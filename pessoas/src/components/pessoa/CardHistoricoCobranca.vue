@@ -1,17 +1,16 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useQuasar, debounce } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataDocumetos } from "src/stores/formataDocumentos";
+import { formataData, formataFromNow } from "src/utils/formatador";
+import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
 const route = useRoute();
 const user = guardaToken();
-const Documentos = formataDocumetos();
-
 const dialogEditarHistorico = ref(false);
 const modelCobrancaHistorico = ref([]);
 const loading = ref(true);
@@ -37,7 +36,7 @@ const buscarCobrancas = debounce(async () => {
   }
 }, 500);
 
-async function scrollHistorico(index, done) {
+const scrollHistorico = async (index, done) => {
   loading.value = true;
   $q.loadingBar.start();
   Paginas.value.page++;
@@ -52,9 +51,9 @@ async function scrollHistorico(index, done) {
   }
   $q.loadingBar.stop();
   done();
-}
+};
 
-async function novaCobranca() {
+const novaCobranca = async () => {
   const ret = await sPessoa.novoHistoricoCobranca(
     route.params.id,
     modelCobrancaHistorico.value.historico
@@ -76,18 +75,18 @@ async function novaCobranca() {
       message: "Erro, tente novamente",
     });
   }
-}
+};
 
-function editarHistorico(codcobrancahistorico, historico) {
+const editarHistorico = (codcobrancahistorico, historico) => {
   cobrancaNova.value = false;
   dialogEditarHistorico.value = true;
   modelCobrancaHistorico.value = {
     historico: historico,
     codcobrancahistorico: codcobrancahistorico,
   };
-}
+};
 
-function deletarHistorico(codcobrancahistorico) {
+const deletarHistorico = (codcobrancahistorico) => {
   $q.dialog({
     title: "Excluir Histórico",
     message: "Tem certeza que deseja excluir esse histórico de cobrança?",
@@ -114,9 +113,9 @@ function deletarHistorico(codcobrancahistorico) {
       });
     }
   });
-}
+};
 
-async function salvarHistorico() {
+const salvarHistorico = async () => {
   try {
     const ret = await sPessoa.salvarHistoricoCobranca(
       route.params.id,
@@ -146,114 +145,159 @@ async function salvarHistorico() {
       message: error.response.data.message,
     });
   }
-}
+};
+
+const submit = () => {
+  cobrancaNova.value ? novaCobranca() : salvarHistorico();
+};
 
 onMounted(() => {
   buscarCobrancas();
 });
+
+watch(
+  () => route.params.id,
+  (novoId) => {
+    if (novoId) {
+      buscarCobrancas();
+    }
+  }
+);
 </script>
 
 <template>
-  <q-infinite-scroll @load="scrollHistorico" :disable="loading">
-    <q-card bordered>
-      <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-        <div class="row items-center no-wrap q-gutter-x-sm">
-          <q-icon name="history" size="sm" />
-          <span class="text-subtitle1 text-weight-medium"
-            >Histórico de Cobrança</span
-          >
-          <q-space />
-          <q-btn
-            flat
-            round
-            dense
-            icon="add"
-            size="sm"
-            color="grey-9"
-            v-if="user.verificaPermissaoUsuario('Publico')"
-            @click="
-              (dialogEditarHistorico = true),
-                (modelCobrancaHistorico = {}),
-                (cobrancaNova = true)
-            "
-          />
-        </div>
-      </q-card-section>
-
-      <div
-        v-for="historico in HistoricosCobranca"
-        v-bind:key="historico.codcobrancahistorico"
-      >
-        <q-separator />
-        <div class="row q-pa-sm items-center">
-          <div class="col">
-            <div class="text-body2">{{ historico.historico }}</div>
-            <div class="text-caption text-grey-7">
-              {{ historico.usuariocriacao }}
-              {{ Documentos.formataFromNow(historico.criacao) }}
-              <q-tooltip>
-                {{ Documentos.formataData(historico.criacao) }}
-              </q-tooltip>
-            </div>
-          </div>
-          <q-btn-dropdown
-            flat
-            auto-close
-            dense
-            v-if="user.verificaPermissaoUsuario('Publico')"
-          >
-            <q-btn
-              flat
-              round
-              icon="edit"
-              @click="
-                editarHistorico(
-                  historico.codcobrancahistorico,
-                  historico.historico
-                )
-              "
-            />
-            <q-btn
-              flat
-              round
-              icon="delete"
-              @click="deletarHistorico(historico.codcobrancahistorico)"
-            />
-          </q-btn-dropdown>
-        </div>
-      </div>
-    </q-card>
-  </q-infinite-scroll>
-
   <!-- Dialog Editar Histórico -->
   <q-dialog v-model="dialogEditarHistorico">
-    <q-card style="min-width: 350px">
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
       <q-form
-        @submit="cobrancaNova == true ? novaCobranca() : salvarHistorico()"
+        @submit="submit()"
       >
-        <q-card-section>
-          <div v-if="cobrancaNova == false" class="text-h6">
-            Editar Histórico de cobrança
-          </div>
-          <div v-else class="text-h6">Novo Histórico de cobrança</div>
+        <q-card-section class="text-grey-9 text-overline row">
+          <template v-if="cobrancaNova">NOVO HISTÓRICO DE COBRANÇA</template>
+          <template v-else>EDITAR HISTÓRICO DE COBRANÇA</template>
         </q-card-section>
+
+        <q-separator inset />
+
         <q-card-section>
           <q-input
             outlined
             v-model="modelCobrancaHistorico.historico"
             autofocus
+            autogrow
+            type="textarea"
+            input-style="min-height: 5em"
             label="Histórico"
             :rules="[(val) => (val && val.length > 0) || 'Histórico obrigatório']"
           />
         </q-card-section>
 
+        <q-separator inset />
+
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
   </q-dialog>
+
+  <q-infinite-scroll @load="scrollHistorico" :disable="loading">
+    <q-card bordered flat>
+      <q-card-section class="text-grey-9 text-overline row">
+        HISTÓRICO DE COBRANÇA
+        <q-space />
+        <q-btn
+          flat
+          round
+          dense
+          icon="add"
+          size="sm"
+          color="primary"
+          v-if="user.verificaPermissaoUsuario('Publico')"
+          @click="
+            (dialogEditarHistorico = true),
+              (modelCobrancaHistorico = {}),
+              (cobrancaNova = true)
+          "
+        />
+      </q-card-section>
+
+      <q-list v-if="HistoricosCobranca?.length > 0">
+        <template
+          v-for="historico in HistoricosCobranca"
+          v-bind:key="historico.codcobrancahistorico"
+        >
+          <q-separator inset />
+          <q-item>
+            <q-item-section avatar>
+              <q-btn round flat icon="history" color="primary" />
+            </q-item-section>
+
+            <q-item-section>
+              <q-item-label style="white-space: pre-wrap">
+                {{ historico.historico }}
+
+                <!-- INFO -->
+                <icone-info-criacao
+                  :usuariocriacao="historico.usuariocriacao"
+                  :criacao="historico.criacao"
+                  :usuarioalteracao="historico.usuarioalteracao"
+                  :alteracao="historico.alteracao"
+                />
+              </q-item-label>
+
+              <q-item-label caption>
+                {{ historico.usuariocriacao }}
+                {{ formataFromNow(historico.criacao) }}
+              </q-item-label>
+            </q-item-section>
+
+            <q-item-section side>
+              <q-item-label
+                caption
+                v-if="user.verificaPermissaoUsuario('Publico')"
+              >
+                <!-- EDITAR -->
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="edit"
+                  size="sm"
+                  color="grey-7"
+                  @click="
+                    editarHistorico(
+                      historico.codcobrancahistorico,
+                      historico.historico
+                    )
+                  "
+                >
+                  <q-tooltip>Editar</q-tooltip>
+                </q-btn>
+
+                <!-- EXCLUIR -->
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="delete"
+                  size="sm"
+                  color="grey-7"
+                  @click="deletarHistorico(historico.codcobrancahistorico)"
+                >
+                  <q-tooltip>Excluir</q-tooltip>
+                </q-btn>
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-list>
+      <div v-else class="q-pa-md text-center text-grey">
+        Nenhum histórico de cobrança
+      </div>
+    </q-card>
+  </q-infinite-scroll>
 </template>
 
 <style scoped></style>

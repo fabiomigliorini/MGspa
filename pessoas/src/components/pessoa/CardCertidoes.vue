@@ -1,62 +1,46 @@
 <script setup>
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataDocumetos } from "src/stores/formataDocumentos";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
-
-const SelectCertidaoEmissor = defineAsyncComponent(() =>
-  import("components/pessoa/SelectCertidaoEmissor.vue")
-);
-const SelectCertidaoTipo = defineAsyncComponent(() =>
-  import("components/pessoa/SelectCertidaoTipo.vue")
-);
+import SelectCertidaoEmissor from "components/pessoa/SelectCertidaoEmissor.vue";
+import SelectCertidaoTipo from "components/pessoa/SelectCertidaoTipo.vue";
+import {
+  formataDataSemHora,
+  dataAtual,
+  dataFormatoSql,
+  formataDataInput,
+  localeBrasil,
+} from "src/utils/formatador";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
 const route = useRoute();
 const user = guardaToken();
-const Documentos = formataDocumetos();
-
 const editCertidao = ref(false);
 const dialogCertidao = ref(false);
 const modelCertidao = ref({});
 const filtroCertidaomodel = ref("validas");
 const certidoesS = ref([]);
 
-const brasil = {
-  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-  months:
-    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-      "_"
-    ),
-  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
-  firstDayOfWeek: 1,
-  format24h: true,
-  pluralDay: "dias",
-};
-
-function filtroCertidao() {
+const filtroCertidao = () => {
   if (filtroCertidaomodel.value == "validas") {
     let validas = sPessoa.item.PessoaCertidaoS.filter(
-      (x) => x.validade >= Documentos.dataAtual()
+      (x) => x.validade >= dataAtual()
     );
     sPessoa.item.PessoaCertidaoS = validas;
   }
   if (filtroCertidaomodel.value == "todas") {
     sPessoa.item.PessoaCertidaoS = certidoesS.value;
   }
-}
+};
 
-async function novaCertidao() {
+const novaCertidao = async () => {
   modelCertidao.value.codpessoa = route.params.id;
   if (modelCertidao.value.validade) {
-    modelCertidao.value.validade = Documentos.dataFormatoSql(
-      modelCertidao.value.validade
-    );
+    modelCertidao.value.validade = dataFormatoSql(modelCertidao.value.validade);
   }
   try {
     const ret = await sPessoa.novaCertidao(modelCertidao.value);
@@ -80,16 +64,16 @@ async function novaCertidao() {
         : "O campo Tipo é obrigatório",
     });
   }
-}
+};
 
-function editarCertidao(
+const editarCertidao = (
   codpessoacertidao,
   codcertidaoemissor,
   numero,
   autenticacao,
   validade,
   codcertidaotipo
-) {
+) => {
   editCertidao.value = true;
   dialogCertidao.value = true;
   modelCertidao.value = {
@@ -97,16 +81,14 @@ function editarCertidao(
     codcertidaoemissor: codcertidaoemissor,
     numero: numero,
     autenticacao: autenticacao,
-    validade: Documentos.formataDataInput(validade),
+    validade: formataDataInput(validade),
     codcertidaotipo: codcertidaotipo,
   };
-}
+};
 
-async function salvarCertidao() {
+const salvarCertidao = async () => {
   if (modelCertidao.value.validade) {
-    modelCertidao.value.validade = Documentos.dataFormatoSql(
-      modelCertidao.value.validade
-    );
+    modelCertidao.value.validade = dataFormatoSql(modelCertidao.value.validade);
   }
   try {
     const ret = await sPessoa.salvarEdicaoCertidao(
@@ -136,9 +118,9 @@ async function salvarCertidao() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function inativaCertidao(codpessoacertidao) {
+const inativaCertidao = async (codpessoacertidao) => {
   try {
     const ret = await sPessoa.inativarCertidao(codpessoacertidao);
     if (ret.data.data) {
@@ -161,9 +143,9 @@ async function inativaCertidao(codpessoacertidao) {
       message: error.message,
     });
   }
-}
+};
 
-async function ativaCertidao(codpessoacertidao) {
+const ativaCertidao = async (codpessoacertidao) => {
   try {
     const ret = await sPessoa.ativarCertidao(codpessoacertidao);
     if (ret.data.data) {
@@ -186,9 +168,9 @@ async function ativaCertidao(codpessoacertidao) {
       message: error.message,
     });
   }
-}
+};
 
-async function deletarCertidao(codpessoacertidao) {
+const deletarCertidao = async (codpessoacertidao) => {
   $q.dialog({
     title: "Excluir Histórico",
     message: "Tem certeza que deseja excluir essa certidão?",
@@ -212,254 +194,265 @@ async function deletarCertidao(codpessoacertidao) {
       });
     }
   });
-}
+};
 
-onMounted(() => {
-  if (!sPessoa.item) return;
-  certidoesS.value = sPessoa.item.PessoaCertidaoS;
-  let validas = sPessoa.item.PessoaCertidaoS.filter(
-    (x) => x.validade >= Documentos.dataAtual()
-  );
-  sPessoa.item.PessoaCertidaoS = validas;
-});
+const submit = () => {
+  editCertidao.value === false ? novaCertidao() : salvarCertidao();
+};
+
+watch(
+  () => sPessoa.item,
+  (newItem) => {
+    if (!newItem) return;
+    certidoesS.value = newItem.PessoaCertidaoS;
+    filtroCertidaomodel.value = "validas";
+    newItem.PessoaCertidaoS = newItem.PessoaCertidaoS.filter(
+      (x) => x.validade >= dataAtual()
+    );
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <div>
-    <q-card bordered>
-      <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-        <div class="row items-center no-wrap q-gutter-x-sm">
-          <q-icon name="description" size="sm" />
-          <span class="text-subtitle1 text-weight-medium">Certidões</span>
-          <q-space />
-          <q-radio
-            v-model="filtroCertidaomodel"
-            val="todas"
-            label="Todas"
-            dense
-            @click="filtroCertidao()"
+  <!-- Dialog Certidões -->
+  <q-dialog v-model="dialogCertidao">
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
+      <q-form @submit="submit()">
+        <q-card-section class="text-grey-9 text-overline row">
+          <template v-if="editCertidao">EDITAR CERTIDÃO</template>
+          <template v-else>NOVA CERTIDÃO</template>
+        </q-card-section>
+
+        <q-separator inset />
+
+        <q-card-section>
+          <q-input
+            outlined
+            v-model="modelCertidao.numero"
+            mask="####################"
+            autofocus
+            label="Número"
+            :rules="[(val) => (val && val.length > 0) || 'Numero obrigatório']"
           />
-          <q-radio
-            v-model="filtroCertidaomodel"
-            val="validas"
-            label="Válidas"
-            dense
-            @click="filtroCertidao()"
+
+          <q-input
+            outlined
+            v-model="modelCertidao.autenticacao"
+            class="q-mb-md"
+            label="Autenticação"
           />
+
+          <q-input
+            outlined
+            v-model="modelCertidao.validade"
+            mask="##/##/####"
+            label="Validade"
+            :rules="[
+              (val) => (val && val.length > 0) || 'Validade obrigatório',
+            ]"
+          >
+            <template v-slot:append>
+              <q-icon name="event" class="cursor-pointer">
+                <q-popup-proxy
+                  cover
+                  transition-show="scale"
+                  transition-hide="scale"
+                >
+                  <q-date
+                    v-model="modelCertidao.validade"
+                    :locale="localeBrasil"
+                    mask="DD/MM/YYYY"
+                  >
+                    <div class="row items-center justify-end">
+                      <q-btn
+                        v-close-popup
+                        label="Fechar"
+                        color="primary"
+                        flat
+                      />
+                    </div>
+                  </q-date>
+                </q-popup-proxy>
+              </q-icon>
+            </template>
+          </q-input>
+
+          <select-certidao-emissor v-model="modelCertidao.codcertidaoemissor" />
+
+          <select-certidao-tipo
+            v-model="modelCertidao.codcertidaotipo"
+            class="q-mt-md"
+          />
+        </q-card-section>
+
+        <q-separator inset />
+
+        <q-card-actions align="right" class="text-primary">
           <q-btn
             flat
-            round
-            dense
-            icon="add"
-            size="sm"
-            color="grey-9"
-            v-if="user.verificaPermissaoUsuario('Publico')"
-            @click="
-              (dialogCertidao = true),
-                (modelCertidao = {}),
-                (editCertidao = false)
-            "
+            label="Cancelar"
+            color="grey-8"
+            v-close-popup
+            tabindex="-1"
           />
-        </div>
-      </q-card-section>
-
-      <q-list separator>
-        <template
-          v-for="certidao in sPessoa.item?.PessoaCertidaoS"
-          v-bind:key="certidao.codpessoacertidao"
-        >
-          <q-item>
-            <q-item-section avatar>
-              <q-btn round flat icon="description" color="primary" />
-            </q-item-section>
-
-            <q-item-section>
-              <q-item-label
-                v-if="certidao.validade"
-                class="text-weight-bold"
-                :class="certidao.validade < Documentos.dataAtual() ? 'text-strike' : null"
-              >
-                Validade: {{ Documentos.formataDatasemHr(certidao.validade) }}
-              </q-item-label>
-              <q-item-label caption>
-                {{ certidao.certidaotipo }} {{ certidao.certidaoemissor }}
-              </q-item-label>
-              <q-item-label caption>
-                {{ certidao.numero }}
-
-                <!-- INFO -->
-                <icone-info-criacao
-                  :usuariocriacao="certidao.usuariocriacao"
-                  :criacao="certidao.criacao"
-                  :usuarioalteracao="certidao.usuarioalteracao"
-                  :alteracao="certidao.alteracao"
-                />
-              </q-item-label>
-              <q-item-label
-                caption
-                v-if="certidao.autenticacao"
-                :class="certidao.validade < Documentos.dataAtual() ? 'text-strike' : null"
-              >
-                {{ certidao.autenticacao }}
-              </q-item-label>
-            </q-item-section>
-
-            <q-item-section side>
-              <q-item-label
-                caption
-                v-if="user.verificaPermissaoUsuario('Publico')"
-              >
-                <!-- EDITAR -->
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="edit"
-                  size="sm"
-                  color="grey-7"
-                  @click="
-                    editarCertidao(
-                      certidao.codpessoacertidao,
-                      certidao.codcertidaoemissor,
-                      certidao.numero,
-                      certidao.autenticacao,
-                      certidao.validade,
-                      certidao.codcertidaotipo
-                    )
-                  "
-                >
-                  <q-tooltip>Editar</q-tooltip>
-                </q-btn>
-
-                <!-- INATIVAR -->
-                <q-btn
-                  v-if="!certidao.inativo"
-                  flat
-                  dense
-                  round
-                  icon="pause"
-                  size="sm"
-                  color="grey-7"
-                  @click="inativaCertidao(certidao.codpessoacertidao)"
-                >
-                  <q-tooltip>Inativar</q-tooltip>
-                </q-btn>
-
-                <!-- ATIVAR -->
-                <q-btn
-                  v-if="certidao.inativo"
-                  flat
-                  dense
-                  round
-                  icon="play_arrow"
-                  size="sm"
-                  color="grey-7"
-                  @click="ativaCertidao(certidao.codpessoacertidao)"
-                >
-                  <q-tooltip>Ativar</q-tooltip>
-                </q-btn>
-
-                <!-- EXCLUIR -->
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="delete"
-                  size="sm"
-                  color="grey-7"
-                  @click="deletarCertidao(certidao.codpessoacertidao)"
-                >
-                  <q-tooltip>Excluir</q-tooltip>
-                </q-btn>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </q-list>
+          <q-btn flat label="Salvar" type="submit" />
+        </q-card-actions>
+      </q-form>
     </q-card>
+  </q-dialog>
 
-    <!-- Dialog Certidões -->
-    <q-dialog v-model="dialogCertidao">
-      <q-card style="min-width: 350px">
-        <q-form
-          @submit="editCertidao == false ? novaCertidao() : salvarCertidao()"
-        >
-          <q-card-section>
-            <div v-if="editCertidao" class="text-h6">Editar Certidão</div>
-            <div v-else class="text-h6">Nova Certidão</div>
-          </q-card-section>
-          <q-card-section>
-            <q-input
-              outlined
-              v-model="modelCertidao.numero"
-              mask="####################"
-              autofocus
-              label="Número"
-              :rules="[
-                (val) => (val && val.length > 0) || 'Numero obrigatório',
-              ]"
-            />
+  <q-card bordered flat>
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      CERTIDÕES
+      <q-space />
+      <q-btn-toggle
+        v-model="filtroCertidaomodel"
+        color="grey-3"
+        toggle-color="primary"
+        text-color="grey-7"
+        toggle-text-color="grey-3"
+        unelevated
+        dense
+        no-caps
+        size="sm"
+        :options="[
+          { label: 'Válidas', value: 'validas' },
+          { label: 'Todas', value: 'todas' },
+        ]"
+        @update:model-value="filtroCertidao()"
+      />
+      <q-btn
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
+        v-if="user.verificaPermissaoUsuario('Publico')"
+        @click="
+          (dialogCertidao = true), (modelCertidao = {}), (editCertidao = false)
+        "
+      />
+    </q-card-section>
 
-            <q-input
-              outlined
-              v-model="modelCertidao.autenticacao"
-              class="q-mb-md"
-              label="Autenticação"
-            />
+    <q-list v-if="sPessoa.item?.PessoaCertidaoS?.length > 0">
+      <template
+        v-for="certidao in sPessoa.item?.PessoaCertidaoS"
+        v-bind:key="certidao.codpessoacertidao"
+      >
+        <q-separator inset />
+        <q-item>
+          <q-item-section avatar>
+            <q-btn round flat icon="description" color="primary" />
+          </q-item-section>
 
-            <q-input
-              outlined
-              v-model="modelCertidao.validade"
-              mask="##/##/####"
-              label="Validade"
-              :rules="[
-                (val) => (val && val.length > 0) || 'Validade obrigatório',
-              ]"
+          <q-item-section>
+            <q-item-label
+              v-if="certidao.validade"
+              class="text-weight-bold"
+              :class="certidao.validade < dataAtual() ? 'text-strike' : null"
             >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="modelCertidao.validade"
-                      :locale="brasil"
-                      mask="DD/MM/YYYY"
-                    >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Fechar"
-                          color="primary"
-                          flat
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+              Validade: {{ formataDataSemHora(certidao.validade) }}
+              <!-- INFO -->
+              <icone-info-criacao
+                :usuariocriacao="certidao.usuariocriacao"
+                :criacao="certidao.criacao"
+                :usuarioalteracao="certidao.usuarioalteracao"
+                :alteracao="certidao.alteracao"
+              />
+            </q-item-label>
+            <q-item-label caption>
+              {{ certidao.certidaotipo }} {{ certidao.certidaoemissor }}
+            </q-item-label>
+            <q-item-label caption>
+              {{ certidao.numero }}
+            </q-item-label>
+            <q-item-label
+              caption
+              v-if="certidao.autenticacao"
+              :class="certidao.validade < dataAtual() ? 'text-strike' : null"
+            >
+              {{ certidao.autenticacao }}
+            </q-item-label>
+          </q-item-section>
 
-            <select-certidao-emissor
-              v-model="modelCertidao.codcertidaoemissor"
-            />
+          <q-item-section side>
+            <q-item-label
+              caption
+              v-if="user.verificaPermissaoUsuario('Publico')"
+            >
+              <!-- EDITAR -->
+              <q-btn
+                flat
+                dense
+                round
+                icon="edit"
+                size="sm"
+                color="grey-7"
+                @click="
+                  editarCertidao(
+                    certidao.codpessoacertidao,
+                    certidao.codcertidaoemissor,
+                    certidao.numero,
+                    certidao.autenticacao,
+                    certidao.validade,
+                    certidao.codcertidaotipo
+                  )
+                "
+              >
+                <q-tooltip>Editar</q-tooltip>
+              </q-btn>
 
-            <select-certidao-tipo
-              v-model="modelCertidao.codcertidaotipo"
-              class="q-mt-md"
-            />
-          </q-card-section>
+              <!-- INATIVAR -->
+              <q-btn
+                v-if="!certidao.inativo"
+                flat
+                dense
+                round
+                icon="pause"
+                size="sm"
+                color="grey-7"
+                @click="inativaCertidao(certidao.codpessoacertidao)"
+              >
+                <q-tooltip>Inativar</q-tooltip>
+              </q-btn>
 
-          <q-card-actions align="right" class="text-primary">
-            <q-btn flat label="Cancelar" v-close-popup />
-            <q-btn flat label="Salvar" type="submit" />
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
-  </div>
+              <!-- ATIVAR -->
+              <q-btn
+                v-if="certidao.inativo"
+                flat
+                dense
+                round
+                icon="play_arrow"
+                size="sm"
+                color="grey-7"
+                @click="ativaCertidao(certidao.codpessoacertidao)"
+              >
+                <q-tooltip>Ativar</q-tooltip>
+              </q-btn>
+
+              <!-- EXCLUIR -->
+              <q-btn
+                flat
+                dense
+                round
+                icon="delete"
+                size="sm"
+                color="grey-7"
+                @click="deletarCertidao(certidao.codpessoacertidao)"
+              >
+                <q-tooltip>Excluir</q-tooltip>
+              </q-btn>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-list>
+    <div v-else class="q-pa-md text-center text-grey">
+      Nenhuma certidão cadastrada
+    </div>
+  </q-card>
 </template>
 
 <style scoped></style>

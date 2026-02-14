@@ -1,22 +1,22 @@
 <script setup>
-import { ref, computed, defineAsyncComponent } from "vue";
+import { ref, computed } from "vue";
 import { useRoute } from "vue-router";
 import { useQuasar } from "quasar";
-import moment from "moment";
 import { pessoaStore } from "stores/pessoa";
 import { dependenteStore } from "stores/dependente";
 import { guardaToken } from "src/stores";
+import { formataDataSemHora } from "src/utils/formatador";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
-
-const SelectPessoa = defineAsyncComponent(() =>
-  import("components/select/SelectPessoa.vue")
-);
+import SelectPessoa from "components/select/SelectPessoa.vue";
 
 const $q = useQuasar();
 const route = useRoute();
 const sPessoa = pessoaStore();
 const sDependente = dependenteStore();
 const user = guardaToken();
+
+const filtroResponsavel = ref("ativos");
+const filtroDependenteDe = ref("ativos");
 
 const dialogDependente = ref(false);
 const isNovo = ref(true);
@@ -71,8 +71,11 @@ const tiposDependente = [
 const cardsConfig = computed(() => [
   {
     key: "responsavel",
-    titulo: "Meus Dependentes",
-    dados: sPessoa.item?.DependenteResponsavelS || [],
+    titulo: "MEUS DEPENDENTES",
+    filtro: filtroResponsavel,
+    dados: filtroResponsavel.value === "ativos"
+      ? (sPessoa.item?.DependenteResponsavelS || []).filter((x) => !x.inativo)
+      : sPessoa.item?.DependenteResponsavelS || [],
     icon: "people",
     modo: "responsavel",
     tooltipAdd: "Adicionar dependente",
@@ -82,8 +85,11 @@ const cardsConfig = computed(() => [
   },
   {
     key: "dependente",
-    titulo: "Sou Dependente de",
-    dados: sPessoa.item?.DependenteS || [],
+    titulo: "SOU DEPENDENTE DE",
+    filtro: filtroDependenteDe,
+    dados: filtroDependenteDe.value === "ativos"
+      ? (sPessoa.item?.DependenteS || []).filter((x) => !x.inativo)
+      : sPessoa.item?.DependenteS || [],
     icon: "supervisor_account",
     modo: "dependente",
     tooltipAdd: "Adicionar responsável",
@@ -99,12 +105,6 @@ const labelPessoaSelecionada = computed(() => {
   }
   return "Pessoa Responsável";
 });
-
-const formataData = (data) => {
-  if (!data) return "";
-  return moment(data).format("DD/MM/YYYY");
-};
-
 
 const resetModel = () => {
   model.value = { ...modelInicial };
@@ -298,20 +298,17 @@ const ativar = async (coddependente) => {
 </script>
 
 <template>
-  <div>
   <!-- DIALOG NOVO/EDITAR DEPENDENTE -->
   <q-dialog v-model="dialogDependente" persistent>
-    <q-card
-      style="width: 600px; max-width: 90vw; max-height: 90vh"
-      class="q-dialog-plugin"
-    >
-      <q-card-section>
-        <div class="text-h6">
-          {{ isNovo ? "Novo Dependente" : "Editar Dependente" }}
-        </div>
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
+      <q-card-section class="text-grey-9 text-overline row">
+        <template v-if="isNovo">NOVO DEPENDENTE</template>
+        <template v-else>EDITAR DEPENDENTE</template>
       </q-card-section>
 
       <q-form @submit="salvar">
+        <q-separator inset />
+
         <q-card-section class="q-pt-none scroll" style="max-height: 60vh">
           <select-pessoa
             v-model="model.codpessoaselecionada"
@@ -477,8 +474,10 @@ const ativar = async (coddependente) => {
           />
         </q-card-section>
 
+        <q-separator inset />
+
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" v-close-popup color="grey-8" tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -490,32 +489,44 @@ const ativar = async (coddependente) => {
     v-for="card in cardsConfig"
     :key="card.key"
     bordered
+    flat
     :class="{ 'q-mb-md': card.key === 'responsavel' }"
   >
-    <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-      <div class="row items-center no-wrap q-gutter-x-sm">
-        <q-icon :name="card.icon" size="sm" />
-        <span class="text-subtitle1 text-weight-medium">
-          {{ card.titulo }}
-        </span>
-        <q-space />
-        <q-btn
-          v-if="user.verificaPermissaoUsuario('Publico')"
-          flat
-          round
-          dense
-          icon="add"
-          size="sm"
-          color="grey-9"
-          @click="abrirNovo(card.modo)"
-        >
-          <q-tooltip>{{ card.tooltipAdd }}</q-tooltip>
-        </q-btn>
-      </div>
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      {{ card.titulo }}
+      <q-space />
+      <q-btn-toggle
+        v-model="card.filtro.value"
+        color="grey-3"
+        toggle-color="primary"
+        text-color="grey-7"
+        toggle-text-color="grey-3"
+        unelevated
+        dense
+        no-caps
+        size="sm"
+        :options="[
+          { label: 'Ativos', value: 'ativos' },
+          { label: 'Todos', value: 'todos' },
+        ]"
+      />
+      <q-btn
+        v-if="user.verificaPermissaoUsuario('Publico')"
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
+        @click="abrirNovo(card.modo)"
+      >
+        <q-tooltip>{{ card.tooltipAdd }}</q-tooltip>
+      </q-btn>
     </q-card-section>
 
-    <q-list separator v-if="card.dados && card.dados.length > 0">
+    <q-list v-if="card.dados && card.dados.length > 0">
       <template v-for="dep in card.dados" :key="dep.coddependente">
+        <q-separator inset />
         <q-item>
           <q-item-section avatar>
             <q-btn
@@ -554,9 +565,9 @@ const ativar = async (coddependente) => {
               caption
               v-if="dep.datainicio || dep.datafim"
             >
-              Início: {{ formataData(dep.datainicio) }}
+              Início: {{ formataDataSemHora(dep.datainicio) }}
               <template v-if="dep.datafim">
-                | Fim: {{ formataData(dep.datafim) }}
+                | Fim: {{ formataDataSemHora(dep.datafim) }}
               </template>
             </q-item-label>
 
@@ -660,7 +671,6 @@ const ativar = async (coddependente) => {
       {{ card.emptyMessage }}
     </div>
   </q-card>
-  </div>
 </template>
 
 <style scoped></style>

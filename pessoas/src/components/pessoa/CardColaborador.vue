@@ -1,33 +1,30 @@
 <script setup>
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { colaboradorStore } from "stores/colaborador";
 import { guardaToken } from "src/stores";
-import { formataDocumetos } from "src/stores/formataDocumentos";
+import {
+  dataFormatoSql,
+  formataDataSemHora,
+  localeBrasil,
+} from "src/utils/formatador";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
 
 const DIAS_EXPERIENCIA = 30;
 
-const CardColaboradorCargo = defineAsyncComponent(() =>
-  import("components/pessoa/CardColaboradorCargo.vue")
-);
-const CardFerias = defineAsyncComponent(() =>
-  import("components/pessoa/CardFerias.vue")
-);
-const SelectFilial = defineAsyncComponent(() =>
-  import("components/pessoa/SelectFilial.vue")
-);
+import CardColaboradorCargo from "components/pessoa/CardColaboradorCargo.vue";
+import CardFerias from "components/pessoa/CardFerias.vue";
+import SelectFilial from "components/pessoa/SelectFilial.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
 const sColaborador = colaboradorStore();
 const route = useRoute();
 const user = guardaToken();
-const Documentos = formataDocumetos();
 
 const modelColaborador = ref({});
 const editColaborador = ref(false);
@@ -40,28 +37,20 @@ const pdfUrl = ref(null);
 const colaboradorAtual = ref(null);
 const uploadingFicha = ref(false);
 
-const brasil = {
-  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-  months:
-    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-      "_"
-    ),
-  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
-  firstDayOfWeek: 0,
-  format24h: true,
-  pluralDay: "dias",
-};
-
-async function visualizarFicha(colaborador) {
+const visualizarFicha = async (colaborador) => {
   try {
     colaboradorAtual.value = colaborador;
     const response = await sColaborador.getFichaColaborador(
       colaborador.codcolaborador
     );
     const blob = new Blob([response.data], { type: "application/pdf" });
-    pdfUrl.value = URL.createObjectURL(blob);
-    dialogPdfFicha.value = true;
+    const blobUrl = URL.createObjectURL(blob);
+    if ($q.platform.is.android) {
+      window.open(blobUrl, "_blank");
+    } else {
+      pdfUrl.value = blobUrl;
+      dialogPdfFicha.value = true;
+    }
   } catch (error) {
     $q.notify({
       color: "red-5",
@@ -72,9 +61,9 @@ async function visualizarFicha(colaborador) {
         "Erro ao carregar a ficha do colaborador",
     });
   }
-}
+};
 
-async function uploadFichaParaDrive() {
+const uploadFichaParaDrive = async () => {
   if (!colaboradorAtual.value) return;
 
   uploadingFicha.value = true;
@@ -109,26 +98,26 @@ async function uploadFichaParaDrive() {
   } finally {
     uploadingFicha.value = false;
   }
-}
+};
 
-function fecharPdfFicha() {
+const fecharPdfFicha = () => {
   if (pdfUrl.value) {
     URL.revokeObjectURL(pdfUrl.value);
     pdfUrl.value = null;
   }
   colaboradorAtual.value = null;
   dialogPdfFicha.value = false;
-}
+};
 
-function novaFerias(iColaborador, colaborador) {
+const novaFerias = (iColaborador, colaborador) => {
   refCardFerias.value[iColaborador].nova(colaborador);
-}
+};
 
-function novoColaboradorCargo(iColaborador, colaborador) {
+const novoColaboradorCargo = (iColaborador, colaborador) => {
   refCardColaboradorCargo.value[iColaborador].novoColaboradorCargo(colaborador);
-}
+};
 
-function preencheExperiencia() {
+const preencheExperiencia = () => {
   const diasExp = modelColaborador.value.diasExperiencia || DIAS_EXPERIENCIA;
   modelColaborador.value.diasExperiencia = diasExp;
   modelColaborador.value.experiencia = moment(
@@ -145,9 +134,9 @@ function preencheExperiencia() {
   )
     .add(diasRen, "days")
     .format("DD/MM/YYYY");
-}
+};
 
-function alterouDiasExperiencia() {
+const alterouDiasExperiencia = () => {
   if (!modelColaborador.value.diasExperiencia) {
     modelColaborador.value.experiencia = null;
     modelColaborador.value.diasExperiencia = null;
@@ -165,9 +154,9 @@ function alterouDiasExperiencia() {
       alterouDiasRenovacao();
     }
   }
-}
+};
 
-function alterouDiasRenovacao() {
+const alterouDiasRenovacao = () => {
   if (!modelColaborador.value.diasRenovacao) {
     modelColaborador.value.renovacaoexperiencia = null;
     modelColaborador.value.diasRenovacao = null;
@@ -184,9 +173,9 @@ function alterouDiasRenovacao() {
         .format("DD/MM/YYYY");
     }
   }
-}
+};
 
-function alterouExperiencia() {
+const alterouExperiencia = () => {
   if (
     modelColaborador.value.contratacao &&
     modelColaborador.value.experiencia
@@ -205,9 +194,9 @@ function alterouExperiencia() {
     }
   }
   alterouDiasRenovacao();
-}
+};
 
-function alterouRenovacao() {
+const alterouRenovacao = () => {
   if (
     modelColaborador.value.experiencia &&
     modelColaborador.value.renovacaoexperiencia
@@ -227,9 +216,9 @@ function alterouRenovacao() {
       );
     }
   }
-}
+};
 
-async function novoColaborador() {
+const novoColaborador = async () => {
   modelColaborador.value.codpessoa = route.params.id;
 
   const colab = { ...modelColaborador.value };
@@ -237,18 +226,16 @@ async function novoColaborador() {
   delete colab.diasRenovacao;
 
   if (colab.contratacao) {
-    colab.contratacao = Documentos.dataFormatoSql(colab.contratacao);
+    colab.contratacao = dataFormatoSql(colab.contratacao);
   }
   if (colab.experiencia) {
-    colab.experiencia = Documentos.dataFormatoSql(colab.experiencia);
+    colab.experiencia = dataFormatoSql(colab.experiencia);
   }
   if (colab.renovacaoexperiencia) {
-    colab.renovacaoexperiencia = Documentos.dataFormatoSql(
-      colab.renovacaoexperiencia
-    );
+    colab.renovacaoexperiencia = dataFormatoSql(colab.renovacaoexperiencia);
   }
   if (colab.rescisao) {
-    colab.rescisao = Documentos.dataFormatoSql(colab.rescisao);
+    colab.rescisao = dataFormatoSql(colab.rescisao);
   }
 
   try {
@@ -271,26 +258,24 @@ async function novoColaborador() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function salvarColaborador() {
+const salvarColaborador = async () => {
   const colab = { ...modelColaborador.value };
   delete colab.diasExperiencia;
   delete colab.diasRenovacao;
 
   if (colab.contratacao) {
-    colab.contratacao = Documentos.dataFormatoSql(colab.contratacao);
+    colab.contratacao = dataFormatoSql(colab.contratacao);
   }
   if (colab.experiencia) {
-    colab.experiencia = Documentos.dataFormatoSql(colab.experiencia);
+    colab.experiencia = dataFormatoSql(colab.experiencia);
   }
   if (colab.renovacaoexperiencia) {
-    colab.renovacaoexperiencia = Documentos.dataFormatoSql(
-      colab.renovacaoexperiencia
-    );
+    colab.renovacaoexperiencia = dataFormatoSql(colab.renovacaoexperiencia);
   }
   if (colab.rescisao) {
-    colab.rescisao = Documentos.dataFormatoSql(colab.rescisao);
+    colab.rescisao = dataFormatoSql(colab.rescisao);
   }
 
   try {
@@ -317,9 +302,9 @@ async function salvarColaborador() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function excluirColaborador(colaborador) {
+const excluirColaborador = async (colaborador) => {
   $q.dialog({
     title: "Excluir Colaborador",
     message: "Tem certeza que deseja excluir esse colaborador?",
@@ -343,9 +328,9 @@ async function excluirColaborador(colaborador) {
       });
     }
   });
-}
+};
 
-function editarColaborador(
+const editarColaborador = (
   codcolaborador,
   codfilial,
   contratacao,
@@ -356,23 +341,21 @@ function editarColaborador(
   numeroponto,
   numerocontabilidade,
   observacoes
-) {
+) => {
   dialogNovoColaborador.value = true;
   editColaborador.value = true;
 
   modelColaborador.value = {
     codcolaborador,
     codfilial,
-    contratacao:
-      contratacao !== null ? Documentos.formataDatasemHr(contratacao) : null,
+    contratacao: contratacao !== null ? formataDataSemHora(contratacao) : null,
     vinculo,
-    experiencia:
-      experiencia !== null ? Documentos.formataDatasemHr(experiencia) : null,
+    experiencia: experiencia !== null ? formataDataSemHora(experiencia) : null,
     renovacaoexperiencia:
       renovacaoexperiencia !== null
-        ? Documentos.formataDatasemHr(renovacaoexperiencia)
+        ? formataDataSemHora(renovacaoexperiencia)
         : null,
-    rescisao: rescisao !== null ? Documentos.formataDatasemHr(rescisao) : null,
+    rescisao: rescisao !== null ? formataDataSemHora(rescisao) : null,
     numeroponto,
     numerocontabilidade,
     observacoes,
@@ -395,16 +378,16 @@ function editarColaborador(
       modelColaborador.value.diasRenovacao = ren.diff(exp, "days");
     }
   }
-}
+};
 
-function validaObrigatorio(value) {
+const validaObrigatorio = (value) => {
   if (!value) {
     return "Preenchimento Obrigatório!";
   }
   return true;
-}
+};
 
-function validaData(value) {
+const validaData = (value) => {
   if (!value) {
     return true;
   }
@@ -413,18 +396,18 @@ function validaData(value) {
     return "Data Inválida!";
   }
   return true;
-}
+};
 
-function validaContratacao(value) {
+const validaContratacao = (value) => {
   const maximo = moment().add(7, "days");
   const cont = moment(value, "DD/MM/YYYY");
   if (maximo.isBefore(cont)) {
     return "Data Muito no Futuro!";
   }
   return true;
-}
+};
 
-function validaPeriodo(value, dataBase, msgAnterior) {
+const validaPeriodo = (value, dataBase, msgAnterior) => {
   const base = moment(dataBase, "DD/MM/YYYY");
   const data = moment(value, "DD/MM/YYYY");
   if (data.isAfter(base.clone().add(60, "days"))) {
@@ -434,25 +417,25 @@ function validaPeriodo(value, dataBase, msgAnterior) {
     return msgAnterior;
   }
   return true;
-}
+};
 
-function validaExperiencia(value) {
+const validaExperiencia = (value) => {
   return validaPeriodo(
     value,
     modelColaborador.value.contratacao,
     "Experiência não pode ser anterior à Contratação!"
   );
-}
+};
 
-function validaRenovacaoExperiencia(value) {
+const validaRenovacaoExperiencia = (value) => {
   return validaPeriodo(
     value,
     modelColaborador.value.experiencia,
     "Renovação não pode ser anterior à Experiência!"
   );
-}
+};
 
-function validaRescisao(value) {
+const validaRescisao = (value) => {
   if (!value) {
     return true;
   }
@@ -477,9 +460,9 @@ function validaRescisao(value) {
     }
   }
   return true;
-}
+};
 
-function abrirNovoColaborador() {
+const abrirNovoColaborador = () => {
   editColaborador.value = false;
   modelColaborador.value = {
     contratacao: moment().format("DD/MM/YYYY"),
@@ -488,109 +471,135 @@ function abrirNovoColaborador() {
   };
   preencheExperiencia();
   dialogNovoColaborador.value = true;
-}
+};
+
+const colaboradoresOrdenados = computed(() =>
+  [...sColaborador.colaboradores].sort(
+    (a, b) => new Date(b.contratacao) - new Date(a.contratacao)
+  )
+);
 
 onMounted(() => {
   sColaborador.getColaboradores(route.params.id);
 });
+
+watch(
+  () => route.params.id,
+  (novoId) => {
+    if (novoId) {
+      sColaborador.getColaboradores(novoId);
+    }
+  }
+);
 </script>
 
 <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-  <q-card bordered class="q-mb-md">
-    <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-      <div class="row items-center no-wrap q-gutter-x-sm">
-        <q-icon name="badge" size="sm" />
-        <span class="text-subtitle1 text-weight-medium"
-          >Registro de Colaborador</span
-        >
+  <q-card
+    bordered
+    flat
+    class="q-mb-md"
+    v-if="sColaborador.colaboradores.length === 0"
+  >
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      REGISTRO DE COLABORADOR
+      <q-space />
+      <q-btn
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
+        @click="abrirNovoColaborador()"
+      />
+    </q-card-section>
+    <div class="q-pa-md text-center text-grey">
+      Nenhum registro de colaborador
+    </div>
+  </q-card>
+
+  <div
+    v-for="(colaborador, iColaborador) in colaboradoresOrdenados"
+    v-bind:key="colaborador.codcolaborador"
+  >
+    <q-card bordered flat class="q-mb-md q-pb-md">
+      <q-card-section class="text-grey-9 text-overline row items-center">
+        <span>
+          <span v-if="colaborador.vinculo == 1">CLT</span>
+          <span v-if="colaborador.vinculo == 2">Menor Aprendiz</span>
+          <span v-if="colaborador.vinculo == 90">Terceirizado</span>
+          <span v-if="colaborador.vinculo == 91">Diarista</span>
+          em {{ colaborador.Filial }}
+        </span>
         <q-space />
+        <q-btn
+          flat
+          round
+          dense
+          icon="edit"
+          size="sm"
+          color="grey-7"
+          @click="
+            editarColaborador(
+              colaborador.codcolaborador,
+              colaborador.codfilial,
+              colaborador.contratacao,
+              colaborador.vinculo,
+              colaborador.experiencia,
+              colaborador.renovacaoexperiencia,
+              colaborador.rescisao,
+              colaborador.numeroponto,
+              colaborador.numerocontabilidade,
+              colaborador.observacoes
+            )
+          "
+        />
+        <q-btn
+          flat
+          round
+          dense
+          icon="delete"
+          size="sm"
+          color="grey-7"
+          @click="excluirColaborador(colaborador)"
+        />
+        <q-btn
+          flat
+          round
+          dense
+          icon="description"
+          size="sm"
+          color="grey-7"
+          @click="visualizarFicha(colaborador)"
+        >
+          <q-tooltip>Ficha do Colaborador</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          round
+          dense
+          icon="folder"
+          size="sm"
+          color="grey-7"
+          :href="
+            'https://drive.google.com/drive/folders/' +
+            colaborador.googledrivefolderid
+          "
+          target="_blank"
+        >
+          <q-tooltip>Arquivos do Colaborador</q-tooltip>
+        </q-btn>
         <q-btn
           flat
           round
           dense
           icon="add"
           size="sm"
-          color="grey-9"
+          color="primary"
           @click="abrirNovoColaborador()"
-        />
-      </div>
-    </q-card-section>
-  </q-card>
-
-  <div
-    v-for="(colaborador, iColaborador) in sColaborador.colaboradores"
-    v-bind:key="colaborador.codcolaborador"
-  >
-    <q-card bordered class="q-mb-md">
-      <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-        <div class="row items-center no-wrap q-gutter-x-sm">
-          <q-icon name="badge" size="sm" />
-          <span class="text-subtitle1 text-weight-medium">
-            <span v-if="colaborador.vinculo == 1">CLT</span>
-            <span v-if="colaborador.vinculo == 2">Menor Aprendiz</span>
-            <span v-if="colaborador.vinculo == 90">Terceirizado</span>
-            <span v-if="colaborador.vinculo == 91">Diarista</span>
-            em {{ colaborador.Filial }}
-          </span>
-          <q-space />
-          <q-btn
-            flat
-            round
-            dense
-            icon="edit"
-            size="sm"
-            color="grey-9"
-            @click="
-              editarColaborador(
-                colaborador.codcolaborador,
-                colaborador.codfilial,
-                colaborador.contratacao,
-                colaborador.vinculo,
-                colaborador.experiencia,
-                colaborador.renovacaoexperiencia,
-                colaborador.rescisao,
-                colaborador.numeroponto,
-                colaborador.numerocontabilidade,
-                colaborador.observacoes
-              )
-            "
-          />
-          <q-btn
-            flat
-            round
-            dense
-            icon="delete"
-            size="sm"
-            color="grey-9"
-            @click="excluirColaborador(colaborador)"
-          />
-          <q-btn
-            flat
-            round
-            dense
-            icon="description"
-            size="sm"
-            color="grey-9"
-            @click="visualizarFicha(colaborador)"
-          >
-            <q-tooltip>Ficha do Colaborador</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            round
-            dense
-            icon="folder"
-            size="sm"
-            color="grey-9"
-            :href="
-              'https://drive.google.com/drive/folders/' +
-              colaborador.googledrivefolderid
-            "
-            target="_blank"
-          >
-            <q-tooltip>Arquivos do Colaborador</q-tooltip>
-          </q-btn>
-        </div>
+        >
+          <q-tooltip>Novo Colaborador</q-tooltip>
+        </q-btn>
       </q-card-section>
 
       <div class="row q-col-gutter-sm q-pa-md">
@@ -644,33 +653,20 @@ onMounted(() => {
         </div>
       </div>
 
-      <q-separator />
-      <q-card-section class="q-py-xs q-px-sm">
-        <div class="row items-center q-gutter-x-xs">
-          <span class="text-caption text-weight-medium text-grey-7">Cargo</span>
-          <q-btn
-            flat
-            round
-            dense
-            icon="add"
-            size="xs"
-            color="grey-7"
-            @click="novoColaboradorCargo(iColaborador, colaborador)"
-          />
-          <q-separator vertical class="q-mx-xs" />
-          <span class="text-caption text-weight-medium text-grey-7"
-            >Férias</span
-          >
-          <q-btn
-            flat
-            round
-            dense
-            icon="add"
-            size="xs"
-            color="grey-7"
-            @click="novaFerias(iColaborador, colaborador)"
-          />
-        </div>
+      <q-card-section
+        class="text-grey-9 text-overline row items-center q-py-xs"
+      >
+        CARGOS
+        <q-space />
+        <q-btn
+          flat
+          round
+          dense
+          icon="add"
+          size="sm"
+          color="primary"
+          @click="novoColaboradorCargo(iColaborador, colaborador)"
+        />
       </q-card-section>
 
       <card-colaborador-cargo
@@ -678,22 +674,40 @@ onMounted(() => {
         :colaboradorCargos="colaborador"
       />
 
+      <q-card-section
+        class="text-grey-9 text-overline row items-center q-py-xs"
+      >
+        FÉRIAS
+        <q-space />
+        <q-btn
+          flat
+          round
+          dense
+          icon="add"
+          size="sm"
+          color="primary"
+          @click="novaFerias(iColaborador, colaborador)"
+        />
+      </q-card-section>
+
       <card-ferias ref="refCardFerias" :colaborador="colaborador" />
     </q-card>
   </div>
 
   <!-- Dialog novo Colaborador -->
   <q-dialog v-model="dialogNovoColaborador">
-    <q-card style="min-width: 350px">
+    <q-card bordered flat style="min-width: 350px">
       <q-form
         @submit="
           editColaborador == true ? salvarColaborador() : novoColaborador()
         "
       >
-        <q-card-section class="bg-yellow text-grey-9 text-h6 q-mb-md">
-          <template v-if="editColaborador"> Editar Colaborador </template>
-          <template v-else> Novo Colaborador </template>
+        <q-card-section class="text-grey-9 text-overline row">
+          <template v-if="editColaborador">EDITAR COLABORADOR</template>
+          <template v-else>NOVO COLABORADOR</template>
         </q-card-section>
+
+        <q-separator inset />
 
         <q-card-section>
           <div class="row q-col-gutter-md">
@@ -752,7 +766,7 @@ onMounted(() => {
                     >
                       <q-date
                         v-model="modelColaborador.contratacao"
-                        :locale="brasil"
+                        :locale="localeBrasil"
                         mask="DD/MM/YYYY"
                         @update:model-value="preencheExperiencia()"
                       >
@@ -790,7 +804,7 @@ onMounted(() => {
                     >
                       <q-date
                         v-model="modelColaborador.rescisao"
-                        :locale="brasil"
+                        :locale="localeBrasil"
                         mask="DD/MM/YYYY"
                       >
                         <div class="row items-center justify-end">
@@ -841,7 +855,7 @@ onMounted(() => {
                     >
                       <q-date
                         v-model="modelColaborador.experiencia"
-                        :locale="brasil"
+                        :locale="localeBrasil"
                         mask="DD/MM/YYYY"
                         @update:model-value="alterouExperiencia()"
                       >
@@ -893,7 +907,7 @@ onMounted(() => {
                     >
                       <q-date
                         v-model="modelColaborador.renovacaoexperiencia"
-                        :locale="brasil"
+                        :locale="localeBrasil"
                         mask="DD/MM/YYYY"
                         @update:model-value="alterouRenovacao()"
                       >
@@ -941,6 +955,8 @@ onMounted(() => {
           </div>
         </q-card-section>
 
+        <q-separator inset />
+
         <q-card-actions align="right" class="text-primary">
           <q-btn
             flat
@@ -957,28 +973,43 @@ onMounted(() => {
 
   <!-- Dialog Visualizar Ficha PDF -->
   <q-dialog v-model="dialogPdfFicha" @hide="fecharPdfFicha">
-    <q-card style="width: 90vw; height: 90vh; max-width: 90vw">
-      <q-card-section class="row items-center q-pb-none">
-        <div class="text-h6">Ficha do Colaborador</div>
+    <q-card bordered flat style="width: 90vw; height: 90vh; max-width: 90vw">
+      <q-card-section class="text-grey-9 text-overline row items-center">
+        FICHA DO COLABORADOR
         <q-space />
         <q-btn
-          icon="upload"
           flat
           round
           dense
+          icon="upload"
+          size="sm"
+          color="grey-7"
           @click="uploadFichaParaDrive"
           :loading="uploadingFicha"
         >
           <q-tooltip>Upload para Google Drive</q-tooltip>
         </q-btn>
-        <q-btn icon="close" flat round dense v-close-popup />
+        <q-btn
+          flat
+          round
+          dense
+          icon="close"
+          size="sm"
+          color="grey-7"
+          v-close-popup
+        />
       </q-card-section>
-      <q-card-section class="q-pt-none" style="height: calc(90vh - 60px)">
-        <iframe
+      <q-card-section class="q-pt-none" style="height: calc(90vh - 70px)">
+        <div
           v-if="pdfUrl"
-          :src="pdfUrl"
-          style="width: 100%; height: 100%; border: none"
-        ></iframe>
+          class="rounded-borders"
+          style="width: 100%; height: 100%; overflow: hidden"
+        >
+          <iframe
+            :src="pdfUrl"
+            style="width: 100%; height: 100%; border: none"
+          ></iframe>
+        </div>
       </q-card-section>
     </q-card>
   </q-dialog>

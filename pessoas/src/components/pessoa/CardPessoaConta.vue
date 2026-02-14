@@ -1,24 +1,24 @@
 <script setup>
-import { defineAsyncComponent, ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataDocumetos } from "src/stores/formataDocumentos";
+import { formataFromNow, formataCPF, formataCNPJ, formataCelularComDDD, formataCnpjEcpf } from "src/utils/formatador";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
-
-const SelectBanco = defineAsyncComponent(() =>
-  import("components/pessoa/SelectBanco.vue")
-);
-const InputFiltered = defineAsyncComponent(() =>
-  import("components/InputFiltered.vue")
-);
+import SelectBanco from "components/pessoa/SelectBanco.vue";
+import InputFiltered from "components/InputFiltered.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
 const route = useRoute();
 const user = guardaToken();
-const Documentos = formataDocumetos();
+const filtroConta = ref("ativos");
+const contasFiltradas = computed(() => {
+  const lista = sPessoa.item?.PessoaContaS || [];
+  if (filtroConta.value === "ativos") return lista.filter((x) => !x.inativo);
+  return lista;
+});
 
 const dialogNovaConta = ref(false);
 const modelContaBancaria = ref({});
@@ -26,7 +26,7 @@ const editarConta = ref(false);
 const codpessoaconta = ref([]);
 const optionsContaEditar = ref([]);
 
-async function novaContaBancaria() {
+const novaContaBancaria = async () => {
   modelContaBancaria.value.codpessoa = route.params.id;
   try {
     const ret = await sPessoa.novaContaBancaria(
@@ -50,9 +50,9 @@ async function novaContaBancaria() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function editarContaBancaria(
+const editarContaBancaria = async (
   cod,
   codbanco,
   cnpj,
@@ -66,7 +66,7 @@ async function editarContaBancaria(
   tipo,
   titular,
   observacoes
-) {
+) => {
   dialogNovaConta.value = true;
   editarConta.value = true;
   codpessoaconta.value = cod;
@@ -101,9 +101,9 @@ async function editarContaBancaria(
 
   const ret = await sPessoa.selectBanco({ codbanco: codbanco });
   optionsContaEditar.value = [ret.data[0]];
-}
+};
 
-async function salvarConta() {
+const salvarConta = async () => {
   try {
     const ret = await sPessoa.salvarEdicaoContaBancaria(
       route.params.id,
@@ -132,9 +132,9 @@ async function salvarConta() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function excluirConta(cod) {
+const excluirConta = async (cod) => {
   $q.dialog({
     title: "Excluir Conta Bancária",
     message: "Tem certeza que deseja excluir essa conta?",
@@ -158,9 +158,9 @@ async function excluirConta(cod) {
       });
     }
   });
-}
+};
 
-async function inativar(cod) {
+const inativar = async (cod) => {
   try {
     const ret = await sPessoa.contaBancariaInativar(cod);
     if (ret.data) {
@@ -179,9 +179,9 @@ async function inativar(cod) {
       message: error.message,
     });
   }
-}
+};
 
-async function ativar(cod) {
+const ativar = async (cod) => {
   try {
     const ret = await sPessoa.contaBancariaAtivar(cod);
     if (ret.data) {
@@ -200,190 +200,25 @@ async function ativar(cod) {
       message: error.message,
     });
   }
-}
+};
+
+const submit = () => {
+  editarConta.value === false ? novaContaBancaria() : salvarConta();
+};
 </script>
 
 <template>
-  <div>
-  <q-card bordered>
-    <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-      <div class="row items-center no-wrap q-gutter-x-sm">
-        <q-icon name="account_balance" size="sm" />
-        <span class="text-subtitle1 text-weight-medium">Contas Bancárias</span>
-        <q-space />
-        <q-btn
-          flat
-          round
-          dense
-          icon="add"
-          size="sm"
-          color="grey-9"
-          v-if="user.verificaPermissaoUsuario('Publico')"
-          @click="
-            (dialogNovaConta = true),
-              (editarConta = false),
-              (modelContaBancaria = {})
-          "
-        />
-      </div>
-    </q-card-section>
-
-    <q-list separator>
-      <template
-        v-for="contas in sPessoa.item?.PessoaContaS"
-        v-bind:key="contas.codpessoaconta"
-      >
-        <q-item>
-          <q-item-section avatar>
-            <q-btn
-              round
-              flat
-              :icon="contas.agencia !== null ? 'account_balance' : 'pix'"
-              color="primary"
-            />
-          </q-item-section>
-
-          <q-item-section>
-            <q-item-label :class="contas.inativo ? 'text-strike' : null">
-              <span v-if="contas.agencia && contas.conta">
-                {{ contas.tipo == 1 ? "Corrente" : "Poupança" }},
-                {{ contas.nomeBanco }}, {{ contas.banco }},
-                {{ contas.agencia }}, {{ contas.conta }}
-              </span>
-              <span v-if="contas.pixcpf">
-                {{
-                  Documentos.formataCPF(
-                    contas.pixcpf.toString().padStart(11, "0")
-                  )
-                }}
-              </span>
-              <span v-if="contas.pixcnpj">
-                {{
-                  Documentos.formataCNPJ(
-                    contas.pixcnpj.toString().padStart(14, "0")
-                  )
-                }}
-              </span>
-              <span v-if="contas.pixtelefone">
-                {{ Documentos.formataCelularComDDD(contas.pixtelefone) }}
-              </span>
-              <span v-if="contas.pixemail">{{ contas.pixemail }}</span>
-              <span v-if="contas.pixaleatoria">{{ contas.pixaleatoria }}</span>
-
-              <!-- INFO -->
-              <icone-info-criacao
-                :usuariocriacao="contas.usuariocriacao"
-                :criacao="contas.criacao"
-                :usuarioalteracao="contas.usuarioalteracao"
-                :alteracao="contas.alteracao"
-              />
-            </q-item-label>
-
-            <q-item-label caption v-if="contas.cnpj">
-              {{ Documentos.formataCnpjEcpf(contas.cnpj) }}
-            </q-item-label>
-            <q-item-label caption v-if="contas.titular">
-              {{ contas.titular }}
-            </q-item-label>
-            <q-item-label caption v-if="contas.observacoes">
-              {{ contas.observacoes }}
-            </q-item-label>
-            <q-item-label caption class="text-red-14" v-if="contas.inativo">
-              Inativo {{ Documentos.formataFromNow(contas.inativo) }}
-            </q-item-label>
-          </q-item-section>
-
-          <q-item-section side>
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
-              <!-- EDITAR -->
-              <q-btn
-                flat
-                dense
-                round
-                icon="edit"
-                size="sm"
-                color="grey-7"
-                @click="
-                  editarContaBancaria(
-                    contas.codpessoaconta,
-                    contas.banco,
-                    contas.cnpj,
-                    contas.agencia,
-                    contas.conta,
-                    contas.pixcpf,
-                    contas.pixcnpj,
-                    contas.pixtelefone,
-                    contas.pixemail,
-                    contas.pixaleatoria,
-                    contas.tipo,
-                    contas.titular,
-                    contas.observacoes
-                  )
-                "
-              >
-                <q-tooltip>Editar</q-tooltip>
-              </q-btn>
-
-              <!-- INATIVAR -->
-              <q-btn
-                v-if="!contas.inativo"
-                flat
-                dense
-                round
-                icon="pause"
-                size="sm"
-                color="grey-7"
-                @click="inativar(contas.codpessoaconta)"
-              >
-                <q-tooltip>Inativar</q-tooltip>
-              </q-btn>
-
-              <!-- ATIVAR -->
-              <q-btn
-                v-if="contas.inativo"
-                flat
-                dense
-                round
-                icon="play_arrow"
-                size="sm"
-                color="grey-7"
-                @click="ativar(contas.codpessoaconta)"
-              >
-                <q-tooltip>Ativar</q-tooltip>
-              </q-btn>
-
-              <!-- EXCLUIR -->
-              <q-btn
-                flat
-                dense
-                round
-                icon="delete"
-                size="sm"
-                color="grey-7"
-                @click="excluirConta(contas.codpessoaconta)"
-              >
-                <q-tooltip>Excluir</q-tooltip>
-              </q-btn>
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-      </template>
-    </q-list>
-  </q-card>
-
   <!-- Dialog nova conta -->
   <q-dialog v-model="dialogNovaConta">
-    <q-card style="min-width: 350px">
-      <q-form
-        @submit="editarConta == false ? novaContaBancaria() : salvarConta()"
-      >
-        <q-card-section>
-          <div v-if="editarConta" class="text-h6">Editar Conta Bancária</div>
-          <div v-else class="text-h6">Nova Conta Bancária</div>
-        </q-card-section>
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
+      <q-card-section class="text-grey-9 text-overline row">
+        <template v-if="editarConta === false">NOVA CONTA BANCÁRIA</template>
+        <template v-else>EDITAR CONTA BANCÁRIA</template>
+      </q-card-section>
+
+      <q-form @submit="submit()">
+        <q-separator inset />
+
         <q-card-section>
           <div class="q-col-gutter-md">
             <q-radio
@@ -625,14 +460,200 @@ async function ativar(cod) {
           </div>
         </q-card-section>
 
+        <q-separator inset />
+
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
   </q-dialog>
-  </div>
+
+  <q-card bordered flat>
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      CONTAS BANCÁRIAS
+      <q-space />
+      <q-btn-toggle
+        v-model="filtroConta"
+        color="grey-3"
+        toggle-color="primary"
+        text-color="grey-7"
+        toggle-text-color="grey-3"
+        unelevated
+        dense
+        no-caps
+        size="sm"
+        :options="[
+          { label: 'Ativos', value: 'ativos' },
+          { label: 'Todos', value: 'todos' },
+        ]"
+      />
+      <q-btn
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
+        v-if="user.verificaPermissaoUsuario('Publico')"
+        @click="
+          (dialogNovaConta = true),
+            (editarConta = false),
+            (modelContaBancaria = {})
+        "
+      />
+    </q-card-section>
+
+    <q-list v-if="contasFiltradas.length > 0">
+      <template
+        v-for="contas in contasFiltradas"
+        v-bind:key="contas.codpessoaconta"
+      >
+        <q-separator inset />
+        <q-item>
+          <q-item-section avatar>
+            <q-btn
+              round
+              flat
+              :icon="contas.agencia !== null ? 'account_balance' : 'pix'"
+              color="primary"
+            />
+          </q-item-section>
+
+          <q-item-section>
+            <q-item-label :class="contas.inativo ? 'text-strike' : null">
+              <span v-if="contas.agencia && contas.conta">
+                {{ contas.tipo == 1 ? "Corrente" : "Poupança" }},
+                {{ contas.nomeBanco }}, {{ contas.banco }},
+                {{ contas.agencia }}, {{ contas.conta }}
+              </span>
+              <span v-if="contas.pixcpf">
+                {{
+                  formataCPF(
+                    contas.pixcpf.toString().padStart(11, "0")
+                  )
+                }}
+              </span>
+              <span v-if="contas.pixcnpj">
+                {{
+                  formataCNPJ(
+                    contas.pixcnpj.toString().padStart(14, "0")
+                  )
+                }}
+              </span>
+              <span v-if="contas.pixtelefone">
+                {{ formataCelularComDDD(contas.pixtelefone) }}
+              </span>
+              <span v-if="contas.pixemail">{{ contas.pixemail }}</span>
+              <span v-if="contas.pixaleatoria">{{ contas.pixaleatoria }}</span>
+
+              <!-- INFO -->
+              <icone-info-criacao
+                :usuariocriacao="contas.usuariocriacao"
+                :criacao="contas.criacao"
+                :usuarioalteracao="contas.usuarioalteracao"
+                :alteracao="contas.alteracao"
+              />
+            </q-item-label>
+
+            <q-item-label caption v-if="contas.cnpj">
+              {{ formataCnpjEcpf(contas.cnpj) }}
+            </q-item-label>
+            <q-item-label caption v-if="contas.titular">
+              {{ contas.titular }}
+            </q-item-label>
+            <q-item-label caption v-if="contas.observacoes">
+              {{ contas.observacoes }}
+            </q-item-label>
+            <q-item-label caption class="text-red-14" v-if="contas.inativo">
+              Inativo {{ formataFromNow(contas.inativo) }}
+            </q-item-label>
+          </q-item-section>
+
+          <q-item-section side>
+            <q-item-label
+              caption
+              v-if="user.verificaPermissaoUsuario('Publico')"
+            >
+              <!-- EDITAR -->
+              <q-btn
+                flat
+                dense
+                round
+                icon="edit"
+                size="sm"
+                color="grey-7"
+                @click="
+                  editarContaBancaria(
+                    contas.codpessoaconta,
+                    contas.banco,
+                    contas.cnpj,
+                    contas.agencia,
+                    contas.conta,
+                    contas.pixcpf,
+                    contas.pixcnpj,
+                    contas.pixtelefone,
+                    contas.pixemail,
+                    contas.pixaleatoria,
+                    contas.tipo,
+                    contas.titular,
+                    contas.observacoes
+                  )
+                "
+              >
+                <q-tooltip>Editar</q-tooltip>
+              </q-btn>
+
+              <!-- INATIVAR -->
+              <q-btn
+                v-if="!contas.inativo"
+                flat
+                dense
+                round
+                icon="pause"
+                size="sm"
+                color="grey-7"
+                @click="inativar(contas.codpessoaconta)"
+              >
+                <q-tooltip>Inativar</q-tooltip>
+              </q-btn>
+
+              <!-- ATIVAR -->
+              <q-btn
+                v-if="contas.inativo"
+                flat
+                dense
+                round
+                icon="play_arrow"
+                size="sm"
+                color="grey-7"
+                @click="ativar(contas.codpessoaconta)"
+              >
+                <q-tooltip>Ativar</q-tooltip>
+              </q-btn>
+
+              <!-- EXCLUIR -->
+              <q-btn
+                flat
+                dense
+                round
+                icon="delete"
+                size="sm"
+                color="grey-7"
+                @click="excluirConta(contas.codpessoaconta)"
+              >
+                <q-tooltip>Excluir</q-tooltip>
+              </q-btn>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-list>
+    <div v-else class="q-pa-md text-center text-grey">
+      Nenhuma conta bancária cadastrada
+    </div>
+  </q-card>
 </template>
 
 <style scoped></style>

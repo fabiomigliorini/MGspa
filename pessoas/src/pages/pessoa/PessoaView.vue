@@ -1,57 +1,44 @@
 <script setup>
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
-
-const CardDetalhesPessoa = defineAsyncComponent(() =>
-  import("components/pessoa/CardDetalhesPessoa.vue")
-);
-const CardCliente = defineAsyncComponent(() =>
-  import("components/pessoa/CardCliente.vue")
-);
-const CardHistoricoCobranca = defineAsyncComponent(() =>
-  import("components/pessoa/CardHistoricoCobranca.vue")
-);
-const CardColaborador = defineAsyncComponent(() =>
-  import("components/pessoa/CardColaborador.vue")
-);
-const ItemTelefone = defineAsyncComponent(() =>
-  import("components/pessoa/ItemTelefone.vue")
-);
-const ItemEmail = defineAsyncComponent(() =>
-  import("components/pessoa/ItemEmail.vue")
-);
-const ItemEndereco = defineAsyncComponent(() =>
-  import("components/pessoa/ItemEndereco.vue")
-);
-const CardPessoaConta = defineAsyncComponent(() =>
-  import("components/pessoa/CardPessoaConta.vue")
-);
-const CardDependentes = defineAsyncComponent(() =>
-  import("components/pessoa/CardDependentes.vue")
-);
-const CardArquivos = defineAsyncComponent(() =>
-  import("components/pessoa/CardArquivos.vue")
-);
-const CardRegistroSpc = defineAsyncComponent(() =>
-  import("components/pessoa/CardRegistroSpc.vue")
-);
-const CardCertidoes = defineAsyncComponent(() =>
-  import("components/pessoa/CardCertidoes.vue")
-);
-const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
+import CardDetalhesPessoa from "components/pessoa/CardDetalhesPessoa.vue";
+import CardCliente from "components/pessoa/CardCliente.vue";
+import CardHistoricoCobranca from "components/pessoa/CardHistoricoCobranca.vue";
+import CardColaborador from "components/pessoa/CardColaborador.vue";
+import CardTelefone from "components/pessoa/CardTelefone.vue";
+import CardEmail from "components/pessoa/CardEmail.vue";
+import CardEndereco from "components/pessoa/CardEndereco.vue";
+import CardPessoaConta from "components/pessoa/CardPessoaConta.vue";
+import CardDependentes from "components/pessoa/CardDependentes.vue";
+import CardArquivos from "components/pessoa/CardArquivos.vue";
+import CardRegistroSpc from "components/pessoa/CardRegistroSpc.vue";
+import CardCertidoes from "components/pessoa/CardCertidoes.vue";
+import MGLayout from "layouts/MGLayout.vue";
+import { formataFromNow } from "src/utils/formatador";
 
 const route = useRoute();
 const sPessoa = pessoaStore();
 const totalNegocioPessoa = ref([]);
 
-onMounted(async () => {
-  sPessoa.get(route.params.id);
-  const ret = await sPessoa.totaisNegocios(1, {
-    codpessoa: route.params.id,
-  });
+async function carregarPessoa(id) {
+  sPessoa.get(id);
+  const ret = await sPessoa.totaisNegocios(1, { codpessoa: id });
   totalNegocioPessoa.value = ret.data;
+}
+
+onMounted(() => {
+  carregarPessoa(route.params.id);
 });
+
+watch(
+  () => route.params.id,
+  (novoId) => {
+    if (novoId) {
+      carregarPessoa(novoId);
+    }
+  }
+);
 </script>
 
 <template>
@@ -73,74 +60,96 @@ onMounted(async () => {
 
     <template #content>
       <q-page>
-        <div
-          v-if="sPessoa.item"
-          class="row q-col-gutter-md"
-          style="max-width: 1280px; margin: auto"
-        >
-          <div class="col-md-8 col-sm-12">
-            <div class="row q-col-gutter-md">
-              <!-- CARD PESSOA -->
-              <div class="col-12">
-                <card-detalhes-pessoa />
+        <div v-if="sPessoa.item" style="max-width: 1280px; margin: auto">
+          <q-item class="q-pt-lg q-pb-sm">
+            <q-item-section avatar>
+              <q-avatar
+                color="grey-9"
+                text-color="grey-5"
+                size="80px"
+                v-if="sPessoa.item.fantasia"
+              >
+                {{ sPessoa.item.fantasia.slice(0, 1) }}
+              </q-avatar>
+            </q-item-section>
+            <q-item-section>
+              <div class="text-h4 text-grey-9">
+                {{ sPessoa.item.fantasia }}
               </div>
-
-              <!-- CLIENTE -->
-              <div class="col-12">
-                <card-cliente />
+              <div class="text-h5 text-grey-7">
+                {{ sPessoa.item.pessoa }}
+                <span v-if="sPessoa.item.inativo" class="text-negative">
+                  (Inativo {{ formataFromNow(sPessoa.item.inativo) }})
+                </span>
               </div>
+            </q-item-section>
+          </q-item>
 
-              <!-- COBRANCA -->
-              <div class="col-12">
-                <card-historico-cobranca />
-              </div>
+          <div class="row q-col-gutter-md q-pa-md">
+            <div class="col-md-8 col-sm-12">
+              <div class="row q-col-gutter-md">
+                <!-- CARD PESSOA -->
+                <div class="col-12">
+                  <card-detalhes-pessoa />
+                </div>
 
-              <!-- COLABORADOR -->
-              <div class="col-12">
-                <card-colaborador />
+                <!-- CLIENTE -->
+                <div class="col-12">
+                  <card-cliente />
+                </div>
+
+                <!-- COBRANCA -->
+                <div class="col-12">
+                  <card-historico-cobranca />
+                </div>
+
+                <!-- COLABORADOR -->
+                <div class="col-12">
+                  <card-colaborador />
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-md-4 col-sm-12">
-            <div class="row q-col-gutter-md">
-              <!-- TELEFONE -->
-              <div class="col-12">
-                <item-telefone />
-              </div>
+            <div class="col-md-4 col-sm-12">
+              <div class="row q-col-gutter-md">
+                <!-- TELEFONE -->
+                <div class="col-12">
+                  <card-telefone />
+                </div>
 
-              <!-- EMAIL -->
-              <div class="col-12">
-                <item-email />
-              </div>
+                <!-- EMAIL -->
+                <div class="col-12">
+                  <card-email />
+                </div>
 
-              <!-- ENDERECO -->
-              <div class="col-12">
-                <item-endereco />
-              </div>
+                <!-- ENDERECO -->
+                <div class="col-12">
+                  <card-endereco />
+                </div>
 
-              <!-- CONTA -->
-              <div class="col-12">
-                <card-pessoa-conta />
-              </div>
+                <!-- CONTA -->
+                <div class="col-12">
+                  <card-pessoa-conta />
+                </div>
 
-              <!-- DEPENDENTES -->
-              <div class="col-12">
-                <card-dependentes />
-              </div>
+                <!-- DEPENDENTES -->
+                <div class="col-12">
+                  <card-dependentes />
+                </div>
 
-              <!-- ARQUIVOS -->
-              <div class="col-12">
-                <card-arquivos />
-              </div>
+                <!-- ARQUIVOS -->
+                <div class="col-12">
+                  <card-arquivos />
+                </div>
 
-              <!-- SPC -->
-              <div class="col-12">
-                <card-registro-spc />
-              </div>
+                <!-- SPC -->
+                <div class="col-12">
+                  <card-registro-spc />
+                </div>
 
-              <!-- CERT -->
-              <div class="col-12">
-                <card-certidoes />
+                <!-- CERT -->
+                <div class="col-12">
+                  <card-certidoes />
+                </div>
               </div>
             </div>
           </div>

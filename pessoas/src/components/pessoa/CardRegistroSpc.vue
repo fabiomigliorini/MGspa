@@ -1,38 +1,28 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataDocumetos } from "src/stores/formataDocumentos";
+import {
+  formataDataInput,
+  dataFormatoSql,
+  localeBrasil,
+  formataDataSemHora,
+} from "src/utils/formatador";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
 const route = useRoute();
 const user = guardaToken();
-const Documentos = formataDocumetos();
-
 const dialogNovoRegistroSpc = ref(false);
 const modelRegistroSpc = ref({});
 const editarRegistro = ref(false);
 const filtroRegistroSpc = ref("abertos");
 const registrosS = ref([]);
 
-const brasil = {
-  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-  months:
-    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-      "_"
-    ),
-  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
-  firstDayOfWeek: 0,
-  format24h: true,
-  pluralDay: "dias",
-};
-
-function filtroSpc() {
+const filtroSpc = () => {
   if (filtroRegistroSpc.value == "abertos") {
     let todos = sPessoa.item.RegistroSpc.filter((x) => !x.baixa);
     sPessoa.item.RegistroSpc = todos;
@@ -40,18 +30,18 @@ function filtroSpc() {
   if (filtroRegistroSpc.value == "todos") {
     sPessoa.item.RegistroSpc = registrosS.value;
   }
-}
+};
 
-async function novoRegistroSpc() {
+const novoRegistroSpc = async () => {
   modelRegistroSpc.value.codpessoa = route.params.id;
 
   const novoRegistro = { ...modelRegistroSpc.value };
 
   if (novoRegistro.inclusao) {
-    novoRegistro.inclusao = Documentos.dataFormatoSql(novoRegistro.inclusao);
+    novoRegistro.inclusao = dataFormatoSql(novoRegistro.inclusao);
   }
   if (novoRegistro.baixa) {
-    novoRegistro.baixa = Documentos.dataFormatoSql(novoRegistro.baixa);
+    novoRegistro.baixa = dataFormatoSql(novoRegistro.baixa);
   }
 
   if (novoRegistro.valor.indexOf(",") > -1) {
@@ -79,34 +69,34 @@ async function novoRegistroSpc() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-function editarRegistroSpc(
+const editarRegistroSpc = (
   codregistrospc,
   valor,
   inclusao,
   baixa,
   observacoes
-) {
+) => {
   dialogNovoRegistroSpc.value = true;
   editarRegistro.value = true;
   modelRegistroSpc.value = {
     codregistrospc: codregistrospc,
     valor: valor,
-    inclusao: inclusao ? Documentos.formataDataInput(inclusao) : null,
-    baixa: baixa ? Documentos.formataDataInput(baixa) : null,
+    inclusao: inclusao ? formataDataInput(inclusao) : null,
+    baixa: baixa ? formataDataInput(baixa) : null,
     observacoes: observacoes,
   };
-}
+};
 
-async function salvarRegistro() {
+const salvarRegistro = async () => {
   const editRegistro = { ...modelRegistroSpc.value };
 
   if (editRegistro.inclusao) {
-    editRegistro.inclusao = Documentos.dataFormatoSql(editRegistro.inclusao);
+    editRegistro.inclusao = dataFormatoSql(editRegistro.inclusao);
   }
   if (editRegistro.baixa) {
-    editRegistro.baixa = Documentos.dataFormatoSql(editRegistro.baixa);
+    editRegistro.baixa = dataFormatoSql(editRegistro.baixa);
   }
 
   if (editRegistro.valor.toString().indexOf(",") > -1) {
@@ -142,9 +132,9 @@ async function salvarRegistro() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function excluirRegistro(codregistrospc) {
+const excluirRegistro = async (codregistrospc) => {
   $q.dialog({
     title: "Excluir Registro Spc",
     message: "Tem certeza que deseja excluir esse registro?",
@@ -168,68 +158,190 @@ async function excluirRegistro(codregistrospc) {
       });
     }
   });
-}
+};
 
-onMounted(() => {
-  if (!sPessoa.item) return;
-  registrosS.value = sPessoa.item.RegistroSpc;
-  let todos = sPessoa.item.RegistroSpc.filter((x) => !x.baixa);
-  sPessoa.item.RegistroSpc = todos;
-});
+const submit = () => {
+  editarRegistro.value === false ? novoRegistroSpc() : salvarRegistro();
+};
+
+watch(
+  () => sPessoa.item,
+  (newItem) => {
+    if (!newItem) return;
+    registrosS.value = newItem.RegistroSpc;
+    filtroRegistroSpc.value = "abertos";
+    newItem.RegistroSpc = newItem.RegistroSpc.filter((x) => !x.baixa);
+  },
+  { immediate: true }
+);
 </script>
 
 <template>
-  <div>
-  <q-card bordered>
-    <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-      <div class="row items-center no-wrap q-gutter-x-sm">
-        <q-icon name="gavel" size="sm" />
-        <span class="text-subtitle1 text-weight-medium">SPC</span>
-        <q-space />
-        <q-radio
-          v-model="filtroRegistroSpc"
-          val="todos"
-          label="Todos"
-          dense
-          @click="filtroSpc()"
-        />
-        <q-radio
-          v-model="filtroRegistroSpc"
-          val="abertos"
-          label="Abertos"
-          dense
-          @click="filtroSpc()"
-        />
-        <q-btn
-          flat
-          round
-          dense
-          icon="add"
-          size="sm"
-          color="grey-9"
-          v-if="user.verificaPermissaoUsuario('Publico')"
-          @click="
-            (dialogNovoRegistroSpc = true),
-              (editarRegistro = false),
-              (modelRegistroSpc = {})
-          "
-        />
-      </div>
+  <!-- Dialog novo Registro Spc -->
+  <q-dialog v-model="dialogNovoRegistroSpc">
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
+      <q-card-section class="text-grey-9 text-overline row">
+        <template v-if="editarRegistro === false">NOVO REGISTRO SPC</template>
+        <template v-else>EDITAR REGISTRO SPC</template>
+      </q-card-section>
+
+      <q-form @submit="submit()">
+        <q-separator inset />
+
+        <q-card-section>
+          <div class="col-6">
+            <q-input
+              outlined
+              v-model="modelRegistroSpc.inclusao"
+              mask="##/##/####"
+              label="Inclusão"
+              :rules="[
+                (val) => (val && val.length > 0) || 'Inclusão obrigatório',
+              ]"
+            >
+              <template v-slot:append>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy
+                    cover
+                    transition-show="scale"
+                    transition-hide="scale"
+                  >
+                    <q-date
+                      v-model="modelRegistroSpc.inclusao"
+                      :locale="localeBrasil"
+                      mask="DD/MM/YYYY"
+                    >
+                      <div class="row items-center justify-end">
+                        <q-btn
+                          v-close-popup
+                          label="Fechar"
+                          color="primary"
+                          flat
+                        />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+            <q-input
+              outlined
+              v-model="modelRegistroSpc.baixa"
+              mask="##/##/####"
+              class="q-mb-md"
+              label="Baixa"
+            >
+              <template v-slot:append>
+                <q-icon name="event" class="cursor-pointer">
+                  <q-popup-proxy
+                    cover
+                    transition-show="scale"
+                    transition-hide="scale"
+                  >
+                    <q-date
+                      v-model="modelRegistroSpc.baixa"
+                      :locale="localeBrasil"
+                      mask="DD/MM/YYYY"
+                    >
+                      <div class="row items-center justify-end">
+                        <q-btn
+                          v-close-popup
+                          label="Fechar"
+                          color="primary"
+                          flat
+                        />
+                      </div>
+                    </q-date>
+                  </q-popup-proxy>
+                </q-icon>
+              </template>
+            </q-input>
+
+            <q-input
+              outlined
+              v-model="modelRegistroSpc.valor"
+              label="Valor"
+              type="numeric"
+              :rules="[
+                (val) =>
+                  (val !== null && val !== '' && val !== undefined) ||
+                  'Valor obrigatório',
+              ]"
+            />
+
+            <q-input
+              outlined
+              v-model="modelRegistroSpc.observacoes"
+              label="Observações"
+              borderless
+              autogrow
+              type="textarea"
+            />
+          </div>
+        </q-card-section>
+
+        <q-separator inset />
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn
+            flat
+            label="Cancelar"
+            color="grey-8"
+            v-close-popup
+            tabindex="-1"
+          />
+          <q-btn flat label="Salvar" type="submit" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
+
+  <q-card bordered flat>
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      SPC
+      <q-space />
+      <q-btn-toggle
+        v-model="filtroRegistroSpc"
+        color="grey-3"
+        toggle-color="primary"
+        text-color="grey-7"
+        toggle-text-color="grey-3"
+        unelevated
+        dense
+        no-caps
+        size="sm"
+        :options="[
+          { label: 'Abertos', value: 'abertos' },
+          { label: 'Todos', value: 'todos' },
+        ]"
+        @update:model-value="filtroSpc()"
+      />
+      <q-btn
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
+        v-if="user.verificaPermissaoUsuario('Publico')"
+        @click="
+          (dialogNovoRegistroSpc = true),
+            (editarRegistro = false),
+            (modelRegistroSpc = {})
+        "
+      />
     </q-card-section>
 
-    <q-list separator>
+    <q-list v-if="sPessoa.item?.RegistroSpc?.length > 0">
       <template
         v-for="registro in sPessoa.item?.RegistroSpc"
         v-bind:key="registro.codregistrospc"
       >
+        <q-separator inset />
         <q-item>
           <q-item-section avatar>
-            <q-btn
-              round
-              flat
-              icon="gavel"
-              color="primary"
-            />
+            <q-btn round flat icon="gavel" color="primary" />
           </q-item-section>
 
           <q-item-section>
@@ -256,7 +368,7 @@ onMounted(() => {
             <q-item-label caption v-if="registro.baixa">
               Baixado em:
               <span class="text-weight-bold">{{
-                Documentos.formataDatasemHr(registro.baixa)
+                formataDataSemHora(registro.baixa)
               }}</span>
             </q-item-label>
           </q-item-section>
@@ -304,119 +416,8 @@ onMounted(() => {
         </q-item>
       </template>
     </q-list>
+    <div v-else class="q-pa-md text-center text-grey">Nenhum registro SPC</div>
   </q-card>
-
-  <!-- Dialog novo Registro Spc -->
-  <q-dialog v-model="dialogNovoRegistroSpc">
-    <q-card style="min-width: 350px">
-      <q-form
-        @submit="editarRegistro == false ? novoRegistroSpc() : salvarRegistro()"
-      >
-        <q-card-section>
-          <div v-if="editarRegistro" class="text-h6">Editar Registro Spc</div>
-          <div v-else class="text-h6">Novo Registro Spc</div>
-        </q-card-section>
-        <q-card-section>
-          <div class="col-6">
-            <q-input
-              outlined
-              v-model="modelRegistroSpc.inclusao"
-              mask="##/##/####"
-              label="Inclusão"
-              :rules="[
-                (val) => (val && val.length > 0) || 'Inclusão obrigatório',
-              ]"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="modelRegistroSpc.inclusao"
-                      :locale="brasil"
-                      mask="DD/MM/YYYY"
-                    >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Fechar"
-                          color="primary"
-                          flat
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
-
-            <q-input
-              outlined
-              v-model="modelRegistroSpc.baixa"
-              mask="##/##/####"
-              class="q-mb-md"
-              label="Baixa"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="modelRegistroSpc.baixa"
-                      :locale="brasil"
-                      mask="DD/MM/YYYY"
-                    >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Fechar"
-                          color="primary"
-                          flat
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
-
-            <q-input
-              outlined
-              v-model="modelRegistroSpc.valor"
-              label="Valor"
-              type="numeric"
-              :rules="[
-                (val) =>
-                  (val !== null && val !== '' && val !== undefined) ||
-                  'Valor obrigatório',
-              ]"
-            />
-
-            <q-input
-              outlined
-              v-model="modelRegistroSpc.observacoes"
-              label="Observações"
-              borderless
-              autogrow
-              type="textarea"
-            />
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn flat label="Salvar" type="submit" />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
-  </div>
 </template>
 
 <style scoped></style>

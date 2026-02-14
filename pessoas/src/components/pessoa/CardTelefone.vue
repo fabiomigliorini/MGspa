@@ -1,27 +1,31 @@
 <script setup>
-import { defineAsyncComponent, ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataData } from "src/utils/formatador";
+import { formataData, formataFone, formataCelular } from "src/utils/formatador";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
-
-const InputFiltered = defineAsyncComponent(() =>
-  import("components/InputFiltered.vue")
-);
+import InputFiltered from "components/InputFiltered.vue";
 
 const $q = useQuasar();
 const route = useRoute();
 const sPessoa = pessoaStore();
 const user = guardaToken();
 
+const filtroTelefone = ref("ativos");
+const telefonesFiltrados = computed(() => {
+  const lista = sPessoa.item?.PessoaTelefoneS || [];
+  if (filtroTelefone.value === "ativos") return lista.filter((x) => !x.inativo);
+  return lista;
+});
+
 const dialogTel = ref(false);
 const telNovo = ref(false);
 const modelTel = ref({});
 const pessoatelefonecod = ref("");
 
-function iconeFone(tipo) {
+const iconeFone = (tipo) => {
   switch (tipo) {
     case 2:
       return "smartphone";
@@ -30,36 +34,13 @@ function iconeFone(tipo) {
     default:
       return "device_unknown";
   }
-}
+};
 
-function formataFone(tipo, fone) {
-  switch (tipo) {
-    case 2:
-      return formataCelular(fone);
-    case 1:
-      return formataFixo(fone);
-    default:
-      return fone;
-  }
-}
-
-function formataCelular(cel) {
-  if (cel == null) return cel;
-  cel = cel.toString().padStart(9);
-  return cel.slice(0, 1) + " " + cel.slice(1, 5) + "-" + cel.slice(5, 9);
-}
-
-function formataFixo(fixo) {
-  if (fixo == null) return fixo;
-  fixo = fixo.toString().padStart(9);
-  return fixo.slice(0, 1) + "" + fixo.slice(1, 5) + "-" + fixo.slice(5, 9);
-}
-
-function linkTel(ddd, telefone) {
+const linkTel = (ddd, telefone) => {
   return "tel:" + ddd + telefone;
-}
+};
 
-function confirmaSmsCel(ddd, telefone, codpessoatelefone) {
+const confirmaSmsCel = (ddd, telefone, codpessoatelefone) => {
   $q.dialog({
     title: "Verificação via SMS",
     message:
@@ -74,9 +55,14 @@ function confirmaSmsCel(ddd, telefone, codpessoatelefone) {
   }).onOk((codverificacao) => {
     postTelefone(ddd, telefone, codpessoatelefone, codverificacao);
   });
-}
+};
 
-async function postTelefone(ddd, telefone, codpessoatelefone, codverificacao) {
+const postTelefone = async (
+  ddd,
+  telefone,
+  codpessoatelefone,
+  codverificacao
+) => {
   try {
     const ret = await sPessoa.telefoneConfirmaVerificacao(
       route.params.id,
@@ -100,9 +86,9 @@ async function postTelefone(ddd, telefone, codpessoatelefone, codverificacao) {
     });
     confirmaSmsCel(ddd, telefone, codpessoatelefone);
   }
-}
+};
 
-async function enviarSms(pais, ddd, telefone, codpessoatelefone) {
+const enviarSms = async (pais, ddd, telefone, codpessoatelefone) => {
   $q.dialog({
     title: "Verificação via SMS",
     message:
@@ -135,9 +121,9 @@ async function enviarSms(pais, ddd, telefone, codpessoatelefone) {
         }
       });
   });
-}
+};
 
-async function salvarTel(codpessoa) {
+const salvarTel = async (codpessoa) => {
   dialogTel.value = false;
   try {
     await sPessoa.telefoneAlterar(
@@ -159,9 +145,9 @@ async function salvarTel(codpessoa) {
       message: error.message,
     });
   }
-}
+};
 
-async function novoTel(codpessoa) {
+const novoTel = async (codpessoa) => {
   dialogTel.value = false;
   try {
     const ret = await sPessoa.telefoneNovo(codpessoa, modelTel.value);
@@ -183,16 +169,20 @@ async function novoTel(codpessoa) {
       message: error.message,
     });
   }
-}
+};
 
-function editarTel(
+const submit = () => {
+  telNovo.value ? novoTel(route.params.id) : salvarTel(route.params.id);
+};
+
+const editarTel = (
   codpessoatelefone,
   ddd,
   telefone,
   apelido,
   tipo,
   verificacao
-) {
+) => {
   dialogTel.value = true;
   modelTel.value = {
     ddd: ddd,
@@ -203,9 +193,9 @@ function editarTel(
     pais: "+55",
   };
   pessoatelefonecod.value = codpessoatelefone;
-}
+};
 
-async function inativar(codpessoa, codpessoatelefone) {
+const inativar = async (codpessoa, codpessoatelefone) => {
   try {
     const ret = await sPessoa.telefoneInativar(codpessoa, codpessoatelefone);
     if (ret.data) {
@@ -228,9 +218,9 @@ async function inativar(codpessoa, codpessoatelefone) {
       message: error.message,
     });
   }
-}
+};
 
-async function ativar(codpessoa, codpessoatelefone) {
+const ativar = async (codpessoa, codpessoatelefone) => {
   try {
     const ret = await sPessoa.telefoneAtivar(codpessoa, codpessoatelefone);
     if (ret.data) {
@@ -253,11 +243,11 @@ async function ativar(codpessoa, codpessoatelefone) {
       message: error.message,
     });
   }
-}
+};
 
-async function excluirTel(codpessoatelefone) {
+const excluirTel = async (codpessoatelefone) => {
   $q.dialog({
-    title: "Excluir Contato",
+    title: "Excluir Telefone",
     message: "Tem certeza que deseja excluir esse telefone?",
     cancel: true,
   }).onOk(async () => {
@@ -284,9 +274,9 @@ async function excluirTel(codpessoatelefone) {
       });
     }
   });
-}
+};
 
-async function cima(codpessoa, codpessoatelefone) {
+const cima = async (codpessoa, codpessoatelefone) => {
   try {
     await sPessoa.telefoneParaCima(codpessoa, codpessoatelefone);
     $q.notify({
@@ -305,9 +295,9 @@ async function cima(codpessoa, codpessoatelefone) {
     });
     sPessoa.get(codpessoa);
   }
-}
+};
 
-async function baixo(codpessoa, codpessoatelefone) {
+const baixo = async (codpessoa, codpessoatelefone) => {
   try {
     await sPessoa.telefoneParaBaixo(codpessoa, codpessoatelefone);
     $q.notify({
@@ -326,165 +316,208 @@ async function baixo(codpessoa, codpessoatelefone) {
     });
     sPessoa.get(codpessoa);
   }
-}
+};
 </script>
 
 <template>
   <!-- DIALOG NOVO/EDITAR TELEFONE -->
   <q-dialog v-model="dialogTel">
-    <q-card style="min-width: 350px">
-      <q-form
-        @submit="
-          telNovo == true
-            ? novoTel(route.params.id)
-            : salvarTel(route.params.id)
-        "
-      >
-        <q-card-section>
-          <div v-if="telNovo" class="text-h6">Novo Telefone</div>
-          <div v-else class="text-h6">Editar Telefone</div>
-        </q-card-section>
+    <q-card bordered flat style="width: 400px; max-width: 90vw">
+      <q-card-section class="text-grey-9 text-overline row">
+        <template v-if="telNovo">NOVO TELEFONE</template>
+        <template v-else>EDITAR TELEFONE</template>
+      </q-card-section>
+
+      <q-form @submit="submit()">
+        <q-separator inset />
 
         <q-card-section>
-          <q-separator spaced />
-          <small class="text-h8-grey">Tipo:</small>
-          <q-radio
-            v-model="modelTel.tipo"
-            checked-icon="task_alt"
-            unchecked-icon="panorama_fish_eye"
-            :val="1"
-            label="Fixo"
-            outlined
-          />
-          <q-radio
-            v-model="modelTel.tipo"
-            checked-icon="task_alt"
-            unchecked-icon="panorama_fish_eye"
-            :val="2"
-            label="Celular"
-            outlined
-          />
-          <q-radio
-            v-model="modelTel.tipo"
-            checked-icon="task_alt"
-            unchecked-icon="panorama_fish_eye"
-            :val="9"
-            label="Outro"
-            outlined
-          />
-          <q-separator spaced />
+          <div class="row q-col-gutter-md">
+            <!-- TIPO -->
+            <div class="col-12">
+              <small class="text-h8-grey">Tipo:</small>
+              <q-radio
+                v-model="modelTel.tipo"
+                checked-icon="task_alt"
+                unchecked-icon="panorama_fish_eye"
+                :val="1"
+                label="Fixo"
+                outlined
+              />
+              <q-radio
+                v-model="modelTel.tipo"
+                checked-icon="task_alt"
+                unchecked-icon="panorama_fish_eye"
+                :val="2"
+                label="Celular"
+                outlined
+              />
+              <q-radio
+                v-model="modelTel.tipo"
+                checked-icon="task_alt"
+                unchecked-icon="panorama_fish_eye"
+                :val="9"
+                label="Outro"
+                outlined
+              />
+            </div>
 
-          <q-input
-            outlined
-            v-model="modelTel.pais"
-            mask="(+##)"
-            value="+55"
-            label="País"
-            :rules="[(val) => (val && val.length > 0) || 'Pais obrigatório']"
-            unmasked-value
-          />
+            <!-- PAIS -->
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model="modelTel.pais"
+                mask="(+##)"
+                value="+55"
+                label="País"
+                :rules="[
+                  (val) => (val && val.length > 0) || 'Pais obrigatório',
+                ]"
+                unmasked-value
+                input-class="text-center"
+              />
+            </div>
 
-          <q-input
-            outlined
-            v-model="modelTel.ddd"
-            mask="(##)"
-            label="DDD"
-            :rules="[
-              telNovo == false
-                ? null
-                : (val) => (val && val.length > 0) || 'DDD obrigatório',
-            ]"
-            unmasked-value
-            v-if="modelTel.tipo != '9'"
-          />
+            <!-- DDD -->
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model="modelTel.ddd"
+                mask="(##)"
+                label="DDD"
+                :rules="[
+                  telNovo == false
+                    ? null
+                    : (val) => (val && val.length > 0) || 'DDD obrigatório',
+                ]"
+                unmasked-value
+                autofocus
+                v-if="modelTel.tipo != '9'"
+                input-class="text-center"
+              />
+            </div>
 
-          <q-input
-            v-if="modelTel.tipo == '2'"
-            outlined
-            v-model="modelTel.telefone"
-            mask="# ####-####"
-            label="Telefone"
-            unmasked-value
-            :rules="[
-              telNovo == false
-                ? null
-                : (val) => (val && val.length > 0) || 'Telefone obrigatório',
-            ]"
-            inputmode="numeric"
-          />
+            <!-- TELEFONE -->
+            <div class="col-6">
+              <q-input
+                v-if="modelTel.tipo == '2'"
+                outlined
+                v-model="modelTel.telefone"
+                mask="# ####-####"
+                label="Telefone"
+                unmasked-value
+                :rules="[
+                  telNovo == false
+                    ? null
+                    : (val) =>
+                        (val && val.length > 0) || 'Telefone obrigatório',
+                ]"
+                inputmode="numeric"
+                input-class="text-center"
+              />
 
-          <q-input
-            v-if="modelTel.tipo == '1'"
-            outlined
-            v-model="modelTel.telefone"
-            mask="####-####"
-            label="Telefone"
-            unmasked-value
-            :rules="[
-              telNovo == false
-                ? null
-                : (val) => (val && val.length > 0) || 'Telefone obrigatório',
-            ]"
-            inputmode="numeric"
-          />
+              <q-input
+                v-if="modelTel.tipo == '1'"
+                outlined
+                v-model="modelTel.telefone"
+                mask="####-####"
+                label="Telefone"
+                unmasked-value
+                :rules="[
+                  telNovo == false
+                    ? null
+                    : (val) =>
+                        (val && val.length > 0) || 'Telefone obrigatório',
+                ]"
+                inputmode="numeric"
+                input-class="text-center"
+              />
 
-          <q-input
-            v-if="modelTel.tipo == '9'"
-            outlined
-            v-model="modelTel.telefone"
-            label="Telefone"
-            :rules="[
-              telNovo == false
-                ? null
-                : (val) => (val && val.length > 0) || 'Telefone obrigatório',
-            ]"
-            inputmode="tel"
-          />
+              <q-input
+                v-if="modelTel.tipo == '9'"
+                outlined
+                v-model="modelTel.telefone"
+                label="Telefone"
+                :rules="[
+                  telNovo == false
+                    ? null
+                    : (val) =>
+                        (val && val.length > 0) || 'Telefone obrigatório',
+                ]"
+                inputmode="tel"
+                input-class="text-center"
+              />
+            </div>
 
-          <input-filtered
-            outlined
-            v-model="modelTel.apelido"
-            label="Apelido"
-            :rules="[]"
-          />
+            <!-- APELIDO -->
+            <div class="col-12">
+              <input-filtered
+                outlined
+                v-model="modelTel.apelido"
+                label="Apelido"
+                :rules="[]"
+              />
+            </div>
+          </div>
         </q-card-section>
+
+        <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn
+            flat
+            label="Cancelar"
+            v-close-popup
+            tabindex="-1"
+            color="grey-8"
+          />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
   </q-dialog>
 
-  <q-card bordered>
-    <q-card-section class="bg-grey-3 text-grey-9 q-py-sm">
-      <div class="row items-center no-wrap q-gutter-x-sm">
-        <q-icon name="phone" size="sm" />
-        <span class="text-subtitle1 text-weight-medium">Telefone</span>
-        <q-space />
-        <q-btn
-          flat
-          round
-          dense
-          icon="add"
-          size="sm"
-          color="grey-9"
-          v-if="user.verificaPermissaoUsuario('Publico')"
-          @click="
-            (dialogTel = true),
-              (modelTel = { tipo: 2, pais: '+55' }),
-              (telNovo = true)
-          "
-        />
-      </div>
+  <q-card bordered flat class="rounded-xl">
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      TELEFONES
+      <q-space />
+      <q-btn-toggle
+        v-model="filtroTelefone"
+        color="grey-3"
+        toggle-color="primary"
+        text-color="grey-7"
+        toggle-text-color="grey-3"
+        unelevated
+        dense
+        no-caps
+        size="sm"
+        :options="[
+          { label: 'Ativos', value: 'ativos' },
+          { label: 'Todos', value: 'todos' },
+        ]"
+      />
+      <q-btn
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
+        v-if="user.verificaPermissaoUsuario('Publico')"
+        @click="
+          (dialogTel = true),
+            (modelTel = { tipo: 2, pais: '+55' }),
+            (telNovo = true)
+        "
+      />
     </q-card-section>
 
-    <q-list separator>
+    <q-list v-if="telefonesFiltrados.length > 0">
       <template
-        v-for="(element, i) in sPessoa.item?.PessoaTelefoneS"
+        v-for="(element, i) in telefonesFiltrados"
         v-bind:key="element.codpessoatelefone"
       >
+        <q-separator inset />
         <q-item>
           <!-- BOTAO TELEFONE -->
           <q-item-section avatar>
@@ -656,5 +689,8 @@ async function baixo(codpessoa, codpessoatelefone) {
         </q-item>
       </template>
     </q-list>
+    <div v-else class="q-pa-md text-center text-grey">
+      Nenhum telefone cadastrado
+    </div>
   </q-card>
 </template>

@@ -1,7 +1,38 @@
 import moment from "moment";
+import "moment/min/locales";
+moment.locale("pt-br");
 
 export const formataData = (data) => {
-  return moment(data).format("DD/MM/YYYY hh:mm");
+  if (!data) return "";
+  return moment(data).format("DD/MM/YYYY HH:mm");
+};
+
+export const formataDataSemHora = (data) => {
+  if (!data) return "";
+  return moment(data).format("DD/MM/YYYY");
+};
+
+export const formataFromNow = (data) => {
+  if (!data) return "";
+  return moment(data).fromNow();
+};
+
+export const formataDataCompleta = (data) => {
+  if (!data) return "";
+  return moment(data).format("llll");
+};
+
+export const dataAtual = () => {
+  return moment().format("YYYY-MM-DD");
+};
+
+export const dataFormatoSql = (data) => {
+  return moment(data, "DD/MM/YYYY").format("YYYY-MM-DD");
+};
+
+export const formataDataInput = (data) => {
+  if (!data) return "";
+  return moment(data).format("DD/MM/YYYY");
 };
 
 export const formataCep = (cep) => {
@@ -198,15 +229,102 @@ export const formataIe = (uf, ie) => {
     }
 };
 
-export const primeiraLetraMaiuscula = (str)  => {
-  return removerAcentos(str).trimStart().replace(/\s+/g, ' ').replace(
+export const formataCPF = (cpf) => {
+  if (cpf == null) return cpf;
+  cpf = cpf.toString().padStart(11, "0");
+  return cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6, 9) + "-" + cpf.slice(9, 11);
+};
+
+export const formataCNPJ = (cnpj) => {
+  if (cnpj == null) return cnpj;
+  cnpj = cnpj.toString().padStart(14, "0");
+  return cnpj.slice(0, 2) + "." + cnpj.slice(2, 5) + "." + cnpj.slice(5, 8) + "/" + cnpj.slice(8, 12) + "-" + cnpj.slice(12, 14);
+};
+
+export const formataCnpjCpf = (cnpjcpf, fisica) => {
+  if (cnpjcpf == null) return cnpjcpf;
+  if (fisica) return formataCPF(cnpjcpf);
+  return formataCNPJ(cnpjcpf);
+};
+
+export const formataCnpjEcpf = (cnpjcpf) => {
+  if (cnpjcpf == null) return cnpjcpf;
+  if (cnpjcpf.toString().length <= 11) {
+    return formataCPF(cnpjcpf.toString().padStart(11, "0"));
+  }
+  return formataCNPJ(cnpjcpf.toString().padStart(14, "0"));
+};
+
+export const formataCelular = (cel) => {
+  if (cel == null) return cel;
+  cel = cel.toString().padStart(9);
+  return cel.slice(0, 1) + " " + cel.slice(1, 5) + "-" + cel.slice(5, 9);
+};
+
+export const formataCelularComDDD = (cel) => {
+  if (cel == null) return cel;
+  cel = cel.toString().padStart(11);
+  return "(" + cel.slice(0, 2) + ") " + cel.slice(2, 3) + " " + cel.slice(3, 7) + "-" + cel.slice(7, 11);
+};
+
+export const formataFixo = (fixo) => {
+  if (fixo == null) return fixo;
+  fixo = fixo.toString().padStart(9);
+  return fixo.slice(0, 1) + "" + fixo.slice(1, 5) + "-" + fixo.slice(5, 9);
+};
+
+export const formataFone = (tipo, fone) => {
+  switch (tipo) {
+    case 2:
+      return formataCelular(fone);
+    case 1:
+      return formataFixo(fone);
+    default:
+      return fone;
+  }
+};
+
+export const formataTitulo = (titulo) => {
+  if (titulo == null) return titulo;
+  titulo = titulo.toString().padStart(12, "0");
+  return titulo.slice(0, 4) + "." + titulo.slice(4, 8) + "." + titulo.slice(8, 12);
+};
+
+export const formataPisPasep = (pispasep) => {
+  if (pispasep == null) return pispasep;
+  pispasep = pispasep.toString().padStart(11, "0");
+  return pispasep.slice(0, 3) + "." + pispasep.slice(3, 8) + "." + pispasep.slice(8, 10) + "-" + pispasep.slice(10, 12);
+};
+
+export const verificaPassadoFuturo = (data) => {
+  return moment(data).isBefore();
+};
+
+export const verificaIdade = (data) => {
+  return moment().diff(data, "years", false);
+};
+
+export const linkMaps = (cidade, endereco, numero, cep) => {
+  return "https://www.google.com/maps/search/?api=1&query=" + endereco + "," + numero + "," + cidade + "," + cep;
+};
+
+export const primeiraLetraMaiuscula = (str) => {
+  return removerAcentos(str).trimStart().replace(/\s+/g, " ").replace(
     /\w\S*/g,
-    function(txt) {
-      return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
-    }
+    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
   );
-}
+};
 
 export const removerAcentos = (str) => {
-  return str.normalize('NFD').replace(/\p{Mn}/gu, "");
-}
+  return str.normalize("NFD").replace(/\p{Mn}/gu, "");
+};
+
+export const localeBrasil = {
+  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
+  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
+  months: "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split("_"),
+  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
+  firstDayOfWeek: 1,
+  format24h: true,
+  pluralDay: "dias",
+};

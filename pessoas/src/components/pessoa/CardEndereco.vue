@@ -1,25 +1,31 @@
 <script setup>
-import { defineAsyncComponent, ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { api } from "boot/axios";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataData, formataCep } from "src/utils/formatador";
+import {
+  formataData,
+  formataCep,
+  linkMaps,
+  removerAcentos,
+} from "src/utils/formatador";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
-
-// const SelectCidade = defineAsyncComponent(() =>
-//   import("components/pessoa/SelectCidade.vue")
-// );
-const InputFiltered = defineAsyncComponent(() =>
-  import("components/InputFiltered.vue")
-);
+import InputFiltered from "components/InputFiltered.vue";
 
 const $q = useQuasar();
 const route = useRoute();
 const sPessoa = pessoaStore();
 const user = guardaToken();
+
+const filtroEndereco = ref("ativos");
+const enderecosFiltrados = computed(() => {
+  const lista = sPessoa.item?.PessoaEnderecoS || [];
+  if (filtroEndereco.value === "ativos") return lista.filter((x) => !x.inativo);
+  return lista;
+});
 
 const dialogEndereco = ref(false);
 const enderecoNovo = ref(false);
@@ -38,66 +44,7 @@ const modelEndereco = ref({
 });
 const options = ref([]);
 
-function linkMaps(cidade, endereco, numero, cep) {
-  return (
-    "https://www.google.com/maps/search/?api=1&query=" +
-    endereco +
-    "," +
-    numero +
-    "," +
-    cidade +
-    "," +
-    cep
-  );
-}
-
-function removerAcentos(s) {
-  var map = {
-    â: "a",
-    Â: "A",
-    à: "a",
-    À: "A",
-    á: "a",
-    Á: "A",
-    ã: "a",
-    Ã: "A",
-    ê: "e",
-    Ê: "E",
-    è: "e",
-    È: "E",
-    é: "e",
-    É: "E",
-    î: "i",
-    Î: "I",
-    ì: "i",
-    Ì: "I",
-    í: "i",
-    Í: "I",
-    õ: "o",
-    Õ: "O",
-    ô: "o",
-    Ô: "O",
-    ò: "o",
-    Ò: "O",
-    ó: "o",
-    Ó: "O",
-    ü: "u",
-    Ü: "U",
-    û: "u",
-    Û: "U",
-    ú: "u",
-    Ú: "U",
-    ù: "u",
-    Ù: "U",
-    ç: "c",
-    Ç: "C",
-  };
-  return s.replace(/[\W\[\] ]/g, function (a) {
-    return map[a] || a;
-  });
-}
-
-async function modalNovoEndereco() {
+const modalNovoEndereco = async () => {
   dialogEndereco.value = true;
   const cobranca =
     sPessoa.item.PessoaEnderecoS.filter((end) => end.cobranca == true).length ==
@@ -113,9 +60,9 @@ async function modalNovoEndereco() {
     nfe: nfe,
   };
   enderecoNovo.value = true;
-}
+};
 
-async function novoEndereco() {
+const novoEndereco = async () => {
   if (modelEndereco.value.endereco !== "") {
     modelEndereco.value.codpessoa = route.params.id;
     try {
@@ -149,9 +96,9 @@ async function novoEndereco() {
       message: "Campo endereço é obrigatório",
     });
   }
-}
+};
 
-async function excluirEndereco(codpessoaendereco) {
+const excluirEndereco = async (codpessoaendereco) => {
   $q.dialog({
     title: "Excluir Endereço",
     message: "Tem certeza que deseja excluir esse endereço?",
@@ -176,9 +123,9 @@ async function excluirEndereco(codpessoaendereco) {
       });
     }
   });
-}
+};
 
-async function editarEndereco(
+const editarEndereco = async (
   codpessoaendereco,
   endereco,
   numero,
@@ -191,7 +138,7 @@ async function editarEndereco(
   entrega,
   apelido,
   cidade
-) {
+) => {
   dialogEndereco.value = true;
   enderecoNovo.value = false;
   modelEndereco.value = {
@@ -209,13 +156,13 @@ async function editarEndereco(
   };
   const ret = await sPessoa.consultaCidade(codcidade);
   options.value = [ret.data[0]];
-}
+};
 
-function submit() {
+const submit = () => {
   enderecoNovo.value ? novoEndereco() : salvarEndereco();
-}
+};
 
-async function salvarEndereco() {
+const salvarEndereco = async () => {
   try {
     const data = await sPessoa.enderecoSalvar(
       route.params.id,
@@ -247,9 +194,9 @@ async function salvarEndereco() {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function BuscaCep() {
+const buscaCep = async () => {
   buscandoCep.value = true;
   if (modelEndereco.value.cep.length == 8) {
     const { data } = await api.get(
@@ -273,9 +220,9 @@ async function BuscaCep() {
       }
     }, 500);
   }
-}
+};
 
-async function inativar(codpessoaendereco) {
+const inativar = async (codpessoaendereco) => {
   try {
     const ret = await sPessoa.enderecoInativar(
       route.params.id,
@@ -304,9 +251,9 @@ async function inativar(codpessoaendereco) {
       message: error.message,
     });
   }
-}
+};
 
-async function ativar(codpessoaendereco) {
+const ativar = async (codpessoaendereco) => {
   try {
     const ret = await sPessoa.enderecoAtivar(
       route.params.id,
@@ -335,9 +282,9 @@ async function ativar(codpessoaendereco) {
       message: error.message,
     });
   }
-}
+};
 
-async function cima(codpessoa, codpessoaendereco) {
+const cima = async (codpessoa, codpessoaendereco) => {
   try {
     await sPessoa.enderecoParaCima(codpessoa, codpessoaendereco);
     $q.notify({
@@ -356,9 +303,9 @@ async function cima(codpessoa, codpessoaendereco) {
     });
     sPessoa.get(codpessoa);
   }
-}
+};
 
-async function baixo(codpessoa, codpessoaendereco) {
+const baixo = async (codpessoa, codpessoaendereco) => {
   try {
     await sPessoa.enderecoParaBaixo(codpessoa, codpessoaendereco);
     $q.notify({
@@ -377,7 +324,7 @@ async function baixo(codpessoa, codpessoaendereco) {
     });
     sPessoa.get(codpessoa);
   }
-}
+};
 </script>
 
 <template>
@@ -401,7 +348,7 @@ async function baixo(codpessoa, codpessoaendereco) {
                 v-model="modelEndereco.cep"
                 label="CEP"
                 mask="#####-###"
-                @change="BuscaCep()"
+                @change="buscaCep()"
                 unmasked-value
                 reactive-rules
                 :rules="[(val) => (val && val.length > 7) || 'CEP inválido']"
@@ -519,9 +466,24 @@ async function baixo(codpessoa, codpessoaendereco) {
   </q-dialog>
 
   <q-card bordered flat>
-    <q-card-section class="text-grey-9 text-overline row">
+    <q-card-section class="text-grey-9 text-overline row items-center">
       ENDEREÇOS
       <q-space />
+      <q-btn-toggle
+        v-model="filtroEndereco"
+        color="grey-3"
+        toggle-color="primary"
+        text-color="grey-7"
+        toggle-text-color="grey-3"
+        unelevated
+        dense
+        no-caps
+        size="sm"
+        :options="[
+          { label: 'Ativos', value: 'ativos' },
+          { label: 'Todos', value: 'todos' },
+        ]"
+      />
       <q-btn
         flat
         round
@@ -534,18 +496,9 @@ async function baixo(codpessoa, codpessoaendereco) {
       />
     </q-card-section>
 
-    <q-banner
-      rounded
-      inline-actions
-      class="text-white bg-red q-ma-sm"
-      v-if="sPessoa.item?.PessoaEnderecoS?.length == 0"
-    >
-      Sem informar ao menos um endereço, não será possivel emitir Nota Fiscal.
-    </q-banner>
-
-    <q-list>
+    <q-list v-if="enderecosFiltrados.length > 0">
       <template
-        v-for="(element, i) in sPessoa.item?.PessoaEnderecoS"
+        v-for="(element, i) in enderecosFiltrados"
         v-bind:key="element.codpessoaendereco"
       >
         <q-separator inset />
@@ -734,6 +687,13 @@ async function baixo(codpessoa, codpessoaendereco) {
         </q-item>
       </template>
     </q-list>
+
+    <div v-else class="q-pa-md text-center text-grey">
+      Nenhum Endereço cadastrado
+      <q-banner rounded inline-actions class="text-white bg-red q-ma-sm">
+        Sem informar ao menos um endereço, não será possivel emitir Nota Fiscal.
+      </q-banner>
+    </div>
   </q-card>
 </template>
 

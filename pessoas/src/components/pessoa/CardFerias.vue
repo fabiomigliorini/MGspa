@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { colaboradorStore } from "stores/colaborador";
 import moment from "moment";
@@ -12,6 +12,12 @@ const $q = useQuasar();
 const sColaborador = colaboradorStore();
 const model = ref({});
 const dialogEditar = ref(false);
+
+const feriasOrdenadas = computed(() =>
+  [...(props.colaborador.Ferias || [])].sort(
+    (a, b) => new Date(b.gozoinicio) - new Date(a.gozoinicio)
+  )
+);
 
 const brasil = {
   days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
@@ -280,84 +286,84 @@ defineExpose({ nova });
 </script>
 
 <template>
-  <template v-if="colaborador.Ferias.length > 0">
-    <div class="row q-pa-md q-col-gutter-md">
-      <div
-        v-for="ferias in colaborador.Ferias"
-        v-bind:key="ferias.codferias"
-        class="col-4"
-      >
-        <q-card
-          bordered
-          :class="ferias.prevista == true ? 'bg-orange-3' : null"
-        >
-          <q-card-section class="q-py-xs q-px-sm">
-            <div class="row items-center no-wrap q-gutter-x-xs">
-              <q-icon name="celebration" size="xs" color="primary" />
-              <span class="text-caption text-weight-medium">
-                {{ ferias.dias }} dias em
-                {{ moment(ferias.gozoinicio).format("MMM/YY") }}
-              </span>
-              <q-space />
-              <q-btn
-                flat
-                round
-                dense
-                icon="edit"
-                size="xs"
-                @click="editar(ferias)"
-              />
-              <q-btn
-                flat
-                round
-                dense
-                icon="delete"
-                size="xs"
-                @click="excluir(ferias)"
-              />
-            </div>
-          </q-card-section>
+  <q-list v-if="colaborador.Ferias?.length > 0">
+    <template
+      v-for="ferias in feriasOrdenadas"
+      v-bind:key="ferias.codferias"
+    >
+      <q-separator inset />
+      <q-item>
+        <q-item-section avatar>
+          <q-btn round flat icon="celebration" color="primary" />
+        </q-item-section>
 
-          <div class="row q-col-gutter-xs q-pa-sm">
-            <div class="col-12" v-if="ferias.diasgozo">
-              <div class="text-overline text-grey-7">Gozo</div>
-              <div class="text-body2">
-                {{ moment(ferias.gozoinicio).format("DD/MMM") }} a
-                {{ moment(ferias.gozofim).format("DD/MMM/YYYY") }}
-              </div>
-              <div class="text-caption text-grey-7">
-                {{ ferias.diasgozo }} Dias Gozo
-                <span v-if="ferias.diasabono">
-                  / {{ ferias.diasabono }} de Abono
-                </span>
-                <span v-if="ferias.diasdescontados">
-                  / {{ ferias.diasdescontados }} Descontados
-                </span>
-                <span v-if="ferias.dias != ferias.diasgozo">
-                  = {{ ferias.dias }} Total
-                </span>
-              </div>
-            </div>
+        <q-item-section>
+          <q-item-label class="text-weight-bold">
+            {{ ferias.dias }} dias em
+            {{ moment(ferias.gozoinicio).format("MMM/YY") }}
+            <q-badge v-if="ferias.prevista" color="orange" class="q-ml-sm">
+              Prevista
+            </q-badge>
+          </q-item-label>
 
-            <div class="col-12">
-              <div class="text-overline text-grey-7">Período Aquisitivo</div>
-              <div class="text-body2">
-                {{ moment(ferias.aquisitivoinicio).format("DD/MMM") }} a
-                {{ moment(ferias.aquisitivofim).format("DD/MMM/YYYY") }}
-              </div>
-            </div>
+          <q-item-label caption v-if="ferias.diasgozo">
+            Gozo: {{ moment(ferias.gozoinicio).format("DD/MMM") }} a
+            {{ moment(ferias.gozofim).format("DD/MMM/YYYY") }}
+          </q-item-label>
 
-            <div class="col-12" v-if="ferias.observacoes">
-              <div class="text-overline text-grey-7">Observações</div>
-              <div class="text-caption">
-                {{ ferias.observacoes }}
-              </div>
-            </div>
-          </div>
-        </q-card>
-      </div>
-    </div>
-  </template>
+          <q-item-label caption v-if="ferias.diasgozo">
+            {{ ferias.diasgozo }} Dias Gozo
+            <span v-if="ferias.diasabono">
+              / {{ ferias.diasabono }} de Abono
+            </span>
+            <span v-if="ferias.diasdescontados">
+              / {{ ferias.diasdescontados }} Descontados
+            </span>
+            <span v-if="ferias.dias != ferias.diasgozo">
+              = {{ ferias.dias }} Total
+            </span>
+          </q-item-label>
+
+          <q-item-label caption>
+            Aquisitivo: {{ moment(ferias.aquisitivoinicio).format("DD/MMM") }} a
+            {{ moment(ferias.aquisitivofim).format("DD/MMM/YYYY") }}
+          </q-item-label>
+
+          <q-item-label caption v-if="ferias.observacoes">
+            {{ ferias.observacoes }}
+          </q-item-label>
+        </q-item-section>
+
+        <q-item-section side>
+          <q-item-label caption>
+            <q-btn
+              flat
+              dense
+              round
+              icon="edit"
+              size="sm"
+              color="grey-7"
+              @click="editar(ferias)"
+            >
+              <q-tooltip>Editar</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              dense
+              round
+              icon="delete"
+              size="sm"
+              color="grey-7"
+              @click="excluir(ferias)"
+            >
+              <q-tooltip>Excluir</q-tooltip>
+            </q-btn>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+  </q-list>
+  <div v-else class="q-pa-md text-center text-grey">Nenhuma férias cadastrada</div>
 
   <!-- Dialog novo Colaborador Ferias -->
   <q-dialog v-model="dialogEditar">

@@ -1,39 +1,20 @@
 <script setup>
-import { defineAsyncComponent, ref } from "vue";
+import { ref } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { formataDocumetos } from "src/stores/formataDocumentos";
+import { formataData, formataDataSemHora, formataCPF, formataCNPJ, formataPisPasep, formataTitulo, verificaIdade, verificaPassadoFuturo, dataFormatoSql, localeBrasil } from "src/utils/formatador";
 import { guardaToken } from "stores/index";
-import moment from "moment";
-
-const SelectGrupoEconomico = defineAsyncComponent(() =>
-  import("components/pessoa/SelectGrupoEconomico.vue")
-);
-const SelectCidade = defineAsyncComponent(() =>
-  import("components/pessoa/SelectCidade.vue")
-);
-const SelectEstado = defineAsyncComponent(() =>
-  import("components/pessoa/SelectEstado.vue")
-);
-const InputIe = defineAsyncComponent(() =>
-  import("components/pessoa/InputIe.vue")
-);
-const InputFiltered = defineAsyncComponent(() =>
-  import("components/InputFiltered.vue")
-);
-const SelectPessoa = defineAsyncComponent(() =>
-  import("components/select/SelectPessoa.vue")
-);
-const SelectEstadoCivil = defineAsyncComponent(() =>
-  import("components/pessoa/SelectEstadoCivil.vue")
-);
-const SelectEtnia = defineAsyncComponent(() =>
-  import("components/pessoa/SelectEtnia.vue")
-);
-const SelectGrauInstrucao = defineAsyncComponent(() =>
-  import("components/pessoa/SelectGrauInstrucao.vue")
-);
+import SelectGrupoEconomico from "components/pessoa/SelectGrupoEconomico.vue";
+import SelectCidade from "components/pessoa/SelectCidade.vue";
+import SelectEstado from "components/pessoa/SelectEstado.vue";
+import InputIe from "components/pessoa/InputIe.vue";
+import InputFiltered from "components/InputFiltered.vue";
+import SelectPessoa from "components/select/SelectPessoa.vue";
+import SelectEstadoCivil from "components/pessoa/SelectEstadoCivil.vue";
+import SelectEtnia from "components/pessoa/SelectEtnia.vue";
+import SelectGrauInstrucao from "components/pessoa/SelectGrauInstrucao.vue";
 
 const $q = useQuasar();
 const router = useRouter();
@@ -47,25 +28,8 @@ const modelPessoa = ref({});
 const options = ref([]);
 const mercosTransferir = ref({ mercosid: null, codpessoanova: null });
 
-const brasil = {
-  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-  months:
-    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-      "_"
-    ),
-  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
-  firstDayOfWeek: 1,
-  format24h: true,
-  pluralDay: "dias",
-};
 
-function primeiraLetra(fantasia) {
-  if (fantasia.charAt(0) === " ") return fantasia.charAt(1);
-  return fantasia.charAt(0);
-}
-
-async function inativar(codpessoa) {
+const inativar = async (codpessoa) => {
   try {
     const ret = await sPessoa.inativarPessoa(codpessoa);
     if (ret.data) {
@@ -85,9 +49,9 @@ async function inativar(codpessoa) {
       message: error.response.data,
     });
   }
-}
+};
 
-async function ativar(codpessoa) {
+const ativar = async (codpessoa) => {
   try {
     const ret = await sPessoa.ativarPessoa(codpessoa);
     if (ret.data) {
@@ -107,9 +71,9 @@ async function ativar(codpessoa) {
       message: error.response.data,
     });
   }
-}
+};
 
-function removerPessoa(codpessoa, pessoa) {
+const removerPessoa = (codpessoa, pessoa) => {
   $q.dialog({
     title: "Excluir pessoa",
     message: "Tem certeza que deseja excluir " + pessoa + "?",
@@ -135,9 +99,9 @@ function removerPessoa(codpessoa, pessoa) {
       });
     }
   });
-}
+};
 
-async function editarDetalhes() {
+const editarDetalhes = async () => {
   DialogDetalhes.value = true;
   modelPessoa.value = {
     cnpj: sPessoa.item.fisica
@@ -159,7 +123,7 @@ async function editarDetalhes() {
         ?.codcidade ?? null,
     rg: sPessoa.item.rg,
     nascimento: sPessoa.item.nascimento
-      ? moment(sPessoa.item.nascimento).format("DD-MM-YYYY")
+      ? formataDataSemHora(sPessoa.item.nascimento)
       : null,
     pai: sPessoa.item.pai,
     mae: sPessoa.item.mae,
@@ -171,7 +135,7 @@ async function editarDetalhes() {
     ctps: sPessoa.item.ctps,
     seriectps: sPessoa.item.seriectps,
     emissaoctps: sPessoa.item.emissaoctps
-      ? moment(sPessoa.item.emissaoctps).format("DD-MM-YYYY")
+      ? formataDataSemHora(sPessoa.item.emissaoctps)
       : null,
     codestadoctps: sPessoa.item.codestadoctps,
     codestadocivil: sPessoa.item.codestadocivil,
@@ -180,16 +144,16 @@ async function editarDetalhes() {
   };
   const ret = await sPessoa.consultaCidade(sPessoa.item.codcidadenascimento);
   options.value = [ret.data[0]];
-}
+};
 
-function abrirDialogMercos() {
+const abrirDialogMercos = () => {
   mercosTransferir.value.codpessoanova = null;
   mercosTransferir.value.mercosid =
     sPessoa.item.mercosId?.length > 0 ? sPessoa.item.mercosId[0] : null;
   DialogMercos.value = true;
-}
+};
 
-function salvarMercos(evt) {
+const salvarMercos = (evt) => {
   if (evt) evt.preventDefault();
   $q.dialog({
     title: "Confirma",
@@ -220,15 +184,15 @@ function salvarMercos(evt) {
       });
     }
   });
-}
+};
 
-async function salvarDetalhes() {
+const salvarDetalhes = async () => {
   const editar = { ...modelPessoa.value };
   if (editar.nascimento) {
-    editar.nascimento = Documentos.dataFormatoSql(editar.nascimento);
+    editar.nascimento = dataFormatoSql(editar.nascimento);
   }
   if (editar.emissaoctps) {
-    editar.emissaoctps = Documentos.dataFormatoSql(editar.emissaoctps);
+    editar.emissaoctps = dataFormatoSql(editar.emissaoctps);
   }
   try {
     const ret = await sPessoa.clienteSalvar(sPessoa.item.codpessoa, editar);
@@ -266,14 +230,20 @@ async function salvarDetalhes() {
       });
     }
   }
-}
+};
 </script>
 
 <template>
   <!-- DIALOG EDITAR DETALHES -->
   <q-dialog v-model="DialogDetalhes">
-    <q-card style="width: 800px; max-width: 80vw">
+    <q-card bordered flat style="width: 800px; max-width: 80vw">
       <q-form @submit="salvarDetalhes()">
+        <q-card-section class="text-grey-9 text-overline row">
+          EDITAR DETALHES
+        </q-card-section>
+
+        <q-separator inset />
+
         <q-card-section class="row q-col-gutter-md">
           <q-input
             :class="
@@ -318,7 +288,7 @@ async function salvarDetalhes() {
                 >
                   <q-date
                     v-model="modelPessoa.nascimento"
-                    :locale="brasil"
+                    :locale="localeBrasil"
                     mask="DD/MM/YYYY"
                   >
                     <div class="row items-center justify-end">
@@ -458,7 +428,7 @@ async function salvarDetalhes() {
                   >
                     <q-date
                       v-model="modelPessoa.emissaoctps"
-                      :locale="brasil"
+                      :locale="localeBrasil"
                       mask="DD/MM/YYYY"
                     >
                       <div class="row items-center justify-end">
@@ -528,9 +498,12 @@ async function salvarDetalhes() {
             <q-toggle v-model="modelPessoa.vendedor" label="Vendedor" />
           </div>
         </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" v-close-popup />
-          <q-btn flat label="Salvar" color="primary" type="submit" />
+
+        <q-separator inset />
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -538,8 +511,14 @@ async function salvarDetalhes() {
 
   <!-- DIALOG MERCOS -->
   <q-dialog v-model="DialogMercos">
-    <q-card style="width: 300px">
+    <q-card bordered flat style="width: 300px">
       <q-form @submit="salvarMercos">
+        <q-card-section class="text-grey-9 text-overline row">
+          TRANSFERIR MERCOS ID
+        </q-card-section>
+
+        <q-separator inset />
+
         <q-card-section>
           <q-select
             outlined
@@ -557,101 +536,82 @@ async function salvarDetalhes() {
             :rules="[(val) => val > 1 || 'Obrigatório']"
           />
         </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="salvar" color="primary" type="submit" />
-          <q-btn flat label="fechar" color="primary" v-close-popup />
+
+        <q-separator inset />
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
   </q-dialog>
 
   <!-- CARD PRINCIPAL -->
-  <q-card bordered>
-    <!-- Header azul -->
-    <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-      <div class="row items-center no-wrap q-gutter-x-sm">
-        <q-avatar
-          color="grey-9"
-          text-color="grey-5"
-          size="50px"
-          v-if="sPessoa.item.fantasia"
+  <q-card bordered flat>
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      DETALHES DA PESSOA
+      <q-space />
+      <template v-if="user.verificaPermissaoUsuario('Publico')">
+        <q-btn
+          flat
+          round
+          dense
+          icon="edit"
+          size="sm"
+          color="grey-7"
+          @click="editarDetalhes()"
         >
-          {{ primeiraLetra(sPessoa.item.fantasia) }}
-        </q-avatar>
-        <div class="col">
-          <div
-            class="text-h5 text-weight-medium"
-            :class="{ 'text-strike': sPessoa.item.inativo }"
-          >
-            {{ sPessoa.item.fantasia }}
-          </div>
-          <div class="text-caption text-grey-7">
-            {{ sPessoa.item.pessoa }}
-            <span v-if="sPessoa.item.inativo" class="text-negative">
-              (Inativo {{ Documentos.formataFromNow(sPessoa.item.inativo) }})
-            </span>
-          </div>
-        </div>
-        <div
-          class="row no-wrap"
-          v-if="user.verificaPermissaoUsuario('Publico')"
+          <q-tooltip>Editar</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          round
+          dense
+          icon="delete"
+          size="sm"
+          color="grey-7"
+          @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
         >
-          <q-btn
-            flat
-            round
-            dense
-            icon="edit"
-            size="sm"
-            color="grey-9"
-            @click="editarDetalhes()"
-          />
-          <q-btn
-            flat
-            round
-            dense
-            icon="delete"
-            size="sm"
-            color="grey-9"
-            @click="removerPessoa(sPessoa.item.codpessoa, sPessoa.item.pessoa)"
-          />
-          <q-btn
-            v-if="!sPessoa.item.inativo"
-            flat
-            round
-            dense
-            icon="pause"
-            size="sm"
-            color="grey-9"
-            @click="inativar(sPessoa.item.codpessoa)"
-          >
-            <q-tooltip>Inativar</q-tooltip>
-          </q-btn>
-          <q-btn
-            v-else
-            flat
-            round
-            dense
-            icon="play_arrow"
-            size="sm"
-            color="grey-9"
-            @click="ativar(sPessoa.item.codpessoa)"
-          >
-            <q-tooltip>Ativar</q-tooltip>
-          </q-btn>
-          <q-btn flat round dense icon="info" size="sm" color="grey-9">
-            <q-tooltip>
-              <div>
-                Criado por {{ sPessoa.item.usuariocriacao }} em
-                {{ Documentos.formataData(sPessoa.item.criacao) }}
-              </div>
-              <div>
-                Alterado por {{ sPessoa.item.usuarioalteracao }} em
-                {{ Documentos.formataData(sPessoa.item.alteracao) }}
-              </div>
-            </q-tooltip>
-          </q-btn>
-        </div>
-      </div>
+          <q-tooltip>Excluir</q-tooltip>
+        </q-btn>
+        <q-btn
+          v-if="!sPessoa.item.inativo"
+          flat
+          round
+          dense
+          icon="pause"
+          size="sm"
+          color="grey-7"
+          @click="inativar(sPessoa.item.codpessoa)"
+        >
+          <q-tooltip>Inativar</q-tooltip>
+        </q-btn>
+        <q-btn
+          v-else
+          flat
+          round
+          dense
+          icon="play_arrow"
+          size="sm"
+          color="grey-7"
+          @click="ativar(sPessoa.item.codpessoa)"
+        >
+          <q-tooltip>Ativar</q-tooltip>
+        </q-btn>
+        <q-btn flat round dense icon="info" size="sm" color="grey-7">
+          <q-tooltip>
+            <div>
+              Criado por {{ sPessoa.item.usuariocriacao }} em
+              {{ formataData(sPessoa.item.criacao) }}
+            </div>
+            <div>
+              Alterado por {{ sPessoa.item.usuarioalteracao }} em
+              {{ formataData(sPessoa.item.alteracao) }}
+            </div>
+          </q-tooltip>
+        </q-btn>
+      </template>
     </q-card-section>
 
     <!-- Info Grid -->
@@ -696,8 +656,8 @@ async function salvarDetalhes() {
         <div class="text-body2">
           {{
             sPessoa.item.fisica
-              ? Documentos.formataCPF(sPessoa.item.cnpj)
-              : Documentos.formataCNPJ(sPessoa.item.cnpj)
+              ? formataCPF(sPessoa.item.cnpj)
+              : formataCNPJ(sPessoa.item.cnpj)
           }}
           <span v-if="sPessoa.item.ie">
             / {{ Documentos.formataIePorSigla(sPessoa.item.ie) }}
@@ -709,13 +669,13 @@ async function salvarDetalhes() {
       <div class="col-6" v-if="sPessoa.item.nascimento">
         <div class="text-overline text-grey-7">Idade / Nascimento</div>
         <div class="text-body2">
-          {{ Documentos.verificaIdade(sPessoa.item.nascimento) }} anos
+          {{ verificaIdade(sPessoa.item.nascimento) }} anos
           <template v-if="sPessoa.item.codcidadenascimento">
             , nascido em {{ sPessoa.item.cidadenascimento }}/{{
               sPessoa.item.ufnascimento
             }}
           </template>
-          , {{ moment(sPessoa.item.nascimento).format("DD/MMM/YYYY") }}
+          , {{ formataDataSemHora(sPessoa.item.nascimento) }}
         </div>
       </div>
 
@@ -743,7 +703,7 @@ async function salvarDetalhes() {
       <div class="col-6" v-if="sPessoa.item.pispasep">
         <div class="text-overline text-grey-7">PIS/PASEP</div>
         <div class="text-body2">
-          {{ Documentos.formataPisPasep(sPessoa.item.pispasep) }}
+          {{ formataPisPasep(sPessoa.item.pispasep) }}
         </div>
       </div>
 
@@ -752,7 +712,7 @@ async function salvarDetalhes() {
           Titulo Eleitor / Zona / Secao
         </div>
         <div class="text-body2">
-          {{ Documentos.formataTitulo(sPessoa.item.tituloeleitor) }} /
+          {{ formataTitulo(sPessoa.item.tituloeleitor) }} /
           {{ sPessoa.item.titulozona }} / {{ sPessoa.item.titulosecao }}
         </div>
       </div>
@@ -762,7 +722,7 @@ async function salvarDetalhes() {
         <div class="text-body2">
           {{ sPessoa.item.ctps }} / Serie {{ sPessoa.item.seriectps }} /
           {{ sPessoa.item.ufctpsS }} /
-          {{ Documentos.formataDatasemHr(sPessoa.item.emissaoctps) }}
+          {{ formataDataSemHora(sPessoa.item.emissaoctps) }}
         </div>
       </div>
 

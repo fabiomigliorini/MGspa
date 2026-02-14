@@ -1,5 +1,5 @@
 <script setup>
-import { defineAsyncComponent, ref } from "vue";
+import { defineAsyncComponent, ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { colaboradorStore } from "stores/colaborador";
 import { formataDocumetos } from "src/stores/formataDocumentos";
@@ -19,6 +19,12 @@ const props = defineProps(["colaboradorCargos"]);
 const $q = useQuasar();
 const sColaborador = colaboradorStore();
 const Documentos = formataDocumetos();
+
+const cargosOrdenados = computed(() =>
+  [...(props.colaboradorCargos.ColaboradorCargo || [])].sort(
+    (a, b) => new Date(b.inicio) - new Date(a.inicio)
+  )
+);
 
 const dialogColaboradorCargo = ref(false);
 const modelColaboradorCargo = ref({});
@@ -213,26 +219,73 @@ defineExpose({ novoColaboradorCargo });
 </script>
 
 <template>
-  <div class="row q-col-gutter-md q-pa-md">
-    <div
-      v-for="colaboradorCargo in colaboradorCargos.ColaboradorCargo"
+  <q-list v-if="colaboradorCargos.ColaboradorCargo?.length > 0">
+    <template
+      v-for="colaboradorCargo in cargosOrdenados"
       v-bind:key="colaboradorCargo.codcolaboradorcargo"
-      class="col-4"
     >
-      <q-card bordered>
-        <q-card-section class="bg-yellow text-grey-9 q-py-xs">
-          <div class="row items-center no-wrap q-gutter-x-xs">
-            <span class="text-caption text-weight-medium">
-              {{ colaboradorCargo.Cargo }}
+      <q-separator inset />
+      <q-item>
+        <q-item-section avatar>
+          <q-btn round flat icon="work" color="primary" />
+        </q-item-section>
+
+        <q-item-section>
+          <q-item-label class="text-weight-bold">
+            {{ colaboradorCargo.Cargo }}
+          </q-item-label>
+
+          <q-item-label caption>
+            {{ colaboradorCargo.Filial }}
+          </q-item-label>
+
+          <q-item-label caption v-if="!colaboradorCargo.fim">
+            {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a ({{
+              Documentos.formataFromNow(colaboradorCargo.inicio)
+            }})
+          </q-item-label>
+          <q-item-label caption v-else>
+            {{ moment(colaboradorCargo.inicio).format("DD/MMM") }} a
+            {{ moment(colaboradorCargo.fim).format("DD/MMM/YYYY") }}
+          </q-item-label>
+
+          <q-item-label
+            caption
+            v-if="
+              colaboradorCargo.comissaoloja ||
+              colaboradorCargo.comissaovenda ||
+              colaboradorCargo.comissaoxerox
+            "
+          >
+            Loja: {{ colaboradorCargo.comissaoloja }}%
+            | Venda: {{ colaboradorCargo.comissaovenda }}%
+            | Xerox: {{ colaboradorCargo.comissaoxerox }}%
+          </q-item-label>
+
+          <q-item-label caption v-if="colaboradorCargo.salario || colaboradorCargo.gratificacao">
+            <span v-if="colaboradorCargo.salario">
+              Salário: R$ {{ colaboradorCargo.salario }}
             </span>
-            <q-space />
+            <span v-if="colaboradorCargo.salario && colaboradorCargo.gratificacao"> | </span>
+            <span v-if="colaboradorCargo.gratificacao">
+              Gratificação: R$ {{ colaboradorCargo.gratificacao }}
+            </span>
+          </q-item-label>
+
+          <q-item-label caption v-if="colaboradorCargo.observacoes">
+            {{ colaboradorCargo.observacoes }}
+          </q-item-label>
+        </q-item-section>
+
+        <q-item-section side>
+          <q-item-label caption>
             <q-btn
               flat
-              round
               dense
+              round
               icon="edit"
-              size="xs"
-              color="grey-9"
+              size="sm"
+              color="grey-7"
               @click="
                 editarColaboradorCargo(
                   colaboradorCargo.codcolaboradorcargo,
@@ -249,62 +302,26 @@ defineExpose({ novoColaboradorCargo });
                   colaboradorCargo.observacoes
                 )
               "
-            />
+            >
+              <q-tooltip>Editar</q-tooltip>
+            </q-btn>
             <q-btn
               flat
-              round
               dense
+              round
               icon="delete"
-              size="xs"
-              color="grey-9"
+              size="sm"
+              color="grey-7"
               @click="excluir(colaboradorCargo)"
-            />
-          </div>
-        </q-card-section>
-
-        <div class="row q-col-gutter-xs q-pa-sm">
-          <div class="col-12">
-            <div class="text-overline text-grey-7">Filial / Período</div>
-            <div class="text-body2">
-              {{ colaboradorCargo.Filial }}
-            </div>
-            <div class="text-caption text-grey-7" v-if="!colaboradorCargo.fim">
-              {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a ({{
-                Documentos.formataFromNow(colaboradorCargo.inicio)
-              }})
-            </div>
-            <div class="text-caption text-grey-7" v-else>
-              {{ moment(colaboradorCargo.inicio).format("DD/MMM") }} a
-              {{ moment(colaboradorCargo.fim).format("DD/MMM/YYYY") }}
-            </div>
-          </div>
-
-          <div
-            class="col-12"
-            v-if="
-              colaboradorCargo.comissaoloja ||
-              colaboradorCargo.comissaovenda ||
-              colaboradorCargo.comissaoxerox
-            "
-          >
-            <div class="text-overline text-grey-7">Comissão</div>
-            <div class="text-body2">
-              <span>Loja: {{ colaboradorCargo.comissaoloja }}% </span>
-              <span>Venda: {{ colaboradorCargo.comissaovenda }}% </span>
-              <span>Xerox: {{ colaboradorCargo.comissaoxerox }}% </span>
-            </div>
-          </div>
-
-          <div class="col-12" v-if="colaboradorCargo.observacoes">
-            <div class="text-overline text-grey-7">Observações</div>
-            <div class="text-caption">
-              {{ colaboradorCargo.observacoes }}
-            </div>
-          </div>
-        </div>
-      </q-card>
-    </div>
-  </div>
+            >
+              <q-tooltip>Excluir</q-tooltip>
+            </q-btn>
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+  </q-list>
+  <div v-else class="q-pa-md text-center text-grey">Nenhum cargo cadastrado</div>
 
   <!-- Dialog Colaborador Cargo -->
   <q-dialog v-model="dialogColaboradorCargo">

@@ -1,20 +1,24 @@
 <script setup>
-import { defineAsyncComponent, ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
 import { formataData } from "src/utils/formatador";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
-
-const InputFiltered = defineAsyncComponent(() =>
-  import("components/InputFiltered.vue")
-);
+import InputFiltered from "components/InputFiltered.vue";
 
 const $q = useQuasar();
 const route = useRoute();
 const sPessoa = pessoaStore();
 const user = guardaToken();
+
+const filtroEmail = ref("ativos");
+const emailsFiltrados = computed(() => {
+  const lista = sPessoa.item?.PessoaEmailS || [];
+  if (filtroEmail.value === "ativos") return lista.filter((x) => !x.inativo);
+  return lista;
+});
 
 const dialogEmail = ref(false);
 const emailNovo = ref(false);
@@ -27,11 +31,11 @@ const modelEmail = ref({
   cobranca: "",
 });
 
-function linkEmail(email) {
+const linkEmail = (email) => {
   return "mailto:" + email;
-}
+};
 
-async function modalNovoEmail() {
+const modalNovoEmail = async () => {
   dialogEmail.value = true;
   const cobranca =
     sPessoa.item.PessoaEmailS.filter((email) => email.cobranca == true)
@@ -40,9 +44,9 @@ async function modalNovoEmail() {
     sPessoa.item.PessoaEmailS.filter((email) => email.nfe == true).length == 0;
   modelEmail.value = { cobranca: cobranca, nfe: nfe };
   emailNovo.value = true;
-}
+};
 
-async function novoEmail() {
+const novoEmail = async () => {
   if (modelEmail.value.email !== "") {
     modelEmail.value.codpessoa = route.params.id;
     try {
@@ -73,9 +77,9 @@ async function novoEmail() {
       message: "Campo Email é obrigatório!",
     });
   }
-}
+};
 
-async function excluirEmail(codpessoaemail) {
+const excluirEmail = async (codpessoaemail) => {
   $q.dialog({
     title: "Excluir Email",
     message: "Tem certeza que deseja excluir esse email?",
@@ -102,9 +106,9 @@ async function excluirEmail(codpessoaemail) {
       });
     }
   });
-}
+};
 
-function editarEmail(codpessoaemail, email, apelido, verificacao, nfe, cobranca) {
+const editarEmail = (codpessoaemail, email, apelido, verificacao, nfe, cobranca) => {
   dialogEmail.value = true;
   modelEmail.value = {
     codpessoaemail: codpessoaemail,
@@ -114,9 +118,9 @@ function editarEmail(codpessoaemail, email, apelido, verificacao, nfe, cobranca)
     nfe: nfe,
     cobranca: cobranca,
   };
-}
+};
 
-async function salvarEmail(codpessoa) {
+const salvarEmail = async (codpessoa) => {
   try {
     const ret = await sPessoa.emailSalvar(
       codpessoa,
@@ -140,9 +144,13 @@ async function salvarEmail(codpessoa) {
       message: error.response.data.message,
     });
   }
-}
+};
 
-async function inativar(codpessoa, codpessoaemail) {
+const submit = () => {
+  emailNovo.value ? novoEmail(route.params.id) : salvarEmail(route.params.id);
+};
+
+const inativar = async (codpessoa, codpessoaemail) => {
   try {
     const ret = await sPessoa.emailInativar(codpessoa, codpessoaemail);
     if (ret.data) {
@@ -161,9 +169,9 @@ async function inativar(codpessoa, codpessoaemail) {
       message: error.message,
     });
   }
-}
+};
 
-async function ativar(codpessoa, codpessoaemail) {
+const ativar = async (codpessoa, codpessoaemail) => {
   try {
     const ret = await sPessoa.emailAtivar(codpessoa, codpessoaemail);
     if (ret.data) {
@@ -182,9 +190,9 @@ async function ativar(codpessoa, codpessoaemail) {
       message: error.message,
     });
   }
-}
+};
 
-async function cima(codpessoa, codpessoaemail) {
+const cima = async (codpessoa, codpessoaemail) => {
   try {
     await sPessoa.emailParaCima(codpessoa, codpessoaemail);
     $q.notify({
@@ -203,9 +211,9 @@ async function cima(codpessoa, codpessoaemail) {
     });
     sPessoa.get(codpessoa);
   }
-}
+};
 
-async function baixo(codpessoa, codpessoaemail) {
+const baixo = async (codpessoa, codpessoaemail) => {
   try {
     await sPessoa.emailParaBaixo(codpessoa, codpessoaemail);
     $q.notify({
@@ -224,9 +232,9 @@ async function baixo(codpessoa, codpessoaemail) {
     });
     sPessoa.get(codpessoa);
   }
-}
+};
 
-function enviarEmail(email, codpessoaemail) {
+const enviarEmail = (email, codpessoaemail) => {
   $q.dialog({
     title: "Verificação de E-mail",
     message:
@@ -247,9 +255,9 @@ function enviarEmail(email, codpessoaemail) {
       });
     confirmaEmail(email, codpessoaemail);
   });
-}
+};
 
-function confirmaEmail(email, codpessoaemail) {
+const confirmaEmail = (email, codpessoaemail) => {
   $q.dialog({
     title: "Verificação de E-mail",
     message: "Digite o código enviado para o e-mail " + email,
@@ -259,9 +267,9 @@ function confirmaEmail(email, codpessoaemail) {
   }).onOk((codverificacao) => {
     postEmail(email, codpessoaemail, codverificacao);
   });
-}
+};
 
-async function postEmail(email, codpessoaemail, codverificacao) {
+const postEmail = async (email, codpessoaemail, codverificacao) => {
   try {
     const ret = await sPessoa.emailConfirmaVerificacao(
       route.params.id,
@@ -285,25 +293,21 @@ async function postEmail(email, codpessoaemail, codverificacao) {
     });
     confirmaEmail(email, codpessoaemail);
   }
-}
+};
 </script>
 
 <template>
-  <div>
-    <!-- DIALOG NOVO EMAIL/EDITAR EMAIL -->
-    <q-dialog v-model="dialogEmail">
-      <q-card style="min-width: 350px">
-        <q-form
-          @submit="
-            emailNovo == true
-              ? novoEmail(route.params.id)
-              : salvarEmail(route.params.id)
-          "
-        >
-          <q-card-section>
-            <div v-if="emailNovo" class="text-h6">Novo Email</div>
-            <div v-else class="text-h6">Editar Email</div>
-          </q-card-section>
+  <!-- DIALOG NOVO EMAIL/EDITAR EMAIL -->
+  <q-dialog v-model="dialogEmail">
+      <q-card bordered flat style="width: 600px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline row">
+          <template v-if="emailNovo">NOVO EMAIL</template>
+          <template v-else>EDITAR EMAIL</template>
+        </q-card-section>
+
+        <q-form @submit="submit()">
+          <q-separator inset />
+
           <q-card-section>
             <q-input
               outlined
@@ -321,38 +325,53 @@ async function postEmail(email, codpessoaemail, codverificacao) {
             <q-toggle v-model="modelEmail.nfe" label="Envio de NFe" />
           </q-card-section>
 
+          <q-separator inset />
+
           <q-card-actions align="right" class="text-primary">
-            <q-btn flat label="Cancelar" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn flat label="Salvar" type="submit" />
           </q-card-actions>
         </q-form>
       </q-card>
     </q-dialog>
 
-    <q-card bordered>
-      <q-card-section class="bg-yellow text-grey-9 q-py-sm">
-        <div class="row items-center no-wrap q-gutter-x-sm">
-          <q-icon name="email" size="sm" />
-          <span class="text-subtitle1 text-weight-medium">Email</span>
-          <q-space />
-          <q-btn
-            flat
-            round
-            dense
-            icon="add"
-            size="sm"
-            color="grey-9"
-            v-if="user.verificaPermissaoUsuario('Publico')"
-            @click="modalNovoEmail()"
-          />
-        </div>
+    <q-card bordered flat>
+      <q-card-section class="text-grey-9 text-overline row items-center">
+        EMAILS
+        <q-space />
+        <q-btn-toggle
+          v-model="filtroEmail"
+          color="grey-3"
+          toggle-color="primary"
+          text-color="grey-7"
+          toggle-text-color="grey-3"
+          unelevated
+          dense
+          no-caps
+          size="sm"
+          :options="[
+            { label: 'Ativos', value: 'ativos' },
+            { label: 'Todos', value: 'todos' },
+          ]"
+        />
+        <q-btn
+          flat
+          round
+          dense
+          icon="add"
+          size="sm"
+          color="primary"
+          v-if="user.verificaPermissaoUsuario('Publico')"
+          @click="modalNovoEmail()"
+        />
       </q-card-section>
 
-      <q-list separator>
+      <q-list v-if="emailsFiltrados.length > 0">
         <template
-          v-for="(element, i) in sPessoa.item?.PessoaEmailS"
+          v-for="(element, i) in emailsFiltrados"
           v-bind:key="element.codpessoaemail"
         >
+          <q-separator inset />
           <q-item>
             <!-- BOTAO EMAIL -->
             <q-item-section avatar>
@@ -534,8 +553,10 @@ async function postEmail(email, codpessoaemail, codverificacao) {
           </q-item>
         </template>
       </q-list>
-    </q-card>
-  </div>
+      <div v-else class="q-pa-md text-center text-grey">
+        Nenhum email cadastrado
+      </div>
+  </q-card>
 </template>
 
 <style scoped></style>
