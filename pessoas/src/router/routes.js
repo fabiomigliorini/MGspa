@@ -47,7 +47,7 @@ const routes = [
       {
         path: "/grupoeconomico/:id",
         name: "grupoeconomico",
-        component: () => import("pages/GrupoEconomico/GrupoEconomicoview"),
+        component: () => import("pages/GrupoEconomico/GrupoEconomicoView"),
       },
 
       {

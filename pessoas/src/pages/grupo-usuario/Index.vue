@@ -5,7 +5,7 @@
         </template>
 
         <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
-            <q-infinite-scroll @load="scrollGrupoUsuario" :disable="loading">
+            <q-infinite-scroll @load="scrollGrupoUsuario" :disable="loading" style="min-height: 100vh">
                 <q-separator />
                 <div class="row q-pa-md q-col-gutter-md">
                     <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3" v-for="grupoUsuario in sGrupoUsuario.grupoUsuarios"

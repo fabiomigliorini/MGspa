@@ -20,7 +20,7 @@ class GrupoEconomicoController extends MgController
         $pesquisa = "%$request->nome%"??null;
 
         $grupos = GrupoEconomicoService::index($pesquisa);
-        return GrupoEconomicoResource::collection($grupos);
+        return GrupoEconomicoListResource::collection($grupos);
     }
 
     public function create (Request $request)
