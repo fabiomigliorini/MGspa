@@ -866,16 +866,22 @@ class PessoaService
 
         $sql = '
         with aniversarios as (
-            select 
-                date_part(\'month\', p.nascimento) as mes, 
-                date_part(\'day\', p.nascimento) as dia, 
+            select
+                date_part(\'month\', p.nascimento) as mes,
+                date_part(\'day\', p.nascimento) as dia,
                 date_part(\'year\', now()) - date_part(\'year\', p.nascimento) as idade,
                 \'Idade\' as tipo,
-                p.pessoa, 
+                p.pessoa,
+                p.fantasia,
+                p.fisica,
+                p.cliente,
+                p.fornecedor,
                 p.codpessoa,
-                p.nascimento as data
+                p.nascimento as data,
+                exists(select 1 from tblcolaborador c where c.codpessoa = p.codpessoa and c.rescisao is null) as colaborador
             from tblpessoa p
             where p.nascimento is not null
+            and p.inativo is null
         ';
 
         switch ($tipo) {
@@ -903,14 +909,19 @@ class PessoaService
             case 'todos':
                 $sql .= '
                 union all
-                select 
-                    date_part(\'month\', c.contratacao) as mes, 
-                    date_part(\'day\', c.contratacao) as dia, 
+                select
+                    date_part(\'month\', c.contratacao) as mes,
+                    date_part(\'day\', c.contratacao) as dia,
                     date_part(\'year\', now()) - date_part(\'year\', c.contratacao) as idade,
                     \'Empresa\' as tipo,
                     p.pessoa,
-                    c.codpessoa, 
-                    c.contratacao as data
+                    p.fantasia,
+                    p.fisica,
+                    p.cliente,
+                    p.fornecedor,
+                    c.codpessoa,
+                    c.contratacao as data,
+                    true as colaborador
                 from tblcolaborador c
                 inner join tblpessoa p on (p.codpessoa = c.codpessoa)
                 where c.rescisao is null
@@ -1006,7 +1017,9 @@ class PessoaService
                 date_part(\'day\', p.nascimento) as dia, 
                 date_part(\'year\', now()) - date_part(\'year\', p.nascimento) as idade,
                 \'Idade\' as tipo,
-                p.pessoa, 
+                p.pessoa,
+                p.fantasia,
+                p.fisica,
                 p.codpessoa,
                 p.nascimento as data
             from tblpessoa p
@@ -1023,7 +1036,9 @@ class PessoaService
                     date_part(\'year\', now()) - date_part(\'year\', c.contratacao) as idade,
                     \'Empresa\' as tipo,
                     p.pessoa,
-                    c.codpessoa, 
+                    p.fantasia,
+                    p.fisica,
+                    c.codpessoa,
                     c.contratacao as data
                 from tblcolaborador c
                 inner join tblpessoa p on (p.codpessoa = c.codpessoa)

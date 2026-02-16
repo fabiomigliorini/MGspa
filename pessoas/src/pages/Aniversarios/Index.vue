@@ -1,196 +1,205 @@
 <template>
-    <MGLayout>
-        <template #tituloPagina> Aniversários </template>
-        <template #content>
+  <MGLayout>
+    <template #tituloPagina>Aniversários</template>
+    <template #content>
+      <div style="max-width: 1280px; margin: auto; min-height: 100vh">
+        <div class="row q-col-gutter-md q-pa-md">
+          <div class="col-12">
+            <div class="row q-col-gutter-md">
+              <!-- Coluna Esquerda - Calendário -->
+              <div class="col-md-6 col-12">
+                <q-card bordered flat class="full-height">
+                  <q-card-section class="text-grey-9 text-overline">
+                    CALENDÁRIO
+                  </q-card-section>
 
-            <div class="row q-pa-md">
-                <div class="col-12">
-                    <q-card>
-                        <q-tabs v-model="tipo" dense class="text-grey" active-color="primary" indicator-color="primary"
-                            align="justify" narrow-indicator>
-                            <q-tab name="todos" label="Todos" />
-                            <q-tab name="colaborador" label="Colaborador" />
-                            <q-tab name="cliente" label="Cliente" />
-                            <q-tab name="fornecedor" label="Fornecedor" />
-                        </q-tabs>
+                  <q-separator inset />
 
-                        <div class="row q-gutter-md q-pa-md">
-                            <div class="col-xs-12 col-md-6 flex flex-center">
-                                <q-date v-model="date" :options="events" event-color="orange" />
-                            </div>
-                            <div v-for="aniversario, i in aniversariosDoDia" v-bind:key="i">
-                                <div class="col-xs-12 col-md-2 col-lg-4">
-                                    <q-card>
-                                        <q-card-section>
-                                            <q-item>
-                                                <q-item-section>
-                                                    <q-item-label>
-                                                        <div class="text-h4 q-mb-md">
-                                                            <q-icon name="calendar_month" color="primary" />
-                                                            Dia {{ aniversario.dia }}
-                                                        </div>
-                                                    </q-item-label>
-                                                    <q-item-label>
-                                                        <q-icon name="celebration" color="primary" />&nbsp;
-                                                        {{ aniversario.idade }}
-                                                        <span v-if="aniversarios.idade == 1">
-                                                            Ano
-                                                        </span>
-                                                        <span v-else>
-                                                            Anos
-                                                        </span>
-                                                        de
-                                                        {{ aniversario.tipo }}
-                                                    </q-item-label>
-                                                    <q-item-label>
-                                                        <q-icon name="people" color="primary" />&nbsp;
-                                                        <q-btn dense flat color="primary" class="ellipsis"
-                                                            :label="aniversario.pessoa"
-                                                            :href="'/#/pessoa/' + aniversario.codpessoa"
-                                                            target="_blank" />
-                                                    </q-item-label>
-                                                </q-item-section>
-                                            </q-item>
-                                        </q-card-section>
-                                    </q-card>
-                                </div>
-                            </div>
-                        </div>
+                  <q-card-section>
+                    <div class="row">
+                      <div class="col-auto">
+                        <q-date
+                          flat
+                          bordered
+                          v-model="date"
+                          :options="events"
+                          event-color="orange"
+                          minimal
+                        />
+                      </div>
+                      <div class="col q-pl-md">
+                        <q-option-group
+                          v-model="tipo"
+                          :options="tipoOptions"
+                          color="primary"
+                        />
+                      </div>
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </div>
 
-                        <!-- Tabela aniversarios -->
-                        <div class="row q-pa-md">
-                            <div class="col-12">
-                                <q-table :rows="aniversarios" :columns="columns"
-                                    no-data-label="Nenhum aniversário encontrado" :pagination="{ rowsPerPage: 50 }"
-                                    emit-value>
+              <!-- Coluna Direita - Aniversariantes do Dia -->
+              <div class="col-md-6 col-12">
+                <q-card bordered flat class="full-height">
+                  <q-card-section class="text-grey-9 text-overline">
+                    ANIVERSARIANTES DO DIA
+                  </q-card-section>
 
-                                    <template v-slot:body="aniversarios">
+                  <q-separator inset />
 
-                                        <q-tr :props="aniversarios">
-                                            <q-td key="data" :props="aniversarios">
-                                                {{ moment(aniversarios.row.data).format('ddd, D/MMM') }}
-                                            </q-td>
-                                            <q-td key="pessoa" :props="aniversarios">
-                                                <q-btn :to="'/pessoa/' + aniversarios.row.codpessoa"
-                                                    :label="aniversarios.row.pessoa" flat dense />
-                                            </q-td>
-                                            <q-td key="idade" :props="aniversarios">
-                                                {{ aniversarios.row.idade }}
-                                                <span v-if="aniversarios.row.idade == 1">
-                                                    Ano
-                                                </span>
-                                                <span v-else>
-                                                    Anos
-                                                </span>
-                                                de
-                                                {{ aniversarios.row.tipo }}
-                                            </q-td>
-                                        </q-tr>
-                                    </template>
-                                </q-table>
-                            </div>
-                        </div>
-                    </q-card>
-                </div>
+                  <aniversario-item
+                    :items="aniversariosDoDia"
+                    empty-message="Nenhum aniversariante neste dia"
+                  />
+                </q-card>
+              </div>
+
+              <!-- Card Últimos Aniversários -->
+              <div class="col-md-6 col-12">
+                <q-card bordered flat class="full-height">
+                  <q-card-section class="text-grey-9 text-overline">
+                    ANTERIORES
+                  </q-card-section>
+
+                  <q-separator inset />
+
+                  <aniversario-item
+                    :items="ultimosAniversarios"
+                    empty-message="Nenhum aniversário nos últimos 7 dias"
+                  />
+                </q-card>
+              </div>
+
+              <!-- Card Próximos Aniversários -->
+              <div class="col-md-6 col-12">
+                <q-card bordered flat class="full-height">
+                  <q-card-section class="text-grey-9 text-overline">
+                    PRÓXIMOS
+                  </q-card-section>
+
+                  <q-separator inset />
+
+                  <aniversario-item
+                    :items="proximosAniversarios"
+                    empty-message="Nenhum aniversário nos próximos 7 dias"
+                  />
+                </q-card>
+              </div>
             </div>
-        </template>
-    </MGLayout>
+          </div>
+        </div>
+      </div>
+    </template>
+  </MGLayout>
 </template>
 
-<script>
-import { defineComponent, defineAsyncComponent, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { pessoaStore } from 'src/stores/pessoa'
+<script setup>
+// 1. Imports do Vue
+import { ref, computed, onMounted, watch } from "vue";
+
+// 2. Imports de stores
+import { pessoaStore } from "src/stores/pessoa";
+
+// 3. Imports de utilitários
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
-import Ably from 'ably'
 
-export default defineComponent({
-    name: 'Index',
-    computed: {
-        aniversariosDoDia() {
-            const dia = moment(this.date, 'YYYY/MM/DD');
-            return this.aniversarios.filter((a) => {
-                return (a.dia == dia.date() && a.mes == (dia.month() + 1));
-            });
-        }
-    },
-    components: {
-        MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-    },
+// 4. Imports de componentes
+import MGLayout from "layouts/MGLayout.vue";
+import AniversarioItem from "components/pessoa/AniversarioItem.vue";
 
-    methods: {
+// 5. Instâncias
+const sPessoa = pessoaStore();
 
+// 6. Refs e computed
+const tipo = ref("todos");
+const date = ref(moment().format("YYYY/MM/DD"));
+const aniversarios = ref([]);
+const events = ref([]);
 
-        async getAniversarios() {
+const tipoOptions = [
+  { label: "Todos", value: "todos" },
+  { label: "Colaboradores", value: "colaborador" },
+  { label: "Clientes", value: "cliente" },
+  { label: "Fornecedores", value: "fornecedor" },
+];
 
-            const ret = await this.sPessoa.buscaAniversarios(this.tipo)
-            this.aniversarios = ret.data
+// Computed para aniversariantes do dia selecionado
+const aniversariosDoDia = computed(() => {
+  const dia = moment(date.value, "YYYY/MM/DD");
+  return aniversarios.value.filter((a) => {
+    return a.dia == dia.date() && a.mes == dia.month() + 1;
+  });
+});
 
-            let dates = []
-            let arrAniversarios = []
-            var diaAtual = moment()
+// Computed para últimos 7 dias (excluindo o dia selecionado)
+const ultimosAniversarios = computed(() => {
+  const dataSelecionada = moment(date.value, "YYYY/MM/DD");
+  const dataInicio = moment(dataSelecionada).subtract(7, "days");
 
-            this.aniversarios.forEach(el => {
+  return aniversarios.value
+    .filter((a) => {
+      const dataAniversario = moment(a.data, "YYYY/MM/DD");
+      return (
+        dataAniversario.isBefore(dataSelecionada, "day") &&
+        dataAniversario.isSameOrAfter(dataInicio, "day")
+      );
+    })
+    .sort((a, b) => moment(b.data).valueOf() - moment(a.data).valueOf());
+});
 
-                var date = moment(el.data, 'YYYY-MM-DD')
+// Computed para próximos 7 dias (excluindo o dia selecionado)
+const proximosAniversarios = computed(() => {
+  const dataSelecionada = moment(date.value, "YYYY/MM/DD");
+  const dataFim = moment(dataSelecionada).add(7, "days");
 
-                var dataAnoAtual = moment(el.data, 'YYYY-MM-DD')
-                dataAnoAtual.date(date.date());
-                dataAnoAtual.month(date.month());
-                dataAnoAtual.year(diaAtual.year());
+  return aniversarios.value
+    .filter((a) => {
+      const dataAniversario = moment(a.data, "YYYY/MM/DD");
+      return (
+        dataAniversario.isAfter(dataSelecionada, "day") &&
+        dataAniversario.isSameOrBefore(dataFim, "day")
+      );
+    })
+    .sort((a, b) => moment(a.data).valueOf() - moment(b.data).valueOf());
+});
 
-                var datasFormatadas = moment(dataAnoAtual).format('YYYY/MM/DD')
-                el.data = datasFormatadas
-                dates.push(datasFormatadas)
-                arrAniversarios.push(el)
+// 7. Funções
+const getAniversarios = async () => {
+  const ret = await sPessoa.buscaAniversarios(tipo.value);
+  const dados = ret.data;
 
-            });
+  const dates = [];
+  const arrAniversarios = [];
+  const anoAtual = moment().year();
 
-            this.aniversarios = arrAniversarios
-            this.events = dates
+  dados.forEach((el) => {
+    const dataOriginal = moment(el.data, "YYYY-MM-DD");
 
-        },
+    // Ajusta a data para o ano atual
+    const dataAnoAtual = dataOriginal.clone().year(anoAtual);
+    const dataFormatada = dataAnoAtual.format("YYYY/MM/DD");
 
-    },
+    el.data = dataFormatada;
+    el.dia = dataOriginal.date();
+    el.mes = dataOriginal.month() + 1;
+    dates.push(dataFormatada);
+    arrAniversarios.push(el);
+  });
 
-    watch: {
-        tipo: function () {
-            this.getAniversarios();
-        },
-    },
+  aniversarios.value = arrAniversarios;
+  events.value = dates;
+};
 
-    setup(props, context) {
-        const router = useRouter()
-        const tipo = ref('todos')
-        const sPessoa = pessoaStore()
-        const splitterModel = ref(50)
-        const events = ['2019/02/01', '2019/02/05', '2019/02/06']
-        const date = ref(moment().format('YYYY/MM/DD'))
-        const aniversarios = ref([])
+// 8. Watchers
+watch(tipo, () => {
+  getAniversarios();
+});
 
-        const columns = [
-            { name: 'data', label: 'Data', field: 'data', align: 'top-left' },
-            { name: 'pessoa', label: 'Pessoa', field: 'pessoa', align: 'top-left', },
-            { name: 'idade', label: 'Aniversário', field: 'idade', align: 'top-left' },
-        ];
-
-        return {
-            splitterModel,
-            events,
-            tipo,
-            sPessoa,
-            date,
-            aniversarios,
-            moment,
-            columns
-        }
-
-    },
-    async mounted() {
-        this.getAniversarios()
-    }
-
-})
+// 9. Lifecycle
+onMounted(() => {
+  getAniversarios();
+});
 </script>
