@@ -43,15 +43,6 @@ const user = guardaToken();
             <q-icon name="celebration" size="35px" />
             <div>Aniversários</div>
           </q-btn>
-          <q-btn
-            flat
-            stack
-            class="col-xs-6 col-sm-3 col-md-3"
-            :to="{ name: 'notafiscaldash' }"
-          >
-            <q-icon name="receipt" size="35px" />
-            <div>Notas</div>
-          </q-btn>
         </q-item>
 
         <q-separator inset color="yelllow-6" />

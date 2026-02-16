@@ -51,12 +51,6 @@ const routes = [
       },
 
       {
-        path: "/nota-fiscal/dashboard",
-        name: "notafiscaldash",
-        component: () => import("pages/NotaFiscal/Index.vue"),
-      },
-
-      {
         path: "/usuarios",
         name: "usuarios",
         component: () => import("pages/usuarios/Index.vue"),
