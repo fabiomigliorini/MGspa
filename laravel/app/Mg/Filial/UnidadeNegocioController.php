@@ -2,13 +2,13 @@
 
 namespace Mg\Filial;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\Http\Requests\Mg\Filial\CriarUnidadeNegocioRequest;
 use App\Http\Requests\Mg\Filial\AtualizarUnidadeNegocioRequest;
 use Mg\MgController;
 use Mg\Meta\MetaUnidadeNegocio;
-use Mg\Permissao\Autorizador\Autorizador;
+use Mg\Usuario\Autorizador;
 
 class UnidadeNegocioController extends MgController
 {
@@ -59,5 +59,27 @@ class UnidadeNegocioController extends MgController
         $reg->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function inativar(Request $request, $codunidadenegocio)
+    {
+        Autorizador::autoriza(['Meta']);
+
+        $reg = UnidadeNegocio::findOrFail($codunidadenegocio);
+        $reg->inativo = Carbon::now();
+        $reg->update();
+
+        return new UnidadeNegocioResource($reg);
+    }
+
+    public function ativar(Request $request, $codunidadenegocio)
+    {
+        Autorizador::autoriza(['Meta']);
+
+        $reg = UnidadeNegocio::findOrFail($codunidadenegocio);
+        $reg->inativo = null;
+        $reg->update();
+
+        return new UnidadeNegocioResource($reg);
     }
 }

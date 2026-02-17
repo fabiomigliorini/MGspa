@@ -47,9 +47,13 @@ const user = guardaToken();
 
         <q-separator inset color="yelllow-6" />
         <q-item class="q-px-sm">
-          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" to="/metas">
+          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'metaIndex' }">
             <q-icon name="trending_up" size="35px" />
             <div>Metas</div>
+          </q-btn>
+          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'unidadeNegocioIndex' }">
+            <q-icon name="store" size="35px" />
+            <div>Unidades</div>
           </q-btn>
         </q-item>
 

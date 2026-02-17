@@ -330,12 +330,27 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post('meta/{codmeta}/desbloquear', '\Mg\Meta\MetaController@desbloquear');
         Route::post('meta/{codmeta}/reprocessar', '\Mg\Meta\MetaController@reprocessar');
         Route::post('meta/{codmeta}/finalizar', '\Mg\Meta\MetaController@finalizar');
+        Route::post('meta/{codmeta}/inativo', '\Mg\Meta\MetaController@inativar');
+        Route::delete('meta/{codmeta}/inativo', '\Mg\Meta\MetaController@ativar');
+
+        // META — UNIDADE (individual)
+        Route::post('meta/{codmeta}/unidade', '\Mg\Meta\MetaController@storeUnidade');
+        Route::put('meta/{codmeta}/unidade/{codunidadenegocio}', '\Mg\Meta\MetaController@updateUnidade');
+        Route::delete('meta/{codmeta}/unidade/{codunidadenegocio}', '\Mg\Meta\MetaController@destroyUnidade');
+
+        // META — PESSOA (individual)
+        Route::post('meta/{codmeta}/unidade/{codunidadenegocio}/pessoa', '\Mg\Meta\MetaController@storePessoa');
+        Route::put('meta/{codmeta}/pessoa/{id}', '\Mg\Meta\MetaController@updatePessoa');
+        Route::delete('meta/{codmeta}/pessoa/{id}', '\Mg\Meta\MetaController@destroyPessoa');
+
+        // META — FIXO (individual)
+        Route::post('meta/{codmeta}/pessoa/{idPessoa}/fixo', '\Mg\Meta\MetaController@storeFixo');
+        Route::put('meta/{codmeta}/fixo/{id}', '\Mg\Meta\MetaController@updateFixo');
+        Route::delete('meta/{codmeta}/fixo/{id}', '\Mg\Meta\MetaController@destroyFixo');
 
         // META DASHBOARD
         Route::get('meta/{codmeta}/dashboard', '\Mg\Meta\MetaDashboardController@dashboard');
-        Route::get('meta/{codmeta}/dashboard/pessoa/{codpessoa}', '\Mg\Meta\MetaDashboardController@dashboardPessoa');
-        Route::get('meta/{codmeta}/vendas-filial', '\Mg\Meta\MetaDashboardController@vendasFilial');
-        Route::get('meta/{codmeta}/vendas-vendedor', '\Mg\Meta\MetaDashboardController@vendasVendedor');
+        Route::get('meta/{codmeta}/dashboard/{codpessoa}', '\Mg\Meta\MetaDashboardController@dashboardPessoa');
 
         // UNIDADE DE NEGOCIO
         Route::get('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@index');
@@ -343,6 +358,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@show');
         Route::put('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@update');
         Route::delete('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@destroy');
+        Route::post('unidade-negocio/{codunidadenegocio}/inativo', '\Mg\Filial\UnidadeNegocioController@inativar');
+        Route::delete('unidade-negocio/{codunidadenegocio}/inativo', '\Mg\Filial\UnidadeNegocioController@ativar');
 
 
         // Pessoa

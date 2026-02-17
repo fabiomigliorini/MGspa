@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Mg\Meta\Meta;
 use Mg\Meta\MetaService;
-use Mg\Meta\Services\ReprocessamentoMetaService;
+use Mg\Meta\Services\MetaReconstrucaoService;
 
 class FinalizaMetaCommand extends Command
 {
@@ -38,7 +38,7 @@ class FinalizaMetaCommand extends Command
 
             $meta->update(['processando' => true]);
 
-            ReprocessamentoMetaService::reprocessar($meta);
+            MetaReconstrucaoService::reconciliarMeta($meta);
             MetaService::apurarMovimentosFinais($meta);
 
             $meta->update([

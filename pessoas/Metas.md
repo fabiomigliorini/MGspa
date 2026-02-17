@@ -1031,6 +1031,21 @@ alter table tblbonificacaoevento
     foreign key (codnegocioprodutobarra)
     references tblnegocioprodutobarra(codnegocioprodutobarra);
 
+create index idx_tblbonificacaoevento_meta_pessoa
+on tblbonificacaoevento (codmeta, codpessoa);
+
+create unique index uq_tblmetaunp
+on tblmetaunidadenegociopessoa (codmeta, codunidadenegocio, codpessoa);
+
+create unique index uq_tblmetaun
+on tblmetaunidadenegocio (codmeta, codunidadenegocio);
+
+create index idx_tblmetaun_unidade
+on tblmetaunidadenegocio (codunidadenegocio);
+
+create index idx_tblmetaunp_meta_unidade
+on tblmetaunidadenegociopessoa (codmeta, codunidadenegocio);
+
 drop materialized view mwvendas;
 
 alter table tblproduto
@@ -1047,5 +1062,6 @@ is 'LEGADO - Compatibilidade temporária.';
 
 comment on column tblmeta.percentualcomissaoxerox
 is 'LEGADO - Compatibilidade temporária.';
+
 
 ```

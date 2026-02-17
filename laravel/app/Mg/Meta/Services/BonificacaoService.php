@@ -31,12 +31,21 @@ class BonificacaoService
 
     public static function processarNegocio(int $codnegocio, Meta $meta): void
     {
-        $negocio = Negocio::with('Pdv')->findOrFail($codnegocio);
+        $negocio = Negocio::with(['Pdv', 'NaturezaOperacao'])->findOrFail($codnegocio);
+
+        $natureza = $negocio->NaturezaOperacao;
+        $ehVenda = $natureza->venda ?? false;
+        $ehDevolucao = $natureza->vendadevolucao ?? false;
+
+        if (!$ehVenda && !$ehDevolucao) {
+            return;
+        }
 
         Log::info('BonificacaoService - Inicio de processamento', [
             'codmeta' => $meta->codmeta,
             'codnegocio' => $negocio->codnegocio,
             'codnegociostatus' => $negocio->codnegociostatus,
+            'devolucao' => $ehDevolucao,
         ]);
 
         if ($negocio->codnegociostatus == static::STATUS_NEGOCIO_ABERTO) {
@@ -53,7 +62,7 @@ class BonificacaoService
         }
 
         $unidade = static::identificarUnidadeNegocio($negocio);
-        $bases = static::calcularBasesNegocio($negocio->codnegocio);
+        $bases = static::calcularBasesNegocio($negocio->codnegocio, $ehDevolucao);
         $eventosEsperados = static::calcularEventosEsperados($meta, $negocio, $unidade, $bases);
 
         static::executarMergeEventosVenda($meta, $negocio, $unidade, $eventosEsperados);
@@ -241,15 +250,19 @@ class BonificacaoService
     private static function calcularEventosEsperados(Meta $meta, Negocio $negocio, UnidadeNegocio $unidade, array $bases): array
     {
         $eventos = [];
+        $dataLancamento = $negocio->lancamento;
+        $alocacao = $negocio->Pdv->alocacao ?? null;
 
+        // VENDA_VENDEDOR
         if (!empty($negocio->codpessoavendedor)) {
             $configuracaoPessoa = static::buscarConfiguracaoPessoaMeta(
                 $meta->codmeta,
                 $unidade->codunidadenegocio,
-                intval($negocio->codpessoavendedor)
+                intval($negocio->codpessoavendedor),
+                $dataLancamento
             );
 
-            if (!is_null($configuracaoPessoa) && !is_null($configuracaoPessoa->percentualvenda) && $bases['total_venda'] > 0) {
+            if (!is_null($configuracaoPessoa) && !is_null($configuracaoPessoa->percentualvenda) && $bases['total_venda'] != 0) {
                 static::adicionarEventoEsperado(
                     $eventos,
                     static::TIPO_VENDA_VENDEDOR,
@@ -260,11 +273,14 @@ class BonificacaoService
             }
         }
 
-        if ($bases['total_xerox'] > 0) {
+        // VENDA_XEROX
+        if ($bases['total_xerox'] != 0) {
             $pessoasXerox = MetaUnidadeNegocioPessoa::query()
                 ->where('codmeta', $meta->codmeta)
                 ->where('codunidadenegocio', $unidade->codunidadenegocio)
                 ->whereNotNull('percentualxerox')
+                ->whereDate('datainicial', '<=', $dataLancamento)
+                ->whereDate('datafinal', '>=', $dataLancamento)
                 ->orderBy('codpessoa')
                 ->get();
 
@@ -279,11 +295,14 @@ class BonificacaoService
             }
         }
 
-        if ($bases['total_geral'] > 0) {
+        // VENDA_SUBGERENTE — exclui vendas com alocacao='R'
+        if ($bases['total_geral'] != 0 && $alocacao !== static::ALOCACAO_REMOTA) {
             $subgerentes = MetaUnidadeNegocioPessoa::query()
                 ->where('codmeta', $meta->codmeta)
                 ->where('codunidadenegocio', $unidade->codunidadenegocio)
                 ->whereNotNull('percentualsubgerente')
+                ->whereDate('datainicial', '<=', $dataLancamento)
+                ->whereDate('datafinal', '>=', $dataLancamento)
                 ->orderBy('codpessoa')
                 ->get();
 
@@ -298,14 +317,13 @@ class BonificacaoService
             }
         }
 
-        $alocacao = $negocio->Pdv->alocacao ?? null;
-
-        if ($alocacao === static::ALOCACAO_CAIXA && !empty($negocio->codusuario) && $bases['total_geral'] > 0) {
+        // VENDA_CAIXA — só se alocacao='C'
+        if ($alocacao === static::ALOCACAO_CAIXA && !empty($negocio->codusuario) && $bases['total_geral'] != 0) {
             $usuario = Usuario::find($negocio->codusuario);
 
             if (!empty($usuario) && !empty($usuario->codpessoa)) {
                 $codpessoa = intval($usuario->codpessoa);
-                $configuracaoPessoa = static::buscarConfiguracaoPessoaMeta($meta->codmeta, $unidade->codunidadenegocio, $codpessoa);
+                $configuracaoPessoa = static::buscarConfiguracaoPessoaMeta($meta->codmeta, $unidade->codunidadenegocio, $codpessoa, $dataLancamento);
                 $percentualCaixa = null;
 
                 if (!empty($configuracaoPessoa)) {
@@ -350,12 +368,14 @@ class BonificacaoService
         $eventos[$chave]['valor'] = static::arredondarValor($eventos[$chave]['valor'] + $valor);
     }
 
-    private static function buscarConfiguracaoPessoaMeta(int $codmeta, int $codunidadenegocio, int $codpessoa): ?MetaUnidadeNegocioPessoa
+    private static function buscarConfiguracaoPessoaMeta(int $codmeta, int $codunidadenegocio, int $codpessoa, $dataLancamento): ?MetaUnidadeNegocioPessoa
     {
         return MetaUnidadeNegocioPessoa::query()
             ->where('codmeta', $codmeta)
             ->where('codunidadenegocio', $codunidadenegocio)
             ->where('codpessoa', $codpessoa)
+            ->whereDate('datainicial', '<=', $dataLancamento)
+            ->whereDate('datafinal', '>=', $dataLancamento)
             ->first();
     }
 
@@ -402,7 +422,7 @@ class BonificacaoService
             ->firstOrFail();
     }
 
-    private static function calcularBasesNegocio(int $codnegocio): array
+    private static function calcularBasesNegocio(int $codnegocio, bool $ehDevolucao = false): array
     {
         $sql = <<<'SQL'
             select
@@ -428,6 +448,11 @@ class BonificacaoService
             }
 
             $totalVenda = floatval($registro->total);
+        }
+
+        if ($ehDevolucao) {
+            $totalVenda = -abs($totalVenda);
+            $totalXerox = -abs($totalXerox);
         }
 
         return [

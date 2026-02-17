@@ -12,6 +12,7 @@ use Mg\Meta\MetaVendedor;
 use Mg\Meta\BonificacaoEvento;
 use Mg\Meta\MetaUnidadeNegocio;
 use Mg\Meta\MetaUnidadeNegocioPessoa;
+use Mg\Meta\MetaUnidadeNegocioPessoaFixo;
 use Mg\Usuario\Usuario;
 
 class Meta extends MgModel
@@ -21,14 +22,10 @@ class Meta extends MgModel
 
 
     protected $fillable = [
+        'inativo',
         'observacoes',
-        'percentualcomissaosubgerentemeta',
-        'percentualcomissaovendedor',
-        'percentualcomissaovendedormeta',
-        'percentualcomissaoxerox',
         'periodofinal',
         'periodoinicial',
-        'premioprimeirovendedorfilial',
         'processando',
         'status'
     ];
@@ -36,6 +33,7 @@ class Meta extends MgModel
     protected $dates = [
         'alteracao',
         'criacao',
+        'inativo',
         'periodofinal',
         'periodoinicial'
     ];
@@ -44,11 +42,6 @@ class Meta extends MgModel
         'codmeta' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'percentualcomissaosubgerentemeta' => 'float',
-        'percentualcomissaovendedor' => 'float',
-        'percentualcomissaovendedormeta' => 'float',
-        'percentualcomissaoxerox' => 'float',
-        'premioprimeirovendedorfilial' => 'float',
         'processando' => 'boolean'
     ];
 
@@ -84,6 +77,11 @@ class Meta extends MgModel
     public function MetaUnidadeNegocioPessoaS()
     {
         return $this->hasMany(MetaUnidadeNegocioPessoa::class, 'codmeta', 'codmeta');
+    }
+
+    public function MetaUnidadeNegocioPessoaFixoS()
+    {
+        return $this->hasMany(MetaUnidadeNegocioPessoaFixo::class, 'codmeta', 'codmeta');
     }
 
     public function MetaVendedorS()

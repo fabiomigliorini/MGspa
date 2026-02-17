@@ -8,6 +8,8 @@ namespace Mg\Meta;
 
 use Mg\MgModel;
 use Mg\Meta\Meta;
+use Mg\Meta\MetaUnidadeNegocioPessoa;
+use Mg\Meta\MetaUnidadeNegocioPessoaFixo;
 use Mg\Filial\UnidadeNegocio;
 
 class MetaUnidadeNegocio extends MgModel
@@ -19,6 +21,14 @@ class MetaUnidadeNegocio extends MgModel
     protected $fillable = [
         'codmeta',
         'codunidadenegocio',
+        'percentualcomissaosubgerente',
+        'percentualcomissaosubgerentemeta',
+        'percentualcomissaovendedor',
+        'percentualcomissaovendedormeta',
+        'percentualcomissaoxerox',
+        'premiometaxerox',
+        'premioprimeirovendedor',
+        'premiosubgerentemeta',
         'valormeta',
         'valormetacaixa',
         'valormetavendedor',
@@ -36,6 +46,14 @@ class MetaUnidadeNegocio extends MgModel
         'codunidadenegocio' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'percentualcomissaosubgerente' => 'float',
+        'percentualcomissaosubgerentemeta' => 'float',
+        'percentualcomissaovendedor' => 'float',
+        'percentualcomissaovendedormeta' => 'float',
+        'percentualcomissaoxerox' => 'float',
+        'premiometaxerox' => 'float',
+        'premioprimeirovendedor' => 'float',
+        'premiosubgerentemeta' => 'float',
         'valormeta' => 'float',
         'valormetacaixa' => 'float',
         'valormetavendedor' => 'float',
@@ -52,6 +70,20 @@ class MetaUnidadeNegocio extends MgModel
     public function UnidadeNegocio()
     {
         return $this->belongsTo(UnidadeNegocio::class, 'codunidadenegocio', 'codunidadenegocio');
+    }
+
+
+    // Tabelas Filhas
+    public function MetaUnidadeNegocioPessoaS()
+    {
+        return $this->hasMany(MetaUnidadeNegocioPessoa::class, 'codunidadenegocio', 'codunidadenegocio')
+            ->where('codmeta', $this->codmeta);
+    }
+
+    public function MetaUnidadeNegocioPessoaFixoS()
+    {
+        return $this->hasMany(MetaUnidadeNegocioPessoaFixo::class, 'codunidadenegocio', 'codunidadenegocio')
+            ->where('codmeta', $this->codmeta);
     }
 
 }

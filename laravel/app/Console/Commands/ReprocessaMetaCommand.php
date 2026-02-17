@@ -7,7 +7,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Mg\Meta\Meta;
-use Mg\Meta\Services\ReprocessamentoMetaService;
+use Mg\Meta\Services\MetaReconstrucaoService;
 
 class ReprocessaMetaCommand extends Command
 {
@@ -33,7 +33,7 @@ class ReprocessaMetaCommand extends Command
 
             $meta->update(['processando' => true]);
 
-            ReprocessamentoMetaService::reprocessar($meta);
+            MetaReconstrucaoService::reconciliarMeta($meta);
 
             $meta->update(['processando' => false]);
 

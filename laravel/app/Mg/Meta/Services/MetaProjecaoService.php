@@ -16,6 +16,10 @@ class MetaProjecaoService
         $totaisUnidade = static::calcularTotaisPorUnidade($meta);
         $totaisPessoa = static::calcularTotaisPorPessoa($meta);
 
+        // Buscar nomes e cargos de todas as pessoas envolvidas
+        $codpessoas = array_values(array_unique(array_column($totaisPessoa, 'codpessoa')));
+        $dadosPessoas = static::buscarDadosPessoas($codpessoas);
+
         $metasUnidade = MetaUnidadeNegocio::query()
             ->where('codmeta', $meta->codmeta)
             ->with('UnidadeNegocio')
@@ -53,12 +57,16 @@ class MetaProjecaoService
                 $ranking[] = [
                     'posicao' => $posicao,
                     'codpessoa' => $codpessoa,
+                    'pessoa' => $dadosPessoas[$codpessoa]['pessoa'] ?? null,
+                    'cargo' => $dadosPessoas[$codpessoa]['cargo'] ?? null,
                     'totalvendas' => $totalPessoa,
                 ];
 
                 if (!isset($pessoasAgrupadas[$codpessoa])) {
                     $pessoasAgrupadas[$codpessoa] = [
                         'codpessoa' => $codpessoa,
+                        'pessoa' => $dadosPessoas[$codpessoa]['pessoa'] ?? null,
+                        'cargo' => $dadosPessoas[$codpessoa]['cargo'] ?? null,
                         'totalvendas' => 0.0,
                     ];
                 }
@@ -97,6 +105,20 @@ class MetaProjecaoService
 
     public static function resumoPessoa(Meta $meta, int $codpessoa): array
     {
+        $pessoa = DB::selectOne('
+            select
+                p.fantasia as pessoa,
+                c.cargo
+            from tblpessoa p
+            left join tblcolaborador col on col.codpessoa = p.codpessoa
+            left join tblcolaboradorcargo cc on cc.codcolaborador = col.codcolaborador and cc.fim is null
+            left join tblcargo c on c.codcargo = cc.codcargo
+            where p.codpessoa = :codpessoa
+            limit 1
+        ', [
+            'codpessoa' => $codpessoa,
+        ]);
+
         $eventos = DB::select('
             select tipo, sum(valor) as total
             from tblbonificacaoevento
@@ -118,10 +140,46 @@ class MetaProjecaoService
 
         return [
             'codpessoa' => $codpessoa,
+            'pessoa' => $pessoa->pessoa ?? null,
+            'cargo' => $pessoa->cargo ?? null,
             'codmeta' => $meta->codmeta,
             'eventos' => $totais,
             'totalGeral' => round($totalGeral, 2),
         ];
+    }
+
+    private static function buscarDadosPessoas(array $codpessoas): array
+    {
+        if (empty($codpessoas)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($codpessoas), '?'));
+
+        $registros = DB::select("
+            select
+                p.codpessoa,
+                p.fantasia as pessoa,
+                c.cargo
+            from tblpessoa p
+            left join tblcolaborador col on col.codpessoa = p.codpessoa
+            left join tblcolaboradorcargo cc on cc.codcolaborador = col.codcolaborador and cc.fim is null
+            left join tblcargo c on c.codcargo = cc.codcargo
+            where p.codpessoa in ({$placeholders})
+        ", $codpessoas);
+
+        $mapa = [];
+        foreach ($registros as $reg) {
+            $cod = intval($reg->codpessoa);
+            if (!isset($mapa[$cod])) {
+                $mapa[$cod] = [
+                    'pessoa' => $reg->pessoa,
+                    'cargo' => $reg->cargo,
+                ];
+            }
+        }
+
+        return $mapa;
     }
 
     private static function calcularTotaisPorUnidade(Meta $meta): array
@@ -134,13 +192,15 @@ class MetaProjecaoService
                     else
                         (select un.codunidadenegocio from tblunidadenegocio un where un.codfilial = n.codfilial and un.inativo is null limit 1)
                 end as codunidadenegocio,
-                sum(npb.valortotal) as totalvendas
+                sum(case when nop.vendadevolucao = true then -abs(npb.valortotal) else npb.valortotal end) as totalvendas
             from tblnegocio n
+            inner join tblnaturezaoperacao nop on nop.codnaturezaoperacao = n.codnaturezaoperacao
             inner join tblnegocioprodutobarra npb on npb.codnegocio = n.codnegocio
             left join tblpdv pdv on pdv.codpdv = n.codpdv
             where n.lancamento between :periodoinicial and :periodofinal
               and n.codnegociostatus = 2
               and npb.inativo is null
+              and (nop.venda = true or nop.vendadevolucao = true)
             group by 1
         SQL;
 
@@ -177,14 +237,19 @@ class MetaProjecaoService
                         (select un.codunidadenegocio from tblunidadenegocio un where un.codfilial = n.codfilial and un.inativo is null limit 1)
                 end as codunidadenegocio,
                 n.codpessoavendedor as codpessoa,
-                sum(npb.valortotal) as totalvendas
+                sum(case when nop.vendadevolucao = true then -abs(npb.valortotal) else npb.valortotal end) as totalvendas
             from tblnegocio n
+            inner join tblnaturezaoperacao nop on nop.codnaturezaoperacao = n.codnaturezaoperacao
             inner join tblnegocioprodutobarra npb on npb.codnegocio = n.codnegocio
+            inner join tblprodutobarra pb on pb.codprodutobarra = npb.codprodutobarra
+            inner join tblproduto p on p.codproduto = pb.codproduto
             left join tblpdv pdv on pdv.codpdv = n.codpdv
             where n.lancamento between :periodoinicial and :periodofinal
               and n.codnegociostatus = 2
               and npb.inativo is null
+              and (nop.venda = true or nop.vendadevolucao = true)
               and n.codpessoavendedor is not null
+              and coalesce(p.bonificacaoxerox, false) = false
             group by 1, 2
             order by 1, totalvendas desc, 2
         SQL;

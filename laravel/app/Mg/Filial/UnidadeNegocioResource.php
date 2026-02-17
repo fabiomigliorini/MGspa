@@ -8,6 +8,8 @@ class UnidadeNegocioResource extends Resource
 {
     public function toArray($request)
     {
-        return parent::toArray($request);
+        $data = parent::toArray($request);
+        $data['Filial'] = $this->codfilial ? $this->Filial->only(['codfilial', 'filial']) : null;
+        return $data;
     }
 }
