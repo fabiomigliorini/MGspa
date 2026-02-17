@@ -483,6 +483,22 @@ const colaboradoresOrdenados = computed(() =>
   )
 );
 
+function formataDuracao(inicio, fim) {
+  const start = moment(inicio);
+  const end = moment(fim);
+  const anos = end.diff(start, "years");
+  const meses = end.diff(start.clone().add(anos, "years"), "months");
+  const dias = end.diff(
+    start.clone().add(anos, "years").add(meses, "months"),
+    "days"
+  );
+  const partes = [];
+  if (anos > 0) partes.push(`${anos} ${anos === 1 ? "ano" : "anos"}`);
+  if (meses > 0) partes.push(`${meses} ${meses === 1 ? "mês" : "meses"}`);
+  if (dias > 0) partes.push(`${dias} ${dias === 1 ? "dia" : "dias"}`);
+  return partes.join(", ") || "0 dias";
+}
+
 onMounted(() => {
   sColaborador.getColaboradores(route.params.id);
 });
@@ -607,32 +623,61 @@ watch(
       </q-card-section>
 
       <div class="row q-col-gutter-sm q-pa-md">
-        <div class="col-6">
+        <div class="col-xs-12 col-sm-6">
           <div class="text-overline text-grey-7">Contratação / Rescisão</div>
-          <div class="text-body2" v-if="!colaborador.rescisao">
-            {{ moment(colaborador.contratacao).format("DD/MMM/YYYY") }} ({{
-              moment(colaborador.contratacao).fromNow()
-            }})
+          <div class="text-body2">
+            {{ moment(colaborador.contratacao).format("DD/MMM/YYYY") }}
+            <template v-if="colaborador.rescisao">
+              até
+              {{ moment(colaborador.rescisao).format("DD/MMM/YYYY") }}
+            </template>
           </div>
-          <div class="text-body2" v-else>
-            {{ moment(colaborador.contratacao).format("DD/MMM") }} a
-            {{ moment(colaborador.rescisao).format("DD/MMM/YYYY") }}
+          <div class="text-caption text-grey-7">
+            <template v-if="!colaborador.rescisao">
+              {{ formataDuracao(colaborador.contratacao, moment()) }}
+            </template>
+            <template v-else>
+              {{
+                formataDuracao(colaborador.contratacao, colaborador.rescisao)
+              }}
+            </template>
           </div>
         </div>
 
-        <div class="col-6" v-if="colaborador.experiencia">
+        <div class="col-xs-12 col-sm-6" v-if="colaborador.experiencia">
           <div class="text-overline text-grey-7">Experiência / Renovação</div>
           <div class="text-body2">
-            {{ moment(colaborador.experiencia).format("DD/MMM/YYYY") }} ({{
-              moment(colaborador.experiencia).fromNow()
-            }}) /
-            {{ moment(colaborador.renovacaoexperiencia).format("DD/MMM/YYYY") }}
-            ({{ moment(colaborador.renovacaoexperiencia).fromNow() }})
+            {{ moment(colaborador.experiencia).format("DD/MMM/YYYY") }}
+            <template v-if="colaborador.renovacaoexperiencia">
+              e
+              {{
+                moment(colaborador.renovacaoexperiencia).format("DD/MMM/YYYY")
+              }}
+            </template>
+          </div>
+          <div class="text-caption text-grey-7">
+            {{
+              moment(colaborador.experiencia).diff(
+                moment(colaborador.contratacao),
+                "days"
+              ) + 1
+            }}
+            dias
+            <template v-if="colaborador.renovacaoexperiencia">
+              +
+              {{
+                moment(colaborador.renovacaoexperiencia).diff(
+                  moment(colaborador.experiencia),
+                  "days"
+                )
+              }}
+              dias
+            </template>
           </div>
         </div>
 
         <div
-          class="col-6"
+          class="col-xs-12 col-sm-6"
           v-if="colaborador.numeroponto || colaborador.numerocontabilidade"
         >
           <div class="text-overline text-grey-7">Ponto / Contabilidade</div>
@@ -701,9 +746,7 @@ watch(
   <!-- Dialog novo Colaborador -->
   <q-dialog v-model="dialogNovoColaborador">
     <q-card bordered flat style="min-width: 350px">
-      <q-form
-        @submit="submit()"
-      >
+      <q-form @submit="submit()">
         <q-card-section class="text-grey-9 text-overline row items-center">
           <template v-if="editColaborador">EDITAR COLABORADOR</template>
           <template v-else>NOVO COLABORADOR</template>

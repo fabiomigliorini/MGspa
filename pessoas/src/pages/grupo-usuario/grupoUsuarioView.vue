@@ -1,314 +1,367 @@
-<template>
-    <MGLayout back-button>
+<script setup>
+import { ref, onMounted, watch } from "vue";
+import { useQuasar } from "quasar";
+import { useRoute, useRouter } from "vue-router";
+import { grupoUsuarioStore } from "src/stores/grupo-usuario";
+import { guardaToken } from "src/stores";
+import MGLayout from "layouts/MGLayout.vue";
+import NaoAutorizado from "components/NaoAutorizado.vue";
 
-        <template #botaoVoltar>
-            <q-btn flat dense round :to="{ name: 'grupousuarios' }" icon="arrow_back" aria-label="Voltar">
-            </q-btn>
-        </template>
+const $q = useQuasar();
+const route = useRoute();
+const router = useRouter();
+const sGrupoUsuario = grupoUsuarioStore();
+const user = guardaToken();
 
-        <template #tituloPagina>
-            Grupo Usuário
-        </template>
+// Dialog
+const dialogEditar = ref(false);
+const modelGrupoUsuario = ref({});
 
-        <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
-            <q-card bordered class="col-12 q-ma-md">
-                <q-item>
-                    <q-toolbar class="text-black">
-                        <q-avatar color="primary" size="100px" text-color="white" icon="groups"></q-avatar>
-                        <q-item class="q-subtitle-1 q-pl-md">
-                            <q-item-section>
-                                <q-item-label header lines="1" class="text-h4 text-weight-bold"
-                                    :class="sGrupoUsuario.detalheGrupoUsuarios.inativo ? 'text-strike text-red-14' : null">
-                                    {{ sGrupoUsuario.detalheGrupoUsuarios.grupousuario }}
-                                    <span v-if="sGrupoUsuario.detalheGrupoUsuarios.inativo"
-                                        class="row text-caption text-red-14">
-                                        Inativo desde: {{
-                Documentos.formataData(sGrupoUsuario.detalheGrupoUsuarios.inativo) }}
-                                    </span>
-                                    <q-item-label caption>
-                                        {{ sGrupoUsuario.detalheGrupoUsuarios.observacoes }}
-                                    </q-item-label>
-                                </q-item-label>
+// Functions
+const editar = () => {
+  modelGrupoUsuario.value = {
+    codgrupousuario: sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario,
+    grupousuario: sGrupoUsuario.detalheGrupoUsuarios.grupousuario,
+    observacoes: sGrupoUsuario.detalheGrupoUsuarios.observacoes,
+  };
+  dialogEditar.value = true;
+};
 
-                            </q-item-section>
-                        </q-item>
-                        <q-btn v-if="user.verificaPermissaoUsuario('Administrador')" round flat icon="edit"
-                            @click="editar()" />
-                        <q-btn v-if="user.verificaPermissaoUsuario('Administrador')" round flat icon="delete"
-                            @click="excluir(sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario)" />
-
-                        <q-btn
-                            v-if="user.verificaPermissaoUsuario('Administrador') && !sGrupoUsuario.detalheGrupoUsuarios.inativo"
-                            round flat icon="pause"
-                            @click="inativar(sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario)">
-                            <q-tooltip>
-                                Inativar
-                            </q-tooltip>
-                        </q-btn>
-
-                        <q-btn
-                            v-if="user.verificaPermissaoUsuario('Administrador') && sGrupoUsuario.detalheGrupoUsuarios.inativo"
-                            round flat icon="play_arrow"
-                            @click="ativar(sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario)">
-                            <q-tooltip>
-                                Ativar
-                            </q-tooltip>
-                        </q-btn>
-
-                        <q-btn round flat icon="info">
-                            <q-tooltip>
-                                <q-item-label class="row">Criado por {{
-                sGrupoUsuario.detalheGrupoUsuarios.usuariocriacao }} em {{
-                Documentos.formataData(sGrupoUsuario.detalheGrupoUsuarios.criacao)
-            }}</q-item-label>
-                                <q-item-label class="row">Alterado por {{
-                    sGrupoUsuario.detalheGrupoUsuarios.usuarioalteracao }} em {{
-                Documentos.formataData(sGrupoUsuario.detalheGrupoUsuarios.alteracao)
-            }}</q-item-label>
-                            </q-tooltip>
-                        </q-btn>
-                    </q-toolbar>
-                </q-item>
-            </q-card>
-
-
-            <!-- CARD USUARIOS DO GRUPO -->
-            <div class="row q-col-gutter-md q-pa-md">
-                <div class="col-md-3 col-sm-6 col-xs-12 col-lg-3 col-xl-2"
-                    v-for="usuariosDoGrupo in sGrupoUsuario.detalheGrupoUsuarios.Usuarios"
-                    v-bind:key="usuariosDoGrupo.codusuario">
-                    <q-card>
-                        <q-list>
-                            <q-item :to="'/usuarios/' + usuariosDoGrupo.codusuario" clickable>
-                                <q-item-section avatar>
-                                    <q-avatar color="primary" class="q-my-md" size="35px" text-color="white">
-                                        {{ primeiraLetra(usuariosDoGrupo.usuario).toUpperCase() }}
-                                    </q-avatar>
-                                </q-item-section>
-                                <q-item-section>
-                                    <q-item-label>
-                                        {{ usuariosDoGrupo.usuario }}
-                                    </q-item-label>
-                                    <q-item-label caption>
-                                        <template v-for="(filial, i) in usuariosDoGrupo.filiais" v-bind:key="filial.codfilial">
-                                            <span v-if="i != 0">
-                                                |
-                                            </span>
-                                             {{ filial.filial }} 
-                                        </template>
-                                    </q-item-label>
-
-                                    
-                                </q-item-section>
-
-                            </q-item>
-                        </q-list>
-                    </q-card>
-                </div>
-            </div>
-            <!-- Dialog editar grupo usuario -->
-            <q-dialog v-model="dialogEditarGrupoUsuario">
-                <q-card style="min-width: 350px">
-                    <q-form @submit="salvar()">
-                        <q-card-section>
-                            <div class="text-h6">Editar Grupo Usuário</div>
-
-                        </q-card-section>
-                        <q-card-section>
-
-                            <q-input outlined v-model="modelGrupoUsuario.grupousuario" label="Grupo Usuário" :rules="[
-                val => val && val.length > 0 || 'Grupo Usuário obrigatório'
-                            ]" />
-
-
-                            <q-input outlined v-model="modelGrupoUsuario.observacoes" label="Observações" type="area">
-                            </q-input>
-                        </q-card-section>
-
-                        <q-card-actions align="right" class="text-primary">
-                            <q-btn flat label="Cancelar" v-close-popup />
-                            <q-btn flat label="Salvar" type="submit" />
-                        </q-card-actions>
-                    </q-form>
-                </q-card>
-            </q-dialog>
-        </template>
-
-        <template #content v-else>
-            <nao-autorizado></nao-autorizado>
-        </template>
-
-    </MGLayout>
-</template>
-
-<script>
-import { defineComponent, defineAsyncComponent, onMounted } from 'vue'
-import { useQuasar } from "quasar"
-import { ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { useRouter } from 'vue-router'
-import { formataDocumetos } from 'src/stores/formataDocumentos'
-import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
-import { guardaToken } from 'src/stores'
-import { pessoaStore } from 'src/stores/pessoa'
-import { grupoUsuarioStore } from 'src/stores/grupo-usuario'
-
-
-export default defineComponent({
-    name: "grupoUsuarioView",
-
-    components: {
-        MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-        NaoAutorizado: defineAsyncComponent(() =>
-            import("components/NaoAutorizado.vue")
-        ),
-    },
-
-
-    methods: {
-        primeiraLetra(grupoeconomico) {
-            if (grupoeconomico.charAt(0) == ' ') {
-                return grupoeconomico.charAt(1)
-            }
-            return grupoeconomico.charAt(0)
-        },
-
-        editar() {
-            this.dialogEditarGrupoUsuario = true
-
-            this.modelGrupoUsuario = {
-                codgrupousuario: this.sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario,
-                grupousuario: this.sGrupoUsuario.detalheGrupoUsuarios.grupousuario,
-                observacoes: this.sGrupoUsuario.detalheGrupoUsuarios.observacoes
-            }
-
-        },
-
-        async salvar() {
-
-            try {
-                const ret = await this.sGrupoUsuario.alterarGrupo(this.modelGrupoUsuario)
-                if (ret.data) {
-                    this.$q.notify({
-                        color: 'green-5',
-                        textColor: 'white',
-                        icon: 'done',
-                        message: 'Grupo alterado!'
-                    })
-                    this.dialogEditarGrupoUsuario = false
-                }
-            } catch (error) {
-                console.log(error)
-                this.$q.notify({
-                    color: 'red-5',
-                    textColor: 'white',
-                    icon: 'error',
-                    message: error.response.data.message
-                })
-            }
-
-        },
-
-        async excluir(codgrupousuario) {
-
-            this.$q.dialog({
-                title: 'Excluir Grupo',
-                message: 'Tem certeza que deseja excluir esse grupo de usuário?',
-                cancel: true,
-            }).onOk(async () => {
-                try {
-                    const ret = await this.sGrupoUsuario.excluir(codgrupousuario)
-                    this.$q.notify({
-                        color: 'green-5',
-                        textColor: 'white',
-                        icon: 'done',
-                        message: 'Grupo excluido'
-                    })
-
-                    this.router.push('/grupo-usuarios')
-                } catch (error) {
-                    this.$q.notify({
-                        color: 'red-5',
-                        textColor: 'white',
-                        icon: 'error',
-                        message: error.response.data.message
-                    })
-                }
-            })
-        },
-
-        async inativar(codgrupousuario) {
-            try {
-                const ret = await this.sGrupoUsuario.inativar(codgrupousuario)
-                if (ret.data) {
-                    this.$q.notify({
-                        color: 'green-5',
-                        textColor: 'white',
-                        icon: 'done',
-                        message: 'Inativado!'
-                    })
-
-                }
-            } catch (error) {
-                this.$q.notify({
-                    color: 'red-5',
-                    textColor: 'white',
-                    icon: 'error',
-                    message: error.message
-                })
-            }
-        },
-
-        async ativar(codgrupousuario) {
-
-            try {
-                const ret = await this.sGrupoUsuario.ativar(codgrupousuario)
-                if (ret.data) {
-                    this.$q.notify({
-                        color: 'green-5',
-                        textColor: 'white',
-                        icon: 'done',
-                        message: 'Ativado!'
-                    })
-
-                }
-            } catch (error) {
-                this.$q.notify({
-                    color: 'red-5',
-                    textColor: 'white',
-                    icon: 'error',
-                    message: error.message
-                })
-            }
-        },
-
-    },
-
-
-    setup() {
-
-        const sGrupoUsuario = grupoUsuarioStore()
-        const user = guardaToken()
-        const route = useRoute()
-        const Documentos = formataDocumetos()
-        const dialogEditarGrupoUsuario = ref(false)
-        const modelGrupoUsuario = ref({})
-        const router = useRouter()
-        return {
-            sGrupoUsuario,
-            user,
-            route,
-            Documentos,
-            modelGrupoUsuario,
-            dialogEditarGrupoUsuario,
-            router
-        }
-    },
-    async mounted() {
-        await this.sGrupoUsuario.getGrupoUsuarioDetalhes(this.route.params.codgrupousuario)
-
+const salvar = async () => {
+  try {
+    const ret = await sGrupoUsuario.alterarGrupo(modelGrupoUsuario.value);
+    if (ret.data) {
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Grupo alterado!",
+      });
+      dialogEditar.value = false;
     }
-})
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response?.data?.message || "Erro ao alterar",
+    });
+  }
+};
+
+const excluir = (codgrupousuario) => {
+  $q.dialog({
+    title: "Excluir Grupo",
+    message: "Tem certeza que deseja excluir esse grupo de usuário?",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await sGrupoUsuario.excluir(codgrupousuario);
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Grupo excluído",
+      });
+      router.push("/grupo-usuarios");
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: error.response?.data?.message || "Erro ao excluir",
+      });
+    }
+  });
+};
+
+const inativar = async (codgrupousuario) => {
+  try {
+    const ret = await sGrupoUsuario.inativar(codgrupousuario);
+    if (ret.data) {
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Inativado!",
+      });
+    }
+  } catch (error) {
+    $q.notify({
+      color: "negative",
+      textColor: "white",
+      icon: "error",
+      message: error.message || "Erro ao inativar",
+    });
+  }
+};
+
+const ativar = async (codgrupousuario) => {
+  try {
+    const ret = await sGrupoUsuario.ativar(codgrupousuario);
+    if (ret.data) {
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Ativado!",
+      });
+    }
+  } catch (error) {
+    $q.notify({
+      color: "negative",
+      textColor: "white",
+      icon: "error",
+      message: error.message || "Erro ao ativar",
+    });
+  }
+};
+
+// Lifecycle
+onMounted(async () => {
+  await sGrupoUsuario.getGrupoUsuarioDetalhes(route.params.codgrupousuario);
+});
+
+watch(
+  () => route.params.codgrupousuario,
+  async (novoId) => {
+    if (novoId) {
+      await sGrupoUsuario.getGrupoUsuarioDetalhes(novoId);
+    }
+  }
+);
 </script>
 
-<style scoped></style>
+<template>
+  <MGLayout back-button>
+    <template #botaoVoltar>
+      <q-btn
+        flat
+        dense
+        round
+        :to="{ name: 'grupousuarios' }"
+        icon="arrow_back"
+        aria-label="Voltar"
+      />
+    </template>
+
+    <template #tituloPagina>Grupo Usuário</template>
+
+    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+      <div
+        style="max-width: 1280px; margin: auto; min-height: 100vh"
+        v-if="sGrupoUsuario.detalheGrupoUsuarios"
+      >
+        <q-item class="q-pt-lg q-pb-sm">
+          <q-item-section avatar>
+            <q-avatar color="grey-8" text-color="grey-4" size="80px">
+              {{
+                sGrupoUsuario.detalheGrupoUsuarios.grupousuario
+                  ?.slice(0, 1)
+                  ?.toUpperCase()
+              }}
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>
+            <div class="text-h5 text-grey-9">
+              {{ sGrupoUsuario.detalheGrupoUsuarios.grupousuario }}
+              <q-badge
+                v-if="sGrupoUsuario.detalheGrupoUsuarios.inativo"
+                color="red"
+                class="q-ml-sm"
+              >
+                Inativo
+              </q-badge>
+            </div>
+          </q-item-section>
+        </q-item>
+
+        <div class="row q-col-gutter-md q-pa-md q-pt-none">
+          <!-- CARD DETALHES -->
+          <div class="col-12">
+            <q-card bordered flat>
+              <q-card-section
+                class="text-grey-9 text-overline row items-center"
+              >
+                DETALHES DO GRUPO
+                <q-space />
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-7"
+                  icon="edit"
+                  @click="editar()"
+                >
+                  <q-tooltip>Editar</q-tooltip>
+                </q-btn>
+
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-7"
+                  icon="delete"
+                  @click="
+                    excluir(sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario)
+                  "
+                >
+                  <q-tooltip>Excluir</q-tooltip>
+                </q-btn>
+
+                <q-btn
+                  v-if="!sGrupoUsuario.detalheGrupoUsuarios.inativo"
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-7"
+                  icon="pause"
+                  @click="
+                    inativar(sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario)
+                  "
+                >
+                  <q-tooltip>Inativar</q-tooltip>
+                </q-btn>
+
+                <q-btn
+                  v-if="sGrupoUsuario.detalheGrupoUsuarios.inativo"
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-7"
+                  icon="play_arrow"
+                  @click="
+                    ativar(sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario)
+                  "
+                >
+                  <q-tooltip>Ativar</q-tooltip>
+                </q-btn>
+              </q-card-section>
+
+              <q-separator inset />
+
+              <q-list>
+                <q-item>
+                  <q-item-section avatar>
+                    <q-icon color="primary" name="notes" size="xs" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label
+                      class="text-caption"
+                      v-if="sGrupoUsuario.detalheGrupoUsuarios.observacoes"
+                    >
+                      {{ sGrupoUsuario.detalheGrupoUsuarios.observacoes }}
+                    </q-item-label>
+                    <q-item-label class="text-caption" v-else>
+                      Sem Observações
+                    </q-item-label>
+                    <q-item-label caption>Observações</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+
+          <!-- USUÁRIOS DO GRUPO -->
+          <div class="col-12">
+            <q-card bordered flat>
+              <q-card-section class="text-grey-9 text-overline">
+                USUÁRIOS DO GRUPO
+              </q-card-section>
+
+              <q-separator inset />
+
+              <q-list
+                v-if="sGrupoUsuario.detalheGrupoUsuarios.Usuarios?.length"
+              >
+                <template
+                  v-for="(usuariosDoGrupo, index) in sGrupoUsuario
+                    .detalheGrupoUsuarios.Usuarios"
+                  :key="usuariosDoGrupo.codusuario"
+                >
+                  <q-separator inset v-if="index > 0" />
+                  <q-item :to="'/usuarios/' + usuariosDoGrupo.codusuario">
+                    <q-item-section avatar>
+                      <q-icon color="primary" name="person" size="xs" />
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label class="ellipsis text-caption">
+                        {{ usuariosDoGrupo.usuario }}
+                      </q-item-label>
+                      <q-item-label
+                        caption
+                        v-if="usuariosDoGrupo.filiais?.length"
+                      >
+                        <template
+                          v-for="(filial, i) in usuariosDoGrupo.filiais"
+                          :key="filial.codfilial"
+                        >
+                          <span v-if="i !== 0"> | </span>
+                          {{ filial.filial }}
+                        </template>
+                      </q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-list>
+
+              <div v-else class="q-pa-md text-center text-grey">
+                Nenhum usuário neste grupo
+              </div>
+            </q-card>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dialog Editar Grupo -->
+      <q-dialog v-model="dialogEditar">
+        <q-card style="min-width: 400px">
+          <q-form @submit.prevent="salvar()">
+            <q-card-section class="text-grey-9 text-overline">
+              EDITAR GRUPO USUÁRIO
+            </q-card-section>
+
+            <q-separator inset />
+
+            <q-card-section class="q-gutter-md">
+              <q-input
+                outlined
+                v-model="modelGrupoUsuario.grupousuario"
+                label="Grupo Usuário"
+                :rules="[
+                  (val) => (val && val.length > 0) || 'Campo obrigatório',
+                ]"
+              />
+
+              <q-input
+                outlined
+                v-model="modelGrupoUsuario.observacoes"
+                label="Observações"
+                type="textarea"
+              />
+            </q-card-section>
+
+            <q-card-actions align="right" class="text-primary">
+              <q-btn
+                flat
+                label="Cancelar"
+                color="grey-8"
+                v-close-popup
+                tabindex="-1"
+              />
+              <q-btn flat label="Salvar" type="submit" />
+            </q-card-actions>
+          </q-form>
+        </q-card>
+      </q-dialog>
+    </template>
+
+    <template #content v-else>
+      <nao-autorizado />
+    </template>
+  </MGLayout>
+</template>

@@ -616,14 +616,14 @@ const salvarDetalhes = async () => {
 
     <!-- Info Grid -->
     <div class="row q-col-gutter-sm q-pa-md">
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Codigo</div>
         <div class="text-body2">
           #{{ String(sPessoa.item.codpessoa).padStart(8, "0") }}
         </div>
       </div>
 
-      <div class="col-6" v-for="mid in sPessoa.item.mercosId" :key="mid">
+      <div class="col-xs-12 col-sm-6" v-for="mid in sPessoa.item.mercosId" :key="mid">
         <div class="text-overline text-grey-7">
           Mercos Id
           <q-btn
@@ -651,7 +651,26 @@ const salvarDetalhes = async () => {
         <div class="text-body2">{{ mid }}</div>
       </div>
 
-      <div class="col-6">
+      <div
+        class="col-xs-12 col-sm-6"
+        v-for="usuario in sPessoa.item.UsuarioS"
+        :key="usuario.codusuario"
+      >
+        <div class="text-overline text-grey-7">Usuário</div>
+        <div class="text-body2">
+          <q-btn
+            flat
+            dense
+            no-caps
+            padding="0"
+            color="primary"
+            :to="'/usuarios/' + usuario.codusuario"
+            :label="usuario.usuario"
+          />
+        </div>
+      </div>
+
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Documentos</div>
         <div class="text-body2">
           {{
@@ -666,7 +685,7 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.nascimento">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.nascimento">
         <div class="text-overline text-grey-7">Idade / Nascimento</div>
         <div class="text-body2">
           {{ verificaIdade(sPessoa.item.nascimento) }} anos
@@ -679,7 +698,7 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.codgrupoeconomico">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.codgrupoeconomico">
         <div class="text-overline text-grey-7">Grupo Economico</div>
         <div class="text-body2">
           <q-btn
@@ -694,7 +713,7 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.pai || sPessoa.item.mae">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.pai || sPessoa.item.mae">
         <div class="text-overline text-grey-7">Filiacao</div>
         <div class="text-body2">
           {{ sPessoa.item.pai }}
@@ -703,14 +722,14 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.pispasep">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.pispasep">
         <div class="text-overline text-grey-7">PIS/PASEP</div>
         <div class="text-body2">
           {{ formataPisPasep(sPessoa.item.pispasep) }}
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.tituloeleitor">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.tituloeleitor">
         <div class="text-overline text-grey-7">
           Titulo Eleitor / Zona / Secao
         </div>
@@ -720,7 +739,7 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.ctps">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.ctps">
         <div class="text-overline text-grey-7">CTPS</div>
         <div class="text-body2">
           {{ sPessoa.item.ctps }} / Serie {{ sPessoa.item.seriectps }} /
@@ -730,7 +749,7 @@ const salvarDetalhes = async () => {
       </div>
 
       <div
-        class="col-6"
+        class="col-xs-12 col-sm-6"
         v-if="
           sPessoa.item.fisica &&
           (sPessoa.item.estadocivil ||
@@ -756,7 +775,7 @@ const salvarDetalhes = async () => {
       </div>
 
       <div
-        class="col-6"
+        class="col-xs-12 col-sm-6"
         v-if="sPessoa.item.rntrc || sPessoa.item.tipotransportador"
       >
         <div class="text-overline text-grey-7">RNTRC</div>

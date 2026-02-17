@@ -138,7 +138,7 @@ const fecharRelatorio = () => {
     </q-card-section>
 
     <div class="row q-col-gutter-sm q-pa-md">
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Saldo em Aberto</div>
         <div class="text-body2" v-if="sPessoa.item.aberto.quantidade > 0">
           {{ sPessoa.item.aberto.quantidade }} Títulos totalizando
@@ -165,7 +165,7 @@ const fecharRelatorio = () => {
         <div class="text-body2" v-else>Nenhum titulo em aberto</div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Limite de Crédito</div>
         <div class="text-body2">
           {{
@@ -177,54 +177,54 @@ const fecharRelatorio = () => {
         </div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Consumidor Final</div>
         <div class="text-body2">
           {{ sPessoa.item.consumidor ? "Sim" : "Não" }}
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.GrupoCliente">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.GrupoCliente">
         <div class="text-overline text-grey-7">Grupo Cliente</div>
         <div class="text-body2">
           {{ sPessoa.item.GrupoCliente.grupocliente }}
         </div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Tolerância Atraso</div>
         <div class="text-body2">{{ sPessoa.item.toleranciaatraso }} Dia(s)</div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Crédito Bloqueado</div>
         <div class="text-body2">
           {{ sPessoa.item.creditobloqueado ? "Sim" : "Não" }}
         </div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Desconto</div>
         <div class="text-body2">
           {{ sPessoa.item.desconto ? sPessoa.item.desconto + "%" : "0,00%" }}
         </div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Vendedor</div>
         <div class="text-body2">
           {{ sPessoa.item.vendedor ? "Sim" : "Não" }}
         </div>
       </div>
 
-      <div class="col-6" v-if="sPessoa.item.codformapagamento">
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.codformapagamento">
         <div class="text-overline text-grey-7">Forma de Pagamento</div>
         <div class="text-body2">
           {{ sPessoa.item.FormaPagamento.formapagamento }}
         </div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Nota Fiscal</div>
         <div class="text-body2">
           <span v-if="sPessoa.item.notafiscal == 0">Tratamento Padrão</span>
@@ -235,14 +235,14 @@ const fecharRelatorio = () => {
         </div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Fornecedor</div>
         <div class="text-body2">
           {{ sPessoa.item.fornecedor ? "Sim" : "Não" }}
         </div>
       </div>
 
-      <div class="col-6">
+      <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Cliente</div>
         <div class="text-body2">
           {{ sPessoa.item.cliente ? "Sim" : "Não" }}

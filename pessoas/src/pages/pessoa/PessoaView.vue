@@ -82,7 +82,7 @@ watch(
           </q-item>
 
           <div class="row q-col-gutter-md q-pa-md">
-            <div class="col-md-8 col-sm-12">
+            <div class="col-xs-12 col-md-8">
               <div class="row q-col-gutter-md">
                 <!-- CARD PESSOA -->
                 <div class="col-12">
@@ -105,7 +105,7 @@ watch(
                 </div>
               </div>
             </div>
-            <div class="col-md-4 col-sm-12">
+            <div class="col-xs-12 col-md-4">
               <div class="row q-col-gutter-md">
                 <!-- TELEFONE -->
                 <div class="col-12">
