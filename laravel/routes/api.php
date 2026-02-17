@@ -322,7 +322,27 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // METAS
         Route::get('meta/', '\Mg\Meta\MetaController@index');
+        Route::post('meta/', '\Mg\Meta\MetaController@store');
         Route::get('meta/{codmeta}', '\Mg\Meta\MetaController@show');
+        Route::put('meta/{codmeta}', '\Mg\Meta\MetaController@update');
+        Route::delete('meta/{codmeta}', '\Mg\Meta\MetaController@destroy');
+        Route::post('meta/{codmeta}/bloquear', '\Mg\Meta\MetaController@bloquear');
+        Route::post('meta/{codmeta}/desbloquear', '\Mg\Meta\MetaController@desbloquear');
+        Route::post('meta/{codmeta}/reprocessar', '\Mg\Meta\MetaController@reprocessar');
+        Route::post('meta/{codmeta}/finalizar', '\Mg\Meta\MetaController@finalizar');
+
+        // META DASHBOARD
+        Route::get('meta/{codmeta}/dashboard', '\Mg\Meta\MetaDashboardController@dashboard');
+        Route::get('meta/{codmeta}/dashboard/pessoa/{codpessoa}', '\Mg\Meta\MetaDashboardController@dashboardPessoa');
+        Route::get('meta/{codmeta}/vendas-filial', '\Mg\Meta\MetaDashboardController@vendasFilial');
+        Route::get('meta/{codmeta}/vendas-vendedor', '\Mg\Meta\MetaDashboardController@vendasVendedor');
+
+        // UNIDADE DE NEGOCIO
+        Route::get('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@index');
+        Route::post('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@store');
+        Route::get('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@show');
+        Route::put('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@update');
+        Route::delete('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@destroy');
 
 
         // Pessoa
