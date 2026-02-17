@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Oct/2024 14:47:07
+ * Date: 16/Feb/2026 21:56:57
  */
 
 namespace Mg\Meta;
@@ -9,6 +9,9 @@ namespace Mg\Meta;
 use Mg\MgModel;
 use Mg\Meta\MetaFilial;
 use Mg\Meta\MetaVendedor;
+use Mg\Meta\BonificacaoEvento;
+use Mg\Meta\MetaUnidadeNegocio;
+use Mg\Meta\MetaUnidadeNegocioPessoa;
 use Mg\Usuario\Usuario;
 
 class Meta extends MgModel
@@ -25,7 +28,9 @@ class Meta extends MgModel
         'percentualcomissaoxerox',
         'periodofinal',
         'periodoinicial',
-        'premioprimeirovendedorfilial'
+        'premioprimeirovendedorfilial',
+        'processando',
+        'status'
     ];
 
     protected $dates = [
@@ -43,7 +48,8 @@ class Meta extends MgModel
         'percentualcomissaovendedor' => 'float',
         'percentualcomissaovendedormeta' => 'float',
         'percentualcomissaoxerox' => 'float',
-        'premioprimeirovendedorfilial' => 'float'
+        'premioprimeirovendedorfilial' => 'float',
+        'processando' => 'boolean'
     ];
 
 
@@ -60,9 +66,24 @@ class Meta extends MgModel
 
 
     // Tabelas Filhas
+    public function BonificacaoEventoS()
+    {
+        return $this->hasMany(BonificacaoEvento::class, 'codmeta', 'codmeta');
+    }
+
     public function MetaFilialS()
     {
         return $this->hasMany(MetaFilial::class, 'codmeta', 'codmeta');
+    }
+
+    public function MetaUnidadeNegocioS()
+    {
+        return $this->hasMany(MetaUnidadeNegocio::class, 'codmeta', 'codmeta');
+    }
+
+    public function MetaUnidadeNegocioPessoaS()
+    {
+        return $this->hasMany(MetaUnidadeNegocioPessoa::class, 'codmeta', 'codmeta');
     }
 
     public function MetaVendedorS()

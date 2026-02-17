@@ -2,7 +2,7 @@
 
 /**
  * Created by php artisan gerador:model.
- * Date: 10/Feb/2026 11:14:09
+ * Date: 16/Feb/2026 21:59:59
  */
 
 namespace Mg\Pessoa;
@@ -42,6 +42,8 @@ use Mg\NotaFiscal\NotaFiscalPagamento;
 use Mg\Meta\MetaVendedor;
 use Mg\Portador\Portador;
 use Mg\Pessoa\Dependente;
+use Mg\Meta\BonificacaoEvento;
+use Mg\Meta\MetaUnidadeNegocioPessoa;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
 use Mg\FormaPagamento\FormaPagamento;
@@ -252,6 +254,11 @@ class Pessoa extends MgModel
 
 
     // Tabelas Filhas
+    public function BonificacaoEventoS()
+    {
+        return $this->hasMany(BonificacaoEvento::class, 'codpessoa', 'codpessoa');
+    }
+
     public function ChequeS()
     {
         return $this->hasMany(Cheque::class, 'codpessoa', 'codpessoa');
@@ -310,6 +317,11 @@ class Pessoa extends MgModel
     public function MetaFilialPessoaS()
     {
         return $this->hasMany(MetaFilialPessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function MetaUnidadeNegocioPessoaS()
+    {
+        return $this->hasMany(MetaUnidadeNegocioPessoa::class, 'codpessoa', 'codpessoa');
     }
 
     public function MetaVendedorS()

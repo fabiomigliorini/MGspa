@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Oct/2025 19:13:21
+ * Date: 16/Feb/2026 21:57:59
  */
 
 namespace Mg\Negocio;
@@ -13,6 +13,7 @@ use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioProdutoBarraPedidoItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\Mercos\MercosPedidoItem;
+use Mg\Meta\BonificacaoEvento;
 use Mg\Negocio\Negocio;
 use Mg\Produto\ProdutoBarra;
 use Mg\Usuario\Usuario;
@@ -105,6 +106,11 @@ class NegocioProdutoBarra extends MgModel
 
 
     // Tabelas Filhas
+    public function BonificacaoEventoS()
+    {
+        return $this->hasMany(BonificacaoEvento::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
+    }
+
     public function y()
     {
         return $this->hasMany(CupomFiscalProdutoBarra::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Jan/2025 11:02:37
+ * Date: 16/Feb/2026 21:57:36
  */
 
 namespace Mg\Pdv;
@@ -24,6 +24,7 @@ class Pdv extends MgModel
 
 
     protected $fillable = [
+        'alocacao',
         'apelido',
         'autorizado',
         'codfilial',

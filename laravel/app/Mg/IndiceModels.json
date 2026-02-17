@@ -304,6 +304,16 @@
                 "tabela": "tblsauruspdv",
                 "coluna": "codfilial",
                 "metodo": "SaurusPdvS"
+            },
+            "tblsauruspinpad.codfilial": {
+                "tabela": "tblsauruspinpad",
+                "coluna": "codfilial",
+                "metodo": "SaurusPinPadS"
+            },
+            "tblunidadenegocio.codfilial": {
+                "tabela": "tblunidadenegocio",
+                "coluna": "codfilial",
+                "metodo": "UnidadeNegocioS"
             }
         }
     },
@@ -2150,6 +2160,146 @@
                 "tabela": "tblveiculotipo",
                 "coluna": "codusuariocriacao",
                 "metodo": "VeiculoTipoS"
+            },
+            "tbldependente.codusuarioalteracao": {
+                "tabela": "tbldependente",
+                "coluna": "codusuarioalteracao",
+                "metodo": "DependenteS"
+            },
+            "tbldependente.codusuariocriacao": {
+                "tabela": "tbldependente",
+                "coluna": "codusuariocriacao",
+                "metodo": "DependenteS"
+            },
+            "tbletnia.codusuarioalteracao": {
+                "tabela": "tbletnia",
+                "coluna": "codusuarioalteracao",
+                "metodo": "EtniaS"
+            },
+            "tbletnia.codusuariocriacao": {
+                "tabela": "tbletnia",
+                "coluna": "codusuariocriacao",
+                "metodo": "EtniaS"
+            },
+            "tbleventocalendario.codusuarioalteracao": {
+                "tabela": "tbleventocalendario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "EventoCalendarioS"
+            },
+            "tbleventocalendario.codusuariocriacao": {
+                "tabela": "tbleventocalendario",
+                "coluna": "codusuariocriacao",
+                "metodo": "EventoCalendarioS"
+            },
+            "tblgrauinstrucao.codusuarioalteracao": {
+                "tabela": "tblgrauinstrucao",
+                "coluna": "codusuarioalteracao",
+                "metodo": "GrauInstrucaoS"
+            },
+            "tblgrauinstrucao.codusuariocriacao": {
+                "tabela": "tblgrauinstrucao",
+                "coluna": "codusuariocriacao",
+                "metodo": "GrauInstrucaoS"
+            },
+            "tblnotafiscalitemtributo.codusuarioalteracao": {
+                "tabela": "tblnotafiscalitemtributo",
+                "coluna": "codusuarioalteracao",
+                "metodo": "NotaFiscalItemTributoS"
+            },
+            "tblnotafiscalitemtributo.codusuariocriacao": {
+                "tabela": "tblnotafiscalitemtributo",
+                "coluna": "codusuariocriacao",
+                "metodo": "NotaFiscalItemTributoS"
+            },
+            "tblsaurusbandeira.codusuarioalteracao": {
+                "tabela": "tblsaurusbandeira",
+                "coluna": "codusuarioalteracao",
+                "metodo": "SaurusBandeiraS"
+            },
+            "tblsaurusbandeira.codusuariocriacao": {
+                "tabela": "tblsaurusbandeira",
+                "coluna": "codusuariocriacao",
+                "metodo": "SaurusBandeiraS"
+            },
+            "tblsauruspagamento.codusuarioalteracao": {
+                "tabela": "tblsauruspagamento",
+                "coluna": "codusuarioalteracao",
+                "metodo": "SaurusPagamentoS"
+            },
+            "tblsauruspagamento.codusuariocriacao": {
+                "tabela": "tblsauruspagamento",
+                "coluna": "codusuariocriacao",
+                "metodo": "SaurusPagamentoS"
+            },
+            "tblsauruspdv.codusuarioalteracao": {
+                "tabela": "tblsauruspdv",
+                "coluna": "codusuarioalteracao",
+                "metodo": "SaurusPdvS"
+            },
+            "tblsauruspdv.codusuariocriacao": {
+                "tabela": "tblsauruspdv",
+                "coluna": "codusuariocriacao",
+                "metodo": "SaurusPdvS"
+            },
+            "tblsauruspedido.codusuarioalteracao": {
+                "tabela": "tblsauruspedido",
+                "coluna": "codusuarioalteracao",
+                "metodo": "SaurusPedidoS"
+            },
+            "tblsauruspedido.codusuariocriacao": {
+                "tabela": "tblsauruspedido",
+                "coluna": "codusuariocriacao",
+                "metodo": "SaurusPedidoS"
+            },
+            "tblsauruspinpad.codusuarioalteracao": {
+                "tabela": "tblsauruspinpad",
+                "coluna": "codusuarioalteracao",
+                "metodo": "SaurusPinPadS"
+            },
+            "tblsauruspinpad.codusuariocriacao": {
+                "tabela": "tblsauruspinpad",
+                "coluna": "codusuariocriacao",
+                "metodo": "SaurusPinPadS"
+            },
+            "tbltributacaoregra.codusuarioalteracao": {
+                "tabela": "tbltributacaoregra",
+                "coluna": "codusuarioalteracao",
+                "metodo": "TributacaoRegraS"
+            },
+            "tbltributacaoregra.codusuariocriacao": {
+                "tabela": "tbltributacaoregra",
+                "coluna": "codusuariocriacao",
+                "metodo": "TributacaoRegraS"
+            },
+            "tbltributo.codusuarioalteracao": {
+                "tabela": "tbltributo",
+                "coluna": "codusuarioalteracao",
+                "metodo": "TributoS"
+            },
+            "tbltributo.codusuariocriacao": {
+                "tabela": "tbltributo",
+                "coluna": "codusuariocriacao",
+                "metodo": "TributoS"
+            },
+            "tblwoopedido.codusuarioalteracao": {
+                "tabela": "tblwoopedido",
+                "coluna": "codusuarioalteracao",
+                "metodo": "WooPedidoS"
+            },
+            "tblwoopedido.codusuariocriacao": {
+                "tabela": "tblwoopedido",
+                "coluna": "codusuariocriacao",
+                "metodo": "WooPedidoS"
+            },
+            "tblwoopedidonegocio.codusuarioalteracao": {
+                "tabela": "tblwoopedidonegocio",
+                "coluna": "codusuarioalteracao",
+                "metodo": "WooPedidoNegocioS"
+            },
+            "tblwoopedidonegocio.codusuariocriacao": {
+                "tabela": "tblwoopedidonegocio",
+                "coluna": "codusuariocriacao",
+                "metodo": "WooPedidoNegocioS"
             }
         }
     },
@@ -2843,6 +2993,16 @@
                 "tabela": "tbldependente",
                 "coluna": "codpessoaresponsavel",
                 "metodo": "DependeteResponsavelS"
+            },
+            "tblbonificacaoevento.codpessoa": {
+                "tabela": "tblbonificacaoevento",
+                "coluna": "codpessoa",
+                "metodo": "BonificacaoEventoS"
+            },
+            "tblmetaunidadenegociopessoa.codpessoa": {
+                "tabela": "tblmetaunidadenegociopessoa",
+                "coluna": "codpessoa",
+                "metodo": "MetaUnidadeNegocioPessoaS"
             }
         }
     },
@@ -3529,6 +3689,11 @@
                 "tabela": "tblwoopedidonegocio",
                 "coluna": "codnegocio",
                 "metodo": "WooPedidoNegocioS"
+            },
+            "tblbonificacaoevento.codnegocio": {
+                "tabela": "tblbonificacaoevento",
+                "coluna": "codnegocio",
+                "metodo": "BonificacaoEventoS"
             }
         }
     },
@@ -4410,6 +4575,11 @@
                 "tabela": "tblmercospedidoitem",
                 "coluna": "codnegocioprodutobarra",
                 "metodo": "MercosPedidoItemS"
+            },
+            "tblbonificacaoevento.codnegocioprodutobarra": {
+                "tabela": "tblbonificacaoevento",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "BonificacaoEventoS"
             }
         }
     },
@@ -4746,8 +4916,25 @@
         "namespace": "Mg\\Filial",
         "classe": "Empresa",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/Empresa.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblfilial.codempresa": {
+                "tabela": "tblfilial",
+                "coluna": "codempresa",
+                "metodo": "FilialS"
+            }
+        }
     },
     "tblestoquelocal": {
         "tabela": "tblestoquelocal",
@@ -4878,6 +5065,21 @@
                 "tabela": "tblmetavendedor",
                 "coluna": "codmeta",
                 "metodo": "MetaVendedorS"
+            },
+            "tblbonificacaoevento.codmeta": {
+                "tabela": "tblbonificacaoevento",
+                "coluna": "codmeta",
+                "metodo": "BonificacaoEventoS"
+            },
+            "tblmetaunidadenegocio.codmeta": {
+                "tabela": "tblmetaunidadenegocio",
+                "coluna": "codmeta",
+                "metodo": "MetaUnidadeNegocioS"
+            },
+            "tblmetaunidadenegociopessoa.codmeta": {
+                "tabela": "tblmetaunidadenegociopessoa",
+                "coluna": "codmeta",
+                "metodo": "MetaUnidadeNegocioPessoaS"
             }
         }
     },
@@ -9041,5 +9243,116 @@
             }
         },
         "hasMany": []
+    },
+    "tblbonificacaoevento": {
+        "tabela": "tblbonificacaoevento",
+        "campocodigo": "codbonificacaoevento",
+        "namespace": "Mg\\Meta",
+        "classe": "BonificacaoEvento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Meta\/BonificacaoEvento.php",
+        "belongsTo": {
+            "codmeta": {
+                "tabela": "tblmeta",
+                "coluna": "codmeta",
+                "metodo": "Meta"
+            },
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codnegocioprodutobarra": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NegocioProdutoBarra"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codunidadenegocio": {
+                "tabela": "tblunidadenegocio",
+                "coluna": "codunidadenegocio",
+                "metodo": "UnidadeNegocio"
+            }
+        },
+        "hasMany": []
+    },
+    "tblmetaunidadenegocio": {
+        "tabela": "tblmetaunidadenegocio",
+        "campocodigo": "codmetaunidadenegocio",
+        "namespace": "Mg\\Meta",
+        "classe": "MetaUnidadeNegocio",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Meta\/MetaUnidadeNegocio.php",
+        "belongsTo": {
+            "codmeta": {
+                "tabela": "tblmeta",
+                "coluna": "codmeta",
+                "metodo": "Meta"
+            },
+            "codunidadenegocio": {
+                "tabela": "tblunidadenegocio",
+                "coluna": "codunidadenegocio",
+                "metodo": "UnidadeNegocio"
+            }
+        },
+        "hasMany": []
+    },
+    "tblmetaunidadenegociopessoa": {
+        "tabela": "tblmetaunidadenegociopessoa",
+        "campocodigo": "codmetaunidadenegociopessoa",
+        "namespace": "Mg\\Meta",
+        "classe": "MetaUnidadeNegocioPessoa",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Meta\/MetaUnidadeNegocioPessoa.php",
+        "belongsTo": {
+            "codmeta": {
+                "tabela": "tblmeta",
+                "coluna": "codmeta",
+                "metodo": "Meta"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codunidadenegocio": {
+                "tabela": "tblunidadenegocio",
+                "coluna": "codunidadenegocio",
+                "metodo": "UnidadeNegocio"
+            }
+        },
+        "hasMany": []
+    },
+    "tblunidadenegocio": {
+        "tabela": "tblunidadenegocio",
+        "campocodigo": "codunidadenegocio",
+        "namespace": "Mg\\Filial",
+        "classe": "UnidadeNegocio",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/UnidadeNegocio.php",
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            }
+        },
+        "hasMany": {
+            "tblbonificacaoevento.codunidadenegocio": {
+                "tabela": "tblbonificacaoevento",
+                "coluna": "codunidadenegocio",
+                "metodo": "BonificacaoEventoS"
+            },
+            "tblmetaunidadenegocio.codunidadenegocio": {
+                "tabela": "tblmetaunidadenegocio",
+                "coluna": "codunidadenegocio",
+                "metodo": "MetaUnidadeNegocioS"
+            },
+            "tblmetaunidadenegociopessoa.codunidadenegocio": {
+                "tabela": "tblmetaunidadenegociopessoa",
+                "coluna": "codunidadenegocio",
+                "metodo": "MetaUnidadeNegocioPessoaS"
+            }
+        }
     }
 }
