@@ -5,7 +5,7 @@ namespace Mg\Pdv;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Mg\PagarMe\PagarMePos;
-use Mg\Prancheta\Prancheta;
+use Mg\Produto\Prancheta;
 use Mg\Produto\PranchetaCategoria;
 
 class PdvPranchetaService

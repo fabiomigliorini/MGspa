@@ -8,7 +8,7 @@ use Mg\MgService;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalCartaCorrecao;
 use Mg\Filial\Filial;
-use Mg\Empresa\Empresa;
+use Mg\Filial\Empresa;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
 use NFePHP\NFe\Complements;

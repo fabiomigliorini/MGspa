@@ -1,38 +1,37 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 17/Feb/2026 11:35:01
+ */
 
 namespace Mg\Permissao;
 
-/**
- * Campos
- * @property  bigint                         $codpermissao                       NOT NULL
- * @property  varchar(100)                   $permissao                          NOT NULL
- * @property  varchar(600)                   $observacoes
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- *
- * Chaves Estrangeiras
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  GrupoUsuario[]        $GrupoUsuario
- */
-
 use Mg\MgModel;
+use Mg\Permissao\GrupoUsuarioPermissao;
 use Mg\Usuario\Usuario;
-use Mg\Usuario\GrupoUsuario;
 
-class Permissao extends MGModel
+class Permissao extends MgModel
 {
     protected $table = 'tblpermissao';
     protected $primaryKey = 'codpermissao';
+
+
     protected $fillable = [
-        'codpermissao',
-        'permissao',
         'observacoes',
+        'permissao'
     ];
+
+    protected $dates = [
+        'alteracao',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'codpermissao' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer'
+    ];
+
 
     // Chaves Estrangeiras
     public function UsuarioAlteracao()
@@ -45,10 +44,11 @@ class Permissao extends MGModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
     // Tabelas Filhas
-    public function GrupoUsuario()
+    public function GrupoUsuarioPermissaoS()
     {
-        return $this->belongsToMany(GrupoUsuario::class, 'tblgrupousuariopermissao', 'codpermissao', 'codgrupousuario');
+        return $this->hasMany(GrupoUsuarioPermissao::class, 'codpermissao', 'codpermissao');
     }
 
 }

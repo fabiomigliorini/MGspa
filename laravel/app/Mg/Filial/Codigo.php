@@ -1,35 +1,31 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:22:48
+ * Date: 17/Feb/2026 10:49:01
  */
 
-namespace Mg\Prancheta;
+namespace Mg\Filial;
 
 use Mg\MgModel;
-use Mg\Prancheta\PranchetaProduto;
 use Mg\Usuario\Usuario;
 
-class Prancheta extends MgModel
+class Codigo extends MgModel
 {
-    protected $table = 'tblprancheta';
-    protected $primaryKey = 'codprancheta';
+    protected $table = 'tblcodigo';
+    protected $primaryKey = 'tabela';
 
 
     protected $fillable = [
-        'inativo',
-        'observacoes',
-        'prancheta'
+        'codproximo'
     ];
 
     protected $dates = [
         'alteracao',
-        'criacao',
-        'inativo'
+        'criacao'
     ];
 
     protected $casts = [
-        'codprancheta' => 'integer',
+        'codproximo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
     ];
@@ -44,13 +40,6 @@ class Prancheta extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-
-    // Tabelas Filhas
-    public function PranchetaProdutoS()
-    {
-        return $this->hasMany(PranchetaProduto::class, 'codprancheta', 'codprancheta');
     }
 
 }

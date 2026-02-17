@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\Empresa;
+namespace Mg\Filial;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 

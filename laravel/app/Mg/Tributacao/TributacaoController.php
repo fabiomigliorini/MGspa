@@ -4,7 +4,6 @@ namespace Mg\Tributacao;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Mg\Tributacao\Tributacao;
 use Mg\Tributacao\Requests\TributacaoRequest;
 use Mg\Tributacao\Resources\TributacaoResource;
 use Mg\Tributacao\Resources\TributacaoDetailResource;

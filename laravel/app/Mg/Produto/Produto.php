@@ -19,7 +19,7 @@ use Mg\Marca\Marca;
 use Mg\NaturezaOperacao\Ncm;
 use Mg\Produto\SubGrupoProduto;
 use Mg\Produto\TipoProduto;
-use Mg\NaturezaOperacao\Tributacao;
+use Mg\Tributacao\Tributacao;
 use Mg\Produto\UnidadeMedida;
 use Mg\Usuario\Usuario;
 use Mg\Estoque\EstoqueLocal;

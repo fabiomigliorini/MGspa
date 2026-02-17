@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:57:41
+ * Date: 17/Feb/2026 10:11:09
  */
 
 namespace Mg\Colaborador;

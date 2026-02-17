@@ -1,43 +1,37 @@
 <?php
-
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 10:17:50
+ * Date: 17/Feb/2026 10:50:31
  */
 
 namespace Mg\Filial;
 
 use Mg\MgModel;
-use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 
-class Empresa extends MgModel
+class PrefixoGs1 extends MgModel
 {
-    const MODOEMISSAONFCE_NORMAL = 1;
-    const MODOEMISSAONFCE_OFFLINE = 9;
-
-    protected $table = 'tblempresa';
-    protected $primaryKey = 'codempresa';
+    protected $table = 'tblprefixogs1';
+    protected $primaryKey = 'codprefixogs1';
 
 
     protected $fillable = [
-        'contingenciadata',
-        'contingenciajustificativa',
-        'empresa',
-        'modoemissaonfce'
+        'descricao',
+        'especial',
+        'final',
+        'inicial'
     ];
 
     protected $dates = [
         'alteracao',
-        'contingenciadata',
         'criacao'
     ];
 
     protected $casts = [
-        'codempresa' => 'integer',
+        'codprefixogs1' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'modoemissaonfce' => 'integer'
+        'especial' => 'boolean'
     ];
 
 
@@ -52,10 +46,4 @@ class Empresa extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
-
-    // Tabelas Filhas
-    public function FilialS()
-    {
-        return $this->hasMany(Filial::class, 'codempresa', 'codempresa');
-    }
 }

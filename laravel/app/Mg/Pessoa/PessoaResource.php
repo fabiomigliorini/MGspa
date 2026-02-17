@@ -68,6 +68,8 @@ class PessoaResource extends JsonResource
 
         $ret['DependenteResponsavelS'] = DependenteResource::collection($this->DependeteResponsavelS()->orderBy('coddependente', 'desc')->get());
 
+        $ret['UsuarioS'] = $this->UsuarioS()->orderBy('usuario')->get(['codusuario', 'usuario']);
+
         return $ret;
     }
 }

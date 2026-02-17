@@ -371,910 +371,30 @@
                 "coluna": "userid",
                 "metodo": "AuthAssignmentS"
             },
-            "tblbanco.codusuarioalteracao": {
-                "tabela": "tblbanco",
-                "coluna": "codusuarioalteracao",
-                "metodo": "BancoS"
-            },
-            "tblbanco.codusuariocriacao": {
-                "tabela": "tblbanco",
-                "coluna": "codusuariocriacao",
-                "metodo": "BancoS"
-            },
-            "tblbaseremota.codusuarioalteracao": {
-                "tabela": "tblbaseremota",
-                "coluna": "codusuarioalteracao",
-                "metodo": "BaseRemotaS"
-            },
-            "tblbaseremota.codusuariocriacao": {
-                "tabela": "tblbaseremota",
-                "coluna": "codusuariocriacao",
-                "metodo": "BaseRemotaS"
-            },
-            "tblboletomotivoocorrencia.codusuarioalteracao": {
-                "tabela": "tblboletomotivoocorrencia",
-                "coluna": "codusuarioalteracao",
-                "metodo": "BoletoMotivoOcorrenciaS"
-            },
-            "tblboletomotivoocorrencia.codusuariocriacao": {
-                "tabela": "tblboletomotivoocorrencia",
-                "coluna": "codusuariocriacao",
-                "metodo": "BoletoMotivoOcorrenciaS"
-            },
-            "tblboletoretorno.codusuarioalteracao": {
-                "tabela": "tblboletoretorno",
-                "coluna": "codusuarioalteracao",
-                "metodo": "BoletoRetornoS"
-            },
-            "tblboletoretorno.codusuariocriacao": {
-                "tabela": "tblboletoretorno",
-                "coluna": "codusuariocriacao",
-                "metodo": "BoletoRetornoS"
-            },
-            "tblboletotipoocorrencia.codusuarioalteracao": {
-                "tabela": "tblboletotipoocorrencia",
-                "coluna": "codusuarioalteracao",
-                "metodo": "BoletoTipoOcorrenciaS"
-            },
-            "tblboletotipoocorrencia.codusuariocriacao": {
-                "tabela": "tblboletotipoocorrencia",
-                "coluna": "codusuariocriacao",
-                "metodo": "BoletoTipoOcorrenciaS"
-            },
-            "tblcaixamercadoria.codusuarioalteracao": {
-                "tabela": "tblcaixamercadoria",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CaixaMercadoriaS"
-            },
-            "tblcaixamercadoria.codusuariocriacao": {
-                "tabela": "tblcaixamercadoria",
-                "coluna": "codusuariocriacao",
-                "metodo": "CaixaMercadoriaS"
-            },
-            "tblcaixamercadoriamodelo.codusuarioalteracao": {
-                "tabela": "tblcaixamercadoriamodelo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CaixaMercadoriaModeloS"
-            },
-            "tblcaixamercadoriamodelo.codusuariocriacao": {
-                "tabela": "tblcaixamercadoriamodelo",
-                "coluna": "codusuariocriacao",
-                "metodo": "CaixaMercadoriaModeloS"
-            },
-            "tblcargo.codusuarioalteracao": {
-                "tabela": "tblcargo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CargoS"
-            },
-            "tblcargo.codusuariocriacao": {
-                "tabela": "tblcargo",
-                "coluna": "codusuariocriacao",
-                "metodo": "CargoS"
-            },
-            "tblcertidaoemissor.codusuarioalteracao": {
-                "tabela": "tblcertidaoemissor",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CertidaoEmissorS"
-            },
-            "tblcertidaoemissor.codusuariocriacao": {
-                "tabela": "tblcertidaoemissor",
-                "coluna": "codusuariocriacao",
-                "metodo": "CertidaoEmissorS"
-            },
-            "tblcertidaotipo.codusuarioalteracao": {
-                "tabela": "tblcertidaotipo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CertidaoTipoS"
-            },
-            "tblcertidaotipo.codusuariocriacao": {
-                "tabela": "tblcertidaotipo",
-                "coluna": "codusuariocriacao",
-                "metodo": "CertidaoTipoS"
-            },
-            "tblcest.codusuarioalteracao": {
-                "tabela": "tblcest",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CestS"
-            },
-            "tblcest.codusuariocriacao": {
-                "tabela": "tblcest",
-                "coluna": "codusuariocriacao",
-                "metodo": "CestS"
-            },
-            "tblcfop.codusuarioalteracao": {
-                "tabela": "tblcfop",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CfopS"
-            },
-            "tblcfop.codusuariocriacao": {
-                "tabela": "tblcfop",
-                "coluna": "codusuariocriacao",
-                "metodo": "CfopS"
-            },
-            "tblcheque.codusuarioalteracao": {
-                "tabela": "tblcheque",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ChequeS"
-            },
-            "tblcheque.codusuariocriacao": {
-                "tabela": "tblcheque",
-                "coluna": "codusuariocriacao",
-                "metodo": "ChequeS"
-            },
-            "tblchequedevolucao.codusuarioalteracao": {
-                "tabela": "tblchequedevolucao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ChequeDevolucaoS"
-            },
-            "tblchequedevolucao.codusuariocriacao": {
-                "tabela": "tblchequedevolucao",
-                "coluna": "codusuariocriacao",
-                "metodo": "ChequeDevolucaoS"
-            },
-            "tblchequeemitente.codusuarioalteracao": {
-                "tabela": "tblchequeemitente",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ChequeEmitenteS"
-            },
-            "tblchequeemitente.codusuariocriacao": {
-                "tabela": "tblchequeemitente",
-                "coluna": "codusuariocriacao",
-                "metodo": "ChequeEmitenteS"
-            },
-            "tblchequemotivodevolucao.codusuarioalteracao": {
-                "tabela": "tblchequemotivodevolucao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ChequeMotivoDevolucaoS"
-            },
-            "tblchequemotivodevolucao.codusuariocriacao": {
-                "tabela": "tblchequemotivodevolucao",
-                "coluna": "codusuariocriacao",
-                "metodo": "ChequeMotivoDevolucaoS"
-            },
-            "tblchequerepasse.codusuarioalteracao": {
-                "tabela": "tblchequerepasse",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ChequeRepasseS"
-            },
-            "tblchequerepasse.codusuariocriacao": {
-                "tabela": "tblchequerepasse",
-                "coluna": "codusuariocriacao",
-                "metodo": "ChequeRepasseS"
-            },
-            "tblchequerepassecheque.codusuarioalteracao": {
-                "tabela": "tblchequerepassecheque",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ChequeRepasseChequeS"
-            },
-            "tblchequerepassecheque.codusuariocriacao": {
-                "tabela": "tblchequerepassecheque",
-                "coluna": "codusuariocriacao",
-                "metodo": "ChequeRepasseChequeS"
-            },
-            "tblcidade.codusuarioalteracao": {
-                "tabela": "tblcidade",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CidadeS"
-            },
-            "tblcidade.codusuariocriacao": {
-                "tabela": "tblcidade",
-                "coluna": "codusuariocriacao",
-                "metodo": "CidadeS"
-            },
-            "tblcobranca.codusuarioalteracao": {
-                "tabela": "tblcobranca",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CobrancaS"
-            },
-            "tblcobranca.codusuariocriacao": {
-                "tabela": "tblcobranca",
-                "coluna": "codusuariocriacao",
-                "metodo": "CobrancaS"
-            },
-            "tblcobrancahistorico.codusuarioalteracao": {
-                "tabela": "tblcobrancahistorico",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CobrancaHistoricoS"
-            },
-            "tblcobrancahistorico.codusuariocriacao": {
-                "tabela": "tblcobrancahistorico",
-                "coluna": "codusuariocriacao",
-                "metodo": "CobrancaHistoricoS"
-            },
-            "tblcobrancahistoricotitulo.codusuarioalteracao": {
-                "tabela": "tblcobrancahistoricotitulo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CobrancaHistoricoTituloS"
-            },
-            "tblcobrancahistoricotitulo.codusuariocriacao": {
-                "tabela": "tblcobrancahistoricotitulo",
-                "coluna": "codusuariocriacao",
-                "metodo": "CobrancaHistoricoTituloS"
-            },
-            "tblcodigo.codusuarioalteracao": {
-                "tabela": "tblcodigo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CodigoS"
-            },
-            "tblcodigo.codusuariocriacao": {
-                "tabela": "tblcodigo",
-                "coluna": "codusuariocriacao",
-                "metodo": "CodigoS"
-            },
-            "tblcolaborador.codusuarioalteracao": {
-                "tabela": "tblcolaborador",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ColaboradorS"
-            },
-            "tblcolaborador.codusuariocriacao": {
-                "tabela": "tblcolaborador",
-                "coluna": "codusuariocriacao",
-                "metodo": "ColaboradorS"
-            },
-            "tblcolaboradorcargo.codusuarioalteracao": {
-                "tabela": "tblcolaboradorcargo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ColaboradorCargoS"
-            },
-            "tblcolaboradorcargo.codusuariocriacao": {
-                "tabela": "tblcolaboradorcargo",
-                "coluna": "codusuariocriacao",
-                "metodo": "ColaboradorCargoS"
-            },
-            "tblcontacontabil.codusuarioalteracao": {
-                "tabela": "tblcontacontabil",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ContaContabilS"
-            },
-            "tblcontacontabil.codusuariocriacao": {
-                "tabela": "tblcontacontabil",
-                "coluna": "codusuariocriacao",
-                "metodo": "ContaContabilS"
-            },
-            "tblcupomfiscal.codusuarioalteracao": {
-                "tabela": "tblcupomfiscal",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CupomFiscalS"
-            },
-            "tblcupomfiscal.codusuariocriacao": {
-                "tabela": "tblcupomfiscal",
-                "coluna": "codusuariocriacao",
-                "metodo": "CupomFiscalS"
-            },
-            "tblcupomfiscalprodutobarra.codusuarioalteracao": {
-                "tabela": "tblcupomfiscalprodutobarra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "CupomFiscalProdutoBarraS"
-            },
-            "tblcupomfiscalprodutobarra.codusuariocriacao": {
-                "tabela": "tblcupomfiscalprodutobarra",
-                "coluna": "codusuariocriacao",
-                "metodo": "CupomFiscalProdutoBarraS"
-            },
-            "tbldfeevento.codusuarioalteracao": {
-                "tabela": "tbldfeevento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "DfeEventoS"
-            },
-            "tbldfeevento.codusuariocriacao": {
-                "tabela": "tbldfeevento",
-                "coluna": "codusuariocriacao",
-                "metodo": "DfeEventoS"
-            },
-            "tbldfetipo.codusuarioalteracao": {
-                "tabela": "tbldfetipo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "DfeTipoS"
-            },
-            "tbldfetipo.codusuariocriacao": {
-                "tabela": "tbldfetipo",
-                "coluna": "codusuariocriacao",
-                "metodo": "DfeTipoS"
-            },
-            "tbldistribuicaodfeevento.codusuarioalteracao": {
-                "tabela": "tbldistribuicaodfeevento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "DistribuicaoDfeEventoS"
-            },
-            "tbldistribuicaodfeevento.codusuariocriacao": {
-                "tabela": "tbldistribuicaodfeevento",
-                "coluna": "codusuariocriacao",
-                "metodo": "DistribuicaoDfeEventoS"
-            },
-            "tbldominioacumulador.codusuarioalteracao": {
-                "tabela": "tbldominioacumulador",
-                "coluna": "codusuarioalteracao",
-                "metodo": "DominioAcumuladorS"
-            },
-            "tbldominioacumulador.codusuariocriacao": {
-                "tabela": "tbldominioacumulador",
-                "coluna": "codusuariocriacao",
-                "metodo": "DominioAcumuladorS"
-            },
             "tblecf.codusuario": {
                 "tabela": "tblecf",
                 "coluna": "codusuario",
                 "metodo": "EcfS"
             },
-            "tblecf.codusuarioalteracao": {
-                "tabela": "tblecf",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EcfS"
-            },
-            "tblecf.codusuariocriacao": {
-                "tabela": "tblecf",
-                "coluna": "codusuariocriacao",
-                "metodo": "EcfS"
-            },
-            "tblecfreducaoz.codusuarioalteracao": {
-                "tabela": "tblecfreducaoz",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EcfReducaoZS"
-            },
-            "tblecfreducaoz.codusuariocriacao": {
-                "tabela": "tblecfreducaoz",
-                "coluna": "codusuariocriacao",
-                "metodo": "EcfReducaoZS"
-            },
-            "tblempresa.codusuarioalteracao": {
-                "tabela": "tblempresa",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EmpresaS"
-            },
-            "tblempresa.codusuariocriacao": {
-                "tabela": "tblempresa",
-                "coluna": "codusuariocriacao",
-                "metodo": "EmpresaS"
-            },
-            "tblestado.codusuarioalteracao": {
-                "tabela": "tblestado",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstadoS"
-            },
-            "tblestado.codusuariocriacao": {
-                "tabela": "tblestado",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstadoS"
-            },
-            "tblestadocivil.codusuarioalteracao": {
-                "tabela": "tblestadocivil",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstadoCivilS"
-            },
-            "tblestadocivil.codusuariocriacao": {
-                "tabela": "tblestadocivil",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstadoCivilS"
-            },
-            "tblestoquelocal.codusuarioalteracao": {
-                "tabela": "tblestoquelocal",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueLocalS"
-            },
-            "tblestoquelocal.codusuariocriacao": {
-                "tabela": "tblestoquelocal",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueLocalS"
-            },
-            "tblestoquelocalprodutovariacao.codusuarioalteracao": {
-                "tabela": "tblestoquelocalprodutovariacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueLocalProdutoVariacaoS"
-            },
-            "tblestoquelocalprodutovariacao.codusuariocriacao": {
-                "tabela": "tblestoquelocalprodutovariacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueLocalProdutoVariacaoS"
-            },
-            "tblestoquelocalprodutovariacaovenda.codusuarioalteracao": {
-                "tabela": "tblestoquelocalprodutovariacaovenda",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueLocalProdutoVariacaoVendaS"
-            },
-            "tblestoquelocalprodutovariacaovenda.codusuariocriacao": {
-                "tabela": "tblestoquelocalprodutovariacaovenda",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueLocalProdutoVariacaoVendaS"
-            },
-            "tblestoquemes.codusuarioalteracao": {
-                "tabela": "tblestoquemes",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueMesS"
-            },
-            "tblestoquemes.codusuariocriacao": {
-                "tabela": "tblestoquemes",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueMesS"
-            },
-            "tblestoquemovimento.codusuarioalteracao": {
-                "tabela": "tblestoquemovimento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueMovimentoS"
-            },
-            "tblestoquemovimento.codusuariocriacao": {
-                "tabela": "tblestoquemovimento",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueMovimentoS"
-            },
-            "tblestoquemovimentotipo.codusuarioalteracao": {
-                "tabela": "tblestoquemovimentotipo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueMovimentoTipoS"
-            },
-            "tblestoquemovimentotipo.codusuariocriacao": {
-                "tabela": "tblestoquemovimentotipo",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueMovimentoTipoS"
-            },
-            "tblestoquesaldo.codusuarioalteracao": {
-                "tabela": "tblestoquesaldo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueSaldoS"
-            },
-            "tblestoquesaldo.codusuariocriacao": {
-                "tabela": "tblestoquesaldo",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueSaldoS"
-            },
-            "tblestoquesaldoconferencia.codusuarioalteracao": {
-                "tabela": "tblestoquesaldoconferencia",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EstoqueSaldoConferenciaS"
-            },
-            "tblestoquesaldoconferencia.codusuariocriacao": {
-                "tabela": "tblestoquesaldoconferencia",
-                "coluna": "codusuariocriacao",
-                "metodo": "EstoqueSaldoConferenciaS"
-            },
-            "tblextratobancario.codusuarioalteracao": {
-                "tabela": "tblextratobancario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ExtratoBancarioS"
-            },
-            "tblextratobancario.codusuariocriacao": {
-                "tabela": "tblextratobancario",
-                "coluna": "codusuariocriacao",
-                "metodo": "ExtratoBancarioS"
-            },
-            "tblextratobancariotipomovimento.codusuarioalteracao": {
-                "tabela": "tblextratobancariotipomovimento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ExtratoBancarioTipoMovimentoS"
-            },
-            "tblextratobancariotipomovimento.codusuariocriacao": {
-                "tabela": "tblextratobancariotipomovimento",
-                "coluna": "codusuariocriacao",
-                "metodo": "ExtratoBancarioTipoMovimentoS"
-            },
-            "tblfamiliaproduto.codusuarioalteracao": {
-                "tabela": "tblfamiliaproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "FamiliaProdutoS"
-            },
-            "tblfamiliaproduto.codusuariocriacao": {
-                "tabela": "tblfamiliaproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "FamiliaProdutoS"
-            },
-            "tblferiado.codusuarioalteracao": {
-                "tabela": "tblferiado",
-                "coluna": "codusuarioalteracao",
-                "metodo": "FeriadoS"
-            },
-            "tblferiado.codusuariocriacao": {
-                "tabela": "tblferiado",
-                "coluna": "codusuariocriacao",
-                "metodo": "FeriadoS"
-            },
-            "tblferias.codusuarioalteracao": {
-                "tabela": "tblferias",
-                "coluna": "codusuarioalteracao",
-                "metodo": "FeriasS"
-            },
-            "tblferias.codusuariocriacao": {
-                "tabela": "tblferias",
-                "coluna": "codusuariocriacao",
-                "metodo": "FeriasS"
-            },
             "tblfilial.acbrnfemonitorcodusuario": {
                 "tabela": "tblfilial",
                 "coluna": "acbrnfemonitorcodusuario",
-                "metodo": "FilialS"
-            },
-            "tblfilial.codusuarioalteracao": {
-                "tabela": "tblfilial",
-                "coluna": "codusuarioalteracao",
-                "metodo": "FilialS"
-            },
-            "tblfilial.codusuariocriacao": {
-                "tabela": "tblfilial",
-                "coluna": "codusuariocriacao",
-                "metodo": "FilialS"
-            },
-            "tblformapagamento.codusuarioalteracao": {
-                "tabela": "tblformapagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "FormaPagamentoS"
-            },
-            "tblformapagamento.codusuariocriacao": {
-                "tabela": "tblformapagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "FormaPagamentoS"
-            },
-            "tblgrupocliente.codusuarioalteracao": {
-                "tabela": "tblgrupocliente",
-                "coluna": "codusuarioalteracao",
-                "metodo": "GrupoClienteS"
-            },
-            "tblgrupocliente.codusuariocriacao": {
-                "tabela": "tblgrupocliente",
-                "coluna": "codusuariocriacao",
-                "metodo": "GrupoClienteS"
-            },
-            "tblgrupoeconomico.codusuarioalteracao": {
-                "tabela": "tblgrupoeconomico",
-                "coluna": "codusuarioalteracao",
-                "metodo": "GrupoEconomicoS"
-            },
-            "tblgrupoeconomico.codusuariocriacao": {
-                "tabela": "tblgrupoeconomico",
-                "coluna": "codusuariocriacao",
-                "metodo": "GrupoEconomicoS"
-            },
-            "tblgrupoproduto.codusuarioalteracao": {
-                "tabela": "tblgrupoproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "GrupoProdutoS"
-            },
-            "tblgrupoproduto.codusuariocriacao": {
-                "tabela": "tblgrupoproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "GrupoProdutoS"
-            },
-            "tblgrupousuario.codusuarioalteracao": {
-                "tabela": "tblgrupousuario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "GrupoUsuarioS"
-            },
-            "tblgrupousuario.codusuariocriacao": {
-                "tabela": "tblgrupousuario",
-                "coluna": "codusuariocriacao",
-                "metodo": "GrupoUsuarioS"
-            },
-            "tblgrupousuariopermissao.codusuarioalteracao": {
-                "tabela": "tblgrupousuariopermissao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "GrupoUsuarioPermissaoS"
-            },
-            "tblgrupousuariopermissao.codusuariocriacao": {
-                "tabela": "tblgrupousuariopermissao",
-                "coluna": "codusuariocriacao",
-                "metodo": "GrupoUsuarioPermissaoS"
+                "metodo": "FilialAcbrNfeMonitorS"
             },
             "tblgrupousuariousuario.codusuario": {
                 "tabela": "tblgrupousuariousuario",
                 "coluna": "codusuario",
                 "metodo": "GrupoUsuarioUsuarioS"
             },
-            "tblgrupousuariousuario.codusuarioalteracao": {
-                "tabela": "tblgrupousuariousuario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "GrupoUsuarioUsuarioS"
-            },
-            "tblgrupousuariousuario.codusuariocriacao": {
-                "tabela": "tblgrupousuariousuario",
-                "coluna": "codusuariocriacao",
-                "metodo": "GrupoUsuarioUsuarioS"
-            },
-            "tblibptax.codusuarioalteracao": {
-                "tabela": "tblibptax",
-                "coluna": "codusuarioalteracao",
-                "metodo": "IbptaxS"
-            },
-            "tblibptax.codusuariocriacao": {
-                "tabela": "tblibptax",
-                "coluna": "codusuariocriacao",
-                "metodo": "IbptaxS"
-            },
-            "tblibptcache.codusuarioalteracao": {
-                "tabela": "tblibptcache",
-                "coluna": "codusuarioalteracao",
-                "metodo": "IbptCacheS"
-            },
-            "tblibptcache.codusuariocriacao": {
-                "tabela": "tblibptcache",
-                "coluna": "codusuariocriacao",
-                "metodo": "IbptCacheS"
-            },
-            "tblimagem.codusuarioalteracao": {
-                "tabela": "tblimagem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ImagemS"
-            },
-            "tblimagem.codusuariocriacao": {
-                "tabela": "tblimagem",
-                "coluna": "codusuariocriacao",
-                "metodo": "ImagemS"
-            },
-            "tblliobandeiracartao.codusuarioalteracao": {
-                "tabela": "tblliobandeiracartao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "LioBandeiraCartaoS"
-            },
-            "tblliobandeiracartao.codusuariocriacao": {
-                "tabela": "tblliobandeiracartao",
-                "coluna": "codusuariocriacao",
-                "metodo": "LioBandeiraCartaoS"
-            },
-            "tblliopedido.codusuarioalteracao": {
-                "tabela": "tblliopedido",
-                "coluna": "codusuarioalteracao",
-                "metodo": "LioPedidoS"
-            },
-            "tblliopedido.codusuariocriacao": {
-                "tabela": "tblliopedido",
-                "coluna": "codusuariocriacao",
-                "metodo": "LioPedidoS"
-            },
-            "tblliopedidopagamento.codusuarioalteracao": {
-                "tabela": "tblliopedidopagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "LioPedidoPagamentoS"
-            },
-            "tblliopedidopagamento.codusuariocriacao": {
-                "tabela": "tblliopedidopagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "LioPedidoPagamentoS"
-            },
-            "tblliopedidostatus.codusuarioalteracao": {
-                "tabela": "tblliopedidostatus",
-                "coluna": "codusuarioalteracao",
-                "metodo": "LioPedidoStatusS"
-            },
-            "tblliopedidostatus.codusuariocriacao": {
-                "tabela": "tblliopedidostatus",
-                "coluna": "codusuariocriacao",
-                "metodo": "LioPedidoStatusS"
-            },
-            "tbllioproduto.codusuarioalteracao": {
-                "tabela": "tbllioproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "LioProdutoS"
-            },
-            "tbllioproduto.codusuariocriacao": {
-                "tabela": "tbllioproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "LioProdutoS"
-            },
-            "tbllioterminal.codusuarioalteracao": {
-                "tabela": "tbllioterminal",
-                "coluna": "codusuarioalteracao",
-                "metodo": "LioTerminalS"
-            },
-            "tbllioterminal.codusuariocriacao": {
-                "tabela": "tbllioterminal",
-                "coluna": "codusuariocriacao",
-                "metodo": "LioTerminalS"
-            },
             "tblliquidacaotitulo.codusuario": {
                 "tabela": "tblliquidacaotitulo",
                 "coluna": "codusuario",
                 "metodo": "LiquidacaoTituloS"
             },
-            "tblliquidacaotitulo.codusuarioalteracao": {
-                "tabela": "tblliquidacaotitulo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "LiquidacaoTituloS"
-            },
-            "tblliquidacaotitulo.codusuariocriacao": {
-                "tabela": "tblliquidacaotitulo",
-                "coluna": "codusuariocriacao",
-                "metodo": "LiquidacaoTituloS"
-            },
             "tblliquidacaotitulo.codusuarioestorno": {
                 "tabela": "tblliquidacaotitulo",
                 "coluna": "codusuarioestorno",
-                "metodo": "LiquidacaoTituloS"
-            },
-            "tblmarca.codusuarioalteracao": {
-                "tabela": "tblmarca",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MarcaS"
-            },
-            "tblmarca.codusuariocriacao": {
-                "tabela": "tblmarca",
-                "coluna": "codusuariocriacao",
-                "metodo": "MarcaS"
-            },
-            "tblmdfe.codusuarioalteracao": {
-                "tabela": "tblmdfe",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MdfeS"
-            },
-            "tblmdfe.codusuariocriacao": {
-                "tabela": "tblmdfe",
-                "coluna": "codusuariocriacao",
-                "metodo": "MdfeS"
-            },
-            "tblmdfeenviosefaz.codusuarioalteracao": {
-                "tabela": "tblmdfeenviosefaz",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MdfeEnvioSefazS"
-            },
-            "tblmdfeenviosefaz.codusuariocriacao": {
-                "tabela": "tblmdfeenviosefaz",
-                "coluna": "codusuariocriacao",
-                "metodo": "MdfeEnvioSefazS"
-            },
-            "tblmdfeestado.codusuarioalteracao": {
-                "tabela": "tblmdfeestado",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MdfeEstadoS"
-            },
-            "tblmdfeestado.codusuariocriacao": {
-                "tabela": "tblmdfeestado",
-                "coluna": "codusuariocriacao",
-                "metodo": "MdfeEstadoS"
-            },
-            "tblmdfenfe.codusuarioalteracao": {
-                "tabela": "tblmdfenfe",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MdfeNfeS"
-            },
-            "tblmdfenfe.codusuariocriacao": {
-                "tabela": "tblmdfenfe",
-                "coluna": "codusuariocriacao",
-                "metodo": "MdfeNfeS"
-            },
-            "tblmdfestatus.codusuarioalteracao": {
-                "tabela": "tblmdfestatus",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MdfeStatusS"
-            },
-            "tblmdfestatus.codusuariocriacao": {
-                "tabela": "tblmdfestatus",
-                "coluna": "codusuariocriacao",
-                "metodo": "MdfeStatusS"
-            },
-            "tblmdfeveiculo.codusuarioalteracao": {
-                "tabela": "tblmdfeveiculo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MdfeVeiculoS"
-            },
-            "tblmdfeveiculo.codusuariocriacao": {
-                "tabela": "tblmdfeveiculo",
-                "coluna": "codusuariocriacao",
-                "metodo": "MdfeVeiculoS"
-            },
-            "tblmenu.codusuarioalteracao": {
-                "tabela": "tblmenu",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MenuS"
-            },
-            "tblmenu.codusuariocriacao": {
-                "tabela": "tblmenu",
-                "coluna": "codusuariocriacao",
-                "metodo": "MenuS"
-            },
-            "tblmercoscliente.codusuarioalteracao": {
-                "tabela": "tblmercoscliente",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MercosClienteS"
-            },
-            "tblmercoscliente.codusuariocriacao": {
-                "tabela": "tblmercoscliente",
-                "coluna": "codusuariocriacao",
-                "metodo": "MercosClienteS"
-            },
-            "tblmercospedido.codusuarioalteracao": {
-                "tabela": "tblmercospedido",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MercosPedidoS"
-            },
-            "tblmercospedido.codusuariocriacao": {
-                "tabela": "tblmercospedido",
-                "coluna": "codusuariocriacao",
-                "metodo": "MercosPedidoS"
-            },
-            "tblmercospedidoitem.codusuarioalteracao": {
-                "tabela": "tblmercospedidoitem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MercosPedidoItemS"
-            },
-            "tblmercospedidoitem.codusuariocriacao": {
-                "tabela": "tblmercospedidoitem",
-                "coluna": "codusuariocriacao",
-                "metodo": "MercosPedidoItemS"
-            },
-            "tblmercosproduto.codusuarioalteracao": {
-                "tabela": "tblmercosproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MercosProdutoS"
-            },
-            "tblmercosproduto.codusuariocriacao": {
-                "tabela": "tblmercosproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "MercosProdutoS"
-            },
-            "tblmercosprodutoimagem.codusuarioalteracao": {
-                "tabela": "tblmercosprodutoimagem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MercosProdutoImagemS"
-            },
-            "tblmercosprodutoimagem.codusuariocriacao": {
-                "tabela": "tblmercosprodutoimagem",
-                "coluna": "codusuariocriacao",
-                "metodo": "MercosProdutoImagemS"
-            },
-            "tblmeta.codusuarioalteracao": {
-                "tabela": "tblmeta",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MetaS"
-            },
-            "tblmeta.codusuariocriacao": {
-                "tabela": "tblmeta",
-                "coluna": "codusuariocriacao",
-                "metodo": "MetaS"
-            },
-            "tblmetafilial.codusuarioalteracao": {
-                "tabela": "tblmetafilial",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MetaFilialS"
-            },
-            "tblmetafilial.codusuariocriacao": {
-                "tabela": "tblmetafilial",
-                "coluna": "codusuariocriacao",
-                "metodo": "MetaFilialS"
-            },
-            "tblmetafilialpessoa.codusuarioalteracao": {
-                "tabela": "tblmetafilialpessoa",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MetaFilialPessoaS"
-            },
-            "tblmetafilialpessoa.codusuariocriacao": {
-                "tabela": "tblmetafilialpessoa",
-                "coluna": "codusuariocriacao",
-                "metodo": "MetaFilialPessoaS"
-            },
-            "tblmetavendedor.codusuarioalteracao": {
-                "tabela": "tblmetavendedor",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MetaVendedorS"
-            },
-            "tblmetavendedor.codusuariocriacao": {
-                "tabela": "tblmetavendedor",
-                "coluna": "codusuariocriacao",
-                "metodo": "MetaVendedorS"
-            },
-            "tblmovimentotitulo.codusuarioalteracao": {
-                "tabela": "tblmovimentotitulo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "MovimentoTituloS"
-            },
-            "tblmovimentotitulo.codusuariocriacao": {
-                "tabela": "tblmovimentotitulo",
-                "coluna": "codusuariocriacao",
-                "metodo": "MovimentoTituloS"
-            },
-            "tblnaturezaoperacao.codusuarioalteracao": {
-                "tabela": "tblnaturezaoperacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NaturezaOperacaoS"
-            },
-            "tblnaturezaoperacao.codusuariocriacao": {
-                "tabela": "tblnaturezaoperacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "NaturezaOperacaoS"
-            },
-            "tblncm.codusuarioalteracao": {
-                "tabela": "tblncm",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NcmS"
-            },
-            "tblncm.codusuariocriacao": {
-                "tabela": "tblncm",
-                "coluna": "codusuariocriacao",
-                "metodo": "NcmS"
+                "metodo": "LiquidacaoTituloEstornoS"
             },
             "tblnegocio.codusuario": {
                 "tabela": "tblnegocio",
@@ -1284,1022 +404,42 @@
             "tblnegocio.codusuarioacertoentrega": {
                 "tabela": "tblnegocio",
                 "coluna": "codusuarioacertoentrega",
-                "metodo": "NegocioS"
-            },
-            "tblnegocio.codusuarioalteracao": {
-                "tabela": "tblnegocio",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NegocioS"
+                "metodo": "NegocioAcertoEntregaS"
             },
             "tblnegocio.codusuarioconfissao": {
                 "tabela": "tblnegocio",
                 "coluna": "codusuarioconfissao",
-                "metodo": "NegocioS"
-            },
-            "tblnegocio.codusuariocriacao": {
-                "tabela": "tblnegocio",
-                "coluna": "codusuariocriacao",
-                "metodo": "NegocioS"
+                "metodo": "NegocioConfissaoS"
             },
             "tblnegocio.codusuariorecebimento": {
                 "tabela": "tblnegocio",
                 "coluna": "codusuariorecebimento",
-                "metodo": "NegocioS"
-            },
-            "tblnegociocaixamercadoria.codusuarioalteracao": {
-                "tabela": "tblnegociocaixamercadoria",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NegocioCaixaMercadoriaS"
-            },
-            "tblnegociocaixamercadoria.codusuariocriacao": {
-                "tabela": "tblnegociocaixamercadoria",
-                "coluna": "codusuariocriacao",
-                "metodo": "NegocioCaixaMercadoriaS"
+                "metodo": "NegocioRecebimentoS"
             },
             "tblnegociocaixamercadoria.codusuariorecebimento": {
                 "tabela": "tblnegociocaixamercadoria",
                 "coluna": "codusuariorecebimento",
                 "metodo": "NegocioCaixaMercadoriaS"
             },
-            "tblnegocioformapagamento.codusuarioalteracao": {
-                "tabela": "tblnegocioformapagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NegocioFormaPagamentoS"
-            },
-            "tblnegocioformapagamento.codusuariocriacao": {
-                "tabela": "tblnegocioformapagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "NegocioFormaPagamentoS"
-            },
-            "tblnegocioprodutobarra.codusuarioalteracao": {
-                "tabela": "tblnegocioprodutobarra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NegocioProdutoBarraS"
-            },
             "tblnegocioprodutobarra.codusuarioconferencia": {
                 "tabela": "tblnegocioprodutobarra",
                 "coluna": "codusuarioconferencia",
                 "metodo": "NegocioProdutoBarraS"
-            },
-            "tblnegocioprodutobarra.codusuariocriacao": {
-                "tabela": "tblnegocioprodutobarra",
-                "coluna": "codusuariocriacao",
-                "metodo": "NegocioProdutoBarraS"
-            },
-            "tblnegocioprodutobarrapedidoitem.codusuarioalteracao": {
-                "tabela": "tblnegocioprodutobarrapedidoitem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NegocioProdutoBarraPedidoItemS"
-            },
-            "tblnegocioprodutobarrapedidoitem.codusuariocriacao": {
-                "tabela": "tblnegocioprodutobarrapedidoitem",
-                "coluna": "codusuariocriacao",
-                "metodo": "NegocioProdutoBarraPedidoItemS"
-            },
-            "tblnegociostatus.codusuarioalteracao": {
-                "tabela": "tblnegociostatus",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NegocioStatusS"
-            },
-            "tblnegociostatus.codusuariocriacao": {
-                "tabela": "tblnegociostatus",
-                "coluna": "codusuariocriacao",
-                "metodo": "NegocioStatusS"
-            },
-            "tblnfeterceiro.codusuarioalteracao": {
-                "tabela": "tblnfeterceiro",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NfeTerceiroS"
             },
             "tblnfeterceiro.codusuarioconferencia": {
                 "tabela": "tblnfeterceiro",
                 "coluna": "codusuarioconferencia",
                 "metodo": "NfeTerceiroS"
             },
-            "tblnfeterceiro.codusuariocriacao": {
-                "tabela": "tblnfeterceiro",
-                "coluna": "codusuariocriacao",
-                "metodo": "NfeTerceiroS"
-            },
             "tblnfeterceiro.codusuariorevisao": {
                 "tabela": "tblnfeterceiro",
                 "coluna": "codusuariorevisao",
-                "metodo": "NfeTerceiroS"
-            },
-            "tblnfeterceiroduplicata.codusuarioalteracao": {
-                "tabela": "tblnfeterceiroduplicata",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NfeTerceiroDuplicataS"
-            },
-            "tblnfeterceiroduplicata.codusuariocriacao": {
-                "tabela": "tblnfeterceiroduplicata",
-                "coluna": "codusuariocriacao",
-                "metodo": "NfeTerceiroDuplicataS"
-            },
-            "tblnfeterceiroitem.codusuarioalteracao": {
-                "tabela": "tblnfeterceiroitem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NfeTerceiroItemS"
+                "metodo": "NfeTerceiroRevisaoS"
             },
             "tblnfeterceiroitem.codusuarioconferencia": {
                 "tabela": "tblnfeterceiroitem",
                 "coluna": "codusuarioconferencia",
                 "metodo": "NfeTerceiroItemS"
-            },
-            "tblnfeterceiroitem.codusuariocriacao": {
-                "tabela": "tblnfeterceiroitem",
-                "coluna": "codusuariocriacao",
-                "metodo": "NfeTerceiroItemS"
-            },
-            "tblnfeterceiropagamento.codusuarioalteracao": {
-                "tabela": "tblnfeterceiropagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NfeTerceiroPagamentoS"
-            },
-            "tblnfeterceiropagamento.codusuariocriacao": {
-                "tabela": "tblnfeterceiropagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "NfeTerceiroPagamentoS"
-            },
-            "tblnotafiscal.codusuarioalteracao": {
-                "tabela": "tblnotafiscal",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalS"
-            },
-            "tblnotafiscal.codusuariocriacao": {
-                "tabela": "tblnotafiscal",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalS"
-            },
-            "tblnotafiscalcartacorrecao.codusuarioalteracao": {
-                "tabela": "tblnotafiscalcartacorrecao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalCartaCorrecaoS"
-            },
-            "tblnotafiscalcartacorrecao.codusuariocriacao": {
-                "tabela": "tblnotafiscalcartacorrecao",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalCartaCorrecaoS"
-            },
-            "tblnotafiscalduplicatas.codusuarioalteracao": {
-                "tabela": "tblnotafiscalduplicatas",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalDuplicatasS"
-            },
-            "tblnotafiscalduplicatas.codusuariocriacao": {
-                "tabela": "tblnotafiscalduplicatas",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalDuplicatasS"
-            },
-            "tblnotafiscalpagamento.codusuarioalteracao": {
-                "tabela": "tblnotafiscalpagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalPagamentoS"
-            },
-            "tblnotafiscalpagamento.codusuariocriacao": {
-                "tabela": "tblnotafiscalpagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalPagamentoS"
-            },
-            "tblnotafiscalprodutobarra.codusuarioalteracao": {
-                "tabela": "tblnotafiscalprodutobarra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalProdutoBarraS"
-            },
-            "tblnotafiscalprodutobarra.codusuariocriacao": {
-                "tabela": "tblnotafiscalprodutobarra",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalProdutoBarraS"
-            },
-            "tblnotafiscalreferenciada.codusuarioalteracao": {
-                "tabela": "tblnotafiscalreferenciada",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalReferenciadaS"
-            },
-            "tblnotafiscalreferenciada.codusuariocriacao": {
-                "tabela": "tblnotafiscalreferenciada",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalReferenciadaS"
-            },
-            "tblnotafiscalterceiro.codusuarioalteracao": {
-                "tabela": "tblnotafiscalterceiro",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalTerceiroS"
-            },
-            "tblnotafiscalterceiro.codusuariocriacao": {
-                "tabela": "tblnotafiscalterceiro",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalTerceiroS"
-            },
-            "tblnotafiscalterceiroduplicata.codusuarioalteracao": {
-                "tabela": "tblnotafiscalterceiroduplicata",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalTerceiroDuplicataS"
-            },
-            "tblnotafiscalterceiroduplicata.codusuariocriacao": {
-                "tabela": "tblnotafiscalterceiroduplicata",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalTerceiroDuplicataS"
-            },
-            "tblnotafiscalterceirogrupo.codusuarioalteracao": {
-                "tabela": "tblnotafiscalterceirogrupo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalTerceiroGrupoS"
-            },
-            "tblnotafiscalterceirogrupo.codusuariocriacao": {
-                "tabela": "tblnotafiscalterceirogrupo",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalTerceiroGrupoS"
-            },
-            "tblnotafiscalterceiroitem.codusuarioalteracao": {
-                "tabela": "tblnotafiscalterceiroitem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalTerceiroItemS"
-            },
-            "tblnotafiscalterceiroitem.codusuariocriacao": {
-                "tabela": "tblnotafiscalterceiroitem",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalTerceiroItemS"
-            },
-            "tblnotafiscalterceiropagamento.codusuarioalteracao": {
-                "tabela": "tblnotafiscalterceiropagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalTerceiroPagamentoS"
-            },
-            "tblnotafiscalterceiropagamento.codusuariocriacao": {
-                "tabela": "tblnotafiscalterceiropagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalTerceiroPagamentoS"
-            },
-            "tblnotafiscalterceiroprodutobarra.codusuarioalteracao": {
-                "tabela": "tblnotafiscalterceiroprodutobarra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalTerceiroProdutoBarraS"
-            },
-            "tblnotafiscalterceiroprodutobarra.codusuariocriacao": {
-                "tabela": "tblnotafiscalterceiroprodutobarra",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalTerceiroProdutoBarraS"
-            },
-            "tbloperacao.codusuarioalteracao": {
-                "tabela": "tbloperacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "OperacaoS"
-            },
-            "tbloperacao.codusuariocriacao": {
-                "tabela": "tbloperacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "OperacaoS"
-            },
-            "tblpagarmebandeira.codusuarioalteracao": {
-                "tabela": "tblpagarmebandeira",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PagarMeBandeiraS"
-            },
-            "tblpagarmebandeira.codusuariocriacao": {
-                "tabela": "tblpagarmebandeira",
-                "coluna": "codusuariocriacao",
-                "metodo": "PagarMeBandeiraS"
-            },
-            "tblpagarmepagamento.codusuarioalteracao": {
-                "tabela": "tblpagarmepagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PagarMePagamentoS"
-            },
-            "tblpagarmepagamento.codusuariocriacao": {
-                "tabela": "tblpagarmepagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "PagarMePagamentoS"
-            },
-            "tblpagarmepedido.codusuarioalteracao": {
-                "tabela": "tblpagarmepedido",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PagarMePedidoS"
-            },
-            "tblpagarmepedido.codusuariocriacao": {
-                "tabela": "tblpagarmepedido",
-                "coluna": "codusuariocriacao",
-                "metodo": "PagarMePedidoS"
-            },
-            "tblpagarmepos.codusuarioalteracao": {
-                "tabela": "tblpagarmepos",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PagarMePosS"
-            },
-            "tblpagarmepos.codusuariocriacao": {
-                "tabela": "tblpagarmepos",
-                "coluna": "codusuariocriacao",
-                "metodo": "PagarMePosS"
-            },
-            "tblpais.codusuarioalteracao": {
-                "tabela": "tblpais",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PaisS"
-            },
-            "tblpais.codusuariocriacao": {
-                "tabela": "tblpais",
-                "coluna": "codusuariocriacao",
-                "metodo": "PaisS"
-            },
-            "tblparametrosgerais.codusuarioalteracao": {
-                "tabela": "tblparametrosgerais",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ParametrosGeraisS"
-            },
-            "tblparametrosgerais.codusuariocriacao": {
-                "tabela": "tblparametrosgerais",
-                "coluna": "codusuariocriacao",
-                "metodo": "ParametrosGeraisS"
-            },
-            "tblpdv.codusuarioalteracao": {
-                "tabela": "tblpdv",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PdvS"
-            },
-            "tblpdv.codusuariocriacao": {
-                "tabela": "tblpdv",
-                "coluna": "codusuariocriacao",
-                "metodo": "PdvS"
-            },
-            "tblpedido.codusuarioalteracao": {
-                "tabela": "tblpedido",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PedidoS"
-            },
-            "tblpedido.codusuariocriacao": {
-                "tabela": "tblpedido",
-                "coluna": "codusuariocriacao",
-                "metodo": "PedidoS"
-            },
-            "tblpedidoitem.codusuarioalteracao": {
-                "tabela": "tblpedidoitem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PedidoItemS"
-            },
-            "tblpedidoitem.codusuariocriacao": {
-                "tabela": "tblpedidoitem",
-                "coluna": "codusuariocriacao",
-                "metodo": "PedidoItemS"
-            },
-            "tblpermissao.codusuarioalteracao": {
-                "tabela": "tblpermissao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PermissaoS"
-            },
-            "tblpermissao.codusuariocriacao": {
-                "tabela": "tblpermissao",
-                "coluna": "codusuariocriacao",
-                "metodo": "PermissaoS"
-            },
-            "tblpessoa.codusuarioalteracao": {
-                "tabela": "tblpessoa",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PessoaS"
-            },
-            "tblpessoa.codusuariocriacao": {
-                "tabela": "tblpessoa",
-                "coluna": "codusuariocriacao",
-                "metodo": "PessoaS"
-            },
-            "tblpessoacertidao.codusuarioalteracao": {
-                "tabela": "tblpessoacertidao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PessoaCertidaoS"
-            },
-            "tblpessoacertidao.codusuariocriacao": {
-                "tabela": "tblpessoacertidao",
-                "coluna": "codusuariocriacao",
-                "metodo": "PessoaCertidaoS"
-            },
-            "tblpessoaconta.codusuarioalteracao": {
-                "tabela": "tblpessoaconta",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PessoaContaS"
-            },
-            "tblpessoaconta.codusuariocriacao": {
-                "tabela": "tblpessoaconta",
-                "coluna": "codusuariocriacao",
-                "metodo": "PessoaContaS"
-            },
-            "tblpessoaemail.codusuarioalteracao": {
-                "tabela": "tblpessoaemail",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PessoaEmailS"
-            },
-            "tblpessoaemail.codusuariocriacao": {
-                "tabela": "tblpessoaemail",
-                "coluna": "codusuariocriacao",
-                "metodo": "PessoaEmailS"
-            },
-            "tblpessoaendereco.codusuarioalteracao": {
-                "tabela": "tblpessoaendereco",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PessoaEnderecoS"
-            },
-            "tblpessoaendereco.codusuariocriacao": {
-                "tabela": "tblpessoaendereco",
-                "coluna": "codusuariocriacao",
-                "metodo": "PessoaEnderecoS"
-            },
-            "tblpessoatelefone.codusuarioalteracao": {
-                "tabela": "tblpessoatelefone",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PessoaTelefoneS"
-            },
-            "tblpessoatelefone.codusuariocriacao": {
-                "tabela": "tblpessoatelefone",
-                "coluna": "codusuariocriacao",
-                "metodo": "PessoaTelefoneS"
-            },
-            "tblpix.codusuarioalteracao": {
-                "tabela": "tblpix",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PixS"
-            },
-            "tblpix.codusuariocriacao": {
-                "tabela": "tblpix",
-                "coluna": "codusuariocriacao",
-                "metodo": "PixS"
-            },
-            "tblpixcob.codusuarioalteracao": {
-                "tabela": "tblpixcob",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PixCobS"
-            },
-            "tblpixcob.codusuariocriacao": {
-                "tabela": "tblpixcob",
-                "coluna": "codusuariocriacao",
-                "metodo": "PixCobS"
-            },
-            "tblpixcobstatus.codusuarioalteracao": {
-                "tabela": "tblpixcobstatus",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PixCobStatusS"
-            },
-            "tblpixcobstatus.codusuariocriacao": {
-                "tabela": "tblpixcobstatus",
-                "coluna": "codusuariocriacao",
-                "metodo": "PixCobStatusS"
-            },
-            "tblpixdevolucao.codusuarioalteracao": {
-                "tabela": "tblpixdevolucao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PixDevolucaoS"
-            },
-            "tblpixdevolucao.codusuariocriacao": {
-                "tabela": "tblpixdevolucao",
-                "coluna": "codusuariocriacao",
-                "metodo": "PixDevolucaoS"
-            },
-            "tblpixdevolucaostatus.codusuarioalteracao": {
-                "tabela": "tblpixdevolucaostatus",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PixDevolucaoStatusS"
-            },
-            "tblpixdevolucaostatus.codusuariocriacao": {
-                "tabela": "tblpixdevolucaostatus",
-                "coluna": "codusuariocriacao",
-                "metodo": "PixDevolucaoStatusS"
-            },
-            "tblportador.codusuarioalteracao": {
-                "tabela": "tblportador",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PortadorS"
-            },
-            "tblportador.codusuariocriacao": {
-                "tabela": "tblportador",
-                "coluna": "codusuariocriacao",
-                "metodo": "PortadorS"
-            },
-            "tblprefixogs1.codusuarioalteracao": {
-                "tabela": "tblprefixogs1",
-                "coluna": "codusuarioalteracao",
-                "metodo": "PrefixoGs1S"
-            },
-            "tblprefixogs1.codusuariocriacao": {
-                "tabela": "tblprefixogs1",
-                "coluna": "codusuariocriacao",
-                "metodo": "PrefixoGs1S"
-            },
-            "tblproduto.codusuarioalteracao": {
-                "tabela": "tblproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ProdutoS"
-            },
-            "tblproduto.codusuariocriacao": {
-                "tabela": "tblproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "ProdutoS"
-            },
-            "tblprodutobarra.codusuarioalteracao": {
-                "tabela": "tblprodutobarra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ProdutoBarraS"
-            },
-            "tblprodutobarra.codusuariocriacao": {
-                "tabela": "tblprodutobarra",
-                "coluna": "codusuariocriacao",
-                "metodo": "ProdutoBarraS"
-            },
-            "tblprodutoembalagem.codusuarioalteracao": {
-                "tabela": "tblprodutoembalagem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ProdutoEmbalagemS"
-            },
-            "tblprodutoembalagem.codusuariocriacao": {
-                "tabela": "tblprodutoembalagem",
-                "coluna": "codusuariocriacao",
-                "metodo": "ProdutoEmbalagemS"
-            },
-            "tblprodutohistoricopreco.codusuarioalteracao": {
-                "tabela": "tblprodutohistoricopreco",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ProdutoHistoricoPrecoS"
-            },
-            "tblprodutohistoricopreco.codusuariocriacao": {
-                "tabela": "tblprodutohistoricopreco",
-                "coluna": "codusuariocriacao",
-                "metodo": "ProdutoHistoricoPrecoS"
-            },
-            "tblprodutoimagem.codusuarioalteracao": {
-                "tabela": "tblprodutoimagem",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ProdutoImagemS"
-            },
-            "tblprodutoimagem.codusuariocriacao": {
-                "tabela": "tblprodutoimagem",
-                "coluna": "codusuariocriacao",
-                "metodo": "ProdutoImagemS"
-            },
-            "tblprodutoimagemprodutovariacao.codusuarioalteracao": {
-                "tabela": "tblprodutoimagemprodutovariacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ProdutoImagemProdutoVariacaoS"
-            },
-            "tblprodutoimagemprodutovariacao.codusuariocriacao": {
-                "tabela": "tblprodutoimagemprodutovariacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "ProdutoImagemProdutoVariacaoS"
-            },
-            "tblprodutovariacao.codusuarioalteracao": {
-                "tabela": "tblprodutovariacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ProdutoVariacaoS"
-            },
-            "tblprodutovariacao.codusuariocriacao": {
-                "tabela": "tblprodutovariacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "ProdutoVariacaoS"
-            },
-            "tblregistrospc.codusuarioalteracao": {
-                "tabela": "tblregistrospc",
-                "coluna": "codusuarioalteracao",
-                "metodo": "RegistroSpcS"
-            },
-            "tblregistrospc.codusuariocriacao": {
-                "tabela": "tblregistrospc",
-                "coluna": "codusuariocriacao",
-                "metodo": "RegistroSpcS"
-            },
-            "tblregulamentoicmsstmt.codusuarioalteracao": {
-                "tabela": "tblregulamentoicmsstmt",
-                "coluna": "codusuarioalteracao",
-                "metodo": "RegulamentoIcmsStMtS"
-            },
-            "tblregulamentoicmsstmt.codusuariocriacao": {
-                "tabela": "tblregulamentoicmsstmt",
-                "coluna": "codusuariocriacao",
-                "metodo": "RegulamentoIcmsStMtS"
-            },
-            "tblsecaoproduto.codusuarioalteracao": {
-                "tabela": "tblsecaoproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SecaoProdutoS"
-            },
-            "tblsecaoproduto.codusuariocriacao": {
-                "tabela": "tblsecaoproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "SecaoProdutoS"
-            },
-            "tblsexo.codusuarioalteracao": {
-                "tabela": "tblsexo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SexoS"
-            },
-            "tblsexo.codusuariocriacao": {
-                "tabela": "tblsexo",
-                "coluna": "codusuariocriacao",
-                "metodo": "SexoS"
-            },
-            "tblstonebandeira.codusuarioalteracao": {
-                "tabela": "tblstonebandeira",
-                "coluna": "codusuarioalteracao",
-                "metodo": "StoneBandeiraS"
-            },
-            "tblstonebandeira.codusuariocriacao": {
-                "tabela": "tblstonebandeira",
-                "coluna": "codusuariocriacao",
-                "metodo": "StoneBandeiraS"
-            },
-            "tblstonefilial.codusuarioalteracao": {
-                "tabela": "tblstonefilial",
-                "coluna": "codusuarioalteracao",
-                "metodo": "StoneFilialS"
-            },
-            "tblstonefilial.codusuariocriacao": {
-                "tabela": "tblstonefilial",
-                "coluna": "codusuariocriacao",
-                "metodo": "StoneFilialS"
-            },
-            "tblstonepos.codusuarioalteracao": {
-                "tabela": "tblstonepos",
-                "coluna": "codusuarioalteracao",
-                "metodo": "StonePosS"
-            },
-            "tblstonepos.codusuariocriacao": {
-                "tabela": "tblstonepos",
-                "coluna": "codusuariocriacao",
-                "metodo": "StonePosS"
-            },
-            "tblstonepretransacao.codusuarioalteracao": {
-                "tabela": "tblstonepretransacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "StonePreTransacaoS"
-            },
-            "tblstonepretransacao.codusuariocriacao": {
-                "tabela": "tblstonepretransacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "StonePreTransacaoS"
-            },
-            "tblstonetransacao.codusuarioalteracao": {
-                "tabela": "tblstonetransacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "StoneTransacaoS"
-            },
-            "tblstonetransacao.codusuariocriacao": {
-                "tabela": "tblstonetransacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "StoneTransacaoS"
-            },
-            "tblstonetransacaoparcela.codusuarioalteracao": {
-                "tabela": "tblstonetransacaoparcela",
-                "coluna": "codusuarioalteracao",
-                "metodo": "StoneTransacaoParcelaS"
-            },
-            "tblstonetransacaoparcela.codusuariocriacao": {
-                "tabela": "tblstonetransacaoparcela",
-                "coluna": "codusuariocriacao",
-                "metodo": "StoneTransacaoParcelaS"
-            },
-            "tblsubgrupoproduto.codusuarioalteracao": {
-                "tabela": "tblsubgrupoproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SubGrupoProdutoS"
-            },
-            "tblsubgrupoproduto.codusuariocriacao": {
-                "tabela": "tblsubgrupoproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "SubGrupoProdutoS"
-            },
-            "tbltipomovimentotitulo.codusuarioalteracao": {
-                "tabela": "tbltipomovimentotitulo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TipoMovimentoTituloS"
-            },
-            "tbltipomovimentotitulo.codusuariocriacao": {
-                "tabela": "tbltipomovimentotitulo",
-                "coluna": "codusuariocriacao",
-                "metodo": "TipoMovimentoTituloS"
-            },
-            "tbltipoproduto.codusuarioalteracao": {
-                "tabela": "tbltipoproduto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TipoProdutoS"
-            },
-            "tbltipoproduto.codusuariocriacao": {
-                "tabela": "tbltipoproduto",
-                "coluna": "codusuariocriacao",
-                "metodo": "TipoProdutoS"
-            },
-            "tbltipotitulo.codusuarioalteracao": {
-                "tabela": "tbltipotitulo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TipoTituloS"
-            },
-            "tbltipotitulo.codusuariocriacao": {
-                "tabela": "tbltipotitulo",
-                "coluna": "codusuariocriacao",
-                "metodo": "TipoTituloS"
-            },
-            "tbltitulo.codusuarioalteracao": {
-                "tabela": "tbltitulo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TituloS"
-            },
-            "tbltitulo.codusuariocriacao": {
-                "tabela": "tbltitulo",
-                "coluna": "codusuariocriacao",
-                "metodo": "TituloS"
-            },
-            "tbltituloagrupamento.codusuarioalteracao": {
-                "tabela": "tbltituloagrupamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TituloAgrupamentoS"
-            },
-            "tbltituloagrupamento.codusuariocriacao": {
-                "tabela": "tbltituloagrupamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "TituloAgrupamentoS"
-            },
-            "tbltituloboleto.codusuarioalteracao": {
-                "tabela": "tbltituloboleto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TituloBoletoS"
-            },
-            "tbltituloboleto.codusuariocriacao": {
-                "tabela": "tbltituloboleto",
-                "coluna": "codusuariocriacao",
-                "metodo": "TituloBoletoS"
-            },
-            "tbltitulonfeterceiro.codusuarioalteracao": {
-                "tabela": "tbltitulonfeterceiro",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TituloNfeTerceiroS"
-            },
-            "tbltitulonfeterceiro.codusuariocriacao": {
-                "tabela": "tbltitulonfeterceiro",
-                "coluna": "codusuariocriacao",
-                "metodo": "TituloNfeTerceiroS"
-            },
-            "tbltributacao.codusuarioalteracao": {
-                "tabela": "tbltributacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TributacaoS"
-            },
-            "tbltributacao.codusuariocriacao": {
-                "tabela": "tbltributacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "TributacaoS"
-            },
-            "tbltributacaonaturezaoperacao.codusuarioalteracao": {
-                "tabela": "tbltributacaonaturezaoperacao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TributacaoNaturezaOperacaoS"
-            },
-            "tbltributacaonaturezaoperacao.codusuariocriacao": {
-                "tabela": "tbltributacaonaturezaoperacao",
-                "coluna": "codusuariocriacao",
-                "metodo": "TributacaoNaturezaOperacaoS"
-            },
-            "tblunidademedida.codusuarioalteracao": {
-                "tabela": "tblunidademedida",
-                "coluna": "codusuarioalteracao",
-                "metodo": "UnidadeMedidaS"
-            },
-            "tblunidademedida.codusuariocriacao": {
-                "tabela": "tblunidademedida",
-                "coluna": "codusuariocriacao",
-                "metodo": "UnidadeMedidaS"
-            },
-            "tblusuario.codusuarioalteracao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "UsuarioS"
-            },
-            "tblusuario.codusuariocriacao": {
-                "tabela": "tblusuario",
-                "coluna": "codusuariocriacao",
-                "metodo": "UsuarioS"
-            },
-            "tblvalecompra.codusuarioalteracao": {
-                "tabela": "tblvalecompra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ValeCompraS"
-            },
-            "tblvalecompra.codusuariocriacao": {
-                "tabela": "tblvalecompra",
-                "coluna": "codusuariocriacao",
-                "metodo": "ValeCompraS"
-            },
-            "tblvalecompraformapagamento.codusuarioalteracao": {
-                "tabela": "tblvalecompraformapagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ValeCompraFormaPagamentoS"
-            },
-            "tblvalecompraformapagamento.codusuariocriacao": {
-                "tabela": "tblvalecompraformapagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "ValeCompraFormaPagamentoS"
-            },
-            "tblvalecompramodelo.codusuarioalteracao": {
-                "tabela": "tblvalecompramodelo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ValeCompraModeloS"
-            },
-            "tblvalecompramodelo.codusuariocriacao": {
-                "tabela": "tblvalecompramodelo",
-                "coluna": "codusuariocriacao",
-                "metodo": "ValeCompraModeloS"
-            },
-            "tblvalecompramodeloprodutobarra.codusuarioalteracao": {
-                "tabela": "tblvalecompramodeloprodutobarra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ValeCompraModeloProdutoBarraS"
-            },
-            "tblvalecompramodeloprodutobarra.codusuariocriacao": {
-                "tabela": "tblvalecompramodeloprodutobarra",
-                "coluna": "codusuariocriacao",
-                "metodo": "ValeCompraModeloProdutoBarraS"
-            },
-            "tblvalecompraprodutobarra.codusuarioalteracao": {
-                "tabela": "tblvalecompraprodutobarra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "ValeCompraProdutoBarraS"
-            },
-            "tblvalecompraprodutobarra.codusuariocriacao": {
-                "tabela": "tblvalecompraprodutobarra",
-                "coluna": "codusuariocriacao",
-                "metodo": "ValeCompraProdutoBarraS"
-            },
-            "tblveiculo.codusuarioalteracao": {
-                "tabela": "tblveiculo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "VeiculoS"
-            },
-            "tblveiculo.codusuariocriacao": {
-                "tabela": "tblveiculo",
-                "coluna": "codusuariocriacao",
-                "metodo": "VeiculoS"
-            },
-            "tblveiculoconjunto.codusuarioalteracao": {
-                "tabela": "tblveiculoconjunto",
-                "coluna": "codusuarioalteracao",
-                "metodo": "VeiculoConjuntoS"
-            },
-            "tblveiculoconjunto.codusuariocriacao": {
-                "tabela": "tblveiculoconjunto",
-                "coluna": "codusuariocriacao",
-                "metodo": "VeiculoConjuntoS"
-            },
-            "tblveiculoconjuntoveiculo.codusuarioalteracao": {
-                "tabela": "tblveiculoconjuntoveiculo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "VeiculoConjuntoVeiculoS"
-            },
-            "tblveiculoconjuntoveiculo.codusuariocriacao": {
-                "tabela": "tblveiculoconjuntoveiculo",
-                "coluna": "codusuariocriacao",
-                "metodo": "VeiculoConjuntoVeiculoS"
-            },
-            "tblveiculotipo.codusuarioalteracao": {
-                "tabela": "tblveiculotipo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "VeiculoTipoS"
-            },
-            "tblveiculotipo.codusuariocriacao": {
-                "tabela": "tblveiculotipo",
-                "coluna": "codusuariocriacao",
-                "metodo": "VeiculoTipoS"
-            },
-            "tbldependente.codusuarioalteracao": {
-                "tabela": "tbldependente",
-                "coluna": "codusuarioalteracao",
-                "metodo": "DependenteS"
-            },
-            "tbldependente.codusuariocriacao": {
-                "tabela": "tbldependente",
-                "coluna": "codusuariocriacao",
-                "metodo": "DependenteS"
-            },
-            "tbletnia.codusuarioalteracao": {
-                "tabela": "tbletnia",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EtniaS"
-            },
-            "tbletnia.codusuariocriacao": {
-                "tabela": "tbletnia",
-                "coluna": "codusuariocriacao",
-                "metodo": "EtniaS"
-            },
-            "tbleventocalendario.codusuarioalteracao": {
-                "tabela": "tbleventocalendario",
-                "coluna": "codusuarioalteracao",
-                "metodo": "EventoCalendarioS"
-            },
-            "tbleventocalendario.codusuariocriacao": {
-                "tabela": "tbleventocalendario",
-                "coluna": "codusuariocriacao",
-                "metodo": "EventoCalendarioS"
-            },
-            "tblgrauinstrucao.codusuarioalteracao": {
-                "tabela": "tblgrauinstrucao",
-                "coluna": "codusuarioalteracao",
-                "metodo": "GrauInstrucaoS"
-            },
-            "tblgrauinstrucao.codusuariocriacao": {
-                "tabela": "tblgrauinstrucao",
-                "coluna": "codusuariocriacao",
-                "metodo": "GrauInstrucaoS"
-            },
-            "tblnotafiscalitemtributo.codusuarioalteracao": {
-                "tabela": "tblnotafiscalitemtributo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "NotaFiscalItemTributoS"
-            },
-            "tblnotafiscalitemtributo.codusuariocriacao": {
-                "tabela": "tblnotafiscalitemtributo",
-                "coluna": "codusuariocriacao",
-                "metodo": "NotaFiscalItemTributoS"
-            },
-            "tblsaurusbandeira.codusuarioalteracao": {
-                "tabela": "tblsaurusbandeira",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SaurusBandeiraS"
-            },
-            "tblsaurusbandeira.codusuariocriacao": {
-                "tabela": "tblsaurusbandeira",
-                "coluna": "codusuariocriacao",
-                "metodo": "SaurusBandeiraS"
-            },
-            "tblsauruspagamento.codusuarioalteracao": {
-                "tabela": "tblsauruspagamento",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SaurusPagamentoS"
-            },
-            "tblsauruspagamento.codusuariocriacao": {
-                "tabela": "tblsauruspagamento",
-                "coluna": "codusuariocriacao",
-                "metodo": "SaurusPagamentoS"
-            },
-            "tblsauruspdv.codusuarioalteracao": {
-                "tabela": "tblsauruspdv",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SaurusPdvS"
-            },
-            "tblsauruspdv.codusuariocriacao": {
-                "tabela": "tblsauruspdv",
-                "coluna": "codusuariocriacao",
-                "metodo": "SaurusPdvS"
-            },
-            "tblsauruspedido.codusuarioalteracao": {
-                "tabela": "tblsauruspedido",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SaurusPedidoS"
-            },
-            "tblsauruspedido.codusuariocriacao": {
-                "tabela": "tblsauruspedido",
-                "coluna": "codusuariocriacao",
-                "metodo": "SaurusPedidoS"
-            },
-            "tblsauruspinpad.codusuarioalteracao": {
-                "tabela": "tblsauruspinpad",
-                "coluna": "codusuarioalteracao",
-                "metodo": "SaurusPinPadS"
-            },
-            "tblsauruspinpad.codusuariocriacao": {
-                "tabela": "tblsauruspinpad",
-                "coluna": "codusuariocriacao",
-                "metodo": "SaurusPinPadS"
-            },
-            "tbltributacaoregra.codusuarioalteracao": {
-                "tabela": "tbltributacaoregra",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TributacaoRegraS"
-            },
-            "tbltributacaoregra.codusuariocriacao": {
-                "tabela": "tbltributacaoregra",
-                "coluna": "codusuariocriacao",
-                "metodo": "TributacaoRegraS"
-            },
-            "tbltributo.codusuarioalteracao": {
-                "tabela": "tbltributo",
-                "coluna": "codusuarioalteracao",
-                "metodo": "TributoS"
-            },
-            "tbltributo.codusuariocriacao": {
-                "tabela": "tbltributo",
-                "coluna": "codusuariocriacao",
-                "metodo": "TributoS"
-            },
-            "tblwoopedido.codusuarioalteracao": {
-                "tabela": "tblwoopedido",
-                "coluna": "codusuarioalteracao",
-                "metodo": "WooPedidoS"
-            },
-            "tblwoopedido.codusuariocriacao": {
-                "tabela": "tblwoopedido",
-                "coluna": "codusuariocriacao",
-                "metodo": "WooPedidoS"
-            },
-            "tblwoopedidonegocio.codusuarioalteracao": {
-                "tabela": "tblwoopedidonegocio",
-                "coluna": "codusuarioalteracao",
-                "metodo": "WooPedidoNegocioS"
-            },
-            "tblwoopedidonegocio.codusuariocriacao": {
-                "tabela": "tblwoopedidonegocio",
-                "coluna": "codusuariocriacao",
-                "metodo": "WooPedidoNegocioS"
             }
         }
     },
@@ -4102,9 +2242,9 @@
     "tbltributacao": {
         "tabela": "tbltributacao",
         "campocodigo": "codtributacao",
-        "namespace": "Mg\\NaturezaOperacao",
+        "namespace": "Mg\\Tributacao",
         "classe": "Tributacao",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/Tributacao.php",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Tributacao\/Tributacao.php",
         "belongsTo": {
             "codusuarioalteracao": {
                 "tabela": "tblusuario",
@@ -4501,10 +2641,16 @@
     "tblncmtributacao": {
         "tabela": "tblncmtributacao",
         "campocodigo": "codncmtributacao",
-        "namespace": "Mg\\NaturezaOperacao",
+        "namespace": "Mg\\Tributacao",
         "classe": "NcmTributacao",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/NaturezaOperacao\/NcmTributacao.php",
-        "belongsTo": [],
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Tributacao\/NcmTributacao.php",
+        "belongsTo": {
+            "codtributacao": {
+                "tabela": "tbltributacao",
+                "coluna": "codtributacao",
+                "metodo": "Tributacao"
+            }
+        },
         "hasMany": []
     },
     "tblnegocioprodutobarra": {
@@ -4719,7 +2865,28 @@
         "namespace": "Mg\\Negocio",
         "classe": "NegocioProdutoBarraPedidoItem",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioProdutoBarraPedidoItem.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codnegocioprodutobarra": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NegocioProdutoBarra"
+            },
+            "codpedidoitem": {
+                "tabela": "tblpedidoitem",
+                "coluna": "codpedidoitem",
+                "metodo": "PedidoItem"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblcupomfiscal": {
@@ -4895,21 +3062,6 @@
             }
         }
     },
-    "tblnotafiscalterceiroevento": {
-        "tabela": "tblnotafiscalterceiroevento",
-        "campocodigo": "codnotafiscalterceiroevento",
-        "namespace": "Mg\\Dfe",
-        "classe": "NotaFiscalTerceiroEvento",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Dfe\/NotaFiscalTerceiroEvento.php",
-        "belongsTo": {
-            "coddistribuicaodfe": {
-                "tabela": "tbldistribuicaodfe",
-                "coluna": "coddistribuicaodfe",
-                "metodo": "DistribuicaoDfe"
-            }
-        },
-        "hasMany": []
-    },
     "tblempresa": {
         "tabela": "tblempresa",
         "campocodigo": "codempresa",
@@ -4998,7 +3150,33 @@
         "namespace": "Mg\\Usuario",
         "classe": "GrupoUsuarioUsuario",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Usuario\/GrupoUsuarioUsuario.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codfilial": {
+                "tabela": "tblfilial",
+                "coluna": "codfilial",
+                "metodo": "Filial"
+            },
+            "codgrupousuario": {
+                "tabela": "tblgrupousuario",
+                "coluna": "codgrupousuario",
+                "metodo": "GrupoUsuario"
+            },
+            "codusuario": {
+                "tabela": "tblusuario",
+                "coluna": "codusuario",
+                "metodo": "Usuario"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblmetafilial": {
@@ -5622,7 +3800,33 @@
         "namespace": "Mg\\Negocio",
         "classe": "NegocioCaixaMercadoria",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/NegocioCaixaMercadoria.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codcaixamercadoria": {
+                "tabela": "tblcaixamercadoria",
+                "coluna": "codcaixamercadoria",
+                "metodo": "CaixaMercadoria"
+            },
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            },
+            "codusuariorecebimento": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariorecebimento",
+                "metodo": "UsuarioRecebimento"
+            }
+        },
         "hasMany": []
     },
     "tblcargo": {
@@ -7204,8 +5408,35 @@
         "namespace": "Mg\\Pedido",
         "classe": "PedidoItem",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Pedido\/PedidoItem.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codpedido": {
+                "tabela": "tblpedido",
+                "coluna": "codpedido",
+                "metodo": "Pedido"
+            },
+            "codprodutovariacao": {
+                "tabela": "tblprodutovariacao",
+                "coluna": "codprodutovariacao",
+                "metodo": "ProdutoVariacao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnegocioprodutobarrapedidoitem.codpedidoitem": {
+                "tabela": "tblnegocioprodutobarrapedidoitem",
+                "coluna": "codpedidoitem",
+                "metodo": "NegocioProdutoBarraPedidoItemS"
+            }
+        }
     },
     "tblvalecompramodeloprodutobarra": {
         "tabela": "tblvalecompramodeloprodutobarra",
@@ -8486,20 +6717,59 @@
     "tblcaixamercadoria": {
         "tabela": "tblcaixamercadoria",
         "campocodigo": "codcaixamercadoria",
-        "namespace": "Mg\\Negocio",
+        "namespace": "Mg\\CaixaMercadoria",
         "classe": "CaixaMercadoria",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/CaixaMercadoria.php",
-        "belongsTo": [],
-        "hasMany": []
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/CaixaMercadoria\/CaixaMercadoria.php",
+        "belongsTo": {
+            "codcaixamercadoriamodelo": {
+                "tabela": "tblcaixamercadoriamodelo",
+                "coluna": "codcaixamercadoriamodelo",
+                "metodo": "CaixaMercadoriaModelo"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblnegociocaixamercadoria.codcaixamercadoria": {
+                "tabela": "tblnegociocaixamercadoria",
+                "coluna": "codcaixamercadoria",
+                "metodo": "NegocioCaixaMercadoriaS"
+            }
+        }
     },
     "tblcaixamercadoriamodelo": {
         "tabela": "tblcaixamercadoriamodelo",
         "campocodigo": "codcaixamercadoriamodelo",
-        "namespace": "Mg\\Negocio",
+        "namespace": "Mg\\CaixaMercadoria",
         "classe": "CaixaMercadoriaModelo",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Negocio\/CaixaMercadoriaModelo.php",
-        "belongsTo": [],
-        "hasMany": []
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/CaixaMercadoria\/CaixaMercadoriaModelo.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblcaixamercadoria.codcaixamercadoriamodelo": {
+                "tabela": "tblcaixamercadoria",
+                "coluna": "codcaixamercadoriamodelo",
+                "metodo": "CaixaMercadoriaS"
+            }
+        }
     },
     "tblcodigo": {
         "tabela": "tblcodigo",
@@ -8507,7 +6777,18 @@
         "namespace": "Mg\\Filial",
         "classe": "Codigo",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/Codigo.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblestoquelocalprodutovariacaovenda": {
@@ -8552,7 +6833,18 @@
         "namespace": "Mg\\Filial",
         "classe": "Feriado",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/Feriado.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblgrupousuario": {
@@ -8561,16 +6853,59 @@
         "namespace": "Mg\\Usuario",
         "classe": "GrupoUsuario",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Usuario\/GrupoUsuario.php",
-        "belongsTo": [],
-        "hasMany": []
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblgrupousuariopermissao.codgrupousuario": {
+                "tabela": "tblgrupousuariopermissao",
+                "coluna": "codgrupousuario",
+                "metodo": "GrupoUsuarioPermissaoS"
+            },
+            "tblgrupousuariousuario.codgrupousuario": {
+                "tabela": "tblgrupousuariousuario",
+                "coluna": "codgrupousuario",
+                "metodo": "GrupoUsuarioUsuarioS"
+            }
+        }
     },
     "tblgrupousuariopermissao": {
         "tabela": "tblgrupousuariopermissao",
         "campocodigo": "codgrupousuariopermissao",
-        "namespace": "Mg\\Usuario",
+        "namespace": "Mg\\Permissao",
         "classe": "GrupoUsuarioPermissao",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Usuario\/GrupoUsuarioPermissao.php",
-        "belongsTo": [],
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Permissao\/GrupoUsuarioPermissao.php",
+        "belongsTo": {
+            "codgrupousuario": {
+                "tabela": "tblgrupousuario",
+                "coluna": "codgrupousuario",
+                "metodo": "GrupoUsuario"
+            },
+            "codpermissao": {
+                "tabela": "tblpermissao",
+                "coluna": "codpermissao",
+                "metodo": "Permissao"
+            },
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblmenu": {
@@ -8579,7 +6914,18 @@
         "namespace": "Mg\\Filial",
         "classe": "Menu",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/Menu.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblparametrosgerais": {
@@ -8588,17 +6934,45 @@
         "namespace": "Mg\\Filial",
         "classe": "ParametrosGerais",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/ParametrosGerais.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblpermissao": {
         "tabela": "tblpermissao",
         "campocodigo": "codpermissao",
-        "namespace": "Mg\\Usuario",
+        "namespace": "Mg\\Permissao",
         "classe": "Permissao",
-        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Usuario\/Permissao.php",
-        "belongsTo": [],
-        "hasMany": []
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Permissao\/Permissao.php",
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
+        "hasMany": {
+            "tblgrupousuariopermissao.codpermissao": {
+                "tabela": "tblgrupousuariopermissao",
+                "coluna": "codpermissao",
+                "metodo": "GrupoUsuarioPermissaoS"
+            }
+        }
     },
     "tblprefixogs1": {
         "tabela": "tblprefixogs1",
@@ -8606,7 +6980,18 @@
         "namespace": "Mg\\Filial",
         "classe": "PrefixoGs1",
         "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/PrefixoGs1.php",
-        "belongsTo": [],
+        "belongsTo": {
+            "codusuarioalteracao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuarioalteracao",
+                "metodo": "UsuarioAlteracao"
+            },
+            "codusuariocriacao": {
+                "tabela": "tblusuario",
+                "coluna": "codusuariocriacao",
+                "metodo": "UsuarioCriacao"
+            }
+        },
         "hasMany": []
     },
     "tblprodutoimagemprodutovariacao": {

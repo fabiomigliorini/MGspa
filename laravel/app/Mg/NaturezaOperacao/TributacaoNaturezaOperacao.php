@@ -11,7 +11,7 @@ use Mg\NaturezaOperacao\Cfop;
 use Mg\Cidade\Estado;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Produto\TipoProduto;
-use Mg\NaturezaOperacao\Tributacao;
+use Mg\Tributacao\Tributacao;
 use Mg\Usuario\Usuario;
 
 class TributacaoNaturezaOperacao extends MgModel

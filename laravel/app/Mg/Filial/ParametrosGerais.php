@@ -1,35 +1,34 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 11:34:11
+ * Date: 17/Feb/2026 10:50:23
  */
 
-namespace Mg\CaixaMercadoria;
+namespace Mg\Filial;
 
 use Mg\MgModel;
-use Mg\CaixaMercadoria\CaixaMercadoria;
 use Mg\Usuario\Usuario;
 
-class CaixaMercadoriaModelo extends MgModel
+class ParametrosGerais extends MgModel
 {
-    protected $table = 'tblcaixamercadoriamodelo';
-    protected $primaryKey = 'codcaixamercadoriamodelo';
+    protected $table = 'tblparametrosgerais';
+    protected $primaryKey = 'codparametrosgerais';
 
 
     protected $fillable = [
-        'caixamercadoriamodelo',
-        'inativo',
-        'observacoes'
+        'transacaofinal',
+        'transacaoinicial'
     ];
 
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo'
+        'transacaofinal',
+        'transacaoinicial'
     ];
 
     protected $casts = [
-        'codcaixamercadoriamodelo' => 'integer',
+        'codparametrosgerais' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer'
     ];
@@ -44,13 +43,6 @@ class CaixaMercadoriaModelo extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-
-    // Tabelas Filhas
-    public function CaixaMercadoriaS()
-    {
-        return $this->hasMany(CaixaMercadoria::class, 'codcaixamercadoriamodelo', 'codcaixamercadoriamodelo');
     }
 
 }

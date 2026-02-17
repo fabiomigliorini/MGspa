@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Pessoa\Pessoa;
-use Mg\Empresa\Empresa;
+use Mg\Filial\Empresa;
 use Mg\NotaFiscal\NotaFiscalService;
 
 class NFePHPValidacaoService
