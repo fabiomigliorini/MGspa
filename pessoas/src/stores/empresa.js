@@ -3,7 +3,7 @@ import { api } from "boot/axios";
 
 export const empresaStore = defineStore("empresa", {
   persist: {
-    paths: ["arrEmpresas", "filtroPesquisa"],
+    paths: ["empresas", "filtroPesquisa"],
   },
 
   state: () => ({

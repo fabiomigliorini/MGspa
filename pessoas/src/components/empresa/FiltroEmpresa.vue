@@ -3,7 +3,6 @@ import { empresaStore } from "src/stores/empresa";
 
 const sEmpresa = empresaStore();
 
-const emit = defineEmits(["buscar", "limpar"]);
 </script>
 
 <template>
