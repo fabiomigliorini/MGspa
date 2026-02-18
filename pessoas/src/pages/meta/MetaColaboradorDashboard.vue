@@ -12,6 +12,9 @@ const sMeta = metaStore();
 const user = guardaToken();
 
 const loading = ref(false);
+const eventos = ref([]);
+const paginaEventos = ref(1);
+const loadingEventos = ref(false);
 
 const dash = computed(() => sMeta.dashboardColaborador || {});
 
@@ -53,11 +56,53 @@ const tipoColor = (tipo) => {
   return "grey-8";
 };
 
+const carregarEventos = async () => {
+  paginaEventos.value = 1;
+  eventos.value = [];
+  loadingEventos.value = false;
+  try {
+    const ret = await sMeta.getDashboardColaboradorEventos(
+      route.params.codmeta,
+      route.params.codpessoa,
+      1
+    );
+    eventos.value = ret.data.data;
+    if (ret.data.meta.last_page <= 1) loadingEventos.value = true;
+  } catch {
+    // silencioso - extrato é complementar
+  }
+};
+
+const scrollEventos = async (index, done) => {
+  paginaEventos.value++;
+  try {
+    const ret = await sMeta.getDashboardColaboradorEventos(
+      route.params.codmeta,
+      route.params.codpessoa,
+      paginaEventos.value
+    );
+    eventos.value.push(...ret.data.data);
+    if (paginaEventos.value >= ret.data.meta.last_page) {
+      loadingEventos.value = true;
+    }
+    done();
+  } catch {
+    done(true);
+  }
+};
+
+const formataData = (data) => {
+  if (!data) return "";
+  const d = new Date(data);
+  return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+};
+
 const carregar = async (codmeta, codpessoa) => {
   if (!codmeta || !codpessoa) return;
   loading.value = true;
   try {
     await sMeta.getDashboardColaborador(codmeta, codpessoa);
+    await carregarEventos();
   } catch (error) {
     $q.notify({
       color: "red-5",
@@ -211,6 +256,70 @@ watch(
               <div v-else class="q-pa-md text-center text-grey">
                 Nenhum evento registrado
               </div>
+            </q-card>
+
+            <!-- EXTRATO DETALHADO -->
+            <q-card bordered flat class="q-mt-md">
+              <q-card-section
+                class="text-grey-9 text-overline row items-center"
+              >
+                EXTRATO DETALHADO
+              </q-card-section>
+
+              <q-scroll-area style="height: 400px">
+                <q-infinite-scroll
+                  @load="scrollEventos"
+                  :disable="loadingEventos"
+                  :offset="100"
+                >
+                  <q-list separator>
+                    <q-item v-for="ev in eventos" :key="ev.codbonificacaoevento">
+                      <q-item-section avatar>
+                        <q-badge
+                          :color="tipoColor(ev.tipo)"
+                          :label="tipoLabel(ev.tipo)"
+                          class="q-pa-xs"
+                        />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label v-if="ev.descricao">
+                          {{ ev.descricao }}
+                        </q-item-label>
+                        <q-item-label caption>
+                          {{ formataData(ev.criacao) }}
+                          <q-badge
+                            v-if="ev.manual"
+                            color="orange"
+                            label="manual"
+                            class="q-ml-xs"
+                          />
+                        </q-item-label>
+                      </q-item-section>
+                      <q-item-section side>
+                        <span
+                          class="text-weight-medium"
+                          :class="ev.valor < 0 ? 'text-red' : 'text-green-8'"
+                        >
+                          {{ formataMoeda(ev.valor) }}
+                        </span>
+                      </q-item-section>
+                    </q-item>
+                  </q-list>
+
+                  <template v-slot:loading>
+                    <div class="row justify-center q-my-md">
+                      <q-spinner color="primary" size="30px" />
+                    </div>
+                  </template>
+                </q-infinite-scroll>
+
+                <div
+                  v-if="eventos.length === 0 && loadingEventos"
+                  class="q-pa-md text-center text-grey"
+                >
+                  Nenhum evento registrado
+                </div>
+              </q-scroll-area>
             </q-card>
           </template>
         </div>

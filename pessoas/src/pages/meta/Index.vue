@@ -3,14 +3,12 @@ import { ref, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { metaStore } from "src/stores/meta";
-import { guardaToken } from "src/stores";
 import { formataDataSemHora } from "src/utils/formatador";
 import MGLayout from "layouts/MGLayout.vue";
 
 const $q = useQuasar();
 const router = useRouter();
 const sMeta = metaStore();
-const user = guardaToken();
 
 // --- DIALOG NOVA META ---
 const dialogNovaMeta = ref(false);

@@ -29,4 +29,16 @@ class MetaDashboardController extends MgController
         return new JsonResource($resumo);
     }
 
+    public function dashboardPessoaEventos(Request $request, $codmeta, $codpessoa)
+    {
+        Meta::findOrFail($codmeta);
+
+        $eventos = BonificacaoEvento::where('codmeta', $codmeta)
+            ->where('codpessoa', (int) $codpessoa)
+            ->orderBy('criacao', 'desc')
+            ->paginate(20);
+
+        return JsonResource::collection($eventos);
+    }
+
 }

@@ -36,6 +36,7 @@ class MetaController extends MgController
 
         $overlap = Meta::where('periodoinicial', '<=', $data['periodofinal'])
             ->where('periodofinal', '>=', $data['periodoinicial'])
+            ->whereNull('inativo')
             ->exists();
 
         if ($overlap) {
@@ -132,21 +133,28 @@ class MetaController extends MgController
     {
         Autorizador::autoriza(['Meta']);
 
+        // Transação curta: verificar e marcar processando
+        DB::beginTransaction();
         $meta = Meta::where('codmeta', $codmeta)->lockForUpdate()->firstOrFail();
 
         if ($meta->processando) {
+            DB::rollBack();
             abort(422, "Meta #{$codmeta} ja esta sendo processada. Aguarde.");
         }
 
-        DB::beginTransaction();
-
         $meta->update(['processando' => true]);
-
-        MetaReconstrucaoService::reconciliarMeta($meta);
-
-        $meta->update(['processando' => false]);
-
         DB::commit();
+
+        try {
+            // Reconciliar — gerencia próprias transações por chunk
+            MetaReconstrucaoService::reconciliarMeta($meta);
+
+            $meta->update(['processando' => false]);
+        } catch (Exception $e) {
+            try { DB::rollBack(); } catch (Exception $ex) {}
+            Meta::where('codmeta', $codmeta)->update(['processando' => false]);
+            throw $e;
+        }
 
         Log::info('MetaController - Meta reprocessada via HTTP', [
             'codmeta' => $meta->codmeta,
@@ -161,31 +169,43 @@ class MetaController extends MgController
     {
         Autorizador::autoriza(['Meta']);
 
+        // Transação curta: verificar status e marcar processando
+        DB::beginTransaction();
         $meta = Meta::where('codmeta', $codmeta)->lockForUpdate()->firstOrFail();
 
         if ($meta->status !== MetaService::META_STATUS_BLOQUEADA) {
+            DB::rollBack();
             abort(422, "Meta #{$codmeta} nao esta com status Bloqueada (B). Status atual: {$meta->status}");
         }
 
         if ($meta->processando) {
+            DB::rollBack();
             abort(422, "Meta #{$codmeta} ja esta sendo processada. Aguarde.");
         }
 
-        DB::beginTransaction();
-
         $meta->update(['processando' => true]);
-
-        MetaReconstrucaoService::reconciliarMeta($meta);
-        MetaService::apurarMovimentosFinais($meta);
-
-        $meta->update([
-            'status' => MetaService::META_STATUS_FECHADA,
-            'processando' => false,
-        ]);
-
-        $novaMeta = MetaService::criarNovaMeta($meta);
-
         DB::commit();
+
+        try {
+            // Reconciliar — gerencia próprias transações por chunk
+            MetaReconstrucaoService::reconciliarMeta($meta);
+
+            // Operações finais em transação única (rápida)
+            DB::beginTransaction();
+            MetaService::apurarMovimentosFinais($meta);
+
+            $meta->update([
+                'status' => MetaService::META_STATUS_FECHADA,
+                'processando' => false,
+            ]);
+
+            $novaMeta = MetaService::criarNovaMeta($meta);
+            DB::commit();
+        } catch (Exception $e) {
+            try { DB::rollBack(); } catch (Exception $ex) {}
+            Meta::where('codmeta', $codmeta)->update(['processando' => false]);
+            throw $e;
+        }
 
         Log::info('MetaController - Meta finalizada via HTTP', [
             'codmetafechada' => $meta->codmeta,

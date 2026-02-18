@@ -2,6 +2,7 @@
 
 namespace Mg\Meta\Services;
 
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Mg\Meta\BonificacaoEvento;
 use Mg\Meta\Meta;
@@ -36,7 +37,8 @@ class MetaReconstrucaoService
             'periodofinal' => $meta->periodofinal,
         ]);
 
-        $negocios = Negocio::query()
+        // Pluck somente IDs (inteiros) em vez de hidratar modelos Eloquent
+        $codnegociosValidos = Negocio::query()
             ->join('tblnaturezaoperacao as nop', 'nop.codnaturezaoperacao', '=', 'tblnegocio.codnaturezaoperacao')
             ->where(function ($q) {
                 $q->where('nop.venda', true)
@@ -52,17 +54,27 @@ class MetaReconstrucaoService
             ])
             ->orderBy('tblnegocio.lancamento')
             ->orderBy('tblnegocio.codnegocio')
-            ->get(['tblnegocio.codnegocio']);
+            ->pluck('tblnegocio.codnegocio')
+            ->map(fn ($v) => intval($v))
+            ->all();
 
-        foreach ($negocios as $negocio) {
-            BonificacaoService::processarNegocio(intval($negocio->codnegocio), $meta);
+        $totalNegocios = count($codnegociosValidos);
+
+        // Processar em chunks — cada chunk em transação independente
+        foreach (array_chunk($codnegociosValidos, 500) as $chunk) {
+            DB::beginTransaction();
+            foreach ($chunk as $codnegocio) {
+                BonificacaoService::processarNegocio($codnegocio, $meta);
+            }
+            DB::commit();
+            gc_collect_cycles();
         }
 
-        $orfaosRemovidos = static::limparEventosOrfaos($meta, $negocios->pluck('codnegocio')->map('intval')->all());
+        $orfaosRemovidos = static::limparEventosOrfaos($meta, $codnegociosValidos);
 
         Log::info('MetaReconstrucaoService - reconciliarMeta concluido', [
             'codmeta' => $meta->codmeta,
-            'negociosprocessados' => $negocios->count(),
+            'negociosprocessados' => $totalNegocios,
             'orfaosremovidos' => $orfaosRemovidos,
         ]);
     }
@@ -91,27 +103,36 @@ class MetaReconstrucaoService
 
     private static function limparEventosOrfaos(Meta $meta, array $codnegociosValidos): int
     {
-        $orfaos = BonificacaoEvento::query()
+        $query = BonificacaoEvento::query()
             ->where('codmeta', $meta->codmeta)
             ->where('manual', false)
-            ->whereNotNull('codnegocio')
-            ->whereNotIn('codnegocio', $codnegociosValidos)
-            ->get();
+            ->whereNotNull('codnegocio');
 
-        foreach ($orfaos as $orfao) {
-            Log::info('MetaReconstrucaoService - Evento orfao removido', [
-                'codbonificacaoevento' => $orfao->codbonificacaoevento,
-                'codmeta' => $meta->codmeta,
-                'codnegocio' => $orfao->codnegocio,
-                'tipo' => $orfao->tipo,
-                'codpessoa' => $orfao->codpessoa,
-                'valor' => $orfao->valor,
-            ]);
-
-            $orfao->delete();
+        if (!empty($codnegociosValidos)) {
+            $query->whereNotIn('codnegocio', $codnegociosValidos);
         }
 
-        return $orfaos->count();
+        $total = 0;
+
+        $query->chunkById(500, function ($orfaos) use ($meta, &$total) {
+            DB::beginTransaction();
+            foreach ($orfaos as $orfao) {
+                Log::info('MetaReconstrucaoService - Evento orfao removido', [
+                    'codbonificacaoevento' => $orfao->codbonificacaoevento,
+                    'codmeta' => $meta->codmeta,
+                    'codnegocio' => $orfao->codnegocio,
+                    'tipo' => $orfao->tipo,
+                    'codpessoa' => $orfao->codpessoa,
+                    'valor' => $orfao->valor,
+                ]);
+
+                $orfao->delete();
+                $total++;
+            }
+            DB::commit();
+        }, 'codbonificacaoevento');
+
+        return $total;
     }
 
     private static function validarStatus(Meta $meta): void

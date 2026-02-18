@@ -370,9 +370,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 mask="(+##)"
                 value="+55"
                 label="País"
-                :rules="[
-                  (val) => (val && val.length > 0) || 'Pais obrigatório',
-                ]"
+                :rules="[(val) => (val && val.length > 0) || ' ']"
                 unmasked-value
                 input-class="text-center"
               />
@@ -388,7 +386,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 :rules="[
                   telNovo == false
                     ? null
-                    : (val) => (val && val.length > 0) || 'DDD obrigatório',
+                    : (val) => (val && val.length > 0) || ' ',
                 ]"
                 unmasked-value
                 autofocus
@@ -409,8 +407,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 :rules="[
                   telNovo == false
                     ? null
-                    : (val) =>
-                        (val && val.length > 0) || 'Telefone obrigatório',
+                    : (val) => (val && val.length > 0) || ' ',
                 ]"
                 inputmode="numeric"
                 input-class="text-center"

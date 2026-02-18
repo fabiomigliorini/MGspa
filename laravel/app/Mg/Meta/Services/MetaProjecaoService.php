@@ -4,12 +4,13 @@ namespace Mg\Meta\Services;
 
 use Illuminate\Support\Facades\DB;
 use Mg\Meta\Meta;
+use Mg\Meta\MetaService;
 use Mg\Meta\MetaUnidadeNegocio;
 
 class MetaProjecaoService
 {
-    public const ALOCACAO_REMOTA = 'R';
-    public const DESCRICAO_UNIDADE_REMOTA = 'Sinopel';
+    public const ALOCACAO_REMOTA = MetaService::ALOCACAO_REMOTA;
+    public const DESCRICAO_UNIDADE_REMOTA = MetaService::DESCRICAO_UNIDADE_REMOTA;
 
     public static function projecao(Meta $meta): array
     {

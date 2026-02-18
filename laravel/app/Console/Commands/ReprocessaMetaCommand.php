@@ -19,31 +19,38 @@ class ReprocessaMetaCommand extends Command
         $codmeta = intval($this->argument('codmeta'));
 
         try {
-            DB::beginTransaction();
+            DB::disableQueryLog();
 
-            $meta = Meta::query()
-                ->where('codmeta', $codmeta)
-                ->lockForUpdate()
-                ->firstOrFail();
+            // Transação curta: verificar e marcar processando
+            DB::beginTransaction();
+            $meta = Meta::where('codmeta', $codmeta)->lockForUpdate()->firstOrFail();
+
+            if ($meta->processando) {
+                DB::rollBack();
+                $this->error("Meta #{$codmeta} ja esta sendo processada. Aguarde.");
+                return 1;
+            }
+
+            $meta->update(['processando' => true]);
+            DB::commit();
 
             Log::info('ReprocessaMetaCommand - Reprocessamento iniciado', [
                 'codmeta' => $meta->codmeta,
                 'status' => $meta->status,
             ]);
 
-            $meta->update(['processando' => true]);
-
+            // Reconciliar — gerencia próprias transações por chunk
             MetaReconstrucaoService::reconciliarMeta($meta);
 
             $meta->update(['processando' => false]);
-
-            DB::commit();
 
             $this->info("Meta {$meta->codmeta} reprocessada com sucesso.");
 
             return 0;
         } catch (Exception $exception) {
-            DB::rollBack();
+            try { DB::rollBack(); } catch (Exception $e) {}
+
+            Meta::where('codmeta', $codmeta)->update(['processando' => false]);
 
             Log::error('ReprocessaMetaCommand - Erro', [
                 'codmeta' => $codmeta,

@@ -141,13 +141,13 @@ const ultimosAniversarios = computed(() => {
 
   return aniversarios.value
     .filter((a) => {
-      const dataAniversario = moment(a.data, "YYYY/MM/DD");
+      const dataAniversario = moment(a.data, "YYYY-MM-DD");
       return (
         dataAniversario.isBefore(dataSelecionada, "day") &&
         dataAniversario.isSameOrAfter(dataInicio, "day")
       );
     })
-    .sort((a, b) => moment(b.data).valueOf() - moment(a.data).valueOf());
+    .sort((a, b) => moment(b.data, "YYYY-MM-DD").valueOf() - moment(a.data, "YYYY-MM-DD").valueOf());
 });
 
 // Computed para próximos 7 dias (excluindo o dia selecionado)
@@ -157,13 +157,13 @@ const proximosAniversarios = computed(() => {
 
   return aniversarios.value
     .filter((a) => {
-      const dataAniversario = moment(a.data, "YYYY/MM/DD");
+      const dataAniversario = moment(a.data, "YYYY-MM-DD");
       return (
         dataAniversario.isAfter(dataSelecionada, "day") &&
         dataAniversario.isSameOrBefore(dataFim, "day")
       );
     })
-    .sort((a, b) => moment(a.data).valueOf() - moment(b.data).valueOf());
+    .sort((a, b) => moment(a.data, "YYYY-MM-DD").valueOf() - moment(b.data, "YYYY-MM-DD").valueOf());
 });
 
 // 7. Funções
@@ -180,12 +180,10 @@ const getAniversarios = async () => {
 
     // Ajusta a data para o ano atual
     const dataAnoAtual = dataOriginal.clone().year(anoAtual);
-    const dataFormatada = dataAnoAtual.format("YYYY/MM/DD");
-
-    el.data = dataFormatada;
+    el.data = dataAnoAtual.format("YYYY-MM-DD");
     el.dia = dataOriginal.date();
     el.mes = dataOriginal.month() + 1;
-    dates.push(dataFormatada);
+    dates.push(dataAnoAtual.format("YYYY/MM/DD"));
     arrAniversarios.push(el);
   });
 

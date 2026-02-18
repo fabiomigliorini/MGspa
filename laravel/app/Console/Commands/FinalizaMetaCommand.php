@@ -20,25 +20,37 @@ class FinalizaMetaCommand extends Command
         $codmeta = intval($this->argument('codmeta'));
 
         try {
-            DB::beginTransaction();
+            DB::disableQueryLog();
 
-            $meta = Meta::query()
-                ->where('codmeta', $codmeta)
-                ->lockForUpdate()
-                ->firstOrFail();
+            // Transação curta: verificar status e marcar processando
+            DB::beginTransaction();
+            $meta = Meta::where('codmeta', $codmeta)->lockForUpdate()->firstOrFail();
 
             if ($meta->status !== MetaService::META_STATUS_BLOQUEADA) {
-                throw new Exception("Meta {$meta->codmeta} nao esta bloqueada.");
+                DB::rollBack();
+                $this->error("Meta #{$codmeta} nao esta bloqueada. Status atual: {$meta->status}");
+                return 1;
             }
+
+            if ($meta->processando) {
+                DB::rollBack();
+                $this->error("Meta #{$codmeta} ja esta sendo processada. Aguarde.");
+                return 1;
+            }
+
+            $meta->update(['processando' => true]);
+            DB::commit();
 
             Log::info('FinalizaMetaCommand - Fechamento iniciado', [
                 'codmeta' => $meta->codmeta,
                 'status' => $meta->status,
             ]);
 
-            $meta->update(['processando' => true]);
-
+            // Reconciliar — gerencia próprias transações por chunk
             MetaReconstrucaoService::reconciliarMeta($meta);
+
+            // Operações finais em transação única (rápida)
+            DB::beginTransaction();
             MetaService::apurarMovimentosFinais($meta);
 
             $meta->update([
@@ -47,14 +59,15 @@ class FinalizaMetaCommand extends Command
             ]);
 
             $novaMeta = MetaService::criarNovaMeta($meta);
-
             DB::commit();
 
             $this->info("Meta {$meta->codmeta} finalizada. Nova meta {$novaMeta->codmeta} criada.");
 
             return 0;
         } catch (Exception $exception) {
-            DB::rollBack();
+            try { DB::rollBack(); } catch (Exception $e) {}
+
+            Meta::where('codmeta', $codmeta)->update(['processando' => false]);
 
             Log::error('FinalizaMetaCommand - Erro', [
                 'codmeta' => $codmeta,
