@@ -246,6 +246,7 @@ export const useTributacaoNaturezaOperacaoStore = defineStore('tributacaoNaturez
 
     clearFilters() {
       this.filters = {
+        codtributacaonaturezaoperacao: null,
         codestado: null,
         codtributacao: null,
         codtipoproduto: null,

@@ -139,8 +139,8 @@ const limparFiltros = async () => {
           label="6. NCM"
           outlined
           clearable
-          placeholder="Ex: 8471.30.12"
-          mask="####.##.##"
+          placeholder="Ex: 84713012"
+          mask="########"
         />
       </div>
 

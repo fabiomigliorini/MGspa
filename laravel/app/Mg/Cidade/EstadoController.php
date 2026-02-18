@@ -21,8 +21,9 @@ class EstadoController extends Controller
         $query = Estado::where('codpais', $codpais);
 
         // Ordenação
-        $sortField = $request->get('sort', 'estado');
-        $sortOrder = $request->get('order', 'asc');
+        $allowedSortFields = ['codestado', 'estado', 'sigla', 'codigooficial', 'criacao', 'alteracao'];
+        $sortField = in_array($request->get('sort'), $allowedSortFields) ? $request->get('sort') : 'estado';
+        $sortOrder = $request->get('order') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortField, $sortOrder);
 
         // Estados são poucos por país, então busca todos (per_page alto)

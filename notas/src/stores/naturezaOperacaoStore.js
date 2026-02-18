@@ -15,6 +15,14 @@ export const OPERACAO_OPTIONS = [
   { value: 2, label: 'Saída' },
 ]
 
+// Constantes para Tipo de Preço
+export const PRECO_OPTIONS = [
+  { value: 1, label: 'Negócio' },
+  { value: 2, label: 'Transferência' },
+  { value: 3, label: 'Custo' },
+  { value: 4, label: 'Origem' },
+]
+
 export const useNaturezaOperacaoStore = defineStore('naturezaOperacao', {
   persist: {
     pick: ['filters'],
@@ -184,6 +192,7 @@ export const useNaturezaOperacaoStore = defineStore('naturezaOperacao', {
     },
 
     async deleteNaturezaOperacao(codnaturezaoperacao) {
+      codnaturezaoperacao = parseInt(codnaturezaoperacao)
       this.loading.naturezaOperacao = true
       try {
         await naturezaOperacaoService.delete(codnaturezaoperacao)

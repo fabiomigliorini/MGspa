@@ -310,7 +310,6 @@ const confirmarExclusao = (regra) => {
     },
   }).onOk(async () => {
     try {
-      console.log(regra.codtributacaoregra)
       await store.deleteRegra(regra.codtributacaoregra)
       $q.notify({
         type: 'positive',
@@ -763,13 +762,11 @@ const confirmarExclusaoTributo = () => {
     <!-- Dialog para Tributo (Novo/Editar) -->
     <q-dialog v-model="tributoDialog">
       <q-card style="width: 400px">
-        <q-card-section>
-          <div class="text-h6">
-            {{ tributoDialogMode === 'create' ? 'Novo Tributo' : 'Editar Tributo' }}
-          </div>
+        <q-card-section class="text-h6 text-white bg-primary">
+          {{ tributoDialogMode === 'create' ? 'Novo Tributo' : 'Editar Tributo' }}
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
+        <q-card-section>
           <q-input
             v-model="tributoForm.codigo"
             label="Sigla *"
@@ -828,8 +825,9 @@ const confirmarExclusaoTributo = () => {
           <q-btn flat label="Cancelar" v-close-popup />
           <q-btn
             unelevated
+            icon="save"
+            class="text-white bg-primary"
             label="Salvar"
-            color="primary"
             @click="salvarTributo"
             :loading="store.isLoading"
           />
@@ -1077,12 +1075,12 @@ const confirmarExclusaoTributo = () => {
         </q-card-actions>
       </q-card>
     </q-dialog>
-  </q-page>
 
-  <!-- FAB para Nova Regra -->
-  <q-page-sticky position="bottom-right" :offset="[18, 18]">
-    <q-btn fab icon="add" color="primary" @click="novaRegra">
-      <q-tooltip>Nova Regra</q-tooltip>
-    </q-btn>
-  </q-page-sticky>
+    <!-- FAB para Nova Regra -->
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="add" color="primary" @click="novaRegra">
+        <q-tooltip>Nova Regra</q-tooltip>
+      </q-btn>
+    </q-page-sticky>
+  </q-page>
 </template>

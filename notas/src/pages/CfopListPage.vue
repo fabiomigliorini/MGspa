@@ -92,7 +92,7 @@ onMounted(async () => {
       <div class="row q-col-gutter-sm">
         <div v-for="cfop in cfops" :key="cfop.codcfop" class="col-6 col-sm-4 col-md-3">
           <q-card class="q-pa-none" flat bordered>
-            <div class="text-weight-bold text-primary text-body2 q-pa-sm">
+            <div class="text-weight-bold text-white bg-primary text-body2 q-pa-sm">
               CFOP: {{ cfop.codcfop }}
             </div>
             <q-separator />

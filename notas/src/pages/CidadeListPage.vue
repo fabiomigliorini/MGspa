@@ -60,9 +60,6 @@ const handleSelectPais = async (codpais) => {
   selectedPais.value = codpais
   try {
     await cidadeStore.fetchEstados()
-    if (cidadeStore.selectedEstado) {
-      await cidadeStore.fetchCidades(true)
-    }
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -72,17 +69,8 @@ const handleSelectPais = async (codpais) => {
   }
 }
 
-const handleSelectEstado = async (codestado) => {
+const handleSelectEstado = (codestado) => {
   selectedEstado.value = codestado
-  try {
-    await cidadeStore.fetchCidades(true)
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao carregar cidades',
-      caption: error.message,
-    })
-  }
 }
 
 // Carrega dados iniciais
@@ -117,7 +105,11 @@ watch(
       try {
         await cidadeStore.fetchCidades(true)
       } catch (error) {
-        console.error('Erro ao carregar cidades:', error)
+        $q.notify({
+          type: 'negative',
+          message: 'Erro ao carregar cidades',
+          caption: error.message,
+        })
       }
     }
   }
@@ -354,7 +346,7 @@ const handleSaveCidade = async () => {
 <template>
   <q-page>
     <!-- Tabs de Paises -->
-    <div class="q-mb-sm">
+    <div>
       <q-tabs
         v-model="selectedPais"
         class="text-grey-7 bg-grey-2"
@@ -381,7 +373,7 @@ const handleSaveCidade = async () => {
     </div>
 
     <!-- Tabs de Estados (apenas para Brasil/Argentina) -->
-    <div v-if="estados.length > 0" class="q-mb-md">
+    <div v-if="estados.length > 0">
       <q-tabs
         v-model="selectedEstado"
         class="text-grey-7 bg-grey-2"
@@ -412,7 +404,7 @@ const handleSaveCidade = async () => {
     </div>
 
     <!-- Info do Pais e Estado Selecionados -->
-    <div v-if="currentPais" class="q-mb-md">
+    <div v-if="currentPais" class="q-pa-sm">
       <q-card flat bordered class="bg-grey-1">
         <q-card-section class="q-py-sm">
           <template v-if="currentEstado">
@@ -479,10 +471,10 @@ const handleSaveCidade = async () => {
 
     <!-- Lista de Cidades com Scroll Infinito -->
     <q-infinite-scroll v-else-if="selectedEstado" @load="onLoad" :offset="250">
-      <div class="row q-col-gutter-sm">
+      <div class="row q-col-gutter-sm q-pa-sm">
         <div v-for="cidade in cidades" :key="cidade.codcidade" class="col-6 col-sm-4 col-md-3">
-          <q-card class="q-pa-none" flat bordered>
-            <div class="text-weight-bold text-primary q-pa-sm">
+          <q-card flat bordered>
+            <div class="text-weight-bold text-white bg-primary q-pa-sm">
               <q-icon name="location_city" class="q-mr-xs" />
               {{ cidade.cidade }}
             </div>
@@ -540,13 +532,11 @@ const handleSaveCidade = async () => {
     <!-- Dialog Estado (Novo/Editar) -->
     <q-dialog v-model="dialogEstado">
       <q-card style="min-width: 350px">
-        <q-card-section>
-          <div class="text-h6">
-            {{ estadoDialogMode === 'create' ? 'Novo Estado' : 'Editar Estado' }}
-          </div>
+        <q-card-section class="text-h6 text-white bg-primary">
+          {{ estadoDialogMode === 'create' ? 'Novo Estado' : 'Editar Estado' }}
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
+        <q-card-section>
           <q-input
             v-model="estadoForm.estado"
             label="Nome do Estado"
@@ -564,10 +554,12 @@ const handleSaveCidade = async () => {
           />
         </q-card-section>
 
-        <q-card-actions align="right" class="text-primary">
+        <q-card-actions align="right">
           <q-btn flat label="Cancelar" v-close-popup />
           <q-btn
             flat
+            class="bg-primary text-white"
+            icon="save"
             label="Salvar"
             @click="handleSaveEstado"
             :disable="!estadoForm.estado || !estadoForm.sigla"
@@ -618,14 +610,12 @@ const handleSaveCidade = async () => {
     <!-- Dialog Cidade (Nova/Editar) -->
     <q-dialog v-model="dialogCidade">
       <q-card style="min-width: 350px">
-        <q-card-section>
-          <div class="text-h6">
-            {{ cidadeDialogMode === 'create' ? 'Nova Cidade' : 'Editar Cidade' }}
-          </div>
-          <div class="text-caption text-grey">{{ currentEstado?.estado }}</div>
+        <q-card-section class="text-h6 text-white bg-primary">
+          {{ cidadeDialogMode === 'create' ? 'Nova Cidade' : 'Editar Cidade' }}
+          <div class="text-caption">{{ currentEstado?.estado }}</div>
         </q-card-section>
 
-        <q-card-section class="q-pt-none">
+        <q-card-section>
           <q-input
             v-model="cidadeForm.cidade"
             label="Nome da Cidade"
@@ -643,10 +633,12 @@ const handleSaveCidade = async () => {
           />
         </q-card-section>
 
-        <q-card-actions align="right" class="text-primary">
+        <q-card-actions align="right">
           <q-btn flat label="Cancelar" v-close-popup />
           <q-btn
             flat
+            icon="save"
+            class="bg-primary text-white"
             label="Salvar"
             @click="handleSaveCidade"
             :disable="!cidadeForm.cidade || !cidadeForm.codigooficial"

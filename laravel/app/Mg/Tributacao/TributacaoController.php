@@ -21,8 +21,9 @@ class TributacaoController extends Controller
         }
 
         // Ordenacao
-        $sortField = $request->get('sort', 'tributacao');
-        $sortOrder = $request->get('order', 'asc');
+        $allowedSortFields = ['codtributacao', 'tributacao', 'criacao', 'alteracao'];
+        $sortField = in_array($request->get('sort'), $allowedSortFields) ? $request->get('sort') : 'tributacao';
+        $sortOrder = $request->get('order') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortField, $sortOrder);
 
         return TributacaoResource::collection(

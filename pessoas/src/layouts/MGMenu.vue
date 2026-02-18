@@ -89,7 +89,7 @@ const user = guardaToken();
               class="col-xs-6 col-sm-3 col-md-3"
               :to="{ name: 'empresa' }"
             >
-              <q-icon name="work" size="35px" />
+              <q-icon name="business" size="35px" />
               <div>Empresas</div>
             </q-btn>
           </q-item>

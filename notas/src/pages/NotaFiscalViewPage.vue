@@ -1360,7 +1360,7 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
-                <div class="text-h6">
+                <div class="text-body2">
                   <q-icon name="business" size="1.5em" class="q-mr-sm" />
                   Filial
                 </div>
@@ -1418,7 +1418,7 @@ onUnmounted(() => {
           <q-card flat bordered class="q-mb-md full-height">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
-                <div class="text-h6">
+                <div class="text-body2">
                   <q-icon name="local_shipping" size="1.5em" class="q-mr-sm" />
                   Transporte
                 </div>
@@ -1472,7 +1472,7 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height flex column">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
-                <div class="text-h6">
+                <div class="text-body2">
                   <q-icon name="code" size="1.5em" class="q-mr-sm" />
                   NFe
                 </div>
@@ -1735,7 +1735,7 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
-                <div class="text-h6">
+                <div class="text-body2">
                   <q-icon
                     :name="nota.pessoa?.fisica === true ? 'person' : 'business'"
                     size="1.5em"
@@ -1833,7 +1833,7 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
-                <div class="text-h6">
+                <div class="text-body2">
                   <q-icon name="calculate" size="1.5em" class="q-mr-sm" />
                   Totais
                 </div>
@@ -1939,13 +1939,13 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
-                <div class="text-h6">
+                <div class="text-body2">
                   <q-icon name="inventory_2" size="1.5em" class="q-mr-sm" />
                   Itens
                   <q-badge
                     color="white"
                     text-color="primary"
-                    class="q-ml-sm text-weight-bold text-body1"
+                    class="q-ml-sm text-weight-bold text-caption"
                   >
                     {{ itens.length }}
                   </q-badge>
@@ -2043,7 +2043,7 @@ onUnmounted(() => {
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
               <div class="row items-center justify-between">
-                <div class="text-h6">
+                <div class="text-body2">
                   <q-icon name="speaker_notes" size="1.5em" class="q-mr-sm" />
                   Observações
                 </div>
@@ -2059,13 +2059,13 @@ onUnmounted(() => {
         <div class="col-12 col-md-6">
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
-              <div class="text-h6">
+              <div class="text-body2">
                 <q-icon name="payments" size="1.5em" class="q-mr-sm" />
                 Formas de Pagamento
                 <q-badge
                   color="white"
                   text-color="primary"
-                  class="q-ml-sm text-weight-bold text-body1"
+                  class="q-ml-sm text-weight-bold text-caption"
                 >
                   {{ pagamentos.length }}
                 </q-badge>
@@ -2183,13 +2183,13 @@ onUnmounted(() => {
         <div class="col-12 col-md-6">
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
-              <div class="text-h6">
+              <div class="text-body2">
                 <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" />
                 Duplicatas
                 <q-badge
                   color="white"
                   text-color="primary"
-                  class="q-ml-sm text-weight-bold text-body1"
+                  class="q-ml-sm text-weight-bold text-caption"
                 >
                   {{ duplicatas.length }}
                 </q-badge>
@@ -2281,13 +2281,13 @@ onUnmounted(() => {
         <div class="col-12 col-md-6">
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
-              <div class="text-h6">
+              <div class="text-body2">
                 <q-icon name="link" size="1.5em" class="q-mr-sm" />
                 Notas Fiscais Referenciadas
                 <q-badge
                   color="white"
                   text-color="primary"
-                  class="q-ml-sm text-weight-bold text-body1"
+                  class="q-ml-sm text-weight-bold text-caption"
                 >
                   {{ referenciadas.length }}
                 </q-badge>
@@ -2394,13 +2394,13 @@ onUnmounted(() => {
         <div class="col-12 col-sm-12 col-md-6">
           <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
-              <div class="text-h6">
+              <div class="text-body2">
                 <q-icon name="edit_note" size="1.5em" class="q-mr-sm" />
                 Cartas de Correção
                 <q-badge
                   color="white"
                   text-color="primary"
-                  class="q-ml-sm text-weight-bold text-body1"
+                  class="q-ml-sm text-weight-bold text-caption"
                 >
                   {{ cartasCorrecao.length }}
                 </q-badge>
