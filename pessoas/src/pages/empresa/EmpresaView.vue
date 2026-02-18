@@ -132,8 +132,22 @@ export default {
 </script>
 
 <template>
-  <MGLayout>
-    <template #tituloPagina>Detalhes da Empresa</template>
+  <MGLayout back-button>
+    <template #tituloPagina>
+      <span class="q-pl-sm">Detalhes da Empresa</span>
+    </template>
+
+    <template #botaoVoltar>
+      <q-btn
+        flat
+        dense
+        round
+        to="/empresa"
+        icon="arrow_back"
+        aria-label="Voltar"
+      />
+    </template>
+
     <template #content>
       <q-page padding>
         <q-inner-loading :showing="loading">
@@ -141,10 +155,6 @@ export default {
         </q-inner-loading>
 
         <div v-if="!loading && sEmpresa.item.codempresa">
-          <div class="q-pa-sm items-center row">
-            <q-btn flat icon="arrow_back" to="/empresa" round />
-            <span class="text-h6">Empresas</span>
-          </div>
           <q-card style="max-width: 1000px; margin: 0 auto">
             <q-card-section>
               <div class="row items-center">
@@ -267,11 +277,12 @@ export default {
               <q-input
                 v-model="filtroFilial"
                 outlined
+                clearable
                 label="Filial"
                 class="col"
                 @keyup.enter="buscarFiliais"
+                @clear="buscarFiliais"
               />
-              <q-btn color="primary" icon="search" @click="buscarFiliais" />
             </div>
 
             <q-inner-loading :showing="sEmpresa.loadingFiliais">

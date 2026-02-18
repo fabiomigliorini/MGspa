@@ -65,8 +65,9 @@ class TributacaoNaturezaOperacaoController extends Controller
         }
 
         // Ordenação
-        $sortField = $request->get('sort', 'codtributacaonaturezaoperacao');
-        $sortOrder = $request->get('order', 'asc');
+        $allowedSortFields = ['codtributacaonaturezaoperacao', 'codtributacao', 'codtipoproduto', 'codestado', 'ncm', 'codcfop', 'criacao', 'alteracao'];
+        $sortField = in_array($request->get('sort'), $allowedSortFields) ? $request->get('sort') : 'codtributacaonaturezaoperacao';
+        $sortOrder = $request->get('order') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortField, $sortOrder);
 
         return TributacaoNaturezaOperacaoResource::collection(

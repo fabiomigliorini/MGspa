@@ -128,7 +128,7 @@ const routes = [
         component: () => import('pages/CfopFormPage.vue'),
         meta: {
           auth: true,
-          title: 'Listagem de CFOPs',
+          title: 'Novo CFOP',
           permissions: ['Administrador', 'Contador'],
         },
       },
@@ -138,7 +138,7 @@ const routes = [
         component: () => import('pages/CfopFormPage.vue'),
         meta: {
           auth: true,
-          title: 'Listagem de CFOPs',
+          title: 'Editar CFOP',
           permissions: ['Administrador', 'Contador'],
         },
       },

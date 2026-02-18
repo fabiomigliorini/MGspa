@@ -66,7 +66,6 @@ export const useTributacaoCadastroStore = defineStore('tributacaoCadastro', {
         }
 
         const response = await tributacaoCadastroService.list(params)
-        console.log('DEBUG API Response:', JSON.stringify(response.data?.[0], null, 2))
 
         const newTributacoes = response.data || []
 

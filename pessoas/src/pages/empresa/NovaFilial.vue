@@ -87,19 +87,24 @@ export default {
 </script>
 
 <template>
-  <MGLayout>
-    <template #tituloPagina>Nova Filial</template>
+  <MGLayout back-button>
+    <template #tituloPagina>
+      <span class="q-pl-sm">Nova Filial</span>
+    </template>
+
+    <template #botaoVoltar>
+      <q-btn
+        flat
+        dense
+        round
+        :to="'/empresa/' + $route.params.codempresa"
+        icon="arrow_back"
+        aria-label="Voltar"
+      />
+    </template>
+
     <template #content>
       <q-page padding>
-        <div class="q-pa-sm items-center row">
-          <q-btn
-            flat
-            icon="arrow_back"
-            :to="'/empresa/' + $route.params.codempresa"
-            round
-          />
-          <span class="text-h6">Nova Filial</span>
-        </div>
 
         <q-card class="q-pa-md" style="max-width: 600px; margin: 0 auto">
           <q-card-section>

@@ -6,6 +6,7 @@ import {
   useNaturezaOperacaoStore,
   FINNFE_OPTIONS,
   OPERACAO_OPTIONS,
+  PRECO_OPTIONS,
 } from '../stores/naturezaOperacaoStore'
 import api from '../services/api'
 
@@ -40,7 +41,7 @@ const form = ref({
   venda: false,
   vendadevolucao: false,
   transferencia: false,
-  preco: false,
+  preco: null,
   observacoesnf: '',
   mensagemprocom: '',
 })
@@ -190,7 +191,7 @@ const loadFormData = async () => {
           venda: naturezaOperacao.value.venda || false,
           vendadevolucao: naturezaOperacao.value.vendadevolucao || false,
           transferencia: naturezaOperacao.value.transferencia || false,
-          preco: naturezaOperacao.value.preco || false,
+          preco: naturezaOperacao.value.preco || null,
           observacoesnf: naturezaOperacao.value.observacoesnf || '',
           mensagemprocom: naturezaOperacao.value.mensagemprocom || '',
         }
@@ -228,7 +229,7 @@ const loadFormData = async () => {
     venda: false,
     vendadevolucao: false,
     transferencia: false,
-    preco: false,
+    preco: null,
     observacoesnf: '',
     mensagemprocom: '',
   }
@@ -539,7 +540,19 @@ onMounted(() => {
                 <q-toggle v-model="form.transferencia" label="Transferência" :disable="loading" />
               </div>
               <div class="col-6 col-sm-4 col-md-3">
-                <q-toggle v-model="form.preco" label="Atualiza Preço" :disable="loading" />
+                <q-select
+                  v-model="form.preco"
+                  :options="PRECO_OPTIONS"
+                  option-value="value"
+                  option-label="label"
+                  emit-value
+                  map-options
+                  outlined
+                  dense
+                  clearable
+                  label="Atualiza Preço"
+                  :disable="loading"
+                />
               </div>
             </div>
           </q-card-section>

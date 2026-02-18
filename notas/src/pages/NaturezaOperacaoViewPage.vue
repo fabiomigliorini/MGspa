@@ -72,6 +72,26 @@ const handleDelete = () => {
   })
 }
 
+const handleDeleteTributacao = (trib) => {
+  $q.dialog({
+    title: 'Confirmar exclusão',
+    message: `Deseja realmente excluir a tributação #${trib.codtributacaonaturezaoperacao}?`,
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Excluir', color: 'negative' },
+  }).onOk(async () => {
+    try {
+      await tributacaoStore.deleteTributacao(trib.codtributacaonaturezaoperacao)
+      $q.notify({ type: 'positive', message: 'Tributação excluída com sucesso' })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao excluir tributação',
+        caption: error.response?.data?.message || error.message,
+      })
+    }
+  })
+}
+
 // const handleCreateTributacao = () => {
 //   router.push({
 //     name: 'tributacao-natureza-operacao-create',
@@ -156,7 +176,7 @@ onMounted(loadData)
               <q-item>
                 <q-item-section class="text-caption">
                   <q-item-label class="text-subtitle2 text-grey-7">Operação</q-item-label>
-                  {{ getOperacaoLabel(naturezaOperacao.codnaturezaoperacao) }}
+                  {{ getOperacaoLabel(naturezaOperacao.codoperacao) }}
                 </q-item-section>
               </q-item>
               <q-item>
@@ -189,12 +209,6 @@ onMounted(loadData)
                     Contabiliza como devolução de Venda
                   </q-item-label>
                   {{ naturezaOperacao.vendadevolucao === true ? 'Sim' : 'Não' }}
-                </q-item-section>
-              </q-item>
-              <q-item>
-                <q-item-section class="text-caption">
-                  <q-item-label class="text-subtitle2 text-grey-7">Tipo Titulo</q-item-label>
-                  {{ naturezaOperacao.tipoTitulo.tipotitulo }}
                 </q-item-section>
               </q-item>
             </q-list>
@@ -485,7 +499,7 @@ onMounted(loadData)
                         icon="delete"
                         color="negative"
                         size="sm"
-                        @click="handleDelete(trib)"
+                        @click="handleDeleteTributacao(trib)"
                       >
                         <q-tooltip>Excluir</q-tooltip>
                       </q-btn>

@@ -14,9 +14,7 @@
 
 Eduardo
 
-- Tela de Empresas. (FAZER EM PESSOAS)
 - Tela de Emissores de Certidões (FAZER EM PESSOAS)
-
 - Nota com erro de (531 - Rejeicao: Total da BC ICMS difere do somatorio dos itens)
 - Tela DFE
 - Tela NFeTrceiro
@@ -147,6 +145,15 @@ DONE:
     - bit
     - ncm
     - cfop (select)
+
+12/02
+
+- Pesssoas
+  - Tela de Empresas. (FAZER EM PESSOAS)
+  - Tela de coloborador, no periodo de experiencia, mostrar os dias (soma)
+
+- Notas
+  - Colocar no padrao de layout (CFOP/Natureza/Cidade)
 
 Rejeitado
 

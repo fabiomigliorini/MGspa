@@ -35,6 +35,7 @@ const form = ref({
   icmscst: null,
   icmslpbase: null,
   icmslppercentual: null,
+  icmslppercentualimportado: null,
   // PIS/COFINS
   piscst: null,
   pispercentual: null,
@@ -94,6 +95,7 @@ const loadFormData = async () => {
           icmscst: tributacao.value.icmscst,
           icmslpbase: tributacao.value.icmslpbase,
           icmslppercentual: tributacao.value.icmslppercentual,
+          icmslppercentualimportado: tributacao.value.icmslppercentualimportado,
           // PIS/COFINS
           piscst: tributacao.value.piscst,
           pispercentual: tributacao.value.pispercentual,
@@ -268,7 +270,7 @@ onMounted(async () => {
 
         <!-- Card 2 - Simples Nacional -->
         <q-card class="q-mb-md" flat bordered>
-          <div class="text-subtitle1 text-white bg-teal q-pa-sm">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="store" class="q-mr-sm" />
             Simples Nacional
           </div>
@@ -313,7 +315,7 @@ onMounted(async () => {
 
         <!-- Card 3 - ICMS -->
         <q-card class="q-mb-md" flat bordered>
-          <div class="text-subtitle1 text-white bg-blue q-pa-sm">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="account_balance" class="q-mr-sm" />
             ICMS
           </div>
@@ -348,13 +350,23 @@ onMounted(async () => {
                   :disable="loading"
                 />
               </div>
+              <div class="col-12 col-sm-3">
+                <q-input
+                  v-model.number="form.icmslppercentualimportado"
+                  outlined
+                  label="Alíquota Importado (%)"
+                  type="number"
+                  step="0.01"
+                  :disable="loading"
+                />
+              </div>
             </div>
           </q-card-section>
         </q-card>
 
         <!-- Card 4 - PIS/COFINS -->
         <q-card class="q-mb-md" flat bordered>
-          <div class="text-subtitle1 text-white bg-purple q-pa-sm">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="paid" class="q-mr-sm" />
             PIS / COFINS
           </div>
@@ -404,7 +416,7 @@ onMounted(async () => {
 
         <!-- Card 5 - IPI/CSLL/IRPJ -->
         <q-card class="q-mb-md" flat bordered>
-          <div class="text-subtitle1 text-white bg-orange q-pa-sm">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="receipt_long" class="q-mr-sm" />
             IPI / CSLL / IRPJ
           </div>
@@ -445,7 +457,7 @@ onMounted(async () => {
 
         <!-- Card 6 - Produtor Rural -->
         <q-card class="q-mb-md" flat bordered>
-          <div class="text-subtitle1 text-white bg-green q-pa-sm">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="agriculture" class="q-mr-sm" />
             Produtor Rural
           </div>
@@ -504,7 +516,7 @@ onMounted(async () => {
 
         <!-- Card 7 - Contábil -->
         <q-card class="q-mb-md" flat bordered>
-          <div class="text-subtitle1 text-white bg-indigo q-pa-sm">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="account_balance" class="q-mr-sm" />
             Contábil
           </div>
@@ -556,7 +568,7 @@ onMounted(async () => {
 
         <!-- Card 8 - Observações -->
         <q-card class="q-mb-md" flat bordered>
-          <div class="text-subtitle1 text-white bg-grey-7 q-pa-sm">
+          <div class="text-subtitle1 text-white bg-primary q-pa-sm">
             <q-icon name="notes" class="q-mr-sm" />
             Observações
           </div>

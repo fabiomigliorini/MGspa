@@ -31,7 +31,7 @@ class NaturezaOperacaoRequest extends FormRequest
             'venda' => 'nullable|boolean',
             'vendadevolucao' => 'nullable|boolean',
             'transferencia' => 'nullable|boolean',
-            'preco' => 'nullable|boolean',
+            'preco' => 'nullable|integer|in:1,2,3,4',
         ];
     }
 

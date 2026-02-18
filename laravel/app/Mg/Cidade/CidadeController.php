@@ -37,8 +37,9 @@ class CidadeController extends Controller
         }
 
         // Ordenação
-        $sortField = $request->get('sort', 'cidade');
-        $sortOrder = $request->get('order', 'asc');
+        $allowedSortFields = ['codcidade', 'cidade', 'codigooficial', 'criacao', 'alteracao'];
+        $sortField = in_array($request->get('sort'), $allowedSortFields) ? $request->get('sort') : 'cidade';
+        $sortOrder = $request->get('order') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortField, $sortOrder);
 
         return CidadeResource::collection(

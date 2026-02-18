@@ -96,8 +96,9 @@ class NotaFiscalController extends Controller
         }
 
         // Ordenação
-        $sortField = $request->get('sort', 'saida');
-        $sortOrder = $request->get('order', 'desc');
+        $allowedSortFields = ['codnotafiscal', 'saida', 'emissao', 'numero', 'serie', 'modelo', 'valortotal', 'status', 'criacao', 'alteracao'];
+        $sortField = in_array($request->get('sort'), $allowedSortFields) ? $request->get('sort') : 'saida';
+        $sortOrder = $request->get('order') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortField, $sortOrder);
         $query->orderByDesc('codnotafiscal');
 

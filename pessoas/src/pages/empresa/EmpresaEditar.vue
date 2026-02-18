@@ -89,19 +89,24 @@ export default {
 </script>
 
 <template>
-  <MGLayout>
-    <template #tituloPagina>Editar Empresa</template>
+  <MGLayout back-button>
+    <template #tituloPagina>
+      <span class="q-pl-sm">Editar Empresa</span>
+    </template>
+
+    <template #botaoVoltar>
+      <q-btn
+        flat
+        dense
+        round
+        :to="'/empresa/' + sEmpresa.item.codempresa"
+        icon="arrow_back"
+        aria-label="Voltar"
+      />
+    </template>
+
     <template #content>
       <q-page padding>
-        <div class="q-pa-sm items-center row">
-          <q-btn
-            flat
-            icon="arrow_back"
-            :to="'/empresa/' + sEmpresa.item.codempresa"
-            round
-          />
-          <span class="text-h6">{{ sEmpresa.item.empresa }}</span>
-        </div>
         <q-inner-loading :showing="loadingPage">
           <q-spinner-gears size="50px" color="primary" />
         </q-inner-loading>

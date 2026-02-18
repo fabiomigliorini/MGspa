@@ -36,8 +36,9 @@ class NaturezaOperacaoController extends Controller
         }
 
         // Ordenação
-        $sortField = $request->get('sort', 'codnaturezaoperacao');
-        $sortOrder = $request->get('order', 'asc');
+        $allowedSortFields = ['codnaturezaoperacao', 'naturezaoperacao', 'codoperacao', 'emitida', 'finnfe', 'criacao', 'alteracao'];
+        $sortField = in_array($request->get('sort'), $allowedSortFields) ? $request->get('sort') : 'codnaturezaoperacao';
+        $sortOrder = $request->get('order') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortField, $sortOrder);
 
         return NaturezaOperacaoResource::collection(

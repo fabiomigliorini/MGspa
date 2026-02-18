@@ -99,7 +99,7 @@ export default {
     <template #tituloPagina>Empresas</template>
 
     <template #drawer>
-      <FiltroEmpresa @limpar="buscarEmpresas" />
+      <FiltroEmpresa />
     </template>
 
     <template #content>

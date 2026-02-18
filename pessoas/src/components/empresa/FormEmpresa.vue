@@ -1,9 +1,6 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useQuasar } from "quasar";
+import { ref, computed } from "vue";
 import moment from "moment";
-
-const $q = useQuasar();
 
 const props = defineProps({
   modelValue: {

@@ -125,8 +125,28 @@ export default {
 </script>
 
 <template>
-  <MGLayout>
-    <template #tituloPagina>Detalhes da Filial</template>
+  <MGLayout back-button>
+    <template #tituloPagina>
+      <span class="q-pl-sm">
+        <template v-if="sEmpresa.filial.codfilial">
+          {{ sEmpresa.filial.Empresa?.empresa }} - filial
+          {{ sEmpresa.filial.filial }}
+        </template>
+        <template v-else>Detalhes da Filial</template>
+      </span>
+    </template>
+
+    <template #botaoVoltar>
+      <q-btn
+        flat
+        dense
+        round
+        :to="'/empresa/' + sEmpresa.filial.codempresa"
+        icon="arrow_back"
+        aria-label="Voltar"
+      />
+    </template>
+
     <template #content>
       <q-page padding>
         <q-inner-loading :showing="loading">
@@ -147,16 +167,6 @@ export default {
         </div>
 
         <div v-if="!loading && !erro && sEmpresa.filial?.codfilial">
-          <div class="q-pa-sm items-center row">
-            <q-btn
-              flat
-              icon="arrow_back"
-              :to="'/empresa/' + sEmpresa.filial.codempresa"
-              round
-            />
-            <span class="text-h6">{{ sEmpresa.filial.Empresa.empresa }}</span>
-          </div>
-
           <q-card style="max-width: 1000px; margin: 0 auto">
             <q-card-section>
               <div class="row items-center">

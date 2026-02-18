@@ -27,8 +27,9 @@ class CfopController extends Controller
         }
 
         // Ordenação
-        $sortField = $request->get('sort', 'codcfop');
-        $sortOrder = $request->get('order', 'asc');
+        $allowedSortFields = ['codcfop', 'cfop', 'descricao', 'criacao', 'alteracao'];
+        $sortField = in_array($request->get('sort'), $allowedSortFields) ? $request->get('sort') : 'codcfop';
+        $sortOrder = $request->get('order') === 'desc' ? 'desc' : 'asc';
         $query->orderBy($sortField, $sortOrder);
 
         return CfopResource::collection(

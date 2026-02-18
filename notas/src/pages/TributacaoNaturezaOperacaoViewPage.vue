@@ -244,7 +244,7 @@ onMounted(loadData)
         <!-- Coluna 2: Contábil -->
         <div class="col-12 col-md-6">
           <q-card flat bordered>
-            <div class="text-subtitle1 text-white bg-grey-7 q-pa-sm">
+            <div class="text-subtitle1 text-white bg-primary q-pa-sm">
               <q-icon name="account_balance" class="q-mr-sm" />
               Contábil
             </div>
@@ -288,7 +288,7 @@ onMounted(loadData)
 
       <!-- Lucro Presumido -->
       <q-card flat bordered class="q-mt-md">
-        <div class="text-subtitle1 text-white bg-blue q-pa-sm">
+        <div class="text-subtitle1 text-white bg-primary q-pa-sm">
           <q-icon name="business" class="q-mr-sm" />
           Lucro Presumido
         </div>
@@ -358,7 +358,7 @@ onMounted(loadData)
         <!-- Simples Nacional -->
         <div class="col-12 col-md-6">
           <q-card flat bordered>
-            <div class="text-subtitle1 text-white bg-teal q-pa-sm">
+            <div class="text-subtitle1 text-white bg-primary q-pa-sm">
               <q-icon name="store" class="q-mr-sm" />
               Simples Nacional
             </div>
@@ -388,7 +388,7 @@ onMounted(loadData)
         <!-- Produtor Rural -->
         <div class="col-12 col-md-6">
           <q-card flat bordered>
-            <div class="text-subtitle1 text-white bg-green q-pa-sm">
+            <div class="text-subtitle1 text-white bg-primary q-pa-sm">
               <q-icon name="agriculture" class="q-mr-sm" />
               Produtor Rural
             </div>
@@ -444,7 +444,7 @@ onMounted(loadData)
 
       <!-- Observações -->
       <q-card v-if="tributacao.observacoesnf" flat bordered class="q-mt-md">
-        <div class="text-subtitle1 text-white bg-grey-7 q-pa-sm">
+        <div class="text-subtitle1 text-white bg-primary q-pa-sm">
           <q-icon name="notes" class="q-mr-sm" />
           Observações NF
         </div>
