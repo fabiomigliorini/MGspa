@@ -441,7 +441,7 @@ class NotaFiscalItemService
             }
 
             // define novo preco e novo valor total
-            $item->valorunitario = $preco;
+            $item->valorunitario = $preco * $produto->embalagem;
             $item->valortotal = $item->valorunitario * $item->quantidade;
             $item->save();
 
