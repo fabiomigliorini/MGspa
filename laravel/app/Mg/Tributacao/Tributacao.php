@@ -1,8 +1,15 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 17/Feb/2026 10:26:06
+ */
 
 namespace Mg\Tributacao;
 
 use Mg\MgModel;
+use Mg\Tributacao\NcmTributacao;
+use Mg\Produto\Produto;
+use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
 use Mg\Usuario\Usuario;
 
 class Tributacao extends MgModel
@@ -10,22 +17,23 @@ class Tributacao extends MgModel
     protected $table = 'tbltributacao';
     protected $primaryKey = 'codtributacao';
 
+
     protected $fillable = [
-        'tributacao',
         'aliquotaicmsecf',
+        'tributacao'
     ];
 
     protected $dates = [
         'alteracao',
-        'criacao',
+        'criacao'
     ];
 
     protected $casts = [
         'codtributacao' => 'integer',
-        'aliquotaicmsecf' => 'float',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer',
+        'codusuariocriacao' => 'integer'
     ];
+
 
     // Chaves Estrangeiras
     public function UsuarioAlteracao()
@@ -37,4 +45,22 @@ class Tributacao extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
+
+    // Tabelas Filhas
+    public function NcmTributacaoS()
+    {
+        return $this->hasMany(NcmTributacao::class, 'codtributacao', 'codtributacao');
+    }
+
+    public function ProdutoS()
+    {
+        return $this->hasMany(Produto::class, 'codtributacao', 'codtributacao');
+    }
+
+    public function TributacaoNaturezaOperacaoS()
+    {
+        return $this->hasMany(TributacaoNaturezaOperacao::class, 'codtributacao', 'codtributacao');
+    }
+
 }

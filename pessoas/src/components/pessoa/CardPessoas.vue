@@ -1,128 +1,154 @@
+<script setup>
+import { computed } from "vue";
+import {
+  formataData,
+  formataCPF,
+  formataCNPJ,
+  formataFone,
+} from "src/utils/formatador";
+
+const props = defineProps({
+  listagempessoas: {
+    type: Object,
+    required: true,
+  },
+});
+
+const primeiroEndereco = computed(() => {
+  const enderecos = props.listagempessoas.PessoaEnderecoS;
+  if (!enderecos) return null;
+  return enderecos.find((e) => e.nfe) || null;
+});
+
+const primeiroEmail = computed(() => {
+  const emails = props.listagempessoas.PessoaEmailS;
+  if (!emails || emails.length === 0) return null;
+  return emails[0];
+});
+
+const primeiroTelefone = computed(() => {
+  const telefones = props.listagempessoas.PessoaTelefoneS;
+  if (!telefones || telefones.length === 0) return null;
+  return telefones[0];
+});
+</script>
+
 <template>
-    <q-card v-ripple>
-        <q-item :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
-            <q-item-section avatar>
-                <q-avatar color="primary" class="q-my-md" size="35px" text-color="white" v-if="listagempessoas.fantasia">
-                    {{ primeiraLetra(listagempessoas.fantasia) }}
-                </q-avatar>
-            </q-item-section>
-            <q-item-section>
-                <q-item-label class="text-h6" :class="listagempessoas.inativo ? 'text-strike text-red-14' : null">
-                    {{ listagempessoas.fantasia }}
-                </q-item-label>
-                <q-item-label class="ellipsis" v-if="listagempessoas.inativo">
-                    Inativo Desde: {{
-                        Documentos.formataData(listagempessoas.inativo) }}
-                </q-item-label>
-                <q-item-label caption class="ellipsis">
-                    {{ listagempessoas.pessoa }}
-                </q-item-label>
-                <q-item-label caption class="ellipsis" v-if="listagempessoas.codgrupoeconomico">
-                    {{ listagempessoas.GrupoEconomico.grupoeconomico }}
-                </q-item-label>
-            </q-item-section>
-        </q-item>
+  <router-link
+    :to="'/pessoa/' + listagempessoas.codpessoa"
+    class="full-height link-card"
+  >
+  <q-card
+    bordered
+    flat
+    class="cursor-pointer full-height q-pb-md"
+  >
+    <!-- BADGE INATIVO -->
+    <q-badge
+      v-if="listagempessoas.inativo"
+      color="red"
+      floating
+      label="Inativo"
+    />
 
-        <q-list>
-            <q-item :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
-                <q-item-section avatar>
-                    <q-icon color="primary" name="fingerprint" />
-                </q-item-section>
-                <q-item-section>
-                    <q-item-label class="ellipsis">
-                        <template v-if="listagempessoas.fisica">
-                            {{ Documentos.formataCPF(listagempessoas.cnpj) }}
-                        </template>
-                        <template v-else>
-                            {{ Documentos.formataCNPJ(listagempessoas.cnpj) }}
-                        </template>
-                    </q-item-label>
-                    <q-item-label caption v-if="listagempessoas.ie">
-                        {{ Documentos.formataIePorSigla(listagempessoas.ie) }}
-                    </q-item-label>
-                </q-item-section>
-            </q-item>
+    <!-- HEADER -->
+    <q-card-section class="text-grey-9 text-overline q-pb-none">
+      <div class="flex items-center" style="height: 3rem">
+        <div class="ellipsis-2-lines titulo-fantasia">
+          {{ listagempessoas.fantasia }}
+        </div>
+      </div>
+      <div class="text-caption text-grey ellipsis razao-social">
+        {{ listagempessoas.pessoa }}
+      </div>
+    </q-card-section>
 
-            <template v-if="listagempessoas.PessoaEnderecoS">
-                <q-item v-for="end in listagempessoas.PessoaEnderecoS.filter(end => end.nfe == true)"
-                    :key="end.codpessoaendereco" :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
-                    <q-item-section avatar>
-                        <q-icon color="red" name="place" />
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label class="ellipsis">
-                            {{ end.cidade }} / {{ end.uf }}
-                        </q-item-label>
-                        <q-item-label caption class="ellipsis">
-                            {{ end.endereco }},
-                            {{ end.numero }},
-                            <template v-if="end.complemento">
-                                {{ end.complemento }},
-                            </template>
-                            {{ end.bairro }}
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>
-            </template>
-            <template v-if="listagempessoas.PessoaEmailS">
-                <q-item v-for="email in listagempessoas.PessoaEmailS.filter(email => email.nfe == true)"
-                    :key="email.codpessoaemail" :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
-                    <q-item-section avatar>
-                        <q-icon color="primary" name="email" />
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label class="ellipsis">
-                            {{ email.email }}
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>
-            </template>
+    <q-separator inset class="q-mt-sm" />
 
-            <template v-if="listagempessoas.PessoaTelefoneS">
-                <q-item v-for="telefone in listagempessoas.PessoaTelefoneS" :key="telefone.codpessoatelefone"
-                    :to="'/pessoa/' + listagempessoas.codpessoa" clickable>
-                    <q-item-section avatar>
-                        <q-icon color="primary" name="phone" />
-                    </q-item-section>
-                    <q-item-section>
-                        <q-item-label class="ellipsis">
-                            ({{ telefone.ddd }})
-                            {{ Documentos.formataFone(telefone.tipo, telefone.telefone) }}
-                        </q-item-label>
-                    </q-item-section>
-                </q-item>
+    <!-- DETALHES -->
+    <q-list>
+      <!-- CNPJ/CPF -->
+      <q-item>
+        <q-item-section avatar>
+          <q-icon color="primary" name="fingerprint" size="xs" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="ellipsis text-caption">
+            <template v-if="listagempessoas.fisica">
+              {{ formataCPF(listagempessoas.cnpj) }}
             </template>
-        </q-list>
-    </q-card>
+            <template v-else>
+              {{ formataCNPJ(listagempessoas.cnpj) }}
+            </template>
+          </q-item-label>
+          <q-item-label caption class="ellipsis" v-if="listagempessoas.ie">
+            {{ listagempessoas.ie }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- ENDERECO -->
+      <q-item v-if="primeiroEndereco" dense>
+        <q-item-section avatar>
+          <q-icon color="red" name="place" size="xs" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="ellipsis text-caption">
+            {{ primeiroEndereco.cidade }} / {{ primeiroEndereco.uf }}
+          </q-item-label>
+          <q-item-label caption class="ellipsis">
+            {{ primeiroEndereco.endereco }}, {{ primeiroEndereco.numero
+            }}<template v-if="primeiroEndereco.complemento"
+              >, {{ primeiroEndereco.complemento }}</template
+            >
+          </q-item-label>
+          <q-item-label caption class="ellipsis">
+            {{ primeiroEndereco.bairro }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- EMAIL -->
+      <q-item v-if="primeiroEmail" dense>
+        <q-item-section avatar>
+          <q-icon color="primary" name="email" size="xs" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="ellipsis text-caption">
+            {{ primeiroEmail.email }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- TELEFONE -->
+      <q-item v-if="primeiroTelefone" dense>
+        <q-item-section avatar>
+          <q-icon color="primary" name="phone" size="xs" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="ellipsis text-caption">
+            ({{ primeiroTelefone.ddd }})
+            {{ formataFone(primeiroTelefone.tipo, primeiroTelefone.telefone) }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </q-list>
+  </q-card>
+  </router-link>
 </template>
 
-
-<script>
-import { defineAsyncComponent } from 'vue'
-import { formataDocumetos } from 'src/stores/formataDocumentos'
-import { pessoaStore } from 'src/stores/pessoa'
-
-export default {
-
-    props: ['listagempessoas'],
-    methods: {
-
-        primeiraLetra(fantasia) {
-            if (fantasia.charAt(0) == ' ') {
-                return fantasia.charAt(1)
-            }
-            return fantasia.charAt(0)
-        },
-    },
-
-    setup() {
-        const Documentos = formataDocumetos()
-        const sPessoa = pessoaStore()
-
-        return {
-            Documentos,
-            sPessoa
-        }
-    },
+<style scoped>
+.titulo-fantasia {
+  line-height: 1.3;
+  font-size: 1rem;
 }
-</script>
+
+.razao-social {
+  text-transform: none;
+}
+
+.link-card {
+  text-decoration: none;
+  color: inherit;
+}
+</style>

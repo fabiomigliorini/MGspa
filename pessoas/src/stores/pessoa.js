@@ -15,7 +15,7 @@ export const pessoaStore = defineStore("pessoa", {
 
   state: () => ({
     counter: 0,
-    item: {},
+    item: null,
     arrPessoas: [],
     filtroPesquisa: {
       codpessoa: null,
@@ -38,7 +38,6 @@ export const pessoaStore = defineStore("pessoa", {
 
   actions: {
     async get(codpessoa) {
-      this.item = null;
       const { data } = await api.get("v1/pessoa/" + codpessoa);
       this.item = data.data;
       return data;

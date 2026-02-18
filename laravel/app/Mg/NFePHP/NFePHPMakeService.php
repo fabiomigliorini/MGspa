@@ -11,7 +11,7 @@ use Mg\NotaFiscal\NotaFiscal;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Filial\Filial;
-use Mg\Empresa\Empresa;
+use Mg\Filial\Empresa;
 use Mg\NaturezaOperacao\NaturezaOperacaoService;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;

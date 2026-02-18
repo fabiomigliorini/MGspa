@@ -1,43 +1,40 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 17/Feb/2026 11:35:08
+ */
 
 namespace Mg\Usuario;
 
-/**
- * Campos
- * @property  bigint                         $codgrupousuario                    NOT NULL DEFAULT nextval('tblgrupousuario_codgrupousuario_seq'::regclass)
- * @property  varchar(50)                    $grupousuario                       NOT NULL
- * @property  varchar(600)                   $observacoes
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  timestamp                      $inativo
- *
- * Chaves Estrangeiras
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  GrupoUsuarioPermissao[]        $GrupoUsuarioPermissaoS
- * @property  GrupoUsuarioUsuario[]          $GrupoUsuarioUsuarioS
- */
 use Mg\MgModel;
 use Mg\Permissao\GrupoUsuarioPermissao;
+use Mg\Usuario\GrupoUsuarioUsuario;
+use Mg\Usuario\Usuario;
 
-class GrupoUsuario extends MGModel
+class GrupoUsuario extends MgModel
 {
     protected $table = 'tblgrupousuario';
     protected $primaryKey = 'codgrupousuario';
+
+
     protected $fillable = [
         'grupousuario',
-        'observacoes',
         'inativo',
+        'observacoes'
     ];
+
     protected $dates = [
         'alteracao',
         'criacao',
-        'inativo',
+        'inativo'
     ];
+
+    protected $casts = [
+        'codgrupousuario' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer'
+    ];
+
 
     // Chaves Estrangeiras
     public function UsuarioAlteracao()
@@ -50,6 +47,7 @@ class GrupoUsuario extends MGModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
     // Tabelas Filhas
     public function GrupoUsuarioPermissaoS()
     {
@@ -60,4 +58,5 @@ class GrupoUsuario extends MGModel
     {
         return $this->hasMany(GrupoUsuarioUsuario::class, 'codgrupousuario', 'codgrupousuario');
     }
+
 }

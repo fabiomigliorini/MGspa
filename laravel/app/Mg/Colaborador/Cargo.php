@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2024 15:01:04
+ * Date: 17/Feb/2026 10:11:09
  */
 
 namespace Mg\Colaborador;
@@ -20,6 +20,7 @@ class Cargo extends MgModel
     protected $fillable = [
         'adicional',
         'cargo',
+        'comissaocaixa',
         'inativo',
         'salario'
     ];
@@ -35,6 +36,7 @@ class Cargo extends MgModel
         'codcargo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'comissaocaixa' => 'float',
         'salario' => 'float'
     ];
 

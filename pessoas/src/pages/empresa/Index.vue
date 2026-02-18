@@ -111,6 +111,7 @@ export default {
         <q-infinite-scroll
           @load="scrollInfinito"
           :disable="loading || acabouDados"
+          style="min-height: 100vh"
         >
           <div class="row q-col-gutter-md">
             <div

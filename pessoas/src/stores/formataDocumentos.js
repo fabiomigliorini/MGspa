@@ -9,7 +9,7 @@ const sPessoa = pessoaStore();
 export const formataDocumetos = defineStore("documentos", {
   actions: {
     formataIePorSigla(ie) {
-      if (!sPessoa.item.PessoaEnderecoS) {
+      if (!sPessoa.item?.PessoaEnderecoS) {
         return ie;
       }
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Sep/2025 17:56:55
+ * Date: 16/Feb/2026 21:57:30
  */
 
 namespace Mg\Produto;
@@ -19,7 +19,7 @@ use Mg\Marca\Marca;
 use Mg\NaturezaOperacao\Ncm;
 use Mg\Produto\SubGrupoProduto;
 use Mg\Produto\TipoProduto;
-use Mg\NaturezaOperacao\Tributacao;
+use Mg\Tributacao\Tributacao;
 use Mg\Produto\UnidadeMedida;
 use Mg\Usuario\Usuario;
 use Mg\Estoque\EstoqueLocal;
@@ -36,6 +36,7 @@ class Produto extends MgModel
         'abcignorar',
         'abcposicao',
         'altura',
+        'bonificacaoxerox',
         'codcest',
         'codcestanterior',
         'codestoquelocal',
@@ -50,7 +51,6 @@ class Produto extends MgModel
         'codtipoproduto',
         'codtributacao',
         'codunidademedida',
-        'comissao',
         'conferenciaperiodica',
         'descricaosite',
         'estoque',
@@ -83,6 +83,7 @@ class Produto extends MgModel
         'abcignorar' => 'boolean',
         'abcposicao' => 'integer',
         'altura' => 'float',
+        'bonificacaoxerox' => 'boolean',
         'codcest' => 'integer',
         'codcestanterior' => 'integer',
         'codestoquelocal' => 'integer',
@@ -100,7 +101,6 @@ class Produto extends MgModel
         'codunidademedida' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'comissao' => 'integer',
         'conferenciaperiodica' => 'boolean',
         'estoque' => 'boolean',
         'importado' => 'boolean',

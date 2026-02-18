@@ -47,13 +47,7 @@ const routes = [
       {
         path: "/grupoeconomico/:id",
         name: "grupoeconomico",
-        component: () => import("pages/GrupoEconomico/GrupoEconomicoview"),
-      },
-
-      {
-        path: "/nota-fiscal/dashboard",
-        name: "notafiscaldash",
-        component: () => import("pages/NotaFiscal/Index.vue"),
+        component: () => import("pages/GrupoEconomico/GrupoEconomicoView"),
       },
 
       {
@@ -118,10 +112,33 @@ const routes = [
         name: "comissaocaixas",
         component: () => import("pages/Cargos/ComissaoCaixas.vue"),
       },
+      // Unidade de Negócio
       {
-        path: "/metas/:codmeta?",
-        name: "metas",
-        component: () => import("pages/Metas/Index.vue"),
+        path: "/unidade-negocio",
+        name: "unidadeNegocioIndex",
+        component: () => import("pages/unidade-negocio/Index.vue"),
+      },
+
+      // Meta
+      {
+        path: "/meta",
+        name: "metaIndex",
+        component: () => import("pages/meta/Index.vue"),
+      },
+      {
+        path: "/meta/:codmeta/dashboard",
+        name: "metaDashboard",
+        component: () => import("pages/meta/MetaDashboard.vue"),
+      },
+      {
+        path: "/meta/:codmeta/dashboard/:codpessoa",
+        name: "metaDashboardColaborador",
+        component: () => import("pages/meta/MetaColaboradorDashboard.vue"),
+      },
+      {
+        path: "/meta/:codmeta/unidade/:codunidadenegocio",
+        name: "metaUnidadeDashboard",
+        component: () => import("pages/meta/MetaUnidadeDashboard.vue"),
       },
       {
         path: "/etnia",

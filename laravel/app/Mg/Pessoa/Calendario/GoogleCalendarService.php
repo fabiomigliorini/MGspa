@@ -6,11 +6,11 @@ use Google\Client;
 use Google\Service\Calendar;
 use Google\Service\Calendar\Event;
 use Google\Service\Calendar\EventDateTime;
+use Google\Service\Exception;
 
 class GoogleCalendarService
 {
     protected Calendar $calendarService;
-    protected string $calendarId;
 
     public function __construct()
     {
@@ -19,29 +19,32 @@ class GoogleCalendarService
         $client->addScope(Calendar::CALENDAR);
 
         $this->calendarService = new Calendar($client);
-        $this->calendarId = env('GOOGLE_CALENDAR_ID');
-
-        if (!$this->calendarId) {
-            throw new \RuntimeException('GOOGLE_CALENDAR_ID não configurado.');
-        }
     }
 
     /**
      * Cria um evento no Google Calendar
      */
-    public function createEvent(array $data): Event
+    public function createEvent(string $calendarId, array $data): Event
     {
         $event = $this->buildEvent($data);
 
-        return $this->calendarService->events->insert($this->calendarId, $event);
+        return $this->calendarService->events->insert($calendarId, $event);
     }
 
     /**
      * Atualiza um evento existente no Google Calendar
      */
-    public function updateEvent(string $eventId, array $data): Event
+    public function updateEvent(string $calendarId, string $eventId, array $data): Event
     {
-        $event = $this->calendarService->events->get($this->calendarId, $eventId);
+        $event = $this->calendarService->events->get($calendarId, $eventId);
+
+        // Evento excluído no Google Calendar retorna com status "cancelled"
+        if ($event->getStatus() === 'cancelled') {
+            throw new Exception(
+                'Evento cancelado no Google Calendar',
+                410
+            );
+        }
 
         $updated = $this->buildEvent($data);
 
@@ -50,17 +53,18 @@ class GoogleCalendarService
         $event->setStart($updated->getStart());
         $event->setEnd($updated->getEnd());
         $event->setRecurrence($updated->getRecurrence() ?? []);
+        $event->setColorId($updated->getColorId());
 
-        return $this->calendarService->events->update($this->calendarId, $eventId, $event);
+        return $this->calendarService->events->update($calendarId, $eventId, $event);
     }
 
 
     /**
      * Remove um evento do Google Calendar
      */
-    public function deleteEvent(string $eventId): void
+    public function deleteEvent(string $calendarId, string $eventId): void
     {
-        $this->calendarService->events->delete($this->calendarId, $eventId);
+        $this->calendarService->events->delete($calendarId, $eventId);
     }
 
     /**
@@ -103,6 +107,10 @@ class GoogleCalendarService
 
         if (!empty($data['recurrence'])) {
             $event->setRecurrence($data['recurrence']);
+        }
+
+        if (!empty($data['colorId'])) {
+            $event->setColorId($data['colorId']);
         }
 
         return $event;

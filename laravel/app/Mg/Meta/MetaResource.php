@@ -4,32 +4,37 @@ namespace Mg\Meta;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
-
 class MetaResource extends Resource
 {
-    /**
-     * Transform the resource into an array.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return array
-     */
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['filiais'] = MetaService::vendasFilial($this->resource);
-        $ret['vendedores'] = MetaService::vendasVendedor($this->resource);
 
-        // $ret['filiais'] = [];
-        // foreach ($this->MetaFilialS as $fil) {
-        //     $retFil = $fil->toArray();
-        //     $retFil['filial'] = $fil->Filial->filial;
-        //     $vendas = MetaService::vendasFilial($this->periodoinicial, $this->periodofinal);
-        //     $retFil['vendas'] = $vendas;
-        //     $retFil['valorvenda'] = $vendas->sum('valorvenda');
-        //     $ret['filiais'][$fil->codfilial] = $retFil;
-        // }
+        $ret['unidades'] = $this->MetaUnidadeNegocioS->map(function ($unidade) {
+            $unidadeArr = $unidade->toArray();
+            $unidadeArr['descricao'] = $unidade->UnidadeNegocio->descricao ?? null;
+
+            $pessoas = MetaUnidadeNegocioPessoa::where('codmeta', $this->codmeta)
+                ->where('codunidadenegocio', $unidade->codunidadenegocio)
+                ->with('Pessoa:codpessoa,pessoa,fantasia')
+                ->get();
+
+            $unidadeArr['pessoas'] = $pessoas->map(function ($pessoa) {
+                $pessoaArr = $pessoa->toArray();
+                $pessoaArr['pessoa'] = $pessoa->Pessoa->fantasia ?? $pessoa->Pessoa->pessoa ?? null;
+
+                $pessoaArr['fixos'] = MetaUnidadeNegocioPessoaFixo::where('codmeta', $this->codmeta)
+                    ->where('codunidadenegocio', $pessoa->codunidadenegocio)
+                    ->where('codpessoa', $pessoa->codpessoa)
+                    ->get()
+                    ->toArray();
+
+                return $pessoaArr;
+            });
+
+            return $unidadeArr;
+        });
 
         return $ret;
     }
-
 }

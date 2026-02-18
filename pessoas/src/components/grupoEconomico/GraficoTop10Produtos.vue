@@ -1,152 +1,114 @@
-<template>
-    <q-card>
-        <q-item-label header>
-            Top 10 Produtos
-        </q-item-label>
+<script setup>
+import { ref, watch, onMounted } from "vue";
+import { useQuasar } from "quasar";
+import { useRoute } from "vue-router";
+import { GrupoEconomicoStore } from "src/stores/GrupoEconomico";
+import Chart from "chart.js/auto";
+import SelectPessoas from "components/pessoa/SelectPessoas.vue";
+import moment from "moment";
 
-        <div class="row">
-            <div class="q-pl-md col-md-6">
-                <select-pessoas label="Filtrar pessoa" v-model="filtroPessoa.codpessoa"></select-pessoas>
-            </div>
+const $q = useQuasar();
+const route = useRoute();
+const sGrupoEconomico = GrupoEconomicoStore();
 
-            <div class="col-md-6 q-pl-md q-pr-md">
-                <q-select outlined v-model="filtroPessoa.desde" emit-value map-options :options="opcoesDesde" label="Data" dense />
-            </div>
-        </div>
-        <canvas id="graficoTopProdutos" height="200" width="200">
-        </canvas>
-    </q-card>
-</template>
-  
-<script>
-import { defineComponent, defineAsyncComponent, watch } from 'vue'
-import { ref } from 'vue'
-import Chart from 'chart.js/auto'
-import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico';
-import { formataDocumetos } from 'src/stores/formataDocumentos';
-import moment from 'moment'
+const canvasRef = ref(null);
+const graficoInstance = ref(null);
+const filtroPessoa = ref({
+  desde: moment().subtract(1, "year").startOf("month").format("YYYY-MM-DD"),
+  codpessoa: null,
+});
 
-export default defineComponent({
-    name: "GraficoTop10Produtos",
+const opcoesDesde = [
+  {
+    label: "Este Ano",
+    value: moment().startOf("year").format("YYYY-MM-DD"),
+  },
+  {
+    label: "1 Ano",
+    value: moment().subtract(1, "year").startOf("month").format("YYYY-MM-DD"),
+  },
+  {
+    label: "2 Anos",
+    value: moment().subtract(2, "year").startOf("month").format("YYYY-MM-DD"),
+  },
+  { label: "Tudo", value: null },
+];
 
-    components: {
-        SelectPessoas: defineAsyncComponent(() => import('components/pessoa/SelectPessoas.vue')),
+const montaGrafico = async () => {
+  try {
+    const ret = await sGrupoEconomico.getTopProdutos(
+      route.params.id,
+      filtroPessoa.value
+    );
 
-    },
+    const valortotal = ret.data.map((v) => v.valortotal);
+    const produtos = ret.data.map((v) => v.produto);
 
-    methods: {
+    if (graficoInstance.value) {
+      graficoInstance.value.destroy();
+    }
 
-        async montaGrafico() {
-            let valortotal = []
-            let label = []
-            this.produtos = []
-
-            const ret = await this.sGrupoEconomico.getTopProdutos(this.$route.params.id, this.filtroPessoa);
-
-            ret.data.forEach(valores => {
-                valortotal.push(valores.valortotal)
-                label.push(valores.produto)
-                this.produtos.push(valores.produto)
-            });
-
-            const data = {
-                labels: this.produtos,
-                datasets: [
-                    {
-                        label: 'Valor Total',
-                        data: null,
-                    },
-                ]
-            };
-
-            const config = {
-                type: 'doughnut',
-                data: data,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        title: {
-                            display: true,
-                        }
-                    }
-                },
-            };
-
-            data.datasets[0].data = valortotal
-            this.graficoTopProdutos = new Chart(document.getElementById('graficoTopProdutos'), config)
+    graficoInstance.value = new Chart(canvasRef.value, {
+      type: "doughnut",
+      data: {
+        labels: produtos,
+        datasets: [{ label: "Valor Total", data: valortotal }],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: "top" },
+          title: { display: true },
         },
+      },
+    });
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: error.response?.data?.message || "Erro ao carregar top produtos",
+    });
+  }
+};
 
-        atualizaGrafico() {
-            this.graficoTopProdutos.destroy()
-            this.montaGrafico()
-        },
+watch(filtroPessoa, () => montaGrafico(), { deep: true });
 
-
-        async filtroDesde() {
-            this.opcoesDesde = [
-                {
-                    label: 'Este Ano',
-                    value: moment().startOf('year').format('YYYY-MM-DD')
-                },
-                {
-                    label: '1 Ano',
-                    value: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
-                },
-                {
-                    label: '2 Anos',
-                    value: moment().subtract(2, 'year').startOf('month').format('YYYY-MM-DD')
-                },
-                {
-                    label: 'Tudo',
-                    value: null
-                },
-            ]
-        },
-    },
-
-    data() {
-
-        watch(
-            () => this.filtroPessoa,
-            () => this.atualizaGrafico(),
-            { deep: true }
-        );
-
-        return {
-            model: null,
-        }
-    },
-
-    async mounted() {
-        this.filtroDesde()
-        this.montaGrafico()
-    },
-
-    setup() {
-
-        const sGrupoEconomico = GrupoEconomicoStore()
-        const filtroPessoa = ref({
-            desde: moment().subtract(1, 'year').startOf('month').format('YYYY-MM-DD')
-        })
-        const graficoTopProdutos = ref('')
-        const produtos = ref([])
-        const Documentos = formataDocumetos()
-        const opcoesDesde = ref([])
-
-
-        return {
-            sGrupoEconomico,
-            filtroPessoa,
-            graficoTopProdutos,
-            opcoesDesde,
-            produtos,
-            Documentos
-        }
-    },
-
-})
+onMounted(() => {
+  montaGrafico();
+});
 </script>
-  
+
+<template>
+  <q-card bordered flat class="full-height">
+    <q-card-section class="text-grey-9 text-overline row items-center">
+      TOP 10 PRODUTOS
+    </q-card-section>
+
+    <q-card-section>
+      <div class="row q-col-gutter-md">
+        <div class="col-md-6 col-xs-12">
+          <select-pessoas
+            label="Filtrar pessoa"
+            v-model="filtroPessoa.codpessoa"
+          />
+        </div>
+        <div class="col-md-6 col-xs-12">
+          <q-select
+            outlined
+            v-model="filtroPessoa.desde"
+            :options="opcoesDesde"
+            label="Data"
+            dense
+            map-options
+            emit-value
+          />
+        </div>
+      </div>
+    </q-card-section>
+
+    <q-card-section>
+      <canvas ref="canvasRef" height="200" width="200" />
+    </q-card-section>
+  </q-card>
+</template>

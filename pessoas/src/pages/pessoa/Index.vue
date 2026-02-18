@@ -3,10 +3,14 @@
     <template #tituloPagina> Pessoas </template>
 
     <template #content>
-      <q-infinite-scroll @load="scrollInfinito" :disable="loading">
+      <q-infinite-scroll
+        @load="scrollInfinito"
+        :disable="loading"
+        style="min-height: 100vh"
+      >
         <div class="row q-pa-md q-col-gutter-md">
           <div
-            class="col-md-4 col-sm-6 col-xs-12 col-lg-3 col-xl-2"
+            class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3"
             v-for="listagempessoas in sPessoa.arrPessoas"
             v-bind:key="listagempessoas.codpessoa"
           >

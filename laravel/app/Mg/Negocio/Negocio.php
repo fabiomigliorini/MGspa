@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 12/Dec/2025 11:17:24
+ * Date: 16/Feb/2026 21:57:52
  */
 
 namespace Mg\Negocio;
@@ -18,6 +18,7 @@ use Mg\Mercos\MercosPedido;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Saurus\SaurusPedido;
 use Mg\Woo\WooPedidoNegocio;
+use Mg\Meta\BonificacaoEvento;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -192,6 +193,11 @@ class Negocio extends MgModel
 
 
     // Tabelas Filhas
+    public function BonificacaoEventoS()
+    {
+        return $this->hasMany(BonificacaoEvento::class, 'codnegocio', 'codnegocio');
+    }
+
     public function MercosPedidoS()
     {
         return $this->hasMany(MercosPedido::class, 'codnegocio', 'codnegocio');

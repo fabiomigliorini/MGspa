@@ -66,7 +66,7 @@ const toggleLeftDrawer = () => {
 
 <template>
   <q-layout view="Hhh lpR fff">
-    <q-header reveal elevated class="bg-yellow text-blue-grey">
+    <q-header reveal elevated class="bg-yellow text-grey-9">
       <q-toolbar>
         <q-btn
           flat
@@ -86,17 +86,13 @@ const toggleLeftDrawer = () => {
           <slot name="tituloPagina"></slot>
         </q-toolbar-title>
 
+        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
+
         <!-- Renderiza o menu -->
         <mg-menu></mg-menu>
 
         <!-- Usuario logout -->
-        <q-btn-dropdown
-          flat
-          dense
-          color="blue-grey"
-          icon="person"
-          :label="user"
-        >
+        <q-btn-dropdown flat dense color="grey-9 " icon="person" :label="user">
           <div class="row no-wrap q-pa-md justify-center">
             <div class="column items-center">
               <q-avatar size="72px">

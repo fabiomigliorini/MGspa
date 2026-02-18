@@ -20,10 +20,10 @@ class UsuarioController extends MgController
     public function index(Request $request)
     {
         list($filter, $sort, $fields) = $this->filtros($request);
-        $qry = UsuarioService::pesquisar($filter, $sort, $fields)->with('Imagem');
+        $qry = UsuarioService::pesquisar($filter, $sort, $fields)->with(['Pessoa:codpessoa,pessoa', 'GrupoUsuarioUsuarioS.GrupoUsuario:codgrupousuario,grupousuario']);
         $res = $qry->orderBy('usuario', 'asc')->paginate()->appends($request->all());
 
-        return UsuarioResource::collection($res);
+        return UsuarioListResource::collection($res);
     }
 
 

@@ -8,11 +8,11 @@ moment.locale("pt-br");
 const user = guardaToken();
 </script>
 <template>
-  <q-btn flat dense round color="blue-grey" icon="apps">
+  <q-btn flat dense round color="text-grey-9" icon="apps">
     <q-menu
       transition-show="fade"
       transition-hide="fade"
-      class="bg-blue-grey text-yellow-6 q-pa-xs"
+      class="bg-grey-9 text-yellow-6 q-pa-xs"
     >
       <q-list>
         <q-item class="q-px-sm">
@@ -43,22 +43,17 @@ const user = guardaToken();
             <q-icon name="celebration" size="35px" />
             <div>Aniversários</div>
           </q-btn>
-          <q-btn
-            flat
-            stack
-            class="col-xs-6 col-sm-3 col-md-3"
-            :to="{ name: 'notafiscaldash' }"
-          >
-            <q-icon name="receipt" size="35px" />
-            <div>Notas</div>
-          </q-btn>
         </q-item>
 
         <q-separator inset color="yelllow-6" />
         <q-item class="q-px-sm">
-          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" to="/metas">
+          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'metaIndex' }">
             <q-icon name="trending_up" size="35px" />
             <div>Metas</div>
+          </q-btn>
+          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'unidadeNegocioIndex' }">
+            <q-icon name="store" size="35px" />
+            <div>Unidades</div>
           </q-btn>
         </q-item>
 

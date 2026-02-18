@@ -1,38 +1,38 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 17/Feb/2026 11:34:56
+ */
 
 namespace Mg\Permissao;
 
-/**
- * Campos
- * @property  bigint                         $codgrupousuariopermissao           NOT NULL DEFAULT nextval('tblgrupousuariopermissao_codgrupousuariopermissao_seq'::regclass)
- * @property  bigint                         $codgrupousuario                    NOT NULL
- * @property  bigint                         $codpermissao                       NOT NULL
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- *
- * Chaves Estrangeiras
- * @property  GrupoUsuario                   $GrupoUsuario
- * @property  Permissao                      $Permissao
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- */
 use Mg\MgModel;
+use Mg\Usuario\GrupoUsuario;
+use Mg\Permissao\Permissao;
+use Mg\Usuario\Usuario;
 
-class GrupoUsuarioPermissao extends MGModel
+class GrupoUsuarioPermissao extends MgModel
 {
     protected $table = 'tblgrupousuariopermissao';
     protected $primaryKey = 'codgrupousuariopermissao';
+
+
     protected $fillable = [
         'codgrupousuario',
-        'codpermissao',
+        'codpermissao'
     ];
+
     protected $dates = [
         'alteracao',
-        'criacao',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'codgrupousuario' => 'integer',
+        'codgrupousuariopermissao' => 'integer',
+        'codpermissao' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer'
     ];
 
 
@@ -56,8 +56,5 @@ class GrupoUsuarioPermissao extends MGModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
-
-    // Tabelas Filhas
 
 }

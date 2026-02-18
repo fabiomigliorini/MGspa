@@ -322,7 +322,44 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // METAS
         Route::get('meta/', '\Mg\Meta\MetaController@index');
+        Route::post('meta/', '\Mg\Meta\MetaController@store');
         Route::get('meta/{codmeta}', '\Mg\Meta\MetaController@show');
+        Route::put('meta/{codmeta}', '\Mg\Meta\MetaController@update');
+        Route::delete('meta/{codmeta}', '\Mg\Meta\MetaController@destroy');
+        Route::post('meta/{codmeta}/bloquear', '\Mg\Meta\MetaController@bloquear');
+        Route::post('meta/{codmeta}/desbloquear', '\Mg\Meta\MetaController@desbloquear');
+        Route::post('meta/{codmeta}/reprocessar', '\Mg\Meta\MetaController@reprocessar');
+        Route::post('meta/{codmeta}/finalizar', '\Mg\Meta\MetaController@finalizar');
+        Route::post('meta/{codmeta}/inativo', '\Mg\Meta\MetaController@inativar');
+        Route::delete('meta/{codmeta}/inativo', '\Mg\Meta\MetaController@ativar');
+
+        // META — UNIDADE (individual)
+        Route::post('meta/{codmeta}/unidade', '\Mg\Meta\MetaController@storeUnidade');
+        Route::put('meta/{codmeta}/unidade/{codunidadenegocio}', '\Mg\Meta\MetaController@updateUnidade');
+        Route::delete('meta/{codmeta}/unidade/{codunidadenegocio}', '\Mg\Meta\MetaController@destroyUnidade');
+
+        // META — PESSOA (individual)
+        Route::post('meta/{codmeta}/unidade/{codunidadenegocio}/pessoa', '\Mg\Meta\MetaController@storePessoa');
+        Route::put('meta/{codmeta}/pessoa/{id}', '\Mg\Meta\MetaController@updatePessoa');
+        Route::delete('meta/{codmeta}/pessoa/{id}', '\Mg\Meta\MetaController@destroyPessoa');
+
+        // META — FIXO (individual)
+        Route::post('meta/{codmeta}/pessoa/{idPessoa}/fixo', '\Mg\Meta\MetaController@storeFixo');
+        Route::put('meta/{codmeta}/fixo/{id}', '\Mg\Meta\MetaController@updateFixo');
+        Route::delete('meta/{codmeta}/fixo/{id}', '\Mg\Meta\MetaController@destroyFixo');
+
+        // META DASHBOARD
+        Route::get('meta/{codmeta}/dashboard', '\Mg\Meta\MetaDashboardController@dashboard');
+        Route::get('meta/{codmeta}/dashboard/{codpessoa}', '\Mg\Meta\MetaDashboardController@dashboardPessoa');
+
+        // UNIDADE DE NEGOCIO
+        Route::get('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@index');
+        Route::post('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@store');
+        Route::get('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@show');
+        Route::put('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@update');
+        Route::delete('unidade-negocio/{codunidadenegocio}', '\Mg\Filial\UnidadeNegocioController@destroy');
+        Route::post('unidade-negocio/{codunidadenegocio}/inativo', '\Mg\Filial\UnidadeNegocioController@inativar');
+        Route::delete('unidade-negocio/{codunidadenegocio}/inativo', '\Mg\Filial\UnidadeNegocioController@ativar');
 
 
         // Pessoa
@@ -357,11 +394,11 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('etnia/{codetnia}/inativo', '\Mg\Pessoa\EtniaController@ativar');
 
         // Empresa
-        Route::get('empresa/', '\Mg\Empresa\EmpresaController@index');
-        Route::post('empresa/', '\Mg\Empresa\EmpresaController@store');
-        Route::get('empresa/{codempresa}', '\Mg\Empresa\EmpresaController@show');
-        Route::put('empresa/{codempresa}', '\Mg\Empresa\EmpresaController@update');
-        Route::delete('empresa/{codempresa}', '\Mg\Empresa\EmpresaController@destroy');
+        Route::get('empresa/', '\Mg\Filial\EmpresaController@index');
+        Route::post('empresa/', '\Mg\Filial\EmpresaController@store');
+        Route::get('empresa/{codempresa}', '\Mg\Filial\EmpresaController@show');
+        Route::put('empresa/{codempresa}', '\Mg\Filial\EmpresaController@update');
+        Route::delete('empresa/{codempresa}', '\Mg\Filial\EmpresaController@destroy');
 
         // Grau de Instrução
         Route::get('grau-instrucao/', '\Mg\Pessoa\GrauInstrucaoController@index');

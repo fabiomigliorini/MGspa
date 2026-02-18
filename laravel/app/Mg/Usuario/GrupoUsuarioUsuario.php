@@ -1,46 +1,49 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 17/Feb/2026 11:35:14
+ */
 
 namespace Mg\Usuario;
 
-/**
- * Campos
- * @property  bigint                         $codgrupousuariousuario             NOT NULL DEFAULT nextval('tblgrupousuariousuario_codgrupousuariousuario_seq'::regclass)
- * @property  bigint                         $codgrupousuario                    NOT NULL
- * @property  bigint                         $codusuario                         NOT NULL
- * @property  bigint                         $codfilial                          NOT NULL
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- *
- * Chaves Estrangeiras
- * @property  GrupoUsuario                   $GrupoUsuario
- * @property  Usuario                        $Usuario
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- * @property  Filial                         $Filial
- *
- * Tabelas Filhas
- */
 use Mg\MgModel;
 use Mg\Filial\Filial;
+use Mg\Usuario\GrupoUsuario;
+use Mg\Usuario\Usuario;
 
-class GrupoUsuarioUsuario extends MGModel
+class GrupoUsuarioUsuario extends MgModel
 {
     protected $table = 'tblgrupousuariousuario';
     protected $primaryKey = 'codgrupousuariousuario';
+
+
     protected $fillable = [
-        'codgrupousuario',
-        'codusuario',
         'codfilial',
+        'codgrupousuario',
+        'codusuario'
     ];
+
     protected $dates = [
         'alteracao',
-        'criacao',
+        'criacao'
+    ];
+
+    protected $casts = [
+        'codfilial' => 'integer',
+        'codgrupousuario' => 'integer',
+        'codgrupousuariousuario' => 'integer',
+        'codusuario' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer'
     ];
 
 
     // Chaves Estrangeiras
+    public function Filial()
+    {
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
     public function GrupoUsuario()
     {
         return $this->belongsTo(GrupoUsuario::class, 'codgrupousuario', 'codgrupousuario');
@@ -60,13 +63,5 @@ class GrupoUsuarioUsuario extends MGModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
-
-    public function Filial()
-    {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
-    }
-
-
-    // Tabelas Filhas
 
 }
