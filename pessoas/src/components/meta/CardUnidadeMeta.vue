@@ -355,8 +355,8 @@ const abrirEditarFixo = (fixo) => {
     valor: fixo.valor,
     quantidade: fixo.quantidade,
     descricao: fixo.descricao,
-    datainicial: fixo.datainicial,
-    datafinal: fixo.datafinal,
+    datainicial: dataISO(fixo.datainicial),
+    datafinal: dataISO(fixo.datafinal),
   };
   dialogFixo.value = true;
 };
@@ -1049,6 +1049,9 @@ const removerFixo = (fixo) => {
                 <template v-if="fixo.descricao">
                   — {{ fixo.descricao }}</template
                 >
+              </q-item-label>
+              <q-item-label caption v-if="fixo.datainicial">
+                {{ formataPeriodoPessoa(fixo.datainicial, fixo.datafinal) }}
               </q-item-label>
             </q-item-section>
             <q-item-section side>
