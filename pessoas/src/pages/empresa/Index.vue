@@ -99,51 +99,29 @@ export default {
     <template #tituloPagina>Empresas</template>
 
     <template #drawer>
-      <FiltroEmpresa />
+      <FiltroEmpresa @buscar="buscarEmpresas()" />
     </template>
 
     <template #content>
-      <q-page padding>
-        <q-inner-loading :showing="loading">
-          <q-spinner-gears size="50px" color="primary" />
-        </q-inner-loading>
-
-        <q-infinite-scroll
-          @load="scrollInfinito"
-          :disable="loading || acabouDados"
-          style="min-height: 100vh"
-        >
-          <div class="row q-col-gutter-md">
-            <div
-              class="col-12 col-md-6 col-lg-4"
-              v-for="empresa in sEmpresa.empresas"
-              :key="empresa.codempresa"
-            >
-              <CardEmpresa :empresa="empresa" />
-            </div>
-          </div>
-
-          <template v-slot:loading>
-            <div class="row justify-center q-my-md">
-              <q-spinner-dots color="primary" size="40px" />
-            </div>
-          </template>
-        </q-infinite-scroll>
-
-        <div
-          v-if="!loading && sEmpresa.empresas.length === 0"
-          class="text-center q-pa-lg"
-        >
-          <q-icon name="business" size="64px" color="grey" />
-          <div class="text-h6 text-grey q-mt-md">
-            Nenhuma empresa encontrada
+      <q-infinite-scroll
+        @load="scrollInfinito"
+        :disable="loading || acabouDados"
+        style="min-height: 100vh"
+      >
+        <div class="row q-pa-md q-col-gutter-md">
+          <div
+            class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3"
+            v-for="empresa in sEmpresa.empresas"
+            :key="empresa.codempresa"
+          >
+            <CardEmpresa :empresa="empresa" />
           </div>
         </div>
+      </q-infinite-scroll>
 
-        <q-page-sticky position="bottom-right" :offset="[18, 18]">
-          <q-btn fab icon="add" color="primary" to="/empresa/nova" />
-        </q-page-sticky>
-      </q-page>
+      <q-page-sticky position="bottom-right" :offset="[18, 18]">
+        <q-btn fab icon="add" color="accent" to="/empresa/nova" />
+      </q-page-sticky>
     </template>
   </MGLayout>
 </template>

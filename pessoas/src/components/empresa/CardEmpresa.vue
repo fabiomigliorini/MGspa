@@ -24,31 +24,57 @@ const contingenciaFormatada = computed(() => {
 </script>
 
 <template>
-  <router-link :to="'/empresa/' + empresa.codempresa">
-    <q-card class="cursor-pointer" flat bordered>
-      <q-card-section>
-        <div class="row items-center q-gutter-md">
-          <div class="text-h6" style="width: 100px">{{ empresa.empresa }}</div>
-          <div class="text-caption text-grey">
-            Código: {{ empresa.codempresa }}
-          </div>
-          <q-badge
-            :color="empresa.modoemissaonfce === 1 ? 'green' : 'orange'"
-            :label="'NFCe: ' + modoEmissaoLabel"
-          />
-          <div v-if="contingenciaFormatada" class="q-pa-none">
-            <q-badge icon="warning" color="orange" text-color="white">
-              Contingência: {{ contingenciaFormatada }}
-            </q-badge>
-          </div>
+  <router-link
+    :to="'/empresa/' + empresa.codempresa"
+    class="full-height link-card"
+  >
+    <q-card bordered flat class="cursor-pointer full-height q-pb-md">
+      <!-- HEADER -->
+      <q-card-section class="text-grey-9 text-overline q-pb-none">
+        <div class="ellipsis-2-lines titulo-empresa">
+          #{{ empresa.codempresa }} {{ empresa.empresa }}
         </div>
       </q-card-section>
+
+      <q-separator inset class="q-mt-sm" />
+
+      <!-- DETALHES -->
+      <q-list>
+        <!-- MODO EMISSÃO NFCe -->
+        <q-item>
+          <q-icon color="primary" name="receipt" size="xs" class="q-mr-sm" />
+          <span class="text-caption text-grey-7"
+            >Modo Emissão NFCe:
+            <q-badge
+              :color="empresa.modoemissaonfce === 1 ? 'green' : 'orange'"
+              :label="modoEmissaoLabel"
+            />
+          </span>
+        </q-item>
+
+        <!-- CONTINGÊNCIA -->
+        <q-item v-if="contingenciaFormatada" dense>
+          <q-icon color="orange" name="warning" size="xs" class="q-mr-sm" />
+
+          <span class="ellipsis text-caption text-grey-7"> Contingência:</span>
+          <span class="text-caption q-ml-sm">{{ contingenciaFormatada }}</span>
+        </q-item>
+      </q-list>
     </q-card>
   </router-link>
 </template>
 
 <style scoped>
-a {
+.titulo-empresa {
+  line-height: 1.3;
+  font-size: 1rem;
+}
+
+.codigo-empresa {
+  text-transform: none;
+}
+
+.link-card {
   text-decoration: none;
   color: inherit;
 }

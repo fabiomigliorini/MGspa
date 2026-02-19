@@ -42,12 +42,12 @@ export default {
 
     const criacaoFormatada = computed(() => {
       if (!sEmpresa.item.criacao) return "-";
-      return moment(sEmpresa.item.criacao).format("DD/MM/YYYY HH:mm");
+      return moment(sEmpresa.item.criacao).format("DD/MM/YYYY - HH:mm");
     });
 
     const alteracaoFormatada = computed(() => {
       if (!sEmpresa.item.alteracao) return "-";
-      return moment(sEmpresa.item.alteracao).format("DD/MM/YYYY HH:mm");
+      return moment(sEmpresa.item.alteracao).format("DD/MM/YYYY - HH:mm");
     });
 
     const carregarEmpresa = async () => {
@@ -149,175 +149,241 @@ export default {
     </template>
 
     <template #content>
-      <q-page padding>
-        <q-inner-loading :showing="loading">
-          <q-spinner-gears size="50px" color="primary" />
-        </q-inner-loading>
+      <q-page>
+        <div
+          v-if="!loading && sEmpresa.item.codempresa"
+          class="container-detalhes"
+        >
+          <!-- HEADER -->
+          <q-item class="q-pt-lg q-pb-sm">
+            <q-item-section avatar>
+              <q-avatar
+                color="grey-8"
+                text-color="grey-4"
+                size="80px"
+                icon="business"
+              />
+            </q-item-section>
+            <q-item-section>
+              <div class="text-h4 text-grey-9">
+                #{{ sEmpresa.item.codempresa }} {{ sEmpresa.item.empresa }}
+              </div>
+            </q-item-section>
+          </q-item>
 
-        <div v-if="!loading && sEmpresa.item.codempresa">
-          <q-card style="max-width: 1000px; margin: 0 auto">
-            <q-card-section>
-              <div class="row items-center">
-                <div class="col row items-center">
-                  <div class="text-h5">
-                    {{ sEmpresa.item.empresa }}
-                    <div class="text-caption text-grey">
-                      Código: {{ sEmpresa.item.codempresa }}
+          <!-- CONTEÚDO -->
+          <div class="row q-col-gutter-md q-pa-md">
+            <!-- COLUNA PRINCIPAL -->
+            <div class="col-xs-12 col-md-8">
+              <div class="row q-col-gutter-md">
+                <!-- CARD DETALHES -->
+                <div class="col-12">
+                  <q-card bordered flat class="q-pa-none">
+                    <q-card-section
+                      class="text-grey-9 text-overline row items-center q-pa-md"
+                    >
+                      DETALHES DA EMPRESA
+                      <q-space />
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="edit"
+                        size="sm"
+                        color="grey-7"
+                        :to="'/empresa/' + sEmpresa.item.codempresa + '/editar'"
+                      >
+                        <q-tooltip>Editar</q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="delete"
+                        size="sm"
+                        color="grey-7"
+                        @click="confirmarExclusao"
+                      >
+                        <q-tooltip>Excluir</q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="info"
+                        size="sm"
+                        color="grey-7"
+                      >
+                        <q-tooltip>
+                          <div>Criado em: {{ criacaoFormatada }}</div>
+                          <div>Alterado em: {{ alteracaoFormatada }}</div>
+                        </q-tooltip>
+                      </q-btn>
+                    </q-card-section>
+
+                    <!-- Info Grid -->
+                    <div class="row q-col-gutter-sm q-pa-md">
+                      <div class="col-xs-12 col-sm-6">
+                        <div class="text-overline text-grey-7">Codigo</div>
+                        <div class="text-body2">
+                          #{{
+                            String(sEmpresa.item.codempresa).padStart(8, "0")
+                          }}
+                        </div>
+                      </div>
+
+                      <div class="col-xs-12 col-sm-6">
+                        <div class="text-overline text-grey-7">
+                          Modo Emissão NFCe
+                        </div>
+                        <div class="text-body2">
+                          <q-badge
+                            :color="
+                              sEmpresa.item.modoemissaonfce === 1
+                                ? 'green'
+                                : 'orange'
+                            "
+                            :label="modoEmissaoLabel"
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        class="col-xs-12 col-sm-6"
+                        v-if="sEmpresa.item.contingenciadata"
+                      >
+                        <div class="text-overline text-grey-7">
+                          Data de Contingência
+                        </div>
+                        <div class="text-body2">
+                          {{ contingenciaFormatada }}
+                        </div>
+                      </div>
+
+                      <div
+                        class="col-xs-12 col-sm-6"
+                        v-if="sEmpresa.item.contingenciajustificativa"
+                      >
+                        <div class="text-overline text-grey-7">
+                          Justificativa de Contingência
+                        </div>
+                        <div class="text-body2">
+                          {{ sEmpresa.item.contingenciajustificativa }}
+                        </div>
+                      </div>
+
+                      <div
+                        class="col-xs-12 col-sm-6"
+                        v-if="sEmpresa.item.criacao"
+                      >
+                        <div class="text-overline text-grey-7">Criação</div>
+                        <div class="text-body2">
+                          {{ criacaoFormatada }}
+                        </div>
+                      </div>
+
+                      <div class="col-xs-12 col-sm-6">
+                        <div class="text-overline text-grey-7">
+                          Última Alteração
+                        </div>
+                        <div class="text-body2">
+                          {{ alteracaoFormatada }}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div class="col-auto q-gutter-sm">
-                  <q-btn
-                    flat
-                    round
-                    color="primary"
-                    icon="edit"
-                    :to="'/empresa/' + sEmpresa.item.codempresa + '/editar'"
-                  >
-                    <q-tooltip> Editar Empresa </q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    flat
-                    round
-                    color="negative"
-                    icon="delete"
-                    @click="confirmarExclusao"
-                  >
-                    <q-tooltip> Excluir Empresa </q-tooltip>
-                  </q-btn>
+                  </q-card>
                 </div>
               </div>
-            </q-card-section>
+            </div>
 
-            <q-separator />
+            <!-- COLUNA LATERAL -->
+            <div class="col-xs-12 col-md-4">
+              <div class="row q-col-gutter-md">
+                <!-- CARD FILIAIS -->
+                <div class="col-12">
+                  <q-card bordered flat>
+                    <q-card-section
+                      class="text-grey-9 text-overline row items-center"
+                    >
+                      FILIAIS
+                      <q-space />
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="add"
+                        size="sm"
+                        color="grey-7"
+                        :to="
+                          '/empresa/' +
+                          sEmpresa.item.codempresa +
+                          '/filial/nova'
+                        "
+                      >
+                        <q-tooltip>Nova Filial</q-tooltip>
+                      </q-btn>
+                    </q-card-section>
 
-            <q-card-section class="row q-gutter-md q-pa-sm">
-              <q-item class="q-gutter-sm q-pa-none">
-                <q-icon name="receipt" color="primary" side size="sm" />
-                <q-item-section>
-                  <q-item-label caption>Modo Emissão NFCe</q-item-label>
-                  <q-item-label>
-                    <q-badge
-                      :color="
-                        sEmpresa.item.modoemissaonfce === 1 ? 'green' : 'orange'
+                    <q-card-section class="q-pt-none">
+                      <q-input
+                        v-model="filtroFilial"
+                        outlined
+                        dense
+                        clearable
+                        label="Buscar filial"
+                        @keyup.enter="buscarFiliais"
+                        @clear="buscarFiliais"
+                      >
+                        <template v-slot:prepend>
+                          <q-icon name="search" />
+                        </template>
+                      </q-input>
+                    </q-card-section>
+
+                    <q-inner-loading :showing="sEmpresa.loadingFiliais">
+                      <q-spinner-gears size="30px" color="primary" />
+                    </q-inner-loading>
+
+                    <div
+                      v-if="
+                        !sEmpresa.loadingFiliais &&
+                        sEmpresa.filiais.length === 0
                       "
-                      :label="modoEmissaoLabel"
-                    />
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
+                      class="text-grey text-center q-pa-md"
+                    >
+                      Nenhuma filial cadastrada
+                    </div>
 
-              <q-item
-                v-if="sEmpresa.item.contingenciadata"
-                class="q-gutter-sm q-pa-none"
-              >
-                <q-icon name="warning" color="orange" side size="sm" />
-                <q-item-section>
-                  <q-item-label caption>Data de Contingência</q-item-label>
-                  <q-item-label class="text-caption">
-                    {{ contingenciaFormatada }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-item
-                v-if="sEmpresa.item.contingenciajustificativa"
-                class="q-gutter-sm q-pa-none"
-              >
-                <q-icon name="description" color="grey" side size="sm" />
-                <q-item-section>
-                  <q-item-label caption>
-                    Justificativa de Contingência
-                  </q-item-label>
-                  <q-item-label class="text-caption">
-                    {{ sEmpresa.item.contingenciajustificativa }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-item
-                v-if="sEmpresa.item.criacao"
-                class="q-gutter-sm q-pa-none"
-              >
-                <q-icon name="add_circle" color="grey" size="sm" side />
-                <q-item-section>
-                  <q-item-label caption>Criação</q-item-label>
-                  <q-item-label class="text-caption">
-                    {{ criacaoFormatada }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-              <q-item class="q-gutter-sm q-pa-none">
-                <q-icon name="update" color="grey" size="sm" side />
-                <q-item-section>
-                  <q-item-label caption>Última Alteração</q-item-label>
-                  <q-item-label class="text-caption">
-                    {{ alteracaoFormatada }}
-                  </q-item-label>
-                </q-item-section>
-              </q-item>
-            </q-card-section>
-          </q-card>
-
-          <!-- Seção Filiais -->
-          <div style="max-width: 1000px; margin: 0 auto" class="q-mt-lg">
-            <div class="row items-center q-py-md">
-              <div class="text-h5 col">Filiais</div>
-              <q-btn
-                color="primary"
-                flat
-                round
-                icon="add"
-                :to="'/empresa/' + sEmpresa.item.codempresa + '/filial/nova'"
-              >
-                <q-tooltip> Nova Filial </q-tooltip>
-              </q-btn>
-            </div>
-
-            <div class="row q-mb-md q-gutter-sm">
-              <q-input
-                v-model="filtroFilial"
-                outlined
-                clearable
-                label="Filial"
-                class="col"
-                @keyup.enter="buscarFiliais"
-                @clear="buscarFiliais"
-              />
-            </div>
-
-            <q-inner-loading :showing="sEmpresa.loadingFiliais">
-              <q-spinner-gears size="30px" color="primary" />
-            </q-inner-loading>
-
-            <div
-              v-if="!sEmpresa.loadingFiliais && sEmpresa.filiais.length === 0"
-              class="text-grey text-center q-pa-md"
-            >
-              Nenhuma filial cadastrada
-            </div>
-
-            <div v-if="!sEmpresa.loadingFiliais">
-              <template
-                v-for="(filial, index) in sEmpresa.filiais"
-                :key="filial.codfilial"
-              >
-                <q-separator v-if="index > 0" />
-                <router-link
-                  :to="'/filial/' + filial.codfilial"
-                  class="row items-center q-pa-sm"
-                  style="text-decoration: none; color: inherit"
-                >
-                  <div class="text-caption text-grey q-mr-md">
-                    {{ formatarCodigo(filial.codfilial) }}
-                  </div>
-                  <div class="text-bold text-primary" style="width: 100px">
-                    {{ filial.filial }}
-                  </div>
-                  <div class="text-grey">
-                    {{ filial.Pessoa?.fantasia || "-" }}
-                  </div>
-                </router-link>
-              </template>
+                    <q-list v-if="!sEmpresa.loadingFiliais">
+                      <template
+                        v-for="(filial, index) in sEmpresa.filiais"
+                        :key="filial.codfilial"
+                      >
+                        <q-separator v-if="index > 0" inset />
+                        <q-item clickable :to="'/filial/' + filial.codfilial">
+                          <q-item-section avatar>
+                            <q-icon color="primary" name="store" size="xs" />
+                          </q-item-section>
+                          <q-item-section>
+                            <q-item-label class="text-caption text-bold">
+                              {{ filial.filial }}
+                            </q-item-label>
+                            <q-item-label caption>
+                              {{ formatarCodigo(filial.codfilial) }}
+                            </q-item-label>
+                            <q-item-label caption class="ellipsis">
+                              {{ filial.Pessoa?.fantasia || "-" }}
+                            </q-item-label>
+                          </q-item-section>
+                          <q-item-section side>
+                            <q-icon name="chevron_right" color="grey" />
+                          </q-item-section>
+                        </q-item>
+                      </template>
+                    </q-list>
+                  </q-card>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -325,3 +391,10 @@ export default {
     </template>
   </MGLayout>
 </template>
+
+<style scoped>
+.container-detalhes {
+  max-width: 1280px;
+  margin: auto;
+}
+</style>

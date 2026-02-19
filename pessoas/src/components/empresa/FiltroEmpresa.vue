@@ -3,38 +3,40 @@ import { empresaStore } from "src/stores/empresa";
 
 const sEmpresa = empresaStore();
 
+const emit = defineEmits(["buscar"]);
 </script>
 
 <template>
-  <q-list>
-    <q-item-label header>Filtros</q-item-label>
-    <q-item>
-      <q-item-section>
-        <q-input
-          outlined
-          v-model="sEmpresa.filtroPesquisa.empresa"
-          label="Nome da Empresa"
-          clearable
-        >
-          <template v-slot:prepend>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </q-item-section>
-    </q-item>
-    <q-item>
-      <q-item-section>
+  <div class="q-pa-none q-pt-sm">
+    <q-card flat>
+      <q-list>
+        <q-item-label header>
+          Filtro Empresa
+          <q-btn
+            icon="replay"
+            @click="emit('buscar')"
+            flat
+            round
+            no-caps
+          />
+        </q-item-label>
+      </q-list>
+    </q-card>
+    <q-form @change="emit('buscar')">
+      <div class="q-pa-md q-gutter-md">
         <q-input
           outlined
           v-model="sEmpresa.filtroPesquisa.codempresa"
-          label="Código da Empresa"
-          clearable
-        >
-          <template v-slot:prepend>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </q-item-section>
-    </q-item>
-  </q-list>
+          label="#"
+          type="number"
+        />
+        <q-input
+          outlined
+          v-model="sEmpresa.filtroPesquisa.empresa"
+          label="Empresa"
+          autofocus
+        />
+      </div>
+    </q-form>
+  </div>
 </template>
