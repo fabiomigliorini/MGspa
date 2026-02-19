@@ -85,19 +85,18 @@ onMounted(async () => {
         v-for="naturezaOperacao in naturezaOperacoes"
         :key="naturezaOperacao.codnaturezaoperacao"
         clickable
+        dense
         :to="{
           name: 'natureza-operacao-view',
           params: { codnaturezaoperacao: naturezaOperacao.codnaturezaoperacao },
         }"
       >
-        <q-item-section class="q-pa-sm">
-          <div class="row q-col-gutter-sm q-pa-none">
-            <div class="col-4 col-sm-2">
-              <div class="text-caption text-grey-7">
-                <q-icon name="tag" size="xs" class="q-mr-xs" />
-                Código
-              </div>
-              <div class="text-caption">
+        <q-item-section class="q-mt-sm">
+          <div class="row q-col-gutter-sm">
+            <div class="col-4 col-sm-2 text-caption text-grey-7">
+              <q-icon name="tag" size="xs" class="q-mr-xs" />
+              Código
+              <div class="text-caption text-black">
                 #{{ formatCodigo(naturezaOperacao.codnaturezaoperacao) }}
               </div>
             </div>

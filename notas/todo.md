@@ -18,7 +18,6 @@ Eduardo
 - Nota com erro de (531 - Rejeicao: Total da BC ICMS difere do somatorio dos itens)
 - Tela DFE
 - Tela NFeTrceiro
-- refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
 - Ao emitir uma nota, deixar salvo quem fez a operação.
 - Conferir como está o site sinopel.mrxempresas.com.br
 
@@ -152,8 +151,11 @@ DONE:
   - Tela de Empresas. (FAZER EM PESSOAS)
   - Tela de coloborador, no periodo de experiencia, mostrar os dias (soma)
 
+18/02
+
 - Notas
   - Colocar no padrao de layout (CFOP/Natureza/Cidade)
+  - refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
 
 Rejeitado
 

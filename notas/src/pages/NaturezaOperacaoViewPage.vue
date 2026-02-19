@@ -163,8 +163,8 @@ onMounted(loadData)
       <div class="row q-col-gutter-md q-mb-lg">
         <div class="col-12 col-md-6">
           <q-card flat bordered>
-            <q-card-section class="bg-primary text-white q-px-md q-py-sm q-mb-sm">
-              <div class="text-body2 text-weight-bold">DETALHES</div>
+            <q-card-section class="bg-primary text-white">
+              <div class="row items-center text-body2 text-weight-bold">Detalhes</div>
             </q-card-section>
             <q-list separator>
               <q-item>
@@ -217,8 +217,8 @@ onMounted(loadData)
 
         <div class="col-12 col-md-6">
           <q-card flat bordered>
-            <q-card-section class="bg-primary text-white q-px-md q-py-sm q-mb-sm">
-              <div class="text-body2 text-weight-bold">CONTABILIDADE</div>
+            <q-card-section class="bg-primary text-white">
+              <div class="row items-center text-body2 text-weight-bold">Contabilidade</div>
             </q-card-section>
             <q-list separator>
               <q-item>

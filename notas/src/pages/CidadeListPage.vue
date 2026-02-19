@@ -413,21 +413,15 @@ const handleSaveCidade = async () => {
             <q-chip dense outline color="grey-7" class="q-ml-sm">
               IBGE: {{ currentEstado.codigooficial }}
             </q-chip>
-            <q-btn
-              flat
-              round
-              size="sm"
-              icon="edit"
-              color="primary"
-              class="q-ml-sm"
-              @click="handleEditEstado"
-            >
-              <q-tooltip>Editar Estado</q-tooltip>
+          </template>
+          <div alingn="right" class="absolute-top-right q-pa-sm">
+            <q-btn flat round size="sm" icon="edit" color="primary" @click="handleEditEstado">
+              <q-tooltip>Editar</q-tooltip>
             </q-btn>
             <q-btn flat round size="sm" icon="delete" color="negative" @click="handleDeleteEstado">
-              <q-tooltip>Excluir Estado</q-tooltip>
+              <q-tooltip>Excluir</q-tooltip>
             </q-btn>
-          </template>
+          </div>
         </q-card-section>
       </q-card>
     </div>
@@ -474,14 +468,17 @@ const handleSaveCidade = async () => {
       <div class="row q-col-gutter-sm q-pa-sm">
         <div v-for="cidade in cidades" :key="cidade.codcidade" class="col-6 col-sm-4 col-md-3">
           <q-card flat bordered>
-            <div class="text-weight-bold text-white bg-primary q-pa-sm">
-              <q-icon name="location_city" class="q-mr-xs" />
-              {{ cidade.cidade }}
-            </div>
+            <q-card-section class="bg-primary text-white">
+              <div class="row items-center text-body2">
+                <q-icon name="location_city" class="q-mr-xs" />
+                {{ cidade.cidade }}
+              </div>
+            </q-card-section>
             <q-separator />
             <div class="q-pa-sm">
-              <div class="row items-center text-caption text-grey-8">
-                IBGE: {{ cidade.codigooficial }}
+              <div class="row text-caption text-grey-8 column">
+                IBGE:
+                <span class="text-black">{{ cidade.codigooficial }}</span>
               </div>
             </div>
 
