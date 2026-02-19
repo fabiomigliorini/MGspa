@@ -72,6 +72,14 @@ export const metaStore = defineStore("meta", {
       return ret;
     },
 
+    async getDashboardColaboradorEventos(codmeta, codpessoa, page = 1) {
+      const ret = await api.get(
+        "v1/meta/" + codmeta + "/dashboard/" + codpessoa + "/eventos",
+        { params: { page } }
+      );
+      return ret;
+    },
+
     // --- UNIDADE (individual) ---
 
     async criarUnidade(codmeta, data) {

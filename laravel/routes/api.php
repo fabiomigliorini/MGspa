@@ -351,6 +351,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // META DASHBOARD
         Route::get('meta/{codmeta}/dashboard', '\Mg\Meta\MetaDashboardController@dashboard');
         Route::get('meta/{codmeta}/dashboard/{codpessoa}', '\Mg\Meta\MetaDashboardController@dashboardPessoa');
+        Route::get('meta/{codmeta}/dashboard/{codpessoa}/eventos', '\Mg\Meta\MetaDashboardController@dashboardPessoaEventos');
 
         // UNIDADE DE NEGOCIO
         Route::get('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@index');

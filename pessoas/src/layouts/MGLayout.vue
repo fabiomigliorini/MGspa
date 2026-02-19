@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from "vue";
 import { Dialog } from "quasar";
-import { version } from "../../package.json";
+import pkg from "../../package.json";
+const version = pkg.version;
 import MgMenu from "layouts/MGMenu.vue";
 import axios from "axios";
 

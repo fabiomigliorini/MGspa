@@ -9,6 +9,7 @@ use Mg\Colaborador\Colaborador;
 use Mg\Filial\UnidadeNegocio;
 use Mg\Meta\BonificacaoEvento;
 use Mg\Meta\Meta;
+use Mg\Meta\MetaService;
 use Mg\Meta\MetaUnidadeNegocioPessoa;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
@@ -25,9 +26,9 @@ class BonificacaoService
     public const STATUS_NEGOCIO_CANCELADO = 3;
 
     public const ALOCACAO_CAIXA = 'C';
-    public const ALOCACAO_REMOTA = 'R';
+    public const ALOCACAO_REMOTA = MetaService::ALOCACAO_REMOTA;
 
-    public const DESCRICAO_UNIDADE_REMOTA = 'Sinopel';
+    public const DESCRICAO_UNIDADE_REMOTA = MetaService::DESCRICAO_UNIDADE_REMOTA;
 
     public static function processarNegocio(int $codnegocio, Meta $meta): void
     {

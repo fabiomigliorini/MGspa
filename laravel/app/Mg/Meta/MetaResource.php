@@ -10,24 +10,29 @@ class MetaResource extends Resource
     {
         $ret = parent::toArray($request);
 
-        $ret['unidades'] = $this->MetaUnidadeNegocioS->map(function ($unidade) {
+        $this->loadMissing(['MetaUnidadeNegocioS.UnidadeNegocio']);
+
+        $pessoas = MetaUnidadeNegocioPessoa::where('codmeta', $this->codmeta)
+            ->with('Pessoa:codpessoa,pessoa,fantasia')
+            ->get()
+            ->groupBy('codunidadenegocio');
+
+        $fixos = MetaUnidadeNegocioPessoaFixo::where('codmeta', $this->codmeta)
+            ->get()
+            ->groupBy(fn ($f) => $f->codunidadenegocio . '|' . $f->codpessoa);
+
+        $ret['unidades'] = $this->MetaUnidadeNegocioS->map(function ($unidade) use ($pessoas, $fixos) {
             $unidadeArr = $unidade->toArray();
             $unidadeArr['descricao'] = $unidade->UnidadeNegocio->descricao ?? null;
 
-            $pessoas = MetaUnidadeNegocioPessoa::where('codmeta', $this->codmeta)
-                ->where('codunidadenegocio', $unidade->codunidadenegocio)
-                ->with('Pessoa:codpessoa,pessoa,fantasia')
-                ->get();
+            $pessoasUnidade = $pessoas->get($unidade->codunidadenegocio, collect());
 
-            $unidadeArr['pessoas'] = $pessoas->map(function ($pessoa) {
+            $unidadeArr['pessoas'] = $pessoasUnidade->map(function ($pessoa) use ($fixos) {
                 $pessoaArr = $pessoa->toArray();
                 $pessoaArr['pessoa'] = $pessoa->Pessoa->fantasia ?? $pessoa->Pessoa->pessoa ?? null;
 
-                $pessoaArr['fixos'] = MetaUnidadeNegocioPessoaFixo::where('codmeta', $this->codmeta)
-                    ->where('codunidadenegocio', $pessoa->codunidadenegocio)
-                    ->where('codpessoa', $pessoa->codpessoa)
-                    ->get()
-                    ->toArray();
+                $chave = $pessoa->codunidadenegocio . '|' . $pessoa->codpessoa;
+                $pessoaArr['fixos'] = $fixos->get($chave, collect())->toArray();
 
                 return $pessoaArr;
             });

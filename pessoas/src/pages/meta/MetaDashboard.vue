@@ -4,6 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
+import { formataDataSemHora } from "src/utils/formatador";
 import MGLayout from "layouts/MGLayout.vue";
 import SelectUnidadeNegocio from "src/components/select/SelectUnidadeNegocio.vue";
 import CardUnidadeMeta from "src/components/meta/CardUnidadeMeta.vue";
@@ -31,11 +32,15 @@ const unidades = computed(() => {
       projUnidades.find(
         (p) => p.codunidadenegocio === cfg.codunidadenegocio
       ) || {};
+    const totalvendas = proj.totalvendas || 0;
+    const valormeta = parseFloat(cfg.valormeta) || 0;
+    const percentualatingimento =
+      valormeta > 0 ? (totalvendas / valormeta) * 100 : null;
     return {
       ...cfg,
-      totalvendas: proj.totalvendas || 0,
-      percentualatingimento: proj.percentualatingimento || null,
-      metaatingida: proj.metaatingida || false,
+      totalvendas,
+      percentualatingimento,
+      metaatingida: percentualatingimento >= 100,
       rankingprovisorio: proj.rankingprovisorio || [],
     };
   });
@@ -170,7 +175,16 @@ watch(
 
   <MGLayout back-button>
     <template #tituloPagina>
-      <span class="q-pl-sm">Dashboard da Meta</span>
+      <span class="q-pl-sm">
+        Dashboard da Meta
+        <span
+          v-if="config.periodoinicial"
+          class="text-caption text-grey-6 q-ml-sm"
+        >
+          {{ formataDataSemHora(config.periodoinicial) }} a
+          {{ formataDataSemHora(config.periodofinal) }}
+        </span>
+      </span>
     </template>
 
     <template #botaoVoltar>

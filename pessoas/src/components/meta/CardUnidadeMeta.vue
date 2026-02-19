@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { metaStore } from "src/stores/meta";
 import SelectPessoa from "src/components/select/SelectPessoa.vue";
@@ -10,11 +10,12 @@ const props = defineProps({
   podeEditar: { type: Boolean, default: false },
   periodoinicial: { type: String, default: null },
   periodofinal: { type: String, default: null },
-  linkColaborador: { type: Boolean, default: true },
 });
 
 const $q = useQuasar();
 const sMeta = metaStore();
+
+const dataISO = (val) => (val ? val.substring(0, 10) : null);
 
 // --- DIALOGS ---
 
@@ -66,6 +67,14 @@ const corPosicao = (posicao) => {
   return "grey-4";
 };
 
+const siglaFuncao = (pessoa) => {
+  if (pessoa.percentualsubgerente) return "S";
+  if (pessoa.percentualxerox) return "X";
+  if (pessoa.percentualcaixa) return "C";
+  if (pessoa.percentualvenda) return "V";
+  return null;
+};
+
 const mesesAbrev = [
   "jan", "fev", "mar", "abr", "mai", "jun",
   "jul", "ago", "set", "out", "nov", "dez",
@@ -112,6 +121,45 @@ const tiposFixo = [
   { label: "Vale Transporte", value: "VALE_TRANSPORTE" },
   { label: "Outro", value: "OUTRO" },
 ];
+
+// --- LISTA UNIFICADA (ranking + config) ---
+
+const colaboradores = computed(() => {
+  const pessoas = props.unidade.pessoas || [];
+  const ranking = props.unidade.rankingprovisorio || [];
+  const codpessoasConfig = new Set(pessoas.map((p) => p.codpessoa));
+
+  const merged = pessoas.map((p) => {
+    const rank = ranking.find((r) => r.codpessoa === p.codpessoa) || {};
+    return {
+      ...p,
+      posicao: rank.posicao || null,
+      totalvendas: rank.totalvendas || 0,
+      cargo: rank.cargo || null,
+      somenteRanking: false,
+    };
+  });
+
+  ranking.forEach((r) => {
+    if (!codpessoasConfig.has(r.codpessoa)) {
+      merged.push({
+        codpessoa: r.codpessoa,
+        pessoa: r.pessoa,
+        cargo: r.cargo,
+        posicao: r.posicao,
+        totalvendas: r.totalvendas || 0,
+        somenteRanking: true,
+      });
+    }
+  });
+
+  return merged.sort((a, b) => {
+    if (a.posicao && b.posicao) return a.posicao - b.posicao;
+    if (a.posicao) return -1;
+    if (b.posicao) return 1;
+    return 0;
+  });
+});
 
 // --- UNIDADE EDIT ---
 
@@ -193,8 +241,8 @@ const abrirAddPessoa = () => {
   codunidadePessoa.value = props.unidade.codunidadenegocio;
   modelPessoa.value = {
     codpessoa: null,
-    datainicial: props.periodoinicial,
-    datafinal: props.periodofinal,
+    datainicial: dataISO(props.periodoinicial),
+    datafinal: dataISO(props.periodofinal),
     percentualvenda: null,
     percentualcaixa: null,
     percentualsubgerente: null,
@@ -293,8 +341,8 @@ const abrirAddFixo = (pessoa) => {
     valor: null,
     quantidade: null,
     descricao: null,
-    datainicial: null,
-    datafinal: null,
+    datainicial: dataISO(props.periodoinicial),
+    datafinal: dataISO(props.periodofinal),
   };
   dialogFixo.value = true;
 };
@@ -307,8 +355,8 @@ const abrirEditarFixo = (fixo) => {
     valor: fixo.valor,
     quantidade: fixo.quantidade,
     descricao: fixo.descricao,
-    datainicial: fixo.datainicial,
-    datafinal: fixo.datafinal,
+    datainicial: dataISO(fixo.datainicial),
+    datafinal: dataISO(fixo.datafinal),
   };
   dialogFixo.value = true;
 };
@@ -833,126 +881,110 @@ const removerFixo = (fixo) => {
       </div>
     </q-card-section>
 
-    <!-- RANKING -->
-    <template
-      v-if="
-        unidade.rankingprovisorio &&
-        unidade.rankingprovisorio.length > 0
-      "
+    <!-- COLABORADORES -->
+    <q-separator />
+    <q-card-section
+      class="text-grey-7 text-overline row items-center"
     >
-      <q-separator inset />
-      <q-list separator>
-        <q-item
-          v-for="item in unidade.rankingprovisorio"
-          :key="item.codpessoa"
-        >
+      COLABORADORES
+      <q-space />
+      <q-btn
+        v-if="podeEditar"
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
+        @click="abrirAddPessoa()"
+      >
+        <q-tooltip>Adicionar Colaborador</q-tooltip>
+      </q-btn>
+    </q-card-section>
+
+    <q-list separator v-if="colaboradores.length > 0">
+      <template
+        v-for="pessoa in colaboradores"
+        :key="pessoa.codmetaunidadenegociopessoa || `rank-${pessoa.codpessoa}`"
+      >
+        <q-item>
           <q-item-section avatar style="min-width: 40px">
             <q-badge
-              :color="corPosicao(item.posicao)"
+              v-if="pessoa.posicao"
+              :color="corPosicao(pessoa.posicao)"
               text-color="white"
-              :label="item.posicao"
+              :label="pessoa.posicao"
+              rounded
+            />
+            <q-badge
+              v-else-if="siglaFuncao(pessoa)"
+              color="grey-4"
+              text-color="white"
+              :label="siglaFuncao(pessoa)"
               rounded
             />
           </q-item-section>
           <q-item-section>
             <q-item-label>{{
-              item.pessoa || item.codpessoa
+              pessoa.pessoa || pessoa.codpessoa
             }}</q-item-label>
-            <q-item-label caption v-if="item.cargo">
-              {{ item.cargo }}
-            </q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-item-label>
-              {{ formataMoeda(item.totalvendas) }}
-            </q-item-label>
-          </q-item-section>
-          <q-item-section side v-if="linkColaborador">
-            <q-btn
-              flat
-              dense
-              round
-              icon="visibility"
-              size="sm"
-              color="grey-7"
-              :to="{
-                name: 'metaDashboardColaborador',
-                params: {
-                  codmeta: codmeta,
-                  codpessoa: item.codpessoa,
-                },
-              }"
+            <q-item-label
+              caption
+              v-if="pessoa.datainicial && pessoa.datafinal"
             >
-              <q-tooltip>Ver Detalhes</q-tooltip>
-            </q-btn>
-          </q-item-section>
-        </q-item>
-      </q-list>
-    </template>
-
-    <!-- COLABORADORES (edição) -->
-    <template v-if="podeEditar">
-      <q-separator />
-      <q-card-section
-        class="text-grey-7 text-overline row items-center"
-      >
-        COLABORADORES
-        <q-space />
-        <q-btn
-          flat
-          round
-          dense
-          icon="add"
-          size="sm"
-          color="primary"
-          @click="abrirAddPessoa()"
-        >
-          <q-tooltip>Adicionar Colaborador</q-tooltip>
-        </q-btn>
-      </q-card-section>
-
-      <q-list
-        separator
-        v-if="unidade.pessoas && unidade.pessoas.length > 0"
-      >
-        <template
-          v-for="pessoa in unidade.pessoas"
-          :key="pessoa.codmetaunidadenegociopessoa"
-        >
-          <q-item>
-            <q-item-section>
-              <q-item-label>{{
-                pessoa.pessoa || pessoa.codpessoa
-              }}</q-item-label>
-              <q-item-label caption>
-                {{ formataPeriodoPessoa(pessoa.datainicial, pessoa.datafinal) }}
-              </q-item-label>
-              <q-item-label
-                caption
-                v-if="
+              {{ formataPeriodoPessoa(pessoa.datainicial, pessoa.datafinal) }}
+            </q-item-label>
+            <q-item-label
+              caption
+              v-if="
+                podeEditar && !pessoa.somenteRanking && (
                   pessoa.percentualvenda ||
                   pessoa.percentualcaixa ||
                   pessoa.percentualsubgerente ||
                   pessoa.percentualxerox
-                "
+                )
+              "
+            >
+              <template v-if="pessoa.percentualvenda"
+                >Venda: {{ pessoa.percentualvenda }}%</template
               >
-                <template v-if="pessoa.percentualvenda"
-                  >Venda: {{ pessoa.percentualvenda }}%</template
-                >
-                <template v-if="pessoa.percentualcaixa">
-                  | Caixa: {{ pessoa.percentualcaixa }}%</template
-                >
-                <template v-if="pessoa.percentualsubgerente">
-                  | Subg:
-                  {{ pessoa.percentualsubgerente }}%</template
-                >
-                <template v-if="pessoa.percentualxerox">
-                  | Xerox: {{ pessoa.percentualxerox }}%</template
-                >
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-item-label caption>
+              <template v-if="pessoa.percentualcaixa">
+                | Caixa: {{ pessoa.percentualcaixa }}%</template
+              >
+              <template v-if="pessoa.percentualsubgerente">
+                | Subg:
+                {{ pessoa.percentualsubgerente }}%</template
+              >
+              <template v-if="pessoa.percentualxerox">
+                | Xerox: {{ pessoa.percentualxerox }}%</template
+              >
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side v-if="pessoa.totalvendas">
+            <q-item-label>
+              {{ formataMoeda(pessoa.totalvendas) }}
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-item-label caption>
+              <q-btn
+                flat
+                dense
+                round
+                icon="visibility"
+                size="sm"
+                color="grey-7"
+                :to="{
+                  name: 'metaDashboardColaborador',
+                  params: {
+                    codmeta: codmeta,
+                    codpessoa: pessoa.codpessoa,
+                  },
+                }"
+              >
+                <q-tooltip>Ver Detalhes</q-tooltip>
+              </q-btn>
+              <template v-if="podeEditar && !pessoa.somenteRanking">
                 <q-btn
                   flat
                   dense
@@ -986,11 +1018,13 @@ const removerFixo = (fixo) => {
                 >
                   <q-tooltip>Adicionar Fixo</q-tooltip>
                 </q-btn>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
+              </template>
+            </q-item-label>
+          </q-item-section>
+        </q-item>
 
-          <!-- FIXOS DA PESSOA -->
+        <!-- FIXOS DA PESSOA -->
+        <template v-if="podeEditar && !pessoa.somenteRanking">
           <q-item
             v-for="fixo in pessoa.fixos"
             :key="fixo.codmetaunidadenegociopessoafixo"
@@ -1015,6 +1049,9 @@ const removerFixo = (fixo) => {
                 <template v-if="fixo.descricao">
                   — {{ fixo.descricao }}</template
                 >
+              </q-item-label>
+              <q-item-label caption v-if="fixo.datainicial">
+                {{ formataPeriodoPessoa(fixo.datainicial, fixo.datafinal) }}
               </q-item-label>
             </q-item-section>
             <q-item-section side>
@@ -1045,13 +1082,13 @@ const removerFixo = (fixo) => {
             </q-item-section>
           </q-item>
         </template>
-      </q-list>
-      <div
-        v-else
-        class="q-pa-sm q-pl-md text-caption text-grey"
-      >
-        Nenhum colaborador cadastrado
-      </div>
-    </template>
+      </template>
+    </q-list>
+    <div
+      v-else
+      class="q-pa-sm q-pl-md text-caption text-grey"
+    >
+      Nenhum colaborador cadastrado
+    </div>
   </q-card>
 </template>
