@@ -283,7 +283,14 @@ const handleSubmit = async () => {
 }
 
 const handleCancel = () => {
-  router.push({ name: 'natureza-operacao' })
+  if (isEditMode.value) {
+    router.push({
+      name: 'natureza-operacao-view',
+      params: { codnaturezaoperacao: route.params.codnaturezaoperacao },
+    })
+  } else {
+    router.push({ name: 'natureza-operacao' })
+  }
 }
 
 onMounted(() => {

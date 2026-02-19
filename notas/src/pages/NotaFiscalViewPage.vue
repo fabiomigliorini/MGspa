@@ -1415,13 +1415,11 @@ onUnmounted(() => {
 
         <!-- TRANSPORTE -->
         <div class="col-12 col-sm-6 col-md-3">
-          <q-card flat bordered class="q-mb-md full-height">
+          <q-card flat bordered class="full-height">
             <q-card-section class="bg-primary text-white">
-              <div class="row items-center justify-between">
-                <div class="text-body2">
-                  <q-icon name="local_shipping" size="1.5em" class="q-mr-sm" />
-                  Transporte
-                </div>
+              <div class="row items-center text-body2">
+                <q-icon name="local_shipping" size="1.5em" class="q-mr-sm" />
+                Transporte
               </div>
             </q-card-section>
 

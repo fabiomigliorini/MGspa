@@ -89,35 +89,42 @@ onMounted(async () => {
 
     <!-- Lista de CFOPs com Scroll Infinito -->
     <q-infinite-scroll v-else @load="onLoad" :offset="250">
-      <div class="row q-col-gutter-sm">
+      <div class="row q-col-gutter-md">
         <div v-for="cfop in cfops" :key="cfop.codcfop" class="col-6 col-sm-4 col-md-3">
           <q-card class="q-pa-none" flat bordered>
-            <div class="text-weight-bold text-white bg-primary text-body2 q-pa-sm">
-              CFOP: {{ cfop.codcfop }}
-            </div>
+            <q-card-section class="bg-primary text-white">
+              <div class="row items-center text-body2">CFOP:{{ cfop.codcfop }}</div>
+            </q-card-section>
             <q-separator />
-            <div class="q-pa-sm text-caption ellipsis text-grey-7">{{ cfop.descricao }}</div>
+            <q-card-section class="q-pa-sm text-caption text-grey-7 column">
+              <span>Descrição:</span>
+              <span class="text-black ellipsis">{{ cfop.descricao }}</span>
+            </q-card-section>
 
             <q-separator />
             <q-card-section class="q-pa-none" align="right">
               <q-btn
                 flat
-                size="sm"
                 rounded
+                size="sm"
                 icon="edit"
                 class="q-px-sm"
                 color="primary"
                 :to="{ name: 'cfop-edit', params: { codcfop: cfop.codcfop } }"
-              />
+              >
+                <q-tooltip>Editar</q-tooltip>
+              </q-btn>
               <q-btn
                 flat
-                size="sm"
                 rounded
+                size="sm"
                 icon="delete"
                 color="negative"
                 class="q-mr-sm q-px-sm"
                 @click="handleDeleteCfop(cfop)"
-              />
+              >
+                <q-tooltip>Excluir</q-tooltip>
+              </q-btn>
             </q-card-section>
           </q-card>
         </div>

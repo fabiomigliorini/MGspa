@@ -61,7 +61,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page class="q-pa-sm">
+  <q-page class="q-pa-md">
     <!-- Loading inicial -->
     <div v-if="loading && tributacoes.length === 0" class="row justify-center q-mt-xl">
       <q-spinner color="primary" size="3em" />
@@ -80,25 +80,31 @@ onMounted(async () => {
     </div>
 
     <!-- Lista de Tributacoes -->
-    <div v-else class="row q-col-gutter-sm">
+    <div v-else class="row q-col-gutter-md">
       <div
         v-for="tributacao in tributacoes"
         :key="tributacao.codtributacao"
         class="col-6 col-sm-4 col-md-3"
       >
         <q-card class="q-pa-none" flat bordered>
-          <div class="text-weight-bold text-white bg-primary text-body2 q-pa-sm">
-            {{ tributacao.tributacao }}
-          </div>
+          <q-card-section class="bg-primary text-white">
+            <div class="row items-center text-body2">
+              {{ tributacao.tributacao }}
+            </div>
+          </q-card-section>
+
           <q-separator />
-          <div class="q-pa-sm text-caption ellipsis text-grey-8">
-            Código do Tributo:
-            <span class="text-caption text-primary">
+          <div class="q-pa-sm text-caption text-grey-8 column">
+            <span>Código do Tributo:</span>
+            <span class="text-caption text-black ellipsis">
               {{ String(tributacao.codtributacao).padStart(8, '0') }}
             </span>
           </div>
-          <div class="q-px-sm q-pb-sm text-caption text-grey-8 ellipsis">
-            Aliquota ICMS ECF: {{ formatAliquota(tributacao.aliquotaicmsecf) }}
+          <div class="q-px-sm q-pb-sm text-caption text-grey-8 ellipsis column">
+            Aliquota ICMS ECF:
+            <span class="text-caption text-black ellipsis">
+              {{ formatAliquota(tributacao.aliquotaicmsecf) }}
+            </span>
           </div>
 
           <q-separator />
