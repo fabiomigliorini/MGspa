@@ -106,7 +106,7 @@ export default {
     <template #content>
       <q-page padding>
 
-        <q-card class="q-pa-md" style="max-width: 600px; margin: 0 auto">
+        <q-card class="q-pa-md container-form" flat bordered>
           <q-card-section>
             <FormFilial v-model="model" :loading="loading" @submit="salvar" />
           </q-card-section>
@@ -115,3 +115,10 @@ export default {
     </template>
   </MGLayout>
 </template>
+
+<style scoped>
+.container-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+</style>

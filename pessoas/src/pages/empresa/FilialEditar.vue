@@ -150,11 +150,12 @@ export default {
 
         <q-card
           v-if="!loadingPage"
-          class="q-pa-md"
-          style="max-width: 600px; margin: 0 auto"
+          class="q-pa-md container-form"
+          flat
+          bordered
         >
           <q-card-section>
-            <div class="text-h6">Editar Filial</div>
+            <div class="text-h6">Editar {{ sEmpresa.filial.filial }}</div>
             <div class="text-caption text-grey">
               Código: {{ $route.params.codfilial }}
             </div>
@@ -168,3 +169,10 @@ export default {
     </template>
   </MGLayout>
 </template>
+
+<style scoped>
+.container-form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+</style>
