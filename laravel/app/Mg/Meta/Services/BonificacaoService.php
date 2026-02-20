@@ -18,7 +18,7 @@ class BonificacaoService
 {
     public const TIPO_VENDA_VENDEDOR = 'VENDA_VENDEDOR';
     public const TIPO_VENDA_CAIXA = 'VENDA_CAIXA';
-    public const TIPO_VENDA_SUBGERENTE = 'VENDA_SUBGERENTE';
+    public const TIPO_VENDA_LOJA = 'VENDA_LOJA';
     public const TIPO_VENDA_XEROX = 'VENDA_XEROX';
 
     public const STATUS_NEGOCIO_ABERTO = 1;
@@ -101,8 +101,8 @@ class BonificacaoService
                 'codunidadenegocio' => $eventoPositivo->codunidadenegocio,
                 'codpessoa' => $eventoPositivo->codpessoa,
                 'tipo' => $eventoPositivo->tipo,
-                'descricao' => 'Estorno ' . $eventoPositivo->descricao,
                 'valor' => static::arredondarValor(-$eventoPositivo->valor),
+                'lancamento' => $negocio->lancamento,
                 'manual' => false,
             ]);
 
@@ -130,7 +130,7 @@ class BonificacaoService
             ->get();
 
         foreach ($eventosNegativos as $eventoNegativo) {
-            if (abs(static::arredondarValor($eventoNegativo->valor + $eventoPositivo->valor)) < 0.01) {
+            if (abs(static::arredondarValor($eventoNegativo->valor + $eventoPositivo->valor)) < 0.00001) {
                 return true;
             }
         }
@@ -183,8 +183,8 @@ class BonificacaoService
                 if (!static::eventoIgualAoEsperado($eventoExistente, $eventoEsperado, $unidade->codunidadenegocio)) {
                     $eventoExistente->update([
                         'codunidadenegocio' => $unidade->codunidadenegocio,
-                        'descricao' => $eventoEsperado['descricao'],
                         'valor' => $eventoEsperado['valor'],
+                        'lancamento' => $eventoEsperado['lancamento'],
                     ]);
 
                     Log::info('BonificacaoService - Evento atualizado', [
@@ -206,8 +206,8 @@ class BonificacaoService
                 'codunidadenegocio' => $unidade->codunidadenegocio,
                 'codpessoa' => $eventoEsperado['codpessoa'],
                 'tipo' => $eventoEsperado['tipo'],
-                'descricao' => $eventoEsperado['descricao'],
                 'valor' => $eventoEsperado['valor'],
+                'lancamento' => $eventoEsperado['lancamento'],
                 'manual' => false,
             ]);
 
@@ -243,8 +243,7 @@ class BonificacaoService
     {
         return (
             intval($eventoExistente->codunidadenegocio) === intval($codunidadenegocio)
-            && $eventoExistente->descricao === $eventoEsperado['descricao']
-            && abs(static::arredondarValor($eventoExistente->valor - $eventoEsperado['valor'])) < 0.01
+            && abs(static::arredondarValor($eventoExistente->valor - $eventoEsperado['valor'])) < 0.00001
         );
     }
 
@@ -269,7 +268,7 @@ class BonificacaoService
                     static::TIPO_VENDA_VENDEDOR,
                     intval($negocio->codpessoavendedor),
                     $bases['total_venda'] * floatval($configuracaoPessoa->percentualvenda) / 100,
-                    'Venda ' . $negocio->codnegocio . ' - vendedor'
+                    $dataLancamento
                 );
             }
         }
@@ -291,12 +290,12 @@ class BonificacaoService
                     static::TIPO_VENDA_XEROX,
                     intval($pessoaXerox->codpessoa),
                     $bases['total_xerox'] * floatval($pessoaXerox->percentualxerox) / 100,
-                    'Venda ' . $negocio->codnegocio . ' - xerox'
+                    $dataLancamento
                 );
             }
         }
 
-        // VENDA_SUBGERENTE — exclui vendas com alocacao='R'
+        // VENDA_LOJA — exclui vendas com alocacao='R'
         if ($bases['total_geral'] != 0 && $alocacao !== static::ALOCACAO_REMOTA) {
             $subgerentes = MetaUnidadeNegocioPessoa::query()
                 ->where('codmeta', $meta->codmeta)
@@ -310,10 +309,10 @@ class BonificacaoService
             foreach ($subgerentes as $subgerente) {
                 static::adicionarEventoEsperado(
                     $eventos,
-                    static::TIPO_VENDA_SUBGERENTE,
+                    static::TIPO_VENDA_LOJA,
                     intval($subgerente->codpessoa),
                     $bases['total_geral'] * floatval($subgerente->percentualsubgerente) / 100,
-                    'Venda ' . $negocio->codnegocio . ' - subgerente'
+                    $dataLancamento
                 );
             }
         }
@@ -341,7 +340,7 @@ class BonificacaoService
                         static::TIPO_VENDA_CAIXA,
                         $codpessoa,
                         $bases['total_geral'] * floatval($percentualCaixa) / 100,
-                        'Venda ' . $negocio->codnegocio . ' - caixa'
+                        $dataLancamento
                     );
                 }
             }
@@ -352,7 +351,7 @@ class BonificacaoService
         return array_values($eventos);
     }
 
-    private static function adicionarEventoEsperado(array &$eventos, string $tipo, int $codpessoa, float $valor, string $descricao): void
+    private static function adicionarEventoEsperado(array &$eventos, string $tipo, int $codpessoa, float $valor, $lancamento): void
     {
         $chave = static::montarChaveEvento($tipo, $codpessoa);
 
@@ -360,8 +359,8 @@ class BonificacaoService
             $eventos[$chave] = [
                 'tipo' => $tipo,
                 'codpessoa' => $codpessoa,
-                'descricao' => $descricao,
                 'valor' => static::arredondarValor($valor),
+                'lancamento' => $lancamento,
             ];
             return;
         }
@@ -470,7 +469,7 @@ class BonificacaoService
 
     private static function arredondarValor(float $valor): float
     {
-        return round($valor, 2);
+        return round($valor, 5);
     }
 
     private static function tiposVenda(): array
@@ -478,7 +477,7 @@ class BonificacaoService
         return [
             static::TIPO_VENDA_VENDEDOR,
             static::TIPO_VENDA_CAIXA,
-            static::TIPO_VENDA_SUBGERENTE,
+            static::TIPO_VENDA_LOJA,
             static::TIPO_VENDA_XEROX,
         ];
     }

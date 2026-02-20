@@ -73,7 +73,7 @@ class MetaProjecaoService
                 }
 
                 $pessoasAgrupadas[$codpessoa]['totalvendas'] += $totalPessoa;
-                $pessoasAgrupadas[$codpessoa]['totalvendas'] = round($pessoasAgrupadas[$codpessoa]['totalvendas'], 2);
+                $pessoasAgrupadas[$codpessoa]['totalvendas'] = round($pessoasAgrupadas[$codpessoa]['totalvendas'], 5);
 
                 $posicao++;
             }
@@ -82,7 +82,7 @@ class MetaProjecaoService
                 'codunidadenegocio' => $codunidade,
                 'descricao' => $metaUnidade->UnidadeNegocio->descricao ?? null,
                 'valormeta' => $valorMeta,
-                'totalvendas' => round($totalUnidade, 2),
+                'totalvendas' => round($totalUnidade, 5),
                 'percentualatingimento' => $percentualAtingimento,
                 'metaatingida' => ($valorMeta > 0 && $totalUnidade >= $valorMeta),
                 'rankingprovisorio' => $ranking,
@@ -145,7 +145,7 @@ class MetaProjecaoService
             'cargo' => $pessoa->cargo ?? null,
             'codmeta' => $meta->codmeta,
             'eventos' => $totais,
-            'totalGeral' => round($totalGeral, 2),
+            'totalGeral' => round($totalGeral, 5),
         ];
     }
 
@@ -221,7 +221,7 @@ class MetaProjecaoService
                 continue;
             }
 
-            $retorno[$codunidade] = round(floatval($registro->totalvendas), 2);
+            $retorno[$codunidade] = round(floatval($registro->totalvendas), 5);
         }
 
         return $retorno;
@@ -275,7 +275,7 @@ class MetaProjecaoService
             $retorno[] = [
                 'codunidadenegocio' => $codunidade,
                 'codpessoa' => $codpessoa,
-                'totalvendas' => round(floatval($registro->totalvendas), 2),
+                'totalvendas' => round(floatval($registro->totalvendas), 5),
             ];
         }
 

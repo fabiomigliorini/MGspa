@@ -13,7 +13,7 @@ class MetaService
     public const TIPO_BONUS_FIXO = 'BONUS_FIXO';
     public const TIPO_PREMIO_META = 'PREMIO_META';
     public const TIPO_PREMIO_META_XEROX = 'PREMIO_META_XEROX';
-    public const TIPO_PREMIO_META_SUBGERENTE = 'PREMIO_META_SUBGERENTE';
+    public const TIPO_PREMIO_META_LOJA = 'PREMIO_META_LOJA';
 
     public const META_STATUS_ABERTA = 'A';
     public const META_STATUS_BLOQUEADA = 'B';
@@ -132,8 +132,7 @@ class MetaService
                         static::TIPO_META_ATINGIDA,
                         $codunidade,
                         intval($rankingPessoa->codpessoa),
-                        $valorEvento,
-                        'Meta atingida da unidade'
+                        $valorEvento
                     );
                 }
             }
@@ -147,12 +146,11 @@ class MetaService
                     static::TIPO_PREMIO_RANKING,
                     $codunidade,
                     intval($primeiro->codpessoa),
-                    floatval($metaUnidade->premioprimeirovendedor),
-                    'Premio ranking da unidade'
+                    floatval($metaUnidade->premioprimeirovendedor)
                 );
             }
 
-            // PREMIO_META_SUBGERENTE — se meta da loja atingida
+            // PREMIO_META_LOJA — se meta da loja atingida
             if ($metaUnidadeAtingida && !empty($metaUnidade->premiosubgerentemeta) && $metaUnidade->premiosubgerentemeta > 0) {
                 $subgerentes = MetaUnidadeNegocioPessoa::query()
                     ->where('codmeta', $meta->codmeta)
@@ -166,11 +164,10 @@ class MetaService
                 foreach ($subgerentes as $subgerente) {
                     static::adicionarEventoFinalEsperado(
                         $eventos,
-                        static::TIPO_PREMIO_META_SUBGERENTE,
+                        static::TIPO_PREMIO_META_LOJA,
                         $codunidade,
                         intval($subgerente->codpessoa),
-                        floatval($metaUnidade->premiosubgerentemeta),
-                        'Premio meta subgerente'
+                        floatval($metaUnidade->premiosubgerentemeta)
                     );
                 }
             }
@@ -200,8 +197,7 @@ class MetaService
                             static::TIPO_PREMIO_META_XEROX,
                             $codunidade,
                             intval($pessoaXerox->codpessoa),
-                            $valorRateado,
-                            'Premio meta xerox'
+                            $valorRateado
                         );
                     }
                 }
@@ -228,8 +224,7 @@ class MetaService
                         static::TIPO_PREMIO_META,
                         $codunidade,
                         intval($fixo->codpessoa),
-                        floatval($fixo->valor),
-                        $fixo->descricao ?? 'Premio meta'
+                        floatval($fixo->valor)
                     );
                     continue;
                 }
@@ -245,8 +240,7 @@ class MetaService
                     static::TIPO_BONUS_FIXO,
                     $codunidade,
                     intval($fixo->codpessoa),
-                    $valorFixo,
-                    $fixo->descricao ?? $fixo->tipo
+                    $valorFixo
                 );
             }
         }
@@ -261,8 +255,7 @@ class MetaService
         string $tipo,
         int $codunidadenegocio,
         int $codpessoa,
-        float $valor,
-        string $descricao
+        float $valor
     ): void {
         $chave = static::montarChaveEventoFinal($tipo, $codunidadenegocio, $codpessoa);
 
@@ -271,7 +264,6 @@ class MetaService
                 'tipo' => $tipo,
                 'codunidadenegocio' => $codunidadenegocio,
                 'codpessoa' => $codpessoa,
-                'descricao' => $descricao,
                 'valor' => static::arredondarValor($valor),
             ];
             return;
@@ -331,7 +323,6 @@ class MetaService
 
                 if (!static::eventoFinalIgual($eventoExistente, $eventoEsperado)) {
                     $eventoExistente->update([
-                        'descricao' => $eventoEsperado['descricao'],
                         'valor' => $eventoEsperado['valor'],
                     ]);
 
@@ -353,7 +344,6 @@ class MetaService
                 'codunidadenegocio' => $eventoEsperado['codunidadenegocio'],
                 'codpessoa' => $eventoEsperado['codpessoa'],
                 'tipo' => $eventoEsperado['tipo'],
-                'descricao' => $eventoEsperado['descricao'],
                 'valor' => $eventoEsperado['valor'],
                 'manual' => false,
             ]);
@@ -390,8 +380,7 @@ class MetaService
             intval($eventoExistente->codunidadenegocio) === intval($eventoEsperado['codunidadenegocio'])
             && intval($eventoExistente->codpessoa) === intval($eventoEsperado['codpessoa'])
             && $eventoExistente->tipo === $eventoEsperado['tipo']
-            && $eventoExistente->descricao === $eventoEsperado['descricao']
-            && abs(static::arredondarValor($eventoExistente->valor - $eventoEsperado['valor'])) < 0.01
+            && abs(static::arredondarValor($eventoExistente->valor - $eventoEsperado['valor'])) < 0.00001
         );
     }
 
@@ -599,7 +588,7 @@ class MetaService
 
     private static function arredondarValor(float $valor): float
     {
-        return round($valor, 2);
+        return round($valor, 5);
     }
 
     private static function tiposFinais(): array
@@ -610,7 +599,7 @@ class MetaService
             static::TIPO_BONUS_FIXO,
             static::TIPO_PREMIO_META,
             static::TIPO_PREMIO_META_XEROX,
-            static::TIPO_PREMIO_META_SUBGERENTE,
+            static::TIPO_PREMIO_META_LOJA,
         ];
     }
 

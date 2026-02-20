@@ -40,6 +40,8 @@ const formataMoeda = (valor) => {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 5,
   }).format(parseFloat(valor) || 0);
 };
 
@@ -76,8 +78,18 @@ const siglaFuncao = (pessoa) => {
 };
 
 const mesesAbrev = [
-  "jan", "fev", "mar", "abr", "mai", "jun",
-  "jul", "ago", "set", "out", "nov", "dez",
+  "jan",
+  "fev",
+  "mar",
+  "abr",
+  "mai",
+  "jun",
+  "jul",
+  "ago",
+  "set",
+  "out",
+  "nov",
+  "dez",
 ];
 
 const formataPeriodoPessoa = (di, df) => {
@@ -97,9 +109,8 @@ const formataPeriodoPessoa = (di, df) => {
   const dateF = new Date(anoF, mesF, diaF);
   const dias = Math.round((dateF - dateI) / 86400000) + 1;
 
-  const inicio = mesI === mesF && anoI === anoF
-    ? `${diaI}`
-    : `${diaI}/${mesesAbrev[mesI]}`;
+  const inicio =
+    mesI === mesF && anoI === anoF ? `${diaI}` : `${diaI}/${mesesAbrev[mesI]}`;
   const fim = `${diaF}/${mesesAbrev[mesF]}`;
 
   return `de ${inicio} a ${fim} (${dias} dias)`;
@@ -306,7 +317,9 @@ const salvarPessoa = async () => {
 const removerPessoa = (pessoa) => {
   $q.dialog({
     title: "Remover Colaborador",
-    message: `Deseja remover ${pessoa.pessoa || "este colaborador"}? Os fixos associados tambem serao removidos.`,
+    message: `Deseja remover ${
+      pessoa.pessoa || "este colaborador"
+    }? Os fixos associados tambem serao removidos.`,
     cancel: true,
   }).onOk(async () => {
     try {
@@ -365,11 +378,7 @@ const salvarFixo = async () => {
   dialogFixo.value = false;
   try {
     if (isNovoFixo.value) {
-      await sMeta.criarFixo(
-        props.codmeta,
-        idPessoaFixo.value,
-        modelFixo.value
-      );
+      await sMeta.criarFixo(props.codmeta, idPessoaFixo.value, modelFixo.value);
       $q.notify({
         color: "green-5",
         textColor: "white",
@@ -438,48 +447,132 @@ const removerFixo = (fixo) => {
 
       <q-form @submit="salvarUnidade()">
         <q-separator inset />
-
         <q-card-section>
+          <div class="text-subtitle2 text-grey-8 q-mb-sm">Meta da Loja</div>
+          <div class="row q-col-gutter-md">
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.valormeta"
+                label="Meta da Loja"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                prefix="R$"
+              />
+            </div>
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.percentualcomissaosubgerente"
+                label="Bonificação"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                suffix="%"
+              />
+            </div>
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.percentualcomissaosubgerentemeta"
+                label="Adicional Meta"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                suffix="%"
+              />
+            </div>
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.premiosubgerentemeta"
+                label="Premiação Meta"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                prefix="R$"
+              />
+            </div>
+          </div>
+
+          <div class="text-subtitle2 text-grey-8 q-mb-sm q-mt-md">
+            Meta do Vendedor
+          </div>
+          <div class="row q-col-gutter-md">
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.valormetavendedor"
+                label="Meta do Vendedor"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                prefix="R$"
+              />
+            </div>
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.percentualcomissaovendedor"
+                label="Vendedor"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                suffix="%"
+              />
+            </div>
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.percentualcomissaovendedormeta"
+                label="Adicional Meta"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                suffix="%"
+              />
+            </div>
+            <div class="col-3">
+              <q-input
+                outlined
+                v-model.number="modelUnidade.premioprimeirovendedor"
+                label="1o Vendedor"
+                type="number"
+                step="0.01"
+                min="0"
+                input-class="text-right"
+                prefix="R$"
+              />
+            </div>
+          </div>
+
           <div class="text-subtitle2 text-grey-8 q-mb-sm">Metas</div>
           <div class="row q-col-gutter-md">
             <div class="col-6">
               <q-input
                 outlined
-                v-model.number="modelUnidade.valormeta"
-                label="Meta Geral"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
-            <div class="col-6">
-              <q-input
-                outlined
                 v-model.number="modelUnidade.valormetacaixa"
-                label="Meta Caixa"
+                label="Meta do Caixa"
                 type="number"
                 step="0.01"
                 min="0"
                 input-class="text-right"
               />
             </div>
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.valormetavendedor"
-                label="Meta Vendedor"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
+
             <div class="col-6">
               <q-input
                 outlined
                 v-model.number="modelUnidade.valormetaxerox"
-                label="Meta Xerox"
+                label="Meta do Xerox"
                 type="number"
                 step="0.01"
                 min="0"
@@ -492,50 +585,7 @@ const removerFixo = (fixo) => {
             Bonificacoes (%)
           </div>
           <div class="row q-col-gutter-md">
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaovendedor"
-                label="Vendedor"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaovendedormeta"
-                label="Vendedor (meta)"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaosubgerente"
-                label="Subgerente"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaosubgerentemeta"
-                label="Subgerente (meta)"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
+            <div class="col-6"></div>
             <div class="col-6">
               <q-input
                 outlined
@@ -553,28 +603,8 @@ const removerFixo = (fixo) => {
             Premios (R$)
           </div>
           <div class="row q-col-gutter-md">
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.premioprimeirovendedor"
-                label="1o Vendedor"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
-            <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.premiosubgerentemeta"
-                label="Subgerente Meta"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
-              />
-            </div>
+            <div class="col-6"></div>
+
             <div class="col-6">
               <q-input
                 outlined
@@ -865,12 +895,7 @@ const removerFixo = (fixo) => {
         </div>
         <div class="col-xs-6 col-sm-3">
           <q-linear-progress
-            :value="
-              Math.min(
-                (unidade.percentualatingimento || 0) / 100,
-                1
-              )
-            "
+            :value="Math.min((unidade.percentualatingimento || 0) / 100, 1)"
             size="8px"
             stripe
             rounded
@@ -883,9 +908,7 @@ const removerFixo = (fixo) => {
 
     <!-- COLABORADORES -->
     <q-separator />
-    <q-card-section
-      class="text-grey-7 text-overline row items-center"
-    >
+    <q-card-section class="text-grey-7 text-overline row items-center">
       COLABORADORES
       <q-space />
       <q-btn
@@ -925,24 +948,19 @@ const removerFixo = (fixo) => {
             />
           </q-item-section>
           <q-item-section>
-            <q-item-label>{{
-              pessoa.pessoa || pessoa.codpessoa
-            }}</q-item-label>
-            <q-item-label
-              caption
-              v-if="pessoa.datainicial && pessoa.datafinal"
-            >
+            <q-item-label>{{ pessoa.pessoa || pessoa.codpessoa }}</q-item-label>
+            <q-item-label caption v-if="pessoa.datainicial && pessoa.datafinal">
               {{ formataPeriodoPessoa(pessoa.datainicial, pessoa.datafinal) }}
             </q-item-label>
             <q-item-label
               caption
               v-if="
-                podeEditar && !pessoa.somenteRanking && (
-                  pessoa.percentualvenda ||
+                podeEditar &&
+                !pessoa.somenteRanking &&
+                (pessoa.percentualvenda ||
                   pessoa.percentualcaixa ||
                   pessoa.percentualsubgerente ||
-                  pessoa.percentualxerox
-                )
+                  pessoa.percentualxerox)
               "
             >
               <template v-if="pessoa.percentualvenda"
@@ -1031,11 +1049,7 @@ const removerFixo = (fixo) => {
             class="q-pl-xl"
           >
             <q-item-section avatar style="min-width: 30px">
-              <q-icon
-                name="attach_money"
-                color="grey-6"
-                size="xs"
-              />
+              <q-icon name="attach_money" color="grey-6" size="xs" />
             </q-item-section>
             <q-item-section>
               <q-item-label caption>
@@ -1084,10 +1098,7 @@ const removerFixo = (fixo) => {
         </template>
       </template>
     </q-list>
-    <div
-      v-else
-      class="q-pa-sm q-pl-md text-caption text-grey"
-    >
+    <div v-else class="q-pa-sm q-pl-md text-caption text-grey">
       Nenhum colaborador cadastrado
     </div>
   </q-card>

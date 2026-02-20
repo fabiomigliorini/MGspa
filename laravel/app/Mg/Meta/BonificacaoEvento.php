@@ -25,7 +25,7 @@ class BonificacaoEvento extends MgModel
         'codnegocioprodutobarra',
         'codpessoa',
         'codunidadenegocio',
-        'descricao',
+        'lancamento',
         'manual',
         'tipo',
         'valor'
@@ -33,7 +33,8 @@ class BonificacaoEvento extends MgModel
 
     protected $dates = [
         'alteracao',
-        'criacao'
+        'criacao',
+        'lancamento'
     ];
 
     protected $casts = [
