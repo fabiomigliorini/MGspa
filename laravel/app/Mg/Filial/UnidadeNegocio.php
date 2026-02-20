@@ -1,15 +1,18 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:57:02
+ * Date: 20/Feb/2026 16:59:17
  */
 
 namespace Mg\Filial;
 
 use Mg\MgModel;
 use Mg\Meta\BonificacaoEvento;
+use Mg\Rh\Indicador;
 use Mg\Meta\MetaUnidadeNegocio;
 use Mg\Meta\MetaUnidadeNegocioPessoa;
+use Mg\MetaUnidadeNegocioPessoaFixo\MetaUnidadeNegocioPessoaFixo;
+use Mg\Filial\Setor;
 use Mg\Filial\Filial;
 
 class UnidadeNegocio extends MgModel
@@ -51,6 +54,11 @@ class UnidadeNegocio extends MgModel
         return $this->hasMany(BonificacaoEvento::class, 'codunidadenegocio', 'codunidadenegocio');
     }
 
+    public function IndicadorS()
+    {
+        return $this->hasMany(Indicador::class, 'codunidadenegocio', 'codunidadenegocio');
+    }
+
     public function MetaUnidadeNegocioS()
     {
         return $this->hasMany(MetaUnidadeNegocio::class, 'codunidadenegocio', 'codunidadenegocio');
@@ -59,6 +67,16 @@ class UnidadeNegocio extends MgModel
     public function MetaUnidadeNegocioPessoaS()
     {
         return $this->hasMany(MetaUnidadeNegocioPessoa::class, 'codunidadenegocio', 'codunidadenegocio');
+    }
+
+    public function MetaUnidadeNegocioPessoaFixoS()
+    {
+        return $this->hasMany(MetaUnidadeNegocioPessoaFixo::class, 'codunidadenegocio', 'codunidadenegocio');
+    }
+
+    public function SetorS()
+    {
+        return $this->hasMany(Setor::class, 'codunidadenegocio', 'codunidadenegocio');
     }
 
 }

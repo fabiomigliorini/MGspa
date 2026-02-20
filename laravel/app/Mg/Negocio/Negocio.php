@@ -1,24 +1,25 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:57:52
+ * Date: 20/Feb/2026 17:01:05
  */
 
 namespace Mg\Negocio;
 
 use Mg\MgModel;
+use Mg\Meta\BonificacaoEvento;
+use Mg\Rh\IndicadorLancamento;
+use Mg\Mercos\MercosPedido;
 use Mg\Negocio\NegocioCaixaMercadoria;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
-use Mg\Pix\PixCob;
-use Mg\Stone\StonePreTransacao;
-use Mg\Mercos\MercosPedido;
 use Mg\PagarMe\PagarMePedido;
+use Mg\Pix\PixCob;
 use Mg\Saurus\SaurusPedido;
+use Mg\Stone\StonePreTransacao;
 use Mg\Woo\WooPedidoNegocio;
-use Mg\Meta\BonificacaoEvento;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -196,6 +197,11 @@ class Negocio extends MgModel
     public function BonificacaoEventoS()
     {
         return $this->hasMany(BonificacaoEvento::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function IndicadorLancamentoS()
+    {
+        return $this->hasMany(IndicadorLancamento::class, 'codnegocio', 'codnegocio');
     }
 
     public function MercosPedidoS()

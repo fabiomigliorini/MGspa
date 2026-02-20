@@ -1,19 +1,20 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:57:59
+ * Date: 20/Feb/2026 17:01:21
  */
 
 namespace Mg\Negocio;
 
 use Mg\MgModel;
+use Mg\Meta\BonificacaoEvento;
 use Mg\CupomFiscal\CupomFiscalProdutoBarra;
 use Mg\Estoque\EstoqueMovimento;
+use Mg\Rh\IndicadorLancamento;
+use Mg\Mercos\MercosPedidoItem;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioProdutoBarraPedidoItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
-use Mg\Mercos\MercosPedidoItem;
-use Mg\Meta\BonificacaoEvento;
 use Mg\Negocio\Negocio;
 use Mg\Produto\ProdutoBarra;
 use Mg\Usuario\Usuario;
@@ -119,6 +120,11 @@ class NegocioProdutoBarra extends MgModel
     public function EstoqueMovimentoS()
     {
         return $this->hasMany(EstoqueMovimento::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
+    }
+
+    public function IndicadorLancamentoS()
+    {
+        return $this->hasMany(IndicadorLancamento::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
     }
 
     public function MercosPedidoItemS()

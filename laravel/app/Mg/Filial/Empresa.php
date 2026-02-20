@@ -2,7 +2,7 @@
 
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 10:17:50
+ * Date: 20/Feb/2026 16:59:10
  */
 
 namespace Mg\Filial;
@@ -13,6 +13,8 @@ use Mg\Usuario\Usuario;
 
 class Empresa extends MgModel
 {
+
+    // TODO: Moder constantes para Service
     const MODOEMISSAONFCE_NORMAL = 1;
     const MODOEMISSAONFCE_OFFLINE = 9;
 
@@ -24,6 +26,7 @@ class Empresa extends MgModel
         'contingenciadata',
         'contingenciajustificativa',
         'empresa',
+        'fatorencargos',
         'modoemissaonfce'
     ];
 
@@ -37,6 +40,7 @@ class Empresa extends MgModel
         'codempresa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'fatorencargos' => 'float',
         'modoemissaonfce' => 'integer'
     ];
 

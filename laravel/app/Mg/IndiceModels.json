@@ -792,15 +792,20 @@
                 "coluna": "codtitulorelacionado",
                 "metodo": "MovimentoTituloRelacionadoS"
             },
+            "tblnegocioformapagamento.codtitulo": {
+                "tabela": "tblnegocioformapagamento",
+                "coluna": "codtitulo",
+                "metodo": "NegocioFormaPagamentoS"
+            },
             "tblnfeterceiroduplicata.codtitulo": {
                 "tabela": "tblnfeterceiroduplicata",
                 "coluna": "codtitulo",
                 "metodo": "NfeTerceiroDuplicataS"
             },
-            "tblvalecompra.codtitulo": {
-                "tabela": "tblvalecompra",
+            "tblperiodocolaborador.codtitulo": {
+                "tabela": "tblperiodocolaborador",
                 "coluna": "codtitulo",
-                "metodo": "ValeCompraS"
+                "metodo": "PeriodoColaboradorS"
             },
             "tbltituloboleto.codtitulo": {
                 "tabela": "tbltituloboleto",
@@ -812,10 +817,10 @@
                 "coluna": "codtitulo",
                 "metodo": "TituloNfeTerceiroS"
             },
-            "tblnegocioformapagamento.codtitulo": {
-                "tabela": "tblnegocioformapagamento",
+            "tblvalecompra.codtitulo": {
+                "tabela": "tblvalecompra",
                 "coluna": "codtitulo",
-                "metodo": "NegocioFormaPagamentoS"
+                "metodo": "ValeCompraS"
             }
         }
     },
@@ -1775,6 +1780,21 @@
             }
         },
         "hasMany": {
+            "tblbonificacaoevento.codnegocio": {
+                "tabela": "tblbonificacaoevento",
+                "coluna": "codnegocio",
+                "metodo": "BonificacaoEventoS"
+            },
+            "tblindicadorlancamento.codnegocio": {
+                "tabela": "tblindicadorlancamento",
+                "coluna": "codnegocio",
+                "metodo": "IndicadorLancamentoS"
+            },
+            "tblmercospedido.codnegocio": {
+                "tabela": "tblmercospedido",
+                "coluna": "codnegocio",
+                "metodo": "MercosPedidoS"
+            },
             "tblnegociocaixamercadoria.codnegocio": {
                 "tabela": "tblnegociocaixamercadoria",
                 "coluna": "codnegocio",
@@ -1800,40 +1820,30 @@
                 "coluna": "codnegocio",
                 "metodo": "NotaFiscalTerceiroS"
             },
-            "tblpixcob.codnegocio": {
-                "tabela": "tblpixcob",
-                "coluna": "codnegocio",
-                "metodo": "PixCobS"
-            },
-            "tblstonepretransacao.codnegocio": {
-                "tabela": "tblstonepretransacao",
-                "coluna": "codnegocio",
-                "metodo": "StonePreTransacaoS"
-            },
-            "tblmercospedido.codnegocio": {
-                "tabela": "tblmercospedido",
-                "coluna": "codnegocio",
-                "metodo": "MercosPedidoS"
-            },
             "tblpagarmepedido.codnegocio": {
                 "tabela": "tblpagarmepedido",
                 "coluna": "codnegocio",
                 "metodo": "PagarMePedidoS"
+            },
+            "tblpixcob.codnegocio": {
+                "tabela": "tblpixcob",
+                "coluna": "codnegocio",
+                "metodo": "PixCobS"
             },
             "tblsauruspedido.codnegocio": {
                 "tabela": "tblsauruspedido",
                 "coluna": "codnegocio",
                 "metodo": "SaurusPedidoS"
             },
+            "tblstonepretransacao.codnegocio": {
+                "tabela": "tblstonepretransacao",
+                "coluna": "codnegocio",
+                "metodo": "StonePreTransacaoS"
+            },
             "tblwoopedidonegocio.codnegocio": {
                 "tabela": "tblwoopedidonegocio",
                 "coluna": "codnegocio",
                 "metodo": "WooPedidoNegocioS"
-            },
-            "tblbonificacaoevento.codnegocio": {
-                "tabela": "tblbonificacaoevento",
-                "coluna": "codnegocio",
-                "metodo": "BonificacaoEventoS"
             }
         }
     },
@@ -2598,9 +2608,19 @@
                 "tabela": "tblprodutoembalagem",
                 "coluna": "codprodutoembalagemtransferencia",
                 "metodo": "ProdutoEmbalagemTransferencia"
+            },
+            "codtiposetor": {
+                "tabela": "tbltiposetor",
+                "coluna": "codtiposetor",
+                "metodo": "TipoSetor"
             }
         },
         "hasMany": {
+            "tblmercosproduto.codproduto": {
+                "tabela": "tblmercosproduto",
+                "coluna": "codproduto",
+                "metodo": "MercosProdutoS"
+            },
             "tblprodutobarra.codproduto": {
                 "tabela": "tblprodutobarra",
                 "coluna": "codproduto",
@@ -2625,11 +2645,6 @@
                 "tabela": "tblprodutovariacao",
                 "coluna": "codproduto",
                 "metodo": "ProdutoVariacaoS"
-            },
-            "tblmercosproduto.codproduto": {
-                "tabela": "tblmercosproduto",
-                "coluna": "codproduto",
-                "metodo": "MercosProdutoS"
             },
             "tblwooproduto.codproduto": {
                 "tabela": "tblwooproduto",
@@ -2692,6 +2707,11 @@
             }
         },
         "hasMany": {
+            "tblbonificacaoevento.codnegocioprodutobarra": {
+                "tabela": "tblbonificacaoevento",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "BonificacaoEventoS"
+            },
             "tblcupomfiscalprodutobarra.codnegocioprodutobarra": {
                 "tabela": "tblcupomfiscalprodutobarra",
                 "coluna": "codnegocioprodutobarra",
@@ -2701,6 +2721,16 @@
                 "tabela": "tblestoquemovimento",
                 "coluna": "codnegocioprodutobarra",
                 "metodo": "EstoqueMovimentoS"
+            },
+            "tblindicadorlancamento.codnegocioprodutobarra": {
+                "tabela": "tblindicadorlancamento",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "IndicadorLancamentoS"
+            },
+            "tblmercospedidoitem.codnegocioprodutobarra": {
+                "tabela": "tblmercospedidoitem",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "MercosPedidoItemS"
             },
             "tblnegocioprodutobarra.codnegocioprodutobarradevolucao": {
                 "tabela": "tblnegocioprodutobarra",
@@ -2716,16 +2746,6 @@
                 "tabela": "tblnotafiscalprodutobarra",
                 "coluna": "codnegocioprodutobarra",
                 "metodo": "NotaFiscalProdutoBarraS"
-            },
-            "tblmercospedidoitem.codnegocioprodutobarra": {
-                "tabela": "tblmercospedidoitem",
-                "coluna": "codnegocioprodutobarra",
-                "metodo": "MercosPedidoItemS"
-            },
-            "tblbonificacaoevento.codnegocioprodutobarra": {
-                "tabela": "tblbonificacaoevento",
-                "coluna": "codnegocioprodutobarra",
-                "metodo": "BonificacaoEventoS"
             }
         }
     },
@@ -6228,9 +6248,19 @@
                 "tabela": "tblportador",
                 "coluna": "codportador",
                 "metodo": "Portador"
+            },
+            "codsetor": {
+                "tabela": "tblsetor",
+                "coluna": "codsetor",
+                "metodo": "Setor"
             }
         },
         "hasMany": {
+            "tblliquidacaotitulo.codpdv": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codpdv",
+                "metodo": "LiquidacaoTituloS"
+            },
             "tblnegocio.codpdv": {
                 "tabela": "tblnegocio",
                 "coluna": "codpdv",
@@ -6255,11 +6285,6 @@
                 "tabela": "tblpixcob",
                 "coluna": "codpdv",
                 "metodo": "PixCobS"
-            },
-            "tblliquidacaotitulo.codpdv": {
-                "tabela": "tblliquidacaotitulo",
-                "coluna": "codpdv",
-                "metodo": "LiquidacaoTituloS"
             }
         }
     },
@@ -6369,15 +6394,25 @@
                 "coluna": "codcolaborador",
                 "metodo": "ColaboradorCargoS"
             },
+            "tbleventocalendario.codcolaborador": {
+                "tabela": "tbleventocalendario",
+                "coluna": "codcolaborador",
+                "metodo": "EventoCalendarioS"
+            },
             "tblferias.codcolaborador": {
                 "tabela": "tblferias",
                 "coluna": "codcolaborador",
                 "metodo": "FeriasS"
             },
-            "tbleventocalendario.codcolaborador": {
-                "tabela": "tbleventocalendario",
+            "tblindicador.codcolaborador": {
+                "tabela": "tblindicador",
                 "coluna": "codcolaborador",
-                "metodo": "EventoCalendarioS"
+                "metodo": "IndicadorS"
+            },
+            "tblperiodocolaborador.codcolaborador": {
+                "tabela": "tblperiodocolaborador",
+                "coluna": "codcolaborador",
+                "metodo": "PeriodoColaboradorS"
             }
         }
     },
@@ -7728,6 +7763,11 @@
                 "coluna": "codunidadenegocio",
                 "metodo": "BonificacaoEventoS"
             },
+            "tblindicador.codunidadenegocio": {
+                "tabela": "tblindicador",
+                "coluna": "codunidadenegocio",
+                "metodo": "IndicadorS"
+            },
             "tblmetaunidadenegocio.codunidadenegocio": {
                 "tabela": "tblmetaunidadenegocio",
                 "coluna": "codunidadenegocio",
@@ -7737,7 +7777,290 @@
                 "tabela": "tblmetaunidadenegociopessoa",
                 "coluna": "codunidadenegocio",
                 "metodo": "MetaUnidadeNegocioPessoaS"
+            },
+            "tblmetaunidadenegociopessoafixo.codunidadenegocio": {
+                "tabela": "tblmetaunidadenegociopessoafixo",
+                "coluna": "codunidadenegocio",
+                "metodo": "MetaUnidadeNegocioPessoaFixoS"
+            },
+            "tblsetor.codunidadenegocio": {
+                "tabela": "tblsetor",
+                "coluna": "codunidadenegocio",
+                "metodo": "SetorS"
             }
         }
+    },
+    "tbltiposetor": {
+        "tabela": "tbltiposetor",
+        "campocodigo": "codtiposetor",
+        "namespace": "Mg\\Filial",
+        "classe": "TipoSetor",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/TipoSetor.php",
+        "belongsTo": [],
+        "hasMany": {
+            "tblproduto.codtiposetor": {
+                "tabela": "tblproduto",
+                "coluna": "codtiposetor",
+                "metodo": "ProdutoS"
+            },
+            "tblsetor.codtiposetor": {
+                "tabela": "tblsetor",
+                "coluna": "codtiposetor",
+                "metodo": "SetorS"
+            }
+        }
+    },
+    "tblsetor": {
+        "tabela": "tblsetor",
+        "campocodigo": "codsetor",
+        "namespace": "Mg\\Filial",
+        "classe": "Setor",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Filial\/Setor.php",
+        "belongsTo": {
+            "codtiposetor": {
+                "tabela": "tbltiposetor",
+                "coluna": "codtiposetor",
+                "metodo": "TipoSetor"
+            },
+            "codunidadenegocio": {
+                "tabela": "tblunidadenegocio",
+                "coluna": "codunidadenegocio",
+                "metodo": "UnidadeNegocio"
+            }
+        },
+        "hasMany": {
+            "tblindicador.codsetor": {
+                "tabela": "tblindicador",
+                "coluna": "codsetor",
+                "metodo": "IndicadorS"
+            },
+            "tblpdv.codsetor": {
+                "tabela": "tblpdv",
+                "coluna": "codsetor",
+                "metodo": "PdvS"
+            },
+            "tblperiodocolaboradorsetor.codsetor": {
+                "tabela": "tblperiodocolaboradorsetor",
+                "coluna": "codsetor",
+                "metodo": "PeriodoColaboradorSetorS"
+            }
+        }
+    },
+    "tblindicador": {
+        "tabela": "tblindicador",
+        "campocodigo": "codindicador",
+        "namespace": "Mg\\Rh",
+        "classe": "Indicador",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Rh\/Indicador.php",
+        "belongsTo": {
+            "codcolaborador": {
+                "tabela": "tblcolaborador",
+                "coluna": "codcolaborador",
+                "metodo": "Colaborador"
+            },
+            "codperiodo": {
+                "tabela": "tblperiodo",
+                "coluna": "codperiodo",
+                "metodo": "Periodo"
+            },
+            "codsetor": {
+                "tabela": "tblsetor",
+                "coluna": "codsetor",
+                "metodo": "Setor"
+            },
+            "codunidadenegocio": {
+                "tabela": "tblunidadenegocio",
+                "coluna": "codunidadenegocio",
+                "metodo": "UnidadeNegocio"
+            }
+        },
+        "hasMany": {
+            "tblcolaboradorrubrica.codindicador": {
+                "tabela": "tblcolaboradorrubrica",
+                "coluna": "codindicador",
+                "metodo": "ColaboradorRubricaS"
+            },
+            "tblcolaboradorrubrica.codindicadorcondicao": {
+                "tabela": "tblcolaboradorrubrica",
+                "coluna": "codindicadorcondicao",
+                "metodo": "ColaboradorRubricaCondicaoS"
+            },
+            "tblindicadorlancamento.codindicador": {
+                "tabela": "tblindicadorlancamento",
+                "coluna": "codindicador",
+                "metodo": "IndicadorLancamentoS"
+            }
+        }
+    },
+    "tblperiodocolaboradorsetor": {
+        "tabela": "tblperiodocolaboradorsetor",
+        "campocodigo": "codperiodocolaboradorsetor",
+        "namespace": "Mg\\Rh",
+        "classe": "PeriodoColaboradorSetor",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Rh\/PeriodoColaboradorSetor.php",
+        "belongsTo": {
+            "codperiodocolaborador": {
+                "tabela": "tblperiodocolaborador",
+                "coluna": "codperiodocolaborador",
+                "metodo": "PeriodoColaborador"
+            },
+            "codsetor": {
+                "tabela": "tblsetor",
+                "coluna": "codsetor",
+                "metodo": "Setor"
+            }
+        },
+        "hasMany": {
+            "tblcolaboradorrubrica.codperiodocolaboradorsetor": {
+                "tabela": "tblcolaboradorrubrica",
+                "coluna": "codperiodocolaboradorsetor",
+                "metodo": "ColaboradorRubricaS"
+            }
+        }
+    },
+    "tblperiodo": {
+        "tabela": "tblperiodo",
+        "campocodigo": "codperiodo",
+        "namespace": "Mg\\Rh",
+        "classe": "Periodo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Rh\/Periodo.php",
+        "belongsTo": [],
+        "hasMany": {
+            "tblindicador.codperiodo": {
+                "tabela": "tblindicador",
+                "coluna": "codperiodo",
+                "metodo": "IndicadorS"
+            },
+            "tblperiodocolaborador.codperiodo": {
+                "tabela": "tblperiodocolaborador",
+                "coluna": "codperiodo",
+                "metodo": "PeriodoColaboradorS"
+            }
+        }
+    },
+    "tblperiodocolaborador": {
+        "tabela": "tblperiodocolaborador",
+        "campocodigo": "codperiodocolaborador",
+        "namespace": "Mg\\Rh",
+        "classe": "PeriodoColaborador",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Rh\/PeriodoColaborador.php",
+        "belongsTo": {
+            "codcolaborador": {
+                "tabela": "tblcolaborador",
+                "coluna": "codcolaborador",
+                "metodo": "Colaborador"
+            },
+            "codperiodo": {
+                "tabela": "tblperiodo",
+                "coluna": "codperiodo",
+                "metodo": "Periodo"
+            },
+            "codtitulo": {
+                "tabela": "tbltitulo",
+                "coluna": "codtitulo",
+                "metodo": "Titulo"
+            }
+        },
+        "hasMany": {
+            "tblcolaboradorrubrica.codperiodocolaborador": {
+                "tabela": "tblcolaboradorrubrica",
+                "coluna": "codperiodocolaborador",
+                "metodo": "ColaboradorRubricaS"
+            },
+            "tblperiodocolaboradorsetor.codperiodocolaborador": {
+                "tabela": "tblperiodocolaboradorsetor",
+                "coluna": "codperiodocolaborador",
+                "metodo": "PeriodoColaboradorSetorS"
+            }
+        }
+    },
+    "tblcolaboradorrubrica": {
+        "tabela": "tblcolaboradorrubrica",
+        "campocodigo": "codcolaboradorrubrica",
+        "namespace": "Mg\\Rh",
+        "classe": "ColaboradorRubrica",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Rh\/ColaboradorRubrica.php",
+        "belongsTo": {
+            "codindicador": {
+                "tabela": "tblindicador",
+                "coluna": "codindicador",
+                "metodo": "Indicador"
+            },
+            "codindicadorcondicao": {
+                "tabela": "tblindicador",
+                "coluna": "codindicadorcondicao",
+                "metodo": "IndicadorCondicao"
+            },
+            "codperiodocolaborador": {
+                "tabela": "tblperiodocolaborador",
+                "coluna": "codperiodocolaborador",
+                "metodo": "PeriodoColaborador"
+            },
+            "codperiodocolaboradorsetor": {
+                "tabela": "tblperiodocolaboradorsetor",
+                "coluna": "codperiodocolaboradorsetor",
+                "metodo": "PeriodoColaboradorSetor"
+            }
+        },
+        "hasMany": []
+    },
+    "tblindicadorlancamento": {
+        "tabela": "tblindicadorlancamento",
+        "campocodigo": "codindicadorlancamento",
+        "namespace": "Mg\\Rh",
+        "classe": "IndicadorLancamento",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/Rh\/IndicadorLancamento.php",
+        "belongsTo": {
+            "codindicador": {
+                "tabela": "tblindicador",
+                "coluna": "codindicador",
+                "metodo": "Indicador"
+            },
+            "codnegocio": {
+                "tabela": "tblnegocio",
+                "coluna": "codnegocio",
+                "metodo": "Negocio"
+            },
+            "codnegocioprodutobarra": {
+                "tabela": "tblnegocioprodutobarra",
+                "coluna": "codnegocioprodutobarra",
+                "metodo": "NegocioProdutoBarra"
+            }
+        },
+        "hasMany": []
+    },
+    "tblmetaunidadenegociopessoafixo": {
+        "tabela": "tblmetaunidadenegociopessoafixo",
+        "campocodigo": "codmetaunidadenegociopessoafixo",
+        "namespace": "Mg\\MetaUnidadeNegocioPessoaFixo",
+        "classe": "MetaUnidadeNegocioPessoaFixo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/MetaUnidadeNegocioPessoaFixo\/MetaUnidadeNegocioPessoaFixo.php",
+        "belongsTo": {
+            "codmeta": {
+                "tabela": "tblmeta",
+                "coluna": "codmeta",
+                "metodo": "Meta"
+            },
+            "codpessoa": {
+                "tabela": "tblpessoa",
+                "coluna": "codpessoa",
+                "metodo": "Pessoa"
+            },
+            "codunidadenegocio": {
+                "tabela": "tblunidadenegocio",
+                "coluna": "codunidadenegocio",
+                "metodo": "UnidadeNegocio"
+            }
+        },
+        "hasMany": []
+    },
+    "tblMetaUnidadeNegocioPessoaFixo": {
+        "tabela": "tblMetaUnidadeNegocioPessoaFixo",
+        "campocodigo": "codmetaunidadenegociopessoafixo",
+        "namespace": "Mg\\MetaUnidadeNegocioPessoaFixo",
+        "classe": "MetaUnidadeNegocioPessoaFixo",
+        "arquivo": "\/opt\/www\/MGspa\/laravel\/app\/Mg\/MetaUnidadeNegocioPessoaFixo\/MetaUnidadeNegocioPessoaFixo.php",
+        "belongsTo": [],
+        "hasMany": []
     }
 }

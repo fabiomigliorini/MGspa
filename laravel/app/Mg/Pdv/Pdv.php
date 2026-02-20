@@ -1,21 +1,22 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:57:36
+ * Date: 20/Feb/2026 16:58:57
  */
 
 namespace Mg\Pdv;
 
 use Mg\MgModel;
+use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Negocio\Negocio;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 use Mg\Portador\Portador;
+use Mg\Filial\Setor;
 
 class Pdv extends MgModel
 {
@@ -29,6 +30,7 @@ class Pdv extends MgModel
         'autorizado',
         'codfilial',
         'codportador',
+        'codsetor',
         'desktop',
         'inativo',
         'ip',
@@ -53,6 +55,7 @@ class Pdv extends MgModel
         'codfilial' => 'integer',
         'codpdv' => 'integer',
         'codportador' => 'integer',
+        'codsetor' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'desktop' => 'boolean',
@@ -71,6 +74,11 @@ class Pdv extends MgModel
     public function Portador()
     {
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');
+    }
+
+    public function Setor()
+    {
+        return $this->belongsTo(Setor::class, 'codsetor', 'codsetor');
     }
 
     public function UsuarioAlteracao()
