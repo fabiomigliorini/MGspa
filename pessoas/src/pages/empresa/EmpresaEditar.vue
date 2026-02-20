@@ -114,10 +114,12 @@ export default {
         <q-card
           v-if="!loadingPage"
           class="q-pa-md"
+          flat
+          bordered
           style="max-width: 600px; margin: 0 auto"
         >
           <q-card-section>
-            <div class="text-h6">Editar Empresa</div>
+            <div class="text-h6">Editar {{ sEmpresa.item.empresa }}</div>
             <div class="text-caption text-grey">
               Código: {{ $route.params.codempresa }}
             </div>

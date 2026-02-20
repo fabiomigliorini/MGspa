@@ -1,12 +1,12 @@
 <script setup>
 import { guardaToken } from "src/stores";
-import { defineComponent } from "vue";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
 
 const user = guardaToken();
 </script>
+
 <template>
   <q-btn flat dense round color="text-grey-9" icon="apps">
     <q-menu
@@ -14,147 +14,138 @@ const user = guardaToken();
       transition-hide="fade"
       class="bg-grey-9 text-yellow-6 q-pa-xs"
     >
-      <q-list>
-        <q-item class="q-px-sm">
-          <q-btn
-            flat
-            stack
-            class="col-xs-6 col-sm-3 col-md-3"
-            :to="{ name: 'pessoa' }"
-          >
+      <div class="menu-grid">
+        <div class="row">
+          <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'pessoa' }">
             <q-icon name="person" size="35px" />
-            <div>Pessoas</div>
+            <div class="menu-label">Pessoas</div>
           </q-btn>
           <q-btn
             flat
             stack
-            class="col-xs-6 col-sm-3 col-md-3"
+            class="col-4 menu-btn"
             :to="{ name: 'grupoeconomicoindex' }"
           >
             <q-icon name="apartment" size="35px" />
-            <div>Grupo Econômico</div>
+            <div class="menu-label">Grupo Econômico</div>
           </q-btn>
           <q-btn
             flat
             stack
-            class="col-xs-6 col-sm-3 col-md-3"
+            class="col-4 menu-btn"
             :to="{ name: 'aniversariosindex' }"
           >
             <q-icon name="celebration" size="35px" />
-            <div>Aniversários</div>
+            <div class="menu-label">Aniversários</div>
           </q-btn>
-        </q-item>
-
-        <q-separator inset color="yelllow-6" />
-        <q-item class="q-px-sm">
-          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'metaIndex' }">
+        </div>
+        <div class="row">
+          <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'metaIndex' }">
             <q-icon name="trending_up" size="35px" />
-            <div>Metas</div>
+            <div class="menu-label">Metas</div>
           </q-btn>
-          <q-btn flat stack class="col-xs-6 col-sm-3 col-md-3" :to="{ name: 'unidadeNegocioIndex' }">
+          <q-btn
+            flat
+            stack
+            class="col-4 menu-btn"
+            :to="{ name: 'unidadeNegocioIndex' }"
+          >
             <q-icon name="store" size="35px" />
-            <div>Unidades</div>
+            <div class="menu-label">Unidades</div>
           </q-btn>
-        </q-item>
+        </div>
 
         <template v-if="user.verificaPermissaoUsuario('Administrador')">
-          <q-separator inset color="yelllow-6" />
-          <q-item class="q-px-sm">
-            <q-btn
-              flat
-              stack
-              class="col-xs-6 col-sm-3 col-md-3"
-              :to="{ name: 'usuarios' }"
-            >
+          <div class="row">
+            <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'usuarios' }">
               <q-icon name="admin_panel_settings" size="35px" />
-              <div>Usuários</div>
+              <div class="menu-label">Usuários</div>
             </q-btn>
             <q-btn
               flat
               stack
-              class="col-xs-6 col-sm-3 col-md-3"
+              class="col-4 menu-btn"
               :to="{ name: 'grupousuarios' }"
             >
               <q-icon name="groups" size="35px" />
-              <div>Grupo Usuários</div>
+              <div class="menu-label">Grupo Usuários</div>
             </q-btn>
-            <q-btn
-              flat
-              stack
-              class="col-xs-6 col-sm-3 col-md-3"
-              :to="{ name: 'empresa' }"
-            >
+            <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'empresa' }">
               <q-icon name="business" size="35px" />
-              <div>Empresas</div>
+              <div class="menu-label">Empresas</div>
             </q-btn>
-          </q-item>
+          </div>
         </template>
 
         <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
-          <q-separator inset color="yelllow-6" />
-          <q-item class="q-px-sm">
+          <div class="row">
             <q-btn
               flat
               stack
-              class="col-xs-6 col-sm-3 col-md-3"
+              class="col-4 menu-btn"
               :to="'/ferias/' + moment().year()"
             >
               <q-icon name="hotel" size="35px" />
-              <div>Férias</div>
+              <div class="menu-label">Férias</div>
             </q-btn>
             <q-btn
               flat
               stack
-              class="col-xs-6 col-sm-3 col-md-3"
+              class="col-4 menu-btn"
               :to="{ name: 'cargosindex' }"
             >
               <q-icon name="work" size="35px" />
-              <div>Cargos</div>
+              <div class="menu-label">Cargos</div>
             </q-btn>
-            <q-btn
-              flat
-              stack
-              class="col-xs-6 col-sm-3 col-md-3"
-              :to="'/comissao-caixas/'"
-            >
+            <q-btn flat stack class="col-4 menu-btn" :to="'/comissao-caixas/'">
               <q-icon name="point_of_sale" size="35px" />
-              <div>Comissão Caixas</div>
+              <div class="menu-label">Comissão Caixas</div>
             </q-btn>
-          </q-item>
+          </div>
         </template>
 
-        <q-separator inset color="yelllow-6" />
-        <q-item-label header class="text-yellow-6">Cadastros</q-item-label>
-        <q-item class="q-px-sm">
-          <q-btn
-            flat
-            stack
-            class="col-xs-6 col-sm-3 col-md-3"
-            :to="{ name: 'etnia' }"
-          >
+        <div class="text-caption text-yellow-6 q-pa-sm">Cadastros</div>
+        <div class="row">
+          <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'etnia' }">
             <q-icon name="diversity_1" size="35px" />
-            <div>Etnia</div>
+            <div class="menu-label">Etnia</div>
           </q-btn>
           <q-btn
             flat
             stack
-            class="col-xs-6 col-sm-3 col-md-3"
+            class="col-4 menu-btn"
             :to="{ name: 'grauinstrucao' }"
           >
             <q-icon name="school" size="35px" />
-            <div>Grau Instrução</div>
+            <div class="menu-label">Grau Instrução</div>
           </q-btn>
           <q-btn
             flat
             stack
-            class="col-xs-6 col-sm-3 col-md-3"
+            class="col-4 menu-btn"
             :to="{ name: 'estadocivil' }"
           >
             <q-icon name="favorite" size="35px" />
-            <div>Estado Civil</div>
+            <div class="menu-label">Estado Civil</div>
           </q-btn>
-        </q-item>
-      </q-list>
+        </div>
+      </div>
     </q-menu>
   </q-btn>
 </template>
+
+<style scoped>
+.menu-grid {
+  min-width: 280px;
+}
+
+.menu-btn {
+  min-height: 70px;
+}
+
+.menu-label {
+  font-size: 0.65rem;
+  line-height: 1.2;
+  text-align: center;
+}
+</style>
