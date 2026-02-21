@@ -17,6 +17,7 @@ use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
+use Mg\Rh\ProcessarVendaJob;
 
 class PdvNegocioService
 {
@@ -325,6 +326,9 @@ class PdvNegocioService
 
         // salva transacao no banco de dados
         DB::commit();
+
+        // Dispara processamento de indicadores RH
+        ProcessarVendaJob::dispatch($negocio->codnegocio);
 
         // busca dados atualizados no banco de dados
         $negocio = $negocio->fresh();

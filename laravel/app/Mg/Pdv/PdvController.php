@@ -30,6 +30,7 @@ use Mg\Saurus\SaurusPedido;
 use Mg\Saurus\SaurusPedidoResource;
 use Mg\Saurus\SaurusPinPad;
 use Mg\Saurus\SaurusService;
+use Mg\Rh\ProcessarVendaJob;
 use Ramsey\Uuid\Uuid;
 
 class PdvController
@@ -241,6 +242,7 @@ class PdvController
         DB::beginTransaction();
         $negocio = PdvNegocioService::cancelar($negocio, $pdv, $request->justificativa);
         DB::commit();
+        ProcessarVendaJob::dispatch($negocio->codnegocio);
         return new NegocioResource($negocio);
     }
 

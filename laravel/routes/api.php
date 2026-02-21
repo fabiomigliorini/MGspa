@@ -826,5 +826,41 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // Route::get('mercos/produto/{id}/exporta', 'MercosController@exportaProduto');
         // Route::get('mercos/produto/{id}/atualiza', 'MercosController@atualizaProduto');
         // Route::get('mercos/cliente/apos/{alterado_apos}', 'MercosController@importaClienteApos');
+
+        // RH — Metas & Variáveis
+        Route::prefix('rh')->group(function () {
+
+            // Períodos
+            Route::get('periodo', '\Mg\Rh\PeriodoController@index');
+            Route::post('periodo', '\Mg\Rh\PeriodoController@store');
+            Route::post('periodo/{codperiodo}/duplicar', '\Mg\Rh\PeriodoController@duplicar');
+            Route::post('periodo/{codperiodo}/fechar', '\Mg\Rh\PeriodoController@fechar');
+            Route::post('periodo/{codperiodo}/reabrir', '\Mg\Rh\PeriodoController@reabrir');
+
+            // Colaboradores do período
+            Route::get('periodo/{codperiodo}/colaborador', '\Mg\Rh\PeriodoColaboradorController@index');
+            Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/encerrar', '\Mg\Rh\PeriodoColaboradorController@encerrar');
+            Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/estornar', '\Mg\Rh\PeriodoColaboradorController@estornar');
+            Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
+
+            // Vínculos colaborador-setor
+            Route::post('periodo-colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorSetorController@store');
+            Route::put('periodo-colaborador-setor/{codperiodocolaboradorsetor}', '\Mg\Rh\PeriodoColaboradorSetorController@update');
+            Route::delete('periodo-colaborador-setor/{codperiodocolaboradorsetor}', '\Mg\Rh\PeriodoColaboradorSetorController@destroy');
+
+            // Rubricas
+            Route::post('periodo-colaborador/{codperiodocolaborador}/rubrica', '\Mg\Rh\ColaboradorRubricaController@store');
+            Route::put('rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@update');
+            Route::delete('rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@destroy');
+            Route::patch('rubrica/{codcolaboradorrubrica}/concedido', '\Mg\Rh\ColaboradorRubricaController@toggleConcedido');
+
+            // Indicadores
+            Route::put('indicador/{codindicador}/meta', '\Mg\Rh\IndicadorController@atualizarMeta');
+            Route::post('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentoManual');
+
+            // Dashboard
+            Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');
+
+        });
     });
 });

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 16:58:34
+ * Date: 20/Feb/2026 18:43:28
  */
 
 namespace Mg\Rh;
@@ -22,6 +22,7 @@ class IndicadorLancamento extends MgModel
         'codnegocio',
         'codnegocioprodutobarra',
         'descricao',
+        'estorno',
         'manual',
         'valor'
     ];
@@ -38,6 +39,7 @@ class IndicadorLancamento extends MgModel
         'codnegocioprodutobarra' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'estorno' => 'boolean',
         'manual' => 'boolean',
         'valor' => 'float'
     ];
