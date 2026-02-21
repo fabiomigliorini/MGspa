@@ -4,7 +4,7 @@ namespace Mg\Rh;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class PeriodoStoreRequest extends FormRequest
+class PeriodoUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,9 +14,9 @@ class PeriodoStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'periodoinicial' => 'required|date',
-            'periodofinal' => 'required|date|after:periodoinicial',
-            'diasuteis' => 'nullable|integer|min:0',
+            'periodoinicial' => 'sometimes|date',
+            'periodofinal' => 'sometimes|date',
+            'diasuteis' => 'sometimes|integer|min:0',
             'observacoes' => 'nullable|string',
         ];
     }

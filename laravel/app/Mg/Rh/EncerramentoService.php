@@ -2,8 +2,9 @@
 
 namespace Mg\Rh;
 
-use Carbon\Carbon;
+use Illuminate\Support\Carbon;
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 
 class EncerramentoService
 {
@@ -34,17 +35,18 @@ class EncerramentoService
         }
 
         // Gera título
-        $debito = $pc->valortotal > 0 ? $pc->valortotal : 0;
-        $credito = $pc->valortotal < 0 ? abs($pc->valortotal) : 0;
+        $credito = $pc->valortotal > 0 ? $pc->valortotal : 0;
+        $debito = $pc->valortotal < 0 ? abs($pc->valortotal) : 0;
 
         $titulo = new Titulo([
             'codtipotitulo' => self::CODTIPOTITULO_VARIAVEL,
             'codfilial' => $pc->Colaborador->codfilial,
             'codpessoa' => $pc->Colaborador->codpessoa,
             'codcontacontabil' => self::CODCONTACONTABIL,
-            'numero' => "RH-{$pc->codperiodo}-{$pc->codcolaborador}",
+            'numero' => "RH " . $pc->Periodo->periodofinal->format('Y-m'),
             'emissao' => $agora,
             'vencimento' => $agora,
+            'vencimentooriginal' => $agora,
             'transacao' => $agora,
             'sistema' => $agora,
             'debito' => $debito,
@@ -79,36 +81,13 @@ class EncerramentoService
         // Estorna título se existir
         if ($pc->codtitulo) {
             $titulo = Titulo::findOrFail($pc->codtitulo);
-            $titulo->estornado = Carbon::now();
-            $titulo->saldo = 0;
-            $titulo->debitosaldo = 0;
-            $titulo->creditosaldo = 0;
-            $titulo->save();
+            TituloService::estornar($titulo);
         }
 
         // Reabre o colaborador
         $pc->status = PeriodoService::STATUS_COLABORADOR_ABERTO;
         $pc->codtitulo = null;
         $pc->encerramento = null;
-        $pc->save();
-
-        return $pc;
-    }
-
-    public static function encerrarValorZero(int $codperiodocolaborador): PeriodoColaborador
-    {
-        $pc = PeriodoColaborador::findOrFail($codperiodocolaborador);
-
-        if ($pc->status !== PeriodoService::STATUS_COLABORADOR_ABERTO) {
-            throw new \Exception('Somente colaboradores com status A (aberto) podem ser encerrados.');
-        }
-
-        CalculoRubricaService::calcularColaborador($codperiodocolaborador);
-        $pc->refresh();
-
-        $pc->status = PeriodoService::STATUS_COLABORADOR_ENCERRADO;
-        $pc->encerramento = Carbon::now();
-        $pc->codtitulo = null;
         $pc->save();
 
         return $pc;

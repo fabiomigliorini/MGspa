@@ -15,7 +15,7 @@ class IndicadorController extends Controller
         DB::beginTransaction();
         try {
             $indicador = Indicador::findOrFail($codindicador);
-            $indicador->meta = $request->meta;
+            $indicador->fill($request->validated());
             $indicador->save();
             DB::commit();
             return new IndicadorResource($indicador);
@@ -33,14 +33,14 @@ class IndicadorController extends Controller
         try {
             $indicador = Indicador::findOrFail($codindicador);
 
-            $lancamento = IndicadorLancamento::create([
-                'codindicador' => $codindicador,
-                'valor' => $request->valor,
-                'descricao' => $request->descricao,
-                'manual' => true,
-            ]);
+            $dados = $request->validated();
 
-            $indicador->valoracumulado += $request->valor;
+            $lancamento = IndicadorLancamento::create(array_merge(
+                $dados,
+                ['codindicador' => $codindicador, 'manual' => true]
+            ));
+
+            $indicador->valoracumulado += $dados['valor'];
             $indicador->save();
 
             DB::commit();

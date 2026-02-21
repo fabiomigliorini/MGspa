@@ -3,7 +3,6 @@
 namespace Mg\Rh;
 
 use Illuminate\Routing\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
@@ -13,7 +12,16 @@ class PeriodoColaboradorController extends Controller
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
+        $periodo = Periodo::findOrFail($codperiodo);
+
         $colaboradores = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->whereHas('Colaborador', function ($q) use ($periodo) {
+                $q->where('contratacao', '<=', $periodo->periodofinal)
+                    ->where(function ($q2) use ($periodo) {
+                        $q2->whereNull('rescisao')
+                            ->orWhere('rescisao', '>=', $periodo->periodoinicial);
+                    });
+            })
             ->with([
                 'Colaborador.Pessoa',
                 'Colaborador.ColaboradorCargoS' => function ($q) {
@@ -21,18 +29,40 @@ class PeriodoColaboradorController extends Controller
                 },
                 'PeriodoColaboradorSetorS.Setor.UnidadeNegocio',
                 'PeriodoColaboradorSetorS.Setor.TipoSetor',
-                'ColaboradorRubricaS.Indicador',
-                'ColaboradorRubricaS.IndicadorCondicao',
+                'ColaboradorRubricaS.Indicador.Setor',
+                'ColaboradorRubricaS.Indicador.UnidadeNegocio',
+                'ColaboradorRubricaS.IndicadorCondicao.Setor',
+                'ColaboradorRubricaS.IndicadorCondicao.UnidadeNegocio',
             ])
             ->get();
 
+        // Indicadores pessoais (V/C) — por colaborador
         $indicadores = Indicador::where('codperiodo', $codperiodo)
             ->whereNotNull('codcolaborador')
+            ->with(['Setor', 'UnidadeNegocio'])
             ->get()
             ->groupBy('codcolaborador');
 
+        // Indicadores de setor (S) — sem codcolaborador, por codsetor
+        $indicadoresSetor = Indicador::where('codperiodo', $codperiodo)
+            ->whereNull('codcolaborador')
+            ->whereNotNull('codsetor')
+            ->with(['Setor', 'UnidadeNegocio'])
+            ->get()
+            ->keyBy('codsetor');
+
         foreach ($colaboradores as $c) {
-            $c->indicadores = $indicadores->get($c->codcolaborador, collect());
+            $pessoais = $indicadores->get($c->codcolaborador, collect());
+
+            // Incluir indicadores de setor conforme os setores do colaborador
+            $setorInds = collect();
+            foreach ($c->PeriodoColaboradorSetorS as $pcs) {
+                if ($indicadoresSetor->has($pcs->codsetor)) {
+                    $setorInds->push($indicadoresSetor->get($pcs->codsetor));
+                }
+            }
+
+            $c->indicadores = $pessoais->merge($setorInds);
         }
 
         return PeriodoColaboradorResource::collection($colaboradores);

@@ -11,6 +11,10 @@ class PeriodoResource extends JsonResource
         $ret = parent::toArray($request);
         $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
         $ret['usuarioalteracao'] = @$this->UsuarioAlteracao->usuario;
+        $ret['diasuteiscalculados'] = PeriodoService::calcularDiasUteis(
+            $this->periodoinicial,
+            $this->periodofinal
+        );
         return $ret;
     }
 }

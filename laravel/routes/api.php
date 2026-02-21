@@ -131,7 +131,6 @@ Route::group(['prefix' => 'v1'], function () {
 
         Route::apiResource('{codnotafiscal}/referenciada', '\Mg\NotaFiscal\NotaFiscalReferenciadaController')
             ->parameters(['referenciada' => 'codnotafiscalreferenciada']);
-
     });
 
     // Negocio
@@ -352,6 +351,31 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('meta/{codmeta}/dashboard', '\Mg\Meta\MetaDashboardController@dashboard');
         Route::get('meta/{codmeta}/dashboard/{codpessoa}', '\Mg\Meta\MetaDashboardController@dashboardPessoa');
         Route::get('meta/{codmeta}/dashboard/{codpessoa}/eventos', '\Mg\Meta\MetaDashboardController@dashboardPessoaEventos');
+
+        // FERIADO
+        Route::get('feriado/', '\Mg\Feriado\FeriadoController@index');
+        Route::post('feriado/', '\Mg\Feriado\FeriadoController@store');
+        Route::put('feriado/{codferiado}', '\Mg\Feriado\FeriadoController@update');
+        Route::delete('feriado/{codferiado}', '\Mg\Feriado\FeriadoController@destroy');
+        Route::post('feriado/{codferiado}/inativo', '\Mg\Feriado\FeriadoController@inativar');
+        Route::delete('feriado/{codferiado}/inativo', '\Mg\Feriado\FeriadoController@ativar');
+        Route::post('feriado/gerar-ano', '\Mg\Feriado\FeriadoController@gerarAno');
+
+        // TIPO SETOR
+        Route::get('tipo-setor/', '\Mg\Filial\TipoSetorController@index');
+        Route::post('tipo-setor/', '\Mg\Filial\TipoSetorController@store');
+        Route::put('tipo-setor/{codtiposetor}', '\Mg\Filial\TipoSetorController@update');
+        Route::delete('tipo-setor/{codtiposetor}', '\Mg\Filial\TipoSetorController@destroy');
+        Route::post('tipo-setor/{codtiposetor}/inativo', '\Mg\Filial\TipoSetorController@inativar');
+        Route::delete('tipo-setor/{codtiposetor}/inativo', '\Mg\Filial\TipoSetorController@ativar');
+
+        // SETOR
+        Route::get('setor/', '\Mg\Filial\SetorController@index');
+        Route::post('setor/', '\Mg\Filial\SetorController@store');
+        Route::put('setor/{codsetor}', '\Mg\Filial\SetorController@update');
+        Route::delete('setor/{codsetor}', '\Mg\Filial\SetorController@destroy');
+        Route::post('setor/{codsetor}/inativo', '\Mg\Filial\SetorController@inativar');
+        Route::delete('setor/{codsetor}/inativo', '\Mg\Filial\SetorController@ativar');
 
         // UNIDADE DE NEGOCIO
         Route::get('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@index');
@@ -836,6 +860,8 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('periodo/{codperiodo}/duplicar', '\Mg\Rh\PeriodoController@duplicar');
             Route::post('periodo/{codperiodo}/fechar', '\Mg\Rh\PeriodoController@fechar');
             Route::post('periodo/{codperiodo}/reabrir', '\Mg\Rh\PeriodoController@reabrir');
+            Route::put('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@update');
+            Route::delete('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@destroy');
 
             // Colaboradores do período
             Route::get('periodo/{codperiodo}/colaborador', '\Mg\Rh\PeriodoColaboradorController@index');
@@ -860,7 +886,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
             // Dashboard
             Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');
-
         });
     });
 });

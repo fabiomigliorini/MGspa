@@ -5,6 +5,7 @@ namespace Mg\Rh;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioService;
 
 class RhReprocessarPeriodoCommand extends Command
 {
@@ -44,7 +45,7 @@ class RhReprocessarPeriodoCommand extends Command
         }
 
         // Buscar vendas do período (fechadas e canceladas)
-        $negocios = Negocio::whereIn('codnegociostatus', [2, 3])
+        $negocios = Negocio::whereIn('codnegociostatus', [NegocioService::STATUS_FECHADO, NegocioService::STATUS_CANCELADO])
             ->where('lancamento', '>=', $periodo->periodoinicial)
             ->where('lancamento', '<=', $periodo->periodofinal)
             ->pluck('codnegocio');
@@ -59,7 +60,7 @@ class RhReprocessarPeriodoCommand extends Command
 
         foreach ($negocios as $codnegocio) {
             try {
-                ProcessarVendaService::processar($codnegocio, $codperiodo);
+                ProcessarVendaService::processar($codnegocio);
                 $ok++;
             } catch (\Exception $e) {
                 $erros++;

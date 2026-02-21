@@ -4,7 +4,7 @@
  * Date: 17/Feb/2026 10:49:10
  */
 
-namespace Mg\Filial;
+namespace Mg\Feriado;
 
 use Mg\MgModel;
 use Mg\Usuario\Usuario;

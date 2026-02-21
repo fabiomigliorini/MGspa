@@ -39,6 +39,21 @@ class PeriodoController extends Controller
         }
     }
 
+    public function update(int $codperiodo, PeriodoUpdateRequest $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        DB::beginTransaction();
+        try {
+            $periodo = PeriodoService::atualizar($codperiodo, $request->validated());
+            DB::commit();
+            return new PeriodoResource($periodo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
     public function duplicar(int $codperiodo)
     {
         Autorizador::autoriza(['Recursos Humanos']);
@@ -78,6 +93,21 @@ class PeriodoController extends Controller
             $periodo = PeriodoService::reabrir($codperiodo);
             DB::commit();
             return new PeriodoResource($periodo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
+    public function destroy(int $codperiodo)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        DB::beginTransaction();
+        try {
+            PeriodoService::excluir($codperiodo);
+            DB::commit();
+            return response()->json(['message' => 'Período excluído']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['erro' => $e->getMessage()], 422);

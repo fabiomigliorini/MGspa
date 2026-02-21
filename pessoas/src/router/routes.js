@@ -112,6 +112,13 @@ const routes = [
         name: "comissaocaixas",
         component: () => import("pages/Cargos/ComissaoCaixas.vue"),
       },
+      // Feriado
+      {
+        path: "/feriado",
+        name: "feriadoIndex",
+        component: () => import("pages/feriado/Index.vue"),
+      },
+
       // Unidade de Negócio
       {
         path: "/unidade-negocio",
@@ -154,6 +161,25 @@ const routes = [
         path: "/estado-civil",
         name: "estadocivil",
         component: () => import("pages/estado-civil/Index.vue"),
+      },
+
+      // RH — Metas & Variáveis
+      {
+        path: "/rh",
+        name: "rhIndex",
+        component: () => import("pages/rh/Index.vue"),
+        children: [
+          {
+            path: ":codperiodo",
+            name: "rhDashboard",
+            component: () => import("pages/rh/PeriodoDashboard.vue"),
+          },
+          {
+            path: ":codperiodo/colaborador/:codperiodocolaborador",
+            name: "rhColaboradorDetalhe",
+            component: () => import("pages/rh/ColaboradorDetalhe.vue"),
+          },
+        ],
       },
 
       // Empresa
