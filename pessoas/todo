@@ -1,3 +1,10 @@
+Eliminar todas as tabelas, models, controllers, telas da refatoracao de Metas.
+
+Metas Novas:
+
+- Campo Alocacao do PDV
+- Campo Alocacao do Produto
+
 TODO: colocar os usuários do grupo ao inves de mostrar varios cards do mesmo usuario da filial,
 mostrar apenas 1 card com todas as filiais inclusas.
 

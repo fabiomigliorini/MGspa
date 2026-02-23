@@ -10,6 +10,7 @@ use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pdv\PdvNegocioService;
+use Mg\Rh\ProcessarVendaJob;
 
 class NegocioService
 {
@@ -108,6 +109,9 @@ class NegocioService
             'codusuario' => Auth::user()->codusuario??$negocio->codusuario,
             'lancamento' => Carbon::now()
         ]);
+
+        // Dispara processamento de indicadores RH
+        ProcessarVendaJob::dispatch($negocio->codnegocio);
 
         return static::movimentaEstoque($negocio);
 

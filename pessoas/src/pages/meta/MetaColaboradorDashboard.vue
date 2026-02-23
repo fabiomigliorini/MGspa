@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
 import MGLayout from "layouts/MGLayout.vue";
+import { getTipo } from "src/config/bonificacaoTipos";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -34,27 +35,21 @@ const formataMoeda = (valor) => {
   }).format(parseFloat(valor) || 0);
 };
 
-const tipoLabel = (tipo) => {
-  const labels = {
-    VENDA_VENDEDOR: "Comissão Vendas",
-    VENDA_CAIXA: "Comissão Caixa",
-    VENDA_SUBGERENTE: "Comissão Subgerente",
-    VENDA_XEROX: "Comissão Xerox",
-    META_ATINGIDA: "Meta Atingida",
-    PREMIO_RANKING: "Prêmio Ranking",
-    BONUS_FIXO: "Bônus Fixo",
-    PREMIO_META: "Prêmio Meta",
-    PREMIO_META_XEROX: "Prêmio Meta Xerox",
-    PREMIO_META_SUBGERENTE: "Prêmio Meta Subgerente",
-  };
-  return labels[tipo] || tipo;
+const formataMoedaPrecisa = (valor) => {
+  const v = parseFloat(valor) || 0;
+  const base = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 5,
+    maximumFractionDigits: 5,
+  }).format(v);
+  const idx = base.length - 3;
+  return { principal: base.substring(0, idx), extra: base.substring(idx) };
 };
 
-const tipoColor = (tipo) => {
-  if (tipo.startsWith("PREMIO") || tipo === "META_ATINGIDA") return "green";
-  if (tipo === "BONUS_FIXO") return "blue";
-  return "grey-8";
-};
+
+const negocioUrl = (codnegocio) =>
+  process.env.APP_NEGOCIOS_URL + "/negocio/" + codnegocio;
 
 const carregarEventos = async () => {
   paginaEventos.value = 1;
@@ -233,10 +228,15 @@ watch(
                 <tbody>
                   <tr v-for="ev in eventosLista" :key="ev.tipo">
                     <td>
-                      <q-badge
-                        :color="tipoColor(ev.tipo)"
-                        :label="tipoLabel(ev.tipo)"
+                      <q-icon
+                        :name="getTipo(ev.tipo).icon"
+                        :color="getTipo(ev.tipo).color"
+                        size="xs"
+                        class="q-mr-xs"
                       />
+                      <span :class="'text-' + getTipo(ev.tipo).color">
+                        {{ getTipo(ev.tipo).label }}
+                      </span>
                     </td>
                     <td
                       class="text-right"
@@ -275,18 +275,31 @@ watch(
                   <q-list separator>
                     <q-item v-for="ev in eventos" :key="ev.codbonificacaoevento">
                       <q-item-section avatar>
-                        <q-badge
-                          :color="tipoColor(ev.tipo)"
-                          :label="tipoLabel(ev.tipo)"
-                          class="q-pa-xs"
+                        <q-icon
+                          :name="getTipo(ev.tipo).icon"
+                          :color="getTipo(ev.tipo).color"
+                          size="sm"
                         />
                       </q-item-section>
                       <q-item-section>
-                        <q-item-label v-if="ev.descricao">
-                          {{ ev.descricao }}
+                        <q-item-label :class="'text-' + getTipo(ev.tipo).color">
+                          {{ getTipo(ev.tipo).label }}
                         </q-item-label>
                         <q-item-label caption>
-                          {{ formataData(ev.criacao) }}
+                          <q-btn
+                            v-if="ev.codnegocio"
+                            flat
+                            dense
+                            no-caps
+                            size="sm"
+                            color="primary"
+                            :href="negocioUrl(ev.codnegocio)"
+                            target="_blank"
+                            :label="'#' + String(ev.codnegocio).padStart(8, '0')"
+                            type="a"
+                            class="q-pa-none"
+                          />
+                          {{ formataData(ev.lancamento) }}
                           <q-badge
                             v-if="ev.manual"
                             color="orange"
@@ -300,7 +313,10 @@ watch(
                           class="text-weight-medium"
                           :class="ev.valor < 0 ? 'text-red' : 'text-green-8'"
                         >
-                          {{ formataMoeda(ev.valor) }}
+                          {{ formataMoedaPrecisa(ev.valor).principal
+                          }}<span style="font-size: 0.7em; vertical-align: super; opacity: 0.5">{{
+                            formataMoedaPrecisa(ev.valor).extra
+                          }}</span>
                         </span>
                       </q-item-section>
                     </q-item>

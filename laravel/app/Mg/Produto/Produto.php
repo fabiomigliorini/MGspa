@@ -1,18 +1,18 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:57:30
+ * Date: 20/Feb/2026 16:59:05
  */
 
 namespace Mg\Produto;
 
 use Mg\MgModel;
+use Mg\Mercos\MercosProduto;
 use Mg\Produto\ProdutoBarra;
 use Mg\Produto\ProdutoEmbalagem;
 use Mg\Produto\ProdutoHistoricoPreco;
 use Mg\Produto\ProdutoImagem;
 use Mg\Produto\ProdutoVariacao;
-use Mg\Mercos\MercosProduto;
 use Mg\Woo\WooProduto;
 use Mg\NaturezaOperacao\Cest;
 use Mg\Marca\Marca;
@@ -23,6 +23,7 @@ use Mg\Tributacao\Tributacao;
 use Mg\Produto\UnidadeMedida;
 use Mg\Usuario\Usuario;
 use Mg\Estoque\EstoqueLocal;
+use Mg\Filial\TipoSetor;
 
 class Produto extends MgModel
 {
@@ -49,6 +50,7 @@ class Produto extends MgModel
         'codprodutoimagem',
         'codsubgrupoproduto',
         'codtipoproduto',
+        'codtiposetor',
         'codtributacao',
         'codunidademedida',
         'conferenciaperiodica',
@@ -97,6 +99,7 @@ class Produto extends MgModel
         'codprodutoimagem' => 'integer',
         'codsubgrupoproduto' => 'integer',
         'codtipoproduto' => 'integer',
+        'codtiposetor' => 'integer',
         'codtributacao' => 'integer',
         'codunidademedida' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -157,6 +160,11 @@ class Produto extends MgModel
     public function TipoProduto()
     {
         return $this->belongsTo(TipoProduto::class, 'codtipoproduto', 'codtipoproduto');
+    }
+
+    public function TipoSetor()
+    {
+        return $this->belongsTo(TipoSetor::class, 'codtiposetor', 'codtiposetor');
     }
 
     public function Tributacao()

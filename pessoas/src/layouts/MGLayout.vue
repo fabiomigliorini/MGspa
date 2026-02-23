@@ -137,7 +137,7 @@ const toggleLeftDrawer = () => {
     </q-drawer>
 
     <q-page-container class="bg-grey-2">
-      <router-view />
+      <router-view v-if="!$slots.content" />
       <slot name="content"></slot>
     </q-page-container>
     <q-footer elevated reveal class="bg-grey-8 text-white">

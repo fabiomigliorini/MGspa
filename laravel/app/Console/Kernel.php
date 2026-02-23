@@ -14,6 +14,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \Mg\Gerador\GeradorModelCommand::class,
+        \Mg\Rh\RhCargaInicialCommand::class,
+        \Mg\Rh\RhReprocessarPeriodoCommand::class,
     ];
 
     /**

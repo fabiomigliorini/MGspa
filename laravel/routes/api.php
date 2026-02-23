@@ -131,7 +131,6 @@ Route::group(['prefix' => 'v1'], function () {
 
         Route::apiResource('{codnotafiscal}/referenciada', '\Mg\NotaFiscal\NotaFiscalReferenciadaController')
             ->parameters(['referenciada' => 'codnotafiscalreferenciada']);
-
     });
 
     // Negocio
@@ -352,6 +351,31 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('meta/{codmeta}/dashboard', '\Mg\Meta\MetaDashboardController@dashboard');
         Route::get('meta/{codmeta}/dashboard/{codpessoa}', '\Mg\Meta\MetaDashboardController@dashboardPessoa');
         Route::get('meta/{codmeta}/dashboard/{codpessoa}/eventos', '\Mg\Meta\MetaDashboardController@dashboardPessoaEventos');
+
+        // FERIADO
+        Route::get('feriado/', '\Mg\Feriado\FeriadoController@index');
+        Route::post('feriado/', '\Mg\Feriado\FeriadoController@store');
+        Route::put('feriado/{codferiado}', '\Mg\Feriado\FeriadoController@update');
+        Route::delete('feriado/{codferiado}', '\Mg\Feriado\FeriadoController@destroy');
+        Route::post('feriado/{codferiado}/inativo', '\Mg\Feriado\FeriadoController@inativar');
+        Route::delete('feriado/{codferiado}/inativo', '\Mg\Feriado\FeriadoController@ativar');
+        Route::post('feriado/gerar-ano', '\Mg\Feriado\FeriadoController@gerarAno');
+
+        // TIPO SETOR
+        Route::get('tipo-setor/', '\Mg\Filial\TipoSetorController@index');
+        Route::post('tipo-setor/', '\Mg\Filial\TipoSetorController@store');
+        Route::put('tipo-setor/{codtiposetor}', '\Mg\Filial\TipoSetorController@update');
+        Route::delete('tipo-setor/{codtiposetor}', '\Mg\Filial\TipoSetorController@destroy');
+        Route::post('tipo-setor/{codtiposetor}/inativo', '\Mg\Filial\TipoSetorController@inativar');
+        Route::delete('tipo-setor/{codtiposetor}/inativo', '\Mg\Filial\TipoSetorController@ativar');
+
+        // SETOR
+        Route::get('setor/', '\Mg\Filial\SetorController@index');
+        Route::post('setor/', '\Mg\Filial\SetorController@store');
+        Route::put('setor/{codsetor}', '\Mg\Filial\SetorController@update');
+        Route::delete('setor/{codsetor}', '\Mg\Filial\SetorController@destroy');
+        Route::post('setor/{codsetor}/inativo', '\Mg\Filial\SetorController@inativar');
+        Route::delete('setor/{codsetor}/inativo', '\Mg\Filial\SetorController@ativar');
 
         // UNIDADE DE NEGOCIO
         Route::get('unidade-negocio/', '\Mg\Filial\UnidadeNegocioController@index');
@@ -826,5 +850,42 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // Route::get('mercos/produto/{id}/exporta', 'MercosController@exportaProduto');
         // Route::get('mercos/produto/{id}/atualiza', 'MercosController@atualizaProduto');
         // Route::get('mercos/cliente/apos/{alterado_apos}', 'MercosController@importaClienteApos');
+
+        // RH — Metas & Variáveis
+        Route::prefix('rh')->group(function () {
+
+            // Períodos
+            Route::get('periodo', '\Mg\Rh\PeriodoController@index');
+            Route::post('periodo', '\Mg\Rh\PeriodoController@store');
+            Route::post('periodo/{codperiodo}/duplicar', '\Mg\Rh\PeriodoController@duplicar');
+            Route::post('periodo/{codperiodo}/fechar', '\Mg\Rh\PeriodoController@fechar');
+            Route::post('periodo/{codperiodo}/reabrir', '\Mg\Rh\PeriodoController@reabrir');
+            Route::put('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@update');
+            Route::delete('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@destroy');
+
+            // Colaboradores do período
+            Route::get('periodo/{codperiodo}/colaborador', '\Mg\Rh\PeriodoColaboradorController@index');
+            Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/encerrar', '\Mg\Rh\PeriodoColaboradorController@encerrar');
+            Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/estornar', '\Mg\Rh\PeriodoColaboradorController@estornar');
+            Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
+
+            // Vínculos colaborador-setor
+            Route::post('periodo-colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorSetorController@store');
+            Route::put('periodo-colaborador-setor/{codperiodocolaboradorsetor}', '\Mg\Rh\PeriodoColaboradorSetorController@update');
+            Route::delete('periodo-colaborador-setor/{codperiodocolaboradorsetor}', '\Mg\Rh\PeriodoColaboradorSetorController@destroy');
+
+            // Rubricas
+            Route::post('periodo-colaborador/{codperiodocolaborador}/rubrica', '\Mg\Rh\ColaboradorRubricaController@store');
+            Route::put('rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@update');
+            Route::delete('rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@destroy');
+            Route::patch('rubrica/{codcolaboradorrubrica}/concedido', '\Mg\Rh\ColaboradorRubricaController@toggleConcedido');
+
+            // Indicadores
+            Route::put('indicador/{codindicador}/meta', '\Mg\Rh\IndicadorController@atualizarMeta');
+            Route::post('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentoManual');
+
+            // Dashboard
+            Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');
+        });
     });
 });

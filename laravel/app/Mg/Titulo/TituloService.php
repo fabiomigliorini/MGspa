@@ -37,7 +37,7 @@ class TituloService
     public static function estornar(Titulo $titulo)
     {
         if (!empty($titulo->estornado)) {
-            throw new Exception("Titulo já está estornado!", 1);
+            throw new \Exception("Titulo já está estornado!", 1);
         }
         $mov = new MovimentoTitulo([
             'codtitulo' => $titulo->codtitulo,

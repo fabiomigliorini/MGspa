@@ -63,6 +63,8 @@ const formataMoeda = (valor) => {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
     currency: "BRL",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 5,
   }).format(parseFloat(valor) || 0);
 };
 

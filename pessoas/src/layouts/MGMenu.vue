@@ -51,7 +51,7 @@ const user = guardaToken();
             :to="{ name: 'unidadeNegocioIndex' }"
           >
             <q-icon name="store" size="35px" />
-            <div class="menu-label">Unidades</div>
+            <div class="menu-label">Unidades & Setores</div>
           </q-btn>
         </div>
 
@@ -97,9 +97,20 @@ const user = guardaToken();
               <q-icon name="work" size="35px" />
               <div class="menu-label">Cargos</div>
             </q-btn>
-            <q-btn flat stack class="col-4 menu-btn" :to="'/comissao-caixas/'">
-              <q-icon name="point_of_sale" size="35px" />
-              <div class="menu-label">Comissão Caixas</div>
+            <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'rhIndex' }">
+              <q-icon name="paid" size="35px" />
+              <div class="menu-label">Metas RH</div>
+            </q-btn>
+          </div>
+          <div class="row">
+            <q-btn
+              flat
+              stack
+              class="col-4 menu-btn"
+              :to="{ name: 'feriadoIndex' }"
+            >
+              <q-icon name="event_busy" size="35px" />
+              <div class="menu-label">Feriados</div>
             </q-btn>
           </div>
         </template>
