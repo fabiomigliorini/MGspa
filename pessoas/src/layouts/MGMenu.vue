@@ -101,8 +101,6 @@ const user = guardaToken();
               <q-icon name="paid" size="35px" />
               <div class="menu-label">Metas RH</div>
             </q-btn>
-          </div>
-          <div class="row">
             <q-btn
               flat
               stack
@@ -111,6 +109,15 @@ const user = guardaToken();
             >
               <q-icon name="event_busy" size="35px" />
               <div class="menu-label">Feriados</div>
+            </q-btn>
+            <q-btn
+              flat
+              stack
+              class="col-4 menu-btn"
+              :to="{ name: 'certidaoemissor' }"
+            >
+              <q-icon name="description" size="35px" />
+              <div class="menu-label">Emissores de Certidões</div>
             </q-btn>
           </div>
         </template>

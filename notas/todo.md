@@ -14,7 +14,6 @@
 
 Eduardo
 
-- Tela de Emissores de Certidões (FAZER EM PESSOAS)
 - Nota com erro de (531 - Rejeicao: Total da BC ICMS difere do somatorio dos itens)
 - Tela DFE
 - Tela NFeTrceiro
@@ -156,6 +155,11 @@ DONE:
 - Notas
   - Colocar no padrao de layout (CFOP/Natureza/Cidade)
   - refatorar telas de listagem (notas/tributacao/natureza). estão muito feias
+
+22/02
+
+- Pessoas
+  - Tela de Emissores de Certidões (FAZER EM PESSOAS)
 
 Rejeitado
 

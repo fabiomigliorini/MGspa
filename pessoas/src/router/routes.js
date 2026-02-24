@@ -163,6 +163,13 @@ const routes = [
         component: () => import("pages/estado-civil/Index.vue"),
       },
 
+      // Certidão Emissor
+      {
+        path: "/certidao-emissor",
+        name: "certidaoemissor",
+        component: () => import("pages/certidao-emissor/Index.vue"),
+      },
+
       // RH — Metas & Variáveis
       {
         path: "/rh",

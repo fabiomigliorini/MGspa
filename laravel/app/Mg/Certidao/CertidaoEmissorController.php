@@ -4,49 +4,51 @@ namespace Mg\Certidao;
 
 use Illuminate\Http\Request;
 use Mg\MgController;
-use Carbon\Carbon;
-use Illuminate\Validation\Rule;
-use Mg\Pessoa\PessoaResource;
+use Mg\MgService;
 
 class CertidaoEmissorController extends MgController
 {
 
     public function index(Request $request)
     {
-        $pessoas = CertidaoEmissor::orderBy('certidaoemissor', 'asc')->paginate();
-        return PessoaResource::collection($pessoas);
+        list($filter, $sort, $fields) = $this->filtros($request);
+        $qry = CertidaoEmissorService::pesquisar($filter, $sort, $fields);
+        $regs = $qry->orderBy('certidaoemissor', 'asc')->paginate()->appends($request->all());
+        return CertidaoEmissorResource::collection($regs);
     }
 
-    public function create (Request $request)
+    public function store(CertidaoEmissorStoreRequest $request)
     {
-        $data = $request->all();
-        $pessoa = CertidaoEmissorService::create($data);
-         dd($pessoa);
-        return new PessoaResource($pessoa);
+        $reg = CertidaoEmissor::create($request->validated());
+        return (new CertidaoEmissorResource($reg))->response()->setStatusCode(201);
     }
 
-    public function show (Request $request, $codpessoa, $codcertidaoemissor)
+    public function update(CertidaoEmissorUpdateRequest $request, $codcertidaoemissor)
     {
-        $pessoa = CertidaoEmissor::findOrFail($codcertidaoemissor);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        $reg = CertidaoEmissor::findOrFail($codcertidaoemissor);
+        $reg->update($request->validated());
+        return new CertidaoEmissorResource($reg);
     }
 
-    public function update (Request $request, $codpessoa, $codcertidaoemissor)
+    public function destroy($codcertidaoemissor)
     {
-        $data = $request->all();
-        $pessoa = CertidaoEmissor::findOrFail($codcertidaoemissor);
-        $pessoa = CertidaoEmissorService::update($pessoa, $data);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        $reg = CertidaoEmissor::findOrFail($codcertidaoemissor);
+        $reg->delete();
+        return response()->json(null, 204);
     }
 
-    public function delete (Request $request, $codpessoa, $codcertidaoemissor)
+    public function inativar($codcertidaoemissor)
     {
+        $reg = CertidaoEmissor::findOrFail($codcertidaoemissor);
+        MgService::inativar($reg);
+        return new CertidaoEmissorResource($reg);
+    }
 
-        $pessoa = CertidaoEmissor::findOrFail($codcertidaoemissor);
-        $pessoa = CertidaoEmissorService::delete($pessoa);
-        return new PessoaResource($pessoa);
+    public function ativar($codcertidaoemissor)
+    {
+        $reg = CertidaoEmissor::findOrFail($codcertidaoemissor);
+        MgService::ativar($reg);
+        return new CertidaoEmissorResource($reg);
     }
 
 }
