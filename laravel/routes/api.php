@@ -881,6 +881,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::patch('rubrica/{codcolaboradorrubrica}/concedido', '\Mg\Rh\ColaboradorRubricaController@toggleConcedido');
 
             // Indicadores
+            Route::get('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentos');
             Route::put('indicador/{codindicador}/meta', '\Mg\Rh\IndicadorController@atualizarMeta');
             Route::post('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentoManual');
 

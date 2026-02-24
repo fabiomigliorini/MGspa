@@ -36,33 +36,22 @@ class PeriodoColaboradorController extends Controller
             ])
             ->get();
 
-        // Indicadores pessoais (V/C) — por colaborador
+        // Indicadores pessoais (V/C) — busca bulk para evitar N+1
         $indicadores = Indicador::where('codperiodo', $codperiodo)
             ->whereNotNull('codcolaborador')
             ->with(['Setor', 'UnidadeNegocio'])
             ->get()
             ->groupBy('codcolaborador');
 
-        // Indicadores de setor (S) — sem codcolaborador, por codsetor
-        $indicadoresSetor = Indicador::where('codperiodo', $codperiodo)
+        // Indicadores coletivos (S/U) — para dropdown de rubricas
+        $coletivos = Indicador::where('codperiodo', $codperiodo)
             ->whereNull('codcolaborador')
-            ->whereNotNull('codsetor')
             ->with(['Setor', 'UnidadeNegocio'])
-            ->get()
-            ->keyBy('codsetor');
+            ->get();
 
         foreach ($colaboradores as $c) {
-            $pessoais = $indicadores->get($c->codcolaborador, collect());
-
-            // Incluir indicadores de setor conforme os setores do colaborador
-            $setorInds = collect();
-            foreach ($c->PeriodoColaboradorSetorS as $pcs) {
-                if ($indicadoresSetor->has($pcs->codsetor)) {
-                    $setorInds->push($indicadoresSetor->get($pcs->codsetor));
-                }
-            }
-
-            $c->indicadores = $pessoais->merge($setorInds);
+            $c->indicadores_pessoais = $indicadores->get($c->codcolaborador, collect());
+            $c->indicadores_coletivos = $coletivos;
         }
 
         return PeriodoColaboradorResource::collection($colaboradores);

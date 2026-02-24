@@ -179,6 +179,11 @@ const routes = [
             name: "rhColaboradorDetalhe",
             component: () => import("pages/rh/ColaboradorDetalhe.vue"),
           },
+          {
+            path: ":codperiodo/indicador/:codindicador",
+            name: "rhIndicadorExtrato",
+            component: () => import("pages/rh/IndicadorExtrato.vue"),
+          },
         ],
       },
 

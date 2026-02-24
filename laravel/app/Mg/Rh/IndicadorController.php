@@ -8,6 +8,30 @@ use Mg\Usuario\Autorizador;
 
 class IndicadorController extends Controller
 {
+    public function lancamentos(int $codindicador)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $indicador = Indicador::with(['Setor', 'UnidadeNegocio', 'Colaborador.Pessoa'])
+            ->findOrFail($codindicador);
+
+        $lancamentos = IndicadorLancamento::where('tblindicadorlancamento.codindicador', $codindicador)
+            ->with(['Negocio.Pessoa'])
+            ->leftJoin('tblnegocio', 'tblnegocio.codnegocio', '=', 'tblindicadorlancamento.codnegocio')
+            ->orderByDesc('tblnegocio.lancamento')
+            ->orderByDesc('tblindicadorlancamento.criacao')
+            ->orderBy('tblindicadorlancamento.valor')
+            ->select('tblindicadorlancamento.*')
+            ->get();
+
+        return response()->json([
+            'data' => [
+                'indicador' => new IndicadorResource($indicador),
+                'lancamentos' => IndicadorLancamentoResource::collection($lancamentos),
+            ]
+        ]);
+    }
+
     public function atualizarMeta(int $codindicador, IndicadorMetaRequest $request)
     {
         Autorizador::autoriza(['Recursos Humanos']);

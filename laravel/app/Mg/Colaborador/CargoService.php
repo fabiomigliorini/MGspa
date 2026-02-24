@@ -13,7 +13,14 @@ class CargoService
     {
 
         $sql = '
-        select * from tblcargo ca 
+        select ca.*,
+            (select count(*)
+             from tblcolaboradorcargo cc
+             join tblcolaborador c on c.codcolaborador = cc.codcolaborador
+             where cc.codcargo = ca.codcargo
+             and cc.fim is null
+             and c.rescisao is null) as colaboradores_ativos
+        from tblcargo ca
         ';
 
         $params = null;
@@ -94,14 +101,15 @@ class CargoService
     {
 
         $sql = '
-        select f.codfilial, f.filial, p.codpessoa, p.fantasia, cc.codcolaboradorcargo, cc.inicio
+        select f.codfilial, f.filial, p.codpessoa, p.fantasia,
+               cc.codcolaboradorcargo, cc.inicio, cc.fim
         from tblcolaboradorcargo cc
         left join tblcolaborador c on (c.codcolaborador = cc.codcolaborador)
         left join tblpessoa p on (p.codpessoa = c.codpessoa)
         left join tblfilial f on (f.codfilial = cc.codfilial)
         where cc.codcargo = :codcargo
-        and cc.fim is null
         and c.rescisao is null
+        order by cc.fim nulls first, cc.inicio desc
         ';
 
         $params['codcargo'] = $codcargo;

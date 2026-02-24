@@ -501,23 +501,7 @@ const setorOptions = computed(() =>
   }))
 );
 
-const todosIndicadores = computed(() => {
-  const map = new Map();
-  // Indicadores do colaborador (V, C)
-  (colaborador.value?.indicadores || []).forEach((ind) => {
-    map.set(ind.codindicador, ind);
-  });
-  // Indicadores referenciados pelas rubricas (pode incluir S, U)
-  (colaborador.value?.colaborador_rubrica_s || []).forEach((r) => {
-    if (r.indicador && !map.has(r.indicador.codindicador)) {
-      map.set(r.indicador.codindicador, r.indicador);
-    }
-    if (r.indicador_condicao && !map.has(r.indicador_condicao.codindicador)) {
-      map.set(r.indicador_condicao.codindicador, r.indicador_condicao);
-    }
-  });
-  return Array.from(map.values());
-});
+const todosIndicadores = computed(() => colaborador.value?.indicadores || []);
 
 const indicadorOptions = computed(() =>
   todosIndicadores.value.map((ind) => {
@@ -1193,10 +1177,24 @@ watch(
                         class="q-mr-sm"
                       />
                     </div>
-                    <div
-                      class="col-auto"
-                      v-if="podeEditar && colaborador.status === 'A'"
-                    >
+                    <div class="col-auto">
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        icon="receipt_long"
+                        size="xs"
+                        color="grey-7"
+                        :to="{
+                          name: 'rhIndicadorExtrato',
+                          params: {
+                            codperiodo: route.params.codperiodo,
+                            codindicador: ind.codindicador,
+                          },
+                        }"
+                      >
+                        <q-tooltip>Ver Extrato</q-tooltip>
+                      </q-btn>
                       <q-btn
                         flat
                         dense
@@ -1205,6 +1203,7 @@ watch(
                         size="xs"
                         color="grey-7"
                         @click="editarMeta(ind)"
+                        v-if="podeEditar && colaborador.status === 'A'"
                       >
                         <q-tooltip>Editar Meta</q-tooltip>
                       </q-btn>
@@ -1259,10 +1258,9 @@ watch(
                     v-if="ind.meta"
                     :value="
                       Math.min(
-                        parseFloat(ind.valoracumulado) / parseFloat(ind.meta) ||
-                          0,
-                        1.5
-                      ) / 1.5
+                        parseFloat(ind.valoracumulado) / parseFloat(ind.meta) || 0,
+                        1
+                      )
                     "
                     size="6px"
                     stripe

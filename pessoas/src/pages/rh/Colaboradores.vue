@@ -113,49 +113,25 @@ const nomeColaborador = (pc) => {
   return pc.colaborador?.pessoa?.fantasia || "—";
 };
 
-const indicadorPessoal = (pc, pcs) => {
-  const indicadores = pc.indicadores || [];
-  const codsetor = pcs?.codsetor;
-
-  // 1. Match direto por codsetor (qualquer tipo: V, C, S, U)
-  if (codsetor) {
-    const porSetor = indicadores.find((i) => i.codsetor === codsetor);
-    if (porSetor) return porSetor;
-  }
-
-  // 2. Indicadores pessoais (V/C)
-  const pessoais = indicadores.filter((i) => i.tipo === "V" || i.tipo === "C");
-  if (pessoais.length === 0) return null;
-  if (!codsetor) return pessoais[0];
-
-  // 3. Match por unidade, excluindo indicadores que já pertencem a outro PCS
-  const codun = pcs?.setor?.unidade_negocio?.codunidadenegocio;
-  if (codun) {
-    const outrosSetores = (pc.periodo_colaborador_setor_s || [])
-      .filter((s) => s.codsetor !== codsetor)
-      .map((s) => s.codsetor);
-    const match = pessoais.find(
-      (i) => i.codunidadenegocio === codun && !outrosSetores.includes(i.codsetor)
-    );
-    if (match) return match;
-  }
-
-  return null;
+const tipoIndicadorLabel = (tipo) => {
+  const map = { U: "Unidade", S: "Setor", V: "Vendedor", C: "Caixa" };
+  return map[tipo] || tipo;
 };
 
-const vendasColaborador = (pc, pcs) => {
-  const ind = indicadorPessoal(pc, pcs);
-  return ind ? parseFloat(ind.valoracumulado) || 0 : null;
+const indicadoresLinha = (pcs) => {
+  const indicadores = pcs?.indicadores || [];
+  return indicadores.length > 0 ? indicadores : [null];
 };
 
-const metaColaborador = (pc, pcs) => {
-  const ind = indicadorPessoal(pc, pcs);
-  return ind ? parseFloat(ind.meta) || null : null;
-};
+const vendasInd = (ind) =>
+  ind ? parseFloat(ind.valoracumulado) || 0 : null;
 
-const atingimentoColaborador = (pc, pcs) => {
-  const vendas = vendasColaborador(pc, pcs);
-  const meta = metaColaborador(pc, pcs);
+const metaInd = (ind) =>
+  ind ? parseFloat(ind.meta) || null : null;
+
+const atingimentoInd = (ind) => {
+  const vendas = vendasInd(ind);
+  const meta = metaInd(ind);
   if (!vendas || !meta) return null;
   return (vendas / meta) * 100;
 };
@@ -273,14 +249,15 @@ const estornar = (pc) => {
 
       <q-markup-table flat separator="horizontal">
         <colgroup>
-          <col style="width: 20%" />
-          <col style="width: 7%" />
+          <col style="width: 18%" />
           <col style="width: 6%" />
-          <col style="width: 13%" />
-          <col style="width: 13%" />
-          <col style="width: 7%" />
+          <col style="width: 5%" />
+          <col style="width: 8%" />
           <col style="width: 12%" />
-          <col style="width: 9%" />
+          <col style="width: 12%" />
+          <col style="width: 7%" />
+          <col style="width: 11%" />
+          <col style="width: 8%" />
           <col style="width: 13%" v-if="podeEditar" />
         </colgroup>
         <thead>
@@ -288,6 +265,7 @@ const estornar = (pc) => {
             <th class="text-left">Nome</th>
             <th class="text-right">Rateio</th>
             <th class="text-right">Dias</th>
+            <th class="text-center">Tipo</th>
             <th class="text-right">Vendas</th>
             <th class="text-right">Meta</th>
             <th class="text-right">Ating.</th>
@@ -304,7 +282,7 @@ const estornar = (pc) => {
             <!-- SETOR HEADER -->
             <tr v-if="setor.setor">
               <td
-                :colspan="podeEditar ? 9 : 8"
+                :colspan="podeEditar ? 10 : 9"
                 class="text-caption text-grey-7 text-weight-medium"
                 style="border-bottom: none; padding-top: 12px"
               >
@@ -313,149 +291,204 @@ const estornar = (pc) => {
             </tr>
 
             <!-- COLABORADORES DO SETOR -->
-            <tr
+            <template
               v-for="item in setor.colaboradores"
               :key="
                 item.pc.codperiodocolaborador +
                 '-' +
                 (item.pcs?.codperiodocolaboradorsetor || 0)
               "
-              :class="corLinha(item.pc)"
             >
-              <td>
-                <router-link
-                  :to="{
-                    name: 'rhColaboradorDetalhe',
-                    params: {
-                      codperiodo: route.params.codperiodo,
-                      codperiodocolaborador:
-                        item.pc.codperiodocolaborador,
-                    },
-                  }"
-                  class="text-primary"
-                >
-                  {{ nomeColaborador(item.pc) }}
-                </router-link>
-              </td>
-              <td class="text-right">
-                {{
-                  item.pcs
-                    ? item.pcs.percentualrateio + "%"
-                    : "—"
-                }}
-              </td>
-              <td
-                class="text-right"
-                :class="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'text-red' : ''"
-                :style="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'cursor: help' : ''"
+              <tr
+                v-for="(ind, idx) in indicadoresLinha(item.pcs)"
+                :key="(ind?.codindicador || 'none') + '-' + idx"
+                :class="corLinha(item.pc)"
               >
-                {{ item.pcs ? item.pcs.diastrabalhados : "—" }}
-                <q-tooltip v-if="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo">
-                  Dias úteis do período: {{ diasUteisPeriodo }}
-                </q-tooltip>
-              </td>
-              <td class="text-right">
-                {{
-                  vendasColaborador(item.pc, item.pcs) != null
-                    ? formataMoeda(vendasColaborador(item.pc, item.pcs))
-                    : "—"
-                }}
-              </td>
-              <td class="text-right">
-                {{
-                  metaColaborador(item.pc, item.pcs) != null
-                    ? formataMoeda(metaColaborador(item.pc, item.pcs))
-                    : "—"
-                }}
-              </td>
-              <td class="text-right">
-                <span
-                  v-if="atingimentoColaborador(item.pc, item.pcs) != null"
-                  :class="
-                    'text-weight-bold text-' +
-                    corProgresso(atingimentoColaborador(item.pc, item.pcs))
-                  "
+                <!-- COLUNAS AGRUPADAS (só primeira linha) -->
+                <td
+                  v-if="idx === 0"
+                  :rowspan="indicadoresLinha(item.pcs).length"
+                >
+                  <router-link
+                    :to="{
+                      name: 'rhColaboradorDetalhe',
+                      params: {
+                        codperiodo: route.params.codperiodo,
+                        codperiodocolaborador:
+                          item.pc.codperiodocolaborador,
+                      },
+                    }"
+                    class="text-primary"
+                  >
+                    {{ nomeColaborador(item.pc) }}
+                  </router-link>
+                </td>
+                <td
+                  v-if="idx === 0"
+                  :rowspan="indicadoresLinha(item.pcs).length"
+                  class="text-right"
                 >
                   {{
-                    formataPercentual(
-                      atingimentoColaborador(item.pc, item.pcs)
-                    )
+                    item.pcs
+                      ? item.pcs.percentualrateio + "%"
+                      : "—"
                   }}
-                </span>
-                <span v-else>—</span>
-              </td>
-              <td class="text-right">
-                {{ formataMoeda(item.pc.valortotal) }}
-              </td>
-              <td class="text-center">
-                <q-badge
-                  :color="
-                    item.pc.status === 'A' ? 'green' : 'blue'
-                  "
-                  :label="
-                    item.pc.status === 'A'
-                      ? 'Aberto'
-                      : 'Encerrado'
-                  "
-                />
-              </td>
-              <td class="text-right text-no-wrap" v-if="podeEditar">
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="visibility"
-                  size="sm"
-                  color="grey-7"
-                  :to="{
-                    name: 'rhColaboradorDetalhe',
-                    params: {
-                      codperiodo: route.params.codperiodo,
-                      codperiodocolaborador:
-                        item.pc.codperiodocolaborador,
-                    },
-                  }"
+                </td>
+                <td
+                  v-if="idx === 0"
+                  :rowspan="indicadoresLinha(item.pcs).length"
+                  class="text-right"
+                  :class="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'text-red' : ''"
+                  :style="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'cursor: help' : ''"
                 >
-                  <q-tooltip>Ver Detalhe</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="refresh"
-                  size="sm"
-                  color="grey-7"
-                  @click="recalcular(item.pc)"
-                  v-if="item.pc.status === 'A'"
+                  {{ item.pcs ? item.pcs.diastrabalhados : "—" }}
+                  <q-tooltip v-if="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo">
+                    Dias úteis do período: {{ diasUteisPeriodo }}
+                  </q-tooltip>
+                </td>
+
+                <!-- COLUNAS POR INDICADOR -->
+                <td class="text-center">
+                  <router-link
+                    v-if="ind"
+                    :to="{
+                      name: 'rhIndicadorExtrato',
+                      params: {
+                        codperiodo: route.params.codperiodo,
+                        codindicador: ind.codindicador,
+                      },
+                    }"
+                    style="text-decoration: none"
+                  >
+                    <q-badge
+                      :color="
+                        ind.tipo === 'V'
+                          ? 'blue'
+                          : ind.tipo === 'C'
+                          ? 'purple'
+                          : ind.tipo === 'U'
+                          ? 'orange'
+                          : 'teal'
+                      "
+                      :label="tipoIndicadorLabel(ind.tipo)"
+                      style="cursor: pointer"
+                    />
+                  </router-link>
+                  <span v-else>—</span>
+                </td>
+                <td class="text-right">
+                  {{
+                    vendasInd(ind) != null
+                      ? formataMoeda(vendasInd(ind))
+                      : "—"
+                  }}
+                </td>
+                <td class="text-right">
+                  {{
+                    metaInd(ind) != null
+                      ? formataMoeda(metaInd(ind))
+                      : "—"
+                  }}
+                </td>
+                <td class="text-right">
+                  <span
+                    v-if="atingimentoInd(ind) != null"
+                    :class="
+                      'text-weight-bold text-' +
+                      corProgresso(atingimentoInd(ind))
+                    "
+                  >
+                    {{ formataPercentual(atingimentoInd(ind)) }}
+                  </span>
+                  <span v-else>—</span>
+                </td>
+
+                <!-- COLUNAS AGRUPADAS (só primeira linha) -->
+                <td
+                  v-if="idx === 0"
+                  :rowspan="indicadoresLinha(item.pcs).length"
+                  class="text-right"
                 >
-                  <q-tooltip>Recalcular</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="check_circle"
-                  size="sm"
-                  color="green-7"
-                  @click="encerrar(item.pc)"
-                  v-if="item.pc.status === 'A'"
+                  {{ formataMoeda(item.pc.valortotal) }}
+                </td>
+                <td
+                  v-if="idx === 0"
+                  :rowspan="indicadoresLinha(item.pcs).length"
+                  class="text-center"
                 >
-                  <q-tooltip>Encerrar</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  icon="undo"
-                  size="sm"
-                  color="grey-7"
-                  @click="estornar(item.pc)"
-                  v-if="item.pc.status === 'E'"
+                  <q-badge
+                    :color="
+                      item.pc.status === 'A' ? 'green' : 'blue'
+                    "
+                    :label="
+                      item.pc.status === 'A'
+                        ? 'Aberto'
+                        : 'Encerrado'
+                    "
+                  />
+                </td>
+                <td
+                  v-if="idx === 0 && podeEditar"
+                  :rowspan="indicadoresLinha(item.pcs).length"
+                  class="text-right text-no-wrap"
                 >
-                  <q-tooltip>Estornar</q-tooltip>
-                </q-btn>
-              </td>
-            </tr>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="visibility"
+                    size="sm"
+                    color="grey-7"
+                    :to="{
+                      name: 'rhColaboradorDetalhe',
+                      params: {
+                        codperiodo: route.params.codperiodo,
+                        codperiodocolaborador:
+                          item.pc.codperiodocolaborador,
+                      },
+                    }"
+                  >
+                    <q-tooltip>Ver Detalhe</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="refresh"
+                    size="sm"
+                    color="grey-7"
+                    @click="recalcular(item.pc)"
+                    v-if="item.pc.status === 'A'"
+                  >
+                    <q-tooltip>Recalcular</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="check_circle"
+                    size="sm"
+                    color="green-7"
+                    @click="encerrar(item.pc)"
+                    v-if="item.pc.status === 'A'"
+                  >
+                    <q-tooltip>Encerrar</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="undo"
+                    size="sm"
+                    color="grey-7"
+                    @click="estornar(item.pc)"
+                    v-if="item.pc.status === 'E'"
+                  >
+                    <q-tooltip>Estornar</q-tooltip>
+                  </q-btn>
+                </td>
+              </tr>
+            </template>
           </template>
         </tbody>
       </q-markup-table>

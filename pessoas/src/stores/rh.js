@@ -150,5 +150,12 @@ export const rhStore = defineStore("rh", {
       );
       return ret;
     },
+
+    async getExtrato(codindicador) {
+      const ret = await api.get(
+        "v1/rh/indicador/" + codindicador + "/lancamento"
+      );
+      return ret.data.data;
+    },
   },
 });
