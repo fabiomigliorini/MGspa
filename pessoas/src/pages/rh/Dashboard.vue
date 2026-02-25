@@ -17,8 +17,6 @@ const podeEditar = computed(
 const dash = computed(() => sRh.dashboard || {});
 const periodo = computed(() => dash.value.periodo || {});
 const unidades = computed(() => dash.value.unidades || []);
-const alertas = computed(() => dash.value.alertas || []);
-
 const grupos = computed(() => {
   const mapa = {};
   for (const u of unidades.value) {
@@ -81,18 +79,6 @@ const corProgresso = (percentual) => {
   if (percentual >= 100) return "green";
   if (percentual >= 70) return "orange";
   return "red";
-};
-
-const corAlerta = (tipo) => {
-  if (tipo === "sem_setor") return "bg-red-1";
-  if (tipo === "sem_meta") return "bg-orange-1";
-  return "bg-yellow-1";
-};
-
-const iconeAlerta = (tipo) => {
-  if (tipo === "sem_setor") return "error";
-  if (tipo === "sem_meta") return "warning";
-  return "info";
 };
 
 const extrairErro = (error, fallback) => {
@@ -321,40 +307,4 @@ const salvarMeta = async () => {
     </q-markup-table>
   </q-card>
 
-  <!-- ALERTAS -->
-  <template v-if="alertas.length > 0">
-    <q-card
-      v-for="(alerta, i) in alertas"
-      :key="i"
-      bordered
-      flat
-      class="q-mb-sm"
-      :class="corAlerta(alerta.tipo)"
-    >
-      <q-card-section class="row items-center q-py-sm">
-        <q-icon
-          :name="iconeAlerta(alerta.tipo)"
-          :color="alerta.tipo === 'sem_setor' ? 'red' : 'orange'"
-          size="sm"
-          class="q-mr-sm"
-        />
-        <span class="text-body2">
-          <router-link
-            v-if="alerta.codperiodocolaborador"
-            :to="{
-              name: 'rhColaboradorDetalhe',
-              params: {
-                codperiodo: route.params.codperiodo,
-                codperiodocolaborador: alerta.codperiodocolaborador,
-              },
-            }"
-            class="text-primary"
-          >
-            {{ alerta.mensagem }}
-          </router-link>
-          <template v-else>{{ alerta.mensagem }}</template>
-        </span>
-      </q-card-section>
-    </q-card>
-  </template>
 </template>

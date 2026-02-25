@@ -7,6 +7,7 @@ import { guardaToken } from "src/stores";
 import { api } from "src/boot/axios";
 import { formataDataSemHora, formataFromNow } from "src/utils/formatador";
 import SelectSetor from "src/components/select/SelectSetor.vue";
+import DialogEditarMeta from "./DialogEditarMeta.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -373,37 +374,11 @@ const submitRubrica = () => {
 // --- DIALOG EDITAR META ---
 
 const dialogMeta = ref(false);
-const modelMeta = ref({ codindicador: null, meta: null });
+const indicadorMeta = ref(null);
 
 const editarMeta = (ind) => {
-  modelMeta.value = {
-    codindicador: ind.codindicador,
-    meta: ind.meta,
-  };
+  indicadorMeta.value = ind;
   dialogMeta.value = true;
-};
-
-const salvarMeta = async () => {
-  dialogMeta.value = false;
-  try {
-    await sRh.atualizarMeta(modelMeta.value.codindicador, {
-      meta: modelMeta.value.meta,
-    });
-    $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Meta atualizada",
-    });
-    await recarregar();
-  } catch (error) {
-    $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao atualizar meta"),
-    });
-  }
 };
 
 // --- AÇÕES HEADER ---
@@ -786,41 +761,11 @@ watch(
   </q-dialog>
 
   <!-- DIALOG EDITAR META -->
-  <q-dialog v-model="dialogMeta">
-    <q-card bordered flat style="width: 400px; max-width: 90vw">
-      <q-form @submit="salvarMeta()">
-        <q-card-section class="text-grey-9 text-overline">
-          EDITAR META
-        </q-card-section>
-
-        <q-separator inset />
-
-        <q-card-section>
-          <q-input
-            outlined
-            v-model.number="modelMeta.meta"
-            label="Meta (R$)"
-            type="number"
-            step="0.01"
-            autofocus
-          />
-        </q-card-section>
-
-        <q-separator inset />
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
-          <q-btn flat label="Salvar" type="submit" />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
+  <DialogEditarMeta
+    v-model="dialogMeta"
+    :indicador="indicadorMeta"
+    @salvo="recarregar()"
+  />
 
   <!-- CONTEÚDO PRINCIPAL -->
   <div style="max-width: 1280px; margin: auto">

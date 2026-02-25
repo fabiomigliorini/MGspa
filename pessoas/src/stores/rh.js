@@ -6,6 +6,7 @@ export const rhStore = defineStore("rh", {
     periodos: [],
     dashboard: {},
     colaboradores: [],
+    indicadores: [],
   }),
 
   actions: {
@@ -138,6 +139,20 @@ export const rhStore = defineStore("rh", {
 
     // --- INDICADORES ---
 
+    async getIndicadores(codperiodo) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/indicador");
+      this.indicadores = ret.data.data;
+      return ret;
+    },
+
+    async criarIndicador(codperiodo, data) {
+      const ret = await api.post(
+        "v1/rh/periodo/" + codperiodo + "/indicador",
+        data
+      );
+      return ret;
+    },
+
     async atualizarMeta(codindicador, data) {
       const ret = await api.put("v1/rh/indicador/" + codindicador + "/meta", data);
       return ret;
@@ -151,11 +166,32 @@ export const rhStore = defineStore("rh", {
       return ret;
     },
 
-    async getExtrato(codindicador) {
-      const ret = await api.get(
-        "v1/rh/indicador/" + codindicador + "/lancamento"
+    async atualizarLancamento(codindicadorlancamento, data) {
+      const ret = await api.put(
+        "v1/rh/indicador-lancamento/" + codindicadorlancamento,
+        data
       );
-      return ret.data.data;
+      return ret;
+    },
+
+    async excluirLancamento(codindicadorlancamento) {
+      const ret = await api.delete(
+        "v1/rh/indicador-lancamento/" + codindicadorlancamento
+      );
+      return ret;
+    },
+
+    async excluirIndicador(codindicador) {
+      const ret = await api.delete("v1/rh/indicador/" + codindicador);
+      return ret;
+    },
+
+    async getExtrato(codindicador, page = 1) {
+      const ret = await api.get(
+        "v1/rh/indicador/" + codindicador + "/lancamento",
+        { params: { page } }
+      );
+      return ret.data;
     },
   },
 });

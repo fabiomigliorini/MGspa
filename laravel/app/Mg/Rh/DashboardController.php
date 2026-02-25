@@ -153,20 +153,6 @@ class DashboardController extends Controller
     {
         $alertas = [];
 
-        $semSetor = PeriodoColaborador::where('codperiodo', $codperiodo)
-            ->whereDoesntHave('PeriodoColaboradorSetorS')
-            ->whereHas('Colaborador', fn($q) => $q->whereNull('rescisao'))
-            ->with('Colaborador.Pessoa')
-            ->get();
-
-        foreach ($semSetor as $pc) {
-            $alertas[] = [
-                'tipo' => 'sem_setor',
-                'mensagem' => ($pc->Colaborador->Pessoa->fantasia ?? 'Colaborador') . ' sem vínculo com setor',
-                'codperiodocolaborador' => $pc->codperiodocolaborador,
-            ];
-        }
-
         $multiplos = PeriodoColaborador::where('codperiodo', $codperiodo)
             ->has('PeriodoColaboradorSetorS', '>', 1)
             ->whereHas('Colaborador', fn($q) => $q->whereNull('rescisao'))

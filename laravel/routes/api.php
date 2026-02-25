@@ -882,9 +882,14 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::patch('rubrica/{codcolaboradorrubrica}/concedido', '\Mg\Rh\ColaboradorRubricaController@toggleConcedido');
 
             // Indicadores
+            Route::get('periodo/{codperiodo}/indicador', '\Mg\Rh\IndicadorController@index');
+            Route::post('periodo/{codperiodo}/indicador', '\Mg\Rh\IndicadorController@store');
             Route::get('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentos');
             Route::put('indicador/{codindicador}/meta', '\Mg\Rh\IndicadorController@atualizarMeta');
             Route::post('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentoManual');
+            Route::put('indicador-lancamento/{codindicadorlancamento}', '\Mg\Rh\IndicadorController@atualizarLancamento');
+            Route::delete('indicador-lancamento/{codindicadorlancamento}', '\Mg\Rh\IndicadorController@excluirLancamento');
+            Route::delete('indicador/{codindicador}', '\Mg\Rh\IndicadorController@destroy');
 
             // Dashboard
             Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');

@@ -8,6 +8,7 @@ import { feriadoStore } from "src/stores/feriado";
 import { formataDataSemHora } from "src/utils/formatador";
 import Dashboard from "./Dashboard.vue";
 import Colaboradores from "./Colaboradores.vue";
+import Indicadores from "./Indicadores.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -18,6 +19,8 @@ const sFeriado = feriadoStore();
 
 const loading = ref(false);
 const tab = ref(route.query.tab || "resumo");
+const indicadoresCarregados = ref(false);
+const loadingIndicadores = ref(false);
 
 const podeEditar = computed(() =>
   user.verificaPermissaoUsuario("Recursos Humanos")
@@ -336,6 +339,36 @@ watch(
     if (newTab) tab.value = newTab;
   }
 );
+
+watch(tab, async (newTab) => {
+  if (route.query.tab !== newTab) {
+    router.replace({ query: { ...route.query, tab: newTab } });
+  }
+  const codperiodo = route.params.codperiodo;
+  if (!codperiodo) return;
+  try {
+    if (newTab === "resumo") {
+      await sRh.getDashboard(codperiodo);
+    } else if (newTab === "colaboradores") {
+      await sRh.getColaboradores(codperiodo);
+    } else if (newTab === "indicadores") {
+      loadingIndicadores.value = true;
+      await sRh.getIndicadores(codperiodo);
+      indicadoresCarregados.value = true;
+    }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: extrairErro(error, "Erro ao carregar dados"),
+    });
+  } finally {
+    if (newTab === "indicadores") {
+      loadingIndicadores.value = false;
+    }
+  }
+}, { immediate: true });
 </script>
 
 <template>
@@ -626,6 +659,7 @@ watch(
       >
         <q-tab name="resumo" label="Resumo" />
         <q-tab name="colaboradores" label="Colaboradores" />
+        <q-tab name="indicadores" label="Indicadores" />
       </q-tabs>
       <q-separator />
 
@@ -636,6 +670,11 @@ watch(
 
         <q-tab-panel name="colaboradores" class="q-pa-none q-mt-md">
           <Colaboradores />
+        </q-tab-panel>
+
+        <q-tab-panel name="indicadores" class="q-pa-none q-mt-md">
+          <q-inner-loading :showing="loadingIndicadores" />
+          <Indicadores v-if="indicadoresCarregados" />
         </q-tab-panel>
       </q-tab-panels>
       </div>

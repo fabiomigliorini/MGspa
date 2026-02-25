@@ -15,6 +15,7 @@ const podeEditar = computed(
 );
 
 const diasUteisPeriodo = computed(() => sRh.dashboard?.periodo?.diasuteis || 0);
+const alertas = computed(() => sRh.dashboard?.alertas || []);
 
 // --- AGRUPAMENTO POR UNIDADE → SETOR ---
 
@@ -235,6 +236,43 @@ const estornar = (pc) => {
 </script>
 
 <template>
+  <!-- ALERTAS -->
+  <template v-if="alertas.length > 0">
+    <q-card
+      v-for="(alerta, i) in alertas"
+      :key="'alerta-' + i"
+      bordered
+      flat
+      class="q-mb-sm"
+      :class="alerta.tipo === 'sem_meta' ? 'bg-orange-1' : 'bg-yellow-1'"
+    >
+      <q-card-section class="row items-center q-py-sm">
+        <q-icon
+          :name="alerta.tipo === 'sem_meta' ? 'warning' : 'info'"
+          :color="'orange'"
+          size="sm"
+          class="q-mr-sm"
+        />
+        <span class="text-body2">
+          <router-link
+            v-if="alerta.codperiodocolaborador"
+            :to="{
+              name: 'rhColaboradorDetalhe',
+              params: {
+                codperiodo: route.params.codperiodo,
+                codperiodocolaborador: alerta.codperiodocolaborador,
+              },
+            }"
+            class="text-primary"
+          >
+            {{ alerta.mensagem }}
+          </router-link>
+          <template v-else>{{ alerta.mensagem }}</template>
+        </span>
+      </q-card-section>
+    </q-card>
+  </template>
+
   <!-- CARDS POR UNIDADE -->
   <template v-for="unidade in agrupado" :key="unidade.codunidadenegocio">
     <q-card
