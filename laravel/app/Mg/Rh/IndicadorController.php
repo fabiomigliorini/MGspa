@@ -210,8 +210,7 @@ class IndicadorController extends Controller
         }
 
         ReprocessarPeriodoJob::dispatch($codperiodo, $request->boolean('limpar', false))
-            ->onConnection('database')
-            ->onQueue('rh');
+            ->onQueue('high');
 
         return response()->json(['mensagem' => 'Reprocessamento iniciado']);
     }
