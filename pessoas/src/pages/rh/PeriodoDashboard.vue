@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
@@ -297,6 +297,116 @@ const excluirPeriodo = () => {
   });
 };
 
+// --- REPROCESSAMENTO ---
+
+const reprocessando = ref(false);
+const progresso = ref(null);
+let pollingTimer = null;
+
+const verificarProgresso = async () => {
+  try {
+    const data = await sRh.progressoReprocessamento(route.params.codperiodo);
+    if (!data.status) {
+      pararPolling();
+      return;
+    }
+    progresso.value = data;
+    if (data.status === 'concluido') {
+      pararPolling();
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: data.mensagem || "Reprocessamento concluído",
+      });
+      await carregar(route.params.codperiodo);
+    } else if (data.status === 'erro') {
+      pararPolling();
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: data.mensagem || "Erro no reprocessamento",
+      });
+    } else if (data.status === 'cancelado') {
+      pararPolling();
+      $q.notify({
+        color: "orange",
+        textColor: "white",
+        icon: "cancel",
+        message: "Reprocessamento cancelado",
+      });
+      await carregar(route.params.codperiodo);
+    }
+  } catch {
+    pararPolling();
+  }
+};
+
+const iniciarPolling = () => {
+  reprocessando.value = true;
+  progresso.value = { status: 'processando', progresso: 0, mensagem: 'Iniciando...' };
+  pollingTimer = setInterval(verificarProgresso, 3000);
+};
+
+const pararPolling = () => {
+  reprocessando.value = false;
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+};
+
+const reprocessarPeriodo = () => {
+  $q.dialog({
+    title: "Reprocessar Indicadores",
+    message: "Reprocessar todas as vendas do período nos indicadores?",
+    options: {
+      type: "checkbox",
+      model: [],
+      items: [
+        { label: "Limpar lançamentos automáticos antes de reprocessar", value: "limpar" },
+      ],
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async (opcoes) => {
+    try {
+      await sRh.reprocessarPeriodo(
+        route.params.codperiodo,
+        opcoes.includes("limpar")
+      );
+      iniciarPolling();
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: extrairErro(error, "Erro ao iniciar reprocessamento"),
+      });
+    }
+  });
+};
+
+const cancelarReprocessamento = () => {
+  $q.dialog({
+    title: "Cancelar Reprocessamento",
+    message: "Tem certeza que deseja cancelar o reprocessamento em andamento?",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await sRh.cancelarReprocessamento(route.params.codperiodo);
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: extrairErro(error, "Erro ao cancelar"),
+      });
+    }
+  });
+};
+
 // --- LIFECYCLE ---
 
 const carregar = async (codperiodo) => {
@@ -322,14 +432,40 @@ const carregar = async (codperiodo) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   carregar(route.params.codperiodo);
+  // Verificar se já há reprocessamento em andamento
+  try {
+    const data = await sRh.progressoReprocessamento(route.params.codperiodo);
+    if (data.status === 'processando') {
+      iniciarPolling();
+      progresso.value = data;
+    }
+  } catch {
+    // ignora
+  }
+});
+
+onUnmounted(() => {
+  pararPolling();
 });
 
 watch(
   () => route.params.codperiodo,
-  (novoId) => {
-    if (novoId && route.name === "rhDashboard") carregar(novoId);
+  async (novoId) => {
+    if (!novoId || route.name !== "rhDashboard") return;
+    pararPolling();
+    progresso.value = null;
+    carregar(novoId);
+    try {
+      const data = await sRh.progressoReprocessamento(novoId);
+      if (data.status === 'processando') {
+        iniciarPolling();
+        progresso.value = data;
+      }
+    } catch {
+      // ignora
+    }
   }
 );
 
@@ -481,6 +617,7 @@ watch(tab, async (newTab) => {
               icon="lock"
               size="sm"
               color="orange-7"
+              :disable="reprocessando"
               @click="fecharPeriodo()"
             >
               <q-tooltip>Fechar Período</q-tooltip>
@@ -509,12 +646,26 @@ watch(tab, async (newTab) => {
               <q-tooltip>Duplicar Período</q-tooltip>
             </q-btn>
             <q-btn
+              v-if="periodo.status === 'A'"
+              flat
+              dense
+              round
+              icon="sync"
+              size="sm"
+              color="grey-7"
+              :disable="reprocessando"
+              @click="reprocessarPeriodo()"
+            >
+              <q-tooltip>Reprocessar Indicadores</q-tooltip>
+            </q-btn>
+            <q-btn
               flat
               dense
               round
               icon="delete"
               size="sm"
               color="red-7"
+              :disable="reprocessando"
               @click="excluirPeriodo()"
             >
               <q-tooltip>Excluir Período</q-tooltip>
@@ -648,6 +799,37 @@ watch(tab, async (newTab) => {
           </q-card>
         </div>
       </div>
+
+      <!-- BARRA DE REPROCESSAMENTO -->
+      <q-card bordered flat class="q-mb-md" v-if="reprocessando && progresso">
+        <q-card-section class="q-py-sm">
+          <div class="row items-center q-gutter-sm">
+            <q-spinner color="primary" size="20px" />
+            <span class="text-body2 text-grey-8">{{ progresso.mensagem }}</span>
+            <q-space />
+            <q-btn
+              flat
+              dense
+              round
+              icon="cancel"
+              size="sm"
+              color="red-7"
+              @click="cancelarReprocessamento()"
+            >
+              <q-tooltip>Cancelar</q-tooltip>
+            </q-btn>
+          </div>
+          <q-linear-progress
+            :value="(progresso.progresso || 0) / 100"
+            size="8px"
+            stripe
+            animated
+            rounded
+            color="primary"
+            class="q-mt-sm"
+          />
+        </q-card-section>
+      </q-card>
 
       <!-- TABS -->
       <q-tabs

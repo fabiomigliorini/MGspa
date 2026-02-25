@@ -891,6 +891,11 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::delete('indicador-lancamento/{codindicadorlancamento}', '\Mg\Rh\IndicadorController@excluirLancamento');
             Route::delete('indicador/{codindicador}', '\Mg\Rh\IndicadorController@destroy');
 
+            // Reprocessamento
+            Route::post('periodo/{codperiodo}/reprocessar', '\Mg\Rh\IndicadorController@reprocessar');
+            Route::get('periodo/{codperiodo}/reprocessar', '\Mg\Rh\IndicadorController@progressoReprocessamento');
+            Route::delete('periodo/{codperiodo}/reprocessar', '\Mg\Rh\IndicadorController@cancelarReprocessamento');
+
             // Dashboard
             Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');
         });

@@ -3,13 +3,10 @@
 namespace Mg\Rh;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioService;
 
 class RhReprocessarPeriodoCommand extends Command
 {
-    protected $signature = 'rh:reprocessar-periodo {codperiodo} {--limpar : Limpa indicadores e lançamentos antes de reprocessar}';
+    protected $signature = 'rh:reprocessar-periodo {codperiodo} {--limpar : Limpa lançamentos automáticos antes de reprocessar}';
 
     protected $description = 'Reprocessa todas as vendas de um período nos indicadores RH';
 
@@ -28,58 +25,43 @@ class RhReprocessarPeriodoCommand extends Command
 
         $this->info("Período {$codperiodo}: {$periodo->periodoinicial} a {$periodo->periodofinal}");
 
-        // Limpar indicadores se solicitado
-        if ($limpar) {
-            $this->warn('Limpando lançamentos e resetando indicadores...');
+        $bar = null;
 
-            $lancamentos = DB::table('tblindicadorlancamento')
-                ->whereIn('codindicador', function ($q) use ($codperiodo) {
-                    $q->select('codindicador')->from('tblindicador')->where('codperiodo', $codperiodo);
-                })->delete();
-
-            $this->info("  {$lancamentos} lançamentos removidos");
-
-            $indicadores = Indicador::where('codperiodo', $codperiodo)->update(['valoracumulado' => 0]);
-
-            $this->info("  {$indicadores} indicadores resetados");
-        }
-
-        // Buscar vendas do período (fechadas e canceladas)
-        $negocios = Negocio::whereIn('codnegociostatus', [NegocioService::STATUS_FECHADO, NegocioService::STATUS_CANCELADO])
-            ->where('lancamento', '>=', $periodo->periodoinicial)
-            ->where('lancamento', '<=', $periodo->periodofinal)
-            ->pluck('codnegocio');
-
-        $total = $negocios->count();
-        $this->info("Processando {$total} negócios...");
-
-        $ok = 0;
-        $erros = 0;
-        $bar = $this->output->createProgressBar($total);
-        $bar->start();
-
-        foreach ($negocios as $codnegocio) {
-            try {
-                ProcessarVendaService::processar($codnegocio);
-                $ok++;
-            } catch (\Exception $e) {
-                $erros++;
-                if ($erros <= 10) {
-                    $bar->clear();
-                    $this->error("  Erro negócio {$codnegocio}: {$e->getMessage()}");
-                    $bar->display();
+        $resultado = ReprocessarPeriodoService::reprocessar(
+            $codperiodo,
+            $limpar,
+            function (array $dados) use (&$bar) {
+                if ($dados['etapa'] === 'limpando') {
+                    $this->warn($dados['mensagem']);
+                } elseif ($dados['etapa'] === 'processando') {
+                    if (!$bar && $dados['total'] > 0) {
+                        $this->info("Processando {$dados['total']} negócios...");
+                        $bar = $this->output->createProgressBar($dados['total']);
+                        $bar->start();
+                    }
+                    if ($bar) {
+                        $bar->setProgress($dados['atual']);
+                    }
+                } elseif ($dados['etapa'] === 'rubricas') {
+                    if ($bar) {
+                        $bar->finish();
+                        $this->newLine(2);
+                    }
+                    $this->info($dados['mensagem']);
                 }
+                return true;
             }
-            $bar->advance();
+        );
+
+        if ($bar && !$resultado['cancelado']) {
+            // Caso rubricas não tenha sido chamado (cenário sem vendas)
         }
 
-        $bar->finish();
-        $this->newLine(2);
-
-        // Resumo indicadores
-        $this->info("Concluído! OK: {$ok} | Erros: {$erros}");
+        $this->newLine();
+        $this->info("Concluído! OK: {$resultado['ok']} | Erros: {$resultado['erros']}");
         $this->newLine();
 
+        // Resumo indicadores por unidade
         $indicadores = Indicador::where('codperiodo', $codperiodo)
             ->where('tipo', 'U')
             ->get();

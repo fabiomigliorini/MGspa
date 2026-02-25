@@ -186,6 +186,23 @@ export const rhStore = defineStore("rh", {
       return ret;
     },
 
+    // --- REPROCESSAMENTO ---
+
+    async reprocessarPeriodo(codperiodo, limpar = false) {
+      const ret = await api.post("v1/rh/periodo/" + codperiodo + "/reprocessar", { limpar });
+      return ret;
+    },
+
+    async progressoReprocessamento(codperiodo) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/reprocessar");
+      return ret.data;
+    },
+
+    async cancelarReprocessamento(codperiodo) {
+      const ret = await api.delete("v1/rh/periodo/" + codperiodo + "/reprocessar");
+      return ret;
+    },
+
     async getExtrato(codindicador, page = 1) {
       const ret = await api.get(
         "v1/rh/indicador/" + codindicador + "/lancamento",

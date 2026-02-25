@@ -2,7 +2,9 @@
 
 namespace Mg\Rh;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
@@ -189,6 +191,58 @@ class IndicadorController extends Controller
             DB::rollBack();
             return response()->json(['erro' => $e->getMessage()], 422);
         }
+    }
+
+    public function reprocessar(int $codperiodo, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $periodo = Periodo::findOrFail($codperiodo);
+
+        if ($periodo->status !== PeriodoService::STATUS_ABERTO) {
+            return response()->json(['erro' => 'Período não está aberto'], 422);
+        }
+
+        $cacheKey = "rh:reprocessar:{$codperiodo}";
+        $cache = Cache::get($cacheKey);
+        if ($cache && $cache['status'] === 'processando') {
+            return response()->json(['erro' => 'Reprocessamento já em andamento'], 422);
+        }
+
+        ReprocessarPeriodoJob::dispatch($codperiodo, $request->boolean('limpar', false))
+            ->onConnection('database')
+            ->onQueue('rh');
+
+        return response()->json(['mensagem' => 'Reprocessamento iniciado']);
+    }
+
+    public function progressoReprocessamento(int $codperiodo)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $cache = Cache::get("rh:reprocessar:{$codperiodo}");
+
+        if (!$cache) {
+            return response()->json(['status' => null]);
+        }
+
+        return response()->json($cache);
+    }
+
+    public function cancelarReprocessamento(int $codperiodo)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $cacheKey = "rh:reprocessar:{$codperiodo}";
+        $cache = Cache::get($cacheKey);
+
+        if (!$cache || $cache['status'] !== 'processando') {
+            return response()->json(['erro' => 'Nenhum reprocessamento em andamento'], 422);
+        }
+
+        Cache::put($cacheKey, array_merge($cache, ['status' => 'cancelado']), 3600);
+
+        return response()->json(['mensagem' => 'Cancelamento solicitado']);
     }
 
     public function destroy(int $codindicador)
