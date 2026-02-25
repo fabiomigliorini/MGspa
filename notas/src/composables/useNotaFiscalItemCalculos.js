@@ -1,6 +1,9 @@
 import { watch } from 'vue'
 import { round } from 'src/utils/formatters'
 
+// CSTs de ICMS onde não há ICMS próprio (base, percentual e valor devem ser zero)
+const ICMS_CST_SEM_ICMS_PROPRIO = [30, 40, 41, 50, 60]
+
 /**
  * Composable para cálculos de impostos de itens da nota fiscal
  * Baseado no sistema legado
@@ -188,6 +191,10 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     let novaBase = valorbase
 
     if (imposto === 'icms') {
+      // Se CST não tem ICMS próprio, não recalcula base
+      if (ICMS_CST_SEM_ICMS_PROPRIO.includes(Number(form.value.icmscst))) {
+        return
+      }
       // Para ICMS, sempre recalcula baseado no basepercentual
       const campoBasePercentual = `${imposto}basepercentual`
       const valorbasepercentual = form.value[campoBasePercentual] || 0
@@ -323,6 +330,16 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     watch(() => form.value.valorfrete, atualizaTotalFinal)
     watch(() => form.value.valorseguro, atualizaTotalFinal)
     watch(() => form.value.valoroutras, atualizaTotalFinal)
+
+    // Watcher para CST do ICMS - zera campos quando CST não tem ICMS próprio
+    watch(() => form.value.icmscst, (novoCst) => {
+      if (ICMS_CST_SEM_ICMS_PROPRIO.includes(Number(novoCst))) {
+        form.value.icmsbase = null
+        form.value.icmsbasepercentual = null
+        form.value.icmspercentual = null
+        form.value.icmsvalor = null
+      }
+    })
 
     // Watchers para ICMS
     watch(
@@ -478,6 +495,18 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     }
   }
 
+  /**
+   * Sanitiza campos de impostos condicionais ao CST antes de enviar ao backend
+   */
+  const sanitizaImpostosParaSubmit = () => {
+    if (ICMS_CST_SEM_ICMS_PROPRIO.includes(Number(form.value.icmscst))) {
+      form.value.icmsbase = null
+      form.value.icmsbasepercentual = null
+      form.value.icmspercentual = null
+      form.value.icmsvalor = null
+    }
+  }
+
   return {
     atualizaTotal,
     atualizaUnitario,
@@ -487,5 +516,6 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     atualizaImpostoKg,
     setupWatchers,
     inicializaValorTotalFinal,
+    sanitizaImpostosParaSubmit,
   }
 }
