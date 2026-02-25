@@ -865,7 +865,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::delete('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@destroy');
 
             // Colaboradores do período
+            Route::get('periodo/{codperiodo}/colaborador/disponiveis', '\Mg\Rh\PeriodoColaboradorController@disponiveis');
             Route::get('periodo/{codperiodo}/colaborador', '\Mg\Rh\PeriodoColaboradorController@index');
+            Route::post('periodo/{codperiodo}/colaborador', '\Mg\Rh\PeriodoColaboradorController@store');
+            Route::delete('periodo/{codperiodo}/colaborador/{codperiodocolaborador}', '\Mg\Rh\PeriodoColaboradorController@destroy');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/encerrar', '\Mg\Rh\PeriodoColaboradorController@encerrar');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/estornar', '\Mg\Rh\PeriodoColaboradorController@estornar');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');

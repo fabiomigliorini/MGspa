@@ -326,23 +326,23 @@ const excluirIndicador = (ind) => {
     @salvo="recarregarIndicadores()"
   />
 
+  <!-- BOTÃO ADICIONAR -->
+  <div class="row justify-end q-mb-sm">
+    <q-btn
+      flat
+      dense
+      icon="add"
+      label="Novo Indicador"
+      color="primary"
+      @click="abrirDialogCriar()"
+    />
+  </div>
+
   <!-- CONTEÚDO -->
   <template v-for="unidade in agrupado" :key="unidade.codunidadenegocio">
     <q-card bordered flat class="q-mb-md">
-      <q-card-section class="text-grey-9 text-overline row items-center">
+      <q-card-section class="text-grey-9 text-overline">
         {{ unidade.descricao }}
-        <q-space />
-        <q-btn
-          flat
-          round
-          dense
-          icon="add"
-          size="sm"
-          color="primary"
-          @click="abrirDialogCriar()"
-        >
-          <q-tooltip>Novo Indicador</q-tooltip>
-        </q-btn>
       </q-card-section>
 
       <q-markup-table flat separator="horizontal">
@@ -468,15 +468,5 @@ const excluirIndicador = (ind) => {
 
   <div v-if="agrupado.length === 0" class="q-pa-md text-center text-grey">
     Nenhum indicador encontrado
-    <div class="q-mt-sm">
-      <q-btn
-        flat
-        dense
-        icon="add"
-        label="Novo Indicador"
-        color="primary"
-        @click="abrirDialogCriar()"
-      />
-    </div>
   </div>
 </template>

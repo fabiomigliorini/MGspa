@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
@@ -154,7 +154,91 @@ const extrairErro = (error, fallback) => {
   return data.mensagem || data.message || fallback;
 };
 
+// --- DIALOG ADICIONAR COLABORADORES ---
+
+const dialogAdicionar = ref(false);
+const disponiveis = ref([]);
+const selecionados = ref([]);
+const loadingDisponiveis = ref(false);
+
+const abrirDialogAdicionar = async () => {
+  loadingDisponiveis.value = true;
+  selecionados.value = [];
+  dialogAdicionar.value = true;
+  try {
+    disponiveis.value = await sRh.getColaboradoresDisponiveis(route.params.codperiodo);
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: extrairErro(error, "Erro ao carregar colaboradores"),
+    });
+  } finally {
+    loadingDisponiveis.value = false;
+  }
+};
+
+const selecionarTodos = () => {
+  if (selecionados.value.length === disponiveis.value.length) {
+    selecionados.value = [];
+  } else {
+    selecionados.value = disponiveis.value.map((c) => c.codcolaborador);
+  }
+};
+
+const submitAdicionar = async () => {
+  if (selecionados.value.length === 0) return;
+  dialogAdicionar.value = false;
+  try {
+    await sRh.adicionarColaboradores(route.params.codperiodo, selecionados.value);
+    $q.notify({
+      color: "green-5",
+      textColor: "white",
+      icon: "done",
+      message: selecionados.value.length + " colaborador(es) adicionado(s)",
+    });
+    await sRh.getColaboradores(route.params.codperiodo);
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: extrairErro(error, "Erro ao adicionar colaboradores"),
+    });
+  }
+};
+
 // --- AÇÕES ---
+
+const excluirColaborador = (pc) => {
+  $q.dialog({
+    title: "Remover Colaborador",
+    message:
+      "Tem certeza que deseja remover " +
+      nomeColaborador(pc) +
+      " deste período? Setores e rubricas serão removidos.",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await sRh.excluirColaborador(route.params.codperiodo, pc.codperiodocolaborador);
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Colaborador removido",
+      });
+      await sRh.getColaboradores(route.params.codperiodo);
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: extrairErro(error, "Erro ao remover colaborador"),
+      });
+    }
+  });
+};
 
 const recalcular = async (pc) => {
   try {
@@ -236,6 +320,78 @@ const estornar = (pc) => {
 </script>
 
 <template>
+  <!-- DIALOG ADICIONAR COLABORADORES -->
+  <q-dialog v-model="dialogAdicionar">
+    <q-card bordered flat style="width: 600px; max-width: 90vw">
+      <q-card-section class="text-grey-9 text-overline row items-center">
+        ADICIONAR COLABORADORES
+        <q-space />
+        <q-btn
+          v-if="disponiveis.length > 0"
+          flat
+          dense
+          size="sm"
+          :label="selecionados.length === disponiveis.length ? 'Desmarcar todos' : 'Selecionar todos'"
+          color="primary"
+          @click="selecionarTodos()"
+        />
+      </q-card-section>
+
+      <q-separator inset />
+
+      <q-card-section style="max-height: 400px; overflow-y: auto" class="q-pa-none">
+        <q-inner-loading :showing="loadingDisponiveis" />
+        <q-list separator v-if="!loadingDisponiveis && disponiveis.length > 0">
+          <q-item
+            v-for="c in disponiveis"
+            :key="c.codcolaborador"
+            tag="label"
+            clickable
+            v-ripple
+          >
+            <q-item-section side>
+              <q-checkbox v-model="selecionados" :val="c.codcolaborador" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>{{ c.fantasia || "—" }}</q-item-label>
+              <q-item-label caption v-if="c.cargo">{{ c.cargo }}</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-list>
+        <div
+          v-if="!loadingDisponiveis && disponiveis.length === 0"
+          class="q-pa-lg text-center text-grey"
+        >
+          Todos os colaboradores ativos ja estao vinculados a este periodo.
+        </div>
+      </q-card-section>
+
+      <q-separator inset />
+
+      <q-card-actions align="right" class="text-primary">
+        <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
+        <q-btn
+          flat
+          :label="'Adicionar (' + selecionados.length + ')'"
+          @click="submitAdicionar()"
+          :disable="selecionados.length === 0"
+        />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+  <!-- BOTÃO ADICIONAR -->
+  <div v-if="podeEditar" class="row justify-end q-mb-sm">
+    <q-btn
+      flat
+      dense
+      icon="person_add"
+      label="Adicionar Colaboradores"
+      color="primary"
+      @click="abrirDialogAdicionar()"
+    />
+  </div>
+
   <!-- ALERTAS -->
   <template v-if="alertas.length > 0">
     <q-card
@@ -523,6 +679,18 @@ const estornar = (pc) => {
                     v-if="item.pc.status === 'E'"
                   >
                     <q-tooltip>Estornar</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    icon="person_remove"
+                    size="sm"
+                    color="red-7"
+                    @click="excluirColaborador(item.pc)"
+                    v-if="item.pc.status === 'A'"
+                  >
+                    <q-tooltip>Remover do Periodo</q-tooltip>
                   </q-btn>
                 </td>
               </tr>

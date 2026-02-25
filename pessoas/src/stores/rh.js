@@ -85,6 +85,23 @@ export const rhStore = defineStore("rh", {
       return ret;
     },
 
+    async getColaboradoresDisponiveis(codperiodo) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/colaborador/disponiveis");
+      return ret.data.data;
+    },
+
+    async adicionarColaboradores(codperiodo, colaboradores) {
+      const ret = await api.post("v1/rh/periodo/" + codperiodo + "/colaborador", { colaboradores });
+      return ret;
+    },
+
+    async excluirColaborador(codperiodo, codperiodocolaborador) {
+      const ret = await api.delete(
+        "v1/rh/periodo/" + codperiodo + "/colaborador/" + codperiodocolaborador
+      );
+      return ret;
+    },
+
     // --- VÍNCULOS COLABORADOR-SETOR ---
 
     async criarSetor(codperiodocolaborador, data) {
