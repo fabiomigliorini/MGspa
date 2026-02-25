@@ -456,7 +456,17 @@ watch(
     if (!novoId || route.name !== "rhDashboard") return;
     pararPolling();
     progresso.value = null;
-    carregar(novoId);
+    await carregar(novoId);
+    // Recarregar dados da aba ativa
+    if (tab.value === "indicadores") {
+      loadingIndicadores.value = true;
+      try {
+        await sRh.getIndicadores(novoId);
+        indicadoresCarregados.value = true;
+      } finally {
+        loadingIndicadores.value = false;
+      }
+    }
     try {
       const data = await sRh.progressoReprocessamento(novoId);
       if (data.status === 'processando') {
