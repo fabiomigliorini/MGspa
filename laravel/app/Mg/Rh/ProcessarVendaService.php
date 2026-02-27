@@ -68,6 +68,12 @@ class ProcessarVendaService
             ? static::resolverColaboradorPorUsuario($negocio->codusuario, $dataVenda)
             : null;
 
+        // IDs de lançamentos automáticos existentes para este negócio
+        $idsExistentes = IndicadorLancamento::where('codnegocio', $codnegocio)
+            ->where('manual', false)
+            ->pluck('codindicadorlancamento')
+            ->all();
+
         // Acumula totais por indicador em memória antes de persistir
         $totais = []; // [codindicador => float]
 
@@ -128,12 +134,16 @@ class ProcessarVendaService
         }
 
         // Persiste um lançamento por negócio por indicador
+        $idsTocados = [];
         foreach ($totais as $codindicador => $valor) {
-            static::acumularIndicador($codindicador, $valor, $codnegocio, false);
+            $idsTocados[] = static::acumularIndicador($codindicador, $valor, $codnegocio, false);
             if ($cancelado) {
-                static::acumularIndicador($codindicador, $valor * -1, $codnegocio, true);
+                $idsTocados[] = static::acumularIndicador($codindicador, $valor * -1, $codnegocio, true);
             }
         }
+
+        // Exclui lançamentos órfãos (indicador antigo que não foi tocado)
+        static::limparLancamentosOrfaos(array_diff($idsExistentes, $idsTocados));
     }
 
     protected static function acumularIndicador(
@@ -141,7 +151,7 @@ class ProcessarVendaService
         float $valor,
         int $codnegocio,
         bool $estorno
-    ): void {
+    ): int {
         $indicador = Indicador::findOrFail($codindicador);
 
         // Idempotência: chave = (codindicador, codnegocio, estorno) — lançamentos automáticos
@@ -157,7 +167,7 @@ class ProcessarVendaService
             $lancamento->valor = $valor;
             $lancamento->save();
         } else {
-            IndicadorLancamento::create([
+            $lancamento = IndicadorLancamento::create([
                 'codindicador' => $codindicador,
                 'codnegocio' => $codnegocio,
                 'codnegocioprodutobarra' => null,
@@ -169,6 +179,24 @@ class ProcessarVendaService
 
         $indicador->valoracumulado += $valor;
         $indicador->save();
+
+        return $lancamento->codindicadorlancamento;
+    }
+
+    protected static function limparLancamentosOrfaos(array $ids): void
+    {
+        if (empty($ids)) {
+            return;
+        }
+        $lancamentos = IndicadorLancamento::whereIn('codindicadorlancamento', $ids)->get();
+        foreach ($lancamentos as $lancamento) {
+            $indicador = Indicador::find($lancamento->codindicador);
+            if ($indicador) {
+                $indicador->valoracumulado -= $lancamento->valor;
+                $indicador->save();
+            }
+            $lancamento->delete();
+        }
     }
 
     protected static function findOrCreateIndicador(
