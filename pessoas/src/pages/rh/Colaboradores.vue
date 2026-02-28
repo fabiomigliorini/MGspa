@@ -74,9 +74,16 @@ const agrupado = computed(() => {
       codunidadenegocio: u.codunidadenegocio,
       descricao: u.descricao,
       alerta: false,
-      setores: Array.from(u.setorMap.values()).sort((a, b) =>
-        a.setor.localeCompare(b.setor)
-      ),
+      setores: Array.from(u.setorMap.values())
+        .sort((a, b) => a.setor.localeCompare(b.setor))
+        .map((s) => ({
+          ...s,
+          colaboradores: s.colaboradores.slice().sort((a, b) => {
+            const nA = a.pc.colaborador?.pessoa?.fantasia || "";
+            const nB = b.pc.colaborador?.pessoa?.fantasia || "";
+            return nA.localeCompare(nB, "pt-BR");
+          }),
+        })),
     }));
 
   return resultado.concat(unidades);
