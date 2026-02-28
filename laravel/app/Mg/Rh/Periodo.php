@@ -1,13 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 16:58:19
+ * Date: 28/Feb/2026 15:28:50
  */
 
 namespace Mg\Rh;
 
 use Mg\MgModel;
 use Mg\Rh\Indicador;
+use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Rh\PeriodoColaborador;
 
 class Periodo extends MgModel
@@ -19,6 +20,7 @@ class Periodo extends MgModel
     protected $fillable = [
         'diasuteis',
         'observacoes',
+        'percentualmaxdesconto',
         'periodofinal',
         'periodoinicial',
         'status'
@@ -35,7 +37,8 @@ class Periodo extends MgModel
         'codperiodo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'diasuteis' => 'integer'
+        'diasuteis' => 'integer',
+        'percentualmaxdesconto' => 'float'
     ];
 
 
@@ -43,6 +46,11 @@ class Periodo extends MgModel
     public function IndicadorS()
     {
         return $this->hasMany(Indicador::class, 'codperiodo', 'codperiodo');
+    }
+
+    public function LiquidacaoTituloS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codperiodo', 'codperiodo');
     }
 
     public function PeriodoColaboradorS()

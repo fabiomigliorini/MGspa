@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Apr/2024 18:41:06
+ * Date: 28/Feb/2026 15:29:00
  */
 
 namespace Mg\Titulo;
@@ -15,6 +15,7 @@ use Mg\Cheque\Cheque;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pdv\Pdv;
 use Mg\Pix\Pix;
+use Mg\Rh\Periodo;
 
 class LiquidacaoTitulo extends MgModel
 {
@@ -28,6 +29,7 @@ class LiquidacaoTitulo extends MgModel
         'codcheque',
         'codpagarmepedido',
         'codpdv',
+        'codperiodo',
         'codpessoa',
         'codpessoacartao',
         'codpix',
@@ -60,6 +62,7 @@ class LiquidacaoTitulo extends MgModel
         'codliquidacaotitulo' => 'integer',
         'codpagarmepedido' => 'integer',
         'codpdv' => 'integer',
+        'codperiodo' => 'integer',
         'codpessoa' => 'integer',
         'codpessoacartao' => 'integer',
         'codpix' => 'integer',
@@ -91,6 +94,11 @@ class LiquidacaoTitulo extends MgModel
     public function Pdv()
     {
         return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
+    }
+
+    public function Periodo()
+    {
+        return $this->belongsTo(Periodo::class, 'codperiodo', 'codperiodo');
     }
 
     public function Pessoa()

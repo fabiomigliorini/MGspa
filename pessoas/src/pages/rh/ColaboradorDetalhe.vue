@@ -34,7 +34,11 @@ const cargo = computed(() => {
 const setores = computed(
   () => colaborador.value?.periodo_colaborador_setor_s || []
 );
-const rubricas = computed(() => colaborador.value?.colaborador_rubrica_s || []);
+const rubricas = computed(() =>
+  (colaborador.value?.colaborador_rubrica_s || [])
+    .slice()
+    .sort((a, b) => a.descricao.localeCompare(b.descricao, "pt-BR"))
+);
 const indicadores = computed(() => colaborador.value?.indicadores || []);
 
 // --- HELPERS ---

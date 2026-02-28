@@ -1,7 +1,7 @@
+TODO: Gerar os recibos dos titulos dos colaboradores
 BUG: CRIOu periodo errado 01/03 a 25/03/2026
 BUG: RH Está Publico
 FIX: Permissoes telas do RH
-FIX: Deixar Rubricas em Ordem Alfabetica
 FIX: Quando rateio xerox nao fecha 100% sistema nao esta descontando
 
 TODO: Lancar Multvale e Convenios
@@ -22,3 +22,7 @@ TODO: Enviar notificação push com os dados do aniversariante do dia via ably
 TODO Adicionar campo comissaocaixa na manutencao de cargo
 
 TODO: Adicionar o cargo / vínculo de estagiário
+
+DONE:
+
+- Deixar Rubricas em Ordem Alfabetica
