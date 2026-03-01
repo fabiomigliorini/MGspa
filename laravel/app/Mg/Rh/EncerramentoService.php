@@ -8,7 +8,6 @@ use Mg\Titulo\TituloService;
 
 class EncerramentoService
 {
-    const CODTIPOTITULO_VARIAVEL = 952;
     const CODCONTACONTABIL = 360;
 
     public static function encerrar(int $codperiodocolaborador): PeriodoColaborador
@@ -39,7 +38,7 @@ class EncerramentoService
         $debito = $pc->valortotal < 0 ? abs($pc->valortotal) : 0;
 
         $titulo = new Titulo([
-            'codtipotitulo' => self::CODTIPOTITULO_VARIAVEL,
+            'codtipotitulo' => TituloService::TIPO_RH,
             'codfilial' => $pc->Colaborador->codfilial,
             'codpessoa' => $pc->Colaborador->codpessoa,
             'codcontacontabil' => self::CODCONTACONTABIL,
@@ -72,10 +71,15 @@ class EncerramentoService
 
     public static function estornar(int $codperiodocolaborador): PeriodoColaborador
     {
-        $pc = PeriodoColaborador::findOrFail($codperiodocolaborador);
+        $pc = PeriodoColaborador::with('Colaborador')->findOrFail($codperiodocolaborador);
 
         if ($pc->status !== PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
             throw new \Exception('Somente colaboradores com status E (encerrado) podem ser estornados.');
+        }
+
+        // Bloquear reabertura se existir acerto financeiro efetivado
+        if (AcertoService::verificarLiquidacaoAtiva($pc->codperiodo, $pc->Colaborador->codpessoa)) {
+            throw new \Exception('Colaborador possui acerto financeiro efetivado. Estorne o acerto financeiro antes de reabrir o colaborador.');
         }
 
         // Estorna título se existir

@@ -8,6 +8,9 @@ use OfxParser\Parser;
 
 class PortadorService
 {
+    const CAIXA = 100;
+    const FOLHA = 202018;
+
     public static function buscarPortadorOfx($routingNumber, $accountNumber)
     {
 

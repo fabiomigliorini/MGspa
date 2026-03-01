@@ -14,10 +14,11 @@ class PeriodoUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'periodoinicial' => 'sometimes|date',
-            'periodofinal' => 'sometimes|date',
-            'diasuteis' => 'sometimes|integer|min:0',
-            'observacoes' => 'nullable|string',
+            'periodoinicial'        => 'sometimes|date',
+            'periodofinal'          => 'sometimes|date',
+            'diasuteis'             => 'sometimes|integer|min:0',
+            'observacoes'           => 'nullable|string',
+            'percentualmaxdesconto' => 'sometimes|nullable|numeric|min:0|max:100',
         ];
     }
 }

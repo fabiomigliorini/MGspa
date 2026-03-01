@@ -227,5 +227,37 @@ export const rhStore = defineStore("rh", {
       );
       return ret.data;
     },
+
+    // --- ACERTOS ---
+
+    async getAcertos(codperiodo, dias = 5) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/acertos", {
+        params: { dias },
+      });
+      return ret;
+    },
+
+    async getTitulosAcerto(codperiodo, codperiodocolaborador, dias = 5) {
+      const ret = await api.get(
+        "v1/rh/periodo/" + codperiodo + "/acertos/" + codperiodocolaborador + "/titulos",
+        { params: { dias } }
+      );
+      return ret;
+    },
+
+    async efetivarAcerto(codperiodo, codperiodocolaborador, payload) {
+      const ret = await api.post(
+        "v1/rh/periodo/" + codperiodo + "/acertos/" + codperiodocolaborador + "/efetivar",
+        payload
+      );
+      return ret;
+    },
+
+    async estornarAcerto(codperiodo, codperiodocolaborador) {
+      const ret = await api.post(
+        "v1/rh/periodo/" + codperiodo + "/acertos/" + codperiodocolaborador + "/estornar"
+      );
+      return ret;
+    },
   },
 });

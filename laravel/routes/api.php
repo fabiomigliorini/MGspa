@@ -901,6 +901,21 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
             // Dashboard
             Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');
+
+            // Acertos (Encontro de Contas)
+            Route::prefix('periodo/{codperiodo}/acertos')->group(function () {
+                Route::get('/', '\Mg\Rh\AcertoController@index');
+                Route::get('/recibos', '\Mg\Rh\AcertoController@recibos');
+                Route::get('/{codperiodocolaborador}/recibos', '\Mg\Rh\AcertoController@recibosColaborador');
+                Route::get('/relatorio-folha', '\Mg\Rh\AcertoController@relatorioFolha');
+                Route::get('/{codperiodocolaborador}/titulos', '\Mg\Rh\AcertoController@titulos');
+                Route::post('/{codperiodocolaborador}/efetivar', '\Mg\Rh\AcertoController@efetivar');
+                Route::post('/{codperiodocolaborador}/estornar', '\Mg\Rh\AcertoController@estornar');
+            });
         });
+
+        Route::get('liquidacao-titulo/{id}/recibo', '\Mg\Titulo\LiquidacaoTituloController@recibo');
+        Route::get('liquidacao-titulo/{id}/recibo-recebimento', '\Mg\Titulo\LiquidacaoTituloController@reciboRecebimento');
+        Route::get('liquidacao-titulo/{id}/recibo-pagamento', '\Mg\Titulo\LiquidacaoTituloController@reciboPagamento');
     });
 });

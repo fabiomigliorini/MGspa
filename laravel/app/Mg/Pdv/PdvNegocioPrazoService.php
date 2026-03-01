@@ -11,7 +11,7 @@ use Mg\Negocio\Negocio;
 use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
 use Mg\Titulo\MovimentoTitulo;
-use Mg\Titulo\TituloService;
+use Mg\Titulo\MovimentoTituloService;
 use Mg\Titulo\TipoTituloService;
 use Mg\Negocio\NegocioFormaPagamentoService;
 
@@ -192,7 +192,7 @@ class PdvNegocioPrazoService
                 $credito = $nfp->valorpagamento;
             }
             MovimentoTitulo::updateOrCreate([
-                'codtipomovimentotitulo' => TituloService::TIPO_AMORTIZACAO,
+                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_AMORTIZACAO,
                 'codtitulo' => $nfp->codtitulo,
                 'codnegocioformapagamento' => $nfp->codnegocioformapagamento
 
@@ -215,7 +215,7 @@ class PdvNegocioPrazoService
         foreach ($nfps as $nfp) {
             foreach ($nfp->MovimentoTituloS as $movOriginal) {
                 MovimentoTitulo::updateOrCreate([
-                    'codtipomovimentotitulo' => TituloService::TIPO_ESTORNO_AMORTIZACAO,
+                    'codtipomovimentotitulo' => MovimentoTituloService::TIPO_ESTORNO_AMORTIZACAO,
                     'codtitulo' => $nfp->codtitulo,
                     'codnegocioformapagamento' => $nfp->codnegocioformapagamento
 

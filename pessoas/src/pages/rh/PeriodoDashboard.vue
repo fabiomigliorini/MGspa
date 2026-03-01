@@ -9,6 +9,7 @@ import { formataDataSemHora } from "src/utils/formatador";
 import Dashboard from "./Dashboard.vue";
 import Colaboradores from "./Colaboradores.vue";
 import Indicadores from "./Indicadores.vue";
+import Acertos from "./Acertos.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -149,6 +150,7 @@ const editarPeriodo = () => {
     periodoinicial: periodo.value.periodoinicial?.substring(0, 10) || "",
     periodofinal: periodo.value.periodofinal?.substring(0, 10) || "",
     observacoes: periodo.value.observacoes || "",
+    percentualmaxdesconto: periodo.value.percentualmaxdesconto ?? null,
   };
   dialogPeriodo.value = true;
 };
@@ -548,7 +550,7 @@ watch(tab, async (newTab) => {
                 :rules="[(val) => !!val || 'Obrigatório']"
               />
             </div>
-            <div class="col-12">
+            <div class="col-8">
               <q-input
                 outlined
                 v-model="modelPeriodo.observacoes"
@@ -556,6 +558,17 @@ watch(tab, async (newTab) => {
                 type="textarea"
                 rows="2"
                 autogrow
+              />
+            </div>
+            <div class="col-4">
+              <q-input
+                outlined
+                v-model.number="modelPeriodo.percentualmaxdesconto"
+                label="% Máx. Desconto Folha"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
               />
             </div>
           </div>
@@ -850,8 +863,9 @@ watch(tab, async (newTab) => {
         class="text-grey-7"
       >
         <q-tab name="resumo" label="Resumo" />
-        <q-tab name="colaboradores" label="Colaboradores" />
         <q-tab name="indicadores" label="Indicadores" />
+        <q-tab name="colaboradores" label="Colaboradores" />
+        <q-tab name="acertos" label="Acertos" />
       </q-tabs>
       <q-separator />
 
@@ -867,6 +881,10 @@ watch(tab, async (newTab) => {
         <q-tab-panel name="indicadores" class="q-pa-none q-mt-md">
           <q-inner-loading :showing="loadingIndicadores" />
           <Indicadores v-if="indicadoresCarregados" />
+        </q-tab-panel>
+
+        <q-tab-panel name="acertos" class="q-pa-none q-mt-md">
+          <Acertos />
         </q-tab-panel>
       </q-tab-panels>
       </div>
