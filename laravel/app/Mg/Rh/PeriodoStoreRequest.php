@@ -14,10 +14,11 @@ class PeriodoStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'periodoinicial' => 'required|date',
-            'periodofinal' => 'required|date|after:periodoinicial',
-            'diasuteis' => 'nullable|integer|min:0',
-            'observacoes' => 'nullable|string',
+            'periodoinicial'        => 'required|date',
+            'periodofinal'          => 'required|date|after:periodoinicial',
+            'diasuteis'             => 'nullable|integer|min:0',
+            'observacoes'           => 'nullable|string',
+            'percentualmaxdesconto' => 'nullable|numeric|min:0|max:100',
         ];
     }
 }

@@ -93,11 +93,12 @@ class PeriodoService
         $novoFinal = $anterior->periodofinal->copy()->addMonth();
 
         $periodo = new Periodo([
-            'periodoinicial' => $novoInicial,
-            'periodofinal' => $novoFinal,
-            'diasuteis' => static::calcularDiasUteis($novoInicial, $novoFinal),
-            'observacoes' => null,
-            'status' => self::STATUS_ABERTO,
+            'periodoinicial'         => $novoInicial,
+            'periodofinal'           => $novoFinal,
+            'diasuteis'              => static::calcularDiasUteis($novoInicial, $novoFinal),
+            'observacoes'            => null,
+            'status'                 => self::STATUS_ABERTO,
+            'percentualmaxdesconto'  => $anterior->percentualmaxdesconto ?? 30,
         ]);
         $periodo->save();
 

@@ -5,6 +5,7 @@ namespace Mg\Rh;
 use Illuminate\Support\Carbon;
 use Mg\Colaborador\Colaborador;
 use Mg\Filial\Setor;
+use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioService;
 use Mg\Pdv\Pdv;
@@ -41,8 +42,8 @@ class ProcessarVendaService
 
         $cancelado = ($negocio->codnegociostatus == NegocioService::STATUS_CANCELADO);
 
-        // Sinal base: devolução inverte
-        $sinalBase = $natureza->vendadevolucao ? -1 : 1;
+        // Sinal base: saída (venda) = positivo, entrada (devolução/outros) = negativo
+        $sinalBase = $natureza->codoperacao === Operacao::SAIDA ? 1 : -1;
 
         // Resolve PDV e setor do PDV
         $pdv = Pdv::find($negocio->codpdv);
@@ -66,6 +67,15 @@ class ProcessarVendaService
         $codcolaboradorCaixa = $negocio->codusuario
             ? static::resolverColaboradorPorUsuario($negocio->codusuario, $dataVenda)
             : null;
+
+        // IDs de lançamentos automáticos existentes para este negócio
+        $idsExistentes = IndicadorLancamento::where('codnegocio', $codnegocio)
+            ->where('manual', false)
+            ->pluck('codindicadorlancamento')
+            ->all();
+
+        // Acumula totais por indicador em memória antes de persistir
+        $totais = []; // [codindicador => float]
 
         foreach ($negocio->NegocioProdutoBarraS as $item) {
 
@@ -118,55 +128,37 @@ class ProcessarVendaService
             }
 
             foreach ($indicadores as [$tipo, $codun, $codset, $codcol]) {
-
-                // Lançamento original (venda)
-                static::acumularIndicador(
-                    $periodo->codperiodo,
-                    $tipo,
-                    $codun,
-                    $codset,
-                    $codcol,
-                    $valorBase,
-                    $item->codnegocioprodutobarra,
-                    $codnegocio,
-                    false
-                );
-
-                // Se cancelado, lança também o estorno (saldo líquido = 0)
-                if ($cancelado) {
-                    static::acumularIndicador(
-                        $periodo->codperiodo,
-                        $tipo,
-                        $codun,
-                        $codset,
-                        $codcol,
-                        $valorBase * -1,
-                        $item->codnegocioprodutobarra,
-                        $codnegocio,
-                        true
-                    );
-                }
+                $indicador = static::findOrCreateIndicador($periodo->codperiodo, $tipo, $codun, $codset, $codcol);
+                $totais[$indicador->codindicador] = ($totais[$indicador->codindicador] ?? 0.0) + $valorBase;
             }
         }
+
+        // Persiste um lançamento por negócio por indicador
+        $idsTocados = [];
+        foreach ($totais as $codindicador => $valor) {
+            $idsTocados[] = static::acumularIndicador($codindicador, $valor, $codnegocio, false);
+            if ($cancelado) {
+                $idsTocados[] = static::acumularIndicador($codindicador, $valor * -1, $codnegocio, true);
+            }
+        }
+
+        // Exclui lançamentos órfãos (indicador antigo que não foi tocado)
+        static::limparLancamentosOrfaos(array_diff($idsExistentes, $idsTocados));
     }
 
     protected static function acumularIndicador(
-        int $codperiodo,
-        string $tipo,
-        ?int $codunidadenegocio,
-        ?int $codsetor,
-        ?int $codcolaborador,
+        int $codindicador,
         float $valor,
-        int $codnegocioprodutobarra,
         int $codnegocio,
         bool $estorno
-    ): void {
-        $indicador = static::findOrCreateIndicador($codperiodo, $tipo, $codunidadenegocio, $codsetor, $codcolaborador);
+    ): int {
+        $indicador = Indicador::findOrFail($codindicador);
 
-        // Idempotência: chave = (codindicador, codnegocioprodutobarra, estorno)
-        $lancamento = IndicadorLancamento::where('codindicador', $indicador->codindicador)
-            ->where('codnegocioprodutobarra', $codnegocioprodutobarra)
+        // Idempotência: chave = (codindicador, codnegocio, estorno) — lançamentos automáticos
+        $lancamento = IndicadorLancamento::where('codindicador', $codindicador)
+            ->where('codnegocio', $codnegocio)
             ->where('estorno', $estorno)
+            ->whereNull('codnegocioprodutobarra')
             ->first();
 
         if ($lancamento) {
@@ -175,10 +167,10 @@ class ProcessarVendaService
             $lancamento->valor = $valor;
             $lancamento->save();
         } else {
-            IndicadorLancamento::create([
-                'codindicador' => $indicador->codindicador,
+            $lancamento = IndicadorLancamento::create([
+                'codindicador' => $codindicador,
                 'codnegocio' => $codnegocio,
-                'codnegocioprodutobarra' => $codnegocioprodutobarra,
+                'codnegocioprodutobarra' => null,
                 'valor' => $valor,
                 'estorno' => $estorno,
                 'manual' => false,
@@ -187,6 +179,24 @@ class ProcessarVendaService
 
         $indicador->valoracumulado += $valor;
         $indicador->save();
+
+        return $lancamento->codindicadorlancamento;
+    }
+
+    protected static function limparLancamentosOrfaos(array $ids): void
+    {
+        if (empty($ids)) {
+            return;
+        }
+        $lancamentos = IndicadorLancamento::whereIn('codindicadorlancamento', $ids)->get();
+        foreach ($lancamentos as $lancamento) {
+            $indicador = Indicador::find($lancamento->codindicador);
+            if ($indicador) {
+                $indicador->valoracumulado -= $lancamento->valor;
+                $indicador->save();
+            }
+            $lancamento->delete();
+        }
     }
 
     protected static function findOrCreateIndicador(

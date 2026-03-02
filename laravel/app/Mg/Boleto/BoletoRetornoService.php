@@ -8,7 +8,7 @@ use Carbon\Carbon;
 use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\MovimentoTitulo;
-use Mg\Titulo\TipoMovimentoTitulo;
+use Mg\Titulo\MovimentoTituloService;
 
 class BoletoRetornoService
 {
@@ -167,7 +167,7 @@ class BoletoRetornoService
                 if ($juros > 0) {
                     $mov = MovimentoTitulo::firstOrNew([
                         'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => TipoMovimentoTitulo::JUROS,
+                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_JUROS,
                     ]);
                     $mov->codtitulo = $br->codtitulo;
                     $mov->codportador = $br->codportador;
@@ -183,7 +183,7 @@ class BoletoRetornoService
                 if ($desconto > 0) {
                     $mov = MovimentoTitulo::firstOrNew([
                         'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => TipoMovimentoTitulo::DESCONTO,
+                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_DESCONTO,
                     ]);
                     $mov->codtitulo = $br->codtitulo;
                     $mov->codportador = $br->codportador;
@@ -198,7 +198,7 @@ class BoletoRetornoService
                 if ($br->pagamento > 0) {
                     $mov = MovimentoTitulo::firstOrNew([
                         'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => TipoMovimentoTitulo::LIQUIDACAO,
+                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_LIQUIDACAO,
                     ]);
                     $mov->codtitulo = $br->codtitulo;
                     $mov->codportador = $br->codportador;
@@ -219,7 +219,7 @@ class BoletoRetornoService
                 if ($credito > 0 || $debito > 0) {
                     $mov = MovimentoTitulo::firstOrNew([
                         'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => TipoMovimentoTitulo::ESTORNOLIQUIDACAO,
+                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO,
                     ]);
                     $mov->codtitulo = $br->codtitulo;
                     $mov->codportador = $br->codportador;

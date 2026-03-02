@@ -617,6 +617,11 @@
                 "tabela": "tblpessoa",
                 "coluna": "codpessoacartao",
                 "metodo": "PessoaCartao"
+            },
+            "codperiodo": {
+                "tabela": "tblperiodo",
+                "coluna": "codperiodo",
+                "metodo": "Periodo"
             }
         },
         "hasMany": {
@@ -7930,6 +7935,11 @@
                 "tabela": "tblindicador",
                 "coluna": "codperiodo",
                 "metodo": "IndicadorS"
+            },
+            "tblliquidacaotitulo.codperiodo": {
+                "tabela": "tblliquidacaotitulo",
+                "coluna": "codperiodo",
+                "metodo": "LiquidacaoTituloS"
             },
             "tblperiodocolaborador.codperiodo": {
                 "tabela": "tblperiodocolaborador",

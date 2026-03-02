@@ -7,6 +7,7 @@ import { guardaToken } from "src/stores";
 import { api } from "src/boot/axios";
 import { formataDataSemHora, formataFromNow } from "src/utils/formatador";
 import SelectSetor from "src/components/select/SelectSetor.vue";
+import DialogEditarMeta from "./DialogEditarMeta.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -33,7 +34,11 @@ const cargo = computed(() => {
 const setores = computed(
   () => colaborador.value?.periodo_colaborador_setor_s || []
 );
-const rubricas = computed(() => colaborador.value?.colaborador_rubrica_s || []);
+const rubricas = computed(() =>
+  (colaborador.value?.colaborador_rubrica_s || [])
+    .slice()
+    .sort((a, b) => a.descricao.localeCompare(b.descricao, "pt-BR"))
+);
 const indicadores = computed(() => colaborador.value?.indicadores || []);
 
 // --- HELPERS ---
@@ -373,37 +378,11 @@ const submitRubrica = () => {
 // --- DIALOG EDITAR META ---
 
 const dialogMeta = ref(false);
-const modelMeta = ref({ codindicador: null, meta: null });
+const indicadorMeta = ref(null);
 
 const editarMeta = (ind) => {
-  modelMeta.value = {
-    codindicador: ind.codindicador,
-    meta: ind.meta,
-  };
+  indicadorMeta.value = ind;
   dialogMeta.value = true;
-};
-
-const salvarMeta = async () => {
-  dialogMeta.value = false;
-  try {
-    await sRh.atualizarMeta(modelMeta.value.codindicador, {
-      meta: modelMeta.value.meta,
-    });
-    $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Meta atualizada",
-    });
-    await recarregar();
-  } catch (error) {
-    $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao atualizar meta"),
-    });
-  }
 };
 
 // --- AÇÕES HEADER ---
@@ -501,23 +480,7 @@ const setorOptions = computed(() =>
   }))
 );
 
-const todosIndicadores = computed(() => {
-  const map = new Map();
-  // Indicadores do colaborador (V, C)
-  (colaborador.value?.indicadores || []).forEach((ind) => {
-    map.set(ind.codindicador, ind);
-  });
-  // Indicadores referenciados pelas rubricas (pode incluir S, U)
-  (colaborador.value?.colaborador_rubrica_s || []).forEach((r) => {
-    if (r.indicador && !map.has(r.indicador.codindicador)) {
-      map.set(r.indicador.codindicador, r.indicador);
-    }
-    if (r.indicador_condicao && !map.has(r.indicador_condicao.codindicador)) {
-      map.set(r.indicador_condicao.codindicador, r.indicador_condicao);
-    }
-  });
-  return Array.from(map.values());
-});
+const todosIndicadores = computed(() => colaborador.value?.indicadores || []);
 
 const indicadorOptions = computed(() =>
   todosIndicadores.value.map((ind) => {
@@ -802,41 +765,11 @@ watch(
   </q-dialog>
 
   <!-- DIALOG EDITAR META -->
-  <q-dialog v-model="dialogMeta">
-    <q-card bordered flat style="width: 400px; max-width: 90vw">
-      <q-form @submit="salvarMeta()">
-        <q-card-section class="text-grey-9 text-overline">
-          EDITAR META
-        </q-card-section>
-
-        <q-separator inset />
-
-        <q-card-section>
-          <q-input
-            outlined
-            v-model.number="modelMeta.meta"
-            label="Meta (R$)"
-            type="number"
-            step="0.01"
-            autofocus
-          />
-        </q-card-section>
-
-        <q-separator inset />
-
-        <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
-          <q-btn flat label="Salvar" type="submit" />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
+  <DialogEditarMeta
+    v-model="dialogMeta"
+    :indicador="indicadorMeta"
+    @salvo="recarregar()"
+  />
 
   <!-- CONTEÚDO PRINCIPAL -->
   <div style="max-width: 1280px; margin: auto">
@@ -1193,10 +1126,24 @@ watch(
                         class="q-mr-sm"
                       />
                     </div>
-                    <div
-                      class="col-auto"
-                      v-if="podeEditar && colaborador.status === 'A'"
-                    >
+                    <div class="col-auto">
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        icon="receipt_long"
+                        size="xs"
+                        color="grey-7"
+                        :to="{
+                          name: 'rhIndicadorExtrato',
+                          params: {
+                            codperiodo: route.params.codperiodo,
+                            codindicador: ind.codindicador,
+                          },
+                        }"
+                      >
+                        <q-tooltip>Ver Extrato</q-tooltip>
+                      </q-btn>
                       <q-btn
                         flat
                         dense
@@ -1205,6 +1152,7 @@ watch(
                         size="xs"
                         color="grey-7"
                         @click="editarMeta(ind)"
+                        v-if="podeEditar && colaborador.status === 'A'"
                       >
                         <q-tooltip>Editar Meta</q-tooltip>
                       </q-btn>
@@ -1259,10 +1207,9 @@ watch(
                     v-if="ind.meta"
                     :value="
                       Math.min(
-                        parseFloat(ind.valoracumulado) / parseFloat(ind.meta) ||
-                          0,
-                        1.5
-                      ) / 1.5
+                        parseFloat(ind.valoracumulado) / parseFloat(ind.meta) || 0,
+                        1
+                      )
                     "
                     size="6px"
                     stripe

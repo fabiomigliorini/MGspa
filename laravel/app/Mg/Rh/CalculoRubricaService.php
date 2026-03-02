@@ -162,26 +162,26 @@ class CalculoRubricaService
     {
         $todosVinculos = PeriodoColaboradorSetor::where('codsetor', $vinculo->codsetor)
             ->whereHas('PeriodoColaborador', function ($q) use ($codperiodo) {
-                $q->where('codperiodo', $codperiodo)
-                    ->where('status', PeriodoService::STATUS_COLABORADOR_ABERTO);
+                $q->where('codperiodo', $codperiodo);
             })
             ->get();
 
-        $totalPontos = 0;
-        $pontosColaborador = 0;
-
-        foreach ($todosVinculos as $v) {
-            $pontos = $v->percentualrateio * $v->diastrabalhados;
-            $totalPontos += $pontos;
-            if ($v->codperiodocolaboradorsetor === $vinculo->codperiodocolaboradorsetor) {
-                $pontosColaborador = $pontos;
-            }
+        // Pool = apenas os % contratados do setor (não normaliza para 100%)
+        // Assim: dois colaboradores com 40%+40% distribuem só 80% do indicador
+        $totalPercentual = $todosVinculos->sum('percentualrateio');
+        if ($totalPercentual == 0) {
+            return 0;
         }
+        $poolAlocado = ($totalPercentual / 100) * $valorIndicador;
 
+        // Distribui o pool proporcional a percentualrateio × diastrabalhados
+        // Quem faltou transfere sua parte pro pool dos presentes
+        $totalPontos = $todosVinculos->sum(fn($v) => $v->percentualrateio * $v->diastrabalhados);
         if ($totalPontos == 0) {
             return 0;
         }
 
-        return ($pontosColaborador / $totalPontos) * $valorIndicador;
+        $pontosColaborador = $vinculo->percentualrateio * $vinculo->diastrabalhados;
+        return ($pontosColaborador / $totalPontos) * $poolAlocado;
     }
 }

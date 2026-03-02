@@ -67,7 +67,8 @@ const toggleLeftDrawer = () => {
 
 <template>
   <q-layout view="Hhh lpR fff">
-    <q-header reveal elevated class="bg-yellow text-grey-9">
+    <!-- CABECALHO -->
+    <q-header reveal bordered class="bg-yellow text-grey-9">
       <q-toolbar>
         <q-btn
           flat
@@ -125,22 +126,25 @@ const toggleLeftDrawer = () => {
       </q-toolbar>
     </q-header>
 
-    <!-- Drawer padrão MG Layout -->
+    <!-- DRAWER -->
     <q-drawer
       show-if-above
       v-model="leftDrawerOpen"
       side="left"
-      elevated
+      bordered
       v-if="drawer"
     >
       <slot name="drawer"></slot>
     </q-drawer>
 
+    <!-- CONTEUDO -->
     <q-page-container class="bg-grey-2">
       <router-view v-if="!$slots.content" />
       <slot name="content"></slot>
     </q-page-container>
-    <q-footer elevated reveal class="bg-grey-8 text-white">
+
+    <!-- RODAPE -->
+    <q-footer bordered reveal class="bg-grey-8 text-white">
       <div class="q-ma-xs text-weight-light text-center">
         Pessoas | MG Papelaria &copy; | v{{ version }}
       </div>

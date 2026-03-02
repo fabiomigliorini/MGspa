@@ -2,8 +2,10 @@
 
 namespace Mg\Rh;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Mg\Colaborador\Colaborador;
 use Mg\Usuario\Autorizador;
 
 class PeriodoColaboradorController extends Controller
@@ -36,36 +38,130 @@ class PeriodoColaboradorController extends Controller
             ])
             ->get();
 
-        // Indicadores pessoais (V/C) — por colaborador
+        // Indicadores pessoais (V/C) — busca bulk para evitar N+1
         $indicadores = Indicador::where('codperiodo', $codperiodo)
             ->whereNotNull('codcolaborador')
             ->with(['Setor', 'UnidadeNegocio'])
             ->get()
             ->groupBy('codcolaborador');
 
-        // Indicadores de setor (S) — sem codcolaborador, por codsetor
-        $indicadoresSetor = Indicador::where('codperiodo', $codperiodo)
+        // Indicadores coletivos (S/U) — para dropdown de rubricas
+        $coletivos = Indicador::where('codperiodo', $codperiodo)
             ->whereNull('codcolaborador')
-            ->whereNotNull('codsetor')
             ->with(['Setor', 'UnidadeNegocio'])
-            ->get()
-            ->keyBy('codsetor');
+            ->get();
 
         foreach ($colaboradores as $c) {
-            $pessoais = $indicadores->get($c->codcolaborador, collect());
-
-            // Incluir indicadores de setor conforme os setores do colaborador
-            $setorInds = collect();
-            foreach ($c->PeriodoColaboradorSetorS as $pcs) {
-                if ($indicadoresSetor->has($pcs->codsetor)) {
-                    $setorInds->push($indicadoresSetor->get($pcs->codsetor));
-                }
-            }
-
-            $c->indicadores = $pessoais->merge($setorInds);
+            $c->indicadores_pessoais = $indicadores->get($c->codcolaborador, collect());
+            $c->indicadores_coletivos = $coletivos;
         }
 
         return PeriodoColaboradorResource::collection($colaboradores);
+    }
+
+    public function disponiveis(int $codperiodo)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $periodo = Periodo::findOrFail($codperiodo);
+
+        $jaVinculados = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->pluck('codcolaborador');
+
+        $colaboradores = Colaborador::where('contratacao', '<=', $periodo->periodofinal)
+            ->where(function ($q) use ($periodo) {
+                $q->whereNull('rescisao')
+                    ->orWhere('rescisao', '>=', $periodo->periodoinicial);
+            })
+            ->whereNotIn('codcolaborador', $jaVinculados)
+            ->with([
+                'Pessoa',
+                'ColaboradorCargoS' => function ($q) {
+                    $q->whereNull('fim')->with('Cargo');
+                },
+            ])
+            ->get()
+            ->map(function ($c) {
+                $cargo = $c->ColaboradorCargoS->first();
+                return [
+                    'codcolaborador' => $c->codcolaborador,
+                    'fantasia' => $c->Pessoa->fantasia ?? null,
+                    'cargo' => $cargo?->Cargo?->cargo ?? null,
+                ];
+            })
+            ->sortBy('fantasia')
+            ->values();
+
+        return response()->json(['data' => $colaboradores]);
+    }
+
+    public function store(int $codperiodo, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $periodo = Periodo::findOrFail($codperiodo);
+
+        $codcolaboradores = $request->input('colaboradores', []);
+        if (empty($codcolaboradores)) {
+            return response()->json(['erro' => 'Nenhum colaborador informado.'], 422);
+        }
+
+        $jaVinculados = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->pluck('codcolaborador')
+            ->toArray();
+
+        $adicionados = 0;
+        DB::beginTransaction();
+        try {
+            foreach ($codcolaboradores as $codcolaborador) {
+                if (in_array((int) $codcolaborador, $jaVinculados)) {
+                    continue;
+                }
+                $pc = new PeriodoColaborador([
+                    'codperiodo' => $codperiodo,
+                    'codcolaborador' => (int) $codcolaborador,
+                    'status' => 'A',
+                    'valortotal' => 0,
+                ]);
+                $pc->save();
+                $adicionados++;
+            }
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+
+        return response()->json([
+            'message' => $adicionados . ' colaborador(es) adicionado(s).',
+            'adicionados' => $adicionados,
+        ]);
+    }
+
+    public function destroy(int $codperiodo, int $codperiodocolaborador)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $pc = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->where('codperiodocolaborador', $codperiodocolaborador)
+            ->firstOrFail();
+
+        if ($pc->status === 'E') {
+            return response()->json(['erro' => 'Não é possível excluir um colaborador encerrado. Estorne o encerramento primeiro.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            ColaboradorRubrica::where('codperiodocolaborador', $codperiodocolaborador)->delete();
+            PeriodoColaboradorSetor::where('codperiodocolaborador', $codperiodocolaborador)->delete();
+            $pc->delete();
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+
+        return response()->json(['message' => 'Colaborador removido do período.']);
     }
 
     public function encerrar(int $codperiodo, int $codperiodocolaborador)

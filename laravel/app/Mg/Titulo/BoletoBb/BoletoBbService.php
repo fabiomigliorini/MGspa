@@ -19,7 +19,7 @@ use JasperPHP\PdfProcessor;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
 use Mg\Titulo\MovimentoTitulo;
-use Mg\Titulo\TipoMovimentoTitulo;
+use Mg\Titulo\MovimentoTituloService;
 use Mg\Portador\Portador;
 use Mg\Negocio\Negocio;
 
@@ -355,7 +355,7 @@ class BoletoBbService
         if ($tituloBoleto->valoroutro > 0) {
             $mov = MovimentoTitulo::firstOrNew([
                 'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => TipoMovimentoTitulo::AJUSTE,
+                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_AJUSTE,
             ]);
             $mov->codtitulo = $tituloBoleto->codtitulo;
             $mov->codportador = $tituloBoleto->codportador;
@@ -371,7 +371,7 @@ class BoletoBbService
         if ($tituloBoleto->valorjuromora > 0) {
             $mov = MovimentoTitulo::firstOrNew([
                 'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => TipoMovimentoTitulo::JUROS,
+                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_JUROS,
             ]);
             $mov->codtitulo = $tituloBoleto->codtitulo;
             $mov->codportador = $tituloBoleto->codportador;
@@ -387,7 +387,7 @@ class BoletoBbService
         if ($tituloBoleto->valormulta > 0) {
             $mov = MovimentoTitulo::firstOrNew([
                 'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => TipoMovimentoTitulo::MULTA,
+                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_MULTA,
             ]);
             $mov->codtitulo = $tituloBoleto->codtitulo;
             $mov->codportador = $tituloBoleto->codportador;
@@ -403,7 +403,7 @@ class BoletoBbService
         if ($tituloBoleto->valordesconto > 0) {
             $mov = MovimentoTitulo::firstOrNew([
                 'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => TipoMovimentoTitulo::DESCONTO,
+                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_DESCONTO,
             ]);
             $mov->codtitulo = $tituloBoleto->codtitulo;
             $mov->codportador = $tituloBoleto->codportador;
@@ -419,7 +419,7 @@ class BoletoBbService
         if ($tituloBoleto->valorpago > 0) {
             $mov = MovimentoTitulo::firstOrNew([
                 'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => TipoMovimentoTitulo::LIQUIDACAO,
+                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_LIQUIDACAO,
             ]);
             $mov->codtitulo = $tituloBoleto->codtitulo;
             $mov->codportador = $tituloBoleto->codportador;

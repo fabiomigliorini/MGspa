@@ -6,6 +6,7 @@ export const rhStore = defineStore("rh", {
     periodos: [],
     dashboard: {},
     colaboradores: [],
+    indicadores: [],
   }),
 
   actions: {
@@ -84,6 +85,23 @@ export const rhStore = defineStore("rh", {
       return ret;
     },
 
+    async getColaboradoresDisponiveis(codperiodo) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/colaborador/disponiveis");
+      return ret.data.data;
+    },
+
+    async adicionarColaboradores(codperiodo, colaboradores) {
+      const ret = await api.post("v1/rh/periodo/" + codperiodo + "/colaborador", { colaboradores });
+      return ret;
+    },
+
+    async excluirColaborador(codperiodo, codperiodocolaborador) {
+      const ret = await api.delete(
+        "v1/rh/periodo/" + codperiodo + "/colaborador/" + codperiodocolaborador
+      );
+      return ret;
+    },
+
     // --- VÍNCULOS COLABORADOR-SETOR ---
 
     async criarSetor(codperiodocolaborador, data) {
@@ -138,6 +156,20 @@ export const rhStore = defineStore("rh", {
 
     // --- INDICADORES ---
 
+    async getIndicadores(codperiodo) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/indicador");
+      this.indicadores = ret.data.data;
+      return ret;
+    },
+
+    async criarIndicador(codperiodo, data) {
+      const ret = await api.post(
+        "v1/rh/periodo/" + codperiodo + "/indicador",
+        data
+      );
+      return ret;
+    },
+
     async atualizarMeta(codindicador, data) {
       const ret = await api.put("v1/rh/indicador/" + codindicador + "/meta", data);
       return ret;
@@ -147,6 +179,83 @@ export const rhStore = defineStore("rh", {
       const ret = await api.post(
         "v1/rh/indicador/" + codindicador + "/lancamento",
         data
+      );
+      return ret;
+    },
+
+    async atualizarLancamento(codindicadorlancamento, data) {
+      const ret = await api.put(
+        "v1/rh/indicador-lancamento/" + codindicadorlancamento,
+        data
+      );
+      return ret;
+    },
+
+    async excluirLancamento(codindicadorlancamento) {
+      const ret = await api.delete(
+        "v1/rh/indicador-lancamento/" + codindicadorlancamento
+      );
+      return ret;
+    },
+
+    async excluirIndicador(codindicador) {
+      const ret = await api.delete("v1/rh/indicador/" + codindicador);
+      return ret;
+    },
+
+    // --- REPROCESSAMENTO ---
+
+    async reprocessarPeriodo(codperiodo, limpar = false) {
+      const ret = await api.post("v1/rh/periodo/" + codperiodo + "/reprocessar", { limpar });
+      return ret;
+    },
+
+    async progressoReprocessamento(codperiodo) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/reprocessar");
+      return ret.data;
+    },
+
+    async cancelarReprocessamento(codperiodo) {
+      const ret = await api.delete("v1/rh/periodo/" + codperiodo + "/reprocessar");
+      return ret;
+    },
+
+    async getExtrato(codindicador, page = 1) {
+      const ret = await api.get(
+        "v1/rh/indicador/" + codindicador + "/lancamento",
+        { params: { page } }
+      );
+      return ret.data;
+    },
+
+    // --- ACERTOS ---
+
+    async getAcertos(codperiodo, dias = 5) {
+      const ret = await api.get("v1/rh/periodo/" + codperiodo + "/acertos", {
+        params: { dias },
+      });
+      return ret;
+    },
+
+    async getTitulosAcerto(codperiodo, codperiodocolaborador, dias = 5) {
+      const ret = await api.get(
+        "v1/rh/periodo/" + codperiodo + "/acertos/" + codperiodocolaborador + "/titulos",
+        { params: { dias } }
+      );
+      return ret;
+    },
+
+    async efetivarAcerto(codperiodo, codperiodocolaborador, payload) {
+      const ret = await api.post(
+        "v1/rh/periodo/" + codperiodo + "/acertos/" + codperiodocolaborador + "/efetivar",
+        payload
+      );
+      return ret;
+    },
+
+    async estornarAcerto(codperiodo, codperiodocolaborador) {
+      const ret = await api.post(
+        "v1/rh/periodo/" + codperiodo + "/acertos/" + codperiodocolaborador + "/estornar"
       );
       return ret;
     },

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
@@ -8,6 +8,8 @@ import { feriadoStore } from "src/stores/feriado";
 import { formataDataSemHora } from "src/utils/formatador";
 import Dashboard from "./Dashboard.vue";
 import Colaboradores from "./Colaboradores.vue";
+import Indicadores from "./Indicadores.vue";
+import Acertos from "./Acertos.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -18,6 +20,8 @@ const sFeriado = feriadoStore();
 
 const loading = ref(false);
 const tab = ref(route.query.tab || "resumo");
+const indicadoresCarregados = ref(false);
+const loadingIndicadores = ref(false);
 
 const podeEditar = computed(() =>
   user.verificaPermissaoUsuario("Recursos Humanos")
@@ -146,6 +150,7 @@ const editarPeriodo = () => {
     periodoinicial: periodo.value.periodoinicial?.substring(0, 10) || "",
     periodofinal: periodo.value.periodofinal?.substring(0, 10) || "",
     observacoes: periodo.value.observacoes || "",
+    percentualmaxdesconto: periodo.value.percentualmaxdesconto ?? null,
   };
   dialogPeriodo.value = true;
 };
@@ -294,6 +299,116 @@ const excluirPeriodo = () => {
   });
 };
 
+// --- REPROCESSAMENTO ---
+
+const reprocessando = ref(false);
+const progresso = ref(null);
+let pollingTimer = null;
+
+const verificarProgresso = async () => {
+  try {
+    const data = await sRh.progressoReprocessamento(route.params.codperiodo);
+    if (!data.status) {
+      pararPolling();
+      return;
+    }
+    progresso.value = data;
+    if (data.status === 'concluido') {
+      pararPolling();
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: data.mensagem || "Reprocessamento concluído",
+      });
+      await carregar(route.params.codperiodo);
+    } else if (data.status === 'erro') {
+      pararPolling();
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: data.mensagem || "Erro no reprocessamento",
+      });
+    } else if (data.status === 'cancelado') {
+      pararPolling();
+      $q.notify({
+        color: "orange",
+        textColor: "white",
+        icon: "cancel",
+        message: "Reprocessamento cancelado",
+      });
+      await carregar(route.params.codperiodo);
+    }
+  } catch {
+    pararPolling();
+  }
+};
+
+const iniciarPolling = () => {
+  reprocessando.value = true;
+  progresso.value = { status: 'processando', progresso: 0, mensagem: 'Iniciando...' };
+  pollingTimer = setInterval(verificarProgresso, 3000);
+};
+
+const pararPolling = () => {
+  reprocessando.value = false;
+  if (pollingTimer) {
+    clearInterval(pollingTimer);
+    pollingTimer = null;
+  }
+};
+
+const reprocessarPeriodo = () => {
+  $q.dialog({
+    title: "Reprocessar Indicadores",
+    message: "Reprocessar todas as vendas do período nos indicadores?",
+    options: {
+      type: "checkbox",
+      model: [],
+      items: [
+        { label: "Limpar lançamentos automáticos antes de reprocessar", value: "limpar" },
+      ],
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async (opcoes) => {
+    try {
+      await sRh.reprocessarPeriodo(
+        route.params.codperiodo,
+        opcoes.includes("limpar")
+      );
+      iniciarPolling();
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: extrairErro(error, "Erro ao iniciar reprocessamento"),
+      });
+    }
+  });
+};
+
+const cancelarReprocessamento = () => {
+  $q.dialog({
+    title: "Cancelar Reprocessamento",
+    message: "Tem certeza que deseja cancelar o reprocessamento em andamento?",
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await sRh.cancelarReprocessamento(route.params.codperiodo);
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: extrairErro(error, "Erro ao cancelar"),
+      });
+    }
+  });
+};
+
 // --- LIFECYCLE ---
 
 const carregar = async (codperiodo) => {
@@ -319,14 +434,50 @@ const carregar = async (codperiodo) => {
   }
 };
 
-onMounted(() => {
+onMounted(async () => {
   carregar(route.params.codperiodo);
+  // Verificar se já há reprocessamento em andamento
+  try {
+    const data = await sRh.progressoReprocessamento(route.params.codperiodo);
+    if (data.status === 'processando') {
+      iniciarPolling();
+      progresso.value = data;
+    }
+  } catch {
+    // ignora
+  }
+});
+
+onUnmounted(() => {
+  pararPolling();
 });
 
 watch(
   () => route.params.codperiodo,
-  (novoId) => {
-    if (novoId && route.name === "rhDashboard") carregar(novoId);
+  async (novoId) => {
+    if (!novoId || route.name !== "rhDashboard") return;
+    pararPolling();
+    progresso.value = null;
+    await carregar(novoId);
+    // Recarregar dados da aba ativa
+    if (tab.value === "indicadores") {
+      loadingIndicadores.value = true;
+      try {
+        await sRh.getIndicadores(novoId);
+        indicadoresCarregados.value = true;
+      } finally {
+        loadingIndicadores.value = false;
+      }
+    }
+    try {
+      const data = await sRh.progressoReprocessamento(novoId);
+      if (data.status === 'processando') {
+        iniciarPolling();
+        progresso.value = data;
+      }
+    } catch {
+      // ignora
+    }
   }
 );
 
@@ -336,6 +487,36 @@ watch(
     if (newTab) tab.value = newTab;
   }
 );
+
+watch(tab, async (newTab) => {
+  if (route.query.tab !== newTab) {
+    router.replace({ query: { ...route.query, tab: newTab } });
+  }
+  const codperiodo = route.params.codperiodo;
+  if (!codperiodo) return;
+  try {
+    if (newTab === "resumo") {
+      await sRh.getDashboard(codperiodo);
+    } else if (newTab === "colaboradores") {
+      await sRh.getColaboradores(codperiodo);
+    } else if (newTab === "indicadores") {
+      loadingIndicadores.value = true;
+      await sRh.getIndicadores(codperiodo);
+      indicadoresCarregados.value = true;
+    }
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: extrairErro(error, "Erro ao carregar dados"),
+    });
+  } finally {
+    if (newTab === "indicadores") {
+      loadingIndicadores.value = false;
+    }
+  }
+}, { immediate: true });
 </script>
 
 <template>
@@ -369,7 +550,7 @@ watch(
                 :rules="[(val) => !!val || 'Obrigatório']"
               />
             </div>
-            <div class="col-12">
+            <div class="col-8">
               <q-input
                 outlined
                 v-model="modelPeriodo.observacoes"
@@ -377,6 +558,17 @@ watch(
                 type="textarea"
                 rows="2"
                 autogrow
+              />
+            </div>
+            <div class="col-4">
+              <q-input
+                outlined
+                v-model.number="modelPeriodo.percentualmaxdesconto"
+                label="% Máx. Desconto Folha"
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
               />
             </div>
           </div>
@@ -448,6 +640,7 @@ watch(
               icon="lock"
               size="sm"
               color="orange-7"
+              :disable="reprocessando"
               @click="fecharPeriodo()"
             >
               <q-tooltip>Fechar Período</q-tooltip>
@@ -476,12 +669,26 @@ watch(
               <q-tooltip>Duplicar Período</q-tooltip>
             </q-btn>
             <q-btn
+              v-if="periodo.status === 'A'"
+              flat
+              dense
+              round
+              icon="sync"
+              size="sm"
+              color="grey-7"
+              :disable="reprocessando"
+              @click="reprocessarPeriodo()"
+            >
+              <q-tooltip>Reprocessar Indicadores</q-tooltip>
+            </q-btn>
+            <q-btn
               flat
               dense
               round
               icon="delete"
               size="sm"
               color="red-7"
+              :disable="reprocessando"
               @click="excluirPeriodo()"
             >
               <q-tooltip>Excluir Período</q-tooltip>
@@ -616,6 +823,37 @@ watch(
         </div>
       </div>
 
+      <!-- BARRA DE REPROCESSAMENTO -->
+      <q-card bordered flat class="q-mb-md" v-if="reprocessando && progresso">
+        <q-card-section class="q-py-sm">
+          <div class="row items-center q-gutter-sm">
+            <q-spinner color="primary" size="20px" />
+            <span class="text-body2 text-grey-8">{{ progresso.mensagem }}</span>
+            <q-space />
+            <q-btn
+              flat
+              dense
+              round
+              icon="cancel"
+              size="sm"
+              color="red-7"
+              @click="cancelarReprocessamento()"
+            >
+              <q-tooltip>Cancelar</q-tooltip>
+            </q-btn>
+          </div>
+          <q-linear-progress
+            :value="(progresso.progresso || 0) / 100"
+            size="8px"
+            stripe
+            animated
+            rounded
+            color="primary"
+            class="q-mt-sm"
+          />
+        </q-card-section>
+      </q-card>
+
       <!-- TABS -->
       <q-tabs
         v-model="tab"
@@ -625,7 +863,9 @@ watch(
         class="text-grey-7"
       >
         <q-tab name="resumo" label="Resumo" />
+        <q-tab name="indicadores" label="Indicadores" />
         <q-tab name="colaboradores" label="Colaboradores" />
+        <q-tab name="acertos" label="Acertos" />
       </q-tabs>
       <q-separator />
 
@@ -636,6 +876,15 @@ watch(
 
         <q-tab-panel name="colaboradores" class="q-pa-none q-mt-md">
           <Colaboradores />
+        </q-tab-panel>
+
+        <q-tab-panel name="indicadores" class="q-pa-none q-mt-md">
+          <q-inner-loading :showing="loadingIndicadores" />
+          <Indicadores v-if="indicadoresCarregados" />
+        </q-tab-panel>
+
+        <q-tab-panel name="acertos" class="q-pa-none q-mt-md">
+          <Acertos />
         </q-tab-panel>
       </q-tab-panels>
       </div>

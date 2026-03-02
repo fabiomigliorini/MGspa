@@ -81,6 +81,9 @@ const handleSubmit = async () => {
     return
   }
 
+  // Sanitiza impostos condicionais ao CST antes de enviar
+  calculos.sanitizaImpostosParaSubmit()
+
   loading.value = true
   try {
     await notaFiscalStore.updateItem(

@@ -865,7 +865,10 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::delete('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@destroy');
 
             // Colaboradores do período
+            Route::get('periodo/{codperiodo}/colaborador/disponiveis', '\Mg\Rh\PeriodoColaboradorController@disponiveis');
             Route::get('periodo/{codperiodo}/colaborador', '\Mg\Rh\PeriodoColaboradorController@index');
+            Route::post('periodo/{codperiodo}/colaborador', '\Mg\Rh\PeriodoColaboradorController@store');
+            Route::delete('periodo/{codperiodo}/colaborador/{codperiodocolaborador}', '\Mg\Rh\PeriodoColaboradorController@destroy');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/encerrar', '\Mg\Rh\PeriodoColaboradorController@encerrar');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/estornar', '\Mg\Rh\PeriodoColaboradorController@estornar');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
@@ -882,11 +885,37 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::patch('rubrica/{codcolaboradorrubrica}/concedido', '\Mg\Rh\ColaboradorRubricaController@toggleConcedido');
 
             // Indicadores
+            Route::get('periodo/{codperiodo}/indicador', '\Mg\Rh\IndicadorController@index');
+            Route::post('periodo/{codperiodo}/indicador', '\Mg\Rh\IndicadorController@store');
+            Route::get('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentos');
             Route::put('indicador/{codindicador}/meta', '\Mg\Rh\IndicadorController@atualizarMeta');
             Route::post('indicador/{codindicador}/lancamento', '\Mg\Rh\IndicadorController@lancamentoManual');
+            Route::put('indicador-lancamento/{codindicadorlancamento}', '\Mg\Rh\IndicadorController@atualizarLancamento');
+            Route::delete('indicador-lancamento/{codindicadorlancamento}', '\Mg\Rh\IndicadorController@excluirLancamento');
+            Route::delete('indicador/{codindicador}', '\Mg\Rh\IndicadorController@destroy');
+
+            // Reprocessamento
+            Route::post('periodo/{codperiodo}/reprocessar', '\Mg\Rh\IndicadorController@reprocessar');
+            Route::get('periodo/{codperiodo}/reprocessar', '\Mg\Rh\IndicadorController@progressoReprocessamento');
+            Route::delete('periodo/{codperiodo}/reprocessar', '\Mg\Rh\IndicadorController@cancelarReprocessamento');
 
             // Dashboard
             Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');
+
+            // Acertos (Encontro de Contas)
+            Route::prefix('periodo/{codperiodo}/acertos')->group(function () {
+                Route::get('/', '\Mg\Rh\AcertoController@index');
+                Route::get('/recibos', '\Mg\Rh\AcertoController@recibos');
+                Route::get('/{codperiodocolaborador}/recibos', '\Mg\Rh\AcertoController@recibosColaborador');
+                Route::get('/relatorio-folha', '\Mg\Rh\AcertoController@relatorioFolha');
+                Route::get('/{codperiodocolaborador}/titulos', '\Mg\Rh\AcertoController@titulos');
+                Route::post('/{codperiodocolaborador}/efetivar', '\Mg\Rh\AcertoController@efetivar');
+                Route::post('/{codperiodocolaborador}/estornar', '\Mg\Rh\AcertoController@estornar');
+            });
         });
+
+        Route::get('liquidacao-titulo/{id}/recibo', '\Mg\Titulo\LiquidacaoTituloController@recibo');
+        Route::get('liquidacao-titulo/{id}/recibo-recebimento', '\Mg\Titulo\LiquidacaoTituloController@reciboRecebimento');
+        Route::get('liquidacao-titulo/{id}/recibo-pagamento', '\Mg\Titulo\LiquidacaoTituloController@reciboPagamento');
     });
 });
