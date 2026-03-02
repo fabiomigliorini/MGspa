@@ -54,6 +54,9 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     // Nota fiscal atual (já contém todos os dados relacionados)
     currentNota: null,
 
+    // Paginação dos itens na tela de visualização
+    paginaAtualItens: 1,
+
     // Item atual sendo editado (apenas para leitura da API)
     currentItem: null,
 
