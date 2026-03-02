@@ -211,7 +211,7 @@ const confirmar = async () => {
 
       <template v-if="!loading && dadosColaborador">
         <!-- CABEÇALHO -->
-        <q-card-section class="q-pb-sm">
+        <q-card-section class="q-pb-sm text-caption">
           <div class="text-h6 text-grey-9">{{ dadosColaborador.nome }}</div>
           <div class="text-caption text-grey-7">
             {{ dadosColaborador.cargo }}
@@ -239,11 +239,13 @@ const confirmar = async () => {
           <q-separator />
 
           <!-- Linhas -->
-          <q-scroll-area style="height: 300px">
+          <q-scroll-area style="height: 280px">
             <template v-for="titulo in titulos" :key="titulo.codtitulo">
-              <div class="row items-center q-col-gutter-md q-pa-md">
-                <div class="col-3 text-body2">{{ titulo.numero }}</div>
-                <div class="col-2 text-body2">
+              <div class="row items-center q-col-gutter-md q-pa-sm">
+                <div class="col-3 text-body2">
+                  {{ titulo.numero }}
+                </div>
+                <div class="col-2 text-body2 q-px-sm q-py-xs">
                   {{ formataData(titulo.vencimento) }}
                 </div>
                 <div
@@ -286,24 +288,22 @@ const confirmar = async () => {
                   />
                 </div>
                 <!-- Descontando + toggle linha -->
-                <div class="col-2">
-                  <div class="row no-wrap items-center">
-                    <q-input
-                      dense
-                      :model-value="titulo.descontando"
-                      @update:model-value="
-                        (val) => atualizarDescontando(titulo, val)
-                      "
-                      type="number"
-                      outlined
-                      v-if="titulo.saldo > 0"
-                      class="col"
-                      input-class="text-right"
-                      min="0"
-                      :max="Math.abs(titulo.saldo)"
-                      step="0.01"
-                    />
-                  </div>
+                <div class="col-2 no-wrap items-center">
+                  <q-input
+                    dense
+                    :model-value="titulo.descontando"
+                    @update:model-value="
+                      (val) => atualizarDescontando(titulo, val)
+                    "
+                    type="number"
+                    outlined
+                    v-if="titulo.saldo > 0"
+                    class="col"
+                    input-class="text-right"
+                    min="0"
+                    :max="Math.abs(titulo.saldo)"
+                    step="0.01"
+                  />
                 </div>
               </div>
               <q-separator />

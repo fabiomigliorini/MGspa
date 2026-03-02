@@ -131,7 +131,10 @@ const itensPorPagina = computed(() => {
   // if ($q.screen.lg) return 6   // Mobile: 1 por linha = 6 linhas
   return 6 // Desktop grande (lg/xl): 6 por linha = 2 linhas
 })
-const paginaAtualItens = ref(1)
+const paginaAtualItens = computed({
+  get: () => notaFiscalStore.paginaAtualItens,
+  set: (val) => { notaFiscalStore.paginaAtualItens = val },
+})
 
 const totalPaginasItens = computed(() => Math.ceil(itens.value.length / itensPorPagina.value))
 
