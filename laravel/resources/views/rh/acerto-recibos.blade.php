@@ -1,16 +1,3 @@
-@php
-    // Monta lista de recibos para preencher a tabela 2 colunas
-    $recibos = [];
-    foreach ($liquidacoes as $liq) {
-        if ($liq->credito > 0) {
-            $recibos[] = ['tipo' => 'recebimento', 'liq' => $liq];
-        }
-        if ($liq->debito > 0) {
-            $recibos[] = ['tipo' => 'pagamento', 'liq' => $liq];
-        }
-    }
-    $pares = array_chunk($recibos, 2);
-@endphp
 <!DOCTYPE html>
 <html>
 
@@ -18,7 +5,7 @@
     <meta charset="utf-8">
     <style>
         @page {
-            size: A4 portrait;
+            size: A5 landscape;
             margin: 8mm;
         }
 
@@ -34,20 +21,10 @@
             border-collapse: collapse;
         }
 
-        .layout {
-            width: 100%;
-        }
-
-        .layout td {
-            width: 50%;
-            vertical-align: top;
-            padding: 4mm;
-        }
-
         .recibo-outer {
             border: 2px solid #000;
             width: 100%;
-            page-break-inside: avoid;
+            page-break-after: always;
         }
 
         .recibo-header {
@@ -169,24 +146,14 @@
 </head>
 
 <body>
-    <table class="layout">
-        @foreach ($pares as $par)
-            <tr>
-                @foreach ($par as $item)
-                    <td>
-                        @if ($item['tipo'] === 'recebimento')
-                            @include('liquidacao-titulo._recibo-recebimento', ['liq' => $item['liq']])
-                        @else
-                            @include('liquidacao-titulo._recibo-pagamento', ['liq' => $item['liq']])
-                        @endif
-                    </td>
-                @endforeach
-                @if (count($par) === 1)
-                    <td></td>
-                @endif
-            </tr>
-        @endforeach
-    </table>
+    @foreach ($liquidacoes as $liq)
+        @if ($liq->credito > 0)
+            @include('liquidacao-titulo._recibo-recebimento', ['liq' => $liq])
+        @endif
+        @if ($liq->debito > 0)
+            @include('liquidacao-titulo._recibo-pagamento', ['liq' => $liq])
+        @endif
+    @endforeach
 </body>
 
 </html>
