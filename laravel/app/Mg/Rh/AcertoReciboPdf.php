@@ -44,12 +44,58 @@ class AcertoReciboPdf
             return '';
         }
 
+        // Envolver o HTML com container para layout em 2 colunas
+        $wrappedHtml = <<<EOD
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm;
+        }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #000;
+        }
+        .recibos-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12mm;
+            column-gap: 12mm;
+        }
+        .recibos-container .recibo-outer {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        @media print {
+            .recibos-container {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12mm;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="recibos-container">
+EOD;
+        
+        $wrappedHtml .= $html;
+        
+        $wrappedHtml .= <<<EOD
+</body>
+</html>
+EOD;
+
         $dompdf = new Dompdf();
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A5', 'landscape');
+        $dompdf->loadHtml($wrappedHtml);
+        $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
         return $dompdf->output();
     }
-
 }
