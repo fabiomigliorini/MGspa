@@ -3,6 +3,10 @@
 <head>
     <meta charset="utf-8">
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 8mm;
+        }
         body {
             font-family: Arial, Helvetica, sans-serif;
             font-size: 7.5pt;
@@ -12,6 +16,12 @@
         }
         table {
             border-collapse: collapse;
+        }
+        .recibos-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12mm;
+            column-gap: 12mm;
         }
         .recibo-outer {
             border: 2px solid #000;
@@ -109,6 +119,7 @@
             font-size: 6.5pt;
             text-align: center;
         }
+        .assin-cnpj,
         .assin-doc {
             font-size: 6pt;
             color: #333;
@@ -116,6 +127,15 @@
     </style>
 </head>
 <body>
-    @include('liquidacao-titulo._recibo-pagamento', ['liq' => $liq])
+    <div class="recibos-container">
+        @foreach ($liquidacoes as $liq)
+            @if ($liq->credito > 0)
+                @include('liquidacao-titulo._recibo-recebimento', ['liq' => $liq])
+            @endif
+            @if ($liq->debito > 0)
+                @include('liquidacao-titulo._recibo-pagamento', ['liq' => $liq])
+            @endif
+        @endforeach
+    </div>
 </body>
 </html>
