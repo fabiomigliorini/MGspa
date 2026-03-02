@@ -86,57 +86,67 @@
             referente ao pagamento dos titulos abaixo listados:
         </p>
 
-        @foreach ($resumo as $codtitulo => $r)
-            @if ($r['total'] > 0)
-                @php $rubricas = $r['titulo']->PeriodoColaboradorS->flatMap->ColaboradorRubricaS->where('valorcalculado', '>', 0); @endphp
-                @if ($rubricas->isNotEmpty())
-                    <table class="itens-table">
-                        <thead>
-                            <tr>
-                                <th>Descricao</th>
-                                <th class="r">Valor</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($rubricas as $rubrica)
-                                <tr>
-                                    <td>{{ $rubrica->descricao }}</td>
-                                    <td class="r">{{ formataNumero($rubrica->valorcalculado) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                @else
-                    <table class="itens-table">
-                        <thead>
-                            <tr>
-                                <th>Numero</th>
-                                <th>Emissao</th>
-                                <th>Vencimento</th>
-                                <th class="r">Valor Original</th>
-                                <th class="r">Pagamento</th>
-                                <th class="r">Juros</th>
-                                <th class="r">Desconto</th>
-                                <th class="r">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{{ $r['titulo']->numero }}</td>
-                                <td>{{ $r['titulo']->emissao?->format('d/m/Y') }}</td>
-                                <td>{{ $r['titulo']->vencimento?->format('d/m/Y') }}</td>
-                                <td class="r">
-                                    {{ formataNumero(abs($r['titulo']->debito - $r['titulo']->credito)) }}</td>
-                                <td class="r">{{ formataNumero($r['principal']) }}</td>
-                                <td class="r">{{ formataNumero($r['juros'] + $r['multa']) }}</td>
-                                <td class="r">{{ formataNumero($r['desconto']) }}</td>
-                                <td class="r bold">{{ formataNumero($r['total']) }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                @endif
-            @endif
-        @endforeach
+        @php
+            $todasRubricas = collect();
+            $titulosSemRubrica = [];
+            foreach ($resumo as $codtitulo => $r) {
+                if ($r['total'] <= 0) continue;
+                $rubricas = $r['titulo']->PeriodoColaboradorS->flatMap->ColaboradorRubricaS->where('valorcalculado', '>', 0);
+                if ($rubricas->isNotEmpty()) {
+                    $todasRubricas = $todasRubricas->merge($rubricas);
+                } else {
+                    $titulosSemRubrica[] = $r;
+                }
+            }
+        @endphp
+        @if ($todasRubricas->isNotEmpty())
+            <table class="itens-table">
+                <thead>
+                    <tr>
+                        <th>Descricao</th>
+                        <th class="r">Valor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($todasRubricas as $rubrica)
+                        <tr>
+                            <td>{{ $rubrica->descricao }}</td>
+                            <td class="r">{{ formataNumero($rubrica->valorcalculado) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+        @if (!empty($titulosSemRubrica))
+            <table class="itens-table">
+                <thead>
+                    <tr>
+                        <th>Numero</th>
+                        <th>Emissao</th>
+                        <th>Vencimento</th>
+                        <th class="r">Valor Original</th>
+                        <th class="r">Pagamento</th>
+                        <th class="r">Juros</th>
+                        <th class="r">Desconto</th>
+                        <th class="r">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($titulosSemRubrica as $r)
+                        <tr>
+                            <td>{{ $r['titulo']->numero }}</td>
+                            <td>{{ $r['titulo']->emissao?->format('d/m/Y') }}</td>
+                            <td>{{ $r['titulo']->vencimento?->format('d/m/Y') }}</td>
+                            <td class="r">{{ formataNumero(abs($r['titulo']->debito - $r['titulo']->credito)) }}</td>
+                            <td class="r">{{ formataNumero($r['principal']) }}</td>
+                            <td class="r">{{ formataNumero($r['juros'] + $r['multa']) }}</td>
+                            <td class="r">{{ formataNumero($r['desconto']) }}</td>
+                            <td class="r bold">{{ formataNumero($r['total']) }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
     </div>
 
     {{-- Rodapé --}}
