@@ -52,7 +52,8 @@
     $pessoa = $liq->Pessoa;
 @endphp
 
-<div class="recibo-outer">
+<table class="recibo-outer">
+<tr><td class="recibo-inner">
 
     {{-- Header --}}
     <div class="recibo-header">
@@ -149,6 +150,9 @@
         @endif
     </div>
 
+</td></tr>
+<tr><td class="recibo-rodape-cell">
+
     {{-- Rodapé --}}
     <div class="recibo-rodape">
         <div class="rodape-data">{{ $dataExtenso }}</div>
@@ -162,4 +166,5 @@
         </div>
     </div>
 
-</div>
+</td></tr>
+</table>

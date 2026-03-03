@@ -45,7 +45,8 @@
     $valorExtenso = formataValorPorExtenso((float) $liq->credito, true);
 @endphp
 
-<div class="recibo-outer">
+<table class="recibo-outer">
+<tr><td class="recibo-inner">
 
     {{-- Header: empresa, recibo, usuario, data --}}
     <div class="recibo-header">
@@ -110,6 +111,9 @@
         </table>
     </div>
 
+</td></tr>
+<tr><td class="recibo-rodape-cell">
+
     {{-- Rodapé --}}
     <div class="recibo-rodape">
         <div class="rodape-data">{{ $dataExtenso }}</div>
@@ -123,4 +127,5 @@
         </div>
     </div>
 
-</div>
+</td></tr>
+</table>
