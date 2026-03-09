@@ -1,10 +1,29 @@
 <script setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { sincronizacaoStore } from "stores/sincronizacao";
+import DialogEditarPdv from "components/pdv/DialogEditarPdv.vue";
 import moment from "moment";
 
 moment.locale("pt-br");
 const sSinc = sincronizacaoStore();
+const dialogCadastroPdv = ref(false);
+
+const abrirSincronizacao = () => {
+  if (!sSinc.pdv.codpdv) {
+    dialogCadastroPdv.value = true;
+  } else {
+    sSinc.importacao.dialog = true;
+  }
+};
+
+const cadastrarPdv = (model) => {
+  sSinc.pdv.apelido = model.apelido;
+  sSinc.pdv.codfilial = model.codfilial;
+  sSinc.pdv.codsetor = model.codsetor;
+  sSinc.pdv.observacoes = model.observacoes;
+  dialogCadastroPdv.value = false;
+  sSinc.importacao.dialog = true;
+};
 
 const btnSincronizarColor = computed({
   get() {
@@ -100,6 +119,12 @@ const btnSincronizarColor = computed({
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <dialog-editar-pdv
+    v-model="dialogCadastroPdv"
+    :pdv="sSinc.pdv"
+    titulo="Confirme seus dados:"
+    @salvar="cadastrarPdv"
+  />
   <q-btn
     round
     dense
@@ -107,7 +132,7 @@ const btnSincronizarColor = computed({
     icon="refresh"
     :loading="sSinc.importacao.rodando"
     :percentage="sSinc.importacao.progresso"
-    @click="sSinc.importacao.dialog = true"
+    @click="abrirSincronizacao"
     class="q-mr-sm"
     :color="btnSincronizarColor"
   >

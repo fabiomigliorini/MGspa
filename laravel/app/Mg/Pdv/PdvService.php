@@ -4,9 +4,9 @@ namespace Mg\Pdv;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mg\Filial\Setor;
 use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
-use Mg\Saurus\SaurusPinPad;
 
 class PdvService
 {
@@ -20,7 +20,11 @@ class PdvService
         $desktop,
         $navegador,
         $versaonavegador,
-        $plataforma
+        $plataforma,
+        $apelido = null,
+        $codfilial = null,
+        $codsetor = null,
+        $observacoes = null
     ) {
         $pdv = Pdv::firstOrNew(['uuid' => $uuid]);
         $pdv->ip = $ip;
@@ -31,6 +35,14 @@ class PdvService
         $pdv->navegador = $navegador;
         $pdv->versaonavegador = $versaonavegador;
         $pdv->plataforma = $plataforma;
+
+        if (!$pdv->exists) {
+            $pdv->apelido = $apelido;
+            $pdv->codfilial = $codfilial;
+            $pdv->observacoes = $observacoes;
+            $pdv->codsetor = $codsetor ?? Setor::whereNull('inativo')->first()->codsetor;
+        }
+
         $pdv->save();
         return $pdv;
     }
@@ -312,11 +324,11 @@ class PdvService
         foreach ($regs as $reg) {
             $reg->PagarMePosS = PagarMePos::select(['codpagarmepos', 'serial', 'apelido'])->where('codfilial', $reg->codfilial)->whereNull('inativo')->get();
             $reg->SaurusPosS = SaurusPdv::select(['tblsauruspdv.codsauruspdv', 'tblsauruspdv.id as serial', 'tblsauruspdv.apelido'])
-            ->join('tblsauruspinpad', 'tblsauruspinpad.codsauruspdv', '=', 'tblsauruspdv.codsauruspdv') 
-            ->where('tblsauruspdv.codfilial', $reg->codfilial)
-            ->whereNull('tblsauruspdv.inativo')
-            ->groupBy('tblsauruspdv.codsauruspdv', 'tblsauruspdv.id', 'tblsauruspdv.apelido')
-            ->get();
+                ->join('tblsauruspinpad', 'tblsauruspinpad.codsauruspdv', '=', 'tblsauruspdv.codsauruspdv')
+                ->where('tblsauruspdv.codfilial', $reg->codfilial)
+                ->whereNull('tblsauruspdv.inativo')
+                ->groupBy('tblsauruspdv.codsauruspdv', 'tblsauruspdv.id', 'tblsauruspdv.apelido')
+                ->get();
         }
         return $regs;
     }
