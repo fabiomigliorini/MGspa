@@ -9,7 +9,7 @@ class AcertoReciboPdf
 {
     public static function gerar(int $codperiodo, array $colaboradores = []): string
     {
-        //ini_set('memory_limit', '256M');
+        ini_set('memory_limit', '256M');
 
         $query = LiquidacaoTitulo::where('codperiodo', $codperiodo)
             ->whereNull('estornado')
