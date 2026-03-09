@@ -32,6 +32,7 @@ class NegocioListagemResource extends Resource
         $ret['fantasiavendedor'] = $this->PessoaVendedor->fantasia ?? null;
         $ret['usuario'] = $this->Usuario->usuario ?? null;
         $ret['pdv'] = $this->Pdv->apelido ?? null;
+        $ret['setor'] = $this->Pdv->Setor->setor ?? null;
         return $ret;
     }
 

@@ -47,6 +47,9 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       codfilial: null,
       filial: null,
       codpdv: null,
+      codsetor: null,
+      observacoes: null,
+      setor: null,
     },
     importacao: {
       totalRegistros: null,
@@ -99,6 +102,10 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
         navegador: this.pdv.navegador,
         versaonavegador: this.pdv.versaonavegador,
         plataforma: this.pdv.plataforma,
+        apelido: this.pdv.apelido,
+        codfilial: this.pdv.codfilial,
+        codsetor: this.pdv.codsetor,
+        observacoes: this.pdv.observacoes,
       };
       let { data } = await api.put("/api/v1/pdv/dispositivo", params);
       this.pdv.autorizado = data.data.autorizado;
@@ -106,6 +113,9 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       this.pdv.codfilial = data.data.codfilial;
       this.pdv.filial = data.data.filial;
       this.pdv.codpdv = data.data.codpdv;
+      this.pdv.codsetor = data.data.codsetor;
+      this.pdv.observacoes = data.data.observacoes;
+      this.pdv.setor = data.data.setor;
     },
 
     async sincronizar() {

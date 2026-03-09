@@ -52,114 +52,129 @@
     $pessoa = $liq->Pessoa;
 @endphp
 
-<div class="recibo-outer">
+<table class="recibo-outer">
+    <tr>
+        <td class="recibo-inner">
 
-    {{-- Header --}}
-    <div class="recibo-header">
-        <table>
-            <tr>
-                <td class="bold">{{ $filialPessoa->fantasia ?? '' }} {{ $filialPessoa->telefone1 ?? '' }}</td>
-                <td class="right">Recibo: {{ formataCodigo($liq->codliquidacaotitulo) }}</td>
-            </tr>
-            <tr>
-                <td>Usuario: {{ $liq->UsuarioCriacao->usuario ?? '—' }}</td>
-                <td class="right">Data: {{ $liq->criacao?->format('d/m/Y H:i:s') }}</td>
-            </tr>
-        </table>
-    </div>
-
-    {{-- Faixa: RECIBO + VALOR --}}
-    <div class="recibo-faixa">
-        <div class="titulo-recibo">R E C I B O</div>
-        <div class="titulo-valor">Valor R$ {{ formataNumero($totalPago) }}</div>
-    </div>
-
-    {{-- Corpo --}}
-    <div class="recibo-corpo">
-        <p>
-            Recebi(emos) de <strong>{{ $filialPessoa->pessoa ?? '—' }}</strong>
-            @if ($filialPessoa->cnpj ?? '')
-                , CNPJ {{ formataCnpjCpf($filialPessoa->cnpj, $filialPessoa->fisica ?? false) }}
-            @endif,
-            a importancia de
-            <strong>{{ $valorExtenso }}</strong>,
-            referente ao pagamento dos titulos abaixo listados:
-        </p>
-
-        @php
-            $todasRubricas = collect();
-            $titulosSemRubrica = [];
-            foreach ($resumo as $codtitulo => $r) {
-                if ($r['total'] <= 0) continue;
-                $rubricas = $r['titulo']->PeriodoColaboradorS->flatMap->ColaboradorRubricaS->where('valorcalculado', '>', 0);
-                if ($rubricas->isNotEmpty()) {
-                    $todasRubricas = $todasRubricas->merge($rubricas);
-                } else {
-                    $titulosSemRubrica[] = $r;
-                }
-            }
-        @endphp
-        @if ($todasRubricas->isNotEmpty())
-            <table class="itens-table">
-                <thead>
+            {{-- Header --}}
+            <div class="recibo-header">
+                <table>
                     <tr>
-                        <th>Descricao</th>
-                        <th class="r">Valor</th>
+                        <td class="bold">{{ $filialPessoa->fantasia ?? '' }} {{ $filialPessoa->telefone1 ?? '' }}</td>
+                        <td class="right">Recibo: {{ formataCodigo($liq->codliquidacaotitulo) }}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach ($todasRubricas as $rubrica)
-                        <tr>
-                            <td>{{ $rubrica->descricao }}</td>
-                            <td class="r">{{ formataNumero($rubrica->valorcalculado) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
-        @if (!empty($titulosSemRubrica))
-            <table class="itens-table">
-                <thead>
                     <tr>
-                        <th>Numero</th>
-                        <th>Emissao</th>
-                        <th>Vencimento</th>
-                        <th class="r">Valor Original</th>
-                        <th class="r">Pagamento</th>
-                        <th class="r">Juros</th>
-                        <th class="r">Desconto</th>
-                        <th class="r">Total</th>
+                        <td>Usuario: {{ $liq->UsuarioCriacao->usuario ?? '—' }}</td>
+                        <td class="right">Data: {{ $liq->criacao?->format('d/m/Y H:i:s') }}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach ($titulosSemRubrica as $r)
-                        <tr>
-                            <td>{{ $r['titulo']->numero }}</td>
-                            <td>{{ $r['titulo']->emissao?->format('d/m/Y') }}</td>
-                            <td>{{ $r['titulo']->vencimento?->format('d/m/Y') }}</td>
-                            <td class="r">{{ formataNumero(abs($r['titulo']->debito - $r['titulo']->credito)) }}</td>
-                            <td class="r">{{ formataNumero($r['principal']) }}</td>
-                            <td class="r">{{ formataNumero($r['juros'] + $r['multa']) }}</td>
-                            <td class="r">{{ formataNumero($r['desconto']) }}</td>
-                            <td class="r bold">{{ formataNumero($r['total']) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        @endif
-    </div>
-
-    {{-- Rodapé --}}
-    <div class="recibo-rodape">
-        <div class="rodape-data">{{ $dataExtenso }}</div>
-
-        <div class="assin-bloco">
-            <div class="assin-linha">
-                {{ $pessoa->pessoa ?? '—' }}<br>
-                <span class="assin-doc">{{ $pessoa->fisica ?? false ? 'CPF' : 'CNPJ' }}
-                    {{ formataCnpjCpf($pessoa->cnpj ?? '', $pessoa->fisica ?? false) }}</span>
+                </table>
             </div>
-        </div>
-    </div>
 
-</div>
+            {{-- Faixa: RECIBO + VALOR --}}
+            <div class="recibo-faixa">
+                <div class="titulo-recibo">R E C I B O</div>
+                <div class="titulo-valor">Valor R$ {{ formataNumero($totalPago) }}</div>
+            </div>
+
+            {{-- Corpo --}}
+            <div class="recibo-corpo">
+                <p>
+                    Recebi(emos) de <strong>{{ $filialPessoa->pessoa ?? '—' }}</strong>
+                    @if ($filialPessoa->cnpj ?? '')
+                        , CNPJ {{ formataCnpjCpf($filialPessoa->cnpj, $filialPessoa->fisica ?? false) }}
+                    @endif,
+                    a importancia de
+                    <strong>{{ $valorExtenso }}</strong>,
+                    referente ao pagamento dos titulos abaixo listados:
+                </p>
+
+                @php
+                    $todasRubricas = collect();
+                    $titulosSemRubrica = [];
+                    foreach ($resumo as $codtitulo => $r) {
+                        if ($r['total'] <= 0) {
+                            continue;
+                        }
+                        $rubricas = $r['titulo']->PeriodoColaboradorS->flatMap->ColaboradorRubricaS->where(
+                            'valorcalculado',
+                            '>',
+                            0,
+                        );
+                        if ($rubricas->isNotEmpty()) {
+                            $todasRubricas = $todasRubricas->merge($rubricas);
+                        } else {
+                            $titulosSemRubrica[] = $r;
+                        }
+                    }
+                @endphp
+                @if ($todasRubricas->isNotEmpty())
+                    <table class="itens-table">
+                        <thead>
+                            <tr>
+                                <th>Descricao</th>
+                                <th class="r">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($todasRubricas as $rubrica)
+                                <tr>
+                                    <td>{{ $rubrica->descricao }}</td>
+                                    <td class="r">{{ formataNumero($rubrica->valorcalculado) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+                @if (!empty($titulosSemRubrica))
+                    <table class="itens-table">
+                        <thead>
+                            <tr>
+                                <th>Numero</th>
+                                <th>Emissao</th>
+                                <th>Vencimento</th>
+                                <th class="r">Valor Original</th>
+                                <th class="r">Pagamento</th>
+                                <th class="r">Juros</th>
+                                <th class="r">Desconto</th>
+                                <th class="r">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($titulosSemRubrica as $r)
+                                <tr>
+                                    <td>{{ $r['titulo']->numero }}</td>
+                                    <td>{{ $r['titulo']->emissao?->format('d/m/Y') }}</td>
+                                    <td>{{ $r['titulo']->vencimento?->format('d/m/Y') }}</td>
+                                    <td class="r">
+                                        {{ formataNumero(abs($r['titulo']->debito - $r['titulo']->credito)) }}</td>
+                                    <td class="r">{{ formataNumero($r['principal']) }}</td>
+                                    <td class="r">{{ formataNumero($r['juros'] + $r['multa']) }}</td>
+                                    <td class="r">{{ formataNumero($r['desconto']) }}</td>
+                                    <td class="r bold">{{ formataNumero($r['total']) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+
+        </td>
+    </tr>
+    <tr>
+        <td class="recibo-rodape-cell">
+
+            {{-- Rodapé --}}
+            <div class="recibo-rodape">
+                <div class="assin-bloco">
+                    <div class="assin-linha">
+                        {{ $pessoa->pessoa ?? '—' }}<br>
+                        <span class="assin-doc">{{ $pessoa->fisica ?? false ? 'CPF' : 'CNPJ' }}
+                            {{ formataCnpjCpf($pessoa->cnpj ?? '', $pessoa->fisica ?? false) }}</span>
+                    </div>
+                </div>
+                <div class="rodape-data">{{ $dataExtenso }}</div>
+            </div>
+
+        </td>
+    </tr>
+</table>

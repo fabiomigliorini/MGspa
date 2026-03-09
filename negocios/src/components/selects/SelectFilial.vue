@@ -35,6 +35,7 @@ const opcoes = ref([]);
     label="Filial"
     use-input
     input-debounce="500"
+    behavior="menu"
     :options="opcoes"
     map-options
     emit-value

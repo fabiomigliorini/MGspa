@@ -500,6 +500,9 @@ const apropriar = () => {
             <q-item-label caption>
               {{ sNegocio.negocio.Pdv.ip }}
             </q-item-label>
+            <q-item-label caption v-if="sNegocio.negocio.Pdv.setor">
+              {{ sNegocio.negocio.Pdv.setor }}
+            </q-item-label>
           </template>
           <q-item-label lines="1" v-else>
             #{{ String(sNegocio.negocio.codpdv).padStart(8, "0") }}

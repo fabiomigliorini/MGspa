@@ -107,10 +107,11 @@ const statusClass = (codnegociostatus) => {
               </q-item-label>
             </q-item-section>
 
-            <!-- USUARIO/PDV -->
+            <!-- USUARIO/PDV/SETOR -->
             <q-item-section class="gt-sm">
               <q-item-label caption> {{ item.usuario }} </q-item-label>
               <q-item-label caption> {{ item.pdv }} </q-item-label>
+              <q-item-label caption> {{ item.setor }} </q-item-label>
             </q-item-section>
 
             <!-- UUID -->
