@@ -76,7 +76,7 @@ class PdvController
             'navegador' => 'required',
             'versaonavegador' => 'required',
             'plataforma' => 'required',
-            'codsetor' => 'required',
+
         ]);
         $pdv = PdvService::dispositivo(
             $request->uuid,
