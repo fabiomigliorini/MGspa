@@ -4,7 +4,17 @@ import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { formataDocumetos } from "src/stores/formataDocumentos";
-import { formataData, formataDataSemHora, formataCPF, formataCNPJ, formataPisPasep, formataTitulo, verificaIdade, verificaPassadoFuturo, dataFormatoSql, localeBrasil } from "src/utils/formatador";
+import {
+  formataData,
+  formataDataSemHora,
+  formataCPF,
+  formataCNPJ,
+  formataPisPasep,
+  formataTitulo,
+  verificaIdade,
+  dataFormatoSql,
+  localeBrasil,
+} from "src/utils/formatador";
 import { guardaToken } from "stores/index";
 import SelectGrupoEconomico from "components/pessoa/SelectGrupoEconomico.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
@@ -27,7 +37,6 @@ const DialogMercos = ref(false);
 const modelPessoa = ref({});
 const options = ref([]);
 const mercosTransferir = ref({ mercosid: null, codpessoanova: null });
-
 
 const inativar = async (codpessoa) => {
   try {
@@ -258,6 +267,14 @@ const salvarDetalhes = async () => {
             unmasked-value
             disable
           />
+          <q-input
+            class="col-md-3 col-sm-6 col-xs-12"
+            outlined
+            v-model="modelPessoa.rg"
+            v-if="modelPessoa.fisica == true"
+            label="RG"
+            unmasked-value
+          />
           <input-ie
             :class="
               modelPessoa.fisica
@@ -304,14 +321,7 @@ const salvarDetalhes = async () => {
               </q-icon>
             </template>
           </q-input>
-          <q-input
-            class="col-md-3 col-sm-6 col-xs-12"
-            outlined
-            v-model="modelPessoa.rg"
-            v-if="modelPessoa.fisica == true"
-            label="RG"
-            unmasked-value
-          />
+
           <input-filtered
             outlined
             v-model="modelPessoa.fantasia"
@@ -357,101 +367,105 @@ const salvarDetalhes = async () => {
               v-model="modelPessoa.mae"
               label="Nome da Mãe"
             />
-            <q-input
-              class="col-md-4 col-sm-6 col-xs-12"
-              outlined
-              v-model="modelPessoa.tituloeleitor"
-              mask="####.####.####"
-              label="Título de Eleitor"
-              unmasked-value
-            />
-            <q-input
-              class="col-md-2 col-sm-3 col-xs-6"
-              outlined
-              v-model="modelPessoa.titulozona"
-              label="Zona"
-              mask="###"
-              unmasked-value
-            />
-            <q-input
-              class="col-md-2 col-sm-3 col-xs-6"
-              outlined
-              v-model="modelPessoa.titulosecao"
-              label="Seção"
-              mask="####"
-              unmasked-value
-            />
-            <q-input
-              class="col-md-4 col-sm-4 col-xs-12"
-              outlined
-              v-model="modelPessoa.pispasep"
-              label="PIS/PASEP"
-              mask="###.#####.##-#"
-              unmasked-value
-            />
-            <q-input
-              class="col-md-4 col-sm-3 col-xs-12"
-              outlined
-              v-model="modelPessoa.ctps"
-              label="CTPS"
-              inputmode="numeric"
-              mask="#######"
-              unmasked-value
-            />
-            <q-input
-              class="col-md-2 col-sm-2 col-xs-6"
-              outlined
-              v-model="modelPessoa.seriectps"
-              label="Série"
-              mask="####"
-              inputmode="numeric"
-              unmasked-value
-            />
-            <select-estado
-              class="col-md-2 col-sm-3 col-xs-6"
-              v-model="modelPessoa.codestadoctps"
-              label="UF"
-            />
-            <q-input
-              class="col-md-4 col-sm-6 col-xs-12"
-              outlined
-              v-model="modelPessoa.emissaoctps"
-              mask="##/##/####"
-              label="Emissão CTPS"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="modelPessoa.emissaoctps"
-                      :locale="localeBrasil"
-                      mask="DD/MM/YYYY"
+            <template v-if="sPessoa.item?.permissaoRH">
+              <q-input
+                class="col-md-4 col-sm-6 col-xs-12"
+                outlined
+                v-model="modelPessoa.tituloeleitor"
+                mask="####.####.####"
+                label="Título de Eleitor"
+                unmasked-value
+              />
+              <q-input
+                class="col-md-2 col-sm-3 col-xs-6"
+                outlined
+                v-model="modelPessoa.titulozona"
+                label="Zona"
+                mask="###"
+                unmasked-value
+              />
+              <q-input
+                class="col-md-2 col-sm-3 col-xs-6"
+                outlined
+                v-model="modelPessoa.titulosecao"
+                label="Seção"
+                mask="####"
+                unmasked-value
+              />
+              <q-input
+                class="col-md-4 col-sm-4 col-xs-12"
+                outlined
+                v-model="modelPessoa.pispasep"
+                label="PIS/PASEP"
+                mask="###.#####.##-#"
+                unmasked-value
+              />
+              <q-input
+                class="col-md-4 col-sm-3 col-xs-12"
+                outlined
+                v-model="modelPessoa.ctps"
+                label="CTPS"
+                inputmode="numeric"
+                mask="#######"
+                unmasked-value
+              />
+              <q-input
+                class="col-md-2 col-sm-2 col-xs-6"
+                outlined
+                v-model="modelPessoa.seriectps"
+                label="Série"
+                mask="####"
+                inputmode="numeric"
+                unmasked-value
+              />
+              <select-estado
+                class="col-md-2 col-sm-3 col-xs-6"
+                v-model="modelPessoa.codestadoctps"
+                label="UF"
+              />
+              <q-input
+                class="col-md-4 col-sm-6 col-xs-12"
+                outlined
+                v-model="modelPessoa.emissaoctps"
+                mask="##/##/####"
+                label="Emissão CTPS"
+              >
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy
+                      cover
+                      transition-show="scale"
+                      transition-hide="scale"
                     >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Fechar"
-                          color="primary"
-                          flat
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+                      <q-date
+                        v-model="modelPessoa.emissaoctps"
+                        :locale="localeBrasil"
+                        mask="DD/MM/YYYY"
+                      >
+                        <div class="row items-center justify-end">
+                          <q-btn
+                            v-close-popup
+                            label="Fechar"
+                            color="primary"
+                            flat
+                          />
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                </template>
+              </q-input>
+            </template>
             <select-estado-civil
               class="col-md-4 col-sm-6 col-xs-12"
               v-model="modelPessoa.codestadocivil"
             />
-            <select-etnia
-              class="col-md-4 col-sm-6 col-xs-12"
-              v-model="modelPessoa.codetnia"
-            />
+            <template v-if="sPessoa.item?.permissaoRH">
+              <select-etnia
+                class="col-md-4 col-sm-6 col-xs-12"
+                v-model="modelPessoa.codetnia"
+              />
+            </template>
             <select-grau-instrucao
               class="col-md-4 col-sm-6 col-xs-12"
               v-model="modelPessoa.codgrauinstrucao"
@@ -459,6 +473,7 @@ const salvarDetalhes = async () => {
           </template>
 
           <q-input
+            v-if="sPessoa.item?.permissaoRH"
             class="col-md-4 col-sm-6 col-xs-12"
             outlined
             v-model="modelPessoa.rntrc"
@@ -502,7 +517,13 @@ const salvarDetalhes = async () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="grey-8"
+            v-close-popup
+            tabindex="-1"
+          />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -540,7 +561,13 @@ const salvarDetalhes = async () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="grey-8"
+            v-close-popup
+            tabindex="-1"
+          />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -623,7 +650,11 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div class="col-xs-12 col-sm-6" v-for="mid in sPessoa.item.mercosId" :key="mid">
+      <div
+        class="col-xs-12 col-sm-6"
+        v-for="mid in sPessoa.item.mercosId"
+        :key="mid"
+      >
         <div class="text-overline text-grey-7">
           Mercos Id
           <q-btn
@@ -713,7 +744,10 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.pai || sPessoa.item.mae">
+      <div
+        class="col-xs-12 col-sm-6"
+        v-if="sPessoa.item.pai || sPessoa.item.mae"
+      >
         <div class="text-overline text-grey-7">Filiacao</div>
         <div class="text-body2">
           {{ sPessoa.item.pai }}
