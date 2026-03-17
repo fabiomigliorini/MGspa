@@ -19,6 +19,7 @@ class ColaboradorController extends MgController
 
     public function show(Request $request, $codpessoa)
     {
+        Autorizador::autoriza(['Recursos Humanos']);
         $colaborador = Colaborador::where('codpessoa', $codpessoa)->get();
         foreach ($colaborador as $col) {
             if (empty($col->googledrivefolderid)) {

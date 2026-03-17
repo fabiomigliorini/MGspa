@@ -4,6 +4,7 @@ namespace Mg\Pessoa;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Mg\Pdv\PdvNegocioPrazoService;
+use Mg\Usuario\Autorizador;
 
 class PessoaResource extends JsonResource
 {
@@ -69,6 +70,27 @@ class PessoaResource extends JsonResource
         $ret['DependenteResponsavelS'] = DependenteResource::collection($this->DependeteResponsavelS()->orderBy('coddependente', 'desc')->get());
 
         $ret['UsuarioS'] = $this->UsuarioS()->orderBy('usuario')->get(['codusuario', 'usuario']);
+
+        // Permissões para o frontend
+        $ret['permissaoRH'] = Autorizador::pode(['Recursos Humanos']);
+        $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
+
+        if (!$ret['permissaoFinanceiro']) {
+            unset($ret['RegistroSpc']);
+            unset($ret['creditobloqueado']);
+            unset($ret['toleranciaatraso']);
+            unset($ret['consumidor']);
+            unset($ret['codgrupocliente']);
+            unset($ret['GrupoCliente']);
+            unset($ret['desconto']);
+            unset($ret['vendedor']);
+            unset($ret['notafiscal']);
+            unset($ret['fornecedor']);
+            unset($ret['cliente']);
+            unset($ret['credito']);
+            unset($ret['codformapagamento']);
+            unset($ret['FormaPagamento']);
+        }
 
         return $ret;
     }

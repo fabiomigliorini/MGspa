@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Mail;
+use Mg\Usuario\Autorizador;
 use Mg\Cidade\Estado;
 use Mg\Cidade\Cidade;
 use Mg\Cidade\CidadeService;
@@ -374,6 +375,33 @@ class PessoaService
 
     public static function update(Pessoa $pessoa, $data)
     {
+        // Remove campos sensíveis se o usuário não é Recursos Humanos
+        if (!Autorizador::pode(['Recursos Humanos'])) {
+            unset($data['rg']);
+            unset($data['pispasep']);
+            unset($data['ctps']);
+            unset($data['seriectps']);
+            unset($data['emissaoctps']);
+            unset($data['codestadoctps']);
+            unset($data['tituloeleitor']);
+            unset($data['titulozona']);
+            unset($data['titulosecao']);
+        }
+
+        // Remove campos de crédito/cliente se o usuário não é Financeiro
+        if (!Autorizador::pode(['Financeiro', 'Recursos Humanos'])) {
+            unset($data['credito']);
+            unset($data['creditobloqueado']);
+            unset($data['toleranciaatraso']);
+            unset($data['consumidor']);
+            unset($data['codgrupocliente']);
+            unset($data['desconto']);
+            unset($data['vendedor']);
+            unset($data['notafiscal']);
+            unset($data['fornecedor']);
+            unset($data['cliente']);
+            unset($data['codformapagamento']);
+        }
 
         if (!empty($data['creditobloqueado'])) {
             $creditobloqueado = filter_var($data['creditobloqueado'], FILTER_VALIDATE_BOOLEAN);

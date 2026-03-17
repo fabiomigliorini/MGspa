@@ -90,17 +90,17 @@ watch(
                 </div>
 
                 <!-- CLIENTE -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoFinanceiro">
                   <card-cliente />
                 </div>
 
                 <!-- COBRANCA -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoFinanceiro">
                   <card-historico-cobranca />
                 </div>
 
                 <!-- COLABORADOR -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoRH">
                   <card-colaborador />
                 </div>
               </div>
@@ -123,27 +123,27 @@ watch(
                 </div>
 
                 <!-- CONTA -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoRH">
                   <card-pessoa-conta />
                 </div>
 
                 <!-- DEPENDENTES -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoRH">
                   <card-dependentes />
                 </div>
 
                 <!-- ARQUIVOS -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoRH">
                   <card-arquivos />
                 </div>
 
                 <!-- SPC -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoFinanceiro">
                   <card-registro-spc />
                 </div>
 
                 <!-- CERT -->
-                <div class="col-12">
+                <div class="col-12" v-if="sPessoa.item?.permissaoRH">
                   <card-certidoes />
                 </div>
               </div>
