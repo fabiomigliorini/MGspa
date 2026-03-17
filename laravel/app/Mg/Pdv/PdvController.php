@@ -31,6 +31,7 @@ use Mg\Saurus\SaurusPedidoResource;
 use Mg\Saurus\SaurusPinPad;
 use Mg\Saurus\SaurusService;
 use Mg\Rh\ProcessarVendaJob;
+use Mg\Usuario\Autorizador;
 use Ramsey\Uuid\Uuid;
 
 class PdvController
@@ -38,8 +39,33 @@ class PdvController
 
     public function getDispositivo(Request $request)
     {
-        $pdvs = Pdv::orderBy('criacao', 'desc')->get();
-        return PdvResource::collection($pdvs);
+        Autorizador::autoriza(['Administrador']);
+        $query = Pdv::orderBy('criacao', 'desc');
+        if ($request->apelido) {
+            $query->where('apelido', 'ilike', "%{$request->apelido}%");
+        }
+        if ($request->codfilial) {
+            $query->where('codfilial', $request->codfilial);
+        }
+        if ($request->status) {
+            match ($request->status) {
+                'autorizado' => $query->where('autorizado', true)->whereNull('inativo'),
+                'inativo' => $query->whereNotNull('inativo'),
+                'nao_autorizado' => $query->where(function ($q) {
+                    $q->where('autorizado', false)->orWhereNull('autorizado');
+                })->whereNull('inativo'),
+            };
+        }
+        if ($request->ip) {
+            $query->where('ip', 'ilike', "%{$request->ip}%");
+        }
+        if ($request->uuid) {
+            $query->where('uuid', 'ilike', "%{$request->uuid}%");
+        }
+        if ($request->codsetor) {
+            $query->where('codsetor', $request->codsetor);
+        }
+        return PdvResource::collection($query->get());
     }
 
     public function putDispositivo(Request $request)
@@ -50,6 +76,7 @@ class PdvController
             'navegador' => 'required',
             'versaonavegador' => 'required',
             'plataforma' => 'required',
+
         ]);
         $pdv = PdvService::dispositivo(
             $request->uuid,
@@ -60,13 +87,18 @@ class PdvController
             $request->desktop,
             $request->navegador,
             $request->versaonavegador,
-            $request->plataforma
+            $request->plataforma,
+            $request->apelido,
+            $request->codfilial,
+            $request->codsetor,
+            $request->observacoes
         );
         return new PdvResource($pdv);
     }
 
     public static function autorizar($codpdv)
     {
+        Autorizador::autoriza([]);
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::autorizar($pdv);
         return new PdvResource($pdv);
@@ -74,6 +106,7 @@ class PdvController
 
     public static function desautorizar($codpdv)
     {
+        Autorizador::autoriza([]);
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::desautorizar($pdv);
         return new PdvResource($pdv);
@@ -81,6 +114,7 @@ class PdvController
 
     public static function inativar($codpdv)
     {
+        Autorizador::autoriza([]);
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::inativar($pdv);
         return new PdvResource($pdv);
@@ -88,6 +122,7 @@ class PdvController
 
     public static function reativar($codpdv)
     {
+        Autorizador::autoriza([]);
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::reativar($pdv);
         return new PdvResource($pdv);
@@ -605,7 +640,7 @@ class PdvController
 
     public function update(PdvRequest $request, $codpdv)
     {
-
+        Autorizador::autoriza([]);
         PdvService::autoriza($request->pdv);
         $pdv =  Pdv::findOrFail($codpdv);
         $data = $request->all();
@@ -663,7 +698,7 @@ class PdvController
         }
 
         // busca a pessoa
-        $pessoa = Filial::findOrFail($request->codfilial)->pessoa;//Pessoa::findOrFail(->codpessoa);
+        $pessoa = Filial::findOrFail($request->codfilial)->pessoa; //Pessoa::findOrFail(->codpessoa);
 
         // se nao tem numero, busca o proximo na filial
         if ($pdvSaurus) {

@@ -9,9 +9,12 @@ export const pdvStore = defineStore("pdv", {
   }),
 
   actions: {
-    async getDispositivos() {
+    async getDispositivos(filtro = {}) {
       try {
-        const { data } = await api.get("/api/v1/pdv/dispositivo");
+        const params = Object.fromEntries(
+          Object.entries(filtro).filter(([, v]) => v != null && v !== "")
+        );
+        const { data } = await api.get("/api/v1/pdv/dispositivo", { params });
         this.dispositivos = data.data;
       } catch (error) {
         console.log(error);

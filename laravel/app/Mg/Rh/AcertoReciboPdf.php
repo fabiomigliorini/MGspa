@@ -9,7 +9,7 @@ class AcertoReciboPdf
 {
     public static function gerar(int $codperiodo, array $colaboradores = []): string
     {
-        //ini_set('memory_limit', '256M');
+        ini_set('memory_limit', '256M');
 
         $query = LiquidacaoTitulo::where('codperiodo', $codperiodo)
             ->whereNull('estornado')
@@ -40,7 +40,7 @@ class AcertoReciboPdf
 
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html);
-        $dompdf->setPaper('A5', 'landscape');
+        $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
         return $dompdf->output();

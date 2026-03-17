@@ -31,6 +31,7 @@ class NegocioResource extends Resource
         $ret['Pdv'] = null;
         if (!empty($this->codpdv)) {
             $ret['Pdv'] = $this->Pdv->toArray();
+            $ret['Pdv']['setor'] = $this->Pdv->Setor->setor ?? null;
         }
         $ret['Pessoa'] = $this->Pessoa->toArray();
         $ret['Pessoa']['formapagamento'] = $this->Pessoa->FormaPagamento->formapagamento??null;
