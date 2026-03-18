@@ -40,7 +40,7 @@ export default route(function (/* { store, ssrContext } */) {
         if (EstaAutenticado) {
           auth.usuarioLogado = EstaAutenticado
           auth.username(EstaAutenticado.usuario)
-          
+
           // Envia sempre o Token em todas as requisições
           api.defaults.headers.common['Authorization'] = 'Bearer ' + auth.token
           // api.defaults.headers.put['Access-Control-Allow-Origin'] = '*'
@@ -49,11 +49,11 @@ export default route(function (/* { store, ssrContext } */) {
           next()
         } else {
           api.defaults.headers.common['Authorization'] = ''
-          next({ name: 'login' })
+          next({ name: 'login', query: { redirect: to.fullPath } })
         }
       } else {
         api.defaults.headers.common['Authorization'] = ''
-        next({ name: 'login' })
+        next({ name: 'login', query: { redirect: to.fullPath } })
       }
     } else {
       next()

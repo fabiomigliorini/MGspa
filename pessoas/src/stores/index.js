@@ -109,8 +109,9 @@ export const guardaToken = defineStore('auth', () => {
     } catch (error) {
       localStorage.removeItem('access_token')
       localStorage.removeItem('usuario')
-      let url = new URL(window.location.href)
-      url = encodeURI(url.origin)
+      document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;"
+      document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;"
+      let url = encodeURIComponent(window.location.href)
       window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
     }
   }
