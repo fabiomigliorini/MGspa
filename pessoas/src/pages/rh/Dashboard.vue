@@ -4,6 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
+import { formataMoeda, formataPercentual, corProgresso, extrairErro } from "src/utils/rhFormatters";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -55,41 +56,6 @@ const totalVendas = computed(() =>
   unidades.value.reduce((s, u) => s + (parseFloat(u.vendas) || 0), 0)
 );
 
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(valor) || 0);
-};
-
-const formataPercentual = (valor) => {
-  if (valor == null) return "—";
-  return (
-    new Intl.NumberFormat("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(parseFloat(valor) || 0) + "%"
-  );
-};
-
-const corProgresso = (percentual) => {
-  if (!percentual) return "grey";
-  if (percentual >= 100) return "green";
-  if (percentual >= 70) return "orange";
-  return "red";
-};
-
-const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
-  }
-  return data.mensagem || data.message || fallback;
-};
 
 // --- DIALOG EDITAR META UNIDADE ---
 

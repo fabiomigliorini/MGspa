@@ -2,6 +2,7 @@
 import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { rhStore } from "src/stores/rh";
+import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
 
 const props = defineProps({
   modelValue: Boolean,
@@ -23,29 +24,10 @@ const observacao = ref("");
 
 // --- HELPERS ---
 
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(valor) || 0);
-};
-
 const formataData = (data) => {
   if (!data) return "";
   const [y, m, d] = data.substring(0, 10).split("-");
   return `${d}/${m}/${y}`;
-};
-
-const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
-  }
-  return data.mensagem || data.message || fallback;
 };
 
 // --- COMPUTED TOTAIS ---

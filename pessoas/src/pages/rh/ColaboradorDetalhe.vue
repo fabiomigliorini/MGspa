@@ -6,8 +6,12 @@ import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { api } from "src/boot/axios";
 import { formataDataSemHora, formataFromNow } from "src/utils/formatador";
+import { formataMoeda, tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
 import SelectSetor from "src/components/select/SelectSetor.vue";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
+import CardIndicadores from "src/components/rh/CardIndicadores.vue";
+import CardRubricas from "src/components/rh/CardRubricas.vue";
+import CardSetores from "src/components/rh/CardSetores.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -43,56 +47,6 @@ const indicadores = computed(() => colaborador.value?.indicadores || []);
 
 // --- HELPERS ---
 
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(valor) || 0);
-};
-
-const formataPercentual = (valor) => {
-  if (valor == null) return "—";
-  return (
-    new Intl.NumberFormat("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(parseFloat(valor) || 0) + "%"
-  );
-};
-
-const corProgresso = (percentual) => {
-  if (!percentual) return "grey";
-  if (percentual >= 100) return "green";
-  if (percentual >= 70) return "orange";
-  return "red";
-};
-
-const tipoIndicadorLabel = (tipo) => {
-  const map = { U: "Unidade", S: "Setor", V: "Vendedor", C: "Caixa" };
-  return map[tipo] || tipo;
-};
-
-const tipoValorLabel = (tipo) => {
-  return tipo === "P" ? "%" : "Fixo";
-};
-
-const condicaoLabel = (rubrica) => {
-  if (!rubrica.tipocondicao) return "—";
-  const tipo = rubrica.tipocondicao === "M" ? "Meta" : "Rank";
-  const ind = rubrica.indicador_condicao;
-  const indicadorLabel = ind ? tipoIndicadorLabel(ind.tipo) : "";
-  return tipo + " " + indicadorLabel;
-};
-
-const condicaoAtingida = (rubrica) => {
-  if (!rubrica.tipocondicao) return null;
-  return rubrica.valorcalculado > 0 || rubrica.concedido === false
-    ? null
-    : false;
-};
-
 const linkTitulo = computed(() => {
   if (!colaborador.value?.codtitulo) return "";
   return (
@@ -109,15 +63,6 @@ const diasUteisPeriodo = computed(() => {
   return p?.diasuteis || 0;
 });
 
-const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
-  }
-  return data.mensagem || data.message || fallback;
-};
 
 // --- DIAS ÚTEIS ---
 
@@ -837,399 +782,45 @@ watch(
         <!-- COLUNA ESQUERDA -->
         <div class="col-xs-12 col-md-8">
           <!-- RUBRICAS -->
-          <q-card bordered flat class="q-mb-md">
-            <q-card-section class="text-grey-9 text-overline row items-center">
-              RUBRICAS
-              <q-space />
-              <q-btn
-                flat
-                dense
-                round
-                icon="refresh"
-                size="sm"
-                color="grey-7"
-                @click="recalcularColaborador()"
-                v-if="podeEditar && colaborador.status === 'A'"
-              >
-                <q-tooltip>Recalcular</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                icon="check_circle"
-                size="sm"
-                color="green-7"
-                @click="encerrarColaborador()"
-                v-if="podeEditar && colaborador.status === 'A'"
-              >
-                <q-tooltip>Encerrar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                icon="undo"
-                size="sm"
-                color="grey-7"
-                @click="estornarColaborador()"
-                v-if="podeEditar && colaborador.status === 'E'"
-              >
-                <q-tooltip>Estornar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                round
-                dense
-                icon="add"
-                size="sm"
-                color="primary"
-                v-if="podeEditar && colaborador.status === 'A'"
-                @click="abrirNovaRubrica()"
-              >
-                <q-tooltip>Nova Rubrica</q-tooltip>
-              </q-btn>
-            </q-card-section>
-
-            <q-markup-table
-              flat
-              separator="horizontal"
-              v-if="rubricas.length > 0"
-              class="rh-tabela"
-            >
-              <thead>
-                <tr class="text-left">
-                  <th>Descrição</th>
-                  <th class="text-center">Tipo</th>
-                  <th class="text-right">%/Valor</th>
-                  <th>Indicador</th>
-                  <th>Condição</th>
-                  <th class="text-right">Calculado</th>
-                  <th class="text-center">Conc.</th>
-                  <th class="text-right" v-if="podeEditar">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="r in rubricas"
-                  :key="r.codcolaboradorrubrica"
-                  :class="!r.concedido ? 'text-grey-5' : ''"
-                >
-                  <td>{{ r.descricao }}</td>
-                  <td class="text-center">
-                    <q-badge
-                      :color="r.tipovalor === 'P' ? 'blue' : 'purple'"
-                      :label="tipoValorLabel(r.tipovalor)"
-                    />
-                  </td>
-                  <td class="text-right">
-                    <template v-if="r.tipovalor === 'P'">
-                      {{ r.percentual }}%
-                    </template>
-                    <template v-else>
-                      {{ formataMoeda(r.valorfixo) }}
-                    </template>
-                  </td>
-                  <td>
-                    <template v-if="r.indicador">
-                      {{ tipoIndicadorLabel(r.indicador.tipo) }}
-                    </template>
-                    <template v-else>—</template>
-                  </td>
-                  <td>{{ condicaoLabel(r) }}</td>
-                  <td class="text-right text-weight-bold">
-                    {{ formataMoeda(r.valorcalculado) }}
-                  </td>
-                  <td class="text-center">
-                    <q-toggle
-                      v-if="podeEditar && colaborador.status === 'A'"
-                      :model-value="r.concedido"
-                      @update:model-value="toggleConcedido(r)"
-                      dense
-                    />
-                    <q-icon
-                      v-else
-                      :name="r.concedido ? 'check_circle' : 'cancel'"
-                      :color="r.concedido ? 'green' : 'red'"
-                      size="sm"
-                    />
-                  </td>
-                  <td class="text-right" v-if="podeEditar">
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="edit"
-                      size="sm"
-                      color="grey-7"
-                      @click="editarRubrica(r)"
-                      v-if="colaborador.status === 'A'"
-                    >
-                      <q-tooltip>Editar</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      flat
-                      dense
-                      round
-                      icon="delete"
-                      size="sm"
-                      color="grey-7"
-                      @click="excluirRubrica(r)"
-                      v-if="colaborador.status === 'A'"
-                    >
-                      <q-tooltip>Excluir</q-tooltip>
-                    </q-btn>
-                  </td>
-                </tr>
-                <!-- TOTAL -->
-                <tr class="text-weight-bold bg-grey-2">
-                  <td colspan="5" class="text-right">TOTAL</td>
-                  <td class="text-right">
-                    {{ formataMoeda(colaborador.valortotal) }}
-                  </td>
-                  <td class="text-center">
-                    <q-badge
-                      :color="colaborador.status === 'A' ? 'green' : 'blue'"
-                      :label="
-                        colaborador.status === 'A' ? 'Aberto' : 'Encerrado'
-                      "
-                    />
-                  </td>
-                  <td v-if="podeEditar" class="text-right">
-                    <a
-                      v-if="colaborador.codtitulo"
-                      :href="linkTitulo"
-                      target="_blank"
-                      class="text-primary text-caption"
-                    >
-                      #{{ String(colaborador.codtitulo).padStart(8, "0") }}
-                      <q-icon name="open_in_new" size="xs" />
-                    </a>
-                  </td>
-                </tr>
-              </tbody>
-            </q-markup-table>
-            <div v-else class="q-pa-md text-center text-grey">
-              Nenhuma rubrica cadastrada
-            </div>
-          </q-card>
+          <CardRubricas
+            :rubricas="rubricas"
+            :valortotal="colaborador.valortotal"
+            :status="colaborador.status"
+            :codtitulo="colaborador.codtitulo"
+            :linkTitulo="linkTitulo"
+            :podeEditar="podeEditar"
+            @editar="editarRubrica"
+            @excluir="excluirRubrica"
+            @toggle-concedido="toggleConcedido"
+            @recalcular="recalcularColaborador"
+            @encerrar="encerrarColaborador"
+            @estornar="estornarColaborador"
+            @nova-rubrica="abrirNovaRubrica"
+          />
         </div>
 
         <!-- COLUNA DIREITA -->
         <div class="col-xs-12 col-md-4">
           <!-- SETORES -->
-          <q-card bordered flat class="q-mb-md q-pb-md">
-            <q-card-section class="text-grey-9 text-overline row items-center">
-              SETORES
-              <q-space />
-              <q-btn
-                flat
-                round
-                dense
-                icon="add"
-                size="sm"
-                color="primary"
-                v-if="podeEditar && colaborador.status === 'A'"
-                @click="abrirNovoSetor()"
-              >
-                <q-tooltip>Adicionar Setor</q-tooltip>
-              </q-btn>
-            </q-card-section>
-
-            <q-list v-if="setores.length > 0">
-              <template
-                v-for="pcs in setores"
-                :key="pcs.codperiodocolaboradorsetor"
-              >
-                <q-separator inset />
-                <q-item>
-                  <q-item-section>
-                    <q-item-label>
-                      {{ pcs.setor?.setor || "—" }}
-                    </q-item-label>
-                    <q-item-label caption>
-                      {{ pcs.setor?.unidade_negocio?.descricao || "" }}
-                    </q-item-label>
-                    <q-item-label caption>
-                      Rateio: {{ pcs.percentualrateio }}% —
-                      <span
-                        :class="pcs.diastrabalhados !== diasUteisPeriodo ? 'text-red text-weight-bold' : ''"
-                        :style="pcs.diastrabalhados !== diasUteisPeriodo ? 'cursor: help' : ''"
-                      >
-                        Dias: {{ pcs.diastrabalhados }}
-                        <q-tooltip v-if="pcs.diastrabalhados !== diasUteisPeriodo">
-                          Dias úteis do período: {{ diasUteisPeriodo }}
-                        </q-tooltip>
-                      </span>
-                    </q-item-label>
-                  </q-item-section>
-                  <q-item-section
-                    side
-                    v-if="podeEditar && colaborador.status === 'A'"
-                  >
-                    <q-item-label caption>
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        icon="edit"
-                        size="sm"
-                        color="grey-7"
-                        @click="editarSetor(pcs)"
-                      >
-                        <q-tooltip>Editar</q-tooltip>
-                      </q-btn>
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        icon="delete"
-                        size="sm"
-                        color="grey-7"
-                        @click="excluirSetor(pcs)"
-                      >
-                        <q-tooltip>Excluir</q-tooltip>
-                      </q-btn>
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-              </template>
-            </q-list>
-            <div v-else class="q-pa-md text-center text-grey">
-              Nenhum setor vinculado
-            </div>
-          </q-card>
+          <CardSetores
+            :setores="setores"
+            :diasUteisPeriodo="diasUteisPeriodo"
+            :podeEditar="podeEditar"
+            :status="colaborador.status"
+            @editar="editarSetor"
+            @excluir="excluirSetor"
+            @adicionar="abrirNovoSetor"
+          />
 
           <!-- INDICADORES -->
-          <q-card bordered flat class="q-mb-md q-pb-md">
-            <q-card-section class="text-grey-9 text-overline row items-center">
-              INDICADORES
-            </q-card-section>
-
-            <template v-if="indicadores.length > 0">
-              <template v-for="ind in indicadores" :key="ind.codindicador">
-                <q-separator inset />
-                <q-card-section class="q-py-sm">
-                  <div class="row items-center">
-                    <div class="col">
-                      <q-badge
-                        :color="
-                          ind.tipo === 'V'
-                            ? 'blue'
-                            : ind.tipo === 'C'
-                            ? 'purple'
-                            : ind.tipo === 'U'
-                            ? 'orange'
-                            : 'teal'
-                        "
-                        :label="tipoIndicadorLabel(ind.tipo)"
-                        class="q-mr-sm"
-                      />
-                    </div>
-                    <div class="col-auto">
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        icon="receipt_long"
-                        size="xs"
-                        color="grey-7"
-                        :to="{
-                          name: 'rhIndicadorExtrato',
-                          params: {
-                            codperiodo: route.params.codperiodo,
-                            codindicador: ind.codindicador,
-                          },
-                        }"
-                      >
-                        <q-tooltip>Ver Extrato</q-tooltip>
-                      </q-btn>
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        icon="edit"
-                        size="xs"
-                        color="grey-7"
-                        @click="editarMeta(ind)"
-                        v-if="podeEditar && colaborador.status === 'A'"
-                      >
-                        <q-tooltip>Editar Meta</q-tooltip>
-                      </q-btn>
-                    </div>
-                  </div>
-                  <div class="text-caption q-mt-xs">
-                    <div class="text-grey-6" style="font-size: 10px">
-                      #{{ ind.codindicador }}
-                      <template v-if="ind.unidade_negocio">
-                        — {{ ind.unidade_negocio.descricao }}
-                      </template>
-                      <template v-if="ind.setor">
-                        — {{ ind.setor.setor }}
-                      </template>
-                    </div>
-                    <div>
-                      Vendas:
-                      <span class="text-weight-bold">
-                        {{ formataMoeda(ind.valoracumulado) }}
-                      </span>
-                    </div>
-                    <div>
-                      Meta:
-                      <span class="text-weight-bold">
-                        {{ ind.meta ? formataMoeda(ind.meta) : "—" }}
-                      </span>
-                    </div>
-                    <div v-if="ind.meta">
-                      Ating:
-                      <span
-                        class="text-weight-bold"
-                        :class="
-                          'text-' +
-                          corProgresso(
-                            (parseFloat(ind.valoracumulado) /
-                              parseFloat(ind.meta)) *
-                              100
-                          )
-                        "
-                      >
-                        {{
-                          formataPercentual(
-                            (parseFloat(ind.valoracumulado) /
-                              parseFloat(ind.meta)) *
-                              100
-                          )
-                        }}
-                      </span>
-                    </div>
-                  </div>
-                  <q-linear-progress
-                    v-if="ind.meta"
-                    :value="
-                      Math.min(
-                        parseFloat(ind.valoracumulado) / parseFloat(ind.meta) || 0,
-                        1
-                      )
-                    "
-                    size="6px"
-                    stripe
-                    rounded
-                    class="q-mt-xs"
-                    :color="
-                      corProgresso(
-                        (parseFloat(ind.valoracumulado) /
-                          parseFloat(ind.meta)) *
-                          100
-                      )
-                    "
-                  />
-                </q-card-section>
-              </template>
-            </template>
-            <div v-else class="q-pa-md text-center text-grey">
-              Nenhum indicador
-            </div>
-          </q-card>
+          <CardIndicadores
+            :indicadores="indicadores"
+            :codperiodo="route.params.codperiodo"
+            nomeRotaExtrato="rhIndicadorExtrato"
+            :podeEditar="podeEditar"
+            :status="colaborador.status"
+            @editar-meta="editarMeta"
+          />
         </div>
       </div>
       </div>

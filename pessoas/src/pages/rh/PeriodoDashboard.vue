@@ -6,6 +6,7 @@ import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { feriadoStore } from "src/stores/feriado";
 import { formataDataSemHora } from "src/utils/formatador";
+import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
 import Dashboard from "./Dashboard.vue";
 import Colaboradores from "./Colaboradores.vue";
 import Indicadores from "./Indicadores.vue";
@@ -42,14 +43,6 @@ const totalEncargos = computed(() => dash.value.totalencargos || 0);
 const totalVariaveis = computed(() => dash.value.totalvariaveis || 0);
 const custoTotal = computed(() => dash.value.total || 0);
 
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(valor) || 0);
-};
 
 // --- DIAS ÚTEIS ---
 
@@ -130,15 +123,6 @@ const formataDataCurta = (data) => {
   return d[2] + "/" + d[1];
 };
 
-const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
-  }
-  return data.mensagem || data.message || fallback;
-};
 
 // --- DIALOG EDITAR PERÍODO ---
 

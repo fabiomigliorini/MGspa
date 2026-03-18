@@ -5,6 +5,7 @@ import { useRouter, useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { formataDataSemHora } from "src/utils/formatador";
+import { extrairErro } from "src/utils/rhFormatters";
 import MGLayout from "layouts/MGLayout.vue";
 
 const $q = useQuasar();
@@ -22,15 +23,6 @@ const modelNovoPeriodo = ref({
   observacoes: "",
 });
 
-const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
-  }
-  return data.mensagem || data.message || fallback;
-};
 
 const statusLabel = (status) => {
   return status === "A" ? "Aberto" : "Fechado";

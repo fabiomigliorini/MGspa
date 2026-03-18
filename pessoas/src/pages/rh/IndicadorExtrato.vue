@@ -1,14 +1,22 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
+import { guardaToken } from "src/stores";
+import { formataMoeda, formataPercentual, corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
 import moment from "moment";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
 
 const $q = useQuasar();
 const route = useRoute();
+const router = useRouter();
 const sRh = rhStore();
+const user = guardaToken();
+
+const podeEditar = computed(() =>
+  user.verificaPermissaoUsuario("Recursos Humanos")
+);
 
 const loading = ref(false);
 const indicador = ref(null);
@@ -24,42 +32,6 @@ const modelLancamento = ref({});
 const isNovoLancamento = computed(() => !modelLancamento.value.codindicadorlancamento);
 
 // --- HELPERS ---
-
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(valor) || 0);
-};
-
-const formataPercentual = (valor) => {
-  if (valor == null) return "—";
-  return (
-    new Intl.NumberFormat("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(parseFloat(valor) || 0) + "%"
-  );
-};
-
-const corProgresso = (percentual) => {
-  if (!percentual) return "grey";
-  if (percentual >= 100) return "green";
-  if (percentual >= 70) return "orange";
-  return "red";
-};
-
-const tipoIndicadorLabel = (tipo) => {
-  const map = { U: "Unidade", S: "Setor", V: "Vendedor", C: "Caixa" };
-  return map[tipo] || tipo;
-};
-
-const tipoIndicadorColor = (tipo) => {
-  const map = { V: "blue", C: "purple", U: "orange", S: "teal" };
-  return map[tipo] || "grey";
-};
 
 const negocioUrl = (codnegocio) =>
   process.env.APP_NEGOCIOS_URL + "/negocio/" + codnegocio;
@@ -140,15 +112,6 @@ const scrollLancamentos = async (index, done) => {
 
 // --- LANÇAMENTO MANUAL CRUD ---
 
-const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
-  }
-  return data.mensagem || data.message || data.erro || fallback;
-};
 
 const abrirDialogLancamento = (lancamento = null) => {
   if (lancamento) {
@@ -258,7 +221,7 @@ onMounted(() => {
             round
             icon="arrow_back"
             color="grey-7"
-            :to="{ name: 'rhDashboard', params: { codperiodo: route.params.codperiodo }, query: { tab: 'indicadores' } }"
+            @click="router.back()"
           >
             <q-tooltip>Voltar</q-tooltip>
           </q-btn>
@@ -285,6 +248,7 @@ onMounted(() => {
                 <div class="text-h6 text-grey-9">
                   {{ meta ? formataMoeda(meta) : "—" }}
                   <q-btn
+                    v-if="podeEditar"
                     flat
                     dense
                     round
@@ -346,6 +310,7 @@ onMounted(() => {
               EXTRATO
               <q-space />
               <q-btn
+                v-if="podeEditar"
                 flat
                 round
                 dense
@@ -419,7 +384,7 @@ onMounted(() => {
                       label="manual"
                       class="q-mr-xs"
                     />
-                    <template v-if="l.manual">
+                    <template v-if="l.manual && podeEditar">
                       <q-btn
                         flat
                         dense
