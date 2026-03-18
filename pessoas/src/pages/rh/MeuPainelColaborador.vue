@@ -113,10 +113,12 @@ onMounted(() => carregar());
 
             <CardIndicadores
               :indicadores="indicadores"
+              :rubricas="colaborador.colaborador_rubrica_s || []"
               :codperiodo="route.params.codperiodo"
               nomeRotaExtrato="rhMeuPainelExtrato"
               :podeEditar="false"
               :status="colaborador.status"
+              :somenteComRubrica="true"
             />
           </div>
         </div>

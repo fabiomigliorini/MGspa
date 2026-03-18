@@ -7,15 +7,31 @@ import {
   tipoIndicadorColor,
 } from "src/utils/rhFormatters";
 
+import { computed } from "vue";
+
 const props = defineProps({
   indicadores: { type: Array, default: () => [] },
+  rubricas: { type: Array, default: () => [] },
   codperiodo: { type: [Number, String], required: true },
   nomeRotaExtrato: { type: String, default: "rhIndicadorExtrato" },
   podeEditar: { type: Boolean, default: false },
   status: { type: String, default: "A" },
+  somenteComRubrica: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["editar-meta"]);
+
+const indicadoresFiltrados = computed(() => {
+  if (!props.somenteComRubrica || props.rubricas.length === 0) {
+    return props.indicadores;
+  }
+  const codsComRubrica = new Set(
+    props.rubricas
+      .filter((r) => r.codindicador)
+      .map((r) => r.codindicador)
+  );
+  return props.indicadores.filter((ind) => codsComRubrica.has(ind.codindicador));
+});
 
 const atingimento = (ind) => {
   if (!ind.meta) return null;
@@ -29,8 +45,8 @@ const atingimento = (ind) => {
       INDICADORES
     </q-card-section>
 
-    <template v-if="indicadores.length > 0">
-      <template v-for="ind in indicadores" :key="ind.codindicador">
+    <template v-if="indicadoresFiltrados.length > 0">
+      <template v-for="ind in indicadoresFiltrados" :key="ind.codindicador">
         <q-separator inset />
         <q-card-section class="q-py-sm">
           <div class="row items-center">

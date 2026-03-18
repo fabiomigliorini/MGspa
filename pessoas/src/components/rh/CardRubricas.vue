@@ -119,6 +119,15 @@ const condicaoLabel = (rubrica) => {
           <td>{{ condicaoLabel(r) }}</td>
           <td class="text-right text-weight-bold">
             {{ formataMoeda(r.valorcalculado) }}
+            <q-icon
+              v-if="r.descontaabsenteismo && status === 'A'"
+              name="schedule"
+              size="xs"
+              color="orange"
+              class="q-ml-xs"
+            >
+              <q-tooltip>Valor provisório — sujeito a desconto de absenteísmo</q-tooltip>
+            </q-icon>
           </td>
           <td class="text-center">
             <q-toggle

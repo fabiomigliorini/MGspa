@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { formataDataSemHora, formataFromNow } from "src/utils/formatador";
 import {
@@ -18,7 +18,6 @@ import CardSetores from "src/components/rh/CardSetores.vue";
 
 const $q = useQuasar();
 const route = useRoute();
-const router = useRouter();
 const sRh = rhStore();
 
 const loading = ref(false);
@@ -70,14 +69,28 @@ const equipeAgrupada = computed(() => {
     });
   });
 
-  return Array.from(setorMap.values());
+  const grupos = Array.from(setorMap.values());
+  const vendasColaborador = (pc) => {
+    const inds = indicadoresLinha(pc);
+    if (!inds[0]) return 0;
+    return Math.max(0, ...inds.map((i) => parseFloat(i.valoracumulado) || 0));
+  };
+  grupos.forEach((g) => {
+    g.colaboradores.sort((a, b) => vendasColaborador(b) - vendasColaborador(a));
+  });
+  return grupos;
 });
 
 const nomeColaborador = (pc) => pc.colaborador?.pessoa?.fantasia || "—";
 
-const indicadoresLinha = (pcs) => {
-  const inds = pcs?.indicadores || [];
-  return inds.length > 0 ? inds : [null];
+const indicadoresLinha = (pc) => {
+  const inds = pc?.indicadores || [];
+  const rubricas = pc?.colaborador_rubrica_s || [];
+  const codsComRubrica = new Set(
+    rubricas.filter((r) => r.codindicador).map((r) => r.codindicador)
+  );
+  const filtrados = inds.filter((ind) => codsComRubrica.has(ind.codindicador));
+  return filtrados.length > 0 ? filtrados : [null];
 };
 
 const vendasInd = (ind) => (ind ? parseFloat(ind.valoracumulado) || 0 : null);
@@ -158,10 +171,12 @@ watch(() => route.params.codperiodo, () => {
 
             <CardIndicadores
               :indicadores="indicadores"
+              :rubricas="colaborador.colaborador_rubrica_s || []"
               :codperiodo="route.params.codperiodo"
               nomeRotaExtrato="rhMeuPainelExtrato"
               :podeEditar="false"
               :status="colaborador.status"
+              :somenteComRubrica="true"
             />
           </div>
         </div>
@@ -208,11 +223,14 @@ watch(() => route.params.codperiodo, () => {
                   <tr
                     v-for="(ind, idx) in indicadoresLinha(pc)"
                     :key="(pc.codperiodocolaborador + '-' + (ind?.codindicador || 'none'))"
-                    class="cursor-pointer"
-                    @click="router.push({ name: 'rhMeuPainelColaborador', params: { codperiodo: route.params.codperiodo, codperiodocolaborador: pc.codperiodocolaborador } })"
                   >
                     <td v-if="idx === 0" :rowspan="indicadoresLinha(pc).length" class="text-weight-medium">
-                      {{ nomeColaborador(pc) }}
+                      <router-link
+                        :to="{ name: 'rhMeuPainelColaborador', params: { codperiodo: route.params.codperiodo, codperiodocolaborador: pc.codperiodocolaborador } }"
+                        class="text-primary"
+                      >
+                        {{ nomeColaborador(pc) }}
+                      </router-link>
                     </td>
                     <td class="text-center">
                       <q-badge
