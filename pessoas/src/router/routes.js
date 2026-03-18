@@ -170,7 +170,31 @@ const routes = [
         component: () => import("pages/certidao-emissor/Index.vue"),
       },
 
-      // RH — Metas & Variáveis
+      // RH — Meu Painel (qualquer usuário autenticado)
+      {
+        path: "/rh/meu-painel",
+        name: "rhMeuPainelIndex",
+        component: () => import("pages/rh/MeuPainelIndex.vue"),
+        children: [
+          {
+            path: ":codperiodo",
+            name: "rhMeuPainelDashboard",
+            component: () => import("pages/rh/MeuPainelDashboard.vue"),
+          },
+          {
+            path: ":codperiodo/colaborador/:codperiodocolaborador",
+            name: "rhMeuPainelColaborador",
+            component: () => import("pages/rh/MeuPainelColaborador.vue"),
+          },
+          {
+            path: ":codperiodo/indicador/:codindicador",
+            name: "rhMeuPainelExtrato",
+            component: () => import("pages/rh/IndicadorExtrato.vue"),
+          },
+        ],
+      },
+
+      // RH — Metas & Variáveis (admin)
       {
         path: "/rh",
         name: "rhIndex",

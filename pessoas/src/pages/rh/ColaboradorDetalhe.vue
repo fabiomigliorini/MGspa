@@ -454,6 +454,20 @@ const recarregar = async () => {
     ) || null;
 };
 
+const toggleGestorColaborador = async () => {
+  try {
+    await sRh.toggleGestor(route.params.codperiodo, colaborador.value.codperiodocolaborador);
+    colaborador.value.gestor = !colaborador.value.gestor;
+  } catch (error) {
+    $q.notify({
+      color: "red-5",
+      textColor: "white",
+      icon: "error",
+      message: extrairErro(error, "Erro ao alterar gestor"),
+    });
+  }
+};
+
 const carregar = async () => {
   loading.value = true;
   try {
@@ -760,20 +774,29 @@ watch(
           </div>
         </q-item-section>
         <q-item-section side>
-          <q-btn
-            flat
-            dense
-            round
-            icon="arrow_back"
-            color="grey-7"
-            :to="{
-              name: 'rhDashboard',
-              params: { codperiodo: route.params.codperiodo },
-              query: { tab: 'colaboradores' },
-            }"
-          >
-            <q-tooltip>Voltar</q-tooltip>
-          </q-btn>
+          <div class="row items-center q-gutter-sm">
+            <q-toggle
+              v-if="podeEditar"
+              :model-value="colaborador.gestor"
+              @update:model-value="toggleGestorColaborador()"
+              label="Gestor"
+              dense
+            />
+            <q-btn
+              flat
+              dense
+              round
+              icon="arrow_back"
+              color="grey-7"
+              :to="{
+                name: 'rhDashboard',
+                params: { codperiodo: route.params.codperiodo },
+                query: { tab: 'colaboradores' },
+              }"
+            >
+              <q-tooltip>Voltar</q-tooltip>
+            </q-btn>
+          </div>
         </q-item-section>
       </q-item>
 

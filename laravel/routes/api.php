@@ -855,6 +855,11 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         // RH — Metas & Variáveis
         Route::prefix('rh')->group(function () {
 
+            // Meu Painel (qualquer usuário autenticado)
+            Route::get('meu-painel/periodos', '\Mg\Rh\MeuPainelController@periodos');
+            Route::get('meu-painel/{codperiodo}', '\Mg\Rh\MeuPainelController@index');
+            Route::get('meu-painel/{codperiodo}/colaborador/{codperiodocolaborador}', '\Mg\Rh\MeuPainelController@colaborador');
+
             // Períodos
             Route::get('periodo', '\Mg\Rh\PeriodoController@index');
             Route::post('periodo', '\Mg\Rh\PeriodoController@store');
@@ -872,6 +877,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/encerrar', '\Mg\Rh\PeriodoColaboradorController@encerrar');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/estornar', '\Mg\Rh\PeriodoColaboradorController@estornar');
             Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
+            Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/gestor', '\Mg\Rh\PeriodoColaboradorController@toggleGestor');
 
             // Vínculos colaborador-setor
             Route::post('periodo-colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorSetorController@store');
