@@ -159,10 +159,6 @@ function editarColaboradorCargo(
   codfilial,
   inicio,
   fim,
-  comissaoloja,
-  comissaovenda,
-  comissaoxerox,
-  gratificacao,
   salario,
   observacoes
 ) {
@@ -173,10 +169,6 @@ function editarColaboradorCargo(
     codfilial: codfilial,
     inicio: inicio !== null ? Documentos.formataDatasemHr(inicio) : null,
     fim: fim !== null ? Documentos.formataDatasemHr(fim) : null,
-    comissaoloja: comissaoloja,
-    comissaovenda: comissaovenda,
-    comissaoxerox: comissaoxerox,
-    gratificacao: gratificacao,
     salario: salario,
     observacoes: observacoes,
   };
@@ -254,27 +246,8 @@ defineExpose({ novoColaboradorCargo });
             {{ moment(colaboradorCargo.fim).format("DD/MMM/YYYY") }}
           </q-item-label>
 
-          <q-item-label
-            caption
-            v-if="
-              colaboradorCargo.comissaoloja ||
-              colaboradorCargo.comissaovenda ||
-              colaboradorCargo.comissaoxerox
-            "
-          >
-            Loja: {{ colaboradorCargo.comissaoloja }}%
-            | Venda: {{ colaboradorCargo.comissaovenda }}%
-            | Xerox: {{ colaboradorCargo.comissaoxerox }}%
-          </q-item-label>
-
-          <q-item-label caption v-if="colaboradorCargo.salario || colaboradorCargo.gratificacao">
-            <span v-if="colaboradorCargo.salario">
-              Salário: R$ {{ colaboradorCargo.salario }}
-            </span>
-            <span v-if="colaboradorCargo.salario && colaboradorCargo.gratificacao"> | </span>
-            <span v-if="colaboradorCargo.gratificacao">
-              Gratificação: R$ {{ colaboradorCargo.gratificacao }}
-            </span>
+          <q-item-label caption v-if="colaboradorCargo.salario">
+            Salário: R$ {{ colaboradorCargo.salario }}
           </q-item-label>
 
           <q-item-label caption v-if="colaboradorCargo.observacoes">
@@ -299,10 +272,6 @@ defineExpose({ novoColaboradorCargo });
                   colaboradorCargo.codfilial,
                   colaboradorCargo.inicio,
                   colaboradorCargo.fim,
-                  colaboradorCargo.comissaoloja,
-                  colaboradorCargo.comissaovenda,
-                  colaboradorCargo.comissaoxerox,
-                  colaboradorCargo.gratificacao,
                   colaboradorCargo.salario,
                   colaboradorCargo.observacoes
                 )
@@ -430,44 +399,7 @@ defineExpose({ novoColaboradorCargo });
                 </template>
               </q-input>
             </div>
-            <div class="col-4">
-              <q-input
-                outlined
-                type="number"
-                step="0.01"
-                min="0.01"
-                suffix="%"
-                v-model="modelColaboradorCargo.comissaoloja"
-                input-class="text-right"
-                label="Comissão Loja"
-              />
-            </div>
-            <div class="col-4">
-              <q-input
-                outlined
-                type="number"
-                step="0.01"
-                min="0.01"
-                suffix="%"
-                v-model="modelColaboradorCargo.comissaovenda"
-                input-class="text-right"
-                label="Comissão Venda"
-              />
-            </div>
-            <div class="col-4">
-              <q-input
-                outlined
-                type="number"
-                step="0.01"
-                min="0.01"
-                suffix="%"
-                v-model="modelColaboradorCargo.comissaoxerox"
-                input-class="text-right"
-                label="Comissão Xerox"
-              />
-            </div>
-
-            <div class="col-6">
+            <div class="col-12">
               <q-input
                 outlined
                 prefix="R$"
@@ -477,19 +409,6 @@ defineExpose({ novoColaboradorCargo });
                 input-class="text-right"
                 v-model="modelColaboradorCargo.salario"
                 label="Salário"
-              />
-            </div>
-
-            <div class="col-6">
-              <q-input
-                outlined
-                prefix="R$"
-                type="number"
-                step="0.01"
-                min="0.01"
-                input-class="text-right"
-                v-model="modelColaboradorCargo.gratificacao"
-                label="Gratificação"
               />
             </div>
 

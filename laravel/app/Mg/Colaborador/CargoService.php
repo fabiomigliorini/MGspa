@@ -102,7 +102,7 @@ class CargoService
 
         $sql = '
         select f.codfilial, f.filial, p.codpessoa, p.fantasia,
-               cc.codcolaboradorcargo, cc.inicio, cc.fim
+               cc.codcolaboradorcargo, cc.inicio, cc.fim, cc.salario
         from tblcolaboradorcargo cc
         left join tblcolaborador c on (c.codcolaborador = cc.codcolaborador)
         left join tblpessoa p on (p.codpessoa = c.codpessoa)

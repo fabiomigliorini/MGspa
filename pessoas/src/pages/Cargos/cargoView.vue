@@ -280,6 +280,9 @@ onMounted(async () => {
                   </q-item-section>
 
                   <q-item-section side>
+                    <q-item-label caption v-if="pessoa.salario">
+                      {{ formataMoeda(pessoa.salario) }}
+                    </q-item-label>
                     <q-item-label caption>
                       {{ formataDataSemHora(pessoa.inicio) }}
                     </q-item-label>
@@ -326,6 +329,9 @@ onMounted(async () => {
                   </q-item-section>
 
                   <q-item-section side>
+                    <q-item-label caption v-if="pessoa.salario">
+                      {{ formataMoeda(pessoa.salario) }}
+                    </q-item-label>
                     <q-item-label caption>
                       {{ formataDataSemHora(pessoa.inicio) }}
                       a {{ formataDataSemHora(pessoa.fim) }}

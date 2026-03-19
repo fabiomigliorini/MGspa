@@ -22,11 +22,7 @@ class ColaboradorCargo extends MgModel
         'codcargo',
         'codcolaborador',
         'codfilial',
-        'comissaoloja',
-        'comissaovenda',
-        'comissaoxerox',
         'fim',
-        'gratificacao',
         'inicio',
         'observacoes',
         'salario'
@@ -46,10 +42,6 @@ class ColaboradorCargo extends MgModel
         'codfilial' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'comissaoloja' => 'float',
-        'comissaovenda' => 'float',
-        'comissaoxerox' => 'float',
-        'gratificacao' => 'float',
         'salario' => 'float'
     ];
 
