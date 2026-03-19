@@ -462,10 +462,24 @@ const validaRescisao = (value) => {
   return true;
 };
 
+const alterouVinculo = () => {
+  if (!isClt.value) {
+    modelColaborador.value.diasExperiencia = null;
+    modelColaborador.value.experiencia = null;
+    modelColaborador.value.diasRenovacao = null;
+    modelColaborador.value.renovacaoexperiencia = null;
+  } else if (!modelColaborador.value.experiencia && modelColaborador.value.contratacao) {
+    modelColaborador.value.diasExperiencia = DIAS_EXPERIENCIA;
+    modelColaborador.value.diasRenovacao = DIAS_EXPERIENCIA;
+    preencheExperiencia();
+  }
+};
+
 const abrirNovoColaborador = () => {
   editColaborador.value = false;
   modelColaborador.value = {
     contratacao: moment().format("DD/MM/YYYY"),
+    vinculo: 1,
     diasExperiencia: DIAS_EXPERIENCIA,
     diasRenovacao: DIAS_EXPERIENCIA,
   };
@@ -476,6 +490,8 @@ const abrirNovoColaborador = () => {
 const submit = () => {
   editColaborador.value ? salvarColaborador() : novoColaborador();
 };
+
+const isClt = computed(() => modelColaborador.value.vinculo === 1);
 
 const colaboradoresOrdenados = computed(() =>
   [...sColaborador.colaboradores].sort(
@@ -547,6 +563,7 @@ watch(
         <span>
           <span v-if="colaborador.vinculo == 1">CLT</span>
           <span v-if="colaborador.vinculo == 2">Menor Aprendiz</span>
+          <span v-if="colaborador.vinculo == 901">Estagiário</span>
           <span v-if="colaborador.vinculo == 90">Terceirizado</span>
           <span v-if="colaborador.vinculo == 91">Diarista</span>
           em {{ colaborador.Filial }}
@@ -778,6 +795,7 @@ watch(
                 :options="[
                   { label: 'CLT', value: 1 },
                   { label: 'Menor Aprendiz', value: 2 },
+                  { label: 'Estagiário', value: 901 },
                   { label: 'Terceirizado', value: 90 },
                   { label: 'Diarista', value: 91 },
                 ]"
@@ -788,6 +806,7 @@ watch(
                     (val !== null && val !== '' && val !== undefined) ||
                     'Vinculo Obrigatório',
                 ]"
+                @update:model-value="alterouVinculo()"
               />
             </div>
 
@@ -876,6 +895,7 @@ watch(
                 type="number"
                 label="Dias Exp."
                 input-class="text-center"
+                :disable="!isClt"
                 @change="alterouDiasExperiencia()"
               />
             </div>
@@ -889,6 +909,7 @@ watch(
                 label="Experiência"
                 :rules="[validaData, validaExperiencia]"
                 input-class="text-center"
+                :disable="!isClt"
                 @change="alterouExperiencia()"
               >
                 <template v-slot:append>
@@ -928,6 +949,7 @@ watch(
                 type="number"
                 label="Dias Ren."
                 input-class="text-center"
+                :disable="!isClt"
                 @change="alterouDiasRenovacao()"
               />
             </div>
@@ -941,6 +963,7 @@ watch(
                 label="Renovação Experiência"
                 :rules="[validaData, validaRenovacaoExperiencia]"
                 input-class="text-center"
+                :disable="!isClt"
                 @change="alterouRenovacao()"
               >
                 <template v-slot:append>
