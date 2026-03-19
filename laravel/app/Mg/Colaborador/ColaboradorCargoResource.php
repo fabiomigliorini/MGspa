@@ -4,7 +4,6 @@
 namespace Mg\Colaborador;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
 
 class ColaboradorCargoResource extends JsonResource
 {
@@ -18,7 +17,7 @@ class ColaboradorCargoResource extends JsonResource
     {
         $ret = parent::toArray($request);
         $ret['Cargo'] = @$this->Cargo->cargo;
-        $ret['Filial'] = @$this->Filial->filial;
+        $ret['Filial'] = @$this->Colaborador->Filial->filial;
         return $ret;
     }
 }

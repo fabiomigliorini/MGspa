@@ -9,7 +9,6 @@ namespace Mg\Colaborador;
 use Mg\MgModel;
 use Mg\Colaborador\Cargo;
 use Mg\Colaborador\Colaborador;
-use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 
 class ColaboradorCargo extends MgModel
@@ -21,7 +20,6 @@ class ColaboradorCargo extends MgModel
     protected $fillable = [
         'codcargo',
         'codcolaborador',
-        'codfilial',
         'fim',
         'inicio',
         'observacoes',
@@ -39,7 +37,6 @@ class ColaboradorCargo extends MgModel
         'codcargo' => 'integer',
         'codcolaborador' => 'integer',
         'codcolaboradorcargo' => 'integer',
-        'codfilial' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'salario' => 'float'
@@ -55,11 +52,6 @@ class ColaboradorCargo extends MgModel
     public function Colaborador()
     {
         return $this->belongsTo(Colaborador::class, 'codcolaborador', 'codcolaborador');
-    }
-
-    public function Filial()
-    {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
     public function UsuarioAlteracao()

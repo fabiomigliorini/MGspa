@@ -7,9 +7,6 @@ import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
 
-const SelectFilial = defineAsyncComponent(() =>
-  import("components/pessoa/SelectFilial.vue")
-);
 const SelectCargo = defineAsyncComponent(() =>
   import("components/pessoa/SelectCargo.vue")
 );
@@ -156,7 +153,6 @@ function editarColaboradorCargo(
   codcolaboradorcargo,
   codcolaborador,
   codcargo,
-  codfilial,
   inicio,
   fim,
   salario,
@@ -166,7 +162,6 @@ function editarColaboradorCargo(
     codcolaboradorcargo: codcolaboradorcargo,
     codcolaborador: codcolaborador,
     codcargo: codcargo,
-    codfilial: codfilial,
     inicio: inicio !== null ? Documentos.formataDatasemHr(inicio) : null,
     fim: fim !== null ? Documentos.formataDatasemHr(fim) : null,
     salario: salario,
@@ -232,10 +227,6 @@ defineExpose({ novoColaboradorCargo });
             {{ colaboradorCargo.Cargo }}
           </q-item-label>
 
-          <q-item-label caption>
-            {{ colaboradorCargo.Filial }}
-          </q-item-label>
-
           <q-item-label caption v-if="!colaboradorCargo.fim">
             {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a ({{
               Documentos.formataFromNow(colaboradorCargo.inicio)
@@ -269,7 +260,6 @@ defineExpose({ novoColaboradorCargo });
                   colaboradorCargo.codcolaboradorcargo,
                   colaboradorCargo.codcolaborador,
                   colaboradorCargo.codcargo,
-                  colaboradorCargo.codfilial,
                   colaboradorCargo.inicio,
                   colaboradorCargo.fim,
                   colaboradorCargo.salario,
@@ -315,16 +305,6 @@ defineExpose({ novoColaboradorCargo });
               (val) =>
                 (val !== null && val !== '' && val !== undefined) ||
                 'Cargo Obrigatório',
-            ]"
-          />
-
-          <select-filial
-            v-model="modelColaboradorCargo.codfilial"
-            reactive-rules
-            :rules="[
-              (val) =>
-                (val !== null && val !== '' && val !== undefined) ||
-                'Filial obrigatório',
             ]"
           />
 

@@ -30,7 +30,6 @@ use Mg\PagarMe\PagarMePedido;
 use Mg\PagarMe\PagarMePos;
 use Mg\Pdv\Pdv;
 use Mg\Colaborador\Colaborador;
-use Mg\Colaborador\ColaboradorCargo;
 use Mg\NaturezaOperacao\DominioAcumulador;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPinPad;
@@ -140,10 +139,6 @@ class Filial extends MgModel
         return $this->hasMany(Colaborador::class, 'codfilial', 'codfilial');
     }
 
-    public function ColaboradorCargoS()
-    {
-        return $this->hasMany(ColaboradorCargo::class, 'codfilial', 'codfilial');
-    }
 
     public function DistribuicaoDfeS()
     {

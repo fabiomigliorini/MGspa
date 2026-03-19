@@ -13,7 +13,7 @@ class ColaboradorComissaoService
         $sql = '
             WITH cx AS (
                 SELECT
-                    cc.codfilial,
+                    col.codfilial,
                     f.filial,
                     p.codpessoa,
                     p.pessoa,
@@ -27,7 +27,7 @@ class ColaboradorComissaoService
                 INNER JOIN tblcolaborador col ON col.codcolaborador = cc.codcolaborador
                 INNER JOIN tblpessoa p ON p.codpessoa = col.codpessoa
                 INNER JOIN tblusuario u ON u.codpessoa = col.codpessoa
-                INNER JOIN tblfilial f ON f.codfilial = cc.codfilial
+                INNER JOIN tblfilial f ON f.codfilial = col.codfilial
                 WHERE
                     c.comissaocaixa IS NOT NULL
                     -- 1. Vigência do CARGO sobrepõe o período [:inicio, :fim]
