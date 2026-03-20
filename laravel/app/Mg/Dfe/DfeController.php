@@ -50,6 +50,11 @@ class DfeController extends MgController
         return DfeService::processar($coddistribuicaodfe);
     }
 
+    public function consultarSefaz(Request $request, int $coddistribuicaodfe)
+    {
+        return DfeService::consultarSefaz($coddistribuicaodfe);
+    }
+
     public function filiaisHabilitadas (Request $request)
     {
         $filiais = Filial::select([
