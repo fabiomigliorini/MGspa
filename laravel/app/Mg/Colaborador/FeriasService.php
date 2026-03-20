@@ -51,7 +51,7 @@ class FeriasService
                 limit 1
             ))
             left join tblcargo ca on (ca.codcargo = cc.codcargo)
-            left join tblfilial f on (f.codfilial = cc.codfilial)
+            left join tblfilial f on (f.codfilial = c.codfilial)
             left join tblpessoa p on (p.codpessoa = c.codpessoa)
             where extract(year from c.contratacao) <= :ano
             and (extract(year from c.rescisao) <= :ano or c.rescisao is null)

@@ -53,6 +53,10 @@ const user = guardaToken();
             <q-icon name="store" size="35px" />
             <div class="menu-label">Unidades & Setores</div>
           </q-btn>
+          <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'rhMeuPainelIndex' }">
+            <q-icon name="assignment_ind" size="35px" />
+            <div class="menu-label">Meu Painel</div>
+          </q-btn>
         </div>
 
         <template v-if="user.verificaPermissaoUsuario('Administrador')">

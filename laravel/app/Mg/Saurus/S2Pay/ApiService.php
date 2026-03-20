@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 class ApiService 
 {
 
-    const TIMEOUT = 1;
+    const TIMEOUT = 5;
 
     public static function functionAutorizacao($chavePDV, $cnpj) {
         $chave = base64_encode($chavePDV . '|' . str_pad($cnpj, 14, '0', STR_PAD_LEFT));

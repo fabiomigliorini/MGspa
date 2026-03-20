@@ -209,4 +209,18 @@ class PeriodoColaboradorController extends Controller
             return response()->json(['erro' => $e->getMessage()], 422);
         }
     }
+
+    public function toggleGestor(int $codperiodo, int $codperiodocolaborador)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $pc = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->where('codperiodocolaborador', $codperiodocolaborador)
+            ->firstOrFail();
+
+        $pc->gestor = !$pc->gestor;
+        $pc->save();
+
+        return response()->json(['gestor' => $pc->gestor]);
+    }
 }

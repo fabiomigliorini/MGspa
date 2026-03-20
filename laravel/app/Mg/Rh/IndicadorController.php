@@ -4,8 +4,10 @@ namespace Mg\Rh;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Mg\Colaborador\Colaborador;
 use Mg\Usuario\Autorizador;
 
 class IndicadorController extends Controller
@@ -67,7 +69,7 @@ class IndicadorController extends Controller
 
     public function lancamentos(int $codindicador)
     {
-        Autorizador::autoriza(['Recursos Humanos']);
+        $this->autorizarLancamentos($codindicador);
 
         $indicador = Indicador::with(['Setor', 'UnidadeNegocio', 'Colaborador.Pessoa'])
             ->findOrFail($codindicador);
@@ -264,5 +266,73 @@ class IndicadorController extends Controller
             DB::rollBack();
             return response()->json(['erro' => $e->getMessage()], 422);
         }
+    }
+
+    private function autorizarLancamentos(int $codindicador): void
+    {
+        // Admin tem acesso total
+        if (Autorizador::pode(['Recursos Humanos'])) {
+            return;
+        }
+
+        // Resolve colaborador do usuário logado
+        $user = Auth::user();
+        $colaborador = Colaborador::where('codpessoa', $user->codpessoa)
+            ->where(function ($q) {
+                $q->whereNull('rescisao')
+                    ->orWhere('rescisao', '>=', now()->toDateString());
+            })
+            ->first();
+
+        if (!$colaborador) {
+            abort(403, 'Não autorizado.');
+        }
+
+        $indicador = Indicador::findOrFail($codindicador);
+
+        // Indicador pessoal do próprio colaborador
+        if ($indicador->codcolaborador === $colaborador->codcolaborador) {
+            return;
+        }
+
+        // Indicador coletivo (S/U) de um setor/unidade onde o colaborador participa
+        $pc = PeriodoColaborador::where('codperiodo', $indicador->codperiodo)
+            ->where('codcolaborador', $colaborador->codcolaborador)
+            ->first();
+
+        if (!$pc) {
+            abort(403, 'Não autorizado.');
+        }
+
+        $meusSetores = PeriodoColaboradorSetor::where('codperiodocolaborador', $pc->codperiodocolaborador)
+            ->pluck('codsetor')
+            ->toArray();
+
+        $minhasUnidades = PeriodoColaboradorSetor::where('codperiodocolaborador', $pc->codperiodocolaborador)
+            ->join('tblsetor', 'tblsetor.codsetor', '=', 'tblperiodocolaboradorsetor.codsetor')
+            ->pluck('tblsetor.codunidadenegocio')
+            ->unique()
+            ->toArray();
+
+        // Indicador coletivo do meu setor/unidade
+        if (in_array($indicador->codsetor, $meusSetores) || in_array($indicador->codunidadenegocio, $minhasUnidades)) {
+            return;
+        }
+
+        // Gestor pode ver indicadores de colaboradores do mesmo setor
+        if ($pc->gestor && $indicador->codcolaborador) {
+            $alvoCompartilhaSetor = PeriodoColaboradorSetor::whereHas('PeriodoColaborador', function ($q) use ($indicador) {
+                $q->where('codcolaborador', $indicador->codcolaborador)
+                    ->where('codperiodo', $indicador->codperiodo);
+            })
+                ->whereIn('codsetor', $meusSetores)
+                ->exists();
+
+            if ($alvoCompartilhaSetor) {
+                return;
+            }
+        }
+
+        abort(403, 'Não autorizado.');
     }
 }

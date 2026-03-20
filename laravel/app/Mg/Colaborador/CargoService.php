@@ -102,11 +102,11 @@ class CargoService
 
         $sql = '
         select f.codfilial, f.filial, p.codpessoa, p.fantasia,
-               cc.codcolaboradorcargo, cc.inicio, cc.fim
+               cc.codcolaboradorcargo, cc.inicio, cc.fim, cc.salario
         from tblcolaboradorcargo cc
         left join tblcolaborador c on (c.codcolaborador = cc.codcolaborador)
         left join tblpessoa p on (p.codpessoa = c.codpessoa)
-        left join tblfilial f on (f.codfilial = cc.codfilial)
+        left join tblfilial f on (f.codfilial = c.codfilial)
         where cc.codcargo = :codcargo
         and c.rescisao is null
         order by cc.fim nulls first, cc.inicio desc

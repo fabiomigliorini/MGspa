@@ -20,6 +20,15 @@ defineProps({
   },
 });
 
+const limparSessao = () => {
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("usuario");
+  document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;";
+  document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;";
+  let url = encodeURIComponent(window.location.href);
+  window.location.href = process.env.API_AUTH_URL + "/login?redirect_uri=" + url;
+};
+
 const deslogar = async () => {
   Dialog.create({
     title: "Sair da conta",
@@ -27,10 +36,6 @@ const deslogar = async () => {
     cancel: true,
     persistent: true,
   }).onOk(async () => {
-    // localStorage.removeItem('access_token')
-    // localStorage.removeItem('usuario')
-    // window.location = process.env.LOGOUT_URL
-
     let token = document.cookie
       .split(";")
       .find((item) => item.trim().startsWith("access_token="));
@@ -48,14 +53,11 @@ const deslogar = async () => {
           },
         }
       )
-      .then((response) => {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("usuario");
-
-        window.location = "#/";
+      .then(() => {
+        limparSessao();
       })
-      .catch((error) => {
-        console.log(error.response);
+      .catch(() => {
+        limparSessao();
       });
   });
 };

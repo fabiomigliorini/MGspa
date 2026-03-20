@@ -20,35 +20,25 @@ export default defineComponent({
 
     // Se existir o token redireciona o usuario para home
     const verificaauth = async () => {
-      // const urlParams = new URLSearchParams(window.location.search);
-      // const Token = urlParams.get("accesstoken");
-
-      if (route.redirectedFrom && route.redirectedFrom.href != "#/") {
-        sPessoa.urlRetorno = route.redirectedFrom.href;
-      }
+      const urlRetorno = route.query.redirect || "/";
 
       let tokenCookie = document.cookie
         .split(";")
         .find((c) => c.trim().startsWith("access_token="));
       if (tokenCookie) {
         const Token = tokenCookie.split("=")[1];
-        localStorage.setItem("access_token", Token);
-        // console.log('Token', Token)
-
         if (Token) {
           auth.accessToken(Token);
-          setTimeout(function () {
-            window.location.replace("/" + sPessoa.urlRetorno);
-            sPessoa.urlRetorno = "#/";
-          }, 1000);
+          localStorage.setItem("access_token", Token);
+          window.location.replace(urlRetorno);
+          return;
         }
       }
 
       if (localStorage.getItem("access_token")) {
-        window.location = "/";
+        window.location.replace(urlRetorno);
       } else {
-        let url = new URL(window.location.href);
-        url = encodeURI(url.origin);
+        let url = encodeURIComponent(window.location.origin + urlRetorno);
         window.location.href =
           process.env.API_AUTH_URL + "/login?redirect_uri=" + url;
       }

@@ -4,6 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { api } from "boot/axios";
+import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
 import AcertoModal from "./AcertoModal.vue";
 
 const $q = useQuasar();
@@ -19,24 +20,6 @@ const dialogPdf = ref(false);
 const pdfUrl = ref(null);
 const pdfTitulo = ref("");
 
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(valor) || 0);
-};
-
-const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
-  }
-  return data.mensagem || data.message || fallback;
-};
 
 // --- AGRUPAMENTO ---
 

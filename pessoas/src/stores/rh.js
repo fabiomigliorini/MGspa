@@ -259,5 +259,31 @@ export const rhStore = defineStore("rh", {
       );
       return ret;
     },
+
+    // --- MEU PAINEL ---
+
+    async getMeuPainelPeriodos() {
+      const ret = await api.get("v1/rh/meu-painel/periodos");
+      return ret.data.data;
+    },
+
+    async getMeuPainel(codperiodo) {
+      const ret = await api.get("v1/rh/meu-painel/" + codperiodo);
+      return ret.data;
+    },
+
+    async getMeuPainelColaborador(codperiodo, codperiodocolaborador) {
+      const ret = await api.get(
+        "v1/rh/meu-painel/" + codperiodo + "/colaborador/" + codperiodocolaborador
+      );
+      return ret.data;
+    },
+
+    async toggleGestor(codperiodo, codperiodocolaborador) {
+      const ret = await api.patch(
+        "v1/rh/periodo/" + codperiodo + "/colaborador/" + codperiodocolaborador + "/gestor"
+      );
+      return ret.data;
+    },
   },
 });
