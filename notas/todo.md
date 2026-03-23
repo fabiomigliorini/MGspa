@@ -15,7 +15,6 @@
 Eduardo
 
 - Nota com erro de (531 - Rejeicao: Total da BC ICMS difere do somatorio dos itens)
-- Tela DFE
 - Tela NFeTrceiro
 - Ao emitir uma nota, deixar salvo quem fez a operação.
 - Conferir como está o site sinopel.mrxempresas.com.br
