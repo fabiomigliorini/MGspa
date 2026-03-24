@@ -58,4 +58,14 @@ class DfeService
         $dd = DistribuicaoDfe::findOrFail($coddistribuicaodfe);
         return NFePHPDistDfeService::processar($dd);
     }
+
+    public static function consultarSefaz($coddistribuicaodfe)
+    {
+        $dd = DistribuicaoDfe::findOrFail($coddistribuicaodfe);
+        $res = NFePHPDistDfeService::consultar($dd->Filial, 0, $dd->nsu);
+        if ($res === null) {
+            return ['message' => 'Nenhum documento localizado na SEFAZ para o NSU ' . $dd->nsu];
+        }
+        return $res;
+    }
 }

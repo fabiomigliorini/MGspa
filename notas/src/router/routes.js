@@ -7,6 +7,7 @@ import CfopFiltrosDrawer from 'src/components/drawers/CfopFiltrosDrawer.vue'
 import CidadeFiltrosDrawer from 'src/components/drawers/CidadeFiltrosDrawer.vue'
 import NaturezaOperacaoFiltrosDrawer from 'src/components/drawers/NaturezaOperacaoFiltrosDrawer.vue'
 import TributacaoNaturezaOperacaoFiltrosDrawer from 'src/components/drawers/TributacaoNaturezaOperacaoFiltrosDrawer.vue'
+import DfeDistribuicaoFiltrosDrawer from 'src/components/drawers/DfeDistribuicaoFiltrosDrawer.vue'
 
 const routes = [
   {
@@ -82,6 +83,24 @@ const routes = [
         meta: {
           auth: true,
           title: 'Notas Fiscais',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/dfe',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'dfe-distribuicao',
+        component: () => import('pages/DfeDistribuicaoPage.vue'),
+        meta: {
+          auth: true,
+          title: "Distribuição de DFe's",
+          leftDrawer: DfeDistribuicaoFiltrosDrawer,
           permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },

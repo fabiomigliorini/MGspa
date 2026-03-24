@@ -43,7 +43,7 @@ const salvar = () => {
     :model-value="modelValue"
     @update:model-value="emit('update:modelValue', $event)"
   >
-    <q-card style="min-width: 350px">
+    <q-card style="width: 400px; max-width: 95vw">
       <q-form ref="form" @submit.prevent="onSubmit">
         <q-card-section class="text-h6">
           {{ titulo }}

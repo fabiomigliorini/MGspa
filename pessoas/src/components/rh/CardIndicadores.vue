@@ -25,11 +25,11 @@ const indicadoresFiltrados = computed(() => {
   if (!props.somenteComRubrica || props.rubricas.length === 0) {
     return props.indicadores;
   }
-  const codsComRubrica = new Set(
-    props.rubricas
-      .filter((r) => r.codindicador)
-      .map((r) => r.codindicador)
-  );
+  const codsComRubrica = new Set();
+  props.rubricas.forEach((r) => {
+    if (r.codindicador) codsComRubrica.add(r.codindicador);
+    if (r.codindicadorcondicao) codsComRubrica.add(r.codindicadorcondicao);
+  });
   return props.indicadores.filter((ind) => codsComRubrica.has(ind.codindicador));
 });
 
