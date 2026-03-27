@@ -74,6 +74,10 @@ class PessoaResource extends JsonResource
         // Permissões para o frontend
         $ret['permissaoRH'] = Autorizador::pode(['Recursos Humanos']);
         $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
+        // Anexos: RH/Admin sempre podem; Financeiro pode se a pessoa NÃO for colaborador ativo
+        $ret['permissaoAnexo'] = $ret['permissaoRH']
+            || ($ret['permissaoFinanceiro'] && !$this->ColaboradorS()->whereNull('rescisao')->exists());
+
 
         if (!$ret['permissaoFinanceiro']) {
             unset($ret['RegistroSpc']);
