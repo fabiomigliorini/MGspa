@@ -13,6 +13,11 @@ use Illuminate\Http\Request;
 
 class NotaFiscalProdutoBarraController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
+
     public function index(Request $request, int $codnotafiscal)
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);
@@ -95,7 +100,7 @@ class NotaFiscalProdutoBarraController extends Controller
         // Recalcula os totais da nota
         NotaFiscalItemService::recalcularTotais($nota);
 
-        return (new NotaFiscalDetailResource($nota->fresh()))
+        return (new NotaFiscalDetailResource($nota->fresh(['UsuarioCriacao', 'UsuarioAlteracao'])))
             ->response()
             ->setStatusCode(201);
     }
@@ -131,7 +136,7 @@ class NotaFiscalProdutoBarraController extends Controller
         $nota = $item->NotaFiscal;
         NotaFiscalItemService::recalcularTotais($nota);
 
-        return (new NotaFiscalDetailResource($nota->fresh()))
+        return (new NotaFiscalDetailResource($nota->fresh(['UsuarioCriacao', 'UsuarioAlteracao'])))
             ->response()
             ->setStatusCode(201);
     }
@@ -151,7 +156,7 @@ class NotaFiscalProdutoBarraController extends Controller
         // Recalcula os totais da nota
         NotaFiscalItemService::recalcularTotais($nota);
 
-        return (new NotaFiscalDetailResource($nota->fresh()))
+        return (new NotaFiscalDetailResource($nota->fresh(['UsuarioCriacao', 'UsuarioAlteracao'])))
             ->response()
             ->setStatusCode(201);
     }
