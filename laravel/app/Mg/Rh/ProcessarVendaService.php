@@ -74,6 +74,9 @@ class ProcessarVendaService
             ->pluck('codindicadorlancamento')
             ->all();
 
+        // Cache: quantidade de setores ativos por unidade (para evitar indicador SETOR duplicado)
+        $setoresAtivosCache = [];
+
         // Acumula totais por indicador em memória antes de persistir
         $totais = []; // [codindicador => float]
 
@@ -112,9 +115,16 @@ class ProcessarVendaService
             // a) Indicador da UNIDADE (sempre)
             $indicadores[] = [self::TIPO_UNIDADE, $codunidadenegocio, null, null];
 
-            // b) Indicador do SETOR (coletivo)
+            // b) Indicador do SETOR (coletivo) — só se a unidade tem mais de 1 setor ativo
             if ($setorDestino->indicadorcoletivo) {
-                $indicadores[] = [self::TIPO_SETOR, $codunidadenegocio, $setorDestino->codsetor, null];
+                if (!isset($setoresAtivosCache[$codunidadenegocio])) {
+                    $setoresAtivosCache[$codunidadenegocio] = Setor::where('codunidadenegocio', $codunidadenegocio)
+                        ->whereNull('inativo')
+                        ->count();
+                }
+                if ($setoresAtivosCache[$codunidadenegocio] > 1) {
+                    $indicadores[] = [self::TIPO_SETOR, $codunidadenegocio, $setorDestino->codsetor, null];
+                }
             }
 
             // c) Indicador do VENDEDOR
