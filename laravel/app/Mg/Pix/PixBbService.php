@@ -8,14 +8,17 @@ use Carbon\Carbon;
 
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Portador\Portador;
+use Mg\Filial\CertificadoService;
 
 class PixBbService
 {
 
-    public static function transmitirPixCob (PixCob $pixCob)
+    public static function transmitirPixCob(PixCob $pixCob)
     {
+        $filial = CertificadoService::filialDoPortador($pixCob->Portador);
         $bbtoken = BoletoBbService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::transmitirPixCob(
+            $filial,
             $bbtoken,
             $pixCob->Portador->bbdevappkey,
             $pixCob->Portador->pixdict,
@@ -30,14 +33,17 @@ class PixBbService
         if (!empty($dadosPix['erros'])) {
             throw new \Exception('API do BB retornou: ' . $dadosPix['erros'][0]['mensagem']);
         }
+        if (!empty($dadosPix['detail'])) {
+            throw new \Exception('API do BB retornou: ' . $dadosPix['detail']);
+        }
+        Log::info('PixBbService::transmitirPixCob resposta', ['dadosPix' => $dadosPix]);
         $status = PixCobStatus::firstOrCreate([
             'pixcobstatus' => $dadosPix['status']
         ]);
         $ret = $pixCob->update([
             'location' => $dadosPix['location'],
-            'qrcode' => $dadosPix['textoImagemQRcode'],
+            'qrcode' => $dadosPix['pixCopiaECola'],
             'txid' => $dadosPix['txid'],
-            // 'locationid' => $dadosPix['loc']['id']??null,
             'codpixcobstatus' => $status->codpixcobstatus
         ]);
         return $pixCob;
@@ -45,9 +51,10 @@ class PixBbService
 
     public static function consultarPixCob(PixCob $pixCob)
     {
-
+        $filial = CertificadoService::filialDoPortador($pixCob->Portador);
         $bbtoken = BoletoBbService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::consultarPixCob(
+            $filial,
             $bbtoken,
             $pixCob->Portador->bbdevappkey,
             $pixCob->txid
@@ -56,6 +63,9 @@ class PixBbService
         if (isset($dadosPix['erros'])) {
             throw new \Exception($dadosPix['erros'][0]['mensagem']);
         }
+        if (!empty($dadosPix['detail'])) {
+            throw new \Exception('API do BB retornou: ' . $dadosPix['detail']);
+        }
 
         $status = PixCobStatus::firstOrCreate([
             'pixcobstatus' => $dadosPix['status']
@@ -63,6 +73,7 @@ class PixBbService
 
         $ret = $pixCob->update([
             'location' => $dadosPix['location'],
+            'qrcode' => $dadosPix['pixCopiaECola'] ?? $pixCob->qrcode,
             'codpixcobstatus' => $status->codpixcobstatus
         ]);
 
@@ -81,8 +92,8 @@ class PixBbService
         Carbon $inicio = null,
         Carbon $fim = null,
         int $pagina = 0
-    ){
-
+    ) {
+        $filial = CertificadoService::filialDoPortador($portador);
         $bbtoken = BoletoBbService::verificaTokenValido($portador);
 
         $strInicio = null;
@@ -94,6 +105,7 @@ class PixBbService
             $strFim = $fim->toIso8601String();
         }
         $ret = PixBbApiService::consultarPix(
+            $filial,
             $bbtoken,
             $portador->bbdevappkey,
             $strInicio,
@@ -103,6 +115,9 @@ class PixBbService
 
         if (isset($ret['erros'][0])) {
             throw new \Exception($ret['erros'][0]['mensagem'], 1);
+        }
+        if (!empty($ret['detail'])) {
+            throw new \Exception('API do BB retornou: ' . $ret['detail'], 1);
         }
 
         $processados = collect([]);
@@ -115,7 +130,4 @@ class PixBbService
         $ret['processados'] = $processados;
         return $ret;
     }
-
-
-
 }

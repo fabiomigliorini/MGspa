@@ -6,6 +6,7 @@ use NFePHP\MDFe\Tools;
 use NFePHP\Common\Certificate;
 
 use Mg\Filial\Filial;
+use Mg\Filial\CertificadoService;
 
 class MdfeNfePhpConfigService
 {
@@ -42,16 +43,10 @@ class MdfeNfePhpConfigService
         $config = static::config($filial, $versao);
 
         // Le Certificado Digital
-        $arquivo = env('NFE_PHP_PATH') . "/Certs/{$filial->codfilial}.pfx";
-        if (!file_exists($arquivo)) {
-            throw new \Exception("Arquivo de certificado não localizado ({$arquivo})!");
-        }
-        $pfx = file_get_contents($arquivo);
+        $pfx = CertificadoService::pfxConteudo($filial);
+        $senha = CertificadoService::pfxSenha($filial);
 
         // retorna Instancia Tools para a configuracao e certificado
-        if (empty($filial->senhacertificado)) {
-            throw new \Exception("Não foi informado senha para o Certificado!");
-        }
-        return new Tools($config, Certificate::readPfx($pfx, $filial->senhacertificado));
+        return new Tools($config, Certificate::readPfx($pfx, $senha));
     }
 }

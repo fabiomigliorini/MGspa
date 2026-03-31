@@ -3,20 +3,19 @@
 namespace Mg\Pix;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
-use Mg\Pix\PixCob;
-use Mg\Pix\PixCobStatus;
-use Mg\Pix\PixService;
-use Mg\Portador\Portador;
+use Mg\Filial\Filial;
+use Mg\Filial\CertificadoService;
 
 class PixBbApiService
 {
 
-
     /*
-    * Esta rotina consome um endpoid PUT da Gerencianet para emissão da cobrança
+    * Esta rotina consome o endpoint PUT /cob do BB para emissão da cobrança Pix (v2)
     */
     public static function transmitirPixCob(
+        Filial $filial,
         $token,
         $gwDevAppKey,
         $chave,
@@ -32,12 +31,12 @@ class PixBbApiService
         // informações da cobrança
         $arr = [
           "calendario" => [
-            "expiracao" => $expiracao // [opcional] Tempo de vida da cobrança, especificado em segundos a partir da data de criação. Caso não definido o padrão será de 86400 segundos ( 24 horas)
+            "expiracao" => $expiracao
           ],
           "valor" => [
-            "original" => number_format($valorOriginal, 2, '.', '') // [obrigatório] Valor original da cobrança.string \d{1,10}.\d{2} Obs: Para QR Code dinâmico, valor mínimo é de 0.01. Para QR Code poderá ser 0.00 (Ficará aberto para o pagador definir o valor)
+            "original" => number_format($valorOriginal, 2, '.', '')
           ],
-          "chave" => $chave, // [obrigatório] Determina a chave Pix registrada no DICT que será utilizada para a cobrança.
+          "chave" => $chave,
         ];
         if (!empty($solicitacaopagador)) {
             $arr['solicitacaoPagador'] = $solicitacaoPagador;
@@ -50,7 +49,7 @@ class PixBbApiService
             $arr['devedor']['cnpj'] = str_pad(number_format($cnpj, 0, '.', ''), 14, '0', STR_PAD_LEFT);
         }
         $body = json_encode($arr);
-        $url = env('BB_URL_PIX') . '/cobqrcode/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
+        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
         $auth = "Authorization: Bearer {$token}";
         $curl = curl_init();
         $opt = [
@@ -58,9 +57,8 @@ class PixBbApiService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            // CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_SSL_VERIFYPEER => 1,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "PUT",
@@ -69,7 +67,7 @@ class PixBbApiService
                 $auth,
                 "Content-Type: application/json"
             ],
-        ];
+        ] + CertificadoService::opcoesCurlMTls($filial);
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
         if ($response === false) {
@@ -82,15 +80,16 @@ class PixBbApiService
     }
 
     /*
-    * Esta rotina consome um endpoid GET da Gerencianet para consultar uma cobrança
+    * Esta rotina consome o endpoint GET /cob do BB para consultar uma cobrança
     */
     public static function consultarPixCob(
+        Filial $filial,
         $token,
         $gwDevAppKey,
         $txid
     )
     {
-        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey; // Monta a url para a requisição que gera a cobrança
+        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
         $auth = "Authorization: Bearer {$token}";
 
         $curl = curl_init();
@@ -99,8 +98,8 @@ class PixBbApiService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_SSL_VERIFYPEER => 1,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
@@ -108,7 +107,7 @@ class PixBbApiService
                 $auth,
                 "Content-Type: application/json"
             ],
-        ];
+        ] + CertificadoService::opcoesCurlMTls($filial);
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
         if ($response === false) {
@@ -121,10 +120,11 @@ class PixBbApiService
     }
 
     /*
-    * Esta rotina consome um endpoid GET da BB para consultar os pix recebidos
-    * nos periodo de 5 dias no maximo entre o inicio e fim
+    * Esta rotina consome o endpoint GET /pix do BB para consultar os pix recebidos
+    * no periodo de 5 dias no maximo entre o inicio e fim
     */
     public static function consultarPix(
+        Filial $filial,
         string $token,
         string $gwDevAppKey,
         string $inicio = null,
@@ -143,14 +143,21 @@ class PixBbApiService
             $data['fim'] = $fim;
         }
         if (!empty($paginaAtual)) {
-            $data['paginaAtual'] = $paginaAtual;
+            $data['paginacao.paginaAtual'] = $paginaAtual;
         }
 
         // monta URL
-        $url = env('BB_URL_PIX') . '/?' . http_build_query($data); // Monta a url para a requisição que gera a cobrança
+        $url = env('BB_URL_PIX') . '/pix?' . http_build_query($data);
 
         // Token Auth
         $auth = "Authorization: Bearer {$token}";
+
+        Log::info('PixBbApiService::consultarPix', [
+            'url' => $url,
+            'filial' => $filial->codfilial,
+            'gwDevAppKey' => $gwDevAppKey,
+            'pfxPath' => CertificadoService::pfxPath($filial),
+        ]);
 
         $curl = curl_init();
         $opt = [
@@ -158,8 +165,8 @@ class PixBbApiService
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_ENCODING => "",
             CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_SSL_VERIFYPEER => 0,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_SSL_VERIFYPEER => 1,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
@@ -167,7 +174,7 @@ class PixBbApiService
                 $auth,
                 "Content-Type: application/json"
             ],
-        ];
+        ] + CertificadoService::opcoesCurlMTls($filial);
 
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
@@ -175,7 +182,6 @@ class PixBbApiService
             throw new \Exception(curl_error($curl), curl_errno($curl));
         }
         curl_close($curl);
-        // file_put_contents('/tmp/host/ret.json', $response);
         $response = preg_replace('/[\x00-\x1F\x7F]/', '', $response);
         $ret = json_decode($response, true);
         return $ret;
@@ -183,9 +189,6 @@ class PixBbApiService
 
     public static function qrCode($qrcode)
     {
-
-        // $url = 'https://chart.googleapis.com/chart?chs=513x513&cht=qr&chl=' .
-        //     urlencode($qrcode);
 
         $url = 'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' .
         urlencode($qrcode);
