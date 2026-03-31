@@ -352,19 +352,49 @@ export default {
     },
 
     refresh: debounce(function () {
-      // inicializa variaveis
       var vm = this
-
-      // monta URL pesquisa
       var url = 'pix/consultar'
       vm.consultando = true
 
-      // faz chamada api
       vm.$axios.post(url).then(response => {
         vm.consultando = false
         vm.page = 1
         vm.loadData(false, vm.done)
-        console.log(response)
+
+        var resultados = response.data
+        if (Array.isArray(resultados)) {
+          var erros = resultados.filter(r => !r.success)
+          var sucessos = resultados.filter(r => r.success)
+
+          sucessos.forEach(r => {
+            vm.$q.notify({
+              type: 'positive',
+              icon: 'done',
+              color: 'green-5',
+              message: r.portador + ': ' + r.processados + ' pix processado(s)',
+              timeout: 5000
+            })
+          })
+
+          erros.forEach(r => {
+            vm.$q.notify({
+              type: 'negative',
+              icon: 'error',
+              color: 'red-5',
+              message: r.portador + ': ' + r.message,
+              timeout: 8000
+            })
+          })
+        }
+      }).catch(error => {
+        vm.consultando = false
+        vm.$q.notify({
+          type: 'negative',
+          icon: 'error',
+          color: 'red-5',
+          message: error.response?.data?.message || 'Erro ao consultar PIX',
+          timeout: 5000
+        })
       })
     }, 500),
 

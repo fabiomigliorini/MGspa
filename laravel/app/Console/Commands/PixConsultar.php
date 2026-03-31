@@ -89,7 +89,7 @@ class PixConsultar extends Command
                 } while ($continuar);
                 Log::info("Processados {$processados} PIX Recebidos do Portador {$portador->codportador} ({$portador->portador})");
             } catch (\Exception $e) {
-                Log::info("Erro {$e->getMessage()} {$portador->codportador} ({$portador->portador})");
+                Log::warning("Erro ao consultar PIX do Portador {$portador->codportador} ({$portador->portador}): {$e->getMessage()}");
             }
         }
     }

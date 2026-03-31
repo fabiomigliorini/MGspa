@@ -90,18 +90,40 @@ class PixController
             $qry->where('codfilial', $request->codfilial);
         }
         $portadores = $qry->get();
+        $resp = [];
         foreach ($portadores as $portador) {
-            $ret = PixService::consultarPix(
-                $portador,
-                $inicio,
-                $fim,
-                $request->pagina ?? 0
-            );
-            $resp[] = [
-                'success' => true,
-                'pix' => PixResource::collection($ret['processados']),
-                'parametros' => $ret['parametros'],
-            ];
+            try {
+                $processados = collect([]);
+                $paginaAtual = 0;
+                do {
+                    $ret = PixService::consultarPix(
+                        $portador,
+                        $inicio,
+                        $fim,
+                        $paginaAtual
+                    );
+                    $processados = $processados->merge($ret['processados']);
+                    $pag = $ret['parametros']['paginacao'] ?? null;
+                    $continuar = $pag && ($pag['paginaAtual'] < ($pag['quantidadeDePaginas'] - 1));
+                    if ($continuar) {
+                        $paginaAtual = $pag['paginaAtual'] + 1;
+                    }
+                } while ($continuar);
+                $resp[] = [
+                    'success' => true,
+                    'portador' => $portador->portador,
+                    'codportador' => $portador->codportador,
+                    'processados' => count($processados),
+                ];
+            } catch (\Exception $e) {
+                Log::warning("Erro ao consultar PIX do Portador {$portador->codportador} ({$portador->portador}): {$e->getMessage()}");
+                $resp[] = [
+                    'success' => false,
+                    'portador' => $portador->portador,
+                    'codportador' => $portador->codportador,
+                    'message' => $e->getMessage(),
+                ];
+            }
         }
         return response()->json($resp, 200);
     }
