@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
@@ -59,7 +59,9 @@ const inativar = async (codpessoa) => {
     });
   }
 };
-
+const temDependentes = computed(() => {
+  return (sPessoa.item?.DependenteResponsavelS || []).some((d) => !d.inativo);
+});
 const ativar = async (codpessoa) => {
   try {
     const ret = await sPessoa.ativarPessoa(codpessoa);
@@ -828,6 +830,13 @@ const salvarDetalhes = async () => {
           </template>
           {{ sPessoa.item.rntrc }}
         </div>
+      </div>
+
+      <div class="col-6">
+        <div class="text-overline text-grey-7">Possui Dependentes</div>
+        <span class="text-body2 bg-grey-2 rounded-borders q-pa-sm">
+          {{ temDependentes ? "Sim" : "Não" }}
+        </span>
       </div>
 
       <div class="col-12" v-if="sPessoa.item.observacoes">

@@ -135,6 +135,7 @@
                     {{ $pessoa->GrauInstrucao?->grauinstrucao }}
                 </td>
             </tr>
+
             <tr>
                 <td class="label">NASCIMENTO</td>
                 <td>DATA: {{ $pessoa->nascimento ? $pessoa->nascimento->format('d/m/Y') : '' }}</td>
@@ -168,7 +169,6 @@
                     <td>CEP: {{ formataCep($pe->cep) ?? '' }}</td>
                 </tr>
             @endforeach
-
             @php
                 $dependentes = $pessoa
                     ->DependeteResponsavelS()
@@ -176,6 +176,16 @@
                     ->orderBy('datainicio', 'desc')
                     ->get();
             @endphp
+            <tr>
+                <td class="label">DEPENDENTES</td>
+                <td colspan="3" class="checbox-group">
+                    <span class="checkbox">
+                        ({{ $dependentes->count() > 0 ? 'X' : '  ' }})
+                        SIM
+                        ({{ $dependentes->count() == 0 ? 'X' : '  ' }}) NÃO
+                    </span>
+                </td>
+            </tr>
 
             @if ($dependentes->count() > 0)
                 <tr>

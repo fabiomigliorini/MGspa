@@ -17,6 +17,11 @@ use Mg\NotaFiscal\NotaFiscalDevolucaoService;
 class NotaFiscalController extends Controller
 {
 
+    public function __construct()
+    {
+        $this->middleware('auth:api');
+    }
+
     public function index(Request $request)
     {
         $query = NotaFiscal::with([
@@ -125,6 +130,8 @@ class NotaFiscalController extends Controller
                 'NotaFiscalDuplicatasS',
                 'NotaFiscalReferenciadaS',
                 'NotaFiscalCartaCorrecaoS',
+                'UsuarioCriacao',
+                'UsuarioAlteracao',
             ])->findOrFail($codnotafiscal)
         );
     }

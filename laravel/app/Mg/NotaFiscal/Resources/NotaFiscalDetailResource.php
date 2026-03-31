@@ -100,6 +100,10 @@ class NotaFiscalDetailResource extends JsonResource
             // Timestamps
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
+
+            // Usuários
+            'usuarioCriacao' => $this->UsuarioCriacao?->only(['codusuario', 'usuario', 'codpessoa']),
+            'usuarioAlteracao' => $this->UsuarioAlteracao?->only(['codusuario', 'usuario', 'codpessoa']),
         ];
     }
 

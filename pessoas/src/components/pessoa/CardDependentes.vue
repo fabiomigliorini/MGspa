@@ -73,9 +73,10 @@ const cardsConfig = computed(() => [
     key: "responsavel",
     titulo: "MEUS DEPENDENTES",
     filtro: filtroResponsavel,
-    dados: filtroResponsavel.value === "ativos"
-      ? (sPessoa.item?.DependenteResponsavelS || []).filter((x) => !x.inativo)
-      : sPessoa.item?.DependenteResponsavelS || [],
+    dados:
+      filtroResponsavel.value === "ativos"
+        ? (sPessoa.item?.DependenteResponsavelS || []).filter((x) => !x.inativo)
+        : sPessoa.item?.DependenteResponsavelS || [],
     icon: "people",
     modo: "responsavel",
     tooltipAdd: "Adicionar dependente",
@@ -87,9 +88,10 @@ const cardsConfig = computed(() => [
     key: "dependente",
     titulo: "SOU DEPENDENTE DE",
     filtro: filtroDependenteDe,
-    dados: filtroDependenteDe.value === "ativos"
-      ? (sPessoa.item?.DependenteS || []).filter((x) => !x.inativo)
-      : sPessoa.item?.DependenteS || [],
+    dados:
+      filtroDependenteDe.value === "ativos"
+        ? (sPessoa.item?.DependenteS || []).filter((x) => !x.inativo)
+        : sPessoa.item?.DependenteS || [],
     icon: "supervisor_account",
     modo: "dependente",
     tooltipAdd: "Adicionar responsável",
@@ -477,7 +479,13 @@ const ativar = async (coddependente) => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup color="grey-8" tabindex="-1" />
+          <q-btn
+            flat
+            label="Cancelar"
+            v-close-popup
+            color="grey-8"
+            tabindex="-1"
+          />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -561,17 +569,24 @@ const ativar = async (coddependente) => {
               {{ dep.tipdepdescricao }}
             </q-item-label>
 
-            <q-item-label
-              caption
-              v-if="dep.datainicio || dep.datafim"
-            >
+            <q-item-label caption v-if="dep.datainicio || dep.datafim">
               Início: {{ formataDataSemHora(dep.datainicio) }}
               <template v-if="dep.datafim">
                 | Fim: {{ formataDataSemHora(dep.datafim) }}
               </template>
             </q-item-label>
 
-            <q-item-label caption v-if="dep.depirrf || dep.depsfam || dep.depplano || dep.incsocfam || dep.guardajudicial || dep.pensaoalimenticia">
+            <q-item-label
+              caption
+              v-if="
+                dep.depirrf ||
+                dep.depsfam ||
+                dep.depplano ||
+                dep.incsocfam ||
+                dep.guardajudicial ||
+                dep.pensaoalimenticia
+              "
+            >
               <div class="row q-gutter-xs">
                 <q-badge v-if="dep.depirrf" color="grey" outline>
                   Dependente IRRF
