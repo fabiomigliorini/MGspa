@@ -41,8 +41,8 @@ class PixBbService
             'pixcobstatus' => $dadosPix['status']
         ]);
         $ret = $pixCob->update([
-            'location' => $dadosPix['location'],
-            'qrcode' => $dadosPix['pixCopiaECola'],
+            'location' => $dadosPix['location'] ?? $dadosPix['loc']['location'] ?? null,
+            'qrcode' => $dadosPix['pixCopiaECola'] ?? null,
             'txid' => $dadosPix['txid'],
             'codpixcobstatus' => $status->codpixcobstatus
         ]);
@@ -72,7 +72,7 @@ class PixBbService
         ]);
 
         $ret = $pixCob->update([
-            'location' => $dadosPix['location'],
+            'location' => $dadosPix['location'] ?? $dadosPix['loc']['location'] ?? $pixCob->location,
             'qrcode' => $dadosPix['pixCopiaECola'] ?? $pixCob->qrcode,
             'codpixcobstatus' => $status->codpixcobstatus
         ]);
