@@ -20,6 +20,7 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
+use Illuminate\Support\Facades\Cache;
 use Mg\Portador\Portador;
 use Mg\Negocio\Negocio;
 
@@ -32,18 +33,15 @@ class BoletoBbService
      */
     public static function verificaTokenValido(Portador $portador)
     {
-        if (!empty($portador->bbtokenexpiracao)) {
-            if ($portador->bbtokenexpiracao->isFuture()) {
-                return $portador->bbtoken;
-            }
+        $cacheKey = "bb_token_{$portador->codportador}";
+        $cached = Cache::get($cacheKey);
+        if ($cached) {
+            return $cached;
         }
         $token = BoletoBbApiService::token($portador);
-        $expiracao = Carbon::now()->addSeconds($token['expires_in'] * 0.5);
-        $portador->update([
-            'bbtoken' => $token['access_token'],
-            'bbtokenexpiracao' => $expiracao,
-        ]);
-        return $portador->bbtoken;
+        $ttl = intval($token['expires_in'] * 0.5);
+        Cache::put($cacheKey, $token['access_token'], $ttl);
+        return $token['access_token'];
     }
 
     /**

@@ -828,6 +828,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::delete('dominio/acumulador/{coddominioacumulador}', '\Mg\Dominio\DominioController@excluirAcumulador');
 
         // Pix
+        Route::get('pix/portadores', '\Mg\Pix\PixController@portadores');
         Route::post('pix/consultar', '\Mg\Pix\PixController@consultarPixTodos');
         Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
         Route::get('pix/', '\Mg\Pix\PixController@index');

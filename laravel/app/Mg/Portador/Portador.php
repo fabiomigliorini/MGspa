@@ -41,8 +41,6 @@ class Portador extends MgModel
         'bbclientid',
         'bbclientsecret',
         'bbdevappkey',
-        'bbtoken',
-        'bbtokenexpiracao',
         'carteira',
         'carteiravariacao',
         'codbanco',
@@ -61,7 +59,6 @@ class Portador extends MgModel
 
     protected $dates = [
         'alteracao',
-        'bbtokenexpiracao',
         'criacao',
         'inativo'
     ];

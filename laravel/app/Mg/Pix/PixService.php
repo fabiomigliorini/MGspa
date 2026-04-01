@@ -11,6 +11,7 @@ use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Portador\Portador;
 use Mg\Pix\GerenciaNet\GerenciaNetService;
+use Mg\Pix\Sicredi\PixSicrediService;
 use Mg\FormaPagamento\FormaPagamento;
 use Illuminate\Support\Facades\DB;
 use Mg\Pdv\Pdv;
@@ -178,6 +179,10 @@ class PixService
                 return GerenciaNetService::transmitirPixCob($cob);
                 break;
 
+            case 748:
+                return PixSicrediService::transmitirPixCob($cob);
+                break;
+
             default:
                 throw new \Exception("Sem integração definida para o Banco {$cob->Portador->Banco->numerobanco}!", 1);
                 break;
@@ -196,6 +201,10 @@ class PixService
 
             case 364:
                 $cob = GerenciaNetService::consultarPixCob($cob);
+                break;
+
+            case 748:
+                $cob = PixSicrediService::consultarPixCob($cob);
                 break;
 
             default:
@@ -319,6 +328,15 @@ class PixService
                 $pixRecebidos = GerenciaNetService::consultarPix($portador);
                 break;
 
+            case 748:
+                $pixRecebidos = PixSicrediService::consultarPix(
+                    $portador,
+                    $inicio,
+                    $fim,
+                    $pagina
+                );
+                break;
+
             default:
                 throw new \Exception("Sem integração definida para o Banco {$portador->Banco->numerobanco}!", 1);
                 break;
@@ -343,6 +361,14 @@ class PixService
                 }
                 $qrcode = GerenciaNetService::qrCode($cob->locationid);
                 $qrcode = $qrcode['imagemQrcode'];
+                break;
+
+            case 748:
+                if (empty($cob->qrcode)) {
+                    throw new \Exception('Sem QRcode registrado!', 1);
+                }
+                $qrcode = PixBbApiService::qrCode($cob->qrcode);
+                $qrcode = 'data:image/png;base64,' . base64_encode($qrcode);
                 break;
 
             default:
@@ -394,82 +420,107 @@ class PixService
             'offset' => $from
         ];
 
-        $sql = '
+        $inner = '
             select
-        		coalesce(pix.horario, cob.criacao) as horario,
-        		coalesce(pix.valor, cob.valororiginal) as valor,
+                pix.horario as horario,
+                pix.valor as valor,
                 pix.codpix,
-        		pix.nome,
-        		pix.cpf,
-        		pix.cnpj,
+                pix.nome,
+                pix.cpf,
+                pix.cnpj,
                 cob.codpixcob,
-        		cob.codnegocio,
+                cob.codnegocio,
                 u.codusuario,
-        		u.usuario,
+                u.usuario,
                 port.codportador,
-        		port.portador,
-        		pix.e2eid,
-        		pix.txid,
-        		pix.infopagador
-        	from tblpix pix
+                port.portador,
+                pix.e2eid,
+                pix.txid,
+                pix.infopagador
+            from tblpix pix
         ';
 
         switch ($negocio) {
             case 'com':
-                $sql .= ' inner join tblpixcob cob on (cob.codpixcob = pix.codpixcob) ';
+                $inner .= ' inner join tblpixcob cob on (cob.codpixcob = pix.codpixcob) ';
                 break;
-            case 'sem':
-            case 'todos':
             default:
-                $sql .= ' full join tblpixcob cob on (cob.codpixcob = pix.codpixcob) ';
+                $inner .= ' left join tblpixcob cob on (cob.codpixcob = pix.codpixcob) ';
                 break;
         }
 
-        $sql .= '
-        	left join tblportador port on (port.codportador = coalesce(pix.codportador, cob.codportador))
-        	left join tblnegocio n on (n.codnegocio = cob.codnegocio)
-        	left join tblusuario u on (u.codusuario = n.codusuario)
+        $inner .= '
+            left join tblportador port on (port.codportador = pix.codportador)
+            left join tblnegocio n on (n.codnegocio = cob.codnegocio)
+            left join tblusuario u on (u.codusuario = n.codusuario)
         ';
+
+        // if ($negocio !== 'com') {
+        //     $inner .= '
+        //         union all
+        //         select
+        //             cob.criacao as horario,
+        //             cob.valororiginal as valor,
+        //             null as codpix,
+        //             null as nome,
+        //             null as cpf,
+        //             null as cnpj,
+        //             cob.codpixcob,
+        //             cob.codnegocio,
+        //             u.codusuario,
+        //             u.usuario,
+        //             port.codportador,
+        //             port.portador,
+        //             null as e2eid,
+        //             null as txid,
+        //             null as infopagador
+        //         from tblpixcob cob
+        //         --inner join tblpixcobstatus st on (st.codpixcobstatus = cob.codpixcobstatus and st.pixcobstatus = \'NOVA\')
+        //         left join tblportador port on (port.codportador = cob.codportador)
+        //         left join tblnegocio n on (n.codnegocio = cob.codnegocio)
+        //         left join tblusuario u on (u.codusuario = n.codusuario)
+        //         where cob.codpixcobstatus = 1
+        //         --where not exists (select 1 from tblpix p where p.codpixcob = cob.codpixcob)
+        //     ';
+        // }
+
+        $sql = "select * from ({$inner}) resultado ";
 
         $where = 'where';
 
         if (!empty($nome)) {
-            $sql .= " {$where}  pix.nome ilike :nome ";
+            $sql .= " {$where} nome ilike :nome ";
             $params['nome'] = '%' . str_replace(' ', '%', $nome) . '%';
             $where = 'and';
         }
 
         switch ($negocio) {
             case 'sem':
-                $sql .= " {$where} cob.codnegocio is null ";
+                $sql .= " {$where} codnegocio is null ";
                 $where = 'and';
-                break;
-            case 'todos':
-            case 'com':
-            default:
                 break;
         }
 
         if (!empty($horarioinicial)) {
-            $sql .= " {$where} coalesce(pix.horario, cob.criacao) >= :horarioinicial ";
+            $sql .= " {$where} horario >= :horarioinicial ";
             $params['horarioinicial'] = $horarioinicial->format('Y-m-d H:i:s');
             $where = 'and';
         }
 
         if (!empty($horariofinal)) {
-            $sql .= " {$where} coalesce(pix.horario, cob.criacao) <= :horariofinal ";
+            $sql .= " {$where} horario <= :horariofinal ";
             $params['horariofinal'] = $horariofinal->format('Y-m-d H:i:s');
             $where = 'and';
         }
 
         if (!empty($valorinicial)) {
-            $sql .= " {$where} coalesce(pix.valor, cob.valororiginal) >= :valorinicial ";
+            $sql .= " {$where} valor >= :valorinicial ";
             $params['valorinicial'] = $valorinicial;
             $where = 'and';
         }
 
         if (!empty($valorfinal)) {
-            $sql .= " {$where} coalesce(pix.valor, cob.valororiginal) <= :valorfinal ";
+            $sql .= " {$where} valor <= :valorfinal ";
             $params['valorfinal'] = $valorfinal;
             $where = 'and';
         }
@@ -477,7 +528,7 @@ class PixService
         if (!empty($cpf)) {
             $cpf = numeroLimpo($cpf);
             if (!empty($cpf)) {
-                $sql .= " {$where} coalesce(to_char(pix.cpf, '00000000000'), to_char(pix.cnpj, '00000000000000')) ilike :cpf ";
+                $sql .= " {$where} coalesce(to_char(cpf, '00000000000'), to_char(cnpj, '00000000000000')) ilike :cpf ";
                 $params['cpf'] = "%{$cpf}%";
                 $where = 'and';
             }
@@ -485,14 +536,14 @@ class PixService
 
         switch ($sort) {
             case 'nome':
-                $sql .= ' order by pix.nome asc, coalesce(pix.horario, cob.criacao) desc ';
+                $sql .= ' order by nome asc, horario desc ';
                 break;
             case 'valor':
-                $sql .= ' order by coalesce(pix.valor, cob.valororiginal) desc, coalesce(pix.horario, cob.criacao) desc ';
+                $sql .= ' order by valor desc, horario desc ';
                 break;
             case 'horario':
             default:
-                $sql .= ' order by coalesce(pix.horario, cob.criacao) desc ';
+                $sql .= ' order by horario desc ';
                 break;
         }
 

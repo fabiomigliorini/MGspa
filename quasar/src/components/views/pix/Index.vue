@@ -274,8 +274,55 @@
       <!-- Se não tiver registros -->
       <mg-no-data v-else-if="!loading" class="layout-padding"></mg-no-data>
 
+      <!-- Dialog Consulta PIX -->
+      <q-dialog v-model="dialogConsulta" persistent>
+        <q-card bordered flat style="width: 500px; max-width: 90vw">
+          <q-card-section>
+            <div class="text-h6">Consultar PIX</div>
+          </q-card-section>
+          <q-card-section>
+            <div v-for="p in portadoresConsulta" :key="p.codportador" class="q-mb-md">
+              <div class="row items-center no-wrap q-mb-xs">
+                <div class="col text-body2 ellipsis">{{ p.portador }}</div>
+                <div class="col-auto q-ml-sm text-caption text-grey-7">
+                  <template v-if="p.erro">Erro</template>
+                  <template v-else-if="p.concluido">{{ p.processados }} pix</template>
+                  <template v-else-if="p.consultando">
+                    Pg. {{ p.paginaAtual + 1 }}<template v-if="p.totalPaginas"> / {{ p.totalPaginas }}</template>
+                  </template>
+                </div>
+              </div>
+              <q-linear-progress
+                :value="p.progresso"
+                :color="p.erro ? 'red-5' : (p.concluido ? 'green-5' : 'primary')"
+                :indeterminate="p.consultando && p.totalPaginas === null"
+                rounded
+                size="8px"
+              />
+              <div v-if="p.erro" class="text-caption text-red q-mt-xs">{{ p.erro }}</div>
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn
+              v-if="!consultaFinalizada"
+              flat
+              label="Cancelar"
+              color="red"
+              @click="cancelarConsulta()"
+            />
+            <q-btn
+              v-else
+              flat
+              label="Fechar"
+              color="grey-8"
+              @click="dialogConsulta = false"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
+
       <q-page-sticky position="bottom-right" :offset="[18, 18]">
-        <q-btn fab icon="refresh" color="primary" @click="refresh()" :loading="consultando" />
+        <q-btn fab icon="refresh" color="primary" @click="refresh()" :disable="dialogConsulta" />
       </q-page-sticky>
 
     </div>
@@ -304,7 +351,9 @@ export default {
       page: 1,
       filter: {}, // Vem do Store
       loading: true,
-      consultando: false
+      dialogConsulta: false,
+      portadoresConsulta: [],
+      consultaCancelada: false
     }
   },
 
@@ -319,6 +368,13 @@ export default {
       deep: true
     }
 
+  },
+
+  computed: {
+    consultaFinalizada () {
+      return this.portadoresConsulta.length > 0 &&
+        this.portadoresConsulta.every(function (p) { return p.concluido || p.erro })
+    }
   },
 
   methods: {
@@ -351,52 +407,90 @@ export default {
       var win = window.open(process.env.MGSIS_URL + '/index.php?r=negocio/view&id=' + codnegocio, '_blank');
     },
 
-    refresh: debounce(function () {
+    async refresh () {
       var vm = this
-      var url = 'pix/consultar'
-      vm.consultando = true
+      vm.consultaCancelada = false
+      vm.portadoresConsulta = []
+      vm.dialogConsulta = true
 
-      vm.$axios.post(url).then(response => {
-        vm.consultando = false
-        vm.page = 1
-        vm.loadData(false, vm.done)
-
-        var resultados = response.data
-        if (Array.isArray(resultados)) {
-          var erros = resultados.filter(r => !r.success)
-          var sucessos = resultados.filter(r => r.success)
-
-          sucessos.forEach(r => {
-            vm.$q.notify({
-              type: 'positive',
-              icon: 'done',
-              color: 'green-5',
-              message: r.portador + ': ' + r.processados + ' pix processado(s)',
-              timeout: 5000
-            })
-          })
-
-          erros.forEach(r => {
-            vm.$q.notify({
-              type: 'negative',
-              icon: 'error',
-              color: 'red-5',
-              message: r.portador + ': ' + r.message,
-              timeout: 8000
-            })
-          })
-        }
-      }).catch(error => {
-        vm.consultando = false
+      try {
+        var response = await vm.$axios.get('pix/portadores')
+        vm.portadoresConsulta = response.data.map(function (p) {
+          return {
+            codportador: p.codportador,
+            portador: p.portador,
+            consultando: true,
+            concluido: false,
+            erro: null,
+            processados: 0,
+            paginaAtual: 0,
+            totalPaginas: null,
+            progresso: 0
+          }
+        })
+      } catch (error) {
+        vm.dialogConsulta = false
         vm.$q.notify({
           type: 'negative',
           icon: 'error',
           color: 'red-5',
-          message: error.response?.data?.message || 'Erro ao consultar PIX',
-          timeout: 5000
+          message: 'Erro ao buscar portadores'
         })
-      })
-    }, 500),
+        return
+      }
+
+      await Promise.all(vm.portadoresConsulta.map(function (p) {
+        return vm.consultarPortador(p)
+      }))
+
+      if (vm.consultaCancelada) return
+
+      if (!vm.portadoresConsulta.some(function (p) { return p.erro })) {
+        vm.dialogConsulta = false
+      }
+
+      vm.page = 1
+      vm.loadData(false, null)
+    },
+
+    async consultarPortador (p) {
+      try {
+        while (!this.consultaCancelada) {
+          var response = await this.$axios.post('pix/' + p.codportador + '/consultar', {
+            pagina: p.paginaAtual
+          })
+          var ret = response.data
+          p.processados += (ret.pix || []).length
+
+          var pag = ret.parametros && ret.parametros.paginacao ? ret.parametros.paginacao : null
+          if (pag) {
+            p.totalPaginas = pag.quantidadeDePaginas
+            p.progresso = (pag.paginaAtual + 1) / pag.quantidadeDePaginas
+            if (pag.paginaAtual < pag.quantidadeDePaginas - 1) {
+              p.paginaAtual = pag.paginaAtual + 1
+            } else {
+              break
+            }
+          } else {
+            p.progresso = 1
+            break
+          }
+        }
+        p.concluido = true
+        p.consultando = false
+      } catch (error) {
+        p.consultando = false
+        p.progresso = 1
+        p.erro = error.response?.data?.message || error.message
+      }
+    },
+
+    cancelarConsulta () {
+      this.consultaCancelada = true
+      this.dialogConsulta = false
+      this.page = 1
+      this.loadData(false, null)
+    },
 
     // scroll infinito - carregar mais registros
     loadMore (index, done) {

@@ -47,6 +47,15 @@ class PixController
         return new PixCobResource($cob);
     }
 
+    public function portadores(Request $request)
+    {
+        $qry = Portador::ativo()->whereNotNull('pixdict')->orderBy('codfilial');
+        if ($request->codfilial) {
+            $qry->where('codfilial', $request->codfilial);
+        }
+        return response()->json($qry->get(['codportador', 'portador']), 200);
+    }
+
     public function consultarPix(Request $request, $codportador)
     {
         if ($inicio = $request->inicio) {
