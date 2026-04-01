@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 61.376 61.382637"
+   width="800"
+   height="800"
+   version="1.1"
+   id="svg224"
+   sodipodi:docname="bb.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs228" />
+  <sodipodi:namedview
+     id="namedview226"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="0.33842444"
+     inkscape:cx="-152.17577"
+     inkscape:cy="695.87173"
+     inkscape:window-width="1920"
+     inkscape:window-height="1043"
+     inkscape:window-x="1920"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg224" />
+  <g
+     id="g234"
+     transform="matrix(0.32340694,0,0,0.32494779,-0.32672544,-0.32494779)">
+    <path
+       clip-rule="evenodd"
+       d="M 1,1 H 190.8 V 189.9 H 1 Z"
+       fill="#ffef38"
+       fill-rule="evenodd"
+       id="path216" />
+    <path
+       clip-rule="evenodd"
+       d="M 81.2,130.5 65.7,120.1 139.4,70.4 93.9,39.8 72.5,54.2 89.1,65.2 50.8,90.8 18.7,69.6 96,18.1 172.7,69.4 Z M 110.3,60 125.8,70.4 52.1,120.1 97.7,150.7 119.1,136.3 102.5,125.4 140.9,99.8 173,121 95.5,172.4 19,121.3 Z m -60.1,92 -15.8,-10.8 -16,10.8 0.2,20.8 z M 142,39.3 157.9,50.1 173.4,39.8 V 18.5 Z"
+       fill-rule="evenodd"
+       id="path220"
+       style="fill:#003da4" />
+  </g>
+</svg>

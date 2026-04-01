@@ -11,9 +11,30 @@ export const pixStore = defineStore("pix", {
     dialog: {
       detalhesPixCob: false,
     },
+    portadoresPorFilial: {},
   }),
 
   actions: {
+    async carregarPortadores(codfilial) {
+      if (this.portadoresPorFilial[codfilial]) {
+        return this.portadoresPorFilial[codfilial];
+      }
+      try {
+        const { data } = await api.get("/api/v1/select/portador", {
+          params: {
+            somentePix: true,
+            codfilial: codfilial,
+          },
+        });
+        data.sort((a, b) => a.codportador - b.codportador);
+        this.portadoresPorFilial[codfilial] = data;
+        return data;
+      } catch (error) {
+        console.log(error);
+        return [];
+      }
+    },
+
     async transmitirPixCob() {
       try {
         const { data } = await api.post(

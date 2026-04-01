@@ -39,6 +39,7 @@ export const negocioStore = defineStore("negocio", {
       codpagarmepos: null,
       codsauruspos: null,
       maquineta: null,
+      codportador: null,
     },
     paginaAtual: 1,
   }),
@@ -1228,7 +1229,7 @@ export const negocioStore = defineStore("negocio", {
       }
     },
 
-    async criarPixCob(valor) {
+    async criarPixCob(valor, codportador) {
       if (!this.negocio.sincronizado) {
         Notify.create({
           type: "negative",
@@ -1240,7 +1241,7 @@ export const negocioStore = defineStore("negocio", {
         return false;
       }
       try {
-        const ret = await sSinc.criarPixCob(valor, this.negocio.codnegocio);
+        const ret = await sSinc.criarPixCob(valor, this.negocio.codnegocio, codportador);
         if (ret.codnegocio) {
           Notify.create({
             type: "positive",

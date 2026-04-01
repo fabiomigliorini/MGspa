@@ -97,7 +97,7 @@ class PixService
         return $cob;
     }
 
-    public static function criarPixCobPdv(Float $valor, Pdv $pdv, Negocio $negocio)
+    public static function criarPixCobPdv(Float $valor, Pdv $pdv, Negocio $negocio, int $codportador = null)
     {
         // procura ou cria registro
         $cob = new PixCob([
@@ -133,22 +133,30 @@ class PixService
         $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
         $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
 
-        //procura portador do BB pra filial com convenio
-        $portador = Portador::where('codfilial', $negocio->codfilial)
-            ->whereNull('inativo')
-            ->where('codbanco', 1)
-            ->whereNotNull('pixdict')
-            ->orderBy('codportador')
-            ->first();
-
-        //procura portador do BB sem filial com convenio
-        if ($portador === null) {
-            $portador = Portador::whereNull('codfilial')
+        // Se codportador informado, busca direto
+        if ($codportador) {
+            $portador = Portador::where('codportador', $codportador)
+                ->whereNull('inativo')
+                ->whereNotNull('pixdict')
+                ->first();
+        } else {
+            // Fallback: procura portador do BB pra filial com convenio
+            $portador = Portador::where('codfilial', $negocio->codfilial)
                 ->whereNull('inativo')
                 ->where('codbanco', 1)
                 ->whereNotNull('pixdict')
                 ->orderBy('codportador')
                 ->first();
+
+            // Procura portador do BB sem filial com convenio
+            if ($portador === null) {
+                $portador = Portador::whereNull('codfilial')
+                    ->whereNull('inativo')
+                    ->where('codbanco', 1)
+                    ->whereNotNull('pixdict')
+                    ->orderBy('codportador')
+                    ->first();
+            }
         }
 
         // se nao localizou nenhum portador
