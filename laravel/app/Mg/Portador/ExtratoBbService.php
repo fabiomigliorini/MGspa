@@ -4,6 +4,7 @@ namespace App\Mg\Portador;
 
 use Exception;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Mg\Portador\ExtratoBancario;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorSaldo;
@@ -11,26 +12,17 @@ use Mg\Portador\PortadorSaldo;
 class ExtratoBbService
 {
 
-    //TODO: Essa função esta duplicada em BoletoBbService
-    public static function verificaTokenValido (Portador $portador)
+    public static function verificaTokenValido(Portador $portador)
     {
-        if (!empty($portador->bbtokenexpiracao)) {
-            if ($portador->bbtokenexpiracao->isFuture()) {
-                return $portador->bbtoken;
-            }
+        $cacheKey = "bb_token_{$portador->codportador}";
+        $cached = Cache::get($cacheKey);
+        if ($cached) {
+            return $cached;
         }
         $token = ExtratoBbApiService::token($portador);
-        $expiracao = Carbon::now()->addSeconds($token['expires_in'] * 0.5);
-        $portador->update([
-            'bbtoken' => $token['access_token'],
-            'bbtokenexpiracao' => $expiracao,
-        ]);
-
-        //TODO: Retirar isso depois
-        $portador->bbtoken = $token['access_token'];
-        $portador->bbtokenexpiracao = $expiracao;
-
-        return $portador->bbtoken;
+        $ttl = intval($token['expires_in'] * 0.5);
+        Cache::put($cacheKey, $token['access_token'], $ttl);
+        return $token['access_token'];
     }
     public static function consultarExtrato(Portador $portador, $dataInicioSolicitacao, $dataFimSolicitacao)
     {

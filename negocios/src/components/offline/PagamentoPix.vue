@@ -3,6 +3,7 @@ import { ref } from "vue";
 import { Notify, debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
+import { db } from "src/boot/db";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpj } from "../../utils/formatador.js";
 import emitter from "../../utils/emitter.js";
@@ -15,9 +16,29 @@ const sPix = pixStore();
 const valorPagamento = ref(null);
 const formPix = ref(null);
 const btnConsultarRef = ref(null);
+const portadores = ref([]);
+const codportador = ref(null);
 
-const inicializarValores = () => {
+const inicializarValores = async () => {
   valorPagamento.value = sNegocio.valorapagar;
+  // Buscar codfilial do negócio aberto via estoquelocal
+  const estoqueLocal = await db.estoqueLocal.get(
+    sNegocio.negocio.codestoquelocal
+  );
+  if (estoqueLocal?.codfilial) {
+    portadores.value = await sPix.carregarPortadores(estoqueLocal.codfilial);
+  } else {
+    portadores.value = [];
+  }
+  // Pré-selecionar padrão somente se existir na lista
+  if (
+    sNegocio.padrao.codportador &&
+    portadores.value.find((p) => p.codportador === sNegocio.padrao.codportador)
+  ) {
+    codportador.value = sNegocio.padrao.codportador;
+  } else {
+    codportador.value = null;
+  }
 };
 
 const valorRule = [
@@ -36,7 +57,10 @@ const valorRule = [
 ];
 
 const salvar = async () => {
-  const pixCob = await sNegocio.criarPixCob(valorPagamento.value);
+  const pixCob = await sNegocio.criarPixCob(
+    valorPagamento.value,
+    codportador.value
+  );
   if (pixCob == false) {
     return;
   }
@@ -124,25 +148,91 @@ const whatsapp = () => {
 </script>
 <template>
   <!-- DIALOG -->
-  <q-dialog v-model="sNegocio.dialog.pagamentoPix" @before-show="inicializarValores()">
+  <q-dialog
+    v-model="sNegocio.dialog.pagamentoPix"
+    @before-show="inicializarValores()"
+  >
     <q-card>
       <q-form @submit="salvar()" ref="formPix">
         <q-card-section>
+          <!-- SELEÇÃO DE PORTADOR -->
+          <q-tabs
+            v-if="portadores.length > 0"
+            v-model="codportador"
+            dense
+            active-color="primary"
+            indicator-color="primary"
+            active-bg-color="blue-1"
+            align="center"
+            class="q-mb-lg"
+          >
+            <q-tab
+              v-for="port in portadores"
+              :key="port.codportador"
+              :name="port.codportador"
+              no-caps
+            >
+              <q-avatar size="28px" class="q-my-sm">
+                <q-img
+                  :src="'/bancos/' + port.codbanco + '.svg'"
+                  @error="(evt) => (evt.target.src = '/bancos/pix.svg')"
+                />
+              </q-avatar>
+              <div class="text-caption text-grey-7">
+                {{ port.banco }}
+              </div>
+              <div class="text-caption text-grey-7 text-bold">
+                {{ port.conta }}-{{ port.contadigito }}
+              </div>
+            </q-tab>
+          </q-tabs>
+          <div v-else class="text-grey-6 text-italic q-pa-sm q-mb-md">
+            Nenhum Portador configurado para PIX
+          </div>
+
+          <!-- VALOR -->
           <q-list>
             <q-item>
               <q-item-section>
-                <q-input prefix="R$" type="number" step="0.01" min="0.01" :max="sNegocio.valorapagar" borderless
-                  v-model.number="valorPagamento" :rules="valorRule" autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary" />
+                <q-input
+                  prefix="R$"
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  :max="sNegocio.valorapagar"
+                  borderless
+                  v-model.number="valorPagamento"
+                  :rules="valorRule"
+                  autofocus
+                  input-class="text-h2 text-weight-bolder text-right text-primary"
+                />
               </q-item-section>
             </q-item>
           </q-list>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="sNegocio.dialog.pagamentoPix = false" tabindex="-1" />
-          <q-btn type="button" flat label="PIX Pela Chave (Manual)" @click="pixChave()" color="primary" />
-          <q-btn type="submit" flat label="PIX Automático (QR CODE)" color="primary" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="primary"
+            @click="sNegocio.dialog.pagamentoPix = false"
+            tabindex="-1"
+          />
+          <q-btn
+            type="button"
+            flat
+            label="PIX Pela Chave (Manual)"
+            @click="pixChave()"
+            color="primary"
+          />
+          <q-btn
+            type="submit"
+            flat
+            label="PIX Automático (QR CODE)"
+            color="primary"
+            :disable="!codportador || !valorPagamento || valorPagamento <= 0"
+          />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -247,9 +337,15 @@ const whatsapp = () => {
           </template>
         </template>
         <template v-else>
-          <q-img v-if="sPix.pixCob.qrcode" class="q-my-lg" :src="'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' +
-            sPix.pixCob.qrcode
-            " ratio="1" />
+          <q-img
+            v-if="sPix.pixCob.qrcode"
+            class="q-my-lg"
+            :src="
+              'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' +
+              sPix.pixCob.qrcode
+            "
+            ratio="1"
+          />
           <q-list>
             <!-- ID -->
             <q-item>
@@ -289,13 +385,51 @@ const whatsapp = () => {
       </q-card-section>
       <q-card-actions align="right">
         <template v-if="sPix.pixCob.status != 'CONCLUIDA'">
-          <q-btn flat label="transmitir" color="primary" @click="transmitir()" tabindex="-1" />
-          <q-btn flat label="whatsapp" color="primary" @click="whatsapp()" tabindex="-1" class="mobile-only" />
-          <q-btn flat label="Mensagem" color="primary" @click="mensagem()" tabindex="-1" class="desktop-only" />
-          <q-btn flat label="imprimir" color="primary" @click="imprimir()" tabindex="-1" />
+          <q-btn
+            flat
+            label="transmitir"
+            color="primary"
+            @click="transmitir()"
+            tabindex="-1"
+          />
+          <q-btn
+            flat
+            label="whatsapp"
+            color="primary"
+            @click="whatsapp()"
+            tabindex="-1"
+            class="mobile-only"
+          />
+          <q-btn
+            flat
+            label="Mensagem"
+            color="primary"
+            @click="mensagem()"
+            tabindex="-1"
+            class="desktop-only"
+          />
+          <q-btn
+            flat
+            label="imprimir"
+            color="primary"
+            @click="imprimir()"
+            tabindex="-1"
+          />
         </template>
-        <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
-        <q-btn flat label="Fechar" color="primary" @click="sPix.dialog.detalhesPixCob = false" tabindex="-1" />
+        <q-btn
+          flat
+          label="consultar"
+          color="primary"
+          @click="consultar()"
+          ref="btnConsultarRef"
+        />
+        <q-btn
+          flat
+          label="Fechar"
+          color="primary"
+          @click="sPix.dialog.detalhesPixCob = false"
+          tabindex="-1"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>

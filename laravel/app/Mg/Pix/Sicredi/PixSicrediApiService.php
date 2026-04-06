@@ -1,44 +1,99 @@
 <?php
 
-namespace Mg\Pix;
+namespace Mg\Pix\Sicredi;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 use Mg\Filial\Filial;
-use Mg\Filial\CertificadoService;
+use Mg\Portador\Portador;
 
-class PixBbApiService
+class PixSicrediApiService
 {
 
-    /*
-    * Esta rotina consome o endpoint PUT /cob do BB para emissão da cobrança Pix (v2)
-    */
-    public static function transmitirPixCob(
-        Filial $filial,
-        $token,
-        $gwDevAppKey,
-        $chave,
-        $txid,
-        $expiracao,
-        $valorOriginal,
-        $solicitacaoPagador,
-        $nome,
-        $cpf,
-        $cnpj
-        )
+    private static function opcoesCurlMTls(): array
     {
-        // informações da cobrança
-        $arr = [
-          "calendario" => [
-            "expiracao" => $expiracao
-          ],
-          "valor" => [
-            "original" => number_format($valorOriginal, 2, '.', '')
-          ],
-          "chave" => $chave,
+        $cert = env('SICREDI_CERTIFICADO');
+        if (empty($cert) || !file_exists($cert)) {
+            throw new \Exception('Certificado do Sicredi não configurado ou não encontrado!');
+        }
+        $opt = [
+            CURLOPT_SSLCERT => $cert,
+            CURLOPT_SSLCERTTYPE => 'PEM',
         ];
-        if (!empty($solicitacaopagador)) {
+        $key = env('SICREDI_CERTIFICADO_KEY');
+        if (!empty($key)) {
+            $opt[CURLOPT_SSLKEY] = $key;
+            $opt[CURLOPT_SSLKEYTYPE] = 'PEM';
+        }
+        $senha = env('SICREDI_CERTIFICADO_SENHA');
+        if (!empty($senha)) {
+            $opt[CURLOPT_SSLCERTPASSWD] = $senha;
+        }
+        return $opt;
+    }
+
+    public static function token(Portador $portador): array
+    {
+        $url = env('SICREDI_URL_OAUTH');
+        $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
+        $body = 'grant_type=client_credentials&scope=cob.read+cob.write+pix.read+pix.write';
+
+        $curl = curl_init();
+        $opt = [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 15,
+            CURLOPT_SSL_VERIFYPEER => 1,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_HTTPHEADER => [
+                "Authorization: Basic {$authorization}",
+                "Content-Type: application/x-www-form-urlencoded"
+            ],
+        ] + static::opcoesCurlMTls();
+        curl_setopt_array($curl, $opt);
+        $response = curl_exec($curl);
+        if ($response === false) {
+            throw new \Exception(curl_error($curl), curl_errno($curl));
+        }
+        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        if ($httpcode == 401) {
+            throw new \Exception("Erro {$httpcode} - {$response} ao Autenticar na API Pix do Sicredi!", $httpcode);
+        }
+        if ($httpcode >= 400) {
+            throw new \Exception("Erro {$httpcode} ao Autenticar na API Pix do Sicredi: {$response}", $httpcode);
+        }
+        $ret = json_decode($response, true);
+        return $ret;
+    }
+
+    public static function transmitirPixCob(
+        string $token,
+        string $chave,
+        string $txid,
+        int $expiracao,
+        float $valorOriginal,
+        string $solicitacaoPagador = null,
+        string $nome = null,
+        string $cpf = null,
+        string $cnpj = null
+    ): array {
+        $arr = [
+            "calendario" => [
+                "expiracao" => $expiracao
+            ],
+            "valor" => [
+                "original" => number_format($valorOriginal, 2, '.', '')
+            ],
+            "chave" => $chave,
+        ];
+        if (!empty($solicitacaoPagador)) {
             $arr['solicitacaoPagador'] = $solicitacaoPagador;
         }
         if (!empty($cpf)) {
@@ -48,9 +103,9 @@ class PixBbApiService
             $arr['devedor']['nome'] = $nome;
             $arr['devedor']['cnpj'] = str_pad(number_format($cnpj, 0, '.', ''), 14, '0', STR_PAD_LEFT);
         }
+
         $body = json_encode($arr);
-        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
-        $auth = "Authorization: Bearer {$token}";
+        $url = env('SICREDI_URL_PIX') . '/cob/' . $txid;
         $curl = curl_init();
         $opt = [
             CURLOPT_URL => $url,
@@ -64,10 +119,10 @@ class PixBbApiService
             CURLOPT_CUSTOMREQUEST => "PUT",
             CURLOPT_POSTFIELDS => $body,
             CURLOPT_HTTPHEADER => [
-                $auth,
+                "Authorization: Bearer {$token}",
                 "Content-Type: application/json"
             ],
-        ] + CertificadoService::opcoesCurlMTls($filial);
+        ] + static::opcoesCurlMTls();
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
         if ($response === false) {
@@ -79,19 +134,11 @@ class PixBbApiService
         return $ret;
     }
 
-    /*
-    * Esta rotina consome o endpoint GET /cob do BB para consultar uma cobrança
-    */
     public static function consultarPixCob(
-        Filial $filial,
-        $token,
-        $gwDevAppKey,
-        $txid
-    )
-    {
-        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
-        $auth = "Authorization: Bearer {$token}";
-
+        string $token,
+        string $txid
+    ): array {
+        $url = env('SICREDI_URL_PIX') . '/cob/' . $txid;
         $curl = curl_init();
         $opt = [
             CURLOPT_URL => $url,
@@ -104,10 +151,10 @@ class PixBbApiService
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
             CURLOPT_HTTPHEADER => [
-                $auth,
+                "Authorization: Bearer {$token}",
                 "Content-Type: application/json"
             ],
-        ] + CertificadoService::opcoesCurlMTls($filial);
+        ] + static::opcoesCurlMTls();
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
         if ($response === false) {
@@ -119,23 +166,13 @@ class PixBbApiService
         return $ret;
     }
 
-    /*
-    * Esta rotina consome o endpoint GET /pix do BB para consultar os pix recebidos
-    * no periodo de 5 dias no maximo entre o inicio e fim
-    */
     public static function consultarPix(
-        Filial $filial,
         string $token,
-        string $gwDevAppKey,
         string $inicio = null,
         string $fim = null,
         int $paginaAtual = 0
-    ){
-
-        // monta parametros da URL
-        $data = [
-            'gw-dev-app-key' => $gwDevAppKey
-        ];
+    ): array {
+        $data = [];
         if (!empty($inicio)) {
             $data['inicio'] = $inicio;
         }
@@ -146,18 +183,10 @@ class PixBbApiService
             $data['paginacao.paginaAtual'] = $paginaAtual;
         }
 
-        // monta URL
-        $url = env('BB_URL_PIX') . '/pix?' . http_build_query($data);
-
-        // Token Auth
-        $auth = "Authorization: Bearer {$token}";
-
-        Log::info('PixBbApiService::consultarPix', [
-            'url' => $url,
-            'filial' => $filial->codfilial,
-            'gwDevAppKey' => $gwDevAppKey,
-            'pfxPath' => CertificadoService::pfxPath($filial),
-        ]);
+        $url = env('SICREDI_URL_PIX') . '/pix';
+        if (!empty($data)) {
+            $url .= '?' . http_build_query($data);
+        }
 
         $curl = curl_init();
         $opt = [
@@ -171,11 +200,10 @@ class PixBbApiService
             CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
             CURLOPT_CUSTOMREQUEST => "GET",
             CURLOPT_HTTPHEADER => [
-                $auth,
+                "Authorization: Bearer {$token}",
                 "Content-Type: application/json"
             ],
-        ] + CertificadoService::opcoesCurlMTls($filial);
-
+        ] + static::opcoesCurlMTls();
         curl_setopt_array($curl, $opt);
         $response = curl_exec($curl);
         if ($response === false) {
@@ -185,28 +213,6 @@ class PixBbApiService
         $response = preg_replace('/[\x00-\x1F\x7F]/', '', $response);
         $ret = json_decode($response, true);
         return $ret;
-    }
-
-    public static function qrCode($qrcode)
-    {
-
-        $url = 'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' .
-        urlencode($qrcode);
-
-        $curl = curl_init();
-        $opt = [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "GET",
-        ];
-        curl_setopt_array($curl, $opt);
-        $img = curl_exec($curl);
-        return $img;
     }
 
 }

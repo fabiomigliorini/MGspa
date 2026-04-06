@@ -1,7 +1,9 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { negocioStore } from "stores/negocio";
+import { pixStore } from "stores/pix";
 import { Dialog, Notify } from "quasar";
+import { db } from "src/boot/db";
 import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
 import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
 import SelectPagarMePos from "components/selects/SelectPagarMePos.vue";
@@ -10,8 +12,10 @@ import SelectSaurusPos from "components/selects/SelectSaurusPos.vue";
 // import SelectPessoa from "components/selects/SelectPessoa.vue";
 
 const sNegocio = negocioStore();
+const sPix = pixStore();
 
 const edicao = ref({});
+const portadores = ref([]);
 
 const opcoesPos = ref([
   { name: "POS Stone/PagarMe", value: "pagarme" },
@@ -26,7 +30,32 @@ onMounted(() => {
 
 const inicializaModel = async () => {
   edicao.value = { ...sNegocio.padrao };
+  await carregarPortadores();
 };
+
+const carregarPortadores = async () => {
+  if (!edicao.value.codestoquelocal) {
+    portadores.value = [];
+    return;
+  }
+  const estoqueLocal = await db.estoqueLocal.get(edicao.value.codestoquelocal);
+  if (!estoqueLocal?.codfilial) {
+    portadores.value = [];
+    return;
+  }
+  portadores.value = await sPix.carregarPortadores(estoqueLocal.codfilial);
+  // Se portador selecionado não está na lista, limpar
+  if (edicao.value.codportador && !portadores.value.find((p) => p.codportador === edicao.value.codportador)) {
+    edicao.value.codportador = null;
+  }
+};
+
+watch(
+  () => edicao.value.codestoquelocal,
+  async () => {
+    await carregarPortadores();
+  }
+);
 
 const salvar = async () => {
   Dialog.create({
@@ -47,7 +76,7 @@ const salvar = async () => {
 <template>
   <q-page>
     <div class="row justify-center">
-      <q-card class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2">
+      <q-card class="q-ma-md col-xs-11 col-sm-8 col-md-5 col-lg-4 col-xl-3">
         <q-form ref="formItem" @submit="salvar()">
           <q-card-section>
             <div class="q-gutter-md">
@@ -108,6 +137,42 @@ const salvar = async () => {
                 label="Impressora"
                 clearable
               />
+
+              <div>
+                <div class="text-caption text-grey-8 q-mb-xs">Portador PIX</div>
+                <q-list v-if="portadores.length > 0" bordered separator class="rounded-borders">
+                  <q-item
+                    v-for="port in portadores"
+                    :key="port.codportador"
+                    clickable
+                    v-ripple
+                    @click="edicao.codportador = port.codportador"
+                  >
+                    <q-item-section avatar>
+                      <q-avatar>
+                        <q-img
+                          :src="'/bancos/' + port.codbanco + '.svg'"
+                          @error="(evt) => (evt.target.src = '/bancos/pix.svg')"
+                        />
+                      </q-avatar>
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label>{{ port.portador }}</q-item-label>
+                      <q-item-label caption>{{ port.banco }}</q-item-label>
+                    </q-item-section>
+                    <q-item-section side>
+                      <q-radio
+                        v-model="edicao.codportador"
+                        :val="port.codportador"
+                        dense
+                      />
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+                <div v-else class="text-grey-6 text-italic q-pa-sm">
+                  Nenhum Portador configurado para PIX
+                </div>
+              </div>
             </div>
           </q-card-section>
 

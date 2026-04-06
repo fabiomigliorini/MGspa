@@ -13,21 +13,21 @@ use Mg\Portador\Portador;
 class PixController
 {
 
-    public function criarPixCobNegocio (Request $request, $codnegocio)
+    public function criarPixCobNegocio(Request $request, $codnegocio)
     {
         $negocio = Negocio::findOrFail($codnegocio);
         $cob = PixService::criarPixCobNegocio($negocio);
         return new PixCobResource($cob);
     }
 
-    public function transmitirPixCob (Request $request, $codpixcob)
+    public function transmitirPixCob(Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
         PixService::transmitirPixCob($cob);
         return new PixCobResource($cob);
     }
 
-    public function consultarPixCob (Request $request, $codpixcob)
+    public function consultarPixCob(Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
         PixService::consultarPixCob($cob);
@@ -35,19 +35,28 @@ class PixController
         return $ret;
     }
 
-    public function brCodePixCob (Request $request, $codpixcob)
+    public function brCodePixCob(Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
         return BrCodeService::montar($cob);
     }
 
-    public function show (Request $request, $codpixcob)
+    public function show(Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
         return new PixCobResource($cob);
     }
 
-    public function consultarPix (Request $request, $codportador)
+    public function portadores(Request $request)
+    {
+        $qry = Portador::ativo()->whereNotNull('pixdict')->orderBy('codfilial');
+        if ($request->codfilial) {
+            $qry->where('codfilial', $request->codfilial);
+        }
+        return response()->json($qry->get(['codportador', 'portador']), 200);
+    }
+
+    public function consultarPix(Request $request, $codportador)
     {
         if ($inicio = $request->inicio) {
             $inicio = Carbon::parse($inicio);
@@ -64,16 +73,16 @@ class PixController
             $portador,
             $inicio,
             $fim,
-            $request->pagina??0
+            $request->pagina ?? 0
         );
         return response()->json([
-            'success'=>true,
-            'pix'=>PixResource::collection($ret['processados']),
-            'parametros'=>$ret['parametros'],
+            'success' => true,
+            'pix' => PixResource::collection($ret['processados']),
+            'parametros' => $ret['parametros'],
         ], 200);
     }
 
-    public function consultarPixTodos (Request $request)
+    public function consultarPixTodos(Request $request)
     {
         if ($inicio = $request->inicio) {
             $inicio = Carbon::parse($inicio);
@@ -85,30 +94,56 @@ class PixController
         } else {
             $fim = Carbon::today()->endOfDay();
         }
-        $portadores = Portador::ativo()->whereNotNull('pixdict')->get();
+        $qry = Portador::ativo()->whereNotNull('pixdict')->orderBy('codfilial');
+        if ($request->codfilial) {
+            $qry->where('codfilial', $request->codfilial);
+        }
+        $portadores = $qry->get();
+        $resp = [];
         foreach ($portadores as $portador) {
-            $ret = PixService::consultarPix(
-                $portador,
-                $inicio,
-                $fim,
-                $request->pagina??0
-            );
-            $resp[] = [
-                'success'=>true,
-                'pix'=>PixResource::collection($ret['processados']),
-                'parametros'=>$ret['parametros'],
-            ];
+            try {
+                $processados = collect([]);
+                $paginaAtual = 0;
+                do {
+                    $ret = PixService::consultarPix(
+                        $portador,
+                        $inicio,
+                        $fim,
+                        $paginaAtual
+                    );
+                    $processados = $processados->merge($ret['processados']);
+                    $pag = $ret['parametros']['paginacao'] ?? null;
+                    $continuar = $pag && ($pag['paginaAtual'] < ($pag['quantidadeDePaginas'] - 1));
+                    if ($continuar) {
+                        $paginaAtual = $pag['paginaAtual'] + 1;
+                    }
+                } while ($continuar);
+                $resp[] = [
+                    'success' => true,
+                    'portador' => $portador->portador,
+                    'codportador' => $portador->codportador,
+                    'processados' => count($processados),
+                ];
+            } catch (\Exception $e) {
+                Log::warning("Erro ao consultar PIX do Portador {$portador->codportador} ({$portador->portador}): {$e->getMessage()}");
+                $resp[] = [
+                    'success' => false,
+                    'portador' => $portador->portador,
+                    'codportador' => $portador->codportador,
+                    'message' => $e->getMessage(),
+                ];
+            }
         }
         return response()->json($resp, 200);
     }
 
-    public function detalhes (Request $request, $codpixcob)
+    public function detalhes(Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
         return new PixCobResource($cob);
     }
 
-    public function imprimirQrCode (Request $request, $codpixcob)
+    public function imprimirQrCode(Request $request, $codpixcob)
     {
         $request->validate([
             'impressora' => ['required', 'string']
@@ -117,17 +152,17 @@ class PixController
         $pdf = PixService::imprimirQrCode($cob, $request->impressora);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="PixCob'.$codpixcob.'.pdf"'
+            'Content-Disposition' => 'inline; filename="PixCob' . $codpixcob . '.pdf"'
         ]);
     }
 
-    public function pdf (Request $request, $codpixcob)
+    public function pdf(Request $request, $codpixcob)
     {
         $cob = PixCob::findOrFail($codpixcob);
         $pdf = PixService::pdf($cob);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="PixCob'.$codpixcob.'.pdf"'
+            'Content-Disposition' => 'inline; filename="PixCob' . $codpixcob . '.pdf"'
         ]);
     }
 
@@ -138,8 +173,8 @@ class PixController
         $arquivo = PixJsonService::salvar($request->getContent());
         PixWebhookJob::dispatch($arquivo);
         return response()->json([
-            'success'=>true,
-            'arquivo'=>$arquivo
+            'success' => true,
+            'arquivo' => $arquivo
         ], 200);
     }
 
@@ -167,12 +202,12 @@ class PixController
         }
 
         $res = PixService::listagem(
-            $request->page??1,
-            $request->per_page??50,
-            $request->sort??'horario',
-            $request->nome??null,
-            $request->cpf??null,
-            $request->negocio??'todos',
+            $request->page ?? 1,
+            $request->per_page ?? 50,
+            $request->sort ?? 'horario',
+            $request->nome ?? null,
+            $request->cpf ?? null,
+            $request->negocio ?? 'todos',
             $valorinicial,
             $valorfinal,
             $horarioinicial,
@@ -187,6 +222,4 @@ class PixController
         $busca = PixService::descobreNome($request->cnpjCpf);
         return response()->json($busca, 200);
     }
-
-
 }

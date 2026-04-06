@@ -717,12 +717,13 @@ export const sincronizacaoStore = defineStore("sincronizacao", {
       }
     },
 
-    async criarPixCob(valor, codnegocio) {
+    async criarPixCob(valor, codnegocio, codportador) {
       try {
         const { data } = await api.post("/api/v1/pdv/pix/cob/", {
           pdv: this.pdv.uuid,
           valor: valor,
           codnegocio: codnegocio,
+          codportador: codportador,
         });
         return data.data;
       } catch (error) {

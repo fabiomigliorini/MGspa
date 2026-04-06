@@ -459,7 +459,7 @@ class PdvController
     {
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($request->codnegocio);
-        PixService::criarPixCobPdv($request->valor, $pdv, $negocio);
+        PixService::criarPixCobPdv($request->valor, $pdv, $negocio, $request->codportador);
         return new NegocioResource($negocio);
     }
 
