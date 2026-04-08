@@ -133,7 +133,7 @@ watch(
                 </div>
 
                 <!-- ARQUIVOS -->
-                <div class="col-12" v-if="sPessoa.item?.permissaoAnexo">
+                <div class="col-12" v-if="sPessoa.item?.permissaoFinanceiro">
                   <card-arquivos />
                 </div>
 

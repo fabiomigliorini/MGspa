@@ -180,9 +180,8 @@
                 <td class="label">DEPENDENTES</td>
                 <td colspan="3" class="checbox-group">
                     <span class="checkbox">
-                        ({{ $dependentes->count() > 0 ? 'X' : '  ' }})
-                        SIM
-                        ({{ $dependentes->count() == 0 ? 'X' : '  ' }}) NÃO
+                        {{ $dependentes->count() > 0 ? 'Possui dependentes' : '  ' }}
+                        {{ $dependentes->count() == 0 ? 'Não possui dependentes' : '  ' }}
                     </span>
                 </td>
             </tr>
