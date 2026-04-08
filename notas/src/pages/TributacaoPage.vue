@@ -9,6 +9,7 @@ import SelectCidade from 'src/components/selects/SelectCidade.vue'
 import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
 import SelectTipoProduto from 'src/components/selects/SelectTipoProduto.vue'
 import SelectTipoCliente from 'src/components/selects/SelectTipoCliente.vue'
+import MgInputDate from 'src/components/MgInputDate.vue'
 
 const $q = useQuasar()
 const store = useTributacaoStore()
@@ -93,22 +94,6 @@ const onTabChange = (newTab) => {
   store.setActiveTab(newTab)
 }
 
-// Converte ISO date (YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS) para DD/MM/YYYY
-const isoToFormDate = (isoDate) => {
-  if (!isoDate) return null
-  const date = new Date(isoDate)
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}/${month}/${year}`
-}
-
-// Converte DD/MM/YYYY para YYYY-MM-DD
-const formDateToIso = (formDate) => {
-  if (!formDate || formDate.length !== 10) return null
-  const [day, month, year] = formDate.split('/')
-  return `${year}-${month}-${day}`
-}
 
 // Retorna a cor do badge de tipo de cliente
 const getTipoClienteColor = (tipo) => {
@@ -197,8 +182,8 @@ const editarRegra = (regra) => {
     geracredito: regra.geracredito,
     beneficiocodigo: regra.beneficiocodigo,
     observacoes: regra.observacoes,
-    vigenciainicio: isoToFormDate(regra.vigenciainicio),
-    vigenciafim: isoToFormDate(regra.vigenciafim),
+    vigenciainicio: regra.vigenciainicio,
+    vigenciafim: regra.vigenciafim,
   }
   regraDialog.value = true
 }
@@ -241,8 +226,8 @@ const salvarRegra = async () => {
     // Prepara os dados para envio convertendo as datas
     const dataToSend = {
       ...regraForm.value,
-      vigenciainicio: formDateToIso(regraForm.value.vigenciainicio),
-      vigenciafim: formDateToIso(regraForm.value.vigenciafim),
+      vigenciainicio: regraForm.value.vigenciainicio,
+      vigenciafim: regraForm.value.vigenciafim,
     }
 
     if (regraDialogMode.value === 'create') {
@@ -289,8 +274,8 @@ const duplicarRegra = (regra) => {
     geracredito: regra.geracredito,
     beneficiocodigo: regra.beneficiocodigo,
     observacoes: regra.observacoes,
-    vigenciainicio: isoToFormDate(regra.vigenciainicio),
-    vigenciafim: isoToFormDate(regra.vigenciafim),
+    vigenciainicio: regra.vigenciainicio,
+    vigenciafim: regra.vigenciafim,
   }
   regraDialog.value = true
 }
@@ -998,54 +983,20 @@ const confirmarExclusaoTributo = () => {
             />
 
             <!-- Vigência Início -->
-            <q-input
+            <MgInputDate
               v-model="regraForm.vigenciainicio"
               label="Vigente do dia"
-              outlined
-              clearable
-              placeholder="DD/MM/AAAA"
-              mask="##/##/####"
-              bottom-slots
               class="col-4"
-              input-class="text-center"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-date v-model="regraForm.vigenciainicio" mask="DD/MM/YYYY">
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Fechar" color="primary" flat />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+              :bottom-slots="true"
+            />
 
             <!-- Vigência Fim -->
-            <q-input
+            <MgInputDate
               v-model="regraForm.vigenciafim"
               label="Até o dia"
-              outlined
-              clearable
-              placeholder="DD/MM/AAAA"
-              mask="##/##/####"
-              bottom-slots
               class="col-4"
-              input-class="text-center"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                    <q-date v-model="regraForm.vigenciafim" mask="DD/MM/YYYY">
-                      <div class="row items-center justify-end">
-                        <q-btn v-close-popup label="Fechar" color="primary" flat />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+              :bottom-slots="true"
+            />
 
             <!-- Observações -->
             <q-input

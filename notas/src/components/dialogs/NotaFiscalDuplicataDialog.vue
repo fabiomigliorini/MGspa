@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
+import MgInputDate from '../MgInputDate.vue'
 
 const props = defineProps({
   modelValue: {
@@ -29,23 +30,6 @@ const loading = ref(false)
 // Computed
 const isEditMode = ref(false)
 
-// Converte ISO date (YYYY-MM-DD) para DD/MM/YYYY
-const isoToFormDate = (isoDate) => {
-  if (!isoDate) return null
-  const date = new Date(isoDate)
-  const day = String(date.getDate()).padStart(2, '0')
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const year = date.getFullYear()
-  return `${day}/${month}/${year}`
-}
-
-// Converte DD/MM/YYYY para YYYY-MM-DD
-const formDateToIso = (formDate) => {
-  if (!formDate || formDate.length !== 10) return null
-  const [day, month, year] = formDate.split('/')
-  return `${year}-${month}-${day}`
-}
-
 // Watch para preencher o formulário quando editar
 watch(
   () => props.duplicata,
@@ -54,7 +38,7 @@ watch(
       isEditMode.value = true
       form.value = {
         fatura: newVal.fatura ?? '',
-        vencimento: isoToFormDate(newVal.vencimento) ?? '',
+        vencimento: newVal.vencimento ?? '',
         valor: newVal.valor ?? null,
       }
     } else {
@@ -81,7 +65,7 @@ const handleSave = () => {
 
   emit('save', {
     fatura: form.value.fatura,
-    vencimento: formDateToIso(form.value.vencimento),
+    vencimento: form.value.vencimento,
     valor: form.value.valor,
     codnotafiscalduplicatas: props.duplicata?.codnotafiscalduplicatas,
   })
@@ -139,31 +123,12 @@ watch(
 
             <!-- Vencimento -->
             <div class="col-12 col-sm-6">
-              <q-input
+              <MgInputDate
                 v-model="form.vencimento"
                 label="Vencimento *"
-                outlined
-                placeholder="DD/MM/AAAA"
-                mask="##/##/####"
-                :rules="[
-                  (val) => !!val || 'Campo obrigatório',
-                  (val) => val?.length === 10 || 'Data inválida',
-                ]"
-                lazy-rules
+                :rules="[(val) => !!val || 'Campo obrigatório']"
                 :disable="notaBloqueada"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                      <q-date v-model="form.vencimento" mask="DD/MM/YYYY">
-                        <div class="row items-center justify-end">
-                          <q-btn v-close-popup label="Fechar" color="primary" flat />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+              />
             </div>
 
             <!-- Valor -->

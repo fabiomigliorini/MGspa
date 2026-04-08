@@ -9,6 +9,7 @@ import SelectFilial from '../components/selects/SelectFilial.vue'
 import SelectEstoqueLocal from '../components/selects/SelectEstoqueLocal.vue'
 import SelectPessoa from '../components/selects/SelectPessoa.vue'
 import SelectEstado from '../components/selects/SelectEstado.vue'
+import MgInputDate from '../components/MgInputDate.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
 import { formatNumero } from 'src/utils/formatters'
 import { validarChaveNFe } from 'src/utils/validators'
@@ -19,26 +20,25 @@ const $q = useQuasar()
 const notaFiscalStore = useNotaFiscalStore()
 const filialStore = useSelectFilialStore()
 
-// Funções de conversão de data/hora
-// Converte ISO datetime (YYYY-MM-DDTHH:MM:SS) para DD/MM/YYYY HH:mm:ss
-const isoToFormDateTime = (isoDateTime) => {
-  if (!isoDateTime) return null
-  const dateObj = new Date(isoDateTime)
-  const day = String(dateObj.getDate()).padStart(2, '0')
-  const month = String(dateObj.getMonth() + 1).padStart(2, '0')
-  const year = dateObj.getFullYear()
-  const hours = String(dateObj.getHours()).padStart(2, '0')
-  const minutes = String(dateObj.getMinutes()).padStart(2, '0')
-  const seconds = String(dateObj.getSeconds()).padStart(2, '0')
-  return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`
+// Normaliza datetime para formato YYYY-MM-DD HH:mm:ss (aceita Date, string ISO com T, ou string com espaço)
+const normalizeIsoDateTime = (val) => {
+  if (!val) return null
+  if (val instanceof Date) {
+    const y = val.getFullYear()
+    const m = String(val.getMonth() + 1).padStart(2, '0')
+    const d = String(val.getDate()).padStart(2, '0')
+    const h = String(val.getHours()).padStart(2, '0')
+    const min = String(val.getMinutes()).padStart(2, '0')
+    const s = String(val.getSeconds()).padStart(2, '0')
+    return `${y}-${m}-${d} ${h}:${min}:${s}`
+  }
+  return String(val).replace('T', ' ')
 }
 
-// Converte DD/MM/YYYY HH:mm:ss para ISO datetime (YYYY-MM-DDTHH:MM:SS)
-const formDateTimeToIso = (formDateTime) => {
-  if (!formDateTime || formDateTime.length !== 19) return null
-  const [datePart, timePart] = formDateTime.split(' ')
-  const [day, month, year] = datePart.split('/')
-  return `${year}-${month}-${day}T${timePart}`
+// Converte ISO com espaço para ISO com T para enviar ao backend
+const toIsoWithT = (iso) => {
+  if (!iso) return null
+  return iso.replace(' ', 'T')
 }
 
 // State
@@ -106,8 +106,8 @@ const loadFormData = async () => {
           serie: nota.value.serie,
           numero: nota.value.numero,
           nfechave: nota.value.nfechave,
-          emissao: isoToFormDateTime(nota.value.emissao),
-          saida: isoToFormDateTime(nota.value.saida),
+          emissao: normalizeIsoDateTime(nota.value.emissao),
+          saida: normalizeIsoDateTime(nota.value.saida),
           cpf: nota.value.cpf,
           valordesconto: nota.value.valordesconto || 0,
           valorfrete: nota.value.valorfrete || 0,
@@ -154,8 +154,8 @@ const loadFormData = async () => {
     serie: 1,
     numero: 0,
     nfechave: null,
-    emissao: isoToFormDateTime(new Date()),
-    saida: isoToFormDateTime(new Date()),
+    emissao: normalizeIsoDateTime(new Date()),
+    saida: normalizeIsoDateTime(new Date()),
     cpf: null,
     valordesconto: null,
     valorfrete: null,
@@ -190,8 +190,8 @@ const handleSubmit = async () => {
     // Prepara os dados convertendo as datas/horas para formato ISO
     const dataToSend = {
       ...form.value,
-      emissao: formDateTimeToIso(form.value.emissao),
-      saida: formDateTimeToIso(form.value.saida),
+      emissao: toIsoWithT(form.value.emissao),
+      saida: toIsoWithT(form.value.saida),
     }
 
     if (isEditMode.value) {
@@ -478,80 +478,26 @@ onMounted(() => {
 
               <!-- Data Emissão -->
               <div class="col-12 col-sm-6">
-                <q-input
+                <MgInputDate
                   v-model="form.emissao"
                   label="Data/Hora Emissão *"
-                  outlined
-                  placeholder="DD/MM/YYYY HH:mm:ss"
-                  mask="##/##/#### ##:##:##"
+                  timestamp
+                  seconds
                   :rules="[(val) => !!val || 'Campo obrigatório']"
                   :disable="notaBloqueada"
-                  input-class="text-center"
-                >
-                  <template v-slot:append>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date
-                          v-model="form.emissao"
-                          mask="DD/MM/YYYY HH:mm:ss"
-                          default-view="Calendar"
-                        >
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Fechar" color="primary" flat />
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                    <q-icon name="access_time" class="cursor-pointer q-ml-xs">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-time v-model="form.emissao" mask="DD/MM/YYYY HH:mm:ss" with-seconds>
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Fechar" color="primary" flat />
-                          </div>
-                        </q-time>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
+                />
               </div>
 
               <!-- Data Saída -->
               <div class="col-12 col-sm-6">
-                <q-input
+                <MgInputDate
                   v-model="form.saida"
                   label="Data/Hora Saída *"
-                  outlined
-                  placeholder="DD/MM/YYYY HH:mm:ss"
-                  mask="##/##/#### ##:##:##"
+                  timestamp
+                  seconds
                   :rules="[(val) => !!val || 'Campo obrigatório']"
                   :disable="notaBloqueada"
-                  input-class="text-center"
-                >
-                  <template v-slot:append>
-                    <q-icon name="event" class="cursor-pointer">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-date
-                          v-model="form.saida"
-                          mask="DD/MM/YYYY HH:mm:ss"
-                          default-view="Calendar"
-                        >
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Fechar" color="primary" flat />
-                          </div>
-                        </q-date>
-                      </q-popup-proxy>
-                    </q-icon>
-                    <q-icon name="access_time" class="cursor-pointer q-ml-xs">
-                      <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                        <q-time v-model="form.saida" mask="DD/MM/YYYY HH:mm:ss" with-seconds>
-                          <div class="row items-center justify-end">
-                            <q-btn v-close-popup label="Fechar" color="primary" flat />
-                          </div>
-                        </q-time>
-                      </q-popup-proxy>
-                    </q-icon>
-                  </template>
-                </q-input>
+                />
               </div>
             </div>
           </q-card-section>

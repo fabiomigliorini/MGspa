@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useQuasar, date } from 'quasar'
+import { useQuasar } from 'quasar'
+import MgInputDate from '../MgInputDate.vue'
 import { formatPercent, formatCurrency } from 'src/utils/formatters'
 
 const $q = useQuasar()
@@ -10,7 +11,7 @@ const form = ref({
   codnaturezaoperacao: null,
   codcidadedestino: null,
   barras: '',
-  data: date.formatDate(Date.now(), 'DD/MM/YYYY'),
+  data: new Date().toISOString().substring(0, 10),
   valorBase: null,
 })
 
@@ -214,26 +215,10 @@ const limparResultados = () => {
         <!-- Data -->
         <div class="q-mb-md">
           <div class="text-subtitle2 q-mb-xs">Data *</div>
-          <q-input
+          <MgInputDate
             v-model="form.data"
-            outlined
-            dense
-            mask="##/##/####"
-            placeholder="DD/MM/AAAA"
             :rules="[(val) => !!val || 'Campo obrigatório']"
-          >
-            <template v-slot:append>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                  <q-date v-model="form.data" mask="DD/MM/YYYY">
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="OK" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
+          />
         </div>
 
         <!-- Valor Base -->

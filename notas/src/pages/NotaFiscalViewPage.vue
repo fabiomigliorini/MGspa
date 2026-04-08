@@ -30,6 +30,7 @@ import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicata
 import NotaFiscalReferenciadaDialog from '../components/dialogs/NotaFiscalReferenciadaDialog.vue'
 import NotaFiscalCartaCorrecaoDialog from '../components/dialogs/NotaFiscalCartaCorrecaoDialog.vue'
 import NotaFiscalItemDialog from 'src/components/dialogs/NotaFiscalItemDialog.vue'
+import NotaFiscalAcoes from '../components/NotaFiscalAcoes.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -759,287 +760,9 @@ const toggleNotaSelecionada = (codnotafiscal) => {
 }
 
 // ==================== NFE ACTIONS ====================
-const loadingNfe = ref(false)
-const loadingConsultar = ref(false)
-const loadingCancelar = ref(false)
-const loadingInutilizar = ref(false)
-const loadingEmail = ref(false)
 const loadingCartaCorrecao = ref(false)
-const progressoNfe = ref({ status: '', percent: 0 })
-const danfeDialog = ref(false)
-const danfeUrl = ref('')
 
-const enviarNfe = async () => {
-  loadingNfe.value = true
-  progressoNfe.value = { status: 'Criando Arquivo XML...', percent: 0 }
 
-  try {
-    // 1. Criar XML
-    const xmlResponse = await notaFiscalStore.criarNfe(nota.value.codnotafiscal)
-    progressoNfe.value = { status: 'Arquivo XML Criado...', percent: 25 }
-
-    // Verifica se é contingência offline (tpEmis = 9)
-    const parser = new DOMParser()
-    const xmlDoc = parser.parseFromString(xmlResponse, 'text/xml')
-    const tpEmis = xmlDoc.querySelector('tpEmis')?.textContent
-
-    if (tpEmis === '9') {
-      // Modo offline - apenas abre DANFE
-      await abrirDanfe()
-
-      // // Se for NFCe, imprime
-      // if (nota.value.modelo === 65) {
-      //   await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
-      // }
-    } else {
-      // 2. Enviar para SEFAZ
-      progressoNfe.value = { status: 'Enviando NFe para Sefaz...', percent: 50 }
-      const envioResponse = await notaFiscalStore.enviarNfeSincrono(nota.value.codnotafiscal)
-
-      if (envioResponse.sucesso) {
-        // 3. Enviar Email
-        progressoNfe.value = { status: 'Enviando Email...', percent: 75 }
-        await notaFiscalStore.enviarEmailNfe(nota.value.codnotafiscal)
-
-        // // 4. Imprimir se for NFCe
-        // if (nota.value.modelo === 65) {
-        //   await notaFiscalStore.imprimirNfe(nota.value.codnotafiscal, '')
-        // }
-
-        // 5. Abrir DANFE
-        progressoNfe.value = { status: 'Finalizado...', percent: 100 }
-        await abrirDanfe()
-
-        // Recarrega a nota
-        await loadData()
-
-        $q.notify({
-          type: 'positive',
-          message: 'NFe enviada com sucesso!',
-        })
-      } else {
-        throw new Error(`${envioResponse.cStat} - ${envioResponse.xMotivo}`)
-      }
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao enviar NFe',
-      caption: error.response?.data?.message || error.message,
-    })
-  } finally {
-    loadingNfe.value = false
-    progressoNfe.value = { status: '', percent: 0 }
-  }
-}
-
-const consultarNfe = async () => {
-  loadingConsultar.value = true
-  try {
-    const response = await notaFiscalStore.consultarNfe(nota.value.codnotafiscal)
-
-    // Sempre mostra o resultado, independente de sucesso ou erro
-    const tipo = response.sucesso ? 'positive' : 'negative'
-    const mensagem = `${response.cStat} - ${response.xMotivo}`
-
-    $q.dialog({
-      title: 'Consulta NFe',
-      message: mensagem,
-      ok: { label: 'OK', color: tipo },
-    })
-  } catch (error) {
-    // Mostra erro 500 do backend no notify bottom
-    const mensagem = error.response?.data?.message || error.message
-
-    $q.notify({
-      type: 'negative',
-      message: mensagem,
-      position: 'bottom',
-    })
-  } finally {
-    loadingConsultar.value = false
-  }
-}
-
-const cancelarNfe = async () => {
-  $q.dialog({
-    title: 'Cancelar NFe',
-    message: 'Digite a justificativa para cancelar a NFe',
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      isValid: (val) => val && val.length >= 15,
-    },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar Cancelamento', color: 'negative' },
-  }).onOk(async (justificativa) => {
-    loadingCancelar.value = true
-    try {
-      const response = await notaFiscalStore.cancelarNfe(nota.value.codnotafiscal, justificativa)
-
-      // Sempre mostra o resultado, independente de sucesso ou erro
-      const tipo = response.sucesso ? 'positive' : 'negative'
-      const mensagem = `${response.cStat} - ${response.xMotivo}`
-
-      $q.dialog({
-        title: 'Cancelamento NFe',
-        message: mensagem,
-        ok: { label: 'OK', color: tipo },
-      })
-    } catch (error) {
-      // Mostra erro 500 do backend no notify bottom
-      const mensagem = error.response?.data?.message || error.message
-
-      $q.notify({
-        type: 'negative',
-        message: mensagem,
-        position: 'bottom',
-      })
-    } finally {
-      loadingCancelar.value = false
-    }
-  })
-}
-
-const inutilizarNfe = async () => {
-  $q.dialog({
-    title: 'Inutilizar NFe',
-    message: 'Digite a justificativa para inutilizar a NFe',
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      isValid: (val) => val && val.length >= 15,
-    },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar Inutilização', color: 'negative' },
-  }).onOk(async (justificativa) => {
-    loadingInutilizar.value = true
-    try {
-      const response = await notaFiscalStore.inutilizarNfe(nota.value.codnotafiscal, justificativa)
-
-      // Sempre mostra o resultado, independente de sucesso ou erro
-      const tipo = response.sucesso ? 'positive' : 'negative'
-      const mensagem = `${response.cStat} - ${response.xMotivo}`
-
-      $q.dialog({
-        title: 'Inutilização NFe',
-        message: mensagem,
-        ok: { label: 'OK', color: tipo },
-      })
-    } catch (error) {
-      // Mostra erro 500 do backend no notify bottom
-      const mensagem = error.response?.data?.message || error.message
-
-      $q.notify({
-        type: 'negative',
-        message: mensagem,
-        position: 'bottom',
-      })
-    } finally {
-      loadingInutilizar.value = false
-    }
-  })
-}
-
-const enviarEmailNfe = async () => {
-  $q.dialog({
-    title: 'Enviar Email',
-    message: 'Digite o endereço de e-mail',
-    prompt: {
-      model: nota.value.pessoa?.email || '',
-      type: 'email',
-      outlined: true,
-    },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Enviar', color: 'primary' },
-  }).onOk(async (email) => {
-    loadingEmail.value = true
-    try {
-      const response = await notaFiscalStore.enviarEmailNfe(nota.value.codnotafiscal, email)
-
-      const tipo = response.sucesso ? 'positive' : 'negative'
-      const mensagem = response.mensagem || 'Email enviado com sucesso'
-
-      $q.notify({
-        type: tipo,
-        message: mensagem,
-      })
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao enviar email',
-        caption: error.response?.data?.message || error.message,
-      })
-    } finally {
-      loadingEmail.value = false
-    }
-  })
-}
-
-const abrirDanfe = async () => {
-  try {
-    danfeUrl.value = await notaFiscalStore.getDanfeUrl(nota.value.codnotafiscal)
-
-    // se for celular android
-    const ua = navigator.userAgent
-    const isAndroidPhone = /Android/i.test(ua) && /Mobile/i.test(ua) && !/CrOS/i.test(ua)
-    if (isAndroidPhone) {
-      window.open(danfeUrl.value, '_blank')
-    } else {
-      danfeDialog.value = true
-    }
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao abrir DANFE',
-      caption: error?.response?.data?.message || error?.message || 'Erro desconhecido',
-    })
-  }
-}
-
-const abrirXml = async () => {
-  try {
-    const xmlUrl = await notaFiscalStore.getXmlUrl(nota.value.codnotafiscal)
-    window.open(xmlUrl, '_blank')
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao abrir XML',
-      caption: error?.response?.data?.message || error?.message || 'Erro desconhecido',
-    })
-  }
-}
-
-// Computed para controlar visibilidade dos botões
-const podeEnviar = computed(() => {
-  return nota.value && ['DIG', 'ERR'].includes(nota.value.status)
-})
-
-const podeConsultar = computed(() => {
-  return nota.value && ['AUT', 'CAN', 'ERR'].includes(nota.value.status)
-})
-
-const podeCancelar = computed(() => {
-  return nota.value && nota.value.status === 'AUT'
-})
-
-const podeInutilizar = computed(() => {
-  return nota.value && nota.value.status === 'ERR'
-})
-
-const podeEnviarEmail = computed(() => {
-  return nota.value && nota.value.status === 'AUT'
-})
-
-const podeAbrirDanfe = computed(() => {
-  return nota.value && ['AUT', 'CAN'].includes(nota.value.status)
-})
-
-const podeAbrirXml = computed(() => {
-  return nota.value && nota.value.emitida && nota.value.nfechave
-})
 
 const podeIncorporar = computed(() => {
   return (
@@ -1214,12 +937,15 @@ const limparInutilizacao = async () => {
   })
 }
 
+// Ref do componente de ações
+const acoesRef = ref(null)
+
 // Atalho F9 para enviar NFe
 const handleKeyDown = (e) => {
   if (e.key === 'F9') {
     e.preventDefault()
-    if (podeEnviar.value && !loadingNfe.value) {
-      enviarNfe()
+    if (acoesRef.value?.podeEnviar && !acoesRef.value?.loadingEnviar) {
+      acoesRef.value.enviarNfe()
     }
   }
 }
@@ -1627,101 +1353,12 @@ onUnmounted(() => {
             <q-separator v-if="nota?.emitida" />
 
             <q-card-actions align="right" v-if="nota?.emitida">
-              <!-- Enviar (F9) -->
-              <q-btn
-                v-if="podeEnviar"
-                dense
-                round
-                flat
-                color="secondary"
-                icon="send"
-                @click="enviarNfe"
-                :loading="loadingNfe"
-              >
-                <q-tooltip>Criar XML e enviar para SEFAZ</q-tooltip>
-              </q-btn>
-
-              <!-- Consultar -->
-              <q-btn
-                v-if="podeConsultar"
-                dense
-                round
-                flat
-                color="primary"
-                icon="refresh"
-                @click="consultarNfe"
-                :loading="loadingConsultar"
-              >
-                <q-tooltip>Consultar situação na SEFAZ</q-tooltip>
-              </q-btn>
-
-              <!-- Abrir DANFE -->
-              <q-btn
-                v-if="podeAbrirDanfe"
-                dense
-                round
-                flat
-                color="secondary"
-                icon="picture_as_pdf"
-                @click="abrirDanfe"
-              >
-                <q-tooltip>Abrir DANFE</q-tooltip>
-              </q-btn>
-
-              <!-- Abrir XML -->
-              <q-btn
-                v-if="podeAbrirXml"
-                dense
-                round
-                flat
-                color="orange"
-                icon="code"
-                @click="abrirXml"
-              >
-                <q-tooltip>Abrir XML</q-tooltip>
-              </q-btn>
-
-              <!-- Enviar Email -->
-              <q-btn
-                v-if="podeEnviarEmail"
-                dense
-                round
-                flat
-                color="primary"
-                icon="email"
-                @click="enviarEmailNfe"
-                :loading="loadingEmail"
-              >
-                <q-tooltip>Enviar por email</q-tooltip>
-              </q-btn>
-
-              <!-- Cancelar -->
-              <q-btn
-                v-if="podeCancelar"
-                dense
-                round
-                flat
-                color="negative"
-                icon="cancel"
-                @click="cancelarNfe"
-                :loading="loadingCancelar"
-              >
-                <q-tooltip>Cancelar NFe</q-tooltip>
-              </q-btn>
-
-              <!-- Inutilizar -->
-              <q-btn
-                v-if="podeInutilizar"
-                dense
-                round
-                flat
-                color="warning"
-                icon="block"
-                @click="inutilizarNfe"
-                :loading="loadingInutilizar"
-              >
-                <q-tooltip>Inutilizar NFe</q-tooltip>
-              </q-btn>
+              <NotaFiscalAcoes
+                ref="acoesRef"
+                :nota="nota"
+                show-extras
+                @action-completed="loadData"
+              />
 
               <!-- Alterar Status -->
               <q-btn dense round flat color="grey-7" icon="edit_note" @click="abrirDialogStatus">
@@ -2586,19 +2223,6 @@ onUnmounted(() => {
       @save="enviarCartaCorrecao"
     />
 
-    <!-- Dialog de Progresso NFe -->
-    <q-dialog v-model="loadingNfe">
-      <q-card style="min-width: 350px">
-        <q-card-section>
-          <div class="text-h6">Processando NFe</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <div class="text-body2 q-mb-md">{{ progressoNfe.status }}</div>
-          <q-linear-progress :value="progressoNfe.percent / 100" color="primary" class="q-mt-md" />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
 
     <!-- Dialog PDF Carta de Correção -->
     <q-dialog v-model="cartaCorrecaoPdfDialog">
@@ -2630,26 +2254,6 @@ onUnmounted(() => {
       </q-card>
     </q-dialog>
 
-    <!-- Dialog DANFE -->
-    <q-dialog v-model="danfeDialog">
-      <q-card
-        :style="
-          nota.modelo === 65
-            ? 'width: 400px; max-width: 90vw; height: 90vh'
-            : 'width: 800px; max-width: 90vw; height: 90vh'
-        "
-      >
-        <q-card-section class="row items-center q-pb-none">
-          <div class="text-h6">{{ nota.modelo === 65 ? 'DANFE NFCe' : 'DANFE NFe' }}</div>
-          <q-space />
-          <q-btn icon="close" flat round dense v-close-popup />
-        </q-card-section>
-
-        <q-card-section class="q-pa-md" style="height: calc(100% - 56px)">
-          <iframe :src="danfeUrl" style="width: 100%; height: 100%; border: none" />
-        </q-card-section>
-      </q-card>
-    </q-dialog>
 
     <!-- Dialog Alterar Status -->
     <q-dialog v-model="statusDialog">

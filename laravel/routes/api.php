@@ -626,10 +626,13 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('graficos/volume-mensal', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@volumeMensal');
             Route::get('graficos/erro-por-filial', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@erroPorFilial');
 
-            // Listas operacionais
-            Route::get('listas/erro', '\Mg\NotaFiscal\Dashboard\DashboardListasController@erro');
-            Route::get('listas/canceladas-inutilizadas', '\Mg\NotaFiscal\Dashboard\DashboardListasController@canceladasInutilizadas');
-            Route::get('listas/digitacao', '\Mg\NotaFiscal\Dashboard\DashboardListasController@digitacao');
+        });
+
+        // NOTA FISCAL CONTROLE
+        Route::prefix('nota-fiscal/controle')->group(function () {
+            Route::get('negocios-sem-nfce', '\Mg\NotaFiscal\Controle\ControleController@negociosSemNfce');
+            Route::post('gerar-nfce-faltantes', '\Mg\NotaFiscal\Controle\ControleController@gerarNfceFaltantes');
+            Route::post('gerar-transferencias', '\Mg\NotaFiscal\Controle\ControleController@gerarTransferencias');
         });
 
         // NOTA FISCAL TRANSFERENCIA
