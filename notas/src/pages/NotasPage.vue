@@ -9,6 +9,7 @@ import { useAuth } from 'src/composables/useAuth'
 import { getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
 import { formatDateTime, formatCurrency, formatNumero } from 'src/utils/formatters'
 import NotaFiscalAcoes from '../components/NotaFiscalAcoes.vue'
+import notaFiscalService from '../services/notaFiscalService'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -179,6 +180,72 @@ const getFilialLabel = (codfilial) => {
   return filial ? filial.label : codfilial
 }
 
+// ==================== DIALOG LACUNAS ====================
+
+const showDialogLacunas = ref(false)
+const lacunasGrupos = ref([])
+const lacunasLoading = ref(false)
+const justificativa = ref('Falha de sistema, saltou numeracao')
+const inutilizando = ref(new Set())
+const inutilizados = ref(new Set())
+
+const chave = (g, n) => `${g.codfilial}-${g.serie}-${g.modelo}-${n}`
+
+const abrirDialogLacunas = async () => {
+  showDialogLacunas.value = true
+  lacunasGrupos.value = []
+  inutilizados.value = new Set()
+  lacunasLoading.value = true
+  try {
+    lacunasGrupos.value = await notaFiscalService.detectarLacunas()
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      icon: 'error',
+      message: error.response?.data?.message || 'Erro ao detectar lacunas',
+    })
+  } finally {
+    lacunasLoading.value = false
+  }
+}
+
+const inutilizarLacuna = async (grupo, numero) => {
+  const k = chave(grupo, numero)
+  const novoSet = new Set(inutilizando.value)
+  novoSet.add(k)
+  inutilizando.value = novoSet
+
+  try {
+    const resultado = await notaFiscalService.criarParaInutilizar({
+      codfilial: grupo.codfilial,
+      serie: grupo.serie,
+      modelo: grupo.modelo,
+      numero,
+      justificativa: justificativa.value,
+    })
+
+    const novoInutilizados = new Set(inutilizados.value)
+    novoInutilizados.add(k)
+    inutilizados.value = novoInutilizados
+
+    $q.notify({
+      color: 'green-5',
+      icon: 'done',
+      message: `Número ${numero} inutilizado — ${resultado.cStat} ${resultado.xMotivo}`,
+    })
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      icon: 'error',
+      message: `Número ${numero}: ${error.response?.data?.message || error.message}`,
+    })
+  } finally {
+    const novoSet = new Set(inutilizando.value)
+    novoSet.delete(k)
+    inutilizando.value = novoSet
+  }
+}
+
 // Lifecycle
 onMounted(async () => {
   // Ler query params da URL — limpa filtros antigos e seta só o status
@@ -322,6 +389,17 @@ onMounted(async () => {
           @click="abrirDialogTransferencias"
         >
           <q-tooltip>Gerar Transferências</q-tooltip>
+        </q-btn>
+
+        <!-- Inutilizar Lacunas -->
+        <q-btn
+          v-if="podeGerar"
+          fab-mini
+          icon="playlist_remove"
+          color="red-7"
+          @click="abrirDialogLacunas"
+        >
+          <q-tooltip>Inutilizar Lacunas</q-tooltip>
         </q-btn>
 
         <!-- Nova Nota -->
@@ -521,6 +599,97 @@ onMounted(async () => {
             :disable="selectedFiliais.length === 0"
             @click="gerarTransferencias"
           />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog: Inutilizar Lacunas -->
+    <q-dialog v-model="showDialogLacunas" persistent>
+      <q-card
+        flat
+        style="
+          width: 600px;
+          max-width: 90vw;
+          max-height: 80vh;
+          display: flex;
+          flex-direction: column;
+        "
+      >
+        <q-card-section class="bg-red-7 text-white">
+          <div class="text-h6">Inutilizar Lacunas</div>
+          <div class="text-caption">Números saltados na numeração (últimos 90 dias)</div>
+        </q-card-section>
+
+        <q-card-section class="q-pb-none q-mb-none">
+          <q-input
+            v-model="justificativa"
+            label="Justificativa"
+            dense
+            outlined
+            :rules="[(v) => v.length >= 15 || 'Mínimo 15 caracteres']"
+          />
+        </q-card-section>
+
+        <q-card-section
+          class="q-pt-none q-mt-none"
+          style="overflow-y: auto; flex: 1; min-height: 0"
+        >
+          <!-- Loading -->
+          <template v-if="lacunasLoading">
+            <div class="text-center q-pa-lg">
+              <q-spinner color="primary" size="2em" />
+              <div class="text-caption q-mt-sm">Buscando lacunas...</div>
+            </div>
+          </template>
+
+          <!-- Sem lacunas -->
+          <template v-else-if="!lacunasLoading && lacunasGrupos.length === 0">
+            <div class="text-center q-pa-lg text-grey-6">Nenhuma lacuna encontrada...</div>
+          </template>
+
+          <!-- Agrupado por filial/serie/modelo -->
+          <template v-else>
+            <template
+              v-for="grupo in lacunasGrupos"
+              :key="`${grupo.codfilial}-${grupo.serie}-${grupo.modelo}`"
+            >
+              <q-item-label header class="text-weight-medium">
+                {{ grupo.filial }} — Série {{ grupo.serie }} — Modelo {{ grupo.modelo }}
+              </q-item-label>
+              <q-list separator dense>
+                <q-item v-for="numero in grupo.lacunas" :key="numero" dense>
+                  <q-item-section>
+                    <q-item-label>Número {{ numero }}</q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-icon
+                      v-if="inutilizados.has(chave(grupo, numero))"
+                      name="done"
+                      color="green"
+                    />
+                    <q-btn
+                      v-else
+                      flat
+                      dense
+                      round
+                      size="sm"
+                      color="red-7"
+                      icon="block"
+                      :loading="inutilizando.has(chave(grupo, numero))"
+                      :disable="justificativa.length < 15"
+                      @click="inutilizarLacuna(grupo, numero)"
+                    >
+                      <q-tooltip>Inutilizar</q-tooltip>
+                    </q-btn>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </template>
+          </template>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Fechar" color="grey-8" v-close-popup tabindex="-1" />
         </q-card-actions>
       </q-card>
     </q-dialog>

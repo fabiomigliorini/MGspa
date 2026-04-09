@@ -60,6 +60,16 @@ export default {
     return response.data
   },
 
+  async detectarLacunas() {
+    const response = await api.get('/v1/nota-fiscal/lacunas')
+    return response.data
+  },
+
+  async criarParaInutilizar(data) {
+    const response = await api.post('/v1/nota-fiscal/criar-para-inutilizar', data)
+    return response.data
+  },
+
   async mail(codnotafiscal, destinatario = null) {
     const data = destinatario ? { destinatario } : {}
     const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/mail`, data)

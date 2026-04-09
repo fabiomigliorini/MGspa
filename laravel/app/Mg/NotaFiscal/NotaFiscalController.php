@@ -769,4 +769,36 @@ class NotaFiscalController extends Controller
             'resultado' => $resultado,
         ]);
     }
+
+    /**
+     * Detecta lacunas na numeração de notas fiscais dos últimos 90 dias
+     */
+    public function detectarLacunas()
+    {
+        return response()->json(NotaFiscalLacunaService::detectarLacunas());
+    }
+
+    /**
+     * Cria registro de nota fiscal e inutiliza na SEFAZ
+     */
+    public function criarParaInutilizar(Request $request)
+    {
+        $request->validate([
+            'codfilial' => 'required|integer',
+            'serie' => 'required|integer',
+            'modelo' => 'required|integer|in:55,65',
+            'numero' => 'required|integer|min:1',
+            'justificativa' => 'required|string|min:15',
+        ]);
+
+        $resultado = NotaFiscalLacunaService::criarParaInutilizar(
+            $request->codfilial,
+            $request->serie,
+            $request->modelo,
+            $request->numero,
+            $request->justificativa
+        );
+
+        return response()->json($resultado);
+    }
 }

@@ -85,6 +85,11 @@ Route::group(['prefix' => 'v1'], function () {
 
     // NOTA FISCAL
     Route::prefix('nota-fiscal')->group(function () {
+
+        // Lacunas de numeração (antes do apiResource para não conflitar)
+        Route::get('lacunas', '\Mg\NotaFiscal\NotaFiscalController@detectarLacunas');
+        Route::post('criar-para-inutilizar', '\Mg\NotaFiscal\NotaFiscalController@criarParaInutilizar');
+
         Route::apiResource('/', '\Mg\NotaFiscal\NotaFiscalController')->parameters(['' => 'codnotafiscal']);
 
         // Atualizar status
