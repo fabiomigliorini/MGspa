@@ -130,6 +130,7 @@ class NotaFiscalTransferenciaService extends MGModel
             and origem.codfilial = :codfilial
             and origem.codfilial != 199 -- Defeito
             and destino.codfilial != 199 -- Defeito
+            and tblnegocioprodutobarra.inativo is null
             --limit 50
 
             union all
@@ -177,6 +178,7 @@ class NotaFiscalTransferenciaService extends MGModel
             and origem.codfilial = :codfilial
             and origem.codfilial != 199 -- Defeito
             and destino.codfilial != 199 -- Defeito
+            and tblnegocioprodutobarra.inativo is null
             --limit 50
 
             limit 600
