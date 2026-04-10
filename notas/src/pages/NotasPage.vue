@@ -115,9 +115,9 @@ const toggleSelecionarTodasFiliais = () => {
 }
 
 // Conta notas no resultado aninhado { filial: { pessoa: { natureza: { itens, codnotafiscal } } } }
-const contarNotasTransferencia = (resultado) => {
+const contarNotasTransferencia = (gerados) => {
   let total = 0
-  for (const filial of Object.values(resultado)) {
+  for (const filial of Object.values(gerados || {})) {
     for (const pessoa of Object.values(filial)) {
       total += Object.keys(pessoa).length
     }
@@ -131,29 +131,68 @@ const gerarTransferencias = async () => {
     return
   }
   transferenciasRodando.value = true
-  let totalErros = 0
+  let totalFiliaisComErro = 0
 
   for (const codfilial of selectedFiliais.value) {
-    transferenciasProgresso.value[codfilial] = { status: 'rodando', qtdNotas: 0 }
+    transferenciasProgresso.value[codfilial] = {
+      status: 'rodando',
+      qtdNotas: 0,
+      erros: [],
+      expandido: false,
+    }
     try {
       let totalNotas = 0
+      const errosFilial = []
       let continuar = true
 
       // Loop para tratar o limite de 600 itens por chamada
+      // Para quando uma chamada nao gerar nenhuma nota nova (so erros restantes)
       while (continuar) {
         const resultado = await controleStore.gerarTransferencias(codfilial)
-        const qtdNotas = contarNotasTransferencia(resultado)
+        const qtdNotas = contarNotasTransferencia(resultado.gerados)
         totalNotas += qtdNotas
-        transferenciasProgresso.value[codfilial] = { status: 'rodando', qtdNotas: totalNotas }
-        // Se gerou notas, pode ter mais pendentes (limite de 600 itens)
+        if (resultado.erros?.length) {
+          errosFilial.push(...resultado.erros)
+        }
+        transferenciasProgresso.value[codfilial] = {
+          status: 'rodando',
+          qtdNotas: totalNotas,
+          erros: errosFilial,
+          expandido: transferenciasProgresso.value[codfilial].expandido,
+        }
         continuar = qtdNotas > 0
       }
 
-      transferenciasProgresso.value[codfilial] = { status: 'concluido', qtdNotas: totalNotas }
+      let status
+      if (errosFilial.length > 0 && totalNotas > 0) {
+        status = 'parcial'
+      } else if (errosFilial.length > 0) {
+        status = 'erro'
+      } else if (totalNotas > 0) {
+        status = 'concluido'
+      } else {
+        status = 'vazio'
+      }
+
+      transferenciasProgresso.value[codfilial] = {
+        status,
+        qtdNotas: totalNotas,
+        erros: errosFilial,
+        expandido: errosFilial.length > 0,
+      }
+
+      if (errosFilial.length > 0) {
+        totalFiliaisComErro++
+      }
     } catch (error) {
-      totalErros++
+      totalFiliaisComErro++
       const mensagem = error.response?.data?.message || error.message
-      transferenciasProgresso.value[codfilial] = { status: 'erro', mensagem }
+      transferenciasProgresso.value[codfilial] = {
+        status: 'erro',
+        qtdNotas: 0,
+        erros: [{ mensagem }],
+        expandido: true,
+      }
       $q.notify({
         color: 'red-5',
         icon: 'error',
@@ -164,11 +203,11 @@ const gerarTransferencias = async () => {
   }
   transferenciasRodando.value = false
 
-  if (totalErros > 0) {
+  if (totalFiliaisComErro > 0) {
     $q.notify({
       color: 'orange-5',
       icon: 'warning',
-      message: `Concluído com ${totalErros} erro(s). Verifique os detalhes.`,
+      message: `Concluído com ${totalFiliaisComErro} filial(is) com erros. Verifique os detalhes.`,
     })
   } else {
     $q.notify({ color: 'green-5', icon: 'done', message: 'Transferências concluídas' })
@@ -542,42 +581,89 @@ onMounted(async () => {
           </div>
 
           <q-list separator dense style="height: 50vh; overflow-y: auto">
-            <q-item v-for="filial in filialStore.filiais" :key="filial.value" tag="label">
-              <q-item-section avatar>
-                <q-checkbox
-                  v-model="selectedFiliais"
-                  :val="filial.value"
-                  dense
-                  :disable="transferenciasRodando"
-                />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>{{ filial.label }}</q-item-label>
-              </q-item-section>
-              <q-item-section side v-if="transferenciasProgresso[filial.value]">
-                <!-- Rodando -->
-                <q-spinner
-                  v-if="transferenciasProgresso[filial.value].status === 'rodando'"
-                  color="primary"
-                  size="1.2em"
-                />
-                <!-- Concluído -->
-                <q-badge
-                  v-else-if="transferenciasProgresso[filial.value].status === 'concluido'"
-                  color="positive"
+            <template v-for="filial in filialStore.filiais" :key="filial.value">
+              <q-item tag="label">
+                <q-item-section avatar>
+                  <q-checkbox
+                    v-model="selectedFiliais"
+                    :val="filial.value"
+                    dense
+                    :disable="transferenciasRodando"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label>{{ filial.label }}</q-item-label>
+                </q-item-section>
+                <q-item-section side v-if="transferenciasProgresso[filial.value]">
+                  <!-- Rodando -->
+                  <q-spinner
+                    v-if="transferenciasProgresso[filial.value].status === 'rodando'"
+                    color="primary"
+                    size="1.2em"
+                  />
+                  <!-- Concluído -->
+                  <q-badge
+                    v-else-if="transferenciasProgresso[filial.value].status === 'concluido'"
+                    color="positive"
+                  >
+                    {{ transferenciasProgresso[filial.value].qtdNotas }} nota(s)
+                  </q-badge>
+                  <!-- Parcial -->
+                  <q-badge
+                    v-else-if="transferenciasProgresso[filial.value].status === 'parcial'"
+                    color="orange-7"
+                  >
+                    {{ transferenciasProgresso[filial.value].qtdNotas }} ok /
+                    {{ transferenciasProgresso[filial.value].erros.length }} erro(s)
+                  </q-badge>
+                  <!-- Erro -->
+                  <q-badge
+                    v-else-if="transferenciasProgresso[filial.value].status === 'erro'"
+                    color="negative"
+                  >
+                    {{ transferenciasProgresso[filial.value].erros.length }} erro(s)
+                  </q-badge>
+                </q-item-section>
+                <q-item-section
+                  side
+                  v-if="transferenciasProgresso[filial.value]?.erros?.length"
                 >
-                  {{ transferenciasProgresso[filial.value].qtdNotas }} nota(s)
-                </q-badge>
-                <!-- Erro -->
-                <q-badge
-                  v-else-if="transferenciasProgresso[filial.value].status === 'erro'"
-                  color="negative"
-                >
-                  Erro
-                  <q-tooltip>{{ transferenciasProgresso[filial.value].mensagem }}</q-tooltip>
-                </q-badge>
-              </q-item-section>
-            </q-item>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    color="grey-7"
+                    :icon="
+                      transferenciasProgresso[filial.value].expandido
+                        ? 'expand_less'
+                        : 'expand_more'
+                    "
+                    @click.prevent.stop="
+                      transferenciasProgresso[filial.value].expandido =
+                        !transferenciasProgresso[filial.value].expandido
+                    "
+                  />
+                </q-item-section>
+              </q-item>
+              <q-item
+                v-if="
+                  transferenciasProgresso[filial.value]?.expandido &&
+                  transferenciasProgresso[filial.value]?.erros?.length
+                "
+                class="q-pl-xl bg-red-1"
+              >
+                <q-item-section>
+                  <q-item-label
+                    v-for="(err, idx) in transferenciasProgresso[filial.value].erros"
+                    :key="idx"
+                    class="text-caption text-red-8 q-py-xs"
+                  >
+                    {{ err.mensagem }}
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
           </q-list>
         </q-card-section>
 
