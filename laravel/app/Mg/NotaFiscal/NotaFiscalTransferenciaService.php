@@ -81,6 +81,11 @@ class NotaFiscalTransferenciaService extends MGModel
 
     public static function geraTransferencias($codfilial)
     {
+        $codnaturezaoperacaoTransferenciaSaida = env('CODNATUREZAOPERACAO_TRANSFERENCIA_SAIDA');
+        if (empty($codnaturezaoperacaoTransferenciaSaida)) {
+            throw new \Exception('Variavel CODNATUREZAOPERACAO_TRANSFERENCIA_SAIDA nao configurada no .env', 1);
+        }
+
         $sql = "
 
             --Negocios gerados a partir de uma Filial, com NF emitida por outra Filial
@@ -199,8 +204,8 @@ class NotaFiscalTransferenciaService extends MGModel
         foreach ($regs as $reg) {
             DB::beginTransaction();
             try {
-                if (isset($gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao])) {
-                    $nf = $nfs[$gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['codnotafiscal']];
+                if (isset($gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida])) {
+                    $nf = $nfs[$gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida]['codnotafiscal']];
                 } else {
                     $nf = new NotaFiscal;
                     $nf->codfilial = $reg->codfilial;
@@ -208,7 +213,7 @@ class NotaFiscalTransferenciaService extends MGModel
                     $nf->modelo = NotaFiscalService::MODELO_NFE;
                     $nf->codpessoa = $reg->codpessoa;
                     $nf->emitida = true;
-                    $nf->codnaturezaoperacao = $reg->codnaturezaoperacao;
+                    $nf->codnaturezaoperacao = $codnaturezaoperacaoTransferenciaSaida;
                     $nf->codoperacao = $nf->NaturezaOperacao->codoperacao;
                     $nf->serie = 1;
                     $nf->numero = 0;
@@ -240,14 +245,14 @@ class NotaFiscalTransferenciaService extends MGModel
 
                 DB::commit();
 
-                if (!isset($gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao])) {
-                    $gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao] = [
+                if (!isset($gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida])) {
+                    $gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida] = [
                         'itens' => 0,
                         'codnotafiscal' => $nf->codnotafiscal,
                     ];
                 }
-                $gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['itens']++;
-                $gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['codnotafiscal'] = $nf->codnotafiscal;
+                $gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida]['itens']++;
+                $gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida]['codnotafiscal'] = $nf->codnotafiscal;
                 $nfs[$nf->codnotafiscal] = $nf;
             } catch (\Exception $e) {
                 DB::rollBack();
