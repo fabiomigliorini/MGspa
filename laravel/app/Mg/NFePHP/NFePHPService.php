@@ -3,6 +3,7 @@
 namespace Mg\NFePHP;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 use Mg\MgService;
 use Mg\NotaFiscal\NotaFiscal;
@@ -21,6 +22,42 @@ class NFePHPService extends MgService
 {
     const EXCEPTION_CHAVE_NFE_AUSENTE = 999;
     const EXCEPTION_XML_ASSINADO_INEXISTENTE = 998;
+
+    /**
+     * Serializa operações concorrentes na mesma NotaFiscal.
+     *
+     * Tenta adquirir um Cache::lock atômico (chave única por codnotafiscal).
+     * Se já houver outro processo segurando o lock, lança \Exception imediatamente.
+     *
+     * O objeto retornado é um "guard" com __destruct() que libera o lock
+     * automaticamente quando a variável cair fora de escopo (no return ou
+     * em qualquer exception do corpo do método chamador) — sem try/finally.
+     *
+     * TTL de 120s serve apenas como fallback caso o processo morra sem
+     * chegar ao destructor (segfault, kill -9, etc).
+     */
+    protected static function lockDaNotaFiscal(NotaFiscal $nf)
+    {
+        $lock = Cache::lock("nfephp-nf-{$nf->codnotafiscal}", 120);
+
+        if (!$lock->get()) {
+            throw new \Exception(
+                "Outra operação já está em andamento para a Nota Fiscal #{$nf->codnotafiscal}. Tente novamente."
+            );
+        }
+
+        return new class($lock) {
+            public function __construct(private $lock) {}
+            public function __destruct()
+            {
+                try {
+                    $this->lock->release();
+                } catch (\Throwable $e) {
+                    // ignora — TTL do lock serve como fallback
+                }
+            }
+        };
+    }
 
     public static function sefazStatus(Filial $filial)
     {
@@ -43,6 +80,8 @@ class NFePHPService extends MgService
 
     public static function criar(NotaFiscal $nf, $offline = false)
     {
+        $guard = static::lockDaNotaFiscal($nf);
+
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
         $tools->model($nf->modelo);
@@ -64,6 +103,7 @@ class NFePHPService extends MgService
 
     public static function enviar(NotaFiscal $nf)
     {
+        $guard = static::lockDaNotaFiscal($nf);
 
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
@@ -126,6 +166,8 @@ class NFePHPService extends MgService
 
     public static function enviarSincrono(NotaFiscal $nf)
     {
+        $guard = static::lockDaNotaFiscal($nf);
+
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
         $tools->model($nf->modelo);
@@ -293,6 +335,8 @@ class NFePHPService extends MgService
 
     public static function consultarRecibo(NotaFiscal $nf)
     {
+        $guard = static::lockDaNotaFiscal($nf);
+
         // valida se existe Chave da NFe
         if (empty($nf->nfereciboenvio)) {
             throw new \Exception('Esta NFe não possui número de Recibo para ser consultado!');
@@ -337,6 +381,8 @@ class NFePHPService extends MgService
 
     public static function cancelar(NotaFiscal $nf, $justificativa)
     {
+        $guard = static::lockDaNotaFiscal($nf);
+
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
         if (strlen($justificativa) < 15) {
@@ -404,6 +450,7 @@ class NFePHPService extends MgService
 
     public static function inutilizar(NotaFiscal $nf, $justificativa)
     {
+        $guard = static::lockDaNotaFiscal($nf);
 
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
@@ -484,6 +531,8 @@ class NFePHPService extends MgService
 
     public static function cartaCorrecao(NotaFiscal $nf, $texto)
     {
+        $guard = static::lockDaNotaFiscal($nf);
+
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($texto));
         if (strlen($justificativa) < 15) {
@@ -613,6 +662,8 @@ class NFePHPService extends MgService
 
     public static function consultar(NotaFiscal $nf)
     {
+        $guard = static::lockDaNotaFiscal($nf);
+
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
             throw new \Exception('Chave da NFe ausente!', static::EXCEPTION_CHAVE_NFE_AUSENTE);
