@@ -80,8 +80,10 @@ const enviarNfe = async (event) => {
           /* ignora erro de email */
         }
         progressoNfe.value = { status: 'Finalizado...', percent: 100 }
-        abrirDanfe()
         $q.notify({ type: 'positive', message: 'NFe enviada com sucesso!' })
+        if (!props.compact) {
+          abrirDanfe()
+        }
       } else {
         throw new Error(`${envioResponse.cStat} - ${envioResponse.xMotivo}`)
       }
@@ -382,7 +384,7 @@ defineExpose({ enviarNfe, podeEnviar, loadingEnviar, progressoNfe })
   </q-dialog>
 
   <!-- Dialog Progresso NFe -->
-  <q-dialog :model-value="loadingEnviar" persistent>
+  <q-dialog :model-value="loadingEnviar && !props.compact" persistent>
     <q-card style="min-width: 350px">
       <q-card-section>
         <div class="text-h6">Processando NFe</div>
