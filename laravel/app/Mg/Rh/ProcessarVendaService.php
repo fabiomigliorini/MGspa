@@ -280,7 +280,7 @@ class ProcessarVendaService
         $ultimo = Periodo::orderBy('periodofinal', 'desc')->first();
 
         if ($ultimo) {
-            return PeriodoService::criarProximoPeriodo($ultimo);
+            return PeriodoService::duplicarDoAnterior($ultimo->codperiodo);
         }
 
         // Sem nenhum período: cria para o mês da data

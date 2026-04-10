@@ -115,6 +115,28 @@ class PeriodoService
         return $novoPeriodo->refresh();
     }
 
+    public static function importarEstruturaDoAnterior(int $codperiodo): Periodo
+    {
+        $destino = Periodo::findOrFail($codperiodo);
+
+        if ($destino->status !== self::STATUS_ABERTO) {
+            throw new \Exception('Somente períodos abertos podem receber importação.');
+        }
+
+        $origem = Periodo::where('codperiodo', '!=', $codperiodo)
+            ->where('periodofinal', '<', $destino->periodoinicial)
+            ->orderBy('periodofinal', 'desc')
+            ->first();
+
+        if (!$origem) {
+            throw new \Exception('Não existe período anterior para importar.');
+        }
+
+        static::duplicarConteudo($origem, $destino);
+
+        return $destino->refresh();
+    }
+
     protected static function duplicarConteudo(Periodo $origem, Periodo $destino): void
     {
         // Duplicar indicadores e montar mapa antigo => novo
@@ -122,15 +144,17 @@ class PeriodoService
         $indicadoresOrigem = Indicador::where('codperiodo', $origem->codperiodo)->get();
 
         foreach ($indicadoresOrigem as $ind) {
-            $novoInd = new Indicador([
+            $novoInd = Indicador::firstOrNew([
                 'codperiodo' => $destino->codperiodo,
                 'tipo' => $ind->tipo,
                 'codunidadenegocio' => $ind->codunidadenegocio,
                 'codsetor' => $ind->codsetor,
                 'codcolaborador' => $ind->codcolaborador,
-                'meta' => $ind->meta,
-                'valoracumulado' => 0,
             ]);
+            $novoInd->meta = $ind->meta;
+            if (!$novoInd->exists) {
+                $novoInd->valoracumulado = 0;
+            }
             $novoInd->save();
             $mapaIndicadores[$ind->codindicador] = $novoInd->codindicador;
         }
@@ -148,12 +172,14 @@ class PeriodoService
                 continue;
             }
 
-            $novoPC = new PeriodoColaborador([
+            $novoPC = PeriodoColaborador::firstOrNew([
                 'codperiodo' => $destino->codperiodo,
                 'codcolaborador' => $pc->codcolaborador,
-                'status' => 'A',
-                'valortotal' => 0,
             ]);
+            if (!$novoPC->exists) {
+                $novoPC->status = 'A';
+                $novoPC->valortotal = 0;
+            }
             $novoPC->save();
 
             // Duplicar PeriodoColaboradorSetor
@@ -161,12 +187,14 @@ class PeriodoService
             $mapaSetores = [];
 
             foreach ($setores as $setor) {
-                $novoSetor = new PeriodoColaboradorSetor([
+                $novoSetor = PeriodoColaboradorSetor::firstOrNew([
                     'codperiodocolaborador' => $novoPC->codperiodocolaborador,
                     'codsetor' => $setor->codsetor,
-                    'diastrabalhados' => $destino->diasuteis,
-                    'percentualrateio' => $setor->percentualrateio,
                 ]);
+                if (!$novoSetor->exists) {
+                    $novoSetor->diastrabalhados = $destino->diasuteis;
+                }
+                $novoSetor->percentualrateio = $setor->percentualrateio;
                 $novoSetor->save();
                 $mapaSetores[$setor->codperiodocolaboradorsetor] = $novoSetor->codperiodocolaboradorsetor;
             }
@@ -177,27 +205,29 @@ class PeriodoService
                 ->get();
 
             foreach ($rubricas as $rubrica) {
-                $novaRubrica = new ColaboradorRubrica([
+                $novaRubrica = ColaboradorRubrica::firstOrNew([
                     'codperiodocolaborador' => $novoPC->codperiodocolaborador,
-                    'codperiodocolaboradorsetor' => isset($mapaSetores[$rubrica->codperiodocolaboradorsetor])
-                        ? $mapaSetores[$rubrica->codperiodocolaboradorsetor]
-                        : null,
-                    'codindicador' => isset($mapaIndicadores[$rubrica->codindicador])
-                        ? $mapaIndicadores[$rubrica->codindicador]
-                        : null,
-                    'codindicadorcondicao' => isset($mapaIndicadores[$rubrica->codindicadorcondicao])
-                        ? $mapaIndicadores[$rubrica->codindicadorcondicao]
-                        : null,
                     'descricao' => $rubrica->descricao,
                     'tipovalor' => $rubrica->tipovalor,
-                    'percentual' => $rubrica->percentual,
-                    'valorfixo' => $rubrica->valorfixo,
-                    'valorcalculado' => 0,
-                    'tipocondicao' => $rubrica->tipocondicao,
-                    'concedido' => true,
-                    'descontaabsenteismo' => $rubrica->descontaabsenteismo,
                     'recorrente' => true,
                 ]);
+                $novaRubrica->codperiodocolaboradorsetor = isset($mapaSetores[$rubrica->codperiodocolaboradorsetor])
+                    ? $mapaSetores[$rubrica->codperiodocolaboradorsetor]
+                    : null;
+                $novaRubrica->codindicador = isset($mapaIndicadores[$rubrica->codindicador])
+                    ? $mapaIndicadores[$rubrica->codindicador]
+                    : null;
+                $novaRubrica->codindicadorcondicao = isset($mapaIndicadores[$rubrica->codindicadorcondicao])
+                    ? $mapaIndicadores[$rubrica->codindicadorcondicao]
+                    : null;
+                $novaRubrica->percentual = $rubrica->percentual;
+                $novaRubrica->valorfixo = $rubrica->valorfixo;
+                $novaRubrica->tipocondicao = $rubrica->tipocondicao;
+                $novaRubrica->descontaabsenteismo = $rubrica->descontaabsenteismo;
+                if (!$novaRubrica->exists) {
+                    $novaRubrica->valorcalculado = 0;
+                    $novaRubrica->concedido = true;
+                }
                 $novaRubrica->save();
             }
         }

@@ -874,6 +874,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('periodo', '\Mg\Rh\PeriodoController@index');
             Route::post('periodo', '\Mg\Rh\PeriodoController@store');
             Route::post('periodo/{codperiodo}/duplicar', '\Mg\Rh\PeriodoController@duplicar');
+            Route::post('periodo/{codperiodo}/importar-estrutura', '\Mg\Rh\PeriodoController@importarEstrutura');
             Route::post('periodo/{codperiodo}/fechar', '\Mg\Rh\PeriodoController@fechar');
             Route::post('periodo/{codperiodo}/reabrir', '\Mg\Rh\PeriodoController@reabrir');
             Route::put('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@update');

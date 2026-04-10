@@ -248,6 +248,35 @@ const duplicarPeriodo = () => {
   });
 };
 
+const importarEstrutura = () => {
+  $q.dialog({
+    title: "Importar Estrutura do Período Anterior",
+    message:
+      "Isto vai copiar colaboradores, setores e rubricas recorrentes do período anterior. A operação é segura e pode ser repetida — registros já existentes são preservados.",
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await sRh.importarEstruturaPeriodo(route.params.codperiodo);
+      $q.notify({
+        color: "green-5",
+        textColor: "white",
+        icon: "done",
+        message: "Estrutura importada com sucesso",
+      });
+      await sRh.getPeriodos();
+      await carregar(route.params.codperiodo);
+    } catch (error) {
+      $q.notify({
+        color: "red-5",
+        textColor: "white",
+        icon: "error",
+        message: extrairErro(error, "Erro ao importar estrutura"),
+      });
+    }
+  });
+};
+
 const excluirPeriodo = () => {
   $q.dialog({
     title: "Excluir Período",
@@ -651,6 +680,18 @@ watch(tab, async (newTab) => {
               @click="duplicarPeriodo()"
             >
               <q-tooltip>Duplicar Período</q-tooltip>
+            </q-btn>
+            <q-btn
+              v-if="periodo.status === 'A'"
+              flat
+              dense
+              round
+              icon="cloud_download"
+              size="sm"
+              color="grey-7"
+              @click="importarEstrutura()"
+            >
+              <q-tooltip>Importar Estrutura do Período Anterior</q-tooltip>
             </q-btn>
             <q-btn
               v-if="periodo.status === 'A'"
