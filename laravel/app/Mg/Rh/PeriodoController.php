@@ -69,6 +69,21 @@ class PeriodoController extends Controller
         }
     }
 
+    public function importarEstrutura(int $codperiodo)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        DB::beginTransaction();
+        try {
+            $periodo = PeriodoService::importarEstruturaDoAnterior($codperiodo);
+            DB::commit();
+            return new PeriodoResource($periodo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
     public function fechar(int $codperiodo)
     {
         Autorizador::autoriza(['Recursos Humanos']);

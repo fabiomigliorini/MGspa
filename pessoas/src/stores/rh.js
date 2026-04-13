@@ -28,6 +28,11 @@ export const rhStore = defineStore("rh", {
       return ret;
     },
 
+    async importarEstruturaPeriodo(codperiodo) {
+      const ret = await api.post("v1/rh/periodo/" + codperiodo + "/importar-estrutura");
+      return ret;
+    },
+
     async fecharPeriodo(codperiodo) {
       const ret = await api.post("v1/rh/periodo/" + codperiodo + "/fechar");
       return ret;

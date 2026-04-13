@@ -52,7 +52,9 @@ class DashboardKpisController extends Controller
                 COUNT(*) AS total_notas,
                 SUM((status = 'AUT')::int) AS qtd_autorizadas,
                 SUM((status IN ('ERR','DEN'))::int) AS qtd_erro,
-                SUM((status IN ('CAN', 'INU'))::int) AS qtd_canceladas
+                SUM((status = 'DIG')::int) AS qtd_digitacao,
+                SUM((status = 'CAN')::int) AS qtd_canceladas,
+                SUM((status = 'INU')::int) AS qtd_inutilizadas
             FROM tblnotafiscal
             WHERE {$where}
         ";
@@ -62,7 +64,9 @@ class DashboardKpisController extends Controller
         $total = (int) ($result->total_notas ?? 0);
         $qtdAutorizadas = (int) ($result->qtd_autorizadas ?? 0);
         $qtdErro = (int) ($result->qtd_erro ?? 0);
+        $qtdDigitacao = (int) ($result->qtd_digitacao ?? 0);
         $qtdCanceladas = (int) ($result->qtd_canceladas ?? 0);
+        $qtdInutilizadas = (int) ($result->qtd_inutilizadas ?? 0);
 
         return response()->json([
             'total_notas' => $total,
@@ -74,9 +78,17 @@ class DashboardKpisController extends Controller
                 'quantidade' => $qtdErro,
                 'percentual' => $total > 0 ? round(100.0 * $qtdErro / $total, 2) : 0,
             ],
+            'digitacao' => [
+                'quantidade' => $qtdDigitacao,
+                'percentual' => $total > 0 ? round(100.0 * $qtdDigitacao / $total, 2) : 0,
+            ],
             'canceladas' => [
                 'quantidade' => $qtdCanceladas,
                 'percentual' => $total > 0 ? round(100.0 * $qtdCanceladas / $total, 2) : 0,
+            ],
+            'inutilizadas' => [
+                'quantidade' => $qtdInutilizadas,
+                'percentual' => $total > 0 ? round(100.0 * $qtdInutilizadas / $total, 2) : 0,
             ],
         ]);
     }

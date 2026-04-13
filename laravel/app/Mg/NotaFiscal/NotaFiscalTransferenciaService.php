@@ -81,7 +81,10 @@ class NotaFiscalTransferenciaService extends MGModel
 
     public static function geraTransferencias($codfilial)
     {
-        DB::BeginTransaction();
+        $codnaturezaoperacaoTransferenciaSaida = env('CODNATUREZAOPERACAO_TRANSFERENCIA_SAIDA');
+        if (empty($codnaturezaoperacaoTransferenciaSaida)) {
+            throw new \Exception('Variavel CODNATUREZAOPERACAO_TRANSFERENCIA_SAIDA nao configurada no .env', 1);
+        }
 
         $sql = "
 
@@ -132,6 +135,7 @@ class NotaFiscalTransferenciaService extends MGModel
             and origem.codfilial = :codfilial
             and origem.codfilial != 199 -- Defeito
             and destino.codfilial != 199 -- Defeito
+            and tblnegocioprodutobarra.inativo is null
             --limit 50
 
             union all
@@ -179,6 +183,7 @@ class NotaFiscalTransferenciaService extends MGModel
             and origem.codfilial = :codfilial
             and origem.codfilial != 199 -- Defeito
             and destino.codfilial != 199 -- Defeito
+            and tblnegocioprodutobarra.inativo is null
             --limit 50
 
             limit 600
@@ -194,62 +199,84 @@ class NotaFiscalTransferenciaService extends MGModel
 
         $nfs = [];
 
+        $erros = [];
+
         foreach ($regs as $reg) {
-            if (isset($gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao])) {
+            DB::beginTransaction();
+            try {
+                if (isset($gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida])) {
+                    $nf = $nfs[$gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida]['codnotafiscal']];
+                } else {
+                    $nf = new NotaFiscal;
+                    $nf->codfilial = $reg->codfilial;
+                    $nf->codestoquelocal = $reg->codestoquelocal;
+                    $nf->modelo = NotaFiscalService::MODELO_NFE;
+                    $nf->codpessoa = $reg->codpessoa;
+                    $nf->emitida = true;
+                    $nf->codnaturezaoperacao = $codnaturezaoperacaoTransferenciaSaida;
+                    $nf->codoperacao = $nf->NaturezaOperacao->codoperacao;
+                    $nf->serie = 1;
+                    $nf->numero = 0;
+                    $nf->emissao = new Carbon();
+                    $nf->saida = $nf->emissao;
+                    $nf->save();
+                }
 
-                $nf = $nfs[$gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['codnotafiscal']];
-            } else {
+                $npb = NegocioProdutoBarra::findOrFail($reg->codnegocioprodutobarra);
 
+                $nfpb = new NotaFiscalProdutoBarra;
 
-                $nf = new NotaFiscal;
-                $nf->codfilial = $reg->codfilial;
-                $nf->codestoquelocal = $reg->codestoquelocal;
-                $nf->modelo = NotaFiscalService::MODELO_NFE;
-                $nf->codpessoa = $reg->codpessoa;
-                $nf->emitida = true;
-                $nf->codnaturezaoperacao = $reg->codnaturezaoperacao;
-                $nf->codoperacao = $nf->NaturezaOperacao->codoperacao;
-                $nf->serie = 1;
-                $nf->numero = 0;
-                $nf->emissao = new Carbon();
-                $nf->saida = $nf->emissao;
-                $nf->save();
+                $nfpb->codnotafiscal = $nf->codnotafiscal;
+                $nfpb->codprodutobarra = $npb->codprodutobarra;
+                $nfpb->quantidade = $npb->quantidade;
 
-                $gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao] = [
-                    'itens' => 0,
-                    'codnotafiscal' => 0,
+                $preco = $npb->ProdutoBarra->Produto->preco;
+                if (!empty($npb->ProdutoBarra->codprodutoembalagem)) {
+                    $preco *= $npb->ProdutoBarra->ProdutoEmbalagem->quantidade;
+                }
+                $nfpb->valorunitario = round($preco * 0.7, 2);
+
+                $nfpb->valortotal = $nfpb->valorunitario * $npb->quantidade;
+                $nfpb->codnegocioprodutobarra = $npb->codnegocioprodutobarra;
+
+                NotaFiscalProdutoBarraService::calcularTributacao($nfpb);
+
+                $nfpb->save();
+
+                DB::commit();
+
+                if (!isset($gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida])) {
+                    $gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida] = [
+                        'itens' => 0,
+                        'codnotafiscal' => $nf->codnotafiscal,
+                    ];
+                }
+                $gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida]['itens']++;
+                $gerados[$reg->codfilial][$reg->codpessoa][$codnaturezaoperacaoTransferenciaSaida]['codnotafiscal'] = $nf->codnotafiscal;
+                $nfs[$nf->codnotafiscal] = $nf;
+            } catch (\Exception $e) {
+                DB::rollBack();
+
+                $infoProduto = "codnegocioprodutobarra={$reg->codnegocioprodutobarra}";
+                try {
+                    $npb = NegocioProdutoBarra::find($reg->codnegocioprodutobarra);
+                    if ($npb) {
+                        $infoProduto = "Negócio #{$npb->codnegocio} / Produto #{$npb->ProdutoBarra->codproduto} {$npb->ProdutoBarra->Produto->produto}";
+                    }
+                } catch (\Exception $eInfo) {
+                    // mantém fallback
+                }
+
+                $erros[] = [
+                    'mensagem' => "{$infoProduto} — {$e->getMessage()}",
                 ];
             }
-
-            $npb = NegocioProdutoBarra::findOrFail($reg->codnegocioprodutobarra);
-
-            $nfpb = new NotaFiscalProdutoBarra;
-
-            $nfpb->codnotafiscal = $nf->codnotafiscal;
-            $nfpb->codprodutobarra = $npb->codprodutobarra;
-            $nfpb->quantidade = $npb->quantidade;
-
-            $preco = $npb->ProdutoBarra->Produto->preco;
-            if (!empty($npb->ProdutoBarra->codprodutoembalagem)) {
-                $preco *= $npb->ProdutoBarra->ProdutoEmbalagem->quantidade;
-            }
-            $nfpb->valorunitario = round($preco * 0.7, 2);
-
-            $nfpb->valortotal = $nfpb->valorunitario * $npb->quantidade;
-            $nfpb->codnegocioprodutobarra = $npb->codnegocioprodutobarra;
-
-            NotaFiscalProdutoBarraService::calcularTributacao($nfpb);
-
-            $nfpb->save();
-
-            $gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['itens']++;
-            $gerados[$reg->codfilial][$reg->codpessoa][$reg->codnaturezaoperacao]['codnotafiscal'] = $nf->codnotafiscal;
-            $nfs[$nf->codnotafiscal] = $nf;
         }
 
-        DB::commit();
-
-        return $gerados;
+        return [
+            'gerados' => $gerados,
+            'erros' => $erros,
+        ];
     }
 
     public static function ListarNotasPorEmitir()

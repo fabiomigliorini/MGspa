@@ -24,30 +24,40 @@ class NFePHPMakeService
 {
     public static function gerarNumeroNotaFiscal(NotaFiscal $nf)
     {
-        // Se Nota Fiscal já tem número já está tudo OK
+        // Se Nota Fiscal já tem número (em memória) já está tudo OK
         if (!empty($nf->numero)) {
             return true;
         }
 
-        // Busca Proximo Valor da Sequence de Numero da Nota Fiscal
-        $sql = "SELECT NEXTVAL('tblnotafiscal_numero_{$nf->codfilial}_{$nf->serie}_{$nf->modelo}_seq') as numero";
-        $ret = DB::select($sql);
-
-        // Se não veio resultado do Banco, retorna Erro
-        if (!isset($ret[0])) {
-            return false;
-        }
-
-        // Atualiza número da Nota no Banco de Dados
+        // UPDATE atômico: só consome NEXTVAL se a linha realmente está sem número.
+        // Em caso de chamadas concorrentes, apenas a primeira atualiza; as demais
+        // recebem rowCount=0 e seguem usando o número que já foi gravado.
+        // Usamos Carbon::now() (timezone do app, America/Cuiaba) em vez de now()
+        // do Postgres (que pode estar em UTC), para a SEFAZ não rejeitar por hora
+        // "atrasada" ou "adiantada".
+        $sequence = "tblnotafiscal_numero_{$nf->codfilial}_{$nf->serie}_{$nf->modelo}_seq";
         $emissao = Carbon::now();
-        NotaFiscal::where('codnotafiscal', $nf->codnotafiscal)->update([
-            'numero' => $ret[0]->numero,
-            'emissao' => $emissao,
-            'saida' => $emissao,
-            'status' => NotaFiscalStatusService::STATUS_ERRO
+        $sql = "
+            UPDATE tblnotafiscal
+            SET numero = NEXTVAL('{$sequence}'),
+                emissao = ?,
+                saida = ?,
+                status = ?
+            WHERE codnotafiscal = ?
+              AND (numero IS NULL OR numero = 0)
+        ";
+        DB::update($sql, [
+            $emissao,
+            $emissao,
+            NotaFiscalStatusService::STATUS_ERRO,
+            $nf->codnotafiscal,
         ]);
 
-        return true;
+        // Recarrega para refletir o que está no banco (seja a numeração feita
+        // por este processo ou por um concorrente que chegou primeiro)
+        $nf->refresh();
+
+        return !empty($nf->numero);
     }
 
     public static function montarXml(NotaFiscal $nf, $offline = false)

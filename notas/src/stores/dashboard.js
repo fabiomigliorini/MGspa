@@ -15,20 +15,17 @@ export const useDashboardStore = defineStore('dashboard', {
     volumeMensal: [],
     erroPorFilial: [],
     kpisPorFilial: [],
-    listas: {
-      erro: [],
-      canceladasInutilizadas: [],
-      digitacao: [],
-    },
     errors: {},
   }),
 
   getters: {
     // KPIs calculados
-    totalNotas: (state) => state.kpisGerais?.total || 0,
-    percentAutorizadas: (state) => state.kpisGerais?.percentual_autorizadas || 0,
-    percentErro: (state) => state.kpisGerais?.percentual_erro || 0,
-    percentCanceladas: (state) => state.kpisGerais?.percentual_canceladas || 0,
+    totalNotas: (state) => state.kpisGerais?.total_notas || 0,
+    percentAutorizadas: (state) => state.kpisGerais?.autorizadas?.percentual || 0,
+    percentErro: (state) => state.kpisGerais?.erro?.percentual || 0,
+    percentDigitacao: (state) => state.kpisGerais?.digitacao?.percentual || 0,
+    percentCanceladas: (state) => state.kpisGerais?.canceladas?.percentual || 0,
+    percentInutilizadas: (state) => state.kpisGerais?.inutilizadas?.percentual || 0,
 
     // Status SEFAZ
     sefazOnline: (state) => state.sefazStatus?.status === 'online',
@@ -66,7 +63,6 @@ export const useDashboardStore = defineStore('dashboard', {
           this.fetchVolumeMensal(),
           this.fetchErroPorFilial(),
           this.fetchKpisPorFilial(),
-          this.fetchListas(),
         ])
       } catch (error) {
         console.error('Erro ao carregar dashboard:', error)
@@ -113,10 +109,12 @@ export const useDashboardStore = defineStore('dashboard', {
         console.error('Erro ao buscar KPIs gerais:', error)
         this.errors.kpisGerais = error.message
         this.kpisGerais = {
-          total: 0,
-          percentual_autorizadas: 0,
-          percentual_erro: 0,
-          percentual_canceladas: 0,
+          total_notas: 0,
+          autorizadas: { quantidade: 0, percentual: 0 },
+          erro: { quantidade: 0, percentual: 0 },
+          digitacao: { quantidade: 0, percentual: 0 },
+          canceladas: { quantidade: 0, percentual: 0 },
+          inutilizadas: { quantidade: 0, percentual: 0 },
         }
       }
     },
@@ -173,25 +171,6 @@ export const useDashboardStore = defineStore('dashboard', {
       }
     },
 
-    async fetchListas() {
-      try {
-        const [erroRes, canceladasInutilizadasRes, digitacaoRes] = await Promise.all([
-          api.get(`${BASE_URL}/listas/erro`),
-          api.get(`${BASE_URL}/listas/canceladas-inutilizadas`),
-          api.get(`${BASE_URL}/listas/digitacao`),
-        ])
-        this.listas = {
-          erro: (erroRes.data.data || erroRes.data || []).slice(0, 20),
-          canceladasInutilizadas: (canceladasInutilizadasRes.data.data || canceladasInutilizadasRes.data || []).slice(0, 20),
-          digitacao: (digitacaoRes.data.data || digitacaoRes.data || []).slice(0, 20),
-        }
-      } catch (error) {
-        console.error('Erro ao buscar listas:', error)
-        this.errors.listas = error.message
-        this.listas = { erro: [], canceladasInutilizadas: [], digitacao: [] }
-      }
-    },
-
     clearData() {
       this.sefazStatus = null
       this.kpisGerais = null
@@ -199,7 +178,6 @@ export const useDashboardStore = defineStore('dashboard', {
       this.volumeMensal = []
       this.erroPorFilial = []
       this.kpisPorFilial = []
-      this.listas = { erro: [], canceladasInutilizadas: [], digitacao: [] }
       this.errors = {}
     },
   },

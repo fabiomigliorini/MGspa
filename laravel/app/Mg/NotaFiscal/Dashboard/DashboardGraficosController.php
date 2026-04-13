@@ -24,7 +24,7 @@ class DashboardGraficosController extends Controller
 
     /**
      * GET /nota-fiscal/dashboard/graficos/volume-mensal
-     * Volume de notas por mes (ultimos 12 meses)
+     * Volume de notas por mes (ultimos 24 meses)
      */
     public function volumeMensal()
     {
@@ -35,7 +35,7 @@ class DashboardGraficosController extends Controller
                 SUM((modelo = 65)::int) AS nfce
             FROM tblnotafiscal
             WHERE status IN ('AUT','ERR','DEN','CAN','INU','DIG')
-              AND saida >= date_trunc('month', CURRENT_DATE) - INTERVAL '11 months'
+              AND saida >= date_trunc('month', CURRENT_DATE) - INTERVAL '23 months'
             GROUP BY date_trunc('month', saida)
             ORDER BY date_trunc('month', saida)
         ";

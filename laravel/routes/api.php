@@ -85,6 +85,11 @@ Route::group(['prefix' => 'v1'], function () {
 
     // NOTA FISCAL
     Route::prefix('nota-fiscal')->group(function () {
+
+        // Lacunas de numeração (antes do apiResource para não conflitar)
+        Route::get('lacunas', '\Mg\NotaFiscal\NotaFiscalController@detectarLacunas');
+        Route::post('criar-para-inutilizar', '\Mg\NotaFiscal\NotaFiscalController@criarParaInutilizar');
+
         Route::apiResource('/', '\Mg\NotaFiscal\NotaFiscalController')->parameters(['' => 'codnotafiscal']);
 
         // Atualizar status
@@ -626,10 +631,13 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('graficos/volume-mensal', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@volumeMensal');
             Route::get('graficos/erro-por-filial', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@erroPorFilial');
 
-            // Listas operacionais
-            Route::get('listas/erro', '\Mg\NotaFiscal\Dashboard\DashboardListasController@erro');
-            Route::get('listas/canceladas-inutilizadas', '\Mg\NotaFiscal\Dashboard\DashboardListasController@canceladasInutilizadas');
-            Route::get('listas/digitacao', '\Mg\NotaFiscal\Dashboard\DashboardListasController@digitacao');
+        });
+
+        // NOTA FISCAL CONTROLE
+        Route::prefix('nota-fiscal/controle')->group(function () {
+            Route::get('negocios-sem-nfce', '\Mg\NotaFiscal\Controle\ControleController@negociosSemNfce');
+            Route::post('gerar-nfce-faltantes', '\Mg\NotaFiscal\Controle\ControleController@gerarNfceFaltantes');
+            Route::post('gerar-transferencias', '\Mg\NotaFiscal\Controle\ControleController@gerarTransferencias');
         });
 
         // NOTA FISCAL TRANSFERENCIA
@@ -866,6 +874,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::get('periodo', '\Mg\Rh\PeriodoController@index');
             Route::post('periodo', '\Mg\Rh\PeriodoController@store');
             Route::post('periodo/{codperiodo}/duplicar', '\Mg\Rh\PeriodoController@duplicar');
+            Route::post('periodo/{codperiodo}/importar-estrutura', '\Mg\Rh\PeriodoController@importarEstrutura');
             Route::post('periodo/{codperiodo}/fechar', '\Mg\Rh\PeriodoController@fechar');
             Route::post('periodo/{codperiodo}/reabrir', '\Mg\Rh\PeriodoController@reabrir');
             Route::put('periodo/{codperiodo}', '\Mg\Rh\PeriodoController@update');

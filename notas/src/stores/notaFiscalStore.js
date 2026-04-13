@@ -497,40 +497,14 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     },
 
     setFilters(filters) {
-      this.filters = { ...this.filters, ...filters }
-      // Reset quando altera filtros
+      Object.assign(this.filters, filters)
       this.initialLoadDone = false
     },
 
     clearFilters() {
-      this.filters = {
-        // Filtros de busca
-        numero: null,
-        serie: null,
-        nfechave: null,
-
-        // Filtros de relacionamento
-        codfilial: null,
-        codpessoa: null,
-        codgrupoeconomico: null,
-        codnaturezaoperacao: null,
-        codoperacao: null,
-
-        // Filtros de tipo
-        modelo: null,
-        emitida: null,
-        status: null,
-
-        // Filtros de data
-        emissao_inicio: null,
-        emissao_fim: null,
-        saida_inicio: null,
-        saida_fim: null,
-
-        // Filtros de valor
-        valortotal_inicio: null,
-        valortotal_fim: null,
-      }
+      Object.keys(this.filters).forEach((k) => {
+        this.filters[k] = null
+      })
       this.initialLoadDone = false
     },
 
