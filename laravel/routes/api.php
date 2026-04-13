@@ -71,7 +71,7 @@ Route::group(['prefix' => 'v1'], function () {
     // Etiqueta
     Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');
 
-    // NFeTerceiro
+    // NFeTerceiro (sem auth - acesso pelo MGsis e visualização)
     Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
     Route::post('nfe-terceiro/{codnfeterceiro}/download', '\Mg\NfeTerceiro\NfeTerceiroController@download');
     Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
@@ -925,5 +925,26 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('liquidacao-titulo/{id}/recibo', '\Mg\Titulo\LiquidacaoTituloController@recibo');
         Route::get('liquidacao-titulo/{id}/recibo-recebimento', '\Mg\Titulo\LiquidacaoTituloController@reciboRecebimento');
         Route::get('liquidacao-titulo/{id}/recibo-pagamento', '\Mg\Titulo\LiquidacaoTituloController@reciboPagamento');
+
+        // NFeTerceiro (com auth)
+        Route::prefix('nfe-terceiro')->group(function () {
+            Route::get('/', '\Mg\NfeTerceiro\NfeTerceiroController@index');
+            Route::post('upload-xml', '\Mg\NfeTerceiro\NfeTerceiroController@uploadXml');
+            Route::get('{codnfeterceiro}', '\Mg\NfeTerceiro\NfeTerceiroController@show');
+            Route::put('{codnfeterceiro}', '\Mg\NfeTerceiro\NfeTerceiroController@update');
+            Route::post('{codnfeterceiro}/revisao', '\Mg\NfeTerceiro\NfeTerceiroController@revisao');
+            Route::post('{codnfeterceiro}/conferencia', '\Mg\NfeTerceiro\NfeTerceiroController@conferencia');
+            Route::get('{codnfeterceiro}/icmsst', '\Mg\NfeTerceiro\NfeTerceiroController@icmsst');
+            Route::post('{codnfeterceiro}/gerar-guia-st', '\Mg\NfeTerceiro\NfeTerceiroController@gerarGuiaSt');
+            Route::get('{codnfeterceiro}/guia-st/{codtitulonfeterceiro}/pdf', '\Mg\NfeTerceiro\NfeTerceiroController@guiaStPdf');
+            Route::get('{codnfeterceiro}/validar-importacao', '\Mg\NfeTerceiro\NfeTerceiroController@validarImportacao');
+            Route::post('{codnfeterceiro}/importar', '\Mg\NfeTerceiro\NfeTerceiroController@importar');
+            Route::post('{codnfeterceiro}/buscar-item', '\Mg\NfeTerceiro\NfeTerceiroController@buscarItem');
+            Route::put('{codnfeterceiro}/item/{codnfeterceiroitem}', '\Mg\NfeTerceiro\NfeTerceiroController@updateItem');
+            Route::post('{codnfeterceiro}/item/{codnfeterceiroitem}/conferencia', '\Mg\NfeTerceiro\NfeTerceiroController@conferenciaItem');
+            Route::post('{codnfeterceiro}/item/{codnfeterceiroitem}/dividir', '\Mg\NfeTerceiro\NfeTerceiroController@dividirItem');
+            Route::post('{codnfeterceiro}/marcar-tipo-produto', '\Mg\NfeTerceiro\NfeTerceiroController@marcarTipoProduto');
+            Route::post('{codnfeterceiro}/informar-complemento', '\Mg\NfeTerceiro\NfeTerceiroController@informarComplemento');
+        });
     });
 });

@@ -8,6 +8,7 @@ import CidadeFiltrosDrawer from 'src/components/drawers/CidadeFiltrosDrawer.vue'
 import NaturezaOperacaoFiltrosDrawer from 'src/components/drawers/NaturezaOperacaoFiltrosDrawer.vue'
 import TributacaoNaturezaOperacaoFiltrosDrawer from 'src/components/drawers/TributacaoNaturezaOperacaoFiltrosDrawer.vue'
 import DfeDistribuicaoFiltrosDrawer from 'src/components/drawers/DfeDistribuicaoFiltrosDrawer.vue'
+import NfeTerceiroFiltrosDrawer from 'src/components/drawers/NfeTerceiroFiltrosDrawer.vue'
 
 const routes = [
   {
@@ -101,6 +102,34 @@ const routes = [
           auth: true,
           title: "Distribuição de DFe's",
           leftDrawer: DfeDistribuicaoFiltrosDrawer,
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/nfe-terceiro',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'nfe-terceiro',
+        component: () => import('pages/NfeTerceiroListPage.vue'),
+        meta: {
+          auth: true,
+          title: 'NFe de Terceiros',
+          leftDrawer: NfeTerceiroFiltrosDrawer,
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+      {
+        path: ':codnfeterceiro',
+        name: 'nfe-terceiro-view',
+        component: () => import('pages/NfeTerceiroViewPage.vue'),
+        meta: {
+          auth: true,
+          title: 'NFe de Terceiros',
           permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },

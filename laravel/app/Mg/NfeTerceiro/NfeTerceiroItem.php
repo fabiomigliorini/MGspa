@@ -24,6 +24,8 @@ class NfeTerceiroItem extends MgModel
         'cfop',
         'codnfeterceiro',
         'codprodutobarra',
+        'codusuarioconferencia',
+        'conferencia',
         'cofinscst',
         'cofinspcofins',
         'cofinsvbc',
@@ -74,6 +76,7 @@ class NfeTerceiroItem extends MgModel
 
     protected $dates = [
         'alteracao',
+        'conferencia',
         'criacao'
     ];
 
@@ -83,6 +86,7 @@ class NfeTerceiroItem extends MgModel
         'codnfeterceiroitem' => 'integer',
         'codprodutobarra' => 'integer',
         'codusuarioalteracao' => 'integer',
+        'codusuarioconferencia' => 'integer',
         'codusuariocriacao' => 'integer',
         'cofinscst' => 'integer',
         'cofinspcofins' => 'float',

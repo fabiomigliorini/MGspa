@@ -10,27 +10,26 @@ class NfeTerceiroResource extends JsonResource
     {
         return [
             'codnfeterceiro' => $this->codnfeterceiro,
-            // 'codnotafiscal' => $this->codnotafiscal,
 
             // Filial
             'codfilial' => $this->codfilial,
-            'filial' => $this->Filial?->only(['codfilial', 'filial', 'cnpj']),
+            'filial' => $this->formatFilial(),
 
             // Pessoa (Emitente)
             'codpessoa' => $this->codpessoa,
-            // 'pessoa' => $this->Pessoa?->only(['codpessoa', 'pessoa', 'fantasia', 'cnpj', 'ie']),
+            'pessoa' => $this->formatPessoa(),
             'emitente' => $this->emitente,
             'cnpj' => $this->cnpj,
             'ie' => $this->ie,
 
             // Natureza de Operacao
-            // 'codnaturezaoperacao' => $this->codnaturezaoperacao,
-            // 'naturezaOperacao' => $this->NaturezaOperacao?->only(['codnaturezaoperacao', 'naturezaoperacao', 'cfop']),
+            'codnaturezaoperacao' => $this->codnaturezaoperacao,
+            'naturezaOperacao' => $this->NaturezaOperacao?->only(['codnaturezaoperacao', 'naturezaoperacao']),
             'natureza' => $this->natureza,
 
-            // Operacao
-            // 'codoperacao' => $this->codoperacao,
-            // 'operacao' => $this->Operacao?->only(['codoperacao', 'operacao']),
+            // Negocio / Nota Fiscal
+            'codnegocio' => $this->codnegocio,
+            'codnotafiscal' => $this->codnotafiscal,
 
             // Dados da Nota
             'modelo' => $this->modelo,
@@ -42,47 +41,82 @@ class NfeTerceiroResource extends JsonResource
 
             // Datas
             'emissao' => $this->emissao,
-            // 'entrada' => $this->entrada,
+            'entrada' => $this->entrada,
             'nfedataautorizacao' => $this->nfedataautorizacao,
 
             // Valores
-            // 'valorprodutos' => $this->valorprodutos,
-            // 'valorfrete' => $this->valorfrete,
-            // 'valorseguro' => $this->valorseguro,
-            // 'valordesconto' => $this->valordesconto,
-            // 'valoroutras' => $this->valoroutras,
+            'valorprodutos' => $this->valorprodutos,
+            'valorfrete' => $this->valorfrete,
+            'valorseguro' => $this->valorseguro,
+            'valordesconto' => $this->valordesconto,
+            'valoroutras' => $this->valoroutras,
             'valortotal' => $this->valortotal,
 
             // Impostos
-            // 'icmsbase' => $this->icmsbase,
-            // 'icmsvalor' => $this->icmsvalor,
-            // 'icmsstbase' => $this->icmsstbase,
-            // 'icmsstvalor' => $this->icmsstvalor,
-            // 'ipivalor' => $this->ipivalor,
+            'icmsbase' => $this->icmsbase,
+            'icmsvalor' => $this->icmsvalor,
+            'icmsstbase' => $this->icmsstbase,
+            'icmsstvalor' => $this->icmsstvalor,
+            'ipivalor' => $this->ipivalor,
 
             // Situacao e Manifestacao
-            // 'indsituacao' => $this->indsituacao,
-            // 'indmanifestacao' => $this->indmanifestacao,
-            // 'ignorada' => $this->ignorada,
+            'indsituacao' => $this->indsituacao,
+            'indmanifestacao' => $this->indmanifestacao,
+            'ignorada' => $this->ignorada,
+            'justificativa' => $this->justificativa,
 
             // Observacoes
-            // 'informacoes' => $this->informacoes,
+            'informacoes' => $this->informacoes,
             'observacoes' => $this->observacoes,
-            // 'justificativa' => $this->justificativa,
 
             // Revisao
-            // 'revisao' => $this->revisao,
-            // 'codusuariorevisao' => $this->codusuariorevisao,
+            'revisao' => $this->revisao,
+            'codusuariorevisao' => $this->codusuariorevisao,
+            'usuarioRevisao' => $this->UsuarioRevisao?->only(['codusuario', 'usuario']),
 
-            // Negocio
-            // 'codnegocio' => $this->codnegocio,
+            // Conferencia
+            'conferencia' => $this->conferencia,
+            'codusuarioconferencia' => $this->codusuarioconferencia,
+            'usuarioConferencia' => $this->UsuarioConferencia?->only(['codusuario', 'usuario']),
 
             // NSU
             'nsu' => $this->nsu,
 
             // Timestamps
-            // 'criacao' => $this->criacao,
-            // 'alteracao' => $this->alteracao,
+            'criacao' => $this->criacao,
+            'alteracao' => $this->alteracao,
+            'codusuarioalteracao' => $this->codusuarioalteracao,
+            'usuarioAlteracao' => $this->UsuarioAlteracao?->only(['codusuario', 'usuario']),
+
+            // Relações filhas (carregadas apenas no show)
+            'itens' => $this->when(
+                $this->relationLoaded('NfeTerceiroItemS'),
+                fn () => NfeTerceiroItemResource::collection($this->NfeTerceiroItemS)
+            ),
+            'duplicatas' => $this->when(
+                $this->relationLoaded('NfeTerceiroDuplicataS'),
+                fn () => NfeTerceiroDuplicataResource::collection($this->NfeTerceiroDuplicataS)
+            ),
+            'pagamentos' => $this->when(
+                $this->relationLoaded('NfeTerceiroPagamentoS'),
+                fn () => NfeTerceiroPagamentoResource::collection($this->NfeTerceiroPagamentoS)
+            ),
         ];
+    }
+
+    private function formatFilial(): ?array
+    {
+        if (!$this->relationLoaded('Filial')) {
+            return null;
+        }
+        return $this->Filial?->only(['codfilial', 'filial', 'cnpj']);
+    }
+
+    private function formatPessoa(): ?array
+    {
+        if (!$this->relationLoaded('Pessoa')) {
+            return null;
+        }
+        return $this->Pessoa?->only(['codpessoa', 'pessoa', 'fantasia', 'cnpj', 'ie']);
     }
 }
