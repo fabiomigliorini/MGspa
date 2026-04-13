@@ -2,6 +2,7 @@
 const emissoesItems = [
   { label: 'Início', icon: 'home', color: 'brown', to: '/' },
   { label: 'Notas', icon: 'description', color: 'blue', to: '/nota' },
+  { label: 'NFe Terceiro', icon: 'move_to_inbox', color: 'orange', to: '/nfe-terceiro' },
 ]
 
 // const cadastrosItems = []

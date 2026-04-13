@@ -45,7 +45,9 @@ class NfeTerceiro extends MgModel
         'codnotafiscal',
         'codoperacao',
         'codpessoa',
+        'codusuarioconferencia',
         'codusuariorevisao',
+        'conferencia',
         'emissao',
         'emitente',
         'entrada',
@@ -85,6 +87,7 @@ class NfeTerceiro extends MgModel
         'emissao',
         'entrada',
         'nfedataautorizacao',
+        'conferencia',
         'revisao'
     ];
 
@@ -98,6 +101,7 @@ class NfeTerceiro extends MgModel
         'codoperacao' => 'integer',
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
+        'codusuarioconferencia' => 'integer',
         'codusuariocriacao' => 'integer',
         'codusuariorevisao' => 'integer',
         'finalidade' => 'integer',
@@ -161,6 +165,11 @@ class NfeTerceiro extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+    public function UsuarioConferencia()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
     }
 
     public function UsuarioRevisao()

@@ -100,7 +100,7 @@ const statusDisponiveis = computed(() => {
 
 // URL base para negócios
 const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
-const mgsisUrl = import.meta.env.VITE_MGSIS_URL || process.env.MGSIS_URL
+
 const pessoasUrl = import.meta.env.VITE_PESSOAS_URL || process.env.PESSOAS_URL
 
 // Lista de negócios únicos vinculados à nota
@@ -1251,14 +1251,13 @@ onUnmounted(() => {
               <template v-if="nota.nfeTerceiros?.length">
                 <div class="text-caption text-grey-7">NFe Terceiro</div>
                 <div v-for="nfeTerceiro in nota.nfeTerceiros" :key="nfeTerceiro.codnfeterceiro">
-                  <a
-                    :href="`${mgsisUrl}/index.php?r=nfeTerceiro/view&id=${nfeTerceiro.codnfeterceiro}`"
-                    target="_blank"
+                  <router-link
+                    :to="{ name: 'nfe-terceiro-view', params: { codnfeterceiro: nfeTerceiro.codnfeterceiro } }"
                     class="text-primary text-body2"
                     style="text-decoration: none"
                   >
                     #{{ nfeTerceiro.nsu }} - {{ nfeTerceiro.emitente }}
-                  </a>
+                  </router-link>
                 </div>
               </template>
 
@@ -2040,8 +2039,7 @@ onUnmounted(() => {
                           icon="open_in_new"
                           color="grey-7"
                           size="sm"
-                          target="_blank"
-                          :href="`${mgsisUrl}/index.php?r=nfeTerceiro/view&id=${n.codnfeterceiro}`"
+                          :to="{ name: 'nfe-terceiro-view', params: { codnfeterceiro: n.codnfeterceiro } }"
                         >
                           <q-tooltip>Abrir Nfe Terceiro</q-tooltip>
                         </q-btn>
