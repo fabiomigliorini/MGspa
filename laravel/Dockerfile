@@ -28,6 +28,7 @@ RUN docker-php-ext-configure gd --with-jpeg
 RUN docker-php-ext-install pgsql pdo pdo_pgsql soap gd zip
 RUN pecl install memcached
 RUN echo extension=memcached.so >> /usr/local/etc/php/conf.d/memcached.ini
+RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/99-custom.ini
 #RUN composer install
 
 #CMD ["/usr/bin/memcached --user=memcached"]

@@ -24,81 +24,13 @@ class NotaFiscalController extends Controller
 
     public function index(Request $request)
     {
-        $query = NotaFiscal::with([
-            'Filial',
-            'Pessoa',
-            'NaturezaOperacao',
-            'Operacao',
-        ]);
-
-        // Filtros
-        if ($request->filled('codfilial')) {
-            $query->where('codfilial', $request->codfilial);
-        }
-
-        if ($request->filled('codpessoa')) {
-            $query->where('codpessoa', $request->codpessoa);
-        }
-
-        if ($request->filled('codgrupoeconomico')) {
-            $query->whereHas('Pessoa', function ($q) use ($request) {
-                $q->where('codgrupoeconomico', $request->codgrupoeconomico);
-            });
-        }
-
-        if ($request->filled('codnaturezaoperacao')) {
-            $query->where('codnaturezaoperacao', $request->codnaturezaoperacao);
-        }
-
-        if ($request->filled('emitida')) {
-            $emitida = ($request->emitida === 'true' || $request->emitida === true);
-            $query->where('emitida', $emitida);
-        }
-
-        if ($request->filled('modelo')) {
-            $query->where('modelo', $request->modelo);
-        }
-
-        if ($request->filled('serie')) {
-            $query->where('serie', $request->serie);
-        }
-
-        if ($request->filled('numero')) {
-            $query->where('numero', $request->numero);
-        }
-
-        if ($request->filled('nfechave')) {
-            $query->where('nfechave', 'like', '%' . $request->nfechave . '%');
-        }
-
-        if ($request->filled('emissao_inicio')) {
-            $query->where('emissao', '>=', "$request->emissao_inicio 00:00:00");
-        }
-
-        if ($request->filled('emissao_fim')) {
-            $query->where('emissao', '<=', "$request->emissao_fim 23:59:59");
-        }
-
-        if ($request->filled('saida_inicio')) {
-            $query->where('saida', '>=', "$request->saida_inicio 00:00:00");
-        }
-
-        if ($request->filled('saida_fim')) {
-            $query->where('saida', '<=', "$request->saida_fim 23:59:59");
-        }
-
-        if ($request->filled('valortotal_inicio')) {
-            $query->where('valortotal', '>=', $request->valortotal_inicio);
-        }
-
-        if ($request->filled('valortotal_fim')) {
-            $query->where('valortotal', '<=', $request->valortotal_fim);
-        }
-
-        // Filtro de status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
+        $query = NotaFiscalRelatorioService::query($request->all())
+            ->with([
+                'Filial',
+                'Pessoa',
+                'NaturezaOperacao',
+                'Operacao',
+            ]);
 
         // Ordenação
         $allowedSortFields = ['codnotafiscal', 'saida', 'emissao', 'numero', 'serie', 'modelo', 'valortotal', 'status', 'criacao', 'alteracao'];
@@ -110,6 +42,14 @@ class NotaFiscalController extends Controller
         return NotaFiscalResource::collection(
             $query->paginate($request->get('per_page', 20))
         );
+    }
+
+    public function relatorio(Request $request)
+    {
+        $pdf = NotaFiscalRelatorioService::pdf($request->all());
+        return response($pdf, 200)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'inline; filename="relatorio-notas-fiscais.pdf"');
     }
 
     public function show(int $codnotafiscal)

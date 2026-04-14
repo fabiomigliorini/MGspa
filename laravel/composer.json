@@ -20,6 +20,7 @@
         "laravel/passport": "^10.1",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.2",
+        "mpdf/mpdf": "^8.3",
         "nfephp-org/sped-common": "^5.1",
         "nfephp-org/sped-da": "^1.1",
         "nfephp-org/sped-ibpt": "^2.0",
