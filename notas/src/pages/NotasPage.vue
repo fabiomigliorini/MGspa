@@ -45,6 +45,36 @@ const onLoad = async (index, done) => {
   }
 }
 
+// ==================== RELATÓRIO PDF ====================
+
+const relatorioUrl = ref(null)
+const relatorioDialog = ref(false)
+const loadingRelatorio = ref(false)
+
+const abrirRelatorio = async () => {
+  loadingRelatorio.value = true
+  try {
+    const url = await notaFiscalStore.getRelatorioUrl()
+    relatorioUrl.value = url
+    const ua = navigator.userAgent
+    const isAndroidPhone = /Android/i.test(ua) && /Mobile/i.test(ua) && !/CrOS/i.test(ua)
+    if (isAndroidPhone) {
+      window.open(url, '_blank')
+    } else {
+      relatorioDialog.value = true
+    }
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      icon: 'error',
+      message: 'Erro ao gerar relatório',
+      caption: error?.response?.data?.message || error?.message,
+    })
+  } finally {
+    loadingRelatorio.value = false
+  }
+}
+
 // ==================== DIALOG NFC-e FALTANTES ====================
 
 const abrirDialogNfce = async () => {
@@ -430,6 +460,17 @@ onMounted(async () => {
           <q-tooltip>Gerar Transferências</q-tooltip>
         </q-btn>
 
+        <!-- Imprimir Relatório -->
+        <q-btn
+          fab-mini
+          icon="print"
+          color="grey-7"
+          :loading="loadingRelatorio"
+          @click="abrirRelatorio"
+        >
+          <q-tooltip>Imprimir Relatório</q-tooltip>
+        </q-btn>
+
         <!-- Inutilizar Lacunas -->
         <q-btn
           v-if="podeGerar"
@@ -453,6 +494,20 @@ onMounted(async () => {
         </q-btn>
       </div>
     </q-page-sticky>
+
+    <!-- Dialog: Relatório PDF -->
+    <q-dialog v-model="relatorioDialog">
+      <q-card style="width: 1100px; max-width: 95vw; height: 90vh">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Relatório de Notas Fiscais</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+        <q-card-section class="q-pa-md" style="height: calc(100% - 56px)">
+          <iframe :src="relatorioUrl" style="width: 100%; height: 100%; border: none" />
+        </q-card-section>
+      </q-card>
+    </q-dialog>
 
     <!-- Dialog: Gerar NFC-e Faltantes -->
     <q-dialog v-model="showDialogNfce" persistent>

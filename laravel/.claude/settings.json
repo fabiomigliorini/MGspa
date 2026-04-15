@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -i)",
+      "Bash(php -r \"echo php_ini_loaded_file\\(\\) . PHP_EOL;\")",
+      "Bash(php -r \"echo php_ini_scanned_files\\(\\) . PHP_EOL;\")",
+      "Read(//etc/php/8.3/**)"
+    ]
+  }
+}

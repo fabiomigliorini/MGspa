@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l app/Mg/NotaFiscal/NotaFiscalRelatorioService.php)",
+      "Bash(php -l app/Mg/NotaFiscal/NotaFiscalController.php)"
+    ]
+  }
+}

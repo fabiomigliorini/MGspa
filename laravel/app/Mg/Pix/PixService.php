@@ -226,8 +226,8 @@ class PixService
     {
         $pix = Pix::firstOrNew([
             'e2eid' => $arrPix['endToEndId'],
-            'codportador' => $portador->codportador,
         ]);
+        $pix->codportador = $portador->codportador;
         $pix->txid = $arrPix['txid'] ?? null;
         if (empty($pix->codpixcob) && !empty($pix->txid)) {
             $pixCob = PixCob::where('codportador', $pix->codportador)

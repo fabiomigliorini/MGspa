@@ -90,6 +90,9 @@ Route::group(['prefix' => 'v1'], function () {
         Route::get('lacunas', '\Mg\NotaFiscal\NotaFiscalController@detectarLacunas');
         Route::post('criar-para-inutilizar', '\Mg\NotaFiscal\NotaFiscalController@criarParaInutilizar');
 
+        // Relatorio PDF (antes do apiResource para nao conflitar com {codnotafiscal})
+        Route::get('relatorio', '\Mg\NotaFiscal\NotaFiscalController@relatorio');
+
         Route::apiResource('/', '\Mg\NotaFiscal\NotaFiscalController')->parameters(['' => 'codnotafiscal']);
 
         // Atualizar status

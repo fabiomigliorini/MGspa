@@ -390,6 +390,16 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    async getRelatorioUrl(filtros = null) {
+      try {
+        const params = filtros ?? this.filters
+        return await notaFiscalService.relatorio(params)
+      } catch (error) {
+        console.error('Erro ao obter URL do Relatório:', error)
+        throw error
+      }
+    },
+
     async getDanfeUrl(codnotafiscal) {
       try {
         return await notaFiscalService.danfe(codnotafiscal)

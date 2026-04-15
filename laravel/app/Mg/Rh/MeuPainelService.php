@@ -4,6 +4,7 @@ namespace Mg\Rh;
 
 use Illuminate\Support\Facades\Auth;
 use Mg\Colaborador\Colaborador;
+use Mg\Filial\Setor;
 
 class MeuPainelService
 {
@@ -59,9 +60,18 @@ class MeuPainelService
                 ->pluck('codsetor')
                 ->toArray();
 
-            if (!empty($meusSetores)) {
-                // Colaboradores que compartilham setor (excluindo o próprio)
-                $equipeCods = PeriodoColaboradorSetor::whereIn('codsetor', $meusSetores)
+            $minhasUnidades = Setor::whereIn('codsetor', $meusSetores)
+                ->pluck('codunidadenegocio')
+                ->filter()
+                ->unique()
+                ->toArray();
+
+            if (!empty($minhasUnidades)) {
+                $setoresUnidade = Setor::whereIn('codunidadenegocio', $minhasUnidades)
+                    ->pluck('codsetor')
+                    ->toArray();
+
+                $equipeCods = PeriodoColaboradorSetor::whereIn('codsetor', $setoresUnidade)
                     ->whereHas('PeriodoColaborador', function ($q) use ($codperiodo, $pc) {
                         $q->where('codperiodo', $codperiodo)
                             ->where('codperiodocolaborador', '!=', $pc->codperiodocolaborador);
@@ -75,11 +85,12 @@ class MeuPainelService
                     $resultado['equipe'] = PeriodoColaboradorResource::collection($equipe)->resolve();
                 }
 
-                // Indicadores tipo S dos setores
                 $resultado['indicadores_setor'] = Indicador::where('codperiodo', $codperiodo)
                     ->whereNull('codcolaborador')
-                    ->where('tipo', 'S')
-                    ->whereIn('codsetor', $meusSetores)
+                    ->where(function ($q) use ($setoresUnidade, $minhasUnidades) {
+                        $q->whereIn('codsetor', $setoresUnidade)
+                            ->orWhereIn('codunidadenegocio', $minhasUnidades);
+                    })
                     ->with(['Setor', 'UnidadeNegocio'])
                     ->get()
                     ->toArray();
@@ -101,9 +112,15 @@ class MeuPainelService
             ->pluck('codsetor')
             ->toArray();
 
-        // Verifica se o alvo compartilha setor
+        $minhasUnidades = Setor::whereIn('codsetor', $meusSetores)
+            ->pluck('codunidadenegocio')
+            ->filter()->unique()->toArray();
+
+        $setoresUnidade = Setor::whereIn('codunidadenegocio', $minhasUnidades)
+            ->pluck('codsetor')->toArray();
+
         $compartilha = PeriodoColaboradorSetor::where('codperiodocolaborador', $codperiodocolaborador)
-            ->whereIn('codsetor', $meusSetores)
+            ->whereIn('codsetor', $setoresUnidade)
             ->exists();
 
         if (!$compartilha) {

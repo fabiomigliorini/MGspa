@@ -76,6 +76,15 @@ export default {
     return response.data
   },
 
+  async relatorio(filtros = {}) {
+    const response = await api.get('/v1/nota-fiscal/relatorio', {
+      params: filtros,
+      responseType: 'blob',
+    })
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    return URL.createObjectURL(blob)
+  },
+
   async danfe(codnotafiscal) {
     // Faz o download do PDF via API (com autenticação via header)
     const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/danfe`, {
