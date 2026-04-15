@@ -3,7 +3,7 @@
 
 import { defineConfig } from '#q-app/wrappers'
 
-export default defineConfig(( ctx ) => {
+export default defineConfig((/* ctx */) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     // preFetch: true,
@@ -11,10 +11,7 @@ export default defineConfig(( ctx ) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: [
-      'axios',
-      'moment'
-    ],
+    boot: ['axios', 'moment'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: [
@@ -42,7 +39,7 @@ export default defineConfig(( ctx ) => {
         node: 'node20'
       },
 
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
       // vueOptionsAPI: false,
@@ -51,12 +48,7 @@ export default defineConfig(( ctx ) => {
 
       // publicPath: '/',
       // analyze: true,
-      env: {
-        API_URL: ctx.dev
-          ? 'https://api-mgspa-dev.mgpapelaria.com.br/api/'
-          : 'https://api-mgspa.mgpapelaria.com.br/api/',
-        API_AUTH_URL: "https://auth-dev.mgpapelaria.com.br"
-      },
+      // env: {},
       // rawDefine: {}
       // ignorePublicFolder: true,
       // minify: false,
@@ -103,10 +95,7 @@ export default defineConfig(( ctx ) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: [
-        "Dialog",
-        'Notify'
-      ]
+      plugins: ['Notify', 'LoadingBar', 'Dialog']
     },
 
     // animations: 'all', // --- includes all animations
@@ -152,15 +141,24 @@ export default defineConfig(( ctx ) => {
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW' // 'GenerateSW' or 'InjectManifest'
-      // swFilename: 'sw.js',
-      // manifestFilename: 'manifest.json',
-      // extendManifestJson (json) {},
-      // useCredentialsForManifestTag: true,
-      // injectPwaMetaTags: false,
-      // extendPWACustomSWConf (esbuildConf) {},
-      // extendGenerateSWOptions (cfg) {},
-      // extendInjectManifestOptions (cfg) {}
+      workboxMode: 'GenerateSW',
+      injectPwaMetaTags: true,
+      swFilename: 'sw.js',
+      manifestFilename: 'manifest.json',
+      useCredentialsForManifestTag: false,
+
+      extendManifestJson(json) {
+        json.name = 'MG Papelaria - Contas'
+        json.short_name = 'MG Contas'
+        json.description = 'Controle de Contas Bancárias'
+        json.theme_color = '#C62828'
+        json.background_color = '#ffffff'
+      },
+
+      extendGenerateSWOptions(cfg) {
+        cfg.skipWaiting = true
+        cfg.clientsClaim = true
+      },
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova

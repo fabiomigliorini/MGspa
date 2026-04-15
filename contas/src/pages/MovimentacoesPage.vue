@@ -1,9 +1,9 @@
 <template>
-  <MGLayout>
-    <template #tituloPagina>
-      <q-btn flat round dense  icon="arrow_back" @click="$router.push('/')" /> {{portador?.portador}}
-    </template>
-    <template #content>
+  <q-page>
+      <div class="q-pa-sm bg-primary text-white row items-center">
+        <q-btn flat round dense icon="arrow_back" @click="$router.push('/')" />
+        <div class="q-ml-sm text-subtitle1">{{portador?.portador}}</div>
+      </div>
       <div class="q-mx-md q-mt-md" v-if="portador">
         <div>
           <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial ? portador.filial : 'Sem Filial'}} | <b>Banco:</b> {{portador.banco}}</p>
@@ -58,17 +58,14 @@
           </q-tooltip>
         </q-btn>
       </q-page-sticky>
-    </template>
-  </MGLayout>
+  </q-page>
 </template>
 
 <script>
-import MGLayout from 'layouts/MGLayout.vue'
 import { date } from 'quasar'
 import { formatMoney } from 'src/utils/formatters.js'
 
 export default {
-  components: { MGLayout },
   data() {
     return {
       portador: null,

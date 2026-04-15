@@ -1,42 +1,71 @@
+<script setup>
+import { ref, computed } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import AppLauncher from 'src/components/AppLauncher.vue'
+import UserMenu from 'src/components/UserMenu.vue'
+import { version } from '../../package.json'
+
+const router = useRouter()
+const route = useRoute()
+const leftDrawerOpen = ref(false)
+const rightDrawerOpen = ref(false)
+
+const pageTitle = computed(() => route.meta?.title || 'Contas')
+
+const goToDashboard = () => {
+  router.push({ name: 'home' })
+}
+</script>
+
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+  <q-layout view="hHh lpR fFf">
+    <q-header elevated class="bg-red-8 text-white">
       <q-toolbar>
         <q-btn
-          flat
           dense
+          flat
           round
           icon="menu"
-          aria-label="Menu"
-          @click="toggleLeftDrawer"
+          @click="leftDrawerOpen = !leftDrawerOpen"
+          :disable="!$route.meta.leftDrawer"
         />
 
-        <q-toolbar-title>
-          Quasar App
+        <q-toolbar-title class="q-ml-sm">
+          <q-avatar size="36px" class="q-mr-sm cursor-pointer" @click="goToDashboard">
+            <img src="/MGPapelariaQuadrado.svg" alt="MG Papelaria" />
+            <q-tooltip>Início</q-tooltip>
+          </q-avatar>
+          {{ pageTitle }}
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
+
+        <user-menu />
+
+        <app-launcher />
+
+        <q-btn
+          dense
+          flat
+          round
+          icon="menu"
+          @click="rightDrawerOpen = !rightDrawerOpen"
+          :disable="!$route.meta.rightDrawer"
+        />
       </q-toolbar>
     </q-header>
 
     <q-drawer
+      v-if="$route.meta.leftDrawer"
       v-model="leftDrawerOpen"
       show-if-above
       bordered
+      class="bg-grey-2"
+      :width="280"
     >
-      <q-list>
-        <q-item-label
-          header
-        >
-          Essential Links
-        </q-item-label>
-
-        <EssentialLink
-          v-for="link in linksList"
-          :key="link.title"
-          v-bind="link"
-        />
-      </q-list>
+      <q-scroll-area class="fit">
+        <component :is="$route.meta.leftDrawer" />
+      </q-scroll-area>
     </q-drawer>
 
     <q-page-container>
@@ -44,59 +73,3 @@
     </q-page-container>
   </q-layout>
 </template>
-
-<script setup>
-import { ref } from 'vue'
-import EssentialLink from 'components/EssentialLink.vue'
-
-const linksList = [
-  {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
-  },
-  {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
-  },
-  {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
-  },
-  {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
-    icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
-  },
-  {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
-  },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
-]
-
-const leftDrawerOpen = ref(false)
-
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
-</script>

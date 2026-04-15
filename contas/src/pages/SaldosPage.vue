@@ -1,7 +1,5 @@
 <template>
-  <MGLayout>
-    <template #tituloPagina> Saldos </template>
-    <template #content>
+  <q-page>
       <div class="q-pa-md" style="display: flex; gap: 8px">
         <q-table :columns="columns" :rows="rows" row-key="banco"
           flat bordered hide-pagination style="flex-grow: 1"
@@ -102,7 +100,7 @@
                 @uploaded="ofxImportado"
                 @failed="ofxFalha"
                 @uploading="enviandoOfx = true"
-                :headers="[{name:'Authorization', 'value':`Bearer ${authStore().token}`}]"
+                :headers="[{name:'Authorization', 'value':`Bearer ${useAuthStore().token}`}]"
                 multiple
                 flat style="width: 100%">
 <!--              <template v-slot:list="scope">
@@ -141,17 +139,14 @@
           </q-card-actions>
         </q-card>
       </q-dialog>
-    </template>
-  </MGLayout>
+  </q-page>
 </template>
 
 <script>
-import MGLayout from 'layouts/MGLayout.vue'
 import { formatMoney } from 'src/utils/formatters.js'
-import { authStore } from 'stores/auth'
+import { useAuthStore } from 'stores/auth'
 
 export default {
-  components: { MGLayout },
   data() {
     return {
       isLoading: false,
@@ -172,7 +167,7 @@ export default {
     }
   },
   methods: {
-    authStore,
+    useAuthStore,
     buscaIntervaloSaldos(){
       //this.buscandoIntervalo = true;
       this.$api
@@ -227,7 +222,7 @@ export default {
     ofxFalha: function(response) {
       this.falhaImportacaoOfx = true;
       const vm = this;
-      response.files.forEach((arquivo, i) => {
+      response.files.forEach((arquivo) => {
         var mensagem =
           'Falha ao importar o arquivo "' +
           arquivo.name +
