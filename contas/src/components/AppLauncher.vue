@@ -8,6 +8,12 @@ const appsItems = [
 
 const cadastrosItems = [
   { label: 'Bancos', icon: 'account_balance', color: 'red-8', to: { name: 'banco' } },
+  {
+    label: 'Contas Contábeis',
+    icon: 'account_tree',
+    color: 'indigo-8',
+    to: { name: 'conta-contabil' },
+  },
 ]
 </script>
 

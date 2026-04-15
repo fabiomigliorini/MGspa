@@ -30,6 +30,19 @@ const routes = [
         },
       },
       {
+        path: 'conta-contabil',
+        name: 'conta-contabil',
+        component: () => import('pages/contaContabil/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Contas Contábeis',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/ContaContabilFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'extrato/:id/:mesAno',
         name: 'extrato',
         component: () => import('pages/MovimentacoesPage.vue'),
