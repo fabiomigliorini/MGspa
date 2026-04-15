@@ -1,7 +1,3 @@
 {
-  "permissions": {
-    "additionalDirectories": [
-      "/opt/www/MGspa/notas/public/icons"
-    ]
-  }
+  "permissions": {}
 }

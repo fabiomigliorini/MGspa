@@ -19,7 +19,7 @@ const goToDashboard = () => {
 
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header reveal bordered class="bg-red-10 text-grey-3">
+    <q-header reveal bordered class="bg-primary text-white">
       <q-toolbar>
         <q-btn
           dense
@@ -60,7 +60,7 @@ const goToDashboard = () => {
       v-model="leftDrawerOpen"
       show-if-above
       bordered
-      class="bg-grey-2"
+      class="bg-white"
       :width="280"
     >
       <q-scroll-area class="fit">
@@ -68,7 +68,7 @@ const goToDashboard = () => {
       </q-scroll-area>
     </q-drawer>
 
-    <q-page-container>
+    <q-page-container class="bg-grey-2">
       <router-view />
     </q-page-container>
   </q-layout>

@@ -1,3 +1,4 @@
+import { defineAsyncComponent } from 'vue'
 import { PERMISSOES } from 'src/constants/permissoes'
 
 const routes = [
@@ -13,6 +14,19 @@ const routes = [
           auth: true,
           title: 'Saldos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'banco',
+        name: 'banco',
+        component: () => import('pages/banco/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Bancos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/BancoFiltrosDrawer.vue'),
+          ),
         },
       },
       {
