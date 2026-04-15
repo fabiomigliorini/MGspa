@@ -30,10 +30,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <q-page class="flex flex-center">
-    <div class="text-center">
-      <q-spinner color="primary" size="3em" />
-      <p class="q-mt-md">{{ status }}</p>
-    </div>
-  </q-page>
+  <q-layout>
+    <q-page-container>
+      <q-page class="flex flex-center">
+        <div class="text-center">
+          <q-spinner color="primary" size="3em" />
+          <p class="q-mt-md">{{ status }}</p>
+        </div>
+      </q-page>
+    </q-page-container>
+  </q-layout>
 </template>

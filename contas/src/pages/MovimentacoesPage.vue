@@ -1,69 +1,125 @@
 <template>
   <q-page>
-      <div class="q-pa-sm bg-primary text-white row items-center">
-        <q-btn flat round dense icon="arrow_back" @click="$router.push('/')" />
-        <div class="q-ml-sm text-subtitle1">{{portador?.portador}}</div>
+    <div class="q-pa-sm bg-red-8 text-white row items-center">
+      <q-btn flat round dense icon="arrow_back" @click="voltar" />
+      <div class="q-ml-sm text-subtitle1">{{ portador?.portador }}</div>
+    </div>
+    <div class="q-mx-md q-mt-md" v-if="portador">
+      <div>
+        <p class="text-caption q-mb-auto">
+          <b>Filial:</b> {{ portador.filial ? portador.filial : 'Sem Filial' }} | <b>Banco:</b>
+          {{ portador.banco }}
+        </p>
+        <p class="text-caption q-mb-auto"></p>
       </div>
-      <div class="q-mx-md q-mt-md" v-if="portador">
-        <div>
-          <p  class="text-caption q-mb-auto"><b>Filial:</b> {{portador.filial ? portador.filial : 'Sem Filial'}} | <b>Banco:</b> {{portador.banco}}</p>
-          <p  class="text-caption q-mb-auto"> </p>
-        </div>
+    </div>
+    <div class="flex items-center">
+      <q-btn
+        round
+        flat
+        size="md"
+        icon="chevron_left"
+        @click="diaAnterior"
+        :disable="!diaAnteriorHabilitado"
+      />
+      <q-select
+        v-model="diaSelecionado"
+        :options="diasDoMes"
+        label="Dia"
+        style="width: 60px"
+        class="q-mx-md"
+        @update:model-value="scrollParaDia"
+      />
+      <q-btn
+        round
+        flat
+        size="md"
+        icon="chevron_right"
+        @click="diaSeguinte"
+        :disable="!diaSeguinteHabilitado"
+      />
+
+      <div v-if="intervalo?.length > 0" class="flex">
+        <q-btn
+          round
+          flat
+          size="md"
+          icon="chevron_left"
+          @click="mesAnterior"
+          :disable="!mesAnteriorHabilitado"
+        />
+        <q-tabs v-model="mesAnoSelecionado" no-caps active-color="primary" class="q-mx-md">
+          <q-tab
+            v-for="mesAno in intervalo"
+            :key="mesAno.name"
+            :name="mesAno.name"
+            :label="mesAno.label"
+          />
+        </q-tabs>
+        <q-btn
+          round
+          flat
+          size="md"
+          icon="chevron_right"
+          @click="mesSeguinte"
+          :disable="!mesSeguinteHabilitado"
+        />
       </div>
-      <div class="flex items-center">
-        <q-btn round flat size="md" icon="chevron_left" @click="diaAnterior" :disable="!diaAnteriorHabilitado" />
-        <q-select v-model="diaSelecionado" :options="diasDoMes"
-                  label="Dia" style="width: 60px" class="q-mx-md" @update:model-value="scrollParaDia" />
-        <q-btn round flat size="md" icon="chevron_right" @click="diaSeguinte" :disable="!diaSeguinteHabilitado"/>
+    </div>
 
+    <div class="q-pa-md" v-if="!buscandoInfo">
+      <q-table
+        ref="tabela"
+        class="my-sticky-dynamic"
+        flat
+        bordered
+        :rows="extratos"
+        :columns="columns"
+        :loading="isLoading"
+        virtual-scroll
+        row-key="codextratobancario"
+        :rows-per-page-options="[0]"
+        loading-label="Carregando"
+        hide-bottom
+      >
+        <template v-slot:body="props">
+          <q-tr :props="props" :class="props.rowIndex % 2 === 0 ? 'bg-white' : 'bg-grey-2'">
+            <q-td
+              v-for="col in props.cols"
+              :key="col.name"
+              :props="props"
+              :class="moneyTextColor(props, col)"
+            >
+              {{ col.value }}
+            </q-td>
+          </q-tr>
+        </template>
+      </q-table>
+    </div>
 
-        <div v-if="intervalo?.length > 0" class="flex" >
-          <q-btn round flat size="md" icon="chevron_left" @click="mesAnterior" :disable="!mesAnteriorHabilitado" />
-          <q-tabs v-model="mesAnoSelecionado" no-caps active-color="primary" class="q-mx-md">
-            <q-tab v-for="mesAno in intervalo" :key="mesAno.name" :name="mesAno.name" :label="mesAno.label" />
-          </q-tabs>
-          <q-btn round flat size="md" icon="chevron_right" @click="mesSeguinte" :disable="!mesSeguinteHabilitado"/>
-        </div>
-      </div>
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="portador">
+      <q-btn
+        fab
+        icon="cloud_download"
+        color="primary"
+        v-if="portador.codbanco == 1"
+        :loading="buscandoApiBb"
+        @click="consultarApiBB()"
+      >
+        <template v-slot:loading>
+          <q-spinner-oval />
+        </template>
 
-      <div class="q-pa-md" v-if="!buscandoInfo">
-        <q-table ref="tabela"
-          class="my-sticky-dynamic"
-          flat bordered
-          :rows="extratos"
-          :columns="columns"
-          :loading="isLoading" virtual-scroll
-          row-key="codextratobancario" :rows-per-page-options="[0]"
-          loading-label="Carregando" hide-bottom>
-          <template v-slot:body="props">
-            <q-tr :props="props" :class="props.rowIndex % 2 === 0 ? 'bg-white' : 'bg-grey-2'">
-              <q-td v-for="col in props.cols" :key="col.name" :props="props"
-                :class="moneyTextColor(props, col)">
-                {{ col.value }}
-              </q-td>
-            </q-tr>
-          </template>
-        </q-table>
-      </div>
-
-      <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="portador">
-        <q-btn fab icon="cloud_download" color="primary" v-if="portador.codbanco == 1"
-               :loading="buscandoApiBb" @click="consultarApiBB()">
-          <template v-slot:loading>
-            <q-spinner-oval  />
-          </template>
-
-          <q-tooltip anchor="center left" self="center right">
-            Consultar API
-          </q-tooltip>
-        </q-btn>
-      </q-page-sticky>
+        <q-tooltip anchor="center left" self="center right"> Consultar API </q-tooltip>
+      </q-btn>
+    </q-page-sticky>
   </q-page>
 </template>
 
 <script>
 import { date } from 'quasar'
 import { formatMoney } from 'src/utils/formatters.js'
+import { goBack } from 'src/utils/goBack'
 
 export default {
   data() {
@@ -135,6 +191,9 @@ export default {
     }
   },
   methods: {
+    voltar() {
+      goBack(this.$router)
+    },
     diaAnterior(){
       const diaAtualIndex = this.diasDoMes.findIndex(dia => dia === this.diaSelecionado)
       if(diaAtualIndex > 0) {

@@ -11,7 +11,7 @@ export default defineConfig((/* ctx */) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['axios', 'moment'],
+    boot: ['axios', 'moment', 'errorHandler'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: [
@@ -70,19 +70,28 @@ export default defineConfig((/* ctx */) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
     devServer: {
-      //server: {
-      //  type: "https",
-      //},
-      //host: 'https://sistema-dev.mgpapelaria.com.br:8086/',
-      allowedHosts: '*',
       https: true,
       port: 8086,
-      open: true // opens browser window automatically
+      open: false,
+      host: '0.0.0.0',
+      client: {
+        overlay: {
+          warnings: false,
+          errors: true,
+        },
+      },
+      hmr: {
+        protocol: 'wss',
+        host: 'sistema-dev.mgpapelaria.com.br',
+        port: 8086,
+      },
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
-      config: {},
+      config: {
+        loadingBar: { color: 'primary' },
+      },
       lang: 'pt-BR',
       // iconSet: 'material-icons', // Quasar icon set
       // lang: 'en-US', // Quasar language pack

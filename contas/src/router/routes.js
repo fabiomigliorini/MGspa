@@ -1,3 +1,5 @@
+import { PERMISSOES } from 'src/constants/permissoes'
+
 const routes = [
   {
     path: '/',
@@ -10,7 +12,7 @@ const routes = [
         meta: {
           auth: true,
           title: 'Saldos',
-          permissions: ['Administrador', 'Financeiro'],
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
         },
       },
       {
@@ -20,7 +22,7 @@ const routes = [
         meta: {
           auth: true,
           title: 'Extrato',
-          permissions: ['Administrador', 'Financeiro'],
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
         },
       },
     ],
@@ -31,6 +33,13 @@ const routes = [
     name: 'login',
     component: () => import('pages/Login.vue'),
     meta: { auth: false },
+  },
+
+  {
+    path: '/sem-permissao',
+    name: 'sem-permissao',
+    component: () => import('pages/SemPermissaoPage.vue'),
+    meta: { auth: false, title: 'Sem permissão' },
   },
 
   {

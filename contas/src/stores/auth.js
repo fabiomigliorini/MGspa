@@ -2,6 +2,9 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 
+// Instância axios dedicada (sem interceptors de src/boot/axios.js).
+// Evita loop no interceptor 401: se o validateToken falhasse com 401, o
+// interceptor chamaria setToken(null) → redireciona → valida de novo → 401 → loop.
 const api = axios.create({
   baseURL: process.env.API_URL,
 })
@@ -43,6 +46,7 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       const response = await api.get('v1/auth/user', {
         headers: { Authorization: `Bearer ${token.value}` },
+        skipLoading: true,
       })
 
       if (response.data?.data?.usuario) {

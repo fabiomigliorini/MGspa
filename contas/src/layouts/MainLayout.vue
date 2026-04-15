@@ -19,7 +19,7 @@ const goToDashboard = () => {
 
 <template>
   <q-layout view="hHh lpR fFf">
-    <q-header elevated class="bg-red-8 text-white">
+    <q-header reveal bordered class="bg-red-10 text-grey-3">
       <q-toolbar>
         <q-btn
           dense

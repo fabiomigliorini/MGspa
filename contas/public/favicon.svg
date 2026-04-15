@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="6" fill="#C62828"/>
+  <!-- Material Icons: account_balance (simplificado, white) -->
+  <path fill="#fff" d="M9 33h4v-10H9v10zm7 0h4v-10h-4v10zm-7.5 4h31V34h-31v3zM23 33h4v-10h-4v10zm7 0h4v-10h-4v10zM9 20v2h30v-2L24 12 9 20z"/>
+</svg>

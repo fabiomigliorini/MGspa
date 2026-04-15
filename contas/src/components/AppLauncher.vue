@@ -1,6 +1,5 @@
 <script setup>
 const appsItems = [
-  { label: 'Contas', icon: 'account_balance', color: 'blue', to: '/' },
   { label: 'Notas', icon: 'description', color: 'blue', href: process.env.NOTAS_URL },
   { label: 'Pessoas', icon: 'people', color: 'teal', href: process.env.PESSOAS_URL },
   { label: 'Negócios', icon: 'handshake', color: 'orange', href: process.env.NEGOCIOS_URL },
@@ -20,9 +19,8 @@ const appsItems = [
                 flat
                 no-caps
                 class="full-width app-launcher-item"
-                :to="item.to"
                 :href="item.href"
-                :target="item.href ? '_blank' : undefined"
+                target="_blank"
                 v-close-popup
               >
                 <div class="column items-center">
@@ -39,15 +37,3 @@ const appsItems = [
     </q-menu>
   </q-btn>
 </template>
-
-<style scoped>
-.app-launcher-item {
-  min-height: 80px;
-  padding: 8px;
-}
-
-.app-launcher-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-  border-radius: 8px;
-}
-</style>

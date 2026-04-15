@@ -1,7 +1,7 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 import { useAuthStore } from 'src/stores/auth'
-import { Notify } from 'quasar'
+import { Notify, LoadingBar } from 'quasar'
 import { api } from 'src/services/api'
 
 export default boot(({ app }) => {
@@ -14,9 +14,14 @@ export default boot(({ app }) => {
         config.headers.Authorization = `Bearer ${authStore.token}`
       }
 
+      if (!config.skipLoading) {
+        LoadingBar.start()
+      }
+
       return config
     },
     (error) => {
+      LoadingBar.stop()
       return Promise.reject(error)
     },
   )
@@ -24,9 +29,16 @@ export default boot(({ app }) => {
   // ===== RESPONSE INTERCEPTOR =====
   api.interceptors.response.use(
     (response) => {
+      if (!response.config?.skipLoading) {
+        LoadingBar.stop()
+      }
       return response
     },
     (error) => {
+      if (!error.config?.skipLoading) {
+        LoadingBar.stop()
+      }
+
       const authStore = useAuthStore()
 
       if (error.response) {
@@ -42,7 +54,6 @@ export default boot(({ app }) => {
             Notify.create({
               type: 'negative',
               message: 'Sessão expirada. Faça login novamente.',
-              position: 'top',
             })
 
             const currentUrl = encodeURIComponent(window.location.origin + '/login')
@@ -56,7 +67,6 @@ export default boot(({ app }) => {
             Notify.create({
               type: 'negative',
               message: 'Você não tem permissão para esta ação',
-              position: 'top',
             })
             break
 
@@ -65,11 +75,22 @@ export default boot(({ app }) => {
             break
 
           case 422:
+            // Validação: tratar no componente via extrairErro(e)
             break
 
           case 500:
+            Notify.create({
+              type: 'negative',
+              message: 'Erro no servidor. Tente novamente em instantes.',
+            })
             break
         }
+      } else if (error.code === 'ECONNABORTED') {
+        Notify.create({
+          type: 'negative',
+          message: 'Tempo esgotado. Tente novamente.',
+          position: 'top',
+        })
       } else if (error.request) {
         Notify.create({
           type: 'negative',
