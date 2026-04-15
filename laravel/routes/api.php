@@ -854,6 +854,15 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post  ('banco/{codbanco}/inativo',       '\Mg\Banco\BancoController@inativar');
         Route::delete('banco/{codbanco}/inativo',       '\Mg\Banco\BancoController@ativar');
 
+        // ContaContabil
+        Route::get   ('conta-contabil',                              '\Mg\ContaContabil\ContaContabilController@index');
+        Route::get   ('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@show');
+        Route::post  ('conta-contabil',                              '\Mg\ContaContabil\ContaContabilController@store');
+        Route::put   ('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@update');
+        Route::delete('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@destroy');
+        Route::post  ('conta-contabil/{codcontacontabil}/inativo',   '\Mg\ContaContabil\ContaContabilController@inativar');
+        Route::delete('conta-contabil/{codcontacontabil}/inativo',   '\Mg\ContaContabil\ContaContabilController@ativar');
+
         // Portador
         Route::get('portador', '\Mg\Portador\PortadorController@index');
         Route::get('portador/intervalo-saldos', '\Mg\Portador\PortadorController@getIntervaloSaldos');

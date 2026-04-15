@@ -19,19 +19,20 @@ class ContaContabil extends MgModel
 
     protected $fillable = [
         'contacontabil',
-        'numero'
+        'numero',
+        'inativo'
     ];
 
     protected $dates = [
         'alteracao',
-        'criacao'
+        'criacao',
+        'inativo'
     ];
 
     protected $casts = [
         'codcontacontabil' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer',
-        'inativo' => 'boolean'
+        'codusuariocriacao' => 'integer'
     ];
 
 
