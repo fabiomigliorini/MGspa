@@ -58,9 +58,10 @@ const onLoad = async (index, done) => {
   }
 }
 
-const handleClick = (item) => {
-  router.push({ name: 'nfe-terceiro-view', params: { codnfeterceiro: item.codnfeterceiro } })
-}
+const handleClick = (item) => ({
+  name: 'nfe-terceiro-view',
+  params: { codnfeterceiro: item.codnfeterceiro },
+})
 
 const handleUploadXml = (files) => {
   if (!files || files.length === 0) return
@@ -126,26 +127,20 @@ onMounted(async () => {
     <!-- Lista com Scroll Infinito -->
     <q-infinite-scroll v-else @load="onLoad" :offset="250">
       <q-list separator>
-        <q-item
-          v-for="item in items"
-          :key="item.codnfeterceiro"
-          clickable
-          @click="handleClick(item)"
-        >
+        <q-item v-for="item in items" :key="item.codnfeterceiro" clickable :to="handleClick(item)">
           <!-- Icone manifestacao -->
-          <q-item-section top avatar>
+          <q-item-section avatar>
             <q-avatar
               :color="manifestacaoLabel(item.indmanifestacao).color"
               text-color="white"
               :icon="manifestacaoLabel(item.indmanifestacao).icon"
-              size="md"
             />
           </q-item-section>
 
           <!-- Filial e Emitente -->
           <q-item-section top>
-            <q-item-label lines="1">
-              <span class="text-weight-medium">
+            <q-item-label>
+              <span class="text-weight-medium text-caption text-primary">
                 {{ item.pessoa?.fantasia || item.emitente }}
               </span>
               <q-badge
@@ -154,42 +149,35 @@ onMounted(async () => {
                 :label="situacaoLabel(item.indsituacao).label"
                 class="q-ml-sm"
               />
-              <q-badge
-                v-if="item.ignorada"
-                color="grey"
-                label="Ignorada"
-                class="q-ml-sm"
-              />
+              <q-badge v-if="item.ignorada" color="grey" label="Ignorada" class="q-ml-sm" />
             </q-item-label>
-            <q-item-label lines="1">
-              <span class="text-grey-8">
-                {{ item.cnpj ? formatCnpjCpf(item.cnpj, false) : '' }}
-              </span>
-              <span class="text-grey-6 q-ml-sm" v-if="item.natureza">
-                {{ item.natureza }}
-              </span>
+            <q-item-label class="text-caption text-grey-7">
+              {{ item.cnpj ? formatCnpjCpf(item.cnpj, false) : '' }}-{{ item.natureza }}
             </q-item-label>
-            <q-item-label caption lines="1">
+            <q-item-label caption class="text-caption text-grey-7">
               {{ formatChave(item.nfechave) }}
             </q-item-label>
           </q-item-section>
 
           <!-- Filial -->
-          <q-item-section top side class="col-sm-2 gt-xs">
-            <q-item-label class="text-weight-medium">
+          <q-item-section top side class="text-caption text-grey-7">
+            <q-item-label class="text-caption text-black text-weight-medium">
               {{ item.filial?.filial }}
             </q-item-label>
-            <q-item-label caption>
+            <q-item-label class="text-caption text-grey-7">
               {{ formatDateTime(item.emissao) }}
+            </q-item-label>
+            <q-item-label v-if="!item.codnotafiscal" class="text-orange text-caption">
+              Pendente Importação
             </q-item-label>
           </q-item-section>
 
           <!-- Valor -->
           <q-item-section top side class="gt-xs">
-            <q-item-label class="text-weight-bold">
+            <q-item-label class="text-weight-bold text-primary">
               R$ {{ formatCurrency(item.valortotal) }}
             </q-item-label>
-            <q-item-label caption>
+            <q-item-label caption :class="`text-${manifestacaoLabel(item.indmanifestacao).color}`">
               {{ manifestacaoLabel(item.indmanifestacao).label }}
             </q-item-label>
           </q-item-section>
@@ -205,10 +193,22 @@ onMounted(async () => {
 
     <!-- FAB Upload XML -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="upload_file" color="primary" :loading="uploadingXml" @click="xmlInput?.click()">
+      <q-btn
+        fab
+        icon="upload_file"
+        color="primary"
+        :loading="uploadingXml"
+        @click="xmlInput?.click()"
+      >
         <q-tooltip>Importar XML</q-tooltip>
       </q-btn>
-      <input ref="xmlInput" type="file" accept=".xml" style="display: none" @change="(e) => handleUploadXml(e.target.files)" />
+      <input
+        ref="xmlInput"
+        type="file"
+        accept=".xml"
+        style="display: none"
+        @change="(e) => handleUploadXml(e.target.files)"
+      />
     </q-page-sticky>
   </q-page>
 </template>

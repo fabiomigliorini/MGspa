@@ -191,7 +191,8 @@ class NfeTerceiro extends MgModel
 
     public function NfeTerceiroItemS()
     {
-        return $this->hasMany(NfeTerceiroItem::class, 'codnfeterceiro', 'codnfeterceiro');
+        return $this->hasMany(NfeTerceiroItem::class, 'codnfeterceiro', 'codnfeterceiro')
+            ->orderBy('nitem');
     }
 
     public function NfeTerceiroPagamentoS()
