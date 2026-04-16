@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
+import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 
 const FLAGS = [
   'avista',
@@ -86,12 +87,14 @@ export const useFormaPagamentoStore = defineStore(
       )
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
+      useSelectCacheStore().invalidate('formaPagamento')
     }
 
     function removeLocal(codformapagamento) {
       items.value = items.value.filter(
         (i) => i.codformapagamento !== codformapagamento,
       )
+      useSelectCacheStore().invalidate('formaPagamento')
     }
 
     return {

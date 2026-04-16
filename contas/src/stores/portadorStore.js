@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
+import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 
 const defaultFilters = () => ({
   codportador: null,
@@ -64,10 +65,12 @@ export const usePortadorStore = defineStore(
       const idx = items.value.findIndex((i) => i.codportador === item.codportador)
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
+      useSelectCacheStore().invalidate('portador')
     }
 
     function removeLocal(codportador) {
       items.value = items.value.filter((i) => i.codportador !== codportador)
+      useSelectCacheStore().invalidate('portador')
     }
 
     return {

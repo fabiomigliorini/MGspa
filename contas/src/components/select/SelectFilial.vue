@@ -42,5 +42,9 @@ const filterFn = (val, update) => {
     emit-value
     map-options
     v-bind="$attrs"
-  />
+  >
+    <template v-for="(_, name) in $slots" :key="name" #[name]="slotData">
+      <slot :name="name" v-bind="slotData ?? {}" />
+    </template>
+  </q-select>
 </template>
