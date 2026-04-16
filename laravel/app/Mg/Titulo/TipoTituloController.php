@@ -1,13 +1,13 @@
 <?php
 
-namespace Mg\Banco;
+namespace Mg\Titulo;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
-class BancoController extends Controller
+class TipoTituloController extends Controller
 {
     private const GRUPOS = ['Administrador', 'Financeiro'];
 
@@ -15,90 +15,91 @@ class BancoController extends Controller
     {
         Autorizador::autoriza(self::GRUPOS);
 
-        $result = BancoService::listar($request->only([
-            'codbanco', 'banco', 'sigla', 'numerobanco', 'inativo', 'todos',
+        $result = TipoTituloService::listar($request->only([
+            'codtipotitulo', 'tipotitulo', 'codtipomovimentotitulo',
+            'pagar', 'receber', 'debito', 'credito', 'inativo', 'todos',
         ]));
 
-        return BancoResource::collection($result);
+        return TipoTituloResource::collection($result);
     }
 
-    public function show(int $codbanco)
+    public function show(int $codtipotitulo)
     {
         Autorizador::autoriza(self::GRUPOS);
-        return new BancoResource(Banco::findOrFail($codbanco));
+        return new TipoTituloResource(TipoTitulo::with('TipoMovimentoTitulo')->findOrFail($codtipotitulo));
     }
 
-    public function store(BancoStoreRequest $request)
+    public function store(TipoTituloStoreRequest $request)
     {
         Autorizador::autoriza(self::GRUPOS);
 
         DB::beginTransaction();
         try {
-            $banco = BancoService::criar($request->validated());
+            $tipo = TipoTituloService::criar($request->validated());
             DB::commit();
-            return new BancoResource($banco);
+            return new TipoTituloResource($tipo);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
-    public function update(int $codbanco, BancoUpdateRequest $request)
+    public function update(int $codtipotitulo, TipoTituloUpdateRequest $request)
     {
         Autorizador::autoriza(self::GRUPOS);
 
         DB::beginTransaction();
         try {
-            $banco = Banco::findOrFail($codbanco);
-            $banco = BancoService::atualizar($banco, $request->validated());
+            $tipo = TipoTitulo::findOrFail($codtipotitulo);
+            $tipo = TipoTituloService::atualizar($tipo, $request->validated());
             DB::commit();
-            return new BancoResource($banco);
+            return new TipoTituloResource($tipo);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
-    public function inativar(int $codbanco)
+    public function inativar(int $codtipotitulo)
     {
         Autorizador::autoriza(self::GRUPOS);
 
         DB::beginTransaction();
         try {
-            $banco = Banco::findOrFail($codbanco);
-            $banco = BancoService::inativar($banco);
+            $tipo = TipoTitulo::findOrFail($codtipotitulo);
+            $tipo = TipoTituloService::inativar($tipo);
             DB::commit();
-            return new BancoResource($banco);
+            return new TipoTituloResource($tipo);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
-    public function ativar(int $codbanco)
+    public function ativar(int $codtipotitulo)
     {
         Autorizador::autoriza(self::GRUPOS);
 
         DB::beginTransaction();
         try {
-            $banco = Banco::findOrFail($codbanco);
-            $banco = BancoService::ativar($banco);
+            $tipo = TipoTitulo::findOrFail($codtipotitulo);
+            $tipo = TipoTituloService::ativar($tipo);
             DB::commit();
-            return new BancoResource($banco);
+            return new TipoTituloResource($tipo);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
-    public function destroy(int $codbanco)
+    public function destroy(int $codtipotitulo)
     {
         Autorizador::autoriza(self::GRUPOS);
 
         DB::beginTransaction();
         try {
-            $banco = Banco::findOrFail($codbanco);
-            BancoService::excluir($banco);
+            $tipo = TipoTitulo::findOrFail($codtipotitulo);
+            TipoTituloService::excluir($tipo);
             DB::commit();
             return response()->json(['ok' => true]);
         } catch (\RuntimeException $e) {

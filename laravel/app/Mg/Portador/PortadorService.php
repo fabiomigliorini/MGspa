@@ -2,14 +2,100 @@
 
 namespace Mg\Portador;
 
+use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Mg\Banco\Banco;
 use OfxParser\Parser;
+use RuntimeException;
 
 class PortadorService
 {
     const CAIXA = 100;
     const FOLHA = 202018;
+
+    public static function listar(array $filtros)
+    {
+        $q = Portador::with(['Banco', 'Filial']);
+
+        if (!empty($filtros['codportador'])) {
+            $q->where('codportador', $filtros['codportador']);
+        }
+
+        if (!empty($filtros['portador'])) {
+            $q->palavras('portador', $filtros['portador']);
+        }
+
+        if (!empty($filtros['codbanco'])) {
+            $q->where('codbanco', $filtros['codbanco']);
+        }
+
+        if (!empty($filtros['codfilial'])) {
+            $q->where('codfilial', $filtros['codfilial']);
+        }
+
+        if (array_key_exists('emiteboleto', $filtros) && $filtros['emiteboleto'] !== null && $filtros['emiteboleto'] !== '') {
+            $q->where('emiteboleto', filter_var($filtros['emiteboleto'], FILTER_VALIDATE_BOOLEAN));
+        }
+
+        if (array_key_exists('inativo', $filtros) && $filtros['inativo'] !== null && $filtros['inativo'] !== '') {
+            if ($filtros['inativo'] === true || $filtros['inativo'] === 'true' || $filtros['inativo'] === 1 || $filtros['inativo'] === '1') {
+                $q->whereNotNull('inativo');
+            } else {
+                $q->whereNull('inativo');
+            }
+        }
+
+        $q->orderBy('portador');
+
+        return $q->paginate(25);
+    }
+
+    public static function criar(array $dados): Portador
+    {
+        $portador = Portador::create($dados);
+        $portador->load(['Banco', 'Filial']);
+        return $portador;
+    }
+
+    public static function atualizar(Portador $portador, array $dados): Portador
+    {
+        $portador->fill($dados);
+        $portador->save();
+        $portador->refresh();
+        $portador->load(['Banco', 'Filial']);
+        return $portador;
+    }
+
+    public static function inativar(Portador $portador): Portador
+    {
+        $portador->inativo = Carbon::now();
+        $portador->save();
+        $portador->refresh();
+        $portador->load(['Banco', 'Filial']);
+        return $portador;
+    }
+
+    public static function ativar(Portador $portador): Portador
+    {
+        $portador->inativo = null;
+        $portador->save();
+        $portador->refresh();
+        $portador->load(['Banco', 'Filial']);
+        return $portador;
+    }
+
+    public static function excluir(Portador $portador): void
+    {
+        try {
+            $portador->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) === '23503') {
+                throw new RuntimeException('Portador em uso, não pode ser excluído. Inative ao invés de excluir.');
+            }
+            throw $e;
+        }
+    }
 
     public static function buscarPortadorOfx($routingNumber, $accountNumber)
     {

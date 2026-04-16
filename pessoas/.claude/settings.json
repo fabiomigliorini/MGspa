@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "additionalDirectories": [
+      "/opt/www/MGspa/contas/src/pages/grupoCliente",
+      "/opt/www/MGspa/contas/src/components/drawers",
+      "/opt/www/MGspa/contas/src/router"
+    ]
+  }
+}

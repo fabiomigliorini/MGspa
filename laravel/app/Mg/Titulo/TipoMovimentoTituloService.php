@@ -6,32 +6,21 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use RuntimeException;
 
-class TipoTituloService
+class TipoMovimentoTituloService
 {
-
-    const TIPO_PIX_RECEBER = 201;
-    const TIPO_PIX_PAGAR = 930;
-
-    const TIPO_ENTREGA_RECEBER = 310;
-    const TIPO_ENTREGA_PAGAR = 320;
-
     public static function listar(array $filtros)
     {
-        $q = TipoTitulo::with('TipoMovimentoTitulo');
-
-        if (!empty($filtros['codtipotitulo'])) {
-            $q->where('codtipotitulo', $filtros['codtipotitulo']);
-        }
-
-        if (!empty($filtros['tipotitulo'])) {
-            $q->palavras('tipotitulo', $filtros['tipotitulo']);
-        }
+        $q = TipoMovimentoTitulo::query();
 
         if (!empty($filtros['codtipomovimentotitulo'])) {
             $q->where('codtipomovimentotitulo', $filtros['codtipomovimentotitulo']);
         }
 
-        foreach (['pagar', 'receber', 'debito', 'credito'] as $flag) {
+        if (!empty($filtros['tipomovimentotitulo'])) {
+            $q->palavras('tipomovimentotitulo', $filtros['tipomovimentotitulo']);
+        }
+
+        foreach (['implantacao', 'ajuste', 'armotizacao', 'juros', 'desconto', 'pagamento', 'estorno'] as $flag) {
             if (array_key_exists($flag, $filtros) && $filtros[$flag] !== null && $filtros[$flag] !== '') {
                 $q->where($flag, filter_var($filtros[$flag], FILTER_VALIDATE_BOOLEAN));
             }
@@ -45,7 +34,7 @@ class TipoTituloService
             }
         }
 
-        $q->orderBy('tipotitulo');
+        $q->orderBy('tipomovimentotitulo');
 
         if (!empty($filtros['todos'])) {
             return $q->get();
@@ -54,47 +43,39 @@ class TipoTituloService
         return $q->paginate(25);
     }
 
-    public static function criar(array $dados): TipoTitulo
+    public static function criar(array $dados): TipoMovimentoTitulo
     {
-        $tipo = TipoTitulo::create($dados);
-        $tipo->load('TipoMovimentoTitulo');
-        return $tipo;
+        return TipoMovimentoTitulo::create($dados);
     }
 
-    public static function atualizar(TipoTitulo $tipo, array $dados): TipoTitulo
+    public static function atualizar(TipoMovimentoTitulo $tipo, array $dados): TipoMovimentoTitulo
     {
         $tipo->fill($dados);
         $tipo->save();
-        $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
-        return $tipo;
+        return $tipo->refresh();
     }
 
-    public static function inativar(TipoTitulo $tipo): TipoTitulo
+    public static function inativar(TipoMovimentoTitulo $tipo): TipoMovimentoTitulo
     {
         $tipo->inativo = Carbon::now();
         $tipo->save();
-        $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
-        return $tipo;
+        return $tipo->refresh();
     }
 
-    public static function ativar(TipoTitulo $tipo): TipoTitulo
+    public static function ativar(TipoMovimentoTitulo $tipo): TipoMovimentoTitulo
     {
         $tipo->inativo = null;
         $tipo->save();
-        $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
-        return $tipo;
+        return $tipo->refresh();
     }
 
-    public static function excluir(TipoTitulo $tipo): void
+    public static function excluir(TipoMovimentoTitulo $tipo): void
     {
         try {
             $tipo->delete();
         } catch (QueryException $e) {
             if (($e->errorInfo[0] ?? null) === '23503') {
-                throw new RuntimeException('Tipo de Título em uso, não pode ser excluído. Inative ao invés de excluir.');
+                throw new RuntimeException('Tipo em uso, não pode ser excluído. Inative ao invés de excluir.');
             }
             throw $e;
         }

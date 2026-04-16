@@ -22,6 +22,7 @@ class TipoTitulo extends MgModel
         'codtipomovimentotitulo',
         'credito',
         'debito',
+        'inativo',
         'observacoes',
         'pagar',
         'receber',
@@ -30,7 +31,8 @@ class TipoTitulo extends MgModel
 
     protected $dates = [
         'alteracao',
-        'criacao'
+        'criacao',
+        'inativo'
     ];
 
     protected $casts = [

@@ -49,8 +49,6 @@ class Portador extends MgModel
         'conta',
         'contadigito',
         'convenio',
-        'diretorioremessa',
-        'diretorioretorno',
         'emiteboleto',
         'inativo',
         'pixdict',

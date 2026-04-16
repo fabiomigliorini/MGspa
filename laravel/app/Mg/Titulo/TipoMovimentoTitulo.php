@@ -23,6 +23,7 @@ class TipoMovimentoTitulo extends MgModel
         'desconto',
         'estorno',
         'implantacao',
+        'inativo',
         'juros',
         'observacao',
         'pagamento',
@@ -31,7 +32,8 @@ class TipoMovimentoTitulo extends MgModel
 
     protected $dates = [
         'alteracao',
-        'criacao'
+        'criacao',
+        'inativo'
     ];
 
     protected $casts = [
