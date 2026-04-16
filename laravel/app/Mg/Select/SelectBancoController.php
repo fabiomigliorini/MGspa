@@ -31,7 +31,7 @@ class SelectBancoController extends Controller
               and (
                 banco ilike :busca
                 or sigla ilike :busca
-                or numerobanco ilike :busca
+                or numerobanco::text ilike :busca
               )
         ';
 
