@@ -1,83 +1,123 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { api } from 'src/boot/axios'
+import axios from 'axios'
 
-export const authStore = defineStore('auth', ()=>{
-  /*state: () => ({
-    // initialize state from local storage to enable user to stay logged in
-    user: JSON.parse(localStorage.getItem('usuario')),
-    returnUrl: null,
-    usuarioLogado: {},
-    urlRetorno: {}
-  })*/
+// Instância axios dedicada (sem interceptors de src/boot/axios.js).
+// Evita loop no interceptor 401: se o validateToken falhasse com 401, o
+// interceptor chamaria setToken(null) → redireciona → valida de novo → 401 → loop.
+const api = axios.create({
+  baseURL: process.env.API_URL,
+})
 
+export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('access_token'))
-  const user = ref(localStorage.getItem('usuario'))
-  //const returnUrl = null
-  //const usuarioLogado = {}
-  //const urlRetorno = {}
+  const user = ref(null)
+  const loading = ref(false)
+  const redirectUrl = ref(localStorage.getItem('redirect_after_login'))
 
-  function accessToken(tokenValue) {
-    localStorage.setItem('access_token', tokenValue)
-    token.value = tokenValue
-  }
-
-  function username(userValue) {
-    localStorage.setItem('usuario', userValue)
-    user.value = userValue
-  }
-
-  function verificaPermissaoUsuario(permissao) {
-    const verificaPermissao = this.usuarioLogado.permissoes.find(grupo => grupo.grupousuario === permissao)
-
-    const admin = this.usuarioLogado.permissoes.find(grupo => grupo.grupousuario === 'Administrador')
-    if(admin){
-      return admin;
+  function setToken(newToken) {
+    token.value = newToken
+    if (newToken) {
+      localStorage.setItem('access_token', newToken)
+    } else {
+      localStorage.removeItem('access_token')
     }
-    return verificaPermissao;
   }
 
-  // Acessa os dados do usuario como verificação se o token esta valido na API
-  async function verificaToken() {
+  function setRedirectUrl(url) {
+    redirectUrl.value = url
+    if (url) {
+      localStorage.setItem('redirect_after_login', url)
+    } else {
+      localStorage.removeItem('redirect_after_login')
+    }
+  }
+
+  function getAndClearRedirectUrl() {
+    const url = redirectUrl.value
+    setRedirectUrl(null)
+    return url
+  }
+
+  async function validateToken() {
+    if (!token.value) return false
+
+    loading.value = true
     try {
-      let tokenCookie = document.cookie.split(";").find((c) => c.trim().startsWith("access_token="));
-      if (tokenCookie) {
-        token.value = tokenCookie.split("=")[1];
-      }
-      const tokenverificacao = 'Bearer ' + token.value
-      const { data } = await api.get('v1/auth/user', {
-        headers: {
-          Authorization: tokenverificacao
-        }
+      const response = await api.get('v1/auth/user', {
+        headers: { Authorization: `Bearer ${token.value}` },
+        skipLoading: true,
       })
 
-      if (data.data.usuario) {
-        this.usuarioLogado = data.data
-        return data.data;
-      } else {
-        localStorage.removeItem('access_token')
-        localStorage.removeItem('usuario')
-        return false
+      if (response.data?.data?.usuario) {
+        user.value = response.data.data
+        return true
       }
-    } catch  {
+      return false
+    } catch (error) {
+      console.error('Erro ao validar token:', error)
+      setToken(null)
+      user.value = null
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  function hasAnyPermission(permissionsList) {
+    if (!user.value?.permissoes) return false
+
+    const userPermissions = user.value.permissoes.map((p) => p.grupousuario)
+
+    if (userPermissions.includes('Administrador')) return true
+
+    return permissionsList.some((p) => userPermissions.includes(p))
+  }
+
+  async function logout() {
+    try {
+      let tokenToUse = token.value
+
+      const cookieToken = document.cookie
+        .split(';')
+        .find((item) => item.trim().startsWith('access_token='))
+
+      if (cookieToken) {
+        tokenToUse = cookieToken.split('=')[1]
+      }
+
+      if (tokenToUse) {
+        await api.post(
+          `${process.env.API_AUTH_URL}/api/logout`,
+          {},
+          {
+            headers: {
+              Authorization: `Bearer ${tokenToUse}`,
+            },
+          },
+        )
+      }
+    } catch (error) {
+      console.warn('Erro ao fazer logout no backend:', error)
+    } finally {
+      setToken(null)
+      user.value = null
       localStorage.removeItem('access_token')
       localStorage.removeItem('usuario')
-      let url = new URL(window.location.href)
-      url = encodeURI(url.origin)
-      window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
+      window.location.href = '/'
     }
   }
 
   return {
     token,
-    authStore,
-    accessToken,
-    verificaPermissaoUsuario,
-    username,
-    verificaToken
-  };
+    user,
+    loading,
+    redirectUrl,
+    setToken,
+    setRedirectUrl,
+    getAndClearRedirectUrl,
+    validateToken,
+    logout,
+    hasAnyPermission,
+  }
 })
-
-/*if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useMyStore, import.meta.hot))
-}*/

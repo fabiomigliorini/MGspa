@@ -1,38 +1,79 @@
+import { defineAsyncComponent } from 'vue'
+import { PERMISSOES } from 'src/constants/permissoes'
+
 const routes = [
-  // ROTAS LIVRES
-  {
-    path: "/login",
-    name: "login",
-    component: () => import("pages/Login.vue"),
-  },
-  // ROTAS AUTENTICADAS
   {
     path: '/',
-    //component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/MainLayout.vue'),
     children: [
       {
-        path: "",
-        name: "inicio",
+        path: '',
+        name: 'home',
         component: () => import('pages/SaldosPage.vue'),
-
+        meta: {
+          auth: true,
+          title: 'Saldos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
       },
       {
-        path: "extrato/:id/:mesAno",
-        name: "extrato",
-        component: () => import('pages/MovimentacoesPage.vue')
-      }
+        path: 'banco',
+        name: 'banco',
+        component: () => import('pages/banco/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Bancos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/BancoFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'conta-contabil',
+        name: 'conta-contabil',
+        component: () => import('pages/contaContabil/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Contas Contábeis',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/ContaContabilFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'extrato/:id/:mesAno',
+        name: 'extrato',
+        component: () => import('pages/MovimentacoesPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Extrato',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
     ],
-    meta: {
-      auth: true,
-    },
   },
 
-  // Always leave this as last one,
-  // but you can also remove it
+  {
+    path: '/login',
+    name: 'login',
+    component: () => import('pages/Login.vue'),
+    meta: { auth: false },
+  },
+
+  {
+    path: '/sem-permissao',
+    name: 'sem-permissao',
+    component: () => import('pages/SemPermissaoPage.vue'),
+    meta: { auth: false, title: 'Sem permissão' },
+  },
+
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
-  }
+    name: 'error404',
+    component: () => import('pages/ErrorNotFound.vue'),
+  },
 ]
 
 export default routes

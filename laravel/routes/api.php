@@ -845,6 +845,24 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('pix/', '\Mg\Pix\PixController@index');
         Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
 
+        // Banco
+        Route::get   ('banco',                          '\Mg\Banco\BancoController@index');
+        Route::get   ('banco/{codbanco}',               '\Mg\Banco\BancoController@show');
+        Route::post  ('banco',                          '\Mg\Banco\BancoController@store');
+        Route::put   ('banco/{codbanco}',               '\Mg\Banco\BancoController@update');
+        Route::delete('banco/{codbanco}',               '\Mg\Banco\BancoController@destroy');
+        Route::post  ('banco/{codbanco}/inativo',       '\Mg\Banco\BancoController@inativar');
+        Route::delete('banco/{codbanco}/inativo',       '\Mg\Banco\BancoController@ativar');
+
+        // ContaContabil
+        Route::get   ('conta-contabil',                              '\Mg\ContaContabil\ContaContabilController@index');
+        Route::get   ('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@show');
+        Route::post  ('conta-contabil',                              '\Mg\ContaContabil\ContaContabilController@store');
+        Route::put   ('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@update');
+        Route::delete('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@destroy');
+        Route::post  ('conta-contabil/{codcontacontabil}/inativo',   '\Mg\ContaContabil\ContaContabilController@inativar');
+        Route::delete('conta-contabil/{codcontacontabil}/inativo',   '\Mg\ContaContabil\ContaContabilController@ativar');
+
         // Portador
         Route::get('portador', '\Mg\Portador\PortadorController@index');
         Route::get('portador/intervalo-saldos', '\Mg\Portador\PortadorController@getIntervaloSaldos');
