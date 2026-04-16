@@ -69,19 +69,6 @@ const routes = [
         },
       },
       {
-        path: 'grupo-cliente',
-        name: 'grupo-cliente',
-        component: () => import('pages/grupoCliente/Index.vue'),
-        meta: {
-          auth: true,
-          title: 'Grupos de Cliente',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/GrupoClienteFiltrosDrawer.vue'),
-          ),
-        },
-      },
-      {
         path: 'portador',
         name: 'portador',
         component: () => import('pages/portador/Index.vue'),

@@ -2,6 +2,7 @@
 
 namespace Mg\Pessoa;
 
+use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use RuntimeException;
 
@@ -19,9 +20,21 @@ class GrupoClienteService
             $q->palavras('grupocliente', $filtros['grupocliente']);
         }
 
+        switch ($filtros['status'] ?? 'ativos') {
+            case 'inativos':
+                $q->whereNotNull('inativo');
+                break;
+            case 'todos':
+                break;
+            case 'ativos':
+            default:
+                $q->whereNull('inativo');
+                break;
+        }
+
         $q->orderBy('grupocliente');
 
-        if (!empty($filtros['todos'])) {
+        if (!empty($filtros['todos_sem_paginacao'])) {
             return $q->get();
         }
 
@@ -42,13 +55,29 @@ class GrupoClienteService
         return $grupo;
     }
 
+    public static function inativar(GrupoCliente $grupo): GrupoCliente
+    {
+        $grupo->inativo = Carbon::now();
+        $grupo->save();
+        $grupo->refresh();
+        return $grupo;
+    }
+
+    public static function ativar(GrupoCliente $grupo): GrupoCliente
+    {
+        $grupo->inativo = null;
+        $grupo->save();
+        $grupo->refresh();
+        return $grupo;
+    }
+
     public static function excluir(GrupoCliente $grupo): void
     {
         try {
             $grupo->delete();
         } catch (QueryException $e) {
             if (($e->errorInfo[0] ?? null) === '23503') {
-                throw new RuntimeException('Grupo de Cliente em uso, não pode ser excluído.');
+                throw new RuntimeException('Grupo de Cliente em uso, não pode ser excluído. Inative ao invés de excluir.');
             }
             throw $e;
         }

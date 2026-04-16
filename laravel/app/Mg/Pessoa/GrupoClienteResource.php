@@ -11,6 +11,7 @@ class GrupoClienteResource extends Resource
         return [
             'codgrupocliente' => $this->codgrupocliente,
             'grupocliente' => $this->grupocliente,
+            'inativo' => $this->inativo,
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
             'codusuariocriacao' => $this->codusuariocriacao,

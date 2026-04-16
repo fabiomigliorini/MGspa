@@ -4,6 +4,8 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import SelectBanco from 'src/components/select/SelectBanco.vue'
+import SelectFilial from 'src/components/select/SelectFilial.vue'
 
 const $q = useQuasar()
 const store = usePortadorStore()
@@ -161,8 +163,6 @@ const carregarMais = async (index, done) => {
 
 onMounted(() => {
   store.fetchItems(true)
-  store.fetchBancos()
-  store.fetchFiliais()
 })
 </script>
 
@@ -230,20 +230,21 @@ onMounted(() => {
 
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn flat dense round color="primary" icon="edit" @click="abrirEditar(props.row)">
+              <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEditar(props.row)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
                 flat
                 dense
                 round
-                :color="props.row.inativo ? 'green-6' : 'orange-7'"
-                :icon="props.row.inativo ? 'toggle_off' : 'toggle_on'"
+                size="sm"
+                color="grey-7"
+                :icon="props.row.inativo ? 'play_arrow' : 'pause'"
                 @click="toggleInativo(props.row)"
               >
                 <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
-              <q-btn flat dense round color="negative" icon="delete" @click="excluir(props.row)">
+              <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(props.row)">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-td>
@@ -285,31 +286,11 @@ onMounted(() => {
               </div>
 
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="model.codbanco"
-                  :options="store.bancos"
-                  option-value="codbanco"
-                  option-label="banco"
-                  emit-value
-                  map-options
-                  outlined
-                  clearable
-                  label="Banco"
-                />
+                <SelectBanco v-model="model.codbanco" outlined clearable label="Banco" />
               </div>
 
               <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="model.codfilial"
-                  :options="store.filiais"
-                  option-value="value"
-                  option-label="label"
-                  emit-value
-                  map-options
-                  outlined
-                  clearable
-                  label="Filial"
-                />
+                <SelectFilial v-model="model.codfilial" outlined clearable label="Filial" />
               </div>
 
               <div class="col-4">

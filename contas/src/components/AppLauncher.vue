@@ -38,12 +38,6 @@ const cadastrosItems = [
     color: 'green-8',
     to: { name: 'forma-pagamento' },
   },
-  {
-    label: 'Grupos de Cliente',
-    icon: 'groups',
-    color: 'indigo-7',
-    to: { name: 'grupo-cliente' },
-  },
 ]
 </script>
 

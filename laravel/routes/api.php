@@ -416,12 +416,14 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::patch('pessoa/{codpessoa}/anexo/inativo/{nome}', '\Mg\Pessoa\PessoaAnexoController@ativar');
 
         //GrupoCliente
-        Route::get   ('grupocliente/',                    '\Mg\Pessoa\GrupoClienteController@index'); // legacy alias (app pessoas)
-        Route::get   ('grupo-cliente',                    '\Mg\Pessoa\GrupoClienteController@index');
-        Route::get   ('grupo-cliente/{codgrupocliente}',  '\Mg\Pessoa\GrupoClienteController@show');
-        Route::post  ('grupo-cliente',                    '\Mg\Pessoa\GrupoClienteController@store');
-        Route::put   ('grupo-cliente/{codgrupocliente}',  '\Mg\Pessoa\GrupoClienteController@update');
-        Route::delete('grupo-cliente/{codgrupocliente}',  '\Mg\Pessoa\GrupoClienteController@destroy');
+        Route::get   ('grupocliente/',                           '\Mg\Pessoa\GrupoClienteController@index'); // legacy alias (SelectGrupoCliente)
+        Route::get   ('grupo-cliente',                           '\Mg\Pessoa\GrupoClienteController@index');
+        Route::get   ('grupo-cliente/{codgrupocliente}',         '\Mg\Pessoa\GrupoClienteController@show');
+        Route::post  ('grupo-cliente',                           '\Mg\Pessoa\GrupoClienteController@store');
+        Route::put   ('grupo-cliente/{codgrupocliente}',         '\Mg\Pessoa\GrupoClienteController@update');
+        Route::post  ('grupo-cliente/{codgrupocliente}/inativo', '\Mg\Pessoa\GrupoClienteController@inativar');
+        Route::delete('grupo-cliente/{codgrupocliente}/inativo', '\Mg\Pessoa\GrupoClienteController@ativar');
+        Route::delete('grupo-cliente/{codgrupocliente}',         '\Mg\Pessoa\GrupoClienteController@destroy');
 
         // Etnia
         Route::get('etnia/', '\Mg\Pessoa\EtniaController@index');
@@ -805,6 +807,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('select/tributo', '\Mg\Select\SelectTributoController@index');
         Route::get('select/tipo-titulo', '\Mg\Select\SelectTipoTituloController@index');
         Route::get('select/conta-contabil', '\Mg\Select\SelectContaContabilController@index');
+        Route::get('select/banco', '\Mg\Select\SelectBancoController@index');
         Route::get('select/estoque-movimento-tipo', '\Mg\Select\SelectEstoqueMovimentoTipoController@index');
         Route::get('select/tributacao', '\Mg\Select\SelectTributacaoController@index');
 

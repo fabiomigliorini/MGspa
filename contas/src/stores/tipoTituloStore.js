@@ -24,7 +24,6 @@ export const useTipoTituloStore = defineStore(
     const page = ref(1)
     const hasMore = ref(true)
     const total = ref(0)
-    const tiposMovimento = ref([])
 
     const activeFiltersCount = computed(() => {
       const f = filters.value
@@ -60,12 +59,6 @@ export const useTipoTituloStore = defineStore(
       }
     }
 
-    async function fetchTiposMovimento() {
-      if (tiposMovimento.value.length) return
-      const { data } = await api.get('v1/tipo-movimento-titulo', { params: { todos: 1 } })
-      tiposMovimento.value = data.data || []
-    }
-
     function clearFilters() {
       filters.value = defaultFilters()
     }
@@ -91,10 +84,8 @@ export const useTipoTituloStore = defineStore(
       page,
       hasMore,
       total,
-      tiposMovimento,
       activeFiltersCount,
       fetchItems,
-      fetchTiposMovimento,
       clearFilters,
       setFilters,
       upsertLocal,

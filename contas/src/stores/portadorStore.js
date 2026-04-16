@@ -21,9 +21,6 @@ export const usePortadorStore = defineStore(
     const hasMore = ref(true)
     const total = ref(0)
 
-    const bancos = ref([])
-    const filiais = ref([])
-
     const activeFiltersCount = computed(() => {
       const f = filters.value
       let count = 0
@@ -59,18 +56,6 @@ export const usePortadorStore = defineStore(
       }
     }
 
-    async function fetchBancos() {
-      if (bancos.value.length) return
-      const { data } = await api.get('v1/banco', { params: { todos: 1 } })
-      bancos.value = data.data || []
-    }
-
-    async function fetchFiliais() {
-      if (filiais.value.length) return
-      const { data } = await api.get('v1/select/filial')
-      filiais.value = Array.isArray(data) ? data : data.data || []
-    }
-
     function clearFilters() {
       filters.value = defaultFilters()
     }
@@ -92,12 +77,8 @@ export const usePortadorStore = defineStore(
       page,
       hasMore,
       total,
-      bancos,
-      filiais,
       activeFiltersCount,
       fetchItems,
-      fetchBancos,
-      fetchFiliais,
       clearFilters,
       upsertLocal,
       removeLocal,

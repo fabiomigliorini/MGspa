@@ -1,44 +1,45 @@
 <script setup>
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useQuasar } from "quasar";
-import { certidaoEmissorStore } from "src/stores/certidao-emissor";
+import { grupoClienteStore } from "src/stores/grupo-cliente";
 
 const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
 
 const $q = useQuasar();
-const store = certidaoEmissorStore();
+const store = grupoClienteStore();
 
-const certidaoEmissores = ref([]);
+const grupos = ref([]);
 const loading = ref(false);
 const dialog = ref(false);
 const editando = ref(false);
-const model = ref({ certidaoemissor: "" });
+const model = ref({ grupocliente: "" });
 const filtro = ref({
-  certidaoemissor: null,
-  inativo: 1,
+  grupocliente: null,
+  status: "ativos",
 });
 
 const statusOptions = [
-  { label: "Ativos", value: 1 },
-  { label: "Inativos", value: 2 },
-  { label: "Todos", value: 9 },
+  { label: "Ativos", value: "ativos" },
+  { label: "Inativos", value: "inativos" },
+  { label: "Todos", value: "todos" },
 ];
+
 const pagination = ref({
   rowsPerPage: 50,
 });
 
 const columns = [
   {
-    name: "codcertidaoemissor",
+    name: "codgrupocliente",
     label: "Código",
-    field: "codcertidaoemissor",
+    field: "codgrupocliente",
     align: "left",
     sortable: true,
   },
   {
-    name: "certidaoemissor",
+    name: "grupocliente",
     label: "Descrição",
-    field: "certidaoemissor",
+    field: "grupocliente",
     align: "left",
     sortable: true,
   },
@@ -62,11 +63,11 @@ const buscar = async () => {
   try {
     store.filtro = filtro.value;
     await store.index();
-    certidaoEmissores.value = store.certidaoEmissores;
+    grupos.value = store.grupos;
   } catch (error) {
     $q.notify({
       type: "negative",
-      message: "Erro ao carregar certidão emissores",
+      message: "Erro ao carregar grupos de cliente",
     });
   } finally {
     loading.value = false;
@@ -75,7 +76,7 @@ const buscar = async () => {
 };
 
 const abrirNovo = () => {
-  model.value = { certidaoemissor: "" };
+  model.value = { grupocliente: "" };
   editando.value = false;
   dialog.value = true;
 };
@@ -87,10 +88,7 @@ const abrirEditar = (item) => {
 };
 
 const salvar = async () => {
-  if (
-    !model.value.certidaoemissor ||
-    model.value.certidaoemissor.trim() === ""
-  ) {
+  if (!model.value.grupocliente || model.value.grupocliente.trim() === "") {
     $q.notify({
       type: "warning",
       message: "Informe a descrição",
@@ -101,24 +99,24 @@ const salvar = async () => {
   loading.value = true;
   try {
     if (editando.value) {
-      await store.update(model.value.codcertidaoemissor, model.value);
+      await store.update(model.value.codgrupocliente, model.value);
       $q.notify({
         type: "positive",
-        message: "Certidão emissor atualizada com sucesso",
+        message: "Grupo de cliente atualizado com sucesso",
       });
     } else {
       await store.store(model.value);
       $q.notify({
         type: "positive",
-        message: "Certidão emissor criada com sucesso",
+        message: "Grupo de cliente criado com sucesso",
       });
     }
-    certidaoEmissores.value = store.certidaoEmissores;
+    grupos.value = store.grupos;
     dialog.value = false;
   } catch (error) {
     $q.notify({
       type: "negative",
-      message: "Erro ao salvar certidão emissor",
+      message: "Erro ao salvar grupo de cliente",
     });
   } finally {
     loading.value = false;
@@ -129,19 +127,19 @@ const toggleInativo = async (item) => {
   loading.value = true;
   try {
     if (item.inativo) {
-      await store.ativar(item.codcertidaoemissor);
+      await store.ativar(item.codgrupocliente);
       $q.notify({
         type: "positive",
-        message: "Certidão emissor ativada com sucesso",
+        message: "Grupo de cliente ativado com sucesso",
       });
     } else {
-      await store.inativar(item.codcertidaoemissor);
+      await store.inativar(item.codgrupocliente);
       $q.notify({
         type: "positive",
-        message: "Certidão emissor inativada com sucesso",
+        message: "Grupo de cliente inativado com sucesso",
       });
     }
-    certidaoEmissores.value = store.certidaoEmissores;
+    grupos.value = store.grupos;
   } catch (error) {
     $q.notify({
       type: "negative",
@@ -155,23 +153,23 @@ const toggleInativo = async (item) => {
 const excluir = (item) => {
   $q.dialog({
     title: "Confirmar exclusão",
-    message: `Deseja realmente excluir a certidão emissor "${item.certidaoemissor}"?`,
+    message: `Deseja realmente excluir o grupo "${item.grupocliente}"?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     loading.value = true;
     try {
-      await store.destroy(item.codcertidaoemissor);
-      certidaoEmissores.value = store.certidaoEmissores;
+      await store.destroy(item.codgrupocliente);
+      grupos.value = store.grupos;
       $q.notify({
         type: "positive",
-        message: "Certidão emissor excluída com sucesso",
+        message: "Grupo de cliente excluído com sucesso",
       });
     } catch (error) {
       $q.notify({
         type: "negative",
         message:
-          "Erro ao excluir certidão emissor. Verifique se não está em uso.",
+          "Erro ao excluir grupo de cliente. Verifique se não está em uso.",
       });
     } finally {
       loading.value = false;
@@ -186,17 +184,16 @@ onMounted(() => {
 
 <template>
   <MGLayout drawer>
-    <template #tituloPagina>Emissores de Certidões</template>
+    <template #tituloPagina> Grupos de Cliente </template>
 
     <template #content>
       <div class="q-pa-md">
         <q-table
-          :rows="certidaoEmissores"
+          :rows="grupos"
           :columns="columns"
-          row-key="codcertidaoemissor"
+          row-key="codgrupocliente"
           :loading="loading"
           :pagination="pagination"
-          hide-pagination
           flat
           bordered
         >
@@ -205,6 +202,7 @@ onMounted(() => {
               <q-chip
                 :color="props.row.inativo ? 'red' : 'green'"
                 text-color="white"
+                dense
               >
                 {{ props.row.inativo ? "Inativo" : "Ativo" }}
               </q-chip>
@@ -254,33 +252,33 @@ onMounted(() => {
           <template v-slot:no-data>
             <div class="full-width row flex-center q-gutter-sm">
               <q-icon size="2em" name="sentiment_dissatisfied" />
-              <span>Nenhuma certidão emissor encontrada</span>
+              <span>Nenhum grupo de cliente encontrado</span>
             </div>
           </template>
         </q-table>
       </div>
 
       <q-dialog v-model="dialog">
-        <q-card style="min-width: 400px" class="q-pa-md">
+        <q-card style="min-width: 350px">
           <q-card-section>
-            <div class="caption">
-              {{ editando ? "Editar" : "Nova" }} Certidão Emissor
+            <div class="text-h6">
+              {{ editando ? "Editar" : "Novo" }} Grupo de Cliente
             </div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
             <q-input
               outlined
-              v-model="model.certidaoemissor"
-              label="Certidão Emissor"
-              maxlength="30"
+              v-model="model.grupocliente"
+              label="Descrição"
+              maxlength="50"
               autofocus
               @keyup.enter="salvar"
             />
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="red" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey" v-close-popup />
             <q-btn
               flat
               label="Salvar"
@@ -310,7 +308,7 @@ onMounted(() => {
         <div class="q-pa-md q-gutter-md">
           <q-input
             outlined
-            v-model="filtro.certidaoemissor"
+            v-model="filtro.grupocliente"
             label="Buscar"
             @change="buscar"
             clearable
@@ -322,7 +320,7 @@ onMounted(() => {
 
           <q-select
             outlined
-            v-model="filtro.inativo"
+            v-model="filtro.status"
             :options="statusOptions"
             label="Status"
             emit-value

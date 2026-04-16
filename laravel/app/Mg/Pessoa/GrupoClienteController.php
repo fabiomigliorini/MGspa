@@ -16,7 +16,7 @@ class GrupoClienteController extends Controller
         Autorizador::autoriza(self::GRUPOS);
 
         $result = GrupoClienteService::listar($request->only([
-            'codgrupocliente', 'grupocliente', 'todos',
+            'codgrupocliente', 'grupocliente', 'status', 'todos_sem_paginacao',
         ]));
 
         return GrupoClienteResource::collection($result);
@@ -51,6 +51,38 @@ class GrupoClienteController extends Controller
         try {
             $grupo = GrupoCliente::findOrFail($codgrupocliente);
             $grupo = GrupoClienteService::atualizar($grupo, $request->validated());
+            DB::commit();
+            return new GrupoClienteResource($grupo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function inativar(int $codgrupocliente)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+
+        DB::beginTransaction();
+        try {
+            $grupo = GrupoCliente::findOrFail($codgrupocliente);
+            $grupo = GrupoClienteService::inativar($grupo);
+            DB::commit();
+            return new GrupoClienteResource($grupo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function ativar(int $codgrupocliente)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+
+        DB::beginTransaction();
+        try {
+            $grupo = GrupoCliente::findOrFail($codgrupocliente);
+            $grupo = GrupoClienteService::ativar($grupo);
             DB::commit();
             return new GrupoClienteResource($grupo);
         } catch (\Exception $e) {

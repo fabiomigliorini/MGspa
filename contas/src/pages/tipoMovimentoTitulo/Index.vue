@@ -211,20 +211,21 @@ onMounted(() => store.fetchItems(true))
 
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn flat dense round color="primary" icon="edit" @click="abrirEditar(props.row)">
+              <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEditar(props.row)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
                 flat
                 dense
                 round
-                :color="props.row.inativo ? 'green-6' : 'orange-7'"
-                :icon="props.row.inativo ? 'toggle_off' : 'toggle_on'"
+                size="sm"
+                color="grey-7"
+                :icon="props.row.inativo ? 'play_arrow' : 'pause'"
                 @click="toggleInativo(props.row)"
               >
                 <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
-              <q-btn flat dense round color="negative" icon="delete" @click="excluir(props.row)">
+              <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(props.row)">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-td>

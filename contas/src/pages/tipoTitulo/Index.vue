@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useTipoTituloStore } from 'src/stores/tipoTituloStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import SelectTipoMovimentoTitulo from 'src/components/select/SelectTipoMovimentoTitulo.vue'
 
 const $q = useQuasar()
 const store = useTipoTituloStore()
@@ -143,7 +144,6 @@ const carregarMais = async (index, done) => {
 
 onMounted(() => {
   store.fetchItems(true)
-  store.fetchTiposMovimento()
 })
 </script>
 
@@ -206,20 +206,21 @@ onMounted(() => {
 
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn flat dense round color="primary" icon="edit" @click="abrirEditar(props.row)">
+              <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEditar(props.row)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
                 flat
                 dense
                 round
-                :color="props.row.inativo ? 'green-6' : 'orange-7'"
-                :icon="props.row.inativo ? 'toggle_off' : 'toggle_on'"
+                size="sm"
+                color="grey-7"
+                :icon="props.row.inativo ? 'play_arrow' : 'pause'"
                 @click="toggleInativo(props.row)"
               >
                 <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
-              <q-btn flat dense round color="negative" icon="delete" @click="excluir(props.row)">
+              <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(props.row)">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-td>
@@ -261,13 +262,8 @@ onMounted(() => {
               </div>
 
               <div class="col-12">
-                <q-select
+                <SelectTipoMovimentoTitulo
                   v-model="model.codtipomovimentotitulo"
-                  :options="store.tiposMovimento"
-                  option-value="codtipomovimentotitulo"
-                  option-label="tipomovimentotitulo"
-                  emit-value
-                  map-options
                   outlined
                   clearable
                   label="Tipo de Movimento"

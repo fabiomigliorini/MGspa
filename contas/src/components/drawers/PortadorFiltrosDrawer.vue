@@ -1,19 +1,16 @@
 <script setup>
-import { watch, onMounted } from 'vue'
+import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import SelectBanco from 'src/components/select/SelectBanco.vue'
+import SelectFilial from 'src/components/select/SelectFilial.vue'
 
 const store = usePortadorStore()
 
 const debouncedFetch = useDebounceFn(() => store.fetchItems(true), 800)
 watch(() => store.filters, debouncedFetch, { deep: true })
-
-onMounted(() => {
-  store.fetchBancos()
-  store.fetchFiliais()
-})
 
 const clear = () => {
   store.clearFilters()
@@ -60,13 +57,8 @@ const statusOptions = [
     </FilterGroup>
 
     <FilterGroup title="Vínculos">
-      <q-select
+      <SelectBanco
         v-model="store.filters.codbanco"
-        :options="store.bancos"
-        option-value="codbanco"
-        option-label="banco"
-        emit-value
-        map-options
         outlined
         clearable
         :bottom-slots="false"
@@ -74,22 +66,17 @@ const statusOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="account_balance" /></template>
-      </q-select>
+      </SelectBanco>
 
-      <q-select
+      <SelectFilial
         v-model="store.filters.codfilial"
-        :options="store.filiais"
-        option-value="value"
-        option-label="label"
-        emit-value
-        map-options
         outlined
         clearable
         :bottom-slots="false"
         label="Filial"
       >
         <template #prepend><q-icon name="store" /></template>
-      </q-select>
+      </SelectFilial>
     </FilterGroup>
 
     <FilterGroup title="Boleto e Status">

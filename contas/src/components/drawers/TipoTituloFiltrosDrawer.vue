@@ -1,16 +1,15 @@
 <script setup>
-import { watch, onMounted } from 'vue'
+import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useTipoTituloStore } from 'src/stores/tipoTituloStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import SelectTipoMovimentoTitulo from 'src/components/select/SelectTipoMovimentoTitulo.vue'
 
 const store = useTipoTituloStore()
 
 const debouncedFetch = useDebounceFn(() => store.fetchItems(true), 800)
 watch(() => store.filters, debouncedFetch, { deep: true })
-
-onMounted(() => store.fetchTiposMovimento())
 
 const clear = () => {
   store.clearFilters()
@@ -56,20 +55,15 @@ const statusOptions = [
         <template #prepend><q-icon name="description" /></template>
       </q-input>
 
-      <q-select
+      <SelectTipoMovimentoTitulo
         v-model="store.filters.codtipomovimentotitulo"
-        :options="store.tiposMovimento"
-        option-value="codtipomovimentotitulo"
-        option-label="tipomovimentotitulo"
-        emit-value
-        map-options
         outlined
         clearable
         :bottom-slots="false"
         label="Tipo Movimento"
       >
         <template #prepend><q-icon name="sync_alt" /></template>
-      </q-select>
+      </SelectTipoMovimentoTitulo>
     </FilterGroup>
 
     <FilterGroup title="Movimentação">

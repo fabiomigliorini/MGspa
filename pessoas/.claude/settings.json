@@ -3,7 +3,11 @@
     "additionalDirectories": [
       "/opt/www/MGspa/contas/src/pages/grupoCliente",
       "/opt/www/MGspa/contas/src/components/drawers",
-      "/opt/www/MGspa/contas/src/router"
+      "/opt/www/MGspa/contas/src/router",
+      "/opt/www/MGspa/contas/src/pages/portador",
+      "/opt/www/MGspa/contas/src/pages/tipoTitulo",
+      "/opt/www/MGspa/contas/src/pages/tipoMovimentoTitulo",
+      "/opt/www/MGspa/contas/src/pages/formaPagamento"
     ]
   }
 }
