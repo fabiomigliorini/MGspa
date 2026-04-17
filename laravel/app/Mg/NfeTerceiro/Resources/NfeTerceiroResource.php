@@ -117,6 +117,28 @@ class NfeTerceiroResource extends JsonResource
         if (!$this->relationLoaded('Pessoa')) {
             return null;
         }
-        return $this->Pessoa?->only(['codpessoa', 'pessoa', 'fantasia', 'cnpj', 'ie']);
+
+        $ret = $this->Pessoa?->only([
+            'codpessoa',
+            'pessoa',
+            'fantasia',
+            'cnpj',
+            'fisica',
+            'ie',
+            'endereco',
+            'numero',
+            'bairro',
+            'complemento',
+            'cep',
+            'telefone1',
+            'email',
+        ]);
+
+        if ($ret) {
+            $ret['cidade'] = $this->Pessoa?->Cidade?->cidade;
+            $ret['uf'] = $this->Pessoa?->Cidade?->Estado?->sigla;
+        }
+
+        return $ret;
     }
 }

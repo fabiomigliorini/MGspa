@@ -22,7 +22,7 @@ class NfeTerceiroController
 
     const RELATIONS_SHOW = [
         'Filial',
-        'Pessoa',
+        'Pessoa.Cidade.Estado',
         'NaturezaOperacao',
         'UsuarioAlteracao',
         'UsuarioRevisao',

@@ -133,6 +133,16 @@ const routes = [
           permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },
+      {
+        path: ':codnfeterceiro/item/:codnfeterceiroitem',
+        name: 'nfe-terceiro-item-view',
+        component: () => import('pages/NfeTerceiroItemViewPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Item NFe de Terceiros',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
     ],
   },
 
