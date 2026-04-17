@@ -162,6 +162,11 @@ const routes = [
         name: "estadocivil",
         component: () => import("pages/estado-civil/Index.vue"),
       },
+      {
+        path: "/grupo-cliente",
+        name: "grupocliente",
+        component: () => import("pages/grupo-cliente/Index.vue"),
+      },
 
       // Certidão Emissor
       {

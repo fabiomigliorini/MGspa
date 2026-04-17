@@ -38,6 +38,10 @@ class BancoService
 
         $q->orderBy('banco');
 
+        if (!empty($filtros['todos'])) {
+            return $q->get();
+        }
+
         return $q->paginate(25);
     }
 

@@ -43,6 +43,58 @@ const routes = [
         },
       },
       {
+        path: 'tipo-movimento-titulo',
+        name: 'tipo-movimento-titulo',
+        component: () => import('pages/tipoMovimentoTitulo/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Tipos de Movimentos de Títulos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/TipoMovimentoTituloFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'tipo-titulo',
+        name: 'tipo-titulo',
+        component: () => import('pages/tipoTitulo/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Tipos de Títulos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/TipoTituloFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'portador',
+        name: 'portador',
+        component: () => import('pages/portador/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Portadores',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/PortadorFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'forma-pagamento',
+        name: 'forma-pagamento',
+        component: () => import('pages/formaPagamento/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Formas de Pagamento',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/FormaPagamentoFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'extrato/:id/:mesAno',
         name: 'extrato',
         component: () => import('pages/MovimentacoesPage.vue'),

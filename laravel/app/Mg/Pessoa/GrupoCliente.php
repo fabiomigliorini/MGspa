@@ -22,7 +22,8 @@ class GrupoCliente extends MgModel
 
     protected $dates = [
         'alteracao',
-        'criacao'
+        'criacao',
+        'inativo'
     ];
 
     protected $casts = [

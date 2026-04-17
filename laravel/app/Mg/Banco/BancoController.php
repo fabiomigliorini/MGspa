@@ -15,11 +15,11 @@ class BancoController extends Controller
     {
         Autorizador::autoriza(self::GRUPOS);
 
-        $paginator = BancoService::listar($request->only([
-            'codbanco', 'banco', 'sigla', 'numerobanco', 'inativo',
+        $result = BancoService::listar($request->only([
+            'codbanco', 'banco', 'sigla', 'numerobanco', 'inativo', 'todos',
         ]));
 
-        return BancoResource::collection($paginator);
+        return BancoResource::collection($result);
     }
 
     public function show(int $codbanco)

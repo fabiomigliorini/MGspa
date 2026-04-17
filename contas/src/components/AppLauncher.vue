@@ -14,6 +14,30 @@ const cadastrosItems = [
     color: 'indigo-8',
     to: { name: 'conta-contabil' },
   },
+  {
+    label: 'Tipos de Título',
+    icon: 'receipt_long',
+    color: 'teal-8',
+    to: { name: 'tipo-titulo' },
+  },
+  {
+    label: 'Tipos de Movimento',
+    icon: 'sync_alt',
+    color: 'deep-purple-8',
+    to: { name: 'tipo-movimento-titulo' },
+  },
+  {
+    label: 'Portadores',
+    icon: 'credit_card',
+    color: 'cyan-8',
+    to: { name: 'portador' },
+  },
+  {
+    label: 'Formas de Pagamento',
+    icon: 'payments',
+    color: 'green-8',
+    to: { name: 'forma-pagamento' },
+  },
 ]
 </script>
 

@@ -6,6 +6,7 @@ use App\Mg\Portador\ExtratoBbService;
 use App\Mg\Portador\SomatorioSaldoResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 use Mg\MgController;
 
@@ -14,6 +15,13 @@ class PortadorController extends MgController
 
     public function index(Request $request)
     {
+        if ($request->boolean('paginar')) {
+            $paginator = PortadorService::listar($request->only([
+                'codportador', 'portador', 'codbanco', 'codfilial', 'emiteboleto', 'inativo',
+            ]));
+            return PortadorResource::collection($paginator);
+        }
+
         $portadores = Portador::ativo()->orderBy('portador')->get();
         return PortadorResource::collection($portadores);
     }
@@ -22,6 +30,78 @@ class PortadorController extends MgController
     {
         $portador = Portador::findOrFail($codportador);
         return new PortadorResource($portador);
+    }
+
+    public function store(PortadorStoreRequest $request)
+    {
+        DB::beginTransaction();
+        try {
+            $portador = PortadorService::criar($request->validated());
+            DB::commit();
+            return new PortadorResource($portador);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function update(PortadorUpdateRequest $request, $codportador)
+    {
+        DB::beginTransaction();
+        try {
+            $portador = Portador::findOrFail($codportador);
+            $portador = PortadorService::atualizar($portador, $request->validated());
+            DB::commit();
+            return new PortadorResource($portador);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function inativar($codportador)
+    {
+        DB::beginTransaction();
+        try {
+            $portador = Portador::findOrFail($codportador);
+            $portador = PortadorService::inativar($portador);
+            DB::commit();
+            return new PortadorResource($portador);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function ativar($codportador)
+    {
+        DB::beginTransaction();
+        try {
+            $portador = Portador::findOrFail($codportador);
+            $portador = PortadorService::ativar($portador);
+            DB::commit();
+            return new PortadorResource($portador);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function destroy($codportador)
+    {
+        DB::beginTransaction();
+        try {
+            $portador = Portador::findOrFail($codportador);
+            PortadorService::excluir($portador);
+            DB::commit();
+            return response()->json(['ok' => true]);
+        } catch (\RuntimeException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 409);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
     public function info(Request $request, $codportador)

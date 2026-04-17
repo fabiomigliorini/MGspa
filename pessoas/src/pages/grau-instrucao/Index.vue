@@ -215,8 +215,9 @@ onMounted(() => {
                 flat
                 round
                 dense
+                size="sm"
                 icon="edit"
-                color="primary"
+                color="grey-7"
                 @click="abrirEditar(props.row)"
               >
                 <q-tooltip>Editar</q-tooltip>
@@ -225,8 +226,9 @@ onMounted(() => {
                 flat
                 round
                 dense
-                :icon="props.row.inativo ? 'check_circle' : 'block'"
-                :color="props.row.inativo ? 'green' : 'orange'"
+                size="sm"
+                :icon="props.row.inativo ? 'play_arrow' : 'pause'"
+                color="grey-7"
                 @click="toggleInativo(props.row)"
               >
                 <q-tooltip>{{
@@ -237,8 +239,9 @@ onMounted(() => {
                 flat
                 round
                 dense
+                size="sm"
                 icon="delete"
-                color="negative"
+                color="grey-7"
                 @click="excluir(props.row)"
               >
                 <q-tooltip>Excluir</q-tooltip>

@@ -3,48 +3,110 @@
 namespace Mg\Pessoa;
 
 use Illuminate\Http\Request;
-use Mg\MgController;
-use Carbon\Carbon;
-use Illuminate\Validation\Rule;
+use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
+use Mg\Usuario\Autorizador;
 
-class GrupoClienteController extends MgController
+class GrupoClienteController extends Controller
 {
+    private const GRUPOS = ['Administrador', 'Financeiro'];
 
     public function index(Request $request)
     {
-        $grupos = GrupoCliente::orderBy('alteracao')->paginate();
-        return response()->json($grupos, 200);
+        Autorizador::autoriza(self::GRUPOS);
+
+        $result = GrupoClienteService::listar($request->only([
+            'codgrupocliente', 'grupocliente', 'status', 'todos_sem_paginacao',
+        ]));
+
+        return GrupoClienteResource::collection($result);
     }
 
-    public function create (Request $request)
+    public function show(int $codgrupocliente)
     {
-        $data = $request->all();
-        $pessoa = GrupoClienteService::create($data);
-        return new PessoaResource($pessoa);
+        Autorizador::autoriza(self::GRUPOS);
+        return new GrupoClienteResource(GrupoCliente::findOrFail($codgrupocliente));
     }
 
-    public function show (Request $request, $codpessoa, $codpessoatelefone)
+    public function store(GrupoClienteStoreRequest $request)
     {
-        $pessoa = GrupoCliente::findOrFail($codpessoatelefone);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        Autorizador::autoriza(self::GRUPOS);
+
+        DB::beginTransaction();
+        try {
+            $grupo = GrupoClienteService::criar($request->validated());
+            DB::commit();
+            return new GrupoClienteResource($grupo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
-    public function update (Request $request, $codpessoa, $codpessoatelefone)
+    public function update(int $codgrupocliente, GrupoClienteUpdateRequest $request)
     {
-        $data = $request->all();
-        $pessoa = GrupoCliente::findOrFail($codpessoatelefone);
-        $pessoa = GrupoClienteService::update($pessoa, $data);
-        dd($pessoa);
-        return new PessoaResource($pessoa);
+        Autorizador::autoriza(self::GRUPOS);
+
+        DB::beginTransaction();
+        try {
+            $grupo = GrupoCliente::findOrFail($codgrupocliente);
+            $grupo = GrupoClienteService::atualizar($grupo, $request->validated());
+            DB::commit();
+            return new GrupoClienteResource($grupo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
-    public function delete (Request $request, $codpessoa, $codpessoatelefone)
+    public function inativar(int $codgrupocliente)
     {
+        Autorizador::autoriza(self::GRUPOS);
 
-        $pessoa = GrupoCliente::findOrFail($codpessoatelefone);
-        $pessoa = GrupoClienteService::delete($pessoa);
-        return new PessoaResource($pessoa);
+        DB::beginTransaction();
+        try {
+            $grupo = GrupoCliente::findOrFail($codgrupocliente);
+            $grupo = GrupoClienteService::inativar($grupo);
+            DB::commit();
+            return new GrupoClienteResource($grupo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
-   
+
+    public function ativar(int $codgrupocliente)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+
+        DB::beginTransaction();
+        try {
+            $grupo = GrupoCliente::findOrFail($codgrupocliente);
+            $grupo = GrupoClienteService::ativar($grupo);
+            DB::commit();
+            return new GrupoClienteResource($grupo);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function destroy(int $codgrupocliente)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+
+        DB::beginTransaction();
+        try {
+            $grupo = GrupoCliente::findOrFail($codgrupocliente);
+            GrupoClienteService::excluir($grupo);
+            DB::commit();
+            return response()->json(['ok' => true]);
+        } catch (\RuntimeException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 409);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
 }

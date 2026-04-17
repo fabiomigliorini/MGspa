@@ -150,6 +150,15 @@ const user = guardaToken();
             <q-icon name="favorite" size="35px" />
             <div class="menu-label">Estado Civil</div>
           </q-btn>
+          <q-btn
+            flat
+            stack
+            class="col-4 menu-btn"
+            :to="{ name: 'grupocliente' }"
+          >
+            <q-icon name="groups" size="35px" />
+            <div class="menu-label">Grupo Cliente</div>
+          </q-btn>
         </div>
       </div>
     </q-menu>

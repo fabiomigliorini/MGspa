@@ -216,6 +216,7 @@ onMounted(() => {
               <q-btn
                 flat
                 round
+                dense
                 size="sm"
                 icon="edit"
                 color="grey-7"
@@ -226,9 +227,10 @@ onMounted(() => {
               <q-btn
                 flat
                 round
+                dense
                 size="sm"
-                :icon="props.row.inativo ? 'check_circle' : 'block'"
-                :color="props.row.inativo ? 'green' : 'grey-7'"
+                :icon="props.row.inativo ? 'play_arrow' : 'pause'"
+                color="grey-7"
                 @click="toggleInativo(props.row)"
               >
                 <q-tooltip>{{
@@ -238,6 +240,7 @@ onMounted(() => {
               <q-btn
                 flat
                 round
+                dense
                 size="sm"
                 icon="delete"
                 color="grey-7"

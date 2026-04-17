@@ -20,6 +20,12 @@ class PortadorResource extends Resource
         unset($ret['bbclientsecret']);
         $ret['extratoconciliar'] = $this->ExtratoBancarioS()->where('conciliado', false)->count();
         $ret['movimentoconciliar'] = $this->PortadorMovimentoS()->where('conciliado', false)->count();
+        $ret['banco'] = $this->whenLoaded('Banco', function () {
+            return optional($this->Banco)->banco;
+        });
+        $ret['filial'] = $this->whenLoaded('Filial', function () {
+            return optional($this->Filial)->filial;
+        });
         return $ret;
     }
 }

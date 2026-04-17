@@ -26,6 +26,7 @@ class FormaPagamento extends MgModel
         'fechamento',
         'formapagamento',
         'formapagamentoecf',
+        'inativo',
         'integracao',
         'lio',
         'notafiscal',
@@ -38,7 +39,8 @@ class FormaPagamento extends MgModel
 
     protected $dates = [
         'alteracao',
-        'criacao'
+        'criacao',
+        'inativo'
     ];
 
     protected $casts = [
