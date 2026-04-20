@@ -117,6 +117,13 @@ class PixBbService
             throw new \Exception($ret['erros'][0]['mensagem'], 1);
         }
         if (!empty($ret['detail'])) {
+            if (stripos($ret['detail'], 'Nenhum resultado encontrado') !== false) {
+                return [
+                    'pix' => [],
+                    'parametros' => [],
+                    'processados' => collect([]),
+                ];
+            }
             throw new \Exception('API do BB retornou: ' . $ret['detail'], 1);
         }
 

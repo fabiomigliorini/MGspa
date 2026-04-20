@@ -9,6 +9,7 @@ use Carbon\Carbon;
 
 use Mg\Negocio\Negocio;
 use Mg\Portador\Portador;
+use Mg\Usuario\Autorizador;
 
 class PixController
 {
@@ -49,6 +50,7 @@ class PixController
 
     public function portadores(Request $request)
     {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
         $qry = Portador::ativo()->whereNotNull('pixdict')->orderBy('codfilial');
         if ($request->codfilial) {
             $qry->where('codfilial', $request->codfilial);
@@ -58,6 +60,7 @@ class PixController
 
     public function consultarPix(Request $request, $codportador)
     {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
         if ($inicio = $request->inicio) {
             $inicio = Carbon::parse($inicio);
         } else {
@@ -84,6 +87,7 @@ class PixController
 
     public function consultarPixTodos(Request $request)
     {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
         if ($inicio = $request->inicio) {
             $inicio = Carbon::parse($inicio);
         } else {
@@ -180,6 +184,7 @@ class PixController
 
     public function index(Request $request)
     {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
 
         $horarioinicial = null;
         if (!empty($request->horarioinicial)) {
@@ -219,6 +224,7 @@ class PixController
 
     public function descobreNome(Request $request)
     {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
         $busca = PixService::descobreNome($request->cnpjCpf);
         return response()->json($busca, 200);
     }

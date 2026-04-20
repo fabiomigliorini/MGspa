@@ -101,7 +101,7 @@ const routes = [
         meta: {
           auth: true,
           title: 'Pix',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.CAIXA],
           leftDrawer: defineAsyncComponent(() =>
             import('components/drawers/PixFiltrosDrawer.vue'),
           ),
