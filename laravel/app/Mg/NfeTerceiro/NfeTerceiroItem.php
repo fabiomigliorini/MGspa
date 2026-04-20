@@ -46,6 +46,7 @@ class NfeTerceiroItem extends MgModel
         'modbcst',
         'ncm',
         'nitem',
+        'observacoes',
         'orig',
         'picms',
         'picmsst',

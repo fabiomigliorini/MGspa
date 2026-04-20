@@ -9,6 +9,8 @@ const route = useRoute()
 const $q = useQuasar()
 const nfeTerceiroStore = useNfeTerceiroStore()
 
+const produtosUrl = process.env.PRODUTOS_URL || ''
+
 const codnfeterceiro = computed(() => Number(route.params.codnfeterceiro))
 const codnfeterceiroitem = computed(() => Number(route.params.codnfeterceiroitem))
 
@@ -118,19 +120,7 @@ onMounted(async () => {
       <div class="text-h6 text-grey-7">Item não encontrado</div>
     </div>
 
-    <template v-else>
-      <!-- Banner Conferido -->
-      <q-banner
-        v-if="item.conferencia"
-        class="bg-green-1 text-green-10 q-mb-md"
-        rounded
-      >
-        <template v-slot:avatar>
-          <q-icon name="check_circle" color="green" size="md" />
-        </template>
-        Item conferido
-      </q-banner>
-
+    <div v-else>
       <!-- Cabeçalho -->
       <div class="row items-center q-mb-md" style="flex-wrap: nowrap">
         <q-btn
@@ -148,7 +138,7 @@ onMounted(async () => {
           <div class="text-body2" v-if="item.produtoBarra">
             <a
               v-if="item.produtoBarra.produto?.codproduto"
-              :href="`${process.env.PRODUTOS_URL || ''}/produto/${item.produtoBarra.produto.codproduto}`"
+              :href="`${produtosUrl}/produto/${item.produtoBarra.produto.codproduto}`"
               target="_blank"
               class="text-primary text-weight-bold"
               style="text-decoration: none"
@@ -185,7 +175,7 @@ onMounted(async () => {
 
       <!-- Dialog: Informar Detalhes -->
       <q-dialog v-model="showDetalhes" persistent>
-        <q-card style="min-width: 500px">
+        <q-card style="min-width: 700px; max-width: 900px">
           <q-card-section class="bg-primary text-white">
             <div class="text-body2">
               <q-icon name="edit_note" size="1.5em" class="q-mr-sm" />
@@ -193,97 +183,107 @@ onMounted(async () => {
             </div>
           </q-card-section>
 
-          <q-card-section>
-            <div class="row q-col-gutter-md">
-              <!-- Produto -->
-              <div class="col-12">
-                <div class="text-caption text-grey-7">Produto</div>
-                <div class="text-body2 text-weight-bold">
-                  {{ item.produtoBarra?.barras || item.cean || '-' }} -
-                  {{ item.produtoBarra?.produto?.produto || item.xprod }}
-                  <span v-if="item.produtoBarra?.variacao?.variacao" class="text-grey-7">
-                    | {{ item.produtoBarra.variacao.variacao }}
-                  </span>
-                </div>
-              </div>
+          <q-card-section class="q-pb-none">
+            <!-- Produto -->
+            <div class="text-caption text-grey-7">Produto</div>
+            <div class="text-body2 text-weight-bold q-mb-md">
+              {{ item.produtoBarra?.barras || item.cean || '-' }} -
+              {{ item.produtoBarra?.produto?.produto || item.xprod }}
+              <span v-if="item.produtoBarra?.variacao?.variacao" class="text-grey-7">
+                | {{ item.produtoBarra.variacao.variacao }}
+              </span>
+            </div>
+          </q-card-section>
 
-              <!-- Coluna 1: dados readonly -->
-              <div class="col-12 col-sm-4">
+          <!-- Dados readonly em grid 3 colunas -->
+          <q-card-section class="q-py-none">
+            <div class="row q-col-gutter-sm">
+              <div class="col-6 col-sm-4">
                 <div class="text-caption text-grey-7">EAN</div>
                 <div class="text-body2">{{ item.cean || '-' }}</div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">Referência</div>
+                <div class="text-body2">{{ item.cprod }}</div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">Total</div>
+                <div class="text-body2">R$ {{ formatCurrency(item.vprod) }}</div>
+              </div>
 
-                <div class="text-caption text-grey-7 q-mt-sm">EAN Trib</div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">EAN Trib</div>
                 <div class="text-body2">{{ item.ceantrib || '-' }}</div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">NCM</div>
+                <div class="text-body2">{{ item.ncm }}</div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">IPI Valor</div>
+                <div class="text-body2">R$ {{ formatCurrency(item.ipivipi) }}</div>
+              </div>
 
-                <div class="text-caption text-grey-7 q-mt-sm">Quantidade Com</div>
-                <div class="text-body2">{{ formatDecimal(item.qcom, 2) }}</div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">Quantidade / UM</div>
+                <div class="text-body2">{{ formatDecimal(item.qcom, 2) }} {{ item.ucom }}</div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">CEST</div>
+                <div class="text-body2">{{ item.cest || '-' }}</div>
+              </div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">ICMS ST Valor</div>
+                <div class="text-body2">R$ {{ formatCurrency(item.vicmsst) }}</div>
+              </div>
 
-                <div class="text-caption text-grey-7 q-mt-sm">UM Com</div>
-                <div class="text-body2">{{ item.ucom }}</div>
-
-                <div class="text-caption text-grey-7 q-mt-sm">Preço</div>
+              <div class="col-6 col-sm-4">
+                <div class="text-caption text-grey-7">Preço</div>
                 <div class="text-body2">{{ formatDecimal(item.vuncom, 2) }}</div>
+              </div>
+            </div>
+          </q-card-section>
 
-                <!-- Margem (editável) -->
+          <q-separator class="q-my-md" />
+
+          <!-- Editáveis + Total Custo em linha alinhada -->
+          <q-card-section class="q-py-none">
+            <div class="row q-col-gutter-md items-start">
+              <div class="col-4">
                 <q-input
                   v-model.number="formDetalhes.margem"
                   label="Margem %"
                   type="number"
                   step="0.01"
                   outlined dense
-                  class="q-mt-sm"
                 />
               </div>
-
-              <!-- Coluna 2: dados readonly + observações -->
-              <div class="col-12 col-sm-4">
-                <div class="text-caption text-grey-7">Referência</div>
-                <div class="text-body2">{{ item.cprod }}</div>
-
-                <div class="text-caption text-grey-7 q-mt-sm">NCM</div>
-                <div class="text-body2">{{ item.ncm }}</div>
-
-                <div class="text-caption text-grey-7 q-mt-sm">CEST</div>
-                <div class="text-body2">{{ item.cest || '-' }}</div>
-
-                <q-input
-                  v-model="formDetalhes.observacoes"
-                  label="Observações"
-                  type="textarea"
-                  rows="4"
-                  outlined dense
-                  maxlength="500"
-                  class="q-mt-sm"
-                />
-              </div>
-
-              <!-- Coluna 3: valores readonly + outros custos editável -->
-              <div class="col-12 col-sm-4">
-                <div class="text-caption text-grey-7">Total</div>
-                <div class="text-body2">R$ {{ formatCurrency(item.vprod) }}</div>
-
-                <div class="text-caption text-grey-7 q-mt-sm">IPI Valor</div>
-                <div class="text-body2">R$ {{ formatCurrency(item.ipivipi) }}</div>
-
-                <div class="text-caption text-grey-7 q-mt-sm">ICMS ST Valor</div>
-                <div class="text-body2">R$ {{ formatCurrency(item.vicmsst) }}</div>
-
-                <!-- Outros Custos (editável) -->
+              <div class="col-4">
                 <q-input
                   v-model.number="formDetalhes.complemento"
                   label="Outros Custos"
                   type="number"
                   step="0.01"
                   outlined dense
-                  class="q-mt-sm"
                 />
-
-                <div class="text-caption text-grey-7 q-mt-sm">Total Custo</div>
+              </div>
+              <div class="col-4">
+                <div class="text-caption text-grey-7">Total Custo</div>
                 <div class="text-subtitle1 text-weight-bold">
                   R$ {{ formatCurrency((item.vprod || 0) + (item.ipivipi || 0) + (item.vicmsst || 0) + (formDetalhes.complemento || 0)) }}
                 </div>
               </div>
             </div>
+          </q-card-section>
+
+          <!-- Observações: linha única, full-width -->
+          <q-card-section class="q-pt-md">
+            <q-input
+              v-model="formDetalhes.observacoes"
+              label="Observações"
+              outlined dense
+              maxlength="500"
+            />
           </q-card-section>
 
           <q-separator />
@@ -490,6 +490,6 @@ onMounted(async () => {
           </q-card>
         </div>
       </div>
-    </template>
+    </div>
   </q-page>
 </template>
