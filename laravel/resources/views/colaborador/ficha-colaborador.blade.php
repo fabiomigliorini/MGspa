@@ -110,8 +110,8 @@
             <tr>
                 <td class="label">TITULO ELEITOR</td>
                 <td>Nº {{ $pessoa->tituloeleitor ? formataNumero($pessoa->tituloeleitor, 0) : '' }}</td>
-                <td>ZONA: {{ $pessoa->titulozona ? formataNumero($pessoa->titulozona, 0) : '' }}</td>
-                <td>SEÇÃO: {{ $pessoa->titulosecao ? formataNumero($pessoa->titulosecao, 0) : '' }}</td>
+                <td>ZONA: {{ $pessoa->titulozona ? str_pad((int) $pessoa->titulozona, 3, '0', STR_PAD_LEFT) : '' }}</td>
+                <td>SEÇÃO: {{ $pessoa->titulosecao ? str_pad((int) $pessoa->titulosecao, 4, '0', STR_PAD_LEFT) : '' }}</td>
             </tr>
             <tr>
                 <td class="label">PIS/PASEP</td>

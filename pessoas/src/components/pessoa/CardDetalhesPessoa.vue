@@ -141,8 +141,12 @@ const editarDetalhes = async () => {
     codcidadenascimento: sPessoa.item.codcidadenascimento,
     pispasep: sPessoa.item.pispasep,
     tituloeleitor: sPessoa.item.tituloeleitor,
-    titulozona: sPessoa.item.titulozona,
-    titulosecao: sPessoa.item.titulosecao,
+    titulozona: sPessoa.item.titulozona
+      ? String(sPessoa.item.titulozona).padStart(3, "0")
+      : sPessoa.item.titulozona,
+    titulosecao: sPessoa.item.titulosecao
+      ? String(sPessoa.item.titulosecao).padStart(4, "0")
+      : sPessoa.item.titulosecao,
     ctps: sPessoa.item.ctps,
     seriectps: sPessoa.item.seriectps,
     emissaoctps: sPessoa.item.emissaoctps
@@ -771,7 +775,8 @@ const salvarDetalhes = async () => {
         </div>
         <div class="text-body2">
           {{ formataTitulo(sPessoa.item.tituloeleitor) }} /
-          {{ sPessoa.item.titulozona }} / {{ sPessoa.item.titulosecao }}
+          {{ String(sPessoa.item.titulozona ?? "").padStart(3, "0") }} /
+          {{ String(sPessoa.item.titulosecao ?? "").padStart(4, "0") }}
         </div>
       </div>
 
