@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
@@ -17,6 +17,8 @@ const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const nfeTerceiroStore = useNfeTerceiroStore()
+
+const pessoasUrl = process.env.PESSOAS_URL
 
 const tab = ref('geral')
 const loadingAction = ref(false)
@@ -280,7 +282,7 @@ const handleOpenDanfe = () => {
 const handleOpenGuiaStPdf = (codtitulonfeterceiro) => {
   window.open(
     nfeTerceiroService.guiaStPdfUrl(nfe.value.codnfeterceiro, codtitulonfeterceiro),
-    '_blank',
+    '_blank'
   )
 }
 
@@ -335,7 +337,11 @@ const handleDividirItem = (item) => {
     ok: { label: 'Dividir', color: 'primary' },
   }).onOk(async (parcelas) => {
     try {
-      await nfeTerceiroStore.dividirItem(nfe.value.codnfeterceiro, item.codnfeterceiroitem, parcelas)
+      await nfeTerceiroStore.dividirItem(
+        nfe.value.codnfeterceiro,
+        item.codnfeterceiroitem,
+        parcelas
+      )
       $q.notify({ type: 'positive', message: `Item dividido em ${parcelas} partes` })
     } catch (error) {
       $q.notify({ type: 'negative', message: 'Erro ao dividir item', caption: error.message })
@@ -355,27 +361,13 @@ const handleMarcarTipoProduto = async () => {
     ok: { label: 'Confirmar', color: 'primary' },
   }).onOk(async () => {
     try {
-      await nfeTerceiroStore.marcarTipoProduto(nfe.value.codnfeterceiro, tipoProdutoSelecionado.value)
+      await nfeTerceiroStore.marcarTipoProduto(
+        nfe.value.codnfeterceiro,
+        tipoProdutoSelecionado.value
+      )
       $q.notify({ type: 'positive', message: 'Itens marcados' })
     } catch (error) {
       $q.notify({ type: 'negative', message: 'Erro ao marcar itens', caption: error.message })
-    }
-  })
-}
-
-const handleInformarComplemento = () => {
-  $q.dialog({
-    title: 'Outros Custos',
-    message: 'Informe o valor para ratear entre os itens (vazio para limpar):',
-    prompt: { model: '', type: 'number' },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Salvar', color: 'primary' },
-  }).onOk(async (valor) => {
-    try {
-      await nfeTerceiroStore.informarComplemento(nfe.value.codnfeterceiro, valor || null)
-      $q.notify({ type: 'positive', message: valor ? 'Complemento distribuido' : 'Complemento limpo' })
-    } catch (error) {
-      $q.notify({ type: 'negative', message: 'Erro ao informar complemento', caption: error.message })
     }
   })
 }
@@ -392,14 +384,10 @@ onMounted(async () => {
     router.push({ name: 'nfe-terceiro' })
   }
 })
-
-onUnmounted(() => {
-  nfeTerceiroStore.clearCurrentNfeTerceiro()
-})
 </script>
 
 <template>
-  <q-page>
+  <q-page class="q-pa-md">
     <!-- Loading -->
     <div v-if="loading && !nfe" class="row justify-center q-py-xl">
       <q-spinner color="primary" size="3em" />
@@ -407,209 +395,300 @@ onUnmounted(() => {
 
     <template v-else-if="nfe">
       <!-- Cabecalho -->
-      <q-card flat bordered class="q-mb-md">
-        <q-card-section>
-          <div class="row items-center justify-between q-mb-sm">
-            <div class="text-h6">
-              {{ formatChave(nfe.nfechave) }}
-            </div>
-            <div>
-              <q-btn flat round icon="arrow_back" @click="router.push({ name: 'nfe-terceiro' })">
-                <q-tooltip>Voltar</q-tooltip>
-              </q-btn>
-            </div>
-          </div>
+      <div class="row items-center q-mb-md" style="flex-wrap: nowrap">
+        <q-btn
+          flat
+          dense
+          round
+          icon="arrow_back"
+          :to="{ name: 'nfe-terceiro' }"
+          class="q-mr-sm"
+          style="flex-shrink: 0"
+        >
+          <q-tooltip>Voltar</q-tooltip>
+        </q-btn>
 
-          <!-- Botoes de status -->
-          <div class="row q-gutter-sm q-mb-md">
-            <!-- Manifestacao -->
-            <q-btn-dropdown
-              :color="manifestacaoLabel(nfe.indmanifestacao).color"
-              :label="manifestacaoLabel(nfe.indmanifestacao).label"
-              :icon="manifestacaoLabel(nfe.indmanifestacao).icon"
-              :loading="loadingAction"
+        <div class="text-h5 ellipsis" style="flex: 1; min-width: 0">
+          NFe {{ nfe.numero }} - Série {{ nfe.serie }}
+        </div>
+
+        <!-- Manifestacao -->
+        <q-btn-dropdown
+          flat
+          :color="manifestacaoLabel(nfe.indmanifestacao).color"
+          :icon="manifestacaoLabel(nfe.indmanifestacao).icon"
+          :loading="loadingAction"
+          class="q-mr-sm"
+        >
+          <q-tooltip>Manifestação: {{ manifestacaoLabel(nfe.indmanifestacao).label }}</q-tooltip>
+          <q-list>
+            <q-item
+              v-for="opt in manifestacaoOptions"
+              :key="opt.value"
+              clickable
+              v-close-popup
+              @click="handleManifestacao(opt.value)"
             >
-              <q-list>
-                <q-item
-                  v-for="opt in manifestacaoOptions"
-                  :key="opt.value"
-                  clickable
-                  v-close-popup
-                  @click="handleManifestacao(opt.value)"
-                >
-                  <q-item-section>{{ opt.label }}</q-item-section>
-                </q-item>
-              </q-list>
-            </q-btn-dropdown>
+              <q-item-section>{{ opt.label }}</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
 
-            <!-- Revisao -->
-            <q-btn
-              :color="nfe.revisao ? 'green' : 'orange'"
-              :label="nfe.revisao ? 'Revisada' : 'Nao Revisada'"
-              @click="handleRevisao"
-            />
+        <!-- Revisao -->
+        <q-btn
+          flat
+          icon="rate_review"
+          :color="nfe.revisao ? 'green' : 'grey-7'"
+          class="q-mr-sm"
+          @click="handleRevisao"
+        >
+          <q-tooltip>{{ nfe.revisao ? 'Revisada' : 'Marcar como revisada' }}</q-tooltip>
+        </q-btn>
 
-            <!-- Conferencia -->
-            <q-btn
-              :color="nfe.conferencia ? 'green' : 'orange'"
-              :label="nfe.conferencia ? 'Conferida' : 'Nao Conferida'"
-              @click="handleConferencia"
-            />
-          </div>
+        <!-- Conferencia -->
+        <q-btn
+          flat
+          icon="task_alt"
+          :color="nfe.conferencia ? 'green' : 'grey-7'"
+          @click="handleConferencia"
+        >
+          <q-tooltip>{{ nfe.conferencia ? 'Conferida' : 'Marcar como conferida' }}</q-tooltip>
+        </q-btn>
+      </div>
 
-          <!-- Acoes -->
-          <div class="row q-gutter-sm">
-            <q-btn flat color="primary" icon="cloud_download" label="Download NFe" @click="handleDownload" />
-            <q-btn flat color="primary" icon="code" label="XML" @click="handleOpenXml" />
-            <q-btn flat color="primary" icon="picture_as_pdf" label="DANFE" @click="handleOpenDanfe" />
-            <q-btn
-              v-if="!nfe.codnotafiscal"
-              flat
-              color="positive"
-              icon="check_circle"
-              label="Importar"
-              :loading="loadingAction"
-              @click="handleImportar"
-            />
-            <q-badge v-else color="green" class="q-ml-sm self-center">
-              Importada (NF #{{ nfe.codnotafiscal }})
-            </q-badge>
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <!-- Dados principais -->
+      <!-- Linha 1: Dados da nota / Valores / NFe -->
       <div class="row q-col-gutter-md q-mb-md">
-        <!-- Coluna 1: Dados da nota -->
+        <!-- Card: Dados da Nota -->
         <div class="col-12 col-md-4">
           <q-card flat bordered class="full-height">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-body2">
+                <q-icon name="receipt_long" size="1.5em" class="q-mr-sm" />
+                Dados da Nota
+              </div>
+            </q-card-section>
             <q-card-section>
-              <div class="text-subtitle2 q-mb-sm">Dados da Nota</div>
-              <q-list dense>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Serie / Numero</q-item-label>
-                    <q-item-label>{{ nfe.serie }} / {{ nfe.numero }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Natureza</q-item-label>
-                    <q-item-label>{{ nfe.natureza }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item v-if="nfe.naturezaOperacao">
-                  <q-item-section>
-                    <q-item-label caption>Nossa Natureza</q-item-label>
-                    <q-item-label>{{ nfe.naturezaOperacao.naturezaoperacao }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Emissao</q-item-label>
-                    <q-item-label>{{ formatDateTime(nfe.emissao) }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Entrada</q-item-label>
-                    <q-item-label>{{ nfe.entrada ? formatDateTime(nfe.entrada) : '-' }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
+              <div class="text-caption text-grey-7">Série / Número</div>
+              <div class="text-subtitle1 text-weight-bold">{{ nfe.serie }} / {{ nfe.numero }}</div>
+
+              <div class="text-caption text-grey-7 q-mt-sm">Natureza</div>
+              <div class="text-body2">{{ nfe.natureza }}</div>
+
+              <template v-if="nfe.naturezaOperacao">
+                <div class="text-caption text-grey-7 q-mt-sm">Nossa Natureza</div>
+                <div class="text-body2">{{ nfe.naturezaOperacao.naturezaoperacao }}</div>
+              </template>
+
+              <div class="text-caption text-grey-7 q-mt-sm">Emissão</div>
+              <div class="text-body2">{{ formatDateTime(nfe.emissao) }}</div>
+
+              <div class="text-caption text-grey-7 q-mt-sm">Entrada</div>
+              <div class="text-body2">{{ nfe.entrada ? formatDateTime(nfe.entrada) : '-' }}</div>
             </q-card-section>
           </q-card>
         </div>
 
-        <!-- Coluna 2: Emitente / Filial -->
+        <!-- Card: Valores -->
         <div class="col-12 col-md-4">
           <q-card flat bordered class="full-height">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-body2">
+                <q-icon name="attach_money" size="1.5em" class="q-mr-sm" />
+                Totais
+              </div>
+            </q-card-section>
             <q-card-section>
-              <div class="text-subtitle2 q-mb-sm">Emitente</div>
-              <q-list dense>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Emitente</q-item-label>
-                    <q-item-label>{{ nfe.emitente }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>CNPJ</q-item-label>
-                    <q-item-label>{{ nfe.cnpj ? formatCnpjCpf(nfe.cnpj, false) : '-' }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>IE</q-item-label>
-                    <q-item-label>{{ nfe.ie || '-' }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Filial</q-item-label>
-                    <q-item-label>{{ nfe.filial?.filial || '-' }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Pessoa</q-item-label>
-                    <q-item-label>{{ nfe.pessoa?.fantasia || nfe.pessoa?.pessoa || '-' }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
+              <div class="text-caption text-grey-7">Valor Total</div>
+              <div class="text-subtitle1 text-weight-bold text-primary">
+                R$ {{ formatCurrency(nfe.valortotal) }}
+              </div>
+
+              <div class="row q-col-gutter-sm q-mt-sm">
+                <div class="col-6">
+                  <div class="text-caption text-grey-7">Produtos</div>
+                  <div class="text-body2">R$ {{ formatCurrency(nfe.valorprodutos) }}</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-caption text-grey-7">Frete</div>
+                  <div class="text-body2">R$ {{ formatCurrency(nfe.valorfrete) }}</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-caption text-grey-7">Desconto</div>
+                  <div class="text-body2">R$ {{ formatCurrency(nfe.valordesconto) }}</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-caption text-grey-7">Outras / Seguro</div>
+                  <div class="text-body2">
+                    R$ {{ formatCurrency(nfe.valoroutras + nfe.valorseguro) }}
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="text-caption text-grey-7">ICMS</div>
+                  <div class="text-body2">R$ {{ formatCurrency(nfe.icmsvalor) }}</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-caption text-grey-7">ICMS ST</div>
+                  <div class="text-body2">R$ {{ formatCurrency(nfe.icmsstvalor) }}</div>
+                </div>
+                <div class="col-6">
+                  <div class="text-caption text-grey-7">IPI</div>
+                  <div class="text-body2">R$ {{ formatCurrency(nfe.ipivalor) }}</div>
+                </div>
+              </div>
             </q-card-section>
           </q-card>
         </div>
 
-        <!-- Coluna 3: Valores -->
+        <!-- Card: NFe -->
         <div class="col-12 col-md-4">
-          <q-card flat bordered class="full-height">
+          <q-card flat bordered class="full-height flex column">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-body2">
+                <q-icon name="description" size="1.5em" class="q-mr-sm" />
+                NFe
+              </div>
+            </q-card-section>
+
+            <q-card-section class="col-grow">
+              <div class="text-caption text-grey-7">Chave</div>
+              <div class="text-caption" style="font-family: monospace">
+                {{ formatChave(nfe.nfechave) }}
+              </div>
+
+              <div class="text-caption text-grey-7 q-mt-sm">Status</div>
+              <div>
+                <q-badge v-if="nfe.codnotafiscal" color="green" class="text-subtitle2">
+                  <q-icon name="check_circle" size="sm" class="q-mr-xs" />
+                  Importada (NF #{{ nfe.codnotafiscal }})
+                </q-badge>
+                <q-badge v-else color="orange" class="text-subtitle2">Pendente Importação</q-badge>
+              </div>
+            </q-card-section>
+
+            <q-separator />
+
+            <q-card-actions align="right">
+              <q-btn dense round flat color="grey-7" icon="cloud_download" @click="handleDownload">
+                <q-tooltip>Download NFe</q-tooltip>
+              </q-btn>
+              <q-btn dense round flat color="grey-7" icon="code" @click="handleOpenXml">
+                <q-tooltip>XML</q-tooltip>
+              </q-btn>
+              <q-btn dense round flat color="grey-7" icon="picture_as_pdf" @click="handleOpenDanfe">
+                <q-tooltip>DANFE</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="!nfe.codnotafiscal"
+                dense
+                round
+                flat
+                color="positive"
+                icon="check_circle"
+                :loading="loadingAction"
+                @click="handleImportar"
+              >
+                <q-tooltip>Importar</q-tooltip>
+              </q-btn>
+            </q-card-actions>
+          </q-card>
+        </div>
+      </div>
+
+      <!-- Linha 2: Emitente -->
+      <div class="row q-mb-md">
+        <div class="col-12">
+          <q-card flat bordered>
+            <q-card-section class="bg-primary text-white">
+              <div class="text-body2">
+                <q-icon
+                  :name="nfe.pessoa?.fisica === true ? 'person' : 'business'"
+                  size="1.5em"
+                  class="q-mr-sm"
+                />
+                Emitente
+              </div>
+            </q-card-section>
+
             <q-card-section>
-              <div class="text-subtitle2 q-mb-sm">Valores</div>
-              <q-list dense>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Produtos</q-item-label>
-                    <q-item-label>R$ {{ formatCurrency(nfe.valorprodutos) }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Frete / Seguro / Desconto / Outras</q-item-label>
-                    <q-item-label>
-                      {{ formatCurrency(nfe.valorfrete) }} /
-                      {{ formatCurrency(nfe.valorseguro) }} /
-                      {{ formatCurrency(nfe.valordesconto) }} /
-                      {{ formatCurrency(nfe.valoroutras) }}
-                    </q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>ICMS (Base / Valor)</q-item-label>
-                    <q-item-label>{{ formatCurrency(nfe.icmsbase) }} / {{ formatCurrency(nfe.icmsvalor) }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>ICMS ST (Base / Valor)</q-item-label>
-                    <q-item-label>{{ formatCurrency(nfe.icmsstbase) }} / {{ formatCurrency(nfe.icmsstvalor) }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>IPI</q-item-label>
-                    <q-item-label>R$ {{ formatCurrency(nfe.ipivalor) }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-                <q-item>
-                  <q-item-section>
-                    <q-item-label caption>Valor Total</q-item-label>
-                    <q-item-label class="text-weight-bold text-h6">R$ {{ formatCurrency(nfe.valortotal) }}</q-item-label>
-                  </q-item-section>
-                </q-item>
-              </q-list>
+              <div class="row q-col-gutter-sm">
+                <!-- NOME -->
+                <div class="col-12 col-sm-8 col-md-5">
+                  <div class="text-caption text-grey-7">Nome | Razão Social</div>
+                  <div class="text-body1 text-weight-bold text-primary ellipsis">
+                    <a
+                      v-if="nfe.pessoa?.codpessoa"
+                      :href="`${pessoasUrl}/pessoa/${nfe.pessoa.codpessoa}`"
+                      target="_blank"
+                      class="text-primary text-weight-bold"
+                      style="text-decoration: none"
+                    >
+                      {{ nfe.pessoa?.fantasia || '-' }}
+                      <span class="text-grey-7">
+                        | {{ nfe.pessoa?.pessoa || nfe.emitente || '-' }}
+                      </span>
+                    </a>
+                    <template v-else>
+                      {{ nfe.emitente || '-' }}
+                    </template>
+                  </div>
+                </div>
+
+                <!-- CNPJ / CPF -->
+                <div class="col-12 col-sm-4 col-md-2">
+                  <div class="text-caption text-grey-7">
+                    {{ nfe.pessoa?.fisica ? 'CPF' : 'CNPJ' }}
+                  </div>
+                  <div class="text-body1 text-weight-bold text-primary ellipsis">
+                    {{ formatCnpjCpf(nfe.pessoa?.cnpj || nfe.cnpj, nfe.pessoa?.fisica) }}
+                  </div>
+                </div>
+
+                <!-- IE -->
+                <div class="col-6 col-sm-8 col-md-2" v-if="nfe.pessoa?.ie || nfe.ie">
+                  <div class="text-caption text-grey-7">Inscrição Estadual</div>
+                  <div class="text-body2 ellipsis">{{ nfe.pessoa?.ie || nfe.ie }}</div>
+                </div>
+
+                <!-- EMAIL -->
+                <div class="col-12 col-sm-4 col-md-3" v-if="nfe.pessoa?.email">
+                  <div class="text-caption text-grey-7">E-MAIL</div>
+                  <div class="text-body2 ellipsis">{{ nfe.pessoa.email }}</div>
+                </div>
+
+                <!-- ENDEREÇO -->
+                <div class="col-12 col-sm-8 col-md-3" v-if="nfe.pessoa?.endereco">
+                  <div class="text-caption text-grey-7">Endereço Fiscal</div>
+                  <div class="text-body2 ellipsis">
+                    {{ nfe.pessoa.endereco }}, {{ nfe.pessoa.numero }}, {{ nfe.pessoa.cep }}
+                  </div>
+                </div>
+
+                <!-- BAIRRO -->
+                <div class="col-12 col-sm-4 col-md-2" v-if="nfe.pessoa?.bairro">
+                  <div class="text-caption text-grey-7">Bairro</div>
+                  <div class="text-body2 ellipsis">{{ nfe.pessoa.bairro }}</div>
+                </div>
+
+                <!-- CIDADE -->
+                <div class="col-12 col-sm-5 col-md-2" v-if="nfe.pessoa?.cidade">
+                  <div class="text-caption text-grey-7">Cidade</div>
+                  <div class="text-body2 ellipsis">
+                    {{ nfe.pessoa.cidade }} / {{ nfe.pessoa.uf }}
+                  </div>
+                </div>
+
+                <!-- TELEFONE -->
+                <div class="col-6 col-sm-4 col-md-2" v-if="nfe.pessoa?.telefone1">
+                  <div class="text-caption text-grey-7">Telefone</div>
+                  <div class="text-body2 ellipsis">{{ nfe.pessoa.telefone1 }}</div>
+                </div>
+
+                <!-- FILIAL DESTINO -->
+                <div class="col-6 col-sm-4 col-md-2" v-if="nfe.filial?.filial">
+                  <div class="text-caption text-grey-7">Filial Destino</div>
+                  <div class="text-body2 ellipsis">{{ nfe.filial.filial }}</div>
+                </div>
+              </div>
             </q-card-section>
           </q-card>
         </div>
@@ -630,57 +709,65 @@ onUnmounted(() => {
         <q-tab-panels v-model="tab" animated>
           <!-- Itens -->
           <q-tab-panel name="geral">
-            <!-- Toolbar: Busca + Marcar tipo + Complemento -->
-            <div class="row q-gutter-sm q-mb-md items-center">
-              <form @submit.prevent="handleBuscarItem" class="row q-gutter-sm items-center">
+            <!-- Toolbar: Busca + Marcar tipo -->
+            <div class="row q-gutter-sm q-mb-md items-center justify-end">
+              <form @submit.prevent="handleBuscarItem">
                 <q-input
                   v-model="barrasInput"
-                  placeholder="Barras / Referencia"
+                  label="Barras / Referencia"
                   outlined
-                  dense
                   :bottom-slots="false"
-                  class="col"
+                  style="width: 200px"
                 >
                   <template v-slot:prepend>
                     <q-icon name="qr_code_scanner" />
                   </template>
                 </q-input>
-                <q-btn type="submit" flat dense icon="search" color="primary">
-                  <q-tooltip>Buscar</q-tooltip>
-                </q-btn>
               </form>
-              <q-separator vertical class="gt-xs" />
               <q-select
                 v-model="tipoProdutoSelecionado"
                 :options="tipoProdutoOptions"
                 label="Tipo Produto"
+                stack-label
                 outlined
-                dense
                 clearable
                 emit-value
                 map-options
                 :bottom-slots="false"
-                class="col-auto"
+                style="width: 160px"
               />
-              <q-btn flat dense icon="select_all" color="primary" @click="handleMarcarTipoProduto">
+              <q-btn flat dense icon="check" color="primary" @click="handleMarcarTipoProduto">
                 <q-tooltip>Marcar todos itens</q-tooltip>
-              </q-btn>
-              <q-separator vertical class="gt-xs" />
-              <q-btn flat dense icon="attach_money" color="primary" @click="handleInformarComplemento">
-                <q-tooltip>Outros Custos</q-tooltip>
               </q-btn>
             </div>
 
             <q-list separator v-if="itens.length > 0">
-              <q-item v-for="item in itens" :key="item.codnfeterceiroitem">
+              <q-item
+                v-for="item in itens"
+                :key="item.codnfeterceiroitem"
+                clickable
+                :class="item.conferencia ? 'bg-green-1' : ''"
+                :to="{
+                  name: 'nfe-terceiro-item-view',
+                  params: {
+                    codnfeterceiro: nfe.codnfeterceiro,
+                    codnfeterceiroitem: item.codnfeterceiroitem,
+                  },
+                }"
+              >
                 <q-item-section top>
                   <q-item-label lines="1">
                     <span class="text-weight-medium">{{ item.xprod }}</span>
-                    <q-badge v-if="item.conferencia" color="green" class="q-ml-sm">Conferido</q-badge>
-                    <q-badge v-if="!item.codprodutobarra" color="red" class="q-ml-sm">Sem Produto</q-badge>
+                    <q-badge v-if="item.conferencia" color="green" class="q-ml-sm">
+                      Conferido
+                    </q-badge>
+                    <q-badge v-if="!item.codprodutobarra" color="red" class="q-ml-sm">
+                      Sem Produto
+                    </q-badge>
                   </q-item-label>
                   <q-item-label caption>
-                    EAN: {{ item.cean || '-' }} | Cod: {{ item.cprod }} | NCM: {{ item.ncm }} | CFOP: {{ item.cfop }}
+                    EAN: {{ item.cean || '-' }} | Cod: {{ item.cprod }} | NCM: {{ item.ncm }} |
+                    CFOP: {{ item.cfop }}
                   </q-item-label>
                   <q-item-label caption v-if="item.produtoBarra">
                     <q-badge color="blue" class="q-mr-xs">
@@ -693,9 +780,7 @@ onUnmounted(() => {
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side top>
-                  <q-item-label>
-                    {{ formatDecimal(item.qcom, 4) }} {{ item.ucom }}
-                  </q-item-label>
+                  <q-item-label>{{ formatDecimal(item.qcom, 4) }} {{ item.ucom }}</q-item-label>
                   <q-item-label class="text-weight-bold">
                     R$ {{ formatCurrency(item.vprod) }}
                   </q-item-label>
@@ -703,14 +788,27 @@ onUnmounted(() => {
                 <q-item-section side top>
                   <q-btn-group flat>
                     <q-btn
-                      flat dense round size="sm"
+                      flat
+                      dense
+                      round
+                      size="sm"
                       :icon="item.conferencia ? 'check_circle' : 'radio_button_unchecked'"
                       :color="item.conferencia ? 'green' : 'grey'"
-                      @click="handleConferenciaItem(item)"
+                      @click.stop.prevent="handleConferenciaItem(item)"
                     >
-                      <q-tooltip>{{ item.conferencia ? 'Desmarcar conferencia' : 'Marcar conferido' }}</q-tooltip>
+                      <q-tooltip>
+                        {{ item.conferencia ? 'Desmarcar conferencia' : 'Marcar conferido' }}
+                      </q-tooltip>
                     </q-btn>
-                    <q-btn flat dense round size="sm" icon="call_split" color="primary" @click="handleDividirItem(item)">
+                    <q-btn
+                      flat
+                      dense
+                      round
+                      size="sm"
+                      icon="call_split"
+                      color="primary"
+                      @click.stop.prevent="handleDividirItem(item)"
+                    >
                       <q-tooltip>Dividir item</q-tooltip>
                     </q-btn>
                   </q-btn-group>
@@ -787,13 +885,20 @@ onUnmounted(() => {
                     <td :class="item.cestnota !== item.cestproduto ? 'text-red' : ''">
                       {{ item.cestproduto || item.cestnota }}
                     </td>
-                    <td class="text-right">{{ item.mva ? ((item.mva - 1) * 100).toFixed(2) : '-' }}</td>
+                    <td class="text-right">
+                      {{ item.mva ? ((item.mva - 1) * 100).toFixed(2) : '-' }}
+                    </td>
                     <td class="text-right">{{ formatCurrency(item.valor) }}</td>
-                    <td class="text-right">{{ item.reducao !== 1 ? (item.reducao * 100).toFixed(2) + '%' : '-' }}</td>
+                    <td class="text-right">
+                      {{ item.reducao !== 1 ? (item.reducao * 100).toFixed(2) + '%' : '-' }}
+                    </td>
                     <td class="text-right">{{ formatCurrency(item.vicms) }}</td>
                     <td class="text-right">{{ formatCurrency(item.vicmsst) }}</td>
                     <td class="text-right">{{ formatCurrency(item.vicmsstcalculado) }}</td>
-                    <td class="text-right" :class="item.diferenca > 0.01 ? 'text-red text-weight-bold' : ''">
+                    <td
+                      class="text-right"
+                      :class="item.diferenca > 0.01 ? 'text-red text-weight-bold' : ''"
+                    >
                       {{ formatCurrency(item.diferenca) }}
                     </td>
                   </tr>
@@ -802,8 +907,13 @@ onUnmounted(() => {
                   <tr class="text-weight-bold">
                     <td colspan="8" class="text-right">Totais:</td>
                     <td class="text-right">{{ formatCurrency(icmsStData.totais.vicmsst) }}</td>
-                    <td class="text-right">{{ formatCurrency(icmsStData.totais.vicmsstcalculado) }}</td>
-                    <td class="text-right" :class="icmsStData.totais.diferenca > 0.01 ? 'text-red' : ''">
+                    <td class="text-right">
+                      {{ formatCurrency(icmsStData.totais.vicmsstcalculado) }}
+                    </td>
+                    <td
+                      class="text-right"
+                      :class="icmsStData.totais.diferenca > 0.01 ? 'text-red' : ''"
+                    >
                       {{ formatCurrency(icmsStData.totais.diferenca) }}
                     </td>
                   </tr>
@@ -817,13 +927,21 @@ onUnmounted(() => {
                   <q-item v-for="guia in icmsStData.guias" :key="guia.codtitulo">
                     <q-item-section>
                       <q-item-label>{{ guia.numero }}</q-item-label>
-                      <q-item-label caption>Vencimento: {{ formatDate(guia.vencimento) }}</q-item-label>
+                      <q-item-label caption>
+                        Vencimento: {{ formatDate(guia.vencimento) }}
+                      </q-item-label>
                     </q-item-section>
                     <q-item-section side>
-                      <q-item-label class="text-weight-bold">R$ {{ formatCurrency(guia.credito) }}</q-item-label>
+                      <q-item-label class="text-weight-bold">
+                        R$ {{ formatCurrency(guia.credito) }}
+                      </q-item-label>
                     </q-item-section>
                     <q-item-section side>
-                      <q-btn flat dense icon="picture_as_pdf" color="red"
+                      <q-btn
+                        flat
+                        dense
+                        icon="picture_as_pdf"
+                        color="red"
                         @click="handleOpenGuiaStPdf(guia.codtitulonfeterceiro)"
                       >
                         <q-tooltip>Ver PDF</q-tooltip>
@@ -868,7 +986,9 @@ onUnmounted(() => {
                   <q-item>
                     <q-item-section>
                       <q-item-label caption>Autorizacao</q-item-label>
-                      <q-item-label>{{ nfe.nfedataautorizacao ? formatDateTime(nfe.nfedataautorizacao) : '-' }}</q-item-label>
+                      <q-item-label>
+                        {{ nfe.nfedataautorizacao ? formatDateTime(nfe.nfedataautorizacao) : '-' }}
+                      </q-item-label>
                     </q-item-section>
                   </q-item>
                   <q-item>
