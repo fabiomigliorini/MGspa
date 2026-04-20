@@ -76,7 +76,7 @@ class PdvNegocioService
         if ($negocio->valorseguro != floatval($tot->valorseguro)) {
             return false;
         }
-        if ($negocio->valortotal != floatval($tot->valortotal)) {
+        if (($negocio->valortotal - $negocio->valorjuros) != floatval($tot->valortotal)) {
             return false;
         }
         return true;
