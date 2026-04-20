@@ -14,7 +14,7 @@
               :class="sUsuario.detalheUsuarios.inativo ? 'text-strike text-red-14' : null">{{
                 sUsuario.detalheUsuarios.usuario }}</span>
 
-            <q-btn flat round icon="edit" @click="editar()" v-if="user.verificaPermissaoUsuario('Administrador')" />
+            <q-btn flat round icon="edit" :to="'/usuarios/' + route.params.codusuario + '/editar'" v-if="user.verificaPermissaoUsuario('Administrador')" />
 
             <q-btn flat round icon="delete" @click="excluir(sUsuario.detalheUsuarios.codusuario)" />
 
@@ -165,10 +165,6 @@ export default defineComponent({
         return fantasia.charAt(1)
       }
       return fantasia.charAt(0)
-    },
-
-    editar() {
-      this.$router.push('/usuarios/' + this.route.params.codusuario + '/editar')
     },
 
     excluir(codusuario) {

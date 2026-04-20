@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, computed, watch, shallowRef } from 'vue'
 import { useQuasar } from 'quasar'
-import { useRouter } from 'vue-router'
 import { useAuth } from 'src/composables/useAuth'
 import { useDashboardStore } from 'src/stores/dashboard'
 import { formatDateTime } from 'src/utils/formatters'
@@ -14,7 +13,6 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 use([CanvasRenderer, LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent])
 
 const $q = useQuasar()
-const router = useRouter()
 const { validateToken } = useAuth()
 const store = useDashboardStore()
 
@@ -130,12 +128,6 @@ const kpiCards = computed(() => [
     status: 'INU',
   },
 ])
-
-const navigateToStatus = (status) => {
-  if (status) {
-    router.push({ path: '/nota', query: { status } })
-  }
-}
 
 const volumeChartOption = shallowRef({})
 watch(
@@ -355,10 +347,14 @@ onMounted(async () => {
     <!-- LINHA 1: Cards KPI -->
     <div flat :class="isMobile ? 'row q-col-gutter-xs q-mb-sm' : 'row q-col-gutter-md q-mb-md'" style="flex-wrap: wrap">
       <div v-for="kpi in kpiCards" :key="kpi.label" :class="isMobile ? 'col-4' : 'col-2'">
+        <component
+          :is="kpi.status ? 'router-link' : 'div'"
+          :to="kpi.status ? { path: '/nota', query: { status: kpi.status } } : undefined"
+          style="text-decoration: none; color: inherit; display: block"
+        >
         <q-card
           flat bordered
           :class="kpi.status ? 'cursor-pointer' : ''"
-          @click="kpi.status ? navigateToStatus(kpi.status) : null"
         >
           <q-card-section
             :horizontal="!isMobile"
@@ -394,6 +390,7 @@ onMounted(async () => {
           </q-card-section>
           <q-tooltip v-if="kpi.status">Clique para ver notas</q-tooltip>
         </q-card>
+        </component>
       </div>
     </div>
 

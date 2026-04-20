@@ -8,7 +8,11 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'home',
+        redirect: { name: 'pix' },
+      },
+      {
+        path: 'portador/saldos',
+        name: 'portador-saldos',
         component: () => import('pages/SaldosPage.vue'),
         meta: {
           auth: true,
@@ -111,13 +115,16 @@ const routes = [
         },
       },
       {
-        path: 'extrato/:id/:mesAno',
+        path: 'portador/:codportador/extrato/:ano(\\d{4})/:mes(\\d{2})',
         name: 'extrato',
-        component: () => import('pages/MovimentacoesPage.vue'),
+        component: () => import('pages/ExtratoPage.vue'),
         meta: {
           auth: true,
           title: 'Extrato',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/ExtratoFiltrosDrawer.vue'),
+          ),
         },
       },
       {

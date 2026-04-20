@@ -11,7 +11,7 @@
           <slot name="title">Padrão</slot>
         </q-toolbar-title>
 
-        <q-btn flat round class="within-iframe-hide" v-if="backPath" @click="$router.replace(backPath)" style="margin-right: 15px">
+        <q-btn flat round class="within-iframe-hide" v-if="backPath" :to="backPath" replace style="margin-right: 15px">
           <q-icon name="arrow_back" />
         </q-btn>
 
@@ -43,8 +43,10 @@
           <img :src="perfil.avatar">
         </q-item-section>
 
-        <q-item-section @click.native="$router.push('/usuario/perfil')" class="cursor-pointer text-subtitle1">
-          {{ perfil.usuario }}
+        <q-item-section class="text-subtitle1">
+          <router-link to="/usuario/perfil" class="text-inherit" style="text-decoration: none; color: inherit">
+            {{ perfil.usuario }}
+          </router-link>
           <q-tooltip anchor="center left" self="center middle">
             Ver meu perfil
           </q-tooltip>
@@ -64,7 +66,7 @@
       <div class="row">
         <div class="text-center col-4" v-for="aplicativo in aplicativos">
 
-          <q-item @click.native="$router.push(aplicativo.path)" style="cursor:pointer">
+          <q-item :to="aplicativo.path" clickable>
 
             <q-item-section>
               <q-item-label>

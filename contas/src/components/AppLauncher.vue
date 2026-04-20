@@ -13,6 +13,12 @@ const movimentoItems = [
     color: 'teal-7',
     to: { name: 'pix' },
   },
+  {
+    label: 'Saldos',
+    icon: 'account_balance_wallet',
+    color: 'amber-8',
+    to: { name: 'portador-saldos' },
+  },
 ]
 
 const cadastrosItems = [

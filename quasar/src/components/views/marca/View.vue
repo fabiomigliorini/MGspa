@@ -18,7 +18,7 @@
                   <q-btn round flat icon="more_vert" class="float-right" ref="popover">
                     <q-menu cover auto-close>
                       <q-list>
-                        <q-item clickable @click="$router.push('/marca/' + item.codmarca + '/foto/')">
+                        <q-item clickable :to="'/marca/' + item.codmarca + '/foto/'">
                           <q-item-section v-if="!item.codimagem">Adicionar Imagem</q-item-section>
                           <q-item-section v-if="item.codimagem">Aterar Imagem</q-item-section>
                         </q-item>

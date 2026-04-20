@@ -1,7 +1,7 @@
 <template>
   <mg-layout>
 
-    <q-btn flat round slot="menu" @click="$router.push('/marca')">
+    <q-btn flat round slot="menu" to="/marca">
       <q-icon name="arrow_back" />
     </q-btn>
 

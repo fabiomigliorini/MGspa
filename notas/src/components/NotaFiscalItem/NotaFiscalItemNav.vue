@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 
 const props = defineProps({
   codnotafiscal: {
@@ -14,7 +14,6 @@ const props = defineProps({
 })
 
 const route = useRoute()
-const router = useRouter()
 
 const currentSection = computed(() => {
   const path = route.path
@@ -52,21 +51,19 @@ const tabs = [
   },
 ]
 
-const navigateTo = (tab) => {
-  router.push({
-    name: tab.route,
-    params: {
-      codnotafiscal: props.codnotafiscal,
-      codnotafiscalitem: props.codnotafiscalitem,
-    },
-  })
-}
+const tabTo = (tab) => ({
+  name: tab.route,
+  params: {
+    codnotafiscal: props.codnotafiscal,
+    codnotafiscalitem: props.codnotafiscalitem,
+  },
+})
 </script>
 
 <template>
   <q-tabs v-model="currentSection" class="text-grey-7 bg-grey-2" active-color="white" active-bg-color="primary"
     indicator-color="transparent" align="left" inline-label no-caps>
     <q-tab v-for="tab in tabs" :key="tab.name" :name="tab.name" :icon="tab.icon" :label="tab.label"
-      @click="navigateTo(tab)" />
+      :to="tabTo(tab)" />
   </q-tabs>
 </template>

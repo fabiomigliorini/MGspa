@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import moment from 'moment'
 import { useQuasar } from 'quasar'
-import { formatMoney } from 'src/utils/formatters.js'
 import { useAuthStore } from 'stores/auth'
 import { useSaldoStore } from 'src/stores/saldoStore'
 
@@ -30,41 +29,65 @@ const importandoOfx = ref(false)
 
 const urlUploadOfx = computed(() => process.env.API_URL + 'v1/portador/importar-ofx')
 
-const columns = computed(() => [
-  { name: 'banco', label: 'Banco', field: 'banco', align: 'left' },
-  ...store.filiais.map((filial, idx) => ({
-    name: String(idx),
-    label: filial.nome ? filial.nome : 'Sem Filial',
-    field: String(idx),
-    align: 'right',
-  })),
-  { name: 'totalBanco', label: 'Total Banco', field: 'totalBanco', align: 'right' },
-])
+const formatNumero = (value) =>
+  new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value || 0)
 
-const rows = computed(() => {
-  const linhasPorBanco = {}
-  store.filiais.forEach((filial, idxFilial) => {
-    filial.bancos.forEach((banco) => {
-      const codbanco = banco.codbanco
-      if (!linhasPorBanco[codbanco]) {
-        linhasPorBanco[codbanco] = { banco: banco.nome, totalBanco: 0 }
-        store.filiais.forEach((_, idx) => {
-          linhasPorBanco[codbanco][String(idx)] = []
-        })
+const bancosUnicos = computed(() => {
+  const map = new Map()
+  store.filiais.forEach((f) =>
+    f.bancos.forEach((b) => {
+      if (!map.has(b.codbanco)) {
+        map.set(b.codbanco, { codbanco: b.codbanco, nome: b.nome })
       }
-      linhasPorBanco[codbanco][String(idxFilial)] = banco.portadores
-      const total = store.totalPorBanco.find((t) => t.codbanco === codbanco)
-      linhasPorBanco[codbanco].totalBanco = total ? total.valor : 0
-    })
-  })
-  return Object.values(linhasPorBanco)
+    }),
+  )
+  return [...map.values()].sort((a, b) => a.nome.localeCompare(b.nome))
 })
 
-const moneyTextColor = (value) => (value < 0 ? 'text-red' : '')
-
-const mesAnoAtual = computed(() =>
-  store.dataSelecionada ? store.dataSelecionada.substring(3) : '',
+const linhas = computed(() =>
+  store.filiais.map((f) => {
+    const porBanco = {}
+    f.bancos.forEach((b) => {
+      porBanco[b.codbanco] = { total: b.totalBanco, portadores: b.portadores }
+    })
+    return {
+      codfilial: f.codfilial,
+      nome: f.nome || 'Sem Filial',
+      totalFilial: f.totalFilial,
+      porBanco,
+    }
+  }),
 )
+
+const expanded = ref({})
+const chave = (codfilial, codbanco) => `${codfilial}-${codbanco}`
+const isExpanded = (codfilial, codbanco) => !!expanded.value[chave(codfilial, codbanco)]
+const toggleExpanded = (codfilial, codbanco) => {
+  const k = chave(codfilial, codbanco)
+  expanded.value[k] = !expanded.value[k]
+}
+
+const moneyColor = (value) => (value < 0 ? 'text-red' : '')
+
+const larguraColuna = computed(() => `${100 / (bancosUnicos.value.length + 2)}%`)
+
+const totalPorBanco = (codbanco) => {
+  const t = store.totalPorBanco.find((x) => x.codbanco === codbanco)
+  return t ? t.valor : 0
+}
+
+const anoAtual = computed(() => (store.dataSelecionada ? store.dataSelecionada.substring(6) : ''))
+const mesAtual = computed(() =>
+  store.dataSelecionada ? store.dataSelecionada.substring(3, 5) : '',
+)
+
+const linkExtrato = (codportador) => ({
+  name: 'extrato',
+  params: { codportador, ano: anoAtual.value, mes: mesAtual.value },
+})
 
 const openDialog = () => {
   falhaImportacaoOfx.value = false
@@ -108,88 +131,150 @@ onMounted(() => {
 </script>
 
 <template>
-  <q-page>
+  <q-page class="relative-position">
     <div class="q-pa-md">
-      <q-table
-        :columns="columns"
-        :rows="rows"
-        row-key="banco"
-        flat
-        bordered
-        hide-pagination
-        no-data-label="Nenhum dado disponível"
-        :loading="store.isLoading || store.buscandoIntervalo"
-      >
-        <template v-slot:body-cell-banco="props">
-          <q-td :props="props" class="text-weight-bold" style="vertical-align: top">
-            {{ props.row.banco }}
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell="props">
-          <q-td :props="props" class="q-pa-0" style="vertical-align: top">
-            <div
-              v-if="Array.isArray(props.value) && props.value.length"
-              style="display: flex; flex-direction: column"
-            >
-              <router-link
-                v-for="port in props.value"
-                :key="port.codportador"
-                style="text-decoration: none; color: dodgerblue"
-                :class="moneyTextColor(port.saldobancario)"
-                :to="{
-                  name: 'extrato',
-                  params: { id: port.codportador, mesAno: mesAnoAtual },
-                }"
-              >
-                {{ formatMoney(port.saldobancario) }}
-              </router-link>
-            </div>
-            <div v-else class="text-grey">---</div>
-          </q-td>
-        </template>
-
-        <template v-slot:body-cell-totalBanco="props">
-          <q-td
-            :props="props"
-            :class="'text-weight-bold bg-yellow-1 ' + moneyTextColor(props.value)"
-            style="vertical-align: top"
+      <q-card bordered flat>
+        <div class="overflow-auto">
+          <table
+            class="q-table q-table--flat q-table--bordered q-table--cell-separator q-table--horizontal-separator"
+            style="table-layout: fixed; width: 100%; border-collapse: collapse"
           >
-            {{ formatMoney(props.value) }}
-          </q-td>
-        </template>
+            <colgroup>
+              <col :style="{ width: larguraColuna }" />
+              <col
+                v-for="b in bancosUnicos"
+                :key="`col-${b.codbanco}`"
+                :style="{ width: larguraColuna }"
+              />
+              <col :style="{ width: larguraColuna }" />
+            </colgroup>
+            <thead>
+              <tr>
+                <th class="text-left">Filial</th>
+                <th v-for="b in bancosUnicos" :key="`h-${b.codbanco}`" class="text-right">
+                  {{ b.nome }}
+                </th>
+                <th class="text-right bg-yellow-1">Total Filial</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="l in linhas" :key="l.codfilial">
+                <td class="text-left text-weight-bold">{{ l.nome }}</td>
 
-        <template v-slot:bottom-row>
-          <q-tr class="bg-yellow-1 text-weight-bold">
-            <q-td key="banco">Total por Filial</q-td>
-            <q-td
-              v-for="f in store.filiais"
-              :key="f.codfilial"
-              align="right"
-              :class="moneyTextColor(f.totalFilial)"
-            >
-              {{ formatMoney(f.totalFilial) }}
-            </q-td>
-            <q-td align="right" :class="moneyTextColor(store.totalGeral)">
-              {{ formatMoney(store.totalGeral) }}
-            </q-td>
-          </q-tr>
-        </template>
+                <td
+                  v-for="b in bancosUnicos"
+                  :key="`c-${l.codfilial}-${b.codbanco}`"
+                  class="text-right overflow-hidden"
+                >
+                  <template v-if="l.porBanco[b.codbanco]">
+                    <router-link
+                      v-if="l.porBanco[b.codbanco].portadores.length === 1"
+                      :to="linkExtrato(l.porBanco[b.codbanco].portadores[0].codportador)"
+                      class="row items-center justify-end no-wrap cursor-pointer text-primary"
+                      :class="moneyColor(l.porBanco[b.codbanco].total)"
+                      style="text-decoration: none"
+                    >
+                      <span>{{ formatNumero(l.porBanco[b.codbanco].total) }}</span>
+                      <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
+                    </router-link>
 
-        <template v-slot:loading>
-          <q-inner-loading showing color="primary" />
-        </template>
-      </q-table>
+                    <template v-else>
+                      <div
+                        class="row items-center justify-end no-wrap cursor-pointer"
+                        :class="moneyColor(l.porBanco[b.codbanco].total)"
+                        @click="toggleExpanded(l.codfilial, b.codbanco)"
+                      >
+                        <span>{{ formatNumero(l.porBanco[b.codbanco].total) }}</span>
+                        <q-icon
+                          :name="
+                            isExpanded(l.codfilial, b.codbanco) ? 'expand_less' : 'expand_more'
+                          "
+                          size="16px"
+                          class="q-ml-xs"
+                        />
+                      </div>
+                      <div v-if="isExpanded(l.codfilial, b.codbanco)" class="q-mt-xs">
+                        <router-link
+                          v-for="p in l.porBanco[b.codbanco].portadores"
+                          :key="p.codportador"
+                          :to="linkExtrato(p.codportador)"
+                          class="cursor-pointer q-py-xs"
+                          style="text-decoration: none; display: block"
+                        >
+                          <div class="row items-center justify-end no-wrap">
+                            <span class="text-primary" :class="moneyColor(p.saldobancario)">
+                              {{ formatNumero(p.saldobancario) }}
+                            </span>
+                            <q-icon
+                              name="horizontal_rule"
+                              size="16px"
+                              color="grey-5"
+                              class="q-ml-xs"
+                            />
+                          </div>
+                          <div
+                            class="text-grey-6 text-uppercase text-right ellipsis"
+                            style="font-size: xx-small"
+                          >
+                            {{ p.portador }}
+                          </div>
+                        </router-link>
+                      </div>
+                    </template>
+                  </template>
+
+                  <div v-else class="row items-center justify-end no-wrap text-grey">
+                    <span>&nbsp;</span>
+                    <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
+                  </div>
+                </td>
+
+                <td
+                  class="text-right text-weight-bold bg-yellow-1"
+                  :class="moneyColor(l.totalFilial)"
+                >
+                  <div class="row items-center justify-end no-wrap">
+                    <span>{{ formatNumero(l.totalFilial) }}</span>
+                    <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
+                  </div>
+                </td>
+              </tr>
+
+              <tr v-if="!linhas.length && !store.isLoading">
+                <td :colspan="bancosUnicos.length + 2" class="text-center text-grey">
+                  Nenhum dado disponível
+                </td>
+              </tr>
+              <tr v-if="linhas.length" class="bg-yellow-1 text-weight-bold">
+                <td class="text-left">Total por Banco</td>
+                <td
+                  v-for="b in bancosUnicos"
+                  :key="`t-${b.codbanco}`"
+                  class="text-right"
+                  :class="moneyColor(totalPorBanco(b.codbanco))"
+                >
+                  <div class="row items-center justify-end no-wrap">
+                    <span>{{ formatNumero(totalPorBanco(b.codbanco)) }}</span>
+                    <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
+                  </div>
+                </td>
+                <td class="text-right" :class="moneyColor(store.totalGeral)">
+                  <div class="row items-center justify-end no-wrap">
+                    <span>{{ formatNumero(store.totalGeral) }}</span>
+                    <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </q-card>
     </div>
 
+    <q-inner-loading :showing="store.isLoading || store.buscandoIntervalo" color="primary" />
+
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        fab
-        :loading="importandoOfx"
-        color="primary"
-        icon="upload_file"
-        @click="openDialog"
-      >
+      <q-btn fab :loading="importandoOfx" color="primary" icon="upload_file" @click="openDialog">
         <template v-slot:loading>
           <q-spinner-oval />
         </template>
@@ -218,13 +303,7 @@ onMounted(() => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Fechar"
-            color="primary"
-            v-close-popup
-            :disable="enviandoOfx"
-          />
+          <q-btn flat label="Fechar" color="primary" v-close-popup :disable="enviandoOfx" />
         </q-card-actions>
       </q-card>
     </q-dialog>
