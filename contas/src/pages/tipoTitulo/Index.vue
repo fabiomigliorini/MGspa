@@ -150,7 +150,7 @@ onMounted(() => {
 <template>
   <q-page>
     <q-infinite-scroll @load="carregarMais" :offset="250">
-      <div class="q-pa-md">
+      <div class="q-pa-md" style="margin: auto; max-width: 850px">
         <q-table
           :rows="store.items"
           :columns="columns"
@@ -171,6 +171,7 @@ onMounted(() => {
             <q-td
               :props="props"
               class="text-weight-medium text-primary cursor-pointer"
+              style="white-space: normal; word-break: break-word; max-width: 10vw"
               @click="abrirEditar(props.row)"
             >
               {{ props.value }}
@@ -178,14 +179,20 @@ onMounted(() => {
           </template>
 
           <template #body-cell-direcao="props">
-            <q-td :props="props">
+            <q-td
+              :props="props"
+              style="white-space: normal; word-break: break-word; max-width: 10vw"
+            >
               <q-badge v-if="props.row.receber" color="green-6">Receber</q-badge>
               <q-badge v-if="props.row.pagar" color="orange-7">Pagar</q-badge>
             </q-td>
           </template>
 
           <template #body-cell-natureza="props">
-            <q-td :props="props">
+            <q-td
+              :props="props"
+              style="white-space: normal; word-break: break-word; max-width: 10vw"
+            >
               <q-badge v-if="props.row.credito" color="teal-6">Crédito</q-badge>
               <q-badge v-if="props.row.debito" color="deep-orange-6">Débito</q-badge>
             </q-td>
@@ -206,7 +213,15 @@ onMounted(() => {
 
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEditar(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                @click="abrirEditar(props.row)"
+              >
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
@@ -220,7 +235,15 @@ onMounted(() => {
               >
                 <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
-              <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluir(props.row)"
+              >
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-td>

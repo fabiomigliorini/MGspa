@@ -123,7 +123,7 @@ onMounted(() => store.fetchItems(true))
 <template>
   <q-page>
     <q-infinite-scroll @load="carregarMais" :offset="250">
-      <div class="q-pa-md">
+      <div class="q-pa-md" style="margin: auto; max-width: 850px">
         <q-table
           :rows="store.items"
           :columns="columns"
@@ -161,7 +161,15 @@ onMounted(() => store.fetchItems(true))
 
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEditar(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                @click="abrirEditar(props.row)"
+              >
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
@@ -175,7 +183,15 @@ onMounted(() => store.fetchItems(true))
               >
                 <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
-              <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluir(props.row)"
+              >
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-td>

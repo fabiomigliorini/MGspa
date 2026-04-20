@@ -95,6 +95,19 @@ const routes = [
         },
       },
       {
+        path: 'pix',
+        name: 'pix',
+        component: () => import('pages/pix/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Pix',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/PixFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'extrato/:id/:mesAno',
         name: 'extrato',
         component: () => import('pages/MovimentacoesPage.vue'),
@@ -104,6 +117,12 @@ const routes = [
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
         },
       },
+      {
+        path: 'sem-permissao',
+        name: 'sem-permissao',
+        component: () => import('pages/SemPermissaoPage.vue'),
+        meta: { auth: false, title: 'Sem permissão' },
+      },
     ],
   },
 
@@ -112,13 +131,6 @@ const routes = [
     name: 'login',
     component: () => import('pages/Login.vue'),
     meta: { auth: false },
-  },
-
-  {
-    path: '/sem-permissao',
-    name: 'sem-permissao',
-    component: () => import('pages/SemPermissaoPage.vue'),
-    meta: { auth: false, title: 'Sem permissão' },
   },
 
   {
