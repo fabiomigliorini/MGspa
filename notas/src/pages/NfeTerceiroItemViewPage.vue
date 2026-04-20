@@ -92,7 +92,7 @@ onMounted(async () => {
   if (!nfe.value || nfe.value.codnfeterceiro !== codnfeterceiro.value) {
     loading.value = true
     try {
-      await nfeTerceiroStore.fetchNfeTerceiroForce(codnfeterceiro.value)
+      await nfeTerceiroStore.fetchNfeTerceiro(codnfeterceiro.value)
     } catch (error) {
       $q.notify({
         type: 'negative',
@@ -119,6 +119,18 @@ onMounted(async () => {
     </div>
 
     <template v-else>
+      <!-- Banner Conferido -->
+      <q-banner
+        v-if="item.conferencia"
+        class="bg-green-1 text-green-10 q-mb-md"
+        rounded
+      >
+        <template v-slot:avatar>
+          <q-icon name="check_circle" color="green" size="md" />
+        </template>
+        Item conferido
+      </q-banner>
+
       <!-- Cabeçalho -->
       <div class="row items-center q-mb-md" style="flex-wrap: nowrap">
         <q-btn

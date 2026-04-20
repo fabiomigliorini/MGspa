@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
@@ -372,30 +372,6 @@ const handleMarcarTipoProduto = async () => {
   })
 }
 
-const handleInformarComplemento = () => {
-  $q.dialog({
-    title: 'Outros Custos',
-    message: 'Informe o valor para ratear entre os itens (vazio para limpar):',
-    prompt: { model: '', type: 'number' },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Salvar', color: 'primary' },
-  }).onOk(async (valor) => {
-    try {
-      await nfeTerceiroStore.informarComplemento(nfe.value.codnfeterceiro, valor || null)
-      $q.notify({
-        type: 'positive',
-        message: valor ? 'Complemento distribuido' : 'Complemento limpo',
-      })
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao informar complemento',
-        caption: error.message,
-      })
-    }
-  })
-}
-
 onMounted(async () => {
   try {
     await nfeTerceiroStore.fetchNfeTerceiro(route.params.codnfeterceiro)
@@ -407,10 +383,6 @@ onMounted(async () => {
     })
     router.push({ name: 'nfe-terceiro' })
   }
-})
-
-onUnmounted(() => {
-  nfeTerceiroStore.clearCurrentNfeTerceiro()
 })
 </script>
 
@@ -737,50 +709,35 @@ onUnmounted(() => {
         <q-tab-panels v-model="tab" animated>
           <!-- Itens -->
           <q-tab-panel name="geral">
-            <!-- Toolbar: Busca + Marcar tipo + Complemento -->
-            <div class="row q-gutter-sm q-mb-md items-center">
-              <form @submit.prevent="handleBuscarItem" class="row q-gutter-sm items-center">
+            <!-- Toolbar: Busca + Marcar tipo -->
+            <div class="row q-gutter-sm q-mb-md items-center justify-end">
+              <form @submit.prevent="handleBuscarItem">
                 <q-input
                   v-model="barrasInput"
-                  placeholder="Barras / Referencia"
+                  label="Barras / Referencia"
                   outlined
-                  dense
                   :bottom-slots="false"
-                  class="col"
+                  style="width: 200px"
                 >
                   <template v-slot:prepend>
                     <q-icon name="qr_code_scanner" />
                   </template>
                 </q-input>
-                <q-btn type="submit" flat dense icon="search" color="primary">
-                  <q-tooltip>Buscar</q-tooltip>
-                </q-btn>
               </form>
-              <q-separator vertical class="gt-xs" />
               <q-select
                 v-model="tipoProdutoSelecionado"
                 :options="tipoProdutoOptions"
                 label="Tipo Produto"
+                stack-label
                 outlined
-                dense
                 clearable
                 emit-value
                 map-options
                 :bottom-slots="false"
-                class="col-auto"
+                style="width: 160px"
               />
-              <q-btn flat dense icon="select_all" color="primary" @click="handleMarcarTipoProduto">
+              <q-btn flat dense icon="check" color="primary" @click="handleMarcarTipoProduto">
                 <q-tooltip>Marcar todos itens</q-tooltip>
-              </q-btn>
-              <q-separator vertical class="gt-xs" />
-              <q-btn
-                flat
-                dense
-                icon="attach_money"
-                color="primary"
-                @click="handleInformarComplemento"
-              >
-                <q-tooltip>Outros Custos</q-tooltip>
               </q-btn>
             </div>
 
@@ -789,7 +746,14 @@ onUnmounted(() => {
                 v-for="item in itens"
                 :key="item.codnfeterceiroitem"
                 clickable
-                :to="{ name: 'nfe-terceiro-item-view', params: { codnfeterceiro: nfe.codnfeterceiro, codnfeterceiroitem: item.codnfeterceiroitem } }"
+                :class="item.conferencia ? 'bg-green-1' : ''"
+                :to="{
+                  name: 'nfe-terceiro-item-view',
+                  params: {
+                    codnfeterceiro: nfe.codnfeterceiro,
+                    codnfeterceiroitem: item.codnfeterceiroitem,
+                  },
+                }"
               >
                 <q-item-section top>
                   <q-item-label lines="1">
@@ -830,7 +794,7 @@ onUnmounted(() => {
                       size="sm"
                       :icon="item.conferencia ? 'check_circle' : 'radio_button_unchecked'"
                       :color="item.conferencia ? 'green' : 'grey'"
-                      @click="handleConferenciaItem(item)"
+                      @click.stop.prevent="handleConferenciaItem(item)"
                     >
                       <q-tooltip>
                         {{ item.conferencia ? 'Desmarcar conferencia' : 'Marcar conferido' }}
@@ -843,7 +807,7 @@ onUnmounted(() => {
                       size="sm"
                       icon="call_split"
                       color="primary"
-                      @click="handleDividirItem(item)"
+                      @click.stop.prevent="handleDividirItem(item)"
                     >
                       <q-tooltip>Dividir item</q-tooltip>
                     </q-btn>

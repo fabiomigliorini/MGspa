@@ -233,8 +233,8 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
     async updateItem(codnfeterceiro, codnfeterceiroitem, data) {
       try {
         const response = await nfeTerceiroService.updateItem(codnfeterceiro, codnfeterceiroitem, data)
-        // Recarrega NFe completa para atualizar itens
-        await this.fetchNfeTerceiroForce(codnfeterceiro)
+        this.currentNfeTerceiro = response.data
+        this.syncCurrentToList()
         return response.data
       } catch (error) {
         console.error('Erro ao atualizar item:', error)
@@ -245,9 +245,9 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
     async toggleConferenciaItem(codnfeterceiro, codnfeterceiroitem) {
       try {
         const response = await nfeTerceiroService.conferenciaItem(codnfeterceiro, codnfeterceiroitem)
-        // Recarrega para refletir cascata no cabeçalho
-        await this.fetchNfeTerceiroForce(codnfeterceiro)
-        return response
+        this.currentNfeTerceiro = response.data
+        this.syncCurrentToList()
+        return response.data
       } catch (error) {
         console.error('Erro ao alterar conferência do item:', error)
         throw error
@@ -268,8 +268,10 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
 
     async marcarTipoProduto(codnfeterceiro, codtipoproduto) {
       try {
-        await nfeTerceiroService.marcarTipoProduto(codnfeterceiro, codtipoproduto)
-        await this.fetchNfeTerceiroForce(codnfeterceiro)
+        const response = await nfeTerceiroService.marcarTipoProduto(codnfeterceiro, codtipoproduto)
+        this.currentNfeTerceiro = response.data
+        this.syncCurrentToList()
+        return response.data
       } catch (error) {
         console.error('Erro ao marcar tipo de produto:', error)
         throw error
