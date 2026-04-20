@@ -366,7 +366,7 @@ export default {
           },
         })
         .then((response) => {
-          let novosExtratos = response.data;
+          let novosExtratos = response.data.map(e => ({ ...e, dia: e.lancamento }));
 
           const extratosComSaldos = [];
 

@@ -3,50 +3,9 @@
 namespace App\Mg\Portador;
 
 use Carbon\Carbon;
-use Mg\Portador\Portador;
 
 class ExtratoBbApiService
 {
-    //TODO: esse código esta replicado em BoletoBbApiService que também é usado em PixBbService. Manter em único lugar depois
-    public static function token (Portador $portador)
-    {
-        $curl = curl_init();
-        $url = env('BB_URL_OAUTH') . '/token';
-        $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
-        $auth = "Authorization: Basic {$authorization}";
-        $body = 'grant_type=client_credentials&scope=extrato-info';
-        $opt = [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            // CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_HTTPHEADER => [
-                $auth,
-                'Content-Type: application/x-www-form-urlencoded'
-            ],
-        ];
-        curl_setopt_array($curl, $opt);
-        $response = curl_exec($curl);
-        if ($response === false) {
-            throw new \Exception(curl_error($curl), curl_errno($curl));
-        }
-        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        if ($httpcode == 401) {
-            throw new \Exception("Erro {$httpcode} - {$response} ao Autenticar na API do BB!", $httpcode);
-        }
-        curl_close($curl);
-        //print_r($response);
-        $ret = json_decode($response, true);
-        return $ret;
-    }
-
     public static function contaCorrente (
         $token,
         $gwDevAppKey,
@@ -88,11 +47,17 @@ class ExtratoBbApiService
         $response = curl_exec($curl);
 
         if ($response === false) {
-            throw new \Exception(curl_error($curl), curl_errno($curl));
+            $err = curl_error($curl);
+            $errno = curl_errno($curl);
+            curl_close($curl);
+            throw new \Exception($err, $errno);
         }
+        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         curl_close($curl);
         $response = preg_replace('/[\x00-\x1F\x7F]/', '', $response);
-        $ret = json_decode($response, true);
-        return $ret;
+        if ($httpcode < 200 || $httpcode >= 300) {
+            throw new \Exception("Erro {$httpcode} ao consultar extrato na API do BB: {$response}", $httpcode);
+        }
+        return json_decode($response, true);
     }
 }

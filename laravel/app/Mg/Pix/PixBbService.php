@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 
 use Carbon\Carbon;
 
-use Mg\Titulo\BoletoBb\BoletoBbService;
+use Mg\Portador\Bb\AuthService;
 use Mg\Portador\Portador;
 use Mg\Filial\CertificadoService;
 
@@ -16,7 +16,7 @@ class PixBbService
     public static function transmitirPixCob(PixCob $pixCob)
     {
         $filial = CertificadoService::filialDoPortador($pixCob->Portador);
-        $bbtoken = BoletoBbService::verificaTokenValido($pixCob->Portador);
+        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::transmitirPixCob(
             $filial,
             $bbtoken,
@@ -52,7 +52,7 @@ class PixBbService
     public static function consultarPixCob(PixCob $pixCob)
     {
         $filial = CertificadoService::filialDoPortador($pixCob->Portador);
-        $bbtoken = BoletoBbService::verificaTokenValido($pixCob->Portador);
+        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::consultarPixCob(
             $filial,
             $bbtoken,
@@ -94,7 +94,7 @@ class PixBbService
         int $pagina = 0
     ) {
         $filial = CertificadoService::filialDoPortador($portador);
-        $bbtoken = BoletoBbService::verificaTokenValido($portador);
+        $bbtoken = AuthService::verificaTokenValido($portador);
 
         $strInicio = null;
         if (!empty($inicio)) {

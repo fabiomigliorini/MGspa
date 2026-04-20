@@ -4,26 +4,14 @@ namespace App\Mg\Portador;
 
 use Exception;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Mg\Portador\ExtratoBancario;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorSaldo;
+use Mg\Portador\Bb\AuthService;
 
 class ExtratoBbService
 {
 
-    public static function verificaTokenValido(Portador $portador)
-    {
-        $cacheKey = "bb_token_{$portador->codportador}";
-        $cached = Cache::get($cacheKey);
-        if ($cached) {
-            return $cached;
-        }
-        $token = ExtratoBbApiService::token($portador);
-        $ttl = intval($token['expires_in'] * 0.5);
-        Cache::put($cacheKey, $token['access_token'], $ttl);
-        return $token['access_token'];
-    }
     public static function consultarExtrato(Portador $portador, $dataInicioSolicitacao, $dataFimSolicitacao)
     {
         $numeroPaginaSolicitacao = 1;
@@ -31,7 +19,7 @@ class ExtratoBbService
         $falhas = 0;
         //  dd($dataInicioSolicitacao, $dataFimSolicitacao);
         do {
-            $bbtoken = static::verificaTokenValido($portador);
+            $bbtoken = AuthService::verificaTokenValido($portador);
 
             $extrato = ExtratoBbApiService::contaCorrente(
                 $bbtoken,
@@ -49,12 +37,7 @@ class ExtratoBbService
                 throw new Exception($extrato['erros'][0]['mensagem'], 1);
             }
 
-            //TODO: Tratar possíveis erros da api
-            // if (!isset($extrato['listaLancamento'])) {
-            //     dd($extrato);
-            //     continue;
-            // }
-            foreach ($extrato['listaLancamento'] as $lancamento) {
+            foreach ($extrato['listaLancamento'] ?? [] as $lancamento) {
                 //Doc: https://apoio.developers.bb.com.br/referency/post/647f7847de39c800131d84ad
                 if($lancamento['codigoHistorico'] == '0'){
                     //Código de histórico 0 – traz o saldo imediatamente anterior ao período pesquisado,
@@ -83,7 +66,7 @@ class ExtratoBbService
                 }
             }
 
-            $numeroPaginaSolicitacao = $extrato['numeroPaginaProximo'];
+            $numeroPaginaSolicitacao = $extrato['numeroPaginaProximo'] ?? 0;
         } while ($numeroPaginaSolicitacao != 0);
         return [
             'codportador' => $portador->codportador,
@@ -115,7 +98,7 @@ class ExtratoBbService
 
         //$extratoBancario->codextratobancariotipomovimento = $tipo->codextratobancariotipomovimento;
         $extratoBancario->indicadortipolancamento = $lancamento['indicadorTipoLancamento'];
-        $extratoBancario->dia = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);;
+        $extratoBancario->lancamento = Carbon::createFromFormat('dmY', $lancamento['dataLancamento']);;
         if ($lancamento['dataMovimento'] != '0') {
             $extratoBancario->movimento = Carbon::createFromFormat('dmY', $lancamento['dataMovimento']);
         }

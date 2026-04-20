@@ -14,6 +14,9 @@ const routes = [
           auth: true,
           title: 'Saldos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/SaldosFiltrosDrawer.vue'),
+          ),
         },
       },
       {
