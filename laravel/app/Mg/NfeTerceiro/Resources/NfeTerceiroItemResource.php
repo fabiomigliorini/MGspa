@@ -83,6 +83,11 @@ class NfeTerceiroItemResource extends JsonResource
             'produtoBarra' => $this->formatProdutoBarra(),
             'complemento' => $this->complemento,
             'margem' => $this->margem,
+            'observacoes' => $this->observacoes,
+
+            // Conferência
+            'conferencia' => $this->conferencia,
+            'codusuarioconferencia' => $this->codusuarioconferencia,
         ];
     }
 

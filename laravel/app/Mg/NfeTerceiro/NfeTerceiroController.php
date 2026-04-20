@@ -12,7 +12,6 @@ use Mg\NfeTerceiro\NfeTerceiroIcmsStService;
 use Mg\NfeTerceiro\NfeTerceiroItemService;
 use Mg\NfeTerceiro\NfeTerceiroService;
 use Mg\NfeTerceiro\Resources\NfeTerceiroResource;
-use Mg\NfeTerceiro\Resources\NfeTerceiroItemResource;
 use Mg\Titulo\TituloNfeTerceiro;
 
 class NfeTerceiroController
@@ -22,7 +21,7 @@ class NfeTerceiroController
 
     const RELATIONS_SHOW = [
         'Filial',
-        'Pessoa',
+        'Pessoa.Cidade.Estado',
         'NaturezaOperacao',
         'UsuarioAlteracao',
         'UsuarioRevisao',
@@ -130,12 +129,12 @@ class NfeTerceiroController
         $nft = NfeTerceiro::findOrFail($codnfeterceiro);
         $item = $nft->NfeTerceiroItemS()->where('codnfeterceiroitem', $codnfeterceiroitem)->firstOrFail();
 
-        $item = NfeTerceiroItemService::atualizar($item, $request->only([
+        NfeTerceiroItemService::atualizar($item, $request->only([
             'codprodutobarra', 'qcom', 'vprod', 'margem',
             'complemento', 'observacoes', 'modalidadeicmsgarantido',
         ]));
 
-        return new NfeTerceiroItemResource($item->load('ProdutoBarra.ProdutoVariacao.Produto'));
+        return new NfeTerceiroResource($nft->fresh()->load(static::RELATIONS_SHOW));
     }
 
     public function conferenciaItem(Request $request, int $codnfeterceiro, int $codnfeterceiroitem)
