@@ -136,7 +136,7 @@ onMounted(() => {
       <q-card bordered flat>
         <div class="overflow-auto">
           <table
-            class="q-table q-table--flat q-table--bordered q-table--cell-separator q-table--horizontal-separator"
+            class="q-table q-table--flat q-table--cell-separator q-table--horizontal-separator"
             style="table-layout: fixed; width: 100%; border-collapse: collapse"
           >
             <colgroup>
