@@ -17,20 +17,29 @@ class SelectProdutoBarraController extends Controller
         $offset = ($page - 1) * $limite;
 
         // monta sql base
-        $sql = "SELECT 
+        $sql = "SELECT
                     similarity(unaccent(descricao || ' ' || barras), unaccent(:frase)) AS score,
-                    codprodutobarra, 
-                    codproduto, 
-                    barras, 
-                    descricao, 
-                    sigla, 
-                    preco, 
-                    marca, 
-                    referencia, 
-                    inativo, 
+                    codprodutobarra,
+                    codproduto,
+                    barras,
+                    descricao,
+                    sigla,
+                    preco,
+                    marca,
+                    referencia,
+                    inativo,
                     'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' || imagem as imagem
                   FROM vwProdutoBarra
                  WHERE codProdutoBarra is not null ";
+
+        // Busca direta por codprodutobarra (usado para inicialização de selects)
+        if (!empty($request->codprodutobarra)) {
+            $resultado = DB::select(
+                $sql . " AND codprodutobarra = :codprodutobarra LIMIT 1",
+                ['frase' => '', 'codprodutobarra' => $request->codprodutobarra]
+            );
+            return $resultado;
+        }
 
         // inativos
         if (!filter_var($request->inativo, FILTER_VALIDATE_BOOLEAN) || is_null($request->inativo)) {

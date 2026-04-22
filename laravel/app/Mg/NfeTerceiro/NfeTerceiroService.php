@@ -85,6 +85,36 @@ class NfeTerceiroService
             $query->where('valortotal', '<=', $filtros['valortotal_fim']);
         }
 
+        if (!empty($filtros['importacao'])) {
+            switch ($filtros['importacao']) {
+                case 'pendentes':
+                    $query->whereNull('codnotafiscal')
+                        ->where('indsituacao', NfeTerceiro::INDSITUACAO_AUTORIZADA)
+                        ->where('ignorada', false)
+                        ->where(function ($q) {
+                            $q->whereNull('indmanifestacao')
+                                ->orWhereNotIn('indmanifestacao', [
+                                    NfeTerceiro::INDMANIFESTACAO_DESCONHECIDA,
+                                    NfeTerceiro::INDMANIFESTACAO_NAOREALIZADA,
+                                ]);
+                        });
+                    break;
+                case 'importadas':
+                    $query->whereNotNull('codnotafiscal');
+                    break;
+                case 'ignoradas':
+                    $query->where(function ($q) {
+                        $q->whereIn('indmanifestacao', [
+                            NfeTerceiro::INDMANIFESTACAO_DESCONHECIDA,
+                            NfeTerceiro::INDMANIFESTACAO_NAOREALIZADA,
+                        ])
+                            ->orWhere('indsituacao', '<>', NfeTerceiro::INDSITUACAO_AUTORIZADA)
+                            ->orWhere('ignorada', true);
+                    });
+                    break;
+            }
+        }
+
         return $query;
     }
 

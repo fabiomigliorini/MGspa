@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
+import SelectProdutoBarra from 'src/components/selects/SelectProdutoBarra.vue'
 import { formatCurrency, formatDecimal } from 'src/utils/formatters'
 
 const route = useRoute()
@@ -180,13 +181,14 @@ onMounted(async () => {
 
           <q-card-section class="q-pb-none">
             <!-- Produto -->
-            <div class="text-caption text-grey-7">Produto</div>
-            <div class="text-body2 text-weight-bold q-mb-md">
-              {{ item.produtoBarra?.barras || item.cean || '-' }} -
-              {{ item.produtoBarra?.produto?.produto || item.xprod }}
-              <span v-if="item.produtoBarra?.variacao?.variacao" class="text-grey-7">
-                | {{ item.produtoBarra.variacao.variacao }}
-              </span>
+            <SelectProdutoBarra
+              v-model="formDetalhes.codprodutobarra"
+              label="Produto"
+              :bottom-slots="false"
+              dense
+            />
+            <div class="text-caption text-grey-7 q-mt-xs" v-if="item.xprod">
+              Descrição na NFe: {{ item.xprod }}
             </div>
           </q-card-section>
 

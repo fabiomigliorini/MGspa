@@ -28,6 +28,7 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
       ignorada: null,
       revisao: null,
       conferencia: null,
+      importacao: null,
     },
     initialLoadDone: false,
     currentNfeTerceiro: null,
@@ -327,6 +328,7 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
         ignorada: null,
         revisao: null,
         conferencia: null,
+        importacao: null,
       }
       this.initialLoadDone = false
     },

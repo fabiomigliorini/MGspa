@@ -43,6 +43,7 @@ class NfeTerceiroController
             'emissao_fim' => 'nullable|date',
             'indsituacao' => 'nullable|integer',
             'indmanifestacao' => 'nullable|integer',
+            'importacao' => 'nullable|in:pendentes,importadas,ignoradas',
             'valortotal_inicio' => 'nullable|numeric',
             'valortotal_fim' => 'nullable|numeric',
             'per_page' => 'nullable|integer|min:1|max:200',
