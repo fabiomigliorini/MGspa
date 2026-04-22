@@ -75,6 +75,42 @@ class NfeTerceiroItemService
         return $item->fresh();
     }
 
+    public static function conferirTodos(NfeTerceiro $nft): NfeTerceiro
+    {
+        $pendentes = $nft->NfeTerceiroItemS()->whereNull('conferencia')->count();
+
+        if ($pendentes > 0) {
+            // Marca todos os pendentes como conferidos
+            $agora = now();
+            $codusuario = Auth::id();
+
+            $nft->NfeTerceiroItemS()
+                ->whereNull('conferencia')
+                ->update([
+                    'conferencia' => $agora,
+                    'codusuarioconferencia' => $codusuario,
+                ]);
+
+            $nft->conferencia = $agora;
+            $nft->codusuarioconferencia = $codusuario;
+            $nft->save();
+        } else {
+            // Todos conferidos -> desmarca todos
+            $nft->NfeTerceiroItemS()
+                ->whereNotNull('conferencia')
+                ->update([
+                    'conferencia' => null,
+                    'codusuarioconferencia' => null,
+                ]);
+
+            $nft->conferencia = null;
+            $nft->codusuarioconferencia = null;
+            $nft->save();
+        }
+
+        return $nft->fresh();
+    }
+
     public static function marcarTipoProduto(NfeTerceiro $nft, int $codtipoproduto): NfeTerceiro
     {
         if (!empty($nft->codnotafiscal)) {

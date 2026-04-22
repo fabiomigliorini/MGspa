@@ -9,7 +9,7 @@ const route = useRoute()
 const $q = useQuasar()
 const nfeTerceiroStore = useNfeTerceiroStore()
 
-const produtosUrl = process.env.PRODUTOS_URL || ''
+const mglaraUrl = process.env.MGLARA_URL || ''
 
 const codnfeterceiro = computed(() => Number(route.params.codnfeterceiro))
 const codnfeterceiroitem = computed(() => Number(route.params.codnfeterceiroitem))
@@ -54,7 +54,7 @@ const salvarDetalhes = async () => {
     await nfeTerceiroStore.updateItem(
       codnfeterceiro.value,
       codnfeterceiroitem.value,
-      formDetalhes.value,
+      formDetalhes.value
     )
     showDetalhes.value = false
     $q.notify({ type: 'positive', message: 'Item atualizado' })
@@ -75,10 +75,7 @@ const handleConferencia = () => {
     ok: { label: 'Confirmar', color: 'primary' },
   }).onOk(async () => {
     try {
-      await nfeTerceiroStore.toggleConferenciaItem(
-        codnfeterceiro.value,
-        codnfeterceiroitem.value,
-      )
+      await nfeTerceiroStore.toggleConferenciaItem(codnfeterceiro.value, codnfeterceiroitem.value)
       $q.notify({ type: 'positive', message: 'Conferência atualizada' })
     } catch (error) {
       $q.notify({
@@ -124,7 +121,9 @@ onMounted(async () => {
       <!-- Cabeçalho -->
       <div class="row items-center q-mb-md" style="flex-wrap: nowrap">
         <q-btn
-          flat dense round
+          flat
+          dense
+          round
           icon="arrow_back"
           :to="{ name: 'nfe-terceiro-view', params: { codnfeterceiro: codnfeterceiro } }"
           class="q-mr-sm"
@@ -138,7 +137,7 @@ onMounted(async () => {
           <div class="text-body2" v-if="item.produtoBarra">
             <a
               v-if="item.produtoBarra.produto?.codproduto"
-              :href="`${produtosUrl}/produto/${item.produtoBarra.produto.codproduto}`"
+              :href="`${mglaraUrl}/produto/${item.produtoBarra.produto.codproduto}`"
               target="_blank"
               class="text-primary text-weight-bold"
               style="text-decoration: none"
@@ -153,7 +152,8 @@ onMounted(async () => {
 
         <!-- Conferência -->
         <q-btn
-          flat dense
+          flat
+          dense
           icon="task_alt"
           :color="item.conferencia ? 'green' : 'grey-7'"
           class="q-mr-sm"
@@ -163,12 +163,7 @@ onMounted(async () => {
         </q-btn>
 
         <!-- Informar Detalhes -->
-        <q-btn
-          flat dense
-          icon="edit_note"
-          color="grey-7"
-          @click="abrirDetalhes"
-        >
+        <q-btn flat dense icon="edit_note" color="grey-7" @click="abrirDetalhes">
           <q-tooltip>Informar Detalhes</q-tooltip>
         </q-btn>
       </div>
@@ -255,7 +250,8 @@ onMounted(async () => {
                   label="Margem %"
                   type="number"
                   step="0.01"
-                  outlined dense
+                  outlined
+                  dense
                 />
               </div>
               <div class="col-4">
@@ -264,13 +260,22 @@ onMounted(async () => {
                   label="Outros Custos"
                   type="number"
                   step="0.01"
-                  outlined dense
+                  outlined
+                  dense
                 />
               </div>
               <div class="col-4">
                 <div class="text-caption text-grey-7">Total Custo</div>
                 <div class="text-subtitle1 text-weight-bold">
-                  R$ {{ formatCurrency((item.vprod || 0) + (item.ipivipi || 0) + (item.vicmsst || 0) + (formDetalhes.complemento || 0)) }}
+                  R$
+                  {{
+                    formatCurrency(
+                      (item.vprod || 0) +
+                        (item.ipivipi || 0) +
+                        (item.vicmsst || 0) +
+                        (formDetalhes.complemento || 0)
+                    )
+                  }}
                 </div>
               </div>
             </div>
@@ -281,7 +286,8 @@ onMounted(async () => {
             <q-input
               v-model="formDetalhes.observacoes"
               label="Observações"
-              outlined dense
+              outlined
+              dense
               maxlength="500"
             />
           </q-card-section>
@@ -334,11 +340,15 @@ onMounted(async () => {
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">EAN</div>
-                  <div class="text-body2" style="font-family: monospace">{{ item.cean || '-' }}</div>
+                  <div class="text-body2" style="font-family: monospace">
+                    {{ item.cean || '-' }}
+                  </div>
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">EAN Trib</div>
-                  <div class="text-body2" style="font-family: monospace">{{ item.ceantrib || '-' }}</div>
+                  <div class="text-body2" style="font-family: monospace">
+                    {{ item.ceantrib || '-' }}
+                  </div>
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">NCM</div>
@@ -358,7 +368,9 @@ onMounted(async () => {
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">Total</div>
-                  <div class="text-subtitle1 text-weight-bold">R$ {{ formatCurrency(item.vprod) }}</div>
+                  <div class="text-subtitle1 text-weight-bold">
+                    R$ {{ formatCurrency(item.vprod) }}
+                  </div>
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">Quantidade Trib</div>

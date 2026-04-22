@@ -159,6 +159,14 @@ class NfeTerceiroController
         return new NfeTerceiroResource($nft->load(static::RELATIONS_SHOW));
     }
 
+    public function conferirTodos(Request $request, int $codnfeterceiro)
+    {
+        $nft = NfeTerceiro::findOrFail($codnfeterceiro);
+        $nft = NfeTerceiroItemService::conferirTodos($nft);
+
+        return new NfeTerceiroResource($nft->load(static::RELATIONS_SHOW));
+    }
+
     public function informarComplemento(Request $request, int $codnfeterceiro)
     {
         $request->validate([
