@@ -4,48 +4,8 @@ namespace Mg\Titulo\BoletoBb;
 
 use Carbon\Carbon;
 
-use Mg\Portador\Portador;
-
 class BoletoBbApiService
 {
-    public static function token (Portador $portador)
-    {
-        $curl = curl_init();
-        $url = env('BB_URL_OAUTH') . '/token';
-        $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
-        $auth = "Authorization: Basic {$authorization}";
-        $body = 'grant_type=client_credentials&scope=cobrancas.boletos-info+cobrancas.boletos-requisicao+cob.read+cob.write+pix.read+pix.write';
-        $opt = [
-            CURLOPT_URL => $url,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_ENCODING => "",
-            CURLOPT_MAXREDIRS => 10,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_SSL_VERIFYPEER => 0,
-            // CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-            CURLOPT_CUSTOMREQUEST => "POST",
-            CURLOPT_POSTFIELDS => $body,
-            CURLOPT_HTTPHEADER => [
-                $auth,
-                'Content-Type: application/x-www-form-urlencoded'
-            ],
-        ];
-        curl_setopt_array($curl, $opt);
-        $response = curl_exec($curl);
-        if ($response === false) {
-            throw new \Exception(curl_error($curl), curl_errno($curl));
-        }
-        $httpcode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        if ($httpcode == 401) {
-            throw new \Exception("Erro {$httpcode} - {$response} ao Autenticar na API do BB!", $httpcode);
-        }
-        curl_close($curl);
-        $ret = json_decode($response, true);
-        return $ret;
-    }
-
     public static function registrar (
         $token,
         $gwDevAppKey,

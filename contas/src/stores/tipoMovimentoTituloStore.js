@@ -101,6 +101,6 @@ export const useTipoMovimentoTituloStore = defineStore(
     }
   },
   {
-    persist: { paths: ['filters'] },
+    persist: { pick: ['filters'] },
   },
 )

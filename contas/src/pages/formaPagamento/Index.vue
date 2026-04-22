@@ -123,10 +123,7 @@ const criar = async () => {
 const atualizar = async () => {
   saving.value = true
   try {
-    const { data } = await api.put(
-      `v1/forma-pagamento/${model.value.codformapagamento}`,
-      payload(),
-    )
+    const { data } = await api.put(`v1/forma-pagamento/${model.value.codformapagamento}`, payload())
     store.upsertLocal(data.data)
     notifySuccess('Forma de pagamento atualizada')
     dialog.value = false
@@ -177,7 +174,7 @@ onMounted(() => store.fetchItems(true))
 <template>
   <q-page>
     <q-infinite-scroll @load="carregarMais" :offset="250">
-      <div class="q-pa-md">
+      <div class="q-pa-md" style="margin: auto; max-width: 850px">
         <q-table
           :rows="store.items"
           :columns="columns"
@@ -198,6 +195,7 @@ onMounted(() => store.fetchItems(true))
             <q-td
               :props="props"
               class="text-weight-medium text-primary cursor-pointer"
+              style="white-space: normal; word-break: break-word; max-width: 10vw"
               @click="abrirEditar(props.row)"
             >
               {{ props.value }}
@@ -211,7 +209,10 @@ onMounted(() => store.fetchItems(true))
           </template>
 
           <template #body-cell-flags="props">
-            <q-td :props="props">
+            <q-td
+              :props="props"
+              style="white-space: normal; word-break: break-word; max-width: 10vw"
+            >
               <q-badge
                 v-for="f in flagsAtivos(props.row)"
                 :key="f.key"
@@ -232,7 +233,15 @@ onMounted(() => store.fetchItems(true))
 
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEditar(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                @click="abrirEditar(props.row)"
+              >
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
@@ -246,7 +255,15 @@ onMounted(() => store.fetchItems(true))
               >
                 <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
-              <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluir(props.row)"
+              >
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-td>

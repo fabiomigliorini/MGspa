@@ -39,10 +39,6 @@ const resetarSenha = (codusuario) => {
   });
 };
 
-const editar = () => {
-  router.push(`/usuarios/${route.params.codusuario}/editar`);
-};
-
 const excluir = (codusuario) => {
   $q.dialog({
     title: "Excluir usuário",
@@ -127,7 +123,7 @@ const ativar = async (codusuario) => {
         size="sm"
         color="grey-7"
         icon="edit"
-        @click="editar()"
+        :to="`/usuarios/${route.params.codusuario}/editar`"
       >
         <q-tooltip>Editar</q-tooltip>
       </q-btn>

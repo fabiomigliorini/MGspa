@@ -23,7 +23,7 @@ class ExtratoBancario extends MgModel
         'codportador',
         'conciliado',
         'fitid',
-        'dia',
+        'lancamento',
         'numero',
         'observacoes',
         'valor',
@@ -44,7 +44,7 @@ class ExtratoBancario extends MgModel
     protected $dates = [
         'alteracao',
         'criacao',
-        'dia',
+        'lancamento',
         'movimento'
     ];
 

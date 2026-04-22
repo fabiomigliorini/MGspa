@@ -547,6 +547,7 @@ export default {
 
   // na criacao, busca filtro do Vuex
   created () {
+    window.location.href = process.env.APP_CONTAS_URL + '/pix'
     this.filter = this.$store.state.filtroPix
   }
 

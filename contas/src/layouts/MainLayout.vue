@@ -1,20 +1,15 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import UserMenu from 'src/components/UserMenu.vue'
 import { version } from '../../package.json'
 
-const router = useRouter()
 const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
 const pageTitle = computed(() => route.meta?.title || 'Contas')
-
-const goToDashboard = () => {
-  router.push({ name: 'home' })
-}
 </script>
 
 <template>
@@ -31,10 +26,12 @@ const goToDashboard = () => {
         />
 
         <q-toolbar-title class="q-ml-sm">
-          <q-avatar size="36px" class="q-mr-sm cursor-pointer" @click="goToDashboard">
-            <img src="/MGPapelariaQuadrado.svg" alt="MG Papelaria" />
-            <q-tooltip>Início</q-tooltip>
-          </q-avatar>
+          <router-link :to="{ name: 'pix' }" class="text-white" style="text-decoration: none">
+            <q-avatar size="36px" class="q-mr-sm cursor-pointer">
+              <img src="/MGPapelariaQuadrado.svg" alt="MG Papelaria" />
+              <q-tooltip>Início</q-tooltip>
+            </q-avatar>
+          </router-link>
           {{ pageTitle }}
         </q-toolbar-title>
 

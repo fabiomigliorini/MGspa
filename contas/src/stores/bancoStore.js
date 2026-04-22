@@ -91,6 +91,6 @@ export const useBancoStore = defineStore(
     }
   },
   {
-    persist: { paths: ['filters'] },
+    persist: { pick: ['filters'] },
   },
 )

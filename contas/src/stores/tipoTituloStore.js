@@ -96,6 +96,6 @@ export const useTipoTituloStore = defineStore(
     }
   },
   {
-    persist: { paths: ['filters'] },
+    persist: { pick: ['filters'] },
   },
 )

@@ -169,7 +169,7 @@ onMounted(() => {
 <template>
   <q-page>
     <q-infinite-scroll @load="carregarMais" :offset="250">
-      <div class="q-pa-md">
+      <div class="q-pa-md" style="margin: auto; max-width: 850px">
         <q-table
           :rows="store.items"
           :columns="columns"
@@ -191,6 +191,7 @@ onMounted(() => {
               :props="props"
               class="text-weight-medium text-primary cursor-pointer"
               @click="abrirEditar(props.row)"
+              style="white-space: normal; word-break: break-word; max-width: 10vw"
             >
               {{ props.value }}
             </q-td>
@@ -209,7 +210,11 @@ onMounted(() => {
           </template>
 
           <template #body-cell-conta="props">
-            <q-td :props="props" class="text-grey-8">
+            <q-td
+              :props="props"
+              class="text-grey-8"
+              style="white-space: normal; word-break: break-word; max-width: 10vw"
+            >
               {{ formatarConta(props.row) }}
             </q-td>
           </template>
@@ -230,7 +235,15 @@ onMounted(() => {
 
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEditar(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                @click="abrirEditar(props.row)"
+              >
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
@@ -244,7 +257,15 @@ onMounted(() => {
               >
                 <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
-              <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(props.row)">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluir(props.row)"
+              >
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-td>

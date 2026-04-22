@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Log;
 
 use Carbon\Carbon;
 
-use Mg\Titulo\BoletoBb\BoletoBbService;
+use Mg\Portador\Bb\AuthService;
 use Mg\Portador\Portador;
 use Mg\Filial\CertificadoService;
 
@@ -16,7 +16,7 @@ class PixBbService
     public static function transmitirPixCob(PixCob $pixCob)
     {
         $filial = CertificadoService::filialDoPortador($pixCob->Portador);
-        $bbtoken = BoletoBbService::verificaTokenValido($pixCob->Portador);
+        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::transmitirPixCob(
             $filial,
             $bbtoken,
@@ -52,7 +52,7 @@ class PixBbService
     public static function consultarPixCob(PixCob $pixCob)
     {
         $filial = CertificadoService::filialDoPortador($pixCob->Portador);
-        $bbtoken = BoletoBbService::verificaTokenValido($pixCob->Portador);
+        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::consultarPixCob(
             $filial,
             $bbtoken,
@@ -94,7 +94,7 @@ class PixBbService
         int $pagina = 0
     ) {
         $filial = CertificadoService::filialDoPortador($portador);
-        $bbtoken = BoletoBbService::verificaTokenValido($portador);
+        $bbtoken = AuthService::verificaTokenValido($portador);
 
         $strInicio = null;
         if (!empty($inicio)) {
@@ -117,6 +117,13 @@ class PixBbService
             throw new \Exception($ret['erros'][0]['mensagem'], 1);
         }
         if (!empty($ret['detail'])) {
+            if (stripos($ret['detail'], 'Nenhum resultado encontrado') !== false) {
+                return [
+                    'pix' => [],
+                    'parametros' => [],
+                    'processados' => collect([]),
+                ];
+            }
             throw new \Exception('API do BB retornou: ' . $ret['detail'], 1);
         }
 

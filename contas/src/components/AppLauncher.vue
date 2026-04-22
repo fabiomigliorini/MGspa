@@ -6,6 +6,21 @@ const appsItems = [
   { label: 'MGsis', icon: 'apps', color: 'brown', href: process.env.MGSIS_URL },
 ]
 
+const movimentoItems = [
+  {
+    label: 'Pix',
+    icon: 'pix',
+    color: 'teal-7',
+    to: { name: 'pix' },
+  },
+  {
+    label: 'Saldos',
+    icon: 'account_balance_wallet',
+    color: 'amber-8',
+    to: { name: 'portador-saldos' },
+  },
+]
+
 const cadastrosItems = [
   { label: 'Bancos', icon: 'account_balance', color: 'red-8', to: { name: 'banco' } },
   {
@@ -55,6 +70,30 @@ const cadastrosItems = [
                 class="full-width app-launcher-item"
                 :href="item.href"
                 target="_blank"
+                v-close-popup
+              >
+                <div class="column items-center">
+                  <q-icon :name="item.icon" size="32px" :color="item.color" />
+                  <div class="text-caption text-center q-mt-xs">
+                    {{ item.label }}
+                  </div>
+                </div>
+              </q-btn>
+            </div>
+          </div>
+        </q-card-section>
+
+        <q-separator />
+
+        <q-card-section class="q-pa-md">
+          <div class="text-subtitle2 text-grey-7 q-mb-md">Movimento</div>
+          <div class="row q-col-gutter-sm">
+            <div class="col-3" v-for="item in movimentoItems" :key="item.label">
+              <q-btn
+                flat
+                no-caps
+                class="full-width app-launcher-item"
+                :to="item.to"
                 v-close-popup
               >
                 <div class="column items-center">

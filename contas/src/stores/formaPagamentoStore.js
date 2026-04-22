@@ -112,6 +112,6 @@ export const useFormaPagamentoStore = defineStore(
     }
   },
   {
-    persist: { paths: ['filters'] },
+    persist: { pick: ['filters'] },
   },
 )

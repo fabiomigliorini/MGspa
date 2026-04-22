@@ -1,7 +1,7 @@
 <template>
   <mg-layout>
 
-    <q-btn flat round slot="menu" @click="$router.push('/usuario/' + data.codusuario)">
+    <q-btn flat round slot="menu" :to="'/usuario/' + data.codusuario">
       <q-icon name="arrow_back" />
     </q-btn>
 
@@ -13,22 +13,22 @@
 
       <div class="row q-pa-md">
         <div class="col-xs-6 col-sm-4 col-lg-2">
-          <div class="card text-center category-link text-primary" @click="$router.push('impressoras')">
+          <router-link to="impressoras" class="card text-center category-link text-primary" style="text-decoration: none; display: block">
             <q-icon name="print" />
             <p class="caption">Impressoras</p>
-          </div>
+          </router-link>
         </div>
         <div class="col-xs-6 col-sm-4 col-lg-2">
-          <div class="card text-center category-link text-primary" @click="$router.push('senha')">
+          <router-link to="senha" class="card text-center category-link text-primary" style="text-decoration: none; display: block">
             <q-icon name="vpn_key" />
             <p class="caption">Trocar senha</p>
-          </div>
+          </router-link>
         </div>
         <div class="col-xs-6 col-sm-4 col-lg-2">
-          <div class="card text-center category-link text-primary" @click="$router.push('foto')">
+          <router-link to="foto" class="card text-center category-link text-primary" style="text-decoration: none; display: block">
             <q-icon name="account_box" />
             <p class="caption">Alterar foto</p>
-          </div>
+          </router-link>
         </div>
       </div>
 

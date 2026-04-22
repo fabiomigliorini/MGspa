@@ -89,6 +89,6 @@ export const useContaContabilStore = defineStore(
     }
   },
   {
-    persist: { paths: ['filters'] },
+    persist: { pick: ['filters'] },
   },
 )

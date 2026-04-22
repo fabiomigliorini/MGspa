@@ -8,12 +8,12 @@
     <div slot="content" class="layout-padding">
       <div class="row wrap">
         <div class="text-center col-md-1 col-xs-3 col-sm-2" v-for="aplicativo in aplicativos">
-          <q-btn flat color="primary" :icon="aplicativo.icon" @click="$router.push(aplicativo.path)" size="2rem"
+          <q-btn flat color="primary" :icon="aplicativo.icon" :to="aplicativo.path" size="2rem"
             style="min-height:0" />
           <br>
-          <small @click="$router.push(aplicativo.path)" class="text-primary" style="cursor:pointer">
-            {{ aplicativo.title }}
-          </small>
+          <router-link :to="aplicativo.path" class="text-primary" style="text-decoration: none">
+            <small>{{ aplicativo.title }}</small>
+          </router-link>
         </div>
       </div>
     </div>

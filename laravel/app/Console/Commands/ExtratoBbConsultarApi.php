@@ -68,11 +68,11 @@ class ExtratoBbConsultarApi extends Command
                 $inicio = Carbon::parse($inicio);
             } else {
                 $ultimoExtrato = ExtratoBancario::where(['codportador' => $portador->codportador])
-                    ->orderBy('dia', 'desc')
+                    ->orderBy('lancamento', 'desc')
                     ->first();
 
                 if($ultimoExtrato) {
-                    $inicio = $ultimoExtrato->dia;
+                    $inicio = $ultimoExtrato->lancamento;
                 }else{
                     $inicio = Carbon::now()->subDays(16);
                 }

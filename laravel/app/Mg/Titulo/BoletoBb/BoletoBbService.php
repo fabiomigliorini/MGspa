@@ -20,29 +20,12 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
-use Illuminate\Support\Facades\Cache;
 use Mg\Portador\Portador;
+use Mg\Portador\Bb\AuthService;
 use Mg\Negocio\Negocio;
 
 class BoletoBbService
 {
-
-    /***
-     * Verifica se o Token do Portador ainda não expirou
-     * se expirou renova o token
-     */
-    public static function verificaTokenValido(Portador $portador)
-    {
-        $cacheKey = "bb_token_{$portador->codportador}";
-        $cached = Cache::get($cacheKey);
-        if ($cached) {
-            return $cached;
-        }
-        $token = BoletoBbApiService::token($portador);
-        $ttl = intval($token['expires_in'] * 0.5);
-        Cache::put($cacheKey, $token['access_token'], $ttl);
-        return $token['access_token'];
-    }
 
     /**
      * Monta Nosso Numero de Acordo com Documentacao do BB:
@@ -126,7 +109,7 @@ class BoletoBbService
         }
 
         // verifica se tem token valido
-        $bbtoken = static::verificaTokenValido($titulo->Portador);
+        $bbtoken = AuthService::verificaTokenValido($titulo->Portador);
 
         // monta variaveis com dados da cobranca
         $endereco = $titulo->Pessoa->enderecocobranca;
@@ -220,7 +203,7 @@ class BoletoBbService
      */
     public static function consultar(TituloBoleto $tituloBoleto)
     {
-        $bbtoken = static::verificaTokenValido($tituloBoleto->Portador);
+        $bbtoken = AuthService::verificaTokenValido($tituloBoleto->Portador);
         $ret = BoletoBbApiService::consultar(
             $bbtoken,
             $tituloBoleto->Portador->bbdevappkey,
@@ -269,7 +252,7 @@ class BoletoBbService
      */
     public static function baixar(TituloBoleto $tituloBoleto)
     {
-        $bbtoken = static::verificaTokenValido($tituloBoleto->Portador);
+        $bbtoken = AuthService::verificaTokenValido($tituloBoleto->Portador);
         $ret = BoletoBbApiService::baixar(
             $bbtoken,
             $tituloBoleto->Portador->bbdevappkey,
@@ -467,7 +450,7 @@ class BoletoBbService
                 Log::info("Boleto BB - Consultando Liquidados - Portador #{$portador->codportador} - Indice {$indice}");
 
                 // autentica na API
-                $bbtoken = static::verificaTokenValido($portador);
+                $bbtoken = AuthService::verificaTokenValido($portador);
 
                 // pega listagem dos boletos baixados / pagos
                 $listagem = BoletoBbApiService::consultarListagem(

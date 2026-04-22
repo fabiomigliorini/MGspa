@@ -8,12 +8,19 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'home',
+        redirect: { name: 'pix' },
+      },
+      {
+        path: 'portador/saldos',
+        name: 'portador-saldos',
         component: () => import('pages/SaldosPage.vue'),
         meta: {
           auth: true,
           title: 'Saldos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/SaldosFiltrosDrawer.vue'),
+          ),
         },
       },
       {
@@ -95,14 +102,36 @@ const routes = [
         },
       },
       {
-        path: 'extrato/:id/:mesAno',
+        path: 'pix',
+        name: 'pix',
+        component: () => import('pages/pix/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Pix',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.CAIXA],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/PixFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'portador/:codportador/extrato/:ano(\\d{4})/:mes(\\d{2})',
         name: 'extrato',
-        component: () => import('pages/MovimentacoesPage.vue'),
+        component: () => import('pages/ExtratoPage.vue'),
         meta: {
           auth: true,
           title: 'Extrato',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/ExtratoFiltrosDrawer.vue'),
+          ),
         },
+      },
+      {
+        path: 'sem-permissao',
+        name: 'sem-permissao',
+        component: () => import('pages/SemPermissaoPage.vue'),
+        meta: { auth: false, title: 'Sem permissão' },
       },
     ],
   },
@@ -112,13 +141,6 @@ const routes = [
     name: 'login',
     component: () => import('pages/Login.vue'),
     meta: { auth: false },
-  },
-
-  {
-    path: '/sem-permissao',
-    name: 'sem-permissao',
-    component: () => import('pages/SemPermissaoPage.vue'),
-    meta: { auth: false, title: 'Sem permissão' },
   },
 
   {
