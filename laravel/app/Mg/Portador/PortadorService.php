@@ -210,7 +210,7 @@ class PortadorService
 
         // Saldo final e data
         $saldoFinal = (float)$bankAccount->balance;
-        $totalPorDia = array();
+        $totalPorDia = [];
 
         foreach ($transactions as $transaction) {
             $dateKey = $transaction->date->format("Y-m-d");

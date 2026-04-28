@@ -50,7 +50,7 @@ class PessoaTelefoneController extends MgController
 
     public function update(Request $request, $codpessoa, $codpessoatelefone)
     {
-        Autorizador::autoriza(array('Publico'));
+        Autorizador::autoriza(['Publico']);
 
 
         $data = $request->all();
@@ -61,7 +61,7 @@ class PessoaTelefoneController extends MgController
 
     public function delete(Request $request, $codpessoa, $codpessoatelefone)
     {
-        Autorizador::autoriza(array('Publico'));
+        Autorizador::autoriza(['Publico']);
 
         $telefones = PessoaTelefone::where('codpessoa', $codpessoa)->get()->count();
         if ($telefones > 1) {
@@ -94,7 +94,7 @@ class PessoaTelefoneController extends MgController
 
     public function ativar(Request $request, $codpessoa, $codpessoatelefone)
     {
-        Autorizador::autoriza(array('Publico'));
+        Autorizador::autoriza(['Publico']);
 
         $pes = PessoaTelefone::findOrFail($codpessoatelefone);
         $pes = PessoaTelefoneService::ativar($pes);
@@ -105,7 +105,7 @@ class PessoaTelefoneController extends MgController
     public function inativar(Request $request, $codpessoa, $codpessoatelefone)
     {
 
-        Autorizador::autoriza(array('Publico'));
+        Autorizador::autoriza(['Publico']);
         
         $pes = PessoaTelefone::findOrFail($codpessoatelefone);
         $pes = PessoaTelefoneService::inativar($pes);

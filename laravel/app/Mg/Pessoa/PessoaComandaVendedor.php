@@ -12,7 +12,7 @@ class PessoaComandaVendedor
     /* Variavel que armazenara os dados do boleto
     / @var array();
     */
-    private $data = array();
+    private $data = [];
     /*
     * método __set()
     * executado sempre que uma propriedade for atribuída.
@@ -23,7 +23,7 @@ class PessoaComandaVendedor
         if (method_exists($this, 'set_'.$prop))
         {
             // executa o método set_<propriedade>
-            call_user_func(array($this, 'set_'.$prop), $value);
+            call_user_func([$this, 'set_'.$prop], $value);
         }
         else
         {
@@ -48,7 +48,7 @@ class PessoaComandaVendedor
         if (method_exists($this, 'get_'.$prop))
         {
             // executa o método get_<propriedade>
-            return call_user_func(array($this, 'get_'.$prop));
+            return call_user_func([$this, 'get_'.$prop]);
         }
         else
         {
