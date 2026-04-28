@@ -38,6 +38,9 @@ const loading = computed(() => nfeTerceiroStore.loading.nfeTerceiro)
 const itens = computed(() => nfeTerceiroStore.itens)
 const duplicatas = computed(() => nfeTerceiroStore.duplicatas)
 const pagamentos = computed(() => nfeTerceiroStore.pagamentos)
+const todosConferidos = computed(
+  () => itens.value.length > 0 && itens.value.every((i) => i.conferencia),
+)
 
 const manifestacaoLabel = (indmanifestacao) => {
   switch (indmanifestacao) {
@@ -368,6 +371,32 @@ const handleMarcarTipoProduto = async () => {
       $q.notify({ type: 'positive', message: 'Itens marcados' })
     } catch (error) {
       $q.notify({ type: 'negative', message: 'Erro ao marcar itens', caption: error.message })
+    }
+  })
+}
+
+const handleConferirTodos = () => {
+  const desmarcando = todosConferidos.value
+  $q.dialog({
+    title: 'Confirmar',
+    message: desmarcando
+      ? 'Desmarcar todos os itens como conferidos?'
+      : 'Marcar todos os itens como conferidos?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Confirmar', color: 'primary' },
+  }).onOk(async () => {
+    try {
+      await nfeTerceiroStore.conferirTodos(nfe.value.codnfeterceiro)
+      $q.notify({
+        type: 'positive',
+        message: desmarcando ? 'Conferência desmarcada' : 'Todos os itens conferidos',
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao alterar conferência',
+        caption: error.response?.data?.message || error.message,
+      })
     }
   })
 }
@@ -738,6 +767,18 @@ onMounted(async () => {
               />
               <q-btn flat dense icon="check" color="primary" @click="handleMarcarTipoProduto">
                 <q-tooltip>Marcar todos itens</q-tooltip>
+              </q-btn>
+              <q-separator vertical class="gt-xs" />
+              <q-btn
+                flat
+                dense
+                :icon="todosConferidos ? 'task_alt' : 'radio_button_unchecked'"
+                :color="todosConferidos ? 'green' : 'grey-7'"
+                @click="handleConferirTodos"
+              >
+                <q-tooltip>
+                  {{ todosConferidos ? 'Desmarcar todos' : 'Marcar todos como conferidos' }}
+                </q-tooltip>
               </q-btn>
             </div>
 

@@ -43,6 +43,7 @@ class NfeTerceiroController
             'emissao_fim' => 'nullable|date',
             'indsituacao' => 'nullable|integer',
             'indmanifestacao' => 'nullable|integer',
+            'importacao' => 'nullable|in:pendentes,importadas,ignoradas',
             'valortotal_inicio' => 'nullable|numeric',
             'valortotal_fim' => 'nullable|numeric',
             'per_page' => 'nullable|integer|min:1|max:200',
@@ -155,6 +156,14 @@ class NfeTerceiroController
 
         $nft = NfeTerceiro::findOrFail($codnfeterceiro);
         $nft = NfeTerceiroItemService::marcarTipoProduto($nft, (int) $request->codtipoproduto);
+
+        return new NfeTerceiroResource($nft->load(static::RELATIONS_SHOW));
+    }
+
+    public function conferirTodos(Request $request, int $codnfeterceiro)
+    {
+        $nft = NfeTerceiro::findOrFail($codnfeterceiro);
+        $nft = NfeTerceiroItemService::conferirTodos($nft);
 
         return new NfeTerceiroResource($nft->load(static::RELATIONS_SHOW));
     }

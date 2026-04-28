@@ -29,6 +29,12 @@ const booleanOptions = [
   { label: 'Não', value: false },
 ]
 
+const importacaoOptions = [
+  { label: 'Pendentes', value: 'pendentes' },
+  { label: 'Importadas', value: 'importadas' },
+  { label: 'Ignoradas', value: 'ignoradas' },
+]
+
 const activeFiltersCount = computed(() => {
   let count = 0
   Object.keys(filters).forEach((key) => {
@@ -59,6 +65,7 @@ const filters = reactive({
   ignorada: null,
   revisao: null,
   conferencia: null,
+  importacao: null,
 })
 
 const convertToISODate = (ddmmyyyy) => {
@@ -183,6 +190,20 @@ onMounted(() => {
             <q-icon name="vpn_key" />
           </template>
         </q-input>
+      </div>
+
+      <!-- Importacao -->
+      <div class="q-mb-md">
+        <q-select
+          v-model="filters.importacao"
+          :options="importacaoOptions"
+          label="Importacao"
+          outlined
+          clearable
+          emit-value
+          map-options
+          :bottom-slots="false"
+        />
       </div>
 
       <q-separator class="q-my-md" />

@@ -98,6 +98,11 @@ export default {
     return response.data
   },
 
+  async conferirTodos(codnfeterceiro) {
+    const response = await api.post(`/v1/nfe-terceiro/${codnfeterceiro}/conferir-todos`)
+    return response.data
+  },
+
   async informarComplemento(codnfeterceiro, valor) {
     const response = await api.post(`/v1/nfe-terceiro/${codnfeterceiro}/informar-complemento`, {
       valor,

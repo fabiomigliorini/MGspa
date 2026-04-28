@@ -28,6 +28,7 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
       ignorada: null,
       revisao: null,
       conferencia: null,
+      importacao: null,
     },
     initialLoadDone: false,
     currentNfeTerceiro: null,
@@ -278,6 +279,18 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
       }
     },
 
+    async conferirTodos(codnfeterceiro) {
+      try {
+        const response = await nfeTerceiroService.conferirTodos(codnfeterceiro)
+        this.currentNfeTerceiro = response.data
+        this.syncCurrentToList()
+        return response.data
+      } catch (error) {
+        console.error('Erro ao conferir todos:', error)
+        throw error
+      }
+    },
+
     async informarComplemento(codnfeterceiro, valor) {
       try {
         const response = await nfeTerceiroService.informarComplemento(codnfeterceiro, valor)
@@ -315,6 +328,7 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
         ignorada: null,
         revisao: null,
         conferencia: null,
+        importacao: null,
       }
       this.initialLoadDone = false
     },
