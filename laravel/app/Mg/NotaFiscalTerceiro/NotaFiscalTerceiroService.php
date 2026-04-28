@@ -173,7 +173,7 @@ class NotaFiscalTerceiroService extends MgService
         $situacao = $request->situacao;
 
         // VALIDA QUAL O VALOR DA SITUACAO A SER FILTRADA
-        $filtroSituacao = array();
+        $filtroSituacao = [];
         switch ($situacao) {
             case 1:
                 $filtroSituacao[0] = 1; // resNFe autorizada

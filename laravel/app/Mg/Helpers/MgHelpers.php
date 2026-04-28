@@ -120,13 +120,13 @@ if (!function_exists('formataValorPorExtenso')) {
     function formataValorPorExtenso($valor = 0, $maiusculas = false)
     {
 
-        $singular = array("centavo", "real", "mil", "milhao", "bilhao", "trilhao", "quatrilhao");
-        $plural = array("centavos", "reais", "mil", "milhoes", "bilhoes", "trilhoes", "quatrilhoes");
+        $singular = ["centavo", "real", "mil", "milhao", "bilhao", "trilhao", "quatrilhao"];
+        $plural = ["centavos", "reais", "mil", "milhoes", "bilhoes", "trilhoes", "quatrilhoes"];
 
-        $c = array("", "cem", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos");
-        $d = array("", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa");
-        $d10 = array("dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezesete", "dezoito", "dezenove");
-        $u = array("", "um", "dois", "tres", "quatro", "cinco", "seis",    "sete", "oito", "nove");
+        $c = ["", "cem", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+        $d = ["", "dez", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+        $d10 = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezesete", "dezoito", "dezenove"];
+        $u = ["", "um", "dois", "tres", "quatro", "cinco", "seis",    "sete", "oito", "nove"];
 
         $z = 0;
         $rt = "";
@@ -177,7 +177,7 @@ if (!function_exists('formataDataPorExtenso')) {
             $mes = date('m');
             $data = date('Y-m-d');
         }
-        $meses = array(
+        $meses = [
             '01' => 'Janeiro',
             '02' => 'Fevereiro',
             '03' => 'Marco',
@@ -190,8 +190,8 @@ if (!function_exists('formataDataPorExtenso')) {
             '10' => 'Outubro',
             '11' => 'Novembro',
             '12' => 'Dezembro'
-        );
-        $dias = array(
+        ];
+        $dias = [
             0 => 'Domingo',
             1 => 'Segunda-feira',
             2 => 'Terca-feira',
@@ -199,7 +199,7 @@ if (!function_exists('formataDataPorExtenso')) {
             4 => 'Quinta-feira',
             5 => 'Sexta-feira',
             6 => 'Sabado'
-        );
+        ];
         return $dias[date('w', strtotime($data))] . ', ' . date('d', strtotime($data)) . ' de ' . $meses[$mes] . ' de ' . date('Y', strtotime($data));
     }
 }
@@ -334,7 +334,7 @@ if (!function_exists('formataPorMascara')) {
 if (!function_exists('formataInscricaoEstadual')) {
     function formataInscricaoEstadual($string, $siglaestado)
     {
-        $mascara = array(
+        $mascara = [
             'AC' => '##.###.###/###-##',
             'AL' => '#########',
             'AP' => '#########',
@@ -362,7 +362,7 @@ if (!function_exists('formataInscricaoEstadual')) {
             'SP' => '###.###.###.###',
             'SE' => '#########-#',
             'TO' => '###########',
-        );
+        ];
 
         if (!array_key_exists($siglaestado, $mascara)) {
             return $string;
@@ -639,7 +639,7 @@ if (!function_exists('primeiraLetraMaiuscula')) {
             # If string has a delimiter
             if (strstr($str, $delimiter)) {
 
-                $ucfirst = array();
+                $ucfirst = [];
                 # Apply ucfirst to every word
                 foreach (explode($delimiter, mb_strtolower($str)) as $word) {
                     $word = mb_convert_case($word, MB_CASE_TITLE);
