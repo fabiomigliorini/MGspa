@@ -19,6 +19,12 @@ const movimentoItems = [
     color: 'amber-8',
     to: { name: 'portador-saldos' },
   },
+  {
+    label: 'Boletos',
+    icon: 'receipt',
+    color: 'red-7',
+    to: { name: 'boleto-abertos', query: { tipo: 'vencidos' } },
+  },
 ]
 
 const cadastrosItems = [

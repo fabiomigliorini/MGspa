@@ -880,6 +880,12 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::post  ('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo',  '\Mg\Titulo\TipoMovimentoTituloController@inativar');
         Route::delete('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo',  '\Mg\Titulo\TipoMovimentoTituloController@ativar');
 
+        // TituloBoleto - listagens (abertos, liquidados, baixados)
+        Route::get('titulo/boleto/abertos/resumo',           '\Mg\Titulo\TituloBoletoController@abertosResumo');
+        Route::get('titulo/boleto/abertos',                  '\Mg\Titulo\TituloBoletoController@abertosLista');
+        Route::get('titulo/boleto/liquidados/navegacao',     '\Mg\Titulo\TituloBoletoController@liquidadosNavegacao');
+        Route::get('titulo/boleto/baixados',                 '\Mg\Titulo\TituloBoletoController@baixadosLista');
+
         // TipoTitulo
         Route::get   ('tipo-titulo',                                '\Mg\Titulo\TipoTituloController@index');
         Route::get   ('tipo-titulo/{codtipotitulo}',                '\Mg\Titulo\TipoTituloController@show');
