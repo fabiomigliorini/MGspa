@@ -128,6 +128,45 @@ const routes = [
         },
       },
       {
+        path: 'boleto/abertos',
+        name: 'boleto-abertos',
+        component: () => import('pages/boleto/AbertosPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Boletos Abertos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/BoletoAbertosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'boleto/liquidados/:ano(\\d{4})?/:mes(\\d{2})?/:dia(\\d{2})?/:codportador(\\d+)?',
+        name: 'boleto-liquidados',
+        component: () => import('pages/boleto/LiquidadosPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Boletos Liquidados',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/BoletoLiquidadosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'boleto/baixados',
+        name: 'boleto-baixados',
+        component: () => import('pages/boleto/BaixadosPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Boletos Baixados',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/BoletoBaixadosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'sem-permissao',
         name: 'sem-permissao',
         component: () => import('pages/SemPermissaoPage.vue'),

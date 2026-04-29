@@ -3,6 +3,7 @@ defineProps({
   activeCount: { type: Number, default: 0 },
   title: { type: String, default: 'Filtros' },
   headerClass: { type: String, default: 'bg-primary text-white' },
+  noPadding: { type: Boolean, default: false },
 })
 
 defineEmits(['clear'])
@@ -37,7 +38,7 @@ defineEmits(['clear'])
 
     <q-separator />
 
-    <div class="q-pa-md">
+    <div :class="noPadding ? '' : 'q-pa-md'">
       <slot />
     </div>
   </div>

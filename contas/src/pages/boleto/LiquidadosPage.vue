@@ -1,0 +1,240 @@
+<script setup>
+import { computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { date } from 'quasar'
+import { formatMoney } from 'src/utils/formatters.js'
+import { useBoletoStore } from 'src/stores/boletoStore'
+import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
+import BoletoTabs from 'src/components/BoletoTabs.vue'
+
+const route = useRoute()
+const router = useRouter()
+const store = useBoletoStore()
+
+const ano = computed(() => route.params.ano)
+const mes = computed(() => route.params.mes)
+const dia = computed(() => route.params.dia)
+const codportador = computed(() =>
+  route.params.codportador ? Number(route.params.codportador) : null,
+)
+
+const portadorAtual = computed(() =>
+  store.liqPortadores.find((p) => p.codportador === codportador.value),
+)
+
+const abrirPessoa = (codpessoa) =>
+  window.open(`${process.env.PESSOAS_URL}/#/pessoa/${codpessoa}`, '_blank')
+const abrirTitulo = (codtitulo) =>
+  window.open(`${process.env.MGSIS_URL}/index.php?r=titulo/view&id=${codtitulo}`, '_blank')
+
+const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
+
+function linkAno(a) {
+  return { name: 'boleto-liquidados', params: { ano: a } }
+}
+function linkMes(m) {
+  return { name: 'boleto-liquidados', params: { ano: ano.value, mes: m } }
+}
+function linkDia(diaIsoStr) {
+  const dd = diaIsoStr.slice(-2)
+  return { name: 'boleto-liquidados', params: { ano: ano.value, mes: mes.value, dia: dd } }
+}
+
+let ultimaChave = ''
+
+async function navegar() {
+  if (route.name !== 'boleto-liquidados') return
+
+  const chaveEntrada = [
+    route.params.ano || '',
+    route.params.mes || '',
+    route.params.dia || '',
+    route.params.codportador || '',
+  ].join('|')
+  if (chaveEntrada === ultimaChave) return
+  ultimaChave = chaveEntrada
+
+  const resp = await store.carregarLiqNavegacao({
+    ano: route.params.ano,
+    mes: route.params.mes,
+    dia: route.params.dia,
+    codportador: route.params.codportador,
+  })
+  if (!resp) return
+
+  const diaDd = (resp.dia || '').slice(-2)
+  const chaveResposta = [
+    resp.ano || '',
+    resp.mes || '',
+    diaDd,
+    resp.codportador || '',
+  ].join('|')
+
+  if (chaveResposta !== chaveEntrada && resp.ano) {
+    ultimaChave = chaveResposta
+    router.replace({
+      name: 'boleto-liquidados',
+      params: {
+        ano: resp.ano,
+        mes: resp.mes,
+        dia: diaDd,
+        codportador: resp.codportador,
+      },
+    })
+  }
+}
+
+watch(
+  () => [route.params.ano, route.params.mes, route.params.dia, route.params.codportador],
+  navegar,
+  { immediate: true },
+)
+</script>
+
+<template>
+  <q-page>
+    <BoletoTabs />
+    <div class="q-pa-md">
+
+    <q-card flat bordered class="q-mb-md">
+      <q-card-section class="q-py-sm">
+        <div class="text-subtitle1 text-weight-bold">
+          Boletos Liquidados
+          <template v-if="portadorAtual">
+            · {{ portadorAtual.conta }} {{ portadorAtual.portador }}
+          </template>
+        </div>
+        <div class="text-caption text-grey-7">
+          Boletos <b>liquidados</b> por data de crédito e portador.
+        </div>
+      </q-card-section>
+
+      <q-separator />
+
+      <q-card-section class="q-py-sm">
+        <div class="row q-gutter-xs q-mb-xs">
+          <q-btn
+            v-for="a in store.liqAnos"
+            :key="a.ano"
+            :to="linkAno(a.ano)"
+            :outline="a.ano !== ano"
+            :color="a.ano === ano ? 'primary' : 'grey-8'"
+            dense
+            no-caps
+            size="sm"
+            :label="a.ano"
+          />
+        </div>
+        <div v-if="store.liqMeses.length" class="row q-gutter-xs q-mb-xs">
+          <q-btn
+            v-for="m in store.liqMeses"
+            :key="m.mes"
+            :to="linkMes(m.mes)"
+            :outline="m.mes !== mes"
+            :color="m.mes === mes ? 'primary' : 'grey-8'"
+            dense
+            no-caps
+            size="sm"
+          >
+            <span>{{ m.label }}</span>
+            <q-badge class="q-ml-xs" color="grey-7" :label="m.quantidade" />
+          </q-btn>
+        </div>
+        <div v-if="store.liqDias.length" class="row q-gutter-xs">
+          <q-btn
+            v-for="d in store.liqDias"
+            :key="d.dia"
+            :to="linkDia(d.dia)"
+            :outline="d.dia.slice(-2) !== dia"
+            :color="d.dia.slice(-2) === dia ? 'primary' : 'grey-8'"
+            dense
+            no-caps
+            size="sm"
+          >
+            <span>{{ d.dia.slice(-2) }}</span>
+            <span class="q-ml-xs">{{ formatMoney(d.total) }}</span>
+            <q-badge class="q-ml-xs" color="grey-7" :label="d.quantidade" />
+          </q-btn>
+        </div>
+      </q-card-section>
+    </q-card>
+
+    <q-list bordered separator dense class="text-caption">
+      <q-item class="bg-grey-2 text-weight-bold text-caption text-grey-8 gt-xs">
+        <q-item-section>
+          <div class="row items-center q-col-gutter-x-sm">
+            <div class="col-12 col-sm-3 col-md-1">Receb.</div>
+            <div class="col-6 col-sm-3 col-md-1 text-right">Valor</div>
+            <div class="col-6 col-sm-3 col-md-1 text-right">Juros</div>
+            <div class="col-6 col-sm-3 col-md-1 text-right">Multa</div>
+            <div class="col-6 col-sm-3 col-md-1 text-right">Outro</div>
+            <div class="col-6 col-sm-3 col-md-1 text-right">Pago</div>
+            <div class="col-12 col-sm-12 col-md-3">Cliente</div>
+            <div class="col-6 col-sm-6 col-md-1">Título</div>
+            <div class="col-6 col-sm-6 col-md-2">Estado</div>
+          </div>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-for="b in store.liqLista" :key="b.codtituloboleto" clickable>
+        <q-item-section>
+          <div class="row items-center q-col-gutter-x-sm">
+            <div class="col-12 col-sm-3 col-md-1 text-weight-bold ellipsis">
+              {{ formatData(b.datarecebimento) }}
+            </div>
+            <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
+              {{ formatMoney(b.valoratual) }}
+            </div>
+            <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
+              {{ formatMoney(b.valorjuromora) }}
+            </div>
+            <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
+              {{ formatMoney(b.valormulta) }}
+            </div>
+            <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
+              {{ formatMoney(b.valoroutro) }}
+            </div>
+            <div class="col-6 col-sm-3 col-md-1 text-right text-weight-bold ellipsis">
+              {{ formatMoney(b.valorpago) }}
+            </div>
+            <div class="col-12 col-sm-12 col-md-3">
+              <a
+                href="#"
+                class="text-primary ellipsis block"
+                style="text-decoration: none"
+                @click.prevent.stop="abrirPessoa(b.codpessoa)"
+              >
+                {{ b.fantasia }}
+              </a>
+              <div v-if="b.saldo > 0" class="text-red text-caption">
+                * Saldo restante {{ formatMoney(b.saldo) }}
+              </div>
+            </div>
+            <div class="col-6 col-sm-6 col-md-1 ellipsis">
+              <a
+                href="#"
+                class="text-primary"
+                style="text-decoration: none"
+                @click.prevent.stop="abrirTitulo(b.codtitulo)"
+              >
+                {{ b.numero }}
+              </a>
+            </div>
+            <div class="col-6 col-sm-6 col-md-2 text-grey-7 ellipsis">
+              {{ ESTADO_COBRANCA[b.estadotitulocobranca] || '' }}
+            </div>
+          </div>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="!store.liqLista.length && !store.carregandoLiq">
+        <q-item-section class="text-center text-grey-6">
+          Nenhum boleto liquidado encontrado
+        </q-item-section>
+      </q-item>
+    </q-list>
+
+    <q-inner-loading :showing="store.carregandoLiq" color="primary" />
+    </div>
+  </q-page>
+</template>
