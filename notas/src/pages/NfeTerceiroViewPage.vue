@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
+import MgInputDate from 'src/components/MgInputDate.vue'
 import {
   formatCnpjCpf,
   formatDateTime,
@@ -26,6 +27,8 @@ const barrasInput = ref('')
 const tipoProdutoSelecionado = ref(null)
 const icmsStData = ref(null)
 const loadingIcmsSt = ref(false)
+const showEntradaDialog = ref(false)
+const entradaModel = ref(null)
 
 const tipoProdutoOptions = [
   { label: 'Uso e Consumo', value: 7 },
@@ -39,7 +42,7 @@ const itens = computed(() => nfeTerceiroStore.itens)
 const duplicatas = computed(() => nfeTerceiroStore.duplicatas)
 const pagamentos = computed(() => nfeTerceiroStore.pagamentos)
 const todosConferidos = computed(
-  () => itens.value.length > 0 && itens.value.every((i) => i.conferencia),
+  () => itens.value.length > 0 && itens.value.every((i) => i.conferencia)
 )
 
 const manifestacaoLabel = (indmanifestacao) => {
@@ -76,6 +79,13 @@ const manifestacaoOptions = [
   { label: 'Desconhecida', value: 210220 },
   { label: 'Nao Realizada', value: 210240 },
 ]
+
+const manifestacaoDescricao = {
+  210210: 'Ciência do destinatário sobre a operação destinada ao seu CNPJ.',
+  210200: 'Confirma que a operação foi efetivamente realizada (entrega do material).',
+  210220: 'Declara desconhecimento da operação — NFe emitida indevidamente contra seu CNPJ.',
+  210240: 'Declara que a operação não ocorreu (ex.: devolução, NFe errada). Requer justificativa.',
+}
 
 const handleManifestacao = (indmanifestacao) => {
   if (indmanifestacao === 210240) {
@@ -375,6 +385,39 @@ const handleMarcarTipoProduto = async () => {
   })
 }
 
+const toIsoMinuto = (date) => {
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+const handleInformarEntrada = () => {
+  entradaModel.value = nfe.value.entrada ? toIsoMinuto(new Date(nfe.value.entrada)) : null
+  showEntradaDialog.value = true
+}
+
+const preencherAgora = () => {
+  entradaModel.value = toIsoMinuto(new Date())
+}
+
+const salvarEntrada = async () => {
+  loadingAction.value = true
+  try {
+    await nfeTerceiroStore.updateNfeTerceiro(nfe.value.codnfeterceiro, {
+      entrada: entradaModel.value,
+    })
+    showEntradaDialog.value = false
+    $q.notify({ type: 'positive', message: 'Entrada atualizada' })
+  } catch (error) {
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao atualizar entrada',
+      caption: error.response?.data?.message || error.message,
+    })
+  } finally {
+    loadingAction.value = false
+  }
+}
+
 const handleConferirTodos = () => {
   const desmarcando = todosConferidos.value
   $q.dialog({
@@ -458,7 +501,12 @@ onMounted(async () => {
               v-close-popup
               @click="handleManifestacao(opt.value)"
             >
-              <q-item-section>{{ opt.label }}</q-item-section>
+              <q-item-section>
+                <q-item-label>{{ opt.label }}</q-item-label>
+                <q-item-label caption class="text-grey-7">
+                  {{ manifestacaoDescricao[opt.value] }}
+                </q-item-label>
+              </q-item-section>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -512,7 +560,22 @@ onMounted(async () => {
               <div class="text-body2">{{ formatDateTime(nfe.emissao) }}</div>
 
               <div class="text-caption text-grey-7 q-mt-sm">Entrada</div>
-              <div class="text-body2">{{ nfe.entrada ? formatDateTime(nfe.entrada) : '-' }}</div>
+              <div class="row items-center no-wrap">
+                <div class="text-body2 col">
+                  {{ nfe.entrada ? formatDateTime(nfe.entrada) : '-' }}
+                </div>
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  icon="edit_calendar"
+                  color="primary"
+                  @click="handleInformarEntrada"
+                >
+                  <q-tooltip>Informar data/hora de recebimento</q-tooltip>
+                </q-btn>
+              </div>
             </q-card-section>
           </q-card>
         </div>
@@ -1101,6 +1164,44 @@ onMounted(async () => {
           </q-tab-panel>
         </q-tab-panels>
       </q-card>
+
+      <!-- Dialog: Informar Entrada -->
+      <q-dialog v-model="showEntradaDialog" persistent>
+        <q-card style="min-width: 360px">
+          <q-card-section class="bg-primary text-white">
+            <div class="text-body2">
+              <q-icon name="edit_calendar" size="1.5em" class="q-mr-sm" />
+              Data/Hora de Recebimento
+            </div>
+          </q-card-section>
+
+          <q-card-section>
+            <MgInputDate v-model="entradaModel" label="Entrada" timestamp />
+            <div class="q-mt-sm">
+              <q-btn
+                flat
+                dense
+                icon="schedule"
+                label="Agora"
+                color="primary"
+                @click="preencherAgora"
+              />
+            </div>
+          </q-card-section>
+
+          <q-separator />
+
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" v-close-popup />
+            <q-btn
+              color="primary"
+              label="Salvar"
+              :loading="loadingAction"
+              @click="salvarEntrada"
+            />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </template>
   </q-page>
 </template>
