@@ -65,6 +65,11 @@ class NfeTerceiroImportarService
     {
         $negocio = null;
 
+        // Garante procNFe completo em disco antes da importação para
+        // viabilizar geração de DANFE depois. Fora da transação para não
+        // segurar locks durante chamada à SEFAZ.
+        NfeTerceiroService::garantirProcNFe($nft);
+
         DB::beginTransaction();
         try {
 
