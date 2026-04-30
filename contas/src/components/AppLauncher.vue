@@ -23,7 +23,7 @@ const movimentoItems = [
     label: 'Boletos',
     icon: 'receipt',
     color: 'red-7',
-    to: { name: 'boleto-abertos', query: { tipo: 'vencidos' } },
+    to: { name: 'boleto-abertos', query: { tipo: 'vencer7' } },
   },
 ]
 

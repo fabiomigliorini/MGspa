@@ -11,7 +11,7 @@ const route = useRoute()
 const router = useRouter()
 const store = useBoletoStore()
 
-const tipoAtual = computed(() => route.query.tipo || 'vencidos')
+const tipoAtual = computed(() => route.query.tipo || 'vencer7')
 const categoriaAtual = computed(() =>
   store.abertosResumo.find((c) => c.tipo === tipoAtual.value) ||
   TIPOS_ABERTOS.find((t) => t.tipo === tipoAtual.value) || { label: tipoAtual.value },
@@ -33,7 +33,7 @@ watch(
 
 onMounted(async () => {
   if (!route.query.tipo) {
-    router.replace({ name: 'boleto-abertos', query: { tipo: 'vencidos' } })
+    router.replace({ name: 'boleto-abertos', query: { tipo: 'vencer7' } })
     return
   }
   store.carregarResumoAbertos()
