@@ -120,15 +120,48 @@ class NfeTerceiroService
 
     public static function xml(NfeTerceiro $nft): string
     {
+        try {
+            static::garantirProcNFe($nft);
+        } catch (Exception $e) {
+            abort(404, $e->getMessage());
+        }
+
         $dfeTipo = DfeTipo::where(['schemaxml' => 'procNFe_v4.00.xsd'])->firstOrFail();
         $dd = $nft->DistribuicaoDfeS()->where('coddfetipo', $dfeTipo->coddfetipo)->first();
         if (!$dd) {
             abort(404, 'XML não disponível para esta NFe.');
         }
         $path = NFePHPPathService::pathDfeGz($dd);
+        if (!file_exists($path)) {
+            abort(404, 'Arquivo XML não localizado no servidor.');
+        }
         $gz = file_get_contents($path);
 
         return gzdecode($gz);
+    }
+
+    /**
+     * Garante que o procNFe (XML completo com protocolo) está disponível em
+     * disco. Se faltar registro ou arquivo, baixa da SEFAZ. Lança Exception
+     * em caso de falha.
+     */
+    public static function garantirProcNFe(NfeTerceiro $nft): void
+    {
+        $dfeTipo = DfeTipo::where(['schemaxml' => 'procNFe_v4.00.xsd'])->firstOrFail();
+        $dd = $nft->DistribuicaoDfeS()->where('coddfetipo', $dfeTipo->coddfetipo)->first();
+
+        if ($dd) {
+            $path = NFePHPPathService::pathDfeGz($dd);
+            if (file_exists($path)) {
+                return;
+            }
+        }
+
+        try {
+            static::download($nft);
+        } catch (Exception $e) {
+            throw new Exception('XML não disponível e falha ao baixar da SEFAZ: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     public static function atualizar(NfeTerceiro $nft, array $data): NfeTerceiro

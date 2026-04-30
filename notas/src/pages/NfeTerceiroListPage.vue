@@ -109,6 +109,14 @@ onMounted(async () => {
 
 <template>
   <q-page>
+    <!-- Indicador de refetch (mantém lista visível) -->
+    <q-linear-progress
+      v-if="loading && items.length > 0"
+      indeterminate
+      color="primary"
+      size="2px"
+    />
+
     <!-- Loading inicial -->
     <div v-if="loading && items.length === 0" class="row justify-center q-py-xl">
       <q-spinner color="primary" size="3em" />

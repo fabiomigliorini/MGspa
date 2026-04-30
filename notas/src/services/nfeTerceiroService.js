@@ -48,7 +48,8 @@ export default {
   },
 
   guiaStPdfUrl(codnfeterceiro, codtitulonfeterceiro) {
-    return `${process.env.API_URL}/v1/nfe-terceiro/${codnfeterceiro}/guia-st/${codtitulonfeterceiro}/pdf`
+    const base = process.env.API_URL.replace(/\/$/, '')
+    return `${base}/v1/nfe-terceiro/${codnfeterceiro}/guia-st/${codtitulonfeterceiro}/pdf`
   },
 
   // Importação
@@ -120,10 +121,12 @@ export default {
   },
 
   xml(codnfeterceiro) {
-    return `${process.env.API_URL}/v1/nfe-terceiro/${codnfeterceiro}/xml`
+    const base = process.env.API_URL.replace(/\/$/, '')
+    return `${base}/v1/nfe-terceiro/${codnfeterceiro}/xml`
   },
 
   danfe(codnfeterceiro) {
-    return `${process.env.API_URL}/v1/nfe-terceiro/${codnfeterceiro}/danfe`
+    const base = process.env.API_URL.replace(/\/$/, '')
+    return `${base}/v1/nfe-terceiro/${codnfeterceiro}/danfe`
   },
 }

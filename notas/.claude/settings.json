@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(php -l app/Mg/NotaFiscal/NotaFiscalRelatorioService.php)",
-      "Bash(php -l app/Mg/NotaFiscal/NotaFiscalController.php)"
+      "Bash(php -l app/Mg/NotaFiscal/NotaFiscalController.php)",
+      "Read(//opt/www/MGspa/laravel/routes/**)",
+      "Bash(git --git-dir=/opt/www/MGspa/.git --work-tree=/opt/www/MGspa show 5083954a -- notas/src/pages/NfeTerceiroItemViewPage.vue)",
+      "Read(//opt/www/MGspa/laravel/app/Mg/NfeTerceiro/**)"
     ]
   }
 }

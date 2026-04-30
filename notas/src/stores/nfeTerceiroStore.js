@@ -53,15 +53,16 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
 
   actions: {
     async fetchItems(reset = false) {
-      if (this.pagination.loading || (!reset && !this.pagination.hasMore)) {
+      if (!reset && (this.pagination.loading || !this.pagination.hasMore)) {
         return
       }
 
       if (reset) {
-        this.items = []
+        this._fetchSeq = (this._fetchSeq || 0) + 1
         this.pagination.page = 1
         this.pagination.hasMore = true
       }
+      const seq = this._fetchSeq
 
       try {
         this.pagination.loading = true
@@ -73,6 +74,11 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
         }
 
         const response = await nfeTerceiroService.list(params)
+
+        if (reset && seq !== this._fetchSeq) {
+          return response
+        }
+
         const newItems = response.data || []
 
         if (reset) {
@@ -96,7 +102,9 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
         console.error('Erro ao buscar NFe de terceiros:', error)
         throw error
       } finally {
-        this.pagination.loading = false
+        if (!reset || seq === this._fetchSeq) {
+          this.pagination.loading = false
+        }
       }
     },
 
