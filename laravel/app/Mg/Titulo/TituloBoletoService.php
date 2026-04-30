@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 class TituloBoletoService
 {
     private const LABELS_TIPOS_ABERTOS = [
+        'divergentes'   => 'Divergentes',
         'vencidos'      => 'Vencidos',
         'vencer7'       => 'Vencer em 7 Dias',
         'vencer30'      => 'Vencer em 30 Dias',
@@ -17,6 +18,12 @@ class TituloBoletoService
     public static function abertosResumo(): array
     {
         $sql = "
+            select 0 as ordem, 'divergentes' as tipo, sum(tb.valoratual) as total, count(tb.codtituloboleto) as quantidade
+            from tbltituloboleto tb
+            inner join tbltitulo t on (t.codtitulo = tb.codtitulo)
+            where tb.estadotitulocobranca not in (6, 7)
+              and tb.valoratual != t.saldo
+            union all
             select 1 as ordem, 'vencidos' as tipo, sum(tb.valoratual) as total, count(tb.codtituloboleto) as quantidade
             from tbltituloboleto tb
             where tb.estadotitulocobranca not in (6, 7)
@@ -89,6 +96,8 @@ class TituloBoletoService
     private static function corteVencimento(string $tipo): ?string
     {
         switch ($tipo) {
+            case 'divergentes':
+                return "and tb.valoratual != t.saldo";
             case 'vencidos':
                 return "and tb.vencimento < date_trunc('day', now() - '1 day'::interval)";
             case 'vencer7':

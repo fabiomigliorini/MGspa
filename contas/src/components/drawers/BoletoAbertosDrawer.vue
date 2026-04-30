@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router'
 import { formatMoney } from 'src/utils/formatters.js'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { TIPOS_ABERTOS } from 'src/constants/tituloBoleto'
-import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 
 const route = useRoute()
 const store = useBoletoStore()
@@ -17,7 +16,7 @@ onMounted(() => store.carregarResumoAbertos())
 </script>
 
 <template>
-  <FilterDrawerShell title="Boletos Abertos" :active-count="0" no-padding>
+  <div class="bg-white">
     <q-list separator>
       <q-item
         v-for="item in TIPOS_ABERTOS"
@@ -40,5 +39,5 @@ onMounted(() => store.carregarResumoAbertos())
         </q-item-section>
       </q-item>
     </q-list>
-  </FilterDrawerShell>
+  </div>
 </template>

@@ -1,56 +1,134 @@
 <script setup>
 import { computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { formatMoney } from 'src/utils/formatters.js'
 import { useBoletoStore } from 'src/stores/boletoStore'
-import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 
 const route = useRoute()
+const router = useRouter()
 const store = useBoletoStore()
 
-const codportadorAtual = computed(() =>
-  route.params.codportador ? Number(route.params.codportador) : null,
+const anoAtual = computed(() => route.params.ano)
+const mesAtual = computed(() => route.params.mes)
+const diaAtual = computed(() => route.params.dia)
+
+const anoOpcoes = computed(() =>
+  store.liqAnos.map((a) => ({
+    value: a.ano,
+    label: `${a.ano} · ${formatMoney(a.total)} (${a.quantidade})`,
+    titulo: a.ano,
+    total: a.total,
+    quantidade: a.quantidade,
+  })),
 )
 
-function linkPortador(codportador) {
-  return {
+const mesOpcoes = computed(() =>
+  store.liqMeses.map((m) => ({
+    value: m.mes,
+    label: `${m.label} · ${formatMoney(m.total)} (${m.quantidade})`,
+    titulo: m.label,
+    total: m.total,
+    quantidade: m.quantidade,
+  })),
+)
+
+const diaOpcoes = computed(() =>
+  store.liqDias.map((d) => ({
+    value: d.dia.slice(-2),
+    label: `${d.dia.slice(-2)} · ${formatMoney(d.total)} (${d.quantidade})`,
+    titulo: d.dia.slice(-2),
+    total: d.total,
+    quantidade: d.quantidade,
+  })),
+)
+
+function onAnoChange(ano) {
+  router.push({ name: 'boleto-liquidados', params: { ano } })
+}
+function onMesChange(mes) {
+  router.push({ name: 'boleto-liquidados', params: { ano: anoAtual.value, mes } })
+}
+function onDiaChange(dia) {
+  router.push({
     name: 'boleto-liquidados',
-    params: {
-      ano: route.params.ano,
-      mes: route.params.mes,
-      dia: route.params.dia,
-      codportador,
-    },
-  }
+    params: { ano: anoAtual.value, mes: mesAtual.value, dia },
+  })
 }
 </script>
 
 <template>
-  <FilterDrawerShell title="Portadores do Dia" :active-count="0" no-padding>
-    <q-list separator>
-      <q-item v-if="!store.liqPortadores.length" class="text-grey-6">
-        <q-item-section>
-          <q-item-label caption>Selecione ano, mês e dia</q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-item
-        v-for="p in store.liqPortadores"
-        :key="p.codportador"
-        clickable
-        :to="linkPortador(p.codportador)"
-        :active="p.codportador === codportadorAtual"
-        active-class="bg-blue-1 text-primary"
-      >
-        <q-item-section>
-          <q-item-label class="text-weight-bold text-right">
-            {{ formatMoney(p.total) }}
-          </q-item-label>
-          <q-item-label caption class="text-right">
-            {{ p.conta }} · {{ p.portador }}
-            <span class="text-grey-6">({{ p.quantidade }})</span>
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-    </q-list>
-  </FilterDrawerShell>
+  <div class="bg-white q-pa-md">
+    <q-select
+      :model-value="anoAtual"
+      @update:model-value="onAnoChange"
+      :options="anoOpcoes"
+      emit-value
+      map-options
+      label="Ano"
+      outlined
+      :bottom-slots="false"
+      class="q-mb-md"
+    >
+      <template v-slot:option="{ itemProps, opt }">
+        <q-item v-bind="itemProps">
+          <q-item-section>
+            <q-item-label class="text-weight-bold">{{ opt.titulo }}</q-item-label>
+            <q-item-label caption>{{ formatMoney(opt.total) }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-item-label caption>{{ opt.quantidade }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-select>
+
+    <q-select
+      :model-value="mesAtual"
+      @update:model-value="onMesChange"
+      :options="mesOpcoes"
+      emit-value
+      map-options
+      label="Mês"
+      outlined
+      :bottom-slots="false"
+      :disable="!mesOpcoes.length"
+      class="q-mb-md"
+    >
+      <template v-slot:option="{ itemProps, opt }">
+        <q-item v-bind="itemProps">
+          <q-item-section>
+            <q-item-label class="text-weight-bold">{{ opt.titulo }}</q-item-label>
+            <q-item-label caption>{{ formatMoney(opt.total) }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-item-label caption>{{ opt.quantidade }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-select>
+
+    <q-select
+      :model-value="diaAtual"
+      @update:model-value="onDiaChange"
+      :options="diaOpcoes"
+      emit-value
+      map-options
+      label="Dia"
+      outlined
+      :bottom-slots="false"
+      :disable="!diaOpcoes.length"
+    >
+      <template v-slot:option="{ itemProps, opt }">
+        <q-item v-bind="itemProps">
+          <q-item-section>
+            <q-item-label class="text-weight-bold">{{ opt.titulo }}</q-item-label>
+            <q-item-label caption>{{ formatMoney(opt.total) }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-item-label caption>{{ opt.quantidade }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-select>
+  </div>
 </template>

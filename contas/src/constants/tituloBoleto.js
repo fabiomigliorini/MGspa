@@ -39,6 +39,7 @@ export const TIPO_BAIXA = Object.freeze({
 })
 
 export const TIPOS_ABERTOS = Object.freeze([
+  { tipo: 'divergentes', label: 'Divergentes' },
   { tipo: 'vencidos', label: 'Vencidos' },
   { tipo: 'vencer7', label: 'Vencer em 7 Dias' },
   { tipo: 'vencer30', label: 'Vencer em 30 Dias' },
