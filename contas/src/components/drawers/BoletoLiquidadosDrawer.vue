@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { formatMoney } from 'src/utils/formatters.js'
+import { formataNumero } from 'src/utils/formatters.js'
 import { useBoletoStore } from 'src/stores/boletoStore'
 
 const route = useRoute()
@@ -15,7 +15,7 @@ const diaAtual = computed(() => route.params.dia)
 const anoOpcoes = computed(() =>
   store.liqAnos.map((a) => ({
     value: a.ano,
-    label: `${a.ano} · ${formatMoney(a.total)} (${a.quantidade})`,
+    label: `${a.ano} · ${formataNumero(a.total)} (${a.quantidade})`,
     titulo: a.ano,
     total: a.total,
     quantidade: a.quantidade,
@@ -25,7 +25,7 @@ const anoOpcoes = computed(() =>
 const mesOpcoes = computed(() =>
   store.liqMeses.map((m) => ({
     value: m.mes,
-    label: `${m.label} · ${formatMoney(m.total)} (${m.quantidade})`,
+    label: `${m.label} · ${formataNumero(m.total)} (${m.quantidade})`,
     titulo: m.label,
     total: m.total,
     quantidade: m.quantidade,
@@ -35,7 +35,7 @@ const mesOpcoes = computed(() =>
 const diaOpcoes = computed(() =>
   store.liqDias.map((d) => ({
     value: d.dia.slice(-2),
-    label: `${d.dia.slice(-2)} · ${formatMoney(d.total)} (${d.quantidade})`,
+    label: `${d.dia.slice(-2)} · ${formataNumero(d.total)} (${d.quantidade})`,
     titulo: d.dia.slice(-2),
     total: d.total,
     quantidade: d.quantidade,
@@ -73,7 +73,7 @@ function onDiaChange(dia) {
         <q-item v-bind="itemProps">
           <q-item-section>
             <q-item-label class="text-weight-bold">{{ opt.titulo }}</q-item-label>
-            <q-item-label caption>{{ formatMoney(opt.total) }}</q-item-label>
+            <q-item-label caption>{{ formataNumero(opt.total) }}</q-item-label>
           </q-item-section>
           <q-item-section side>
             <q-item-label caption>{{ opt.quantidade }}</q-item-label>
@@ -98,7 +98,7 @@ function onDiaChange(dia) {
         <q-item v-bind="itemProps">
           <q-item-section>
             <q-item-label class="text-weight-bold">{{ opt.titulo }}</q-item-label>
-            <q-item-label caption>{{ formatMoney(opt.total) }}</q-item-label>
+            <q-item-label caption>{{ formataNumero(opt.total) }}</q-item-label>
           </q-item-section>
           <q-item-section side>
             <q-item-label caption>{{ opt.quantidade }}</q-item-label>
@@ -122,7 +122,7 @@ function onDiaChange(dia) {
         <q-item v-bind="itemProps">
           <q-item-section>
             <q-item-label class="text-weight-bold">{{ opt.titulo }}</q-item-label>
-            <q-item-label caption>{{ formatMoney(opt.total) }}</q-item-label>
+            <q-item-label caption>{{ formataNumero(opt.total) }}</q-item-label>
           </q-item-section>
           <q-item-section side>
             <q-item-label caption>{{ opt.quantidade }}</q-item-label>

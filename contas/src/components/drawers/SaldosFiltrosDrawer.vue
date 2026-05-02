@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import moment from 'moment'
+import { date } from 'quasar'
 import { useSaldoStore } from 'src/stores/saldoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
@@ -9,10 +9,10 @@ const store = useSaldoStore()
 const dateProxy = ref(null)
 
 const minYearMonth = computed(() =>
-  store.intervalo ? moment(store.intervalo.primeira_data).format('YYYY/MM') : undefined,
+  store.intervalo ? date.formatDate(store.intervalo.primeira_data, 'YYYY/MM') : undefined,
 )
 const maxYearMonth = computed(() =>
-  store.intervalo ? moment(store.intervalo.ultima_data).format('YYYY/MM') : undefined,
+  store.intervalo ? date.formatDate(store.intervalo.ultima_data, 'YYYY/MM') : undefined,
 )
 
 const onDateChange = (val) => {

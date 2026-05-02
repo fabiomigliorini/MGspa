@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import moment from 'moment'
-import { useQuasar } from 'quasar'
+import { useQuasar, date } from 'quasar'
 import { useAuthStore } from 'stores/auth'
 import { useSaldoStore } from 'src/stores/saldoStore'
+import { formataNumero } from 'src/utils/formatters.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -28,12 +28,6 @@ const enviandoOfx = ref(false)
 const importandoOfx = ref(false)
 
 const urlUploadOfx = computed(() => process.env.API_URL + 'v1/portador/importar-ofx')
-
-const formatNumero = (value) =>
-  new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value || 0)
 
 const bancosUnicos = computed(() => {
   const map = new Map()
@@ -123,7 +117,7 @@ const ofxFalha = (response) => {
 }
 
 onMounted(() => {
-  const dia = route.query.dia || moment().format('DD-MM-YYYY')
+  const dia = route.query.dia || date.formatDate(Date.now(), 'DD-MM-YYYY')
   store.dataSelecionada = dia
   store.buscaIntervalo()
   store.listaSaldos()
@@ -174,7 +168,7 @@ onMounted(() => {
                       :class="moneyColor(l.porBanco[b.codbanco].total)"
                       style="text-decoration: none"
                     >
-                      <span>{{ formatNumero(l.porBanco[b.codbanco].total) }}</span>
+                      <span>{{ formataNumero(l.porBanco[b.codbanco].total) }}</span>
                       <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
                     </router-link>
 
@@ -184,7 +178,7 @@ onMounted(() => {
                         :class="moneyColor(l.porBanco[b.codbanco].total)"
                         @click="toggleExpanded(l.codfilial, b.codbanco)"
                       >
-                        <span>{{ formatNumero(l.porBanco[b.codbanco].total) }}</span>
+                        <span>{{ formataNumero(l.porBanco[b.codbanco].total) }}</span>
                         <q-icon
                           :name="
                             isExpanded(l.codfilial, b.codbanco) ? 'expand_less' : 'expand_more'
@@ -203,7 +197,7 @@ onMounted(() => {
                         >
                           <div class="row items-center justify-end no-wrap">
                             <span class="text-primary" :class="moneyColor(p.saldobancario)">
-                              {{ formatNumero(p.saldobancario) }}
+                              {{ formataNumero(p.saldobancario) }}
                             </span>
                             <q-icon
                               name="horizontal_rule"
@@ -234,7 +228,7 @@ onMounted(() => {
                   :class="moneyColor(l.totalFilial)"
                 >
                   <div class="row items-center justify-end no-wrap">
-                    <span>{{ formatNumero(l.totalFilial) }}</span>
+                    <span>{{ formataNumero(l.totalFilial) }}</span>
                     <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
                   </div>
                 </td>
@@ -254,13 +248,13 @@ onMounted(() => {
                   :class="moneyColor(totalPorBanco(b.codbanco))"
                 >
                   <div class="row items-center justify-end no-wrap">
-                    <span>{{ formatNumero(totalPorBanco(b.codbanco)) }}</span>
+                    <span>{{ formataNumero(totalPorBanco(b.codbanco)) }}</span>
                     <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
                   </div>
                 </td>
                 <td class="text-right" :class="moneyColor(store.totalGeral)">
                   <div class="row items-center justify-end no-wrap">
-                    <span>{{ formatNumero(store.totalGeral) }}</span>
+                    <span>{{ formataNumero(store.totalGeral) }}</span>
                     <q-icon name="horizontal_rule" size="16px" color="grey-5" class="q-ml-xs" />
                   </div>
                 </td>

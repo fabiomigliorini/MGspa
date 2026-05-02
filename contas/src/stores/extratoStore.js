@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import moment from 'moment'
+import { date } from 'quasar'
 import { api } from 'src/services/api'
 import { notifyError, notifySuccess } from 'src/utils/notify'
 
@@ -26,14 +26,14 @@ export const useExtratoStore = defineStore('extrato', () => {
 
   const diasDoMes = computed(() => {
     const dias = new Set()
-    extratos.value.forEach((e) => dias.add(moment(e.lancamento).format('DD')))
+    extratos.value.forEach((e) => dias.add(date.formatDate(e.lancamento, 'DD')))
     return Array.from(dias).sort()
   })
 
   const anosDisponiveis = computed(() => {
     if (!intervalo.value) return []
-    const inicio = moment(intervalo.value.primeira_data).year()
-    const fim = moment(intervalo.value.ultima_data).year()
+    const inicio = new Date(intervalo.value.primeira_data).getFullYear()
+    const fim = new Date(intervalo.value.ultima_data).getFullYear()
     const arr = []
     for (let a = inicio; a <= fim; a++) arr.push(String(a))
     return arr
@@ -41,14 +41,14 @@ export const useExtratoStore = defineStore('extrato', () => {
 
   const mesesDisponiveis = computed(() => {
     if (!intervalo.value || !ano.value) return []
-    const inicio = moment(intervalo.value.primeira_data).startOf('month')
-    const fim = moment(intervalo.value.ultima_data).endOf('month')
+    const inicio = date.startOfDate(intervalo.value.primeira_data, 'month')
+    const fim = date.endOfDate(intervalo.value.ultima_data, 'month')
     const out = []
     for (let m = 1; m <= 12; m++) {
       const mm = String(m).padStart(2, '0')
-      const ref = moment(`${ano.value}-${mm}-01`)
-      if (ref.isBetween(inicio, fim, null, '[]')) {
-        out.push({ value: mm, label: ref.format('MMM').toUpperCase() })
+      const ref = date.extractDate(`${ano.value}-${mm}-01`, 'YYYY-MM-DD')
+      if (date.isBetweenDates(ref, inicio, fim, { inclusiveFrom: true, inclusiveTo: true })) {
+        out.push({ value: mm, label: date.formatDate(ref, 'MMM').toUpperCase() })
       }
     }
     return out

@@ -62,6 +62,8 @@ const pesquisa = (texto, update) => {
     option-label="contacontabil"
     emit-value
     map-options
+    class="q-select--truncado"
+    input-class="ellipsis"
     v-bind="$attrs"
   >
     <template v-for="(_, name) in $slots" :key="name" #[name]="slotData">

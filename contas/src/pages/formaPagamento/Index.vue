@@ -174,7 +174,7 @@ onMounted(() => store.fetchItems(true))
 <template>
   <q-page>
     <q-infinite-scroll @load="carregarMais" :offset="250">
-      <div class="q-pa-md" style="margin: auto; max-width: 850px">
+      <div class="q-pa-md" style="margin: auto; max-width: 1086px">
         <q-table
           :rows="store.items"
           :columns="columns"

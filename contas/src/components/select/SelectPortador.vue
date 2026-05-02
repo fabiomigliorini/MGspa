@@ -43,6 +43,8 @@ const filterFn = (val, update) => {
     option-label="portador"
     emit-value
     map-options
+    class="q-select--truncado"
+    input-class="ellipsis"
     v-bind="$attrs"
   >
     <template v-for="(_, name) in $slots" :key="name" #[name]="slotData">

@@ -8,6 +8,12 @@ const appsItems = [
 
 const movimentoItems = [
   {
+    label: 'Títulos',
+    icon: 'request_quote',
+    color: 'indigo-7',
+    to: { name: 'titulo' },
+  },
+  {
     label: 'Pix',
     icon: 'pix',
     color: 'teal-7',

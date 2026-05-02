@@ -2,7 +2,7 @@
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { date } from 'quasar'
-import { formatMoney } from 'src/utils/formatters.js'
+import { formataNumero } from 'src/utils/formatters.js'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'
@@ -112,7 +112,7 @@ watch(
               no-caps
             >
               <span>Conta {{ p.conta }} |</span>
-              <span class="q-ml-xs">{{ formatMoney(p.total) }}</span>
+              <span class="q-ml-xs">{{ formataNumero(p.total) }}</span>
               <q-badge class="q-ml-xs" color="grey-7" :label="p.quantidade" />
             </q-btn>
           </div>
@@ -143,19 +143,19 @@ watch(
                 {{ formatData(b.datarecebimento) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
-                {{ formatMoney(b.valoratual) }}
+                {{ formataNumero(b.valoratual) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
-                {{ formatMoney(b.valorjuromora) }}
+                {{ formataNumero(b.valorjuromora) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
-                {{ formatMoney(b.valormulta) }}
+                {{ formataNumero(b.valormulta) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
-                {{ formatMoney(b.valoroutro) }}
+                {{ formataNumero(b.valoroutro) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right text-weight-bold ellipsis">
-                {{ formatMoney(b.valorpago) }}
+                {{ formataNumero(b.valorpago) }}
               </div>
               <div class="col-12 col-sm-12 col-md-3">
                 <a
@@ -167,7 +167,7 @@ watch(
                   {{ b.fantasia }}
                 </a>
                 <div v-if="b.saldo > 0" class="text-red text-caption">
-                  * Saldo restante {{ formatMoney(b.saldo) }}
+                  * Saldo restante {{ formataNumero(b.saldo) }}
                 </div>
               </div>
               <div class="col-6 col-sm-6 col-md-1 ellipsis">

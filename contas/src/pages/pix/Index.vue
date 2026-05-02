@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { api } from 'src/services/api'
 import { usePixStore } from 'src/stores/pixStore'
 import { notifyError } from 'src/utils/notify'
-import { formataCPF, formataCNPJ, formatMoney, tempoRelativo } from 'src/utils/formatters'
+import { formataCPF, formataCNPJ, formataNumero, tempoRelativo } from 'src/utils/formatters'
 
 const store = usePixStore()
 
@@ -108,7 +108,7 @@ onMounted(() => {
 <template>
   <q-page>
     <q-infinite-scroll @load="carregarMais" :offset="250">
-      <div class="q-pa-md" style="max-width: 850px; margin: auto">
+      <div class="q-pa-md" style="max-width: 1086px; margin: auto">
         <q-list v-if="store.items.length > 0" bordered separator class="bg-white rounded-borders">
           <q-item v-for="item in store.items" :key="item.e2eid || item.codpix || item.codpixcob">
             <!-- Avatar status -->
@@ -156,7 +156,7 @@ onMounted(() => {
               <q-item-label>
                 <span class="text-grey text-caption">R$</span>
                 <span class="text-weight-bold">
-                  {{ formatMoney(item.valor).replace('R$', '').trim() }}
+                  {{ formataNumero(item.valor).replace('R$', '').trim() }}
                 </span>
               </q-item-label>
               <q-item-label caption>

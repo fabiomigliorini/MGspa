@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { formatMoney } from 'src/utils/formatters.js'
+import { formataNumero } from 'src/utils/formatters.js'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { TIPOS_ABERTOS } from 'src/constants/tituloBoleto'
 
@@ -28,7 +28,7 @@ onMounted(() => store.carregarResumoAbertos())
       >
         <q-item-section>
           <q-item-label class="text-weight-bold text-right">
-            {{ resumoDe(item.tipo) ? formatMoney(resumoDe(item.tipo).total) : '—' }}
+            {{ resumoDe(item.tipo) ? formataNumero(resumoDe(item.tipo).total) : '—' }}
           </q-item-label>
           <q-item-label caption class="text-right">
             {{ item.label }}

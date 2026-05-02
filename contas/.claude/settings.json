@@ -1,3 +1,7 @@
 {
-  "permissions": {}
+  "permissions": {
+    "allow": [
+      "Bash(docker exec *)"
+    ]
+  }
 }
