@@ -6,6 +6,7 @@ import { api } from 'src/services/api'
 import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import IconeInfoCriacao from 'src/components/IconeInfoCriacao.vue'
+import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
@@ -148,6 +149,63 @@ async function salvar() {
   }
 }
 
+// === Boleto BB ===
+function bbCriar() {
+  $q.dialog({
+    title: 'Novo Boleto',
+    message: 'Deseja criar um novo boleto para este título?',
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await api.post(`v1/titulo/${codtitulo.value}/boleto-bb`)
+      notifySuccess('Boleto criado')
+      await carregar()
+    } catch (e) {
+      notifyError(e, 'Erro ao criar boleto')
+    }
+  })
+}
+
+async function bbConsultar(b) {
+  try {
+    await api.post(`v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/consultar`)
+    notifySuccess('Boleto consultado')
+    await carregar()
+  } catch (e) {
+    notifyError(e, 'Erro ao consultar boleto')
+  }
+}
+
+function bbBaixar(b) {
+  $q.dialog({
+    title: 'Baixar Boleto',
+    message: 'Confirma baixar (cancelar) este boleto no banco?',
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await api.post(`v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/baixar`)
+      notifySuccess('Boleto baixado')
+      await carregar()
+    } catch (e) {
+      notifyError(e, 'Erro ao baixar boleto')
+    }
+  })
+}
+
+function bbAbrirPdf(b) {
+  const url = `${process.env.API_URL}v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/pdf`
+  window.open(url, '_blank')
+}
+
+function bbEstadoCor(estado) {
+  if (estado === 6) return 'green-7' // LIQUIDADO
+  if (estado === 7) return 'red-7' // BAIXADO
+  if ([14, 80].includes(estado)) return 'orange-7' // EM LIQUIDACAO / PROCESSAMENTO
+  return 'blue-7'
+}
+
 // === Outras ações ===
 function estornar() {
   $q.dialog({
@@ -172,6 +230,8 @@ const urlNegocio = (codnegocio) =>
   codnegocio ? `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}` : null
 const urlAgrupamento = (cod) =>
   cod ? `${process.env.MGSIS_URL}/index.php?r=tituloAgrupamento/view&id=${cod}` : null
+const urlLiquidacao = (cod) =>
+  cod ? `${process.env.MGSIS_URL}/index.php?r=liquidacaoTitulo/view&id=${cod}` : null
 
 // === Estilos derivados ===
 // Parseia YYYY-MM-DD como data local (evita o offset UTC do `new Date(string)`).
@@ -192,14 +252,6 @@ const classeVencimento = computed(() => {
   if (atraso > 0) return 'text-orange'
   return 'text-green'
 })
-
-const tipoMovimentoCor = (codtipo) => {
-  if ([900, 910, 920, 930, 940, 941, 950, 991].includes(codtipo)) return 'red-7'
-  if ([400, 401].includes(codtipo)) return 'orange-7'
-  if (codtipo === 500) return 'blue-7'
-  if ([600, 601, 610].includes(codtipo)) return 'green-7'
-  return 'grey-7'
-}
 
 onMounted(carregar)
 watch(() => route.fullPath, carregar)
@@ -447,79 +499,224 @@ watch(() => route.fullPath, carregar)
           </q-card>
         </template>
 
-        <!-- Card Movimentos -->
-        <template v-if="titulo.movimentos?.length">
-          <q-card bordered flat class="q-mt-md">
-            <q-card-section class="text-grey-9 text-overline">
-              MOVIMENTOS ({{ titulo.movimentos.length }})
-            </q-card-section>
+        <div class="row q-col-gutter-md">
+          <!-- Card Movimentos -->
+          <div class="col-xs-12 col-sm-6">
+            <q-card bordered flat class="q-mt-md">
+              <q-card-section class="text-grey-9 text-overline">
+                MOVIMENTOS ({{ titulo.movimentos.length }})
+              </q-card-section>
 
-            <q-list separator>
-              <q-item v-for="m in titulo.movimentos" :key="m.codmovimentotitulo">
-                <!-- Transacao -->
-                <q-item-section style="flex: 0 0 70px; min-width: 0">
-                  <q-item-label caption>{{ formataDataSemHora(m.transacao) }}</q-item-label>
-                </q-item-section>
+              <q-list separator>
+                <q-item v-for="m in titulo.movimentos" :key="m.codmovimentotitulo">
+                  <!-- Transacao -->
+                  <q-item-section style="flex: 0 0 70px; min-width: 0">
+                    <q-item-label caption>{{ formataDataSemHora(m.transacao) }}</q-item-label>
+                    <q-item-label caption>
+                      {{ m.tipomovimentotitulo }}
+                    </q-item-label>
+                  </q-item-section>
 
-                <!-- TIPO -->
-                <q-item-section style="flex: 0 0 70px; min-width: 0">
-                  <q-badge :color="tipoMovimentoCor(m.codtipomovimentotitulo)">
-                    {{ m.tipomovimentotitulo }}
-                  </q-badge>
-                </q-item-section>
+                  <!-- VALOR -->
+                  <q-item-section class="text-right">
+                    <q-item-label
+                      class="text-weight-bold"
+                      :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
+                    >
+                      {{ formataNumero(Math.abs(m.valor)) }} {{ m.operacao }}
+                    </q-item-label>
+                    <q-item-label caption class="ellipsis">
+                      <q-btn
+                        v-if="m.codnegocio"
+                        flat
+                        dense
+                        no-caps
+                        size="sm"
+                        padding="0 4px"
+                        color="primary"
+                        :href="urlNegocio(m.codnegocio)"
+                        target="_blank"
+                        :label="`Negócio ${formatCodigo(m.codnegocio)}`"
+                      />
+                      <q-btn
+                        v-if="m.codliquidacaotitulo"
+                        flat
+                        dense
+                        no-caps
+                        size="sm"
+                        padding="0 4px"
+                        color="primary"
+                        :href="urlLiquidacao(m.codliquidacaotitulo)"
+                        target="_blank"
+                        :label="`Liquidação ${formatCodigo(m.codliquidacaotitulo)}`"
+                      />
+                      <q-btn
+                        v-if="m.codtituloagrupamento"
+                        flat
+                        dense
+                        no-caps
+                        size="sm"
+                        padding="0 4px"
+                        color="primary"
+                        :href="urlAgrupamento(m.codtituloagrupamento)"
+                        target="_blank"
+                        :label="`Agrupamento ${formatCodigo(m.codtituloagrupamento)}`"
+                      />
+                      <span v-if="m.codboletoretorno">Retorno Boleto</span>
+                      <span v-if="m.codcobranca">Cobrança</span>
+                    </q-item-label>
+                    <q-item-label v-if="m.portador" caption>{{ m.portador }}</q-item-label>
+                  </q-item-section>
 
-                <!-- VALOR -->
-                <q-item-section side class="text-right" style="min-width: 130px">
-                  <q-item-label
-                    class="text-weight-bold"
-                    :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
-                  >
-                    {{ formataNumero(Math.abs(m.valor)) }} {{ m.operacao }}
-                  </q-item-label>
-                </q-item-section>
+                  <q-item-section side>
+                    <IconeInfoCriacao :usuariocriacao="m.usuariocriacao" :criacao="m.criacao" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
 
-                <!-- PORTADO -->
-                <q-item-section class="text-grey-7 ellipsis">
-                  <q-item-label v-if="m.portador" caption>{{ m.portador }}</q-item-label>
-                  <q-item-label caption class="ellipsis">
-                    <q-btn
-                      v-if="m.codnegocio"
-                      flat
-                      dense
-                      no-caps
-                      padding="0 4px"
-                      color="primary"
-                      :href="urlNegocio(m.codnegocio)"
-                      target="_blank"
-                      :label="`Negócio ${formatCodigo(m.codnegocio)}`"
-                    />
-                    <span v-if="m.codliquidacaotitulo">
-                      Liq. {{ formatCodigo(m.codliquidacaotitulo) }}
-                    </span>
-                    <q-btn
-                      v-if="m.codtituloagrupamento"
-                      flat
-                      dense
-                      no-caps
-                      padding="0 4px"
-                      color="primary"
-                      :href="urlAgrupamento(m.codtituloagrupamento)"
-                      target="_blank"
-                      :label="`Agrup. ${formatCodigo(m.codtituloagrupamento)}`"
-                    />
-                    <span v-if="m.codboletoretorno">Retorno Boleto</span>
-                    <span v-if="m.codcobranca">Cobrança</span>
-                  </q-item-label>
-                </q-item-section>
+          <!-- Card Boleto BB -->
+          <div class="col-xs-12 col-sm-6">
+            <q-card bordered flat class="q-mt-md">
+              <q-card-section class="text-grey-9 text-overline row items-center">
+                BOLETO BB ({{ titulo.boletos?.length || 0 }})
+                <q-space />
+                <q-btn flat round dense icon="add" size="sm" color="primary" @click="bbCriar">
+                  <q-tooltip>Novo Boleto</q-tooltip>
+                </q-btn>
+              </q-card-section>
 
-                <!-- Icone -->
-                <q-item-section side>
-                  <IconeInfoCriacao :usuariocriacao="m.usuariocriacao" :criacao="m.criacao" />
-                </q-item-section>
-              </q-item>
-            </q-list>
-          </q-card>
-        </template>
+              <q-list separator v-if="titulo.boletos?.length">
+                <q-item
+                  v-for="b in titulo.boletos"
+                  :key="b.codtituloboleto"
+                  :class="{ 'bg-grey-2': !!b.inativo }"
+                >
+                  <q-item-section>
+                    <!-- NOSSO NUMERO/STATUS -->
+                    <q-item-label>
+                      <span class="text-weight-medium">{{ b.nossonumero }}</span>
+                      &nbsp;
+                      <q-badge :color="bbEstadoCor(b.estadotitulocobranca)">
+                        {{ ESTADO_COBRANCA[b.estadotitulocobranca] || b.estadotitulocobranca }}
+                      </q-badge>
+                    </q-item-label>
+
+                    <!-- PORTADOR -->
+                    <q-item-label caption>
+                      {{ b.portador }}
+                    </q-item-label>
+
+                    <!-- VENCIMENTO -->
+                    <q-item-label caption>
+                      Vencimento {{ formataDataSemHora(b.vencimento) }}
+                    </q-item-label>
+
+                    <!-- REGISTRO -->
+                    <q-item-label caption v-if="b.dataregistro">
+                      Registro {{ formataDataSemHora(b.dataregistro) }}
+                    </q-item-label>
+
+                    <!-- RECEBIMENTO -->
+                    <q-item-label caption v-if="b.datarecebimento">
+                      Recebimento {{ formataDataSemHora(b.datarecebimento) }}
+                    </q-item-label>
+
+                    <!-- CREDITO -->
+                    <q-item-label caption v-if="b.datacredito">
+                      Crédito {{ formataDataSemHora(b.datacredito) }}
+                    </q-item-label>
+
+                    <!-- BAIXA -->
+                    <q-item-label caption v-if="b.databaixaautomatica">
+                      Baixa {{ formataDataSemHora(b.databaixaautomatica) }}
+                    </q-item-label>
+
+                    <!-- VALOR ORIGINAL -->
+                    <q-item-label caption>
+                      Original {{ formataNumero(b.valororiginal) }}
+                    </q-item-label>
+
+                    <!-- VALOR ATUAL -->
+                    <q-item-label caption>
+                      Atual {{ formataNumero(b.valoratual) }}
+                    </q-item-label>
+
+                    <!-- VALOR PAGO -->
+                    <q-item-label caption v-if="b.valorpago > 0" class="text-green">
+                      Pago {{ formataNumero(b.valorpago) }}
+                    </q-item-label>
+
+                    <!-- VALOR JUROS MORA -->
+                    <q-item-label caption v-if="b.valorjuromora > 0" class="text-orange">
+                      Juros {{ formataNumero(b.valorjuromora) }}
+                    </q-item-label>
+
+                    <!-- VALOR MULTA -->
+                    <q-item-label caption v-if="b.valormulta > 0" class="text-orange">
+                      Multa {{ formataNumero(b.valormulta) }}
+                    </q-item-label>
+
+                    <!-- VALOR DESCONTO -->
+                    <q-item-label caption v-if="b.valordesconto > 0" class="text-blue">
+                      Desconto {{ formataNumero(b.valordesconto) }}
+                    </q-item-label>
+
+                    <!-- VALOR OUTRO -->
+                    <q-item-label caption v-if="b.valoroutro > 0">
+                      Outro {{ formataNumero(b.valoroutro) }}
+                    </q-item-label>
+                  </q-item-section>
+
+                  <!-- Ações -->
+                  <q-item-section side>
+                    <div class="row q-gutter-xs">
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        size="sm"
+                        icon="picture_as_pdf"
+                        color="primary"
+                        @click="bbAbrirPdf(b)"
+                      >
+                        <q-tooltip>Abrir Boleto</q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        size="sm"
+                        icon="refresh"
+                        color="grey-7"
+                        @click="bbConsultar(b)"
+                      >
+                        <q-tooltip>Consultar</q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        size="sm"
+                        icon="block"
+                        color="red-7"
+                        @click="bbBaixar(b)"
+                      >
+                        <q-tooltip>Baixar</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <q-card-section v-else class="text-center text-grey-6 q-pa-md">
+                Nenhum boleto emitido
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <template v-if="titulo.movimentos?.length"> </template>
       </template>
     </div>
 

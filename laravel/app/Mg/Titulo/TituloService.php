@@ -158,6 +158,10 @@ class TituloService
                     ]);
             },
             'TituloNfeTerceiroS',
+            'TituloBoletoS' => function ($q) {
+                $q->orderBy('criacao')
+                    ->with(['Portador:codportador,portador,codbanco']);
+            },
         ])->findOrFail($codtitulo);
     }
 

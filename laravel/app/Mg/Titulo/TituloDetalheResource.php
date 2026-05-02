@@ -17,6 +17,34 @@ class TituloDetalheResource extends Resource
         $operacao = ($valor < 0) ? 'CR' : 'DB';
         $operacaosaldo = ($saldo < 0 || $credito > $debito) ? 'CR' : 'DB';
 
+        $boletos = $this->TituloBoletoS->map(function ($b) {
+            return [
+                'codtituloboleto'      => (int)$b->codtituloboleto,
+                'codportador'          => $b->codportador ? (int)$b->codportador : null,
+                'portador'             => optional($b->Portador)->portador,
+                'nossonumero'          => $b->nossonumero,
+                'estadotitulocobranca' => (int)$b->estadotitulocobranca,
+                'tipobaixatitulo'      => $b->tipobaixatitulo ? (int)$b->tipobaixatitulo : null,
+                'vencimento'           => $b->vencimento,
+                'dataregistro'         => $b->dataregistro,
+                'datarecebimento'      => $b->datarecebimento,
+                'datacredito'          => $b->datacredito,
+                'databaixaautomatica'  => $b->databaixaautomatica,
+                'valororiginal'        => (float)$b->valororiginal,
+                'valoratual'           => (float)$b->valoratual,
+                'valorpagamentoparcial' => (float)$b->valorpagamentoparcial,
+                'valorabatimento'      => (float)$b->valorabatimento,
+                'valorjuromora'        => (float)$b->valorjuromora,
+                'valormulta'           => (float)$b->valormulta,
+                'valordesconto'        => (float)$b->valordesconto,
+                'valorreajuste'        => (float)$b->valorreajuste,
+                'valoroutro'           => (float)$b->valoroutro,
+                'valorpago'            => (float)$b->valorpago,
+                'valorliquido'         => (float)$b->valorliquido,
+                'inativo'              => $b->inativo,
+            ];
+        });
+
         $movimentos = $this->MovimentoTituloS->map(function ($m) {
             $debMov = (float)$m->debito;
             $credMov = (float)$m->credito;
@@ -97,6 +125,7 @@ class TituloDetalheResource extends Resource
             'alteracao'        => $this->alteracao,
             'sistema'          => $this->sistema,
             'movimentos'       => $movimentos,
+            'boletos'          => $boletos,
             'gerado_automaticamente' => (!empty($this->codnegocioformapagamento) || !empty($this->codtituloagrupamento)),
         ];
     }
