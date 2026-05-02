@@ -173,7 +173,13 @@ const routes = [
         meta: {
           auth: true,
           title: 'Títulos',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          // Visualização: qualquer usuário autenticado
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.PUBLICO,
+          ],
           leftDrawer: defineAsyncComponent(() =>
             import('components/drawers/TituloFiltrosDrawer.vue'),
           ),
@@ -186,7 +192,8 @@ const routes = [
         meta: {
           auth: true,
           title: 'Novo Título',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          // Criação: apenas financeiro/cobrança/admin
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
         },
       },
       {
@@ -196,7 +203,13 @@ const routes = [
         meta: {
           auth: true,
           title: 'Título',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          // Visualização: qualquer usuário autenticado
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.PUBLICO,
+          ],
         },
       },
       {

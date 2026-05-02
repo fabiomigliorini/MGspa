@@ -9,11 +9,14 @@ use Mg\Usuario\Autorizador;
 
 class TituloController extends MgController
 {
-    private const GRUPOS = ['Administrador', 'Financeiro'];
+    // Visualização: qualquer usuário autenticado.
+    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca', 'Publico'];
+    // Mutação (criar/alterar/estornar): apenas financeiro/cobrança/admin.
+    private const GRUPOS_MUTACAO = ['Administrador', 'Financeiro', 'Cobranca'];
 
     public function index(Request $request)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_LEITURA);
 
         $paginator = TituloListagemService::listar($request->only([
             'codtitulo', 'numero', 'fatura', 'nossonumero',
@@ -36,14 +39,14 @@ class TituloController extends MgController
 
     public function show($codtitulo)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_LEITURA);
         $titulo = TituloService::carregar((int)$codtitulo);
         return new TituloDetalheResource($titulo);
     }
 
     public function store(TituloStoreRequest $request)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
 
         DB::beginTransaction();
         try {
@@ -61,7 +64,7 @@ class TituloController extends MgController
 
     public function update(TituloUpdateRequest $request, $codtitulo)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
 
         DB::beginTransaction();
         try {
@@ -80,7 +83,7 @@ class TituloController extends MgController
 
     public function estornar($codtitulo)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
 
         DB::beginTransaction();
         try {

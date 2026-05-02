@@ -5,6 +5,8 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { useAuthStore } from 'src/stores/auth'
+import { PERMISSOES } from 'src/constants/permissoes'
 import IconeInfoCriacao from 'src/components/IconeInfoCriacao.vue'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
@@ -16,6 +18,13 @@ import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
+const auth = useAuthStore()
+
+// Permissão para criar/alterar/estornar e mexer em boletos.
+// Visualização (carregar/PDF) é livre para qualquer usuário autenticado.
+const podeMutar = computed(() =>
+  auth.hasAnyPermission([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
+)
 
 const titulo = ref(null)
 const loading = ref(false)
@@ -42,10 +51,15 @@ const estornado = computed(() => !!titulo.value?.estornado)
 // Estornar segue a mesma regra de geradoAuto: títulos gerados automaticamente
 // (vinculados a negócio ou agrupamento) só podem ser estornados pela origem.
 const podeEstornar = computed(
-  () => titulo.value && !estornado.value && !geradoAuto.value && Number(titulo.value.saldo) !== 0,
+  () =>
+    podeMutar.value &&
+    titulo.value &&
+    !estornado.value &&
+    !geradoAuto.value &&
+    Number(titulo.value.saldo) !== 0,
 )
 
-const podeEditar = computed(() => titulo.value && !estornado.value)
+const podeEditar = computed(() => podeMutar.value && titulo.value && !estornado.value)
 
 // === Helpers ===
 const formatCodigo = (v) => (v ? '#' + String(v).padStart(8, '0') : '')
@@ -580,7 +594,16 @@ watch(() => route.fullPath, carregar)
               <q-card-section class="text-grey-9 text-overline row items-center">
                 BOLETO BB ({{ titulo.boletos?.length || 0 }})
                 <q-space />
-                <q-btn flat round dense icon="add" size="sm" color="primary" @click="bbCriar">
+                <q-btn
+                  v-if="podeMutar"
+                  flat
+                  round
+                  dense
+                  icon="add"
+                  size="sm"
+                  color="primary"
+                  @click="bbCriar"
+                >
                   <q-tooltip>Novo Boleto</q-tooltip>
                 </q-btn>
               </q-card-section>
@@ -682,6 +705,7 @@ watch(() => route.fullPath, carregar)
                         <q-tooltip>Abrir Boleto</q-tooltip>
                       </q-btn>
                       <q-btn
+                        v-if="podeMutar"
                         flat
                         dense
                         round
@@ -693,6 +717,7 @@ watch(() => route.fullPath, carregar)
                         <q-tooltip>Consultar</q-tooltip>
                       </q-btn>
                       <q-btn
+                        v-if="podeMutar"
                         flat
                         dense
                         round
