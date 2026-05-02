@@ -39,12 +39,10 @@ const geradoAuto = computed(
 const liquidado = computed(() => !duplicando.value && Number(titulo.value?.saldo ?? 1) === 0)
 const estornado = computed(() => !!titulo.value?.estornado)
 
+// Estornar segue a mesma regra de geradoAuto: títulos gerados automaticamente
+// (vinculados a negócio ou agrupamento) só podem ser estornados pela origem.
 const podeEstornar = computed(
-  () =>
-    titulo.value &&
-    !estornado.value &&
-    !titulo.value.codtituloagrupamento &&
-    Number(titulo.value.saldo) !== 0,
+  () => titulo.value && !estornado.value && !geradoAuto.value && Number(titulo.value.saldo) !== 0,
 )
 
 const podeEditar = computed(() => titulo.value && !estornado.value)
