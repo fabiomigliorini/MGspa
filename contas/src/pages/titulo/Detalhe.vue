@@ -237,7 +237,7 @@ function estornar() {
 }
 
 const urlPessoa = (codpessoa) =>
-  codpessoa ? `${process.env.PESSOAS_URL}/#/pessoa/${codpessoa}` : null
+  codpessoa ? `${process.env.PESSOAS_URL}/pessoa/${codpessoa}` : null
 const urlNegocio = (codnegocio) =>
   codnegocio ? `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}` : null
 const urlAgrupamento = (cod) =>
