@@ -149,11 +149,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('negocio/{codnegocio}/boleto-bb/registrar', '\Mg\Negocio\NegocioController@BoletoBbRegistrar');
     Route::post('negocio/{codnegocio}/identificar-vendedor/{codpessoavendedor}', '\Mg\Negocio\NegocioController@identificarVendedor');
 
-    // Boletos BB
-    Route::post('titulo/{codtitulo}/boleto-bb', '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');
-    Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}', '\Mg\Titulo\BoletoBb\BoletoBbController@show');
-    Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/consultar', '\Mg\Titulo\BoletoBb\BoletoBbController@consultar');
-    Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/baixar', '\Mg\Titulo\BoletoBb\BoletoBbController@baixar');
+    // PDF do boleto pode ser aberto via window.open() sem header de auth
     Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf');
 
     // Stone
@@ -892,6 +888,12 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get   ('titulo/{codtitulo}',                '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
         Route::put   ('titulo/{codtitulo}',                '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
         Route::post  ('titulo/{codtitulo}/estornar',       '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
+
+        // Boletos BB
+        Route::post('titulo/{codtitulo}/boleto-bb',                              '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');
+        Route::get ('titulo/{codtitulo}/boleto-bb/{codtituloboleto}',            '\Mg\Titulo\BoletoBb\BoletoBbController@show');
+        Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/consultar',  '\Mg\Titulo\BoletoBb\BoletoBbController@consultar');
+        Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/baixar',     '\Mg\Titulo\BoletoBb\BoletoBbController@baixar');
 
         // TipoTitulo
         Route::get   ('tipo-titulo',                                '\Mg\Titulo\TipoTituloController@index');
