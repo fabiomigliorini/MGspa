@@ -170,11 +170,7 @@ class TituloService
         if (!empty($titulo->estornado)) {
             throw new \Exception("Titulo já está estornado!", 1);
         }
-        // título gerado automaticamente (negócio/agrupamento) só pode ser estornado
-        // pela origem que o criou.
-        if (!empty($titulo->codnegocioformapagamento) || !empty($titulo->codtituloagrupamento)) {
-            throw new \Exception("Título gerado automaticamente não pode ser estornado individualmente!", 1);
-        }
+
         // só pode estornar título não movimentado
         if (round((float)$titulo->debito - (float)$titulo->credito, 2) != round((float)$titulo->saldo, 2)) {
             throw new \Exception("Impossível estornar um título movimentado!", 1);
