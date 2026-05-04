@@ -9,7 +9,7 @@ import BoletoTabs from 'src/components/BoletoTabs.vue'
 const store = useBoletoStore()
 
 const abrirPessoa = (codpessoa) =>
-  window.open(`${process.env.PESSOAS_URL}/#/pessoa/${codpessoa}`, '_blank')
+  window.open(`${process.env.PESSOAS_URL}/pessoa/${codpessoa}`, '_blank')
 const abrirTitulo = (codtitulo) =>
   window.open(`${process.env.MGSIS_URL}/index.php?r=titulo/view&id=${codtitulo}`, '_blank')
 
