@@ -10,7 +10,16 @@ defineEmits(['clear'])
 </script>
 
 <template>
-  <div class="column full-height bg-white">
+  <div
+    class="column full-height bg-white"
+    style="
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      overflow-x: hidden;
+      box-sizing: border-box;
+    "
+  >
     <div :class="['q-pa-md', headerClass]">
       <div class="text-h6">
         <q-icon name="filter_list" class="q-mr-sm" />
@@ -38,7 +47,10 @@ defineEmits(['clear'])
 
     <q-separator />
 
-    <div :class="noPadding ? '' : 'q-pa-md'">
+    <div
+      :class="noPadding ? '' : 'q-pa-md'"
+      style="min-width: 0; max-width: 100%; overflow-x: hidden; box-sizing: border-box"
+    >
       <slot />
     </div>
   </div>

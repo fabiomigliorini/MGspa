@@ -886,6 +886,13 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('titulo/boleto/liquidados/navegacao',     '\Mg\Titulo\TituloBoletoController@liquidadosNavegacao');
         Route::get('titulo/boleto/baixados',                 '\Mg\Titulo\TituloBoletoController@baixadosLista');
 
+        // Titulo - CRUD
+        Route::get   ('titulo',                            '\Mg\Titulo\TituloController@index');
+        Route::post  ('titulo',                            '\Mg\Titulo\TituloController@store');
+        Route::get   ('titulo/{codtitulo}',                '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
+        Route::put   ('titulo/{codtitulo}',                '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
+        Route::post  ('titulo/{codtitulo}/estornar',       '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
+
         // TipoTitulo
         Route::get   ('tipo-titulo',                                '\Mg\Titulo\TipoTituloController@index');
         Route::get   ('tipo-titulo/{codtipotitulo}',                '\Mg\Titulo\TipoTituloController@show');

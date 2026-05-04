@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { date } from 'quasar'
-import { formatMoney } from 'src/utils/formatters.js'
+import { formataNumero } from 'src/utils/formatters.js'
 import { useExtratoStore } from 'src/stores/extratoStore'
 
 const route = useRoute()
@@ -24,14 +24,14 @@ const columns = [
     label: 'Valor',
     field: 'valor',
     align: 'right',
-    format: (v) => (v !== null && v !== undefined ? formatMoney(v) : ''),
+    format: (v) => (v !== null && v !== undefined ? formataNumero(v) : ''),
   },
   {
     name: 'saldo',
     label: 'Saldo',
     field: 'saldo',
     align: 'right',
-    format: (v) => (v !== null && v !== undefined ? formatMoney(v) : ''),
+    format: (v) => (v !== null && v !== undefined ? formataNumero(v) : ''),
   },
 ]
 

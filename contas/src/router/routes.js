@@ -167,6 +167,52 @@ const routes = [
         },
       },
       {
+        path: 'titulo',
+        name: 'titulo',
+        component: () => import('pages/titulo/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Títulos',
+          // Visualização: qualquer usuário autenticado
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.PUBLICO,
+          ],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/TituloFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'titulo/novo',
+        name: 'titulo-novo',
+        component: () => import('pages/titulo/Novo.vue'),
+        meta: {
+          auth: true,
+          title: 'Novo Título',
+          // Criação: apenas financeiro/cobrança/admin
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+        },
+      },
+      {
+        path: 'titulo/:codtitulo(\\d+)',
+        name: 'titulo-detalhe',
+        component: () => import('pages/titulo/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Título',
+          // Visualização: qualquer usuário autenticado
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.PUBLICO,
+          ],
+        },
+      },
+      {
         path: 'sem-permissao',
         name: 'sem-permissao',
         component: () => import('pages/SemPermissaoPage.vue'),

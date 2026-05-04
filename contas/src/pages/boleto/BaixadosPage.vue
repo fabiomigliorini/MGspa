@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, watch } from 'vue'
 import { date } from 'quasar'
-import { formatMoney } from 'src/utils/formatters.js'
+import { formataNumero } from 'src/utils/formatters.js'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA, TIPO_BAIXA } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'
@@ -59,7 +59,7 @@ onMounted(() => store.carregarBaixados())
               {{ formatData(b.vencimento) }}
             </div>
             <div class="col-12 col-sm-4 col-md-1 text-right text-weight-bold ellipsis">
-              {{ formatMoney(b.valoratual) }}
+              {{ formataNumero(b.valoratual) }}
             </div>
             <div class="col-12 col-sm-12 col-md-3">
               <a
@@ -71,7 +71,7 @@ onMounted(() => store.carregarBaixados())
                 {{ b.fantasia }}
               </a>
               <div v-if="b.valoratual != b.saldo" class="text-red text-caption">
-                * Valor diverge do saldo {{ formatMoney(b.saldo) }}
+                * Valor diverge do saldo {{ formataNumero(b.saldo) }}
               </div>
             </div>
             <div class="col-12 col-sm-4 col-md-1 ellipsis">

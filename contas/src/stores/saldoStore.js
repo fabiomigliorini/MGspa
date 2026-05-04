@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import moment from 'moment'
+import { date } from 'quasar'
 import { api } from 'src/services/api'
 import { notifyError } from 'src/utils/notify'
 
 export const useSaldoStore = defineStore('saldo', () => {
-  const dataSelecionada = ref(moment().format('DD-MM-YYYY'))
+  const dataSelecionada = ref(date.formatDate(Date.now(), 'DD-MM-YYYY'))
   const intervalo = ref(null)
   const filiais = ref([])
   const totalPorBanco = ref([])

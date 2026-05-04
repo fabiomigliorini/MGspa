@@ -60,7 +60,13 @@ const pageTitle = computed(() => route.meta?.title || 'Contas')
       class="bg-white"
       :width="280"
     >
-      <q-scroll-area class="fit">
+      <q-scroll-area
+        class="fit"
+        :content-style="{ overflowX: 'hidden', width: '100%' }"
+        :content-active-style="{ overflowX: 'hidden', width: '100%' }"
+        :horizontal-thumb-style="{ display: 'none' }"
+        :horizontal-bar-style="{ display: 'none' }"
+      >
         <component :is="$route.meta.leftDrawer" />
       </q-scroll-area>
     </q-drawer>

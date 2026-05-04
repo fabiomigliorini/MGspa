@@ -9,3 +9,62 @@
     border-radius: 8px;
   }
 }
+
+// Regras de truncamento para q-select estreito.
+// Quasar não dá min-width:0 no .q-field__control-container, e o
+// .q-field__input nativo cresce com o texto. Estas regras forçam o encolhimento,
+// limitam o input de busca e ativam ellipsis no item selecionado.
+//
+// Aplicação:
+//  - Automaticamente em qualquer q-select dentro de q-drawer (drawers laterais).
+//  - Manualmente via classe `.q-select--truncado` em outros contextos estreitos.
+@mixin q-select-truncado {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+
+  .q-field__inner,
+  .q-field__control,
+  .q-field__control-container,
+  .q-field__native {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .q-field__native {
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+
+  // Children diretos de .q-field__native (selected-item span e q-field__input)
+  // não podem ter largura mínima implícita do flex
+  .q-field__native > * {
+    min-width: 0;
+  }
+
+  // Item selecionado: trunca com ellipsis
+  .q-field__native > span,
+  .q-field__native > div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  // Input nativo de busca: nunca cresce além do espaço disponível
+  .q-field__input {
+    width: 0 !important;
+    min-width: 50px;
+    flex: 1 1 50px;
+  }
+
+  // Append (X clear + ▼ dropdown) nunca encolhe
+  .q-field__append {
+    flex-shrink: 0;
+  }
+}
+
+.q-drawer .q-select,
+.q-select--truncado {
+  @include q-select-truncado;
+}
