@@ -19,19 +19,38 @@ class TituloController extends MgController
         Autorizador::autoriza(self::GRUPOS_LEITURA);
 
         $paginator = TituloListagemService::listar($request->only([
-            'codtitulo', 'numero', 'fatura', 'nossonumero',
-            'codfilial', 'codpessoa', 'codgrupoeconomico', 'codtipotitulo',
-            'codcontacontabil', 'codportador', 'codgrupocliente',
+            'codtitulo',
+            'numero',
+            'fatura',
+            'nossonumero',
+            'codfilial',
+            'codpessoa',
+            'codgrupoeconomico',
+            'codtipotitulo',
+            'codcontacontabil',
+            'codportador',
+            'codgrupocliente',
             'codusuariocriacao',
-            'vencimento_de', 'vencimento_ate',
-            'emissao_de', 'emissao_ate',
-            'criacao_de', 'criacao_ate',
-            'liquidacao_de', 'liquidacao_ate',
-            'debito_de', 'debito_ate',
-            'credito_de', 'credito_ate',
-            'saldo_de', 'saldo_ate',
-            'status', 'credito', 'gerencial', 'boleto',
-            'pagarreceber', 'ordem',
+            'vencimento_de',
+            'vencimento_ate',
+            'emissao_de',
+            'emissao_ate',
+            'criacao_de',
+            'criacao_ate',
+            'liquidacao_de',
+            'liquidacao_ate',
+            'debito_de',
+            'debito_ate',
+            'credito_de',
+            'credito_ate',
+            'saldo_de',
+            'saldo_ate',
+            'status',
+            'credito',
+            'gerencial',
+            'boleto',
+            'pagarreceber',
+            'ordem',
         ]));
 
         return TituloListaResource::collection($paginator);
@@ -85,9 +104,15 @@ class TituloController extends MgController
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
 
+        // título gerado automaticamente (negócio/agrupamento) só pode ser estornado
+        // pela origem que o criou.
+        $titulo = Titulo::findOrFail($codtitulo);
+        if (!empty($titulo->codnegocioformapagamento) || !empty($titulo->codtituloagrupamento)) {
+            throw new \Exception("Título gerado automaticamente não pode ser estornado individualmente!", 1);
+        }
+
         DB::beginTransaction();
         try {
-            $titulo = Titulo::findOrFail($codtitulo);
             $titulo = TituloService::estornar($titulo);
             DB::commit();
             return new TituloDetalheResource($titulo);
