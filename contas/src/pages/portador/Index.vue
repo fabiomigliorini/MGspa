@@ -144,7 +144,6 @@ const excluir = (row) => {
     title: 'Excluir',
     message: `Confirma excluir o portador "${row.portador}"?`,
     cancel: true,
-    persistent: true,
   }).onOk(async () => {
     try {
       await api.delete(`v1/portador/${row.codportador}`)
@@ -286,7 +285,7 @@ onMounted(() => {
       </q-btn>
     </q-page-sticky>
 
-    <q-dialog v-model="dialog" persistent>
+    <q-dialog v-model="dialog">
       <q-card bordered flat style="width: 600px; max-width: 90vw">
         <q-card-section class="text-grey-9 text-overline">
           {{ isNovo ? 'NOVO PORTADOR' : 'EDITAR PORTADOR' }}

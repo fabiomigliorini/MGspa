@@ -167,7 +167,6 @@ function bbCriar() {
     title: 'Novo Boleto',
     message: 'Deseja criar um novo boleto para este título?',
     cancel: true,
-    persistent: true,
   }).onOk(async () => {
     try {
       await api.post(`v1/titulo/${codtitulo.value}/boleto-bb`)
@@ -194,7 +193,6 @@ function bbBaixar(b) {
     title: 'Baixar Boleto',
     message: 'Confirma baixar (cancelar) este boleto no banco?',
     cancel: true,
-    persistent: true,
   }).onOk(async () => {
     try {
       await api.post(`v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/baixar`)
@@ -224,7 +222,6 @@ function estornar() {
     title: 'Estornar',
     message: 'Confirma estornar este título?',
     cancel: true,
-    persistent: true,
   }).onOk(async () => {
     try {
       const { data } = await api.post(`v1/titulo/${codtitulo.value}/estornar`)
@@ -660,9 +657,7 @@ watch(() => route.fullPath, carregar)
                     </q-item-label>
 
                     <!-- VALOR ATUAL -->
-                    <q-item-label caption>
-                      Atual {{ formataNumero(b.valoratual) }}
-                    </q-item-label>
+                    <q-item-label caption> Atual {{ formataNumero(b.valoratual) }} </q-item-label>
 
                     <!-- VALOR PAGO -->
                     <q-item-label caption v-if="b.valorpago > 0" class="text-green">
@@ -746,7 +741,7 @@ watch(() => route.fullPath, carregar)
     <q-inner-loading :showing="loading" color="primary" />
 
     <!-- Dialog de duplicar / editar -->
-    <q-dialog v-model="dialogOpen" persistent>
+    <q-dialog v-model="dialogOpen">
       <q-card bordered flat style="width: 700px; max-width: 95vw">
         <q-card-section class="text-grey-9 text-overline">
           {{ duplicando ? 'DUPLICAR TÍTULO' : 'EDITAR TÍTULO' }}

@@ -276,7 +276,7 @@ onMounted(() => {
       </q-btn>
     </q-page-sticky>
 
-    <q-dialog v-model="ofxDialog" persistent>
+    <q-dialog v-model="ofxDialog">
       <q-card style="min-width: 800px">
         <q-card-section>
           <q-uploader

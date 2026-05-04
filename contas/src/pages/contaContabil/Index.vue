@@ -96,7 +96,6 @@ const excluir = (row) => {
     title: 'Excluir',
     message: `Confirma excluir a conta contábil "${row.contacontabil}"?`,
     cancel: true,
-    persistent: true,
   }).onOk(async () => {
     try {
       await api.delete(`v1/conta-contabil/${row.codcontacontabil}`)
@@ -209,7 +208,7 @@ onMounted(() => store.fetchItems(true))
       </q-btn>
     </q-page-sticky>
 
-    <q-dialog v-model="dialog" persistent>
+    <q-dialog v-model="dialog">
       <q-card bordered flat style="width: 400px; max-width: 90vw">
         <q-card-section class="text-grey-9 text-overline">
           {{ isNovo ? 'NOVA CONTA CONTÁBIL' : 'EDITAR CONTA CONTÁBIL' }}
