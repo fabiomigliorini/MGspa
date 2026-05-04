@@ -757,6 +757,7 @@ watch(() => route.fullPath, carregar)
                   outlined
                   label="Filial"
                   :rules="[(v) => !!v || 'Obrigatório']"
+                  autofocus
                 />
               </div>
 
