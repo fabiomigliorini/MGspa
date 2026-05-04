@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware(['auth:api', 'cors'])->get('v1/auth/user', '\Mg\Usuario\UsuarioController@permissoesUsuarios');
 
 Route::middleware('auth:api')->get('v1/auth/logout', function (Request $request) {
-    $user =  $request->user();
+    $user = $request->user();
     $accessToken = $user->token();
     DB::table('oauth_refresh_tokens')
         ->where('access_token_id', $accessToken->id)
@@ -42,8 +42,8 @@ Route::group(['prefix' => 'v1/auth'], function () {
     Route::post('login', 'Auth\SSOController@login');
     // Route::get('logout', 'Auth\LoginController@logoutt');
     // Route::get('check', 'Auth\LoginController@check');
-    //  Route::get('refresh', 'Auth\LoginController@refreshToken');
-    //  Route::get('user', 'Auth\SSOController@getAuthenticatedUser');
+    // Route::get('refresh', 'Auth\LoginController@refreshToken');
+    // Route::get('user', 'Auth\SSOController@getAuthenticatedUser');
 });
 
 Route::group(['prefix' => 'v1'], function () {
@@ -412,14 +412,14 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::patch('pessoa/{codpessoa}/anexo/inativo/{nome}', '\Mg\Pessoa\PessoaAnexoController@ativar');
 
         //GrupoCliente
-        Route::get   ('grupocliente/',                           '\Mg\Pessoa\GrupoClienteController@index'); // legacy alias (SelectGrupoCliente)
-        Route::get   ('grupo-cliente',                           '\Mg\Pessoa\GrupoClienteController@index');
-        Route::get   ('grupo-cliente/{codgrupocliente}',         '\Mg\Pessoa\GrupoClienteController@show');
-        Route::post  ('grupo-cliente',                           '\Mg\Pessoa\GrupoClienteController@store');
-        Route::put   ('grupo-cliente/{codgrupocliente}',         '\Mg\Pessoa\GrupoClienteController@update');
-        Route::post  ('grupo-cliente/{codgrupocliente}/inativo', '\Mg\Pessoa\GrupoClienteController@inativar');
+        Route::get('grupocliente/', '\Mg\Pessoa\GrupoClienteController@index'); // legacy alias (SelectGrupoCliente)
+        Route::get('grupo-cliente', '\Mg\Pessoa\GrupoClienteController@index');
+        Route::get('grupo-cliente/{codgrupocliente}', '\Mg\Pessoa\GrupoClienteController@show');
+        Route::post('grupo-cliente', '\Mg\Pessoa\GrupoClienteController@store');
+        Route::put('grupo-cliente/{codgrupocliente}', '\Mg\Pessoa\GrupoClienteController@update');
+        Route::post('grupo-cliente/{codgrupocliente}/inativo', '\Mg\Pessoa\GrupoClienteController@inativar');
         Route::delete('grupo-cliente/{codgrupocliente}/inativo', '\Mg\Pessoa\GrupoClienteController@ativar');
-        Route::delete('grupo-cliente/{codgrupocliente}',         '\Mg\Pessoa\GrupoClienteController@destroy');
+        Route::delete('grupo-cliente/{codgrupocliente}', '\Mg\Pessoa\GrupoClienteController@destroy');
 
         // Etnia
         Route::get('etnia/', '\Mg\Pessoa\EtniaController@index');
@@ -636,7 +636,6 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             // Graficos
             Route::get('graficos/volume-mensal', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@volumeMensal');
             Route::get('graficos/erro-por-filial', '\Mg\NotaFiscal\Dashboard\DashboardGraficosController@erroPorFilial');
-
         });
 
         // NOTA FISCAL CONTROLE
@@ -850,78 +849,78 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
 
         // Banco
-        Route::get   ('banco',                          '\Mg\Banco\BancoController@index');
-        Route::get   ('banco/{codbanco}',               '\Mg\Banco\BancoController@show');
-        Route::post  ('banco',                          '\Mg\Banco\BancoController@store');
-        Route::put   ('banco/{codbanco}',               '\Mg\Banco\BancoController@update');
-        Route::delete('banco/{codbanco}',               '\Mg\Banco\BancoController@destroy');
-        Route::post  ('banco/{codbanco}/inativo',       '\Mg\Banco\BancoController@inativar');
-        Route::delete('banco/{codbanco}/inativo',       '\Mg\Banco\BancoController@ativar');
+        Route::get('banco', '\Mg\Banco\BancoController@index');
+        Route::get('banco/{codbanco}', '\Mg\Banco\BancoController@show');
+        Route::post('banco', '\Mg\Banco\BancoController@store');
+        Route::put('banco/{codbanco}', '\Mg\Banco\BancoController@update');
+        Route::delete('banco/{codbanco}', '\Mg\Banco\BancoController@destroy');
+        Route::post('banco/{codbanco}/inativo', '\Mg\Banco\BancoController@inativar');
+        Route::delete('banco/{codbanco}/inativo', '\Mg\Banco\BancoController@ativar');
 
         // ContaContabil
-        Route::get   ('conta-contabil',                              '\Mg\ContaContabil\ContaContabilController@index');
-        Route::get   ('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@show');
-        Route::post  ('conta-contabil',                              '\Mg\ContaContabil\ContaContabilController@store');
-        Route::put   ('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@update');
-        Route::delete('conta-contabil/{codcontacontabil}',           '\Mg\ContaContabil\ContaContabilController@destroy');
-        Route::post  ('conta-contabil/{codcontacontabil}/inativo',   '\Mg\ContaContabil\ContaContabilController@inativar');
-        Route::delete('conta-contabil/{codcontacontabil}/inativo',   '\Mg\ContaContabil\ContaContabilController@ativar');
+        Route::get('conta-contabil', '\Mg\ContaContabil\ContaContabilController@index');
+        Route::get('conta-contabil/{codcontacontabil}', '\Mg\ContaContabil\ContaContabilController@show');
+        Route::post('conta-contabil', '\Mg\ContaContabil\ContaContabilController@store');
+        Route::put('conta-contabil/{codcontacontabil}', '\Mg\ContaContabil\ContaContabilController@update');
+        Route::delete('conta-contabil/{codcontacontabil}', '\Mg\ContaContabil\ContaContabilController@destroy');
+        Route::post('conta-contabil/{codcontacontabil}/inativo', '\Mg\ContaContabil\ContaContabilController@inativar');
+        Route::delete('conta-contabil/{codcontacontabil}/inativo', '\Mg\ContaContabil\ContaContabilController@ativar');
 
         // TipoMovimentoTitulo
-        Route::get   ('tipo-movimento-titulo',                               '\Mg\Titulo\TipoMovimentoTituloController@index');
-        Route::get   ('tipo-movimento-titulo/{codtipomovimentotitulo}',      '\Mg\Titulo\TipoMovimentoTituloController@show');
-        Route::post  ('tipo-movimento-titulo',                               '\Mg\Titulo\TipoMovimentoTituloController@store');
-        Route::put   ('tipo-movimento-titulo/{codtipomovimentotitulo}',      '\Mg\Titulo\TipoMovimentoTituloController@update');
-        Route::delete('tipo-movimento-titulo/{codtipomovimentotitulo}',          '\Mg\Titulo\TipoMovimentoTituloController@destroy');
-        Route::post  ('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo',  '\Mg\Titulo\TipoMovimentoTituloController@inativar');
-        Route::delete('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo',  '\Mg\Titulo\TipoMovimentoTituloController@ativar');
+        Route::get('tipo-movimento-titulo', '\Mg\Titulo\TipoMovimentoTituloController@index');
+        Route::get('tipo-movimento-titulo/{codtipomovimentotitulo}', '\Mg\Titulo\TipoMovimentoTituloController@show');
+        Route::post('tipo-movimento-titulo', '\Mg\Titulo\TipoMovimentoTituloController@store');
+        Route::put('tipo-movimento-titulo/{codtipomovimentotitulo}', '\Mg\Titulo\TipoMovimentoTituloController@update');
+        Route::delete('tipo-movimento-titulo/{codtipomovimentotitulo}', '\Mg\Titulo\TipoMovimentoTituloController@destroy');
+        Route::post('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo', '\Mg\Titulo\TipoMovimentoTituloController@inativar');
+        Route::delete('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo', '\Mg\Titulo\TipoMovimentoTituloController@ativar');
 
         // TituloBoleto - listagens (abertos, liquidados, baixados)
-        Route::get('titulo/boleto/abertos/resumo',           '\Mg\Titulo\TituloBoletoController@abertosResumo');
-        Route::get('titulo/boleto/abertos',                  '\Mg\Titulo\TituloBoletoController@abertosLista');
-        Route::get('titulo/boleto/liquidados/navegacao',     '\Mg\Titulo\TituloBoletoController@liquidadosNavegacao');
-        Route::get('titulo/boleto/baixados',                 '\Mg\Titulo\TituloBoletoController@baixadosLista');
+        Route::get('titulo/boleto/abertos/resumo', '\Mg\Titulo\TituloBoletoController@abertosResumo');
+        Route::get('titulo/boleto/abertos', '\Mg\Titulo\TituloBoletoController@abertosLista');
+        Route::get('titulo/boleto/liquidados/navegacao', '\Mg\Titulo\TituloBoletoController@liquidadosNavegacao');
+        Route::get('titulo/boleto/baixados', '\Mg\Titulo\TituloBoletoController@baixadosLista');
 
         // Titulo - CRUD
-        Route::get   ('titulo',                            '\Mg\Titulo\TituloController@index');
-        Route::post  ('titulo',                            '\Mg\Titulo\TituloController@store');
-        Route::get   ('titulo/{codtitulo}',                '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
-        Route::put   ('titulo/{codtitulo}',                '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
-        Route::post  ('titulo/{codtitulo}/estornar',       '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
+        Route::get('titulo', '\Mg\Titulo\TituloController@index');
+        Route::post('titulo', '\Mg\Titulo\TituloController@store');
+        Route::get('titulo/{codtitulo}', '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
+        Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
+        Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
 
         // Boletos BB
-        Route::post('titulo/{codtitulo}/boleto-bb',                              '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');
-        Route::get ('titulo/{codtitulo}/boleto-bb/{codtituloboleto}',            '\Mg\Titulo\BoletoBb\BoletoBbController@show');
-        Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/consultar',  '\Mg\Titulo\BoletoBb\BoletoBbController@consultar');
-        Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/baixar',     '\Mg\Titulo\BoletoBb\BoletoBbController@baixar');
+        Route::post('titulo/{codtitulo}/boleto-bb', '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');
+        Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}', '\Mg\Titulo\BoletoBb\BoletoBbController@show');
+        Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/consultar', '\Mg\Titulo\BoletoBb\BoletoBbController@consultar');
+        Route::post('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/baixar', '\Mg\Titulo\BoletoBb\BoletoBbController@baixar');
 
         // TipoTitulo
-        Route::get   ('tipo-titulo',                                '\Mg\Titulo\TipoTituloController@index');
-        Route::get   ('tipo-titulo/{codtipotitulo}',                '\Mg\Titulo\TipoTituloController@show');
-        Route::post  ('tipo-titulo',                                '\Mg\Titulo\TipoTituloController@store');
-        Route::put   ('tipo-titulo/{codtipotitulo}',                '\Mg\Titulo\TipoTituloController@update');
-        Route::delete('tipo-titulo/{codtipotitulo}',                '\Mg\Titulo\TipoTituloController@destroy');
-        Route::post  ('tipo-titulo/{codtipotitulo}/inativo',        '\Mg\Titulo\TipoTituloController@inativar');
-        Route::delete('tipo-titulo/{codtipotitulo}/inativo',        '\Mg\Titulo\TipoTituloController@ativar');
+        Route::get('tipo-titulo', '\Mg\Titulo\TipoTituloController@index');
+        Route::get('tipo-titulo/{codtipotitulo}', '\Mg\Titulo\TipoTituloController@show');
+        Route::post('tipo-titulo', '\Mg\Titulo\TipoTituloController@store');
+        Route::put('tipo-titulo/{codtipotitulo}', '\Mg\Titulo\TipoTituloController@update');
+        Route::delete('tipo-titulo/{codtipotitulo}', '\Mg\Titulo\TipoTituloController@destroy');
+        Route::post('tipo-titulo/{codtipotitulo}/inativo', '\Mg\Titulo\TipoTituloController@inativar');
+        Route::delete('tipo-titulo/{codtipotitulo}/inativo', '\Mg\Titulo\TipoTituloController@ativar');
 
         // FormaPagamento
-        Route::get   ('forma-pagamento',                              '\Mg\FormaPagamento\FormaPagamentoController@index');
-        Route::get   ('forma-pagamento/{codformapagamento}',          '\Mg\FormaPagamento\FormaPagamentoController@show');
-        Route::post  ('forma-pagamento',                              '\Mg\FormaPagamento\FormaPagamentoController@store');
-        Route::put   ('forma-pagamento/{codformapagamento}',          '\Mg\FormaPagamento\FormaPagamentoController@update');
-        Route::delete('forma-pagamento/{codformapagamento}',          '\Mg\FormaPagamento\FormaPagamentoController@destroy');
-        Route::post  ('forma-pagamento/{codformapagamento}/inativo',  '\Mg\FormaPagamento\FormaPagamentoController@inativar');
-        Route::delete('forma-pagamento/{codformapagamento}/inativo',  '\Mg\FormaPagamento\FormaPagamentoController@ativar');
+        Route::get('forma-pagamento', '\Mg\FormaPagamento\FormaPagamentoController@index');
+        Route::get('forma-pagamento/{codformapagamento}', '\Mg\FormaPagamento\FormaPagamentoController@show');
+        Route::post('forma-pagamento', '\Mg\FormaPagamento\FormaPagamentoController@store');
+        Route::put('forma-pagamento/{codformapagamento}', '\Mg\FormaPagamento\FormaPagamentoController@update');
+        Route::delete('forma-pagamento/{codformapagamento}', '\Mg\FormaPagamento\FormaPagamentoController@destroy');
+        Route::post('forma-pagamento/{codformapagamento}/inativo', '\Mg\FormaPagamento\FormaPagamentoController@inativar');
+        Route::delete('forma-pagamento/{codformapagamento}/inativo', '\Mg\FormaPagamento\FormaPagamentoController@ativar');
 
         // Portador
         Route::get('portador', '\Mg\Portador\PortadorController@index');
         Route::get('portador/intervalo-saldos', '\Mg\Portador\PortadorController@getIntervaloSaldos');
         Route::get('portador/lista-saldos', '\Mg\Portador\PortadorController@listaSaldos');
-        Route::post  ('portador',                          '\Mg\Portador\PortadorController@store');
-        Route::put   ('portador/{codportador}',            '\Mg\Portador\PortadorController@update');
-        Route::delete('portador/{codportador}',            '\Mg\Portador\PortadorController@destroy');
-        Route::post  ('portador/{codportador}/inativo',    '\Mg\Portador\PortadorController@inativar');
-        Route::delete('portador/{codportador}/inativo',    '\Mg\Portador\PortadorController@ativar');
+        Route::post('portador', '\Mg\Portador\PortadorController@store');
+        Route::put('portador/{codportador}', '\Mg\Portador\PortadorController@update');
+        Route::delete('portador/{codportador}', '\Mg\Portador\PortadorController@destroy');
+        Route::post('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@inativar');
+        Route::delete('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@ativar');
         Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
         Route::get('portador/{codportador}/info', '\Mg\Portador\PortadorController@info');
         Route::get('portador/{codportador}/extratos', '\Mg\Portador\PortadorController@listaExtratos');
