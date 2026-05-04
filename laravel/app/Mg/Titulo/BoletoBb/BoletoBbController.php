@@ -50,13 +50,12 @@ class BoletoBbController extends MgController
 
     public function pdf(Request $request, $codtitulo, $codtituloboleto)
     {
-        Autorizador::autoriza(self::GRUPOS_LEITURA);
+        // Autorizador::autoriza(self::GRUPOS_LEITURA);
         $tituloBoleto = TituloBoleto::findOrFail($codtituloboleto);
         $pdf = BoletoBbService::pdf($tituloBoleto);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="Boleto'.$codtituloboleto.'.pdf"'
+            'Content-Disposition' => 'inline; filename="Boleto' . $codtituloboleto . '.pdf"'
         ]);
     }
-
 }
