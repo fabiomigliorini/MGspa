@@ -5,6 +5,7 @@ namespace Mg\NfeTerceiro;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloNfeTerceiro;
@@ -128,8 +129,12 @@ class NfeTerceiroIcmsStService
             throw new Exception('Impossível determinar Número do Contribuinte!');
         }
 
+        // SEFAZ-MT espera vencimento no formato dd/mm/yyyy (igual ao legado)
+        $vencimentoCarbon = Carbon::parse($vencimento);
+        $vencimentoBR = $vencimentoCarbon->format('d/m/Y');
+
         $valorFormatado = number_format($valor, 2, ',', '.');
-        $params = self::buildSefazPayload($nft, $valorFormatado, $vencimento);
+        $params = self::buildSefazPayload($nft, $valorFormatado, $vencimentoBR);
 
         $cookieFile = tempnam(sys_get_temp_dir(), 'sefaz_');
 
@@ -169,44 +174,59 @@ class NfeTerceiroIcmsStService
         if (strpos($contentType, 'application/pdf') !== false) {
             $pdf = $response;
         } else {
-            // Segunda requisição para obter PDF
-            $urlPdf = 'https://www.sefaz.mt.gov.br/arrecadacao/darlivre/impirmirdar?chavePix=true';
-            $ch = curl_init();
-            curl_setopt_array($ch, [
-                CURLOPT_URL => $urlPdf,
-                CURLOPT_CUSTOMREQUEST => 'GET',
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_COOKIEFILE => $cookieFile,
-                CURLOPT_TIMEOUT => 30,
-                CURLOPT_HTTPHEADER => [
-                    'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:107.0) Gecko/20100101 Firefox/107.0',
-                    'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp;q=0.8',
-                    'Accept-Language: pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3',
-                    'Accept-Encoding: gzip, deflate, br',
-                    'Connection: keep-alive',
-                    'Referer: https://www.sefaz.mt.gov.br/arrecadacao/darlivre/pj/gerardar',
-                    'Upgrade-Insecure-Requests: 1',
-                    'Sec-Fetch-Dest: iframe',
-                    'Sec-Fetch-Mode: navigate',
-                    'Sec-Fetch-Site: same-origin',
-                ],
-            ]);
-            $pdfResponse = curl_exec($ch);
-            $pdfContentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-            $pdfError = curl_error($ch);
-            curl_close($ch);
+            // SEFAZ-MT mudou o fluxo: o 1º POST retorna uma página intermediária
+            // "Selecione a Forma de Pagamento" com um hidden <input name="numrDar">.
+            // Pra obter o PDF é necessário um 2º POST para /formapagamento com
+            // pagn=emitirDarPdf + numrDar extraído. Equivalente a JS pagamento(1).
+            preg_match('/<input[^>]*name="numrDar"[^>]*value="([^"]+)"/i', $response ?? '', $matchNumrDar);
+            $numrDar = $matchNumrDar[1] ?? null;
 
-            if ($pdfError) {
-                @unlink($cookieFile);
-                throw new Exception("Falha ao gerar PDF da DAR! - {$pdfError}");
-            }
+            if ($numrDar) {
+                $urlPagto = 'https://www.sefaz.mt.gov.br/arrecadacao/darlivre/formapagamento';
+                $payloadPagto = [
+                    'pagn' => 'emitirDarPdf',
+                    'parmEmissao' => '0',
+                    'codgLocalEmissao' => '',
+                    'numrDar' => $numrDar,
+                ];
 
-            if (strpos($pdfContentType, 'application/pdf') !== false) {
-                $pdf = $pdfResponse;
-            } else {
-                $errorHtml = $pdfResponse;
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => $urlPagto,
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => http_build_query($payloadPagto),
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_COOKIEFILE => $cookieFile,
+                    CURLOPT_COOKIEJAR => $cookieFile,
+                    CURLOPT_TIMEOUT => 30,
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/x-www-form-urlencoded',
+                        'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:107.0) Gecko/20100101 Firefox/107.0',
+                        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp;q=0.8',
+                        'Accept-Language: pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3',
+                        'Accept-Encoding: gzip, deflate, br',
+                        'Connection: keep-alive',
+                        'Referer: https://www.sefaz.mt.gov.br/arrecadacao/darlivre/pj/gerardar',
+                        'Upgrade-Insecure-Requests: 1',
+                    ],
+                ]);
+                $pdfResponse = curl_exec($ch);
+                $pdfContentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                $pdfError = curl_error($ch);
+                curl_close($ch);
+
+                if ($pdfError) {
+                    @unlink($cookieFile);
+                    throw new Exception("Falha ao gerar PDF da DAR! - {$pdfError}");
+                }
+
+                if (strpos($pdfContentType, 'application/pdf') !== false) {
+                    $pdf = $pdfResponse;
+                } else {
+                    $errorHtml = $pdfResponse;
+                }
             }
         }
 
@@ -219,6 +239,22 @@ class NfeTerceiroIcmsStService
             $xpath = new \DOMXPath($dom);
             $erroNodes = $xpath->query("//font[@class='SEFAZ-FONT-MensagemErro']");
             $mensagemErro = $erroNodes->length > 0 ? $erroNodes->item(0)->textContent : 'Erro desconhecido ao gerar DAR.';
+
+            // [DEBUG TEMPORÁRIO] Dumpa respostas crus em arquivo pra diagnóstico
+            $stamp = date('Ymd_His');
+            @file_put_contents("/tmp/sefaz_first_{$stamp}.html", $response ?? '');
+            @file_put_contents("/tmp/sefaz_error_{$stamp}.html", $errorHtml ?? '');
+            Log::error('SEFAZ DAR falhou', [
+                'codnfeterceiro' => $nft->codnfeterceiro,
+                'nfechave' => $nft->nfechave,
+                'mensagemErro' => $mensagemErro,
+                'firstCallContentType' => $contentType,
+                'firstCallHttpCode' => $httpCode,
+                'firstCallLen' => strlen($response ?? ''),
+                'errorHtmlLen' => strlen($errorHtml ?? ''),
+                'dumpStamp' => $stamp,
+            ]);
+
             throw new Exception("SEFAZ MT: {$mensagemErro}");
         }
 
@@ -245,8 +281,8 @@ class NfeTerceiroIcmsStService
         $titulo->emissao = Carbon::now();
         $titulo->transacao = $titulo->emissao;
         $titulo->sistema = $titulo->emissao; // NOT NULL no schema; legado preenche via beforeSave (sistema = criacao)
-        $titulo->vencimento = Carbon::parse($vencimento);
-        $titulo->vencimentooriginal = $titulo->vencimento;
+        $titulo->vencimento = $vencimentoCarbon;
+        $titulo->vencimentooriginal = $vencimentoCarbon;
         $titulo->observacao = "ICMS ST NFe {$nft->numero} - {$nft->Pessoa->fantasia}\n{$nft->nfechave}";
         $titulo->save();
 
