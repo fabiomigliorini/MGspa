@@ -39,7 +39,6 @@ export const usePixStore = defineStore(
     async function fetchItems(reset = false) {
       if (reset) {
         page.value = 1
-        items.value = []
         hasMore.value = true
       }
       if (!hasMore.value || loading.value) return
@@ -49,7 +48,7 @@ export const usePixStore = defineStore(
         const params = { ...filters.value, page: page.value, per_page: 50 }
         const { data } = await api.get('v1/pix', { params })
         const rows = data.data || []
-        items.value.push(...rows)
+        items.value = reset ? rows : [...items.value, ...rows]
         hasMore.value = rows.length >= 50
         page.value++
       } finally {
