@@ -4,8 +4,8 @@ import { useDebounceFn } from '@vueuse/core'
 import { usePixStore } from 'src/stores/pixStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import MgInputData from 'src/components/MgInputData.vue'
-import MgInputValor from 'src/components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const store = usePixStore()
 

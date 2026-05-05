@@ -7,8 +7,8 @@ import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 import PessoaInfo from 'src/components/PessoaInfo.vue'
-import MgInputData from 'src/components/MgInputData.vue'
-import MgInputValor from 'src/components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const route = useRoute()
 const router = useRouter()

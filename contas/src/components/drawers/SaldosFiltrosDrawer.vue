@@ -3,7 +3,7 @@ import { useRouter } from 'vue-router'
 import { useSaldoStore } from 'src/stores/saldoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import MgInputData from 'src/components/MgInputData.vue'
+import MgInputData from '@components/MgInputData.vue'
 
 const router = useRouter()
 const store = useSaldoStore()

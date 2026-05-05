@@ -2,6 +2,7 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
 import { defineConfig } from '#q-app/wrappers'
+import path from 'node:path'
 
 export default defineConfig((/* ctx */) => {
   return {
@@ -37,6 +38,10 @@ export default defineConfig((/* ctx */) => {
       target: {
         browser: [ 'es2022', 'firefox115', 'chrome115', 'safari16' ],
         node: 'node20'
+      },
+
+      alias: {
+        '@components': path.resolve(import.meta.dirname, '../components')
       },
 
       vueRouterMode: 'history', // available values: 'hash', 'history'
