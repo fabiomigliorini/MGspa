@@ -35,7 +35,6 @@ export const useBancoStore = defineStore(
     async function fetchItems(reset = false) {
       if (reset) {
         page.value = 1
-        items.value = []
         hasMore.value = true
       }
       if (!hasMore.value || loading.value) return
@@ -45,7 +44,7 @@ export const useBancoStore = defineStore(
         const params = { ...filters.value, page: page.value }
         const { data } = await api.get('v1/banco', { params })
         const rows = data.data || []
-        items.value.push(...rows)
+        items.value = reset ? rows : [...items.value, ...rows]
         total.value = data.meta?.total ?? items.value.length
         const lastPage = data.meta?.last_page ?? (rows.length ? page.value + 1 : page.value)
         hasMore.value = page.value < lastPage

@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { LoadingBar } from 'quasar'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 
@@ -37,7 +36,6 @@ const pesquisa = (texto, update) => {
   update(async () => {
     const t = (texto || '').trim()
     if (t.length < 2) return
-    LoadingBar.start()
     try {
       const ret = await api.get('v1/select/conta-contabil', { params: { busca: t } })
       const rows = Array.isArray(ret.data) ? ret.data : ret.data.data || []
@@ -46,7 +44,6 @@ const pesquisa = (texto, update) => {
     } catch {
       opcoes.value = []
     }
-    LoadingBar.stop()
   })
 }
 </script>

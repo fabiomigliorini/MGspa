@@ -10,8 +10,8 @@ import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
 import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
-import MgInputData from 'src/components/MgInputData.vue'
-import MgInputValor from 'src/components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const store = useTituloStore()
 

@@ -175,9 +175,6 @@ export const useExtratoStore = defineStore('extrato', () => {
   }
 
   async function carregar() {
-    extratos.value = []
-    saldos.value = []
-    saldoAnterior.value = null
     await Promise.all([buscaSaldos(), buscaExtratos()])
   }
 
