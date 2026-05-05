@@ -186,15 +186,8 @@ class PixController
     {
         Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
 
-        $horarioinicial = null;
-        if (!empty($request->horarioinicial)) {
-            $horarioinicial = Carbon::createFromFormat('d/m/Y H:i', $request->horarioinicial);
-        }
-
-        $horariofinal = null;
-        if (!empty($request->horariofinal)) {
-            $horariofinal = Carbon::createFromFormat('d/m/Y H:i', $request->horariofinal);
-        }
+        $horarioinicial = empty($request->horarioinicial) ? null : Carbon::parse($request->horarioinicial);
+        $horariofinal = empty($request->horariofinal) ? null : Carbon::parse($request->horariofinal);
 
         $valorinicial = null;
         if (!empty($request->valorinicial)) {

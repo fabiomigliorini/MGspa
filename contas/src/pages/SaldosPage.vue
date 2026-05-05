@@ -1,26 +1,15 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useQuasar, date } from 'quasar'
 import { useAuthStore } from 'stores/auth'
 import { useSaldoStore } from 'src/stores/saldoStore'
 import { formataNumero } from 'src/utils/formatters.js'
 
 const route = useRoute()
-const router = useRouter()
 const $q = useQuasar()
 const authStore = useAuthStore()
 const store = useSaldoStore()
-
-watch(
-  () => store.dataSelecionada,
-  (dia) => {
-    if (!dia) return
-    if (route.query.dia !== dia) {
-      router.replace({ query: { ...route.query, dia } })
-    }
-  },
-)
 
 const ofxDialog = ref(false)
 const falhaImportacaoOfx = ref(false)
@@ -73,9 +62,11 @@ const totalPorBanco = (codbanco) => {
   return t ? t.valor : 0
 }
 
-const anoAtual = computed(() => (store.dataSelecionada ? store.dataSelecionada.substring(6) : ''))
+const anoAtual = computed(() =>
+  store.dataSelecionada ? store.dataSelecionada.substring(0, 4) : '',
+)
 const mesAtual = computed(() =>
-  store.dataSelecionada ? store.dataSelecionada.substring(3, 5) : '',
+  store.dataSelecionada ? store.dataSelecionada.substring(5, 7) : '',
 )
 
 const linkExtrato = (codportador) => ({
@@ -117,7 +108,7 @@ const ofxFalha = (response) => {
 }
 
 onMounted(() => {
-  const dia = route.query.dia || date.formatDate(Date.now(), 'DD-MM-YYYY')
+  const dia = route.params.dia || date.formatDate(Date.now(), 'YYYY-MM-DD')
   store.dataSelecionada = dia
   store.buscaIntervalo()
   store.listaSaldos()
@@ -276,7 +267,7 @@ onMounted(() => {
       </q-btn>
     </q-page-sticky>
 
-    <q-dialog v-model="ofxDialog" persistent>
+    <q-dialog v-model="ofxDialog">
       <q-card style="min-width: 800px">
         <q-card-section>
           <q-uploader

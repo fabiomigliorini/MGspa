@@ -1,56 +1,32 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { date } from 'quasar'
+import { useRouter } from 'vue-router'
 import { useSaldoStore } from 'src/stores/saldoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import MgInputData from 'src/components/MgInputData.vue'
 
+const router = useRouter()
 const store = useSaldoStore()
-const dateProxy = ref(null)
 
-const minYearMonth = computed(() =>
-  store.intervalo ? date.formatDate(store.intervalo.primeira_data, 'YYYY/MM') : undefined,
-)
-const maxYearMonth = computed(() =>
-  store.intervalo ? date.formatDate(store.intervalo.ultima_data, 'YYYY/MM') : undefined,
-)
-
-const onDateChange = (val) => {
-  store.dataSelecionada = val
+const onDateChange = (dia) => {
+  store.dataSelecionada = dia
   store.listaSaldos()
-  dateProxy.value?.hide()
+  if (!dia) return
+  const newPath = router.resolve({ name: 'portador-saldos', params: { dia } }).href
+  window.history.replaceState(window.history.state, '', newPath)
 }
 </script>
 
 <template>
   <FilterDrawerShell title="Filtros" :active-count="0">
     <FilterGroup title="Data" first>
-      <q-input
+      <MgInputData
         :model-value="store.dataSelecionada"
-        readonly
-        outlined
-        :bottom-slots="false"
+        type="date"
         label="Dia"
-      >
-        <template #prepend>
-          <q-icon name="event" class="cursor-pointer">
-            <q-popup-proxy
-              ref="dateProxy"
-              cover
-              transition-show="scale"
-              transition-hide="scale"
-            >
-              <q-date
-                :model-value="store.dataSelecionada"
-                @update:model-value="onDateChange"
-                mask="DD-MM-YYYY"
-                :navigation-min-year-month="minYearMonth"
-                :navigation-max-year-month="maxYearMonth"
-              />
-            </q-popup-proxy>
-          </q-icon>
-        </template>
-      </q-input>
+        :bottom-slots="false"
+        @update:model-value="onDateChange"
+      />
     </FilterGroup>
   </FilterDrawerShell>
 </template>

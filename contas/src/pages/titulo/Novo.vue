@@ -7,6 +7,8 @@ import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 import PessoaInfo from 'src/components/PessoaInfo.vue'
+import MgInputData from 'src/components/MgInputData.vue'
+import MgInputValor from 'src/components/MgInputValor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -805,12 +807,9 @@ onMounted(async () => {
         <q-card-section v-else-if="step === STEP.VALORES">
           <div class="row q-col-gutter-md">
             <div class="col-xs-12 col-sm-4">
-              <q-input
-                v-model.number="model.valor"
-                outlined
-                type="number"
-                step="0.01"
-                min="0.01"
+              <MgInputValor
+                v-model="model.valor"
+                :min="0.01"
                 label="Valor"
                 prefix="R$"
                 autofocus
@@ -818,15 +817,21 @@ onMounted(async () => {
               />
             </div>
             <div class="col-xs-12 col-sm-4">
-              <q-input v-model="model.emissao" outlined type="date" label="Emissão" stack-label />
+              <MgInputData
+                v-model="model.emissao"
+                type="date"
+                label="Emissão"
+                stack-label
+                @keyup.enter="avancarValores"
+              />
             </div>
             <div class="col-xs-12 col-sm-4">
-              <q-input
+              <MgInputData
                 v-model="model.vencimento"
-                outlined
                 type="date"
                 label="Vencimento"
                 stack-label
+                @keyup.enter="avancarValores"
               />
             </div>
           </div>

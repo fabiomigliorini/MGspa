@@ -5,7 +5,7 @@ import { api } from 'src/services/api'
 import { notifyError } from 'src/utils/notify'
 
 export const useSaldoStore = defineStore('saldo', () => {
-  const dataSelecionada = ref(date.formatDate(Date.now(), 'DD-MM-YYYY'))
+  const dataSelecionada = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'))
   const intervalo = ref(null)
   const filiais = ref([])
   const totalPorBanco = ref([])

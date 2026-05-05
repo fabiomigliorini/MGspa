@@ -100,7 +100,6 @@ const excluir = (row) => {
     title: 'Excluir',
     message: `Confirma excluir o banco "${row.banco}"?`,
     cancel: true,
-    persistent: true,
   }).onOk(async () => {
     try {
       await api.delete(`v1/banco/${row.codbanco}`)
@@ -212,7 +211,7 @@ onMounted(() => store.fetchItems(true))
       </q-btn>
     </q-page-sticky>
 
-    <q-dialog v-model="dialog" persistent>
+    <q-dialog v-model="dialog">
       <q-card bordered flat style="width: 400px; max-width: 90vw">
         <q-card-section class="text-grey-9 text-overline">
           {{ isNovo ? 'NOVO BANCO' : 'EDITAR BANCO' }}

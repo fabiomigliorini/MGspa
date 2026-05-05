@@ -139,7 +139,6 @@ const excluir = (row) => {
     title: 'Excluir',
     message: `Confirma excluir "${row.tipomovimentotitulo}"?`,
     cancel: true,
-    persistent: true,
   }).onOk(async () => {
     try {
       await api.delete(`v1/tipo-movimento-titulo/${row.codtipomovimentotitulo}`)
@@ -266,7 +265,7 @@ onMounted(() => store.fetchItems(true))
       </q-btn>
     </q-page-sticky>
 
-    <q-dialog v-model="dialog" persistent>
+    <q-dialog v-model="dialog">
       <q-card bordered flat style="width: 500px; max-width: 90vw">
         <q-card-section class="text-grey-9 text-overline">
           {{ isNovo ? 'NOVO TIPO DE MOVIMENTO' : 'EDITAR TIPO DE MOVIMENTO' }}

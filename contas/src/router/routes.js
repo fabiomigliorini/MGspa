@@ -11,7 +11,7 @@ const routes = [
         redirect: { name: 'pix' },
       },
       {
-        path: 'portador/saldos',
+        path: 'portador/saldos/:dia(\\d{4}-\\d{2}-\\d{2})?',
         name: 'portador-saldos',
         component: () => import('pages/SaldosPage.vue'),
         meta: {
