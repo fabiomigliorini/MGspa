@@ -10,6 +10,8 @@ import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
 import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
+import MgInputData from 'src/components/MgInputData.vue'
+import MgInputValor from 'src/components/MgInputValor.vue'
 
 const store = useTituloStore()
 
@@ -68,14 +70,23 @@ const pagarReceberOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
+      <q-select
+        v-model="store.filters.status"
+        :options="statusOptions"
+        emit-value
+        map-options
+        outlined
+        :bottom-slots="false"
+        label="Situação"
+        class="q-mb-md"
+      />
       <q-input
         v-model.number="store.filters.codtitulo"
         outlined
-        clearable
         :bottom-slots="false"
         type="number"
         label="Código"
-        class="q-mb-sm"
+        class="q-mb-md"
       >
         <template #prepend><q-icon name="numbers" /></template>
       </q-input>
@@ -83,16 +94,14 @@ const pagarReceberOptions = [
       <q-input
         v-model="store.filters.numero"
         outlined
-        clearable
         :bottom-slots="false"
         label="Número"
-        class="q-mb-sm"
+        class="q-mb-md"
       />
 
       <q-input
         v-model="store.filters.nossonumero"
         outlined
-        clearable
         :bottom-slots="false"
         label="Nosso Número"
       />
@@ -105,7 +114,7 @@ const pagarReceberOptions = [
         clearable
         :bottom-slots="false"
         label="Pessoa"
-        class="q-mb-sm"
+        class="q-mb-md"
       >
         <template #prepend><q-icon name="person" /></template>
       </SelectPessoa>
@@ -128,7 +137,7 @@ const pagarReceberOptions = [
         clearable
         :bottom-slots="false"
         label="Filial"
-        class="q-mb-sm"
+        class="q-mb-md"
       >
         <template #prepend><q-icon name="store" /></template>
       </SelectFilial>
@@ -139,7 +148,7 @@ const pagarReceberOptions = [
         clearable
         :bottom-slots="false"
         label="Tipo de Título"
-        class="q-mb-sm"
+        class="q-mb-md"
       />
 
       <SelectContaContabil
@@ -148,7 +157,7 @@ const pagarReceberOptions = [
         clearable
         :bottom-slots="false"
         label="Conta Contábil"
-        class="q-mb-sm"
+        class="q-mb-md"
       />
 
       <SelectPortador
@@ -163,13 +172,10 @@ const pagarReceberOptions = [
     </FilterGroup>
 
     <FilterGroup title="Datas">
-      <div class="row q-col-gutter-xs q-mb-sm">
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.vencimento_de"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
             label="Vencimento"
@@ -177,25 +183,19 @@ const pagarReceberOptions = [
           />
         </div>
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.vencimento_ate"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
-            label="até"
+            label="Até"
             stack-label
           />
         </div>
       </div>
-      <div class="row q-col-gutter-xs q-mb-sm">
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.emissao_de"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
             label="Emissão"
@@ -203,25 +203,19 @@ const pagarReceberOptions = [
           />
         </div>
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.emissao_ate"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
-            label="até"
+            label="Até"
             stack-label
           />
         </div>
       </div>
-      <div class="row q-col-gutter-xs q-mb-sm">
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.criacao_de"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
             label="Criação"
@@ -229,40 +223,31 @@ const pagarReceberOptions = [
           />
         </div>
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.criacao_ate"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
-            label="Criação até"
+            label="Até"
             stack-label
           />
         </div>
       </div>
-      <div class="row q-col-gutter-xs">
+      <div class="row q-col-gutter-md">
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.liquidacao_de"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
-            label="Liq. de"
+            label="Liquidação"
             stack-label
           />
         </div>
         <div class="col-6">
-          <q-input
+          <MgInputData
             v-model="store.filters.liquidacao_ate"
-            outlined
-            dense
-            clearable
             :bottom-slots="false"
             type="date"
-            label="Liq. até"
+            label="Até"
             stack-label
           />
         </div>
@@ -270,98 +255,63 @@ const pagarReceberOptions = [
     </FilterGroup>
 
     <FilterGroup title="Valores">
-      <div class="row q-col-gutter-xs q-mb-sm">
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-input
-            v-model.number="store.filters.debito_de"
-            outlined
-            dense
-            clearable
+          <MgInputValor
+            v-model="store.filters.debito_de"
             :bottom-slots="false"
-            type="number"
-            label="Déb. de"
+            label="Débito"
             stack-label
           />
         </div>
         <div class="col-6">
-          <q-input
-            v-model.number="store.filters.debito_ate"
-            outlined
-            dense
-            clearable
+          <MgInputValor
+            v-model="store.filters.debito_ate"
             :bottom-slots="false"
-            type="number"
-            label="Déb. até"
+            label="Até"
             stack-label
           />
         </div>
       </div>
-      <div class="row q-col-gutter-xs q-mb-sm">
+      <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
-          <q-input
-            v-model.number="store.filters.credito_de"
-            outlined
-            dense
-            clearable
+          <MgInputValor
+            v-model="store.filters.credito_de"
             :bottom-slots="false"
-            type="number"
-            label="Créd. de"
+            label="Crédito"
             stack-label
           />
         </div>
         <div class="col-6">
-          <q-input
-            v-model.number="store.filters.credito_ate"
-            outlined
-            dense
-            clearable
+          <MgInputValor
+            v-model="store.filters.credito_ate"
             :bottom-slots="false"
-            type="number"
-            label="Créd. até"
+            label="Até"
             stack-label
           />
         </div>
       </div>
-      <div class="row q-col-gutter-xs">
+      <div class="row q-col-gutter-md">
         <div class="col-6">
-          <q-input
-            v-model.number="store.filters.saldo_de"
-            outlined
-            dense
-            clearable
+          <MgInputValor
+            v-model="store.filters.saldo_de"
             :bottom-slots="false"
-            type="number"
-            label="Saldo de"
+            label="Saldo"
             stack-label
           />
         </div>
         <div class="col-6">
-          <q-input
-            v-model.number="store.filters.saldo_ate"
-            outlined
-            dense
-            clearable
+          <MgInputValor
+            v-model="store.filters.saldo_ate"
             :bottom-slots="false"
-            type="number"
-            label="Saldo até"
+            label="Até"
             stack-label
           />
         </div>
       </div>
     </FilterGroup>
 
-    <FilterGroup title="Situação e Ordem">
-      <q-select
-        v-model="store.filters.status"
-        :options="statusOptions"
-        emit-value
-        map-options
-        outlined
-        :bottom-slots="false"
-        label="Situação"
-        class="q-mb-sm"
-      />
-
+    <FilterGroup title="Operação e Ordem">
       <q-select
         v-model="store.filters.pagarreceber"
         :options="pagarReceberOptions"
@@ -369,8 +319,8 @@ const pagarReceberOptions = [
         map-options
         outlined
         :bottom-slots="false"
-        label="Direção"
-        class="q-mb-sm"
+        label="Pagar / Receber"
+        class="q-mb-md"
       />
 
       <q-select
@@ -381,7 +331,7 @@ const pagarReceberOptions = [
         outlined
         :bottom-slots="false"
         label="Operação"
-        class="q-mb-sm"
+        class="q-mb-md"
       />
 
       <q-select
@@ -392,7 +342,7 @@ const pagarReceberOptions = [
         outlined
         :bottom-slots="false"
         label="Gerencial / Fiscal"
-        class="q-mb-sm"
+        class="q-mb-md"
       />
 
       <q-select
@@ -403,7 +353,7 @@ const pagarReceberOptions = [
         outlined
         :bottom-slots="false"
         label="Boleto"
-        class="q-mb-sm"
+        class="q-mb-md"
       />
 
       <q-select

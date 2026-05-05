@@ -178,7 +178,7 @@ class PortadorController extends MgController
     }
 
     public function listaSaldos(Request $request){
-        $dia = Carbon::createFromFormat('d-m-Y', $request->dia);
+        $dia = Carbon::parse($request->dia);
 
         $dados = PortadorService::listaSaldos($dia);
 

@@ -8,6 +8,8 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
 import IconeInfoCriacao from 'src/components/IconeInfoCriacao.vue'
+import MgInputData from 'src/components/MgInputData.vue'
+import MgInputValor from 'src/components/MgInputValor.vue'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
@@ -793,6 +795,7 @@ watch(() => route.fullPath, carregar)
                   outlined
                   label="Número"
                   maxlength="20"
+                  :bg-color="geradoAuto ? 'grey-3' : ''"
                   :readonly="geradoAuto"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
@@ -805,13 +808,11 @@ watch(() => route.fullPath, carregar)
 
               <!-- VALOR -->
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="model.valor"
-                  outlined
-                  type="number"
-                  step="0.01"
+                <MgInputValor
+                  v-model="model.valor"
                   label="Valor"
                   prefix="R$"
+                  :bg-color="geradoAuto ? 'grey-3' : ''"
                   :readonly="geradoAuto || liquidado"
                   :rules="[(v) => (v && Number(v) > 0) || 'Obrigatório']"
                 />
@@ -819,12 +820,12 @@ watch(() => route.fullPath, carregar)
 
               <!-- EMISSAO -->
               <div class="col-6 col-sm-3">
-                <q-input
+                <MgInputData
                   v-model="model.emissao"
-                  outlined
                   type="date"
                   label="Emissão"
                   stack-label
+                  :bg-color="geradoAuto ? 'grey-3' : ''"
                   :readonly="geradoAuto"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
@@ -832,12 +833,12 @@ watch(() => route.fullPath, carregar)
 
               <!-- TRANSACAO -->
               <div class="col-6 col-sm-3">
-                <q-input
+                <MgInputData
                   v-model="model.transacao"
-                  outlined
                   type="date"
                   label="Transação"
                   stack-label
+                  :bg-color="geradoAuto ? 'grey-3' : ''"
                   :readonly="geradoAuto"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
@@ -845,12 +846,12 @@ watch(() => route.fullPath, carregar)
 
               <!-- VENCIMENTO ORIGINAL -->
               <div class="col-6 col-sm-3">
-                <q-input
+                <MgInputData
                   v-model="model.vencimentooriginal"
-                  outlined
                   type="date"
                   label="Vencimento Original"
                   stack-label
+                  :bg-color="geradoAuto ? 'grey-3' : ''"
                   :readonly="geradoAuto"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
@@ -858,9 +859,8 @@ watch(() => route.fullPath, carregar)
 
               <!-- VENCIMENTO -->
               <div class="col-6 col-sm-3">
-                <q-input
+                <MgInputData
                   v-model="model.vencimento"
-                  outlined
                   type="date"
                   label="Vencimento"
                   stack-label
