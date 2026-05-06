@@ -76,6 +76,7 @@ Route::group(['prefix' => 'v1'], function () {
     Route::post('nfe-terceiro/{codnfeterceiro}/download', '\Mg\NfeTerceiro\NfeTerceiroController@download');
     Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
     Route::get('nfe-terceiro/{codnfeterceiro}/danfe', '\Mg\NfeTerceiro\NfeTerceiroController@danfe');
+    Route::get('nfe-terceiro/{codnfeterceiro}/guia-st/{codtitulonfeterceiro}/pdf', '\Mg\NfeTerceiro\NfeTerceiroController@guiaStPdf');
 
     // TRIBUTACAO
     Route::prefix('tributacao')->group(function () {
@@ -1038,7 +1039,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::post('{codnfeterceiro}/conferencia', '\Mg\NfeTerceiro\NfeTerceiroController@conferencia');
             Route::get('{codnfeterceiro}/icmsst', '\Mg\NfeTerceiro\NfeTerceiroController@icmsst');
             Route::post('{codnfeterceiro}/gerar-guia-st', '\Mg\NfeTerceiro\NfeTerceiroController@gerarGuiaSt');
-            Route::get('{codnfeterceiro}/guia-st/{codtitulonfeterceiro}/pdf', '\Mg\NfeTerceiro\NfeTerceiroController@guiaStPdf');
+            // guia-st/.../pdf é definido fora do auth:api (grupo público de NFeTerceiro), pois window.open não envia bearer token
             Route::get('{codnfeterceiro}/validar-importacao', '\Mg\NfeTerceiro\NfeTerceiroController@validarImportacao');
             Route::post('{codnfeterceiro}/importar', '\Mg\NfeTerceiro\NfeTerceiroController@importar');
             Route::post('{codnfeterceiro}/buscar-item', '\Mg\NfeTerceiro\NfeTerceiroController@buscarItem');

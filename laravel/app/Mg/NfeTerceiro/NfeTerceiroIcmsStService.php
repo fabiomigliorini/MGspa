@@ -5,8 +5,8 @@ namespace Mg\NfeTerceiro;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
-use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloNfeTerceiro;
 
@@ -21,6 +21,14 @@ class NfeTerceiroIcmsStService
 
     // Mapeamento de número pessoa destinatário por filial
     const PESSOA_DESTINATARIO_FILIAL = [
+        101 => '611107',
+        103 => '126206917',
+        105 => '128413022',
+    ];
+
+    // Mapeamento de número de contribuinte por filial
+    // Filial 101 alternativa "Sem IE": 4432657 (legado)
+    const CONTRIBUINTE_FILIAL = [
         101 => '611107',
         103 => '126206917',
         105 => '128413022',
@@ -43,7 +51,7 @@ class NfeTerceiroIcmsStService
                         n.ncm as ncmproduto,
                         nti.cest as cestnota,
                         c.cest as cestproduto,
-                        round(1 + (coalesce(c.mva, 0) / 100), 4) as mva,
+                        round(1 + (c.mva / 100), 4) as mva,
                         coalesce(vprod, 0) + coalesce(vfrete, 0) + coalesce(vseg, 0) + coalesce(voutro, 0) + coalesce(ipivipi, 0) - coalesce(vdesc, 0) as valor,
                         case when coalesce(n.bit, false) then 0.4117 else 1.0 end as reducao,
                         case when coalesce(picms, 0) > 7 then
@@ -107,71 +115,53 @@ class NfeTerceiroIcmsStService
      */
     public static function gerarGuiaSt(NfeTerceiro $nft, float $valor, string $vencimento): array
     {
-        if ($valor <= 0) {
-            throw new Exception('Valor deve ser maior que zero.');
+        if ($valor <= 0.01) {
+            throw new Exception('Valor Não Informado!');
         }
 
-        $filial = $nft->Filial;
-        $codfilial = $filial->codfilial;
-
-        if (!isset(self::CNAE_FILIAL[$codfilial])) {
-            throw new Exception("Filial {$codfilial} não configurada para geração de Guia ST.");
+        if (!isset(self::CNAE_FILIAL[$nft->codfilial])) {
+            throw new Exception('Impossível determinar Cnae!');
+        }
+        if (!isset(self::PESSOA_DESTINATARIO_FILIAL[$nft->codfilial])) {
+            throw new Exception('Impossível determinar Número da pessoa Destinatario!');
+        }
+        if (!isset(self::CONTRIBUINTE_FILIAL[$nft->codfilial])) {
+            throw new Exception('Impossível determinar Número do Contribuinte!');
         }
 
-        $cnae = self::CNAE_FILIAL[$codfilial];
-        $numrPessoaDestinatario = self::PESSOA_DESTINATARIO_FILIAL[$codfilial];
-        $numrContribuinte = self::PESSOA_DESTINATARIO_FILIAL[$codfilial];
+        // SEFAZ-MT espera vencimento no formato dd/mm/yyyy (igual ao legado)
+        $vencimentoCarbon = Carbon::parse($vencimento);
+        $vencimentoBR = $vencimentoCarbon->format('d/m/Y');
 
-        // Dados da filial
-        $ie = $filial->Pessoa->ie;
-        $cnpj = $filial->Pessoa->cnpj;
-
-        $periodoReferencia = date('m/Y');
         $valorFormatado = number_format($valor, 2, ',', '.');
-
-        // POST para SEFAZ MT
-        $url = 'https://www.sefaz.mt.gov.br/arrecadacao/darlivre/pj/gerardar';
-        $params = [
-            'periodoReferencia' => $periodoReferencia,
-            'tipoVenda' => '2',
-            'tributo' => '2817',
-            'cnpjBeneficiario' => '',
-            'numrDocumentoDestinatario' => $ie,
-            'numrNota1' => $nft->nfechave,
-            'numrPessoaDestinatario' => $numrPessoaDestinatario,
-            'statInscricaoEstadual' => 'Ativo',
-            'dataVencimento' => $vencimento,
-            'valor' => $valorFormatado,
-            'numrContribuinte' => $numrContribuinte,
-            'numrDocumento' => $cnpj,
-            'numrInscEstadual' => $ie,
-            'tipoContribuinte' => '1',
-            'codgCnae' => $cnae,
-            'tributoTad' => '2817',
-            'tipoDocumento' => '2',
-            'municipio' => '255009',
-        ];
+        $params = self::buildSefazPayload($nft, $valorFormatado, $vencimentoBR);
 
         $cookieFile = tempnam(sys_get_temp_dir(), 'sefaz_');
 
         // Primeira requisição
+        $url = 'https://www.sefaz.mt.gov.br/arrecadacao/darlivre/pj/gerardar';
         $ch = curl_init();
         curl_setopt_array($ch, [
             CURLOPT_URL => $url,
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => http_build_query($params),
+            CURLOPT_POSTFIELDS => $params,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_SSL_VERIFYPEER => false,
             CURLOPT_SSL_VERIFYHOST => false,
             CURLOPT_COOKIEJAR => $cookieFile,
             CURLOPT_COOKIEFILE => $cookieFile,
-            CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_TIMEOUT => 30,
         ]);
         $response = curl_exec($ch);
         $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
+
+        if ($curlError) {
+            @unlink($cookieFile);
+            throw new Exception("Falha ao gerar PDF da DAR! - {$curlError}");
+        }
 
         if ($httpCode !== 200) {
             @unlink($cookieFile);
@@ -179,77 +169,132 @@ class NfeTerceiroIcmsStService
         }
 
         $pdf = null;
+        $errorHtml = $response;
 
         if (strpos($contentType, 'application/pdf') !== false) {
             $pdf = $response;
         } else {
-            // Segunda requisição para obter PDF
-            $urlPdf = 'https://www.sefaz.mt.gov.br/arrecadacao/darlivre/impirmirdar?chavePix=true';
-            $ch = curl_init();
-            curl_setopt_array($ch, [
-                CURLOPT_URL => $urlPdf,
-                CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
-                CURLOPT_COOKIEFILE => $cookieFile,
-                CURLOPT_TIMEOUT => 30,
-            ]);
-            $pdfResponse = curl_exec($ch);
-            $pdfContentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-            curl_close($ch);
+            // SEFAZ-MT mudou o fluxo: o 1º POST retorna uma página intermediária
+            // "Selecione a Forma de Pagamento" com um hidden <input name="numrDar">.
+            // Pra obter o PDF é necessário um 2º POST para /formapagamento com
+            // pagn=emitirDarPdf + numrDar extraído. Equivalente a JS pagamento(1).
+            preg_match('/<input[^>]*name="numrDar"[^>]*value="([^"]+)"/i', $response ?? '', $matchNumrDar);
+            $numrDar = $matchNumrDar[1] ?? null;
 
-            if (strpos($pdfContentType, 'application/pdf') !== false) {
-                $pdf = $pdfResponse;
+            if ($numrDar) {
+                $urlPagto = 'https://www.sefaz.mt.gov.br/arrecadacao/darlivre/formapagamento';
+                $payloadPagto = [
+                    'pagn' => 'emitirDarPdf',
+                    'parmEmissao' => '0',
+                    'codgLocalEmissao' => '',
+                    'numrDar' => $numrDar,
+                ];
+
+                $ch = curl_init();
+                curl_setopt_array($ch, [
+                    CURLOPT_URL => $urlPagto,
+                    CURLOPT_POST => true,
+                    CURLOPT_POSTFIELDS => http_build_query($payloadPagto),
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_SSL_VERIFYPEER => false,
+                    CURLOPT_SSL_VERIFYHOST => false,
+                    CURLOPT_COOKIEFILE => $cookieFile,
+                    CURLOPT_COOKIEJAR => $cookieFile,
+                    CURLOPT_TIMEOUT => 30,
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/x-www-form-urlencoded',
+                        'User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:107.0) Gecko/20100101 Firefox/107.0',
+                        'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp;q=0.8',
+                        'Accept-Language: pt-BR,pt;q=0.8,en-US;q=0.5,en;q=0.3',
+                        'Accept-Encoding: gzip, deflate, br',
+                        'Connection: keep-alive',
+                        'Referer: https://www.sefaz.mt.gov.br/arrecadacao/darlivre/pj/gerardar',
+                        'Upgrade-Insecure-Requests: 1',
+                    ],
+                ]);
+                $pdfResponse = curl_exec($ch);
+                $pdfContentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+                $pdfError = curl_error($ch);
+                curl_close($ch);
+
+                if ($pdfError) {
+                    @unlink($cookieFile);
+                    throw new Exception("Falha ao gerar PDF da DAR! - {$pdfError}");
+                }
+
+                if (strpos($pdfContentType, 'application/pdf') !== false) {
+                    $pdf = $pdfResponse;
+                } else {
+                    $errorHtml = $pdfResponse;
+                }
             }
         }
 
         @unlink($cookieFile);
 
         if (!$pdf) {
-            // Tenta extrair mensagem de erro do HTML
+            // Tenta extrair mensagem de erro do HTML (response da chamada que falhou)
             $dom = new \DOMDocument();
-            @$dom->loadHTML($response);
+            @$dom->loadHTML($errorHtml);
             $xpath = new \DOMXPath($dom);
             $erroNodes = $xpath->query("//font[@class='SEFAZ-FONT-MensagemErro']");
             $mensagemErro = $erroNodes->length > 0 ? $erroNodes->item(0)->textContent : 'Erro desconhecido ao gerar DAR.';
+
+            // [DEBUG TEMPORÁRIO] Dumpa respostas crus em arquivo pra diagnóstico
+            $stamp = date('Ymd_His');
+            @file_put_contents("/tmp/sefaz_first_{$stamp}.html", $response ?? '');
+            @file_put_contents("/tmp/sefaz_error_{$stamp}.html", $errorHtml ?? '');
+            Log::error('SEFAZ DAR falhou', [
+                'codnfeterceiro' => $nft->codnfeterceiro,
+                'nfechave' => $nft->nfechave,
+                'mensagemErro' => $mensagemErro,
+                'firstCallContentType' => $contentType,
+                'firstCallHttpCode' => $httpCode,
+                'firstCallLen' => strlen($response ?? ''),
+                'errorHtmlLen' => strlen($errorHtml ?? ''),
+                'dumpStamp' => $stamp,
+            ]);
+
             throw new Exception("SEFAZ MT: {$mensagemErro}");
         }
 
-        // Cria Título
+        // Cria diretório pra salvar o PDF (path baseado na emissão da NFe, igual ao legado)
+        $ano = Carbon::parse($nft->emissao)->format('Y');
+        $mes = Carbon::parse($nft->emissao)->format('m');
+        $path = "/opt/www/Arquivos/GuiaST/{$ano}/{$mes}";
+        if (!is_dir($path)) {
+            mkdir($path, 0755, true);
+        }
+
+        // Reserva Codtitulo
         $codtitulo = DB::selectOne("SELECT NEXTVAL('tbltitulo_codtitulo_seq') as codtitulo")->codtitulo;
 
+        // Cria o Título
         $titulo = new Titulo();
         $titulo->codtitulo = $codtitulo;
         $titulo->codfilial = $nft->codfilial;
         $titulo->codtipotitulo = 928; // Boleto a Pagar
         $titulo->codpessoa = 3899; // SEFAZ
         $titulo->codcontacontabil = 147; // ICMS ST
-        $titulo->codportador = Portador::CARTEIRA;
         $titulo->credito = $valor;
         $titulo->numero = "ICMS ST {$codtitulo}";
         $titulo->emissao = Carbon::now();
         $titulo->transacao = $titulo->emissao;
-        $titulo->sistema = $titulo->emissao;
-        $titulo->vencimento = Carbon::parse($vencimento);
-        $titulo->vencimentooriginal = $titulo->vencimento;
-        $titulo->gerencial = true;
+        $titulo->sistema = $titulo->emissao; // NOT NULL no schema; legado preenche via beforeSave (sistema = criacao)
+        $titulo->vencimento = $vencimentoCarbon;
+        $titulo->vencimentooriginal = $vencimentoCarbon;
+        $titulo->observacao = "ICMS ST NFe {$nft->numero} - {$nft->Pessoa->fantasia}\n{$nft->nfechave}";
         $titulo->save();
 
-        // Vincula ao NfeTerceiro
+        // Salva PDF
+        $arquivo = "{$path}/{$nft->nfechave}-{$codtitulo}.pdf";
+        file_put_contents($arquivo, $pdf);
+
+        // Amarra título à NfeTerceiro
         $tnft = new TituloNfeTerceiro();
         $tnft->codtitulo = $titulo->codtitulo;
         $tnft->codnfeterceiro = $nft->codnfeterceiro;
         $tnft->save();
-
-        // Salva PDF
-        $ano = date('Y');
-        $mes = date('m');
-        $path = "/opt/www/Arquivos/GuiaST/{$ano}/{$mes}";
-        if (!is_dir($path)) {
-            mkdir($path, 0755, true);
-        }
-        $arquivo = "{$path}/{$nft->nfechave}-{$codtitulo}.pdf";
-        file_put_contents($arquivo, $pdf);
 
         return [
             'codtitulo' => $titulo->codtitulo,
@@ -265,13 +310,115 @@ class NfeTerceiroIcmsStService
     {
         $titulo = $tnft->Titulo;
         $nft = $tnft->NfeTerceiro;
-        $ano = Carbon::parse($titulo->emissao)->format('Y');
-        $mes = Carbon::parse($titulo->emissao)->format('m');
+        $ano = Carbon::parse($nft->emissao)->format('Y');
+        $mes = Carbon::parse($nft->emissao)->format('m');
         $arquivo = "/opt/www/Arquivos/GuiaST/{$ano}/{$mes}/{$nft->nfechave}-{$titulo->codtitulo}.pdf";
 
         if (file_exists($arquivo)) {
             return $arquivo;
         }
         return null;
+    }
+
+    /**
+     * Monta o payload do POST para SEFAZ-MT (DAR Livre)
+     * Espelha o array enviado pelo legado MGsis em NfeTerceiroController::actionGerarGuiaSt
+     */
+    private static function buildSefazPayload(NfeTerceiro $nft, string $valorFormatado, string $vencimento): array
+    {
+        $codfilial = $nft->codfilial;
+        $ie = $nft->Filial->Pessoa->ie;
+        $cnpj = $nft->Filial->Pessoa->cnpj;
+        $cnae = self::CNAE_FILIAL[$codfilial];
+        $numrPessoaDestinatario = self::PESSOA_DESTINATARIO_FILIAL[$codfilial];
+        $numrContribuinte = self::CONTRIBUINTE_FILIAL[$codfilial];
+
+        return [
+            'periodoReferencia' => date('m/Y'),
+            'tipoVenda' => '2',
+            'tributo' => '2817',
+            'cnpjBeneficiario' => '',
+            'numrDuimp' => '',
+            'numrDocumentoDestinatario' => $ie,
+            'txtCaminhoArquivo' => '(binary)',
+            'isNFE1' => 'on',
+            'numrNota1' => $nft->nfechave,
+            'isNFE2' => 'on',
+            'numrNota2' => '',
+            'isNFE3' => 'on',
+            'numrNota3' => '',
+            'isNFE4' => 'on',
+            'numrNota4' => '',
+            'isNFE5' => 'on',
+            'numrNota5' => '',
+            'isNFE6' => 'on',
+            'numrNota6' => '',
+            'isNFE7' => 'on',
+            'numrNota7' => '',
+            'isNFE8' => 'on',
+            'numrNota8' => '',
+            'isNFE9' => 'on',
+            'numrNota9' => '',
+            'isNFE10' => 'on',
+            'numrNota10' => '',
+            'numrPessoaDestinatario' => $numrPessoaDestinatario,
+            'statInscricaoEstadual' => 'Ativo',
+            'notas' => '1',
+            'nfeNota1' => '',
+            'nfeNota2' => '',
+            'nfeNota3' => '',
+            'nfeNota4' => '',
+            'nfeNota5' => '',
+            'nfeNota6' => '',
+            'nfeNota7' => '',
+            'nfeNota8' => '',
+            'nfeNota9' => '',
+            'nfeNota10' => '',
+            'numrParcela' => '',
+            'totalParcela' => '',
+            'numrNai' => '',
+            'numrTad' => '',
+            'multaCovid' => '',
+            'numeroNob' => '',
+            'codgConvDesc' => '',
+            'dataVencimento' => $vencimento,
+            'qtd' => '',
+            'qtdUnMedida' => '',
+            'valorUnitario' => '',
+            'valorCampo' => $valorFormatado,
+            'valorCorrecao' => '',
+            'diasAtraso' => '',
+            'juros' => '',
+            'tipoDocumento' => '2',
+            'nota1' => '',
+            'nota2' => '',
+            'nota3' => '',
+            'nota4' => '',
+            'nota5' => '',
+            'nota6' => '',
+            'nota7' => '',
+            'nota8' => '',
+            'nota9' => '',
+            'nota10' => '',
+            'informacaoPrevista' => '',
+            'informacaoPrevista2' => '',
+            'municipio' => '255009',
+            'numrContribuinte' => $numrContribuinte,
+            'pagn' => 'emitir',
+            'numrDocumento' => $cnpj,
+            'numrInscEstadual' => $ie,
+            'tipoContribuinte' => '1',
+            'codgCnae' => $cnae,
+            'tipoTributoH' => '',
+            'codgOrgao' => '',
+            'valor' => $valorFormatado,
+            'valorPadrao' => '0',
+            'valorMulta' => '',
+            'tributoTad' => '2817',
+            'tipoVendaX' => '',
+            'tipoUniMedida' => '',
+            'valorUnit' => '',
+            'upfmtFethab' => '',
+        ];
     }
 }
