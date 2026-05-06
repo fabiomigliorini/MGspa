@@ -435,7 +435,7 @@ class ArquivoEntrada extends Arquivo
             $reg->codigoEspecie = 1; // Nota Fiscal em Fornulario - Modelo Antigo
         } else {
             if ($doc->modelo == 55) {
-                if ($doc->serie == 890) {
+                if ($doc->serie >= 890) {
                     $reg->codigoEspecie = 102; // Nota Fiscal Eletronica Avulsa
                 } else {
                     $reg->codigoEspecie = 36; // NFe

@@ -213,6 +213,85 @@ const routes = [
         },
       },
       {
+        path: 'liquidacao-titulo',
+        name: 'liquidacao-titulo',
+        component: () => import('pages/liquidacaoTitulo/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Liquidações de Títulos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/LiquidacaoTituloFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'liquidacao-titulo/nova',
+        name: 'liquidacao-titulo-nova',
+        component: () => import('pages/liquidacaoTitulo/Nova.vue'),
+        meta: {
+          auth: true,
+          title: 'Nova Liquidação',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+        },
+      },
+      {
+        path: 'liquidacao-titulo/:id(\\d+)',
+        name: 'liquidacao-titulo-detalhe',
+        component: () => import('pages/liquidacaoTitulo/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Liquidação',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+        },
+      },
+      {
+        path: 'agrupamento',
+        name: 'agrupamento',
+        component: () => import('pages/tituloAgrupamento/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Agrupamentos de Títulos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/TituloAgrupamentoFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'agrupamento/pendentes',
+        name: 'agrupamento-pendentes',
+        component: () => import('pages/tituloAgrupamento/Pendentes.vue'),
+        meta: {
+          auth: true,
+          title: 'Fechamentos Pendentes',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          leftDrawer: defineAsyncComponent(() =>
+            import('components/drawers/AgrupamentoPendentesFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'agrupamento/novo',
+        name: 'agrupamento-novo',
+        component: () => import('pages/tituloAgrupamento/Novo.vue'),
+        meta: {
+          auth: true,
+          title: 'Novo Agrupamento',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+        },
+      },
+      {
+        path: 'agrupamento/:id(\\d+)',
+        name: 'agrupamento-detalhe',
+        component: () => import('pages/tituloAgrupamento/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Agrupamento',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+        },
+      },
+      {
         path: 'sem-permissao',
         name: 'sem-permissao',
         component: () => import('pages/SemPermissaoPage.vue'),
