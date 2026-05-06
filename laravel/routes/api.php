@@ -882,11 +882,29 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('titulo/boleto/baixados', '\Mg\Titulo\TituloBoletoController@baixadosLista');
 
         // Titulo - CRUD
+        Route::get('titulo/abertos-para-fechamento', '\Mg\Titulo\TituloController@abertosParaFechamento');
         Route::get('titulo', '\Mg\Titulo\TituloController@index');
         Route::post('titulo', '\Mg\Titulo\TituloController@store');
         Route::get('titulo/{codtitulo}', '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
         Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
         Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
+
+        // Liquidação de Títulos
+        Route::get('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@index');
+        Route::get('liquidacao-titulo/relatorio', '\Mg\Titulo\LiquidacaoTituloController@relatorio');
+        Route::get('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@show')->where('id', '[0-9]+');
+        Route::post('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@store');
+        Route::post('liquidacao-titulo/{id}/estornar', '\Mg\Titulo\LiquidacaoTituloController@estornar')->where('id', '[0-9]+');
+
+        // Agrupamento de Títulos
+        Route::get('titulo-agrupamento', '\Mg\Titulo\TituloAgrupamentoController@index');
+        Route::get('titulo-agrupamento/pendentes', '\Mg\Titulo\TituloAgrupamentoController@pendentes');
+        Route::get('titulo-agrupamento/relatorio', '\Mg\Titulo\TituloAgrupamentoController@relatorio');
+        Route::get('titulo-agrupamento/relatorio-pendentes', '\Mg\Titulo\TituloAgrupamentoController@relatorioPendentes');
+        Route::get('titulo-agrupamento/{id}', '\Mg\Titulo\TituloAgrupamentoController@show')->where('id', '[0-9]+');
+        Route::get('titulo-agrupamento/{id}/relatorio', '\Mg\Titulo\TituloAgrupamentoController@relatorioDetalhe')->where('id', '[0-9]+');
+        Route::post('titulo-agrupamento', '\Mg\Titulo\TituloAgrupamentoController@store');
+        Route::post('titulo-agrupamento/{id}/estornar', '\Mg\Titulo\TituloAgrupamentoController@estornar')->where('id', '[0-9]+');
 
         // Boletos BB
         Route::post('titulo/{codtitulo}/boleto-bb', '\Mg\Titulo\BoletoBb\BoletoBbController@registrar');

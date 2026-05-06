@@ -239,10 +239,6 @@ const urlPessoa = (codpessoa) =>
   codpessoa ? `${process.env.PESSOAS_URL}/pessoa/${codpessoa}` : null
 const urlNegocio = (codnegocio) =>
   codnegocio ? `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}` : null
-const urlAgrupamento = (cod) =>
-  cod ? `${process.env.MGSIS_URL}/index.php?r=tituloAgrupamento/view&id=${cod}` : null
-const urlLiquidacao = (cod) =>
-  cod ? `${process.env.MGSIS_URL}/index.php?r=liquidacaoTitulo/view&id=${cod}` : null
 
 // === Estilos derivados ===
 // Parseia YYYY-MM-DD como data local (evita o offset UTC do `new Date(string)`).
@@ -251,6 +247,17 @@ function parseDateLocal(s) {
   const [y, m, d] = String(s).slice(0, 10).split('-').map(Number)
   return new Date(y, m - 1, d)
 }
+
+const movimentosOrdenados = computed(() => {
+  const lista = titulo.value?.movimentos
+  if (!lista) return []
+  return [...lista].sort((a, b) => {
+    const ta = a.transacao || ''
+    const tb = b.transacao || ''
+    if (ta !== tb) return ta < tb ? -1 : 1
+    return (a.codmovimentotitulo ?? 0) - (b.codmovimentotitulo ?? 0)
+  })
+})
 
 const classeVencimento = computed(() => {
   if (!titulo.value || Number(titulo.value.saldo) === 0) return 'text-grey-6'
@@ -487,8 +494,7 @@ watch(() => route.fullPath, carregar)
             no-caps
             padding="0 4px"
             color="primary"
-            :href="urlAgrupamento(titulo.codtituloagrupamento)"
-            target="_blank"
+            :to="{ name: 'agrupamento-detalhe', params: { id: titulo.codtituloagrupamento } }"
             :label="`Agrupamento ${formatCodigo(titulo.codtituloagrupamento)}`"
           />
         </q-banner>
@@ -519,7 +525,7 @@ watch(() => route.fullPath, carregar)
               </q-card-section>
 
               <q-list separator>
-                <q-item v-for="m in titulo.movimentos" :key="m.codmovimentotitulo">
+                <q-item v-for="m in movimentosOrdenados" :key="m.codmovimentotitulo">
                   <!-- Transacao -->
                   <q-item-section style="flex: 0 0 70px; min-width: 0">
                     <q-item-label caption>{{ formataDataSemHora(m.transacao) }}</q-item-label>
@@ -557,8 +563,7 @@ watch(() => route.fullPath, carregar)
                         size="sm"
                         padding="0 4px"
                         color="primary"
-                        :href="urlLiquidacao(m.codliquidacaotitulo)"
-                        target="_blank"
+                        :to="{ name: 'liquidacao-titulo-detalhe', params: { id: m.codliquidacaotitulo } }"
                         :label="`Liquidação ${formatCodigo(m.codliquidacaotitulo)}`"
                       />
                       <q-btn

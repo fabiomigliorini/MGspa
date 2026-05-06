@@ -31,6 +31,18 @@ const movimentoItems = [
     color: 'red-7',
     to: { name: 'boleto-abertos', query: { tipo: 'vencer7' } },
   },
+  {
+    label: 'Agrupamentos',
+    icon: 'receipt_long',
+    color: 'indigo-7',
+    to: { name: 'agrupamento' },
+  },
+  {
+    label: 'Liquidações',
+    icon: 'paid',
+    color: 'green-7',
+    to: { name: 'liquidacao-titulo' },
+  },
 ]
 
 const cadastrosItems = [
