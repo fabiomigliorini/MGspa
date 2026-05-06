@@ -3,6 +3,8 @@ import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { metaStore } from "src/stores/meta";
 import SelectPessoa from "src/components/select/SelectPessoa.vue";
+import MgInputData from "@components/MgInputData.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const props = defineProps({
   unidade: { type: Object, required: true },
@@ -451,50 +453,34 @@ const removerFixo = (fixo) => {
           <div class="text-subtitle2 text-grey-8 q-mb-sm">Meta da Loja</div>
           <div class="row q-col-gutter-md">
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.valormeta"
+              <MgInputValor
+                v-model="modelUnidade.valormeta"
                 label="Meta da Loja"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 prefix="R$"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaosubgerente"
+              <MgInputValor
+                v-model="modelUnidade.percentualcomissaosubgerente"
                 label="Bonificação"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 suffix="%"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaosubgerentemeta"
+              <MgInputValor
+                v-model="modelUnidade.percentualcomissaosubgerentemeta"
                 label="Adicional Meta"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 suffix="%"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.premiosubgerentemeta"
+              <MgInputValor
+                v-model="modelUnidade.premiosubgerentemeta"
                 label="Premiação Meta"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 prefix="R$"
               />
             </div>
@@ -505,50 +491,34 @@ const removerFixo = (fixo) => {
           </div>
           <div class="row q-col-gutter-md">
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.valormetavendedor"
+              <MgInputValor
+                v-model="modelUnidade.valormetavendedor"
                 label="Meta do Vendedor"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 prefix="R$"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaovendedor"
+              <MgInputValor
+                v-model="modelUnidade.percentualcomissaovendedor"
                 label="Vendedor"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 suffix="%"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaovendedormeta"
+              <MgInputValor
+                v-model="modelUnidade.percentualcomissaovendedormeta"
                 label="Adicional Meta"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 suffix="%"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.premioprimeirovendedor"
+              <MgInputValor
+                v-model="modelUnidade.premioprimeirovendedor"
                 label="1o Vendedor"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
                 prefix="R$"
               />
             </div>
@@ -557,26 +527,18 @@ const removerFixo = (fixo) => {
           <div class="text-subtitle2 text-grey-8 q-mb-sm">Metas</div>
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.valormetacaixa"
+              <MgInputValor
+                v-model="modelUnidade.valormetacaixa"
                 label="Meta do Caixa"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
 
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.valormetaxerox"
+              <MgInputValor
+                v-model="modelUnidade.valormetaxerox"
                 label="Meta do Xerox"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
           </div>
@@ -587,14 +549,10 @@ const removerFixo = (fixo) => {
           <div class="row q-col-gutter-md">
             <div class="col-6"></div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.percentualcomissaoxerox"
+              <MgInputValor
+                v-model="modelUnidade.percentualcomissaoxerox"
                 label="Xerox"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
           </div>
@@ -606,14 +564,10 @@ const removerFixo = (fixo) => {
             <div class="col-6"></div>
 
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelUnidade.premiometaxerox"
+              <MgInputValor
+                v-model="modelUnidade.premiometaxerox"
                 label="Meta Xerox"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
           </div>
@@ -657,8 +611,7 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelPessoa.datainicial"
                 label="Data Inicial"
                 type="date"
@@ -666,8 +619,7 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelPessoa.datafinal"
                 label="Data Final"
                 type="date"
@@ -675,47 +627,31 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelPessoa.percentualvenda"
+              <MgInputValor
+                v-model="modelPessoa.percentualvenda"
                 label="% Venda"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelPessoa.percentualcaixa"
+              <MgInputValor
+                v-model="modelPessoa.percentualcaixa"
                 label="% Caixa"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelPessoa.percentualsubgerente"
+              <MgInputValor
+                v-model="modelPessoa.percentualsubgerente"
                 label="% Subgerente"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelPessoa.percentualxerox"
+              <MgInputValor
+                v-model="modelPessoa.percentualxerox"
                 label="% Xerox"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
           </div>
@@ -764,14 +700,10 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelFixo.valor"
+              <MgInputValor
+                v-model="modelFixo.valor"
                 label="Valor"
-                type="number"
-                step="0.01"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
             <div class="col-6">
@@ -793,16 +725,14 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelFixo.datainicial"
                 label="Data Inicial"
                 type="date"
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelFixo.datafinal"
                 label="Data Final"
                 type="date"

@@ -12,6 +12,7 @@ import DialogEditarMeta from "./DialogEditarMeta.vue";
 import CardIndicadores from "src/components/rh/CardIndicadores.vue";
 import CardRubricas from "src/components/rh/CardRubricas.vue";
 import CardSetores from "src/components/rh/CardSetores.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -528,12 +529,9 @@ watch(
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelSetor.percentualrateio"
+              <MgInputValor
+                v-model="modelSetor.percentualrateio"
                 label="% Rateio"
-                type="number"
-                step="0.01"
               />
             </div>
             <div class="col-6">
@@ -622,12 +620,9 @@ watch(
             <!-- PERCENTUAL + INDICADOR -->
             <template v-if="modelRubrica.tipovalor === 'P'">
               <div class="col-4">
-                <q-input
-                  outlined
-                  v-model.number="modelRubrica.percentual"
+                <MgInputValor
+                  v-model="modelRubrica.percentual"
                   label="Percentual %"
-                  type="number"
-                  step="0.01"
                   :rules="[(val) => val > 0 || 'Obrigatório']"
                 />
               </div>
@@ -646,12 +641,10 @@ watch(
 
             <!-- VALOR FIXO -->
             <div class="col-12" v-if="modelRubrica.tipovalor === 'F'">
-              <q-input
-                outlined
-                v-model.number="modelRubrica.valorfixo"
-                label="Valor Fixo (R$)"
-                type="number"
-                step="0.01"
+              <MgInputValor
+                v-model="modelRubrica.valorfixo"
+                label="Valor Fixo"
+                prefix="R$"
                 :rules="[(val) => val != null || 'Obrigatório']"
               />
             </div>

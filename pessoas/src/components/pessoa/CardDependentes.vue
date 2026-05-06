@@ -8,6 +8,8 @@ import { guardaToken } from "src/stores";
 import { formataDataSemHora } from "src/utils/formatador";
 import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
 import SelectPessoa from "components/select/SelectPessoa.vue";
+import MgInputData from "@components/MgInputData.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -331,21 +333,17 @@ const ativar = async (coddependente) => {
 
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <q-input
+              <MgInputData
                 v-model="model.datainicio"
-                outlined
                 type="date"
                 label="Data Início"
-                input-class="text-center"
               />
             </div>
             <div class="col-6">
-              <q-input
+              <MgInputData
                 v-model="model.datafim"
-                outlined
                 type="date"
                 label="Data Fim"
-                input-class="text-center"
               />
             </div>
           </div>
@@ -395,29 +393,21 @@ const ativar = async (coddependente) => {
               class="row q-col-gutter-md q-mb-sm"
             >
               <div class="col-6">
-                <q-input
-                  v-model.number="model.pensaovalor"
-                  min="0"
-                  step="0.01"
-                  outlined
-                  type="number"
+                <MgInputValor
+                  v-model="model.pensaovalor"
+                  :min="0"
                   label="Valor Fixo "
                   prefix="R$"
-                  input-class="text-right"
-                  :disable="!!model.pensaopercentual"
+                  :readonly="!!model.pensaopercentual"
                 />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model.number="model.pensaopercentual"
-                  outlined
-                  min="0"
-                  step="0.01"
-                  type="number"
+                <MgInputValor
+                  v-model="model.pensaopercentual"
+                  :min="0"
                   label="Percentual"
                   suffix="%"
-                  input-class="text-right"
-                  :disable="!!model.pensaovalor"
+                  :readonly="!!model.pensaovalor"
                 />
               </div>
               <div class="col-6">

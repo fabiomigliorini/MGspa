@@ -3,6 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { rhStore } from "src/stores/rh";
 import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const props = defineProps({
   modelValue: Boolean,
@@ -255,36 +256,28 @@ const confirmar = async () => {
                 </div>
                 <!-- Pagando -->
                 <div class="col-2">
-                  <q-input
+                  <MgInputValor
                     dense
                     :model-value="titulo.pagando"
                     @update:model-value="(val) => atualizarPagando(titulo, val)"
-                    type="number"
-                    outlined
                     v-if="titulo.saldo < 0"
                     class="full-width"
-                    input-class="text-right"
-                    min="0"
+                    :min="0"
                     :max="Math.abs(titulo.saldo)"
-                    step="0.01"
                   />
                 </div>
                 <!-- Descontando + toggle linha -->
                 <div class="col-2 no-wrap items-center">
-                  <q-input
+                  <MgInputValor
                     dense
                     :model-value="titulo.descontando"
                     @update:model-value="
                       (val) => atualizarDescontando(titulo, val)
                     "
-                    type="number"
-                    outlined
                     v-if="titulo.saldo > 0"
                     class="col"
-                    input-class="text-right"
-                    min="0"
+                    :min="0"
                     :max="Math.abs(titulo.saldo)"
-                    step="0.01"
                   />
                 </div>
               </div>

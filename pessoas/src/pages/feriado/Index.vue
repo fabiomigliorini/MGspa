@@ -5,6 +5,7 @@ import { feriadoStore } from "src/stores/feriado";
 import { guardaToken } from "src/stores";
 import { formataData } from "src/utils/formatador";
 import MGLayout from "layouts/MGLayout.vue";
+import MgInputData from "@components/MgInputData.vue";
 
 const $q = useQuasar();
 const sFeriado = feriadoStore();
@@ -268,8 +269,7 @@ onMounted(async () => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelFeriado.data"
                 label="Data"
                 autofocus

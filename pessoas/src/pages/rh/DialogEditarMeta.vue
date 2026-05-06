@@ -2,6 +2,7 @@
 import { ref, watch } from "vue";
 import { useQuasar } from "quasar";
 import { rhStore } from "src/stores/rh";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const sRh = rhStore();
@@ -73,12 +74,10 @@ const salvar = async () => {
         <q-separator inset />
 
         <q-card-section>
-          <q-input
-            outlined
-            v-model.number="meta"
-            label="Meta (R$)"
-            type="number"
-            step="0.01"
+          <MgInputValor
+            v-model="meta"
+            label="Meta"
+            prefix="R$"
             autofocus
           />
         </q-card-section>

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from "vue";
-import moment from "moment";
+import MgInputData from "@components/MgInputData.vue";
 
 const props = defineProps({
   modelValue: {
@@ -40,22 +40,6 @@ const submit = async () => {
   }
 };
 
-const contingenciaDataFormatada = computed({
-  get() {
-    if (!model.value.contingenciadata) return "";
-    return moment(model.value.contingenciadata).format("DD/MM/YYYY HH:mm");
-  },
-  set(val) {
-    if (val) {
-      model.value.contingenciadata = moment(val, "DD/MM/YYYY HH:mm").format(
-        "YYYY-MM-DD HH:mm:ss"
-      );
-    } else {
-      model.value.contingenciadata = null;
-    }
-  },
-});
-
 defineExpose({
   submit,
   validate: () => formRef.value.validate(),
@@ -85,46 +69,11 @@ defineExpose({
       class="q-pa-none"
     />
 
-    <q-input
-      outlined
-      v-model="contingenciaDataFormatada"
+    <MgInputData
+      v-model="model.contingenciadata"
+      type="timestamp"
       label="Data de Contingência"
-      mask="##/##/#### ##:##"
-      clearable
-      @clear="model.contingenciadata = null"
-    >
-      <template v-slot:prepend>
-        <q-icon name="event" class="cursor-pointer">
-          <q-popup-proxy
-            cover
-            transition-show="scale"
-            transition-hide="scale"
-          >
-            <q-date
-              v-model="model.contingenciadata"
-              mask="YYYY-MM-DD HH:mm:ss"
-            >
-              <q-btn v-close-popup label="OK" color="primary" flat />
-            </q-date>
-          </q-popup-proxy>
-        </q-icon>
-        <q-icon name="access_time" class="cursor-pointer">
-          <q-popup-proxy
-            cover
-            transition-show="scale"
-            transition-hide="scale"
-          >
-            <q-time
-              v-model="model.contingenciadata"
-              mask="YYYY-MM-DD HH:mm:ss"
-              format24h
-            >
-              <q-btn v-close-popup label="OK" color="primary" flat />
-            </q-time>
-          </q-popup-proxy>
-        </q-icon>
-      </template>
-    </q-input>
+    />
 
     <q-input
       outlined

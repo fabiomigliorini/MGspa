@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { formataMoeda, formataPercentual, corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -250,12 +251,9 @@ const excluirIndicador = (ind) => {
             clearable
           />
 
-          <q-input
-            outlined
-            v-model.number="modelCriar.meta"
+          <MgInputValor
+            v-model="modelCriar.meta"
             label="Meta"
-            type="number"
-            step="0.01"
           />
         </q-card-section>
 
