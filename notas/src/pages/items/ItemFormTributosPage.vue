@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../../stores/notaFiscalStore'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -113,35 +114,26 @@ onMounted(() => { loadItem() })
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.cbsbase"
+                <MgInputValor
+                  v-model="form.cbsbase"
                   label="Base de Cálculo CBS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.cbsaliquota"
+                <MgInputValor
+                  v-model="form.cbsaliquota"
                   label="Alíquota CBS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   suffix="%"
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.cbsvalor"
+                <MgInputValor
+                  v-model="form.cbsvalor"
                   label="Valor CBS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                 />
               </div>
@@ -156,35 +148,26 @@ onMounted(() => { loadItem() })
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.ibsbase"
+                <MgInputValor
+                  v-model="form.ibsbase"
                   label="Base de Cálculo IBS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.ibsaliquota"
+                <MgInputValor
+                  v-model="form.ibsaliquota"
                   label="Alíquota IBS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   suffix="%"
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.ibsvalor"
+                <MgInputValor
+                  v-model="form.ibsvalor"
                   label="Valor IBS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                 />
               </div>
@@ -199,35 +182,26 @@ onMounted(() => { loadItem() })
 
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.isbase"
+                <MgInputValor
+                  v-model="form.isbase"
                   label="Base de Cálculo IS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.isaliquota"
+                <MgInputValor
+                  v-model="form.isaliquota"
                   label="Alíquota IS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   suffix="%"
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.isvalor"
+                <MgInputValor
+                  v-model="form.isvalor"
                   label="Valor IS"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                 />
               </div>

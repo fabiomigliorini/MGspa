@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import SelectProdutoBarra from 'src/components/selects/SelectProdutoBarra.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { formatCurrency, formatDecimal } from 'src/utils/formatters'
 
 const route = useRoute()
@@ -247,22 +248,16 @@ onMounted(async () => {
           <q-card-section class="q-py-none">
             <div class="row q-col-gutter-md items-start">
               <div class="col-4">
-                <q-input
-                  v-model.number="formDetalhes.margem"
+                <MgInputValor
+                  v-model="formDetalhes.margem"
                   label="Margem %"
-                  type="number"
-                  step="0.01"
-                  outlined
                   dense
                 />
               </div>
               <div class="col-4">
-                <q-input
-                  v-model.number="formDetalhes.complemento"
+                <MgInputValor
+                  v-model="formDetalhes.complemento"
                   label="Outros Custos"
-                  type="number"
-                  step="0.01"
-                  outlined
                   dense
                 />
               </div>

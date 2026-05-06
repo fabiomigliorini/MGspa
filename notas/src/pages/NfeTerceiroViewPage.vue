@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
-import MgInputDate from 'src/components/MgInputDate.vue'
+import MgInputData from '@components/MgInputData.vue'
 import {
   formatCnpjCpf,
   formatDateTime,
@@ -1176,7 +1176,7 @@ onMounted(async () => {
           </q-card-section>
 
           <q-card-section>
-            <MgInputDate v-model="entradaModel" label="Entrada" timestamp />
+            <MgInputData v-model="entradaModel" label="Entrada" type="timestamp" :seconds="false" clearable />
             <div class="q-mt-sm">
               <q-btn
                 flat

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
-import MgInputDate from '../MgInputDate.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
   modelValue: {
@@ -123,31 +124,29 @@ watch(
 
             <!-- Vencimento -->
             <div class="col-12 col-sm-6">
-              <MgInputDate
+              <MgInputData
                 v-model="form.vencimento"
+                type="date"
                 label="Vencimento *"
+                clearable
                 :rules="[(val) => !!val || 'Campo obrigatório']"
-                :disable="notaBloqueada"
+                :readonly="notaBloqueada"
               />
             </div>
 
             <!-- Valor -->
             <div class="col-12 col-sm-6">
-              <q-input
-                v-model.number="form.valor"
+              <MgInputValor
+                v-model="form.valor"
                 label="Valor *"
-                outlined
-                type="number"
-                min="0"
-                step="0.01"
+                :min="0"
                 prefix="R$"
                 :rules="[
                   (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
                   (val) => val > 0 || 'Valor deve ser maior que zero',
                 ]"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
           </div>

@@ -9,6 +9,7 @@ import ImpostosReformaTab from 'src/components/NotaFiscalItemTabs/ImpostosReform
 import { useNotaFiscalStore } from 'src/stores/notaFiscalStore'
 import { useNotaFiscalItemCalculos } from 'src/composables/useNotaFiscalItemCalculos'
 import { storeToRefs } from 'pinia'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -185,22 +186,18 @@ onBeforeUnmount(() => {
 
                   <!-- Valor Unitário -->
                   <div class="col-6 col-sm-3">
-                    <q-input
-                      v-model.number="editingItem.valorunitario"
+                    <MgInputValor
+                      v-model="editingItem.valorunitario"
                       label="Valor Unitário *"
-                      outlined
-                      type="number"
-                      step="0.000001"
-                      min="0"
+                      :decimals="6"
+                      :min="0"
                       prefix="R$"
                       :rules="[
                         (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
                         (val) => val >= 0 || 'Deve ser maior ou igual a zero',
                       ]"
                       lazy-rules
-                      :disable="notaBloqueada"
-                      input-class="text-right"
-                      hint=""
+                      :readonly="notaBloqueada"
                     />
                   </div>
 
@@ -219,65 +216,45 @@ onBeforeUnmount(() => {
 
                   <!-- Desconto -->
                   <div class="col-6 col-sm-3">
-                    <q-input
-                      v-model.number="editingItem.valordesconto"
+                    <MgInputValor
+                      v-model="editingItem.valordesconto"
                       label="Desconto"
-                      outlined
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      :min="0"
                       prefix="R$"
-                      :disable="notaBloqueada"
-                      input-class="text-right"
-                      hint=""
+                      :readonly="notaBloqueada"
                     />
                   </div>
 
                   <!-- Frete -->
                   <div class="col-6 col-sm-3">
-                    <q-input
-                      v-model.number="editingItem.valorfrete"
+                    <MgInputValor
+                      v-model="editingItem.valorfrete"
                       label="Frete"
-                      outlined
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      :min="0"
                       prefix="R$"
-                      :disable="notaBloqueada"
-                      input-class="text-right"
-                      hint=""
+                      :readonly="notaBloqueada"
                     />
                   </div>
 
                   <!-- Seguro -->
                   <div class="col-6 col-sm-3">
-                    <q-input
-                      v-model.number="editingItem.valorseguro"
+                    <MgInputValor
+                      v-model="editingItem.valorseguro"
                       label="Seguro"
-                      outlined
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      :min="0"
                       prefix="R$"
-                      :disable="notaBloqueada"
-                      input-class="text-right"
-                      hint=""
+                      :readonly="notaBloqueada"
                     />
                   </div>
 
                   <!-- Outras Despesas -->
                   <div class="col-6 col-sm-3">
-                    <q-input
-                      v-model.number="editingItem.valoroutras"
+                    <MgInputValor
+                      v-model="editingItem.valoroutras"
                       label="Outras Despesas"
-                      outlined
-                      type="number"
-                      step="0.01"
-                      min="0"
+                      :min="0"
                       prefix="R$"
-                      :disable="notaBloqueada"
-                      input-class="text-right"
-                      hint=""
+                      :readonly="notaBloqueada"
                     />
                   </div>
 

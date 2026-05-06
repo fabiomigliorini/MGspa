@@ -9,6 +9,7 @@ import {
 import SelectEstado from '../components/selects/SelectEstado.vue'
 import SelectTributacao from '../components/selects/SelectTributacao.vue'
 import SelectCfop from '../components/selects/SelectCfop.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -290,23 +291,17 @@ onMounted(async () => {
                 </q-input>
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.icmsbase"
-                  outlined
+                <MgInputValor
+                  v-model="form.icmsbase"
                   label="Base ICMS (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.icmspercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.icmspercentual"
                   label="Alíquota (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
             </div>
@@ -331,33 +326,24 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.icmslpbase"
-                  outlined
+                <MgInputValor
+                  v-model="form.icmslpbase"
                   label="Base (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.icmslppercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.icmslppercentual"
                   label="Alíquota (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.icmslppercentualimportado"
-                  outlined
+                <MgInputValor
+                  v-model="form.icmslppercentualimportado"
                   label="Alíquota Importado (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
             </div>
@@ -382,13 +368,10 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.pispercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.pispercentual"
                   label="PIS (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-3">
@@ -401,13 +384,10 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.cofinspercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.cofinspercentual"
                   label="COFINS (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
             </div>
@@ -432,23 +412,17 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.csllpercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.csllpercentual"
                   label="CSLL (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.irpjpercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.irpjpercentual"
                   label="IRPJ (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
             </div>
@@ -471,43 +445,33 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.fethabkg"
-                  outlined
+                <MgInputValor
+                  v-model="form.fethabkg"
                   label="FETHAB por KG"
-                  type="number"
-                  step="0.0001"
-                  :disable="loading"
+                  :decimals="4"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.iagrokg"
-                  outlined
+                <MgInputValor
+                  v-model="form.iagrokg"
                   label="IAGRO por KG"
-                  type="number"
-                  step="0.0001"
-                  :disable="loading"
+                  :decimals="4"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.funruralpercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.funruralpercentual"
                   label="FUNRURAL (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.senarpercentual"
-                  outlined
+                <MgInputValor
+                  v-model="form.senarpercentual"
                   label="SENAR (%)"
-                  type="number"
-                  step="0.01"
-                  :disable="loading"
+                  :readonly="loading"
                 />
               </div>
             </div>

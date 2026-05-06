@@ -6,6 +6,7 @@ import {
   tipoPagamentoRequerBandeira,
 } from 'src/constants/notaFiscal'
 import SelectPessoa from 'src/components/selects/SelectPessoa.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
   modelValue: {
@@ -173,21 +174,17 @@ watch(
 
             <!-- Valor do Pagamento -->
             <div class="col-12 col-sm-6">
-              <q-input
-                v-model.number="form.valorpagamento"
+              <MgInputValor
+                v-model="form.valorpagamento"
                 label="Valor *"
-                outlined
-                type="number"
-                min="0"
-                step="0.01"
+                :min="0"
                 prefix="R$"
                 :rules="[
                   (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
                   (val) => val > 0 || 'Valor deve ser maior que zero',
                 ]"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 
@@ -203,16 +200,12 @@ watch(
 
             <!-- Troco (somente para dinheiro) -->
             <div v-if="podeTerTroco" class="col-12 col-sm-6 q-pa-none">
-              <q-input
-                v-model.number="form.troco"
+              <MgInputValor
+                v-model="form.troco"
                 label="Troco"
-                outlined
-                type="number"
-                min="0"
-                step="0.01"
+                :min="0"
                 prefix="R$"
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
                 hint="Somente para pagamento em dinheiro"
               />
             </div>

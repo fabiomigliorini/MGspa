@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, computed } from 'vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
   modelValue: {
@@ -168,31 +169,23 @@ watch(
             </div>
 
             <div class="col-12 col-sm-6">
-              <q-input
-                v-model.number="form.basereducaopercentual"
+              <MgInputValor
+                v-model="form.basereducaopercentual"
                 label="% Redução da Base"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
+                :min="0"
+                :max="100"
                 suffix="%"
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 
             <div class="col-12 col-sm-6">
-              <q-input
-                v-model.number="form.basereducao"
+              <MgInputValor
+                v-model="form.basereducao"
                 label="Valor da Redução"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 
@@ -203,51 +196,39 @@ watch(
             </div>
 
             <div class="col-12 col-sm-4">
-              <q-input
-                v-model.number="form.base"
+              <MgInputValor
+                v-model="form.base"
                 label="Base de Cálculo *"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
                 :rules="[(val) => (val !== null && val !== undefined) || 'Campo obrigatório']"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 
             <div class="col-12 col-sm-4">
-              <q-input
-                v-model.number="form.aliquota"
+              <MgInputValor
+                v-model="form.aliquota"
                 label="Alíquota *"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
+                :min="0"
+                :max="100"
                 suffix="%"
                 :rules="[(val) => (val !== null && val !== undefined) || 'Campo obrigatório']"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 
             <div class="col-12 col-sm-4">
-              <q-input
-                v-model.number="form.valor"
+              <MgInputValor
+                v-model="form.valor"
                 label="Valor do Tributo *"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
                 :rules="[(val) => (val !== null && val !== undefined) || 'Campo obrigatório']"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 
@@ -269,16 +250,12 @@ watch(
             </div>
 
             <div v-if="form.geracredito" class="col-12 col-sm-6">
-              <q-input
-                v-model.number="form.valorcredito"
+              <MgInputValor
+                v-model="form.valorcredito"
                 label="Valor do Crédito"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 

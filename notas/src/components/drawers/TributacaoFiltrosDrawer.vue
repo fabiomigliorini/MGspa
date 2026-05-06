@@ -8,6 +8,7 @@ import SelectCidade from 'components/selects/SelectCidade.vue'
 import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
 import SelectTipoProduto from 'components/selects/SelectTipoProduto.vue'
 import SelectTipoCliente from 'components/selects/SelectTipoCliente.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const $q = useQuasar()
 const store = useTributacaoStore()
@@ -148,31 +149,23 @@ const limparFiltros = async () => {
 
       <!-- Base Percentual -->
       <div class="q-mb-md">
-        <q-input
-          v-model.number="store.filters.basepercentual"
+        <MgInputValor
+          v-model="store.filters.basepercentual"
           label="Base Percentual (%)"
-          outlined
           clearable
-          type="number"
-          min="0"
-          max="100"
-          step="0.01"
-          placeholder="Ex: 100"
+          :min="0"
+          :max="100"
         />
       </div>
 
       <!-- Alíquota -->
       <div class="q-mb-md">
-        <q-input
-          v-model.number="store.filters.aliquota"
+        <MgInputValor
+          v-model="store.filters.aliquota"
           label="Alíquota (%)"
-          outlined
           clearable
-          type="number"
-          min="0"
-          max="100"
-          step="0.01"
-          placeholder="Ex: 8.5"
+          :min="0"
+          :max="100"
         />
       </div>
 

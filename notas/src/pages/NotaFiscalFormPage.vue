@@ -9,7 +9,8 @@ import SelectFilial from '../components/selects/SelectFilial.vue'
 import SelectEstoqueLocal from '../components/selects/SelectEstoqueLocal.vue'
 import SelectPessoa from '../components/selects/SelectPessoa.vue'
 import SelectEstado from '../components/selects/SelectEstado.vue'
-import MgInputDate from '../components/MgInputDate.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
 import { formatNumero } from 'src/utils/formatters'
 import { validarChaveNFe } from 'src/utils/validators'
@@ -478,25 +479,25 @@ onMounted(() => {
 
               <!-- Data Emissão -->
               <div class="col-12 col-sm-6">
-                <MgInputDate
+                <MgInputData
                   v-model="form.emissao"
                   label="Data/Hora Emissão *"
-                  timestamp
-                  seconds
+                  type="timestamp"
+                  clearable
                   :rules="[(val) => !!val || 'Campo obrigatório']"
-                  :disable="notaBloqueada"
+                  :readonly="notaBloqueada"
                 />
               </div>
 
               <!-- Data Saída -->
               <div class="col-12 col-sm-6">
-                <MgInputDate
+                <MgInputData
                   v-model="form.saida"
                   label="Data/Hora Saída *"
-                  timestamp
-                  seconds
+                  type="timestamp"
+                  clearable
                   :rules="[(val) => !!val || 'Campo obrigatório']"
-                  :disable="notaBloqueada"
+                  :readonly="notaBloqueada"
                 />
               </div>
             </div>
@@ -585,61 +586,45 @@ onMounted(() => {
 
               <!-- Desconto -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.valordesconto"
+                <MgInputValor
+                  v-model="form.valordesconto"
                   label="Desconto"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
+                  :readonly="notaBloqueada"
                 />
               </div>
 
               <!-- Frete -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.valorfrete"
+                <MgInputValor
+                  v-model="form.valorfrete"
                   label="Frete"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
+                  :readonly="notaBloqueada"
                 />
               </div>
 
               <!-- Seguro -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.valorseguro"
+                <MgInputValor
+                  v-model="form.valorseguro"
                   label="Seguro"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
+                  :readonly="notaBloqueada"
                 />
               </div>
 
               <!-- Outras Despesas -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.valoroutras"
+                <MgInputValor
+                  v-model="form.valoroutras"
                   label="Outras Despesas"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
-                  :disable="notaBloqueada"
-                  input-class="text-right"
+                  :readonly="notaBloqueada"
                 />
               </div>
 
