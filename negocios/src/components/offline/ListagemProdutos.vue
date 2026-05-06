@@ -5,6 +5,7 @@ import { negocioStore } from "stores/negocio";
 import { Dialog } from "quasar";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
+import MgInputValor from "@components/MgInputValor.vue";
 
 const sProduto = produtoStore();
 const sNegocio = negocioStore();
@@ -224,52 +225,52 @@ const linkProduto = (codproduto) => {
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input type="number" step="0.01" min="0.01" outlined v-model.number="edicao.valorunitario"
-                    prefix="R$" label="Preço" input-class="text-right" :rules="preenchimentoObrigatorioRule"
+                  <MgInputValor :min="0.01" v-model="edicao.valorunitario"
+                    prefix="R$" label="Preço" :rules="preenchimentoObrigatorioRule"
                     @change="recalcularValorProdutos()" />
                 </div>
                 <div class="col-6">
-                  <q-input type="number" step="0.01" min="0.01" outlined v-model.number="edicao.valorprodutos"
-                    prefix="R$" label="Total Produto" input-class="text-right" :rules="preenchimentoObrigatorioRule"
+                  <MgInputValor :min="0.01" v-model="edicao.valorprodutos"
+                    prefix="R$" label="Total Produto" :rules="preenchimentoObrigatorioRule"
                     @change="recalcularValorProdutos()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input type="number" step="0.01" min="0" max="99.99" outlined
-                    v-model.number="edicao.percentualdesconto" label="% Desc" input-class="text-right" suffix="%"
+                  <MgInputValor :min="0" :max="99.99"
+                    v-model="edicao.percentualdesconto" label="% Desc" suffix="%"
                     :rules="maiorQueZeroRule" @change="recalcularValorDesconto()" />
                 </div>
                 <div class="col-6">
-                  <q-input type="number" step="0.01" :max="edicao.valorprodutos - 0.01" outlined
-                    v-model.number="edicao.valordesconto" prefix="R$" label="Desconto" input-class="text-right"
+                  <MgInputValor :max="edicao.valorprodutos - 0.01"
+                    v-model="edicao.valordesconto" prefix="R$" label="Desconto"
                     :rules="maiorQueZeroRule" @change="recalcularPercentualDesconto()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valorfrete" prefix="R$"
-                    label="Frete" input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
+                  <MgInputValor v-model="edicao.valorfrete" prefix="R$"
+                    label="Frete" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valorseguro" prefix="R$"
-                    label="Seguro" input-class="text-right" :rules="maiorQueZeroRule"
+                  <MgInputValor v-model="edicao.valorseguro" prefix="R$"
+                    label="Seguro" :rules="maiorQueZeroRule"
                     @change="recalcularValorTotal()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valoroutras" prefix="R$"
-                    label="Outras" input-class="text-right" :rules="maiorQueZeroRule"
+                  <MgInputValor v-model="edicao.valoroutras" prefix="R$"
+                    label="Outras" :rules="maiorQueZeroRule"
                     @change="recalcularValorTotal()" />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input type="number" step="0.01" outlined v-model.number="edicao.valortotal" prefix="R$"
-                    label="Total" input-class="text-right" :rules="preenchimentoObrigatorioRule"
+                  <MgInputValor v-model="edicao.valortotal" prefix="R$"
+                    label="Total" :rules="preenchimentoObrigatorioRule"
                     @change="recalcularValorTotal()" />
                 </div>
               </div>

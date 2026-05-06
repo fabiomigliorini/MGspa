@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import MgSlimBatch from "src/utils/pqina/slim/MgSlimBatch.vue";
 import { confissaoStore } from "src/stores/confissao";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const sConfissao = confissaoStore();
 
@@ -22,8 +23,8 @@ const confissaoRatio = ref('1:2');
         <mg-slim-batch :ratio="confissaoRatio" pasta="confissao" @upload="dialogConfissao = false" />
         <q-input type="number" min="0" class="q-mt-md" input-class="text-right" step="1" outlined
           v-model="sConfissao.codnegocio" :disable="sConfissao.encontrados == 1" />
-        <q-input type="number" min="0" class="q-my-md" input-class="text-right" step="0.01" outlined
-          v-model="sConfissao.valor" :disable="sConfissao.encontrados == 1" />
+        <MgInputValor :min="0" class="q-my-md"
+          v-model="sConfissao.valor" :readonly="sConfissao.encontrados == 1" />
       </div>
     </div>
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
