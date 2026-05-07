@@ -5,8 +5,8 @@ import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
 import { formataData, formataFone, formataCelular } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
-import InputFiltered from "components/InputFiltered.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
+import MgInputFormatado from "@components/MgInputFormatado.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -448,7 +448,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
 
             <!-- APELIDO -->
             <div class="col-12">
-              <input-filtered
+              <MgInputFormatado
                 outlined
                 v-model="modelTel.apelido"
                 label="Apelido"
@@ -542,7 +542,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
               </q-icon>
 
               <!-- INFO -->
-              <icone-info-criacao
+              <MgInfoCriacao
                 :usuariocriacao="element.usuariocriacao"
                 :criacao="element.criacao"
                 :usuarioalteracao="element.usuarioalteracao"

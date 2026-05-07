@@ -6,7 +6,7 @@ import { pessoaStore } from "stores/pessoa";
 import { dependenteStore } from "stores/dependente";
 import { guardaToken } from "src/stores";
 import { formataDataSemHora } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectPessoa from "components/select/SelectPessoa.vue";
 import MgInputData from "@components/MgInputData.vue";
 import MgInputValor from "@components/MgInputValor.vue";
@@ -547,7 +547,7 @@ const ativar = async (coddependente) => {
               </q-badge>
 
               <!-- INFO -->
-              <icone-info-criacao
+              <MgInfoCriacao
                 :usuariocriacao="dep.usuariocriacao"
                 :criacao="dep.criacao"
                 :usuarioalteracao="dep.usuarioalteracao"

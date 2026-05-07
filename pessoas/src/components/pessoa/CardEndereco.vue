@@ -11,9 +11,9 @@ import {
   linkMaps,
   removerAcentos,
 } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
-import InputFiltered from "components/InputFiltered.vue";
+import MgInputFormatado from "@components/MgInputFormatado.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -357,7 +357,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
             </div>
 
             <div class="col-xs-9 col-sm-7">
-              <input-filtered
+              <MgInputFormatado
                 ref="enderecoRef"
                 outlined
                 v-model="modelEndereco.endereco"
@@ -394,7 +394,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               />
             </div>
             <div class="col-xs-12 col-sm-6">
-              <input-filtered
+              <MgInputFormatado
                 outlined
                 v-model="modelEndereco.bairro"
                 label="Bairro"
@@ -412,7 +412,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               />
             </div>
             <div class="col-xs-12 col-sm-6">
-              <input-filtered
+              <MgInputFormatado
                 outlined
                 v-model="modelEndereco.complemento"
                 label="Complemento"
@@ -435,7 +435,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               />
             </div>
             <div class="col-xs-12 col-sm-6">
-              <input-filtered
+              <MgInputFormatado
                 outlined
                 v-model="modelEndereco.apelido"
                 label="Apelido"
@@ -558,7 +558,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               </q-icon>
 
               <!-- INFO -->
-              <icone-info-criacao
+              <MgInfoCriacao
                 :usuariocriacao="element.usuariocriacao"
                 :criacao="element.criacao"
                 :usuarioalteracao="element.usuarioalteracao"

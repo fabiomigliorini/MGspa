@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
-import UserMenu from 'src/components/UserMenu.vue'
+import MgUserMenu from '@components/MgUserMenu.vue'
 import { version } from '../../package.json'
 
 const route = useRoute()
@@ -40,7 +40,7 @@ const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscai
         <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
 
         <!-- Menu do Usuário -->
-        <user-menu />
+        <MgUserMenu />
 
         <!-- App Launcher -->
         <app-launcher />

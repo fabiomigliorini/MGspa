@@ -4,16 +4,11 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectCertidaoEmissor from "components/pessoa/SelectCertidaoEmissor.vue";
 import SelectCertidaoTipo from "components/pessoa/SelectCertidaoTipo.vue";
-import {
-  formataDataSemHora,
-  dataAtual,
-  dataFormatoSql,
-  formataDataInput,
-  localeBrasil,
-} from "src/utils/formatador";
+import MgInputData from "@components/MgInputData.vue";
+import { formataDataSemHora, dataAtual } from "src/utils/formatador";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -33,9 +28,6 @@ const certidoesFiltradas = computed(() => {
 
 const novaCertidao = async () => {
   modelCertidao.value.codpessoa = route.params.id;
-  if (modelCertidao.value.validade) {
-    modelCertidao.value.validade = dataFormatoSql(modelCertidao.value.validade);
-  }
   try {
     const ret = await sPessoa.novaCertidao(modelCertidao.value);
     if (ret.data.data) {
@@ -75,15 +67,12 @@ const editarCertidao = (
     codcertidaoemissor: codcertidaoemissor,
     numero: numero,
     autenticacao: autenticacao,
-    validade: formataDataInput(validade),
+    validade: validade,
     codcertidaotipo: codcertidaotipo,
   };
 };
 
 const salvarCertidao = async () => {
-  if (modelCertidao.value.validade) {
-    modelCertidao.value.validade = dataFormatoSql(modelCertidao.value.validade);
-  }
   try {
     const ret = await sPessoa.salvarEdicaoCertidao(
       modelCertidao.value.codpessoacertidao,
@@ -238,41 +227,14 @@ const submit = () => {
               />
             </div>
             <div class="col-12">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="modelCertidao.validade"
-                mask="##/##/####"
                 label="Validade"
                 :rules="[
                   (val) => (val && val.length > 0) || 'Validade obrigatório',
                 ]"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelCertidao.validade"
-                        :locale="localeBrasil"
-                        mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+              />
             </div>
           </div>
         </q-card-section>
@@ -345,7 +307,7 @@ const submit = () => {
             >
               Validade: {{ formataDataSemHora(certidao.validade) }}
               <!-- INFO -->
-              <icone-info-criacao
+              <MgInfoCriacao
                 :usuariocriacao="certidao.usuariocriacao"
                 :criacao="certidao.criacao"
                 :usuarioalteracao="certidao.usuarioalteracao"

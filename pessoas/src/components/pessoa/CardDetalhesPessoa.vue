@@ -20,7 +20,7 @@ import SelectGrupoEconomico from "components/pessoa/SelectGrupoEconomico.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
 import SelectEstado from "components/pessoa/SelectEstado.vue";
 import InputIe from "components/pessoa/InputIe.vue";
-import InputFiltered from "components/InputFiltered.vue";
+import MgInputFormatado from "@components/MgInputFormatado.vue";
 import SelectPessoa from "components/select/SelectPessoa.vue";
 import SelectEstadoCivil from "components/pessoa/SelectEstadoCivil.vue";
 import SelectEtnia from "components/pessoa/SelectEtnia.vue";
@@ -328,7 +328,7 @@ const salvarDetalhes = async () => {
             </template>
           </q-input>
 
-          <input-filtered
+          <MgInputFormatado
             outlined
             v-model="modelPessoa.fantasia"
             label="Fantasia"
@@ -338,7 +338,7 @@ const salvarDetalhes = async () => {
             autofocus
             class="col-md-4 col-sm-6 col-xs-12"
           />
-          <input-filtered
+          <MgInputFormatado
             outlined
             v-model="modelPessoa.pessoa"
             label="Razão Social"
@@ -361,13 +361,13 @@ const salvarDetalhes = async () => {
               :cidadeEditar="options"
               label="Nascido em"
             />
-            <input-filtered
+            <MgInputFormatado
               class="col-md-4 col-sm-6 col-xs-12"
               outlined
               v-model="modelPessoa.pai"
               label="Nome do Pai"
             />
-            <input-filtered
+            <MgInputFormatado
               class="col-md-4 col-sm-6 col-xs-12"
               outlined
               v-model="modelPessoa.mae"

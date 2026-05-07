@@ -5,9 +5,9 @@ import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
 import { formataFromNow, formataCPF, formataCNPJ, formataCelularComDDD, formataCnpjEcpf } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectBanco from "components/pessoa/SelectBanco.vue";
-import InputFiltered from "components/InputFiltered.vue";
+import MgInputFormatado from "@components/MgInputFormatado.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -441,7 +441,7 @@ const submit = () => {
               label="Cnpj/Cpf"
               step="any"
             />
-            <input-filtered
+            <MgInputFormatado
               outlined
               v-model="modelContaBancaria.titular"
               label="Titular"
@@ -549,7 +549,7 @@ const submit = () => {
               <span v-if="contas.pixaleatoria">{{ contas.pixaleatoria }}</span>
 
               <!-- INFO -->
-              <icone-info-criacao
+              <MgInfoCriacao
                 :usuariocriacao="contas.usuariocriacao"
                 :criacao="contas.criacao"
                 :usuarioalteracao="contas.usuarioalteracao"
