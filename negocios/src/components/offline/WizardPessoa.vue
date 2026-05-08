@@ -15,7 +15,7 @@ import {
   isTelefoneValido,
 } from "src/utils/validador.js";
 import SelectCidade from "../selects/SelectCidade.vue";
-import InputFiltered from "../InputFiltered.vue";
+import MgInputFormatado from "@components/MgInputFormatado.vue";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
 import { negocioStore } from "src/stores/negocio";
 import { api } from "src/boot/axios";
@@ -867,7 +867,7 @@ watch(
                   />
                 </div>
                 <div class="row q-col-gutter-md q-mb-md">
-                  <input-filtered
+                  <MgInputFormatado
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
                     v-model="pessoa.pessoa"
@@ -881,7 +881,7 @@ watch(
                     maxlength="100"
                     autofocus
                   />
-                  <input-filtered
+                  <MgInputFormatado
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
                     v-model="pessoa.fantasia"
@@ -1000,7 +1000,7 @@ watch(
                       inputmode="numeric"
                     >
                     </q-input>
-                    <input-filtered
+                    <MgInputFormatado
                       class="col-md-6 col-sm-6 col-xs-8"
                       outlined
                       v-model="pessoa.enderecos[i].endereco"
@@ -1031,7 +1031,7 @@ watch(
                           tabindex="-1"
                         />
                       </template>
-                    </input-filtered>
+                    </MgInputFormatado>
                     <q-input
                       class="col-md-3 col-sm-3 col-xs-4"
                       outlined
@@ -1046,7 +1046,7 @@ watch(
                       inputmode="tel"
                     >
                     </q-input>
-                    <input-filtered
+                    <MgInputFormatado
                       class="col-md-3 col-sm-3 col-xs-12"
                       outlined
                       v-model="pessoa.enderecos[i].bairro"
@@ -1058,8 +1058,8 @@ watch(
                       counter
                       maxlength="50"
                     >
-                    </input-filtered>
-                    <input-filtered
+                    </MgInputFormatado>
+                    <MgInputFormatado
                       class="col-md-3 col-sm-3 col-xs-12"
                       outlined
                       v-model="pessoa.enderecos[i].complemento"
@@ -1070,7 +1070,7 @@ watch(
                       counter
                       maxlength="50"
                     >
-                    </input-filtered>
+                    </MgInputFormatado>
                     <select-cidade
                       outlined
                       v-model="pessoa.enderecos[i].codcidade"

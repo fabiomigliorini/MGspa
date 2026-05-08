@@ -5,6 +5,7 @@ import SelectPessoa from "components/selects/SelectPessoa.vue";
 import SelectPdv from "components/selects/SelectPdv.vue";
 import SelectUsuario from "components/selects/SelectUsuario.vue";
 import SelectPortador from "components/selects/SelectPortador.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 const sLiquidacao = liquidacaoStore();
 
 onMounted(() => {
@@ -221,28 +222,20 @@ onMounted(() => {
     <q-item>
       <q-item-section>
         <div class="row q-col-gutter-sm">
-          <q-input
-            outlined
-            type="number"
-            step="0.01"
-            min="0.01"
-            input-class="text-right"
+          <MgInputValor
+            :min="0.01"
             v-model="sLiquidacao.filtro.valor_de"
             :max="sLiquidacao.filtro.valor_ate"
             label="Valor de"
             class="col-6"
             prefix="R$"
           />
-          <q-input
-            outlined
-            type="number"
-            step="0.01"
+          <MgInputValor
             :min="
               sLiquidacao.filtro.valor_de > 0
                 ? sLiquidacao.filtro.valor_de
                 : 0.01
             "
-            input-class="text-right"
             v-model="sLiquidacao.filtro.valor_ate"
             label="até"
             class="col-6"

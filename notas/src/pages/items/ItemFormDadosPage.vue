@@ -3,6 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../../stores/notaFiscalStore'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -236,13 +237,10 @@ onMounted(() => {
 
               <!-- Valor Unitário -->
               <div class="col-12 col-sm-6 col-md-4">
-                <q-input
-                  v-model.number="form.valorunitario"
+                <MgInputValor
+                  v-model="form.valorunitario"
                   label="Valor Unitário *"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   :rules="[
                     val => val !== null && val !== undefined || 'Campo obrigatório',
                     val => val >= 0 || 'Valor deve ser maior ou igual a zero'
@@ -254,13 +252,10 @@ onMounted(() => {
 
               <!-- Valor Total -->
               <div class="col-12 col-sm-12 col-md-4">
-                <q-input
-                  v-model.number="form.valortotal"
+                <MgInputValor
+                  v-model="form.valortotal"
                   label="Valor Total *"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   :rules="[
                     val => val !== null && val !== undefined || 'Campo obrigatório',
                     val => val >= 0 || 'Valor deve ser maior ou igual a zero'
@@ -274,13 +269,10 @@ onMounted(() => {
 
               <!-- Desconto -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.valordesconto"
+                <MgInputValor
+                  v-model="form.valordesconto"
                   label="Desconto"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                   @update:model-value="calcularTotal"
                 />
@@ -288,13 +280,10 @@ onMounted(() => {
 
               <!-- Frete -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.valorfrete"
+                <MgInputValor
+                  v-model="form.valorfrete"
                   label="Frete"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                   @update:model-value="calcularTotal"
                 />
@@ -302,13 +291,10 @@ onMounted(() => {
 
               <!-- Seguro -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.valorseguro"
+                <MgInputValor
+                  v-model="form.valorseguro"
                   label="Seguro"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                   @update:model-value="calcularTotal"
                 />
@@ -316,13 +302,10 @@ onMounted(() => {
 
               <!-- Outras Despesas -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  v-model.number="form.valoroutras"
+                <MgInputValor
+                  v-model="form.valoroutras"
                   label="Outras Despesas"
-                  outlined
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  :min="0"
                   prefix="R$"
                   @update:model-value="calcularTotal"
                 />

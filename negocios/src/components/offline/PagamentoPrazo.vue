@@ -4,6 +4,7 @@ import { Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
+import MgInputValor from "@components/MgInputValor.vue";
 
 const sNegocio = negocioStore();
 
@@ -275,9 +276,9 @@ const salvar = async () => {
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <q-input prefix="R$" type="number" step="0.01" min="0.01" :max="sNegocio.valorapagar" borderless
-                  v-model.number="pagamento.valor" :rules="valorRule" autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary" />
+                <MgInputValor prefix="R$" :min="0.01" :max="sNegocio.valorapagar"
+                  v-model="pagamento.valor" :rules="valorRule" autofocus
+                  class="text-h2 text-weight-bolder text-primary" />
               </q-item-section>
             </q-item>
             <q-item>

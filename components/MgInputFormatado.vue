@@ -1,29 +1,30 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
-import { primeiraLetraMaiuscula } from "src/utils/formatador";
 
-// variavaies de controle
-const refInput = ref(); // ref para poder setar o foco
-const filtrar = ref(true); // toogle se filtra ou nao o texto
-const modelAnterior = ref(null); // cache do ultimo filtro pra nao ficar aplicando filtro quando estiver navegando com as setas
+const removerAcentos = (str) => {
+  if (!str) return str;
+  return str.normalize("NFD").replace(/\p{Mn}/gu, "");
+};
 
-// propriedades
+const primeiraLetraMaiuscula = (str) => {
+  if (!str) return str;
+  return removerAcentos(str)
+    .trimStart()
+    .replace(/\s+/g, " ")
+    .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+};
+
+const refInput = ref();
+const filtrar = ref(true);
+const modelAnterior = ref(null);
+
 const props = defineProps({
-  modelValue: {
-    type: [String],
-    default: "",
-  },
-  filtro: {
-    //tipo do filtro pra alicar
-    type: [String],
-    default: "primeiraLetraMaiuscula",
-  },
+  modelValue: { type: [String], default: "" },
+  filtro: { type: [String], default: "primeiraLetraMaiuscula" },
 });
 
-// para mandar pro componente pai as alteracoes
 const emit = defineEmits(["update:modelValue"]);
 
-// controla as alteracoes pra enviar ao compoenente pai, e recebe as alteracoes do pai
 const model = computed({
   get() {
     return props.modelValue;
@@ -33,22 +34,16 @@ const model = computed({
   },
 });
 
-// aplica o filtro selecionado
-const aplicarFiltro = (event) => {
-  // se o texto for igual ao da ultima execucao evita aplicar
-  // novamente pra que não sobrecarregue quando o usuario
-  // estiver apenas navegando com as setas por exemplo
+const aplicarFiltro = () => {
   if (model.value == modelAnterior.value || !filtrar.value) {
     return;
   }
-  // salva localizacao do cursor antes de alterar
   const posStart = refInput.value.getNativeElement().selectionStart;
   const posEnd = refInput.value.getNativeElement().selectionEnd;
   switch (props.filtro) {
     case "primeiraLetraMaiuscula":
       model.value = primeiraLetraMaiuscula(model.value);
       nextTick(() => {
-        // volta localizacao do cursor
         refInput.value.getNativeElement().selectionStart = posStart;
         refInput.value.getNativeElement().selectionEnd = posEnd;
       });
@@ -56,11 +51,9 @@ const aplicarFiltro = (event) => {
     default:
       break;
   }
-  // salva cache da ultima alteracao
   modelAnterior.value = model.value;
 };
 
-// liga/desliga o filtro
 const toggleFiltrar = () => {
   filtrar.value = !filtrar.value;
   refInput.value.focus();
@@ -81,6 +74,7 @@ const toggleFiltrar = () => {
         class="cursor-pointer"
         @click="toggleFiltrar()"
       />
+      <slot name="append" />
     </template>
   </q-input>
 </template>

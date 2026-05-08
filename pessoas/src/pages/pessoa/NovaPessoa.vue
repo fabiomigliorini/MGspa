@@ -127,12 +127,12 @@
 
               <!-- CONCLUIR -->
               <q-step :name="4" title="Finalizar " :done="step > 4">
-                <input-filtered outlined v-model="model.fantasia" label="Fantasia" :rules="[
+                <MgInputFormatado outlined v-model="model.fantasia" label="Fantasia" :rules="[
                   (val) =>
                     (val && val.length >= 3) || 'Nome Fantasia deve ter no mínimo 3 letras!',
                 ]" autofocus style="max-width: 350px" maxlength="50" @focus="fantasiaFocus" @update:model-value="preencherRazaoSeVazia" />
 
-                <input-filtered outlined v-model="model.pessoa" label="Razão Social" :rules="[
+                <MgInputFormatado outlined v-model="model.pessoa" label="Razão Social" :rules="[
                   (val) =>
                     (val && val.length >= 5) || 'Razão Social deve coonter no mínimo 5 letras!',
                 ]" style="max-width: 550px" maxlength="100" />
@@ -170,7 +170,7 @@ export default {
   components: {
     MGLayout: defineAsyncComponent(() => import("layouts/MGLayout.vue")),
     SelectEstado: defineAsyncComponent(() => import("components/pessoa/SelectEstado.vue")),
-    InputFiltered: defineAsyncComponent(() => import('components/InputFiltered.vue')),
+    MgInputFormatado: defineAsyncComponent(() => import('@components/MgInputFormatado.vue')),
 
     CardPessoas: defineAsyncComponent(() =>
       import("components/pessoa/CardPessoas.vue")

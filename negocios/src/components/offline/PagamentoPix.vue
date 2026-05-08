@@ -9,6 +9,7 @@ import { formataCnpj } from "../../utils/formatador.js";
 import emitter from "../../utils/emitter.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
+import MgInputValor from "@components/MgInputValor.vue";
 
 const sNegocio = negocioStore();
 const sPix = pixStore();
@@ -194,17 +195,14 @@ const whatsapp = () => {
           <q-list>
             <q-item>
               <q-item-section>
-                <q-input
+                <MgInputValor
                   prefix="R$"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
+                  :min="0.01"
                   :max="sNegocio.valorapagar"
-                  borderless
-                  v-model.number="valorPagamento"
+                  v-model="valorPagamento"
                   :rules="valorRule"
                   autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary"
+                  class="text-h2 text-weight-bolder text-primary"
                 />
               </q-item-section>
             </q-item>

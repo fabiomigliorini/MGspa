@@ -7,6 +7,7 @@ import { guardaToken } from "src/stores";
 import { formataMoeda, formataPercentual, corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
 import moment from "moment";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -443,12 +444,10 @@ onMounted(() => {
           <q-separator inset />
 
           <q-card-section class="q-gutter-md">
-            <q-input
-              outlined
-              v-model.number="modelLancamento.valor"
-              label="Valor (R$)"
-              type="number"
-              step="0.01"
+            <MgInputValor
+              v-model="modelLancamento.valor"
+              label="Valor"
+              prefix="R$"
               autofocus
               :rules="[(val) => val != null && val !== '' || 'Obrigatório']"
             />

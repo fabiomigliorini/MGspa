@@ -7,6 +7,7 @@ import SelectTributo from '../selects/SelectTributo.vue'
 import { Notify } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { round } from 'src/utils/formatters'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const notaFiscalStore = useNotaFiscalStore()
 
@@ -244,32 +245,24 @@ const updatedValor = async (ti) => {
 
             <!-- Redução de Base -->
             <div class="col-4">
-              <q-input
-                v-model.number="tributoItem.basereducaopercentual"
+              <MgInputValor
+                v-model="tributoItem.basereducaopercentual"
                 label="% Redução"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
+                :min="0"
+                :max="100"
                 suffix="%"
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
                 @update:model-value="updatedBaseReducaoPercentual(tributoItem)"
               />
             </div>
 
             <div class="col-4">
-              <q-input
-                v-model.number="tributoItem.basereducao"
+              <MgInputValor
+                v-model="tributoItem.basereducao"
                 label="Redução Base"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
                 @update:model-value="updatedBaseReducao(tributoItem, true)"
               />
             </div>
@@ -286,53 +279,41 @@ const updatedValor = async (ti) => {
 
             <!-- Base, Alíquota e Valor -->
             <div class="col-4">
-              <q-input
-                v-model.number="tributoItem.base"
+              <MgInputValor
+                v-model="tributoItem.base"
                 label="Base de Cálculo *"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
                 :rules="[(val) => (val !== null && val !== undefined) || 'Campo obrigatório']"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
                 @update:model-value="updatedBase(tributoItem, true)"
               />
             </div>
 
             <div class="col-4">
-              <q-input
-                v-model.number="tributoItem.aliquota"
+              <MgInputValor
+                v-model="tributoItem.aliquota"
                 label="Alíquota *"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
+                :min="0"
+                :max="100"
                 suffix="%"
                 :rules="[(val) => (val !== null && val !== undefined) || 'Campo obrigatório']"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
                 @update:model-value="updatedAliquota(tributoItem)"
               />
             </div>
 
             <div class="col-4">
-              <q-input
-                v-model.number="tributoItem.valor"
+              <MgInputValor
+                v-model="tributoItem.valor"
                 :label="'Valor ' + tributoItem.tributo?.codigo + '*'"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
                 :rules="[(val) => (val !== null && val !== undefined) || 'Campo obrigatório']"
                 lazy-rules
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
                 @update:model-value="updatedValor(tributoItem)"
               />
             </div>
@@ -350,16 +331,12 @@ const updatedValor = async (ti) => {
             </div>
 
             <div v-if="tributoItem.geracredito" class="col-6">
-              <q-input
-                v-model.number="tributoItem.valorcredito"
+              <MgInputValor
+                v-model="tributoItem.valorcredito"
                 label="Valor do Crédito"
-                outlined
-                type="number"
-                step="0.01"
-                min="0"
+                :min="0"
                 prefix="R$"
-                :disable="notaBloqueada"
-                input-class="text-right"
+                :readonly="notaBloqueada"
               />
             </div>
 

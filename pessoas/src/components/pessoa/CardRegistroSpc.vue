@@ -10,7 +10,7 @@ import {
   localeBrasil,
   formataDataSemHora,
 } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -339,7 +339,7 @@ const submit = () => {
               }}
 
               <!-- INFO -->
-              <icone-info-criacao
+              <MgInfoCriacao
                 :usuariocriacao="registro.usuariocriacao"
                 :criacao="registro.criacao"
                 :usuarioalteracao="registro.usuarioalteracao"

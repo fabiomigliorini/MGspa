@@ -9,6 +9,7 @@ import SelectSaurusPos from "../selects/SelectSaurusPos.vue";
 import cartoesManuais from "../../data/cartoes-manuais.json";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
+import MgInputValor from "@components/MgInputValor.vue";
 
 const sNegocio = negocioStore();
 const sPagarMe = pagarMeStore();
@@ -261,17 +262,14 @@ const toStone = async () => {
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <q-input
+                <MgInputValor
                   prefix="R$"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
+                  :min="0.01"
                   :max="sNegocio.valorapagar"
-                  borderless
-                  v-model.number="pagamento.valor"
+                  v-model="pagamento.valor"
                   :rules="valorRule"
                   autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary "
+                  class="text-h2 text-weight-bolder text-primary "
                 />
               </q-item-section>
             </q-item>

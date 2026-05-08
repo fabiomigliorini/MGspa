@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from "vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const emit = defineEmits(["submit"]);
 
@@ -57,26 +58,20 @@ defineExpose({ abrirNovo, editar });
               />
             </div>
             <div class="col-8">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="model.salario"
                 label="Salário Base"
-                type="number"
                 prefix="R$"
                 :rules="[(val) => (val && val > 1) || 'Salário obrigatório!']"
-                step="0.01"
-                min="1"
+                :min="1"
               />
             </div>
             <div class="col-4">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="model.adicional"
                 label="Adicional"
-                type="number"
                 suffix="%"
-                step="0.01"
-                min=".01"
+                :min="0.01"
               />
             </div>
           </div>

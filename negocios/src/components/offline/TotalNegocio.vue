@@ -11,6 +11,7 @@ import PagamentoPix from "components/offline/PagamentoPix.vue";
 import PagamentoPagarMe from "components/offline/PagamentoPagarMe.vue";
 import PagamentoSaurus from "components/offline/PagamentoSaurus.vue";
 import PagamentoPrazo from "components/offline/PagamentoPrazo.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 import { formataCpf } from "../../utils/formatador.js";
 import { formataCnpj } from "../../utils/formatador.js";
 import moment from "moment/min/moment-with-locales";
@@ -217,44 +218,44 @@ const creditCardColorPagamento = (pag) => {
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6"></div>
             <div class="col-6">
-              <q-input disable type="number" step="0.01" min="0.01" outlined v-model.number="edicao.valorprodutos"
-                prefix="R$" label="Total Produtos" input-class="text-right" :rules="preenchimentoObrigatorioRule" />
+              <MgInputValor readonly :min="0.01" v-model="edicao.valorprodutos"
+                prefix="R$" label="Total Produtos" :rules="preenchimentoObrigatorioRule" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input type="number" step="0.1" min="0" max="99.9" outlined v-model.number="edicao.percentualdesconto"
-                label="% Desc" input-class="text-right" suffix="%" :rules="maiorQueZeroRule"
+              <MgInputValor :decimals="1" :min="0" :max="99.9" v-model="edicao.percentualdesconto"
+                label="% Desc" suffix="%" :rules="maiorQueZeroRule"
                 @change="recalcularValorDesconto()" autofocus />
             </div>
             <div class="col-6">
-              <q-input type="number" step="0.01" :max="edicao.valorprodutos - 0.01" outlined
-                v-model.number="edicao.valordesconto" prefix="R$" label="Desconto" input-class="text-right"
+              <MgInputValor :max="edicao.valorprodutos - 0.01"
+                v-model="edicao.valordesconto" prefix="R$" label="Desconto"
                 :rules="maiorQueZeroRule" @change="recalcularPercentualDesconto()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input type="number" step="0.01" outlined v-model.number="edicao.valorfrete" prefix="R$" label="Frete"
-                input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
+              <MgInputValor v-model="edicao.valorfrete" prefix="R$" label="Frete"
+                :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input type="number" step="0.01" outlined v-model.number="edicao.valorseguro" prefix="R$" label="Seguro"
-                input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
+              <MgInputValor v-model="edicao.valorseguro" prefix="R$" label="Seguro"
+                :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input type="number" step="0.01" outlined v-model.number="edicao.valoroutras" prefix="R$" label="Outras"
-                input-class="text-right" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
+              <MgInputValor v-model="edicao.valoroutras" prefix="R$" label="Outras"
+                :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
             </div>
           </div>
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6">
-              <q-input type="number" step="0.01" outlined v-model.number="edicao.valortotal" prefix="R$" label="Total"
-                input-class="text-right" :rules="preenchimentoObrigatorioRule" @change="recalcularValorTotal()" />
+              <MgInputValor v-model="edicao.valortotal" prefix="R$" label="Total"
+                :rules="preenchimentoObrigatorioRule" @change="recalcularValorTotal()" />
             </div>
           </div>
         </q-card-section>

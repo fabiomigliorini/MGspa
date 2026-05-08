@@ -7,6 +7,7 @@ import { guardaToken } from "src/stores";
 import { formataDataSemHora } from "src/utils/formatador";
 import { extrairErro } from "src/utils/rhFormatters";
 import MGLayout from "layouts/MGLayout.vue";
+import MgInputData from "@components/MgInputData.vue";
 
 const $q = useQuasar();
 const router = useRouter();
@@ -36,7 +37,7 @@ const formatDTLocal = (date, time = "00:00") => {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
   const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}T${time}`;
+  return `${y}-${m}-${d} ${time}`;
 };
 
 const abrirNovoPeriodo = () => {
@@ -147,20 +148,20 @@ onMounted(() => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelNovoPeriodo.periodoinicial"
                 label="Período Inicial"
-                type="datetime-local"
+                type="timestamp"
+                :seconds="false"
                 :rules="[(val) => !!val || 'Obrigatório']"
               />
             </div>
             <div class="col-12 col-sm-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelNovoPeriodo.periodofinal"
                 label="Período Final"
-                type="datetime-local"
+                type="timestamp"
+                :seconds="false"
                 :rules="[(val) => !!val || 'Obrigatório']"
               />
             </div>

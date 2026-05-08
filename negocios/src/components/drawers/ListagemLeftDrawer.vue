@@ -6,6 +6,7 @@ import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vu
 import SelectPessoa from "components/selects/SelectPessoa.vue";
 import SelectPdv from "components/selects/SelectPdv.vue";
 import SelectUsuario from "components/selects/SelectUsuario.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 const sListagem = listagemStore();
 
 onMounted(() => {
@@ -188,26 +189,18 @@ onMounted(() => {
     <q-item>
       <q-item-section>
         <div class="row q-col-gutter-sm">
-          <q-input
-            outlined
-            type="number"
-            step="0.01"
-            min="0.01"
-            input-class="text-right"
+          <MgInputValor
+            :min="0.01"
             v-model="sListagem.filtro.valor_de"
             :max="sListagem.filtro.valor_ate"
             label="Valor de"
             class="col-6"
             prefix="R$"
           />
-          <q-input
-            outlined
-            type="number"
-            step="0.01"
+          <MgInputValor
             :min="
               sListagem.filtro.valor_de > 0 ? sListagem.filtro.valor_de : 0.01
             "
-            input-class="text-right"
             v-model="sListagem.filtro.valor_ate"
             label="até"
             class="col-6"

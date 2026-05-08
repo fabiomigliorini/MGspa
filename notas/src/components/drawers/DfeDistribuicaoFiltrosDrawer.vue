@@ -3,6 +3,7 @@ import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useDfeDistribuicaoStore } from '../../stores/dfeDistribuicaoStore'
 import { useDebounceFn } from '@vueuse/core'
 import dfeDistribuicaoService from '../../services/dfeDistribuicaoService'
+import MgInputData from '@components/MgInputData.vue'
 
 const dfeStore = useDfeDistribuicaoStore()
 const isInitializing = ref(true)
@@ -153,38 +154,26 @@ onMounted(() => {
 
       <!-- Data De -->
       <div class="q-mb-md">
-        <q-input
+        <MgInputData
           v-model="filters.datade"
           label="De"
-          outlined
-          clearable
           type="date"
+          clearable
           stack-label
           :max="filters.dataate"
-          :bottom-slots="false"
-        >
-          <template v-slot:prepend>
-            <q-icon name="date_range" />
-          </template>
-        </q-input>
+        />
       </div>
 
       <!-- Data Até -->
       <div class="q-mb-md">
-        <q-input
+        <MgInputData
           v-model="filters.dataate"
           label="Até"
-          outlined
-          clearable
           type="date"
+          clearable
           stack-label
           :min="filters.datade"
-          :bottom-slots="false"
-        >
-          <template v-slot:prepend>
-            <q-icon name="date_range" />
-          </template>
-        </q-input>
+        />
       </div>
 
       <q-separator class="q-my-md" />

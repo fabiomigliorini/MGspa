@@ -2,6 +2,8 @@
 import { ref } from "vue";
 import { wooStore } from "stores/woo";
 import { Notify } from "quasar";
+import MgInputValor from "@components/MgInputValor.vue";
+import MgInputData from "@components/MgInputData.vue";
 
 const sWoo = wooStore();
 
@@ -153,19 +155,15 @@ const buscarPorAlteracao = async () => {
     <q-item>
       <q-item-section>
         <div class="row q-col-gutter-sm">
-          <q-input
-            outlined
+          <MgInputData
             type="date"
-            input-class="text-right"
             v-model="sWoo.filtro.criacaowoo_de"
             :max="sWoo.filtro.valor_ate"
             label="De"
             class="col-6"
           />
-          <q-input
-            outlined
+          <MgInputData
             type="date"
-            input-class="text-right"
             v-model="sWoo.filtro.criacaowoo_ate"
             label="Até"
             class="col-6"
@@ -178,26 +176,18 @@ const buscarPorAlteracao = async () => {
     <q-item>
       <q-item-section>
         <div class="row q-col-gutter-sm">
-          <q-input
-            outlined
-            type="number"
-            step="0.01"
-            min="0.01"
-            input-class="text-right"
+          <MgInputValor
+            :min="0.01"
             v-model="sWoo.filtro.valortotal_de"
             :max="sWoo.filtro.valortotal_ate"
             label="Valor de"
             class="col-6"
             prefix="R$"
           />
-          <q-input
-            outlined
-            type="number"
-            step="0.01"
+          <MgInputValor
             :min="
               sWoo.filtro.valortotal_de > 0 ? sWoo.filtro.valortotal_de : 0.01
             "
-            input-class="text-right"
             v-model="sWoo.filtro.valortotal_ate"
             label="até"
             class="col-6"

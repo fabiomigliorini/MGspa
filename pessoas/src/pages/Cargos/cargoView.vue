@@ -6,7 +6,7 @@ import { cargoStore } from "src/stores/cargo";
 import { pessoaStore } from "src/stores/pessoa";
 import { formataData, formataDataSemHora } from "src/utils/formatador";
 import MGLayout from "layouts/MGLayout.vue";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import DialogCargo from "components/cargo/DialogCargo.vue";
 
 const $q = useQuasar();
@@ -188,7 +188,7 @@ onMounted(async () => {
                   — {{ cargo.adicional }}% adicional
                 </span>
               </span>
-              <IconeInfoCriacao
+              <MgInfoCriacao
                 :usuariocriacao="cargo.usuariocriacao"
                 :criacao="cargo.criacao"
                 :usuarioalteracao="cargo.usuarioalteracao"

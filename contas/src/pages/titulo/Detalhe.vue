@@ -7,7 +7,7 @@ import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
-import IconeInfoCriacao from 'src/components/IconeInfoCriacao.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
@@ -406,7 +406,7 @@ watch(() => route.fullPath, carregar)
             >
               <q-tooltip>Estornar</q-tooltip>
             </q-btn>
-            <IconeInfoCriacao
+            <MgInfoCriacao
               :usuariocriacao="titulo.usuariocriacao"
               :criacao="titulo.criacao"
               :usuarioalteracao="titulo.usuarioalteracao"
@@ -585,7 +585,7 @@ watch(() => route.fullPath, carregar)
                   </q-item-section>
 
                   <q-item-section side>
-                    <IconeInfoCriacao :usuariocriacao="m.usuariocriacao" :criacao="m.criacao" />
+                    <MgInfoCriacao :usuariocriacao="m.usuariocriacao" :criacao="m.criacao" />
                   </q-item-section>
                 </q-item>
               </q-list>

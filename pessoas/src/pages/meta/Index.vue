@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { formataDataSemHora } from "src/utils/formatador";
 import MGLayout from "layouts/MGLayout.vue";
+import MgInputData from "@components/MgInputData.vue";
 
 const $q = useQuasar();
 const router = useRouter();
@@ -21,7 +22,7 @@ const formatDTLocal = (date, hours, minutes) => {
   const d = String(date.getDate()).padStart(2, "0");
   const h = String(hours).padStart(2, "0");
   const min = String(minutes).padStart(2, "0");
-  return `${y}-${m}-${d}T${h}:${min}`;
+  return `${y}-${m}-${d} ${h}:${min}`;
 };
 
 const abrirNovaMeta = () => {
@@ -280,20 +281,20 @@ onMounted(() => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelNovaMeta.periodoinicial"
                 label="Periodo Inicial"
-                type="datetime-local"
+                type="timestamp"
+                :seconds="false"
                 :rules="[(val) => !!val || 'Obrigatorio']"
               />
             </div>
             <div class="col-12 col-sm-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelNovaMeta.periodofinal"
                 label="Periodo Final"
-                type="datetime-local"
+                type="timestamp"
+                :seconds="false"
                 :rules="[(val) => !!val || 'Obrigatorio']"
               />
             </div>

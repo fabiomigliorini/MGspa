@@ -9,7 +9,8 @@ import SelectCidade from 'src/components/selects/SelectCidade.vue'
 import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
 import SelectTipoProduto from 'src/components/selects/SelectTipoProduto.vue'
 import SelectTipoCliente from 'src/components/selects/SelectTipoCliente.vue'
-import MgInputDate from 'src/components/MgInputDate.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const $q = useQuasar()
 const store = useTributacaoStore()
@@ -937,33 +938,21 @@ const confirmarExclusaoTributo = () => {
             />
 
             <!-- Base Percentual -->
-            <q-input
-              v-model.number="regraForm.basepercentual"
+            <MgInputValor
+              v-model="regraForm.basepercentual"
               label="Base (%)"
-              outlined
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              placeholder="Ex: 100%"
-              bottom-slots
+              :min="0"
+              :max="100"
               class="col-2"
-              input-class="text-right"
             />
 
             <!-- Alíquota -->
-            <q-input
-              v-model.number="regraForm.aliquota"
+            <MgInputValor
+              v-model="regraForm.aliquota"
               label="Alíquota (%)"
-              outlined
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              placeholder="Ex: 8.5"
-              bottom-slots
+              :min="0"
+              :max="100"
               class="col-2"
-              input-class="text-right"
             />
 
             <!-- SE GERA CREDITO -->
@@ -983,19 +972,23 @@ const confirmarExclusaoTributo = () => {
             />
 
             <!-- Vigência Início -->
-            <MgInputDate
+            <MgInputData
               v-model="regraForm.vigenciainicio"
+              type="date"
               label="Vigente do dia"
+              clearable
+              bottom-slots
               class="col-4"
-              :bottom-slots="true"
             />
 
             <!-- Vigência Fim -->
-            <MgInputDate
+            <MgInputData
               v-model="regraForm.vigenciafim"
+              type="date"
               label="Até o dia"
+              clearable
+              bottom-slots
               class="col-4"
-              :bottom-slots="true"
             />
 
             <!-- Observações -->

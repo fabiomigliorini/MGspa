@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
-import MgInputDate from '../MgInputDate.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { formatPercent, formatCurrency } from 'src/utils/formatters'
 
 const $q = useQuasar()
@@ -215,8 +216,10 @@ const limparResultados = () => {
         <!-- Data -->
         <div class="q-mb-md">
           <div class="text-subtitle2 q-mb-xs">Data *</div>
-          <MgInputDate
+          <MgInputData
             v-model="form.data"
+            type="date"
+            clearable
             :rules="[(val) => !!val || 'Campo obrigatório']"
           />
         </div>
@@ -224,15 +227,11 @@ const limparResultados = () => {
         <!-- Valor Base -->
         <div class="q-mb-md">
           <div class="text-subtitle2 q-mb-xs">Valor Base *</div>
-          <q-input
-            v-model.number="form.valorBase"
-            outlined
+          <MgInputValor
+            v-model="form.valorBase"
             dense
-            type="number"
-            min="0"
-            step="0.01"
+            :min="0"
             prefix="R$"
-            placeholder="0,00"
             :rules="[(val) => val > 0 || 'Valor deve ser maior que zero']"
           />
         </div>

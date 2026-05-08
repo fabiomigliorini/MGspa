@@ -11,6 +11,8 @@ import Dashboard from "./Dashboard.vue";
 import Colaboradores from "./Colaboradores.vue";
 import Indicadores from "./Indicadores.vue";
 import Acertos from "./Acertos.vue";
+import MgInputData from "@components/MgInputData.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -546,8 +548,7 @@ watch(tab, async (newTab) => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelPeriodo.periodoinicial"
                 label="Período Inicial"
                 type="date"
@@ -555,8 +556,7 @@ watch(tab, async (newTab) => {
               />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
                 v-model="modelPeriodo.periodofinal"
                 label="Período Final"
                 type="date"
@@ -574,14 +574,11 @@ watch(tab, async (newTab) => {
               />
             </div>
             <div class="col-4">
-              <q-input
-                outlined
-                v-model.number="modelPeriodo.percentualmaxdesconto"
+              <MgInputValor
+                v-model="modelPeriodo.percentualmaxdesconto"
                 label="% Máx. Desconto Folha"
-                type="number"
-                min="0"
-                max="100"
-                step="0.01"
+                :min="0"
+                :max="100"
               />
             </div>
           </div>

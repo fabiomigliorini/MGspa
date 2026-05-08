@@ -5,6 +5,7 @@ import { produtoStore } from "src/stores/produto";
 import { uid, Dialog, Notify } from "quasar";
 import { api } from "src/boot/axios";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const sProduto = produtoStore();
 const sSinc = sincronizacaoStore();
@@ -790,12 +791,11 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
                           disable
                           outlined
                         />
-                        <q-input
+                        <MgInputValor
                           v-model="produto.preco"
                           label="Preço"
-                          type="number"
-                          disable
-                          outlined
+                          prefix="R$"
+                          readonly
                         />
                         <q-input
                           v-model="produto.descricao"

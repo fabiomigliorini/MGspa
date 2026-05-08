@@ -8,6 +8,7 @@ import SelectPagarMePos from "../selects/SelectPagarMePos.vue";
 import cartoesManuais from "../../data/cartoes-manuais.json";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
+import MgInputValor from "@components/MgInputValor.vue";
 
 const sNegocio = negocioStore();
 const sPagarMe = pagarMeStore();
@@ -382,9 +383,9 @@ const toSafrapay = async () => {
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <q-input prefix="R$" type="number" step="0.01" min="0.01" :max="sNegocio.valorapagar" borderless
-                  v-model.number="pagamento.valor" :rules="valorRule" autofocus
-                  input-class="text-h2 text-weight-bolder text-right text-primary " />
+                <MgInputValor prefix="R$" :min="0.01" :max="sNegocio.valorapagar"
+                  v-model="pagamento.valor" :rules="valorRule" autofocus
+                  class="text-h2 text-weight-bolder text-primary" />
               </q-item-section>
             </q-item>
 
@@ -465,9 +466,9 @@ const toSafrapay = async () => {
           </q-step>
 
           <q-step :name="3" title="Valor e Parcelamento" icon="calendar_month" :done="stepManual > 3">
-            <q-input prefix="R$" type="number" step="0.01" min="0.01" :max="sNegocio.valorapagar" outlined borderless
-              v-model.number="pagamento.valor" autofocus @keydown.enter.prevent="vaiParaStepManual(4)"
-              input-class="text-h3 text-weight-bolder text-right text-primary" class="q-mb-md" />
+            <MgInputValor prefix="R$" :min="0.01" :max="sNegocio.valorapagar"
+              v-model="pagamento.valor" autofocus @keydown.enter.prevent="vaiParaStepManual(4)"
+              class="text-h3 text-weight-bolder text-primary q-mb-md" />
             <div class="row q-mb-md" v-if="parcelamentoDisponivel.length > 1">
               <q-radio v-model="pagamento.parcelas" v-for="parc in parcelamentoDisponivel" :val="parc.parcelas"
                 :key="parc.parcelas" class="col-xs-12 col-sm-6" @update:model-value="vaiParaStepManual(4)">

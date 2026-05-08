@@ -6,6 +6,7 @@ import { formataDocumetos } from "src/stores/formataDocumentos";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
+import MgInputValor from "@components/MgInputValor.vue";
 
 const SelectCargo = defineAsyncComponent(() =>
   import("components/pessoa/SelectCargo.vue")
@@ -380,13 +381,9 @@ defineExpose({ novoColaboradorCargo });
               </q-input>
             </div>
             <div class="col-12">
-              <q-input
-                outlined
+              <MgInputValor
                 prefix="R$"
-                type="number"
-                step="0.01"
-                min="0.01"
-                input-class="text-right"
+                :min="0.01"
                 v-model="modelColaboradorCargo.salario"
                 label="Salário"
               />

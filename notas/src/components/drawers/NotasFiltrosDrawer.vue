@@ -6,7 +6,8 @@ import SelectFilial from '../selects/SelectFilial.vue'
 import SelectNaturezaOperacao from '../selects/SelectNaturezaOperacao.vue'
 import SelectGrupoEconomico from '../selects/SelectGrupoEconomico.vue'
 import SelectPessoa from '../selects/SelectPessoa.vue'
-import MgInputDate from '../MgInputDate.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import {
   MODELO_OPTIONS,
   STATUS_OPTIONS,
@@ -253,11 +254,11 @@ watch(
       <div class="text-caption text-grey-7 q-mb-md">Período de Emissão</div>
 
       <div class="q-mb-md">
-        <MgInputDate v-model="notaFiscalStore.filters.emissao_inicio" label="Emissão - De" />
+        <MgInputData v-model="notaFiscalStore.filters.emissao_inicio" type="date" label="Emissão - De" clearable />
       </div>
 
       <div class="q-mb-md">
-        <MgInputDate v-model="notaFiscalStore.filters.emissao_fim" label="Emissão - Até" />
+        <MgInputData v-model="notaFiscalStore.filters.emissao_fim" type="date" label="Emissão - Até" clearable />
       </div>
 
       <q-separator class="q-my-md" />
@@ -265,11 +266,11 @@ watch(
       <div class="text-caption text-grey-7 q-mb-md">Período de Saída</div>
 
       <div class="q-mb-md">
-        <MgInputDate v-model="notaFiscalStore.filters.saida_inicio" label="Saída - De" />
+        <MgInputData v-model="notaFiscalStore.filters.saida_inicio" type="date" label="Saída - De" clearable />
       </div>
 
       <div class="q-mb-md">
-        <MgInputDate v-model="notaFiscalStore.filters.saida_fim" label="Saída - Até" />
+        <MgInputData v-model="notaFiscalStore.filters.saida_fim" type="date" label="Saída - Até" clearable />
       </div>
 
       <q-separator class="q-my-md" />
@@ -278,38 +279,24 @@ watch(
 
       <!-- Valor Total - De -->
       <div class="q-mb-md">
-        <q-input
-          v-model.number="notaFiscalStore.filters.valortotal_inicio"
+        <MgInputValor
+          v-model="notaFiscalStore.filters.valortotal_inicio"
           label="Valor Total - De"
-          outlined
           clearable
-          type="number"
-          step="0.01"
-          min="0"
-          :bottom-slots="false"
-        >
-          <template v-slot:prepend>
-            <q-icon name="attach_money" />
-          </template>
-        </q-input>
+          :min="0"
+          prefix="R$"
+        />
       </div>
 
       <!-- Valor Total - Até -->
       <div class="q-mb-md">
-        <q-input
-          v-model.number="notaFiscalStore.filters.valortotal_fim"
+        <MgInputValor
+          v-model="notaFiscalStore.filters.valortotal_fim"
           label="Valor Total - Até"
-          outlined
           clearable
-          type="number"
-          step="0.01"
-          min="0"
-          :bottom-slots="false"
-        >
-          <template v-slot:prepend>
-            <q-icon name="attach_money" />
-          </template>
-        </q-input>
+          :min="0"
+          prefix="R$"
+        />
       </div>
     </div>
   </div>

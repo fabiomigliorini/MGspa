@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from "vue";
 import { negocioStore } from "stores/negocio";
+import MgInputValor from "@components/MgInputValor.vue";
 const sNegocio = negocioStore();
 
 const valorPagamento = ref(null);
@@ -84,13 +85,9 @@ const salvar = () => {
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-h2 text-primary text-weight-bolder text-right">
-                  <q-input type="number" step="0.01" min="0" borderless v-model.number="valorPagamento"
+                  <MgInputValor :min="0" v-model="valorPagamento"
                     :rules="maiorQueZeroRule" autofocus
-                    input-class="text-h2 text-weight-bolder text-right text-primary">
-                    <template v-slot:error>
-                      <div class="text-right">Valor inválido!</div>
-                    </template>
-                  </q-input>
+                    class="text-h2 text-weight-bolder text-primary" />
                 </q-item-label>
                 <q-item-label caption class="text-right">
                   Pagamento

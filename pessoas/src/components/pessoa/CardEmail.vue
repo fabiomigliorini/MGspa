@@ -5,8 +5,8 @@ import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
 import { formataData } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
-import InputFiltered from "components/InputFiltered.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
+import MgInputFormatado from "@components/MgInputFormatado.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -316,7 +316,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
               label="Email"
               :rules="[(val) => (val && val.length > 0) || 'Email obrigatório']"
             />
-            <input-filtered
+            <MgInputFormatado
               outlined
               v-model="modelEmail.apelido"
               label="Apelido"
@@ -414,7 +414,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
                 </q-icon>
 
                 <!-- INFO -->
-                <icone-info-criacao
+                <MgInfoCriacao
                   :usuariocriacao="element.usuariocriacao"
                   :criacao="element.criacao"
                   :usuarioalteracao="element.usuarioalteracao"

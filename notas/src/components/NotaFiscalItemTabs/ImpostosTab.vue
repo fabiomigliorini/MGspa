@@ -10,6 +10,7 @@ import {
 } from 'src/constants/notaFiscal'
 import { storeToRefs } from 'pinia'
 import SelectCfop from '../selects/SelectCfop.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const notaFiscalStore = useNotaFiscalStore()
 
@@ -72,62 +73,46 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
         <!-- Base de Cálculo -->
         <div class="col-6 col-sm-3">
-          <q-input
-            v-model.number="editingItem.icmsbasepercentual"
+          <MgInputValor
+            v-model="editingItem.icmsbasepercentual"
             label="% da Base"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <div class="col-6 col-sm-3">
-          <q-input
-            v-model.number="editingItem.icmsbase"
+          <MgInputValor
+            v-model="editingItem.icmsbase"
             label="Base de Cálculo"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Alíquota -->
         <div class="col-6 col-sm-3">
-          <q-input
-            v-model.number="editingItem.icmspercentual"
+          <MgInputValor
+            v-model="editingItem.icmspercentual"
             label="Alíquota"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Valor ICMS -->
         <div class="col-6 col-sm-3">
-          <q-input
-            v-model.number="editingItem.icmsvalor"
+          <MgInputValor
+            v-model="editingItem.icmsvalor"
             label="Valor ICMS"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
       </div>
@@ -144,45 +129,33 @@ const { editingItem } = storeToRefs(notaFiscalStore)
     <q-card-section>
       <div class="row q-col-gutter-md">
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.icmsstbase"
+          <MgInputValor
+            v-model="editingItem.icmsstbase"
             label="Base "
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.icmsstpercentual"
+          <MgInputValor
+            v-model="editingItem.icmsstpercentual"
             label="Alíquota "
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.icmsstvalor"
+          <MgInputValor
+            v-model="editingItem.icmsstvalor"
             label="Valor ST"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
       </div>
@@ -213,78 +186,58 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
         <!-- Base de Cálculo -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.ipibase"
+          <MgInputValor
+            v-model="editingItem.ipibase"
             label="Base "
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Alíquota -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.ipipercentual"
+          <MgInputValor
+            v-model="editingItem.ipipercentual"
             label="Alíquota"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Valor IPI -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.ipivalor"
+          <MgInputValor
+            v-model="editingItem.ipivalor"
             label="Valor IPI"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Valor Devolução -->
         <div class="col-6">
-          <q-input
-            v-model.number="editingItem.ipidevolucaovalor"
+          <MgInputValor
+            v-model="editingItem.ipidevolucaovalor"
             label="IPI Devolvido "
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Devolução Percentual -->
         <div class="col-6">
-          <q-input
-            v-model.number="editingItem.devolucaopercentual"
+          <MgInputValor
+            v-model="editingItem.devolucaopercentual"
             label="% Devolução"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
       </div>
@@ -315,47 +268,35 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
         <!-- Base -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.pisbase"
+          <MgInputValor
+            v-model="editingItem.pisbase"
             label="Base"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Alíquota -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.pispercentual"
+          <MgInputValor
+            v-model="editingItem.pispercentual"
             label="Alíquota"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Valor -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.pisvalor"
+          <MgInputValor
+            v-model="editingItem.pisvalor"
             label="Valor PIS"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
       </div>
@@ -386,47 +327,35 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
         <!-- Base -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.cofinsbase"
+          <MgInputValor
+            v-model="editingItem.cofinsbase"
             label="Base de Cálculo"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Alíquota -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.cofinspercentual"
+          <MgInputValor
+            v-model="editingItem.cofinspercentual"
             label="Alíquota COFINS"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <!-- Valor -->
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.cofinsvalor"
+          <MgInputValor
+            v-model="editingItem.cofinsvalor"
             label="Valor COFINS"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
       </div>
@@ -442,45 +371,33 @@ const { editingItem } = storeToRefs(notaFiscalStore)
     <q-card-section>
       <div class="row q-col-gutter-md">
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.csllbase"
+          <MgInputValor
+            v-model="editingItem.csllbase"
             label="Base"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.csllpercentual"
+          <MgInputValor
+            v-model="editingItem.csllpercentual"
             label="Alíquota"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.csllvalor"
+          <MgInputValor
+            v-model="editingItem.csllvalor"
             label="Valor CSLL"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
       </div>
@@ -496,45 +413,33 @@ const { editingItem } = storeToRefs(notaFiscalStore)
     <q-card-section>
       <div class="row q-col-gutter-md">
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.irpjbase"
+          <MgInputValor
+            v-model="editingItem.irpjbase"
             label="Base "
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.irpjpercentual"
+          <MgInputValor
+            v-model="editingItem.irpjpercentual"
             label="Alíquota"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
-            max="100"
+            :min="0"
+            :max="100"
             suffix="%"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
 
         <div class="col-4">
-          <q-input
-            v-model.number="editingItem.irpjvalor"
+          <MgInputValor
+            v-model="editingItem.irpjvalor"
             label="Valor IRPJ"
-            outlined
-            type="number"
-            step="0.01"
-            min="0"
+            :min="0"
             prefix="R$"
-            :disable="notaBloqueada"
-            input-class="text-right"
+            :readonly="notaBloqueada"
           />
         </div>
       </div>

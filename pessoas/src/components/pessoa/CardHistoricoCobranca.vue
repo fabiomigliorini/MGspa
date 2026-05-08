@@ -5,7 +5,7 @@ import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
 import { formataData, formataFromNow } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -239,7 +239,7 @@ watch(
                 {{ historico.historico }}
 
                 <!-- INFO -->
-                <icone-info-criacao
+                <MgInfoCriacao
                   :usuariocriacao="historico.usuariocriacao"
                   :criacao="historico.criacao"
                   :usuarioalteracao="historico.usuarioalteracao"

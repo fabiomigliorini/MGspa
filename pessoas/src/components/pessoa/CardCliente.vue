@@ -9,6 +9,7 @@ import { api } from "src/boot/axios";
 
 import SelectGrupoCliente from "components/pessoa/SelectGrupoCliente.vue";
 import SelectFormaPagamento from "components/pessoa/SelectFormaPagamento.vue";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -295,21 +296,14 @@ const fecharRelatorio = () => {
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="modelEditar.desconto"
                 label="Desconto"
-                type="number"
-                min=".1"
-                max="50"
-                step="0.1"
-                unmasked-value
-                input-class="text-right"
-              >
-                <template v-slot:append>
-                  <span class="text-caption">%</span>
-                </template>
-              </q-input>
+                suffix="%"
+                :decimals="1"
+                :min="0.1"
+                :max="50"
+              />
             </div>
           </div>
 
@@ -324,19 +318,12 @@ const fecharRelatorio = () => {
               class="col-9"
               v-if="user.verificaPermissaoUsuario('Financeiro')"
             >
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="modelEditar.credito"
                 label="Limite de Crédito"
-                type="number"
-                step="0"
-                input-class="text-right"
+                prefix="R$"
                 class="q-pr-md"
-              >
-                <template v-slot:prepend>
-                  <span class="text-body2">R$</span>
-                </template>
-              </q-input>
+              />
             </div>
             <div
               :class="

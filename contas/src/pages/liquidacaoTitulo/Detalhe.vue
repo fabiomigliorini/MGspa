@@ -7,7 +7,7 @@ import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
-import IconeInfoCriacao from 'src/components/IconeInfoCriacao.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
 const route = useRoute()
@@ -203,7 +203,7 @@ watch(() => route.fullPath, carregar)
             >
               <q-tooltip>Estornar</q-tooltip>
             </q-btn>
-            <IconeInfoCriacao
+            <MgInfoCriacao
               :usuariocriacao="liq.usuariocriacao"
               :criacao="liq.criacao"
               :usuarioalteracao="liq.usuarioalteracao"

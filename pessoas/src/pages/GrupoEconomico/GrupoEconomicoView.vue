@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { GrupoEconomicoStore } from "src/stores/GrupoEconomico";
 import { guardaToken } from "src/stores";
 import { formataData } from "src/utils/formatador";
-import IconeInfoCriacao from "components/IconeInfoCriacao.vue";
+import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import MGLayout from "layouts/MGLayout.vue";
 import CardPessoas from "components/pessoa/CardPessoas.vue";
 import GraficoNegocios from "components/grupoEconomico/GraficoNegocios.vue";
@@ -204,7 +204,7 @@ watch(
                 :class="grupoEconomico.inativo ? 'text-strike text-red-14' : ''"
               >
                 {{ grupoEconomico.grupoeconomico }}
-                <icone-info-criacao
+                <MgInfoCriacao
                   :usuariocriacao="grupoEconomico.usuariocriacao"
                   :criacao="grupoEconomico.criacao"
                   :usuarioalteracao="grupoEconomico.usuarioalteracao"

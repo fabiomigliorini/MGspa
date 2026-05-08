@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { formataMoeda, formataPercentual, corProgresso, extrairErro } from "src/utils/rhFormatters";
+import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -104,12 +105,10 @@ const salvarMeta = async () => {
         <q-separator inset />
 
         <q-card-section>
-          <q-input
-            outlined
-            v-model.number="modelMeta.meta"
-            label="Meta (R$)"
-            type="number"
-            step="0.01"
+          <MgInputValor
+            v-model="modelMeta.meta"
+            label="Meta"
+            prefix="R$"
             autofocus
           />
         </q-card-section>
