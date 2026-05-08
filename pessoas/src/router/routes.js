@@ -33,11 +33,6 @@ const routes = [
         name: "pessoaView",
         component: () => import("pages/pessoa/PessoaView"),
       },
-      {
-        path: "/pessoa/edit/:id",
-        name: "pessoaedit",
-        component: () => import("pages/pessoa/PessoaEditar"),
-      },
 
       {
         path: "/grupoeconomico",

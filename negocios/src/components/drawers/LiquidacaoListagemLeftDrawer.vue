@@ -6,6 +6,7 @@ import SelectPdv from "components/selects/SelectPdv.vue";
 import SelectUsuario from "components/selects/SelectUsuario.vue";
 import SelectPortador from "components/selects/SelectPortador.vue";
 import MgInputValor from "@components/MgInputValor.vue";
+import MgInputData from "@components/MgInputData.vue";
 const sLiquidacao = liquidacaoStore();
 
 onMounted(() => {
@@ -72,102 +73,24 @@ onMounted(() => {
     <!-- LANCAMENTO_DE -->
     <q-item>
       <q-item-section>
-        <q-input
-          outlined
+        <MgInputData
+          type="timestamp"
+          :seconds="false"
           v-model="sLiquidacao.filtro.transacao_de"
-          input-class="text-center"
           label="De"
-          mask="##/##/#### ##:##"
-        >
-          <template v-slot:prepend>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy
-                cover
-                transition-show="scale"
-                transition-hide="scale"
-              >
-                <q-date
-                  v-model="sLiquidacao.filtro.transacao_de"
-                  mask="DD/MM/YYYY HH:mm"
-                >
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup label="Close" color="primary" flat />
-                  </div>
-                </q-date>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-          <template v-slot:append>
-            <q-icon name="access_time" class="cursor-pointer">
-              <q-popup-proxy
-                cover
-                transition-show="scale"
-                transition-hide="scale"
-              >
-                <q-time
-                  v-model="sLiquidacao.filtro.transacao_de"
-                  mask="DD/MM/YYYY HH:mm"
-                  format24h
-                >
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup label="Close" color="primary" flat />
-                  </div>
-                </q-time>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+        />
       </q-item-section>
     </q-item>
 
     <!-- LANCAMENTO_ATE -->
     <q-item>
       <q-item-section>
-        <q-input
-          outlined
+        <MgInputData
+          type="timestamp"
+          :seconds="false"
           v-model="sLiquidacao.filtro.transacao_ate"
-          input-class="text-center"
           label="Até"
-          mask="##/##/#### ##:##"
-        >
-          <template v-slot:prepend>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy
-                cover
-                transition-show="scale"
-                transition-hide="scale"
-              >
-                <q-date
-                  v-model="sLiquidacao.filtro.transacao_ate"
-                  mask="DD/MM/YYYY HH:mm"
-                >
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup label="Close" color="primary" flat />
-                  </div>
-                </q-date>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-          <template v-slot:append>
-            <q-icon name="access_time" class="cursor-pointer">
-              <q-popup-proxy
-                cover
-                transition-show="scale"
-                transition-hide="scale"
-              >
-                <q-time
-                  v-model="sLiquidacao.filtro.transacao_ate"
-                  mask="DD/MM/YYYY HH:mm"
-                  format24h
-                >
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup label="Close" color="primary" flat />
-                  </div>
-                </q-time>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+        />
       </q-item-section>
     </q-item>
 

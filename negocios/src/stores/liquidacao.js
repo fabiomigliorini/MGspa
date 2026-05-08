@@ -48,8 +48,8 @@ export const liquidacaoStore = defineStore("liquidacao", {
         transacao_de: moment()
           .subtract(7, "d")
           .startOf("day")
-          .format("DD/MM/YYYY HH:mm"),
-        transacao_ate: moment().endOf("day").format("DD/MM/YYYY HH:mm"),
+          .format("YYYY-MM-DD HH:mm"),
+        transacao_ate: moment().endOf("day").format("YYYY-MM-DD HH:mm"),
         pesquisar: "LIQ",
         codpessoa: null,
         tipo: null,
@@ -79,20 +79,6 @@ export const liquidacaoStore = defineStore("liquidacao", {
       try {
         const filtro = { ...this.filtro };
         filtro.pdv = sSinc.pdv.uuid;
-        //converte data inicial
-        var lanc = moment(filtro.transacao_de, "DD/MM/YYYY HH:mm", true);
-        if (lanc.isValid()) {
-          filtro.transacao_de = lanc.format("YYYY-MM-DD HH:mm:SS");
-        } else {
-          filtro.transacao_de = null;
-        }
-        //converte data final
-        var lanc = moment(filtro.transacao_ate, "DD/MM/YYYY HH:mm", true);
-        if (lanc.isValid()) {
-          filtro.transacao_ate = lanc.format("YYYY-MM-DD HH:mm:SS");
-        } else {
-          filtro.transacao_ate = null;
-        }
         filtro.page = this.paginacao.current_page + 1;
         const { data } = await api.get("/api/v1/pdv/liquidacao", {
           params: filtro,

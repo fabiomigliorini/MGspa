@@ -12,8 +12,6 @@ import {
   formataPisPasep,
   formataTitulo,
   verificaIdade,
-  dataFormatoSql,
-  localeBrasil,
 } from "src/utils/formatador";
 import { guardaToken } from "stores/index";
 import SelectGrupoEconomico from "components/pessoa/SelectGrupoEconomico.vue";
@@ -21,6 +19,7 @@ import SelectCidade from "components/pessoa/SelectCidade.vue";
 import SelectEstado from "components/pessoa/SelectEstado.vue";
 import InputIe from "components/pessoa/InputIe.vue";
 import MgInputFormatado from "@components/MgInputFormatado.vue";
+import MgInputData from "@components/MgInputData.vue";
 import SelectPessoa from "components/select/SelectPessoa.vue";
 import SelectEstadoCivil from "components/pessoa/SelectEstadoCivil.vue";
 import SelectEtnia from "components/pessoa/SelectEtnia.vue";
@@ -133,9 +132,7 @@ const editarDetalhes = async () => {
       sPessoa.item.PessoaEnderecoS?.find((item) => item.nfe === true)
         ?.codcidade ?? null,
     rg: sPessoa.item.rg,
-    nascimento: sPessoa.item.nascimento
-      ? formataDataSemHora(sPessoa.item.nascimento)
-      : null,
+    nascimento: sPessoa.item.nascimento ?? null,
     pai: sPessoa.item.pai,
     mae: sPessoa.item.mae,
     codcidadenascimento: sPessoa.item.codcidadenascimento,
@@ -149,9 +146,7 @@ const editarDetalhes = async () => {
       : sPessoa.item.titulosecao,
     ctps: sPessoa.item.ctps,
     seriectps: sPessoa.item.seriectps,
-    emissaoctps: sPessoa.item.emissaoctps
-      ? formataDataSemHora(sPessoa.item.emissaoctps)
-      : null,
+    emissaoctps: sPessoa.item.emissaoctps ?? null,
     codestadoctps: sPessoa.item.codestadoctps,
     codestadocivil: sPessoa.item.codestadocivil,
     codetnia: sPessoa.item.codetnia,
@@ -203,12 +198,6 @@ const salvarMercos = (evt) => {
 
 const salvarDetalhes = async () => {
   const editar = { ...modelPessoa.value };
-  if (editar.nascimento) {
-    editar.nascimento = dataFormatoSql(editar.nascimento);
-  }
-  if (editar.emissaoctps) {
-    editar.emissaoctps = dataFormatoSql(editar.emissaoctps);
-  }
   try {
     const ret = await sPessoa.clienteSalvar(sPessoa.item.codpessoa, editar);
     sPessoa.item = ret.data.data;
@@ -291,42 +280,16 @@ const salvarDetalhes = async () => {
             label="Inscrição Estadual"
             disable
           />
-          <q-input
+          <MgInputData
+            type="date"
             :class="
               modelPessoa.fisica
                 ? 'col-md-3 col-sm-6 col-xs-12'
                 : 'col-md-4 col-sm-6 col-xs-12'
             "
-            outlined
             v-model="modelPessoa.nascimento"
-            mask="##/##/####"
             :label="modelPessoa.fisica ? 'Nascimento' : 'Fundação'"
-          >
-            <template v-slot:append>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date
-                    v-model="modelPessoa.nascimento"
-                    :locale="localeBrasil"
-                    mask="DD/MM/YYYY"
-                  >
-                    <div class="row items-center justify-end">
-                      <q-btn
-                        v-close-popup
-                        label="Fechar"
-                        color="primary"
-                        flat
-                      />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
+          />
 
           <MgInputFormatado
             outlined
@@ -429,38 +392,12 @@ const salvarDetalhes = async () => {
                 v-model="modelPessoa.codestadoctps"
                 label="UF"
               />
-              <q-input
+              <MgInputData
+                type="date"
                 class="col-md-4 col-sm-6 col-xs-12"
-                outlined
                 v-model="modelPessoa.emissaoctps"
-                mask="##/##/####"
                 label="Emissão CTPS"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelPessoa.emissaoctps"
-                        :locale="localeBrasil"
-                        mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+              />
             </template>
             <select-estado-civil
               class="col-md-4 col-sm-6 col-xs-12"
