@@ -14,7 +14,7 @@ async function buscar(busca = '') {
   loading.value = true
   try {
     const { data } = await api.get('v1/select/grupo-economico', {
-      params: { grupoeconomico: busca || ' ' },
+      params: { busca: busca || ' ' },
     })
     opcoes.value = Array.isArray(data) ? data : data.data || []
   } finally {
