@@ -15,7 +15,7 @@ function abrirRelatorio() {
   for (const [k, v] of Object.entries(store.filters)) {
     if (v !== null && v !== undefined && v !== '') params[k] = v
   }
-  abrirPdf('v1/titulo-agrupamento/relatorio', params)
+  abrirPdf('v1/titulo-agrupamento/relatorio', params, { title: 'Agrupamentos' })
 }
 
 async function carregarMais(index, done) {
@@ -91,9 +91,9 @@ onMounted(() => {
     </q-infinite-scroll>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <div class="column q-gutter-sm items-end">
-        <q-btn fab-mini color="grey-8" icon="picture_as_pdf" @click="abrirRelatorio">
-          <q-tooltip anchor="center left" self="center right">Relatório (PDF)</q-tooltip>
+      <div class="row q-gutter-sm items-end">
+        <q-btn fab-mini color="grey-8" icon="print" @click="abrirRelatorio">
+          <q-tooltip anchor="top middle" self="bottom middle">Relatório</q-tooltip>
         </q-btn>
         <q-btn
           fab-mini
@@ -101,10 +101,10 @@ onMounted(() => {
           icon="pending_actions"
           :to="{ name: 'agrupamento-pendentes' }"
         >
-          <q-tooltip anchor="center left" self="center right">Fechamentos pendentes</q-tooltip>
+          <q-tooltip anchor="top middle" self="bottom middle">Fechamentos pendentes</q-tooltip>
         </q-btn>
         <q-btn fab icon="add" color="primary" :to="{ name: 'agrupamento-novo' }">
-          <q-tooltip anchor="center left" self="center right">Novo Agrupamento</q-tooltip>
+          <q-tooltip anchor="top middle" self="bottom middle">Novo Agrupamento</q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>

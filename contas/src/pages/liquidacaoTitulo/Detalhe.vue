@@ -47,7 +47,14 @@ async function carregar() {
 }
 
 function abrirRecibo(rota) {
-  abrirPdf(`v1/liquidacao-titulo/${id.value}/${rota}`)
+  const titulos = {
+    recibo: 'Recibo',
+    'recibo-recebimento': 'Recibo de Recebimento',
+    'recibo-pagamento': 'Recibo de Pagamento',
+  }
+  abrirPdf(`v1/liquidacao-titulo/${id.value}/${rota}`, {}, {
+    title: titulos[rota] || 'Recibo',
+  })
 }
 
 function estornar() {
