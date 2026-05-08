@@ -4,13 +4,9 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import {
-  formataDataInput,
-  dataFormatoSql,
-  localeBrasil,
-  formataDataSemHora,
-} from "src/utils/formatador";
+import { formataDataSemHora } from "src/utils/formatador";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
+import MgInputData from "@components/MgInputData.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -32,13 +28,6 @@ const novoRegistroSpc = async () => {
   modelRegistroSpc.value.codpessoa = route.params.id;
 
   const novoRegistro = { ...modelRegistroSpc.value };
-
-  if (novoRegistro.inclusao) {
-    novoRegistro.inclusao = dataFormatoSql(novoRegistro.inclusao);
-  }
-  if (novoRegistro.baixa) {
-    novoRegistro.baixa = dataFormatoSql(novoRegistro.baixa);
-  }
 
   if (novoRegistro.valor.indexOf(",") > -1) {
     var removeVirgula = novoRegistro.valor.replace(/,([^,]*)$/, ".$1");
@@ -79,21 +68,14 @@ const editarRegistroSpc = (
   modelRegistroSpc.value = {
     codregistrospc: codregistrospc,
     valor: valor,
-    inclusao: inclusao ? formataDataInput(inclusao) : null,
-    baixa: baixa ? formataDataInput(baixa) : null,
+    inclusao: inclusao,
+    baixa: baixa,
     observacoes: observacoes,
   };
 };
 
 const salvarRegistro = async () => {
   const editRegistro = { ...modelRegistroSpc.value };
-
-  if (editRegistro.inclusao) {
-    editRegistro.inclusao = dataFormatoSql(editRegistro.inclusao);
-  }
-  if (editRegistro.baixa) {
-    editRegistro.baixa = dataFormatoSql(editRegistro.baixa);
-  }
 
   if (editRegistro.valor.toString().indexOf(",") > -1) {
     var removeVirgula = editRegistro.valor.replace(/,([^,]*)$/, ".$1");
@@ -176,73 +158,22 @@ const submit = () => {
 
         <q-card-section>
           <div class="col-6">
-            <q-input
-              outlined
+            <MgInputData
+              type="date"
               v-model="modelRegistroSpc.inclusao"
-              mask="##/##/####"
               label="Inclusão"
+              class="q-mb-md"
               :rules="[
                 (val) => (val && val.length > 0) || 'Inclusão obrigatório',
               ]"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="modelRegistroSpc.inclusao"
-                      :locale="localeBrasil"
-                      mask="DD/MM/YYYY"
-                    >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Fechar"
-                          color="primary"
-                          flat
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+            />
 
-            <q-input
-              outlined
+            <MgInputData
+              type="date"
               v-model="modelRegistroSpc.baixa"
-              mask="##/##/####"
-              class="q-mb-md"
               label="Baixa"
-            >
-              <template v-slot:append>
-                <q-icon name="event" class="cursor-pointer">
-                  <q-popup-proxy
-                    cover
-                    transition-show="scale"
-                    transition-hide="scale"
-                  >
-                    <q-date
-                      v-model="modelRegistroSpc.baixa"
-                      :locale="localeBrasil"
-                      mask="DD/MM/YYYY"
-                    >
-                      <div class="row items-center justify-end">
-                        <q-btn
-                          v-close-popup
-                          label="Fechar"
-                          color="primary"
-                          flat
-                        />
-                      </div>
-                    </q-date>
-                  </q-popup-proxy>
-                </q-icon>
-              </template>
-            </q-input>
+              class="q-mb-md"
+            />
 
             <q-input
               outlined

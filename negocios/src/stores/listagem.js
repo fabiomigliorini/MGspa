@@ -85,8 +85,8 @@ export const listagemStore = defineStore("listagem", {
         lancamento_de: moment()
           .subtract(7, "d")
           .startOf("day")
-          .format("DD/MM/YYYY HH:mm"),
-        lancamento_ate: moment().endOf("day").format("DD/MM/YYYY HH:mm"),
+          .format("YYYY-MM-DD HH:mm"),
+        lancamento_ate: moment().endOf("day").format("YYYY-MM-DD HH:mm"),
         codestoquelocal: sNegocio.padrao.codestoquelocal,
         codusuario: null,
         codnegociostatus: null,
@@ -124,20 +124,6 @@ export const listagemStore = defineStore("listagem", {
       try {
         const filtro = { ...this.filtro };
         filtro.pdv = sSinc.pdv.uuid;
-        //converte data inicial
-        var lanc = moment(filtro.lancamento_de, "DD/MM/YYYY HH:mm", true);
-        if (lanc.isValid()) {
-          filtro.lancamento_de = lanc.format("YYYY-MM-DD HH:mm:SS");
-        } else {
-          filtro.lancamento_de = null;
-        }
-        //converte data final
-        var lanc = moment(filtro.lancamento_ate, "DD/MM/YYYY HH:mm", true);
-        if (lanc.isValid()) {
-          filtro.lancamento_ate = lanc.format("YYYY-MM-DD HH:mm:SS");
-        } else {
-          filtro.lancamento_ate = null;
-        }
         filtro.page = this.paginacao.current_page + 1;
         const { data } = await api.get("/api/v1/pdv/negocio", {
           params: filtro,

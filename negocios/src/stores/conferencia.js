@@ -22,7 +22,7 @@ export const conferenciaStore = defineStore("conferencia", {
         return;
       }
       const filtro = {
-        dia: moment().startOf("day").format("DD/MM/YYYY"),
+        dia: moment().format("YYYY-MM-DD"),
         codpdv: null,
       };
       const pdv = await sPdv.findByUuid(sSinc.pdv.uuid);
@@ -37,14 +37,6 @@ export const conferenciaStore = defineStore("conferencia", {
       try {
         const filtro = { ...this.filtro };
         filtro.pdv = sSinc.pdv.uuid;
-        //converte data inicial
-        var dia = moment(filtro.dia, "DD/MM/YYYY");
-        if (dia.isValid()) {
-          filtro.dia = dia.format("YYYY-MM-DD");
-        } else {
-          filtro.dia = null;
-        }
-        //converte data final
 
         const ret = await api.get("/api/v1/pdv/negocio/conferencia", {
           params: filtro,

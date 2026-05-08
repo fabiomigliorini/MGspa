@@ -5,6 +5,7 @@ import { colaboradorStore } from "stores/colaborador";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
+import MgInputData from "@components/MgInputData.vue";
 
 const props = defineProps(["colaborador"]);
 
@@ -59,11 +60,27 @@ function calculaPeriodoAquisitivo(colaborador) {
 }
 
 function sugereAquisitivoFim() {
-  const inicio = moment(model.value.aquisitivoinicio, "DD/MM/YYYY");
+  if (!model.value.aquisitivoinicio) return;
+  const inicio = moment(model.value.aquisitivoinicio, "YYYY-MM-DD", true);
+  if (!inicio.isValid()) return;
   model.value.aquisitivofim = inicio
     .add(1, "year")
     .subtract(1, "day")
-    .format("DD/MM/YYYY");
+    .format("YYYY-MM-DD");
+  sugereGozo();
+}
+
+function sugereGozo() {
+  if (!model.value.aquisitivofim) return;
+  const fim = moment(model.value.aquisitivofim, "YYYY-MM-DD", true);
+  if (!fim.isValid()) return;
+  const dias = model.value.diasgozo || model.value.dias || 30;
+  const from = fim.clone().add(1, "day");
+  const to = from.clone().add(dias - 1, "days");
+  model.value.gozo = {
+    from: from.format("YYYY-MM-DD"),
+    to: to.format("YYYY-MM-DD"),
+  };
 }
 
 function nova(colaborador) {
@@ -77,11 +94,11 @@ function nova(colaborador) {
   const gozofim = gozoinicio.clone().add(dias, "day");
   model.value = {
     codcolaborador: colaborador.codcolaborador,
-    aquisitivoinicio: aquisitivoinicio.format("DD/MM/YYYY"),
-    aquisitivofim: aquisitivofim.format("DD/MM/YYYY"),
+    aquisitivoinicio: aquisitivoinicio.format("YYYY-MM-DD"),
+    aquisitivofim: aquisitivofim.format("YYYY-MM-DD"),
     gozo: {
-      from: gozoinicio.format("DD/MM/YYYY"),
-      to: gozofim.format("DD/MM/YYYY"),
+      from: gozoinicio.format("YYYY-MM-DD"),
+      to: gozofim.format("YYYY-MM-DD"),
     },
     dias: dias,
     diasabono: 0,
@@ -105,12 +122,8 @@ function preparaModel() {
     return null;
   }
 
-  m.aquisitivoinicio = moment(m.aquisitivoinicio, "DD/MM/YYYY").format(
-    "YYYY-MM-DD"
-  );
-  m.aquisitivofim = moment(m.aquisitivofim, "DD/MM/YYYY").format("YYYY-MM-DD");
-  m.gozoinicio = moment(m.gozo.from, "DD/MM/YYYY").format("YYYY-MM-DD");
-  m.gozofim = moment(m.gozo.to, "DD/MM/YYYY").format("YYYY-MM-DD");
+  m.gozoinicio = m.gozo.from;
+  m.gozofim = m.gozo.to;
   delete m.gozo;
   return m;
 }
@@ -194,13 +207,11 @@ async function excluir(ferias) {
 
 function editar(ferias) {
   const m = { ...ferias };
-  m.aquisitivoinicio = moment(m.aquisitivoinicio, "YYYY-MM-DD").format(
-    "DD/MM/YYYY"
-  );
-  m.aquisitivofim = moment(m.aquisitivofim, "YYYY-MM-DD").format("DD/MM/YYYY");
+  m.aquisitivoinicio = m.aquisitivoinicio?.substring(0, 10) ?? null;
+  m.aquisitivofim = m.aquisitivofim?.substring(0, 10) ?? null;
   m.gozo = {
-    from: moment(m.gozoinicio, "YYYY-MM-DD").format("DD/MM/YYYY"),
-    to: moment(m.gozofim, "YYYY-MM-DD").format("DD/MM/YYYY"),
+    from: m.gozoinicio?.substring(0, 10) ?? null,
+    to: m.gozofim?.substring(0, 10) ?? null,
   };
   delete m.gozoinicio;
   delete m.gozofim;
@@ -220,7 +231,7 @@ function validaData(value) {
   if (!value) {
     return true;
   }
-  const data = moment(value, "DD/MM/YYYY");
+  const data = moment(value, "DD/MM/YYYY", true);
   if (!data.isValid()) {
     return "Data Inválida!";
   }
@@ -228,24 +239,37 @@ function validaData(value) {
 }
 
 function validaAqInicio(value) {
+  if (!value) {
+    return true;
+  }
+  const inicio = moment(value, "DD/MM/YYYY", true);
+  if (!inicio.isValid()) {
+    return true;
+  }
   const colaborador = sColaborador.findColaborador(model.value.codcolaborador);
-  const inicio = moment(value, "DD/MM/YYYY");
-  const contratacao = moment(colaborador.contratacao);
-  if (contratacao.isAfter(inicio)) {
+  const contratacao = colaborador?.contratacao?.substring(0, 10);
+  if (contratacao && inicio.format("YYYY-MM-DD") < contratacao) {
     return "Aquisitivo início não pode ser anterior a contratação!";
   }
   return true;
 }
 
 function validaAqFim(value) {
+  if (!value) {
+    return true;
+  }
+  const aqFim = moment(value, "DD/MM/YYYY", true);
+  if (!aqFim.isValid()) {
+    return true;
+  }
+  const aqFimISO = aqFim.format("YYYY-MM-DD");
   const colaborador = sColaborador.findColaborador(model.value.codcolaborador);
-  const aqFim = moment(value, "DD/MM/YYYY");
-  const rescisao = moment(colaborador.rescisao);
-  if (rescisao.isBefore(aqFim)) {
+  const rescisao = colaborador?.rescisao?.substring(0, 10);
+  if (rescisao && aqFimISO > rescisao) {
     return "Aquisitivo fim tem que ser anterior a rescisão!";
   }
-  const inicio = moment(model.value.aquisitivoinicio, "DD/MM/YYYY");
-  if (inicio.isAfter(aqFim)) {
+  const inicio = model.value.aquisitivoinicio;
+  if (inicio && aqFimISO < inicio) {
     return "Aquisitivo fim tem que ser depois do inicio!";
   }
   return true;
@@ -269,8 +293,9 @@ function calculaDiasGozo() {
   var diasgozo =
     model.value.dias - model.value.diasabono - model.value.diasdescontados;
   model.value.diasgozo = diasgozo;
-  const inicio = moment(model.value.gozo.from, "DD/MM/YYYY");
-  model.value.gozo.to = inicio.add(diasgozo - 1, "days").format("DD/MM/YYYY");
+  if (!model.value.gozo?.from) return;
+  const inicio = moment(model.value.gozo.from, "YYYY-MM-DD", true);
+  model.value.gozo.to = inicio.add(diasgozo - 1, "days").format("YYYY-MM-DD");
 }
 
 function calculaFimGozo() {
@@ -280,10 +305,10 @@ function calculaFimGozo() {
   var mFrom;
   switch (typeof model.value.gozo) {
     case "string":
-      mFrom = moment(model.value.gozo, "DD/MM/YYYY");
+      mFrom = moment(model.value.gozo, "YYYY-MM-DD", true);
       break;
     case "object":
-      mFrom = moment(model.value.gozo.from, "DD/MM/YYYY");
+      mFrom = moment(model.value.gozo.from, "YYYY-MM-DD", true);
       break;
     default:
       mFrom = moment();
@@ -291,8 +316,8 @@ function calculaFimGozo() {
   }
   const mTo = mFrom.clone().add(model.value.diasgozo - 1, "days");
   model.value.gozo = {
-    from: mFrom.format("DD/MM/YYYY"),
-    to: mTo.format("DD/MM/YYYY"),
+    from: mFrom.format("YYYY-MM-DD"),
+    to: mTo.format("YYYY-MM-DD"),
   };
 }
 
@@ -458,76 +483,22 @@ defineExpose({ nova });
 
             <!-- AQUISITIVO -->
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="model.aquisitivoinicio"
-                mask="##/##/####"
                 label="Aquisitivo de"
                 :rules="[validaObrigatorio, validaData, validaAqInicio]"
-                input-class="text-center"
-                @change="sugereAquisitivoFim"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="model.aquisitivoinicio"
-                        :locale="brasil"
-                        mask="DD/MM/YYYY"
-                        @update:model-value="sugereAquisitivoFim"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                @update:model-value="sugereAquisitivoFim"
+              />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="model.aquisitivofim"
-                mask="##/##/####"
                 label="Aquisitivo até"
                 :rules="[validaObrigatorio, validaData, validaAqFim]"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="model.aquisitivofim"
-                        :locale="brasil"
-                        mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                @update:model-value="sugereGozo"
+              />
             </div>
 
             <div class="col-12">
@@ -547,7 +518,7 @@ defineExpose({ nova });
                 label="Periodo Gozo"
                 :locale="brasil"
                 range
-                mask="DD/MM/YYYY"
+                mask="YYYY-MM-DD"
                 landscape
                 @update:model-value="calculaFimGozo"
               />

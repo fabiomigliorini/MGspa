@@ -93,7 +93,7 @@
               v-model="sPessoa.filtroPesquisa.fone"
               ref="fone"
               label="Fone"
-              type="number"
+              type="tel"
             />
             <SelectGrupoEconomico
               v-model="sPessoa.filtroPesquisa.codgrupoeconomico"

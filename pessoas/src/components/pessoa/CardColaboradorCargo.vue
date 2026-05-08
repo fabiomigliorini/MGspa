@@ -7,6 +7,7 @@ import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
 import MgInputValor from "@components/MgInputValor.vue";
+import MgInputData from "@components/MgInputData.vue";
 
 const SelectCargo = defineAsyncComponent(() =>
   import("components/pessoa/SelectCargo.vue")
@@ -28,31 +29,15 @@ const dialogColaboradorCargo = ref(false);
 const modelColaboradorCargo = ref({});
 const editarCargo = ref(false);
 
-const brasil = {
-  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
-  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-  months:
-    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
-      "_"
-    ),
-  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
-  firstDayOfWeek: 1,
-  format24h: true,
-  pluralDay: "dias",
-};
-
 function preencheCargo(colaborador) {
   if (colaborador.ColaboradorCargo.length > 0) {
-    var dataAtual = moment();
     modelColaboradorCargo.value = {
-      inicio: moment(dataAtual).format("DD/MM/YYYY"),
+      inicio: moment().format("YYYY-MM-DD"),
       codcolaborador: colaborador.codcolaborador,
     };
   } else {
     modelColaboradorCargo.value = {
-      inicio: moment(colaborador.contratacao, "YYYY-MM-DD").format(
-        "DD/MM/YYYY"
-      ),
+      inicio: colaborador.contratacao?.substring(0, 10) ?? null,
       codcolaborador: colaborador.codcolaborador,
     };
   }
@@ -65,14 +50,7 @@ function novoColaboradorCargo(colaborador) {
 }
 
 function preparaModel() {
-  const model = { ...modelColaboradorCargo.value };
-  if (model.inicio) {
-    model.inicio = Documentos.dataFormatoSql(model.inicio);
-  }
-  if (model.fim) {
-    model.fim = Documentos.dataFormatoSql(model.fim);
-  }
-  return model;
+  return { ...modelColaboradorCargo.value };
 }
 
 async function novoCargo() {
@@ -163,8 +141,8 @@ function editarColaboradorCargo(
     codcolaboradorcargo: codcolaboradorcargo,
     codcolaborador: codcolaborador,
     codcargo: codcargo,
-    inicio: inicio !== null ? Documentos.formataDatasemHr(inicio) : null,
-    fim: fim !== null ? Documentos.formataDatasemHr(fim) : null,
+    inicio: inicio?.substring(0, 10) ?? null,
+    fim: fim?.substring(0, 10) ?? null,
     salario: salario,
     observacoes: observacoes,
   };
@@ -183,7 +161,7 @@ function validaDataValida(value) {
   if (!value) {
     return true;
   }
-  const data = moment(value, "DD/MM/YYYY");
+  const data = moment(value, "DD/MM/YYYY", true);
   if (!data.isValid()) {
     return "Data Inválida!";
   }
@@ -191,18 +169,30 @@ function validaDataValida(value) {
 }
 
 function validaInicio(value) {
-  const inicio = moment(value, "DD/MM/YYYY");
-  const contratacao = moment(props.colaboradorCargos.contratacao);
-  if (contratacao.isAfter(inicio)) {
+  if (!value) {
+    return true;
+  }
+  const inicio = moment(value, "DD/MM/YYYY", true);
+  if (!inicio.isValid()) {
+    return true;
+  }
+  const contratacao = props.colaboradorCargos.contratacao?.substring(0, 10);
+  if (contratacao && inicio.format("YYYY-MM-DD") < contratacao) {
     return "Inicio não pode ser anterior á Contratação!";
   }
   return true;
 }
 
 function validaFim(value) {
-  const fim = moment(value, "DD/MM/YYYY");
-  const inicio = moment(modelColaboradorCargo.value.inicio, "DD/MM/YYYY");
-  if (inicio.isAfter(fim)) {
+  if (!value) {
+    return true;
+  }
+  const fim = moment(value, "DD/MM/YYYY", true);
+  if (!fim.isValid()) {
+    return true;
+  }
+  const inicio = modelColaboradorCargo.value.inicio;
+  if (inicio && fim.format("YYYY-MM-DD") < inicio) {
     return "Fim não pode ser anterior ao inicio!";
   }
   return true;
@@ -311,74 +301,20 @@ defineExpose({ novoColaboradorCargo });
 
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="modelColaboradorCargo.inicio"
-                mask="##/##/####"
                 label="Início"
-                :rules="[validaDataValida, validaInicio, validaObrigatorio]"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelColaboradorCargo.inicio"
-                        :locale="brasil"
-                        mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                :rules="[validaObrigatorio, validaDataValida, validaInicio]"
+              />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="modelColaboradorCargo.fim"
-                mask="##/##/####"
                 label="Fim"
                 :rules="[validaDataValida, validaFim]"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelColaboradorCargo.fim"
-                        :locale="brasil"
-                        mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+              />
             </div>
             <div class="col-12">
               <MgInputValor

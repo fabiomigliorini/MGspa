@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from "vue";
 import { debounce } from "quasar";
 import { guardaToken } from "src/stores";
 import MGLayout from "src/layouts/MGLayout.vue";
+import MgInputData from "@components/MgInputData.vue";
 import moment from "moment";
 import { api } from "src/boot/axios";
 
@@ -10,21 +11,13 @@ const user = guardaToken();
 const caixas = ref([]);
 
 const filtro = ref({
-  inicio: moment().add(-10, "days").startOf("month").format("DD/MM/YYYY HH:mm"),
-  fim: moment().add(-10, "days").endOf("month").format("DD/MM/YYYY HH:mm"),
+  inicio: moment().add(-10, "days").startOf("month").format("YYYY-MM-DD HH:mm"),
+  fim: moment().add(-10, "days").endOf("month").format("YYYY-MM-DD HH:mm"),
 });
 
 const buscar = debounce(async () => {
   try {
-    const params = {
-      inicio: moment(filtro.value.inicio, "DD/MM/YYYY HH:mm").format(
-        "YYYY-MM-DD HH:mm"
-      ),
-      fim: moment(filtro.value.fim, "DD/MM/YYYY HH:mm").format(
-        "YYYY-MM-DD HH:mm"
-      ),
-    };
-    const ret = await api.get("v1/comissao-caixas", { params: params });
+    const ret = await api.get("v1/comissao-caixas", { params: filtro.value });
     caixas.value = ret.data;
   } catch (error) {
     console.log(error);
@@ -172,83 +165,18 @@ const filter = ref("");
           </q-list>
         </q-card>
         <div class="q-pa-md q-gutter-md">
-          <!-- DATA inicio -->
-          <q-input outlined v-model="filtro.inicio" input-class="text-center">
-            <template v-slot:prepend>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date v-model="filtro.inicio" mask="DD/MM/YYYY HH:mm">
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-
-            <template v-slot:append>
-              <q-icon name="access_time" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-time
-                    v-model="filtro.inicio"
-                    mask="DD/MM/YYYY HH:mm"
-                    format24h
-                  >
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-time>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
-
-          <!-- DATA fim -->
-          <q-input outlined v-model="filtro.fim" input-class="text-center">
-            <template v-slot:prepend>
-              <q-icon name="event" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-date v-model="filtro.fim" mask="DD/MM/YYYY HH:mm">
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-date>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-
-            <template v-slot:append>
-              <q-icon name="access_time" class="cursor-pointer">
-                <q-popup-proxy
-                  cover
-                  transition-show="scale"
-                  transition-hide="scale"
-                >
-                  <q-time
-                    v-model="filtro.fim"
-                    mask="DD/MM/YYYY HH:mm"
-                    format24h
-                  >
-                    <div class="row items-center justify-end">
-                      <q-btn v-close-popup label="Close" color="primary" flat />
-                    </div>
-                  </q-time>
-                </q-popup-proxy>
-              </q-icon>
-            </template>
-          </q-input>
+          <MgInputData
+            type="timestamp"
+            :seconds="false"
+            v-model="filtro.inicio"
+            label="Início"
+          />
+          <MgInputData
+            type="timestamp"
+            :seconds="false"
+            v-model="filtro.fim"
+            label="Fim"
+          />
         </div>
       </div>
     </template>

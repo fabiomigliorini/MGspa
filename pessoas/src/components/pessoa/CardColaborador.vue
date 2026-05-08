@@ -5,11 +5,6 @@ import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { colaboradorStore } from "stores/colaborador";
 import { guardaToken } from "src/stores";
-import {
-  dataFormatoSql,
-  formataDataSemHora,
-  localeBrasil,
-} from "src/utils/formatador";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
@@ -19,6 +14,7 @@ const DIAS_EXPERIENCIA = 30;
 import CardColaboradorCargo from "components/pessoa/CardColaboradorCargo.vue";
 import CardFerias from "components/pessoa/CardFerias.vue";
 import SelectFilial from "components/pessoa/SelectFilial.vue";
+import MgInputData from "@components/MgInputData.vue";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -122,18 +118,20 @@ const preencheExperiencia = () => {
   modelColaborador.value.diasExperiencia = diasExp;
   modelColaborador.value.experiencia = moment(
     modelColaborador.value.contratacao,
-    "DD/MM/YYYY"
+    "YYYY-MM-DD",
+    true
   )
     .add(diasExp - 1, "days")
-    .format("DD/MM/YYYY");
+    .format("YYYY-MM-DD");
   const diasRen = modelColaborador.value.diasRenovacao || DIAS_EXPERIENCIA;
   modelColaborador.value.diasRenovacao = diasRen;
   modelColaborador.value.renovacaoexperiencia = moment(
     modelColaborador.value.experiencia,
-    "DD/MM/YYYY"
+    "YYYY-MM-DD",
+    true
   )
     .add(diasRen, "days")
-    .format("DD/MM/YYYY");
+    .format("YYYY-MM-DD");
 };
 
 const alterouDiasExperiencia = () => {
@@ -145,12 +143,13 @@ const alterouDiasExperiencia = () => {
   if (modelColaborador.value.contratacao) {
     const contratacao = moment(
       modelColaborador.value.contratacao,
-      "DD/MM/YYYY"
+      "YYYY-MM-DD",
+      true
     );
     if (contratacao.isValid()) {
       modelColaborador.value.experiencia = contratacao
         .add(modelColaborador.value.diasExperiencia - 1, "days")
-        .format("DD/MM/YYYY");
+        .format("YYYY-MM-DD");
       alterouDiasRenovacao();
     }
   }
@@ -165,12 +164,13 @@ const alterouDiasRenovacao = () => {
   if (modelColaborador.value.experiencia) {
     const experiencia = moment(
       modelColaborador.value.experiencia,
-      "DD/MM/YYYY"
+      "YYYY-MM-DD",
+      true
     );
     if (experiencia.isValid()) {
       modelColaborador.value.renovacaoexperiencia = experiencia
         .add(modelColaborador.value.diasRenovacao, "days")
-        .format("DD/MM/YYYY");
+        .format("YYYY-MM-DD");
     }
   }
 };
@@ -182,11 +182,13 @@ const alterouExperiencia = () => {
   ) {
     const contratacao = moment(
       modelColaborador.value.contratacao,
-      "DD/MM/YYYY"
+      "YYYY-MM-DD",
+      true
     );
     const experiencia = moment(
       modelColaborador.value.experiencia,
-      "DD/MM/YYYY"
+      "YYYY-MM-DD",
+      true
     );
     if (contratacao.isValid() && experiencia.isValid()) {
       modelColaborador.value.diasExperiencia =
@@ -203,11 +205,13 @@ const alterouRenovacao = () => {
   ) {
     const experiencia = moment(
       modelColaborador.value.experiencia,
-      "DD/MM/YYYY"
+      "YYYY-MM-DD",
+      true
     );
     const renovacao = moment(
       modelColaborador.value.renovacaoexperiencia,
-      "DD/MM/YYYY"
+      "YYYY-MM-DD",
+      true
     );
     if (experiencia.isValid() && renovacao.isValid()) {
       modelColaborador.value.diasRenovacao = renovacao.diff(
@@ -224,19 +228,6 @@ const novoColaborador = async () => {
   const colab = { ...modelColaborador.value };
   delete colab.diasExperiencia;
   delete colab.diasRenovacao;
-
-  if (colab.contratacao) {
-    colab.contratacao = dataFormatoSql(colab.contratacao);
-  }
-  if (colab.experiencia) {
-    colab.experiencia = dataFormatoSql(colab.experiencia);
-  }
-  if (colab.renovacaoexperiencia) {
-    colab.renovacaoexperiencia = dataFormatoSql(colab.renovacaoexperiencia);
-  }
-  if (colab.rescisao) {
-    colab.rescisao = dataFormatoSql(colab.rescisao);
-  }
 
   try {
     const ret = await sColaborador.novoColaborador(colab);
@@ -264,19 +255,6 @@ const salvarColaborador = async () => {
   const colab = { ...modelColaborador.value };
   delete colab.diasExperiencia;
   delete colab.diasRenovacao;
-
-  if (colab.contratacao) {
-    colab.contratacao = dataFormatoSql(colab.contratacao);
-  }
-  if (colab.experiencia) {
-    colab.experiencia = dataFormatoSql(colab.experiencia);
-  }
-  if (colab.renovacaoexperiencia) {
-    colab.renovacaoexperiencia = dataFormatoSql(colab.renovacaoexperiencia);
-  }
-  if (colab.rescisao) {
-    colab.rescisao = dataFormatoSql(colab.rescisao);
-  }
 
   try {
     const ret = await sColaborador.salvarColaborador(colab);
@@ -348,31 +326,29 @@ const editarColaborador = (
   modelColaborador.value = {
     codcolaborador,
     codfilial,
-    contratacao: contratacao !== null ? formataDataSemHora(contratacao) : null,
+    contratacao: contratacao?.substring(0, 10) ?? null,
     vinculo,
-    experiencia: experiencia !== null ? formataDataSemHora(experiencia) : null,
-    renovacaoexperiencia:
-      renovacaoexperiencia !== null
-        ? formataDataSemHora(renovacaoexperiencia)
-        : null,
-    rescisao: rescisao !== null ? formataDataSemHora(rescisao) : null,
+    experiencia: experiencia?.substring(0, 10) ?? null,
+    renovacaoexperiencia: renovacaoexperiencia?.substring(0, 10) ?? null,
+    rescisao: rescisao?.substring(0, 10) ?? null,
     numeroponto,
     numerocontabilidade,
     observacoes,
   };
 
   if (contratacao && experiencia) {
-    const cont = moment(modelColaborador.value.contratacao, "DD/MM/YYYY");
-    const exp = moment(modelColaborador.value.experiencia, "DD/MM/YYYY");
+    const cont = moment(modelColaborador.value.contratacao, "YYYY-MM-DD", true);
+    const exp = moment(modelColaborador.value.experiencia, "YYYY-MM-DD", true);
     if (cont.isValid() && exp.isValid()) {
       modelColaborador.value.diasExperiencia = exp.diff(cont, "days") + 1;
     }
   }
   if (experiencia && renovacaoexperiencia) {
-    const exp = moment(modelColaborador.value.experiencia, "DD/MM/YYYY");
+    const exp = moment(modelColaborador.value.experiencia, "YYYY-MM-DD", true);
     const ren = moment(
       modelColaborador.value.renovacaoexperiencia,
-      "DD/MM/YYYY"
+      "YYYY-MM-DD",
+      true
     );
     if (exp.isValid() && ren.isValid()) {
       modelColaborador.value.diasRenovacao = ren.diff(exp, "days");
@@ -391,7 +367,7 @@ const validaData = (value) => {
   if (!value) {
     return true;
   }
-  const data = moment(value, "DD/MM/YYYY");
+  const data = moment(value, "DD/MM/YYYY", true);
   if (!data.isValid()) {
     return "Data Inválida!";
   }
@@ -399,8 +375,10 @@ const validaData = (value) => {
 };
 
 const validaContratacao = (value) => {
+  if (!value) return true;
+  const cont = moment(value, "DD/MM/YYYY", true);
+  if (!cont.isValid()) return true;
   const maximo = moment().add(7, "days");
-  const cont = moment(value, "DD/MM/YYYY");
   if (maximo.isBefore(cont)) {
     return "Data Muito no Futuro!";
   }
@@ -408,14 +386,15 @@ const validaContratacao = (value) => {
 };
 
 const validaPeriodo = (value, dataBase, msgAnterior) => {
-  const base = moment(dataBase, "DD/MM/YYYY");
-  const data = moment(value, "DD/MM/YYYY");
-  if (data.isAfter(base.clone().add(60, "days"))) {
-    return "Data Muito no Futuro!";
-  }
-  if (data.isBefore(base)) {
-    return msgAnterior;
-  }
+  if (!value || !dataBase) return true;
+  const data = moment(value, "DD/MM/YYYY", true);
+  if (!data.isValid()) return true;
+  const dataISO = data.format("YYYY-MM-DD");
+  if (dataISO < dataBase) return msgAnterior;
+  const limite = moment(dataBase, "YYYY-MM-DD", true)
+    .add(60, "days")
+    .format("YYYY-MM-DD");
+  if (dataISO > limite) return "Data Muito no Futuro!";
   return true;
 };
 
@@ -439,23 +418,25 @@ const validaRescisao = (value) => {
   if (!value) {
     return true;
   }
-  const res = moment(value, "DD/MM/YYYY");
-  const contratacao = moment(modelColaborador.value.contratacao, "DD/MM/YYYY");
-  if (contratacao.isAfter(res)) {
+  const res = moment(value, "DD/MM/YYYY", true);
+  if (!res.isValid()) return true;
+  const resISO = res.format("YYYY-MM-DD");
+  const contratacao = modelColaborador.value.contratacao;
+  if (contratacao && contratacao > resISO) {
     return "Rescisão não pode ser anterior à Contratação!";
   }
   if (editColaborador.value == true) {
     const colaborador = sColaborador.colaboradores.find(
       (c) => c.codcolaborador === modelColaborador.value.codcolaborador
     );
-    let min = contratacao;
+    let minISO = contratacao;
     colaborador.ColaboradorCargo.forEach((cc) => {
-      min = moment.max(min, moment(cc.inicio));
-      if (cc.fim) {
-        min = moment.max(min, moment(cc.fim));
-      }
+      const inicioISO = cc.inicio?.substring(0, 10);
+      if (inicioISO && (!minISO || inicioISO > minISO)) minISO = inicioISO;
+      const fimISO = cc.fim?.substring(0, 10);
+      if (fimISO && (!minISO || fimISO > minISO)) minISO = fimISO;
     });
-    if (min.isAfter(res)) {
+    if (minISO && minISO > resISO) {
       return "Existe cargo com data inicial/final posterior à Recisão!";
     }
   }
@@ -478,7 +459,7 @@ const alterouVinculo = () => {
 const abrirNovoColaborador = () => {
   editColaborador.value = false;
   modelColaborador.value = {
-    contratacao: moment().format("DD/MM/YYYY"),
+    contratacao: moment().format("YYYY-MM-DD"),
     vinculo: 1,
     diasExperiencia: DIAS_EXPERIENCIA,
     diasRenovacao: DIAS_EXPERIENCIA,
@@ -812,78 +793,23 @@ watch(
 
             <!-- CONTRATACAO -->
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="modelColaborador.contratacao"
-                mask="##/##/####"
                 label="Contratação"
                 :rules="[validaObrigatorio, validaData, validaContratacao]"
-                @change="preencheExperiencia()"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelColaborador.contratacao"
-                        :locale="localeBrasil"
-                        mask="DD/MM/YYYY"
-                        @update:model-value="preencheExperiencia()"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                @update:model-value="preencheExperiencia()"
+              />
             </div>
 
             <!-- RESCISAO -->
             <div class="col-6">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="modelColaborador.rescisao"
-                mask="##/##/####"
                 label="Rescisão"
                 :rules="[validaData, validaRescisao]"
-                input-class="text-center"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelColaborador.rescisao"
-                        :locale="localeBrasil"
-                        mask="DD/MM/YYYY"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+              />
             </div>
 
             <!-- DIAS DE EXPERIENCIA -->
@@ -902,42 +828,14 @@ watch(
 
             <!-- FIM DA EXPERIENCIA -->
             <div class="col-4">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="modelColaborador.experiencia"
-                mask="##/##/####"
                 label="Experiência"
                 :rules="[validaData, validaExperiencia]"
-                input-class="text-center"
-                :disable="!isClt"
-                @change="alterouExperiencia()"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelColaborador.experiencia"
-                        :locale="localeBrasil"
-                        mask="DD/MM/YYYY"
-                        @update:model-value="alterouExperiencia()"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                :readonly="!isClt"
+                @update:model-value="alterouExperiencia()"
+              />
             </div>
 
             <!-- DIAS DA RENOVACAO -->
@@ -956,42 +854,14 @@ watch(
 
             <!-- FINAL DA RENOVACAO DA EXPERIENCIA -->
             <div class="col-4">
-              <q-input
-                outlined
+              <MgInputData
+                type="date"
                 v-model="modelColaborador.renovacaoexperiencia"
-                mask="##/##/####"
                 label="Renovação Experiência"
                 :rules="[validaData, validaRenovacaoExperiencia]"
-                input-class="text-center"
-                :disable="!isClt"
-                @change="alterouRenovacao()"
-              >
-                <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
-                    <q-popup-proxy
-                      cover
-                      transition-show="scale"
-                      transition-hide="scale"
-                    >
-                      <q-date
-                        v-model="modelColaborador.renovacaoexperiencia"
-                        :locale="localeBrasil"
-                        mask="DD/MM/YYYY"
-                        @update:model-value="alterouRenovacao()"
-                      >
-                        <div class="row items-center justify-end">
-                          <q-btn
-                            v-close-popup
-                            label="Fechar"
-                            color="primary"
-                            flat
-                          />
-                        </div>
-                      </q-date>
-                    </q-popup-proxy>
-                  </q-icon>
-                </template>
-              </q-input>
+                :readonly="!isClt"
+                @update:model-value="alterouRenovacao()"
+              />
             </div>
 
             <div class="col-6">
