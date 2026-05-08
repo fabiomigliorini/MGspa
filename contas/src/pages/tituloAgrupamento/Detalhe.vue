@@ -43,7 +43,9 @@ async function carregar() {
 }
 
 function abrirRelatorio() {
-  abrirPdf(`v1/titulo-agrupamento/${id.value}/relatorio`)
+  abrirPdf(`v1/titulo-agrupamento/${id.value}/relatorio`, {}, {
+    title: 'Agrupamento',
+  })
 }
 
 function estornar() {
@@ -174,13 +176,13 @@ watch(() => route.fullPath, carregar)
               flat
               round
               dense
-              icon="picture_as_pdf"
+              icon="print"
               size="sm"
               color="grey-7"
               @click="abrirRelatorio"
               v-if="!estornado"
             >
-              <q-tooltip>Relatório PDF</q-tooltip>
+              <q-tooltip>Relatório</q-tooltip>
             </q-btn>
             <q-btn
               v-if="podeEstornar"

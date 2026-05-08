@@ -29,7 +29,9 @@ function abrirRelatorio() {
     if (v === null || v === undefined || v === '') continue
     params[k] = v
   }
-  abrirPdf('v1/titulo-agrupamento/relatorio-pendentes', params)
+  abrirPdf('v1/titulo-agrupamento/relatorio-pendentes', params, {
+    title: 'Fechamentos Pendentes',
+  })
 }
 
 const total = computed(() =>
@@ -65,10 +67,10 @@ onMounted(() => {
           <q-btn
             flat
             dense
-            icon="picture_as_pdf"
+            icon="print"
             color="grey-8"
             @click="abrirRelatorio"
-            label="PDF"
+            label="Relatório"
           />
         </q-item-section>
       </q-item>
