@@ -159,7 +159,6 @@ class LiquidacaoTituloController extends Controller
     {
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
         return response($dompdf->output(), 200, [
