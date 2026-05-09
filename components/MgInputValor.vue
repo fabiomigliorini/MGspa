@@ -17,6 +17,7 @@ const props = defineProps({
   rules: { type: Array, default: () => [] },
   stackLabel: { type: Boolean, default: false },
   bottomSlots: { type: Boolean, default: true },
+  inputClass: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -227,7 +228,7 @@ function onKeydown(e) {
     :rules="wrappedRules"
     :stack-label="stackLabel"
     :bottom-slots="bottomSlots"
-    input-class="text-right"
+    :input-class="['text-right', inputClass]"
     inputmode="decimal"
     @focus="onFocus"
     @blur="onBlur"

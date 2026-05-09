@@ -23,11 +23,6 @@ class TituloAbertosFechamentoService
             ->join('tblpessoa as p', 'p.codpessoa', '=', 'tbltitulo.codpessoa')
             ->where('tbltitulo.saldo', '<>', 0);
 
-        if (!empty($filtros['codtitulos']) && is_array($filtros['codtitulos'])) {
-            // Sempre traz títulos já selecionados, mesmo fora do filtro padrão
-            $q->orWhereIn('tbltitulo.codtitulo', array_map('intval', $filtros['codtitulos']));
-        }
-
         // Filtros principais
         if (!empty($filtros['codpessoa'])) {
             $q->where('tbltitulo.codpessoa', $filtros['codpessoa']);
@@ -51,6 +46,15 @@ class TituloAbertosFechamentoService
             } elseif ((int)$filtros['credito'] === 2) {
                 $q->where('tbltitulo.debito', '>', 0);
             }
+        }
+        if (!empty($filtros['codtipotitulo'])) {
+            $q->where('tbltitulo.codtipotitulo', $filtros['codtipotitulo']);
+        }
+        if (!empty($filtros['codcontacontabil'])) {
+            $q->where('tbltitulo.codcontacontabil', $filtros['codcontacontabil']);
+        }
+        if (!empty($filtros['codportador'])) {
+            $q->where('tbltitulo.codportador', $filtros['codportador']);
         }
 
         $q->orderBy('tbltitulo.vencimento')->orderBy('tbltitulo.saldo')->orderBy('tbltitulo.numero');
