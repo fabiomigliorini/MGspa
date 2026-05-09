@@ -52,9 +52,13 @@ function abrirRecibo(rota) {
     'recibo-recebimento': 'Recibo de Recebimento',
     'recibo-pagamento': 'Recibo de Pagamento',
   }
-  abrirPdf(`v1/liquidacao-titulo/${id.value}/${rota}`, {}, {
-    title: titulos[rota] || 'Recibo',
-  })
+  abrirPdf(
+    `v1/liquidacao-titulo/${id.value}/${rota}`,
+    {},
+    {
+      title: titulos[rota] || 'Recibo',
+    },
+  )
 }
 
 function estornar() {
@@ -96,7 +100,9 @@ watch(() => route.fullPath, carregar)
             />
           </q-item-section>
           <q-item-section>
-            <div class="text-h4 text-grey-9">Liquidação {{ formatCodigo(liq.codliquidacaotitulo) }}</div>
+            <div class="text-h4 text-grey-9">
+              Liquidação {{ formatCodigo(liq.codliquidacaotitulo) }}
+            </div>
             <div v-if="estornado" class="text-negative">
               Estornada em {{ formataDataSemHora(liq.estornado) }}
             </div>
@@ -108,40 +114,46 @@ watch(() => route.fullPath, carregar)
 
         <!-- Cards resumo -->
         <div class="row q-col-gutter-md q-mb-md">
+          <!-- PESSOA -->
           <div class="col-xs-6 col-sm-4">
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Pessoa</div>
               <div class="text-h6 ellipsis">
-                <q-btn
-                  flat
-                  dense
-                  no-caps
-                  padding="0"
-                  color="primary"
-                  :label="liq.fantasia"
+                <a
                   :href="urlPessoa(liq.codpessoa)"
-                  target="_blank"
-                />
+                  class="text-primary"
+                  style="text-decoration: none"
+                >
+                  {{ liq.fantasia }}
+                </a>
               </div>
             </q-card>
           </div>
-          <div class="col-xs-6 col-sm-3">
-            <q-card bordered flat class="q-py-sm text-center">
-              <div class="text-caption text-grey-7">Transação</div>
-              <div class="text-h6 text-grey-7">{{ formataDataSemHora(liq.transacao) }}</div>
-            </q-card>
-          </div>
+
+          <!-- DATA -->
           <div class="col-xs-6 col-sm-2">
             <q-card bordered flat class="q-py-sm text-center">
-              <div class="text-caption text-grey-7">Portador</div>
-              <div class="text-body1">{{ liq.portador }}</div>
+              <div class="text-caption text-grey-7">Transação</div>
+              <div class="text-h6 text-grey-9">
+                {{ formataDataSemHora(liq.transacao) }}
+              </div>
             </q-card>
           </div>
+
+          <!-- Portador -->
+          <div class="col-xs-6 col-sm-3">
+            <q-card bordered flat class="q-py-sm text-center">
+              <div class="text-caption text-grey-7">Portador</div>
+              <div class="text-h6 text-grey-9 ellipsis">{{ liq.portador }}</div>
+            </q-card>
+          </div>
+
+          <!-- TOTAL -->
           <div class="col-xs-6 col-sm-3">
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Total</div>
               <div
-                class="text-h6"
+                class="text-h6 ellipsis"
                 :class="liq.operacao === 'CR' ? 'text-orange' : 'text-green'"
               >
                 {{ formataNumero(liq.valor) }} {{ liq.operacao }}
@@ -214,18 +226,14 @@ watch(() => route.fullPath, carregar)
             <q-separator />
             <q-card-section>
               <div class="text-overline text-grey-7">Observação</div>
-              <div class="text-body2 bg-grey-2 rounded-borders q-pa-sm" style="white-space: pre-line">
+              <div
+                class="text-body2 bg-grey-2 rounded-borders q-pa-sm"
+                style="white-space: pre-line"
+              >
                 {{ liq.observacao }}
               </div>
             </q-card-section>
           </template>
-        </q-card>
-
-        <!-- Títulos baixados -->
-        <q-card bordered flat class="q-mt-md">
-          <q-card-section class="text-grey-9 text-overline">
-            TÍTULOS BAIXADOS ({{ liq.movimentos?.length || 0 }})
-          </q-card-section>
           <q-list separator v-if="liq.movimentos?.length">
             <q-item v-for="m in liq.movimentos" :key="m.codmovimentotitulo">
               <q-item-section style="flex: 0 0 90px; min-width: 0" class="gt-xs">
@@ -233,36 +241,44 @@ watch(() => route.fullPath, carregar)
                   {{ m.titulo?.filial }}
                 </q-item-label>
               </q-item-section>
-              <q-item-section style="min-width: 0">
+              <q-item-section>
                 <q-item-label class="text-weight-medium">
-                  <q-btn
-                    flat
-                    dense
-                    no-caps
-                    padding="0"
-                    color="primary"
-                    :label="m.titulo?.numero"
+                  <router-link
+                    style="text-decoration: none"
+                    class="text-primary"
                     :to="{ name: 'titulo-detalhe', params: { codtitulo: m.codtitulo } }"
-                  />
+                  >
+                    {{ m.titulo?.numero }}
+                  </router-link>
                 </q-item-label>
-                <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
+              </q-item-section>
+              <q-item-section class="gt-xs">
+                <q-item-label class="text-grey-9">
+                  <a
+                    :href="urlPessoa(m.titulo?.codpessoa)"
+                    class="text-primary"
+                    style="text-decoration: none"
+                  >
+                    {{ m.titulo?.fantasia }}
+                  </a>
+                </q-item-label>
+              </q-item-section>
+              <q-item-section class="gt-xs">
+                <q-item-label caption>
+                  {{ formataDataSemHora(m.titulo?.vencimento) }}
+                </q-item-label>
                 <q-item-label caption v-if="m.titulo?.boleto">
                   Boleto {{ m.titulo?.nossonumero }}
                 </q-item-label>
               </q-item-section>
-              <q-item-section style="flex: 0 0 130px" class="gt-xs">
-                <q-item-label caption>
-                  {{ formataDataSemHora(m.titulo?.vencimento) }}
-                </q-item-label>
-                <q-item-label caption>{{ m.titulo?.fantasia }}</q-item-label>
-              </q-item-section>
-              <q-item-section style="flex: 0 0 110px">
+              <q-item-section>
                 <q-item-label
                   class="text-weight-bold text-right"
                   :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
                 >
                   {{ formataNumero(m.valor) }} {{ m.operacao }}
                 </q-item-label>
+                <q-item-label class="text-right" caption>{{ m.tipomovimentotitulo }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>
