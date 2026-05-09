@@ -44,7 +44,6 @@ class TituloAgrupamentoController extends Controller
         try {
             $ag = TituloAgrupamentoService::criar($request->validated());
             DB::commit();
-            return new TituloAgrupamentoDetalheResource($ag);
         } catch (\InvalidArgumentException $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
@@ -52,6 +51,11 @@ class TituloAgrupamentoController extends Controller
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 500);
         }
+
+        // Registra boletos fora da transação (chamada externa ao BB)
+        TituloAgrupamentoService::registrarBoletos($ag);
+
+        return new TituloAgrupamentoDetalheResource(TituloAgrupamentoService::carregar($ag->codtituloagrupamento));
     }
 
     public function estornar(int $id)

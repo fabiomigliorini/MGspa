@@ -4,6 +4,7 @@ namespace Mg\Titulo;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mg\Titulo\BoletoBb\BoletoBbService;
 
 class TituloAgrupamentoService
 {
@@ -211,6 +212,19 @@ class TituloAgrupamentoService
         }
 
         return self::carregar($ag->codtituloagrupamento);
+    }
+
+    public static function registrarBoletos(TituloAgrupamento $ag): void
+    {
+        foreach ($ag->TituloS as $titulo) {
+            if (!$titulo->boleto) continue;
+            if (!empty($titulo->nossonumero)) continue;
+            try {
+                BoletoBbService::registrar($titulo);
+            } catch (\Throwable $th) {
+                // não interrompe; falhas individuais ficam para reprocessamento manual
+            }
+        }
     }
 
     public static function estornar(TituloAgrupamento $ag): TituloAgrupamento
