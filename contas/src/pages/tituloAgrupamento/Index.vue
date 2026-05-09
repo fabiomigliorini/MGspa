@@ -40,6 +40,7 @@ onMounted(() => {
             :to="{ name: 'agrupamento-detalhe', params: { id: ag.codtituloagrupamento } }"
             :class="{ 'bg-red-1': !!ag.cancelamento }"
           >
+            <!-- ICONE -->
             <q-item-section avatar class="gt-xs">
               <q-avatar
                 :icon="ag.cancelamento ? 'undo' : 'receipt_long'"
@@ -48,19 +49,19 @@ onMounted(() => {
                 size="40px"
               />
             </q-item-section>
-            <q-item-section style="min-width: 0">
+
+            <!-- DETLAHES -->
+            <q-item-section>
               <q-item-label class="text-primary text-weight-medium ellipsis">
                 {{ ag.fantasia }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 {{ formatCodigo(ag.codtituloagrupamento) }}
-                · Emissão {{ formatData(ag.emissao) }}
-              </q-item-label>
-              <q-item-label caption class="ellipsis text-grey-7">
-                {{ ag.observacao }}
               </q-item-label>
             </q-item-section>
-            <q-item-section style="flex: 0 0 120px; min-width: 0">
+
+            <!-- VALOR -->
+            <q-item-section side>
               <q-item-label
                 class="text-weight-bold text-right"
                 :class="ag.operacao === 'CR' ? 'text-orange' : 'text-green'"
@@ -69,6 +70,9 @@ onMounted(() => {
               </q-item-label>
               <q-item-label v-if="ag.cancelamento" caption class="text-right text-negative">
                 Estornado
+              </q-item-label>
+              <q-item-label caption class="ellipsis text-grey-7">
+                {{ formatData(ag.emissao) }}
               </q-item-label>
             </q-item-section>
           </q-item>
