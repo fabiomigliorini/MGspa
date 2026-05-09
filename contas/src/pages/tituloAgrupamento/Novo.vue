@@ -15,8 +15,8 @@ const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 
-const step = ref('titulos')
 const saving = ref(false)
+const dialogFinalizar = ref(false)
 
 const linhas = ref([])
 const codpessoaFiltro = ref(route.query.codpessoa ? Number(route.query.codpessoa) : null)
@@ -38,14 +38,37 @@ const finalizar = ref({
   observacao: '',
 })
 
-const podeAvancarPasso1 = computed(() => linhas.value.length > 0)
-const podeAvancarPasso2 = computed(() => {
+const podeAvancar = computed(() => linhas.value.length > 0)
+
+// Filial sugerida: a com maior soma de "total" entre os títulos selecionados
+const codfilialSugerida = computed(() => {
+  const acc = new Map()
+  for (const l of linhas.value) {
+    if (l.codfilial == null) continue
+    acc.set(l.codfilial, (acc.get(l.codfilial) || 0) + (Number(l.total) || 0))
+  }
+  let vencedora = null
+  let maior = -Infinity
+  for (const [cod, soma] of acc) {
+    if (soma > maior) {
+      maior = soma
+      vencedora = cod
+    }
+  }
+  return vencedora
+})
+
+watch(codfilialSugerida, (v) => {
+  if (v != null) vencimentos.value.codfilial = v
+})
+
+const somaParcelas = computed(() =>
+  vencimentos.value.parcelasGeradas.reduce((a, p) => a + (Number(p.valor) || 0), 0),
+)
+
+const parcelasOk = computed(() => {
   if (vencimentos.value.parcelasGeradas.length === 0) return false
-  const soma = vencimentos.value.parcelasGeradas.reduce(
-    (a, p) => a + (Number(p.valor) || 0),
-    0,
-  )
-  return Math.abs(soma - totalLiquido.value) < 0.01
+  return Math.abs(somaParcelas.value - totalLiquido.value) < 0.01
 })
 
 // Calcula a primeira parcela considerando até 7 dias antes do final do mês
@@ -95,15 +118,111 @@ function calcularParcelas() {
   }))
 }
 
+function redistribuirValores() {
+  const lista = vencimentos.value.parcelasGeradas
+  const n = lista.length
+  if (n === 0) return
+  const total = totalLiquido.value
+  const valorBase = Math.floor((total / n) * 100) / 100
+  let acumulado = 0
+  for (let i = 0; i < n; i++) {
+    if (i === n - 1) lista[i].valor = +(total - acumulado).toFixed(2)
+    else {
+      lista[i].valor = valorBase
+      acumulado += valorBase
+    }
+  }
+}
+
+function adicionarParcela() {
+  const lista = vencimentos.value.parcelasGeradas
+  const ultima = lista[lista.length - 1]
+  let baseDate
+  if (ultima) {
+    const [y, m, d] = ultima.vencimento.split('-').map(Number)
+    baseDate = new Date(y, m - 1, d)
+  } else {
+    baseDate = new Date()
+  }
+  baseDate.setDate(baseDate.getDate() + (Number(vencimentos.value.demais) || 0))
+  lista.push({
+    vencimento: date.formatDate(baseDate, 'YYYY-MM-DD'),
+    valor: 0,
+  })
+  redistribuirValores()
+}
+
+function removerParcela(i) {
+  vencimentos.value.parcelasGeradas.splice(i, 1)
+  redistribuirValores()
+}
+
+function maxParcela(i) {
+  let acc = 0
+  for (let k = 0; k < i; k++) {
+    acc += Number(vencimentos.value.parcelasGeradas[k].valor) || 0
+  }
+  return +(totalLiquido.value - acc).toFixed(2)
+}
+
+function setValor(i, novo) {
+  const lista = vencimentos.value.parcelasGeradas
+  lista[i].valor = Number(novo) || 0
+  const restantes = lista.length - i - 1
+  if (restantes <= 0) return
+  let somaAteAqui = 0
+  for (let k = 0; k <= i; k++) somaAteAqui += Number(lista[k].valor) || 0
+  const restante = Math.max(0, +(totalLiquido.value - somaAteAqui).toFixed(2))
+  const valorBase = Math.floor((restante / restantes) * 100) / 100
+  let acumulado = 0
+  for (let k = i + 1; k < lista.length; k++) {
+    if (k === lista.length - 1) lista[k].valor = +(restante - acumulado).toFixed(2)
+    else {
+      lista[k].valor = valorBase
+      acumulado += valorBase
+    }
+  }
+}
+
+function dataEmissao() {
+  const [y, m, d] = finalizar.value.emissao.split('-').map(Number)
+  return new Date(y, m - 1, d)
+}
+
+function getDias(i) {
+  const p = vencimentos.value.parcelasGeradas[i]
+  if (!p) return 0
+  const [y, m, d] = p.vencimento.split('-').map(Number)
+  const target = new Date(y, m - 1, d)
+  return Math.round((target - dataEmissao()) / 86400000)
+}
+
+function setDias(i, dias) {
+  const base = dataEmissao()
+  base.setDate(base.getDate() + (Number(dias) || 0))
+  vencimentos.value.parcelasGeradas[i].vencimento = date.formatDate(base, 'YYYY-MM-DD')
+}
+
+watch(dialogFinalizar, (v) => {
+  if (v) calcularParcelas()
+})
+
 watch(
-  () => totalLiquido.value,
+  () => [vencimentos.value.parcelas, vencimentos.value.primeira, vencimentos.value.demais],
   () => {
-    if (vencimentos.value.parcelasGeradas.length === 0) return
-    // Não recalcula automaticamente — mantém o controle manual.
+    if (dialogFinalizar.value) calcularParcelas()
   },
 )
 
 async function salvar() {
+  if (!codpessoaFiltro.value) {
+    notifyError({ message: 'Selecione a pessoa nos filtros!' }, 'Selecione a pessoa')
+    return
+  }
+  if (!parcelasOk.value) {
+    notifyError({ message: 'A soma das parcelas deve ser igual ao total!' }, 'Parcelas inválidas')
+    return
+  }
   $q.dialog({
     title: 'Confirmar',
     message: 'Tem certeza que deseja salvar o agrupamento?',
@@ -111,10 +230,8 @@ async function salvar() {
   }).onOk(async () => {
     saving.value = true
     try {
-      const codpessoa = codpessoaFiltro.value
-      if (!codpessoa) throw new Error('Selecione a pessoa nos filtros do passo 1!')
       const payload = {
-        codpessoa,
+        codpessoa: codpessoaFiltro.value,
         codfilial: vencimentos.value.codfilial,
         codportador: vencimentos.value.codportador || null,
         emissao: finalizar.value.emissao,
@@ -148,7 +265,7 @@ async function salvar() {
 
 <template>
   <q-page class="q-pa-md">
-    <div style="max-width: 1200px; margin: auto">
+    <div style="max-width: 1086px; margin: auto">
       <q-item class="q-pb-md q-px-none">
         <q-item-section avatar>
           <q-btn
@@ -165,103 +282,91 @@ async function salvar() {
         </q-item-section>
       </q-item>
 
-      <q-stepper v-model="step" header-nav animated flat bordered>
-        <q-step
-          name="titulos"
-          title="Títulos"
-          icon="receipt_long"
-          :done="podeAvancarPasso1"
-        >
-          <SeletorTitulosAbertos
-            v-model="linhas"
-            :codpessoa-inicial="codpessoaFiltro"
-            @update:codpessoa="(v) => (codpessoaFiltro = v)"
-            @update:total-liquido="(v) => (totalLiquido = v)"
-            @update:operacao="(v) => (operacao = v)"
-          />
-        </q-step>
+      <div>
+        <SeletorTitulosAbertos
+          v-model="linhas"
+          :codpessoa-inicial="codpessoaFiltro"
+          @update:codpessoa="(v) => (codpessoaFiltro = v)"
+          @update:total-liquido="(v) => (totalLiquido = v)"
+          @update:operacao="(v) => (operacao = v)"
+        />
+      </div>
+    </div>
 
-        <q-step
-          name="vencimentos"
-          title="Vencimentos"
-          icon="event"
-          :disable="!podeAvancarPasso1"
-          :done="podeAvancarPasso2"
-        >
-          <div class="text-grey-7 q-mb-md">
-            Total a parcelar:
-            <span class="text-weight-bold" :class="operacao === 'CR' ? 'text-orange' : 'text-green'">
-              {{ formataNumero(totalLiquido) }} {{ operacao }}
-            </span>
-          </div>
+    <!-- FAB Salvar -->
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn
+        fab
+        icon="save"
+        color="primary"
+        :disable="!podeAvancar"
+        @click="dialogFinalizar = true"
+      >
+        <q-tooltip>Finalizar Agrupamento</q-tooltip>
+      </q-btn>
+    </q-page-sticky>
 
-          <div class="row q-col-gutter-md q-mb-md">
-            <div class="col-xs-12 col-sm-4">
-              <SelectFilial
-                v-model="vencimentos.codfilial"
-                outlined
-                label="Filial"
-                :rules="[(v) => !!v || 'Obrigatório']"
-                autofocus
-              />
+    <!-- Dialog Finalizar -->
+    <q-dialog v-model="dialogFinalizar">
+      <q-card bordered flat style="width: 600px; max-width: 90vw">
+        <q-form @submit.prevent="salvar">
+          <q-card-section class="q-pb-none">
+            <div class="text-grey-9 text-overline">FINALIZAR AGRUPAMENTO</div>
+            <div class="text-grey-7 q-mb-md text-caption">
+              {{ linhas.length }} títulos selecionados — Total a parcelar:
+              <span
+                class="text-weight-bold"
+                :class="operacao === 'CR' ? 'text-orange' : 'text-green'"
+              >
+                R$ {{ formataNumero(totalLiquido) }} {{ operacao }}
+              </span>
             </div>
-            <div class="col-xs-12 col-sm-5">
-              <SelectPortador
-                v-model="vencimentos.codportador"
-                outlined
-                clearable
-                label="Portador"
-              />
-            </div>
-            <div class="col-xs-12 col-sm-3">
-              <q-toggle
-                v-model="vencimentos.boleto"
-                label="Emitir Boleto"
-                left-label
-              />
-            </div>
-            <div class="col-xs-4 col-sm-2">
-              <q-input
-                v-model.number="vencimentos.parcelas"
-                type="number"
-                outlined
-                label="Parcelas"
-                :bottom-slots="false"
-              />
-            </div>
-            <div class="col-xs-4 col-sm-2">
-              <q-input
-                v-model.number="vencimentos.primeira"
-                type="number"
-                outlined
-                label="Dias 1ª"
-                :bottom-slots="false"
-              />
-            </div>
-            <div class="col-xs-4 col-sm-2">
-              <q-input
-                v-model.number="vencimentos.demais"
-                type="number"
-                outlined
-                label="Dias demais"
-                :bottom-slots="false"
-              />
-            </div>
-            <div class="col-xs-12 col-sm-6 flex items-center">
-              <q-btn
-                color="primary"
-                icon="calculate"
-                label="Calcular Parcelas"
-                @click="calcularParcelas"
-              />
-            </div>
-          </div>
+          </q-card-section>
 
-          <q-card v-if="vencimentos.parcelasGeradas.length" flat bordered>
-            <q-list separator>
+          <q-card-section class="q-pt-none">
+            <div class="row q-col-gutter-md">
+              <div class="col-xs-12 col-sm-3">
+                <MgInputData
+                  v-model="finalizar.emissao"
+                  type="date"
+                  label="Emissão"
+                  year-digits="2"
+                  stack-label
+                  :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+              <div class="col-xs-12 col-sm-4">
+                <SelectFilial
+                  v-model="vencimentos.codfilial"
+                  outlined
+                  label="Filial"
+                  :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+
+              <div class="col-xs-12 col-sm-5">
+                <SelectPortador
+                  v-model="vencimentos.codportador"
+                  outlined
+                  clearable
+                  label="Portador"
+                />
+              </div>
+            </div>
+            <div class="col-xs-12 cursor-pointer" @click="vencimentos.boleto = !vencimentos.boleto">
+              <q-toggle v-model="vencimentos.boleto" name="boleto" />
+              <span class="text-grey-9" v-if="vencimentos.boleto">
+                Serão emitidos boletos para este agrupamento!
+              </span>
+              <span class="text-grey-9" v-else> Sem Boletos! </span>
+            </div>
+
+            <q-list v-if="vencimentos.parcelasGeradas.length" flat class="q-mt-md">
               <q-item v-for="(p, i) in vencimentos.parcelasGeradas" :key="i">
-                <q-item-section style="flex: 0 0 60px">
-                  <q-item-label class="text-grey-7">#{{ i + 1 }}</q-item-label>
+                <q-item-section avatar>
+                  <q-avatar color="grey-6" text-color="white">
+                    {{ i + 1 }}
+                  </q-avatar>
                 </q-item-section>
                 <q-item-section>
                   <MgInputData
@@ -272,49 +377,71 @@ async function salvar() {
                     :bottom-slots="false"
                   />
                 </q-item-section>
+                <q-item-section style="flex: 0 0 90px">
+                  <q-input
+                    type="number"
+                    outlined
+                    label="Dias"
+                    stack-label
+                    :bottom-slots="false"
+                    :model-value="getDias(i)"
+                    @update:model-value="(v) => setDias(i, v)"
+                    autofocus
+                  />
+                </q-item-section>
                 <q-item-section>
                   <MgInputValor
-                    v-model="p.valor"
                     label="Valor"
                     stack-label
                     :bottom-slots="false"
+                    :min="0"
+                    :max="maxParcela(i)"
+                    :model-value="p.valor"
+                    @update:model-value="(v) => setValor(i, v)"
+                  />
+                </q-item-section>
+                <q-item-section side style="flex: 0 0 40px">
+                  <q-btn
+                    v-if="i > 0"
+                    flat
+                    size="sm"
+                    dense
+                    round
+                    color="primary"
+                    icon="close"
+                    @click="removerParcela(i)"
+                  >
+                    <q-tooltip>Excluir parcela</q-tooltip>
+                  </q-btn>
+                </q-item-section>
+              </q-item>
+              <q-item class="q-mb-md">
+                <q-item-section>
+                  <q-btn
+                    flat
+                    color="primary"
+                    icon="add"
+                    label="Adicionar Parcela"
+                    @click="adicionarParcela"
                   />
                 </q-item-section>
               </q-item>
             </q-list>
-            <q-card-section
-              class="row items-center"
-              :class="podeAvancarPasso2 ? 'bg-green-1' : 'bg-red-1'"
-            >
-              <div>
-                Soma: {{ formataNumero(vencimentos.parcelasGeradas.reduce((a, p) => a + (Number(p.valor) || 0), 0)) }}
-                / Esperado: {{ formataNumero(totalLiquido) }}
-              </div>
-              <q-space />
-              <q-icon v-if="podeAvancarPasso2" name="check_circle" color="green" />
-              <q-icon v-else name="error" color="red" />
-            </q-card-section>
-          </q-card>
-        </q-step>
 
-        <q-step
-          name="finalizar"
-          title="Finalizar"
-          icon="check_circle"
-          :disable="!podeAvancarPasso2"
-        >
-          <q-form @submit.prevent="salvar">
+            <q-card v-if="!parcelasOk" flat class="q-mb-md">
+              <q-banner class="bg-negative text-white" inline-actions>
+                <div>Total das parcelas não bate com o total dos títulos!</div>
+                <div class="text-weight-bold q-mt-sm">
+                  Soma: {{ formataNumero(somaParcelas) }} / Esperado:
+                  {{ formataNumero(totalLiquido) }}
+                </div>
+                <template v-slot:action>
+                  <q-icon name="error" color="white" size="md" />
+                </template>
+              </q-banner>
+            </q-card>
+
             <div class="row q-col-gutter-md">
-              <div class="col-xs-12 col-sm-4">
-                <MgInputData
-                  v-model="finalizar.emissao"
-                  type="date"
-                  label="Emissão"
-                  stack-label
-                  :rules="[(v) => !!v || 'Obrigatório']"
-                  autofocus
-                />
-              </div>
               <div class="col-12">
                 <q-input
                   v-model="finalizar.observacao"
@@ -326,47 +453,22 @@ async function salvar() {
                 />
               </div>
             </div>
-            <div class="q-mt-md text-right">
-              <q-btn label="Salvar" type="submit" color="primary" :loading="saving" />
-            </div>
-          </q-form>
-        </q-step>
+          </q-card-section>
 
-        <template #navigation>
-          <q-stepper-navigation>
+          <q-separator />
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn
-              v-if="step === 'titulos'"
-              :disable="!podeAvancarPasso1"
-              color="primary"
-              label="Continuar"
-              @click="step = 'vencimentos'"
-            />
-            <template v-else-if="step === 'vencimentos'">
-              <q-btn
-                flat
-                color="primary"
-                label="Voltar"
-                @click="step = 'titulos'"
-              />
-              <q-btn
-                :disable="!podeAvancarPasso2"
-                color="primary"
-                label="Continuar"
-                class="q-ml-sm"
-                @click="step = 'finalizar'"
-              />
-            </template>
-            <q-btn
-              v-else
               flat
+              label="Salvar"
+              type="submit"
               color="primary"
-              label="Voltar"
-              class="q-ml-sm"
-              @click="step = 'vencimentos'"
+              :loading="saving"
+              :disable="!parcelasOk"
             />
-          </q-stepper-navigation>
-        </template>
-      </q-stepper>
-    </div>
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>

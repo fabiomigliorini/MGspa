@@ -162,8 +162,10 @@ function onBlur() {
   const parsed = parseValor(text)
   if (parsed === null) {
     displayRef.value = formatNumber(lastValid.value)
-  } else {
+  } else if (parsed !== lastValid.value) {
     emitFromNumber(parsed)
+  } else {
+    displayRef.value = formatNumber(lastValid.value)
   }
 }
 

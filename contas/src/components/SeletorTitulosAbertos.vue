@@ -132,6 +132,7 @@ function emitModel() {
   const arr = selecionados.value.map((r) => ({
     codtitulo: r.codtitulo,
     codpessoa: r.codpessoa,
+    codfilial: r.codfilial,
     operacao: r.operacao,
     saldo: r.capital, // parent espera "saldo" para o capital editado
     multa: r.multa,
