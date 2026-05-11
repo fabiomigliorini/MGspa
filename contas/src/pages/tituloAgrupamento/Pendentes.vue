@@ -34,9 +34,7 @@ function abrirRelatorio() {
   })
 }
 
-const total = computed(() =>
-  store.items.reduce((acc, r) => acc + (Number(r.saldo) || 0), 0),
-)
+const total = computed(() => store.items.reduce((acc, r) => acc + (Number(r.saldo) || 0), 0))
 
 onMounted(() => {
   if (store.items.length === 0) store.fetchItems()
@@ -45,7 +43,7 @@ onMounted(() => {
 
 <template>
   <q-page class="q-pa-md">
-    <div style="max-width: 1200px; margin: auto">
+    <div style="max-width: 1086px; margin: auto">
       <q-item class="q-pb-md q-px-none">
         <q-item-section avatar>
           <q-btn
@@ -64,60 +62,79 @@ onMounted(() => {
           </div>
         </q-item-section>
         <q-item-section side>
-          <q-btn
-            flat
-            dense
-            icon="print"
-            color="grey-8"
-            @click="abrirRelatorio"
-            label="Relatório"
-          />
+          <q-btn flat dense icon="print" color="grey-8" @click="abrirRelatorio" label="Relatório" />
         </q-item-section>
       </q-item>
 
       <q-card flat bordered>
         <q-inner-loading :showing="store.loading" color="primary" />
-        <q-markup-table flat dense>
+        <q-list separator>
+          <template v-for="r in store.items" :key="r.codpessoa">
+            <q-item
+              :to="{
+                name: 'agrupamento-novo',
+                query: { codpessoa: r.codpessoa },
+              }"
+            >
+              <q-item-section avatar class="gt-xs">
+                <q-avatar icon=" receipt_long" color="indigo-7" text-color="white" size="40px" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label>
+                  <a
+                    :href="`${PESSOAS_URL}/pessoa/${r.codpessoa}`"
+                    target="_blank"
+                    class="text-primary text-weight-bold"
+                    style="text-decoration: none"
+                  >
+                    <template v-if="r.grupoeconomico">
+                      {{ r.grupoeconomico }}
+
+                      -
+                    </template>
+                    {{ r.fantasia }}
+                  </a>
+                </q-item-label>
+                <q-item-label v-if="r.grupocliente">
+                  <span class="text-grey-7">
+                    {{ r.grupocliente }}
+                  </span>
+                </q-item-label>
+                <q-item-label v-if="r.formapagamento">
+                  <span class="text-grey-7">
+                    {{ r.formapagamento }}
+                  </span>
+                </q-item-label>
+              </q-item-section>
+
+              <q-item-section side>
+                <q-item-label
+                  class="text-right text-weight-bold"
+                  :class="classeVencimento(r.vencimento)"
+                >
+                  {{ formataNumero(r.saldo) }}
+                </q-item-label>
+                <q-item-label class="text-right" caption>
+                  {{ formatData(r.vencimento) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
+        </q-list>
+        <q-markup-table flat>
           <thead>
             <tr>
-              <th class="text-left">Grupo Cliente</th>
-              <th class="text-left">Grupo Econômico</th>
               <th class="text-left">Cliente</th>
-              <th class="text-left">Vencimento</th>
-              <th class="text-right">Saldo</th>
-              <th class="text-left">Forma</th>
-              <th></th>
+              <th class="text-right">Vencimento</th>
+              <th class="text-left"></th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="r in store.items" :key="r.codpessoa">
-              <td>{{ r.grupocliente }}</td>
-              <td>{{ r.grupoeconomico }}</td>
+              <td></td>
+
               <td>
-                <a
-                  :href="`${PESSOAS_URL}/pessoa/${r.codpessoa}`"
-                  target="_blank"
-                  class="text-primary"
-                >
-                  {{ r.fantasia }}
-                </a>
-              </td>
-              <td :class="classeVencimento(r.vencimento)">{{ formatData(r.vencimento) }}</td>
-              <td class="text-right text-weight-bold">{{ formataNumero(r.saldo) }}</td>
-              <td>{{ r.formapagamento }}</td>
-              <td>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  size="sm"
-                  icon="play_arrow"
-                  color="primary"
-                  :to="{
-                    name: 'agrupamento-novo',
-                    query: { codpessoa: r.codpessoa },
-                  }"
-                >
+                <q-btn flat dense round icon="open_in_new" color="grey-7">
                   <q-tooltip>Agrupar</q-tooltip>
                 </q-btn>
               </td>

@@ -61,7 +61,8 @@ class TituloController extends MgController
         Autorizador::autoriza(self::GRUPOS_LEITURA);
         $rows = TituloAbertosFechamentoService::listar($request->only([
             'codpessoa', 'codgrupoeconomico', 'codfilial',
-            'vencimento_de', 'vencimento_ate', 'credito', 'codtitulos',
+            'vencimento_de', 'vencimento_ate', 'credito',
+            'codtipotitulo', 'codcontacontabil', 'codportador',
         ]));
         return response()->json(['data' => $rows]);
     }

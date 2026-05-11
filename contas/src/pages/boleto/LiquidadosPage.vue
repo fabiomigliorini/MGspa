@@ -22,11 +22,6 @@ const portadorAtual = computed(() =>
   store.liqPortadores.find((p) => p.codportador === codportador.value),
 )
 
-const abrirPessoa = (codpessoa) =>
-  window.open(`${process.env.PESSOAS_URL}/pessoa/${codpessoa}`, '_blank')
-const abrirTitulo = (codtitulo) =>
-  window.open(`${process.env.MGSIS_URL}/index.php?r=titulo/view&id=${codtitulo}`, '_blank')
-
 const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
 
 function linkPortador(cp) {
@@ -85,7 +80,7 @@ watch(
 <template>
   <q-page>
     <BoletoTabs />
-    <div class="q-pa-md">
+    <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <q-card flat bordered class="q-mb-md">
         <q-card-section class="q-py-sm">
           <div class="text-subtitle1 text-weight-bold">
@@ -119,8 +114,8 @@ watch(
         </q-card-section>
       </q-card>
 
-      <q-list bordered separator dense class="text-caption">
-        <q-item class="bg-grey-2 text-weight-bold text-caption text-grey-8 gt-xs">
+      <q-list bordered separator dense class="text-caption bg-white">
+        <q-item class="text-weight-bold text-caption text-grey-8 gt-xs">
           <q-item-section>
             <div class="row items-center q-col-gutter-x-sm">
               <div class="col-12 col-sm-3 col-md-1">Receb.</div>
@@ -129,17 +124,22 @@ watch(
               <div class="col-6 col-sm-3 col-md-1 text-right">Multa</div>
               <div class="col-6 col-sm-3 col-md-1 text-right">Outro</div>
               <div class="col-6 col-sm-3 col-md-1 text-right">Pago</div>
+              <div class="col-6 col-sm-6 col-md-2">Título</div>
               <div class="col-12 col-sm-12 col-md-3">Cliente</div>
-              <div class="col-6 col-sm-6 col-md-1">Título</div>
-              <div class="col-6 col-sm-6 col-md-2">Estado</div>
+              <div class="col-6 col-sm-6 col-md-1">Estado</div>
             </div>
           </q-item-section>
         </q-item>
 
-        <q-item v-for="b in store.liqLista" :key="b.codtituloboleto" clickable>
+        <q-item
+          v-for="b in store.liqLista"
+          :key="b.codtituloboleto"
+          clickable
+          :to="'/titulo/' + b.codtitulo"
+        >
           <q-item-section>
             <div class="row items-center q-col-gutter-x-sm">
-              <div class="col-12 col-sm-3 col-md-1 text-weight-bold ellipsis">
+              <div class="col-12 col-sm-3 col-md-1 ellipsis">
                 {{ formatData(b.datarecebimento) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
@@ -154,33 +154,21 @@ watch(
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
                 {{ formataNumero(b.valoroutro) }}
               </div>
-              <div class="col-6 col-sm-3 col-md-1 text-right text-weight-bold ellipsis">
+              <div
+                class="col-6 col-sm-3 col-md-1 text-right text-weight-bold ellipsis text-primary"
+              >
                 {{ formataNumero(b.valorpago) }}
               </div>
-              <div class="col-12 col-sm-12 col-md-3">
-                <a
-                  href="#"
-                  class="text-primary ellipsis block"
-                  style="text-decoration: none"
-                  @click.prevent.stop="abrirPessoa(b.codpessoa)"
-                >
-                  {{ b.fantasia }}
-                </a>
+              <div class="col-6 col-sm-6 col-md-2 ellipsis">
+                {{ b.numero }}
+              </div>
+              <div class="col-12 col-sm-12 col-md-3 text-weight-bold text-primary ellipsis">
+                {{ b.fantasia }}
                 <div v-if="b.saldo > 0" class="text-red text-caption">
                   * Saldo restante {{ formataNumero(b.saldo) }}
                 </div>
               </div>
-              <div class="col-6 col-sm-6 col-md-1 ellipsis">
-                <a
-                  href="#"
-                  class="text-primary"
-                  style="text-decoration: none"
-                  @click.prevent.stop="abrirTitulo(b.codtitulo)"
-                >
-                  {{ b.numero }}
-                </a>
-              </div>
-              <div class="col-6 col-sm-6 col-md-2 text-grey-7 ellipsis">
+              <div class="col-6 col-sm-6 col-md-1 text-grey-7 ellipsis">
                 {{ ESTADO_COBRANCA[b.estadotitulocobranca] || '' }}
               </div>
             </div>

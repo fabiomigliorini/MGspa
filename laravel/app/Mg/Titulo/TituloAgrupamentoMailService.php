@@ -131,6 +131,10 @@ class TituloAgrupamentoMailService
             if ($mov->codtipomovimentotitulo == 100) {
                 continue;
             }
+            // Pula as parcelas novas geradas pelo próprio agrupamento
+            if ($mov->Titulo->codtituloagrupamento == $ta->codtituloagrupamento) {
+                continue;
+            }
             if (!isset($baixas[$mov->codtitulo])) {
                 $baixas[$mov->codtitulo] = (object)[
                     'codtitulo' => $mov->codtitulo,

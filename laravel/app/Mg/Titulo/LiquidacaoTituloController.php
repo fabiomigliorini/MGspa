@@ -76,6 +76,10 @@ class LiquidacaoTituloController extends Controller
     public function relatorio(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);
+        if ($request->boolean('html')) {
+            $html = LiquidacaoTituloRelatorioService::html($request->all());
+            return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+        }
         $pdf = LiquidacaoTituloRelatorioService::pdf($request->all());
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
@@ -155,7 +159,6 @@ class LiquidacaoTituloController extends Controller
     {
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
         return response($dompdf->output(), 200, [

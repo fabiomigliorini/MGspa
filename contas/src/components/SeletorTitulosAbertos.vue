@@ -6,11 +6,14 @@ import { formataNumero } from 'src/utils/formatters.js'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
+import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
+import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
+import SelectPortador from 'src/components/select/SelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
-  modelValue: { type: Array, default: () => [] }, // linhas selecionadas
+  modelValue: { type: Array, default: () => [] },
   codpessoaInicial: { type: Number, default: null },
 })
 
@@ -21,14 +24,55 @@ const emit = defineEmits([
   'update:operacao',
 ])
 
-// === Filtros locais ===
+// Cálculo de juros conforme legado MGsis/MGJuros.php
+const parametros = ref({
+  juros: 4, // % ao mês
+  multa: 2, // %
+  diasTolerancia: 3,
+})
+
+function diasAtraso(vencimento) {
+  if (!vencimento) return 0
+  const venc = new Date(String(vencimento).slice(0, 10) + 'T00:00:00')
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  return Math.floor((hoje.getTime() - venc.getTime()) / 86400000)
+}
+
+function calcularJurosMulta(t) {
+  const dias = diasAtraso(t.vencimento)
+  const valor = Number(t.saldo) || 0
+  // Juros e multa apenas para títulos a receber (DB)
+  if (t.operacao === 'DB' && dias > parametros.value.diasTolerancia && valor > 0) {
+    return {
+      juros: round2(valor * (parametros.value.juros / 30 / 100) * dias),
+      multa: round2(valor * (parametros.value.multa / 100)),
+      dias,
+    }
+  }
+  return { juros: 0, multa: 0, dias }
+}
+
+function maxTotal(t) {
+  const { juros, multa } = calcularJurosMulta(t)
+  return (Number(t.saldo) || 0) + juros + multa
+}
+
+function round2(n) {
+  return Math.round(Number(n) * 100) / 100
+}
+
+// === Filtros ===
 const filtros = ref({
   codfilial: null,
   codgrupoeconomico: null,
   codpessoa: props.codpessoaInicial,
   vencimento_de: null,
   vencimento_ate: null,
-  credito: null, // 1 = crédito; 2 = débito
+  credito: null,
+  codtipotitulo: null,
+  codcontacontabil: null,
+  codportador: null,
 })
 
 watch(
@@ -40,56 +84,73 @@ watch(
 
 const operacaoOptions = [
   { label: 'Todos', value: null },
-  { label: 'Crédito', value: 1 },
-  { label: 'Débito', value: 2 },
+  { label: 'CR', value: 1 },
+  { label: 'DB', value: 2 },
 ]
 
 // === Estado da listagem ===
+// Cada titulo: { ...t (dados do API), selecionado, capital, multa, juros, desconto, total }
+// titulo.saldo = saldo original do API (imutável). titulo.capital = capital sendo pago.
 const loading = ref(false)
 const titulos = ref([])
 
-// Mapa de linhas selecionadas: codtitulo -> { saldo, multa, juros, desconto, total, operacao, calculado }
-const linhas = ref(new Map())
+const selecionados = computed(() => titulos.value.filter((r) => r.selecionado))
 
-// Inicializa a partir do modelValue (em mounts/edits)
-function syncFromModel() {
-  const novo = new Map()
-  for (const l of props.modelValue) {
-    novo.set(l.codtitulo, { ...l })
+function novoRegistro(t) {
+  const { juros, multa } = calcularJurosMulta(t)
+  return {
+    ...t,
+    selecionado: false,
+    capital: t.saldo,
+    multa: multa || null,
+    juros: juros || null,
+    desconto: null,
+    total: round2(t.saldo + multa + juros),
   }
-  linhas.value = novo
+}
+
+function syncFromModel() {
+  // pré-carrega seleção a partir do modelValue. Dados completos virão no buscar()
+  titulos.value = props.modelValue.map((l) => ({
+    ...l,
+    capital: l.saldo, // o "saldo" do parent é o capital editado
+    selecionado: true,
+  }))
 }
 syncFromModel()
 
 watch(
   () => props.modelValue,
   () => {
-    if (props.modelValue.length === 0) linhas.value = new Map()
+    if (props.modelValue.length === 0) {
+      for (const r of titulos.value) r.selecionado = false
+    }
   },
 )
 
 function emitModel() {
-  const arr = Array.from(linhas.value.values()).map((l) => ({
-    codtitulo: l.codtitulo,
-    saldo: l.saldo ?? 0,
-    multa: l.multa ?? 0,
-    juros: l.juros ?? 0,
-    desconto: l.desconto ?? 0,
-    total: l.total ?? 0,
-    operacao: l.operacao,
+  const arr = selecionados.value.map((r) => ({
+    codtitulo: r.codtitulo,
+    codpessoa: r.codpessoa,
+    codfilial: r.codfilial,
+    operacao: r.operacao,
+    saldo: r.capital, // parent espera "saldo" para o capital editado
+    multa: r.multa,
+    juros: r.juros,
+    desconto: r.desconto,
+    total: r.total,
   }))
   emit('update:modelValue', arr)
 
-  // total e operação
-  let totalCR = 0
-  let totalDB = 0
+  let cr = 0
+  let db = 0
   for (const l of arr) {
-    if (l.operacao === 'CR') totalCR += Number(l.total) || 0
-    else totalDB += Number(l.total) || 0
+    if (l.operacao === 'CR') cr += Number(l.total) || 0
+    else db += Number(l.total) || 0
   }
-  const liquido = totalDB - totalCR
-  emit('update:totalLiquido', Math.abs(liquido))
-  emit('update:operacao', liquido < 0 ? 'CR' : 'DB')
+  const liq = db - cr
+  emit('update:totalLiquido', Math.abs(liq))
+  emit('update:operacao', liq < 0 ? 'CR' : 'DB')
 }
 
 // === Buscar títulos ===
@@ -103,10 +164,32 @@ async function buscar() {
       vencimento_de: filtros.value.vencimento_de,
       vencimento_ate: filtros.value.vencimento_ate,
       credito: filtros.value.credito,
-      codtitulos: Array.from(linhas.value.keys()),
+      codtipotitulo: filtros.value.codtipotitulo,
+      codcontacontabil: filtros.value.codcontacontabil,
+      codportador: filtros.value.codportador,
     }
     const { data } = await api.get('v1/titulo/abertos-para-fechamento', { params })
-    titulos.value = data.data || []
+    const novosTitulos = data.data || []
+    // merge: mantém selecionados que sumiram no resultado novo + atualiza dados imutáveis dos que voltaram
+    const novosCodigos = new Set(novosTitulos.map((t) => t.codtitulo))
+    const existentesPorCod = new Map(titulos.value.map((r) => [r.codtitulo, r]))
+    const faltando = titulos.value.filter((r) => r.selecionado && !novosCodigos.has(r.codtitulo))
+    const novos = novosTitulos.map((t) => {
+      const existente = existentesPorCod.get(t.codtitulo)
+      if (existente) {
+        return {
+          ...t,
+          selecionado: existente.selecionado,
+          capital: existente.capital,
+          multa: existente.multa,
+          juros: existente.juros,
+          desconto: existente.desconto,
+          total: existente.total,
+        }
+      }
+      return novoRegistro(t)
+    })
+    titulos.value = [...faltando, ...novos]
   } finally {
     loading.value = false
   }
@@ -117,7 +200,6 @@ watch(
   (v) => emit('update:codpessoa', v),
 )
 
-// debounce simples
 let debounceTimer = null
 watch(
   () => ({ ...filtros.value }),
@@ -128,92 +210,132 @@ watch(
   { deep: true, immediate: true },
 )
 
-// === Helpers ===
-function isSel(codtitulo) {
-  return linhas.value.has(codtitulo)
-}
-
-function defaultLinha(t) {
-  return {
-    codtitulo: t.codtitulo,
-    operacao: t.operacao,
-    saldo: t.saldo,
-    multa: 0,
-    juros: 0,
-    desconto: 0,
-    total: t.saldo,
-  }
-}
-
-function toggle(t) {
-  if (linhas.value.has(t.codtitulo)) {
-    linhas.value.delete(t.codtitulo)
-  } else {
-    linhas.value.set(t.codtitulo, defaultLinha(t))
-  }
-  linhas.value = new Map(linhas.value)
+// === Seleção e edição ===
+function toggle(titulo) {
+  titulo.selecionado = !titulo.selecionado
   emitModel()
 }
 
-function getLinha(codtitulo) {
-  return linhas.value.get(codtitulo) || null
-}
-
-function setLinha(t, patch) {
-  if (!linhas.value.has(t.codtitulo)) {
-    linhas.value.set(t.codtitulo, defaultLinha(t))
-  }
-  const l = linhas.value.get(t.codtitulo)
-  Object.assign(l, patch)
-  linhas.value = new Map(linhas.value)
+function updateEd(titulo, campo, valor) {
+  if (titulo[campo] === valor) return // sem mudança real → não auto-seleciona
+  titulo[campo] = valor
+  if (!titulo.selecionado) titulo.selecionado = true
+  recalc(titulo, campo)
   emitModel()
 }
 
-function recalc(t, campo) {
-  const tit = titulos.value.find((x) => x.codtitulo === t.codtitulo)
-  if (!tit) return
-  const l = getLinha(t.codtitulo)
-  if (!l) return
+// Recálculo proporcional (espelha lógica do legado)
+function recalc(titulo, campo) {
+  const { juros: jurosCalc, multa: multaCalc } = calcularJurosMulta(titulo)
+  const saldoCalc = Number(titulo.saldo) || 0
+  const totalCalc = round2(saldoCalc + jurosCalc + multaCalc)
 
-  const saldoMax = tit.saldo
-  let saldo = Number(l.saldo) || 0
-  let multa = Number(l.multa) || 0
-  let juros = Number(l.juros) || 0
-  let desconto = Number(l.desconto) || 0
+  let capital = Number(titulo.capital) || 0
+  let multa = Number(titulo.multa) || 0
+  let juros = Number(titulo.juros) || 0
+  let desconto = Number(titulo.desconto) || 0
+  let total = Number(titulo.total) || 0
 
-  if (campo === 'saldo') {
-    if (saldo > saldoMax) saldo = saldoMax
+  if (campo === 'capital') {
+    let perc = 1
+    if (capital > saldoCalc) capital = saldoCalc
+    else if (saldoCalc > 0) perc = capital / saldoCalc
+    juros = round2(jurosCalc * perc)
+    multa = round2(multaCalc * perc)
+    desconto = null
+  } else if (campo === 'total') {
+    if (total > totalCalc) total = totalCalc
+    // Escala juros/multa proporcionalmente considerando o desconto vigente
+    let perc = totalCalc > 0 ? (total + desconto) / totalCalc : 1
+    if (perc > 1) perc = 1
+    if (perc < 0) perc = 0
+    juros = round2(jurosCalc * perc)
+    multa = round2(multaCalc * perc)
+    capital = round2(total - multa - juros + desconto)
+    if (capital > saldoCalc) capital = saldoCalc
+    if (capital < 0) capital = 0
   } else if (campo === 'desconto') {
-    const lim = saldo + juros + multa
-    if (desconto > lim) desconto = lim
+    if (desconto > capital + juros + multa) desconto = capital + juros + multa
   }
 
-  const total = round2(saldo + multa + juros - desconto)
-  setLinha(t, { saldo: round2(saldo), multa: round2(multa), juros: round2(juros), desconto: round2(desconto), total })
+  total = round2(capital + multa + juros - desconto)
+  titulo.capital = round2(capital)
+  titulo.multa = multa || null
+  titulo.juros = juros || null
+  titulo.desconto = desconto ? round2(desconto) : null
+  titulo.total = total
 }
 
-function round2(n) {
-  return Math.round(Number(n) * 100) / 100
+// === Seleção em massa ===
+function selecionarVencidos() {
+  for (const r of titulos.value) {
+    r.selecionado = diasAtraso(r.vencimento) >= 0
+  }
+  emitModel()
+}
+
+function selecionarTodos() {
+  for (const r of titulos.value) r.selecionado = true
+  emitModel()
+}
+
+function deselecionarTodos() {
+  for (const r of titulos.value) r.selecionado = false
+  emitModel()
+}
+
+function limparJurosMulta() {
+  for (const r of titulos.value) {
+    r.multa = null
+    r.juros = null
+    r.total = round2((Number(r.capital) || 0) - (Number(r.desconto) || 0))
+  }
+  emitModel()
+}
+
+function recalcularJurosMulta() {
+  for (const r of titulos.value) {
+    const { juros, multa } = calcularJurosMulta(r)
+    r.multa = multa || null
+    r.juros = juros || null
+    r.total = round2((Number(r.capital) || 0) + multa + juros - (Number(r.desconto) || 0))
+  }
+  emitModel()
+}
+
+// === Dialog de Recalcular (com parâmetros customizáveis) ===
+const dialogRecalcular = ref(false)
+const recalcForm = ref({ juros: 4, multa: 2, diasTolerancia: 3 })
+
+function abrirDialogRecalcular() {
+  recalcForm.value.juros = parametros.value.juros
+  recalcForm.value.multa = parametros.value.multa
+  recalcForm.value.diasTolerancia = parametros.value.diasTolerancia
+  dialogRecalcular.value = true
+}
+
+function confirmarRecalcular() {
+  parametros.value.juros = Number(recalcForm.value.juros) || 0
+  parametros.value.multa = Number(recalcForm.value.multa) || 0
+  parametros.value.diasTolerancia = Number(recalcForm.value.diasTolerancia) || 0
+  recalcularJurosMulta()
+  dialogRecalcular.value = false
 }
 
 // === Totais ===
-const totalSaldo = computed(() => somar('saldo'))
+const totalCapital = computed(() => somar('capital'))
 const totalMulta = computed(() => somar('multa'))
 const totalJuros = computed(() => somar('juros'))
 const totalDesconto = computed(() => somar('desconto'))
-const totalGeral = computed(() => somar('total', true))
+const totalGeral = computed(() => somar('total'))
 
-function somar(campo, comSinal = false) {
+function somar(campo) {
   let cr = 0
   let db = 0
-  for (const l of linhas.value.values()) {
-    const v = Number(l[campo]) || 0
-    if (l.operacao === 'CR') cr += v
+  for (const r of selecionados.value) {
+    const v = Number(r[campo]) || 0
+    if (r.operacao === 'CR') cr += v
     else db += v
-  }
-  if (comSinal) {
-    const liq = db - cr
-    return { valor: Math.abs(liq), operacao: liq < 0 ? 'CR' : 'DB' }
   }
   const liq = db - cr
   return { valor: Math.abs(liq), operacao: liq < 0 ? 'CR' : 'DB' }
@@ -227,196 +349,404 @@ function formatVcto(v) {
   return v ? date.formatDate(v, 'DD/MM/YYYY') : ''
 }
 
-function classeVencimento(t, l) {
-  if (!l) return 'text-grey-7'
-  const venc = t.vencimento ? new Date(String(t.vencimento).slice(0, 10)) : null
-  if (!venc) return 'text-grey-7'
-  if (venc < new Date()) return 'text-red'
-  return 'text-green'
+function classeVencimento(t) {
+  const dias = diasAtraso(t.vencimento)
+  if (dias <= 0) return 'text-green'
+  if (dias <= parametros.value.diasTolerancia) return 'text-orange'
+  return 'text-red'
 }
 </script>
 
 <template>
   <div>
     <!-- Filtros -->
-    <q-card flat bordered class="q-pa-md q-mb-md">
-      <div class="row q-col-gutter-sm">
-        <div class="col-xs-12 col-sm-3">
-          <SelectFilial
-            v-model="filtros.codfilial"
-            outlined
-            clearable
-            label="Filial"
-            :bottom-slots="false"
-          />
+    <q-card flat bordered class="q-mb-md">
+      <q-card-section>
+        <div class="text-grey-9 text-overline q-mb-sm">
+          BUSCAR TITULOS
+          <q-btn flat dense round size="sm" icon="autorenew" color="grey-8" @click="buscar">
+            <q-tooltip>Atualizar Listagem</q-tooltip>
+          </q-btn>
         </div>
-        <div class="col-xs-12 col-sm-3">
-          <q-select
-            v-model="filtros.credito"
-            :options="operacaoOptions"
-            emit-value
-            map-options
-            outlined
-            label="Operação"
-            :bottom-slots="false"
-          />
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <SelectGrupoEconomico
-            v-model="filtros.codgrupoeconomico"
-            outlined
-            clearable
-            label="Grupo Econômico"
-            :bottom-slots="false"
-          />
-        </div>
-        <div class="col-xs-12 col-sm-6">
-          <SelectPessoa
-            v-model="filtros.codpessoa"
-            outlined
-            clearable
-            label="Pessoa"
-            :bottom-slots="false"
-          />
-        </div>
-        <div class="col-xs-6 col-sm-3">
-          <MgInputData
-            v-model="filtros.vencimento_de"
-            type="date"
-            label="Vencimento de"
-            stack-label
-            :bottom-slots="false"
-          />
-        </div>
-        <div class="col-xs-6 col-sm-3">
-          <MgInputData
-            v-model="filtros.vencimento_ate"
-            type="date"
-            label="Até"
-            stack-label
-            :bottom-slots="false"
-          />
-        </div>
-      </div>
-    </q-card>
+        <div class="row q-col-gutter-sm">
+          <div class="col-xs-12 col-sm-3">
+            <SelectGrupoEconomico
+              dense
+              v-model="filtros.codgrupoeconomico"
+              class="text-caption"
+              outlined
+              clearable
+              label="Grupo Econômico"
+              :bottom-slots="false"
+            />
+          </div>
+          <div class="col-xs-12 col-sm-3">
+            <SelectPessoa
+              dense
+              class="text-caption"
+              v-model="filtros.codpessoa"
+              outlined
+              clearable
+              label="Pessoa"
+              :bottom-slots="false"
+              autofocus
+            />
+          </div>
 
-    <!-- Totais -->
-    <q-card flat bordered class="q-pa-sm q-mb-sm">
-      <div class="row items-center q-gutter-md">
-        <div class="text-weight-bold">Total Selecionado</div>
-        <q-space />
-        <div class="text-caption text-grey-7">Capital</div>
-        <div class="text-weight-bold">{{ formataNumero(totalSaldo.valor) }}</div>
-        <div class="text-caption text-grey-7">Multa</div>
-        <div class="text-weight-bold">{{ formataNumero(totalMulta.valor) }}</div>
-        <div class="text-caption text-grey-7">Juros</div>
-        <div class="text-weight-bold">{{ formataNumero(totalJuros.valor) }}</div>
-        <div class="text-caption text-grey-7">Desconto</div>
-        <div class="text-weight-bold">{{ formataNumero(totalDesconto.valor) }}</div>
-        <q-separator vertical />
-        <div class="text-caption text-grey-7">Total</div>
-        <div class="text-h6" :class="classeOperacao(totalGeral.operacao)">
-          {{ formataNumero(totalGeral.valor) }} {{ totalGeral.operacao }}
-        </div>
-      </div>
-    </q-card>
-
-    <!-- Tabela -->
-    <q-card flat bordered>
-      <q-inner-loading :showing="loading" color="primary" />
-      <div v-if="!titulos.length && !loading" class="text-center text-grey q-pa-xl">
-        Nenhum título encontrado para esses filtros.
-      </div>
-
-      <q-list separator v-else>
-        <q-item v-for="t in titulos" :key="t.codtitulo" dense>
-          <q-item-section avatar style="min-width: 40px">
-            <q-checkbox :model-value="isSel(t.codtitulo)" @update:model-value="toggle(t)" />
-          </q-item-section>
-
-          <q-item-section style="flex: 0 0 220px; min-width: 0">
-            <q-item-label class="ellipsis text-weight-medium">{{ t.numero }}</q-item-label>
-            <q-item-label caption class="ellipsis">
-              {{ t.fatura }}
-            </q-item-label>
-            <q-item-label caption :class="classeVencimento(t, getLinha(t.codtitulo))">
-              {{ formatVcto(t.vencimento) }} ·
-              <span class="text-weight-bold">
-                {{ formataNumero(t.saldo) }} {{ t.operacao }}
-              </span>
-            </q-item-label>
-          </q-item-section>
-
-          <q-item-section style="flex: 0 0 110px">
+          <div class="col-xs-4 col-sm-2">
+            <q-select
+              dense
+              class="text-caption"
+              v-model="filtros.credito"
+              :options="operacaoOptions"
+              emit-value
+              map-options
+              outlined
+              label="Operação"
+              :bottom-slots="false"
+            />
+          </div>
+          <div class="col-xs-6 col-sm-2">
             <MgInputData
-              v-if="false"
-              :model-value="null"
-              label="?"
-            />
-            <MgInputValor
               dense
-              :bottom-slots="false"
-              :model-value="getLinha(t.codtitulo)?.saldo ?? null"
-              @update:model-value="(v) => { setLinha(t, { saldo: v ?? 0 }); recalc(t, 'saldo') }"
-              label="Capital"
+              input-class="text-caption"
+              v-model="filtros.vencimento_de"
+              type="date"
+              label="Vencimento de"
               stack-label
+              :bottom-slots="false"
             />
-          </q-item-section>
-
-          <q-item-section style="flex: 0 0 100px">
-            <MgInputValor
+          </div>
+          <div class="col-xs-6 col-sm-2">
+            <MgInputData
               dense
-              :bottom-slots="false"
-              :model-value="getLinha(t.codtitulo)?.multa ?? null"
-              @update:model-value="(v) => { setLinha(t, { multa: v ?? 0 }); recalc(t, 'multa') }"
-              label="Multa"
+              v-model="filtros.vencimento_ate"
+              input-class="text-caption"
+              type="date"
+              label="Até"
               stack-label
+              :bottom-slots="false"
             />
-          </q-item-section>
-
-          <q-item-section style="flex: 0 0 100px">
-            <MgInputValor
+          </div>
+          <div class="col-xs-6 col-sm-3">
+            <SelectFilial
               dense
+              class="text-caption"
+              v-model="filtros.codfilial"
+              outlined
+              clearable
+              label="Filial"
               :bottom-slots="false"
-              :model-value="getLinha(t.codtitulo)?.juros ?? null"
-              @update:model-value="(v) => { setLinha(t, { juros: v ?? 0 }); recalc(t, 'juros') }"
-              label="Juros"
-              stack-label
             />
-          </q-item-section>
-
-          <q-item-section style="flex: 0 0 100px">
-            <MgInputValor
+          </div>
+          <div class="col-xs-12 col-sm-3">
+            <SelectTipoTitulo
               dense
+              class="text-caption"
+              v-model="filtros.codtipotitulo"
+              outlined
+              clearable
+              label="Tipo de Título"
               :bottom-slots="false"
-              :model-value="getLinha(t.codtitulo)?.desconto ?? null"
-              @update:model-value="(v) => { setLinha(t, { desconto: v ?? 0 }); recalc(t, 'desconto') }"
-              label="Desc."
-              stack-label
             />
-          </q-item-section>
-
-          <q-item-section style="flex: 0 0 110px">
-            <MgInputValor
+          </div>
+          <div class="col-xs-12 col-sm-3">
+            <SelectContaContabil
               dense
+              class="text-caption"
+              v-model="filtros.codcontacontabil"
+              outlined
+              clearable
+              label="Conta Contábil"
               :bottom-slots="false"
-              :model-value="getLinha(t.codtitulo)?.total ?? null"
-              @update:model-value="(v) => { setLinha(t, { total: v ?? 0 }) }"
-              label="Total"
-              stack-label
             />
-          </q-item-section>
-
-          <q-item-section side class="gt-sm">
-            <q-item-label caption :class="t.gerencial ? 'text-orange' : 'text-green'">
-              {{ t.filial }}
-            </q-item-label>
-            <q-item-label caption class="ellipsis" style="max-width: 180px">
-              {{ t.fantasia }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
+          </div>
+          <div class="col-xs-12 col-sm-3">
+            <SelectPortador
+              dense
+              class="text-caption"
+              v-model="filtros.codportador"
+              outlined
+              clearable
+              label="Portador"
+              :bottom-slots="false"
+            />
+          </div>
+        </div>
+      </q-card-section>
     </q-card>
+
+    <q-inner-loading :showing="loading" color="primary" />
+
+    <div v-if="!titulos.length" class="text-center text-grey q-ma-xl">
+      Nenhum título encontrado para esses filtros.
+    </div>
+    <q-card v-else flat bordered class="text-caption text-weight-bold">
+      <!-- TOTAIS -->
+      <q-card-section class="text-grey-9 text-overline">
+        <div class="row q-col-gutter-md">
+          <!-- NUMERO -->
+          <div class="col-xs-12 col-sm-3">
+            <div class="row">
+              <q-btn
+                flat
+                round
+                dense
+                size="sm"
+                icon="event_busy"
+                color="red-7"
+                @click="selecionarVencidos"
+              >
+                <q-tooltip>Selecionar somente títulos vencidos</q-tooltip>
+              </q-btn>
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                icon="done_all"
+                color="grey-8"
+                @click="selecionarTodos"
+              >
+                <q-tooltip>Selecionar todos</q-tooltip>
+              </q-btn>
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                icon="block"
+                color="grey-8"
+                @click="deselecionarTodos"
+              >
+                <q-tooltip>Limpar seleção</q-tooltip>
+              </q-btn>
+              <q-space />
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                icon="money_off"
+                color="grey-8"
+                @click="limparJurosMulta"
+              >
+                <q-tooltip>Zerar juros e multa de todos os títulos</q-tooltip>
+              </q-btn>
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                icon="calculate"
+                color="grey-8"
+                @click="abrirDialogRecalcular"
+              >
+                <q-tooltip>Recalcular juros e multa de todos os títulos</q-tooltip>
+              </q-btn>
+            </div>
+          </div>
+
+          <!-- VALORES -->
+          <div class="col-xs-12 col-sm-7 col-md-6">
+            <div class="row q-col-gutter-md">
+              <div class="col-3 text-right ellipsis">
+                {{ formataNumero(totalCapital.valor) }}
+              </div>
+              <div class="col-2 text-right">
+                {{ formataNumero(totalMulta.valor) }}
+              </div>
+              <div class="col-2 text-right ellipsis">
+                {{ formataNumero(totalJuros.valor) }}
+              </div>
+              <div class="col-2 text-right ellipsis">
+                {{ formataNumero(totalDesconto.valor) }}
+              </div>
+              <div class="col-3 text-right ellipsis" :class="classeOperacao(totalGeral.operacao)">
+                {{ formataNumero(totalGeral.valor) }} {{ totalGeral.operacao }}
+              </div>
+            </div>
+          </div>
+          <div class="col gt-sm">
+            {{ selecionados.length }} / {{ titulos.length }} título{{
+              titulos.length === 1 ? '' : 's'
+            }}
+          </div>
+        </div>
+      </q-card-section>
+      <q-separator />
+
+      <!-- TITULOS -->
+      <template v-for="(titulo, i) in titulos" :key="titulo.codtitulo">
+        <q-card-section
+          class="text-caption cursor-pointer q-py-sm"
+          :class="{ 'bg-blue-1': titulo.selecionado }"
+          @click="toggle(titulo)"
+        >
+          <div class="row q-col-gutter-md items-center">
+            <!-- NUMERO -->
+            <div class="col-xs-12 col-sm-3 ellipsis text-weight-bold">
+              <div class="row">
+                <router-link
+                  :to="'/titulo/' + titulo.codtitulo"
+                  class="text-primary"
+                  style="text-decoration: none"
+                  @click.stop
+                  target="_blank"
+                  tabindex="-1"
+                >
+                  {{ titulo.numero }}
+                  <q-icon name="launch" />
+                </router-link>
+                <q-space />
+                <span :class="classeOperacao(titulo.operacao)">
+                  {{ formataNumero(titulo.saldo) }} {{ titulo.operacao }}
+                </span>
+              </div>
+              <div class="row">
+                <span class="text-grey-7" v-if="titulo.fatura"> {{ titulo.fatura }} </span>
+                <q-space />
+                <span :class="classeVencimento(titulo)">
+                  {{ formatVcto(titulo.vencimento) }}
+                </span>
+              </div>
+            </div>
+
+            <!-- VALORES -->
+            <div class="col-xs-12 col-sm-7 col-md-6">
+              <div class="row q-col-gutter-sm">
+                <div class="col-xs-4 col-sm-3" @click.stop>
+                  <MgInputValor
+                    dense
+                    input-class="text-caption"
+                    label="Capital"
+                    :bottom-slots="false"
+                    :min="0"
+                    :max="titulo.saldo"
+                    :model-value="titulo.capital ?? null"
+                    @update:model-value="(v) => updateEd(titulo, 'capital', v ?? 0)"
+                  />
+                </div>
+
+                <div class="col-xs-4 col-sm-2" @click.stop>
+                  <MgInputValor
+                    dense
+                    input-class="text-caption"
+                    label="Multa"
+                    :bottom-slots="false"
+                    :min="0"
+                    :model-value="titulo.multa ?? null"
+                    @update:model-value="(v) => updateEd(titulo, 'multa', v ?? 0)"
+                  />
+                </div>
+
+                <div class="col-xs-4 col-sm-2" @click.stop>
+                  <MgInputValor
+                    dense
+                    input-class="text-caption"
+                    label="Juros"
+                    :bottom-slots="false"
+                    :min="0"
+                    :model-value="titulo.juros ?? null"
+                    @update:model-value="(v) => updateEd(titulo, 'juros', v ?? 0)"
+                  />
+                </div>
+
+                <div class="col-xs-4 col-sm-2" @click.stop>
+                  <MgInputValor
+                    dense
+                    input-class="text-caption"
+                    label="Desconto"
+                    :bottom-slots="false"
+                    :min="0"
+                    :max="
+                      (Number(titulo.capital) || 0) +
+                      (Number(titulo.multa) || 0) +
+                      (Number(titulo.juros) || 0)
+                    "
+                    :model-value="titulo.desconto ?? null"
+                    @update:model-value="(v) => updateEd(titulo, 'desconto', v ?? 0)"
+                  />
+                </div>
+
+                <div class="col" @click.stop>
+                  <MgInputValor
+                    dense
+                    input-class="text-caption"
+                    label="Total"
+                    :bottom-slots="false"
+                    :min="0"
+                    :max="maxTotal(titulo) - (Number(titulo.desconto) || 0)"
+                    :model-value="titulo.total ?? null"
+                    @update:model-value="(v) => updateEd(titulo, 'total', v ?? 0)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="col ellipsis text-weight-bold">
+              <div :class="titulo.gerencial ? 'text-orange' : 'text-green'">
+                {{ titulo.filial }}
+              </div>
+              <div class="text-grey-7">
+                {{ titulo.fantasia }}
+              </div>
+            </div>
+          </div>
+        </q-card-section>
+        <q-separator v-if="i < titulos.length - 1" />
+      </template>
+    </q-card>
+
+    <!-- Dialog Recalcular Juros/Multa -->
+    <q-dialog v-model="dialogRecalcular">
+      <q-card bordered flat style="width: 500px; max-width: 90vw">
+        <q-form @submit.prevent="confirmarRecalcular">
+          <q-card-section class="row items-center q-pb-none">
+            <div class="text-grey-9 text-overline">RECALCULAR JUROS/MULTA</div>
+          </q-card-section>
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-4">
+                <MgInputValor
+                  v-model="recalcForm.juros"
+                  label="Juros Mensal"
+                  suffix="%"
+                  :decimals="1"
+                  :min="0"
+                  :bottom-slots="false"
+                  autofocus
+                />
+              </div>
+              <div class="col-4">
+                <MgInputValor
+                  v-model="recalcForm.multa"
+                  label="Multa"
+                  suffix="%"
+                  :decimals="1"
+                  :min="0"
+                  :bottom-slots="false"
+                />
+              </div>
+              <div class="col-4">
+                <MgInputValor
+                  v-model="recalcForm.diasTolerancia"
+                  label="Tolerância"
+                  :decimals="0"
+                  :min="0"
+                  :bottom-slots="false"
+                  suffix="dias"
+                />
+              </div>
+            </div>
+          </q-card-section>
+          <q-separator />
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn flat label="Recalcular" type="submit" color="primary" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
   </div>
 </template>

@@ -15,9 +15,9 @@ const props = defineProps({
     validator: (v) => ["start", "end", "now"].includes(v),
   },
   yearDigits: {
-    type: Number,
+    type: [Number, String],
     default: 4,
-    validator: (v) => v === 2 || v === 4,
+    validator: (v) => +v === 2 || +v === 4,
   },
   label: { type: String, default: "" },
   min: { type: String, default: null },
@@ -27,6 +27,7 @@ const props = defineProps({
   outlined: { type: Boolean, default: true },
   dense: { type: Boolean, default: false },
   stackLabel: { type: Boolean, default: false },
+  inputClass: { type: String, default: "" },
 });
 
 const emit = defineEmits(["update:modelValue"]);
@@ -42,14 +43,14 @@ const isTimestamp = computed(() => props.type === "timestamp");
 const hasSeconds = computed(() => isTimestamp.value && props.seconds);
 
 const computedMask = computed(() => {
-  const datePart = props.yearDigits === 2 ? "##/##/##" : "##/##/####";
+  const datePart = +props.yearDigits === 2 ? "##/##/##" : "##/##/####";
   if (!isTimestamp.value) return datePart;
   if (hasSeconds.value) return `${datePart} ##:##:##`;
   return `${datePart} ##:##`;
 });
 
 const displayLength = computed(() => {
-  const dl = props.yearDigits === 2 ? 8 : 10;
+  const dl = +props.yearDigits === 2 ? 8 : 10;
   if (!isTimestamp.value) return dl;
   if (hasSeconds.value) return dl + 9;
   return dl + 6;
@@ -112,7 +113,7 @@ function dateToIso(dt) {
 function dateToDisplay(dt) {
   if (!dt) return "";
   const yStr =
-    props.yearDigits === 2
+    +props.yearDigits === 2
       ? pad(dt.getFullYear() % 100)
       : String(dt.getFullYear());
   const datePart = `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${yStr}`;
@@ -492,7 +493,7 @@ function onPaste(e) {
     :stack-label="stackLabel"
     :readonly="readonly"
     :rules="rules"
-    input-class="text-center"
+    :input-class="['text-center', inputClass]"
     @focus="onFocus"
     @blur="onBlur"
     @keydown="onKeydown"

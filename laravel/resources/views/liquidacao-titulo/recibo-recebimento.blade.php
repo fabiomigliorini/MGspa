@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <style>
         @page {
-            size: A4 portrait;
+            size: A5 landscape;
             margin: 6mm 8mm;
         }
         body {
@@ -22,12 +22,11 @@
             border-collapse: separate;
             border-spacing: 0;
             width: 100%;
-            height: 136mm;
+            height: 134mm;
             page-break-inside: avoid;
-            margin-bottom: 3mm;
         }
         .recibo-inner {
-            height: 110mm;
+            height: 108mm;
             vertical-align: top;
             padding: 0;
             border: none;

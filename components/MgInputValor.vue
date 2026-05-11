@@ -17,6 +17,7 @@ const props = defineProps({
   rules: { type: Array, default: () => [] },
   stackLabel: { type: Boolean, default: false },
   bottomSlots: { type: Boolean, default: true },
+  inputClass: { type: String, default: '' },
 })
 
 const emit = defineEmits(['update:modelValue'])
@@ -161,8 +162,10 @@ function onBlur() {
   const parsed = parseValor(text)
   if (parsed === null) {
     displayRef.value = formatNumber(lastValid.value)
-  } else {
+  } else if (parsed !== lastValid.value) {
     emitFromNumber(parsed)
+  } else {
+    displayRef.value = formatNumber(lastValid.value)
   }
 }
 
@@ -227,7 +230,7 @@ function onKeydown(e) {
     :rules="wrappedRules"
     :stack-label="stackLabel"
     :bottom-slots="bottomSlots"
-    input-class="text-right"
+    :input-class="['text-right', inputClass]"
     inputmode="decimal"
     @focus="onFocus"
     @blur="onBlur"

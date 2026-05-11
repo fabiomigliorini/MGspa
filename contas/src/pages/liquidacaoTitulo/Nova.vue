@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar, date } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
+import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
 import { formataNumero } from 'src/utils/formatters.js'
@@ -12,28 +13,37 @@ import { formataNumero } from 'src/utils/formatters.js'
 const router = useRouter()
 const $q = useQuasar()
 
-const step = ref('titulos')
 const saving = ref(false)
+const dialogFinalizar = ref(false)
 
-const linhas = ref([])
+const titulos = ref([])
 const codpessoaFiltro = ref(null)
 const totalLiquido = ref(0)
 const operacao = ref('DB')
 
 const finalizar = ref({
   transacao: date.formatDate(new Date(), 'YYYY-MM-DD'),
+  codpessoa: null,
   codportador: null,
   observacao: '',
 })
 
-const podeAvancar = computed(() => linhas.value.length > 0)
+const podeAvancar = computed(() => titulos.value.length > 0)
 
-function descricaoTitulos() {
-  if (linhas.value.length === 0) return 'Nenhum título selecionado'
-  return `${linhas.value.length} título(s) — ${formataNumero(totalLiquido.value)} ${operacao.value}`
-}
+const codpessoaSugerido = computed(() => {
+  const set = new Set(titulos.value.map((l) => l.codpessoa).filter((v) => v != null))
+  return set.size === 1 ? [...set][0] : null
+})
+
+watch(codpessoaSugerido, (v) => {
+  finalizar.value.codpessoa = v
+})
 
 async function salvar() {
+  if (!finalizar.value.codpessoa) {
+    notifyError({ message: 'Selecione a pessoa!' }, 'Selecione a pessoa')
+    return
+  }
   if (!finalizar.value.codportador) {
     notifyError({ message: 'Selecione um portador!' }, 'Selecione um portador')
     return
@@ -45,14 +55,12 @@ async function salvar() {
   }).onOk(async () => {
     saving.value = true
     try {
-      const codpessoa = codpessoaFiltro.value
-      if (!codpessoa) throw new Error('Selecione a pessoa nos filtros do passo 1!')
       const payload = {
-        codpessoa,
+        codpessoa: finalizar.value.codpessoa,
         codportador: finalizar.value.codportador,
         transacao: finalizar.value.transacao,
         observacao: finalizar.value.observacao || null,
-        titulos: linhas.value.map((l) => ({
+        titulos: titulos.value.map((l) => ({
           codtitulo: l.codtitulo,
           saldo: l.saldo,
           multa: l.multa,
@@ -78,7 +86,7 @@ async function salvar() {
 
 <template>
   <q-page class="q-pa-md">
-    <div style="max-width: 1200px; margin: auto">
+    <div style="max-width: 1086px; margin: auto">
       <q-item class="q-pb-md q-px-none">
         <q-item-section avatar>
           <q-btn
@@ -95,31 +103,42 @@ async function salvar() {
         </q-item-section>
       </q-item>
 
-      <q-stepper v-model="step" header-nav animated flat bordered>
-        <q-step
-          name="titulos"
-          title="Títulos"
-          icon="receipt_long"
-          :done="podeAvancar"
-        >
-          <SeletorTitulosAbertos
-            v-model="linhas"
-            :codpessoa-inicial="codpessoaFiltro"
-            @update:codpessoa="(v) => (codpessoaFiltro = v)"
-            @update:total-liquido="(v) => (totalLiquido = v)"
-            @update:operacao="(v) => (operacao = v)"
-          />
-        </q-step>
+      <div>
+        <SeletorTitulosAbertos
+          v-model="titulos"
+          :codpessoa-inicial="codpessoaFiltro"
+          @update:codpessoa="(v) => (codpessoaFiltro = v)"
+          @update:total-liquido="(v) => (totalLiquido = v)"
+          @update:operacao="(v) => (operacao = v)"
+        />
+      </div>
+    </div>
 
-        <q-step
-          name="finalizar"
-          title="Finalizar"
-          icon="check_circle"
-          :disable="!podeAvancar"
-        >
-          <div class="text-grey-7 q-mb-md">{{ descricaoTitulos() }}</div>
+    <!-- FAB Salvar -->
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn
+        fab
+        icon="save"
+        color="primary"
+        :disable="!podeAvancar"
+        @click="dialogFinalizar = true"
+      >
+        <q-tooltip>Finalizar Liquidação</q-tooltip>
+      </q-btn>
+    </q-page-sticky>
 
-          <q-form @submit.prevent="salvar">
+    <!-- Dialog Finalizar -->
+    <q-dialog v-model="dialogFinalizar">
+      <q-card bordered flat style="width: 500px; max-width: 90vw">
+        <q-form @submit.prevent="salvar">
+          <q-card-section class="items-center q-pb-none">
+            <div class="text-grey-9 text-overline">FINALIZAR</div>
+            <div class="text-grey-7 q-mb-md text-caption">
+              {{ titulos.length }} títulos selecionados — R$ {{ formataNumero(totalLiquido) }}
+              {{ operacao }}
+            </div>
+          </q-card-section>
+          <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-xs-12 col-sm-4">
                 <MgInputData
@@ -128,7 +147,6 @@ async function salvar() {
                   label="Data Transação"
                   stack-label
                   :rules="[(v) => !!v || 'Obrigatório']"
-                  autofocus
                 />
               </div>
               <div class="col-xs-12 col-sm-8">
@@ -136,6 +154,15 @@ async function salvar() {
                   v-model="finalizar.codportador"
                   outlined
                   label="Portador"
+                  :rules="[(v) => !!v || 'Obrigatório']"
+                  autofocus
+                />
+              </div>
+              <div class="col-xs-12">
+                <SelectPessoa
+                  v-model="finalizar.codpessoa"
+                  outlined
+                  label="Pessoa"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
@@ -150,32 +177,14 @@ async function salvar() {
                 />
               </div>
             </div>
-            <div class="q-mt-md text-right">
-              <q-btn label="Salvar" type="submit" color="primary" :loading="saving" />
-            </div>
-          </q-form>
-        </q-step>
-
-        <template #navigation>
-          <q-stepper-navigation>
-            <q-btn
-              v-if="step === 'titulos'"
-              :disable="!podeAvancar"
-              color="primary"
-              label="Continuar"
-              @click="step = 'finalizar'"
-            />
-            <q-btn
-              v-else
-              flat
-              color="primary"
-              label="Voltar"
-              class="q-ml-sm"
-              @click="step = 'titulos'"
-            />
-          </q-stepper-navigation>
-        </template>
-      </q-stepper>
-    </div>
+          </q-card-section>
+          <q-separator />
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn flat label="Salvar" type="submit" color="primary" :loading="saving" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>

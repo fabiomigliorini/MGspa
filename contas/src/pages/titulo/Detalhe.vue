@@ -301,6 +301,7 @@ watch(() => route.fullPath, carregar)
           </q-item-section>
         </q-item>
 
+        <!-- Cards resumo -->
         <div class="row q-col-gutter-md q-mb-md">
           <!-- FILIAL -->
           <div class="col-xs-6 col-sm-3">
@@ -563,7 +564,10 @@ watch(() => route.fullPath, carregar)
                         size="sm"
                         padding="0 4px"
                         color="primary"
-                        :to="{ name: 'liquidacao-titulo-detalhe', params: { id: m.codliquidacaotitulo } }"
+                        :to="{
+                          name: 'liquidacao-titulo-detalhe',
+                          params: { id: m.codliquidacaotitulo },
+                        }"
                         :label="`Liquidação ${formatCodigo(m.codliquidacaotitulo)}`"
                       />
                       <q-btn
