@@ -239,6 +239,8 @@ const urlPessoa = (codpessoa) =>
   codpessoa ? `${process.env.PESSOAS_URL}/pessoa/${codpessoa}` : null
 const urlNegocio = (codnegocio) =>
   codnegocio ? `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}` : null
+const urlAgrupamento = (codtituloagrupamento) =>
+  codtituloagrupamento ? `/agrupamento/${codtituloagrupamento}` : null
 
 // === Estilos derivados ===
 // Parseia YYYY-MM-DD como data local (evita o offset UTC do `new Date(string)`).
@@ -467,7 +469,7 @@ watch(() => route.fullPath, carregar)
             </div>
 
             <!-- LIQUIDACAO -->
-            <div class="col-xs-12 col-sm-6 col-md-4" v-if="transacaoliquidacao">
+            <div class="col-xs-12 col-sm-6 col-md-4" v-if="titulo.transacaoliquidacao">
               <div class="text-overline text-grey-7">Liquidação</div>
               <div class="text-body2">{{ formataDataSemHora(titulo.transacaoliquidacao) }}</div>
             </div>
