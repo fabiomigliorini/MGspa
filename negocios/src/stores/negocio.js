@@ -10,6 +10,68 @@ import { falar } from "../utils/falar.js";
 
 const sSinc = sincronizacaoStore();
 
+// Serializa operações concorrentes por uuid de negócio.
+// Evita race entre cliques rápidos, scanner duplo e listener multi-aba.
+const _mutexes = new Map();
+async function comLock(uuid, fn) {
+  if (!uuid) return fn();
+  const previo = _mutexes.get(uuid) || Promise.resolve();
+  let liberar;
+  const novo = new Promise((r) => (liberar = r));
+  _mutexes.set(uuid, novo);
+  try {
+    await previo;
+    return await fn();
+  } finally {
+    liberar();
+    if (_mutexes.get(uuid) === novo) _mutexes.delete(uuid);
+  }
+}
+
+// BroadcastChannel para sincronizar entre abas/janelas do mesmo origin.
+// Cada salvar() posta o uuid; outras abas recarregam se estão no mesmo negócio.
+const _bc =
+  typeof BroadcastChannel !== "undefined"
+    ? new BroadcastChannel("mgspa-negocio")
+    : null;
+let _bcListenerStore = null;
+function instalarListenerMultiAba(store) {
+  if (!_bc || _bcListenerStore === store) return;
+  _bcListenerStore = store;
+  _bc.onmessage = (e) => {
+    const uuid = e.data?.uuid;
+    if (uuid && uuid === store.negocio?.uuid) {
+      comLock(uuid, () => store.recarregar());
+    }
+  };
+}
+
+// Compara dois valores numéricos com tolerância, tratando
+// null/undefined/''/NaN como "sem valor". Tolerância 0.0001.
+function numerosIguais(a, b) {
+  const norm = (x) => {
+    if (x === null || x === undefined || x === "") return null;
+    const n = parseFloat(x);
+    return isNaN(n) ? null : n;
+  };
+  const na = norm(a);
+  const nb = norm(b);
+  if (na === null && nb === null) return true;
+  if (na === null || nb === null) return false;
+  return Math.abs(na - nb) < 0.0001;
+}
+
+// Compara descontos: 0/null/undefined/''/NaN são todos "sem desconto" e
+// considerados iguais entre si. Demais valores comparados com tolerância.
+function descontosIguais(a, b) {
+  const norm = (x) => {
+    if (x === null || x === undefined || x === "") return 0;
+    const n = parseFloat(x);
+    return isNaN(n) ? 0 : n;
+  };
+  return Math.abs(norm(a) - norm(b)) < 0.0001;
+}
+
 export const negocioStore = defineStore("negocio", {
   persist: {
     paths: ["padrao", "paginaAtual", "ultimos"],
@@ -42,6 +104,7 @@ export const negocioStore = defineStore("negocio", {
       codportador: null,
     },
     paginaAtual: 1,
+    dialogVerificarDuplicados: false,
   }),
 
   getters: {
@@ -78,6 +141,47 @@ export const negocioStore = defineStore("negocio", {
           .reduce((prev, curr) => prev + curr, 0);
       }
       return Math.round((this.negocio.valortotal - pagamentos) * 100) / 100;
+    },
+    gruposDuplicadosPorBarras() {
+      if (!this.negocio || !this.negocio.itens) {
+        return [];
+      }
+      const mapa = new Map();
+      for (const item of this.negocio.itens) {
+        if (item.inativo != null) continue;
+        const chave = String(item.barras ?? "").trim();
+        if (!chave) continue;
+        if (!mapa.has(chave)) mapa.set(chave, []);
+        mapa.get(chave).push(item);
+      }
+      const grupos = [];
+      for (const [barras, itens] of mapa) {
+        if (itens.length < 2) continue;
+        const ref = itens[0];
+        const divergentes = [];
+        if (!itens.every((i) => numerosIguais(i.valorunitario, ref.valorunitario))) {
+          divergentes.push("preço");
+        }
+        for (const [campo, label] of [
+          ["percentualdesconto", "desconto"],
+          ["valorfrete", "frete"],
+          ["valorseguro", "seguro"],
+          ["valoroutras", "outras"],
+        ]) {
+          if (!itens.every((i) => descontosIguais(i[campo], ref[campo]))) {
+            divergentes.push(label);
+          }
+        }
+        grupos.push({
+          barras,
+          itens: [...itens].sort((a, b) =>
+            String(a.criacao).localeCompare(String(b.criacao))
+          ),
+          podeJuntar: divergentes.length === 0,
+          camposDivergentes: divergentes,
+        });
+      }
+      return grupos;
     },
   },
 
@@ -186,6 +290,7 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async carregarPeloCodnegocio(codnegocio) {
+      instalarListenerMultiAba(this);
       // busca no indexedDB
       const negocio = await db.negocio
         .where("codnegocio")
@@ -228,6 +333,7 @@ export const negocioStore = defineStore("negocio", {
     },
 
     async carregarPeloUuid(uuid) {
+      instalarListenerMultiAba(this);
       const negocio = await db.negocio.get(uuid);
 
       // verifica se deve recarregar da api
@@ -653,6 +759,7 @@ export const negocioStore = defineStore("negocio", {
         this.negocio.sincronizado = false;
       }
       const ret = await db.negocio.put(toRaw(this.negocio));
+      _bc?.postMessage({ uuid: this.negocio.uuid });
       if (sincronizar) {
         this.sincronizar(this.negocio.uuid);
       } else {
@@ -670,6 +777,7 @@ export const negocioStore = defineStore("negocio", {
       quantidade,
       valorunitario
     ) {
+      return comLock(this.negocio?.uuid, async () => {
       // busca versao do IndexedDB para
       // garantir que nao foi adicionado nada em outra aba
       await this.recarregar();
@@ -742,24 +850,74 @@ export const negocioStore = defineStore("negocio", {
 
       // salva no IndexedDB
       await this.salvar();
+      });
+    },
+
+    async juntarItensPorBarras(barras) {
+      return comLock(this.negocio?.uuid, async () => {
+      await this.recarregar();
+      const grupo = this.negocio.itens.filter(
+        (i) => i.inativo == null && String(i.barras ?? "") === String(barras)
+      );
+      if (grupo.length < 2) {
+        return false;
+      }
+      const info = this.gruposDuplicadosPorBarras.find(
+        (g) => g.barras === String(barras)
+      );
+      if (info && !info.podeJuntar) {
+        Notify.create({
+          type: "negative",
+          message:
+            "Divergente em: " +
+            info.camposDivergentes.join(", ") +
+            " — ajuste manualmente.",
+          timeout: 3000,
+          actions: [{ icon: "close", color: "white" }],
+        });
+        return false;
+      }
+      // alvo = mais antigo do grupo
+      grupo.sort((a, b) =>
+        String(a.criacao).localeCompare(String(b.criacao))
+      );
+      const alvo = grupo[0];
+      const outros = grupo.slice(1);
+      const carimbo = moment().format("YYYY-MM-DD HH:mm:ss");
+      // inativa os outros antes de recalcular para que recalcularValorTotal
+      // (cascateado por itemRecalcularValorProdutos) só some o alvo
+      for (const x of outros) {
+        x.inativo = carimbo;
+      }
+      alvo.quantidade =
+        parseFloat(alvo.quantidade) +
+        outros.reduce((s, x) => s + parseFloat(x.quantidade), 0);
+      alvo.alteracao = carimbo;
+      alvo.ordenacao = carimbo;
+      this.itemRecalcularValorProdutos(alvo);
+      await this.salvar();
+      return true;
+      });
     },
 
     async itemAdicionarQuantidade(uuid, quantidade) {
-      await this.recarregar();
-      const item = this.negocio.itens.find(function (item) {
-        return item.inativo === null && item.uuid == uuid;
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar();
+        const item = this.negocio.itens.find(function (item) {
+          return item.inativo === null && item.uuid == uuid;
+        });
+        if (!item) {
+          return false;
+        }
+        const total = parseFloat(item.quantidade) + parseFloat(quantidade);
+        if (total <= 0) {
+          return;
+        }
+        item.quantidade = total;
+        this.itemRecalcularValorProdutos(item);
+        // salva no IndexedDB
+        await this.salvar();
       });
-      if (!item) {
-        return false;
-      }
-      const total = parseFloat(item.quantidade) + parseFloat(quantidade);
-      if (total <= 0) {
-        return;
-      }
-      item.quantidade = total;
-      this.itemRecalcularValorProdutos(item);
-      // salva no IndexedDB
-      this.salvar();
     },
 
     async itemSalvar(
@@ -775,37 +933,41 @@ export const negocioStore = defineStore("negocio", {
       valoroutras,
       valortotal
     ) {
-      await this.recarregar();
-      const item = this.negocio.itens.find(function (item) {
-        return item.inativo === null && item.uuid == uuid;
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar();
+        const item = this.negocio.itens.find(function (item) {
+          return item.inativo === null && item.uuid == uuid;
+        });
+        if (!item) {
+          return false;
+        }
+        item.codprodutobarra = codprodutobarra;
+        item.quantidade = quantidade;
+        item.valorunitario = valorunitario;
+        item.valorprodutos = valorprodutos;
+        item.percentualdesconto = percentualdesconto;
+        item.valordesconto = valordesconto;
+        item.valorfrete = valorfrete;
+        item.valorseguro = valorseguro;
+        item.valoroutras = valoroutras;
+        item.valortotal = valortotal;
+        this.recalcularValorTotal();
+        await this.salvar();
       });
-      if (!item) {
-        return false;
-      }
-      item.codprodutobarra = codprodutobarra;
-      item.quantidade = quantidade;
-      item.valorunitario = valorunitario;
-      item.valorprodutos = valorprodutos;
-      item.percentualdesconto = percentualdesconto;
-      item.valordesconto = valordesconto;
-      item.valorfrete = valorfrete;
-      item.valorseguro = valorseguro;
-      item.valoroutras = valoroutras;
-      item.valortotal = valortotal;
-      this.recalcularValorTotal();
-      this.salvar();
     },
 
     async itemInativar(uuid) {
-      await this.recarregar();
-      const inativar = this.negocio.itens.find(function (item) {
-        return item.inativo === null && item.uuid == uuid;
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar();
+        const inativar = this.negocio.itens.find(function (item) {
+          return item.inativo === null && item.uuid == uuid;
+        });
+        if (inativar) {
+          inativar.inativo = moment().format("YYYY-MM-DD HH:mm:ss");
+          this.recalcularValorTotal();
+          await this.salvar();
+        }
       });
-      if (inativar) {
-        inativar.inativo = moment().format("YYYY-MM-DD HH:mm:ss");
-        this.recalcularValorTotal();
-        this.salvar();
-      }
     },
 
     async itemRecalcularValorProdutos(item) {

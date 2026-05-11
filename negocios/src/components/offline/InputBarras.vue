@@ -184,7 +184,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
   if (ret.length == 1) {
     const qtd = parseFloat(quantidade.value);
     quantidade.value = 1;
-    sNegocio.itemAdicionar(
+    await sNegocio.itemAdicionar(
       ret[0].codprodutobarra,
       ret[0].barras,
       ret[0].codproduto,
@@ -215,7 +215,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
   }
 };
 
-const adicionarPelaListagem = (
+const adicionarPelaListagem = async (
   codprodutobarra,
   barras,
   codproduto,
@@ -223,7 +223,7 @@ const adicionarPelaListagem = (
   codimagem,
   preco
 ) => {
-  sNegocio.itemAdicionar(
+  await sNegocio.itemAdicionar(
     codprodutobarra,
     barras,
     codproduto,
@@ -394,6 +394,16 @@ onUnmounted(() => {
           icon="mdi-clipboard-edit-outline"
           color="primary"
           @click="orcamento()"
+          label-position="left"
+        />
+        <!-- VERIFICAR DUPLICADOS -->
+        <q-fab-action
+          external-label
+          label-class="bg-primary"
+          label="Verificar duplicados"
+          icon="join_inner"
+          color="primary"
+          @click="sNegocio.dialogVerificarDuplicados = true"
           label-position="left"
         />
       </q-fab>
