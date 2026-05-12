@@ -61,7 +61,7 @@ onMounted(() => {
             </q-item-section>
 
             <!-- Pessoa, Número, Tipo/Conta -->
-            <q-item-section style="min-width: 0">
+            <q-item-section>
               <q-item-label class="text-primary text-weight-medium ellipsis">
                 {{ t.fantasia }}
               </q-item-label>
