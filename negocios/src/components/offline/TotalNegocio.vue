@@ -33,7 +33,7 @@ const edicao = ref({
 });
 
 const urlTitulo = (codtitulo) => {
-  return process.env.MGSIS_URL + "index.php?r=titulo/view&id=" + codtitulo;
+  return process.env.CONTAS_URL + "/titulo/" + codtitulo;
 };
 
 const editarValores = () => {

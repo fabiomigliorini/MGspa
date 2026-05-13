@@ -6,7 +6,7 @@ moment.locale("pt-br");
 const sNegocio = negocioStore();
 
 const urlTitulo = (codtitulo) => {
-  return process.env.MGSIS_URL + "index.php?r=titulo/view&id=" + codtitulo;
+  return process.env.CONTAS_URL + "/titulo/" + codtitulo;
 };
 </script>
 <template>

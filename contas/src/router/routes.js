@@ -179,6 +179,7 @@ const routes = [
             PERMISSOES.FINANCEIRO,
             PERMISSOES.COBRANCA,
             PERMISSOES.PUBLICO,
+            PERMISSOES.CAIXA,
           ],
           leftDrawer: defineAsyncComponent(() =>
             import('components/drawers/TituloFiltrosDrawer.vue'),
@@ -209,6 +210,7 @@ const routes = [
             PERMISSOES.FINANCEIRO,
             PERMISSOES.COBRANCA,
             PERMISSOES.PUBLICO,
+            PERMISSOES.CAIXA,
           ],
         },
       },

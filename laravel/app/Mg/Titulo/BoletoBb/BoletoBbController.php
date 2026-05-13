@@ -13,9 +13,9 @@ use Mg\Usuario\Autorizador;
 class BoletoBbController extends MgController
 {
     // Visualizar/abrir PDF: qualquer um com acesso a títulos.
-    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca', 'Publico'];
-    // Mutação (registrar/consultar/baixar): apenas financeiro/cobrança/admin.
-    private const GRUPOS_MUTACAO = ['Administrador', 'Financeiro', 'Cobranca'];
+    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca', 'Publico', 'Caixa'];
+    // Mutação (registrar/consultar/baixar): apenas financeiro/cobrança/admin/caixa.
+    private const GRUPOS_MUTACAO = ['Administrador', 'Financeiro', 'Cobranca', 'Caixa'];
 
     public function registrar(Request $request, $codtitulo)
     {
