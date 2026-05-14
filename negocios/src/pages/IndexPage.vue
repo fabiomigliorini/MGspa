@@ -694,6 +694,83 @@ onUnmounted(() => {
       </q-card>
     </q-dialog>
 
+    <!-- VERIFICAR DUPLICADOS -->
+    <q-dialog v-model="sNegocio.dialogVerificarDuplicados">
+      <q-card style="width: 500px; max-width: 90vw">
+        <q-card-section class="row items-center q-pb-none">
+          <div class="text-h6">Produtos duplicados</div>
+          <q-space />
+          <q-btn icon="close" flat round dense v-close-popup />
+        </q-card-section>
+        <q-card-section>
+          <div
+            v-if="sNegocio.gruposDuplicadosPorBarras.length === 0"
+            class="text-grey-7"
+          >
+            Nenhum produto duplicado na lista.
+          </div>
+          <q-list separator v-else>
+            <q-item
+              v-for="grupo in sNegocio.gruposDuplicadosPorBarras"
+              :key="grupo.barras"
+              class="q-py-sm"
+            >
+              <q-item-section>
+                <q-item-label class="text-weight-medium">
+                  {{ grupo.itens[0].produto }}
+                </q-item-label>
+                <q-item-label caption>
+                  Barras: {{ grupo.barras }} — {{ grupo.itens.length }} slots
+                </q-item-label>
+                <q-list dense class="q-mt-xs">
+                  <q-item
+                    v-for="it in grupo.itens"
+                    :key="it.uuid"
+                    class="q-px-none"
+                  >
+                    <q-item-section>
+                      <q-item-label caption>
+                        Qtd: {{ it.quantidade }} ×
+                        {{
+                          new Intl.NumberFormat("pt-BR", {
+                            style: "currency",
+                            currency: "BRL",
+                          }).format(it.valorunitario)
+                        }}
+                        <span v-if="it.percentualdesconto">
+                          (desc {{ it.percentualdesconto }}%)
+                        </span>
+                        — {{ it.criacao }}
+                      </q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+                <div
+                  v-if="!grupo.podeJuntar"
+                  class="text-negative text-caption q-mt-xs"
+                >
+                  Divergente em: {{ grupo.camposDivergentes.join(", ") }} —
+                  ajuste manualmente.
+                </div>
+              </q-item-section>
+              <q-item-section side top>
+                <q-btn
+                  color="primary"
+                  icon="join_inner"
+                  label="Juntar"
+                  :disable="!grupo.podeJuntar || !sNegocio.podeEditar"
+                  @click="sNegocio.juntarItensPorBarras(grupo.barras)"
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Fechar" color="primary" v-close-popup />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
     <q-page-scroller position="bottom-left" :scroll-offset="150" :offset="[18, 18]">
       <q-btn fab icon="keyboard_arrow_up" color="secondary" />
     </q-page-scroller>

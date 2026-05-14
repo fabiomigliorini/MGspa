@@ -3,9 +3,71 @@
 namespace Mg\Titulo;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
+use Mg\Negocio\NegocioNotaFiscalResource;
 
 class TituloDetalheResource extends Resource
 {
+    private function notasVinculadas(): array
+    {
+        $origens = [];
+
+        if (!empty($this->codtituloagrupamento)) {
+            $ag = TituloAgrupamento::with([
+                'MovimentoTituloS.TipoMovimentoTitulo',
+                'MovimentoTituloS.Titulo.NegocioFormaPagamento',
+            ])->find($this->codtituloagrupamento);
+            if ($ag) {
+                foreach ($ag->MovimentoTituloS as $m) {
+                    if (optional($m->TipoMovimentoTitulo)->estorno) continue;
+                    $t = $m->Titulo;
+                    if (!$t) continue;
+                    if ($t->codtituloagrupamento === $ag->codtituloagrupamento) continue;
+                    $cn = optional($t->NegocioFormaPagamento)->codnegocio;
+                    if (!$cn) continue;
+                    $origens[] = [
+                        'codtitulo' => (int)$t->codtitulo,
+                        'numero' => $t->numero,
+                        'codnegocio' => (int)$cn,
+                    ];
+                }
+            }
+        } elseif (!empty($this->codnegocioformapagamento)) {
+            $cn = optional($this->NegocioFormaPagamento)->codnegocio;
+            if ($cn) {
+                $origens[] = [
+                    'codtitulo' => (int)$this->codtitulo,
+                    'numero' => $this->numero,
+                    'codnegocio' => (int)$cn,
+                ];
+            }
+        }
+
+        if (empty($origens)) return [];
+
+        $notas = [];
+        $cacheNegocio = [];
+        foreach ($origens as $o) {
+            $cn = $o['codnegocio'];
+            if (!isset($cacheNegocio[$cn])) {
+                $cacheNegocio[$cn] = NegocioNotaFiscalResource::buscarPorCodnegocio($cn);
+            }
+            foreach ($cacheNegocio[$cn] as $nf) {
+                $notas[] = array_merge((array)$nf, [
+                    'codtitulo' => $o['codtitulo'],
+                    'numero_titulo' => $o['numero'],
+                ]);
+            }
+        }
+
+        usort($notas, function ($a, $b) {
+            $cmp = strcmp((string)($b['emissao'] ?? ''), (string)($a['emissao'] ?? ''));
+            if ($cmp !== 0) return $cmp;
+            return ($b['codnotafiscal'] ?? 0) <=> ($a['codnotafiscal'] ?? 0);
+        });
+
+        return $notas;
+    }
+
     public function toArray($request)
     {
         $debito = (float)$this->debito;
@@ -126,6 +188,7 @@ class TituloDetalheResource extends Resource
             'sistema'          => $this->sistema,
             'movimentos'       => $movimentos,
             'boletos'          => $boletos,
+            'notas'            => $this->notasVinculadas(),
             'gerado_automaticamente' => (!empty($this->codnegocioformapagamento) || !empty($this->codtituloagrupamento)),
         ];
     }

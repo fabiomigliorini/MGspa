@@ -10,7 +10,7 @@ use Mg\Usuario\Autorizador;
 class TituloController extends MgController
 {
     // Visualização: qualquer usuário autenticado.
-    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca', 'Publico'];
+    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca', 'Publico', 'Caixa'];
     // Mutação (criar/alterar/estornar): apenas financeiro/cobrança/admin.
     private const GRUPOS_MUTACAO = ['Administrador', 'Financeiro', 'Cobranca'];
 
