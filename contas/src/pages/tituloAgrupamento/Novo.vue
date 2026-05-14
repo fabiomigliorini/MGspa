@@ -5,6 +5,7 @@ import { useQuasar, date } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
+import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -35,6 +36,7 @@ const vencimentos = ref({
 
 const finalizar = ref({
   emissao: date.formatDate(new Date(), 'YYYY-MM-DD'),
+  codpessoa: null,
   observacao: '',
 })
 
@@ -60,6 +62,25 @@ const codfilialSugerida = computed(() => {
 
 watch(codfilialSugerida, (v) => {
   if (v != null) vencimentos.value.codfilial = v
+})
+
+// Pessoa sugerida: filtro se houver; senão, a com maior soma de abs(saldo) entre os títulos selecionados
+const codpessoaSugerido = computed(() => {
+  if (codpessoaFiltro.value != null) return codpessoaFiltro.value
+  const acc = new Map()
+  for (const l of linhas.value) {
+    if (l.codpessoa == null) continue
+    acc.set(l.codpessoa, (acc.get(l.codpessoa) || 0) + Math.abs(Number(l.saldo) || 0))
+  }
+  let vencedora = null
+  let maior = -Infinity
+  for (const [cod, soma] of acc) {
+    if (soma > maior) {
+      maior = soma
+      vencedora = cod
+    }
+  }
+  return vencedora
 })
 
 const somaParcelas = computed(() =>
@@ -204,7 +225,12 @@ function setDias(i, dias) {
 }
 
 watch(dialogFinalizar, (v) => {
-  if (v) calcularParcelas()
+  if (v) {
+    if (codpessoaSugerido.value != null) {
+      finalizar.value.codpessoa = codpessoaSugerido.value
+    }
+    calcularParcelas()
+  }
 })
 
 watch(
@@ -215,8 +241,8 @@ watch(
 )
 
 async function salvar() {
-  if (!codpessoaFiltro.value) {
-    notifyError({ message: 'Selecione a pessoa nos filtros!' }, 'Selecione a pessoa')
+  if (!finalizar.value.codpessoa) {
+    notifyError({ message: 'Selecione a pessoa!' }, 'Selecione a pessoa')
     return
   }
   if (!parcelasOk.value) {
@@ -231,7 +257,7 @@ async function salvar() {
     saving.value = true
     try {
       const payload = {
-        codpessoa: codpessoaFiltro.value,
+        codpessoa: finalizar.value.codpessoa,
         codfilial: vencimentos.value.codfilial,
         codportador: vencimentos.value.codportador || null,
         emissao: finalizar.value.emissao,
@@ -325,6 +351,14 @@ async function salvar() {
 
           <q-card-section class="q-pt-none">
             <div class="row q-col-gutter-md">
+              <div class="col-xs-12">
+                <SelectPessoa
+                  v-model="finalizar.codpessoa"
+                  outlined
+                  label="Pessoa"
+                  :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
               <div class="col-xs-12 col-sm-3">
                 <MgInputData
                   v-model="finalizar.emissao"

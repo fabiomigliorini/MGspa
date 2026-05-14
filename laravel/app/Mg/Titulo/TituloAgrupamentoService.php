@@ -4,6 +4,11 @@ namespace Mg\Titulo;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mg\Negocio\Negocio;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscal\NotaFiscalDuplicatas;
+use Mg\NotaFiscal\NotaFiscalNegocioService;
+use Mg\NotaFiscal\NotaFiscalService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 
 class TituloAgrupamentoService
@@ -243,6 +248,81 @@ class TituloAgrupamentoService
         $ag->save();
 
         return self::carregar($ag->codtituloagrupamento);
+    }
+
+    public static function notasDoAgrupamento(int $codtituloagrupamento): array
+    {
+        $sql = "
+            select distinct nfpb.codnotafiscal
+            from tbltituloagrupamento ta
+            inner join tblmovimentotitulo mt on (mt.codtituloagrupamento = ta.codtituloagrupamento)
+            inner join tbltitulo t on (t.codtitulo = mt.codtitulo)
+            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            inner join tblnegocioprodutobarra npb on (npb.codnegocio = nfp.codnegocio)
+            inner join tblnotafiscalprodutobarra nfpb on (nfpb.codnegocioprodutobarra = npb.codnegocioprodutobarra)
+            where ta.codtituloagrupamento = :codtituloagrupamento
+        ";
+        $rows = DB::select($sql, ['codtituloagrupamento' => $codtituloagrupamento]);
+        $codnotas = array_map(fn($r) => (int)$r->codnotafiscal, $rows);
+        if (empty($codnotas)) {
+            return [];
+        }
+        return NotaFiscal::whereIn('codnotafiscal', $codnotas)
+            ->with([
+                'Filial:codfilial,filial',
+                'Pessoa:codpessoa,fantasia',
+                'NaturezaOperacao:codnaturezaoperacao,naturezaoperacao',
+            ])
+            ->orderBy('codnotafiscal', 'desc')
+            ->get()
+            ->all();
+    }
+
+    public static function gerarNotaFiscal(TituloAgrupamento $ag, int $modelo, bool $todos = false): NotaFiscal
+    {
+        if (!empty($ag->cancelamento)) {
+            throw new \Exception('Agrupamento estornado!', 1);
+        }
+        if (!in_array($modelo, [NotaFiscalService::MODELO_NFE, NotaFiscalService::MODELO_NFCE], true)) {
+            throw new \InvalidArgumentException('Modelo de Nota Fiscal inválido!');
+        }
+
+        $codnegocios = DB::select('
+            select distinct nfp.codnegocio
+            from tbltituloagrupamento ta
+            inner join tblmovimentotitulo mt on (mt.codtituloagrupamento = ta.codtituloagrupamento)
+            inner join tbltitulo t on (t.codtitulo = mt.codtitulo)
+            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            where ta.codtituloagrupamento = :codtituloagrupamento
+        ', ['codtituloagrupamento' => $ag->codtituloagrupamento]);
+
+        if (empty($codnegocios)) {
+            throw new \Exception('Não foi possível localizar nenhum negócio vinculado ao fechamento!', 1);
+        }
+
+        $nota = null;
+        foreach ($codnegocios as $row) {
+            $negocio = Negocio::findOrFail((int)$row->codnegocio);
+            $nota = NotaFiscalNegocioService::gerarNotaFiscalDoNegocio($negocio, $modelo, false, $nota, $todos);
+        }
+
+        if (empty($nota) || empty($nota->codnotafiscal)) {
+            throw new \Exception('Erro ao gerar Nota Fiscal!', 1);
+        }
+
+        // duplicatas a partir dos títulos gerados pelo agrupamento
+        foreach ($ag->TituloS as $tit) {
+            $valor = abs((float)$tit->credito - (float)$tit->debito);
+            $dupl = new NotaFiscalDuplicatas([
+                'codnotafiscal' => $nota->codnotafiscal,
+                'fatura'        => $tit->numero,
+                'vencimento'    => $tit->vencimento,
+                'valor'         => $valor,
+            ]);
+            $dupl->save();
+        }
+
+        return $nota;
     }
 
     public static function pendentes(array $filtros): array

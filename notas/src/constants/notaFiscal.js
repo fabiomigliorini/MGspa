@@ -2,6 +2,13 @@
  * Constantes e opções reutilizáveis para Notas Fiscais
  */
 
+import {
+  NOTA_FISCAL_STATUS_OPTIONS,
+  getNotaFiscalStatusLabel,
+  getNotaFiscalStatusColor,
+  getNotaFiscalStatusIcon,
+} from '@components/notaFiscalStatus'
+
 /**
  * Configurações de ícones e cores por ente tributário
  */
@@ -39,15 +46,7 @@ export const MODELO_OPTIONS = [
   { label: 'NFC-e (65)', value: '65' },
 ]
 
-export const STATUS_OPTIONS = [
-  { label: 'Lançada', value: 'LAN', icon: 'description', color: 'blue-grey' },
-  { label: 'Em Digitação', value: 'DIG', icon: 'edit_note', color: 'blue' },
-  { label: 'Não Autorizada', value: 'ERR', icon: 'error', color: 'deep-orange' },
-  { label: 'Autorizada', value: 'AUT', icon: 'check_circle', color: 'secondary' },
-  { label: 'Cancelada', value: 'CAN', icon: 'highlight_off', color: 'negative' },
-  { label: 'Inutilizada', value: 'INU', icon: 'block', color: 'warning' },
-  { label: 'Denegada', value: 'DEN', icon: 'report', color: 'negative' },
-]
+export const STATUS_OPTIONS = NOTA_FISCAL_STATUS_OPTIONS
 
 export const EMITIDA_OPTIONS = [
   { label: 'Nossa Emissão', value: true },
@@ -59,29 +58,9 @@ export const OPERACAO_OPTIONS = [
   { label: 'Saída', value: 1 },
 ]
 
-/**
- * Retorna a label do status baseado no valor
- */
-export const getStatusLabel = (status) => {
-  const option = STATUS_OPTIONS.find((opt) => opt.value === status)
-  return option ? option.label : status
-}
-
-/**
- * Retorna a cor do status para badges/chips
- */
-export const getStatusColor = (status) => {
-  const option = STATUS_OPTIONS.find((opt) => opt.value === status)
-  return option ? option.color : 'grey'
-}
-
-/**
- * Retorna o ícone do status
- */
-export const getStatusIcon = (status) => {
-  const option = STATUS_OPTIONS.find((opt) => opt.value === status)
-  return option ? option.icon : 'help'
-}
+export const getStatusLabel = getNotaFiscalStatusLabel
+export const getStatusColor = getNotaFiscalStatusColor
+export const getStatusIcon = getNotaFiscalStatusIcon
 
 /**
  * Retorna a label do modelo baseado no valor

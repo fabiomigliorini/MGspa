@@ -117,4 +117,30 @@ class TituloAgrupamentoController extends Controller
         $ta = TituloAgrupamento::findOrFail($codtituloagrupamento);
         return TituloAgrupamentoMailService::mail($ta, $dest);
     }
+
+    public function gerarNotaFiscal(Request $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
+
+        $request->validate([
+            'modelo' => 'required|integer|in:55,65',
+            'todos'  => 'sometimes|boolean',
+        ]);
+
+        try {
+            $ag = TituloAgrupamentoService::carregar($id);
+            $nota = TituloAgrupamentoService::gerarNotaFiscal(
+                $ag,
+                (int)$request->modelo,
+                (bool)$request->boolean('todos'),
+            );
+            return response()->json([
+                'codnotafiscal' => (int)$nota->codnotafiscal,
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
 }

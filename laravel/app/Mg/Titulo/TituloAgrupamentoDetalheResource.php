@@ -68,6 +68,25 @@ class TituloAgrupamentoDetalheResource extends Resource
             })
             ->all();
 
+        $notas = collect(TituloAgrupamentoService::notasDoAgrupamento((int)$this->codtituloagrupamento))
+            ->map(fn($n) => [
+                'codnotafiscal'      => (int)$n->codnotafiscal,
+                'codfilial'          => (int)$n->codfilial,
+                'filial'             => optional($n->Filial)->filial,
+                'codpessoa'          => (int)$n->codpessoa,
+                'fantasia'           => optional($n->Pessoa)->fantasia,
+                'modelo'             => (int)$n->modelo,
+                'serie'              => $n->serie,
+                'numero'             => $n->numero,
+                'emitida'            => (bool)$n->emitida,
+                'emissao'            => $n->emissao,
+                'status'             => $n->status,
+                'nfechave'           => $n->nfechave,
+                'valortotal'         => (float)$n->valortotal,
+                'naturezaoperacao'   => optional($n->NaturezaOperacao)->naturezaoperacao,
+            ])
+            ->all();
+
         return [
             'codtituloagrupamento' => (int)$this->codtituloagrupamento,
             'codpessoa'            => (int)$this->codpessoa,
@@ -84,6 +103,7 @@ class TituloAgrupamentoDetalheResource extends Resource
             'credito'              => $credito,
             'valor'                => abs($valor),
             'operacao'             => $operacao,
+            'notas_fiscais'        => $notas,
             'titulos_gerados'      => $titulosGerados,
             'titulos_baixados'     => $titulosBaixados,
         ];

@@ -30,7 +30,8 @@ import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicata
 import NotaFiscalReferenciadaDialog from '../components/dialogs/NotaFiscalReferenciadaDialog.vue'
 import NotaFiscalCartaCorrecaoDialog from '../components/dialogs/NotaFiscalCartaCorrecaoDialog.vue'
 import NotaFiscalItemDialog from 'src/components/dialogs/NotaFiscalItemDialog.vue'
-import NotaFiscalAcoes from '../components/NotaFiscalAcoes.vue'
+import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
+import api from '../services/api'
 
 const router = useRouter()
 const route = useRoute()
@@ -1352,9 +1353,10 @@ onUnmounted(() => {
             <q-separator v-if="nota?.emitida" />
 
             <q-card-actions align="right" v-if="nota?.emitida">
-              <NotaFiscalAcoes
+              <MgNotaFiscalAcoes
                 ref="acoesRef"
                 :nota="nota"
+                :api="api"
                 show-extras
                 @action-completed="loadData"
               />
