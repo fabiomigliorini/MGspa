@@ -58,6 +58,8 @@ module.exports = configure(function (/* ctx */) {
       alias: {
         "@components": path.resolve(__dirname, "../components"),
         "quasar/src": path.resolve(__dirname, "node_modules/quasar/src"),
+        vue: path.resolve(__dirname, "node_modules/vue"),
+        quasar: path.resolve(__dirname, "node_modules/quasar"),
       },
 
       vueRouterMode: "history", // available values: 'hash', 'history'
