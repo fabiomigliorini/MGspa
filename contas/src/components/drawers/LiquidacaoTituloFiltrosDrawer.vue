@@ -58,18 +58,14 @@ const estornadoOptions = [
         :bottom-slots="false"
         label="Pessoa"
         class="q-mb-md"
-      >
-        <template #prepend><q-icon name="person" /></template>
-      </SelectPessoa>
+      />
       <SelectGrupoEconomico
         v-model="store.filters.codgrupoeconomico"
         outlined
         clearable
         :bottom-slots="false"
         label="Grupo Econômico"
-      >
-        <template #prepend><q-icon name="groups" /></template>
-      </SelectGrupoEconomico>
+      />
     </FilterGroup>
 
     <FilterGroup title="Portador">

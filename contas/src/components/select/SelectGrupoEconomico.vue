@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed, useSlots } from 'vue'
 import { api } from 'src/services/api'
 
 const props = defineProps({
@@ -44,6 +44,9 @@ watch(
   () => props.modelValue,
   (v) => carregarPorId(v),
 )
+
+const slots = useSlots()
+const slotsForwarded = computed(() => Object.keys(slots).filter((n) => n !== 'prepend'))
 </script>
 
 <template>
@@ -72,7 +75,10 @@ watch(
         <q-item-section class="text-grey-6">Digite para buscar</q-item-section>
       </q-item>
     </template>
-    <template v-for="(_, name) in $slots" :key="name" #[name]="slotData">
+    <template #prepend>
+      <slot name="prepend"><q-icon name="groups" /></slot>
+    </template>
+    <template v-for="name in slotsForwarded" :key="name" #[name]="slotData">
       <slot :name="name" v-bind="slotData ?? {}" />
     </template>
   </q-select>
