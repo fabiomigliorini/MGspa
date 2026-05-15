@@ -110,10 +110,15 @@ class LiquidacaoTituloController extends Controller
 
     // ==== Recibos (mantidos do código antigo) ====
 
+    private const GRUPOS_RECIBO = ['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca', 'Gerente', 'Caixa'];
+
     public function recibo(int $id)
     {
-        Autorizador::autoriza(['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca']);
+        Autorizador::autoriza(self::GRUPOS_RECIBO);
         $liq = static::carregarLiquidacao($id);
+        if (!LiquidacaoTituloAutorizador::podeVer($liq, Auth::user()->codusuario)) {
+            abort(403, 'Liquidação não pertence à sua filial.');
+        }
 
         $html = '';
         if ($liq->credito > 0) {
@@ -132,8 +137,11 @@ class LiquidacaoTituloController extends Controller
 
     public function reciboRecebimento(int $id)
     {
-        Autorizador::autoriza(['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca']);
+        Autorizador::autoriza(self::GRUPOS_RECIBO);
         $liq = static::carregarLiquidacao($id);
+        if (!LiquidacaoTituloAutorizador::podeVer($liq, Auth::user()->codusuario)) {
+            abort(403, 'Liquidação não pertence à sua filial.');
+        }
 
         if ($liq->credito <= 0) {
             throw new \Exception('Liquidação sem créditos para recibo de recebimento.', 400);
@@ -147,8 +155,11 @@ class LiquidacaoTituloController extends Controller
 
     public function reciboPagamento(int $id)
     {
-        Autorizador::autoriza(['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca']);
+        Autorizador::autoriza(self::GRUPOS_RECIBO);
         $liq = static::carregarLiquidacao($id);
+        if (!LiquidacaoTituloAutorizador::podeVer($liq, Auth::user()->codusuario)) {
+            abort(403, 'Liquidação não pertence à sua filial.');
+        }
 
         if ($liq->debito <= 0) {
             throw new \Exception('Liquidação sem débitos para recibo de pagamento.', 400);
