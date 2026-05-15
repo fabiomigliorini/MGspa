@@ -7,6 +7,7 @@ import FilterGroup from 'src/components/FilterGroup.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
+import SelectUsuario from 'src/components/select/SelectUsuario.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const store = useLiquidacaoTituloStore()
@@ -78,6 +79,16 @@ const estornadoOptions = [
       >
         <template #prepend><q-icon name="credit_card" /></template>
       </SelectPortador>
+    </FilterGroup>
+
+    <FilterGroup title="Usuário">
+      <SelectUsuario
+        v-model="store.filters.codusuariocriacao"
+        outlined
+        clearable
+        :bottom-slots="false"
+        label="Criado por"
+      />
     </FilterGroup>
 
     <FilterGroup title="Datas">

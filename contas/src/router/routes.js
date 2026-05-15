@@ -221,7 +221,13 @@ const routes = [
         meta: {
           auth: true,
           title: 'Liquidações de Títulos',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.GERENTE,
+            PERMISSOES.CAIXA,
+          ],
           leftDrawer: defineAsyncComponent(() =>
             import('components/drawers/LiquidacaoTituloFiltrosDrawer.vue'),
           ),
@@ -234,7 +240,13 @@ const routes = [
         meta: {
           auth: true,
           title: 'Nova Liquidação',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.GERENTE,
+            PERMISSOES.CAIXA,
+          ],
         },
       },
       {
@@ -244,7 +256,13 @@ const routes = [
         meta: {
           auth: true,
           title: 'Liquidação',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.GERENTE,
+            PERMISSOES.CAIXA,
+          ],
         },
       },
       {

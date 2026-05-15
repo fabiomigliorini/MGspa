@@ -74,6 +74,34 @@ export const useAuthStore = defineStore('auth', () => {
     return permissionsList.some((p) => userPermissions.includes(p))
   }
 
+  function temGrupo(grupoNome) {
+    if (!user.value?.permissoes) return false
+    return user.value.permissoes.some((p) => p.grupousuario === grupoNome)
+  }
+
+  function filiaisDoGrupo(grupoNome) {
+    if (!user.value?.permissoes) return []
+    const filiais = []
+    for (const p of user.value.permissoes) {
+      if (p.grupousuario === grupoNome) {
+        for (const f of p.filiais || []) {
+          if (f.codfilial != null) filiais.push(f.codfilial)
+        }
+      }
+    }
+    return [...new Set(filiais)]
+  }
+
+  // null = sem restrição (Administrador/Financeiro/Cobranca);
+  // array = filiais permitidas para Caixa+Gerente.
+  function filiaisRestritas() {
+    if (!user.value?.permissoes) return []
+    if (temGrupo('Administrador') || temGrupo('Financeiro') || temGrupo('Cobranca')) {
+      return null
+    }
+    return [...new Set([...filiaisDoGrupo('Caixa'), ...filiaisDoGrupo('Gerente')])]
+  }
+
   async function logout() {
     try {
       let tokenToUse = token.value
@@ -119,5 +147,8 @@ export const useAuthStore = defineStore('auth', () => {
     validateToken,
     logout,
     hasAnyPermission,
+    temGrupo,
+    filiaisDoGrupo,
+    filiaisRestritas,
   }
 })

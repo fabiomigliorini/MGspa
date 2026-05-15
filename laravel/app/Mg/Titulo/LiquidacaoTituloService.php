@@ -3,6 +3,7 @@
 namespace Mg\Titulo;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class LiquidacaoTituloService
@@ -13,11 +14,21 @@ class LiquidacaoTituloService
             ->select('tblliquidacaotitulo.*')
             ->with([
                 'Pessoa:codpessoa,fantasia',
-                'Portador:codportador,portador',
+                'Portador:codportador,portador,codfilial',
                 'UsuarioCriacao:codusuario,usuario',
             ]);
 
         $q->join('tblpessoa as p', 'p.codpessoa', '=', 'tblliquidacaotitulo.codpessoa');
+
+        if (array_key_exists('filiais_permitidas', $filtros) && $filtros['filiais_permitidas'] !== null) {
+            $q->join('tblportador as pt', 'pt.codportador', '=', 'tblliquidacaotitulo.codportador');
+            $filiais = $filtros['filiais_permitidas'];
+            if (empty($filiais)) {
+                $q->whereRaw('1 = 0');
+            } else {
+                $q->whereIn('pt.codfilial', $filiais);
+            }
+        }
 
         if (!empty($filtros['codliquidacaotitulo'])) {
             $q->where('tblliquidacaotitulo.codliquidacaotitulo', preg_replace('/[^0-9]/', '', (string)$filtros['codliquidacaotitulo']));
@@ -64,7 +75,7 @@ class LiquidacaoTituloService
     {
         return LiquidacaoTitulo::with([
             'Pessoa:codpessoa,fantasia',
-            'Portador:codportador,portador',
+            'Portador:codportador,portador,codfilial',
             'UsuarioCriacao:codusuario,usuario',
             'UsuarioAlteracao:codusuario,usuario',
             'MovimentoTituloS' => function ($q) {
@@ -157,6 +168,7 @@ class LiquidacaoTituloService
         }
 
         $liq->estornado = Carbon::now()->format('Y-m-d H:i:s');
+        $liq->codusuarioestorno = Auth::user()->codusuario;
         $liq->save();
 
         return self::carregar($liq->codliquidacaotitulo);

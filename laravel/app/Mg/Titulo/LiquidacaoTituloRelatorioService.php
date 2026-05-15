@@ -48,6 +48,16 @@ class LiquidacaoTituloRelatorioService
             ])
             ->join('tblpessoa as p', 'p.codpessoa', '=', 'tblliquidacaotitulo.codpessoa');
 
+        if (array_key_exists('filiais_permitidas', $filtros) && $filtros['filiais_permitidas'] !== null) {
+            $q->join('tblportador as pt', 'pt.codportador', '=', 'tblliquidacaotitulo.codportador');
+            $filiais = $filtros['filiais_permitidas'];
+            if (empty($filiais)) {
+                $q->whereRaw('1 = 0');
+            } else {
+                $q->whereIn('pt.codfilial', $filiais);
+            }
+        }
+
         // mesmo filtro do listar(), mas sem paginação
         if (!empty($filtros['codliquidacaotitulo'])) {
             $q->where('tblliquidacaotitulo.codliquidacaotitulo', preg_replace('/[^0-9]/', '', (string)$filtros['codliquidacaotitulo']));

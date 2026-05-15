@@ -9,9 +9,15 @@ import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
 import { formataNumero } from 'src/utils/formatters.js'
+import { useAuthStore } from 'src/stores/auth'
+import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 
 const router = useRouter()
 const $q = useQuasar()
+const auth = useAuthStore()
+const store = useLiquidacaoTituloStore()
+
+const filiaisPortador = computed(() => auth.filiaisRestritas())
 
 const saving = ref(false)
 const dialogFinalizar = ref(false)
@@ -70,6 +76,7 @@ async function salvar() {
         })),
       }
       const { data } = await api.post('v1/liquidacao-titulo', payload)
+      store.upsertLocal(data.data)
       notifySuccess('Liquidação criada')
       router.replace({
         name: 'liquidacao-titulo-detalhe',
@@ -155,6 +162,7 @@ async function salvar() {
                   outlined
                   label="Portador"
                   :rules="[(v) => !!v || 'Obrigatório']"
+                  :filiais="filiaisPortador"
                   autofocus
                 />
               </div>

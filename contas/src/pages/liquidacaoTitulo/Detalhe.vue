@@ -6,6 +6,7 @@ import { api } from 'src/services/api'
 import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
+import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { abrirPdf } from 'src/utils/abrirPdf'
@@ -13,9 +14,16 @@ import { abrirPdf } from 'src/utils/abrirPdf'
 const route = useRoute()
 const $q = useQuasar()
 const auth = useAuthStore()
+const store = useLiquidacaoTituloStore()
 
 const podeMutar = computed(() =>
-  auth.hasAnyPermission([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
+  auth.hasAnyPermission([
+    PERMISSOES.ADMINISTRADOR,
+    PERMISSOES.FINANCEIRO,
+    PERMISSOES.COBRANCA,
+    PERMISSOES.GERENTE,
+    PERMISSOES.CAIXA,
+  ]),
 )
 
 const liq = ref(null)
@@ -70,6 +78,7 @@ function estornar() {
     try {
       const { data } = await api.post(`v1/liquidacao-titulo/${id.value}/estornar`)
       liq.value = data.data
+      store.upsertLocal(data.data)
       notifySuccess('Liquidação estornada')
     } catch (e) {
       notifyError(e, 'Erro ao estornar')
