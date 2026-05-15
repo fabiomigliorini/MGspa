@@ -50,25 +50,21 @@ const estornadoOptions = [
     </FilterGroup>
 
     <FilterGroup title="Pessoa">
-      <SelectPessoa
-        v-model="store.filters.codpessoa"
-        outlined
-        clearable
-        :bottom-slots="false"
-        label="Pessoa"
-        class="q-mb-md"
-      >
-        <template #prepend><q-icon name="person" /></template>
-      </SelectPessoa>
       <SelectGrupoEconomico
         v-model="store.filters.codgrupoeconomico"
         outlined
         clearable
         :bottom-slots="false"
         label="Grupo Econômico"
-      >
-        <template #prepend><q-icon name="groups" /></template>
-      </SelectGrupoEconomico>
+        class="q-mb-md"
+      />
+      <SelectPessoa
+        v-model="store.filters.codpessoa"
+        outlined
+        clearable
+        :bottom-slots="false"
+        label="Pessoa"
+      />
     </FilterGroup>
 
     <FilterGroup title="Datas">

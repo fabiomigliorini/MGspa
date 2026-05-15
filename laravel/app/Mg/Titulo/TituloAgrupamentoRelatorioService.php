@@ -123,71 +123,27 @@ class TituloAgrupamentoRelatorioService
 
     public static function pdfDetalhe(int $id): string
     {
-        $ag = TituloAgrupamentoService::carregar($id);
-        $valor = (float)$ag->debito - (float)$ag->credito;
-        $op = $valor < 0 ? 'CR' : 'DB';
-        $vstr = number_format(abs($valor), 2, ',', '.');
-        $emi = $ag->emissao ? Carbon::parse($ag->emissao)->format('d/m/Y') : '';
+        $ag = TituloAgrupamento::with([
+            'Pessoa',
+            'Pessoa.Cidade.Estado',
+            'TituloS' => function ($q) {
+                $q->orderBy('vencimento')->with([
+                    'Filial:codfilial,codpessoa,filial',
+                    'Filial.Pessoa',
+                    'Portador:codportador,portador',
+                ]);
+            },
+            'MovimentoTituloS' => function ($q) {
+                $q->orderBy('codmovimentotitulo')->with([
+                    'Titulo',
+                    'Titulo.Filial:codfilial,filial',
+                    'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo,estorno',
+                ]);
+            },
+        ])->findOrFail($id);
+
         $cod = '#' . str_pad((string)$ag->codtituloagrupamento, 8, '0', STR_PAD_LEFT);
-        $pess = htmlspecialchars(optional($ag->Pessoa)->fantasia ?? '', ENT_QUOTES, 'UTF-8');
-        $obs = htmlspecialchars((string)$ag->observacao, ENT_QUOTES, 'UTF-8');
-        $can = $ag->cancelamento ? '<div style="color:#c00">Estornado em ' . Carbon::parse($ag->cancelamento)->format('d/m/Y') . '</div>' : '';
-
-        $cabec = "
-            <table style='width:100%;border:0'>
-                <tr>
-                    <td><b>Pessoa:</b> {$pess}</td>
-                    <td><b>Emissão:</b> {$emi}</td>
-                    <td style='text-align:right'><b>Total:</b> {$vstr} {$op}</td>
-                </tr>
-                <tr><td colspan='3'><b>Observação:</b> {$obs}</td></tr>
-            </table>
-            {$can}
-        ";
-
-        $linhasGerados = '';
-        foreach ($ag->TituloS as $t) {
-            $valorT = (float)$t->debito - (float)$t->credito;
-            $opT = $valorT < 0 ? 'CR' : 'DB';
-            $vTstr = number_format(abs($valorT), 2, ',', '.');
-            $vencT = $t->vencimento ? Carbon::parse($t->vencimento)->format('d/m/Y') : '';
-            $linhasGerados .= "<tr>
-                <td>" . htmlspecialchars(optional($t->Filial)->filial ?? '', ENT_QUOTES, 'UTF-8') . "</td>
-                <td>{$t->numero}</td>
-                <td>{$vencT}</td>
-                <td style='text-align:right'>{$vTstr} {$opT}</td>
-                <td>" . htmlspecialchars(optional($t->Portador)->portador ?? '', ENT_QUOTES, 'UTF-8') . "</td>
-                <td>{$t->nossonumero}</td>
-            </tr>";
-        }
-
-        $linhasBaixados = '';
-        foreach ($ag->MovimentoTituloS as $m) {
-            if (optional($m->TipoMovimentoTitulo)->estorno) continue;
-            if (!$m->Titulo) continue;
-            if ($m->Titulo->codtituloagrupamento === $ag->codtituloagrupamento) continue;
-            $valorM = (float)$m->debito - (float)$m->credito;
-            $opM = $valorM < 0 ? 'CR' : 'DB';
-            $vMstr = number_format(abs($valorM), 2, ',', '.');
-            $vencM = $m->Titulo->vencimento ? Carbon::parse($m->Titulo->vencimento)->format('d/m/Y') : '';
-            $linhasBaixados .= "<tr>
-                <td>" . htmlspecialchars(optional($m->Titulo->Filial)->filial ?? '', ENT_QUOTES, 'UTF-8') . "</td>
-                <td>{$m->Titulo->numero}</td>
-                <td>" . htmlspecialchars(optional($m->TipoMovimentoTitulo)->tipomovimentotitulo ?? '', ENT_QUOTES, 'UTF-8') . "</td>
-                <td>{$vencM}</td>
-                <td style='text-align:right'>{$vMstr} {$opM}</td>
-            </tr>";
-        }
-
-        $html = self::estiloTabela() . $cabec
-            . "<h3>Títulos Gerados</h3>
-            <table><thead><tr>
-                <th>Filial</th><th>Número</th><th>Vencimento</th><th>Valor</th><th>Portador</th><th>Nosso Núm.</th>
-            </tr></thead><tbody>{$linhasGerados}</tbody></table>
-            <h3>Títulos Baixados</h3>
-            <table><thead><tr>
-                <th>Filial</th><th>Número</th><th>Tipo Mov.</th><th>Vencimento</th><th>Valor</th>
-            </tr></thead><tbody>{$linhasBaixados}</tbody></table>";
+        $html = view('titulo-agrupamento.detalhe', compact('ag'))->render();
 
         return self::renderPdf($html, 'Agrupamento de T&iacute;tulos ' . $cod);
     }

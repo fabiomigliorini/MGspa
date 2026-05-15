@@ -40,7 +40,8 @@ class NotaFiscalNegocioService
         Negocio $negocio,
         $modelo = NotaFiscalService::MODELO_NFCE,
         $incluirPagamentos = true,
-        ?NotaFiscal $nota = null
+        ?NotaFiscal $nota = null,
+        bool $ignorarJaNotados = false
     ) {
 
         if ($modelo == NotaFiscalService::MODELO_NFE && $negocio->codpessoa == PessoaService::CONSUMIDOR) {
@@ -144,10 +145,12 @@ class NotaFiscalNegocioService
                 continue;
             }
 
-            // se o item já está em outra nota
-            foreach ($item->NotaFiscalProdutoBarraS as $nfpb) {
-                if (!NotaFiscalStatusService::isCanceladaInutilizada($nfpb->NotaFiscal)) {
-                    continue (2); // vai para proximo item
+            // se o item já está em outra nota (a menos que seja explicitamente pra incluir todos)
+            if (!$ignorarJaNotados) {
+                foreach ($item->NotaFiscalProdutoBarraS as $nfpb) {
+                    if (!NotaFiscalStatusService::isCanceladaInutilizada($nfpb->NotaFiscal)) {
+                        continue (2); // vai para proximo item
+                    }
                 }
             }
 

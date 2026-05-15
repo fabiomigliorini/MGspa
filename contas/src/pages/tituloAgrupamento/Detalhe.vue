@@ -8,6 +8,13 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
+import {
+  getNotaFiscalStatusIcon,
+  getNotaFiscalStatusColor,
+  getNotaFiscalStatusLabel,
+  isNotaFiscalCanceladaInutilizada,
+} from '@components/notaFiscalStatus'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
 const route = useRoute()
@@ -43,9 +50,13 @@ async function carregar() {
 }
 
 function abrirRelatorio() {
-  abrirPdf(`v1/titulo-agrupamento/${id.value}/relatorio`, {}, {
-    title: 'Agrupamento',
-  })
+  abrirPdf(
+    `v1/titulo-agrupamento/${id.value}/relatorio`,
+    {},
+    {
+      title: 'Agrupamento',
+    },
+  )
 }
 
 function estornar() {
@@ -66,6 +77,43 @@ function estornar() {
 
 const dialogEmail = ref(false)
 const emailDest = ref('')
+
+const dialogModelo = ref(false)
+const gerandoNota = ref(false)
+const gerarTodos = ref(false)
+
+const NOTAS_URL = process.env.NOTAS_URL
+const urlNotaFiscal = (cod) => (cod ? `${NOTAS_URL}/nota/${cod}` : null)
+const formataNumeroNota = (n) => {
+  if (!n) return ''
+  const serie = n.serie ? String(n.serie).padStart(3, '0') : '000'
+  const numero = n.numero ? String(n.numero).padStart(9, '0') : '000000000'
+  const tipo = n.modelo === 65 ? 'NFC-e' : 'NF-e'
+  const status = n.emitida ? '' : ' (não emitida)'
+  return `${tipo} ${serie}-${numero}${status}`
+}
+
+function abrirDialogModelo() {
+  gerarTodos.value = false
+  dialogModelo.value = true
+}
+
+async function gerarNota(modelo) {
+  dialogModelo.value = false
+  gerandoNota.value = true
+  try {
+    await api.post(`v1/titulo-agrupamento/${id.value}/gerar-nota-fiscal`, {
+      modelo,
+      todos: gerarTodos.value,
+    })
+    notifySuccess('Nota Fiscal gerada')
+    await carregar()
+  } catch (e) {
+    notifyError(e, 'Erro ao gerar Nota Fiscal')
+  } finally {
+    gerandoNota.value = false
+  }
+}
 
 function abrirDialogEmail() {
   emailDest.value = ''
@@ -146,10 +194,7 @@ watch(() => route.fullPath, carregar)
           <div class="col-xs-12 col-sm-4">
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Total</div>
-              <div
-                class="text-h6"
-                :class="ag.operacao === 'CR' ? 'text-orange' : 'text-green'"
-              >
+              <div class="text-h6" :class="ag.operacao === 'CR' ? 'text-orange' : 'text-green'">
                 {{ formataNumero(ag.valor) }} {{ ag.operacao }}
               </div>
             </q-card>
@@ -171,6 +216,18 @@ watch(() => route.fullPath, carregar)
               v-if="!estornado"
             >
               <q-tooltip>Enviar por e-mail</q-tooltip>
+            </q-btn>
+            <q-btn
+              v-if="podeMutar && !estornado"
+              flat
+              round
+              dense
+              icon="receipt_long"
+              size="sm"
+              color="grey-7"
+              @click="abrirDialogModelo"
+            >
+              <q-tooltip>Gerar Nota Fiscal</q-tooltip>
             </q-btn>
             <q-btn
               flat
@@ -217,6 +274,66 @@ watch(() => route.fullPath, carregar)
           </template>
         </q-card>
 
+        <!-- Notas Fiscais -->
+        <q-card bordered flat class="q-mt-md" v-if="ag.notas_fiscais?.length">
+          <q-card-section class="text-grey-9 text-overline">
+            NOTAS FISCAIS ({{ ag.notas_fiscais.length }})
+          </q-card-section>
+          <q-list separator>
+            <q-item
+              v-for="n in ag.notas_fiscais"
+              :key="n.codnotafiscal"
+              :class="isNotaFiscalCanceladaInutilizada(n.status) ? 'bg-red-1' : ''"
+            >
+              <q-item-section avatar>
+                <q-icon
+                  :name="getNotaFiscalStatusIcon(n.status)"
+                  :color="getNotaFiscalStatusColor(n.status)"
+                  size="sm"
+                />
+              </q-item-section>
+              <q-item-section style="flex: 0 0 90px" class="gt-xs">
+                <q-item-label caption>{{ n.filial }}</q-item-label>
+                <q-item-label caption :class="`text-${getNotaFiscalStatusColor(n.status)} `">
+                  {{ getNotaFiscalStatusLabel(n.status) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section style="min-width: 0">
+                <q-item-label class="text-weight-medium">
+                  <q-btn
+                    flat
+                    dense
+                    no-caps
+                    padding="0"
+                    color="primary"
+                    :label="formataNumeroNota(n)"
+                    :href="urlNotaFiscal(n.codnotafiscal)"
+                    target="_blank"
+                  />
+                </q-item-label>
+                <q-item-label caption>{{ n.naturezaoperacao }}</q-item-label>
+              </q-item-section>
+              <q-item-section style="flex: 0 0 130px" class="gt-xs">
+                <q-item-label caption> Emissão {{ formataDataSemHora(n.emissao) }} </q-item-label>
+              </q-item-section>
+              <q-item-section style="flex: 0 0 110px">
+                <q-item-label class="text-weight-bold text-right">
+                  {{ formataNumero(n.valortotal) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <MgNotaFiscalAcoes
+                  compact
+                  show-extras
+                  :nota="n"
+                  :api="api"
+                  @action-completed="carregar"
+                />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
+
         <!-- Títulos Gerados -->
         <q-card bordered flat class="q-mt-md">
           <q-card-section class="text-grey-9 text-overline">
@@ -241,9 +358,7 @@ watch(() => route.fullPath, carregar)
                     :to="{ name: 'titulo-detalhe', params: { codtitulo: t.codtitulo } }"
                   />
                 </q-item-label>
-                <q-item-label caption v-if="t.boleto">
-                  Boleto {{ t.nossonumero }}
-                </q-item-label>
+                <q-item-label caption v-if="t.boleto"> Boleto {{ t.nossonumero }} </q-item-label>
               </q-item-section>
               <q-item-section style="flex: 0 0 130px" class="gt-xs">
                 <q-item-label caption>
@@ -311,7 +426,29 @@ watch(() => route.fullPath, carregar)
       </template>
     </div>
 
-    <q-inner-loading :showing="loading" color="primary" />
+    <q-inner-loading :showing="loading || gerandoNota" color="primary" />
+
+    <!-- Dialog Modelo Nota Fiscal -->
+    <q-dialog v-model="dialogModelo">
+      <q-card bordered flat style="width: 400px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline">
+          GERAR QUAL MODELO DE NOTA FISCAL?
+        </q-card-section>
+        <q-separator inset />
+        <q-card-section>
+          <q-checkbox v-model="gerarTodos" label="Incluir itens que já possuem nota fiscal" />
+          <div class="text-caption text-grey-7 q-mt-xs">
+            Por padrão só entram itens sem nota fiscal ativa.
+          </div>
+        </q-card-section>
+        <q-separator inset />
+        <q-card-actions align="right" class="q-pa-md">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat label="NFC-e (Cupom)" color="primary" @click="gerarNota(65)" />
+          <q-btn flat label="NF-e (Nota)" color="primary" @click="gerarNota(55)" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
 
     <!-- Dialog Email -->
     <q-dialog v-model="dialogEmail">

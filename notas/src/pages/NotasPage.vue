@@ -8,7 +8,8 @@ import { useSelectFilialStore } from 'stores/selects/filial'
 import { useAuth } from 'src/composables/useAuth'
 import { getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
 import { formatDateTime, formatCurrency, formatNumero } from 'src/utils/formatters'
-import NotaFiscalAcoes from '../components/NotaFiscalAcoes.vue'
+import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
+import api from '../services/api'
 import notaFiscalService from '../services/notaFiscalService'
 
 const $q = useQuasar()
@@ -33,6 +34,16 @@ const transferenciasRodando = ref(false)
 const loading = computed(() => notaFiscalStore.pagination.loading)
 const notas = computed(() => notaFiscalStore.notas)
 const hasActiveFilters = computed(() => notaFiscalStore.hasActiveFilters)
+
+async function atualizarNotaNaLista(codnotafiscal) {
+  try {
+    const fresh = await notaFiscalService.get(codnotafiscal)
+    notaFiscalStore.currentNota = fresh.data ?? fresh
+    notaFiscalStore.syncCurrentNotaToList()
+  } catch {
+    /* segue */
+  }
+}
 
 // Infinite scroll
 const onLoad = async (index, done) => {
@@ -416,14 +427,24 @@ onMounted(async () => {
 
               <!-- Ações -->
               <div class="q-px-sm col-12 col-md-2 text-right lt-md" @click.stop>
-                <NotaFiscalAcoes compact :nota="nota" />
+                <MgNotaFiscalAcoes
+                  compact
+                  :nota="nota"
+                  :api="api"
+                  @action-completed="atualizarNotaNaLista(nota.codnotafiscal)"
+                />
               </div>
             </div>
           </q-item-section>
 
           <!-- Ações -->
           <q-item-section side style="width: 95px" class="gt-sm">
-            <NotaFiscalAcoes compact :nota="nota" />
+            <MgNotaFiscalAcoes
+              compact
+              :nota="nota"
+              :api="api"
+              @action-completed="atualizarNotaNaLista(nota.codnotafiscal)"
+            />
           </q-item-section>
         </q-item>
       </q-list>
