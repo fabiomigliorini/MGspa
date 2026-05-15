@@ -884,6 +884,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // Titulo - CRUD
         Route::get('titulo/abertos-para-fechamento', '\Mg\Titulo\TituloController@abertosParaFechamento');
+        Route::get('titulo/listagem/relatorio', '\Mg\Titulo\TituloController@relatorioListagem');
         Route::get('titulo', '\Mg\Titulo\TituloController@index');
         Route::post('titulo', '\Mg\Titulo\TituloController@store');
         Route::get('titulo/{codtitulo}', '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');

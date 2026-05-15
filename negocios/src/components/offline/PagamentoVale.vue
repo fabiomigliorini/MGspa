@@ -100,12 +100,11 @@ const valorMax = [
 ];
 
 const salvar = async () => {
-
   // informa a pessoa do vale, se for consumidor final
   if (sNegocio.negocio.codpessoa == 1) {
     await sNegocio.informarPessoa(
       titulo.value.codpessoa,
-      null, //cpf
+      null //cpf
     );
   }
 
@@ -147,7 +146,11 @@ onUnmounted(() => {
 });
 </script>
 <template>
-  <q-dialog v-model="sNegocio.dialog.pagamentoVale" @before-show="inicializarValores()" ref="refDialogVale">
+  <q-dialog
+    v-model="sNegocio.dialog.pagamentoVale"
+    @before-show="inicializarValores()"
+    ref="refDialogVale"
+  >
     <q-card>
       <q-form @submit="salvar()">
         <q-card-section style="min-height: 430px">
@@ -157,11 +160,20 @@ onUnmounted(() => {
                 #Vale
               </q-item-section>
               <q-item-section>
-                <q-item-label class="text-h2 text-primary text-weight-bolder text-right">
-                  <q-input type="number" borderless v-model.number="codtituloVale" autofocus
+                <q-item-label
+                  class="text-h2 text-primary text-weight-bolder text-right"
+                >
+                  <MgInputValor
+                    autofocus
+                    :min="0"
+                    v-model="codtituloVale"
                     :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
-                    input-class="text-h2 text-weight-bolder text-right text-primary">
-                  </q-input>
+                    class="q-input-grande text-h4"
+                    input-class="text-weight-bold text-h2 text-primary"
+                    :borderless="true"
+                    :outlined="false"
+                    :decimals="0"
+                  />
                 </q-item-label>
 
                 <q-item-label caption class="text-right" v-if="titulo">
@@ -180,7 +192,9 @@ onUnmounted(() => {
                   R$
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-h4 text-secondary text-weight-bolder text-right">
+                  <q-item-label
+                    class="text-h4 text-secondary text-weight-bolder text-right"
+                  >
                     {{
                       new Intl.NumberFormat("pt-BR", {
                         style: "decimal",
@@ -200,10 +214,18 @@ onUnmounted(() => {
                   R$
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-h2 text-primary text-weight-bolder text-right">
-                    <MgInputValor :min="0" v-model="valorPagamento"
+                  <q-item-label
+                    class="text-h2 text-primary text-weight-bolder text-right"
+                  >
+                    <MgInputValor
+                      :min="0"
+                      v-model="valorPagamento"
                       :rules="(maiorQueZeroRule, valorMax)"
-                      class="text-h2 text-weight-bolder text-primary" />
+                      class="q-input-grande text-h4"
+                      input-class="text-weight-bold text-h2 text-primary"
+                      :borderless="true"
+                      :outlined="false"
+                    />
                   </q-item-label>
                   <q-item-label caption class="text-right">
                     Pagamento
@@ -216,7 +238,9 @@ onUnmounted(() => {
                   R$
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label class="text-h4 text-secondary text-weight-bolder text-right">
+                  <q-item-label
+                    class="text-h4 text-secondary text-weight-bolder text-right"
+                  >
                     {{
                       new Intl.NumberFormat("pt-BR", {
                         style: "decimal",
@@ -235,8 +259,20 @@ onUnmounted(() => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="sNegocio.dialog.pagamentoVale = false" tabindex="-1" />
-          <q-btn type="submit" flat label="Salvar" color="primary" :disable="!(valorPagamento > 0)" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="primary"
+            @click="sNegocio.dialog.pagamentoVale = false"
+            tabindex="-1"
+          />
+          <q-btn
+            type="submit"
+            flat
+            label="Salvar"
+            color="primary"
+            :disable="!(valorPagamento > 0)"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

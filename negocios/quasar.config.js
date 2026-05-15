@@ -11,7 +11,7 @@
 const path = require("path");
 const { configure } = require("quasar/wrappers");
 
-module.exports = configure(function (/* ctx */) {
+module.exports = configure(function (ctx) {
   return {
     eslint: {
       // fix: true,
@@ -58,8 +58,13 @@ module.exports = configure(function (/* ctx */) {
       alias: {
         "@components": path.resolve(__dirname, "../components"),
         "quasar/src": path.resolve(__dirname, "node_modules/quasar/src"),
-        vue: path.resolve(__dirname, "node_modules/vue"),
-        quasar: path.resolve(__dirname, "node_modules/quasar"),
+        // Só no build: components compartilhados em ../components não têm node_modules próprio,
+        // então Rollup não consegue resolver 'vue'/'quasar' nos imports deles.
+        // Em dev esses aliases causam dupla instância e tela em branco.
+        ...(ctx.prod && {
+          vue: path.resolve(__dirname, "node_modules/vue"),
+          quasar: path.resolve(__dirname, "node_modules/quasar"),
+        }),
       },
 
       vueRouterMode: "history", // available values: 'hash', 'history'

@@ -9,19 +9,29 @@ class TituloListagemService
 {
     public static function listar(array $filtros)
     {
-        $q = Titulo::query()
-            ->select('tbltitulo.*')
-            ->with([
-                'Pessoa:codpessoa,fantasia,pessoa,codgrupoeconomico,codgrupocliente',
-                'Filial:codfilial,filial',
-                'Portador:codportador,portador,codbanco,codfilial',
-                'TipoTitulo:codtipotitulo,tipotitulo,credito,debito,pagar,receber',
-                'ContaContabil:codcontacontabil,contacontabil',
-                'UsuarioCriacao:codusuario,usuario',
-                'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
-            ]);
+        return self::query($filtros, [
+            'Pessoa:codpessoa,fantasia,pessoa,codgrupoeconomico,codgrupocliente',
+            'Filial:codfilial,filial',
+            'Portador:codportador,portador,codbanco,codfilial',
+            'TipoTitulo:codtipotitulo,tipotitulo,credito,debito,pagar,receber',
+            'ContaContabil:codcontacontabil,contacontabil',
+            'UsuarioCriacao:codusuario,usuario',
+            'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
+        ])->paginate(50);
+    }
 
-        // join com pessoa para filtros e ordenação
+    /**
+     * Monta o query builder aplicando todos os filtros e ordenação, mas sem paginar.
+     * Útil para relatórios.
+     */
+    public static function query(array $filtros, array $with = [])
+    {
+        $q = Titulo::query()->select('tbltitulo.*');
+
+        if (!empty($with)) {
+            $q->with($with);
+        }
+
         $q->join('tblpessoa as p', 'p.codpessoa', '=', 'tbltitulo.codpessoa');
 
         self::aplicarFiltrosBasicos($q, $filtros);
@@ -35,7 +45,7 @@ class TituloListagemService
         self::aplicarFiltroGrupoCliente($q, $filtros);
         self::aplicarOrdenacao($q, $filtros);
 
-        return $q->paginate(50);
+        return $q;
     }
 
     private static function aplicarFiltrosBasicos($q, array $filtros): void

@@ -101,10 +101,7 @@ const edicao = ref({
 const editar = async (uuid) => {
   await sNegocio.recarregar();
   const item = sNegocio.negocio.itens.find(function (item) {
-    return (
-      item.inativo === null &&
-      item.uuid == uuid
-    );
+    return item.inativo === null && item.uuid == uuid;
   });
   if (!item) {
     return false;
@@ -218,66 +215,118 @@ const linkProduto = (codproduto) => {
             <q-card-section>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input autofocus type="number" step="0.001" min="0.001" lazy-rules outlined
-                    v-model.number="edicao.quantidade" label="Quantidade" input-class="text-right"
-                    :rules="preenchimentoObrigatorioRule" @change="recalcularValorProdutos()" />
+                  <q-input />
+                  <MgInputValor
+                    autofocus
+                    lazy-rules
+                    :min="0.001"
+                    :decimals="3"
+                    v-model="edicao.quantidade"
+                    label="Quantidade"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor :min="0.01" v-model="edicao.valorunitario"
-                    prefix="R$" label="Preço" :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorProdutos()" />
+                  <MgInputValor
+                    :min="0.01"
+                    v-model="edicao.valorunitario"
+                    prefix="R$"
+                    label="Preço"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()"
+                  />
                 </div>
                 <div class="col-6">
-                  <MgInputValor :min="0.01" v-model="edicao.valorprodutos"
-                    prefix="R$" label="Total Produto" :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorProdutos()" />
-                </div>
-              </div>
-              <div class="row justify-end q-col-gutter-md">
-                <div class="col-6">
-                  <MgInputValor :min="0" :max="99.99"
-                    v-model="edicao.percentualdesconto" label="% Desc" suffix="%"
-                    :rules="maiorQueZeroRule" @change="recalcularValorDesconto()" />
-                </div>
-                <div class="col-6">
-                  <MgInputValor :max="edicao.valorprodutos - 0.01"
-                    v-model="edicao.valordesconto" prefix="R$" label="Desconto"
-                    :rules="maiorQueZeroRule" @change="recalcularPercentualDesconto()" />
+                  <MgInputValor
+                    :min="0.01"
+                    v-model="edicao.valorprodutos"
+                    prefix="R$"
+                    label="Total Produto"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valorfrete" prefix="R$"
-                    label="Frete" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    :min="0"
+                    :max="99.99"
+                    v-model="edicao.percentualdesconto"
+                    label="% Desc"
+                    suffix="%"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorDesconto()"
+                  />
+                </div>
+                <div class="col-6">
+                  <MgInputValor
+                    :max="edicao.valorprodutos - 0.01"
+                    v-model="edicao.valordesconto"
+                    prefix="R$"
+                    label="Desconto"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularPercentualDesconto()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valorseguro" prefix="R$"
-                    label="Seguro" :rules="maiorQueZeroRule"
-                    @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    v-model="edicao.valorfrete"
+                    prefix="R$"
+                    label="Frete"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valoroutras" prefix="R$"
-                    label="Outras" :rules="maiorQueZeroRule"
-                    @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    v-model="edicao.valorseguro"
+                    prefix="R$"
+                    label="Seguro"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valortotal" prefix="R$"
-                    label="Total" :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    v-model="edicao.valoroutras"
+                    prefix="R$"
+                    label="Outras"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()"
+                  />
+                </div>
+              </div>
+              <div class="row justify-end q-col-gutter-md">
+                <div class="col-6">
+                  <MgInputValor
+                    v-model="edicao.valortotal"
+                    prefix="R$"
+                    label="Total"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorTotal()"
+                  />
                 </div>
               </div>
             </q-card-section>
 
             <q-card-actions align="right">
-              <q-btn flat label="Cancelar" color="primary" @click="dialogItem = false" tabindex="-1" />
+              <q-btn
+                flat
+                label="Cancelar"
+                color="primary"
+                @click="dialogItem = false"
+                tabindex="-1"
+              />
               <q-btn type="submit" flat label="Salvar" color="primary" />
             </q-card-actions>
           </q-form>
@@ -287,25 +336,54 @@ const linkProduto = (codproduto) => {
 
     <!-- Paginacao -->
     <div class="row q-px-md">
-      <q-pagination v-model="sNegocio.paginaAtual" :max="paginas" :max-pages="6" boundary-numbers gutter="md" />
+      <q-pagination
+        v-model="sNegocio.paginaAtual"
+        :max="paginas"
+        :max-pages="6"
+        boundary-numbers
+        gutter="md"
+      />
     </div>
 
     <!-- listagem de produto -->
     <div class="row q-pa-md q-col-gutter-md">
-      <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" v-for="item in itens" :key="item.uuid">
+      <div
+        class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
+        v-for="item in itens"
+        :key="item.uuid"
+      >
         <q-card>
           <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
           <q-separator />
 
           <q-card-section class="q-pb-none">
-            <div class="absolute" style="top: 0; right: 5px; transform: translateY(-42px)">
-              <q-btn v-if="sNegocio.podeEditar" color="primary" round icon="edit" @click="editar(item.uuid)" />
-              <q-btn v-if="sNegocio.podeEditar" round color="negative" icon="delete" class="q-ma-sm"
-                @click="inativar(item.uuid)" />
+            <div
+              class="absolute"
+              style="top: 0; right: 5px; transform: translateY(-42px)"
+            >
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                color="primary"
+                round
+                icon="edit"
+                @click="editar(item.uuid)"
+              />
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                round
+                color="negative"
+                icon="delete"
+                class="q-ma-sm"
+                @click="inativar(item.uuid)"
+              />
             </div>
 
-            <Transition mode="out-in" :duration="{ enter: 300, leave: 300 }" leave-active-class="animated bounceOut"
-              enter-active-class="animated bounceIn">
+            <Transition
+              mode="out-in"
+              :duration="{ enter: 300, leave: 300 }"
+              leave-active-class="animated bounceOut"
+              enter-active-class="animated bounceIn"
+            >
               <div class="text-h5" :key="item.valortotal">
                 <small class="text-grey-7">R$</small>
                 {{
@@ -319,13 +397,25 @@ const linkProduto = (codproduto) => {
             </Transition>
 
             <div class="text-overline text-grey-7">
-              <q-btn v-if="sNegocio.podeEditar" size="xs" label="-" round dense flat @click="
-                sNegocio.itemAdicionarQuantidade(item.uuid, -1)
-                " />
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                size="xs"
+                label="-"
+                round
+                dense
+                flat
+                @click="sNegocio.itemAdicionarQuantidade(item.uuid, -1)"
+              />
               {{ new Intl.NumberFormat("pt-BR").format(item.quantidade) }}
-              <q-btn v-if="sNegocio.podeEditar" size="xs" label="+" round dense flat @click="
-                sNegocio.itemAdicionarQuantidade(item.uuid, 1)
-                " />
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                size="xs"
+                label="+"
+                round
+                dense
+                flat
+                @click="sNegocio.itemAdicionarQuantidade(item.uuid, 1)"
+              />
               de
               {{
                 new Intl.NumberFormat("pt-BR", {
@@ -377,7 +467,10 @@ const linkProduto = (codproduto) => {
             </div>
           </q-card-section>
 
-          <q-item :to="'/negocio/' + item.devolucao.codnegocio" v-if="item.devolucao && item.devolucao.codnegocio">
+          <q-item
+            :to="'/negocio/' + item.devolucao.codnegocio"
+            v-if="item.devolucao && item.devolucao.codnegocio"
+          >
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
                 Devolvido de #{{
@@ -387,8 +480,11 @@ const linkProduto = (codproduto) => {
             </q-item-section>
           </q-item>
 
-          <q-item v-for="devolucao in item.devolucoes" v-bind:key="devolucao.codnegocioprodutobarra"
-            :to="'/negocio/' + devolucao.codnegocio">
+          <q-item
+            v-for="devolucao in item.devolucoes"
+            v-bind:key="devolucao.codnegocioprodutobarra"
+            :to="'/negocio/' + devolucao.codnegocio"
+          >
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
                 Devolvido
@@ -407,7 +503,12 @@ const linkProduto = (codproduto) => {
               </q-item-label>
             </q-item-section>
           </q-item>
-          <q-item clickable v-ripple :href="linkProduto(item.codproduto)" target="_blank">
+          <q-item
+            clickable
+            v-ripple
+            :href="linkProduto(item.codproduto)"
+            target="_blank"
+          >
             <q-item-section class="text-caption text-grey-7">
               <q-item-label overline>{{ item.barras }}</q-item-label>
               <q-item-label>{{ item.produto }}</q-item-label>
@@ -420,12 +521,24 @@ const linkProduto = (codproduto) => {
 
     <!-- Paginacao -->
     <div class="row q-px-md q-mb-lg">
-      <q-pagination v-model="sNegocio.paginaAtual" :max="paginas" :max-pages="6" boundary-numbers gutter="md" />
+      <q-pagination
+        v-model="sNegocio.paginaAtual"
+        :max="paginas"
+        :max-pages="6"
+        boundary-numbers
+        gutter="md"
+      />
     </div>
 
     <div class="q-pa-md q-mb-xl" v-if="inativos.length > 0">
-      <q-table :rows="inativos" virtual-scroll title="Itens Excluídos" :rows-per-page-options="[0]" :columns="columns"
-        selection="multiple">
+      <q-table
+        :rows="inativos"
+        virtual-scroll
+        title="Itens Excluídos"
+        :rows-per-page-options="[0]"
+        :columns="columns"
+        selection="multiple"
+      >
         <template v-slot:header-selection> </template>
         <template v-slot:body-selection="scope">
           <q-avatar>

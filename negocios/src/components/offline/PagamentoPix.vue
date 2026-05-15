@@ -202,7 +202,10 @@ const whatsapp = () => {
                   v-model="valorPagamento"
                   :rules="valorRule"
                   autofocus
-                  class="text-h2 text-weight-bolder text-primary"
+                  class="q-input-grande text-h4"
+                  input-class="text-weight-bold text-h2 text-primary"
+                  :borderless="true"
+                  :outlined="false"
                 />
               </q-item-section>
             </q-item>

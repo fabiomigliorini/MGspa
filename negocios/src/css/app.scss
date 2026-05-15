@@ -1,1 +1,15 @@
 // app global css in SCSS form
+
+// Permite q-input/MgInputValor crescerem com fontes grandes (text-h1/h2).
+// Sem isto, .q-field__control fica preso em 56px e o glifo é cortado.
+.q-input-grande {
+  .q-field__control {
+    height: auto;
+    min-height: 7rem;
+  }
+  .q-field__native,
+  .q-field__prefix,
+  .q-field__suffix {
+    line-height: 1.2;
+  }
+}

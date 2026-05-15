@@ -796,7 +796,7 @@ watch(() => route.fullPath, carregar)
               <q-list separator>
                 <q-item
                   v-for="n in titulo.notas"
-                  :key="`${n.codnotafiscal}-${n.codtitulo}`"
+                  :key="n.codnotafiscal"
                   clickable
                   v-ripple
                   @click="abrirDanfe(n.codnotafiscal)"
@@ -811,7 +811,6 @@ watch(() => route.fullPath, carregar)
                     <q-item-label caption>
                       {{ n.filial }} • Emissão {{ formataDataSemHora(n.emissao) }}
                     </q-item-label>
-                    <q-item-label caption>Título {{ n.numero_titulo }}</q-item-label>
                   </q-item-section>
                   <q-item-section side>
                     <q-item-label class="text-weight-bold">

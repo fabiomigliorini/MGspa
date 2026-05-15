@@ -49,7 +49,7 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: false,
     tipo: 5, // Credito Loja
-    diasAvulsos: []
+    diasAvulsos: [],
   },
   {
     codformapagamento: process.env.CODFORMAPAGAMENTO_FECHAMENTO,
@@ -62,7 +62,7 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: false,
     tipo: 5, // Credito Loja
-    diasAvulsos: []
+    diasAvulsos: [],
   },
   {
     codformapagamento: process.env.CODFORMAPAGAMENTO_BOLETO,
@@ -75,7 +75,7 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: true,
     tipo: 15, // Boleto Bancario
-    diasAvulsos: [7, 10, 15]
+    diasAvulsos: [7, 10, 15],
   },
   {
     codformapagamento: process.env.CODFORMAPAGAMENTO_CARTEIRA,
@@ -88,7 +88,7 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: true,
     tipo: 5, // Credito Loja
-    diasAvulsos: []
+    diasAvulsos: [],
   },
 ]);
 
@@ -175,8 +175,8 @@ const calcularParcelas = async () => {
       parcelas: 1,
       valorjuros: 0,
       valorparcela: valor,
-      label: 'Cliente paga na entrega',
-      dias: 0
+      label: "Cliente paga na entrega",
+      dias: 0,
     });
     pagamento.value.parcelas = 0;
     return;
@@ -188,12 +188,12 @@ const calcularParcelas = async () => {
       parcelas: 1,
       valorjuros: 0,
       valorparcela: valor,
-      label: i + ' Dias',
-      dias: i
+      label: i + " Dias",
+      dias: i,
     });
   }
   pagamento.value.parcelas = parcelamentoDisponivel.value.length;
-  let label = '';
+  let label = "";
   for (let i = 1; i <= maximoParcelas; i++) {
     var valorjuros = 0;
     var valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100;
@@ -205,23 +205,29 @@ const calcularParcelas = async () => {
     if (valorparcela < valorMinimoParcela && i > 1) {
       break;
     }
-    if (forma.value.codformapagamento == process.env.CODFORMAPAGAMENTO_FECHAMENTO) {
+    if (
+      forma.value.codformapagamento == process.env.CODFORMAPAGAMENTO_FECHAMENTO
+    ) {
       if (i > 1) {
-        label = label.slice(0, -3) + '/'
+        label = label.slice(0, -3) + "/";
       }
-      label += moment().add(5, 'days').add(i, 'month').endOf('month').format('MMM/YY');
+      label += moment()
+        .add(5, "days")
+        .add(i, "month")
+        .endOf("month")
+        .format("MMM/YY");
     } else {
       if (i > 1) {
-        label = label.slice(0, -5) + '/'
+        label = label.slice(0, -5) + "/";
       }
-      label += i * 30 + ' Dias'
+      label += i * 30 + " Dias";
     }
     parcelamentoDisponivel.value.push({
       parcelas: i,
       valorjuros: valorjuros,
       valorparcela: valorparcela,
       label: label,
-      dias: 30
+      dias: 30,
     });
   }
 };
@@ -229,7 +235,7 @@ const calcularParcelas = async () => {
 const salvar = async () => {
   if (
     pagamento.value.codformapagamento !=
-    process.env.CODFORMAPAGAMENTO_ENTREGA &&
+      process.env.CODFORMAPAGAMENTO_ENTREGA &&
     sNegocio.negocio.codpessoa == 1
   ) {
     Notify.create({
@@ -268,17 +274,30 @@ const salvar = async () => {
 </script>
 <template>
   <!-- DIALOG -->
-  <q-dialog v-model="sNegocio.dialog.pagamentoPrazo" @before-show="inicializarValores()" class="full-width">
-    <q-card style="width: 700px; max-width: 80vw;">
+  <q-dialog
+    v-model="sNegocio.dialog.pagamentoPrazo"
+    @before-show="inicializarValores()"
+    class="full-width"
+  >
+    <q-card style="width: 700px; max-width: 80vw">
       <q-form @submit="salvar()" ref="formPrazo">
         <q-card-section>
           <q-list>
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <MgInputValor prefix="R$" :min="0.01" :max="sNegocio.valorapagar"
-                  v-model="pagamento.valor" :rules="valorRule" autofocus
-                  class="text-h2 text-weight-bolder text-primary" />
+                <MgInputValor
+                  prefix="R$"
+                  :min="0.01"
+                  :max="sNegocio.valorapagar"
+                  v-model="pagamento.valor"
+                  :rules="valorRule"
+                  autofocus
+                  class="q-input-grande text-h4"
+                  input-class="text-weight-bold text-h2 text-primary"
+                  :borderless="true"
+                  :outlined="false"
+                />
               </q-item-section>
             </q-item>
             <q-item>
@@ -286,8 +305,13 @@ const salvar = async () => {
                 <!-- FORMA -->
                 <div class="col-xs-12 col-sm-6">
                   <div class="row">
-                    <q-radio class="col-12" v-model="pagamento.codformapagamento" v-for="forma in formas"
-                      :val="forma.codformapagamento" :key="forma.codformapagamento">
+                    <q-radio
+                      class="col-12"
+                      v-model="pagamento.codformapagamento"
+                      v-for="forma in formas"
+                      :val="forma.codformapagamento"
+                      :key="forma.codformapagamento"
+                    >
                       <q-avatar :icon="forma.icone" />
                       {{ forma.nome }}
                     </q-radio>
@@ -296,14 +320,16 @@ const salvar = async () => {
 
                 <!-- PARCELAMENTO -->
                 <div class="col-xs-12 col-sm-6">
-
                   <!-- OBSERVACOES -->
                   <div class="row text-caption text-grey-8" v-if="isEntrega">
-                    Cliente vai pagar no momento da entrega ou retirada do produto.
+                    Cliente vai pagar no momento da entrega ou retirada do
+                    produto.
                   </div>
                   <div class="row text-caption text-grey-8" v-if="isFechamento">
-                    Financeiro cuidará da cobrança. Serão somadas todas as compras do período e emitida a Nota Fiscal
-                    com todas as compras no final do mês com vencimento para o último dia do mês subsequente.
+                    Financeiro cuidará da cobrança. Serão somadas todas as
+                    compras do período e emitida a Nota Fiscal com todas as
+                    compras no final do mês com vencimento para o último dia do
+                    mês subsequente.
                   </div>
                   <div class="row text-caption text-grey-8" v-if="isCarteira">
                     Valor Mínimo: R$ 30,00. <br />
@@ -318,7 +344,10 @@ const salvar = async () => {
 
                   <!-- PARCELAS -->
                   <q-list>
-                    <template v-for="(parc, i) in parcelamentoDisponivel" :key="i">
+                    <template
+                      v-for="(parc, i) in parcelamentoDisponivel"
+                      :key="i"
+                    >
                       <q-item tag="label" v-ripple>
                         <q-item-section avatar>
                           <q-radio v-model="pagamento.parcelas" :val="i" />
@@ -329,8 +358,7 @@ const salvar = async () => {
                           </q-item-label>
                           <q-item-label caption>
                             {{ parc.parcelas }}
-                            parcela(s) de
-                            R$
+                            parcela(s) de R$
                             {{
                               new Intl.NumberFormat("pt-BR", {
                                 style: "decimal",
@@ -346,7 +374,6 @@ const salvar = async () => {
                       </q-item>
                     </template>
                   </q-list>
-
                 </div>
               </div>
             </q-item>
@@ -354,7 +381,13 @@ const salvar = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="sNegocio.dialog.pagamentoPrazo = false" tabindex="-1" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="primary"
+            @click="sNegocio.dialog.pagamentoPrazo = false"
+            tabindex="-1"
+          />
           <q-btn type="submit" flat label="salvar" color="primary" />
         </q-card-actions>
       </q-form>

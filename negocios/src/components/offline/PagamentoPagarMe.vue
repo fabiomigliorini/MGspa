@@ -36,7 +36,7 @@ const inicializarValores = () => {
     padrao.codpagarmepos = null;
   }
   pagamento.value = padrao;
-  stepManual.value = 1
+  stepManual.value = 1;
   calcularParcelas();
 };
 
@@ -366,7 +366,10 @@ const toSafrapay = async () => {
 </script>
 <template>
   <!-- DIALOG NOVO PEDIDO -->
-  <q-dialog v-model="sNegocio.dialog.pagamentoPagarMe" @before-show="inicializarValores()">
+  <q-dialog
+    v-model="sNegocio.dialog.pagamentoPagarMe"
+    @before-show="inicializarValores()"
+  >
     <q-card style="width: 600px">
       <q-form @submit="salvar()" ref="formPagarMe">
         <q-card-section>
@@ -374,18 +377,32 @@ const toSafrapay = async () => {
             <!-- POS  -->
             <q-item>
               <q-item-section>
-                <select-pagar-me-pos outlined v-model="pagamento.codpagarmepos" label="POS Stone/PagarMe"
+                <select-pagar-me-pos
+                  outlined
+                  v-model="pagamento.codpagarmepos"
+                  label="POS Stone/PagarMe"
                   :codestoquelocal="sNegocio.negocio.codestoquelocal"
-                  :rules="[(value) => value || 'Selecione a Maquineta!']" clearable />
+                  :rules="[(value) => value || 'Selecione a Maquineta!']"
+                  clearable
+                />
               </q-item-section>
             </q-item>
 
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <MgInputValor prefix="R$" :min="0.01" :max="sNegocio.valorapagar"
-                  v-model="pagamento.valor" :rules="valorRule" autofocus
-                  class="text-h2 text-weight-bolder text-primary" />
+                <MgInputValor
+                  prefix="R$"
+                  :min="0.01"
+                  :max="sNegocio.valorapagar"
+                  v-model="pagamento.valor"
+                  :rules="valorRule"
+                  autofocus
+                  class="q-input-grande text-h4"
+                  input-class="text-weight-bold text-h2 text-primary"
+                  :borderless="true"
+                  :outlined="false"
+                />
               </q-item-section>
             </q-item>
 
@@ -404,8 +421,16 @@ const toSafrapay = async () => {
             <q-item v-if="pagamento.tipo == 2">
               <q-item-section>
                 <div class="row">
-                  <div class="col-xs-12 col-sm-6" v-for="parc in parcelamentoDisponivel" :key="parc.parcelas">
-                    <q-radio v-model="pagamento.parcelas" :val="parc.parcelas" :disable="!parc.habilitado">
+                  <div
+                    class="col-xs-12 col-sm-6"
+                    v-for="parc in parcelamentoDisponivel"
+                    :key="parc.parcelas"
+                  >
+                    <q-radio
+                      v-model="pagamento.parcelas"
+                      :val="parc.parcelas"
+                      :disable="!parc.habilitado"
+                    >
                       <b>{{ parc.parcelas }}</b>
                       <span class="text-grey"> x R$ </span>
                       <b>
@@ -427,9 +452,28 @@ const toSafrapay = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="fechar()" tabindex="-1" />
-          <q-btn flat label="Usar Safrapay" color="primary" @click="toSafrapay()" tabindex="-1" />
-          <q-btn type="button" flat label="Cartão Manual" @click="manual()" color="primary" tabindex="-1" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="primary"
+            @click="fechar()"
+            tabindex="-1"
+          />
+          <q-btn
+            flat
+            label="Usar Safrapay"
+            color="primary"
+            @click="toSafrapay()"
+            tabindex="-1"
+          />
+          <q-btn
+            type="button"
+            flat
+            label="Cartão Manual"
+            @click="manual()"
+            color="primary"
+            tabindex="-1"
+          />
           <q-btn type="submit" flat label="Enviar Maquineta" color="primary" />
         </q-card-actions>
       </q-form>
@@ -437,41 +481,107 @@ const toSafrapay = async () => {
   </q-dialog>
 
   <!-- DIALOG CARTAO MANUAL -->
-  <q-dialog v-model="sNegocio.dialog.pagamentoCartaoManual" @before-show="inicializarValores()">
+  <q-dialog
+    v-model="sNegocio.dialog.pagamentoCartaoManual"
+    @before-show="inicializarValores()"
+  >
     <q-card style="width: 600px">
-      <q-stepper v-model="stepManual" vertical color="primary" animated header-nav>
+      <q-stepper
+        v-model="stepManual"
+        vertical
+        color="primary"
+        animated
+        header-nav
+      >
         <q-form @submit="salvarManual()" ref="formManual">
           <!-- PESSOA  -->
-          <q-step :name="1" title="Parceiro" icon="account_balance" :done="stepManual > 1">
+          <q-step
+            :name="1"
+            title="Parceiro"
+            icon="account_balance"
+            :done="stepManual > 1"
+          >
             <div class="row q-mb-md">
-              <q-radio class="col-xs-12 col-sm-6 q-pa-sm" v-model="pagamento.codpessoa" v-for="pes in cartoesManuais"
-                :val="pes.codpessoa" :key="pes.codpessoa" @update:model-value="vaiParaStepManual(2)">
+              <q-radio
+                class="col-xs-12 col-sm-6 q-pa-sm"
+                v-model="pagamento.codpessoa"
+                v-for="pes in cartoesManuais"
+                :val="pes.codpessoa"
+                :key="pes.codpessoa"
+                @update:model-value="vaiParaStepManual(2)"
+              >
                 <q-avatar>
                   <img :src="pes.logo" />
                 </q-avatar>
                 {{ pes.apelido }}
               </q-radio>
             </div>
-            <q-btn @click="vaiParaStepManual(2)" color="primary" label="Continuar" />
+            <q-btn
+              @click="vaiParaStepManual(2)"
+              color="primary"
+              label="Continuar"
+            />
           </q-step>
 
           <!-- TIPO  -->
-          <q-step :name="2" title="Tipo" icon="account_balance_wallet" :done="stepManual > 2">
+          <q-step
+            :name="2"
+            title="Tipo"
+            icon="account_balance_wallet"
+            :done="stepManual > 2"
+          >
             <div class="row q-mb-md">
-              <q-radio class="col-xs-12 col-sm-4" v-model="pagamento.tipo" :val="tipo.tipo" v-for="tipo in tiposManuais"
-                :key="tipo.tipo" :label="tipo.apelido" @update:model-value="vaiParaStepManual(3)" />
+              <q-radio
+                class="col-xs-12 col-sm-4"
+                v-model="pagamento.tipo"
+                :val="tipo.tipo"
+                v-for="tipo in tiposManuais"
+                :key="tipo.tipo"
+                :label="tipo.apelido"
+                @update:model-value="vaiParaStepManual(3)"
+              />
             </div>
-            <q-btn @click="vaiParaStepManual(3)" color="primary" label="Continuar" />
-            <q-btn flat @click="stepManual -= 1" color="primary" label="Voltar" class="q-ml-sm" />
+            <q-btn
+              @click="vaiParaStepManual(3)"
+              color="primary"
+              label="Continuar"
+            />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
           </q-step>
 
-          <q-step :name="3" title="Valor e Parcelamento" icon="calendar_month" :done="stepManual > 3">
-            <MgInputValor prefix="R$" :min="0.01" :max="sNegocio.valorapagar"
-              v-model="pagamento.valor" autofocus @keydown.enter.prevent="vaiParaStepManual(4)"
-              class="text-h3 text-weight-bolder text-primary q-mb-md" />
+          <q-step
+            :name="3"
+            title="Valor e Parcelamento"
+            icon="calendar_month"
+            :done="stepManual > 3"
+          >
+            <MgInputValor
+              prefix="R$"
+              :min="0.01"
+              :max="sNegocio.valorapagar"
+              v-model="pagamento.valor"
+              autofocus
+              @keydown.enter.prevent="vaiParaStepManual(4)"
+              class="q-input-grande text-h4"
+              input-class="text-weight-bold text-h2 text-primary"
+              :borderless="true"
+              :outlined="false"
+            />
             <div class="row q-mb-md" v-if="parcelamentoDisponivel.length > 1">
-              <q-radio v-model="pagamento.parcelas" v-for="parc in parcelamentoDisponivel" :val="parc.parcelas"
-                :key="parc.parcelas" class="col-xs-12 col-sm-6" @update:model-value="vaiParaStepManual(4)">
+              <q-radio
+                v-model="pagamento.parcelas"
+                v-for="parc in parcelamentoDisponivel"
+                :val="parc.parcelas"
+                :key="parc.parcelas"
+                class="col-xs-12 col-sm-6"
+                @update:model-value="vaiParaStepManual(4)"
+              >
                 <b>{{ parc.parcelas }}</b>
                 <span class="text-grey"> x R$ </span>
                 <b>
@@ -486,18 +596,49 @@ const toSafrapay = async () => {
                 <span v-if="parc.valorjuros"> C/Juros </span>
               </q-radio>
             </div>
-            <q-btn @click="vaiParaStepManual(4)" color="primary" label="Continuar" />
-            <q-btn flat @click="stepManual -= 1" color="primary" label="Voltar" class="q-ml-sm" />
+            <q-btn
+              @click="vaiParaStepManual(4)"
+              color="primary"
+              label="Continuar"
+            />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
           </q-step>
 
-          <q-step :name="4" title="Bandeira" icon="style" :done="stepManual > 4">
+          <q-step
+            :name="4"
+            title="Bandeira"
+            icon="style"
+            :done="stepManual > 4"
+          >
             <div class="row q-mb-md">
-              <q-radio v-for="band in bandeirasManuais" :key="band.bandeira" v-model="pagamento.bandeira"
-                :val="band.bandeira" :label="band.apelido" class="col-xs-12 col-sm-4"
-                @update:model-value="vaiParaStepManual(5)" />
+              <q-radio
+                v-for="band in bandeirasManuais"
+                :key="band.bandeira"
+                v-model="pagamento.bandeira"
+                :val="band.bandeira"
+                :label="band.apelido"
+                class="col-xs-12 col-sm-4"
+                @update:model-value="vaiParaStepManual(5)"
+              />
             </div>
-            <q-btn @click="vaiParaStepManual(5)" color="primary" label="Continuar" />
-            <q-btn flat @click="stepManual -= 1" color="primary" label="Voltar" class="q-ml-sm" />
+            <q-btn
+              @click="vaiParaStepManual(5)"
+              color="primary"
+              label="Continuar"
+            />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
           </q-step>
 
           <q-step :name="5" title="Autorização" icon="task_alt">
@@ -592,10 +733,22 @@ const toSafrapay = async () => {
               </template>
             </q-list>
             <!-- AUTORIZACAO  -->
-            <q-input outlined v-model="pagamento.autorizacao" maxlength="20" label="Código de Autorização"
-              class="q-mb-md" autofocus />
+            <q-input
+              outlined
+              v-model="pagamento.autorizacao"
+              maxlength="20"
+              label="Código de Autorização"
+              class="q-mb-md"
+              autofocus
+            />
             <q-btn color="primary" type="submit" label="Salvar" />
-            <q-btn flat @click="stepManual -= 1" color="primary" label="Voltar" class="q-ml-sm" />
+            <q-btn
+              flat
+              @click="stepManual -= 1"
+              color="primary"
+              label="Voltar"
+              class="q-ml-sm"
+            />
           </q-step>
         </q-form>
       </q-stepper>
@@ -603,7 +756,10 @@ const toSafrapay = async () => {
   </q-dialog>
 
   <!-- DIALOG DETALHES PEDIDO -->
-  <q-dialog v-model="sPagarMe.dialog.detalhesPedido" @show="btnConsultarRef.$el.focus()">
+  <q-dialog
+    v-model="sPagarMe.dialog.detalhesPedido"
+    @show="btnConsultarRef.$el.focus()"
+  >
     <q-card style="width: 600px">
       <q-card-section>
         <div class="text-h6">
@@ -622,7 +778,10 @@ const toSafrapay = async () => {
 
         <!-- PAGAMENTOS -->
         <q-list>
-          <template v-for="pag in sPagarMe.pedido.PagarMePagamentoS" :key="pag.codpagarmepagamento">
+          <template
+            v-for="pag in sPagarMe.pedido.PagarMePagamentoS"
+            :key="pag.codpagarmepagamento"
+          >
             <!-- VALOR -->
             <q-separator spaced />
             <template v-if="pag.valorcancelamento">
@@ -800,10 +959,29 @@ const toSafrapay = async () => {
         </q-list>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat label="cancelar" color="negative" @click="cancelar()" tabindex="-1"
-          v-if="sPagarMe.pedido.status != 3" />
-        <q-btn flat label="consultar" color="primary" @click="consultar()" type="submit" ref="btnConsultarRef" />
-        <q-btn flat label="Fechar" color="primary" @click="sPagarMe.dialog.detalhesPedido = false" tabindex="-1" />
+        <q-btn
+          flat
+          label="cancelar"
+          color="negative"
+          @click="cancelar()"
+          tabindex="-1"
+          v-if="sPagarMe.pedido.status != 3"
+        />
+        <q-btn
+          flat
+          label="consultar"
+          color="primary"
+          @click="consultar()"
+          type="submit"
+          ref="btnConsultarRef"
+        />
+        <q-btn
+          flat
+          label="Fechar"
+          color="primary"
+          @click="sPagarMe.dialog.detalhesPedido = false"
+          tabindex="-1"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>

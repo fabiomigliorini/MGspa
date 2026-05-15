@@ -1,10 +1,33 @@
 <script setup>
 import { onMounted } from 'vue'
-import { date } from 'quasar'
+import { date, useQuasar } from 'quasar'
 import { formataNumero, tempoRelativo } from 'src/utils/formatters.js'
 import { useTituloStore } from 'src/stores/tituloStore'
+import { abrirPdf } from 'src/utils/abrirPdf'
 
 const store = useTituloStore()
+const $q = useQuasar()
+
+function abrirRelatorio() {
+  $q.dialog({
+    title: 'Relatório de Títulos',
+    message:
+      'Deseja o relatório com as informações de Tipo do Título, Conta Contábil e Observações?',
+    ok: { label: 'Sim, detalhado', color: 'primary', unelevated: true, flat: true },
+    cancel: { label: 'Não, simplificado', color: 'primary', unelevated: true, flat: true },
+    persistent: false,
+  })
+    .onOk(() => gerarPdf(true))
+    .onCancel(() => gerarPdf(false))
+}
+
+function gerarPdf(detalhado) {
+  const params = { detalhado: detalhado ? 1 : 0 }
+  for (const [k, v] of Object.entries(store.filters)) {
+    if (v !== null && v !== undefined && v !== '') params[k] = v
+  }
+  abrirPdf('v1/titulo/listagem/relatorio', params, { title: 'Títulos' })
+}
 
 const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
 const formatCodigo = (v) => '#' + String(v).padStart(8, '0')
@@ -140,9 +163,14 @@ onMounted(() => {
     </q-infinite-scroll>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" :to="{ name: 'titulo-novo' }">
-        <q-tooltip anchor="center left" self="center right">Novo Título</q-tooltip>
-      </q-btn>
+      <div class="row q-gutter-sm items-end">
+        <q-btn fab-mini color="grey-8" icon="print" @click="abrirRelatorio">
+          <q-tooltip anchor="top middle" self="bottom middle">Relatório</q-tooltip>
+        </q-btn>
+        <q-btn fab icon="add" color="primary" :to="{ name: 'titulo-novo' }">
+          <q-tooltip anchor="top middle" self="bottom middle">Novo Título</q-tooltip>
+        </q-btn>
+      </div>
     </q-page-sticky>
   </q-page>
 </template>
