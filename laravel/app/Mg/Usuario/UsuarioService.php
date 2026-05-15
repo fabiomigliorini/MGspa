@@ -124,6 +124,9 @@ class UsuarioService extends MgService
     public static function create($data)
     {
         $usuario = new Usuario($data);
+        if (!empty($data['senha'])) {
+            $usuario->senha = bcrypt($data['senha']);
+        }
         $usuario->save();
         static::autalizaPermissoes($usuario, $data['permissoes']);
         return $usuario;

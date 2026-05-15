@@ -1048,6 +1048,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
             Route::put('{codnfeterceiro}/item/{codnfeterceiroitem}', '\Mg\NfeTerceiro\NfeTerceiroController@updateItem');
             Route::post('{codnfeterceiro}/item/{codnfeterceiroitem}/conferencia', '\Mg\NfeTerceiro\NfeTerceiroController@conferenciaItem');
             Route::post('{codnfeterceiro}/item/{codnfeterceiroitem}/dividir', '\Mg\NfeTerceiro\NfeTerceiroController@dividirItem');
+            Route::get('{codnfeterceiro}/item/{codnfeterceiroitem}/analise', '\Mg\NfeTerceiro\NfeTerceiroController@analiseItem');
             Route::post('{codnfeterceiro}/marcar-tipo-produto', '\Mg\NfeTerceiro\NfeTerceiroController@marcarTipoProduto');
             Route::post('{codnfeterceiro}/conferir-todos', '\Mg\NfeTerceiro\NfeTerceiroController@conferirTodos');
             Route::post('{codnfeterceiro}/informar-complemento', '\Mg\NfeTerceiro\NfeTerceiroController@informarComplemento');

@@ -262,8 +262,12 @@ class UsuarioController extends MgController
 
     public function novoUsuario(Request $request)
     {
-       $usuario =  UsuarioService::create($request->all());
-       return new UsuarioResource($usuario);
+        $request->validate([
+            'usuario' => ['required', 'unique:tblusuario', 'min:2'],
+            'senha'   => ['required', 'min:6'],
+        ]);
+        $usuario = UsuarioService::create($request->all());
+        return new UsuarioResource($usuario);
     }
 
     public function resetSenha($codusuario)

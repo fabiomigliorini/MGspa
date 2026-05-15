@@ -13,32 +13,6 @@ const route = useRoute();
 const sUsuario = usuarioStore();
 const user = guardaToken();
 
-const resetarSenha = (codusuario) => {
-  $q.dialog({
-    title: "Reset de senha",
-    message: "Tem certeza que deseja resetar a senha desse usuário?",
-    cancel: true,
-  }).onOk(async () => {
-    try {
-      const ret = await sUsuario.resetarSenha(codusuario);
-      if (ret.data) {
-        $q.dialog({
-          title: "Senha gerada",
-          message: `A nova senha é: <b class="text-h6">${ret.data}</b>`,
-          html: true,
-        });
-      }
-    } catch (error) {
-      $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "warning",
-        message: error.response?.data?.message || "Erro ao resetar senha",
-      });
-    }
-  });
-};
-
 const excluir = (codusuario) => {
   $q.dialog({
     title: "Excluir usuário",
@@ -164,18 +138,6 @@ const ativar = async (codusuario) => {
         @click="ativar(sUsuario.detalheUsuarios.codusuario)"
       >
         <q-tooltip>Ativar</q-tooltip>
-      </q-btn>
-
-      <q-btn
-        flat
-        round
-        dense
-        size="sm"
-        color="primary"
-        icon="lock_reset"
-        @click="resetarSenha(sUsuario.detalheUsuarios.codusuario)"
-      >
-        <q-tooltip>Resetar Senha</q-tooltip>
       </q-btn>
     </q-card-section>
 

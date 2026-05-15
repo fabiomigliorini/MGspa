@@ -151,4 +151,9 @@ class NfeTerceiroItem extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+    public function UsuarioConferencia()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
+    }
+
 }

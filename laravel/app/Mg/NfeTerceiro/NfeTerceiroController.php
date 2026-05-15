@@ -9,6 +9,7 @@ use NFePHP\DA\NFe\Danfe;
 
 use Mg\NfeTerceiro\NfeTerceiroImportarService;
 use Mg\NfeTerceiro\NfeTerceiroIcmsStService;
+use Mg\NfeTerceiro\NfeTerceiroItemAnaliseService;
 use Mg\NfeTerceiro\NfeTerceiroItemService;
 use Mg\NfeTerceiro\NfeTerceiroService;
 use Mg\NfeTerceiro\Resources\NfeTerceiroResource;
@@ -26,7 +27,12 @@ class NfeTerceiroController
         'UsuarioAlteracao',
         'UsuarioRevisao',
         'UsuarioConferencia',
-        'NfeTerceiroItemS.ProdutoBarra.ProdutoVariacao.Produto',
+        'NfeTerceiroItemS.ProdutoBarra.ProdutoVariacao.Produto.Ncm',
+        'NfeTerceiroItemS.ProdutoBarra.ProdutoVariacao.Produto.Cest',
+        'NfeTerceiroItemS.ProdutoBarra.ProdutoVariacao.Produto.Tributacao',
+        'NfeTerceiroItemS.ProdutoBarra.ProdutoVariacao.Produto.ProdutoEmbalagemS.UnidadeMedida',
+        'NfeTerceiroItemS.ProdutoBarra.ProdutoVariacao.ProdutoBarraS',
+        'NfeTerceiroItemS.UsuarioConferencia',
         'NfeTerceiroDuplicataS.Titulo',
         'NfeTerceiroPagamentoS',
     ];
@@ -178,6 +184,14 @@ class NfeTerceiroController
         $nft = NfeTerceiroItemService::informarComplemento($nft, $request->valor !== null ? (float) $request->valor : null);
 
         return new NfeTerceiroResource($nft->load(static::RELATIONS_SHOW));
+    }
+
+    public function analiseItem(Request $request, int $codnfeterceiro, int $codnfeterceiroitem)
+    {
+        $nft = NfeTerceiro::findOrFail($codnfeterceiro);
+        $item = $nft->NfeTerceiroItemS()->where('codnfeterceiroitem', $codnfeterceiroitem)->firstOrFail();
+
+        return response()->json(NfeTerceiroItemAnaliseService::analise($item));
     }
 
     public function dividirItem(Request $request, int $codnfeterceiro, int $codnfeterceiroitem)

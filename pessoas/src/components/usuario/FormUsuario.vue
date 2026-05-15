@@ -19,10 +19,13 @@ const model = ref({
   codfilial: null,
   codportador: null,
   codpessoa: null,
+  senha: null,
+  senha_confirmacao: null,
   permissoes: {},
 });
 const grupos = ref([]);
 const filiais = ref([]);
+const isPwd = ref(true);
 
 // Computed
 const isNovo = computed(() => !route.params.codusuario);
@@ -36,6 +39,20 @@ const usuarioValido = (val) => {
   const usernameRegex = /^[a-z0-9_.]+$/;
   if (!usernameRegex.test(val)) {
     return "Somente Letras, Números, traços e pontos são aceitos!";
+  }
+  return true;
+};
+
+const senhaValida = (val) => {
+  if (String(val).length < 6) {
+    return "Mínimo 6 letras ou números!";
+  }
+  return true;
+};
+
+const confirmacaoValida = (val) => {
+  if (model.value.senha !== val) {
+    return "Senhas não batem!";
   }
   return true;
 };
@@ -208,6 +225,47 @@ onMounted(async () => {
                 <q-icon name="badge" />
               </template>
             </select-pessoa-usuario>
+          </div>
+        </div>
+      </q-card-section>
+
+      <q-separator inset class="q-mt-md" v-if="isNovo" />
+
+      <q-card-section v-if="isNovo">
+        <div class="text-overline text-grey-9 q-mb-md">SENHA</div>
+        <div class="row q-col-gutter-md">
+          <div class="col-md-6 col-12">
+            <q-input
+              outlined
+              v-model="model.senha"
+              label="Senha"
+              :type="isPwd ? 'password' : 'text'"
+              :rules="[senhaValida]"
+            >
+              <template #prepend>
+                <q-icon name="lock_open" />
+              </template>
+              <template #append>
+                <q-icon
+                  :name="isPwd ? 'visibility_off' : 'visibility'"
+                  class="cursor-pointer"
+                  @click="isPwd = !isPwd"
+                />
+              </template>
+            </q-input>
+          </div>
+          <div class="col-md-6 col-12">
+            <q-input
+              outlined
+              v-model="model.senha_confirmacao"
+              label="Confirmar senha"
+              :type="isPwd ? 'password' : 'text'"
+              :rules="[confirmacaoValida]"
+            >
+              <template #prepend>
+                <q-icon name="lock_open" />
+              </template>
+            </q-input>
           </div>
         </div>
       </q-card-section>

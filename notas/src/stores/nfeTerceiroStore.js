@@ -35,6 +35,8 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
     loading: {
       nfeTerceiro: false,
     },
+    analiseItens: {},
+    loadingAnaliseItens: {},
   }),
 
   getters: {
@@ -244,10 +246,28 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
         const response = await nfeTerceiroService.updateItem(codnfeterceiro, codnfeterceiroitem, data)
         this.currentNfeTerceiro = response.data
         this.syncCurrentToList()
+        delete this.analiseItens[codnfeterceiroitem]
         return response.data
       } catch (error) {
         console.error('Erro ao atualizar item:', error)
         throw error
+      }
+    },
+
+    async fetchAnaliseItem(codnfeterceiro, codnfeterceiroitem, { force = false } = {}) {
+      if (!force && this.analiseItens[codnfeterceiroitem]) {
+        return this.analiseItens[codnfeterceiroitem]
+      }
+      this.loadingAnaliseItens[codnfeterceiroitem] = true
+      try {
+        const data = await nfeTerceiroService.analiseItem(codnfeterceiro, codnfeterceiroitem)
+        this.analiseItens[codnfeterceiroitem] = data
+        return data
+      } catch (error) {
+        console.error('Erro ao buscar análise do item:', error)
+        throw error
+      } finally {
+        delete this.loadingAnaliseItens[codnfeterceiroitem]
       }
     },
 
@@ -268,6 +288,7 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
         const response = await nfeTerceiroService.dividirItem(codnfeterceiro, codnfeterceiroitem, parcelas)
         this.currentNfeTerceiro = response.data
         this.syncCurrentToList()
+        this.analiseItens = {}
         return response.data
       } catch (error) {
         console.error('Erro ao dividir item:', error)
@@ -304,6 +325,7 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
         const response = await nfeTerceiroService.informarComplemento(codnfeterceiro, valor)
         this.currentNfeTerceiro = response.data
         this.syncCurrentToList()
+        this.analiseItens = {}
         return response.data
       } catch (error) {
         console.error('Erro ao informar complemento:', error)
