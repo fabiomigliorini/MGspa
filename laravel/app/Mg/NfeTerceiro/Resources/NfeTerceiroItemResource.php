@@ -88,6 +88,9 @@ class NfeTerceiroItemResource extends JsonResource
             // Conferência
             'conferencia' => $this->conferencia,
             'codusuarioconferencia' => $this->codusuarioconferencia,
+            'usuarioConferencia' => $this->relationLoaded('UsuarioConferencia')
+                ? $this->UsuarioConferencia?->only(['codusuario', 'usuario'])
+                : null,
         ];
     }
 
@@ -103,8 +106,63 @@ class NfeTerceiroItemResource extends JsonResource
         return [
             'codprodutobarra' => $pb->codprodutobarra,
             'barras' => $pb->barras,
-            'produto' => $pb->ProdutoVariacao?->Produto?->only(['codproduto', 'produto', 'inativo']),
-            'variacao' => $pb->ProdutoVariacao?->only(['codprodutovariacao', 'variacao']),
+            'codprodutoembalagem' => $pb->codprodutoembalagem,
+            'produto' => $this->formatProduto($pb->ProdutoVariacao?->Produto),
+            'variacao' => $this->formatVariacao($pb->ProdutoVariacao),
+        ];
+    }
+
+    private function formatProduto($p): ?array
+    {
+        if (!$p) {
+            return null;
+        }
+        return [
+            'codproduto' => $p->codproduto,
+            'produto' => $p->produto,
+            'inativo' => $p->inativo,
+            'preco' => $p->preco,
+            'abc' => $p->abc,
+            'abccategoria' => $p->abccategoria,
+            'abcposicao' => $p->abcposicao,
+            'codtributacao' => $p->codtributacao,
+            'importado' => $p->importado,
+            'codncm' => $p->codncm,
+            'codcest' => $p->codcest,
+            'ncm' => $p->relationLoaded('Ncm') ? $p->Ncm?->only(['codncm', 'ncm', 'bit']) : null,
+            'cest' => $p->relationLoaded('Cest') ? $p->Cest?->only(['codcest', 'cest', 'mva']) : null,
+            'tributacao' => $p->relationLoaded('Tributacao')
+                ? $p->Tributacao?->only(['codtributacao', 'tributacao'])
+                : null,
+            'produtoEmbalagens' => $p->relationLoaded('ProdutoEmbalagemS')
+                ? $p->ProdutoEmbalagemS->map(fn ($e) => [
+                    'codprodutoembalagem' => $e->codprodutoembalagem,
+                    'descricao' => $e->descricao,
+                    'quantidade' => $e->quantidade,
+                    'preco' => $e->preco,
+                    'unidadeMedida' => $e->relationLoaded('UnidadeMedida')
+                        ? $e->UnidadeMedida?->only(['codunidademedida', 'sigla'])
+                        : null,
+                ])->values()->all()
+                : null,
+        ];
+    }
+
+    private function formatVariacao($v): ?array
+    {
+        if (!$v) {
+            return null;
+        }
+        return [
+            'codprodutovariacao' => $v->codprodutovariacao,
+            'variacao' => $v->variacao,
+            'produtoBarras' => $v->relationLoaded('ProdutoBarraS')
+                ? $v->ProdutoBarraS->map(fn ($b) => [
+                    'codprodutobarra' => $b->codprodutobarra,
+                    'barras' => $b->barras,
+                    'codprodutoembalagem' => $b->codprodutoembalagem,
+                ])->values()->all()
+                : null,
         ];
     }
 }

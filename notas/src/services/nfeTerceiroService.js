@@ -84,6 +84,13 @@ export default {
     return response.data
   },
 
+  async analiseItem(codnfeterceiro, codnfeterceiroitem) {
+    const response = await api.get(
+      `/v1/nfe-terceiro/${codnfeterceiro}/item/${codnfeterceiroitem}/analise`,
+    )
+    return response.data
+  },
+
   async dividirItem(codnfeterceiro, codnfeterceiroitem, parcelas) {
     const response = await api.post(
       `/v1/nfe-terceiro/${codnfeterceiro}/item/${codnfeterceiroitem}/dividir`,
