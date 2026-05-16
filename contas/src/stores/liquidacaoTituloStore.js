@@ -1,7 +1,6 @@
 import { formataDataIso } from "@components/formatters";
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { date } from 'quasar'
 import { api } from 'src/services/api'
 
 const defaultFilters = () => {

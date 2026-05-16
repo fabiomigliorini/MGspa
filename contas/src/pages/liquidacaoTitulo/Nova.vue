@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useQuasar, date } from 'quasar'
+import { useQuasar } from "quasar"
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import SelectPortador from 'src/components/select/SelectPortador.vue'

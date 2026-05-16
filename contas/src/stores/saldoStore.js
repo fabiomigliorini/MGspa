@@ -1,7 +1,6 @@
 import { formataDataIso } from "@components/formatters";
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { date } from 'quasar'
 import { api } from 'src/services/api'
 import { notifyError } from 'src/utils/notify'
 

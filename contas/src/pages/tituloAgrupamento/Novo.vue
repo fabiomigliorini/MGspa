@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useQuasar, date } from 'quasar'
+import { useQuasar } from "quasar"
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import SelectFilial from 'src/components/select/SelectFilial.vue'

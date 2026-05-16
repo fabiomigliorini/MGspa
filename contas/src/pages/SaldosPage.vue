@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useQuasar, date } from 'quasar'
+import { useQuasar } from "quasar"
 import { useAuthStore } from 'stores/auth'
 import { useSaldoStore } from 'src/stores/saldoStore'
 import { formataNumero, formataDataIso } from "@components/formatters"
