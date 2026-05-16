@@ -1,149 +1,148 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { cargoStore } from "src/stores/cargo";
-import { guardaToken } from "src/stores";
-import { formataNumero, formataData, formataTimestamp } from "@components/formatters";
-import MGLayout from "layouts/MGLayout.vue";
-import DialogCargo from "components/cargo/DialogCargo.vue";
+import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { cargoStore } from 'src/stores/cargo'
+import { guardaToken } from 'src/stores'
+import { formataNumero, formataData, formataTimestamp } from '@components/formatters'
+import MGLayout from 'layouts/MGLayout.vue'
+import DialogCargo from 'components/cargo/DialogCargo.vue'
 
-const $q = useQuasar();
-const sCargo = cargoStore();
-const user = guardaToken();
+const $q = useQuasar()
+const sCargo = cargoStore()
+const user = guardaToken()
 
 // --- FILTROS ---
 
-const filtro = ref("ativos");
+const filtro = ref('ativos')
 
 const cargosFiltrados = computed(() => {
-  const lista = sCargo.listagem || [];
-  if (filtro.value === "ativos") return lista.filter((x) => !x.inativo);
-  return lista;
-});
+  const lista = sCargo.listagem || []
+  if (filtro.value === 'ativos') return lista.filter((x) => !x.inativo)
+  return lista
+})
 
 // --- HELPERS ---
 
 const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
+  const data = error.response?.data
+  if (!data) return fallback
   if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
+    const primeiro = Object.values(data.errors).flat()[0]
+    if (primeiro) return primeiro
   }
-  return data.mensagem || data.message || fallback;
-};
-
+  return data.mensagem || data.message || fallback
+}
 
 // --- DIALOG CARGO ---
 
-const dialogCargoRef = ref(null);
+const dialogCargoRef = ref(null)
 
 const onSubmit = async (model, isNovo) => {
   try {
     if (isNovo) {
-      await sCargo.criar(model);
+      await sCargo.criar(model)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Cargo criado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Cargo criado',
+      })
     } else {
-      await sCargo.atualizar(model.codcargo, model);
+      await sCargo.atualizar(model.codcargo, model)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Cargo alterado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Cargo alterado',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar cargo"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar cargo'),
+    })
   }
-};
+}
 
 const excluir = (cargo) => {
   $q.dialog({
-    title: "Excluir Cargo",
+    title: 'Excluir Cargo',
     message: 'Tem certeza que deseja excluir "' + cargo.cargo + '"?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sCargo.excluir(cargo.codcargo);
+      await sCargo.excluir(cargo.codcargo)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Cargo excluído",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Cargo excluído',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir cargo"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir cargo'),
+      })
     }
-  });
-};
+  })
+}
 
 const inativar = async (cargo) => {
   try {
-    await sCargo.inativar(cargo.codcargo);
+    await sCargo.inativar(cargo.codcargo)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Inativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Inativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao inativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao inativar'),
+    })
   }
-};
+}
 
 const ativar = async (cargo) => {
   try {
-    await sCargo.ativar(cargo.codcargo);
+    await sCargo.ativar(cargo.codcargo)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Ativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Ativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao ativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao ativar'),
+    })
   }
-};
+}
 
 // --- LIFECYCLE ---
 
 onMounted(async () => {
   try {
-    await sCargo.getListagem();
+    await sCargo.getListagem()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar cargos"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar cargos'),
+    })
   }
-});
+})
 </script>
 
 <template>
@@ -215,11 +214,7 @@ onMounted(async () => {
                         class="q-ml-xs"
                       />
                     </q-item-label>
-                    <q-item-label
-                      caption
-                      class="text-red-14"
-                      v-if="cargo.inativo"
-                    >
+                    <q-item-label caption class="text-red-14" v-if="cargo.inativo">
                       Inativo desde: {{ formataTimestamp(cargo.inativo) }}
                     </q-item-label>
                   </q-item-section>
@@ -288,9 +283,7 @@ onMounted(async () => {
                 </q-item>
               </template>
             </q-list>
-            <div v-else class="q-pa-md text-center text-grey">
-              Nenhum cargo cadastrado
-            </div>
+            <div v-else class="q-pa-md text-center text-grey">Nenhum cargo cadastrado</div>
           </q-card>
         </div>
       </q-page>

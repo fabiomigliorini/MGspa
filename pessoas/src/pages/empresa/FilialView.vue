@@ -1,114 +1,114 @@
 <script>
-import { formataData, formataCodNegocio, formataTimestamp } from "@components/formatters";
-import { ref, onMounted, defineAsyncComponent, computed } from "vue";
-import { empresaStore } from "src/stores/empresa";
-import { useQuasar } from "quasar";
-import { useRoute, useRouter } from "vue-router";
-import moment from "moment";
+import { formataData, formataCodNegocio, formataTimestamp } from '@components/formatters'
+import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
+import { empresaStore } from 'src/stores/empresa'
+import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
+import moment from 'moment'
 
 export default {
   components: {
-    MGLayout: defineAsyncComponent(() => import("layouts/MGLayout.vue")),
+    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
   },
 
   setup() {
-    const sEmpresa = empresaStore();
-    const $q = useQuasar();
-    const route = useRoute();
-    const router = useRouter();
-    const loading = ref(false);
-    const erro = ref(false);
+    const sEmpresa = empresaStore()
+    const $q = useQuasar()
+    const route = useRoute()
+    const router = useRouter()
+    const loading = ref(false)
+    const erro = ref(false)
 
     const formatarCodigo = (cod) => {
-      if (!cod) return "";
-      return formataCodNegocio(cod);
-    };
+      if (!cod) return ''
+      return formataCodNegocio(cod)
+    }
 
     const ambienteNfeLabel = computed(() => {
       const ambientes = {
-        1: "Produção",
-        2: "Homologação",
-      };
-      return ambientes[sEmpresa.filial.nfeambiente] || "-";
-    });
+        1: 'Produção',
+        2: 'Homologação',
+      }
+      return ambientes[sEmpresa.filial.nfeambiente] || '-'
+    })
 
     const criacaoFormatada = computed(() => {
-      if (!sEmpresa.filial.criacao) return "-";
-      return formataTimestamp(sEmpresa.filial.criacao);
-    });
+      if (!sEmpresa.filial.criacao) return '-'
+      return formataTimestamp(sEmpresa.filial.criacao)
+    })
 
     const alteracaoFormatada = computed(() => {
-      if (!sEmpresa.filial.alteracao) return "-";
-      return formataTimestamp(sEmpresa.filial.alteracao);
-    });
+      if (!sEmpresa.filial.alteracao) return '-'
+      return formataTimestamp(sEmpresa.filial.alteracao)
+    })
 
     const validadeCertificadoFormatada = computed(() => {
-      if (!sEmpresa.filial.validadecertificado) return "-";
-      return formataData(sEmpresa.filial.validadecertificado);
-    });
+      if (!sEmpresa.filial.validadecertificado) return '-'
+      return formataData(sEmpresa.filial.validadecertificado)
+    })
 
     const carregarFilial = async () => {
-      loading.value = true;
-      erro.value = false;
+      loading.value = true
+      erro.value = false
       try {
-        await sEmpresa.getFilial(route.params.codfilial);
+        await sEmpresa.getFilial(route.params.codfilial)
         if (!sEmpresa.filial || !sEmpresa.filial.codfilial) {
-          erro.value = true;
+          erro.value = true
           $q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
-            message: "Filial não encontrada",
-          });
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: 'Filial não encontrada',
+          })
         }
       } catch (error) {
-        erro.value = true;
+        erro.value = true
         $q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: "Erro ao carregar filial",
-        });
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: 'Erro ao carregar filial',
+        })
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
+    }
 
     const confirmarExclusao = () => {
       $q.dialog({
-        title: "Confirmar Exclusão",
+        title: 'Confirmar Exclusão',
         message: `Para excluir a filial "${sEmpresa.filial.filial}", digite EXCLUIR abaixo:`,
         prompt: {
-          model: "",
-          type: "text",
-          isValid: (val) => val === "EXCLUIR",
+          model: '',
+          type: 'text',
+          isValid: (val) => val === 'EXCLUIR',
         },
         cancel: true,
         persistent: true,
       }).onOk(async () => {
         try {
-          await sEmpresa.removerFilial(sEmpresa.filial.codfilial);
+          await sEmpresa.removerFilial(sEmpresa.filial.codfilial)
           $q.notify({
-            color: "green-5",
-            textColor: "white",
-            icon: "check",
-            message: "Filial excluída com sucesso!",
-          });
-          router.push("/empresa/" + sEmpresa.filial.codempresa);
+            color: 'green-5',
+            textColor: 'white',
+            icon: 'check',
+            message: 'Filial excluída com sucesso!',
+          })
+          router.push('/empresa/' + sEmpresa.filial.codempresa)
         } catch (error) {
           $q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
-            message: error.response?.data?.message || "Erro ao excluir filial",
-          });
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
+            message: error.response?.data?.message || 'Erro ao excluir filial',
+          })
         }
-      });
-    };
+      })
+    }
 
     onMounted(() => {
-      carregarFilial();
-    });
+      carregarFilial()
+    })
 
     return {
       sEmpresa,
@@ -120,9 +120,9 @@ export default {
       alteracaoFormatada,
       validadeCertificadoFormatada,
       confirmarExclusao,
-    };
+    }
   },
-};
+}
 </script>
 
 <template>
@@ -163,19 +163,11 @@ export default {
           />
         </div>
 
-        <div
-          v-if="!loading && !erro && sEmpresa.filial?.codfilial"
-          class="container-detalhes"
-        >
+        <div v-if="!loading && !erro && sEmpresa.filial?.codfilial" class="container-detalhes">
           <!-- HEADER -->
           <q-item class="q-pt-lg q-pb-sm">
             <q-item-section avatar>
-              <q-avatar
-                color="grey-8"
-                text-color="grey-4"
-                size="80px"
-                icon="store"
-              />
+              <q-avatar color="grey-8" text-color="grey-4" size="80px" icon="store" />
             </q-item-section>
             <q-item-section>
               <div class="text-h4 text-grey-9">
@@ -195,9 +187,7 @@ export default {
                 <!-- CARD DETALHES -->
                 <div class="col-12">
                   <q-card bordered flat>
-                    <q-card-section
-                      class="text-grey-9 text-overline row items-center"
-                    >
+                    <q-card-section class="text-grey-9 text-overline row items-center">
                       DETALHES DA FILIAL
                       <q-space />
                       <q-btn
@@ -222,14 +212,7 @@ export default {
                       >
                         <q-tooltip>Excluir</q-tooltip>
                       </q-btn>
-                      <q-btn
-                        flat
-                        round
-                        dense
-                        icon="info"
-                        size="sm"
-                        color="grey-7"
-                      >
+                      <q-btn flat round dense icon="info" size="sm" color="grey-7">
                         <q-tooltip>
                           <div>Criado em: {{ criacaoFormatada }}</div>
                           <div>Alterado em: {{ alteracaoFormatada }}</div>
@@ -256,18 +239,12 @@ export default {
                             padding="0"
                             color="primary"
                             :to="'/empresa/' + sEmpresa.filial.codempresa"
-                            :label="
-                              sEmpresa.filial.Empresa?.empresa ||
-                              sEmpresa.filial.codempresa
-                            "
+                            :label="sEmpresa.filial.Empresa?.empresa || sEmpresa.filial.codempresa"
                           />
                         </div>
                       </div>
 
-                      <div
-                        class="col-xs-12 col-sm-6"
-                        v-if="sEmpresa.filial.codpessoa"
-                      >
+                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.codpessoa">
                         <div class="text-overline text-grey-7">Pessoa</div>
                         <div class="text-body2">
                           <q-btn
@@ -277,10 +254,7 @@ export default {
                             padding="0"
                             color="primary"
                             :to="'/pessoa/' + sEmpresa.filial.codpessoa"
-                            :label="
-                              sEmpresa.filial.Pessoa?.pessoa ||
-                              sEmpresa.filial.codpessoa
-                            "
+                            :label="sEmpresa.filial.Pessoa?.pessoa || sEmpresa.filial.codpessoa"
                           />
                         </div>
                       </div>
@@ -288,21 +262,15 @@ export default {
                       <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">CRT</div>
                         <div class="text-body2">
-                          {{ sEmpresa.filial.crt || "-" }}
+                          {{ sEmpresa.filial.crt || '-' }}
                         </div>
                       </div>
 
                       <div class="col-xs-12 col-sm-6">
-                        <div class="text-overline text-grey-7">
-                          Ambiente NFe
-                        </div>
+                        <div class="text-overline text-grey-7">Ambiente NFe</div>
                         <div class="text-body2">
                           <q-badge
-                            :color="
-                              sEmpresa.filial.nfeambiente === 1
-                                ? 'green'
-                                : 'orange'
-                            "
+                            :color="sEmpresa.filial.nfeambiente === 1 ? 'green' : 'orange'"
                             :label="ambienteNfeLabel"
                           />
                         </div>
@@ -311,7 +279,7 @@ export default {
                       <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">Série NFe</div>
                         <div class="text-body2">
-                          {{ sEmpresa.filial.nfeserie || "-" }}
+                          {{ sEmpresa.filial.nfeserie || '-' }}
                         </div>
                       </div>
 
@@ -335,54 +303,35 @@ export default {
                         </div>
                       </div>
 
-                      <div
-                        class="col-xs-12 col-sm-6"
-                        v-if="sEmpresa.filial.empresadominio"
-                      >
-                        <div class="text-overline text-grey-7">
-                          Empresa Domínio
-                        </div>
+                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.empresadominio">
+                        <div class="text-overline text-grey-7">Empresa Domínio</div>
                         <div class="text-body2">
                           {{ sEmpresa.filial.empresadominio }}
                         </div>
                       </div>
 
-                      <div
-                        class="col-xs-12 col-sm-6"
-                        v-if="sEmpresa.filial.stonecode"
-                      >
+                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.stonecode">
                         <div class="text-overline text-grey-7">Stone Code</div>
                         <div class="text-body2">
                           {{ sEmpresa.filial.stonecode }}
                         </div>
                       </div>
 
-                      <div
-                        class="col-xs-12 col-sm-6"
-                        v-if="sEmpresa.filial.ultimonsu"
-                      >
+                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.ultimonsu">
                         <div class="text-overline text-grey-7">Último NSU</div>
                         <div class="text-body2">
                           {{ sEmpresa.filial.ultimonsu }}
                         </div>
                       </div>
 
-                      <div
-                        class="col-xs-12 col-sm-6"
-                        v-if="sEmpresa.filial.validadecertificado"
-                      >
-                        <div class="text-overline text-grey-7">
-                          Validade Certificado
-                        </div>
+                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.validadecertificado">
+                        <div class="text-overline text-grey-7">Validade Certificado</div>
                         <div class="text-body2">
                           {{ validadeCertificadoFormatada }}
                         </div>
                       </div>
 
-                      <div
-                        class="col-xs-12 col-sm-6"
-                        v-if="sEmpresa.filial.criacao"
-                      >
+                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.criacao">
                         <div class="text-overline text-grey-7">Criação</div>
                         <div class="text-body2">
                           {{ criacaoFormatada }}
@@ -390,9 +339,7 @@ export default {
                       </div>
 
                       <div class="col-xs-12 col-sm-6">
-                        <div class="text-overline text-grey-7">
-                          Última Alteração
-                        </div>
+                        <div class="text-overline text-grey-7">Última Alteração</div>
                         <div class="text-body2">
                           {{ alteracaoFormatada }}
                         </div>
@@ -416,9 +363,7 @@ export default {
                   "
                 >
                   <q-card bordered flat>
-                    <q-card-section
-                      class="text-grey-9 text-overline row items-center"
-                    >
+                    <q-card-section class="text-grey-9 text-overline row items-center">
                       TOKENS
                     </q-card-section>
 
@@ -428,9 +373,7 @@ export default {
                           <q-icon color="primary" name="key" size="xs" />
                         </q-item-section>
                         <q-item-section>
-                          <q-item-label class="text-caption">
-                            Token NFCe
-                          </q-item-label>
+                          <q-item-label class="text-caption"> Token NFCe </q-item-label>
                           <q-item-label caption class="ellipsis">
                             {{ sEmpresa.filial.tokennfce }}
                           </q-item-label>
@@ -439,10 +382,7 @@ export default {
 
                       <q-separator
                         inset
-                        v-if="
-                          sEmpresa.filial.tokennfce &&
-                          sEmpresa.filial.idtokennfce
-                        "
+                        v-if="sEmpresa.filial.tokennfce && sEmpresa.filial.idtokennfce"
                       />
 
                       <q-item v-if="sEmpresa.filial.idtokennfce">
@@ -450,9 +390,7 @@ export default {
                           <q-icon color="primary" name="pin" size="xs" />
                         </q-item-section>
                         <q-item-section>
-                          <q-item-label class="text-caption">
-                            ID Token NFCe
-                          </q-item-label>
+                          <q-item-label class="text-caption"> ID Token NFCe </q-item-label>
                           <q-item-label caption>
                             {{ sEmpresa.filial.idtokennfce }}
                           </q-item-label>
@@ -462,8 +400,7 @@ export default {
                       <q-separator
                         inset
                         v-if="
-                          (sEmpresa.filial.tokennfce ||
-                            sEmpresa.filial.idtokennfce) &&
+                          (sEmpresa.filial.tokennfce || sEmpresa.filial.idtokennfce) &&
                           sEmpresa.filial.tokenibpt
                         "
                       />
@@ -473,9 +410,7 @@ export default {
                           <q-icon color="primary" name="token" size="xs" />
                         </q-item-section>
                         <q-item-section>
-                          <q-item-label class="text-caption">
-                            Token IBPT
-                          </q-item-label>
+                          <q-item-label class="text-caption"> Token IBPT </q-item-label>
                           <q-item-label caption class="ellipsis">
                             {{ sEmpresa.filial.tokenibpt }}
                           </q-item-label>
@@ -496,54 +431,34 @@ export default {
                   "
                 >
                   <q-card bordered flat>
-                    <q-card-section
-                      class="text-grey-9 text-overline row items-center"
-                    >
+                    <q-card-section class="text-grey-9 text-overline row items-center">
                       ACBR MONITOR
                     </q-card-section>
 
                     <div class="row q-col-gutter-sm q-pa-md">
                       <div
                         class="col-12"
-                        v-if="
-                          sEmpresa.filial.acbrmonitorip ||
-                          sEmpresa.filial.acbrmonitorporta
-                        "
+                        v-if="sEmpresa.filial.acbrmonitorip || sEmpresa.filial.acbrmonitorporta"
                       >
-                        <div class="text-overline text-grey-7">
-                          IP : Porta
-                        </div>
+                        <div class="text-overline text-grey-7">IP : Porta</div>
                         <div class="text-body2">
                           {{
-                            [
-                              sEmpresa.filial.acbrmonitorip,
-                              sEmpresa.filial.acbrmonitorporta,
-                            ]
+                            [sEmpresa.filial.acbrmonitorip, sEmpresa.filial.acbrmonitorporta]
                               .filter(Boolean)
-                              .join(":")
+                              .join(':')
                           }}
                         </div>
                       </div>
 
-                      <div
-                        class="col-12"
-                        v-if="sEmpresa.filial.caminhomonitoracbr"
-                      >
-                        <div class="text-overline text-grey-7">
-                          Caminho Monitor
-                        </div>
+                      <div class="col-12" v-if="sEmpresa.filial.caminhomonitoracbr">
+                        <div class="text-overline text-grey-7">Caminho Monitor</div>
                         <div class="text-body2 text-break">
                           {{ sEmpresa.filial.caminhomonitoracbr }}
                         </div>
                       </div>
 
-                      <div
-                        class="col-12"
-                        v-if="sEmpresa.filial.caminhoredeacbr"
-                      >
-                        <div class="text-overline text-grey-7">
-                          Caminho Rede
-                        </div>
+                      <div class="col-12" v-if="sEmpresa.filial.caminhoredeacbr">
+                        <div class="text-overline text-grey-7">Caminho Rede</div>
                         <div class="text-body2 text-break">
                           {{ sEmpresa.filial.caminhoredeacbr }}
                         </div>

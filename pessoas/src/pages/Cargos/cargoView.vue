@@ -1,150 +1,149 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute, useRouter } from "vue-router";
-import { cargoStore } from "src/stores/cargo";
-import { pessoaStore } from "src/stores/pessoa";
-import { formataNumero, formataData, formataTimestamp } from "@components/formatters";
-import MGLayout from "layouts/MGLayout.vue";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
-import DialogCargo from "components/cargo/DialogCargo.vue";
+import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
+import { cargoStore } from 'src/stores/cargo'
+import { pessoaStore } from 'src/stores/pessoa'
+import { formataNumero, formataData, formataTimestamp } from '@components/formatters'
+import MGLayout from 'layouts/MGLayout.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import DialogCargo from 'components/cargo/DialogCargo.vue'
 
-const $q = useQuasar();
-const sCargo = cargoStore();
-const sPessoa = pessoaStore();
-const route = useRoute();
-const router = useRouter();
+const $q = useQuasar()
+const sCargo = cargoStore()
+const sPessoa = pessoaStore()
+const route = useRoute()
+const router = useRouter()
 
 // --- REFS ---
 
-const cargo = ref({});
-const pessoasCargo = ref([]);
+const cargo = ref({})
+const pessoasCargo = ref([])
 
-const atuais = computed(() => pessoasCargo.value.filter((p) => !p.fim));
+const atuais = computed(() => pessoasCargo.value.filter((p) => !p.fim))
 
-const anteriores = computed(() => pessoasCargo.value.filter((p) => p.fim));
+const anteriores = computed(() => pessoasCargo.value.filter((p) => p.fim))
 
 // --- HELPERS ---
 
 const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
+  const data = error.response?.data
+  if (!data) return fallback
   if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
+    const primeiro = Object.values(data.errors).flat()[0]
+    if (primeiro) return primeiro
   }
-  return data.mensagem || data.message || fallback;
-};
-
+  return data.mensagem || data.message || fallback
+}
 
 // --- DIALOG ---
 
-const dialogCargoRef = ref(null);
+const dialogCargoRef = ref(null)
 
 const onSubmit = async (model) => {
   try {
-    await sCargo.atualizar(model.codcargo, model);
-    cargo.value = { ...cargo.value, ...model };
+    await sCargo.atualizar(model.codcargo, model)
+    cargo.value = { ...cargo.value, ...model }
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Cargo alterado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Cargo alterado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar cargo"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar cargo'),
+    })
   }
-};
+}
 
 // --- CRUD ---
 
 const excluir = () => {
   $q.dialog({
-    title: "Excluir Cargo",
+    title: 'Excluir Cargo',
     message: 'Tem certeza que deseja excluir "' + cargo.value.cargo + '"?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sCargo.excluir(cargo.value.codcargo);
+      await sCargo.excluir(cargo.value.codcargo)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Cargo excluído",
-      });
-      router.push("/cargo");
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Cargo excluído',
+      })
+      router.push('/cargo')
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir cargo"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir cargo'),
+      })
     }
-  });
-};
+  })
+}
 
 const inativar = async () => {
   try {
-    const ret = await sCargo.inativar(cargo.value.codcargo);
-    cargo.value = ret.data.data;
+    const ret = await sCargo.inativar(cargo.value.codcargo)
+    cargo.value = ret.data.data
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Inativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Inativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao inativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao inativar'),
+    })
   }
-};
+}
 
 const ativar = async () => {
   try {
-    const ret = await sCargo.ativar(cargo.value.codcargo);
-    cargo.value = ret.data.data;
+    const ret = await sCargo.ativar(cargo.value.codcargo)
+    cargo.value = ret.data.data
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Ativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Ativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao ativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao ativar'),
+    })
   }
-};
+}
 
 // --- LIFECYCLE ---
 
 onMounted(async () => {
   try {
-    const ret = await sPessoa.pessoasColaboradorCargo(route.params.id);
-    pessoasCargo.value = ret.data.data.pessoasCargo;
-    cargo.value = ret.data.data.cargoS;
+    const ret = await sPessoa.pessoasColaboradorCargo(route.params.id)
+    pessoasCargo.value = ret.data.data.pessoasCargo
+    cargo.value = ret.data.data.cargoS
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar cargo"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar cargo'),
+    })
   }
-});
+})
 </script>
 
 <template>
@@ -152,14 +151,7 @@ onMounted(async () => {
 
   <MGLayout back-button>
     <template #botaoVoltar>
-      <q-btn
-        flat
-        dense
-        round
-        :to="{ name: 'cargosindex' }"
-        icon="arrow_back"
-        aria-label="Voltar"
-      />
+      <q-btn flat dense round :to="{ name: 'cargosindex' }" icon="arrow_back" aria-label="Voltar" />
     </template>
 
     <template #tituloPagina>
@@ -178,9 +170,7 @@ onMounted(async () => {
               <q-space />
               <span class="text-caption text-grey-5 q-mr-sm">
                 {{ formataNumero(cargo.salario) }}
-                <span v-if="cargo.adicional">
-                  — {{ cargo.adicional }}% adicional
-                </span>
+                <span v-if="cargo.adicional"> — {{ cargo.adicional }}% adicional </span>
               </span>
               <MgInfoCriacao
                 :usuariocriacao="cargo.usuariocriacao"
@@ -223,24 +213,12 @@ onMounted(async () => {
               >
                 <q-tooltip>Ativar</q-tooltip>
               </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                icon="delete"
-                size="sm"
-                color="grey-7"
-                @click="excluir()"
-              >
+              <q-btn flat dense round icon="delete" size="sm" color="grey-7" @click="excluir()">
                 <q-tooltip>Excluir</q-tooltip>
               </q-btn>
             </q-card-section>
 
-            <q-item-label
-              caption
-              class="text-red-14 q-px-md q-pb-sm"
-              v-if="cargo.inativo"
-            >
+            <q-item-label caption class="text-red-14 q-px-md q-pb-sm" v-if="cargo.inativo">
               Inativo desde: {{ formataTimestamp(cargo.inativo) }}
             </q-item-label>
           </q-card>
@@ -252,10 +230,7 @@ onMounted(async () => {
             </q-card-section>
 
             <q-list v-if="atuais.length > 0">
-              <template
-                v-for="pessoa in atuais"
-                :key="pessoa.codcolaboradorcargo"
-              >
+              <template v-for="pessoa in atuais" :key="pessoa.codcolaboradorcargo">
                 <q-separator inset />
                 <q-item clickable :to="'/pessoa/' + pessoa.codpessoa">
                   <q-item-section avatar>
@@ -284,27 +259,17 @@ onMounted(async () => {
                 </q-item>
               </template>
             </q-list>
-            <div v-else class="q-pa-md text-center text-grey">
-              Nenhum colaborador neste cargo
-            </div>
+            <div v-else class="q-pa-md text-center text-grey">Nenhum colaborador neste cargo</div>
           </q-card>
 
           <!-- CARD COLABORADORES ANTERIORES -->
-          <q-card
-            v-if="anteriores.length > 0"
-            bordered
-            flat
-            class="q-mt-md q-pb-md"
-          >
+          <q-card v-if="anteriores.length > 0" bordered flat class="q-mt-md q-pb-md">
             <q-card-section class="text-grey-9 text-overline row items-center">
               ANTERIORES ({{ anteriores.length }})
             </q-card-section>
 
             <q-list>
-              <template
-                v-for="pessoa in anteriores"
-                :key="pessoa.codcolaboradorcargo"
-              >
+              <template v-for="pessoa in anteriores" :key="pessoa.codcolaboradorcargo">
                 <q-separator inset />
                 <q-item clickable :to="'/pessoa/' + pessoa.codpessoa">
                   <q-item-section avatar>

@@ -1,118 +1,128 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { formataData, formataPisPasep, formataIe, formataCpf, formataTitulo, formataCnpj, formataCodNegocio, verificaIdade, formataTimestamp } from "@components/formatters";
-import { guardaToken } from "stores/index";
-import SelectGrupoEconomico from "components/pessoa/SelectGrupoEconomico.vue";
-import SelectCidade from "components/pessoa/SelectCidade.vue";
-import SelectEstado from "components/pessoa/SelectEstado.vue";
-import InputIe from "components/pessoa/InputIe.vue";
-import MgInputFormatado from "@components/MgInputFormatado.vue";
-import MgInputData from "@components/MgInputData.vue";
-import SelectPessoa from "components/select/SelectPessoa.vue";
-import SelectEstadoCivil from "components/pessoa/SelectEstadoCivil.vue";
-import SelectEtnia from "components/pessoa/SelectEtnia.vue";
-import SelectGrauInstrucao from "components/pessoa/SelectGrauInstrucao.vue";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import {
+  formataData,
+  formataPisPasep,
+  formataIe,
+  formataCpf,
+  formataTitulo,
+  formataCnpj,
+  formataCodNegocio,
+  verificaIdade,
+  formataTimestamp,
+} from '@components/formatters'
+import { guardaToken } from 'stores/index'
+import SelectGrupoEconomico from 'components/pessoa/SelectGrupoEconomico.vue'
+import SelectCidade from 'components/pessoa/SelectCidade.vue'
+import SelectEstado from 'components/pessoa/SelectEstado.vue'
+import InputIe from 'components/pessoa/InputIe.vue'
+import MgInputFormatado from '@components/MgInputFormatado.vue'
+import MgInputData from '@components/MgInputData.vue'
+import SelectPessoa from 'components/select/SelectPessoa.vue'
+import SelectEstadoCivil from 'components/pessoa/SelectEstadoCivil.vue'
+import SelectEtnia from 'components/pessoa/SelectEtnia.vue'
+import SelectGrauInstrucao from 'components/pessoa/SelectGrauInstrucao.vue'
 
-const $q = useQuasar();
-const router = useRouter();
-const sPessoa = pessoaStore();
-const user = guardaToken();
+const $q = useQuasar()
+const router = useRouter()
+const sPessoa = pessoaStore()
+const user = guardaToken()
 
 const ufNfe = computed(() => {
-  const enderecos = sPessoa.item?.PessoaEnderecoS || [];
-  const nfe = enderecos.find((e) => e.nfe === true);
-  return nfe?.uf || null;
-});
+  const enderecos = sPessoa.item?.PessoaEnderecoS || []
+  const nfe = enderecos.find((e) => e.nfe === true)
+  return nfe?.uf || null
+})
 
-const DialogDetalhes = ref(false);
-const DialogMercos = ref(false);
-const modelPessoa = ref({});
-const options = ref([]);
-const mercosTransferir = ref({ mercosid: null, codpessoanova: null });
+const DialogDetalhes = ref(false)
+const DialogMercos = ref(false)
+const modelPessoa = ref({})
+const options = ref([])
+const mercosTransferir = ref({ mercosid: null, codpessoanova: null })
 
 const inativar = async (codpessoa) => {
   try {
-    const ret = await sPessoa.inativarPessoa(codpessoa);
+    const ret = await sPessoa.inativarPessoa(codpessoa)
     if (ret.data) {
-      sPessoa.item = ret.data.data;
+      sPessoa.item = ret.data.data
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Inativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Inativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "negative",
-      textColor: "white",
-      icon: "error",
+      color: 'negative',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data,
-    });
+    })
   }
-};
+}
 const temDependentes = computed(() => {
-  return (sPessoa.item?.DependenteResponsavelS || []).some((d) => !d.inativo);
-});
+  return (sPessoa.item?.DependenteResponsavelS || []).some((d) => !d.inativo)
+})
 const ativar = async (codpessoa) => {
   try {
-    const ret = await sPessoa.ativarPessoa(codpessoa);
+    const ret = await sPessoa.ativarPessoa(codpessoa)
     if (ret.data) {
-      sPessoa.item = ret.data.data;
+      sPessoa.item = ret.data.data
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Ativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Ativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "negative",
-      textColor: "white",
-      icon: "error",
+      color: 'negative',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data,
-    });
+    })
   }
-};
+}
 
 const removerPessoa = (codpessoa, pessoa) => {
   $q.dialog({
-    title: "Excluir pessoa",
-    message: "Tem certeza que deseja excluir " + pessoa + "?",
+    title: 'Excluir pessoa',
+    message: 'Tem certeza que deseja excluir ' + pessoa + '?',
     cancel: true,
   }).onOk(async () => {
     try {
-      const ret = await sPessoa.removePessoa(codpessoa);
+      const ret = await sPessoa.removePessoa(codpessoa)
       if (ret.data.result === true) {
         $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Removido",
-        });
-        router.push("/pessoa");
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Removido',
+        })
+        router.push('/pessoa')
       }
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "warning",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'warning',
         message: error.response.data.message,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 const editarDetalhes = async () => {
-  DialogDetalhes.value = true;
+  DialogDetalhes.value = true
   modelPessoa.value = {
     cnpj: sPessoa.item.fisica
-      ? String(sPessoa.item.cnpj).padStart(11, "0")
-      : String(sPessoa.item.cnpj).padStart(14, "0"),
+      ? String(sPessoa.item.cnpj).padStart(11, '0')
+      : String(sPessoa.item.cnpj).padStart(14, '0'),
     rntrc: sPessoa.item.rntrc,
     ie: sPessoa.item.ie,
     fantasia: sPessoa.item.fantasia,
@@ -124,9 +134,7 @@ const editarDetalhes = async () => {
     vendedor: sPessoa.item.vendedor,
     observacoes: sPessoa.item.observacoes,
     codgrupoeconomico: sPessoa.item.codgrupoeconomico,
-    codcidade:
-      sPessoa.item.PessoaEnderecoS?.find((item) => item.nfe === true)
-        ?.codcidade ?? null,
+    codcidade: sPessoa.item.PessoaEnderecoS?.find((item) => item.nfe === true)?.codcidade ?? null,
     rg: sPessoa.item.rg,
     nascimento: sPessoa.item.nascimento ?? null,
     pai: sPessoa.item.pai,
@@ -135,10 +143,10 @@ const editarDetalhes = async () => {
     pispasep: sPessoa.item.pispasep,
     tituloeleitor: sPessoa.item.tituloeleitor,
     titulozona: sPessoa.item.titulozona
-      ? String(sPessoa.item.titulozona).padStart(3, "0")
+      ? String(sPessoa.item.titulozona).padStart(3, '0')
       : sPessoa.item.titulozona,
     titulosecao: sPessoa.item.titulosecao
-      ? String(sPessoa.item.titulosecao).padStart(4, "0")
+      ? String(sPessoa.item.titulosecao).padStart(4, '0')
       : sPessoa.item.titulosecao,
     ctps: sPessoa.item.ctps,
     seriectps: sPessoa.item.seriectps,
@@ -147,90 +155,90 @@ const editarDetalhes = async () => {
     codestadocivil: sPessoa.item.codestadocivil,
     codetnia: sPessoa.item.codetnia,
     codgrauinstrucao: sPessoa.item.codgrauinstrucao,
-  };
-  const ret = await sPessoa.consultaCidade(sPessoa.item.codcidadenascimento);
-  options.value = [ret.data[0]];
-};
+  }
+  const ret = await sPessoa.consultaCidade(sPessoa.item.codcidadenascimento)
+  options.value = [ret.data[0]]
+}
 
 const abrirDialogMercos = () => {
-  mercosTransferir.value.codpessoanova = null;
+  mercosTransferir.value.codpessoanova = null
   mercosTransferir.value.mercosid =
-    sPessoa.item.mercosId?.length > 0 ? sPessoa.item.mercosId[0] : null;
-  DialogMercos.value = true;
-};
+    sPessoa.item.mercosId?.length > 0 ? sPessoa.item.mercosId[0] : null
+  DialogMercos.value = true
+}
 
 const salvarMercos = (evt) => {
-  if (evt) evt.preventDefault();
+  if (evt) evt.preventDefault()
   $q.dialog({
-    title: "Confirma",
-    message: "Tem certeza que deseja confirmar a transferência do Mercos ID?",
+    title: 'Confirma',
+    message: 'Tem certeza que deseja confirmar a transferência do Mercos ID?',
     cancel: true,
   }).onOk(async () => {
     try {
       const ret = await sPessoa.transferirMercosId(
         sPessoa.item.codpessoa,
         mercosTransferir.value.mercosid,
-        mercosTransferir.value.codpessoanova
-      );
-      sPessoa.item = ret.data.data;
+        mercosTransferir.value.codpessoanova,
+      )
+      sPessoa.item = ret.data.data
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "MercosID Transferido",
-      });
-      DialogMercos.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'MercosID Transferido',
+      })
+      DialogMercos.value = false
     } catch (error) {
-      console.log(error);
+      console.log(error)
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: "Falha ao transferir MercosID!",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: 'Falha ao transferir MercosID!',
+      })
     }
-  });
-};
+  })
+}
 
 const salvarDetalhes = async () => {
-  const editar = { ...modelPessoa.value };
+  const editar = { ...modelPessoa.value }
   try {
-    const ret = await sPessoa.clienteSalvar(sPessoa.item.codpessoa, editar);
-    sPessoa.item = ret.data.data;
+    const ret = await sPessoa.clienteSalvar(sPessoa.item.codpessoa, editar)
+    sPessoa.item = ret.data.data
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Alterado",
-      });
-      DialogDetalhes.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Alterado',
+      })
+      DialogDetalhes.value = false
     }
   } catch (error) {
     if (error.response.data.errors?.cnpj) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.errors.cnpj,
-      });
+      })
     } else if (error.response.data.errors?.ie) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.errors.ie,
-      });
+      })
     } else {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
   }
-};
+}
 </script>
 
 <template>
@@ -247,9 +255,7 @@ const salvarDetalhes = async () => {
         <q-card-section class="row q-col-gutter-md">
           <q-input
             :class="
-              modelPessoa.fisica
-                ? 'col-md-3 col-sm-6 col-xs-12'
-                : 'col-md-4 col-sm-6 col-xs-12'
+              modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
             "
             outlined
             v-model="modelPessoa.cnpj"
@@ -268,9 +274,7 @@ const salvarDetalhes = async () => {
           />
           <input-ie
             :class="
-              modelPessoa.fisica
-                ? 'col-md-3 col-sm-6 col-xs-12'
-                : 'col-md-4 col-sm-6 col-xs-12'
+              modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
             "
             v-model="modelPessoa.ie"
             label="Inscrição Estadual"
@@ -279,9 +283,7 @@ const salvarDetalhes = async () => {
           <MgInputData
             type="date"
             :class="
-              modelPessoa.fisica
-                ? 'col-md-3 col-sm-6 col-xs-12'
-                : 'col-md-4 col-sm-6 col-xs-12'
+              modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
             "
             v-model="modelPessoa.nascimento"
             :label="modelPessoa.fisica ? 'Nascimento' : 'Fundação'"
@@ -291,9 +293,7 @@ const salvarDetalhes = async () => {
             outlined
             v-model="modelPessoa.fantasia"
             label="Fantasia"
-            :rules="[
-              (val) => (val && val.length > 0) || 'Nome Fantasia é Obrigatório',
-            ]"
+            :rules="[(val) => (val && val.length > 0) || 'Nome Fantasia é Obrigatório']"
             autofocus
             class="col-md-4 col-sm-6 col-xs-12"
           />
@@ -301,9 +301,7 @@ const salvarDetalhes = async () => {
             outlined
             v-model="modelPessoa.pessoa"
             label="Razão Social"
-            :rules="[
-              (val) => (val && val.length > 0) || 'Razão Social é Obrigatório',
-            ]"
+            :rules="[(val) => (val && val.length > 0) || 'Razão Social é Obrigatório']"
             class="col-md-4 col-sm-6 col-xs-12"
           />
           <select-grupo-economico
@@ -400,10 +398,7 @@ const salvarDetalhes = async () => {
               v-model="modelPessoa.codestadocivil"
             />
             <template v-if="sPessoa.item?.permissaoRH">
-              <select-etnia
-                class="col-md-4 col-sm-6 col-xs-12"
-                v-model="modelPessoa.codetnia"
-              />
+              <select-etnia class="col-md-4 col-sm-6 col-xs-12" v-model="modelPessoa.codetnia" />
             </template>
             <select-grau-instrucao
               class="col-md-4 col-sm-6 col-xs-12"
@@ -456,13 +451,7 @@ const salvarDetalhes = async () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="grey-8"
-            v-close-popup
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -500,13 +489,7 @@ const salvarDetalhes = async () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="grey-8"
-            v-close-popup
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -519,15 +502,7 @@ const salvarDetalhes = async () => {
       DETALHES DA PESSOA
       <q-space />
       <template v-if="user.verificaPermissaoUsuario('Publico')">
-        <q-btn
-          flat
-          round
-          dense
-          icon="edit"
-          size="sm"
-          color="grey-7"
-          @click="editarDetalhes()"
-        >
+        <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="editarDetalhes()">
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
         <q-btn
@@ -589,11 +564,7 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div
-        class="col-xs-12 col-sm-6"
-        v-for="mid in sPessoa.item.mercosId"
-        :key="mid"
-      >
+      <div class="col-xs-12 col-sm-6" v-for="mid in sPessoa.item.mercosId" :key="mid">
         <div class="text-overline text-grey-7">
           Mercos Id
           <q-btn
@@ -643,14 +614,8 @@ const salvarDetalhes = async () => {
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Documentos</div>
         <div class="text-body2">
-          {{
-            sPessoa.item.fisica
-              ? formataCpf(sPessoa.item.cnpj)
-              : formataCnpj(sPessoa.item.cnpj)
-          }}
-          <span v-if="sPessoa.item.ie">
-            / {{ formataIe(sPessoa.item.ie, ufNfe) }}
-          </span>
+          {{ sPessoa.item.fisica ? formataCpf(sPessoa.item.cnpj) : formataCnpj(sPessoa.item.cnpj) }}
+          <span v-if="sPessoa.item.ie"> / {{ formataIe(sPessoa.item.ie, ufNfe) }} </span>
           <span v-if="sPessoa.item.rg"> / {{ sPessoa.item.rg }} </span>
         </div>
       </div>
@@ -660,9 +625,7 @@ const salvarDetalhes = async () => {
         <div class="text-body2">
           {{ verificaIdade(sPessoa.item.nascimento) }} anos
           <template v-if="sPessoa.item.codcidadenascimento">
-            , nascido em {{ sPessoa.item.cidadenascimento }}/{{
-              sPessoa.item.ufnascimento
-            }}
+            , nascido em {{ sPessoa.item.cidadenascimento }}/{{ sPessoa.item.ufnascimento }}
           </template>
           , {{ formataData(sPessoa.item.nascimento) }}
         </div>
@@ -683,10 +646,7 @@ const salvarDetalhes = async () => {
         </div>
       </div>
 
-      <div
-        class="col-xs-12 col-sm-6"
-        v-if="sPessoa.item.pai || sPessoa.item.mae"
-      >
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.pai || sPessoa.item.mae">
         <div class="text-overline text-grey-7">Filiacao</div>
         <div class="text-body2">
           {{ sPessoa.item.pai }}
@@ -703,13 +663,11 @@ const salvarDetalhes = async () => {
       </div>
 
       <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.tituloeleitor">
-        <div class="text-overline text-grey-7">
-          Titulo Eleitor / Zona / Secao
-        </div>
+        <div class="text-overline text-grey-7">Titulo Eleitor / Zona / Secao</div>
         <div class="text-body2">
           {{ formataTitulo(sPessoa.item.tituloeleitor) }} /
-          {{ String(sPessoa.item.titulozona ?? "").padStart(3, "0") }} /
-          {{ String(sPessoa.item.titulosecao ?? "").padStart(4, "0") }}
+          {{ String(sPessoa.item.titulozona ?? '').padStart(3, '0') }} /
+          {{ String(sPessoa.item.titulosecao ?? '').padStart(4, '0') }}
         </div>
       </div>
 
@@ -726,44 +684,31 @@ const salvarDetalhes = async () => {
         class="col-xs-12 col-sm-6"
         v-if="
           sPessoa.item.fisica &&
-          (sPessoa.item.estadocivil ||
-            sPessoa.item.etnia ||
-            sPessoa.item.grauinstrucao)
+          (sPessoa.item.estadocivil || sPessoa.item.etnia || sPessoa.item.grauinstrucao)
         "
       >
-        <div class="text-overline text-grey-7">
-          Estado Civil / Etnia / Instrucao
-        </div>
+        <div class="text-overline text-grey-7">Estado Civil / Etnia / Instrucao</div>
         <div class="text-body2">
           <template v-if="sPessoa.item.estadocivil">
             {{ sPessoa.item.estadocivil }}
           </template>
           <template v-if="sPessoa.item.etnia">
-            {{ sPessoa.item.estadocivil ? " / " : "" }}{{ sPessoa.item.etnia }}
+            {{ sPessoa.item.estadocivil ? ' / ' : '' }}{{ sPessoa.item.etnia }}
           </template>
           <template v-if="sPessoa.item.grauinstrucao">
-            {{ sPessoa.item.estadocivil || sPessoa.item.etnia ? " / " : ""
+            {{ sPessoa.item.estadocivil || sPessoa.item.etnia ? ' / ' : ''
             }}{{ sPessoa.item.grauinstrucao }}
           </template>
         </div>
       </div>
 
-      <div
-        class="col-xs-12 col-sm-6"
-        v-if="sPessoa.item.rntrc || sPessoa.item.tipotransportador"
-      >
+      <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.rntrc || sPessoa.item.tipotransportador">
         <div class="text-overline text-grey-7">RNTRC</div>
         <div class="text-body2">
           <template v-if="sPessoa.item.tipotransportador">
-            <span v-if="sPessoa.item.tipotransportador == 1"
-              >ETC - Empresa</span
-            >
-            <span v-if="sPessoa.item.tipotransportador == 2"
-              >TAC - Autonomo</span
-            >
-            <span v-if="sPessoa.item.tipotransportador == 3"
-              >CTC - Cooperativa</span
-            >
+            <span v-if="sPessoa.item.tipotransportador == 1">ETC - Empresa</span>
+            <span v-if="sPessoa.item.tipotransportador == 2">TAC - Autonomo</span>
+            <span v-if="sPessoa.item.tipotransportador == 3">CTC - Cooperativa</span>
             |
           </template>
           {{ sPessoa.item.rntrc }}
@@ -773,16 +718,13 @@ const salvarDetalhes = async () => {
       <div class="col-6">
         <div class="text-overline text-grey-7">Possui Dependentes</div>
         <span class="text-body2 bg-grey-2 rounded-borders q-pa-sm">
-          {{ temDependentes ? "Sim" : "Não" }}
+          {{ temDependentes ? 'Sim' : 'Não' }}
         </span>
       </div>
 
       <div class="col-12" v-if="sPessoa.item.observacoes">
         <div class="text-overline text-grey-7">Observacoes</div>
-        <div
-          class="text-body2 bg-grey-2 rounded-borders q-pa-sm"
-          style="white-space: pre-line"
-        >
+        <div class="text-body2 bg-grey-2 rounded-borders q-pa-sm" style="white-space: pre-line">
           {{ sPessoa.item.observacoes }}
         </div>
       </div>

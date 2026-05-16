@@ -1,109 +1,94 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute, useRouter } from "vue-router";
-import { rhStore } from "src/stores/rh";
-import { guardaToken } from "src/stores";
-import { api } from "src/boot/axios";
-import { formataData, formataFromNow } from "@components/formatters";
-import { tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
-import { formataNumero } from "@components/formatters";
-import SelectSetor from "src/components/select/SelectSetor.vue";
-import DialogEditarMeta from "./DialogEditarMeta.vue";
-import CardIndicadores from "src/components/rh/CardIndicadores.vue";
-import CardRubricas from "src/components/rh/CardRubricas.vue";
-import CardSetores from "src/components/rh/CardSetores.vue";
-import MgInputValor from "@components/MgInputValor.vue";
+import { ref, computed, onMounted, watch } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
+import { rhStore } from 'src/stores/rh'
+import { guardaToken } from 'src/stores'
+import { api } from 'src/boot/axios'
+import { formataData, formataFromNow } from '@components/formatters'
+import { tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
+import { formataNumero } from '@components/formatters'
+import SelectSetor from 'src/components/select/SelectSetor.vue'
+import DialogEditarMeta from './DialogEditarMeta.vue'
+import CardIndicadores from 'src/components/rh/CardIndicadores.vue'
+import CardRubricas from 'src/components/rh/CardRubricas.vue'
+import CardSetores from 'src/components/rh/CardSetores.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const router = useRouter();
-const sRh = rhStore();
-const user = guardaToken();
+const $q = useQuasar()
+const route = useRoute()
+const router = useRouter()
+const sRh = rhStore()
+const user = guardaToken()
 
-const loading = ref(false);
-const podeEditar = computed(() =>
-  user.verificaPermissaoUsuario("Recursos Humanos")
-);
+const loading = ref(false)
+const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
 
 // --- DADOS DO COLABORADOR ---
 
-const colaborador = ref(null);
+const colaborador = ref(null)
 
-const nome = computed(
-  () => colaborador.value?.colaborador?.pessoa?.fantasia || "—"
-);
+const nome = computed(() => colaborador.value?.colaborador?.pessoa?.fantasia || '—')
 const cargo = computed(() => {
-  const cargos = colaborador.value?.colaborador?.colaborador_cargo_s || [];
-  return cargos.length > 0 ? cargos[0].cargo?.cargo : null;
-});
-const setores = computed(
-  () => colaborador.value?.periodo_colaborador_setor_s || []
-);
+  const cargos = colaborador.value?.colaborador?.colaborador_cargo_s || []
+  return cargos.length > 0 ? cargos[0].cargo?.cargo : null
+})
+const setores = computed(() => colaborador.value?.periodo_colaborador_setor_s || [])
 const rubricas = computed(() =>
   (colaborador.value?.colaborador_rubrica_s || [])
     .slice()
-    .sort((a, b) => a.descricao.localeCompare(b.descricao, "pt-BR"))
-);
-const indicadores = computed(() => colaborador.value?.indicadores || []);
+    .sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR')),
+)
+const indicadores = computed(() => colaborador.value?.indicadores || [])
 
 // --- HELPERS ---
 
 const linkTitulo = computed(() => {
-  if (!colaborador.value?.codtitulo) return "";
-  return (
-    process.env.MGSIS_URL +
-    "index.php?r=titulo/view&id=" +
-    colaborador.value.codtitulo
-  );
-});
+  if (!colaborador.value?.codtitulo) return ''
+  return process.env.MGSIS_URL + 'index.php?r=titulo/view&id=' + colaborador.value.codtitulo
+})
 
 const diasUteisPeriodo = computed(() => {
   const p = (sRh.periodos || []).find(
-    (per) => String(per.codperiodo) === String(route.params.codperiodo)
-  );
-  return p?.diasuteis || 0;
-});
-
+    (per) => String(per.codperiodo) === String(route.params.codperiodo),
+  )
+  return p?.diasuteis || 0
+})
 
 // --- DIAS ÚTEIS ---
 
 const calcularDiasUteis = (inicio, fim, feriados) => {
-  const feriadoSet = new Set(feriados.map((f) => f.data?.substring(0, 10)));
-  let count = 0;
-  const d = new Date(inicio.substring(0, 10) + "T12:00:00");
-  const end = new Date(fim.substring(0, 10) + "T12:00:00");
+  const feriadoSet = new Set(feriados.map((f) => f.data?.substring(0, 10)))
+  let count = 0
+  const d = new Date(inicio.substring(0, 10) + 'T12:00:00')
+  const end = new Date(fim.substring(0, 10) + 'T12:00:00')
   while (d <= end) {
-    const day = d.getDay();
-    const dateStr = d.toISOString().substring(0, 10);
-    if (day !== 0 && !feriadoSet.has(dateStr)) count++;
-    d.setDate(d.getDate() + 1);
+    const day = d.getDay()
+    const dateStr = d.toISOString().substring(0, 10)
+    if (day !== 0 && !feriadoSet.has(dateStr)) count++
+    d.setDate(d.getDate() + 1)
   }
-  return count;
-};
+  return count
+}
 
 // --- DIALOG SETOR ---
 
-const dialogSetor = ref(false);
-const isNovoSetor = ref(false);
-const modelSetor = ref({});
+const dialogSetor = ref(false)
+const isNovoSetor = ref(false)
+const modelSetor = ref({})
 
 const abrirNovoSetor = async () => {
-  isNovoSetor.value = true;
-  let diasUteis = 22;
+  isNovoSetor.value = true
+  let diasUteis = 22
   try {
-    if (sRh.periodos.length === 0) await sRh.getPeriodos();
+    if (sRh.periodos.length === 0) await sRh.getPeriodos()
     const periodo = sRh.periodos.find(
-      (p) => String(p.codperiodo) === String(route.params.codperiodo)
-    );
+      (p) => String(p.codperiodo) === String(route.params.codperiodo),
+    )
     if (periodo?.periodoinicial && periodo?.periodofinal) {
-      const ret = await api.get("v1/feriado");
-      const feriados = (ret.data.data || []).filter((f) => !f.inativo);
-      diasUteis = calcularDiasUteis(
-        periodo.periodoinicial,
-        periodo.periodofinal,
-        feriados
-      );
+      const ret = await api.get('v1/feriado')
+      const feriados = (ret.data.data || []).filter((f) => !f.inativo)
+      diasUteis = calcularDiasUteis(periodo.periodoinicial, periodo.periodofinal, feriados)
     }
   } catch (e) {
     // fallback 22
@@ -112,104 +97,95 @@ const abrirNovoSetor = async () => {
     codsetor: null,
     percentualrateio: 100,
     diastrabalhados: diasUteis,
-  };
-  dialogSetor.value = true;
-};
+  }
+  dialogSetor.value = true
+}
 
 const editarSetor = (pcs) => {
-  isNovoSetor.value = false;
+  isNovoSetor.value = false
   modelSetor.value = {
     codperiodocolaboradorsetor: pcs.codperiodocolaboradorsetor,
     codsetor: pcs.codsetor,
     percentualrateio: pcs.percentualrateio,
     diastrabalhados: pcs.diastrabalhados,
-  };
-  dialogSetor.value = true;
-};
+  }
+  dialogSetor.value = true
+}
 
 const salvarSetor = async () => {
-  dialogSetor.value = false;
+  dialogSetor.value = false
   try {
     if (isNovoSetor.value) {
-      await sRh.criarSetor(
-        colaborador.value.codperiodocolaborador,
-        modelSetor.value
-      );
+      await sRh.criarSetor(colaborador.value.codperiodocolaborador, modelSetor.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Setor vinculado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Setor vinculado',
+      })
     } else {
-      await sRh.atualizarSetor(
-        modelSetor.value.codperiodocolaboradorsetor,
-        modelSetor.value
-      );
+      await sRh.atualizarSetor(modelSetor.value.codperiodocolaboradorsetor, modelSetor.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Setor atualizado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Setor atualizado',
+      })
     }
-    await recarregar();
+    await recarregar()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar setor"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar setor'),
+    })
   }
-};
+}
 
 const excluirSetor = (pcs) => {
   $q.dialog({
-    title: "Remover Setor",
-    message:
-      "Tem certeza? Rubricas vinculadas a este setor também serão removidas.",
+    title: 'Remover Setor',
+    message: 'Tem certeza? Rubricas vinculadas a este setor também serão removidas.',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.excluirSetor(pcs.codperiodocolaboradorsetor);
+      await sRh.excluirSetor(pcs.codperiodocolaboradorsetor)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Setor removido",
-      });
-      await recarregar();
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Setor removido',
+      })
+      await recarregar()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao remover setor"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao remover setor'),
+      })
     }
-  });
-};
+  })
+}
 
 const submitSetor = () => {
-  salvarSetor();
-};
+  salvarSetor()
+}
 
 // --- DIALOG RUBRICA ---
 
-const dialogRubrica = ref(false);
-const isNovaRubrica = ref(false);
-const modelRubrica = ref({});
+const dialogRubrica = ref(false)
+const isNovaRubrica = ref(false)
+const modelRubrica = ref({})
 
 const abrirNovaRubrica = () => {
-  isNovaRubrica.value = true;
+  isNovaRubrica.value = true
   modelRubrica.value = {
-    descricao: "",
+    descricao: '',
     codperiodocolaboradorsetor:
-      setores.value.length === 1
-        ? setores.value[0].codperiodocolaboradorsetor
-        : null,
-    tipovalor: "P",
+      setores.value.length === 1 ? setores.value[0].codperiodocolaboradorsetor : null,
+    tipovalor: 'P',
     percentual: null,
     valorfixo: null,
     codindicador: null,
@@ -218,12 +194,12 @@ const abrirNovaRubrica = () => {
     concedido: true,
     recorrente: true,
     descontaabsenteismo: false,
-  };
-  dialogRubrica.value = true;
-};
+  }
+  dialogRubrica.value = true
+}
 
 const editarRubrica = (r) => {
-  isNovaRubrica.value = false;
+  isNovaRubrica.value = false
   modelRubrica.value = {
     codcolaboradorrubrica: r.codcolaboradorrubrica,
     descricao: r.descricao,
@@ -237,273 +213,251 @@ const editarRubrica = (r) => {
     concedido: r.concedido,
     recorrente: r.recorrente,
     descontaabsenteismo: r.descontaabsenteismo,
-  };
-  dialogRubrica.value = true;
-};
+  }
+  dialogRubrica.value = true
+}
 
 const salvarRubrica = async () => {
-  dialogRubrica.value = false;
+  dialogRubrica.value = false
   try {
     if (isNovaRubrica.value) {
-      await sRh.criarRubrica(
-        colaborador.value.codperiodocolaborador,
-        modelRubrica.value
-      );
+      await sRh.criarRubrica(colaborador.value.codperiodocolaborador, modelRubrica.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Rubrica criada",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Rubrica criada',
+      })
     } else {
-      await sRh.atualizarRubrica(
-        modelRubrica.value.codcolaboradorrubrica,
-        modelRubrica.value
-      );
+      await sRh.atualizarRubrica(modelRubrica.value.codcolaboradorrubrica, modelRubrica.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Rubrica atualizada",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Rubrica atualizada',
+      })
     }
-    await recarregar();
+    await recarregar()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar rubrica"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar rubrica'),
+    })
   }
-};
+}
 
 const excluirRubrica = (r) => {
   $q.dialog({
-    title: "Excluir Rubrica",
-    message: "Tem certeza que deseja excluir esta rubrica?",
+    title: 'Excluir Rubrica',
+    message: 'Tem certeza que deseja excluir esta rubrica?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.excluirRubrica(r.codcolaboradorrubrica);
+      await sRh.excluirRubrica(r.codcolaboradorrubrica)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Rubrica excluída",
-      });
-      await recarregar();
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Rubrica excluída',
+      })
+      await recarregar()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir rubrica"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir rubrica'),
+      })
     }
-  });
-};
+  })
+}
 
 const toggleConcedido = async (r) => {
   try {
-    await sRh.toggleConcedido(r.codcolaboradorrubrica);
-    await recarregar();
+    await sRh.toggleConcedido(r.codcolaboradorrubrica)
+    await recarregar()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao alterar concedido"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao alterar concedido'),
+    })
   }
-};
+}
 
 const submitRubrica = () => {
-  salvarRubrica();
-};
+  salvarRubrica()
+}
 
 // --- DIALOG EDITAR META ---
 
-const dialogMeta = ref(false);
-const indicadorMeta = ref(null);
+const dialogMeta = ref(false)
+const indicadorMeta = ref(null)
 
 const editarMeta = (ind) => {
-  indicadorMeta.value = ind;
-  dialogMeta.value = true;
-};
+  indicadorMeta.value = ind
+  dialogMeta.value = true
+}
 
 // --- AÇÕES HEADER ---
 
 const recalcularColaborador = async () => {
   try {
-    await sRh.recalcular(
-      route.params.codperiodo,
-      colaborador.value.codperiodocolaborador
-    );
+    await sRh.recalcular(route.params.codperiodo, colaborador.value.codperiodocolaborador)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Recalculado",
-    });
-    await recarregar();
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Recalculado',
+    })
+    await recarregar()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao recalcular"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao recalcular'),
+    })
   }
-};
+}
 
 const encerrarColaborador = () => {
   $q.dialog({
-    title: "Encerrar Colaborador",
-    message: "Tem certeza? Um título será gerado.",
+    title: 'Encerrar Colaborador',
+    message: 'Tem certeza? Um título será gerado.',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.encerrar(
-        route.params.codperiodo,
-        colaborador.value.codperiodocolaborador
-      );
+      await sRh.encerrar(route.params.codperiodo, colaborador.value.codperiodocolaborador)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Encerrado",
-      });
-      await recarregar();
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Encerrado',
+      })
+      await recarregar()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao encerrar"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao encerrar'),
+      })
     }
-  });
-};
+  })
+}
 
 const estornarColaborador = () => {
   $q.dialog({
-    title: "Estornar Encerramento",
-    message: "Tem certeza? O título será cancelado.",
+    title: 'Estornar Encerramento',
+    message: 'Tem certeza? O título será cancelado.',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.estornar(
-        route.params.codperiodo,
-        colaborador.value.codperiodocolaborador
-      );
+      await sRh.estornar(route.params.codperiodo, colaborador.value.codperiodocolaborador)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Estornado",
-      });
-      await recarregar();
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Estornado',
+      })
+      await recarregar()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao estornar"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao estornar'),
+      })
     }
-  });
-};
+  })
+}
 
 // --- SELECT OPTIONS ---
 
 const setorOptions = computed(() =>
   setores.value.map((pcs) => ({
-    label:
-      (pcs.setor?.unidade_negocio?.descricao || "") +
-      " — " +
-      (pcs.setor?.setor || ""),
+    label: (pcs.setor?.unidade_negocio?.descricao || '') + ' — ' + (pcs.setor?.setor || ''),
     value: pcs.codperiodocolaboradorsetor,
-  }))
-);
+  })),
+)
 
-const todosIndicadores = computed(() => colaborador.value?.indicadores || []);
+const todosIndicadores = computed(() => colaborador.value?.indicadores || [])
 
 const indicadorOptions = computed(() =>
   todosIndicadores.value.map((ind) => {
-    let label = tipoIndicadorLabel(ind.tipo);
-    const un = ind.unidade_negocio?.descricao;
-    const setor = ind.setor?.setor;
+    let label = tipoIndicadorLabel(ind.tipo)
+    const un = ind.unidade_negocio?.descricao
+    const setor = ind.setor?.setor
     if (un || setor) {
-      label += " — " + [un, setor].filter(Boolean).join(" / ");
+      label += ' — ' + [un, setor].filter(Boolean).join(' / ')
     }
     if (ind.valoracumulado) {
-      label += " (" + formataNumero(ind.valoracumulado) + ")";
+      label += ' (' + formataNumero(ind.valoracumulado) + ')'
     }
-    return { label, value: ind.codindicador };
-  })
-);
+    return { label, value: ind.codindicador }
+  }),
+)
 
 // --- LIFECYCLE ---
 
 const recarregar = async () => {
-  await sRh.getColaboradores(route.params.codperiodo);
+  await sRh.getColaboradores(route.params.codperiodo)
   colaborador.value =
     sRh.colaboradores.find(
-      (c) =>
-        String(c.codperiodocolaborador) ===
-        String(route.params.codperiodocolaborador)
-    ) || null;
-};
+      (c) => String(c.codperiodocolaborador) === String(route.params.codperiodocolaborador),
+    ) || null
+}
 
 const toggleGestorColaborador = async () => {
   try {
-    await sRh.toggleGestor(route.params.codperiodo, colaborador.value.codperiodocolaborador);
-    colaborador.value.gestor = !colaborador.value.gestor;
+    await sRh.toggleGestor(route.params.codperiodo, colaborador.value.codperiodocolaborador)
+    colaborador.value.gestor = !colaborador.value.gestor
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao alterar gestor"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao alterar gestor'),
+    })
   }
-};
+}
 
 const carregar = async () => {
-  loading.value = true;
+  loading.value = true
   try {
     if (sRh.colaboradores.length === 0) {
-      await sRh.getColaboradores(route.params.codperiodo);
+      await sRh.getColaboradores(route.params.codperiodo)
     }
     colaborador.value =
       sRh.colaboradores.find(
-        (c) =>
-          String(c.codperiodocolaborador) ===
-          String(route.params.codperiodocolaborador)
-      ) || null;
+        (c) => String(c.codperiodocolaborador) === String(route.params.codperiodocolaborador),
+      ) || null
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar colaborador"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar colaborador'),
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 onMounted(() => {
-  carregar();
-});
+  carregar()
+})
 
 watch(
   () => route.params.codperiodocolaborador,
   () => {
-    if (route.name === "rhColaboradorDetalhe") carregar();
-  }
-);
+    if (route.name === 'rhColaboradorDetalhe') carregar()
+  },
+)
 </script>
 
 <template>
@@ -530,10 +484,7 @@ watch(
               />
             </div>
             <div class="col-6">
-              <MgInputValor
-                v-model="modelSetor.percentualrateio"
-                label="% Rateio"
-              />
+              <MgInputValor v-model="modelSetor.percentualrateio" label="% Rateio" />
             </div>
             <div class="col-6">
               <q-input
@@ -549,13 +500,7 @@ watch(
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -693,10 +638,7 @@ watch(
             <div class="col-12">
               <q-toggle v-model="modelRubrica.concedido" label="Concedido" />
               <q-toggle v-model="modelRubrica.recorrente" label="Recorrente" />
-              <q-toggle
-                v-model="modelRubrica.descontaabsenteismo"
-                label="Desconta Absenteísmo"
-              />
+              <q-toggle v-model="modelRubrica.descontaabsenteismo" label="Desconta Absenteísmo" />
             </div>
           </div>
         </q-card-section>
@@ -704,13 +646,7 @@ watch(
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -718,11 +654,7 @@ watch(
   </q-dialog>
 
   <!-- DIALOG EDITAR META -->
-  <DialogEditarMeta
-    v-model="dialogMeta"
-    :indicador="indicadorMeta"
-    @salvo="recarregar()"
-  />
+  <DialogEditarMeta v-model="dialogMeta" :indicador="indicadorMeta" @salvo="recarregar()" />
 
   <!-- CONTEÚDO PRINCIPAL -->
   <div style="max-width: 1280px; margin: auto">
@@ -732,12 +664,7 @@ watch(
       <!-- HEADER -->
       <q-item class="q-pt-lg q-pb-sm">
         <q-item-section avatar>
-          <q-avatar
-            color="grey-8"
-            text-color="grey-4"
-            size="80px"
-            v-if="nome !== '—'"
-          >
+          <q-avatar color="grey-8" text-color="grey-4" size="80px" v-if="nome !== '—'">
             {{ nome.slice(0, 1) }}
           </q-avatar>
         </q-item-section>
@@ -758,10 +685,7 @@ watch(
           <div class="text-h5 text-grey-7">
             <span v-if="cargo">{{ cargo }}</span>
           </div>
-          <div
-            v-if="colaborador?.colaborador?.contratacao"
-            class="text-caption text-grey"
-          >
+          <div v-if="colaborador?.colaborador?.contratacao" class="text-caption text-grey">
             Contratação:
             {{ formataData(colaborador.colaborador.contratacao) }}
             ({{ formataFromNow(colaborador.colaborador.contratacao) }})
@@ -795,59 +719,56 @@ watch(
       </q-item>
 
       <div class="q-pa-md">
-      <div class="row q-col-gutter-md">
-        <!-- COLUNA ESQUERDA -->
-        <div class="col-xs-12 col-md-8">
-          <!-- RUBRICAS -->
-          <CardRubricas
-            :rubricas="rubricas"
-            :valortotal="colaborador.valortotal"
-            :status="colaborador.status"
-            :codtitulo="colaborador.codtitulo"
-            :linkTitulo="linkTitulo"
-            :podeEditar="podeEditar"
-            @editar="editarRubrica"
-            @excluir="excluirRubrica"
-            @toggle-concedido="toggleConcedido"
-            @recalcular="recalcularColaborador"
-            @encerrar="encerrarColaborador"
-            @estornar="estornarColaborador"
-            @nova-rubrica="abrirNovaRubrica"
-          />
-        </div>
+        <div class="row q-col-gutter-md">
+          <!-- COLUNA ESQUERDA -->
+          <div class="col-xs-12 col-md-8">
+            <!-- RUBRICAS -->
+            <CardRubricas
+              :rubricas="rubricas"
+              :valortotal="colaborador.valortotal"
+              :status="colaborador.status"
+              :codtitulo="colaborador.codtitulo"
+              :linkTitulo="linkTitulo"
+              :podeEditar="podeEditar"
+              @editar="editarRubrica"
+              @excluir="excluirRubrica"
+              @toggle-concedido="toggleConcedido"
+              @recalcular="recalcularColaborador"
+              @encerrar="encerrarColaborador"
+              @estornar="estornarColaborador"
+              @nova-rubrica="abrirNovaRubrica"
+            />
+          </div>
 
-        <!-- COLUNA DIREITA -->
-        <div class="col-xs-12 col-md-4">
-          <!-- SETORES -->
-          <CardSetores
-            :setores="setores"
-            :diasUteisPeriodo="diasUteisPeriodo"
-            :podeEditar="podeEditar"
-            :status="colaborador.status"
-            @editar="editarSetor"
-            @excluir="excluirSetor"
-            @adicionar="abrirNovoSetor"
-          />
+          <!-- COLUNA DIREITA -->
+          <div class="col-xs-12 col-md-4">
+            <!-- SETORES -->
+            <CardSetores
+              :setores="setores"
+              :diasUteisPeriodo="diasUteisPeriodo"
+              :podeEditar="podeEditar"
+              :status="colaborador.status"
+              @editar="editarSetor"
+              @excluir="excluirSetor"
+              @adicionar="abrirNovoSetor"
+            />
 
-          <!-- INDICADORES -->
-          <CardIndicadores
-            :indicadores="indicadores"
-            :codperiodo="route.params.codperiodo"
-            nomeRotaExtrato="rhIndicadorExtrato"
-            :podeEditar="podeEditar"
-            :status="colaborador.status"
-            @editar-meta="editarMeta"
-          />
+            <!-- INDICADORES -->
+            <CardIndicadores
+              :indicadores="indicadores"
+              :codperiodo="route.params.codperiodo"
+              nomeRotaExtrato="rhIndicadorExtrato"
+              :podeEditar="podeEditar"
+              :status="colaborador.status"
+              @editar-meta="editarMeta"
+            />
+          </div>
         </div>
-      </div>
       </div>
     </template>
 
     <!-- COLABORADOR NÃO ENCONTRADO -->
-    <div
-      v-else-if="!loading && !colaborador"
-      class="q-pa-xl text-center text-grey"
-    >
+    <div v-else-if="!loading && !colaborador" class="q-pa-xl text-center text-grey">
       Colaborador não encontrado
     </div>
   </div>

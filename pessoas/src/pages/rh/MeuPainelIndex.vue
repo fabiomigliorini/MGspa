@@ -1,57 +1,56 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { useRouter, useRoute } from "vue-router";
-import { rhStore } from "src/stores/rh";
-import { formataData } from "@components/formatters";
-import { extrairErro } from "src/utils/rhFormatters";
-import MGLayout from "layouts/MGLayout.vue";
+import { ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRouter, useRoute } from 'vue-router'
+import { rhStore } from 'src/stores/rh'
+import { formataData } from '@components/formatters'
+import { extrairErro } from 'src/utils/rhFormatters'
+import MGLayout from 'layouts/MGLayout.vue'
 
-const $q = useQuasar();
-const router = useRouter();
-const route = useRoute();
-const sRh = rhStore();
+const $q = useQuasar()
+const router = useRouter()
+const route = useRoute()
+const sRh = rhStore()
 
-const periodos = ref([]);
-const loading = ref(false);
+const periodos = ref([])
+const loading = ref(false)
 
-const statusLabel = (status) => (status === "A" ? "Aberto" : "Fechado");
-const statusColor = (status) => (status === "A" ? "green" : "grey");
+const statusLabel = (status) => (status === 'A' ? 'Aberto' : 'Fechado')
+const statusColor = (status) => (status === 'A' ? 'green' : 'grey')
 
-const periodoSelecionado = (codperiodo) =>
-  String(route.params.codperiodo) === String(codperiodo);
+const periodoSelecionado = (codperiodo) => String(route.params.codperiodo) === String(codperiodo)
 
 const selecionarPeriodo = (codperiodo) => {
-  router.push({ name: "rhMeuPainelDashboard", params: { codperiodo } });
-};
+  router.push({ name: 'rhMeuPainelDashboard', params: { codperiodo } })
+}
 
 const carregar = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    periodos.value = await sRh.getMeuPainelPeriodos();
+    periodos.value = await sRh.getMeuPainelPeriodos()
     if (!route.params.codperiodo && periodos.value.length > 0) {
-      const aberto = periodos.value.find((p) => p.status === "A");
-      const periodo = aberto || periodos.value[0];
+      const aberto = periodos.value.find((p) => p.status === 'A')
+      const periodo = aberto || periodos.value[0]
       router.replace({
-        name: "rhMeuPainelDashboard",
+        name: 'rhMeuPainelDashboard',
         params: { codperiodo: periodo.codperiodo },
-      });
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar períodos"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar períodos'),
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 onMounted(() => {
-  carregar();
-});
+  carregar()
+})
 </script>
 
 <template>
@@ -86,7 +85,9 @@ onMounted(() => {
             </q-item-section>
             <q-item-section side>
               <q-badge
-                :color="periodoSelecionado(periodo.codperiodo) ? 'white' : statusColor(periodo.status)"
+                :color="
+                  periodoSelecionado(periodo.codperiodo) ? 'white' : statusColor(periodo.status)
+                "
                 :text-color="periodoSelecionado(periodo.codperiodo) ? 'primary' : 'white'"
                 :label="statusLabel(periodo.status)"
               />
@@ -106,9 +107,7 @@ onMounted(() => {
       <q-page v-else-if="!loading && periodos.length === 0" class="flex flex-center">
         <div class="text-center">
           <q-icon name="assignment_ind" size="64px" color="grey-5" />
-          <div class="text-h6 text-grey-7 q-mt-md">
-            Você não está vinculado a nenhum período
-          </div>
+          <div class="text-h6 text-grey-7 q-mt-md">Você não está vinculado a nenhum período</div>
         </div>
       </q-page>
     </template>

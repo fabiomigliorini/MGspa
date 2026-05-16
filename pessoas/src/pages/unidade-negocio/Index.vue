@@ -1,195 +1,192 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { unidadeNegocioStore } from "src/stores/unidadenegocio";
-import { setorStore } from "src/stores/setor";
-import { tipoSetorStore } from "src/stores/tiposetor";
-import { guardaToken } from "src/stores";
-import { formataData, formataTimestamp } from "@components/formatters";
-import MGLayout from "layouts/MGLayout.vue";
-import SelectFilial from "components/select/SelectFilial.vue";
-import SelectUnidadeNegocio from "components/select/SelectUnidadeNegocio.vue";
-import SelectTipoSetor from "components/select/SelectTipoSetor.vue";
+import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { unidadeNegocioStore } from 'src/stores/unidadenegocio'
+import { setorStore } from 'src/stores/setor'
+import { tipoSetorStore } from 'src/stores/tiposetor'
+import { guardaToken } from 'src/stores'
+import { formataData, formataTimestamp } from '@components/formatters'
+import MGLayout from 'layouts/MGLayout.vue'
+import SelectFilial from 'components/select/SelectFilial.vue'
+import SelectUnidadeNegocio from 'components/select/SelectUnidadeNegocio.vue'
+import SelectTipoSetor from 'components/select/SelectTipoSetor.vue'
 
-const $q = useQuasar();
-const sUnidade = unidadeNegocioStore();
-const sSetor = setorStore();
-const sTipoSetor = tipoSetorStore();
-const user = guardaToken();
+const $q = useQuasar()
+const sUnidade = unidadeNegocioStore()
+const sSetor = setorStore()
+const sTipoSetor = tipoSetorStore()
+const user = guardaToken()
 
 // --- FILTROS ---
 
-const filtroUnidade = ref("ativos");
-const filtroSetor = ref("ativos");
-const filtroTipoSetor = ref("ativos");
+const filtroUnidade = ref('ativos')
+const filtroSetor = ref('ativos')
+const filtroTipoSetor = ref('ativos')
 
 const unidadesFiltradas = computed(() => {
-  const lista = sUnidade.listagem || [];
-  if (filtroUnidade.value === "ativos") return lista.filter((x) => !x.inativo);
-  return lista;
-});
+  const lista = sUnidade.listagem || []
+  if (filtroUnidade.value === 'ativos') return lista.filter((x) => !x.inativo)
+  return lista
+})
 
 const setoresFiltrados = computed(() => {
-  const lista = sSetor.listagem || [];
-  if (filtroSetor.value === "ativos") return lista.filter((x) => !x.inativo);
-  return lista;
-});
+  const lista = sSetor.listagem || []
+  if (filtroSetor.value === 'ativos') return lista.filter((x) => !x.inativo)
+  return lista
+})
 
 const tiposSetorFiltrados = computed(() => {
-  const lista = sTipoSetor.listagem || [];
-  if (filtroTipoSetor.value === "ativos") return lista.filter((x) => !x.inativo);
-  return lista;
-});
+  const lista = sTipoSetor.listagem || []
+  if (filtroTipoSetor.value === 'ativos') return lista.filter((x) => !x.inativo)
+  return lista
+})
 
 // --- HELPERS ---
 
 const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
+  const data = error.response?.data
+  if (!data) return fallback
   if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
+    const primeiro = Object.values(data.errors).flat()[0]
+    if (primeiro) return primeiro
   }
-  return data.mensagem || data.message || fallback;
-};
+  return data.mensagem || data.message || fallback
+}
 
 // --- DIALOG UNIDADE ---
 
-const dialogUnidade = ref(false);
-const isNovoUnidade = ref(false);
-const modelUnidade = ref({});
+const dialogUnidade = ref(false)
+const isNovoUnidade = ref(false)
+const modelUnidade = ref({})
 
 const abrirNovaUnidade = () => {
-  modelUnidade.value = { descricao: "", codfilial: null };
-  isNovoUnidade.value = true;
-  dialogUnidade.value = true;
-};
+  modelUnidade.value = { descricao: '', codfilial: null }
+  isNovoUnidade.value = true
+  dialogUnidade.value = true
+}
 
 const editarUnidade = (unidade) => {
   modelUnidade.value = {
     codunidadenegocio: unidade.codunidadenegocio,
     descricao: unidade.descricao,
     codfilial: unidade.codfilial,
-  };
-  isNovoUnidade.value = false;
-  dialogUnidade.value = true;
-};
+  }
+  isNovoUnidade.value = false
+  dialogUnidade.value = true
+}
 
 const submitUnidade = async () => {
-  dialogUnidade.value = false;
+  dialogUnidade.value = false
   try {
     if (isNovoUnidade.value) {
-      await sUnidade.criar(modelUnidade.value);
+      await sUnidade.criar(modelUnidade.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Unidade criada",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Unidade criada',
+      })
     } else {
-      await sUnidade.atualizar(
-        modelUnidade.value.codunidadenegocio,
-        modelUnidade.value
-      );
+      await sUnidade.atualizar(modelUnidade.value.codunidadenegocio, modelUnidade.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Unidade alterada",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Unidade alterada',
+      })
     }
-    await sUnidade.getListagem();
+    await sUnidade.getListagem()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar unidade"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar unidade'),
+    })
   }
-};
+}
 
 const excluirUnidade = (unidade) => {
   $q.dialog({
-    title: "Excluir Unidade",
+    title: 'Excluir Unidade',
     message: 'Tem certeza que deseja excluir "' + unidade.descricao + '"?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sUnidade.excluir(unidade.codunidadenegocio);
+      await sUnidade.excluir(unidade.codunidadenegocio)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Unidade excluída",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Unidade excluída',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir unidade"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir unidade'),
+      })
     }
-  });
-};
+  })
+}
 
 const inativarUnidade = async (unidade) => {
   try {
-    await sUnidade.inativar(unidade.codunidadenegocio);
+    await sUnidade.inativar(unidade.codunidadenegocio)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Inativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Inativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao inativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao inativar'),
+    })
   }
-};
+}
 
 const ativarUnidade = async (unidade) => {
   try {
-    await sUnidade.ativar(unidade.codunidadenegocio);
+    await sUnidade.ativar(unidade.codunidadenegocio)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Ativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Ativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao ativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao ativar'),
+    })
   }
-};
+}
 
 // --- DIALOG SETOR ---
 
-const dialogSetor = ref(false);
-const isNovoSetor = ref(false);
-const modelSetor = ref({});
+const dialogSetor = ref(false)
+const isNovoSetor = ref(false)
+const modelSetor = ref({})
 
 const abrirNovoSetor = () => {
   modelSetor.value = {
-    setor: "",
+    setor: '',
     codunidadenegocio: null,
     codtiposetor: null,
     indicadorvendedor: false,
     indicadorcaixa: false,
     indicadorcoletivo: false,
-  };
-  isNovoSetor.value = true;
-  dialogSetor.value = true;
-};
+  }
+  isNovoSetor.value = true
+  dialogSetor.value = true
+}
 
 const editarSetor = (setor) => {
   modelSetor.value = {
@@ -200,241 +197,234 @@ const editarSetor = (setor) => {
     indicadorvendedor: setor.indicadorvendedor,
     indicadorcaixa: setor.indicadorcaixa,
     indicadorcoletivo: setor.indicadorcoletivo,
-  };
-  isNovoSetor.value = false;
-  dialogSetor.value = true;
-};
+  }
+  isNovoSetor.value = false
+  dialogSetor.value = true
+}
 
 const submitSetor = async () => {
-  dialogSetor.value = false;
+  dialogSetor.value = false
   try {
     if (isNovoSetor.value) {
-      await sSetor.criar(modelSetor.value);
+      await sSetor.criar(modelSetor.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Setor criado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Setor criado',
+      })
     } else {
-      await sSetor.atualizar(modelSetor.value.codsetor, modelSetor.value);
+      await sSetor.atualizar(modelSetor.value.codsetor, modelSetor.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Setor alterado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Setor alterado',
+      })
     }
-    await sSetor.getListagem();
+    await sSetor.getListagem()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar setor"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar setor'),
+    })
   }
-};
+}
 
 const excluirSetor = (setor) => {
   $q.dialog({
-    title: "Excluir Setor",
+    title: 'Excluir Setor',
     message: 'Tem certeza que deseja excluir "' + setor.setor + '"?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sSetor.excluir(setor.codsetor);
+      await sSetor.excluir(setor.codsetor)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Setor excluído",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Setor excluído',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir setor"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir setor'),
+      })
     }
-  });
-};
+  })
+}
 
 const inativarSetor = async (setor) => {
   try {
-    await sSetor.inativar(setor.codsetor);
+    await sSetor.inativar(setor.codsetor)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Inativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Inativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao inativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao inativar'),
+    })
   }
-};
+}
 
 const ativarSetor = async (setor) => {
   try {
-    await sSetor.ativar(setor.codsetor);
+    await sSetor.ativar(setor.codsetor)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Ativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Ativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao ativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao ativar'),
+    })
   }
-};
+}
 
 // --- DIALOG TIPO SETOR ---
 
-const dialogTipoSetor = ref(false);
-const isNovoTipoSetor = ref(false);
-const modelTipoSetor = ref({});
+const dialogTipoSetor = ref(false)
+const isNovoTipoSetor = ref(false)
+const modelTipoSetor = ref({})
 
 const abrirNovoTipoSetor = () => {
-  modelTipoSetor.value = { tiposetor: "" };
-  isNovoTipoSetor.value = true;
-  dialogTipoSetor.value = true;
-};
+  modelTipoSetor.value = { tiposetor: '' }
+  isNovoTipoSetor.value = true
+  dialogTipoSetor.value = true
+}
 
 const editarTipoSetor = (tipo) => {
   modelTipoSetor.value = {
     codtiposetor: tipo.codtiposetor,
     tiposetor: tipo.tiposetor,
-  };
-  isNovoTipoSetor.value = false;
-  dialogTipoSetor.value = true;
-};
+  }
+  isNovoTipoSetor.value = false
+  dialogTipoSetor.value = true
+}
 
 const submitTipoSetor = async () => {
-  dialogTipoSetor.value = false;
+  dialogTipoSetor.value = false
   try {
     if (isNovoTipoSetor.value) {
-      await sTipoSetor.criar(modelTipoSetor.value);
+      await sTipoSetor.criar(modelTipoSetor.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Tipo criado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Tipo criado',
+      })
     } else {
-      await sTipoSetor.atualizar(
-        modelTipoSetor.value.codtiposetor,
-        modelTipoSetor.value
-      );
+      await sTipoSetor.atualizar(modelTipoSetor.value.codtiposetor, modelTipoSetor.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Tipo alterado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Tipo alterado',
+      })
     }
-    await sTipoSetor.getListagem();
+    await sTipoSetor.getListagem()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar tipo de setor"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar tipo de setor'),
+    })
   }
-};
+}
 
 const excluirTipoSetor = (tipo) => {
   $q.dialog({
-    title: "Excluir Tipo de Setor",
+    title: 'Excluir Tipo de Setor',
     message: 'Tem certeza que deseja excluir "' + tipo.tiposetor + '"?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sTipoSetor.excluir(tipo.codtiposetor);
+      await sTipoSetor.excluir(tipo.codtiposetor)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Tipo excluído",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Tipo excluído',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir tipo de setor"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir tipo de setor'),
+      })
     }
-  });
-};
+  })
+}
 
 const inativarTipoSetor = async (tipo) => {
   try {
-    await sTipoSetor.inativar(tipo.codtiposetor);
+    await sTipoSetor.inativar(tipo.codtiposetor)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Inativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Inativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao inativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao inativar'),
+    })
   }
-};
+}
 
 const ativarTipoSetor = async (tipo) => {
   try {
-    await sTipoSetor.ativar(tipo.codtiposetor);
+    await sTipoSetor.ativar(tipo.codtiposetor)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Ativado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Ativado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao ativar"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao ativar'),
+    })
   }
-};
+}
 
 // --- LIFECYCLE ---
 
 onMounted(async () => {
   try {
-    await Promise.all([
-      sUnidade.getListagem(),
-      sSetor.getListagem(),
-      sTipoSetor.getListagem(),
-    ]);
+    await Promise.all([sUnidade.getListagem(), sSetor.getListagem(), sTipoSetor.getListagem()])
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar dados"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar dados'),
+    })
   }
-});
+})
 </script>
 
 <template>
@@ -457,18 +447,11 @@ onMounted(async () => {
                 v-model="modelUnidade.descricao"
                 label="Descrição"
                 autofocus
-                :rules="[
-                  (val) => (val && val.length > 0) || 'Descrição obrigatória',
-                ]"
+                :rules="[(val) => (val && val.length > 0) || 'Descrição obrigatória']"
               />
             </div>
             <div class="col-12">
-              <SelectFilial
-                v-model="modelUnidade.codfilial"
-                outlined
-                label="Filial"
-                clearable
-              />
+              <SelectFilial v-model="modelUnidade.codfilial" outlined label="Filial" clearable />
             </div>
           </div>
         </q-card-section>
@@ -476,13 +459,7 @@ onMounted(async () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -508,9 +485,7 @@ onMounted(async () => {
                 v-model="modelSetor.setor"
                 label="Nome do Setor"
                 autofocus
-                :rules="[
-                  (val) => (val && val.length > 0) || 'Nome obrigatório',
-                ]"
+                :rules="[(val) => (val && val.length > 0) || 'Nome obrigatório']"
               />
             </div>
             <div class="col-12">
@@ -530,18 +505,9 @@ onMounted(async () => {
               />
             </div>
             <div class="col-12">
-              <q-toggle
-                v-model="modelSetor.indicadorvendedor"
-                label="Indicador Vendedor"
-              />
-              <q-toggle
-                v-model="modelSetor.indicadorcaixa"
-                label="Indicador Caixa"
-              />
-              <q-toggle
-                v-model="modelSetor.indicadorcoletivo"
-                label="Indicador Coletivo"
-              />
+              <q-toggle v-model="modelSetor.indicadorvendedor" label="Indicador Vendedor" />
+              <q-toggle v-model="modelSetor.indicadorcaixa" label="Indicador Caixa" />
+              <q-toggle v-model="modelSetor.indicadorcoletivo" label="Indicador Coletivo" />
             </div>
           </div>
         </q-card-section>
@@ -549,13 +515,7 @@ onMounted(async () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -579,22 +539,14 @@ onMounted(async () => {
             v-model="modelTipoSetor.tiposetor"
             label="Tipo de Setor"
             autofocus
-            :rules="[
-              (val) => (val && val.length > 0) || 'Nome obrigatório',
-            ]"
+            :rules="[(val) => (val && val.length > 0) || 'Nome obrigatório']"
           />
         </q-card-section>
 
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -613,9 +565,7 @@ onMounted(async () => {
             <!-- COLUNA ESQUERDA: UNIDADES DE NEGÓCIO -->
             <div class="col-xs-12 col-md-5">
               <q-card bordered flat>
-                <q-card-section
-                  class="text-grey-9 text-overline row items-center"
-                >
+                <q-card-section class="text-grey-9 text-overline row items-center">
                   UNIDADES DE NEGÓCIO
                   <q-space />
                   <q-btn-toggle
@@ -647,33 +597,20 @@ onMounted(async () => {
                 </q-card-section>
 
                 <q-list v-if="unidadesFiltradas.length > 0">
-                  <template
-                    v-for="unidade in unidadesFiltradas"
-                    :key="unidade.codunidadenegocio"
-                  >
+                  <template v-for="unidade in unidadesFiltradas" :key="unidade.codunidadenegocio">
                     <q-separator inset />
                     <q-item>
                       <q-item-section avatar>
-                        <q-avatar
-                          color="primary"
-                          text-color="white"
-                          size="35px"
-                        >
+                        <q-avatar color="primary" text-color="white" size="35px">
                           {{ unidade.descricao?.charAt(0) }}
                         </q-avatar>
                       </q-item-section>
 
                       <q-item-section>
-                        <q-item-label
-                          :class="unidade.inativo ? 'text-strike' : ''"
-                        >
+                        <q-item-label :class="unidade.inativo ? 'text-strike' : ''">
                           {{ unidade.descricao }}
                         </q-item-label>
-                        <q-item-label
-                          caption
-                          class="text-red-14"
-                          v-if="unidade.inativo"
-                        >
+                        <q-item-label caption class="text-red-14" v-if="unidade.inativo">
                           Inativo desde: {{ formataTimestamp(unidade.inativo) }}
                         </q-item-label>
                         <q-item-label caption v-if="unidade.Filial">
@@ -734,16 +671,12 @@ onMounted(async () => {
                     </q-item>
                   </template>
                 </q-list>
-                <div v-else class="q-pa-md text-center text-grey">
-                  Nenhuma unidade cadastrada
-                </div>
+                <div v-else class="q-pa-md text-center text-grey">Nenhuma unidade cadastrada</div>
               </q-card>
 
               <!-- TIPOS DE SETOR -->
               <q-card bordered flat class="q-mt-md">
-                <q-card-section
-                  class="text-grey-9 text-overline row items-center"
-                >
+                <q-card-section class="text-grey-9 text-overline row items-center">
                   TIPOS DE SETOR
                   <q-space />
                   <q-btn-toggle
@@ -775,23 +708,14 @@ onMounted(async () => {
                 </q-card-section>
 
                 <q-list v-if="tiposSetorFiltrados.length > 0">
-                  <template
-                    v-for="tipo in tiposSetorFiltrados"
-                    :key="tipo.codtiposetor"
-                  >
+                  <template v-for="tipo in tiposSetorFiltrados" :key="tipo.codtiposetor">
                     <q-separator inset />
                     <q-item>
                       <q-item-section>
-                        <q-item-label
-                          :class="tipo.inativo ? 'text-strike' : ''"
-                        >
+                        <q-item-label :class="tipo.inativo ? 'text-strike' : ''">
                           {{ tipo.tiposetor }}
                         </q-item-label>
-                        <q-item-label
-                          caption
-                          class="text-red-14"
-                          v-if="tipo.inativo"
-                        >
+                        <q-item-label caption class="text-red-14" v-if="tipo.inativo">
                           Inativo desde: {{ formataTimestamp(tipo.inativo) }}
                         </q-item-label>
                       </q-item-section>
@@ -849,18 +773,14 @@ onMounted(async () => {
                     </q-item>
                   </template>
                 </q-list>
-                <div v-else class="q-pa-md text-center text-grey">
-                  Nenhum tipo cadastrado
-                </div>
+                <div v-else class="q-pa-md text-center text-grey">Nenhum tipo cadastrado</div>
               </q-card>
             </div>
 
             <!-- COLUNA DIREITA: SETORES -->
             <div class="col-xs-12 col-md-7">
               <q-card bordered flat>
-                <q-card-section
-                  class="text-grey-9 text-overline row items-center"
-                >
+                <q-card-section class="text-grey-9 text-overline row items-center">
                   SETORES
                   <q-space />
                   <q-btn-toggle
@@ -892,32 +812,20 @@ onMounted(async () => {
                 </q-card-section>
 
                 <q-list v-if="setoresFiltrados.length > 0">
-                  <template
-                    v-for="setor in setoresFiltrados"
-                    :key="setor.codsetor"
-                  >
+                  <template v-for="setor in setoresFiltrados" :key="setor.codsetor">
                     <q-separator inset />
                     <q-item>
                       <q-item-section>
-                        <q-item-label
-                          :class="setor.inativo ? 'text-strike' : ''"
-                        >
+                        <q-item-label :class="setor.inativo ? 'text-strike' : ''">
                           {{ setor.setor }}
                         </q-item-label>
                         <q-item-label caption v-if="setor.UnidadeNegocio">
                           {{ setor.UnidadeNegocio.descricao }}
-                          <span
-                            v-if="setor.TipoSetor"
-                            class="text-grey-5"
-                          >
+                          <span v-if="setor.TipoSetor" class="text-grey-5">
                             — {{ setor.TipoSetor.tiposetor }}
                           </span>
                         </q-item-label>
-                        <q-item-label
-                          caption
-                          class="text-red-14"
-                          v-if="setor.inativo"
-                        >
+                        <q-item-label caption class="text-red-14" v-if="setor.inativo">
                           Inativo desde: {{ formataTimestamp(setor.inativo) }}
                         </q-item-label>
                         <q-item-label caption v-if="!setor.inativo">
@@ -933,11 +841,7 @@ onMounted(async () => {
                             label="Caixa"
                             class="q-mr-xs"
                           />
-                          <q-badge
-                            v-if="setor.indicadorcoletivo"
-                            color="teal"
-                            label="Coletivo"
-                          />
+                          <q-badge v-if="setor.indicadorcoletivo" color="teal" label="Coletivo" />
                         </q-item-label>
                       </q-item-section>
 
@@ -994,9 +898,7 @@ onMounted(async () => {
                     </q-item>
                   </template>
                 </q-list>
-                <div v-else class="q-pa-md text-center text-grey">
-                  Nenhum setor cadastrado
-                </div>
+                <div v-else class="q-pa-md text-center text-grey">Nenhum setor cadastrado</div>
               </q-card>
             </div>
           </div>

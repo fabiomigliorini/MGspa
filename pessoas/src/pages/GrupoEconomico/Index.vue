@@ -1,81 +1,81 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { useQuasar, debounce } from "quasar";
-import { useRouter } from "vue-router";
-import { GrupoEconomicoStore } from "stores/GrupoEconomico";
-import { guardaToken } from "src/stores";
-import MGLayout from "layouts/MGLayout.vue";
+import { ref, onMounted } from 'vue'
+import { useQuasar, debounce } from 'quasar'
+import { useRouter } from 'vue-router'
+import { GrupoEconomicoStore } from 'stores/GrupoEconomico'
+import { guardaToken } from 'src/stores'
+import MGLayout from 'layouts/MGLayout.vue'
 
-const $q = useQuasar();
-const router = useRouter();
-const sPessoa = GrupoEconomicoStore();
-const loading = ref(true);
-const user = guardaToken();
+const $q = useQuasar()
+const router = useRouter()
+const sPessoa = GrupoEconomicoStore()
+const loading = ref(true)
+const user = guardaToken()
 
 const buscarGrupos = debounce(async () => {
-  $q.loadingBar.start();
-  sPessoa.filtroGrupoPesquisa.page = 1;
+  $q.loadingBar.start()
+  sPessoa.filtroGrupoPesquisa.page = 1
   try {
-    const ret = await sPessoa.buscaGrupos();
-    loading.value = false;
-    $q.loadingBar.stop();
+    const ret = await sPessoa.buscaGrupos()
+    loading.value = false
+    $q.loadingBar.stop()
     if (ret.data.data.length == 0) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "warning",
-        message: "Nenhum Registro encontrado",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'warning',
+        message: 'Nenhum Registro encontrado',
+      })
     }
   } catch (error) {
-    $q.loadingBar.stop();
+    $q.loadingBar.stop()
   }
-}, 500);
+}, 500)
 
 const scrollGrupo = async (index, done) => {
-  loading.value = true;
-  $q.loadingBar.start();
-  sPessoa.filtroGrupoPesquisa.page++;
-  const ret = await sPessoa.buscaGrupos();
-  loading.value = false;
-  $q.loadingBar.stop();
+  loading.value = true
+  $q.loadingBar.start()
+  sPessoa.filtroGrupoPesquisa.page++
+  const ret = await sPessoa.buscaGrupos()
+  loading.value = false
+  $q.loadingBar.stop()
   if (ret.data.data.length == 0) {
-    loading.value = true;
+    loading.value = true
   }
-  await done();
-};
+  await done()
+}
 
 const novoGrupo = () => {
   $q.dialog({
-    title: "Novo Grupo Econômico",
-    prompt: { model: "", type: "text" },
+    title: 'Novo Grupo Econômico',
+    prompt: { model: '', type: 'text' },
     cancel: true,
   }).onOk(async (grupoeconomico) => {
-    const ret = await sPessoa.novoGrupoEconomico(grupoeconomico);
+    const ret = await sPessoa.novoGrupoEconomico(grupoeconomico)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Grupo Criado!",
-      });
-      router.push("/grupoeconomico/" + ret.data.data.codgrupoeconomico);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Grupo Criado!',
+      })
+      router.push('/grupoeconomico/' + ret.data.data.codgrupoeconomico)
     }
-  });
-};
+  })
+}
 
 const pessoasOrdenadas = (pessoas) => {
-  if (!pessoas) return [];
+  if (!pessoas) return []
   return [...pessoas].sort((a, b) =>
-    (a.fantasia || "").localeCompare(b.fantasia || "", "pt-BR", { sensitivity: "base" })
-  );
-};
+    (a.fantasia || '').localeCompare(b.fantasia || '', 'pt-BR', { sensitivity: 'base' }),
+  )
+}
 
 onMounted(() => {
   if (sPessoa.arrGrupos.length == 0) {
-    buscarGrupos();
+    buscarGrupos()
   }
-});
+})
 </script>
 
 <template>
@@ -83,11 +83,7 @@ onMounted(() => {
     <template #tituloPagina> Grupo Econômico </template>
 
     <template #content>
-      <q-infinite-scroll
-        @load="scrollGrupo"
-        :disable="loading"
-        style="min-height: 100vh"
-      >
+      <q-infinite-scroll @load="scrollGrupo" :disable="loading" style="min-height: 100vh">
         <div class="row q-pa-md q-col-gutter-md">
           <div
             class="col-md-4 col-sm-6 col-xs-12 col-lg-3 col-xl-2"
@@ -99,12 +95,7 @@ onMounted(() => {
               class="link-card"
             >
               <q-card bordered flat class="cursor-pointer full-height">
-                <q-badge
-                  v-if="grupoEconomico.inativo"
-                  color="red"
-                  floating
-                  label="Inativo"
-                />
+                <q-badge v-if="grupoEconomico.inativo" color="red" floating label="Inativo" />
                 <q-card-section class="text-grey-9 text-overline">
                   <div class="flex items-center" style="height: 3rem">
                     <div class="ellipsis-2-lines titulo-grupo">
@@ -133,9 +124,7 @@ onMounted(() => {
                   </template>
                   <q-item v-if="!grupoEconomico.PessoasdoGrupo?.length">
                     <q-item-section>
-                      <q-item-label class="text-caption text-grey">
-                        Nenhuma pessoa
-                      </q-item-label>
+                      <q-item-label class="text-caption text-grey"> Nenhuma pessoa </q-item-label>
                     </q-item-section>
                   </q-item>
                 </q-list>

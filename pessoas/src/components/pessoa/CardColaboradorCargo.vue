@@ -1,130 +1,128 @@
 <script setup>
-import { defineAsyncComponent, ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { colaboradorStore } from "stores/colaborador";
-import { tempoRelativo, formataDataIso, formataDataAbreviada } from "@components/formatters";
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
-import MgInputValor from "@components/MgInputValor.vue";
-import MgInputData from "@components/MgInputData.vue";
+import { defineAsyncComponent, ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { colaboradorStore } from 'stores/colaborador'
+import { tempoRelativo, formataDataIso, formataDataAbreviada } from '@components/formatters'
+import moment from 'moment'
+import 'moment/min/locales'
+moment.locale('pt-br')
+import MgInputValor from '@components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
 
-const SelectCargo = defineAsyncComponent(() =>
-  import("components/pessoa/SelectCargo.vue")
-);
+const SelectCargo = defineAsyncComponent(() => import('components/pessoa/SelectCargo.vue'))
 
-const props = defineProps(["colaboradorCargos"]);
+const props = defineProps(['colaboradorCargos'])
 
-const $q = useQuasar();
-const sColaborador = colaboradorStore();
+const $q = useQuasar()
+const sColaborador = colaboradorStore()
 
 const cargosOrdenados = computed(() =>
   [...(props.colaboradorCargos.ColaboradorCargo || [])].sort(
-    (a, b) => new Date(b.inicio) - new Date(a.inicio)
-  )
-);
+    (a, b) => new Date(b.inicio) - new Date(a.inicio),
+  ),
+)
 
-const dialogColaboradorCargo = ref(false);
-const modelColaboradorCargo = ref({});
-const editarCargo = ref(false);
+const dialogColaboradorCargo = ref(false)
+const modelColaboradorCargo = ref({})
+const editarCargo = ref(false)
 
 function preencheCargo(colaborador) {
   if (colaborador.ColaboradorCargo.length > 0) {
     modelColaboradorCargo.value = {
       inicio: formataDataIso(new Date()),
       codcolaborador: colaborador.codcolaborador,
-    };
+    }
   } else {
     modelColaboradorCargo.value = {
       inicio: colaborador.contratacao?.substring(0, 10) ?? null,
       codcolaborador: colaborador.codcolaborador,
-    };
+    }
   }
 }
 
 function novoColaboradorCargo(colaborador) {
-  editarCargo.value = false;
-  dialogColaboradorCargo.value = true;
-  preencheCargo(colaborador);
+  editarCargo.value = false
+  dialogColaboradorCargo.value = true
+  preencheCargo(colaborador)
 }
 
 function preparaModel() {
-  return { ...modelColaboradorCargo.value };
+  return { ...modelColaboradorCargo.value }
 }
 
 async function novoCargo() {
   try {
-    const model = preparaModel();
-    const ret = await sColaborador.novoColaboradorCargo(model);
+    const model = preparaModel()
+    const ret = await sColaborador.novoColaboradorCargo(model)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador Cargo criado!",
-      });
-      dialogColaboradorCargo.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador Cargo criado!',
+      })
+      dialogColaboradorCargo.value = false
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
+    })
   }
 }
 
 async function salvarCargo() {
   try {
-    const model = preparaModel();
-    const ret = await sColaborador.salvarColaboradorCargo(model);
+    const model = preparaModel()
+    const ret = await sColaborador.salvarColaboradorCargo(model)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador Cargo Alterado!",
-      });
-      dialogColaboradorCargo.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador Cargo Alterado!',
+      })
+      dialogColaboradorCargo.value = false
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
+    })
   }
 }
 
 const submit = () => {
-  editarCargo.value ? salvarCargo() : novoCargo();
-};
+  editarCargo.value ? salvarCargo() : novoCargo()
+}
 
 async function excluir(colaboradorCargo) {
   $q.dialog({
-    title: "Excluir Colaborador Cargo",
-    message: "Tem certeza que deseja excluir esse Cargo?",
+    title: 'Excluir Colaborador Cargo',
+    message: 'Tem certeza que deseja excluir esse Cargo?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sColaborador.deleteColaboradorCargo(colaboradorCargo);
+      await sColaborador.deleteColaboradorCargo(colaboradorCargo)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador Cargo excluido!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador Cargo excluido!',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
-  });
+  })
 }
 
 function editarColaboradorCargo(
@@ -134,7 +132,7 @@ function editarColaboradorCargo(
   inicio,
   fim,
   salario,
-  observacoes
+  observacoes,
 ) {
   modelColaboradorCargo.value = {
     codcolaboradorcargo: codcolaboradorcargo,
@@ -144,60 +142,60 @@ function editarColaboradorCargo(
     fim: fim?.substring(0, 10) ?? null,
     salario: salario,
     observacoes: observacoes,
-  };
-  editarCargo.value = true;
-  dialogColaboradorCargo.value = true;
+  }
+  editarCargo.value = true
+  dialogColaboradorCargo.value = true
 }
 
 function validaObrigatorio(value) {
   if (!value) {
-    return "Preenchimento Obrigatório!";
+    return 'Preenchimento Obrigatório!'
   }
-  return true;
+  return true
 }
 
 function validaDataValida(value) {
   if (!value) {
-    return true;
+    return true
   }
-  const data = moment(value, "DD/MM/YYYY", true);
+  const data = moment(value, 'DD/MM/YYYY', true)
   if (!data.isValid()) {
-    return "Data Inválida!";
+    return 'Data Inválida!'
   }
-  return true;
+  return true
 }
 
 function validaInicio(value) {
   if (!value) {
-    return true;
+    return true
   }
-  const inicio = moment(value, "DD/MM/YYYY", true);
+  const inicio = moment(value, 'DD/MM/YYYY', true)
   if (!inicio.isValid()) {
-    return true;
+    return true
   }
-  const contratacao = props.colaboradorCargos.contratacao?.substring(0, 10);
-  if (contratacao && inicio.format("YYYY-MM-DD") < contratacao) {
-    return "Inicio não pode ser anterior á Contratação!";
+  const contratacao = props.colaboradorCargos.contratacao?.substring(0, 10)
+  if (contratacao && inicio.format('YYYY-MM-DD') < contratacao) {
+    return 'Inicio não pode ser anterior á Contratação!'
   }
-  return true;
+  return true
 }
 
 function validaFim(value) {
   if (!value) {
-    return true;
+    return true
   }
-  const fim = moment(value, "DD/MM/YYYY", true);
+  const fim = moment(value, 'DD/MM/YYYY', true)
   if (!fim.isValid()) {
-    return true;
+    return true
   }
-  const inicio = modelColaboradorCargo.value.inicio;
-  if (inicio && fim.format("YYYY-MM-DD") < inicio) {
-    return "Fim não pode ser anterior ao inicio!";
+  const inicio = modelColaboradorCargo.value.inicio
+  if (inicio && fim.format('YYYY-MM-DD') < inicio) {
+    return 'Fim não pode ser anterior ao inicio!'
   }
-  return true;
+  return true
 }
 
-defineExpose({ novoColaboradorCargo });
+defineExpose({ novoColaboradorCargo })
 </script>
 
 <template>
@@ -253,7 +251,7 @@ defineExpose({ novoColaboradorCargo });
                   colaboradorCargo.inicio,
                   colaboradorCargo.fim,
                   colaboradorCargo.salario,
-                  colaboradorCargo.observacoes
+                  colaboradorCargo.observacoes,
                 )
               "
             >
@@ -292,9 +290,7 @@ defineExpose({ novoColaboradorCargo });
             :permite-adicionar="true"
             reactive-rules
             :rules="[
-              (val) =>
-                (val !== null && val !== '' && val !== undefined) ||
-                'Cargo Obrigatório',
+              (val) => (val !== null && val !== '' && val !== undefined) || 'Cargo Obrigatório',
             ]"
           />
 

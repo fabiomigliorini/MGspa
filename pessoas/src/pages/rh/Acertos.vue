@@ -1,171 +1,157 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { rhStore } from "src/stores/rh";
-import { api } from "boot/axios";
-import { extrairErro } from "src/utils/rhFormatters";
-import { formataNumero } from "@components/formatters";
-import AcertoModal from "./AcertoModal.vue";
+import { ref, computed, onMounted, watch } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { rhStore } from 'src/stores/rh'
+import { api } from 'boot/axios'
+import { extrairErro } from 'src/utils/rhFormatters'
+import { formataNumero } from '@components/formatters'
+import AcertoModal from './AcertoModal.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const sRh = rhStore();
+const $q = useQuasar()
+const route = useRoute()
+const sRh = rhStore()
 
-const loading = ref(false);
-const dias = ref(5);
-const acertos = ref([]);
-const modalAberto = ref(false);
-const colaboradorAtivo = ref(null);
-const dialogPdf = ref(false);
-const pdfUrl = ref(null);
-const pdfTitulo = ref("");
-
+const loading = ref(false)
+const dias = ref(5)
+const acertos = ref([])
+const modalAberto = ref(false)
+const colaboradorAtivo = ref(null)
+const dialogPdf = ref(false)
+const pdfUrl = ref(null)
+const pdfTitulo = ref('')
 
 // --- AGRUPAMENTO ---
 
 const acertosPorUnidade = computed(() => {
-  const map = new Map();
+  const map = new Map()
   acertos.value.forEach((a) => {
-    const cod = a.codunidadenegocio;
+    const cod = a.codunidadenegocio
     if (!map.has(cod)) {
-      map.set(cod, { codunidadenegocio: cod, unidade: a.unidade, items: [] });
+      map.set(cod, { codunidadenegocio: cod, unidade: a.unidade, items: [] })
     }
-    map.get(cod).items.push(a);
-  });
+    map.get(cod).items.push(a)
+  })
   return Array.from(map.values()).sort((a, b) =>
-    (a.unidade || "").localeCompare(b.unidade || "", "pt-BR")
-  );
-});
+    (a.unidade || '').localeCompare(b.unidade || '', 'pt-BR'),
+  )
+})
 
-const temEfetivados = computed(() =>
-  acertos.value.some((a) => a.status_acerto === "efetivado")
-);
+const temEfetivados = computed(() => acertos.value.some((a) => a.status_acerto === 'efetivado'))
 
 const formataRemanescente = (item) => {
-  if (!item.remanescente_qtd) return "—";
-  return (
-    formataNumero(item.remanescente_valor) + " (" + item.remanescente_qtd + ")"
-  );
-};
+  if (!item.remanescente_qtd) return '—'
+  return formataNumero(item.remanescente_valor) + ' (' + item.remanescente_qtd + ')'
+}
 
 // --- API ---
 
 const carregarAcertos = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const ret = await sRh.getAcertos(route.params.codperiodo, dias.value);
-    acertos.value = ret.data.data;
+    const ret = await sRh.getAcertos(route.params.codperiodo, dias.value)
+    acertos.value = ret.data.data
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar acertos"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar acertos'),
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const abrirModal = (colaborador) => {
-  colaboradorAtivo.value = colaborador;
-  modalAberto.value = true;
-};
+  colaboradorAtivo.value = colaborador
+  modalAberto.value = true
+}
 
 const estornar = (item) => {
   $q.dialog({
-    title: "Estornar Acerto",
+    title: 'Estornar Acerto',
     message: `Tem certeza que deseja estornar o acerto de ${item.nome}?`,
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.estornarAcerto(
-        route.params.codperiodo,
-        item.codperiodocolaborador
-      );
+      await sRh.estornarAcerto(route.params.codperiodo, item.codperiodocolaborador)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Acerto estornado",
-      });
-      await carregarAcertos();
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Acerto estornado',
+      })
+      await carregarAcertos()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao estornar acerto"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao estornar acerto'),
+      })
     }
-  });
-};
+  })
+}
 
 // --- PDF ---
 
 const abrirPdf = async (endpoint, titulo) => {
   try {
-    const ret = await api.get(endpoint, { responseType: "blob" });
-    const blob = new Blob([ret.data], { type: "application/pdf" });
-    pdfTitulo.value = titulo;
-    pdfUrl.value = URL.createObjectURL(blob);
-    dialogPdf.value = true;
+    const ret = await api.get(endpoint, { responseType: 'blob' })
+    const blob = new Blob([ret.data], { type: 'application/pdf' })
+    pdfTitulo.value = titulo
+    pdfUrl.value = URL.createObjectURL(blob)
+    dialogPdf.value = true
   } catch {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: "Erro ao gerar PDF",
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: 'Erro ao gerar PDF',
+    })
   }
-};
+}
 
 const fecharPdf = () => {
   if (pdfUrl.value) {
-    URL.revokeObjectURL(pdfUrl.value);
-    pdfUrl.value = null;
+    URL.revokeObjectURL(pdfUrl.value)
+    pdfUrl.value = null
   }
-  dialogPdf.value = false;
-};
+  dialogPdf.value = false
+}
 
 const imprimirTodosRecibos = () => {
-  abrirPdf(
-    `v1/rh/periodo/${route.params.codperiodo}/acertos/recibos`,
-    "Recibos de Acertos"
-  );
-};
+  abrirPdf(`v1/rh/periodo/${route.params.codperiodo}/acertos/recibos`, 'Recibos de Acertos')
+}
 
 const relatorioFolha = () => {
-  abrirPdf(
-    `v1/rh/periodo/${route.params.codperiodo}/acertos/relatorio-folha`,
-    "Relatório Folha"
-  );
-};
+  abrirPdf(`v1/rh/periodo/${route.params.codperiodo}/acertos/relatorio-folha`, 'Relatório Folha')
+}
 
 const imprimirReciboColaborador = (item) => {
   abrirPdf(
     `v1/rh/periodo/${route.params.codperiodo}/acertos/${item.codperiodocolaborador}/recibos`,
-    `Recibo - ${item.nome}`
-  );
-};
+    `Recibo - ${item.nome}`,
+  )
+}
 
 // --- LIFECYCLE ---
 
-let diasTimer = null;
+let diasTimer = null
 watch(dias, () => {
-  clearTimeout(diasTimer);
-  diasTimer = setTimeout(carregarAcertos, 400);
-});
+  clearTimeout(diasTimer)
+  diasTimer = setTimeout(carregarAcertos, 400)
+})
 
 watch(
   () => route.params.codperiodo,
   (novoId) => {
-    if (novoId) carregarAcertos();
-  }
-);
+    if (novoId) carregarAcertos()
+  },
+)
 
-onMounted(carregarAcertos);
+onMounted(carregarAcertos)
 </script>
 
 <template>
@@ -184,15 +170,7 @@ onMounted(carregarAcertos);
       <q-card-section class="text-grey-9 text-overline row items-center">
         {{ pdfTitulo }}
         <q-space />
-        <q-btn
-          flat
-          round
-          dense
-          icon="close"
-          size="sm"
-          color="grey-7"
-          v-close-popup
-        />
+        <q-btn flat round dense icon="close" size="sm" color="grey-7" v-close-popup />
       </q-card-section>
       <q-card-section class="q-pt-none" style="height: calc(90vh - 80px)">
         <iframe
@@ -236,10 +214,7 @@ onMounted(carregarAcertos);
   <q-inner-loading :showing="loading" style="min-height: 80px" />
 
   <!-- VAZIO -->
-  <div
-    v-if="!loading && acertos.length === 0"
-    class="q-pa-md text-center text-grey"
-  >
+  <div v-if="!loading && acertos.length === 0" class="q-pa-md text-center text-grey">
     Nenhum colaborador encontrado
   </div>
 
@@ -293,12 +268,8 @@ onMounted(carregarAcertos);
             <td class="text-right">{{ formataRemanescente(item) }}</td>
             <td class="text-center">
               <q-badge
-                :color="
-                  item.status_acerto === 'efetivado' ? 'green-7' : 'grey-6'
-                "
-                :label="
-                  item.status_acerto === 'efetivado' ? 'Efetivado' : 'Pendente'
-                "
+                :color="item.status_acerto === 'efetivado' ? 'green-7' : 'grey-6'"
+                :label="item.status_acerto === 'efetivado' ? 'Efetivado' : 'Pendente'"
               />
             </td>
             <td class="text-right text-no-wrap">
@@ -331,14 +302,7 @@ onMounted(carregarAcertos);
                 >
                   <q-tooltip>Imprimir Recibo</q-tooltip>
                 </q-btn>
-                <q-btn
-                  flat
-                  round
-                  icon="undo"
-                  size="sm"
-                  color="grey-7"
-                  @click="estornar(item)"
-                >
+                <q-btn flat round icon="undo" size="sm" color="grey-7" @click="estornar(item)">
                   <q-tooltip>Estornar Acerto</q-tooltip>
                 </q-btn>
               </template>

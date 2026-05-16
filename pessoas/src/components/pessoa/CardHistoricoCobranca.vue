@@ -1,177 +1,164 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { useQuasar, debounce } from "quasar";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import { formataData, formataFromNow } from "@components/formatters";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
+import { ref, onMounted, watch } from 'vue'
+import { useQuasar, debounce } from 'quasar'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import { guardaToken } from 'src/stores'
+import { formataData, formataFromNow } from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
-const $q = useQuasar();
-const sPessoa = pessoaStore();
-const route = useRoute();
-const user = guardaToken();
-const dialogEditarHistorico = ref(false);
-const modelCobrancaHistorico = ref([]);
-const loading = ref(true);
-const cobrancaNova = ref(false);
-const HistoricosCobranca = ref([]);
-const Paginas = ref({ page: 1 });
+const $q = useQuasar()
+const sPessoa = pessoaStore()
+const route = useRoute()
+const user = guardaToken()
+const dialogEditarHistorico = ref(false)
+const modelCobrancaHistorico = ref([])
+const loading = ref(true)
+const cobrancaNova = ref(false)
+const HistoricosCobranca = ref([])
+const Paginas = ref({ page: 1 })
 
 const buscarCobrancas = debounce(async () => {
   try {
-    Paginas.value.page = 1;
-    const ret = await sPessoa.getCobrancaHistorico(
-      route.params.id,
-      Paginas.value
-    );
-    HistoricosCobranca.value = ret.data.data;
-    loading.value = false;
-    $q.loadingBar.stop();
+    Paginas.value.page = 1
+    const ret = await sPessoa.getCobrancaHistorico(route.params.id, Paginas.value)
+    HistoricosCobranca.value = ret.data.data
+    loading.value = false
+    $q.loadingBar.stop()
     if (ret.data.data.length == 0) {
-      loading.value = true;
+      loading.value = true
     }
   } catch (error) {
-    $q.loadingBar.stop();
+    $q.loadingBar.stop()
   }
-}, 500);
+}, 500)
 
 const scrollHistorico = async (index, done) => {
-  loading.value = true;
-  $q.loadingBar.start();
-  Paginas.value.page++;
-  const ret = await sPessoa.getCobrancaHistorico(
-    route.params.id,
-    Paginas.value
-  );
-  HistoricosCobranca.value.push(...ret.data.data);
-  loading.value = false;
+  loading.value = true
+  $q.loadingBar.start()
+  Paginas.value.page++
+  const ret = await sPessoa.getCobrancaHistorico(route.params.id, Paginas.value)
+  HistoricosCobranca.value.push(...ret.data.data)
+  loading.value = false
   if (ret.data.data.length == 0) {
-    loading.value = true;
+    loading.value = true
   }
-  $q.loadingBar.stop();
-  done();
-};
+  $q.loadingBar.stop()
+  done()
+}
 
 const novaCobranca = async () => {
   const ret = await sPessoa.novoHistoricoCobranca(
     route.params.id,
-    modelCobrancaHistorico.value.historico
-  );
+    modelCobrancaHistorico.value.historico,
+  )
   if (ret.data.data) {
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Histórico criado!",
-    });
-    buscarCobrancas();
-    dialogEditarHistorico.value = false;
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Histórico criado!',
+    })
+    buscarCobrancas()
+    dialogEditarHistorico.value = false
   } else {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "warning",
-      message: "Erro, tente novamente",
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'warning',
+      message: 'Erro, tente novamente',
+    })
   }
-};
+}
 
 const editarHistorico = (codcobrancahistorico, historico) => {
-  cobrancaNova.value = false;
-  dialogEditarHistorico.value = true;
+  cobrancaNova.value = false
+  dialogEditarHistorico.value = true
   modelCobrancaHistorico.value = {
     historico: historico,
     codcobrancahistorico: codcobrancahistorico,
-  };
-};
+  }
+}
 
 const deletarHistorico = (codcobrancahistorico) => {
   $q.dialog({
-    title: "Excluir Histórico",
-    message: "Tem certeza que deseja excluir esse histórico de cobrança?",
+    title: 'Excluir Histórico',
+    message: 'Tem certeza que deseja excluir esse histórico de cobrança?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sPessoa.deletaCobrancaHistorico(
-        route.params.id,
-        codcobrancahistorico
-      );
+      await sPessoa.deletaCobrancaHistorico(route.params.id, codcobrancahistorico)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Histórico excluido!",
-      });
-      buscarCobrancas();
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Histórico excluido!',
+      })
+      buscarCobrancas()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 const salvarHistorico = async () => {
   try {
     const ret = await sPessoa.salvarHistoricoCobranca(
       route.params.id,
       modelCobrancaHistorico.value.codcobrancahistorico,
-      modelCobrancaHistorico.value
-    );
+      modelCobrancaHistorico.value,
+    )
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Histórico alterado",
-      });
-      dialogEditarHistorico.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Histórico alterado',
+      })
+      dialogEditarHistorico.value = false
       const i = HistoricosCobranca.value.findIndex(
-        (item) =>
-          item.codcobrancahistorico ===
-          modelCobrancaHistorico.value.codcobrancahistorico
-      );
-      HistoricosCobranca.value[i] = ret.data.data;
+        (item) => item.codcobrancahistorico === modelCobrancaHistorico.value.codcobrancahistorico,
+      )
+      HistoricosCobranca.value[i] = ret.data.data
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
+    })
   }
-};
+}
 
 const submit = () => {
-  cobrancaNova.value ? novaCobranca() : salvarHistorico();
-};
+  cobrancaNova.value ? novaCobranca() : salvarHistorico()
+}
 
 onMounted(() => {
-  buscarCobrancas();
-});
+  buscarCobrancas()
+})
 
 watch(
   () => route.params.id,
   (novoId) => {
     if (novoId) {
-      buscarCobrancas();
+      buscarCobrancas()
     }
-  }
-);
+  },
+)
 </script>
 
 <template>
   <!-- Dialog Editar Histórico -->
   <q-dialog v-model="dialogEditarHistorico">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
-      <q-form
-        @submit="submit()"
-      >
+      <q-form @submit="submit()">
         <q-card-section class="text-grey-9 text-overline row items-center">
           <template v-if="cobrancaNova">NOVO HISTÓRICO DE COBRANÇA</template>
           <template v-else>EDITAR HISTÓRICO DE COBRANÇA</template>
@@ -216,9 +203,7 @@ watch(
           color="primary"
           v-if="user.verificaPermissaoUsuario('Publico')"
           @click="
-            (dialogEditarHistorico = true),
-              (modelCobrancaHistorico = {}),
-              (cobrancaNova = true)
+            ;(dialogEditarHistorico = true), (modelCobrancaHistorico = {}), (cobrancaNova = true)
           "
         />
       </q-card-section>
@@ -254,10 +239,7 @@ watch(
             </q-item-section>
 
             <q-item-section side>
-              <q-item-label
-                caption
-                v-if="user.verificaPermissaoUsuario('Publico')"
-              >
+              <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
                 <!-- EDITAR -->
                 <q-btn
                   flat
@@ -266,12 +248,7 @@ watch(
                   icon="edit"
                   size="sm"
                   color="grey-7"
-                  @click="
-                    editarHistorico(
-                      historico.codcobrancahistorico,
-                      historico.historico
-                    )
-                  "
+                  @click="editarHistorico(historico.codcobrancahistorico, historico.historico)"
                 >
                   <q-tooltip>Editar</q-tooltip>
                 </q-btn>
@@ -293,9 +270,7 @@ watch(
           </q-item>
         </template>
       </q-list>
-      <div v-else class="q-pa-md text-center text-grey">
-        Nenhum histórico de cobrança
-      </div>
+      <div v-else class="q-pa-md text-center text-grey">Nenhum histórico de cobrança</div>
     </q-card>
   </q-infinite-scroll>
 </template>

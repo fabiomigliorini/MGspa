@@ -1,129 +1,126 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { rhStore } from "src/stores/rh";
-import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
-import { formataNumero, formataPercentual } from "@components/formatters";
-import DialogEditarMeta from "./DialogEditarMeta.vue";
-import MgInputValor from "@components/MgInputValor.vue";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { rhStore } from 'src/stores/rh'
+import {
+  corProgresso,
+  tipoIndicadorLabel,
+  tipoIndicadorColor,
+  extrairErro,
+} from 'src/utils/rhFormatters'
+import { formataNumero, formataPercentual } from '@components/formatters'
+import DialogEditarMeta from './DialogEditarMeta.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const sRh = rhStore();
+const $q = useQuasar()
+const route = useRoute()
+const sRh = rhStore()
 
 // --- AGRUPAMENTO POR UNIDADE → SETOR ---
 
 const agrupado = computed(() => {
-  const unidadeMap = new Map();
+  const unidadeMap = new Map()
 
   sRh.indicadores.forEach((ind) => {
-    const codun = ind.codunidadenegocio || 0;
-    const descun = ind.unidade_negocio_nome || "Sem Unidade";
+    const codun = ind.codunidadenegocio || 0
+    const descun = ind.unidade_negocio_nome || 'Sem Unidade'
 
     if (!unidadeMap.has(codun)) {
       unidadeMap.set(codun, {
         codunidadenegocio: codun,
         descricao: descun,
         setorMap: new Map(),
-      });
+      })
     }
 
-    const grupo = unidadeMap.get(codun);
-    const codsetor = ind.codsetor || 0;
-    const nomeSetor = ind.setor_nome || "Sem Setor";
+    const grupo = unidadeMap.get(codun)
+    const codsetor = ind.codsetor || 0
+    const nomeSetor = ind.setor_nome || 'Sem Setor'
 
     if (!grupo.setorMap.has(codsetor)) {
       grupo.setorMap.set(codsetor, {
         codsetor,
         setor: nomeSetor,
         indicadores: [],
-      });
+      })
     }
-    grupo.setorMap.get(codsetor).indicadores.push(ind);
-  });
+    grupo.setorMap.get(codsetor).indicadores.push(ind)
+  })
 
   return Array.from(unidadeMap.values())
     .sort((a, b) => a.descricao.localeCompare(b.descricao))
     .map((u) => ({
       ...u,
-      setores: Array.from(u.setorMap.values()).sort((a, b) =>
-        a.setor.localeCompare(b.setor)
-      ),
-    }));
-});
+      setores: Array.from(u.setorMap.values()).sort((a, b) => a.setor.localeCompare(b.setor)),
+    }))
+})
 
 // --- HELPERS ---
 
 const atingimento = (ind) => {
-  const vendas = parseFloat(ind.valoracumulado) || 0;
-  const meta = parseFloat(ind.meta) || 0;
-  if (!vendas || !meta) return null;
-  return (vendas / meta) * 100;
-};
-
+  const vendas = parseFloat(ind.valoracumulado) || 0
+  const meta = parseFloat(ind.meta) || 0
+  if (!vendas || !meta) return null
+  return (vendas / meta) * 100
+}
 
 // --- OPTIONS PARA SELECTS ---
 
 const tipoOptions = [
-  { label: "Vendedor", value: "V" },
-  { label: "Caixa", value: "C" },
-  { label: "Setor", value: "S" },
-  { label: "Unidade", value: "U" },
-];
+  { label: 'Vendedor', value: 'V' },
+  { label: 'Caixa', value: 'C' },
+  { label: 'Setor', value: 'S' },
+  { label: 'Unidade', value: 'U' },
+]
 
 const colaboradoresOptions = computed(() => {
   return sRh.colaboradores.map((pc) => ({
-    label: pc.colaborador?.pessoa?.fantasia || "—",
+    label: pc.colaborador?.pessoa?.fantasia || '—',
     value: pc.codcolaborador,
-  }));
-});
+  }))
+})
 
 const unidadesOptions = computed(() => {
-  const map = new Map();
+  const map = new Map()
   sRh.colaboradores.forEach((pc) => {
-    (pc.periodo_colaborador_setor_s || []).forEach((pcs) => {
-      const un = pcs.setor?.unidade_negocio;
+    ;(pc.periodo_colaborador_setor_s || []).forEach((pcs) => {
+      const un = pcs.setor?.unidade_negocio
       if (un && !map.has(un.codunidadenegocio)) {
         map.set(un.codunidadenegocio, {
           label: un.descricao,
           value: un.codunidadenegocio,
-        });
+        })
       }
-    });
-  });
-  return Array.from(map.values()).sort((a, b) =>
-    a.label.localeCompare(b.label)
-  );
-});
+    })
+  })
+  return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
+})
 
 const setoresOptions = computed(() => {
-  const map = new Map();
+  const map = new Map()
   sRh.colaboradores.forEach((pc) => {
-    (pc.periodo_colaborador_setor_s || []).forEach((pcs) => {
+    ;(pc.periodo_colaborador_setor_s || []).forEach((pcs) => {
       if (
         pcs.setor &&
         !map.has(pcs.codsetor) &&
         (!modelCriar.value.codunidadenegocio ||
-          pcs.setor.unidade_negocio?.codunidadenegocio ===
-            modelCriar.value.codunidadenegocio)
+          pcs.setor.unidade_negocio?.codunidadenegocio === modelCriar.value.codunidadenegocio)
       ) {
         map.set(pcs.codsetor, {
           label: pcs.setor.setor,
           value: pcs.codsetor,
-        });
+        })
       }
-    });
-  });
-  return Array.from(map.values()).sort((a, b) =>
-    a.label.localeCompare(b.label)
-  );
-});
+    })
+  })
+  return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label))
+})
 
 // --- DIALOG CRIAR INDICADOR ---
 
-const dialogCriar = ref(false);
-const modelCriar = ref({});
+const dialogCriar = ref(false)
+const modelCriar = ref({})
 
 const abrirDialogCriar = () => {
   modelCriar.value = {
@@ -132,71 +129,71 @@ const abrirDialogCriar = () => {
     codunidadenegocio: null,
     codsetor: null,
     meta: null,
-  };
-  dialogCriar.value = true;
-};
+  }
+  dialogCriar.value = true
+}
 
 const submitCriar = async () => {
-  dialogCriar.value = false;
+  dialogCriar.value = false
   try {
-    await sRh.criarIndicador(route.params.codperiodo, modelCriar.value);
+    await sRh.criarIndicador(route.params.codperiodo, modelCriar.value)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Indicador criado",
-    });
-    await sRh.getIndicadores(route.params.codperiodo);
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Indicador criado',
+    })
+    await sRh.getIndicadores(route.params.codperiodo)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao criar indicador"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao criar indicador'),
+    })
   }
-};
+}
 
 // --- DIALOG EDITAR META ---
 
-const dialogMeta = ref(false);
-const indicadorMeta = ref(null);
+const dialogMeta = ref(false)
+const indicadorMeta = ref(null)
 
 const editarMeta = (ind) => {
-  indicadorMeta.value = ind;
-  dialogMeta.value = true;
-};
+  indicadorMeta.value = ind
+  dialogMeta.value = true
+}
 
-const recarregarIndicadores = () => sRh.getIndicadores(route.params.codperiodo);
+const recarregarIndicadores = () => sRh.getIndicadores(route.params.codperiodo)
 
 // --- EXCLUIR INDICADOR ---
 
 const excluirIndicador = (ind) => {
   $q.dialog({
-    title: "Excluir Indicador",
-    message: "Tem certeza que deseja excluir este indicador?",
+    title: 'Excluir Indicador',
+    message: 'Tem certeza que deseja excluir este indicador?',
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     try {
-      await sRh.excluirIndicador(ind.codindicador);
+      await sRh.excluirIndicador(ind.codindicador)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Indicador excluído",
-      });
-      await recarregarIndicadores();
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Indicador excluído',
+      })
+      await recarregarIndicadores()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir indicador"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir indicador'),
+      })
     }
-  });
-};
+  })
+}
 </script>
 
 <template>
@@ -204,9 +201,7 @@ const excluirIndicador = (ind) => {
   <q-dialog v-model="dialogCriar">
     <q-card bordered flat style="width: 400px; max-width: 90vw">
       <q-form @submit="submitCriar()">
-        <q-card-section class="text-grey-9 text-overline">
-          NOVO INDICADOR
-        </q-card-section>
+        <q-card-section class="text-grey-9 text-overline"> NOVO INDICADOR </q-card-section>
 
         <q-separator inset />
 
@@ -252,22 +247,13 @@ const excluirIndicador = (ind) => {
             clearable
           />
 
-          <MgInputValor
-            v-model="modelCriar.meta"
-            label="Meta"
-          />
+          <MgInputValor v-model="modelCriar.meta" label="Meta" />
         </q-card-section>
 
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -335,13 +321,13 @@ const excluirIndicador = (ind) => {
                 />
               </td>
               <td>
-                {{ ind.colaborador_nome || "—" }}
+                {{ ind.colaborador_nome || '—' }}
               </td>
               <td class="text-right">
                 {{ formataNumero(ind.valoracumulado) }}
               </td>
               <td class="text-right">
-                {{ ind.meta ? formataNumero(ind.meta) : "—" }}
+                {{ ind.meta ? formataNumero(ind.meta) : '—' }}
                 <q-btn
                   flat
                   dense
@@ -367,13 +353,7 @@ const excluirIndicador = (ind) => {
               <td>
                 <q-linear-progress
                   v-if="ind.meta"
-                  :value="
-                    Math.min(
-                      parseFloat(ind.valoracumulado) / parseFloat(ind.meta) ||
-                        0,
-                      1
-                    )
-                  "
+                  :value="Math.min(parseFloat(ind.valoracumulado) / parseFloat(ind.meta) || 0, 1)"
                   size="8px"
                   stripe
                   rounded

@@ -1,88 +1,88 @@
 <script setup>
-import { formataDataAbreviada } from "@components/formatters";
-import { ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { usuarioStore } from "src/stores/usuario";
-import { guardaToken } from "src/stores";
-import MGLayout from "layouts/MGLayout.vue";
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
+import { formataDataAbreviada } from '@components/formatters'
+import { ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { usuarioStore } from 'src/stores/usuario'
+import { guardaToken } from 'src/stores'
+import MGLayout from 'layouts/MGLayout.vue'
+import moment from 'moment'
+import 'moment/min/locales'
+moment.locale('pt-br')
 
-const $q = useQuasar();
-const sUsuario = usuarioStore();
-const user = guardaToken();
+const $q = useQuasar()
+const sUsuario = usuarioStore()
+const user = guardaToken()
 
 // Refs
-const dialogAlterarSenha = ref(false);
-const isPwd = ref(true);
-const modelPerfilUsuario = ref({});
+const dialogAlterarSenha = ref(false)
+const isPwd = ref(true)
+const modelPerfilUsuario = ref({})
 
 // Functions
 const senhaValida = (val) => {
   if (String(val).length < 6) {
-    return "Mínimo 6 letras ou números!";
+    return 'Mínimo 6 letras ou números!'
   }
-  return true;
-};
+  return true
+}
 
 const confirmacaoValida = (val) => {
   if (modelPerfilUsuario.value.senha !== val) {
-    return "Senhas não batem!";
+    return 'Senhas não batem!'
   }
-  return true;
-};
+  return true
+}
 
 const editar = () => {
   modelPerfilUsuario.value = {
     codusuario: user.usuarioLogado.codusuario,
     usuario: user.usuarioLogado.usuario,
-  };
-  dialogAlterarSenha.value = true;
-};
+  }
+  dialogAlterarSenha.value = true
+}
 
 const salvar = async () => {
   try {
     if (!modelPerfilUsuario.value.senha_antiga) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: "Digite a senha antiga",
-      });
-      return;
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: 'Digite a senha antiga',
+      })
+      return
     }
-    const ret = await sUsuario.usuarioAlterarPerfil(modelPerfilUsuario.value);
+    const ret = await sUsuario.usuarioAlterarPerfil(modelPerfilUsuario.value)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Senha alterada!",
-      });
-      dialogAlterarSenha.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Senha alterada!',
+      })
+      dialogAlterarSenha.value = false
     }
   } catch (error) {
-    const errors = error.response?.data?.errors;
+    const errors = error.response?.data?.errors
     const mensagem =
       errors?.senha?.[0] ||
       errors?.senha_antiga?.[0] ||
       errors?.usuario?.[0] ||
-      "Erro ao alterar senha";
+      'Erro ao alterar senha'
 
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "warning",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'warning',
       message: mensagem,
-    });
+    })
   }
-};
+}
 
 // Lifecycle
 onMounted(async () => {
-  await sUsuario.getUsuario(user.usuarioLogado.codusuario);
-});
+  await sUsuario.getUsuario(user.usuarioLogado.codusuario)
+})
 </script>
 
 <template>
@@ -96,9 +96,7 @@ onMounted(async () => {
             <q-card bordered flat>
               <q-card-section class="text-grey-9 text-overline q-pb-none">
                 <div class="text-h6">{{ sUsuario.detalheUsuarios.usuario }}</div>
-                <q-badge v-if="sUsuario.detalheUsuarios.inativo" color="red">
-                  Inativo
-                </q-badge>
+                <q-badge v-if="sUsuario.detalheUsuarios.inativo" color="red"> Inativo </q-badge>
               </q-card-section>
 
               <q-card-section class="q-pt-none">
@@ -177,9 +175,7 @@ onMounted(async () => {
       <q-dialog v-model="dialogAlterarSenha">
         <q-card style="width: 400px">
           <q-form @submit.prevent="salvar()">
-            <q-card-section class="text-grey-9 text-overline">
-              ALTERAR SENHA
-            </q-card-section>
+            <q-card-section class="text-grey-9 text-overline"> ALTERAR SENHA </q-card-section>
 
             <q-separator inset />
 

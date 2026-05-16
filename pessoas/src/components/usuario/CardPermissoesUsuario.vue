@@ -1,14 +1,12 @@
 <script setup>
-import { usuarioStore } from "src/stores/usuario";
+import { usuarioStore } from 'src/stores/usuario'
 
-const sUsuario = usuarioStore();
+const sUsuario = usuarioStore()
 </script>
 
 <template>
   <q-card bordered flat v-if="sUsuario.detalheUsuarios?.permissoes">
-    <q-card-section class="text-grey-9 text-overline">
-      PERMISSÕES
-    </q-card-section>
+    <q-card-section class="text-grey-9 text-overline"> PERMISSÕES </q-card-section>
 
     <q-separator inset />
 
@@ -30,10 +28,7 @@ const sUsuario = usuarioStore();
               {{ grupo.observacoes }}
             </q-item-label>
             <q-item-label caption v-if="grupo.filiais?.length">
-              <template
-                v-for="(filial, i) in grupo.filiais"
-                :key="filial.codfilial"
-              >
+              <template v-for="(filial, i) in grupo.filiais" :key="filial.codfilial">
                 <span v-if="i !== 0"> | </span>
                 {{ filial.filial }}
               </template>
@@ -43,9 +38,6 @@ const sUsuario = usuarioStore();
       </template>
     </q-list>
 
-    <div v-else class="q-pa-md text-center text-grey">
-      Nenhuma permissão atribuída
-    </div>
+    <div v-else class="q-pa-md text-center text-grey">Nenhuma permissão atribuída</div>
   </q-card>
 </template>
-

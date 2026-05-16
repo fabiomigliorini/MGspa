@@ -1,16 +1,16 @@
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRouter, useRoute } from "vue-router";
-import { usuarioStore } from "src/stores/usuario";
-import SelectFilial from "components/pessoa/SelectFilial.vue";
-import SelectPortador from "components/select/SelectPortador.vue";
-import SelectPessoaUsuario from "components/Usuarios/SelectPessoaUsuario.vue";
+import { ref, onMounted, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRouter, useRoute } from 'vue-router'
+import { usuarioStore } from 'src/stores/usuario'
+import SelectFilial from 'components/pessoa/SelectFilial.vue'
+import SelectPortador from 'components/select/SelectPortador.vue'
+import SelectPessoaUsuario from 'components/Usuarios/SelectPessoaUsuario.vue'
 
-const $q = useQuasar();
-const router = useRouter();
-const route = useRoute();
-const sUsuario = usuarioStore();
+const $q = useQuasar()
+const router = useRouter()
+const route = useRoute()
+const sUsuario = usuarioStore()
 
 // Refs
 const model = ref({
@@ -22,150 +22,150 @@ const model = ref({
   senha: null,
   senha_confirmacao: null,
   permissoes: {},
-});
-const grupos = ref([]);
-const filiais = ref([]);
-const isPwd = ref(true);
+})
+const grupos = ref([])
+const filiais = ref([])
+const isPwd = ref(true)
 
 // Computed
-const isNovo = computed(() => !route.params.codusuario);
-const titulo = computed(() => (isNovo.value ? "Novo Usuário" : sUsuario.detalheUsuarios?.usuario || ""));
+const isNovo = computed(() => !route.params.codusuario)
+const titulo = computed(() =>
+  isNovo.value ? 'Novo Usuário' : sUsuario.detalheUsuarios?.usuario || '',
+)
 
 // Functions
 const usuarioValido = (val) => {
   if (String(val).length < 4) {
-    return "No mínimo 4 caracteres!";
+    return 'No mínimo 4 caracteres!'
   }
-  const usernameRegex = /^[a-z0-9_.]+$/;
+  const usernameRegex = /^[a-z0-9_.]+$/
   if (!usernameRegex.test(val)) {
-    return "Somente Letras, Números, traços e pontos são aceitos!";
+    return 'Somente Letras, Números, traços e pontos são aceitos!'
   }
-  return true;
-};
+  return true
+}
 
 const senhaValida = (val) => {
   if (String(val).length < 6) {
-    return "Mínimo 6 letras ou números!";
+    return 'Mínimo 6 letras ou números!'
   }
-  return true;
-};
+  return true
+}
 
 const confirmacaoValida = (val) => {
   if (model.value.senha !== val) {
-    return "Senhas não batem!";
+    return 'Senhas não batem!'
   }
-  return true;
-};
+  return true
+}
 
 const marcarTodos = (codgrupousuario) => {
   for (const codfilial of Object.keys(model.value.permissoes[codgrupousuario])) {
-    model.value.permissoes[codgrupousuario][codfilial] = true;
+    model.value.permissoes[codgrupousuario][codfilial] = true
   }
-};
+}
 
 const marcarNenhum = (codgrupousuario) => {
   for (const codfilial of Object.keys(model.value.permissoes[codgrupousuario])) {
-    model.value.permissoes[codgrupousuario][codfilial] = false;
+    model.value.permissoes[codgrupousuario][codfilial] = false
   }
-};
+}
 
 const criar = () => {
   $q.dialog({
-    title: "Criar usuário",
-    message: "Tem certeza que deseja criar esse usuário?",
+    title: 'Criar usuário',
+    message: 'Tem certeza que deseja criar esse usuário?',
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     try {
-      await sUsuario.postUsuario(model.value);
+      await sUsuario.postUsuario(model.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Usuário Criado!",
-      });
-      router.push("/usuarios/");
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Usuário Criado!',
+      })
+      router.push('/usuarios/')
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: error.response?.data?.message || "Erro ao criar usuário",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: error.response?.data?.message || 'Erro ao criar usuário',
+      })
     }
-  });
-};
+  })
+}
 
 const alterar = () => {
   $q.dialog({
-    title: "Alterar usuário",
-    message: "Tem certeza que deseja alterar esse usuário?",
+    title: 'Alterar usuário',
+    message: 'Tem certeza que deseja alterar esse usuário?',
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     try {
-      await sUsuario.putUsuario(model.value);
+      await sUsuario.putUsuario(model.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Usuário alterado!",
-      });
-      router.push(`/usuarios/${sUsuario.detalheUsuarios.codusuario}`);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Usuário alterado!',
+      })
+      router.push(`/usuarios/${sUsuario.detalheUsuarios.codusuario}`)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: error.response?.data?.message || "Erro ao alterar usuário",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: error.response?.data?.message || 'Erro ao alterar usuário',
+      })
     }
-  });
-};
+  })
+}
 
 const submit = () => {
   if (isNovo.value) {
-    criar();
+    criar()
   } else {
-    alterar();
+    alterar()
   }
-};
+}
 
 // Lifecycle
 onMounted(async () => {
-  const retGrupos = await sUsuario.getGrupoUsuarios();
-  const retFiliais = await sUsuario.getFilial();
+  const retGrupos = await sUsuario.getGrupoUsuarios()
+  const retFiliais = await sUsuario.getFilial()
 
-  grupos.value = retGrupos.data.data.sort((a, b) =>
-    a.grupousuario.localeCompare(b.grupousuario)
-  );
-  filiais.value = retFiliais.data.data.sort((a, b) => a.codfilial - b.codfilial);
+  grupos.value = retGrupos.data.data.sort((a, b) => a.grupousuario.localeCompare(b.grupousuario))
+  filiais.value = retFiliais.data.data.sort((a, b) => a.codfilial - b.codfilial)
 
   if (!isNovo.value) {
-    model.value.codusuario = sUsuario.detalheUsuarios.codusuario;
-    model.value.usuario = sUsuario.detalheUsuarios.usuario;
-    model.value.codfilial = sUsuario.detalheUsuarios.codfilial;
-    model.value.codportador = sUsuario.detalheUsuarios.codportador;
-    model.value.codpessoa = sUsuario.detalheUsuarios.codpessoa;
+    model.value.codusuario = sUsuario.detalheUsuarios.codusuario
+    model.value.usuario = sUsuario.detalheUsuarios.usuario
+    model.value.codfilial = sUsuario.detalheUsuarios.codfilial
+    model.value.codportador = sUsuario.detalheUsuarios.codportador
+    model.value.codpessoa = sUsuario.detalheUsuarios.codpessoa
   }
 
   // Inicializa permissões
   grupos.value.forEach((grupo) => {
-    model.value.permissoes[grupo.codgrupousuario] = {};
+    model.value.permissoes[grupo.codgrupousuario] = {}
     filiais.value.forEach((filial) => {
-      let existe = false;
+      let existe = false
       if (!isNovo.value) {
         const permGrupo = sUsuario.detalheUsuarios.permissoes.find(
-          (g) => g.codgrupousuario === grupo.codgrupousuario
-        );
+          (g) => g.codgrupousuario === grupo.codgrupousuario,
+        )
         if (permGrupo) {
-          existe = permGrupo.filiais.some((f) => f.codfilial === filial.codfilial);
+          existe = permGrupo.filiais.some((f) => f.codfilial === filial.codfilial)
         }
       }
-      model.value.permissoes[grupo.codgrupousuario][filial.codfilial] = existe;
-    });
-  });
-});
+      model.value.permissoes[grupo.codgrupousuario][filial.codfilial] = existe
+    })
+  })
+})
 </script>
 
 <template>
@@ -173,9 +173,7 @@ onMounted(async () => {
     <q-card bordered flat>
       <q-card-section class="text-grey-9 text-overline q-pb-none">
         <div class="text-h6">{{ titulo }}</div>
-        <q-badge v-if="sUsuario.detalheUsuarios?.inativo" color="red">
-          Inativo
-        </q-badge>
+        <q-badge v-if="sUsuario.detalheUsuarios?.inativo" color="red"> Inativo </q-badge>
       </q-card-section>
 
       <q-card-section class="q-pt-sm">
@@ -217,8 +215,7 @@ onMounted(async () => {
               :modelcod-pessoa="model.codpessoa"
               v-model="model.codpessoa"
               :rules="[
-                (val) =>
-                  (val !== null && val !== '' && val !== undefined) || 'Pessoa Obrigatória',
+                (val) => (val !== null && val !== '' && val !== undefined) || 'Pessoa Obrigatória',
               ]"
             >
               <template #prepend>

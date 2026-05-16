@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { api } from "src/boot/axios.js";
-import { LoadingBar } from "quasar";
-import { formataCnpjCpf } from "@components/formatters";
+import { ref, onMounted, watch } from 'vue'
+import { api } from 'src/boot/axios.js'
+import { LoadingBar } from 'quasar'
+import { formataCnpjCpf } from '@components/formatters'
 
 const props = defineProps({
   modelValue: {
@@ -16,83 +16,92 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue'])
 
-const opcoes = ref([]);
+const opcoes = ref([])
 
 const alterar = (value) => {
-  emit("update:modelValue", value);
-};
+  emit('update:modelValue', value)
+}
 
 const buscarPeloCod = async (codpessoa) => {
   try {
     const ret = await api.get('v1/select/pessoa', {
       params: {
-        codpessoa: codpessoa
-      }
+        codpessoa: codpessoa,
+      },
     })
     opcoes.value = ret.data
   } catch (error) {
-    console.log(error);
-    opcoes.value = [];
+    console.log(error)
+    opcoes.value = []
   }
-};
+}
 
 watch(
   () => props.modelValue,
   (newValue) => {
-    buscarPeloCod(newValue);
-  }
-);
+    buscarPeloCod(newValue)
+  },
+)
 
 onMounted(async () => {
   if (!props.modelValue) {
-    return;
+    return
   }
-  buscarPeloCod(props.modelValue);
-});
+  buscarPeloCod(props.modelValue)
+})
 
 const pesquisa = (textoPesquisa, update) => {
   update(async () => {
-    const texto = textoPesquisa.trim();
+    const texto = textoPesquisa.trim()
     // verifica se tem texto de busca
     if (texto.length < 2) {
-      return;
+      return
     }
 
     // sinaliza pro usuario que está pesquisando
-    LoadingBar.start();
+    LoadingBar.start()
 
     const params = {
       pessoa: texto,
     }
     if (props.somenteAtivos) {
-      params.somenteAtivos = true;
+      params.somenteAtivos = true
     }
     if (props.somenteVendedores) {
-      params.somenteVendedores = true;
+      params.somenteVendedores = true
     }
 
     try {
       const ret = await api.get('v1/select/pessoa', {
-        params: params
-      });
+        params: params,
+      })
       opcoes.value = ret.data
-
     } catch (error) {
-      console.log(error);
-      opcoes.value = [];
+      console.log(error)
+      opcoes.value = []
     }
 
-    LoadingBar.stop();
-  });
-};
+    LoadingBar.stop()
+  })
+}
 </script>
 <template>
-  <q-select :options="opcoes" :model-value="modelValue" @filter="pesquisa" use-input emit-value map-options
-    option-value="codpessoa" option-label="fantasia" v-bind="$attrs" @update:model-value="(value) => alterar(value)">
+  <q-select
+    :options="opcoes"
+    :model-value="modelValue"
+    @filter="pesquisa"
+    use-input
+    emit-value
+    map-options
+    option-value="codpessoa"
+    option-label="fantasia"
+    v-bind="$attrs"
+    @update:model-value="(value) => alterar(value)"
+  >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section avatar>
@@ -112,12 +121,8 @@ const pesquisa = (textoPesquisa, update) => {
             <template v-if="scope.opt.endereco">
               {{ scope.opt.endereco }}, {{ scope.opt.numero }}
             </template>
-            <template v-if="scope.opt.complemento">
-              - {{ scope.opt.complemento }}
-            </template>
-            <template v-if="scope.opt.bairro">
-              - {{ scope.opt.bairro }} -
-            </template>
+            <template v-if="scope.opt.complemento"> - {{ scope.opt.complemento }} </template>
+            <template v-if="scope.opt.bairro"> - {{ scope.opt.bairro }} - </template>
             {{ scope.opt.cidade }}/{{ scope.opt.uf }}
           </q-item-label>
         </q-item-section>

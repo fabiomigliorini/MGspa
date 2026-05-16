@@ -1,142 +1,128 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { metaStore } from "src/stores/meta";
-import { guardaToken } from "src/stores";
-import { formataData, formataNumero } from "@components/formatters";
-import MGLayout from "layouts/MGLayout.vue";
-import SelectUnidadeNegocio from "src/components/select/SelectUnidadeNegocio.vue";
-import CardUnidadeMeta from "src/components/meta/CardUnidadeMeta.vue";
+import { ref, computed, onMounted, watch } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { metaStore } from 'src/stores/meta'
+import { guardaToken } from 'src/stores'
+import { formataData, formataNumero } from '@components/formatters'
+import MGLayout from 'layouts/MGLayout.vue'
+import SelectUnidadeNegocio from 'src/components/select/SelectUnidadeNegocio.vue'
+import CardUnidadeMeta from 'src/components/meta/CardUnidadeMeta.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const sMeta = metaStore();
-const user = guardaToken();
+const $q = useQuasar()
+const route = useRoute()
+const sMeta = metaStore()
+const user = guardaToken()
 
-const loading = ref(false);
+const loading = ref(false)
 
-const dash = computed(() => sMeta.dashboard || {});
-const config = computed(() => sMeta.item || {});
+const dash = computed(() => sMeta.dashboard || {})
+const config = computed(() => sMeta.item || {})
 const podeEditar = computed(
-  () =>
-    user.verificaPermissaoUsuario("Recursos Humanos") &&
-    config.value.status !== "F"
-);
+  () => user.verificaPermissaoUsuario('Recursos Humanos') && config.value.status !== 'F',
+)
 
 const unidades = computed(() => {
-  const cfgUnidades = config.value.unidades || [];
-  const projUnidades = dash.value.unidades || [];
+  const cfgUnidades = config.value.unidades || []
+  const projUnidades = dash.value.unidades || []
   return cfgUnidades.map((cfg) => {
-    const proj =
-      projUnidades.find(
-        (p) => p.codunidadenegocio === cfg.codunidadenegocio
-      ) || {};
-    const totalvendas = proj.totalvendas || 0;
-    const valormeta = parseFloat(cfg.valormeta) || 0;
-    const percentualatingimento =
-      valormeta > 0 ? (totalvendas / valormeta) * 100 : null;
+    const proj = projUnidades.find((p) => p.codunidadenegocio === cfg.codunidadenegocio) || {}
+    const totalvendas = proj.totalvendas || 0
+    const valormeta = parseFloat(cfg.valormeta) || 0
+    const percentualatingimento = valormeta > 0 ? (totalvendas / valormeta) * 100 : null
     return {
       ...cfg,
       totalvendas,
       percentualatingimento,
       metaatingida: percentualatingimento >= 100,
       rankingprovisorio: proj.rankingprovisorio || [],
-    };
-  });
-});
+    }
+  })
+})
 
 const totalVendas = computed(() =>
-  (dash.value.unidades || []).reduce(
-    (acc, u) => acc + (parseFloat(u.totalvendas) || 0),
-    0
-  )
-);
+  (dash.value.unidades || []).reduce((acc, u) => acc + (parseFloat(u.totalvendas) || 0), 0),
+)
 const totalMeta = computed(() =>
-  unidades.value.reduce(
-    (acc, u) => acc + (parseFloat(u.valormeta) || 0),
-    0
-  )
-);
+  unidades.value.reduce((acc, u) => acc + (parseFloat(u.valormeta) || 0), 0),
+)
 
 const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
+  const data = error.response?.data
+  if (!data) return fallback
   if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
+    const primeiro = Object.values(data.errors).flat()[0]
+    if (primeiro) return primeiro
   }
-  return data.mensagem || data.message || fallback;
-};
+  return data.mensagem || data.message || fallback
+}
 
 // --- DIALOG ADD UNIDADE ---
 
-const dialogAddUnidade = ref(false);
-const modelAddUnidade = ref({});
+const dialogAddUnidade = ref(false)
+const modelAddUnidade = ref({})
 
 const abrirAddUnidade = () => {
-  modelAddUnidade.value = { codunidadenegocio: null };
-  dialogAddUnidade.value = true;
-};
+  modelAddUnidade.value = { codunidadenegocio: null }
+  dialogAddUnidade.value = true
+}
 
 const salvarAddUnidade = async () => {
-  dialogAddUnidade.value = false;
+  dialogAddUnidade.value = false
   try {
-    await sMeta.criarUnidade(route.params.codmeta, modelAddUnidade.value);
+    await sMeta.criarUnidade(route.params.codmeta, modelAddUnidade.value)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Unidade adicionada",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Unidade adicionada',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao adicionar unidade"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao adicionar unidade'),
+    })
   }
-};
+}
 
 // --- LIFECYCLE ---
 
 const carregar = async (codmeta) => {
-  if (!codmeta) return;
-  loading.value = true;
+  if (!codmeta) return
+  loading.value = true
   try {
-    await Promise.all([sMeta.getDashboard(codmeta), sMeta.get(codmeta)]);
+    await Promise.all([sMeta.getDashboard(codmeta), sMeta.get(codmeta)])
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar dashboard"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar dashboard'),
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 onMounted(() => {
-  carregar(route.params.codmeta);
-});
+  carregar(route.params.codmeta)
+})
 
 watch(
   () => route.params.codmeta,
   (novoId) => {
-    if (novoId) carregar(novoId);
-  }
-);
+    if (novoId) carregar(novoId)
+  },
+)
 </script>
 
 <template>
   <!-- DIALOG ADICIONAR UNIDADE -->
   <q-dialog v-model="dialogAddUnidade">
     <q-card bordered flat style="width: 400px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline">
-        ADICIONAR UNIDADE
-      </q-card-section>
+      <q-card-section class="text-grey-9 text-overline"> ADICIONAR UNIDADE </q-card-section>
 
       <q-form @submit="salvarAddUnidade()">
         <q-separator inset />
@@ -153,13 +139,7 @@ watch(
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Adicionar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -170,10 +150,7 @@ watch(
     <template #tituloPagina>
       <span class="q-pl-sm">
         Dashboard da Meta
-        <span
-          v-if="config.periodoinicial"
-          class="text-caption text-grey-6 q-ml-sm"
-        >
+        <span v-if="config.periodoinicial" class="text-caption text-grey-6 q-ml-sm">
           {{ formataData(config.periodoinicial) }} a
           {{ formataData(config.periodofinal) }}
         </span>
@@ -181,13 +158,7 @@ watch(
     </template>
 
     <template #botaoVoltar>
-      <q-btn
-        flat
-        round
-        :to="{ name: 'metaIndex' }"
-        icon="arrow_back"
-        aria-label="Voltar"
-      />
+      <q-btn flat round :to="{ name: 'metaIndex' }" icon="arrow_back" aria-label="Voltar" />
     </template>
 
     <template #content>

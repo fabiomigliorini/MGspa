@@ -1,73 +1,71 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { rhStore } from "src/stores/rh";
-import { guardaToken } from "src/stores";
-import { corProgresso, tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
-import { formataNumero, formataPercentual } from "@components/formatters";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { rhStore } from 'src/stores/rh'
+import { guardaToken } from 'src/stores'
+import { corProgresso, tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
+import { formataNumero, formataPercentual } from '@components/formatters'
 
-const $q = useQuasar();
-const route = useRoute();
-const sRh = rhStore();
-const user = guardaToken();
+const $q = useQuasar()
+const route = useRoute()
+const sRh = rhStore()
+const user = guardaToken()
 
-const podeEditar = computed(
-  () => user.verificaPermissaoUsuario("Recursos Humanos")
-);
+const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
 
-const diasUteisPeriodo = computed(() => sRh.dashboard?.periodo?.diasuteis || 0);
-const alertas = computed(() => sRh.dashboard?.alertas || []);
+const diasUteisPeriodo = computed(() => sRh.dashboard?.periodo?.diasuteis || 0)
+const alertas = computed(() => sRh.dashboard?.alertas || [])
 
 // --- AGRUPAMENTO POR UNIDADE → SETOR ---
 
 const agrupado = computed(() => {
-  const semSetor = [];
-  const unidadeMap = new Map();
+  const semSetor = []
+  const unidadeMap = new Map()
 
   sRh.colaboradores.forEach((pc) => {
-    const setores = pc.periodo_colaborador_setor_s || [];
+    const setores = pc.periodo_colaborador_setor_s || []
     if (setores.length === 0) {
-      semSetor.push({ pc, pcs: null });
-      return;
+      semSetor.push({ pc, pcs: null })
+      return
     }
     setores.forEach((pcs) => {
-      const un = pcs.setor?.unidade_negocio;
-      const codun = un?.codunidadenegocio || 0;
-      const descun = un?.descricao || "Sem Unidade";
+      const un = pcs.setor?.unidade_negocio
+      const codun = un?.codunidadenegocio || 0
+      const descun = un?.descricao || 'Sem Unidade'
 
       if (!unidadeMap.has(codun)) {
         unidadeMap.set(codun, {
           codunidadenegocio: codun,
           descricao: descun,
           setorMap: new Map(),
-        });
+        })
       }
 
-      const grupo = unidadeMap.get(codun);
-      const codsetor = pcs.codsetor;
-      const nomeSetor = pcs.setor?.setor || "—";
+      const grupo = unidadeMap.get(codun)
+      const codsetor = pcs.codsetor
+      const nomeSetor = pcs.setor?.setor || '—'
 
       if (!grupo.setorMap.has(codsetor)) {
         grupo.setorMap.set(codsetor, {
           codsetor,
           setor: nomeSetor,
           colaboradores: [],
-        });
+        })
       }
-      grupo.setorMap.get(codsetor).colaboradores.push({ pc, pcs });
-    });
-  });
+      grupo.setorMap.get(codsetor).colaboradores.push({ pc, pcs })
+    })
+  })
 
-  const resultado = [];
+  const resultado = []
 
   if (semSetor.length > 0) {
     resultado.push({
       codunidadenegocio: null,
-      descricao: "SEM SETOR",
+      descricao: 'SEM SETOR',
       alerta: true,
       setores: [{ codsetor: null, setor: null, colaboradores: semSetor }],
-    });
+    })
   }
 
   const unidades = Array.from(unidadeMap.values())
@@ -81,211 +79,205 @@ const agrupado = computed(() => {
         .map((s) => ({
           ...s,
           colaboradores: s.colaboradores.slice().sort((a, b) => {
-            const nA = a.pc.colaborador?.pessoa?.fantasia || "";
-            const nB = b.pc.colaborador?.pessoa?.fantasia || "";
-            return nA.localeCompare(nB, "pt-BR");
+            const nA = a.pc.colaborador?.pessoa?.fantasia || ''
+            const nB = b.pc.colaborador?.pessoa?.fantasia || ''
+            return nA.localeCompare(nB, 'pt-BR')
           }),
         })),
-    }));
+    }))
 
-  return resultado.concat(unidades);
-});
+  return resultado.concat(unidades)
+})
 
 // --- HELPERS ---
 
 const nomeColaborador = (pc) => {
-  return pc.colaborador?.pessoa?.fantasia || "—";
-};
+  return pc.colaborador?.pessoa?.fantasia || '—'
+}
 
 const indicadoresLinha = (pcs) => {
-  const indicadores = pcs?.indicadores || [];
-  return indicadores.length > 0 ? indicadores : [null];
-};
+  const indicadores = pcs?.indicadores || []
+  return indicadores.length > 0 ? indicadores : [null]
+}
 
-const vendasInd = (ind) =>
-  ind ? parseFloat(ind.valoracumulado) || 0 : null;
+const vendasInd = (ind) => (ind ? parseFloat(ind.valoracumulado) || 0 : null)
 
-const metaInd = (ind) =>
-  ind ? parseFloat(ind.meta) || null : null;
+const metaInd = (ind) => (ind ? parseFloat(ind.meta) || null : null)
 
 const atingimentoInd = (ind) => {
-  const vendas = vendasInd(ind);
-  const meta = metaInd(ind);
-  if (!vendas || !meta) return null;
-  return (vendas / meta) * 100;
-};
+  const vendas = vendasInd(ind)
+  const meta = metaInd(ind)
+  if (!vendas || !meta) return null
+  return (vendas / meta) * 100
+}
 
 const corLinha = (pc) => {
-  if (pc.status === "E") return "bg-green-1";
-  const rubricas = pc.colaborador_rubrica_s || [];
-  if (rubricas.length === 0) return "bg-yellow-1";
-  return "";
-};
-
+  if (pc.status === 'E') return 'bg-green-1'
+  const rubricas = pc.colaborador_rubrica_s || []
+  if (rubricas.length === 0) return 'bg-yellow-1'
+  return ''
+}
 
 // --- DIALOG ADICIONAR COLABORADORES ---
 
-const dialogAdicionar = ref(false);
-const disponiveis = ref([]);
-const selecionados = ref([]);
-const loadingDisponiveis = ref(false);
+const dialogAdicionar = ref(false)
+const disponiveis = ref([])
+const selecionados = ref([])
+const loadingDisponiveis = ref(false)
 
 const abrirDialogAdicionar = async () => {
-  loadingDisponiveis.value = true;
-  selecionados.value = [];
-  dialogAdicionar.value = true;
+  loadingDisponiveis.value = true
+  selecionados.value = []
+  dialogAdicionar.value = true
   try {
-    disponiveis.value = await sRh.getColaboradoresDisponiveis(route.params.codperiodo);
+    disponiveis.value = await sRh.getColaboradoresDisponiveis(route.params.codperiodo)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar colaboradores"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar colaboradores'),
+    })
   } finally {
-    loadingDisponiveis.value = false;
+    loadingDisponiveis.value = false
   }
-};
+}
 
 const selecionarTodos = () => {
   if (selecionados.value.length === disponiveis.value.length) {
-    selecionados.value = [];
+    selecionados.value = []
   } else {
-    selecionados.value = disponiveis.value.map((c) => c.codcolaborador);
+    selecionados.value = disponiveis.value.map((c) => c.codcolaborador)
   }
-};
+}
 
 const submitAdicionar = async () => {
-  if (selecionados.value.length === 0) return;
-  dialogAdicionar.value = false;
+  if (selecionados.value.length === 0) return
+  dialogAdicionar.value = false
   try {
-    await sRh.adicionarColaboradores(route.params.codperiodo, selecionados.value);
+    await sRh.adicionarColaboradores(route.params.codperiodo, selecionados.value)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: selecionados.value.length + " colaborador(es) adicionado(s)",
-    });
-    await sRh.getColaboradores(route.params.codperiodo);
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: selecionados.value.length + ' colaborador(es) adicionado(s)',
+    })
+    await sRh.getColaboradores(route.params.codperiodo)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao adicionar colaboradores"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao adicionar colaboradores'),
+    })
   }
-};
+}
 
 // --- AÇÕES ---
 
 const excluirColaborador = (pc) => {
   $q.dialog({
-    title: "Remover Colaborador",
+    title: 'Remover Colaborador',
     message:
-      "Tem certeza que deseja remover " +
+      'Tem certeza que deseja remover ' +
       nomeColaborador(pc) +
-      " deste período? Setores e rubricas serão removidos.",
+      ' deste período? Setores e rubricas serão removidos.',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.excluirColaborador(route.params.codperiodo, pc.codperiodocolaborador);
+      await sRh.excluirColaborador(route.params.codperiodo, pc.codperiodocolaborador)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador removido",
-      });
-      await sRh.getColaboradores(route.params.codperiodo);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador removido',
+      })
+      await sRh.getColaboradores(route.params.codperiodo)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao remover colaborador"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao remover colaborador'),
+      })
     }
-  });
-};
+  })
+}
 
 const recalcular = async (pc) => {
   try {
-    await sRh.recalcular(route.params.codperiodo, pc.codperiodocolaborador);
+    await sRh.recalcular(route.params.codperiodo, pc.codperiodocolaborador)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Recalculado",
-    });
-    await sRh.getColaboradores(route.params.codperiodo);
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Recalculado',
+    })
+    await sRh.getColaboradores(route.params.codperiodo)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao recalcular"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao recalcular'),
+    })
   }
-};
+}
 
 const encerrar = (pc) => {
   $q.dialog({
-    title: "Encerrar Colaborador",
-    message:
-      "Tem certeza que deseja encerrar " +
-      nomeColaborador(pc) +
-      "? Um título será gerado.",
+    title: 'Encerrar Colaborador',
+    message: 'Tem certeza que deseja encerrar ' + nomeColaborador(pc) + '? Um título será gerado.',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.encerrar(route.params.codperiodo, pc.codperiodocolaborador);
+      await sRh.encerrar(route.params.codperiodo, pc.codperiodocolaborador)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador encerrado",
-      });
-      await sRh.getColaboradores(route.params.codperiodo);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador encerrado',
+      })
+      await sRh.getColaboradores(route.params.codperiodo)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao encerrar"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao encerrar'),
+      })
     }
-  });
-};
+  })
+}
 
 const estornar = (pc) => {
   $q.dialog({
-    title: "Estornar Encerramento",
+    title: 'Estornar Encerramento',
     message:
-      "Tem certeza que deseja estornar o encerramento de " +
+      'Tem certeza que deseja estornar o encerramento de ' +
       nomeColaborador(pc) +
-      "? O título será cancelado.",
+      '? O título será cancelado.',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sRh.estornar(route.params.codperiodo, pc.codperiodocolaborador);
+      await sRh.estornar(route.params.codperiodo, pc.codperiodocolaborador)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Encerramento estornado",
-      });
-      await sRh.getColaboradores(route.params.codperiodo);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Encerramento estornado',
+      })
+      await sRh.getColaboradores(route.params.codperiodo)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao estornar"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao estornar'),
+      })
     }
-  });
-};
+  })
+}
 </script>
 
 <template>
@@ -300,7 +292,9 @@ const estornar = (pc) => {
           flat
           dense
           size="sm"
-          :label="selecionados.length === disponiveis.length ? 'Desmarcar todos' : 'Selecionar todos'"
+          :label="
+            selecionados.length === disponiveis.length ? 'Desmarcar todos' : 'Selecionar todos'
+          "
           color="primary"
           @click="selecionarTodos()"
         />
@@ -311,18 +305,12 @@ const estornar = (pc) => {
       <q-card-section style="max-height: 400px; overflow-y: auto" class="q-pa-none">
         <q-inner-loading :showing="loadingDisponiveis" />
         <q-list separator v-if="!loadingDisponiveis && disponiveis.length > 0">
-          <q-item
-            v-for="c in disponiveis"
-            :key="c.codcolaborador"
-            tag="label"
-            clickable
-            v-ripple
-          >
+          <q-item v-for="c in disponiveis" :key="c.codcolaborador" tag="label" clickable v-ripple>
             <q-item-section side>
               <q-checkbox v-model="selecionados" :val="c.codcolaborador" />
             </q-item-section>
             <q-item-section>
-              <q-item-label>{{ c.fantasia || "—" }}</q-item-label>
+              <q-item-label>{{ c.fantasia || '—' }}</q-item-label>
               <q-item-label caption v-if="c.cargo">{{ c.cargo }}</q-item-label>
             </q-item-section>
           </q-item>
@@ -400,12 +388,7 @@ const estornar = (pc) => {
 
   <!-- CARDS POR UNIDADE -->
   <template v-for="unidade in agrupado" :key="unidade.codunidadenegocio">
-    <q-card
-      bordered
-      flat
-      class="q-mb-md"
-      :class="unidade.alerta ? 'bg-red-1' : ''"
-    >
+    <q-card bordered flat class="q-mb-md" :class="unidade.alerta ? 'bg-red-1' : ''">
       <q-card-section class="text-grey-9 text-overline">
         {{ unidade.descricao }}
       </q-card-section>
@@ -438,10 +421,7 @@ const estornar = (pc) => {
           </tr>
         </thead>
         <tbody>
-          <template
-            v-for="setor in unidade.setores"
-            :key="setor.codsetor"
-          >
+          <template v-for="setor in unidade.setores" :key="setor.codsetor">
             <!-- SETOR HEADER -->
             <tr v-if="setor.setor">
               <td
@@ -457,9 +437,7 @@ const estornar = (pc) => {
             <template
               v-for="item in setor.colaboradores"
               :key="
-                item.pc.codperiodocolaborador +
-                '-' +
-                (item.pcs?.codperiodocolaboradorsetor || 0)
+                item.pc.codperiodocolaborador + '-' + (item.pcs?.codperiodocolaboradorsetor || 0)
               "
             >
               <tr
@@ -468,17 +446,13 @@ const estornar = (pc) => {
                 :class="corLinha(item.pc)"
               >
                 <!-- COLUNAS AGRUPADAS (só primeira linha) -->
-                <td
-                  v-if="idx === 0"
-                  :rowspan="indicadoresLinha(item.pcs).length"
-                >
+                <td v-if="idx === 0" :rowspan="indicadoresLinha(item.pcs).length">
                   <router-link
                     :to="{
                       name: 'rhColaboradorDetalhe',
                       params: {
                         codperiodo: route.params.codperiodo,
-                        codperiodocolaborador:
-                          item.pc.codperiodocolaborador,
+                        codperiodocolaborador: item.pc.codperiodocolaborador,
                       },
                     }"
                     class="text-primary"
@@ -491,20 +465,20 @@ const estornar = (pc) => {
                   :rowspan="indicadoresLinha(item.pcs).length"
                   class="text-right"
                 >
-                  {{
-                    item.pcs
-                      ? item.pcs.percentualrateio + "%"
-                      : "—"
-                  }}
+                  {{ item.pcs ? item.pcs.percentualrateio + '%' : '—' }}
                 </td>
                 <td
                   v-if="idx === 0"
                   :rowspan="indicadoresLinha(item.pcs).length"
                   class="text-right"
-                  :class="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'text-red' : ''"
-                  :style="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'cursor: help' : ''"
+                  :class="
+                    item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'text-red' : ''
+                  "
+                  :style="
+                    item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo ? 'cursor: help' : ''
+                  "
                 >
-                  {{ item.pcs ? item.pcs.diastrabalhados : "—" }}
+                  {{ item.pcs ? item.pcs.diastrabalhados : '—' }}
                   <q-tooltip v-if="item.pcs && item.pcs.diastrabalhados !== diasUteisPeriodo">
                     Dias úteis do período: {{ diasUteisPeriodo }}
                   </q-tooltip>
@@ -540,26 +514,15 @@ const estornar = (pc) => {
                   <span v-else>—</span>
                 </td>
                 <td class="text-right">
-                  {{
-                    vendasInd(ind) != null
-                      ? formataNumero(vendasInd(ind))
-                      : "—"
-                  }}
+                  {{ vendasInd(ind) != null ? formataNumero(vendasInd(ind)) : '—' }}
                 </td>
                 <td class="text-right">
-                  {{
-                    metaInd(ind) != null
-                      ? formataNumero(metaInd(ind))
-                      : "—"
-                  }}
+                  {{ metaInd(ind) != null ? formataNumero(metaInd(ind)) : '—' }}
                 </td>
                 <td class="text-right">
                   <span
                     v-if="atingimentoInd(ind) != null"
-                    :class="
-                      'text-weight-bold text-' +
-                      corProgresso(atingimentoInd(ind))
-                    "
+                    :class="'text-weight-bold text-' + corProgresso(atingimentoInd(ind))"
                   >
                     {{ formataPercentual(atingimentoInd(ind)) }}
                   </span>
@@ -580,14 +543,8 @@ const estornar = (pc) => {
                   class="text-center"
                 >
                   <q-badge
-                    :color="
-                      item.pc.status === 'A' ? 'green' : 'blue'
-                    "
-                    :label="
-                      item.pc.status === 'A'
-                        ? 'Aberto'
-                        : 'Encerrado'
-                    "
+                    :color="item.pc.status === 'A' ? 'green' : 'blue'"
+                    :label="item.pc.status === 'A' ? 'Aberto' : 'Encerrado'"
                   />
                 </td>
                 <td
@@ -606,8 +563,7 @@ const estornar = (pc) => {
                       name: 'rhColaboradorDetalhe',
                       params: {
                         codperiodo: route.params.codperiodo,
-                        codperiodocolaborador:
-                          item.pc.codperiodocolaborador,
+                        codperiodocolaborador: item.pc.codperiodocolaborador,
                       },
                     }"
                   >
@@ -670,10 +626,7 @@ const estornar = (pc) => {
     </q-card>
   </template>
 
-  <div
-    v-if="agrupado.length === 0"
-    class="q-pa-md text-center text-grey"
-  >
+  <div v-if="agrupado.length === 0" class="q-pa-md text-center text-grey">
     Nenhum colaborador encontrado
   </div>
 </template>

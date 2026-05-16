@@ -1,83 +1,80 @@
 <script setup>
-import { formataDataIso } from "@components/formatters";
-import { ref, watch, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { GrupoEconomicoStore } from "src/stores/GrupoEconomico";
-import Chart from "chart.js/auto";
-import SelectPessoas from "components/pessoa/SelectPessoas.vue";
-import moment from "moment";
+import { formataDataIso } from '@components/formatters'
+import { ref, watch, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
+import Chart from 'chart.js/auto'
+import SelectPessoas from 'components/pessoa/SelectPessoas.vue'
+import moment from 'moment'
 
-const $q = useQuasar();
-const route = useRoute();
-const sGrupoEconomico = GrupoEconomicoStore();
+const $q = useQuasar()
+const route = useRoute()
+const sGrupoEconomico = GrupoEconomicoStore()
 
-const canvasRef = ref(null);
-const graficoInstance = ref(null);
+const canvasRef = ref(null)
+const graficoInstance = ref(null)
 const filtroPessoa = ref({
-  desde: formataDataIso(moment().subtract(1, "year").startOf("month").toDate()),
+  desde: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
   codpessoa: null,
-});
+})
 
 const opcoesDesde = [
   {
-    label: "Este Ano",
-    value: formataDataIso(moment().startOf("year").toDate()),
+    label: 'Este Ano',
+    value: formataDataIso(moment().startOf('year').toDate()),
   },
   {
-    label: "1 Ano",
-    value: formataDataIso(moment().subtract(1, "year").startOf("month").toDate()),
+    label: '1 Ano',
+    value: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
   },
   {
-    label: "2 Anos",
-    value: formataDataIso(moment().subtract(2, "year").startOf("month").toDate()),
+    label: '2 Anos',
+    value: formataDataIso(moment().subtract(2, 'year').startOf('month').toDate()),
   },
-  { label: "Tudo", value: null },
-];
+  { label: 'Tudo', value: null },
+]
 
 const montaGrafico = async () => {
   try {
-    const ret = await sGrupoEconomico.getTopProdutos(
-      route.params.id,
-      filtroPessoa.value
-    );
+    const ret = await sGrupoEconomico.getTopProdutos(route.params.id, filtroPessoa.value)
 
-    const valortotal = ret.data.map((v) => v.valortotal);
-    const produtos = ret.data.map((v) => v.produto);
+    const valortotal = ret.data.map((v) => v.valortotal)
+    const produtos = ret.data.map((v) => v.produto)
 
     if (graficoInstance.value) {
-      graficoInstance.value.destroy();
+      graficoInstance.value.destroy()
     }
 
     graficoInstance.value = new Chart(canvasRef.value, {
-      type: "doughnut",
+      type: 'doughnut',
       data: {
         labels: produtos,
-        datasets: [{ label: "Valor Total", data: valortotal }],
+        datasets: [{ label: 'Valor Total', data: valortotal }],
       },
       options: {
         responsive: true,
         plugins: {
-          legend: { position: "top" },
+          legend: { position: 'top' },
           title: { display: true },
         },
       },
-    });
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: error.response?.data?.message || "Erro ao carregar top produtos",
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: error.response?.data?.message || 'Erro ao carregar top produtos',
+    })
   }
-};
+}
 
-watch(filtroPessoa, () => montaGrafico(), { deep: true });
+watch(filtroPessoa, () => montaGrafico(), { deep: true })
 
 onMounted(() => {
-  montaGrafico();
-});
+  montaGrafico()
+})
 </script>
 
 <template>
@@ -89,10 +86,7 @@ onMounted(() => {
     <q-card-section>
       <div class="row q-col-gutter-md">
         <div class="col-md-6 col-xs-12">
-          <select-pessoas
-            label="Filtrar pessoa"
-            v-model="filtroPessoa.codpessoa"
-          />
+          <select-pessoas label="Filtrar pessoa" v-model="filtroPessoa.codpessoa" />
         </div>
         <div class="col-md-6 col-xs-12">
           <q-select

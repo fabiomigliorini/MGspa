@@ -1,56 +1,59 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import { formataFromNow, formataCpf, formataCnpj, formataCelularComDDD, formataCnpjEcpf } from "@components/formatters";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
-import SelectBanco from "components/pessoa/SelectBanco.vue";
-import MgInputFormatado from "@components/MgInputFormatado.vue";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import { guardaToken } from 'src/stores'
+import {
+  formataFromNow,
+  formataCpf,
+  formataCnpj,
+  formataCelularComDDD,
+  formataCnpjEcpf,
+} from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import SelectBanco from 'components/pessoa/SelectBanco.vue'
+import MgInputFormatado from '@components/MgInputFormatado.vue'
 
-const $q = useQuasar();
-const sPessoa = pessoaStore();
-const route = useRoute();
-const user = guardaToken();
-const filtroConta = ref("ativos");
+const $q = useQuasar()
+const sPessoa = pessoaStore()
+const route = useRoute()
+const user = guardaToken()
+const filtroConta = ref('ativos')
 const contasFiltradas = computed(() => {
-  const lista = sPessoa.item?.PessoaContaS || [];
-  if (filtroConta.value === "ativos") return lista.filter((x) => !x.inativo);
-  return lista;
-});
+  const lista = sPessoa.item?.PessoaContaS || []
+  if (filtroConta.value === 'ativos') return lista.filter((x) => !x.inativo)
+  return lista
+})
 
-const dialogNovaConta = ref(false);
-const modelContaBancaria = ref({});
-const editarConta = ref(false);
-const codpessoaconta = ref([]);
-const optionsContaEditar = ref([]);
+const dialogNovaConta = ref(false)
+const modelContaBancaria = ref({})
+const editarConta = ref(false)
+const codpessoaconta = ref([])
+const optionsContaEditar = ref([])
 
 const novaContaBancaria = async () => {
-  modelContaBancaria.value.codpessoa = route.params.id;
+  modelContaBancaria.value.codpessoa = route.params.id
   try {
-    const ret = await sPessoa.novaContaBancaria(
-      route.params.id,
-      modelContaBancaria.value
-    );
+    const ret = await sPessoa.novaContaBancaria(route.params.id, modelContaBancaria.value)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Conta Criada!",
-      });
-      dialogNovaConta.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Conta Criada!',
+      })
+      dialogNovaConta.value = false
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "warning",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'warning',
       message: error.response.data.message,
-    });
+    })
   }
-};
+}
 
 const editarContaBancaria = async (
   cod,
@@ -65,146 +68,140 @@ const editarContaBancaria = async (
   pixaleatoria,
   tipo,
   titular,
-  observacoes
+  observacoes,
 ) => {
-  dialogNovaConta.value = true;
-  editarConta.value = true;
-  codpessoaconta.value = cod;
+  dialogNovaConta.value = true
+  editarConta.value = true
+  codpessoaconta.value = cod
 
   modelContaBancaria.value = {
     banco: codbanco,
     cnpj: cnpj,
     agencia: agencia,
     conta: conta,
-    pixcpf: pixcpf ? pixcpf.toString().padStart(11, "0") : null,
-    pixcnpj: pixcnpj ? pixcnpj.toString().padStart(14, "0") : null,
+    pixcpf: pixcpf ? pixcpf.toString().padStart(11, '0') : null,
+    pixcnpj: pixcnpj ? pixcnpj.toString().padStart(14, '0') : null,
     pixtelefone: pixtelefone,
     pixemail: pixemail,
     pixaleatoria: pixaleatoria,
     tipo: tipo,
     titular: titular,
     observacoes: observacoes,
-  };
+  }
 
-  if (modelContaBancaria.value.agencia)
-    modelContaBancaria.value.radio = "bancaria";
-  if (modelContaBancaria.value.pixcpf)
-    modelContaBancaria.value.radio = "pixcpf";
-  if (modelContaBancaria.value.pixcnpj)
-    modelContaBancaria.value.radio = "pixcnpj";
-  if (modelContaBancaria.value.pixtelefone)
-    modelContaBancaria.value.radio = "pixtelefone";
-  if (modelContaBancaria.value.pixemail)
-    modelContaBancaria.value.radio = "pixemail";
-  if (modelContaBancaria.value.pixaleatoria)
-    modelContaBancaria.value.radio = "pixaleatoria";
+  if (modelContaBancaria.value.agencia) modelContaBancaria.value.radio = 'bancaria'
+  if (modelContaBancaria.value.pixcpf) modelContaBancaria.value.radio = 'pixcpf'
+  if (modelContaBancaria.value.pixcnpj) modelContaBancaria.value.radio = 'pixcnpj'
+  if (modelContaBancaria.value.pixtelefone) modelContaBancaria.value.radio = 'pixtelefone'
+  if (modelContaBancaria.value.pixemail) modelContaBancaria.value.radio = 'pixemail'
+  if (modelContaBancaria.value.pixaleatoria) modelContaBancaria.value.radio = 'pixaleatoria'
 
-  const ret = await sPessoa.selectBanco({ codbanco: codbanco });
-  optionsContaEditar.value = [ret.data[0]];
-};
+  const ret = await sPessoa.selectBanco({ codbanco: codbanco })
+  optionsContaEditar.value = [ret.data[0]]
+}
 
 const salvarConta = async () => {
   try {
     const ret = await sPessoa.salvarEdicaoContaBancaria(
       route.params.id,
       codpessoaconta.value,
-      modelContaBancaria.value
-    );
+      modelContaBancaria.value,
+    )
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Conta Bancária alterada!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Conta Bancária alterada!',
+      })
       const i = sPessoa.item.PessoaContaS.findIndex(
-        (item) => item.codpessoaconta === codpessoaconta.value
-      );
-      sPessoa.item.PessoaContaS[i] = ret.data.data;
-      dialogNovaConta.value = false;
-      editarConta.value = false;
+        (item) => item.codpessoaconta === codpessoaconta.value,
+      )
+      sPessoa.item.PessoaContaS[i] = ret.data.data
+      dialogNovaConta.value = false
+      editarConta.value = false
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
+    })
   }
-};
+}
 
 const excluirConta = async (cod) => {
   $q.dialog({
-    title: "Excluir Conta Bancária",
-    message: "Tem certeza que deseja excluir essa conta?",
+    title: 'Excluir Conta Bancária',
+    message: 'Tem certeza que deseja excluir essa conta?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sPessoa.excluirContaBancaria(route.params.id, cod);
+      await sPessoa.excluirContaBancaria(route.params.id, cod)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Conta excluida",
-      });
-      sPessoa.get(route.params.id);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Conta excluida',
+      })
+      sPessoa.get(route.params.id)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 const inativar = async (cod) => {
   try {
-    const ret = await sPessoa.contaBancariaInativar(cod);
+    const ret = await sPessoa.contaBancariaInativar(cod)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Inativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Inativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const ativar = async (cod) => {
   try {
-    const ret = await sPessoa.contaBancariaAtivar(cod);
+    const ret = await sPessoa.contaBancariaAtivar(cod)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Ativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Ativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const submit = () => {
-  editarConta.value === false ? novaContaBancaria() : salvarConta();
-};
+  editarConta.value === false ? novaContaBancaria() : salvarConta()
+}
 </script>
 
 <template>
@@ -271,9 +268,7 @@ const submit = () => {
               :banco-editar="optionsContaEditar"
               :rules="[
                 (val) =>
-                  (modelContaBancaria.radio === 'bancaria' &&
-                    val !== null &&
-                    val !== undefined) ||
+                  (modelContaBancaria.radio === 'bancaria' && val !== null && val !== undefined) ||
                   'Banco Obrigatório',
               ]"
             />
@@ -293,18 +288,13 @@ const submit = () => {
               label="Tipo"
               :rules="[
                 (val) =>
-                  (modelContaBancaria.radio === 'bancaria' &&
-                    val !== null &&
-                    val !== undefined) ||
+                  (modelContaBancaria.radio === 'bancaria' && val !== null && val !== undefined) ||
                   'Tipo Obrigatório',
               ]"
             />
 
             <div class="row">
-              <div
-                class="col-6 q-pr-md"
-                v-if="modelContaBancaria.radio === 'bancaria'"
-              >
+              <div class="col-6 q-pr-md" v-if="modelContaBancaria.radio === 'bancaria'">
                 <q-input
                   outlined
                   v-model="modelContaBancaria.agencia"
@@ -319,10 +309,7 @@ const submit = () => {
                   ]"
                 />
               </div>
-              <div
-                class="col-6"
-                v-if="modelContaBancaria.radio === 'bancaria'"
-              >
+              <div class="col-6" v-if="modelContaBancaria.radio === 'bancaria'">
                 <q-input
                   outlined
                   v-model="modelContaBancaria.conta"
@@ -338,10 +325,7 @@ const submit = () => {
                 />
               </div>
 
-              <div
-                class="col-6 q-pr-md q-pt-md"
-                v-if="modelContaBancaria.radio === 'pixcpf'"
-              >
+              <div class="col-6 q-pr-md q-pt-md" v-if="modelContaBancaria.radio === 'pixcpf'">
                 <q-input
                   outlined
                   v-model="modelContaBancaria.pixcpf"
@@ -360,10 +344,7 @@ const submit = () => {
                 />
               </div>
 
-              <div
-                class="col-6 q-pt-md"
-                v-if="modelContaBancaria.radio === 'pixcnpj'"
-              >
+              <div class="col-6 q-pt-md" v-if="modelContaBancaria.radio === 'pixcnpj'">
                 <q-input
                   outlined
                   v-model="modelContaBancaria.pixcnpj"
@@ -380,10 +361,7 @@ const submit = () => {
                   ]"
                 />
               </div>
-              <div
-                class="col-6 q-pr-md q-pt-md"
-                v-if="modelContaBancaria.radio === 'pixtelefone'"
-              >
+              <div class="col-6 q-pr-md q-pt-md" v-if="modelContaBancaria.radio === 'pixtelefone'">
                 <q-input
                   outlined
                   v-model="modelContaBancaria.pixtelefone"
@@ -400,10 +378,7 @@ const submit = () => {
                   unmasked-value
                 />
               </div>
-              <div
-                class="col-6 q-pt-md"
-                v-if="modelContaBancaria.radio === 'pixemail'"
-              >
+              <div class="col-6 q-pt-md" v-if="modelContaBancaria.radio === 'pixemail'">
                 <q-input
                   outlined
                   v-model="modelContaBancaria.pixemail"
@@ -497,19 +472,12 @@ const submit = () => {
         size="sm"
         color="primary"
         v-if="user.verificaPermissaoUsuario('Publico')"
-        @click="
-          (dialogNovaConta = true),
-            (editarConta = false),
-            (modelContaBancaria = {})
-        "
+        @click=";(dialogNovaConta = true), (editarConta = false), (modelContaBancaria = {})"
       />
     </q-card-section>
 
     <q-list v-if="contasFiltradas.length > 0">
-      <template
-        v-for="contas in contasFiltradas"
-        v-bind:key="contas.codpessoaconta"
-      >
+      <template v-for="contas in contasFiltradas" v-bind:key="contas.codpessoaconta">
         <q-separator inset />
         <q-item>
           <q-item-section avatar>
@@ -524,23 +492,14 @@ const submit = () => {
           <q-item-section>
             <q-item-label :class="contas.inativo ? 'text-strike' : null">
               <span v-if="contas.agencia && contas.conta">
-                {{ contas.tipo == 1 ? "Corrente" : "Poupança" }},
-                {{ contas.nomeBanco }}, {{ contas.banco }},
-                {{ contas.agencia }}, {{ contas.conta }}
+                {{ contas.tipo == 1 ? 'Corrente' : 'Poupança' }}, {{ contas.nomeBanco }},
+                {{ contas.banco }}, {{ contas.agencia }}, {{ contas.conta }}
               </span>
               <span v-if="contas.pixcpf">
-                {{
-                  formataCpf(
-                    contas.pixcpf.toString().padStart(11, "0")
-                  )
-                }}
+                {{ formataCpf(contas.pixcpf.toString().padStart(11, '0')) }}
               </span>
               <span v-if="contas.pixcnpj">
-                {{
-                  formataCnpj(
-                    contas.pixcnpj.toString().padStart(14, "0")
-                  )
-                }}
+                {{ formataCnpj(contas.pixcnpj.toString().padStart(14, '0')) }}
               </span>
               <span v-if="contas.pixtelefone">
                 {{ formataCelularComDDD(contas.pixtelefone) }}
@@ -572,10 +531,7 @@ const submit = () => {
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
+            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat
@@ -598,7 +554,7 @@ const submit = () => {
                     contas.pixaleatoria,
                     contas.tipo,
                     contas.titular,
-                    contas.observacoes
+                    contas.observacoes,
                   )
                 "
               >
@@ -650,9 +606,7 @@ const submit = () => {
         </q-item>
       </template>
     </q-list>
-    <div v-else class="q-pa-md text-center text-grey">
-      Nenhuma conta bancária cadastrada
-    </div>
+    <div v-else class="q-pa-md text-center text-grey">Nenhuma conta bancária cadastrada</div>
   </q-card>
 </template>
 

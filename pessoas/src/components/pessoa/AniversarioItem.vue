@@ -1,5 +1,5 @@
 <script setup>
-import { formataDataAbreviada } from "@components/formatters";
+import { formataDataAbreviada } from '@components/formatters'
 
 // Props
 const props = defineProps({
@@ -9,59 +9,59 @@ const props = defineProps({
   },
   emptyMessage: {
     type: String,
-    default: "Nenhum aniversário encontrado",
+    default: 'Nenhum aniversário encontrado',
   },
-});
+})
 
 // Computed
-const idadeClass = "text-body1 text-grey-7";
+const idadeClass = 'text-body1 text-grey-7'
 
-const listStyle = "max-height: 400px; overflow-y: auto";
+const listStyle = 'max-height: 400px; overflow-y: auto'
 
 // Functions
 const formataTipo = (item) => {
   if (item.fisica === false) {
-    return "Fundação da Empresa";
+    return 'Fundação da Empresa'
   }
-  if (item.tipo === "Empresa") {
-    return "Tempo de Colaboração";
+  if (item.tipo === 'Empresa') {
+    return 'Tempo de Colaboração'
   }
-  return item.tipo;
-};
+  return item.tipo
+}
 
 const getCategoria = (item) => {
   if (item.colaborador) {
-    return "Colaborador";
+    return 'Colaborador'
   }
   if (item.cliente) {
-    return "Cliente";
+    return 'Cliente'
   }
   if (item.fornecedor) {
-    return "Fornecedor";
+    return 'Fornecedor'
   }
-  return null;
-};
+  return null
+}
 
 const formataCaption = (item) => {
-  const data = formataDataAbreviada(item.data, 0);
-  const categoria = getCategoria(item);
-  const tipo = formataTipo(item);
+  const data = formataDataAbreviada(item.data, 0)
+  const categoria = getCategoria(item)
+  const tipo = formataTipo(item)
 
-  return categoria ? `${data} • ${categoria} • ${tipo}` : `${data} • ${tipo}`;
-};
+  return categoria ? `${data} • ${categoria} • ${tipo}` : `${data} • ${tipo}`
+}
 
 const getIcone = (item) => {
   // Pessoa jurídica (empresa/organização)
   if (item.fisica === false) {
-    return "business";
+    return 'business'
   }
   // Aniversário de contratação (tempo de empresa)
-  if (item.tipo === "Empresa") {
-    return "workspace_premium";
+  if (item.tipo === 'Empresa') {
+    return 'workspace_premium'
   }
   // Aniversário de nascimento (idade)
-  return "cake";
-};
+  return 'cake'
+}
 </script>
 <template>
   <q-list v-if="items.length > 0" :style="listStyle">
@@ -95,7 +95,7 @@ const getIcone = (item) => {
               {{ item.idade }}
             </div>
             <div class="text-caption text-grey-6">
-              {{ item.idade === 1 ? "Ano" : "Anos" }}
+              {{ item.idade === 1 ? 'Ano' : 'Anos' }}
             </div>
           </div>
         </q-item-section>

@@ -1,40 +1,40 @@
 <script setup>
-import { onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import CardDetalhesPessoa from "components/pessoa/CardDetalhesPessoa.vue";
-import CardCliente from "components/pessoa/CardCliente.vue";
-import CardHistoricoCobranca from "components/pessoa/CardHistoricoCobranca.vue";
-import CardColaborador from "components/pessoa/CardColaborador.vue";
-import CardTelefone from "components/pessoa/CardTelefone.vue";
-import CardEmail from "components/pessoa/CardEmail.vue";
-import CardEndereco from "components/pessoa/CardEndereco.vue";
-import CardPessoaConta from "components/pessoa/CardPessoaConta.vue";
-import CardDependentes from "components/pessoa/CardDependentes.vue";
-import CardArquivos from "components/pessoa/CardArquivos.vue";
-import CardRegistroSpc from "components/pessoa/CardRegistroSpc.vue";
-import CardCertidoes from "components/pessoa/CardCertidoes.vue";
-import MGLayout from "layouts/MGLayout.vue";
-import { formataFromNow } from "@components/formatters";
+import { onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import CardDetalhesPessoa from 'components/pessoa/CardDetalhesPessoa.vue'
+import CardCliente from 'components/pessoa/CardCliente.vue'
+import CardHistoricoCobranca from 'components/pessoa/CardHistoricoCobranca.vue'
+import CardColaborador from 'components/pessoa/CardColaborador.vue'
+import CardTelefone from 'components/pessoa/CardTelefone.vue'
+import CardEmail from 'components/pessoa/CardEmail.vue'
+import CardEndereco from 'components/pessoa/CardEndereco.vue'
+import CardPessoaConta from 'components/pessoa/CardPessoaConta.vue'
+import CardDependentes from 'components/pessoa/CardDependentes.vue'
+import CardArquivos from 'components/pessoa/CardArquivos.vue'
+import CardRegistroSpc from 'components/pessoa/CardRegistroSpc.vue'
+import CardCertidoes from 'components/pessoa/CardCertidoes.vue'
+import MGLayout from 'layouts/MGLayout.vue'
+import { formataFromNow } from '@components/formatters'
 
-const route = useRoute();
-const sPessoa = pessoaStore();
+const route = useRoute()
+const sPessoa = pessoaStore()
 function carregarPessoa(id) {
-  sPessoa.get(id);
+  sPessoa.get(id)
 }
 
 onMounted(() => {
-  carregarPessoa(route.params.id);
-});
+  carregarPessoa(route.params.id)
+})
 
 watch(
   () => route.params.id,
   (novoId) => {
     if (novoId) {
-      carregarPessoa(novoId);
+      carregarPessoa(novoId)
     }
-  }
-);
+  },
+)
 </script>
 
 <template>
@@ -44,14 +44,7 @@ watch(
     </template>
 
     <template #botaoVoltar>
-      <q-btn
-        flat
-        dense
-        round
-        :to="{ name: 'pessoa' }"
-        icon="arrow_back"
-        aria-label="Voltar"
-      />
+      <q-btn flat dense round :to="{ name: 'pessoa' }" icon="arrow_back" aria-label="Voltar" />
     </template>
 
     <template #content>
@@ -59,12 +52,7 @@ watch(
         <div v-if="sPessoa.item" style="max-width: 1280px; margin: auto">
           <q-item class="q-pt-lg q-pb-sm">
             <q-item-section avatar>
-              <q-avatar
-                color="grey-8"
-                text-color="grey-4"
-                size="80px"
-                v-if="sPessoa.item.fantasia"
-              >
+              <q-avatar color="grey-8" text-color="grey-4" size="80px" v-if="sPessoa.item.fantasia">
                 {{ sPessoa.item.fantasia.slice(0, 1) }}
               </q-avatar>
             </q-item-section>

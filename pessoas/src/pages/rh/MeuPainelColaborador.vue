@@ -1,60 +1,56 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute, useRouter } from "vue-router";
-import { rhStore } from "src/stores/rh";
-import { formataData, formataFromNow } from "@components/formatters";
-import { extrairErro } from "src/utils/rhFormatters";
-import CardIndicadores from "src/components/rh/CardIndicadores.vue";
-import CardRubricas from "src/components/rh/CardRubricas.vue";
-import CardSetores from "src/components/rh/CardSetores.vue";
+import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
+import { rhStore } from 'src/stores/rh'
+import { formataData, formataFromNow } from '@components/formatters'
+import { extrairErro } from 'src/utils/rhFormatters'
+import CardIndicadores from 'src/components/rh/CardIndicadores.vue'
+import CardRubricas from 'src/components/rh/CardRubricas.vue'
+import CardSetores from 'src/components/rh/CardSetores.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const router = useRouter();
-const sRh = rhStore();
+const $q = useQuasar()
+const route = useRoute()
+const router = useRouter()
+const sRh = rhStore()
 
-const loading = ref(false);
-const colaborador = ref(null);
+const loading = ref(false)
+const colaborador = ref(null)
 
-const nome = computed(
-  () => colaborador.value?.colaborador?.pessoa?.fantasia || "—"
-);
+const nome = computed(() => colaborador.value?.colaborador?.pessoa?.fantasia || '—')
 const cargo = computed(() => {
-  const cargos = colaborador.value?.colaborador?.colaborador_cargo_s || [];
-  return cargos.length > 0 ? cargos[0].cargo?.cargo : null;
-});
-const setores = computed(
-  () => colaborador.value?.periodo_colaborador_setor_s || []
-);
+  const cargos = colaborador.value?.colaborador?.colaborador_cargo_s || []
+  return cargos.length > 0 ? cargos[0].cargo?.cargo : null
+})
+const setores = computed(() => colaborador.value?.periodo_colaborador_setor_s || [])
 const rubricas = computed(() =>
   (colaborador.value?.colaborador_rubrica_s || [])
     .slice()
-    .sort((a, b) => a.descricao.localeCompare(b.descricao, "pt-BR"))
-);
-const indicadores = computed(() => colaborador.value?.indicadores || []);
+    .sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR')),
+)
+const indicadores = computed(() => colaborador.value?.indicadores || [])
 
 const carregar = async () => {
-  loading.value = true;
+  loading.value = true
   try {
     const ret = await sRh.getMeuPainelColaborador(
       route.params.codperiodo,
-      route.params.codperiodocolaborador
-    );
-    colaborador.value = ret.colaborador;
+      route.params.codperiodocolaborador,
+    )
+    colaborador.value = ret.colaborador
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar colaborador"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar colaborador'),
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
-onMounted(() => carregar());
+onMounted(() => carregar())
 </script>
 
 <template>
@@ -71,19 +67,13 @@ onMounted(() => carregar());
           <div class="text-h5 text-grey-9">{{ nome }}</div>
           <div class="text-body2 text-grey-7" v-if="cargo">{{ cargo }}</div>
           <div class="text-caption text-grey" v-if="colaborador.colaborador?.contratacao">
-            Contratação: {{ formataData(colaborador.colaborador.contratacao) }}
-            ({{ formataFromNow(colaborador.colaborador.contratacao) }})
+            Contratação: {{ formataData(colaborador.colaborador.contratacao) }} ({{
+              formataFromNow(colaborador.colaborador.contratacao)
+            }})
           </div>
         </q-item-section>
         <q-item-section side>
-          <q-btn
-            flat
-            dense
-            round
-            icon="arrow_back"
-            color="grey-7"
-            @click="router.back()"
-          >
+          <q-btn flat dense round icon="arrow_back" color="grey-7" @click="router.back()">
             <q-tooltip>Voltar</q-tooltip>
           </q-btn>
         </q-item-section>
@@ -125,10 +115,7 @@ onMounted(() => carregar());
       </div>
     </template>
 
-    <div
-      v-else-if="!loading && !colaborador"
-      class="q-pa-xl text-center text-grey"
-    >
+    <div v-else-if="!loading && !colaborador" class="q-pa-xl text-center text-grey">
       Colaborador não encontrado
     </div>
   </div>

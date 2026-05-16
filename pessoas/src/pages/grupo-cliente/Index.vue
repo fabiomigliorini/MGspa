@@ -1,185 +1,184 @@
 <script setup>
-import { defineAsyncComponent, ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { grupoClienteStore } from "src/stores/grupo-cliente";
+import { defineAsyncComponent, ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { grupoClienteStore } from 'src/stores/grupo-cliente'
 
-const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
+const MGLayout = defineAsyncComponent(() => import('layouts/MGLayout.vue'))
 
-const $q = useQuasar();
-const store = grupoClienteStore();
+const $q = useQuasar()
+const store = grupoClienteStore()
 
-const grupos = ref([]);
-const loading = ref(false);
-const dialog = ref(false);
-const editando = ref(false);
-const model = ref({ grupocliente: "" });
+const grupos = ref([])
+const loading = ref(false)
+const dialog = ref(false)
+const editando = ref(false)
+const model = ref({ grupocliente: '' })
 const filtro = ref({
   grupocliente: null,
-  status: "ativos",
-});
+  status: 'ativos',
+})
 
 const statusOptions = [
-  { label: "Ativos", value: "ativos" },
-  { label: "Inativos", value: "inativos" },
-  { label: "Todos", value: "todos" },
-];
+  { label: 'Ativos', value: 'ativos' },
+  { label: 'Inativos', value: 'inativos' },
+  { label: 'Todos', value: 'todos' },
+]
 
 const pagination = ref({
   rowsPerPage: 50,
-});
+})
 
 const columns = [
   {
-    name: "codgrupocliente",
-    label: "Código",
-    field: "codgrupocliente",
-    align: "left",
+    name: 'codgrupocliente',
+    label: 'Código',
+    field: 'codgrupocliente',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "grupocliente",
-    label: "Descrição",
-    field: "grupocliente",
-    align: "left",
+    name: 'grupocliente',
+    label: 'Descrição',
+    field: 'grupocliente',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "inativo",
-    label: "Status",
-    field: "inativo",
-    align: "center",
+    name: 'inativo',
+    label: 'Status',
+    field: 'inativo',
+    align: 'center',
   },
   {
-    name: "acoes",
-    label: "Ações",
-    field: "acoes",
-    align: "center",
+    name: 'acoes',
+    label: 'Ações',
+    field: 'acoes',
+    align: 'center',
   },
-];
+]
 
 const buscar = async () => {
-  loading.value = true;
-  $q.loadingBar.start();
+  loading.value = true
+  $q.loadingBar.start()
   try {
-    store.filtro = filtro.value;
-    await store.index();
-    grupos.value = store.grupos;
+    store.filtro = filtro.value
+    await store.index()
+    grupos.value = store.grupos
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao carregar grupos de cliente",
-    });
+      type: 'negative',
+      message: 'Erro ao carregar grupos de cliente',
+    })
   } finally {
-    loading.value = false;
-    $q.loadingBar.stop();
+    loading.value = false
+    $q.loadingBar.stop()
   }
-};
+}
 
 const abrirNovo = () => {
-  model.value = { grupocliente: "" };
-  editando.value = false;
-  dialog.value = true;
-};
+  model.value = { grupocliente: '' }
+  editando.value = false
+  dialog.value = true
+}
 
 const abrirEditar = (item) => {
-  model.value = { ...item };
-  editando.value = true;
-  dialog.value = true;
-};
+  model.value = { ...item }
+  editando.value = true
+  dialog.value = true
+}
 
 const salvar = async () => {
-  if (!model.value.grupocliente || model.value.grupocliente.trim() === "") {
+  if (!model.value.grupocliente || model.value.grupocliente.trim() === '') {
     $q.notify({
-      type: "warning",
-      message: "Informe a descrição",
-    });
-    return;
+      type: 'warning',
+      message: 'Informe a descrição',
+    })
+    return
   }
 
-  loading.value = true;
+  loading.value = true
   try {
     if (editando.value) {
-      await store.update(model.value.codgrupocliente, model.value);
+      await store.update(model.value.codgrupocliente, model.value)
       $q.notify({
-        type: "positive",
-        message: "Grupo de cliente atualizado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grupo de cliente atualizado com sucesso',
+      })
     } else {
-      await store.store(model.value);
+      await store.store(model.value)
       $q.notify({
-        type: "positive",
-        message: "Grupo de cliente criado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grupo de cliente criado com sucesso',
+      })
     }
-    grupos.value = store.grupos;
-    dialog.value = false;
+    grupos.value = store.grupos
+    dialog.value = false
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao salvar grupo de cliente",
-    });
+      type: 'negative',
+      message: 'Erro ao salvar grupo de cliente',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const toggleInativo = async (item) => {
-  loading.value = true;
+  loading.value = true
   try {
     if (item.inativo) {
-      await store.ativar(item.codgrupocliente);
+      await store.ativar(item.codgrupocliente)
       $q.notify({
-        type: "positive",
-        message: "Grupo de cliente ativado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grupo de cliente ativado com sucesso',
+      })
     } else {
-      await store.inativar(item.codgrupocliente);
+      await store.inativar(item.codgrupocliente)
       $q.notify({
-        type: "positive",
-        message: "Grupo de cliente inativado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grupo de cliente inativado com sucesso',
+      })
     }
-    grupos.value = store.grupos;
+    grupos.value = store.grupos
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao alterar status",
-    });
+      type: 'negative',
+      message: 'Erro ao alterar status',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const excluir = (item) => {
   $q.dialog({
-    title: "Confirmar exclusão",
+    title: 'Confirmar exclusão',
     message: `Deseja realmente excluir o grupo "${item.grupocliente}"?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
-    loading.value = true;
+    loading.value = true
     try {
-      await store.destroy(item.codgrupocliente);
-      grupos.value = store.grupos;
+      await store.destroy(item.codgrupocliente)
+      grupos.value = store.grupos
       $q.notify({
-        type: "positive",
-        message: "Grupo de cliente excluído com sucesso",
-      });
+        type: 'positive',
+        message: 'Grupo de cliente excluído com sucesso',
+      })
     } catch (error) {
       $q.notify({
-        type: "negative",
-        message:
-          "Erro ao excluir grupo de cliente. Verifique se não está em uso.",
-      });
+        type: 'negative',
+        message: 'Erro ao excluir grupo de cliente. Verifique se não está em uso.',
+      })
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  });
-};
+  })
+}
 
 onMounted(() => {
-  buscar();
-});
+  buscar()
+})
 </script>
 
 <template>
@@ -199,12 +198,8 @@ onMounted(() => {
         >
           <template v-slot:body-cell-inativo="props">
             <q-td :props="props">
-              <q-chip
-                :color="props.row.inativo ? 'red' : 'green'"
-                text-color="white"
-                dense
-              >
-                {{ props.row.inativo ? "Inativo" : "Ativo" }}
+              <q-chip :color="props.row.inativo ? 'red' : 'green'" text-color="white" dense>
+                {{ props.row.inativo ? 'Inativo' : 'Ativo' }}
               </q-chip>
             </q-td>
           </template>
@@ -231,9 +226,7 @@ onMounted(() => {
                 color="grey-7"
                 @click="toggleInativo(props.row)"
               >
-                <q-tooltip>{{
-                  props.row.inativo ? "Ativar" : "Inativar"
-                }}</q-tooltip>
+                <q-tooltip>{{ props.row.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
               <q-btn
                 flat
@@ -261,9 +254,7 @@ onMounted(() => {
       <q-dialog v-model="dialog">
         <q-card style="min-width: 350px">
           <q-card-section>
-            <div class="text-h6">
-              {{ editando ? "Editar" : "Novo" }} Grupo de Cliente
-            </div>
+            <div class="text-h6">{{ editando ? 'Editar' : 'Novo' }} Grupo de Cliente</div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
@@ -279,13 +270,7 @@ onMounted(() => {
 
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey" v-close-popup />
-            <q-btn
-              flat
-              label="Salvar"
-              color="primary"
-              @click="salvar"
-              :loading="loading"
-            />
+            <q-btn flat label="Salvar" color="primary" @click="salvar" :loading="loading" />
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -306,13 +291,7 @@ onMounted(() => {
           </q-list>
         </q-card>
         <div class="q-pa-md q-gutter-md">
-          <q-input
-            outlined
-            v-model="filtro.grupocliente"
-            label="Buscar"
-            @change="buscar"
-            clearable
-          >
+          <q-input outlined v-model="filtro.grupocliente" label="Buscar" @change="buscar" clearable>
             <template v-slot:prepend>
               <q-icon name="search" />
             </template>

@@ -1,185 +1,202 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute, useRouter } from "vue-router";
-import { rhStore } from "src/stores/rh";
-import { guardaToken } from "src/stores";
-import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
-import { formataNumero, formataPercentual, formataTimestamp, formataCodNegocio } from "@components/formatters";
-import moment from "moment";
-import DialogEditarMeta from "./DialogEditarMeta.vue";
-import MgInputValor from "@components/MgInputValor.vue";
+import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute, useRouter } from 'vue-router'
+import { rhStore } from 'src/stores/rh'
+import { guardaToken } from 'src/stores'
+import {
+  corProgresso,
+  tipoIndicadorLabel,
+  tipoIndicadorColor,
+  extrairErro,
+} from 'src/utils/rhFormatters'
+import {
+  formataNumero,
+  formataPercentual,
+  formataTimestamp,
+  formataCodNegocio,
+} from '@components/formatters'
+import moment from 'moment'
+import DialogEditarMeta from './DialogEditarMeta.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const router = useRouter();
-const sRh = rhStore();
-const user = guardaToken();
+const $q = useQuasar()
+const route = useRoute()
+const router = useRouter()
+const sRh = rhStore()
+const user = guardaToken()
 
-const podeEditar = computed(() =>
-  user.verificaPermissaoUsuario("Recursos Humanos")
-);
+const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
 
-const loading = ref(false);
-const indicador = ref(null);
-const dialogMeta = ref(false);
-const lancamentos = ref([]);
-const pagina = ref(1);
-const loadingScroll = ref(false);
-const totalRegistros = ref(0);
+const loading = ref(false)
+const indicador = ref(null)
+const dialogMeta = ref(false)
+const lancamentos = ref([])
+const pagina = ref(1)
+const loadingScroll = ref(false)
+const totalRegistros = ref(0)
 
 // --- DIALOG LANÇAMENTO MANUAL ---
-const dialogLancamento = ref(false);
-const modelLancamento = ref({});
-const isNovoLancamento = computed(() => !modelLancamento.value.codindicadorlancamento);
+const dialogLancamento = ref(false)
+const modelLancamento = ref({})
+const isNovoLancamento = computed(() => !modelLancamento.value.codindicadorlancamento)
 
 // --- HELPERS ---
 
-const negocioUrl = (codnegocio) =>
-  process.env.APP_NEGOCIOS_URL + "/negocio/" + codnegocio;
+const negocioUrl = (codnegocio) => process.env.APP_NEGOCIOS_URL + '/negocio/' + codnegocio
 
 // --- COMPUTED ---
 
 const titulo = computed(() => {
-  if (!indicador.value) return "";
-  const ind = indicador.value;
-  let t = tipoIndicadorLabel(ind.tipo);
-  const un = ind.unidade_negocio?.descricao;
-  const setor = ind.setor?.setor;
+  if (!indicador.value) return ''
+  const ind = indicador.value
+  let t = tipoIndicadorLabel(ind.tipo)
+  const un = ind.unidade_negocio?.descricao
+  const setor = ind.setor?.setor
   if (un || setor) {
-    t += " — " + [un, setor].filter(Boolean).join(" / ");
+    t += ' — ' + [un, setor].filter(Boolean).join(' / ')
   }
-  return t;
-});
+  return t
+})
 
 const nomeColaborador = computed(() => {
-  if (!indicador.value?.colaborador) return null;
-  return indicador.value.colaborador.pessoa?.fantasia || null;
-});
+  if (!indicador.value?.colaborador) return null
+  return indicador.value.colaborador.pessoa?.fantasia || null
+})
 
-const valorAcumulado = computed(
-  () => parseFloat(indicador.value?.valoracumulado) || 0
-);
+const valorAcumulado = computed(() => parseFloat(indicador.value?.valoracumulado) || 0)
 
-const meta = computed(() => parseFloat(indicador.value?.meta) || null);
+const meta = computed(() => parseFloat(indicador.value?.meta) || null)
 
 const atingimento = computed(() => {
-  if (!valorAcumulado.value || !meta.value) return null;
-  return (valorAcumulado.value / meta.value) * 100;
-});
+  if (!valorAcumulado.value || !meta.value) return null
+  return (valorAcumulado.value / meta.value) * 100
+})
 
 // --- LIFECYCLE ---
 
 const carregar = async () => {
-  loading.value = true;
-  pagina.value = 1;
-  loadingScroll.value = false;
+  loading.value = true
+  pagina.value = 1
+  loadingScroll.value = false
   try {
-    const ret = await sRh.getExtrato(route.params.codindicador, 1);
-    indicador.value = ret.data.indicador;
-    lancamentos.value = ret.data.lancamentos;
-    totalRegistros.value = ret.meta.total;
+    const ret = await sRh.getExtrato(route.params.codindicador, 1)
+    indicador.value = ret.data.indicador
+    lancamentos.value = ret.data.lancamentos
+    totalRegistros.value = ret.meta.total
     if (ret.meta.current_page >= ret.meta.last_page) {
-      loadingScroll.value = true;
+      loadingScroll.value = true
     }
   } catch (error) {
     const msg =
-      error.response?.data?.message ||
-      error.response?.data?.erro ||
-      "Erro ao carregar extrato";
+      error.response?.data?.message || error.response?.data?.erro || 'Erro ao carregar extrato'
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: msg,
-    });
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const scrollLancamentos = async (index, done) => {
-  pagina.value++;
+  pagina.value++
   try {
-    const ret = await sRh.getExtrato(route.params.codindicador, pagina.value);
-    lancamentos.value.push(...ret.data.lancamentos);
+    const ret = await sRh.getExtrato(route.params.codindicador, pagina.value)
+    lancamentos.value.push(...ret.data.lancamentos)
     if (pagina.value >= ret.meta.last_page) {
-      loadingScroll.value = true;
+      loadingScroll.value = true
     }
-    done();
+    done()
   } catch {
-    done(true);
+    done(true)
   }
-};
+}
 
 // --- LANÇAMENTO MANUAL CRUD ---
-
 
 const abrirDialogLancamento = (lancamento = null) => {
   if (lancamento) {
     modelLancamento.value = {
       codindicadorlancamento: lancamento.codindicadorlancamento,
       valor: lancamento.valor,
-      descricao: lancamento.descricao || "",
-    };
+      descricao: lancamento.descricao || '',
+    }
   } else {
-    modelLancamento.value = { valor: null, descricao: "" };
+    modelLancamento.value = { valor: null, descricao: '' }
   }
-  dialogLancamento.value = true;
-};
+  dialogLancamento.value = true
+}
 
 const submitLancamento = async () => {
-  dialogLancamento.value = false;
+  dialogLancamento.value = false
   try {
     if (isNovoLancamento.value) {
       await sRh.lancamentoManual(route.params.codindicador, {
         valor: modelLancamento.value.valor,
         descricao: modelLancamento.value.descricao || null,
-      });
-      $q.notify({ color: "green-5", textColor: "white", icon: "done", message: "Lançamento criado" });
+      })
+      $q.notify({
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Lançamento criado',
+      })
     } else {
       await sRh.atualizarLancamento(modelLancamento.value.codindicadorlancamento, {
         valor: modelLancamento.value.valor,
         descricao: modelLancamento.value.descricao || null,
-      });
-      $q.notify({ color: "green-5", textColor: "white", icon: "done", message: "Lançamento atualizado" });
+      })
+      $q.notify({
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Lançamento atualizado',
+      })
     }
-    await carregar();
+    await carregar()
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar lançamento"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar lançamento'),
+    })
   }
-};
+}
 
 const excluirLancamento = (lancamento) => {
   $q.dialog({
-    title: "Excluir Lançamento",
+    title: 'Excluir Lançamento',
     message: `Excluir lançamento manual de ${formataNumero(lancamento.valor)}?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     try {
-      await sRh.excluirLancamento(lancamento.codindicadorlancamento);
-      $q.notify({ color: "green-5", textColor: "white", icon: "done", message: "Lançamento excluído" });
-      await carregar();
+      await sRh.excluirLancamento(lancamento.codindicadorlancamento)
+      $q.notify({
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Lançamento excluído',
+      })
+      await carregar()
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao excluir lançamento"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao excluir lançamento'),
+      })
     }
-  });
-};
+  })
+}
 
 onMounted(() => {
-  carregar();
-});
+  carregar()
+})
 </script>
 
 <template>
@@ -212,19 +229,10 @@ onMounted(() => {
           <div class="text-body2 text-grey-7" v-if="nomeColaborador">
             {{ nomeColaborador }}
           </div>
-          <div class="text-caption text-grey">
-            #{{ indicador.codindicador }}
-          </div>
+          <div class="text-caption text-grey">#{{ indicador.codindicador }}</div>
         </q-item-section>
         <q-item-section side>
-          <q-btn
-            flat
-            dense
-            round
-            icon="arrow_back"
-            color="grey-7"
-            @click="router.back()"
-          >
+          <q-btn flat dense round icon="arrow_back" color="grey-7" @click="router.back()">
             <q-tooltip>Voltar</q-tooltip>
           </q-btn>
         </q-item-section>
@@ -248,7 +256,7 @@ onMounted(() => {
               <q-card-section class="text-center">
                 <div class="text-caption text-grey">Meta</div>
                 <div class="text-h6 text-grey-9">
-                  {{ meta ? formataNumero(meta) : "—" }}
+                  {{ meta ? formataNumero(meta) : '—' }}
                   <q-btn
                     v-if="podeEditar"
                     flat
@@ -269,13 +277,9 @@ onMounted(() => {
                 <div class="text-caption text-grey">Atingimento</div>
                 <div
                   class="text-h6"
-                  :class="
-                    atingimento
-                      ? 'text-' + corProgresso(atingimento)
-                      : 'text-grey-9'
-                  "
+                  :class="atingimento ? 'text-' + corProgresso(atingimento) : 'text-grey-9'"
                 >
-                  {{ atingimento ? formataPercentual(atingimento) : "—" }}
+                  {{ atingimento ? formataPercentual(atingimento) : '—' }}
                 </div>
                 <q-linear-progress
                   v-if="atingimento"
@@ -302,11 +306,7 @@ onMounted(() => {
         </div>
 
         <!-- TABELA DE LANÇAMENTOS -->
-        <q-infinite-scroll
-          @load="scrollLancamentos"
-          :disable="loadingScroll"
-          :offset="200"
-        >
+        <q-infinite-scroll @load="scrollLancamentos" :disable="loadingScroll" :offset="200">
           <q-card bordered flat>
             <q-card-section class="text-grey-9 text-overline row items-center">
               EXTRATO
@@ -325,11 +325,7 @@ onMounted(() => {
               </q-btn>
             </q-card-section>
 
-            <q-markup-table
-              flat
-              separator="horizontal"
-              v-if="lancamentos.length > 0"
-            >
+            <q-markup-table flat separator="horizontal" v-if="lancamentos.length > 0">
               <thead>
                 <tr>
                   <th class="text-left">Data</th>
@@ -365,7 +361,7 @@ onMounted(() => {
                     <span v-else class="text-grey">—</span>
                   </td>
                   <td>
-                    {{ l.negocio?.pessoa?.fantasia || l.descricao || "—" }}
+                    {{ l.negocio?.pessoa?.fantasia || l.descricao || '—' }}
                   </td>
                   <td
                     class="text-right text-weight-medium"
@@ -374,18 +370,8 @@ onMounted(() => {
                     {{ formataNumero(l.valor) }}
                   </td>
                   <td class="text-center">
-                    <q-badge
-                      v-if="l.estorno"
-                      color="red"
-                      label="estorno"
-                      class="q-mr-xs"
-                    />
-                    <q-badge
-                      v-if="l.manual"
-                      color="orange"
-                      label="manual"
-                      class="q-mr-xs"
-                    />
+                    <q-badge v-if="l.estorno" color="red" label="estorno" class="q-mr-xs" />
+                    <q-badge v-if="l.manual" color="orange" label="manual" class="q-mr-xs" />
                     <template v-if="l.manual && podeEditar">
                       <q-btn
                         flat
@@ -414,9 +400,7 @@ onMounted(() => {
                 </tr>
               </tbody>
             </q-markup-table>
-            <div v-else class="q-pa-md text-center text-grey">
-              Nenhum lançamento encontrado
-            </div>
+            <div v-else class="q-pa-md text-center text-grey">Nenhum lançamento encontrado</div>
           </q-card>
 
           <template v-slot:loading>
@@ -428,18 +412,14 @@ onMounted(() => {
       </div>
     </template>
 
-    <DialogEditarMeta
-      v-model="dialogMeta"
-      :indicador="indicador"
-      @salvo="carregar()"
-    />
+    <DialogEditarMeta v-model="dialogMeta" :indicador="indicador" @salvo="carregar()" />
 
     <!-- DIALOG LANÇAMENTO MANUAL -->
     <q-dialog v-model="dialogLancamento">
       <q-card bordered flat style="width: 400px; max-width: 90vw">
         <q-form @submit="submitLancamento()">
           <q-card-section class="text-grey-9 text-overline">
-            {{ isNovoLancamento ? "NOVO LANÇAMENTO MANUAL" : "EDITAR LANÇAMENTO MANUAL" }}
+            {{ isNovoLancamento ? 'NOVO LANÇAMENTO MANUAL' : 'EDITAR LANÇAMENTO MANUAL' }}
           </q-card-section>
 
           <q-separator inset />
@@ -450,7 +430,7 @@ onMounted(() => {
               label="Valor"
               prefix="R$"
               autofocus
-              :rules="[(val) => val != null && val !== '' || 'Obrigatório']"
+              :rules="[(val) => (val != null && val !== '') || 'Obrigatório']"
             />
             <q-input
               outlined
@@ -463,13 +443,7 @@ onMounted(() => {
           <q-separator inset />
 
           <q-card-actions align="right" class="text-primary">
-            <q-btn
-              flat
-              label="Cancelar"
-              v-close-popup
-              tabindex="-1"
-              color="grey-8"
-            />
+            <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
             <q-btn flat label="Salvar" type="submit" />
           </q-card-actions>
         </q-form>
