@@ -1,32 +1,30 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { pdvStore } from "src/stores/pdv";
+import { ref, onMounted } from 'vue'
+import { pdvStore } from 'src/stores/pdv'
 
-const sPdv = pdvStore();
+const sPdv = pdvStore()
 
 onMounted(async () => {
-  const ret = await sPdv.selectFilail();
-  opcoes.value = ret.data;
-});
+  const ret = await sPdv.selectFilail()
+  opcoes.value = ret.data
+})
 
 const filterFn = async (val, update) => {
-  if (val === "") {
+  if (val === '') {
     update(async () => {
-      const ret = await sPdv.selectFilail();
-      opcoes.value = ret.data;
-    });
-    return;
+      const ret = await sPdv.selectFilail()
+      opcoes.value = ret.data
+    })
+    return
   }
 
   update(() => {
-    const needle = val.toLowerCase();
-    opcoes.value = opcoes.value.filter(
-      (v) => v.label.toLowerCase().indexOf(needle) > -1
-    );
-  });
-};
+    const needle = val.toLowerCase()
+    opcoes.value = opcoes.value.filter((v) => v.label.toLowerCase().indexOf(needle) > -1)
+  })
+}
 
-const opcoes = ref([]);
+const opcoes = ref([])
 </script>
 
 <template>

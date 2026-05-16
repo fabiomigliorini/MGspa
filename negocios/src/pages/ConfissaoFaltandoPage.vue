@@ -1,17 +1,22 @@
 <script setup>
-import { formataNumero, formataDataIso, formataHora, formataDataCompleta } from "@components/formatters";
-import { onMounted, ref, watch } from "vue";
-import { exportFile, Notify, Dialog } from "quasar";
-import { sincronizacaoStore } from "src/stores/sincronizacao";
-import { api } from "src/boot/axios";
+import {
+  formataNumero,
+  formataDataIso,
+  formataHora,
+  formataDataCompleta,
+} from '@components/formatters'
+import { onMounted, ref, watch } from 'vue'
+import { exportFile, Notify, Dialog } from 'quasar'
+import { sincronizacaoStore } from 'src/stores/sincronizacao'
+import { api } from 'src/boot/axios'
 
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sSinc = sincronizacaoStore();
+const sSinc = sincronizacaoStore()
 
-const anos = ref([]);
-const ano = ref(null);
+const anos = ref([])
+const ano = ref(null)
 
 const meses = ref([
   { numero: 1, label: 'Jan' },
@@ -26,124 +31,132 @@ const meses = ref([
   { numero: 10, label: 'Out' },
   { numero: 11, label: 'Nov' },
   { numero: 12, label: 'Dez' },
-]);
-const mes = ref(null);
+])
+const mes = ref(null)
 
-const codfilial = ref(null); // filial selecionada
+const codfilial = ref(null) // filial selecionada
 
-const data = ref(null); // data selecionada no q-date
-const datas = ref([]);
-const datasDisponiveis = ref([]);
-const datasFaltando = ref([]);
+const data = ref(null) // data selecionada no q-date
+const datas = ref([])
+const datasDisponiveis = ref([])
+const datasFaltando = ref([])
 
-const detalhado = ref([]);
+const detalhado = ref([])
 
 const colunasTabelaNegocios = [
   { name: 'codnegocio', label: '#', field: 'codnegocio', sortable: true },
   {
     name: 'valortotal',
     label: 'Valor',
-    field: row => parseFloat(row.valortotal),
-    format: val => formataNumero(val), sortable: true
+    field: (row) => parseFloat(row.valortotal),
+    format: (val) => formataNumero(val),
+    sortable: true,
   },
   {
     name: 'valorsaldo',
     label: 'Saldo',
-    field: row => parseFloat(row.valorsaldo),
-    format: val => formataNumero(val), sortable: true
+    field: (row) => parseFloat(row.valorsaldo),
+    format: (val) => formataNumero(val),
+    sortable: true,
   },
   { name: 'fantasia', label: 'Fantasia', field: 'fantasia', align: 'left', sortable: true },
-  { name: 'lancamento', label: 'Hora', field: 'lancamento', format: val => formataHora(val), sortable: true },
+  {
+    name: 'lancamento',
+    label: 'Hora',
+    field: 'lancamento',
+    format: (val) => formataHora(val),
+    sortable: true,
+  },
   { name: 'usuario', align: 'left', label: 'Usuário', field: 'usuario', sortable: true },
   {
-    name: 'pdv', label: 'PDV', align: 'left', field: 'pdv', sortable: true
+    name: 'pdv',
+    label: 'PDV',
+    align: 'left',
+    field: 'pdv',
+    sortable: true,
   },
 ]
 
 const inicializaAnosMeses = async () => {
-  ano.value = moment().year();
-  let i = ano.value - 3;
+  ano.value = moment().year()
+  let i = ano.value - 3
   do {
-    anos.value.push(i);
-    i++;
-  } while (i <= ano.value);
-  mes.value = moment().month() + 1;
-  data.value = formataDataIso(new Date());
-  inicializaDiaInicialFinal();
+    anos.value.push(i)
+    i++
+  } while (i <= ano.value)
+  mes.value = moment().month() + 1
+  data.value = formataDataIso(new Date())
+  inicializaDiaInicialFinal()
 }
 
 const inicializaDiaInicialFinal = () => {
-  const d = moment(new Date(ano.value, mes.value - 1, 1));
-  d.startOf('month');
-  datasDisponiveis.value = [];
+  const d = moment(new Date(ano.value, mes.value - 1, 1))
+  d.startOf('month')
+  datasDisponiveis.value = []
   do {
-    datasDisponiveis.value.push(d.format('YYYY/MM/DD'));
-    d.add(1, 'day');
-  } while ((d.month() + 1) == mes.value)
-  decideDia();
-  buscaFaltando();
+    datasDisponiveis.value.push(d.format('YYYY/MM/DD'))
+    d.add(1, 'day')
+  } while (d.month() + 1 == mes.value)
+  decideDia()
+  buscaFaltando()
 }
 
 const decideDia = () => {
-  const d = moment(new Date(ano.value, mes.value - 1, 1));
-  const hj = moment();
+  const d = moment(new Date(ano.value, mes.value - 1, 1))
+  const hj = moment()
   if (d.year() == hj.year() && d.month() == hj.month()) {
-    data.value = hj.format('YYYY-MM-DD');
-    return;
+    data.value = hj.format('YYYY-MM-DD')
+    return
   }
-  data.value = d.endOf('month').format('YYYY-MM-DD');
+  data.value = d.endOf('month').format('YYYY-MM-DD')
 }
 
 const buscaFaltando = async () => {
   try {
-    const ret = await api.get("/api/v1/pdv/negocio/anexo/faltando/" + ano.value + "/" + mes.value, {
+    const ret = await api.get('/api/v1/pdv/negocio/anexo/faltando/' + ano.value + '/' + mes.value, {
       params: {
-        pdv: sSinc.pdv.uuid
+        pdv: sSinc.pdv.uuid,
       },
-    });
+    })
     // datasFaltando.value = ret.data.resumo;
-    datasFaltando.value = [];
-    ret.data.resumo.forEach(d => {
-      datasFaltando.value.push(moment(d).format('YYYY/MM/DD'));
-    });
-    datas.value = ret.data.datas;
-    await detalhesDoDia();
+    datasFaltando.value = []
+    ret.data.resumo.forEach((d) => {
+      datasFaltando.value.push(moment(d).format('YYYY/MM/DD'))
+    })
+    datas.value = ret.data.datas
+    await detalhesDoDia()
   } catch (error) {
-    console.log(error);
-    var message = error?.response?.data?.message;
+    console.log(error)
+    var message = error?.response?.data?.message
     if (!message) {
-      message = error?.message;
+      message = error?.message
     }
     Notify.create({
-      type: "negative",
+      type: 'negative',
       message: message,
       timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return false;
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return false
   }
 }
 
 const detalhesDoDia = async () => {
-  const achou = datas.value.find(e => {
-    return e.data == data.value;
+  const achou = datas.value.find((e) => {
+    return e.data == data.value
   })
   if (!achou) {
-    detalhado.value = false;
-    return;
+    detalhado.value = false
+    return
   }
-  detalhado.value = achou;
-  codfilial.value = achou.filiais[0].codfilial;
+  detalhado.value = achou
+  codfilial.value = achou.filiais[0].codfilial
 }
 
 const wrapCsvValue = (val, formatFn, row) => {
-  let formatted = formatFn !== void 0
-    ? formatFn(val, row)
-    : val
+  let formatted = formatFn !== void 0 ? formatFn(val, row) : val
 
-  formatted = formatted === void 0 || formatted === null
-    ? ''
-    : String(formatted)
+  formatted = formatted === void 0 || formatted === null ? '' : String(formatted)
 
   formatted = formatted.split('"').join('""')
   /**
@@ -158,91 +171,96 @@ const wrapCsvValue = (val, formatFn, row) => {
 
 const exportTable = () => {
   // naive encoding to csv format
-  const rows = detalhado.value.filiais.find(e => e.codfilial == codfilial.value).negocios;
-  const content = [colunasTabelaNegocios.map(col => wrapCsvValue(col.label))].concat(
-    rows.map(row => colunasTabelaNegocios.map(col => wrapCsvValue(
-      typeof col.field === 'function'
-        ? col.field(row)
-        : row[col.field === void 0 ? col.name : col.field],
-      col.format,
-      row
-    )).join(','))
-  ).join('\r\n')
+  const rows = detalhado.value.filiais.find((e) => e.codfilial == codfilial.value).negocios
+  const content = [colunasTabelaNegocios.map((col) => wrapCsvValue(col.label))]
+    .concat(
+      rows.map((row) =>
+        colunasTabelaNegocios
+          .map((col) =>
+            wrapCsvValue(
+              typeof col.field === 'function'
+                ? col.field(row)
+                : row[col.field === void 0 ? col.name : col.field],
+              col.format,
+              row,
+            ),
+          )
+          .join(','),
+      ),
+    )
+    .join('\r\n')
 
   const status = exportFile(
     'anexos-faltando-' + data.value + '-' + codfilial.value + '.csv',
     content,
-    'text/csv'
+    'text/csv',
   )
 
   if (status !== true) {
     Notify.create({
-      type: "negative",
+      type: 'negative',
       icon: 'warning',
       message: 'Navegador não permitiu o download...',
       timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
 }
 
 const ignorar = (codnegocio) => {
-
   Dialog.create({
-    title: "Ignorar",
-    message: "Tem certeza que você deseja ignorar a confissão de dívida para o negocio " + codnegocio + "?",
+    title: 'Ignorar',
+    message:
+      'Tem certeza que você deseja ignorar a confissão de dívida para o negocio ' +
+      codnegocio +
+      '?',
     cancel: true,
   }).onOk(async () => {
-
     try {
-      const ret = await api.post("/api/v1/pdv/negocio/" + codnegocio + "/ignorar-confissao/", {
-        pdv: sSinc.pdv.uuid
-      });
-      datasFaltando.value = [];
-      ret.data.resumo.forEach(d => {
-        datasFaltando.value.push(moment(d).format('YYYY/MM/DD'));
-      });
-      datas.value = ret.data.datas;
-      await detalhesDoDia();
+      const ret = await api.post('/api/v1/pdv/negocio/' + codnegocio + '/ignorar-confissao/', {
+        pdv: sSinc.pdv.uuid,
+      })
+      datasFaltando.value = []
+      ret.data.resumo.forEach((d) => {
+        datasFaltando.value.push(moment(d).format('YYYY/MM/DD'))
+      })
+      datas.value = ret.data.datas
+      await detalhesDoDia()
     } catch (error) {
-      console.log(error);
-      var message = error?.response?.data?.message;
+      console.log(error)
+      var message = error?.response?.data?.message
       if (!message) {
-        message = error?.message;
+        message = error?.message
       }
       Notify.create({
-        type: "negative",
+        type: 'negative',
         message: message,
         timeout: 3000, // 3 segundos
-        actions: [{ icon: "close", color: "white" }],
-      });
-      return false;
+        actions: [{ icon: 'close', color: 'white' }],
+      })
+      return false
     }
-
-  });
-
+  })
 }
 
 onMounted(() => {
-  inicializaAnosMeses();
-});
+  inicializaAnosMeses()
+})
 
 watch(ano, () => {
-  inicializaDiaInicialFinal();
-});
+  inicializaDiaInicialFinal()
+})
 
 watch(mes, () => {
-  inicializaDiaInicialFinal();
-});
+  inicializaDiaInicialFinal()
+})
 
 watch(data, () => {
-  detalhesDoDia();
-});
-
+  detalhesDoDia()
+})
 </script>
 <template>
   <q-page>
-
     <!-- ANOS -->
     <q-tabs v-model="ano" inline-label class="bg-primary text-white">
       <template v-for="a in anos" :key="a">
@@ -258,20 +276,35 @@ watch(data, () => {
     </q-tabs>
 
     <div class="row q-pa-md q-col-gutter-md">
-
       <!-- CALENDARIO -->
-      <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2" style="min-width: 310px;">
-        <q-date minimal v-model="data" :options="datasDisponiveis" :events="datasFaltando" event-color="negative"
-          no-unset mask="YYYY-MM-DD" style="width: 100%;" />
+      <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2" style="min-width: 310px">
+        <q-date
+          minimal
+          v-model="data"
+          :options="datasDisponiveis"
+          :events="datasFaltando"
+          event-color="negative"
+          no-unset
+          mask="YYYY-MM-DD"
+          style="width: 100%"
+        />
       </div>
 
       <!-- CARD DETALHES -->
       <div class="col" v-if="detalhado">
         <q-card class="shadow-1" bordered flat>
-
           <!-- TITULO -->
           <q-card-section class="bg-primary text-white">
-            <q-btn dense round flat color="white" icon="archive" class="float-right" no-caps @click="exportTable" />
+            <q-btn
+              dense
+              round
+              flat
+              color="white"
+              icon="archive"
+              class="float-right"
+              no-caps
+              @click="exportTable"
+            />
             <div class="text-h6">
               {{ detalhado.faltando }} confissões faltando |
               {{ formataDataCompleta(data) }}
@@ -291,24 +324,46 @@ watch(data, () => {
           <q-tab-panels v-model="codfilial" animated>
             <template v-for="f in detalhado.filiais" :key="f.codfilial">
               <q-tab-panel :name="f.codfilial" class="q-pa-none">
-
                 <!-- TABELA -->
-                <q-table dense flat :rows="f.negocios" :columns="colunasTabelaNegocios" row-key="codnegocio"
-                  virtual-scroll :pagination="{
-                    rowsPerPage: 0
-                  }" :rows-per-page-options="[0]" style="max-height: 60vh">
-
-
+                <q-table
+                  dense
+                  flat
+                  :rows="f.negocios"
+                  :columns="colunasTabelaNegocios"
+                  row-key="codnegocio"
+                  virtual-scroll
+                  :pagination="{
+                    rowsPerPage: 0,
+                  }"
+                  :rows-per-page-options="[0]"
+                  style="max-height: 60vh"
+                >
                   <!-- LINK NEGOCIO -->
                   <template v-slot:body-cell-codnegocio="props">
                     <q-td :props="props">
-                      <q-btn link size="12px" round flat ripple dense color="negative" icon="not_interested"
-                        @click="ignorar(props.key)" />
-                      <q-btn link size="12px" flat ripple dense color="primary" :label="props.value"
-                        :to="'/negocio/' + props.key" />
+                      <q-btn
+                        link
+                        size="12px"
+                        round
+                        flat
+                        ripple
+                        dense
+                        color="negative"
+                        icon="not_interested"
+                        @click="ignorar(props.key)"
+                      />
+                      <q-btn
+                        link
+                        size="12px"
+                        flat
+                        ripple
+                        dense
+                        color="primary"
+                        :label="props.value"
+                        :to="'/negocio/' + props.key"
+                      />
                     </q-td>
                   </template>
-
                 </q-table>
               </q-tab-panel>
             </template>

@@ -1,77 +1,80 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { negocioStore } from "stores/negocio";
-import { pixStore } from "stores/pix";
-import { Dialog, Notify } from "quasar";
-import { db } from "src/boot/db";
-import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
-import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
-import SelectPagarMePos from "components/selects/SelectPagarMePos.vue";
-import SelectImpressora from "components/selects/SelectImpressora.vue";
-import SelectSaurusPos from "components/selects/SelectSaurusPos.vue";
+import { ref, onMounted, watch } from 'vue'
+import { negocioStore } from 'stores/negocio'
+import { pixStore } from 'stores/pix'
+import { Dialog, Notify } from 'quasar'
+import { db } from 'src/boot/db'
+import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
+import SelectEstoqueLocal from 'components/selects/SelectEstoqueLocal.vue'
+import SelectPagarMePos from 'components/selects/SelectPagarMePos.vue'
+import SelectImpressora from 'components/selects/SelectImpressora.vue'
+import SelectSaurusPos from 'components/selects/SelectSaurusPos.vue'
 // import SelectPessoa from "components/selects/SelectPessoa.vue";
 
-const sNegocio = negocioStore();
-const sPix = pixStore();
+const sNegocio = negocioStore()
+const sPix = pixStore()
 
-const edicao = ref({});
-const portadores = ref([]);
+const edicao = ref({})
+const portadores = ref([])
 
 const opcoesPos = ref([
-  { name: "POS Stone/PagarMe", value: "pagarme" },
-  { name: "POS Safrapay/Saurus", value: "saurus" },
-]);
+  { name: 'POS Stone/PagarMe', value: 'pagarme' },
+  { name: 'POS Safrapay/Saurus', value: 'saurus' },
+])
 
-const opcaoPosSelecionado = ref("");
+const opcaoPosSelecionado = ref('')
 
 onMounted(() => {
-  inicializaModel();
-});
+  inicializaModel()
+})
 
 const inicializaModel = async () => {
-  edicao.value = { ...sNegocio.padrao };
-  await carregarPortadores();
-};
+  edicao.value = { ...sNegocio.padrao }
+  await carregarPortadores()
+}
 
 const carregarPortadores = async () => {
   if (!edicao.value.codestoquelocal) {
-    portadores.value = [];
-    return;
+    portadores.value = []
+    return
   }
-  const estoqueLocal = await db.estoqueLocal.get(edicao.value.codestoquelocal);
+  const estoqueLocal = await db.estoqueLocal.get(edicao.value.codestoquelocal)
   if (!estoqueLocal?.codfilial) {
-    portadores.value = [];
-    return;
+    portadores.value = []
+    return
   }
-  portadores.value = await sPix.carregarPortadores(estoqueLocal.codfilial);
+  portadores.value = await sPix.carregarPortadores(estoqueLocal.codfilial)
   // Se portador selecionado não está na lista, limpar
-  if (edicao.value.codportador && !portadores.value.find((p) => p.codportador === edicao.value.codportador)) {
-    edicao.value.codportador = null;
+  if (
+    edicao.value.codportador &&
+    !portadores.value.find((p) => p.codportador === edicao.value.codportador)
+  ) {
+    edicao.value.codportador = null
   }
-};
+}
 
 watch(
   () => edicao.value.codestoquelocal,
   async () => {
-    await carregarPortadores();
-  }
-);
+    await carregarPortadores()
+  },
+)
 
 const salvar = async () => {
   Dialog.create({
-    title: "Salvar",
-    message: "Tem certeza que você deseja salvar?",
+    title: 'Salvar',
+    message: 'Tem certeza que você deseja salvar?',
     cancel: true,
   }).onOk(() => {
-    sNegocio.salvarPadrao(edicao.value);
+    sNegocio.salvarPadrao(edicao.value)
     Notify.create({
-      type: "positive",
-      message: "Configurações Salvas!",
+      type: 'positive',
+      message: 'Configurações Salvas!',
       timeout: 1000, // 1 segundo
-      actions: [{ icon: "close", color: "white" }],
-    });
-  });
-};
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+  })
+}
 </script>
 <template>
   <q-page>
@@ -161,11 +164,7 @@ const salvar = async () => {
                       <q-item-label caption>{{ port.banco }}</q-item-label>
                     </q-item-section>
                     <q-item-section side>
-                      <q-radio
-                        v-model="edicao.codportador"
-                        :val="port.codportador"
-                        dense
-                      />
+                      <q-radio v-model="edicao.codportador" :val="port.codportador" dense />
                     </q-item-section>
                   </q-item>
                 </q-list>
@@ -177,13 +176,7 @@ const salvar = async () => {
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn
-              flat
-              label="Cancelar"
-              color="primary"
-              tabindex="-1"
-              @click="inicializaModel()"
-            />
+            <q-btn flat label="Cancelar" color="primary" tabindex="-1" @click="inicializaModel()" />
             <q-btn type="submit" flat label="Salvar" color="primary" />
           </q-card-actions>
         </q-form>

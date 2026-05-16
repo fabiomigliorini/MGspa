@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { api } from "src/boot/axios";
+import { ref, onMounted, watch } from 'vue'
+import { api } from 'src/boot/axios'
 
 const props = defineProps({
   modelValue: {
@@ -10,30 +10,30 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-});
+})
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue'])
 
 const alterar = (value) => {
-  emit("update:modelValue", value);
-};
+  emit('update:modelValue', value)
+}
 
 onMounted(async () => {
   if (!props.modelValue) {
-    return;
+    return
   }
-  buscarPeloCod(props.modelValue);
-});
+  buscarPeloCod(props.modelValue)
+})
 
 const buscarPeloCod = async () => {
   if (!props.modelValue) {
-    return;
+    return
   }
-  const ret = await api.get("/api/v1/select/portador", {
+  const ret = await api.get('/api/v1/select/portador', {
     params: { codportador: props.modelValue },
-  });
-  opcoes.value = ret.data;
-};
+  })
+  opcoes.value = ret.data
+}
 
 const buscar = async (val, update, abort) => {
   // if (val.length < 1) {
@@ -42,24 +42,24 @@ const buscar = async (val, update, abort) => {
   // }
 
   update(async () => {
-    const ret = await api.get("/api/v1/select/portador", {
+    const ret = await api.get('/api/v1/select/portador', {
       params: {
         busca: val,
         somenteAtivos: props.somenteAtivos,
       },
-    });
-    opcoes.value = ret.data;
-  });
-};
+    })
+    opcoes.value = ret.data
+  })
+}
 
-const opcoes = ref([]);
+const opcoes = ref([])
 
 watch(
   () => props.modelValue,
   (newValue) => {
-    buscarPeloCod(newValue);
-  }
-);
+    buscarPeloCod(newValue)
+  },
+)
 </script>
 
 <template>
@@ -79,10 +79,7 @@ watch(
     clearable
   >
     <template v-slot:option="scope">
-      <q-item
-        v-bind="scope.itemProps"
-        :class="scope.opt.inativo ? 'text-red' : ''"
-      >
+      <q-item v-bind="scope.itemProps" :class="scope.opt.inativo ? 'text-red' : ''">
         <q-item-section avatar>
           <q-icon name="mdi-bank" v-if="scope.opt.codbanco" />
           <q-icon name="point_of_sale" v-else />
@@ -93,8 +90,9 @@ watch(
           </q-item-label>
           <q-item-label caption v-if="scope.opt.codbanco">
             {{ scope.opt.banco }}
-            {{ scope.opt.agencia }}-{{ scope.opt.agenciadigito }}
-            {{ scope.opt.conta }}-{{ scope.opt.contadigito }}
+            {{ scope.opt.agencia }}-{{ scope.opt.agenciadigito }} {{ scope.opt.conta }}-{{
+              scope.opt.contadigito
+            }}
           </q-item-label>
         </q-item-section>
         <q-item-section side>

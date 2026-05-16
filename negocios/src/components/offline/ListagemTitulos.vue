@@ -1,14 +1,14 @@
 <script setup>
-import { formataNumero, formataCodNegocio, formataData } from "@components/formatters";
-import { negocioStore } from "stores/negocio";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { formataNumero, formataCodNegocio, formataData } from '@components/formatters'
+import { negocioStore } from 'stores/negocio'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sNegocio = negocioStore();
+const sNegocio = negocioStore()
 
 const urlTitulo = (codtitulo) => {
-  return process.env.CONTAS_URL + "/titulo/" + codtitulo;
-};
+  return process.env.CONTAS_URL + '/titulo/' + codtitulo
+}
 </script>
 <template>
   <div
@@ -17,15 +17,9 @@ const urlTitulo = (codtitulo) => {
     :key="titulo.codtitulo"
   >
     <q-card>
-      <q-item
-        clickable
-        v-ripple
-        :href="urlTitulo(titulo.codtitulo)"
-        target="_blank"
-      >
+      <q-item clickable v-ripple :href="urlTitulo(titulo.codtitulo)" target="_blank">
         <q-item-section avatar>
-          <q-avatar icon="receipt" color="primary" text-color="white">
-          </q-avatar>
+          <q-avatar icon="receipt" color="primary" text-color="white"> </q-avatar>
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis"> Título </q-item-label>
@@ -54,19 +48,13 @@ const urlTitulo = (codtitulo) => {
         <q-item-section>
           <q-item-label>
             R$
-            {{
-              formataNumero(titulo.debito + titulo.credito)
-            }}
+            {{ formataNumero(titulo.debito + titulo.credito) }}
           </q-item-label>
           <q-item-label caption lines="1">
             <template v-if="Math.abs(titulo.saldo) > 0">
-              <template
-                v-if="titulo.saldo != Math.abs(titulo.debito + titulo.credito)"
-              >
+              <template v-if="titulo.saldo != Math.abs(titulo.debito + titulo.credito)">
                 R$
-                {{
-                  formataNumero(titulo.saldo)
-                }}
+                {{ formataNumero(titulo.saldo) }}
               </template>
               Em aberto
             </template>

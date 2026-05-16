@@ -1,20 +1,20 @@
-import { formataTimestampIso } from "@components/formatters";
-import { defineStore } from "pinia";
-import { api } from "src/boot/axios";
-import { pdvStore } from "./pdv";
-import { sincronizacaoStore } from "./sincronizacao";
-import moment from "moment";
+import { formataTimestampIso } from '@components/formatters'
+import { defineStore } from 'pinia'
+import { api } from 'src/boot/axios'
+import { pdvStore } from './pdv'
+import { sincronizacaoStore } from './sincronizacao'
+import moment from 'moment'
 
-const sPdv = pdvStore();
-const sSinc = sincronizacaoStore();
+const sPdv = pdvStore()
+const sSinc = sincronizacaoStore()
 
-export const liquidacaoStore = defineStore("liquidacao", {
+export const liquidacaoStore = defineStore('liquidacao', {
   persist: {
-    paths: ["filtroListagem", "listagem"],
+    paths: ['filtroListagem', 'listagem'],
   },
   state: () => ({
     opcoes: {
-      integracao: ["Manual", "Integrado"],
+      integracao: ['Manual', 'Integrado'],
     },
     counter: 0,
     listagem: [],
@@ -39,70 +39,67 @@ export const liquidacaoStore = defineStore("liquidacao", {
   actions: {
     async inicializaFiltro() {
       if (Object.keys(this.filtro).length > 0) {
-        return;
+        return
       }
       const filtro = {
         codpdv: null,
         codusuariocriacao: 1,
         codportador: null,
         codliquidacao: null,
-        transacao_de: moment()
-          .subtract(7, "d")
-          .startOf("day")
-          .format("YYYY-MM-DD HH:mm"),
-        transacao_ate: formataTimestampIso(moment().endOf("day").toDate()),
-        pesquisar: "LIQ",
+        transacao_de: moment().subtract(7, 'd').startOf('day').format('YYYY-MM-DD HH:mm'),
+        transacao_ate: formataTimestampIso(moment().endOf('day').toDate()),
+        pesquisar: 'LIQ',
         codpessoa: null,
         tipo: null,
         valor_de: null,
         valor_ate: null,
         integracao: [],
-      };
-      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid);
-      if (pdv) {
-        filtro.codpdv = pdv.codpdv;
       }
-      this.filtro = filtro;
-      await this.getLiquidacoes();
+      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid)
+      if (pdv) {
+        filtro.codpdv = pdv.codpdv
+      }
+      this.filtro = filtro
+      await this.getLiquidacoes()
     },
 
     async getLiquidacoes() {
-      this.paginacao.current_page = 0;
-      this.paginacao.last_page = 99999;
+      this.paginacao.current_page = 0
+      this.paginacao.last_page = 99999
       // this.negocios = [];
-      await this.getLiquidacoesPaginacao();
+      await this.getLiquidacoesPaginacao()
     },
 
     async getLiquidacoesPaginacao() {
       if (this.paginacao.current_page >= this.paginacao.last_page) {
-        return false;
+        return false
       }
       try {
-        const filtro = { ...this.filtro };
-        filtro.pdv = sSinc.pdv.uuid;
-        filtro.page = this.paginacao.current_page + 1;
-        const { data } = await api.get("/api/v1/pdv/liquidacao", {
+        const filtro = { ...this.filtro }
+        filtro.pdv = sSinc.pdv.uuid
+        filtro.page = this.paginacao.current_page + 1
+        const { data } = await api.get('/api/v1/pdv/liquidacao', {
           params: filtro,
-        });
+        })
         if (filtro.page == 1) {
-          this.listagem = data.data;
+          this.listagem = data.data
         } else {
-          this.listagem = this.listagem.concat(data.data);
+          this.listagem = this.listagem.concat(data.data)
         }
-        this.paginacao = data.meta;
+        this.paginacao = data.meta
       } catch (error) {
-        var message = error?.response?.data?.message;
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
   },
-});
+})

@@ -1,7 +1,7 @@
 <script setup>
-import MainLayout from "layouts/MainLayout.vue";
-import ConferenciaLeftDrawer from "components/drawers/ConferenciaLeftDrawer.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
+import MainLayout from 'layouts/MainLayout.vue'
+import ConferenciaLeftDrawer from 'components/drawers/ConferenciaLeftDrawer.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
   <main-layout title="Conferência" left-drawer>

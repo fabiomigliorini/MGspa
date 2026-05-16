@@ -1,6 +1,6 @@
 <script setup>
-import MainLayout from "layouts/MainLayout.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
+import MainLayout from 'layouts/MainLayout.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
   <main-layout title="Conferência das Confissões de Dívida" left-drawer>
@@ -32,7 +32,6 @@ import UsuarioConectado from "components/UsuarioConectado.vue";
         </q-item-section>
       </q-item>
       <q-separator />
-
     </template>
     <template #content>
       <router-view :key="$route.fullPath" />

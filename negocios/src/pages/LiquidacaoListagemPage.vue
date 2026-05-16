@@ -1,74 +1,71 @@
 <script setup>
-import { formataNumero, formataCodNegocio, formataData } from "@components/formatters";
-import { ref, watch } from "vue";
-import { debounce } from "quasar";
-import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
-import { liquidacaoStore } from "src/stores/liquidacao";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { formataNumero, formataCodNegocio, formataData } from '@components/formatters'
+import { ref, watch } from 'vue'
+import { debounce } from 'quasar'
+import { iconeNegocio, corIconeNegocio } from '../utils/iconeNegocio.js'
+import { liquidacaoStore } from 'src/stores/liquidacao'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sLiquidacao = liquidacaoStore();
-const scrollRef = ref(null);
+const sLiquidacao = liquidacaoStore()
+const scrollRef = ref(null)
 
 const onLoad = async (index, done) => {
-  await sLiquidacao.getLiquidacoesPaginacao();
+  await sLiquidacao.getLiquidacoesPaginacao()
   if (sLiquidacao.paginacao.current_page >= sLiquidacao.paginacao.last_page) {
-    done(true);
+    done(true)
   } else {
-    done(false);
+    done(false)
   }
-};
+}
 
 const inicializa = debounce(async () => {
-  await sLiquidacao.getLiquidacoes();
+  await sLiquidacao.getLiquidacoes()
   try {
-    scrollRef.value.reset();
-    scrollRef.value.resume();
+    scrollRef.value.reset()
+    scrollRef.value.resume()
   } catch (error) {}
-});
+})
 
 watch(
   () => sLiquidacao.filtro,
   () => {
-    inicializa();
+    inicializa()
   },
-  { deep: true }
-);
+  { deep: true },
+)
 
 const statusClass = (liq) => {
   if (liq.estornado) {
-    return "bg-deep-orange-1 text-deep-orange-10";
+    return 'bg-deep-orange-1 text-deep-orange-10'
   }
-  return "";
-};
+  return ''
+}
 
 const iconeLiquidacao = (liq) => {
   if (liq.debito > liq.credito) {
-    return "mdi-checkbook-arrow-left";
+    return 'mdi-checkbook-arrow-left'
   } else if (liq.debito < liq.credito) {
-    return "mdi-checkbook-arrow-right";
+    return 'mdi-checkbook-arrow-right'
   }
-  return "mdi-checkbook";
-};
+  return 'mdi-checkbook'
+}
 
 const corIconeLiquidacao = (liq) => {
   if (liq.debito > liq.credito) {
-    return "secondary";
+    return 'secondary'
   } else if (liq.debito < liq.credito) {
-    return "negative";
+    return 'negative'
   }
-  return "grey";
-};
+  return 'grey'
+}
 </script>
 <template>
   <q-page>
     <!-- <pre>
       {{ sLiquidacao.listagem[0] }}
     </pre> -->
-    <div
-      v-if="sLiquidacao.listagem.length == 0"
-      class="absolute-center text-grey text-center"
-    >
+    <div v-if="sLiquidacao.listagem.length == 0" class="absolute-center text-grey text-center">
       <q-icon name="do_not_disturb" color="" size="300px" />
       <h3>Nenhum registro localizado!</h3>
     </div>
@@ -103,25 +100,17 @@ const corIconeLiquidacao = (liq) => {
             <!-- CREDITO -->
             <q-item-section class="col-xs-2 col-sm-1">
               <q-item-label class="text-right">
-                {{
-                  formataNumero(item.credito)
-                }}
+                {{ formataNumero(item.credito) }}
               </q-item-label>
-              <q-item-label class="ellipsis text-right" caption>
-                Recebido
-              </q-item-label>
+              <q-item-label class="ellipsis text-right" caption> Recebido </q-item-label>
             </q-item-section>
 
             <!-- DEBITO -->
             <q-item-section class="col-xs-2 col-sm-1">
               <q-item-label class="text-right">
-                {{
-                  formataNumero(item.debito)
-                }}
+                {{ formataNumero(item.debito) }}
               </q-item-label>
-              <q-item-label class="ellipsis text-right" caption>
-                Pago
-              </q-item-label>
+              <q-item-label class="ellipsis text-right" caption> Pago </q-item-label>
             </q-item-section>
 
             <!-- PESSOA/VENDEDOR/COD/NATUREZA -->
@@ -134,9 +123,7 @@ const corIconeLiquidacao = (liq) => {
                 <span v-if="item.codpagarmepedido"> PagarMe </span>
                 <span v-if="item.codcheque"> Cheque </span>
                 <span v-if="item.tipo"> {{ item.nometipo }} </span>
-                <span v-if="item.parcelas > 1">
-                  {{ item.parcelas }} Parcelas
-                </span>
+                <span v-if="item.parcelas > 1"> {{ item.parcelas }} Parcelas </span>
                 <span v-if="item.autorizacao"> {{ item.autorizacao }} </span>
                 <span v-if="item.bandeira"> {{ item.nomebandeira }} </span>
                 <span v-if="item.integracao"> Pagamento Integrado </span>
@@ -152,10 +139,7 @@ const corIconeLiquidacao = (liq) => {
             </q-item-section>
 
             <!-- DATA/STATUS -->
-            <q-item-section
-              class="col-xs-4 col-sm-3 col-md-2 col-lg-1 ellipsis"
-              side
-            >
+            <q-item-section class="col-xs-4 col-sm-3 col-md-2 col-lg-1 ellipsis" side>
               <q-item-label caption>
                 {{ formataData(item.transacao) }}
               </q-item-label>

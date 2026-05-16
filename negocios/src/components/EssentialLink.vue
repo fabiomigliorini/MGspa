@@ -1,13 +1,6 @@
 <template>
-  <q-item
-    clickable
-    tag="a"
-    target="_blank"
-    :href="link"
-  >
-    <q-item-section
-      avatar
-    >
+  <q-item clickable tag="a" target="_blank" :href="link">
+    <q-item-section avatar>
       <q-icon name="delete" />
     </q-item-section>
 
@@ -20,36 +13,36 @@
 
 <script>
 import { defineComponent } from 'vue'
-import { mainStore } from "stores/main";
+import { mainStore } from 'stores/main'
 
 export default defineComponent({
   name: 'EssentialLink',
   props: {
     title: {
       type: String,
-      required: true
+      required: true,
     },
 
     caption: {
       type: String,
-      default: ''
+      default: '',
     },
 
     link: {
       type: String,
-      default: '#'
+      default: '#',
     },
 
     icon: {
       type: String,
-      default: ''
+      default: '',
+    },
+  },
+  setup() {
+    const store = mainStore()
+    return {
+      store,
     }
   },
-  setup () {
-    const store = mainStore();
-    return {
-      store
-    };
-  }
 })
 </script>

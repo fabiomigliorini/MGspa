@@ -1,12 +1,12 @@
 <script>
 //importing hyperscript from vue to create the HTML element
-import { h } from "vue";
-import JsBarcode from "jsbarcode";
+import { h } from 'vue'
+import JsBarcode from 'jsbarcode'
 
 //importing jsbarcode method from jsbarcode library
 // var JsBarcode = require("jsbarcode");
 export default {
-  name: "BarcodeGenerator",
+  name: 'BarcodeGenerator',
   // defining props and props type to be used in BarcodeGenerator component
   props: {
     value: [String, Number],
@@ -35,9 +35,9 @@ export default {
     ean128: [String, Boolean],
     elementTag: {
       type: String,
-      default: "svg",
+      default: 'svg',
       validator: function (value) {
-        return ["canvas", "svg", "img"].indexOf(value) !== -1;
+        return ['canvas', 'svg', 'img'].indexOf(value) !== -1
       },
     },
   },
@@ -45,19 +45,19 @@ export default {
   //render function to create the HTML element
 
   render() {
-    return h(this.elementTag, { id: ["barcodegen"] });
+    return h(this.elementTag, { id: ['barcodegen'] })
   },
 
   // calling custom function (generateBarcode) inside mounted lifecycle method
   mounted: function () {
-    generateBarcode.call(this);
+    generateBarcode.call(this)
   },
-};
+}
 
 // custom function for taking props from the component and passing that to jsbarcode method and generating the barcode
 
 function generateBarcode() {
-  var that = this;
+  var that = this
 
   var settings = {
     format: this.format,
@@ -81,22 +81,20 @@ function generateBarcode() {
     flat: this.flat,
     ean128: this.ean128,
     valid: function (valid) {
-      that.valid = valid;
+      that.valid = valid
     },
     elementTag: this.elementTag,
-  };
+  }
 
   // custom function calling to remove the undefined objects from the settings
-  removeUndefinedProps(settings);
+  removeUndefinedProps(settings)
 
   // calling jsbarcode function and passing element, value and settings to generate the barcode
-  JsBarcode(this.$el, this.value, settings);
+  JsBarcode(this.$el, this.value, settings)
 }
 
 //custom function to remove undefined objects from the settings
 function removeUndefinedProps(obj) {
-  Object.keys(obj).forEach((key) =>
-    obj[key] === undefined ? delete obj[key] : {}
-  );
+  Object.keys(obj).forEach((key) => (obj[key] === undefined ? delete obj[key] : {}))
 }
 </script>

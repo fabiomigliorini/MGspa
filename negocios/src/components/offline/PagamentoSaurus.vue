@@ -1,25 +1,25 @@
 <script setup>
-import { formataNumero, formataTimestampCompleto } from "@components/formatters";
-import { ref, watch, computed } from "vue";
-import { debounce } from "quasar";
-import { negocioStore } from "stores/negocio";
-import { pagarMeStore } from "stores/pagar-me";
-import { saurusStore } from "stores/saurus";
-import emitter from "../../utils/emitter.js";
-import SelectSaurusPos from "../selects/SelectSaurusPos.vue";
-import cartoesManuais from "../../data/cartoes-manuais.json";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
-import MgInputValor from "@components/MgInputValor.vue";
+import { formataNumero, formataTimestampCompleto } from '@components/formatters'
+import { ref, watch, computed } from 'vue'
+import { debounce } from 'quasar'
+import { negocioStore } from 'stores/negocio'
+import { pagarMeStore } from 'stores/pagar-me'
+import { saurusStore } from 'stores/saurus'
+import emitter from '../../utils/emitter.js'
+import SelectSaurusPos from '../selects/SelectSaurusPos.vue'
+import cartoesManuais from '../../data/cartoes-manuais.json'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
+import MgInputValor from '@components/MgInputValor.vue'
 
-const sNegocio = negocioStore();
-const sPagarMe = pagarMeStore();
-const edicao = ref({});
-const sSaurus = saurusStore();
-const pagamento = ref({});
-const parcelamentoDisponivel = ref([]);
-const formSaurus = ref(null);
-const btnConsultarRef = ref(null);
+const sNegocio = negocioStore()
+const sPagarMe = pagarMeStore()
+const edicao = ref({})
+const sSaurus = saurusStore()
+const pagamento = ref({})
+const parcelamentoDisponivel = ref([])
+const formSaurus = ref(null)
+const btnConsultarRef = ref(null)
 
 const inicializarValores = () => {
   const padrao = {
@@ -35,85 +35,85 @@ const inicializarValores = () => {
     autorizacao: null,
     bandeira: null,
     codpessoa: null,
-  };
-  if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
-    padrao.codsauruspos = null;
-    padrao.codpagarmepos = null;
   }
-  pagamento.value = padrao;
-  edicao.value = { ...sNegocio.padrao };
-  calcularParcelas();
-};
+  if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
+    padrao.codsauruspos = null
+    padrao.codpagarmepos = null
+  }
+  pagamento.value = padrao
+  edicao.value = { ...sNegocio.padrao }
+  calcularParcelas()
+}
 
 const valorRule = [
   (value) => {
     if (!value) {
-      return "Preencha o valor!";
+      return 'Preencha o valor!'
     }
     if (parseFloat(value) <= 0.01) {
-      return "Preencha o valor!";
+      return 'Preencha o valor!'
     }
     if (parseFloat(value) > sNegocio.valorapagar) {
-      return "Valor maior que o saldo do Negócio!";
+      return 'Valor maior que o saldo do Negócio!'
     }
-    return true;
+    return true
   },
-];
+]
 
 watch(
   () => pagamento.value.tipo,
   () => {
-    calcularParcelas();
-  }
-);
+    calcularParcelas()
+  },
+)
 
 watch(
   () => pagamento.value.valor,
   () => {
-    calcularParcelas();
-  }
-);
+    calcularParcelas()
+  },
+)
 
 watch(
   () => pagamento.value.parcelas,
   () => {
-    calcularJuros();
-  }
-);
+    calcularJuros()
+  },
+)
 
 watch(
   () => pagamento.value.codpessoa,
   () => {
     if (bandeirasManuais.value.length == 1) {
-      pagamento.value.bandeira = bandeirasManuais.value[0].bandeira;
+      pagamento.value.bandeira = bandeirasManuais.value[0].bandeira
     }
     if (tiposManuais.value.length == 1) {
-      pagamento.value.tipo = tiposManuais.value[0].tipo;
+      pagamento.value.tipo = tiposManuais.value[0].tipo
     }
-    return;
-  }
-);
+    return
+  },
+)
 
 const calcularParcelas = async () => {
-  const valorMinimoParcela = 30.0;
-  const taxa = 1.5;
-  const valor = pagamento.value.valor;
-  const tipo = pagamento.value.tipo;
+  const valorMinimoParcela = 30.0
+  const taxa = 1.5
+  const valor = pagamento.value.valor
+  const tipo = pagamento.value.tipo
 
-  parcelamentoDisponivel.value = [];
+  parcelamentoDisponivel.value = []
   for (let i = 1; i <= 18; i++) {
-    var valorjuros = 0;
-    var valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100;
+    var valorjuros = 0
+    var valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100
     if (i > 6) {
-      valorjuros = Math.round(taxa * i * valor) / 100;
-      valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100;
-      valorjuros = Math.round((valorparcela * i - valor) * 100) / 100;
+      valorjuros = Math.round(taxa * i * valor) / 100
+      valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100
+      valorjuros = Math.round((valorparcela * i - valor) * 100) / 100
     }
-    let habilitado = false;
+    let habilitado = false
     if (i == 1) {
-      habilitado = true;
+      habilitado = true
     } else if (tipo == 2 && valorparcela >= valorMinimoParcela && i <= 18) {
-      habilitado = true;
+      habilitado = true
     }
     if (habilitado) {
       parcelamentoDisponivel.value.push({
@@ -121,21 +121,19 @@ const calcularParcelas = async () => {
         habilitado: habilitado,
         valorjuros: valorjuros,
         valorparcela: valorparcela,
-      });
+      })
     } else {
-      break;
+      break
     }
   }
-  pagamento.value.parcelas = 1;
-};
+  pagamento.value.parcelas = 1
+}
 
 const calcularJuros = () => {
-  var parc = parcelamentoDisponivel.value.find(
-    (i) => i.parcelas == pagamento.value.parcelas
-  );
-  pagamento.value.valorjuros = parc.valorjuros;
-  pagamento.value.valorparcela = parc.valorparcela;
-};
+  var parc = parcelamentoDisponivel.value.find((i) => i.parcelas == pagamento.value.parcelas)
+  pagamento.value.valorjuros = parc.valorjuros
+  pagamento.value.valorparcela = parc.valorparcela
+}
 
 const salvar = async () => {
   const pedido = await sNegocio.criarSaurusPedido(
@@ -145,103 +143,100 @@ const salvar = async () => {
     pagamento.value.valorjuros,
     pagamento.value.tipo,
     pagamento.value.parcelas,
-    pagamento.value.jurosloja
-  );
+    pagamento.value.jurosloja,
+  )
   if (pedido == false) {
-    return;
+    return
   }
-  sSaurus.pedido = pedido;
-  sSaurus.dialog.detalhesPedido = true;
-  sNegocio.dialog.pagamentoSaurus = false;
-};
+  sSaurus.pedido = pedido
+  sSaurus.dialog.detalhesPedido = true
+  sNegocio.dialog.pagamentoSaurus = false
+}
 
 const consultar = debounce(async () => {
-  await sSaurus.consultarPedido();
+  await sSaurus.consultarPedido()
   if (sSaurus.pedido.status == 2) {
-    sSaurus.dialog.detalhesPedido = false;
-    emitter.emit("pagamentoAdicionado");
+    sSaurus.dialog.detalhesPedido = false
+    emitter.emit('pagamentoAdicionado')
   }
-}, 500);
+}, 500)
 
 const reenviar = async () => {
-  await sSaurus.reenviarPedido();
-};
+  await sSaurus.reenviarPedido()
+}
 
 const cancelar = async () => {
-  await sSaurus.cancelarPedido();
+  await sSaurus.cancelarPedido()
   if (sSaurus.pedido.status == 3) {
-    sSaurus.dialog.detalhesPedido = false;
+    sSaurus.dialog.detalhesPedido = false
   }
-};
+}
 
 const fechar = async () => {
-  sNegocio.dialog.pagamentoSaurus = false;
-  sNegocio.dialog.pagamentoPagarMe = false;
-  sNegocio.dialog.pagamentoCartaoManual = false;
-};
+  sNegocio.dialog.pagamentoSaurus = false
+  sNegocio.dialog.pagamentoPagarMe = false
+  sNegocio.dialog.pagamentoCartaoManual = false
+}
 
 const manual = async () => {
-  sNegocio.dialog.pagamentoSaurus = false;
-  sNegocio.dialog.pagamentoPagarMe = false;
-  sNegocio.dialog.pagamentoCartaoManual = true;
-};
+  sNegocio.dialog.pagamentoSaurus = false
+  sNegocio.dialog.pagamentoPagarMe = false
+  sNegocio.dialog.pagamentoCartaoManual = true
+}
 
 const tiposManuais = computed(() => {
   if (!pagamento.value.codpessoa) {
-    return [];
+    return []
   }
   const pes = cartoesManuais.find((el) => {
-    return pagamento.value.codpessoa == el.codpessoa;
-  });
-  return pes.tipos;
-});
+    return pagamento.value.codpessoa == el.codpessoa
+  })
+  return pes.tipos
+})
 
 const bandeirasManuais = computed(() => {
   if (!pagamento.value.codpessoa) {
-    return [];
+    return []
   }
   const pes = cartoesManuais.find((el) => {
-    return pagamento.value.codpessoa == el.codpessoa;
-  });
-  return pes.bandeiras;
-});
+    return pagamento.value.codpessoa == el.codpessoa
+  })
+  return pes.bandeiras
+})
 
 const labelParceiro = computed(() => {
   if (!pagamento.value.codpessoa) {
-    return [];
+    return []
   }
-  let ret = "";
+  let ret = ''
   const pes = cartoesManuais.find((el) => {
-    return pagamento.value.codpessoa == el.codpessoa;
-  });
-  ret += pes.apelido;
+    return pagamento.value.codpessoa == el.codpessoa
+  })
+  ret += pes.apelido
   if (tiposManuais.value.length > 1) {
     const tipo = tiposManuais.value.find((el) => {
-      return pagamento.value.tipo == el.tipo;
-    });
-    ret += "\n" + tipo.apelido;
+      return pagamento.value.tipo == el.tipo
+    })
+    ret += '\n' + tipo.apelido
   }
   if (bandeirasManuais.value.length > 1) {
     const band = bandeirasManuais.value.find((el) => {
-      return pagamento.value.bandeira == el.bandeira;
-    });
-    ret += "\n" + band.apelido;
+      return pagamento.value.bandeira == el.bandeira
+    })
+    ret += '\n' + band.apelido
   }
-  return ret;
-});
+  return ret
+})
 
 const toStone = async () => {
-  sNegocio.dialog.pagamentoSaurus = false;
-  sNegocio.dialog.pagamentoCartaoManual = false;
-  sNegocio.dialog.pagamentoPagarMe = true;
-};
+  sNegocio.dialog.pagamentoSaurus = false
+  sNegocio.dialog.pagamentoCartaoManual = false
+  sNegocio.dialog.pagamentoPagarMe = true
+}
 </script>
 <template>
   <!-- DIALOG NOVO PEDIDO -->
-  <q-dialog
-    v-model="sNegocio.dialog.pagamentoSaurus"
-    @before-show="inicializarValores()"
-  >
+  <q-dialog v-model="sNegocio.dialog.pagamentoSaurus" @before-show="inicializarValores()">
     <q-card style="width: 600px">
       <q-form @submit="salvar()" ref="formSaurus">
         <q-card-section>
@@ -306,9 +301,7 @@ const toStone = async () => {
                       <b>{{ parc.parcelas }}</b>
                       <span class="text-grey"> x R$ </span>
                       <b>
-                        {{
-                          formataNumero(parc.valorparcela)
-                        }}
+                        {{ formataNumero(parc.valorparcela) }}
                       </b>
                       <span v-if="parc.valorjuros"> C/Juros </span>
                     </q-radio>
@@ -320,20 +313,8 @@ const toStone = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="primary"
-            @click="fechar()"
-            tabindex="-1"
-          />
-          <q-btn
-            flat
-            label="Usar Stone"
-            color="primary"
-            @click="toStone()"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="primary" @click="fechar()" tabindex="-1" />
+          <q-btn flat label="Usar Stone" color="primary" @click="toStone()" tabindex="-1" />
           <q-btn
             type="button"
             flat
@@ -349,17 +330,12 @@ const toStone = async () => {
   </q-dialog>
 
   <!-- DIALOG DETALHES PEDIDO SAURUS-->
-  <q-dialog
-    v-model="sSaurus.dialog.detalhesPedido"
-    @show="btnConsultarRef.$el.focus()"
-  >
+  <q-dialog v-model="sSaurus.dialog.detalhesPedido" @show="btnConsultarRef.$el.focus()">
     <q-card style="width: 600px">
       <q-card-section>
         <div class="text-h6">
           Cobrança Safrapay/Saurus de R$
-          {{
-            formataNumero(sSaurus.pedido.valor)
-          }}
+          {{ formataNumero(sSaurus.pedido.valor) }}
         </div>
         <div class="text-subtitle2 text-grey text-uppercase">
           {{ sSaurus.pedido.statusdescricao }}
@@ -367,10 +343,7 @@ const toStone = async () => {
 
         <!-- PAGAMENTOS -->
         <q-list>
-          <template
-            v-for="pag in sSaurus.pedido.SaurusPagamentoS"
-            :key="pag.codsauruspagamento"
-          >
+          <template v-for="pag in sSaurus.pedido.SaurusPagamentoS" :key="pag.codsauruspagamento">
             <!-- VALOR -->
             <q-separator spaced />
             <template v-if="pag.valorcancelamento">
@@ -381,9 +354,7 @@ const toStone = async () => {
                 <q-item-section>
                   <q-item-label>
                     R$
-                    {{
-                      formataNumero(pag.valorcancelamento)
-                    }}
+                    {{ formataNumero(pag.valorcancelamento) }}
                   </q-item-label>
                   <q-item-label caption> Valor Cancelamento </q-item-label>
                 </q-item-section>
@@ -397,9 +368,7 @@ const toStone = async () => {
                 <q-item-section>
                   <q-item-label>
                     R$
-                    {{
-                      formataNumero(pag.valortotal)
-                    }}
+                    {{ formataNumero(pag.valortotal) }}
                   </q-item-label>
                   <q-item-label caption> Valor efetivamente Pago </q-item-label>
                 </q-item-section>
@@ -423,9 +392,7 @@ const toStone = async () => {
                   <span class="text-uppercase">
                     {{ pag.tipodescricao }}
                   </span>
-                  <span v-if="pag.parcelas > 1">
-                    em {{ pag.parcelas }} parcelas
-                  </span>
+                  <span v-if="pag.parcelas > 1"> em {{ pag.parcelas }} parcelas </span>
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -455,9 +422,7 @@ const toStone = async () => {
                 <q-icon color="primary" name="point_of_sale" />
               </q-item-section>
               <q-item-section>
-                <q-item-label>
-                  POS {{ pag.apelido }} Serial {{ pag.pos }}
-                </q-item-label>
+                <q-item-label> POS {{ pag.apelido }} Serial {{ pag.pos }} </q-item-label>
                 <q-item-label caption>
                   {{ formataTimestampCompleto(pag.horario) }}
                 </q-item-label>
@@ -472,9 +437,7 @@ const toStone = async () => {
               <q-icon color="primary" name="post_add" />
             </q-item-section>
             <q-item-section>
-              <q-item-label class="ellipsis">
-                Pedido {{ sSaurus.pedido.idpedido }}
-              </q-item-label>
+              <q-item-label class="ellipsis"> Pedido {{ sSaurus.pedido.idpedido }} </q-item-label>
               <q-item-label caption class="ellipsis">
                 <span v-if="sSaurus.pedido.fechado"> Fechado </span>
                 <span v-else> Aberto </span>
@@ -509,9 +472,7 @@ const toStone = async () => {
               <q-item-section>
                 <q-item-label>
                   R$
-                  {{
-                    formataNumero(sSaurus.pedido.valor)
-                  }}
+                  {{ formataNumero(sSaurus.pedido.valor) }}
                 </q-item-label>
                 <q-item-label caption>
                   <span class="text-uppercase">
@@ -520,9 +481,7 @@ const toStone = async () => {
                   <span v-if="sSaurus.pedido.parcelas > 1">
                     em {{ sSaurus.pedido.parcelas }}
                     parcelas de R$
-                    {{
-                      formataNumero(sSaurus.pedido.valorparcela)
-                    }}
+                    {{ formataNumero(sSaurus.pedido.valorparcela) }}
                     <span v-if="sSaurus.pedido.valorjuros"> (C/Juros) </span>
                   </span>
                 </q-item-label>

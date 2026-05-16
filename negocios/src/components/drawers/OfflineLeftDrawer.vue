@@ -1,26 +1,20 @@
 <script setup>
-import { ref } from "vue";
-import OfflineLeftDrawerTabNegocios from "./OfflineLeftDrawerTabNegocios.vue";
-import OfflineLeftDrawerTabPrancheta from "./OfflineLeftDrawerTabPrancheta.vue";
-import OfflineLeftDrawerTabMercos from "./OfflineLeftDrawerTabMercos.vue";
-const tab = ref("negocios");
+import { ref } from 'vue'
+import OfflineLeftDrawerTabNegocios from './OfflineLeftDrawerTabNegocios.vue'
+import OfflineLeftDrawerTabPrancheta from './OfflineLeftDrawerTabPrancheta.vue'
+import OfflineLeftDrawerTabMercos from './OfflineLeftDrawerTabMercos.vue'
+const tab = ref('negocios')
 </script>
 <template>
   <q-tabs v-model="tab" dense active-color="primary" class="text-grey-8" align="left" inline-label>
     <q-tab name="negocios" icon="mdi-format-list-checkbox">
-      <q-tooltip class="bg-accent">
-        Listagem de Negócios
-      </q-tooltip>
+      <q-tooltip class="bg-accent"> Listagem de Negócios </q-tooltip>
     </q-tab>
     <q-tab name="prancheta" icon="mdi-clipboard-text-outline">
-      <q-tooltip class="bg-accent">
-        Prancheta
-      </q-tooltip>
+      <q-tooltip class="bg-accent"> Prancheta </q-tooltip>
     </q-tab>
     <q-tab name="mercos" icon="mdi-cloud-outline">
-      <q-tooltip class="bg-accent">
-        Vendas Mercos
-      </q-tooltip>
+      <q-tooltip class="bg-accent"> Vendas Mercos </q-tooltip>
     </q-tab>
   </q-tabs>
 

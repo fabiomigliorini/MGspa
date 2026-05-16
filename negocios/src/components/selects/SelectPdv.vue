@@ -1,72 +1,72 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { db } from "boot/db";
-import { pdvStore } from "src/stores/pdv";
+import { ref, onMounted } from 'vue'
+import { db } from 'boot/db'
+import { pdvStore } from 'src/stores/pdv'
 
-const sPdv = pdvStore();
+const sPdv = pdvStore()
 
 const props = defineProps({
   somenteAtivos: {
     type: Boolean,
     default: true,
   },
-});
+})
 
-const opcoes = ref([]);
-const filtrado = ref([]);
+const opcoes = ref([])
+const filtrado = ref([])
 
 onMounted(async () => {
   if (sPdv.dispositivos.length == 0) {
-    await sPdv.getDispositivos();
+    await sPdv.getDispositivos()
   }
   if (props.somenteAtivos) {
     opcoes.value = await sPdv.dispositivos.filter((item) => {
-      return item.inativo == null;
-    });
+      return item.inativo == null
+    })
   } else {
-    opcoes.value = [...sPdv.dispositivos];
+    opcoes.value = [...sPdv.dispositivos]
   }
-  filtrado.value = [...opcoes.value];
-});
+  filtrado.value = [...opcoes.value]
+})
 
 const sortRegs = (regs) => {
   regs = regs.sort((a, b) => {
     if (!a.apelido) {
-      return 1;
+      return 1
     }
     if (!b.apelido) {
-      return -1;
+      return -1
     }
     if (a.apelido.toUpperCase() > b.apelido.toUpperCase()) {
-      return 1;
+      return 1
     }
-    return -1;
-  });
-  return regs;
-};
+    return -1
+  })
+  return regs
+}
 
 const pesquisa = (val, update) => {
-  if (val === "") {
+  if (val === '') {
     update(() => {
-      filtrado.value = sortRegs(opcoes.value);
-    });
-    return;
+      filtrado.value = sortRegs(opcoes.value)
+    })
+    return
   }
   update(() => {
-    const pesquisa = val.toLowerCase();
+    const pesquisa = val.toLowerCase()
     let regs = opcoes.value.filter((item) => {
       if (item.apelido == null) {
-        item.apelido = "";
+        item.apelido = ''
       }
       return (
         item.ip.toLowerCase().indexOf(pesquisa) > -1 ||
         item.uuid.toLowerCase().indexOf(pesquisa) > -1 ||
         item.apelido.toLowerCase().indexOf(pesquisa) > -1
-      );
-    });
-    filtrado.value = sortRegs(regs);
-  });
-};
+      )
+    })
+    filtrado.value = sortRegs(regs)
+  })
+}
 </script>
 <template>
   <q-select
@@ -77,10 +77,7 @@ const pesquisa = (val, update) => {
     map-options
     option-value="codpdv"
     :option-label="
-      (item) =>
-        item.apelido === null
-          ? item.ip + ' (#' + item.codpdv + ')'
-          : item.apelido
+      (item) => (item.apelido === null ? item.ip + ' (#' + item.codpdv + ')' : item.apelido)
     "
     v-bind="$attrs"
     options-cover

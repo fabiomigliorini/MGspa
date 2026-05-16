@@ -1,25 +1,25 @@
 <script setup>
-import { formataNumero, formataCodNegocio } from "@components/formatters";
-import { ref, watch } from "vue";
-import { debounce } from "quasar";
+import { formataNumero, formataCodNegocio } from '@components/formatters'
+import { ref, watch } from 'vue'
+import { debounce } from 'quasar'
 
-import { conferenciaStore } from "src/stores/conferencia";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { conferenciaStore } from 'src/stores/conferencia'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sConferencia = conferenciaStore();
+const sConferencia = conferenciaStore()
 
 const inicializa = debounce(async () => {
-  await sConferencia.getConferencia();
-}, 500);
+  await sConferencia.getConferencia()
+}, 500)
 
 watch(
   () => sConferencia.filtro,
   () => {
-    inicializa();
+    inicializa()
   },
-  { deep: true }
-);
+  { deep: true },
+)
 </script>
 <template>
   <q-page>
@@ -42,9 +42,7 @@ watch(
             <q-item-label>
               <template v-if="item.valortotal">
                 R$
-                {{
-                  formataNumero(item.valortotal)
-                }}
+                {{ formataNumero(item.valortotal) }}
               </template>
             </q-item-label>
             <q-item-label caption>Total</q-item-label>
@@ -54,9 +52,7 @@ watch(
             <q-item-label>
               <template v-if="item.valorpix">
                 R$
-                {{
-                  formataNumero(item.valorpix)
-                }}
+                {{ formataNumero(item.valorpix) }}
               </template>
               &nbsp;
             </q-item-label>
@@ -67,9 +63,7 @@ watch(
             <q-item-label>
               <template v-if="item.valorstone">
                 R$
-                {{
-                  formataNumero(item.valorstone)
-                }}
+                {{ formataNumero(item.valorstone) }}
               </template>
               &nbsp;
             </q-item-label>
@@ -80,9 +74,7 @@ watch(
             <q-item-label>
               <template v-if="item.valortitulo">
                 R$
-                {{
-                  formataNumero(item.valortitulo)
-                }}
+                {{ formataNumero(item.valortitulo) }}
               </template>
               &nbsp;
             </q-item-label>
@@ -93,9 +85,7 @@ watch(
             <q-item-label>
               <template v-if="item.valordiferenca">
                 R$
-                {{
-                  formataNumero(item.valordiferenca)
-                }}
+                {{ formataNumero(item.valordiferenca) }}
               </template>
               &nbsp;
             </q-item-label>

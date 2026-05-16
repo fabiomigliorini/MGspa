@@ -1,18 +1,23 @@
 <script setup>
-import { onMounted } from "vue";
-import { useRoute } from "vue-router";
-import { negocioStore } from "src/stores/negocio";
-import { formataCnpjCpf, formataNumero, formataTimestamp, formataCodNegocio } from "@components/formatters";
-import { produtoStore } from "src/stores/produto";
-import BarCode from "components/BarCode.vue";
+import { onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { negocioStore } from 'src/stores/negocio'
+import {
+  formataCnpjCpf,
+  formataNumero,
+  formataTimestamp,
+  formataCodNegocio,
+} from '@components/formatters'
+import { produtoStore } from 'src/stores/produto'
+import BarCode from 'components/BarCode.vue'
 
-const route = useRoute();
-const sNegocio = negocioStore();
-const sProduto = produtoStore();
+const route = useRoute()
+const sNegocio = negocioStore()
+const sProduto = produtoStore()
 
 onMounted(() => {
-  sNegocio.carregarPeloUuid(route.params.uuid);
-});
+  sNegocio.carregarPeloUuid(route.params.uuid)
+})
 </script>
 <template>
   <template v-if="sNegocio.negocio">
@@ -54,12 +59,7 @@ onMounted(() => {
           <td v-if="sNegocio.negocio.Pessoa.codpessoa != 1">
             <span class="row">
               {{ formataCodNegocio(sNegocio.negocio.codpessoa) }} |
-              {{
-                formataCnpjCpf(
-                  sNegocio.negocio.Pessoa.cnpj,
-                  sNegocio.negocio.Pessoa.fisica
-                )
-              }}
+              {{ formataCnpjCpf(sNegocio.negocio.Pessoa.cnpj, sNegocio.negocio.Pessoa.fisica) }}
             </span>
             <div class="row">
               <span v-if="sNegocio.negocio.Pessoa.telefone1">
@@ -84,9 +84,7 @@ onMounted(() => {
             <span v-if="sNegocio.negocio.Pessoa.bairro">
               {{ sNegocio.negocio.Pessoa.bairro }} -
             </span>
-            {{ sNegocio.negocio.Pessoa.cidade }}/{{
-              sNegocio.negocio.Pessoa.uf
-            }}
+            {{ sNegocio.negocio.Pessoa.cidade }}/{{ sNegocio.negocio.Pessoa.uf }}
           </td>
         </tr>
       </table>
@@ -98,10 +96,7 @@ onMounted(() => {
           </tr>
         </thead>
         <tbody class="zebrada">
-          <template
-            v-for="produto in sNegocio.itensAtivos"
-            v-bind:key="produto.uuid"
-          >
+          <template v-for="produto in sNegocio.itensAtivos" v-bind:key="produto.uuid">
             <tr>
               <td class="codigo">
                 {{ produto.barras }} |
@@ -121,9 +116,7 @@ onMounted(() => {
           </template>
         </tbody>
         <tbody class="totais">
-          <tr
-            v-if="sNegocio.negocio.valorprodutos != sNegocio.negocio.valortotal"
-          >
+          <tr v-if="sNegocio.negocio.valorprodutos != sNegocio.negocio.valortotal">
             <td class="subtotal text-right">
               Produtos R$ {{ formataNumero(sNegocio.negocio.valorprodutos) }}
             </td>
@@ -136,27 +129,19 @@ onMounted(() => {
           </tr>
 
           <tr v-if="sNegocio.negocio.valorfrete">
-            <td class="text-right">
-              Frete R$ {{ formataNumero(sNegocio.negocio.valorfrete) }}
-            </td>
+            <td class="text-right">Frete R$ {{ formataNumero(sNegocio.negocio.valorfrete) }}</td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valorseguro">
-            <td class="text-right">
-              Seguro R$ {{ formataNumero(sNegocio.negocio.valorseguro) }}
-            </td>
+            <td class="text-right">Seguro R$ {{ formataNumero(sNegocio.negocio.valorseguro) }}</td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valoroutras">
-            <td class="text-right">
-              Outras R$ {{ formataNumero(sNegocio.negocio.valoroutras) }}
-            </td>
+            <td class="text-right">Outras R$ {{ formataNumero(sNegocio.negocio.valoroutras) }}</td>
           </tr>
 
           <tr>
-            <td class="text-right">
-              Total R$ {{ formataNumero(sNegocio.negocio.valortotal) }}
-            </td>
+            <td class="text-right">Total R$ {{ formataNumero(sNegocio.negocio.valortotal) }}</td>
           </tr>
         </tbody>
         <tbody v-if="sNegocio.negocio.pagamentos.length > 0" class="pagamentos">
@@ -204,10 +189,7 @@ onMounted(() => {
       <div class="text-center text-h5 text-bold">
         Orçamento {{ sNegocio.negocio.uuid.substring(0, 8) }}
       </div>
-      <div
-        class="barcode text-center"
-        style="display: flex; justify-content: center"
-      >
+      <div class="barcode text-center" style="display: flex; justify-content: center">
         <BarCode
           :value="'ORC' + sNegocio.negocio.uuid.substring(0, 8)"
           :format="'code128'"

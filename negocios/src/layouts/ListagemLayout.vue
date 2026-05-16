@@ -1,7 +1,7 @@
 <script setup>
-import MainLayout from "layouts/MainLayout.vue";
-import ListagemLeftDrawer from "components/drawers/ListagemLeftDrawer.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
+import MainLayout from 'layouts/MainLayout.vue'
+import ListagemLeftDrawer from 'components/drawers/ListagemLeftDrawer.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
   <main-layout title="Listagem de Negócios" left-drawer>

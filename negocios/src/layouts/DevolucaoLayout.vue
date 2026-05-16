@@ -1,17 +1,17 @@
 <script setup>
-import { computed } from "vue";
-import MainLayout from "layouts/MainLayout.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
-import { negocioStore } from "src/stores/negocio";
-const sNegocio = negocioStore();
+import { computed } from 'vue'
+import MainLayout from 'layouts/MainLayout.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
+import { negocioStore } from 'src/stores/negocio'
+const sNegocio = negocioStore()
 const linkVoltar = computed({
   get() {
     if (!sNegocio.negocio) {
-      return null;
+      return null
     }
-    return "/offline/" + sNegocio.negocio.uuid;
+    return '/offline/' + sNegocio.negocio.uuid
   },
-});
+})
 </script>
 <template>
   <main-layout title="Devolução" :back-to="linkVoltar">

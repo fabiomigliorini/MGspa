@@ -1,23 +1,29 @@
 <script setup>
-import { onMounted, ref } from "vue";
-import { useRoute } from "vue-router";
-import { db } from "boot/db";
-import { negocioStore } from "src/stores/negocio";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
-import { formataCnpjCpf, formataCnpj, formataNumero, formataTimestamp, formataCodNegocio } from "@components/formatters";
-import { produtoStore } from "src/stores/produto";
-import BarCode from "components/BarCode.vue";
+import { onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { db } from 'boot/db'
+import { negocioStore } from 'src/stores/negocio'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
+import {
+  formataCnpjCpf,
+  formataCnpj,
+  formataNumero,
+  formataTimestamp,
+  formataCodNegocio,
+} from '@components/formatters'
+import { produtoStore } from 'src/stores/produto'
+import BarCode from 'components/BarCode.vue'
 
-const route = useRoute();
-const sNegocio = negocioStore();
-const sProduto = produtoStore();
-const loc = ref(null);
+const route = useRoute()
+const sNegocio = negocioStore()
+const sProduto = produtoStore()
+const loc = ref(null)
 
 onMounted(async () => {
-  const ret = await sNegocio.carregarPeloUuid(route.params.uuid);
-  loc.value = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal);
-});
+  const ret = await sNegocio.carregarPeloUuid(route.params.uuid)
+  loc.value = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
+})
 </script>
 <template>
   <template v-if="sNegocio.negocio">
@@ -36,20 +42,13 @@ onMounted(async () => {
           <td>{{ formataCodNegocio(sNegocio.negocio.codnegocio) }}</td>
         </tr>
         <tr>
-          <td
-            v-if="sNegocio.negocio.fantasiavendedor"
-            class="text-bold text-right"
-          >
-            Vendedor
-          </td>
+          <td v-if="sNegocio.negocio.fantasiavendedor" class="text-bold text-right">Vendedor</td>
           <td v-if="sNegocio.negocio.fantasiavendedor">
             {{ sNegocio.negocio.fantasiavendedor }}
           </td>
           <td class="text-bold text-right">Data</td>
           <td>
-            {{
-              formataTimestamp(sNegocio.negocio.lancamento, 4, true)
-            }}
+            {{ formataTimestamp(sNegocio.negocio.lancamento, 4, true) }}
           </td>
         </tr>
       </table>
@@ -109,99 +108,74 @@ onMounted(async () => {
             <td class="unidademedida">UN</td>
             <td class="quantidade">{{ produto.quantidade }}</td>
             <td class="valor text-right">
-              {{
-                formataNumero(produto.valorunitario)
-              }}
-              <template
-                v-if="produto.valordesconto > 0 && produto.quantidade > 0"
-              >
+              {{ formataNumero(produto.valorunitario) }}
+              <template v-if="produto.valordesconto > 0 && produto.quantidade > 0">
                 <div>
                   (-
-                  {{
-                    formataNumero(produto.valordesconto / produto.quantidade)
-                  }})
+                  {{ formataNumero(produto.valordesconto / produto.quantidade) }})
                 </div>
                 <div>
                   {{
-                    formataNumero((produto.valorprodutos - produto.valordesconto) /
-                        produto.quantidade)
+                    formataNumero(
+                      (produto.valorprodutos - produto.valordesconto) / produto.quantidade,
+                    )
                   }}
                 </div>
               </template>
             </td>
             <td class="valor text-right">
-              {{
-                formataNumero(produto.valorprodutos)
-              }}
+              {{ formataNumero(produto.valorprodutos) }}
               <template v-if="produto.valordesconto">
                 <div>
                   (-
-                  {{
-                    formataNumero(produto.valordesconto)
-                  }})
+                  {{ formataNumero(produto.valordesconto) }})
                 </div>
                 <div>
-                  {{
-                    formataNumero(produto.valorprodutos - produto.valordesconto)
-                  }}
+                  {{ formataNumero(produto.valorprodutos - produto.valordesconto) }}
                 </div>
               </template>
             </td>
           </tr>
         </tbody>
         <tbody class="totais">
-          <tr
-            v-if="sNegocio.negocio.valortotal != sNegocio.negocio.valorprodutos"
-          >
+          <tr v-if="sNegocio.negocio.valortotal != sNegocio.negocio.valorprodutos">
             <td colspan="6" class="text-right">Produtos</td>
             <td class="text-right">
-              {{
-                formataNumero(sNegocio.negocio.valorprodutos)
-              }}
+              {{ formataNumero(sNegocio.negocio.valorprodutos) }}
             </td>
           </tr>
           <tr v-if="sNegocio.negocio.valordesconto">
             <td colspan="6" class="text-right">Desconto</td>
             <td class="text-right">
-              {{
-                formataNumero(sNegocio.negocio.valordesconto)
-              }}
+              {{ formataNumero(sNegocio.negocio.valordesconto) }}
             </td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valorfrete">
             <td colspan="6" class="text-right">Frete</td>
             <td class="text-right">
-              {{
-                formataNumero(sNegocio.negocio.valorfrete)
-              }}
+              {{ formataNumero(sNegocio.negocio.valorfrete) }}
             </td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valorseguro">
             <td colspan="6" class="text-right">Seguro</td>
             <td class="text-right">
-              {{
-                formataNumero(sNegocio.negocio.valorseguro)
-              }}
+              {{ formataNumero(sNegocio.negocio.valorseguro) }}
             </td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valoroutras">
             <td colspan="6" class="text-right">Outras</td>
             <td class="text-right">
-              {{
-                formataNumero(sNegocio.negocio.valoroutras)
-              }}
+              {{ formataNumero(sNegocio.negocio.valoroutras) }}
             </td>
           </tr>
 
           <tr>
             <td colspan="6" class="text-right">Total</td>
             <td class="text-right">
-              {{
-                formataNumero(sNegocio.negocio.valortotal)
-              }}
+              {{ formataNumero(sNegocio.negocio.valortotal) }}
             </td>
           </tr>
         </tbody>
@@ -214,9 +188,7 @@ onMounted(async () => {
       <!-- PAGAMENTO -->
       <div v-for="pag in sNegocio.negocio.pagamentos" v-bind:key="pag.uuid">
         <b>
-          {{
-            formataNumero(pag.valorpagamento)
-          }}
+          {{ formataNumero(pag.valorpagamento) }}
         </b>
         {{ pag.formapagamento }}
       </div>
@@ -265,10 +237,7 @@ onMounted(async () => {
       <div class="text-center text-h5 text-bold">
         Orçamento {{ sNegocio.negocio.uuid.substring(0, 8) }}
       </div>
-      <div
-        class="barcode text-center"
-        style="display: flex; justify-content: center"
-      >
+      <div class="barcode text-center" style="display: flex; justify-content: center">
         <BarCode
           :value="'ORC' + sNegocio.negocio.uuid.substring(0, 8)"
           :format="'code128'"
@@ -281,9 +250,7 @@ onMounted(async () => {
     </template>
     <div class="text-center text-h5 text-bold">
       R$
-      {{
-        formataNumero(sNegocio.negocio.valortotal)
-      }}
+      {{ formataNumero(sNegocio.negocio.valortotal) }}
     </div>
   </template>
 </template>

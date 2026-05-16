@@ -1,6 +1,6 @@
 <script setup>
-import MainLayout from "layouts/MainLayout.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
+import MainLayout from 'layouts/MainLayout.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
   <main-layout title="Comanda de Vendedor" back-to="/">

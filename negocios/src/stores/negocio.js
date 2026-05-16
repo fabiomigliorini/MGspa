@@ -1,81 +1,78 @@
-import { formataTimestampIso } from "@components/formatters";
-import { defineStore } from "pinia";
-import { toRaw } from "vue";
-import { db } from "boot/db";
-import { Notify, uid } from "quasar";
-import { sincronizacaoStore } from "stores/sincronizacao";
-import moment from "moment";
-import tiposPagamento from "../data/tipos-pagamento.json";
-import bandeirasCartao from "../data/bandeiras-cartao.json";
-import { falar } from "../utils/falar.js";
+import { formataTimestampIso } from '@components/formatters'
+import { defineStore } from 'pinia'
+import { toRaw } from 'vue'
+import { db } from 'boot/db'
+import { Notify, uid } from 'quasar'
+import { sincronizacaoStore } from 'stores/sincronizacao'
+import moment from 'moment'
+import tiposPagamento from '../data/tipos-pagamento.json'
+import bandeirasCartao from '../data/bandeiras-cartao.json'
+import { falar } from '../utils/falar.js'
 
-const sSinc = sincronizacaoStore();
+const sSinc = sincronizacaoStore()
 
 // Serializa operações concorrentes por uuid de negócio.
 // Evita race entre cliques rápidos, scanner duplo e listener multi-aba.
-const _mutexes = new Map();
+const _mutexes = new Map()
 async function comLock(uuid, fn) {
-  if (!uuid) return fn();
-  const previo = _mutexes.get(uuid) || Promise.resolve();
-  let liberar;
-  const novo = new Promise((r) => (liberar = r));
-  _mutexes.set(uuid, novo);
+  if (!uuid) return fn()
+  const previo = _mutexes.get(uuid) || Promise.resolve()
+  let liberar
+  const novo = new Promise((r) => (liberar = r))
+  _mutexes.set(uuid, novo)
   try {
-    await previo;
-    return await fn();
+    await previo
+    return await fn()
   } finally {
-    liberar();
-    if (_mutexes.get(uuid) === novo) _mutexes.delete(uuid);
+    liberar()
+    if (_mutexes.get(uuid) === novo) _mutexes.delete(uuid)
   }
 }
 
 // BroadcastChannel para sincronizar entre abas/janelas do mesmo origin.
 // Cada salvar() posta o uuid; outras abas recarregam se estão no mesmo negócio.
-const _bc =
-  typeof BroadcastChannel !== "undefined"
-    ? new BroadcastChannel("mgspa-negocio")
-    : null;
-let _bcListenerStore = null;
+const _bc = typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel('mgspa-negocio') : null
+let _bcListenerStore = null
 function instalarListenerMultiAba(store) {
-  if (!_bc || _bcListenerStore === store) return;
-  _bcListenerStore = store;
+  if (!_bc || _bcListenerStore === store) return
+  _bcListenerStore = store
   _bc.onmessage = (e) => {
-    const uuid = e.data?.uuid;
+    const uuid = e.data?.uuid
     if (uuid && uuid === store.negocio?.uuid) {
-      comLock(uuid, () => store.recarregar());
+      comLock(uuid, () => store.recarregar())
     }
-  };
+  }
 }
 
 // Compara dois valores numéricos com tolerância, tratando
 // null/undefined/''/NaN como "sem valor". Tolerância 0.0001.
 function numerosIguais(a, b) {
   const norm = (x) => {
-    if (x === null || x === undefined || x === "") return null;
-    const n = parseFloat(x);
-    return isNaN(n) ? null : n;
-  };
-  const na = norm(a);
-  const nb = norm(b);
-  if (na === null && nb === null) return true;
-  if (na === null || nb === null) return false;
-  return Math.abs(na - nb) < 0.0001;
+    if (x === null || x === undefined || x === '') return null
+    const n = parseFloat(x)
+    return isNaN(n) ? null : n
+  }
+  const na = norm(a)
+  const nb = norm(b)
+  if (na === null && nb === null) return true
+  if (na === null || nb === null) return false
+  return Math.abs(na - nb) < 0.0001
 }
 
 // Compara descontos: 0/null/undefined/''/NaN são todos "sem desconto" e
 // considerados iguais entre si. Demais valores comparados com tolerância.
 function descontosIguais(a, b) {
   const norm = (x) => {
-    if (x === null || x === undefined || x === "") return 0;
-    const n = parseFloat(x);
-    return isNaN(n) ? 0 : n;
-  };
-  return Math.abs(norm(a) - norm(b)) < 0.0001;
+    if (x === null || x === undefined || x === '') return 0
+    const n = parseFloat(x)
+    return isNaN(n) ? 0 : n
+  }
+  return Math.abs(norm(a) - norm(b)) < 0.0001
 }
 
-export const negocioStore = defineStore("negocio", {
+export const negocioStore = defineStore('negocio', {
   persist: {
-    paths: ["padrao", "paginaAtual", "ultimos"],
+    paths: ['padrao', 'paginaAtual', 'ultimos'],
   },
 
   state: () => ({
@@ -110,275 +107,260 @@ export const negocioStore = defineStore("negocio", {
 
   getters: {
     quantidadeProdutosAtivos() {
-      return this.itensAtivos.length;
+      return this.itensAtivos.length
     },
     itensAtivos() {
       if (!this.negocio) {
-        return [];
+        return []
       }
       return this.negocio.itens
         .filter((item) => item.inativo == null)
-        .sort((a, b) => b.ordenacao.localeCompare(a.ordenacao));
+        .sort((a, b) => b.ordenacao.localeCompare(a.ordenacao))
     },
     itensInativos() {
       if (!this.negocio) {
-        return [];
+        return []
       }
       return this.negocio.itens
         .filter((item) => item.inativo != null)
-        .sort((a, b) => b.inativo.localeCompare(a.inativo));
+        .sort((a, b) => b.inativo.localeCompare(a.inativo))
     },
     podeEditar() {
-      return (
-        this.negocio?.codnegociostatus == 1 &&
-        this.negocio?.codpdv == sSinc.pdv?.codpdv
-      );
+      return this.negocio?.codnegociostatus == 1 && this.negocio?.codpdv == sSinc.pdv?.codpdv
     },
     valorapagar() {
-      var pagamentos = 0;
+      var pagamentos = 0
       if (this.negocio.pagamentos) {
         pagamentos = this.negocio.pagamentos
           .map((item) => item.valortotal)
-          .reduce((prev, curr) => prev + curr, 0);
+          .reduce((prev, curr) => prev + curr, 0)
       }
-      return Math.round((this.negocio.valortotal - pagamentos) * 100) / 100;
+      return Math.round((this.negocio.valortotal - pagamentos) * 100) / 100
     },
     gruposDuplicadosPorBarras() {
       if (!this.negocio || !this.negocio.itens) {
-        return [];
+        return []
       }
-      const mapa = new Map();
+      const mapa = new Map()
       for (const item of this.negocio.itens) {
-        if (item.inativo != null) continue;
-        const chave = String(item.barras ?? "").trim();
-        if (!chave) continue;
-        if (!mapa.has(chave)) mapa.set(chave, []);
-        mapa.get(chave).push(item);
+        if (item.inativo != null) continue
+        const chave = String(item.barras ?? '').trim()
+        if (!chave) continue
+        if (!mapa.has(chave)) mapa.set(chave, [])
+        mapa.get(chave).push(item)
       }
-      const grupos = [];
+      const grupos = []
       for (const [barras, itens] of mapa) {
-        if (itens.length < 2) continue;
-        const ref = itens[0];
-        const divergentes = [];
+        if (itens.length < 2) continue
+        const ref = itens[0]
+        const divergentes = []
         if (!itens.every((i) => numerosIguais(i.valorunitario, ref.valorunitario))) {
-          divergentes.push("preço");
+          divergentes.push('preço')
         }
         for (const [campo, label] of [
-          ["percentualdesconto", "desconto"],
-          ["valorfrete", "frete"],
-          ["valorseguro", "seguro"],
-          ["valoroutras", "outras"],
+          ['percentualdesconto', 'desconto'],
+          ['valorfrete', 'frete'],
+          ['valorseguro', 'seguro'],
+          ['valoroutras', 'outras'],
         ]) {
           if (!itens.every((i) => descontosIguais(i[campo], ref[campo]))) {
-            divergentes.push(label);
+            divergentes.push(label)
           }
         }
         grupos.push({
           barras,
-          itens: [...itens].sort((a, b) =>
-            String(a.criacao).localeCompare(String(b.criacao))
-          ),
+          itens: [...itens].sort((a, b) => String(a.criacao).localeCompare(String(b.criacao))),
           podeJuntar: divergentes.length === 0,
           camposDivergentes: divergentes,
-        });
+        })
       }
-      return grupos;
+      return grupos
     },
   },
 
   actions: {
     async salvarPadrao(padrao) {
-      this.padrao = { ...padrao };
-      const nat = await db.naturezaOperacao.get(padrao.codnaturezaoperacao);
-      this.padrao.codoperacao = nat.codoperacao;
-      this.padrao.venda = nat.venda;
+      this.padrao = { ...padrao }
+      const nat = await db.naturezaOperacao.get(padrao.codnaturezaoperacao)
+      this.padrao.codoperacao = nat.codoperacao
+      this.padrao.venda = nat.venda
     },
 
     async atualizarListagem() {
       // busca todos negocios abertos do PDV
       let negs = await db.negocio
-        .where("[codnegociostatus+codpdv]")
+        .where('[codnegociostatus+codpdv]')
         .equals([1, sSinc.pdv.codpdv])
         .reverse()
-        .sortBy("criacao");
-      this.negocios = negs;
+        .sortBy('criacao')
+      this.negocios = negs
 
       // verifica se tem negocio aberto
       if (this.negocio) {
         // verifica se o negocio está na listagem de abertos
         const iNegocio = negs.findIndex((neg) => {
-          return neg.codnegocio == this.negocio.codnegocio;
-        });
+          return neg.codnegocio == this.negocio.codnegocio
+        })
 
         // verifica se o negocio está na listagem dos ultimos
-        var ultimos = this.ultimos;
+        var ultimos = this.ultimos
         const iUltimo = ultimos.findIndex((u) => {
-          return u.codnegocio == this.negocio.codnegocio;
-        });
+          return u.codnegocio == this.negocio.codnegocio
+        })
 
         if (iUltimo != -1) {
           if (iNegocio != -1) {
             // se esta nos abertos remove dos ultimos
-            ultimos.splice(iUltimo, 1);
+            ultimos.splice(iUltimo, 1)
           } else {
             // senao atualiza ele na listagem de ultimos
-            ultimos[iUltimo] = { ...this.negocio };
+            ultimos[iUltimo] = { ...this.negocio }
           }
         } else if (iNegocio == -1) {
           // se nao esta nem nos ultimos nem nos abertos, adiciona nos ultimos
-          ultimos.unshift({ ...this.negocio });
+          ultimos.unshift({ ...this.negocio })
         }
 
         //se listagem de ultimos maior que 10 registros filtra os 10 primeiros
         if (ultimos.length > 10) {
-          ultimos = ultimos.slice(0, 10);
+          ultimos = ultimos.slice(0, 10)
         }
 
         // atualiza listagem dos ultimos
-        this.ultimos = ultimos;
+        this.ultimos = ultimos
       }
     },
 
     async reconsultarAbertos() {
       // mostra notificacao
       const dismiss = Notify.create({
-        type: "ongoing",
-        message: "Reconsultando meus negócios abertos no Servidor!",
+        type: 'ongoing',
+        message: 'Reconsultando meus negócios abertos no Servidor!',
         timeout: 0,
-      });
+      })
 
       // percorre todos negocios abertos do pdv
-      var iNeg = 1;
+      var iNeg = 1
       for (const neg of this.negocios) {
         // se nao está sincronizado, não reconsulta no servidor
         if (!neg.sincronizado) {
-          continue;
+          continue
         }
 
         try {
           // log pra saber se deu algum erro
-          console.log(
-            "reconsultnado " +
-              iNeg +
-              "/" +
-              this.negocios.length +
-              " - " +
-              neg.codnegocio
-          );
-          iNeg++;
+          console.log('reconsultnado ' + iNeg + '/' + this.negocios.length + ' - ' + neg.codnegocio)
+          iNeg++
 
           // consulta no servidor
-          const ret = await sSinc.getNegocio(neg.uuid);
+          const ret = await sSinc.getNegocio(neg.uuid)
 
           // salva no banco local
-          let retDb = await db.negocio.put(ret);
+          let retDb = await db.negocio.put(ret)
 
           // se for o negocio aberto, atualiza o objeto da tela
           if (this.negocio.uuid == ret.uuid) {
-            this.negocio = { ...ret };
+            this.negocio = { ...ret }
           }
         } catch (error) {
-          console.log("Erro ao buscar " + neg.uuid);
-          console.log(error);
+          console.log('Erro ao buscar ' + neg.uuid)
+          console.log(error)
         }
       }
 
       // atualiza listagem de negocios abertos (drawer)
-      this.atualizarListagem();
+      this.atualizarListagem()
 
       // fecha notificacao
-      dismiss();
+      dismiss()
     },
 
     async carregarPeloCodnegocio(codnegocio) {
-      instalarListenerMultiAba(this);
+      instalarListenerMultiAba(this)
       // busca no indexedDB
-      const negocio = await db.negocio
-        .where("codnegocio")
-        .equals(codnegocio)
-        .first();
+      const negocio = await db.negocio.where('codnegocio').equals(codnegocio).first()
 
       // se nao tem offline busca na api
       if (negocio == undefined) {
         try {
-          await this.recarregarDaApi(codnegocio);
-          return this.negocio;
+          await this.recarregarDaApi(codnegocio)
+          return this.negocio
         } catch (error) {
-          console.log(error);
+          console.log(error)
           Notify.create({
-            type: "negative",
-            message: "Falha ao buscar dados no Servidor!",
+            type: 'negative',
+            message: 'Falha ao buscar dados no Servidor!',
             timeout: 3000, // 3 segundos
-            actions: [{ icon: "close", color: "white" }],
-          });
-          return false;
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          return false
         }
       }
 
       // se negocio esta sincronizado busca da API para
       // caso o negocio tenha sido alterado em outro computador
       if (!negocio.sincronizado) {
-        this.negocio = { ...negocio };
-        await this.carregarChavesEstrangeiras();
+        this.negocio = { ...negocio }
+        await this.carregarChavesEstrangeiras()
       } else {
         try {
-          await this.recarregarDaApi(codnegocio);
+          await this.recarregarDaApi(codnegocio)
         } catch (error) {
-          this.negocio = { ...negocio };
-          await this.carregarChavesEstrangeiras();
-          console.log(error);
+          this.negocio = { ...negocio }
+          await this.carregarChavesEstrangeiras()
+          console.log(error)
         }
       }
-      await this.atualizarListagem();
-      return this.negocio;
+      await this.atualizarListagem()
+      return this.negocio
     },
 
     async carregarPeloUuid(uuid) {
-      instalarListenerMultiAba(this);
-      const negocio = await db.negocio.get(uuid);
+      instalarListenerMultiAba(this)
+      const negocio = await db.negocio.get(uuid)
 
       // verifica se deve recarregar da api
       if (negocio == undefined) {
         try {
-          await this.recarregarDaApi(uuid);
-          return this.negocio;
+          await this.recarregarDaApi(uuid)
+          return this.negocio
         } catch (error) {
-          console.log(error);
+          console.log(error)
           Notify.create({
-            type: "negative",
-            message: "Falha ao buscar dados no Servidor!",
+            type: 'negative',
+            message: 'Falha ao buscar dados no Servidor!',
             timeout: 3000, // 3 segundos
-            actions: [{ icon: "close", color: "white" }],
-          });
-          return false;
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          return false
         }
       }
 
       // se negocio esta sincronizado busca da API para
       // caso o negocio tenha sido alterado em outro computador
       if (!negocio.sincronizado) {
-        this.negocio = { ...negocio };
-        await this.carregarChavesEstrangeiras();
+        this.negocio = { ...negocio }
+        await this.carregarChavesEstrangeiras()
       } else {
         try {
-          await this.recarregarDaApi(uuid);
+          await this.recarregarDaApi(uuid)
         } catch (error) {
-          this.negocio = { ...negocio };
-          await this.carregarChavesEstrangeiras();
-          console.log(error);
+          this.negocio = { ...negocio }
+          await this.carregarChavesEstrangeiras()
+          console.log(error)
         }
       }
-      return this.negocio;
+      return this.negocio
     },
 
     async recarregar() {
-      const neg = await db.negocio.get(this.negocio.uuid);
-      this.negocio = { ...neg };
-      return true;
+      const neg = await db.negocio.get(this.negocio.uuid)
+      this.negocio = { ...neg }
+      return true
     },
 
     async criar() {
-      const uuid = uid();
+      const uuid = uid()
       const negocio = {
         uuid: uuid,
         codnegocio: null,
@@ -422,78 +404,70 @@ export const negocioStore = defineStore("negocio", {
         notas: [],
         codpdv: sSinc.pdv.codpdv,
         Pdv: { ...sSinc.pdv },
-      };
-      db.negocio.add(negocio, uuid);
-      this.negocio = { ...negocio };
-      await this.atualizarListagem();
-      return negocio;
+      }
+      db.negocio.add(negocio, uuid)
+      this.negocio = { ...negocio }
+      await this.atualizarListagem()
+      return negocio
     },
 
     async recalcularValorTotal() {
-      let valorprodutos = 0;
-      let valordesconto = 0;
-      let valorfrete = 0;
-      let valorseguro = 0;
-      let valoroutras = 0;
+      let valorprodutos = 0
+      let valordesconto = 0
+      let valorfrete = 0
+      let valorseguro = 0
+      let valoroutras = 0
 
       // soma totais dos itens
       this.negocio.itens
         .filter((item) => {
-          return item.inativo == null;
+          return item.inativo == null
         })
         .forEach((item) => {
-          valorprodutos += parseFloat(item.valorprodutos);
+          valorprodutos += parseFloat(item.valorprodutos)
           if (item.valordesconto > 0) {
-            valordesconto += parseFloat(item.valordesconto);
+            valordesconto += parseFloat(item.valordesconto)
           }
           if (item.valorfrete > 0) {
-            valorfrete += parseFloat(item.valorfrete);
+            valorfrete += parseFloat(item.valorfrete)
           }
           if (item.valorseguro > 0) {
-            valorseguro += parseFloat(item.valorseguro);
+            valorseguro += parseFloat(item.valorseguro)
           }
           if (item.valoroutras > 0) {
-            valoroutras += parseFloat(item.valoroutras);
+            valoroutras += parseFloat(item.valoroutras)
           }
-        });
+        })
 
       // soma os juros dos pagamentos
       const valorjuros = this.negocio.pagamentos.reduce((acumulador, pag) => {
-        return acumulador + pag.valorjuros;
-      }, 0);
+        return acumulador + pag.valorjuros
+      }, 0)
 
       let valortotal =
-        valorprodutos -
-        valordesconto +
-        valorfrete +
-        valorseguro +
-        valoroutras +
-        valorjuros;
+        valorprodutos - valordesconto + valorfrete + valorseguro + valoroutras + valorjuros
 
-      this.negocio.valorprodutos = Math.round(valorprodutos * 100) / 100;
-      this.negocio.valordesconto = Math.round(valordesconto * 100) / 100;
-      this.negocio.valorfrete = Math.round(valorfrete * 100) / 100;
-      this.negocio.valorseguro = Math.round(valorseguro * 100) / 100;
-      this.negocio.valoroutras = Math.round(valoroutras * 100) / 100;
-      this.negocio.valorjuros = Math.round(valorjuros * 100) / 100;
-      this.negocio.valortotal = Math.round(valortotal * 100) / 100;
+      this.negocio.valorprodutos = Math.round(valorprodutos * 100) / 100
+      this.negocio.valordesconto = Math.round(valordesconto * 100) / 100
+      this.negocio.valorfrete = Math.round(valorfrete * 100) / 100
+      this.negocio.valorseguro = Math.round(valorseguro * 100) / 100
+      this.negocio.valoroutras = Math.round(valoroutras * 100) / 100
+      this.negocio.valorjuros = Math.round(valorjuros * 100) / 100
+      this.negocio.valortotal = Math.round(valortotal * 100) / 100
 
-      await this.recalcularTroco();
+      await this.recalcularTroco()
     },
 
     async recalcularTroco() {
-      const pagar = this.valorapagar;
-      let troco = pagar < 0 ? Math.abs(pagar) : null;
+      const pagar = this.valorapagar
+      let troco = pagar < 0 ? Math.abs(pagar) : null
       this.negocio.pagamentos
-        .filter(
-          (pag) =>
-            pag.codformapagamento == process.env.CODFORMAPAGAMENTO_DINHEIRO
-        )
+        .filter((pag) => pag.codformapagamento == process.env.CODFORMAPAGAMENTO_DINHEIRO)
         .sort((a, b) => b.valorpagamento - a.valorpagamento) // ordem decrescente
         .forEach((pag) => {
-          pag.valortroco = Math.min(troco, pag.valorpagamento);
-          troco -= pag.valortroco;
-        });
+          pag.valortroco = Math.min(troco, pag.valorpagamento)
+          troco -= pag.valortroco
+        })
     },
 
     async carregarPrimeiroVazio() {
@@ -503,195 +477,193 @@ export const negocioStore = defineStore("negocio", {
         })
         .filter((neg) => {
           if (neg.valortotal) {
-            return false;
+            return false
           }
           if (neg.codestoquelocal != this.padrao.codestoquelocal) {
-            return false;
+            return false
           }
           if (neg.codpessoa != this.padrao.codpessoa) {
-            return false;
+            return false
           }
           if (neg.codnaturezaoperacao != this.padrao.codnaturezaoperacao) {
-            return false;
+            return false
           }
           if (neg.codpdv != sSinc.pdv.codpdv) {
-            return false;
+            return false
           }
-          return true;
+          return true
         })
-        .sortBy("lancamento");
+        .sortBy('lancamento')
       if (negocios.length > 0) {
-        this.negocio = { ...negocios[0] };
-        return negocios[0];
+        this.negocio = { ...negocios[0] }
+        return negocios[0]
       }
-      return false;
+      return false
     },
 
     async carregarPrimeiroVazioOuCriar() {
       if (!sSinc.pdv.codpdv) {
         Notify.create({
-          type: "negative",
-          message: "Registro de PDV ainda não criado no servidor!",
+          type: 'negative',
+          message: 'Registro de PDV ainda não criado no servidor!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       if (!sSinc.ultimaSincronizacao.completa) {
         Notify.create({
-          type: "negative",
-          message: "Ainda não foi feita nenhuma sincronização!",
+          type: 'negative',
+          message: 'Ainda não foi feita nenhuma sincronização!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
-      let negocio = await this.carregarPrimeiroVazio();
+      let negocio = await this.carregarPrimeiroVazio()
       if (negocio != false) {
-        await this.carregarChavesEstrangeiras();
-        return negocio;
+        await this.carregarChavesEstrangeiras()
+        return negocio
       }
-      negocio = await this.criar();
+      negocio = await this.criar()
       if (negocio != false) {
-        await this.carregarChavesEstrangeiras();
-        await this.salvar();
-        return negocio;
+        await this.carregarChavesEstrangeiras()
+        await this.salvar()
+        return negocio
       }
-      return false;
+      return false
     },
 
     async duplicar() {
-      const uuid = uid();
+      const uuid = uid()
       // const negocio = { ...this.negocio };
       // let negocio = Object.assign({}, this.negocio);
-      let negocio = JSON.parse(JSON.stringify(this.negocio));
-      negocio.codnegocio = null;
-      negocio.uuid = uuid;
-      negocio.codnegociostatus = 1;
-      negocio.justificativa = null;
-      negocio.lancamento = formataTimestampIso(new Date());
-      negocio.criacao = formataTimestampIso(new Date());
-      negocio.alteracao = formataTimestampIso(new Date());
-      negocio.sincronizado = false;
-      negocio.codpdv = sSinc.pdv.codpdv;
-      negocio.Pdv = { ...sSinc.pdv };
-      negocio.pagamentos = [];
-      negocio.titulos = [];
-      negocio.notas = [];
-      negocio.PagarMePedidoS = [];
-      negocio.pixCob = [];
+      let negocio = JSON.parse(JSON.stringify(this.negocio))
+      negocio.codnegocio = null
+      negocio.uuid = uuid
+      negocio.codnegociostatus = 1
+      negocio.justificativa = null
+      negocio.lancamento = formataTimestampIso(new Date())
+      negocio.criacao = formataTimestampIso(new Date())
+      negocio.alteracao = formataTimestampIso(new Date())
+      negocio.sincronizado = false
+      negocio.codpdv = sSinc.pdv.codpdv
+      negocio.Pdv = { ...sSinc.pdv }
+      negocio.pagamentos = []
+      negocio.titulos = []
+      negocio.notas = []
+      negocio.PagarMePedidoS = []
+      negocio.pixCob = []
       negocio.itens = negocio.itens.filter((i) => {
-        return i.inativo == null;
-      });
+        return i.inativo == null
+      })
       negocio.itens.forEach((i) => {
-        i.codnegocioprodutobarra = null;
-        i.codnegocio = null;
-        i.uuid = uid();
-      });
-      db.negocio.add(negocio, uuid);
-      this.negocio = { ...negocio };
-      await this.carregarChavesEstrangeiras();
-      await this.salvar();
-      await this.atualizarListagem();
-      return negocio;
+        i.codnegocioprodutobarra = null
+        i.codnegocio = null
+        i.uuid = uid()
+      })
+      db.negocio.add(negocio, uuid)
+      this.negocio = { ...negocio }
+      await this.carregarChavesEstrangeiras()
+      await this.salvar()
+      await this.atualizarListagem()
+      return negocio
     },
 
     async isNegocioIntegro() {
       try {
-        const neg = this.negocio;
+        const neg = this.negocio
         if (neg.codoperacao == null) {
-          return false;
+          return false
         }
         if (neg.codestoquelocal == null) {
-          return false;
+          return false
         }
         if (neg.codnaturezaoperacao == null) {
-          return false;
+          return false
         }
         if (neg.codnegociostatus == null) {
-          return false;
+          return false
         }
         if (neg.codpessoa == null) {
-          return false;
+          return false
         }
         if (neg.Pessoa == null) {
-          return false;
+          return false
         }
-        return true;
+        return true
       } catch (error) {
-        return false;
+        return false
       }
     },
 
     async consertarNegocioCorrompido() {
       if (this.negocio.codestoquelocal == null) {
-        this.negocio.codestoquelocal = this.padrao.codestoquelocal;
+        this.negocio.codestoquelocal = this.padrao.codestoquelocal
       }
       if (this.negocio.codnaturezaoperacao == null) {
-        this.negocio.codnaturezaoperacao = this.padrao.codnaturezaoperacao;
+        this.negocio.codnaturezaoperacao = this.padrao.codnaturezaoperacao
       }
       if (this.negocio.codoperacao == null) {
-        this.negocio.codoperacao = this.padrao.codoperacao;
+        this.negocio.codoperacao = this.padrao.codoperacao
       }
       if (this.negocio.venda == null) {
-        this.negocio.venda = this.padrao.venda;
+        this.negocio.venda = this.padrao.venda
       }
       if (this.negocio.financeiro == null) {
-        this.negocio.financeiro = false;
+        this.negocio.financeiro = false
       }
       if (this.negocio.codnegociostatus == null) {
-        this.negocio.codnegociostatus = 1;
+        this.negocio.codnegociostatus = 1
       }
       if (this.negocio.codpessoa == null) {
-        this.negocio.codpessoa = this.padrao.codpessoa;
+        this.negocio.codpessoa = this.padrao.codpessoa
       }
       if (this.negocio.itens == null) {
-        this.negocio.itens = [];
+        this.negocio.itens = []
       }
       if (this.negocio.pagamentos == null) {
-        this.negocio.pagamentos = [];
+        this.negocio.pagamentos = []
       }
       if (this.negocio.titulos == null) {
-        this.negocio.titulos = [];
+        this.negocio.titulos = []
       }
       if (this.negocio.notas == null) {
-        this.negocio.notas = [];
+        this.negocio.notas = []
       }
       if (this.negocio.codpdv == null) {
-        this.negocio.codpdv = sSinc.pdv.codpdv;
+        this.negocio.codpdv = sSinc.pdv.codpdv
       }
-      await this.carregarChavesEstrangeiras();
+      await this.carregarChavesEstrangeiras()
     },
 
     async carregarChavesEstrangeiras() {
-      var naturezaoperacao = "Natureza Indefinida";
-      var codoperacao = this.padrao.codoperacao;
-      var venda = true;
-      var operacao = "Saída";
-      var negociostatus = "Aberto";
-      var estoquelocal = "Local Indefinido";
-      var fantasia = "Pessoa Indefinida";
-      var fantasiavendedor = "";
-      var financeiro = false;
+      var naturezaoperacao = 'Natureza Indefinida'
+      var codoperacao = this.padrao.codoperacao
+      var venda = true
+      var operacao = 'Saída'
+      var negociostatus = 'Aberto'
+      var estoquelocal = 'Local Indefinido'
+      var fantasia = 'Pessoa Indefinida'
+      var fantasiavendedor = ''
+      var financeiro = false
 
       if (!this.negocio) {
-        return false;
+        return false
       }
 
       // natureza
       if (this.negocio.codnaturezaoperacao) {
-        const nat = await db.naturezaOperacao.get(
-          this.negocio.codnaturezaoperacao
-        );
+        const nat = await db.naturezaOperacao.get(this.negocio.codnaturezaoperacao)
         if (nat) {
-          naturezaoperacao = nat.naturezaoperacao;
-          financeiro = nat.financeiro;
-          codoperacao = nat.codoperacao;
-          venda = nat.venda;
+          naturezaoperacao = nat.naturezaoperacao
+          financeiro = nat.financeiro
+          codoperacao = nat.codoperacao
+          venda = nat.venda
           if (nat.codoperacao == 1) {
-            operacao = "Entrada";
+            operacao = 'Entrada'
           } else {
-            operacao = "Saída";
+            operacao = 'Saída'
           }
         }
       }
@@ -699,74 +671,74 @@ export const negocioStore = defineStore("negocio", {
       // status
       switch (parseInt(this.negocio.codnegociostatus)) {
         case 2:
-          negociostatus = "Fechado";
-          break;
+          negociostatus = 'Fechado'
+          break
         case 3:
-          negociostatus = "Cancelado";
-          break;
+          negociostatus = 'Cancelado'
+          break
         case 1:
         default:
-          negociostatus = "Aberto";
-          break;
+          negociostatus = 'Aberto'
+          break
       }
 
       // estoquelocal
       if (this.negocio.codestoquelocal) {
-        const loc = await db.estoqueLocal.get(this.negocio.codestoquelocal);
+        const loc = await db.estoqueLocal.get(this.negocio.codestoquelocal)
         if (loc) {
-          estoquelocal = loc.estoquelocal;
+          estoquelocal = loc.estoquelocal
         }
       }
 
       // Pessoa
       if (this.negocio.codpessoa) {
-        const pes = await db.pessoa.get(this.negocio.codpessoa);
+        const pes = await db.pessoa.get(this.negocio.codpessoa)
         if (pes) {
           if (pes.codformapagamento) {
-            const fp = await db.formaPagamento.get(pes.codformapagamento);
-            pes.formapagamento = fp.formapagamento;
+            const fp = await db.formaPagamento.get(pes.codformapagamento)
+            pes.formapagamento = fp.formapagamento
           }
-          this.negocio.Pessoa = pes;
-          fantasia = pes.fantasia;
+          this.negocio.Pessoa = pes
+          fantasia = pes.fantasia
         }
       }
 
       // Vendedor
       if (this.negocio.codpessoavendedor) {
-        const vnd = await db.pessoa.get(this.negocio.codpessoavendedor);
+        const vnd = await db.pessoa.get(this.negocio.codpessoavendedor)
         if (vnd) {
-          fantasiavendedor = vnd.fantasia;
+          fantasiavendedor = vnd.fantasia
         }
       }
 
-      this.negocio.naturezaoperacao = naturezaoperacao;
-      this.negocio.financeiro = financeiro;
-      this.negocio.codoperacao = codoperacao;
-      this.negocio.venda = venda;
-      this.negocio.operacao = operacao;
-      this.negocio.negociostatus = negociostatus;
-      this.negocio.estoquelocal = estoquelocal;
-      this.negocio.fantasia = fantasia;
-      this.negocio.fantasiavendedor = fantasiavendedor;
+      this.negocio.naturezaoperacao = naturezaoperacao
+      this.negocio.financeiro = financeiro
+      this.negocio.codoperacao = codoperacao
+      this.negocio.venda = venda
+      this.negocio.operacao = operacao
+      this.negocio.negociostatus = negociostatus
+      this.negocio.estoquelocal = estoquelocal
+      this.negocio.fantasia = fantasia
+      this.negocio.fantasiavendedor = fantasiavendedor
     },
 
     async salvar(sincronizar = true) {
       // marca alteracao
       if (sincronizar) {
         if (this.negocio.codnegociostatus == 1) {
-          this.negocio.alteracao = formataTimestampIso(new Date());
-          this.negocio.lancamento = formataTimestampIso(new Date());
+          this.negocio.alteracao = formataTimestampIso(new Date())
+          this.negocio.lancamento = formataTimestampIso(new Date())
         }
-        this.negocio.sincronizado = false;
+        this.negocio.sincronizado = false
       }
-      const ret = await db.negocio.put(toRaw(this.negocio));
-      _bc?.postMessage({ uuid: this.negocio.uuid });
+      const ret = await db.negocio.put(toRaw(this.negocio))
+      _bc?.postMessage({ uuid: this.negocio.uuid })
       if (sincronizar) {
-        this.sincronizar(this.negocio.uuid);
+        this.sincronizar(this.negocio.uuid)
       } else {
-        await this.atualizarListagem();
+        await this.atualizarListagem()
       }
-      return ret;
+      return ret
     },
 
     async itemAdicionar(
@@ -776,149 +748,141 @@ export const negocioStore = defineStore("negocio", {
       produto,
       codimagem,
       quantidade,
-      valorunitario
+      valorunitario,
     ) {
       return comLock(this.negocio?.uuid, async () => {
-      // busca versao do IndexedDB para
-      // garantir que nao foi adicionado nada em outra aba
-      await this.recarregar();
+        // busca versao do IndexedDB para
+        // garantir que nao foi adicionado nada em outra aba
+        await this.recarregar()
 
-      //verifica se o item já existe no negocio
-      const index = this.negocio.itens.findIndex(function (item) {
-        return (
-          item.inativo === null &&
-          parseInt(item.codprodutobarra) === parseInt(codprodutobarra)
-        );
-      });
+        //verifica se o item já existe no negocio
+        const index = this.negocio.itens.findIndex(function (item) {
+          return (
+            item.inativo === null && parseInt(item.codprodutobarra) === parseInt(codprodutobarra)
+          )
+        })
 
-      // se ja existe adiciona a quantiade, se nao cria um novo item
-      if (index >= 0) {
-        var item = this.negocio.itens.splice(index, 1);
-        item = item[0];
-        item.quantidade = parseFloat(item.quantidade) + parseFloat(quantidade);
-        item.alteracao = formataTimestampIso(new Date());
-        item.ordenacao = item.alteracao;
-      } else {
-        var item = {
-          uuid: uid(),
-          codprodutobarra,
-          barras,
-          codproduto,
-          produto,
-          codimagem,
-          quantidade: parseFloat(quantidade),
-          valorunitario: parseFloat(valorunitario),
-          valorprodutos: 0,
-          percentualdesconto: null,
-          valordesconto: null,
-          valorfrete: null,
-          valorseguro: null,
-          valoroutras: null,
-          valortotal: null,
-          criacao: formataTimestampIso(new Date()),
-          alteracao: formataTimestampIso(new Date()),
-          ordenacao: formataTimestampIso(new Date()),
-          inativo: null,
-        };
-        try {
-          if (this.negocio.Pessoa.desconto) {
-            item.percentualdesconto = this.negocio.Pessoa.desconto;
+        // se ja existe adiciona a quantiade, se nao cria um novo item
+        if (index >= 0) {
+          var item = this.negocio.itens.splice(index, 1)
+          item = item[0]
+          item.quantidade = parseFloat(item.quantidade) + parseFloat(quantidade)
+          item.alteracao = formataTimestampIso(new Date())
+          item.ordenacao = item.alteracao
+        } else {
+          var item = {
+            uuid: uid(),
+            codprodutobarra,
+            barras,
+            codproduto,
+            produto,
+            codimagem,
+            quantidade: parseFloat(quantidade),
+            valorunitario: parseFloat(valorunitario),
+            valorprodutos: 0,
+            percentualdesconto: null,
+            valordesconto: null,
+            valorfrete: null,
+            valorseguro: null,
+            valoroutras: null,
+            valortotal: null,
+            criacao: formataTimestampIso(new Date()),
+            alteracao: formataTimestampIso(new Date()),
+            ordenacao: formataTimestampIso(new Date()),
+            inativo: null,
           }
-        } catch (error) {
-          item.percentualdesconto = null;
+          try {
+            if (this.negocio.Pessoa.desconto) {
+              item.percentualdesconto = this.negocio.Pessoa.desconto
+            }
+          } catch (error) {
+            item.percentualdesconto = null
+          }
         }
-      }
 
-      const palavras = item.produto.split(" ");
-      var texto = "";
-      if (palavras.length >= 2) {
-        texto = palavras[0] + " " + palavras[1];
-      } else {
-        texto = palavras[0];
-      }
-      falar(texto);
+        const palavras = item.produto.split(' ')
+        var texto = ''
+        if (palavras.length >= 2) {
+          texto = palavras[0] + ' ' + palavras[1]
+        } else {
+          texto = palavras[0]
+        }
+        falar(texto)
 
-      // adiciona o item no inicio do array
-      this.negocio.itens.unshift(item);
+        // adiciona o item no inicio do array
+        this.negocio.itens.unshift(item)
 
-      // recalcula os totais
-      this.itemRecalcularValorProdutos(item);
+        // recalcula os totais
+        this.itemRecalcularValorProdutos(item)
 
-      // confirma se tem alguma coisa pra consertar
-      if (!(await this.isNegocioIntegro())) {
-        await this.consertarNegocioCorrompido();
-      }
+        // confirma se tem alguma coisa pra consertar
+        if (!(await this.isNegocioIntegro())) {
+          await this.consertarNegocioCorrompido()
+        }
 
-      // salva no IndexedDB
-      await this.salvar();
-      });
+        // salva no IndexedDB
+        await this.salvar()
+      })
     },
 
     async juntarItensPorBarras(barras) {
       return comLock(this.negocio?.uuid, async () => {
-      await this.recarregar();
-      const grupo = this.negocio.itens.filter(
-        (i) => i.inativo == null && String(i.barras ?? "") === String(barras)
-      );
-      if (grupo.length < 2) {
-        return false;
-      }
-      const info = this.gruposDuplicadosPorBarras.find(
-        (g) => g.barras === String(barras)
-      );
-      if (info && !info.podeJuntar) {
-        Notify.create({
-          type: "negative",
-          message:
-            "Divergente em: " +
-            info.camposDivergentes.join(", ") +
-            " — ajuste manualmente.",
-          timeout: 3000,
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
-      }
-      // alvo = mais antigo do grupo
-      grupo.sort((a, b) =>
-        String(a.criacao).localeCompare(String(b.criacao))
-      );
-      const alvo = grupo[0];
-      const outros = grupo.slice(1);
-      const carimbo = formataTimestampIso(new Date());
-      // inativa os outros antes de recalcular para que recalcularValorTotal
-      // (cascateado por itemRecalcularValorProdutos) só some o alvo
-      for (const x of outros) {
-        x.inativo = carimbo;
-      }
-      alvo.quantidade =
-        parseFloat(alvo.quantidade) +
-        outros.reduce((s, x) => s + parseFloat(x.quantidade), 0);
-      alvo.alteracao = carimbo;
-      alvo.ordenacao = carimbo;
-      this.itemRecalcularValorProdutos(alvo);
-      await this.salvar();
-      return true;
-      });
+        await this.recarregar()
+        const grupo = this.negocio.itens.filter(
+          (i) => i.inativo == null && String(i.barras ?? '') === String(barras),
+        )
+        if (grupo.length < 2) {
+          return false
+        }
+        const info = this.gruposDuplicadosPorBarras.find((g) => g.barras === String(barras))
+        if (info && !info.podeJuntar) {
+          Notify.create({
+            type: 'negative',
+            message:
+              'Divergente em: ' + info.camposDivergentes.join(', ') + ' — ajuste manualmente.',
+            timeout: 3000,
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          return false
+        }
+        // alvo = mais antigo do grupo
+        grupo.sort((a, b) => String(a.criacao).localeCompare(String(b.criacao)))
+        const alvo = grupo[0]
+        const outros = grupo.slice(1)
+        const carimbo = formataTimestampIso(new Date())
+        // inativa os outros antes de recalcular para que recalcularValorTotal
+        // (cascateado por itemRecalcularValorProdutos) só some o alvo
+        for (const x of outros) {
+          x.inativo = carimbo
+        }
+        alvo.quantidade =
+          parseFloat(alvo.quantidade) + outros.reduce((s, x) => s + parseFloat(x.quantidade), 0)
+        alvo.alteracao = carimbo
+        alvo.ordenacao = carimbo
+        this.itemRecalcularValorProdutos(alvo)
+        await this.salvar()
+        return true
+      })
     },
 
     async itemAdicionarQuantidade(uuid, quantidade) {
       return comLock(this.negocio?.uuid, async () => {
-        await this.recarregar();
+        await this.recarregar()
         const item = this.negocio.itens.find(function (item) {
-          return item.inativo === null && item.uuid == uuid;
-        });
+          return item.inativo === null && item.uuid == uuid
+        })
         if (!item) {
-          return false;
+          return false
         }
-        const total = parseFloat(item.quantidade) + parseFloat(quantidade);
+        const total = parseFloat(item.quantidade) + parseFloat(quantidade)
         if (total <= 0) {
-          return;
+          return
         }
-        item.quantidade = total;
-        this.itemRecalcularValorProdutos(item);
+        item.quantidade = total
+        this.itemRecalcularValorProdutos(item)
         // salva no IndexedDB
-        await this.salvar();
-      });
+        await this.salvar()
+      })
     },
 
     async itemSalvar(
@@ -932,100 +896,95 @@ export const negocioStore = defineStore("negocio", {
       valorfrete,
       valorseguro,
       valoroutras,
-      valortotal
+      valortotal,
     ) {
       return comLock(this.negocio?.uuid, async () => {
-        await this.recarregar();
+        await this.recarregar()
         const item = this.negocio.itens.find(function (item) {
-          return item.inativo === null && item.uuid == uuid;
-        });
+          return item.inativo === null && item.uuid == uuid
+        })
         if (!item) {
-          return false;
+          return false
         }
-        item.codprodutobarra = codprodutobarra;
-        item.quantidade = quantidade;
-        item.valorunitario = valorunitario;
-        item.valorprodutos = valorprodutos;
-        item.percentualdesconto = percentualdesconto;
-        item.valordesconto = valordesconto;
-        item.valorfrete = valorfrete;
-        item.valorseguro = valorseguro;
-        item.valoroutras = valoroutras;
-        item.valortotal = valortotal;
-        this.recalcularValorTotal();
-        await this.salvar();
-      });
+        item.codprodutobarra = codprodutobarra
+        item.quantidade = quantidade
+        item.valorunitario = valorunitario
+        item.valorprodutos = valorprodutos
+        item.percentualdesconto = percentualdesconto
+        item.valordesconto = valordesconto
+        item.valorfrete = valorfrete
+        item.valorseguro = valorseguro
+        item.valoroutras = valoroutras
+        item.valortotal = valortotal
+        this.recalcularValorTotal()
+        await this.salvar()
+      })
     },
 
     async itemInativar(uuid) {
       return comLock(this.negocio?.uuid, async () => {
-        await this.recarregar();
+        await this.recarregar()
         const inativar = this.negocio.itens.find(function (item) {
-          return item.inativo === null && item.uuid == uuid;
-        });
+          return item.inativo === null && item.uuid == uuid
+        })
         if (inativar) {
-          inativar.inativo = formataTimestampIso(new Date());
-          this.recalcularValorTotal();
-          await this.salvar();
+          inativar.inativo = formataTimestampIso(new Date())
+          this.recalcularValorTotal()
+          await this.salvar()
         }
-      });
+      })
     },
 
     async itemRecalcularValorProdutos(item) {
       let total =
-        Math.round(
-          parseFloat(item.quantidade) * parseFloat(item.valorunitario) * 100
-        ) / 100;
-      item.valorprodutos = total;
-      this.itemRecalcularValorDesconto(item);
+        Math.round(parseFloat(item.quantidade) * parseFloat(item.valorunitario) * 100) / 100
+      item.valorprodutos = total
+      this.itemRecalcularValorDesconto(item)
     },
 
     async itemRecalcularValorDesconto(item) {
       if (item.percentualdesconto <= 0) {
-        item.valordesconto = null;
+        item.valordesconto = null
       } else {
-        item.valordesconto =
-          Math.round(item.valorprodutos * item.percentualdesconto) / 100;
+        item.valordesconto = Math.round(item.valorprodutos * item.percentualdesconto) / 100
       }
-      this.itemRecalcularValorTotal(item);
+      this.itemRecalcularValorTotal(item)
     },
 
     async itemRecalcularValorTotal(item) {
-      let total = parseFloat(item.valorprodutos);
+      let total = parseFloat(item.valorprodutos)
       if (item.valordesconto) {
-        total -= parseFloat(item.valordesconto);
+        total -= parseFloat(item.valordesconto)
       }
       if (item.valorfrete) {
-        total += parseFloat(item.valorfrete);
+        total += parseFloat(item.valorfrete)
       }
       if (item.valorseguro) {
-        total += parseFloat(item.valorseguro);
+        total += parseFloat(item.valorseguro)
       }
       if (item.valoroutras) {
-        total += parseFloat(item.valoroutras);
+        total += parseFloat(item.valoroutras)
       }
-      item.valortotal = Math.round(total * 100) / 100;
-      this.recalcularValorTotal();
+      item.valortotal = Math.round(total * 100) / 100
+      this.recalcularValorTotal()
     },
 
     async aplicarValores(valordesconto, valorfrete, valorseguro, valoroutras) {
       // Função auxiliar para garantir arredondamento preciso de ponto flutuante
       const roundToTwoDecimals = (num) => {
-        if (num === null || num === undefined) return 0;
+        if (num === null || num === undefined) return 0
         // Utiliza a técnica de multiplicar/arredondar/dividir para precisão
-        return parseFloat((Math.round(num * 100) / 100).toFixed(2));
-      };
+        return parseFloat((Math.round(num * 100) / 100).toFixed(2))
+      }
 
-      await this.recarregar();
+      await this.recarregar()
 
-      const totalProdutos = this.negocio.valorprodutos;
+      const totalProdutos = this.negocio.valorprodutos
 
       // 1. ORDENAÇÃO: Cria uma cópia e ordena os itens do menor para o maior valor do produto.
       // O maior item (ou um dos maiores) irá absorver o erro de arredondamento.
-      const itensOrdenados = [...this.itensAtivos].sort(
-        (a, b) => a.valorprodutos - b.valorprodutos
-      );
-      const ultimoIndex = itensOrdenados.length - 1;
+      const itensOrdenados = [...this.itensAtivos].sort((a, b) => a.valorprodutos - b.valorprodutos)
+      const ultimoIndex = itensOrdenados.length - 1
 
       // 2. Inicialização de Valores e Saldos (Garantindo Absoluto e Arredondamento)
       const valoresTotais = {
@@ -1033,160 +992,152 @@ export const negocioStore = defineStore("negocio", {
         frete: roundToTwoDecimals(Math.abs(valorfrete || 0)),
         seguro: roundToTwoDecimals(Math.abs(valorseguro || 0)),
         outras: roundToTwoDecimals(Math.abs(valoroutras || 0)),
-      };
+      }
 
-      const saldos = { ...valoresTotais };
+      const saldos = { ...valoresTotais }
 
       // 3. Cálculo dos Percentuais
       const percentuais = {
-        desconto:
-          totalProdutos > 0 ? valoresTotais.desconto / totalProdutos : 0,
+        desconto: totalProdutos > 0 ? valoresTotais.desconto / totalProdutos : 0,
         frete: totalProdutos > 0 ? valoresTotais.frete / totalProdutos : 0,
         seguro: totalProdutos > 0 ? valoresTotais.seguro / totalProdutos : 0,
         outras: totalProdutos > 0 ? valoresTotais.outras / totalProdutos : 0,
-      };
+      }
 
       // --- Função Auxiliar para Rateio Robusto ---
-      const aplicarRateio = (
-        item,
-        index,
-        percentual,
-        saldoKey,
-        valorKey,
-        percentualKey = null
-      ) => {
-        const saldoAtual = saldos[saldoKey];
-        const totalRateavel = valoresTotais[saldoKey];
+      const aplicarRateio = (item, index, percentual, saldoKey, valorKey, percentualKey = null) => {
+        const saldoAtual = saldos[saldoKey]
+        const totalRateavel = valoresTotais[saldoKey]
 
         if (totalRateavel === 0 || totalProdutos === 0) {
-          item[valorKey] = 0;
-          if (percentualKey) item[percentualKey] = 0;
-          return;
+          item[valorKey] = 0
+          if (percentualKey) item[percentualKey] = 0
+          return
         }
 
         if (index === ultimoIndex) {
           // NO ÚLTIMO ITEM: Atribui o saldo restante (o valor final exato).
           // Arredonda para garantir 0.00 se o saldo for um número negativo de precisão flutuante.
-          item[valorKey] = roundToTwoDecimals(saldoAtual);
+          item[valorKey] = roundToTwoDecimals(saldoAtual)
         } else {
           // Nos itens anteriores:
           // 1. Calcula o valor proporcional.
-          let valorRateadoBruto = item.valorprodutos * percentual;
+          let valorRateadoBruto = item.valorprodutos * percentual
 
           // 2. Controla o Saldo: O valor rateado nunca pode ser maior que o saldo restante.
-          let valorRateadoControlado = Math.min(valorRateadoBruto, saldoAtual);
+          let valorRateadoControlado = Math.min(valorRateadoBruto, saldoAtual)
 
           // 3. Arredonda o valor a ser atribuído.
-          let valorAtribuido = roundToTwoDecimals(valorRateadoControlado);
+          let valorAtribuido = roundToTwoDecimals(valorRateadoControlado)
 
-          item[valorKey] = valorAtribuido;
+          item[valorKey] = valorAtribuido
 
           // 4. Subtrai o valor ARREDONDADO do saldo e arredonda o próprio saldo.
-          saldos[saldoKey] -= valorAtribuido;
-          saldos[saldoKey] = roundToTwoDecimals(saldos[saldoKey]);
+          saldos[saldoKey] -= valorAtribuido
+          saldos[saldoKey] = roundToTwoDecimals(saldos[saldoKey])
         }
 
         if (percentualKey) {
-          item[percentualKey] = roundToTwoDecimals(percentual * 100);
+          item[percentualKey] = roundToTwoDecimals(percentual * 100)
         }
-      };
+      }
 
       // 4. Loop Principal (usando itens ordenados)
       for (let index = 0; index <= ultimoIndex; index++) {
-        const item = itensOrdenados[index]; // Usa o item ORDENADO
+        const item = itensOrdenados[index] // Usa o item ORDENADO
 
         aplicarRateio(
           item,
           index,
           percentuais.desconto,
-          "desconto",
-          "valordesconto",
-          "percentualdesconto"
-        );
-        aplicarRateio(item, index, percentuais.frete, "frete", "valorfrete");
-        aplicarRateio(item, index, percentuais.seguro, "seguro", "valorseguro");
-        aplicarRateio(item, index, percentuais.outras, "outras", "valoroutras");
+          'desconto',
+          'valordesconto',
+          'percentualdesconto',
+        )
+        aplicarRateio(item, index, percentuais.frete, 'frete', 'valorfrete')
+        aplicarRateio(item, index, percentuais.seguro, 'seguro', 'valorseguro')
+        aplicarRateio(item, index, percentuais.outras, 'outras', 'valoroutras')
 
         // Note: Se o 'item' é uma referência ao objeto original, ele será atualizado.
         // Se a referência foi perdida (dependendo da sua implementação de this.itensAtivos),
         // pode ser necessário atualizar a lista original após o loop.
         // Assumo que a atualização do 'item' altera a referência dentro de 'this.itensAtivos'.
-        this.itemRecalcularValorTotal(item);
+        this.itemRecalcularValorTotal(item)
       }
 
       // 5. Opcional: Se 'itemRecalcularValorTotal' for o método que atualiza a lista principal,
       // esta etapa final de recálculo e salvamento é crucial.
-      await this.recalcularValorTotal();
-      this.salvar();
+      await this.recalcularValorTotal()
+      this.salvar()
     },
 
     async informarPessoa(codpessoa, cpf) {
       // atribui o cliente/cpf no negocio
-      this.negocio.codpessoa = codpessoa;
+      this.negocio.codpessoa = codpessoa
       if (codpessoa == 1) {
-        this.negocio.cpf = cpf;
+        this.negocio.cpf = cpf
       } else {
-        this.negocio.cpf = null;
+        this.negocio.cpf = null
       }
 
       // pega desconto do cliente antigo e do novo
-      const descontoClienteAntigo = parseFloat(this.negocio.Pessoa.desconto);
-      await this.carregarChavesEstrangeiras();
-      const descontoClienteNovo = parseFloat(this.negocio.Pessoa.desconto);
+      const descontoClienteAntigo = parseFloat(this.negocio.Pessoa.desconto)
+      await this.carregarChavesEstrangeiras()
+      const descontoClienteNovo = parseFloat(this.negocio.Pessoa.desconto)
 
       // se negocio nao estiver aberto retorna
       if (this.negocio.codnegociostatus != 1) {
-        await this.salvar();
-        return;
+        await this.salvar()
+        return
       }
 
       // se novo cliente tem desconto, aplica o desconto dele
       if (descontoClienteNovo > 0) {
         this.negocio.itens.forEach((item) => {
-          item.percentualdesconto = descontoClienteNovo;
-          this.itemRecalcularValorProdutos(item);
-        });
+          item.percentualdesconto = descontoClienteNovo
+          this.itemRecalcularValorProdutos(item)
+        })
       } else if (descontoClienteAntigo > 0) {
         this.negocio.itens.forEach((item) => {
           // se o desconto dos itens era o desconto do cliente antigo, retira o desconto
           if (item.percentualdesconto == descontoClienteAntigo) {
-            item.percentualdesconto = null;
-            this.itemRecalcularValorProdutos(item);
+            item.percentualdesconto = null
+            this.itemRecalcularValorProdutos(item)
           }
-        });
+        })
       }
-      await this.salvar();
+      await this.salvar()
     },
 
     async informarNatureza(codestoquelocal, codnaturezaoperacao, observacoes) {
-      await this.recarregar();
-      this.negocio.codestoquelocal = codestoquelocal;
-      this.negocio.codnaturezaoperacao = codnaturezaoperacao;
-      this.negocio.observacoes = observacoes;
-      await this.carregarChavesEstrangeiras();
-      await this.salvar();
+      await this.recarregar()
+      this.negocio.codestoquelocal = codestoquelocal
+      this.negocio.codnaturezaoperacao = codnaturezaoperacao
+      this.negocio.observacoes = observacoes
+      await this.carregarChavesEstrangeiras()
+      await this.salvar()
     },
 
     async informarVendedor(codpessoavendedor) {
-      await this.recarregar();
-      this.negocio.codpessoavendedor = codpessoavendedor;
-      await this.carregarChavesEstrangeiras();
-      await this.salvar();
+      await this.recarregar()
+      this.negocio.codpessoavendedor = codpessoavendedor
+      await this.carregarChavesEstrangeiras()
+      await this.salvar()
     },
 
     async sincronizar(uuid) {
-      const negocio = await db.negocio.get(uuid);
-      let retorno = false;
+      const negocio = await db.negocio.get(uuid)
+      let retorno = false
       try {
-        const ret = await sSinc.putNegocio(negocio);
+        const ret = await sSinc.putNegocio(negocio)
         if (ret) {
           db.negocio.update(ret.uuid, {
             codnegocio: ret.codnegocio,
             codnegociostatus: ret.codnegociostatus,
-          });
+          })
           if (this.negocio.uuid == ret.uuid) {
-            this.negocio.codnegocio = ret.codnegocio;
-            this.negocio.codnegociostatus = ret.codnegociostatus;
+            this.negocio.codnegocio = ret.codnegocio
+            this.negocio.codnegociostatus = ret.codnegociostatus
             if (
               this.negocio.valortotal == ret.valortotal &&
               this.negocio.valordesconto == ret.valordesconto &&
@@ -1194,53 +1145,53 @@ export const negocioStore = defineStore("negocio", {
               this.negocio.valorjuros == ret.valorjuros &&
               this.negocio.valoroutras == ret.valoroutras
             ) {
-              this.negocio.sincronizado = true;
+              this.negocio.sincronizado = true
               db.negocio.update(ret.uuid, {
                 sincronizado: true,
-              });
+              })
             }
           }
-          retorno = true;
+          retorno = true
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
-      await this.atualizarListagem();
-      return retorno;
+      await this.atualizarListagem()
+      return retorno
     },
 
     async recarregarDaApi(codOrUuid) {
       try {
-        const ret = await sSinc.getNegocio(codOrUuid);
+        const ret = await sSinc.getNegocio(codOrUuid)
         if (!ret.codnegocio) {
-          return false;
+          return false
         }
-        await this.atualizarNegocioPeloObjeto(ret);
-        return true;
+        await this.atualizarNegocioPeloObjeto(ret)
+        return true
       } catch (error) {
-        console.log(error);
-        return false;
+        console.log(error)
+        return false
       }
     },
 
     async apropriar(codOrUuid) {
       try {
-        const ret = await sSinc.postApropriar(codOrUuid);
+        const ret = await sSinc.postApropriar(codOrUuid)
         if (!ret.codnegocio) {
-          return false;
+          return false
         }
-        await this.atualizarNegocioPeloObjeto(ret);
-        return true;
+        await this.atualizarNegocioPeloObjeto(ret)
+        return true
       } catch (error) {
-        console.log(error);
-        return false;
+        console.log(error)
+        return false
       }
     },
 
     async atualizarNegocioPeloObjeto(neg) {
-      this.negocio = { ...neg };
-      db.negocio.put(neg);
-      await this.atualizarListagem();
+      this.negocio = { ...neg }
+      db.negocio.put(neg)
+      await this.atualizarListagem()
     },
 
     async adicionarPagamento(
@@ -1255,36 +1206,36 @@ export const negocioStore = defineStore("negocio", {
       autorizacao,
       parcelas,
       valorparcela,
-      dias
+      dias,
     ) {
-      await this.recarregar();
+      await this.recarregar()
 
       // descricao forma de pagamento
-      const fp = await db.formaPagamento.get(codformapagamento);
+      const fp = await db.formaPagamento.get(codformapagamento)
 
       // nome parceiro
-      let parceiro = null;
+      let parceiro = null
       if (codpessoa) {
-        const pes = await db.pessoa.get(codpessoa);
-        parceiro = pes.fantasia;
+        const pes = await db.pessoa.get(codpessoa)
+        parceiro = pes.fantasia
       }
 
       // nome bandeira
-      let nomebandeira = null;
+      let nomebandeira = null
       if (bandeira) {
         const band = bandeirasCartao.find((el) => {
-          return el.bandeira == bandeira;
-        });
-        nomebandeira = band.nome;
+          return el.bandeira == bandeira
+        })
+        nomebandeira = band.nome
       }
 
       // nome Tipo
-      let nometipo = null;
+      let nometipo = null
       if (tipo) {
         const tp = tiposPagamento.find((el) => {
-          return el.tipo == tipo;
-        });
-        nometipo = tp.nome;
+          return el.tipo == tipo
+        })
+        nometipo = tp.nome
       }
 
       // objeto do pagamento
@@ -1312,111 +1263,105 @@ export const negocioStore = defineStore("negocio", {
         parcelas: parcelas,
         valorparcela: valorparcela,
         dias: dias,
-      };
-      this.negocio.pagamentos.push(pagamento);
+      }
+      this.negocio.pagamentos.push(pagamento)
 
       // recalcula total por causa dos juros
-      this.recalcularValorTotal();
+      this.recalcularValorTotal()
 
       // salva
-      this.salvar();
+      this.salvar()
     },
 
     async excluirPagamento(uuid) {
-      await this.recarregar();
+      await this.recarregar()
       const index = this.negocio.pagamentos.findIndex(function (item) {
-        return item.uuid == uuid;
-      });
+        return item.uuid == uuid
+      })
       if (index > -1) {
-        this.negocio.pagamentos.splice(index, 1);
+        this.negocio.pagamentos.splice(index, 1)
         // recalcula total por causa dos juros
-        this.recalcularValorTotal();
+        this.recalcularValorTotal()
       }
-      this.salvar();
+      this.salvar()
     },
 
     async fechar() {
       if (!this.negocio.sincronizado) {
         Notify.create({
-          type: "negative",
-          message:
-            "Impossível fechar um negócio não sincronizado com o servidor!",
+          type: 'negative',
+          message: 'Impossível fechar um negócio não sincronizado com o servidor!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       try {
-        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio);
+        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio)
         if (ret.codnegocio) {
           Notify.create({
-            type: "positive",
-            message: "Negócio Fechado!",
+            type: 'positive',
+            message: 'Negócio Fechado!',
             timeout: 1000, // 1 segundo
-            actions: [{ icon: "close", color: "white" }],
-          });
-          await this.atualizarNegocioPeloObjeto(ret);
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          await this.atualizarNegocioPeloObjeto(ret)
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
     },
 
     async cancelar(justificativa) {
       if (!this.negocio.sincronizado) {
         Notify.create({
-          type: "negative",
-          message:
-            "Impossível cancelar um negócio não sincronizado com o servidor!",
+          type: 'negative',
+          message: 'Impossível cancelar um negócio não sincronizado com o servidor!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       try {
-        const ret = await sSinc.cancelarNegocio(
-          this.negocio.codnegocio,
-          justificativa
-        );
+        const ret = await sSinc.cancelarNegocio(this.negocio.codnegocio, justificativa)
         if (ret.codnegocio) {
           Notify.create({
-            type: "positive",
-            message: "Negócio cancelado!",
+            type: 'positive',
+            message: 'Negócio cancelado!',
             timeout: 1000, // 1 segundo
-            actions: [{ icon: "close", color: "white" }],
-          });
-          await this.atualizarNegocioPeloObjeto(ret);
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          await this.atualizarNegocioPeloObjeto(ret)
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
     },
 
     async criarPixCob(valor, codportador) {
       if (!this.negocio.sincronizado) {
         Notify.create({
-          type: "negative",
-          message:
-            "Impossível criar Cobrança PIX em um negócio não sincronizado com o servidor!",
+          type: 'negative',
+          message: 'Impossível criar Cobrança PIX em um negócio não sincronizado com o servidor!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       try {
-        const ret = await sSinc.criarPixCob(valor, this.negocio.codnegocio, codportador);
+        const ret = await sSinc.criarPixCob(valor, this.negocio.codnegocio, codportador)
         if (ret.codnegocio) {
           Notify.create({
-            type: "positive",
-            message: "Cobrança PIX Criada!",
+            type: 'positive',
+            message: 'Cobrança PIX Criada!',
             timeout: 1000, // 1 segundo
-            actions: [{ icon: "close", color: "white" }],
-          });
-          await this.atualizarNegocioPeloObjeto(ret);
-          return ret.pixCob[0];
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          await this.atualizarNegocioPeloObjeto(ret)
+          return ret.pixCob[0]
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
     },
 
@@ -1427,20 +1372,20 @@ export const negocioStore = defineStore("negocio", {
       valorjuros,
       tipo,
       parcelas,
-      jurosloja
+      jurosloja,
     ) {
       if (!this.negocio.sincronizado) {
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message:
-            "Impossível criar Cobrança Stone/PagarMe em um negócio não sincronizado com o servidor!",
+            'Impossível criar Cobrança Stone/PagarMe em um negócio não sincronizado com o servidor!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       try {
-        const descricao = "Negocio " + this.negocio.codnegocio;
+        const descricao = 'Negocio ' + this.negocio.codnegocio
         const ret = await sSinc.criarPagarMePedido(
           this.negocio.codnegocio,
           this.negocio.codpessoa,
@@ -1451,20 +1396,20 @@ export const negocioStore = defineStore("negocio", {
           tipo,
           parcelas,
           jurosloja,
-          descricao
-        );
+          descricao,
+        )
         if (ret.codnegocio) {
           Notify.create({
-            type: "positive",
-            message: "Cobrança Pagar Me/Stone Criada!",
+            type: 'positive',
+            message: 'Cobrança Pagar Me/Stone Criada!',
             timeout: 1000, // 1 segundo
-            actions: [{ icon: "close", color: "white" }],
-          });
-          await this.atualizarNegocioPeloObjeto(ret);
-          return ret.PagarMePedidoS[0];
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          await this.atualizarNegocioPeloObjeto(ret)
+          return ret.PagarMePedidoS[0]
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
     },
 
@@ -1475,20 +1420,20 @@ export const negocioStore = defineStore("negocio", {
       valorjuros,
       tipo,
       parcelas,
-      jurosloja
+      jurosloja,
     ) {
       if (!this.negocio.sincronizado) {
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message:
-            "Impossível criar Cobrança Saurus/Safra Pay em um negócio não sincronizado com o servidor!",
+            'Impossível criar Cobrança Saurus/Safra Pay em um negócio não sincronizado com o servidor!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       try {
-        const descricao = "Negocio " + this.negocio.codnegocio;
+        const descricao = 'Negocio ' + this.negocio.codnegocio
         const ret = await sSinc.criarSaurusPedido(
           this.negocio.codnegocio,
           this.negocio.codpessoa,
@@ -1499,125 +1444,109 @@ export const negocioStore = defineStore("negocio", {
           tipo,
           parcelas,
           jurosloja,
-          descricao
-        );
+          descricao,
+        )
         if (ret.codnegocio) {
           Notify.create({
-            type: "positive",
-            message: "Cobrança Saurus/Safra Pay Criada!",
+            type: 'positive',
+            message: 'Cobrança Saurus/Safra Pay Criada!',
             timeout: 1000, // 1 segundo
-            actions: [{ icon: "close", color: "white" }],
-          });
-          await this.atualizarNegocioPeloObjeto(ret);
-          return ret.SaurusPedidoS[0];
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          await this.atualizarNegocioPeloObjeto(ret)
+          return ret.SaurusPedidoS[0]
         }
       } catch (error) {
-        console.log(error);
+        console.log(error)
       }
-      return false;
+      return false
     },
 
     async uploadAnexo(pasta, ratio, anexoBase64) {
       try {
         // asdasd();
-        const ret = await sSinc.uploadAnexo(
-          this.negocio.codnegocio,
-          pasta,
-          ratio,
-          anexoBase64
-        );
+        const ret = await sSinc.uploadAnexo(this.negocio.codnegocio, pasta, ratio, anexoBase64)
         if (!ret) {
-          return false;
+          return false
         }
         Notify.create({
-          type: "positive",
-          message: "Anexo Adicionado!",
+          type: 'positive',
+          message: 'Anexo Adicionado!',
           timeout: 1000, // 1 segundo
-          actions: [{ icon: "close", color: "white" }],
-        });
-        this.negocio.anexos = ret.data;
-        return true;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        this.negocio.anexos = ret.data
+        return true
       } catch (error) {
-        console.log(error);
-        return false;
+        console.log(error)
+        return false
       }
     },
 
     async deleteAnexo(pasta, anexo) {
       try {
         // asdasd();
-        const data = await sSinc.deleteAnexo(
-          this.negocio.codnegocio,
-          pasta,
-          anexo
-        );
+        const data = await sSinc.deleteAnexo(this.negocio.codnegocio, pasta, anexo)
         if (!data) {
-          return false;
+          return false
         }
         Notify.create({
-          type: "positive",
-          message: "Anexo Excluído!",
+          type: 'positive',
+          message: 'Anexo Excluído!',
           timeout: 1000, // 1 segundo
-          actions: [{ icon: "close", color: "white" }],
-        });
-        this.negocio.anexos = data;
-        return true;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        this.negocio.anexos = data
+        return true
       } catch (error) {
-        console.log(error);
-        return false;
+        console.log(error)
+        return false
       }
     },
 
     async unificarComanda(codnegociocomanda) {
       if (!this.negocio.sincronizado) {
         Notify.create({
-          type: "negative",
-          message:
-            "Impossível ler Comandas em um negócio não sincronizado com o servidor!",
+          type: 'negative',
+          message: 'Impossível ler Comandas em um negócio não sincronizado com o servidor!',
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       try {
-        const ret = await sSinc.unificarComanda(
-          this.negocio.codnegocio,
-          codnegociocomanda
-        );
+        const ret = await sSinc.unificarComanda(this.negocio.codnegocio, codnegociocomanda)
         if (!ret) {
-          return false;
+          return false
         }
         Notify.create({
-          type: "positive",
-          message: "Comanda Lida!",
+          type: 'positive',
+          message: 'Comanda Lida!',
           timeout: 1000, // 1 segundo
-          actions: [{ icon: "close", color: "white" }],
-        });
+          actions: [{ icon: 'close', color: 'white' }],
+        })
         if (ret.negocio.codnegocio) {
-          await this.atualizarNegocioPeloObjeto(ret.negocio);
+          await this.atualizarNegocioPeloObjeto(ret.negocio)
         }
         if (ret.comanda.codnegocio) {
-          db.negocio.put(ret.comanda);
+          db.negocio.put(ret.comanda)
         }
-        return true;
+        return true
       } catch (error) {
-        console.log(error);
-        return false;
+        console.log(error)
+        return false
       }
     },
 
     async Devolucao(arrDevolucao) {
-      const postDevolucao = await sSinc.negocioDevolucao(
-        this.negocio.codnegocio,
-        arrDevolucao
-      );
+      const postDevolucao = await sSinc.negocioDevolucao(this.negocio.codnegocio, arrDevolucao)
 
-      return postDevolucao;
+      return postDevolucao
     },
 
     async buscarVale(codtitulo) {
-      const vale = await sSinc.buscarVale(codtitulo);
-      return vale;
+      const vale = await sSinc.buscarVale(codtitulo)
+      return vale
     },
   },
-});
+})

@@ -1,113 +1,96 @@
 <script setup>
-import { formataNumero, formataTimestampCompleto } from "@components/formatters";
-import { onMounted, ref } from "vue";
-import { Notify } from "quasar";
-import { pagarMeStore } from "src/stores/pagar-me";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { formataNumero, formataTimestampCompleto } from '@components/formatters'
+import { onMounted, ref } from 'vue'
+import { Notify } from 'quasar'
+import { pagarMeStore } from 'src/stores/pagar-me'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sPagarMe = pagarMeStore();
-const rodando = ref(false);
+const sPagarMe = pagarMeStore()
+const rodando = ref(false)
 
 const consultar = async (ped) => {
-  rodando.value = true;
+  rodando.value = true
   try {
-    sPagarMe.pedido = ped;
-    await sPagarMe.consultarPedido();
-    await sPagarMe.consultarPedidosPendentes();
+    sPagarMe.pedido = ped
+    await sPagarMe.consultarPedido()
+    await sPagarMe.consultarPedidosPendentes()
   } catch (error) {
     Notify.create({
-      type: "negative",
+      type: 'negative',
       message: error.response.data.message,
       timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
-  rodando.value = false;
-};
+  rodando.value = false
+}
 
 const cancelar = async (ped) => {
-  rodando.value = true;
+  rodando.value = true
   try {
-    sPagarMe.pedido = ped;
-    await sPagarMe.cancelarPedido();
-    await sPagarMe.consultarPedidosPendentes();
+    sPagarMe.pedido = ped
+    await sPagarMe.cancelarPedido()
+    await sPagarMe.consultarPedidosPendentes()
   } catch (error) {
     Notify.create({
-      type: "negative",
+      type: 'negative',
       message: error.response.data.message,
       timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
-  rodando.value = false;
-};
+  rodando.value = false
+}
 
 const atualizar = async () => {
-  rodando.value = true;
+  rodando.value = true
   try {
-    await sPagarMe.consultarPedidosPendentes();
+    await sPagarMe.consultarPedidosPendentes()
   } catch (error) {
     Notify.create({
-      type: "negative",
+      type: 'negative',
       message: error.response.data.message,
       timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
-  rodando.value = false;
-};
+  rodando.value = false
+}
 
 const importar = async () => {
-  rodando.value = true;
+  rodando.value = true
   try {
-    await sPagarMe.importarPedidosPendentes();
+    await sPagarMe.importarPedidosPendentes()
   } catch (error) {
     Notify.create({
-      type: "negative",
+      type: 'negative',
       message: error.response.data.message,
       timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
-  rodando.value = false;
-};
+  rodando.value = false
+}
 
 onMounted(() => {
-  atualizar();
-});
+  atualizar()
+})
 </script>
 <template>
   <q-page>
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        @click="atualizar()"
-        fab
-        icon="refresh"
-        color="secondary"
-        :loading="rodando"
-      >
+      <q-btn @click="atualizar()" fab icon="refresh" color="secondary" :loading="rodando">
         <q-tooltip class="" :offset="[10, 10]"> Atualizar Listagem </q-tooltip>
       </q-btn>
       &nbsp;
-      <q-btn
-        @click="importar()"
-        fab
-        icon="cloud_sync"
-        color="accent"
-        :loading="rodando"
-      >
-        <q-tooltip class="" :offset="[10, 10]">
-          Buscar Listagem da PagarMe
-        </q-tooltip>
+      <q-btn @click="importar()" fab icon="cloud_sync" color="accent" :loading="rodando">
+        <q-tooltip class="" :offset="[10, 10]"> Buscar Listagem da PagarMe </q-tooltip>
       </q-btn>
     </q-page-sticky>
     <div class="row q-pa-md q-pb-xl justify-center">
       <q-list bordered class="rounded-borders" style="max-width: 650px">
-        <template
-          v-for="ped in sPagarMe.pedidosPendentes"
-          :key="ped.codpagarmepedido"
-        >
+        <template v-for="ped in sPagarMe.pedidosPendentes" :key="ped.codpagarmepedido">
           <q-item>
             <q-item-section avatar>
               <q-avatar color="primary" text-color="white">
@@ -119,9 +102,7 @@ onMounted(() => {
               <q-item-label>
                 R$
                 <span class="text-weight-bold">
-                  {{
-                    formataNumero(ped.valor)
-                  }}
+                  {{ formataNumero(ped.valor) }}
                 </span>
                 {{ ped.tipodescricao }}
                 <template v-if="ped.parcelas > 1">

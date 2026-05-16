@@ -1,14 +1,14 @@
 <script setup>
-import { ref } from "vue";
-import { wooStore } from "stores/woo";
-import { Notify } from "quasar";
-import MgInputValor from "@components/MgInputValor.vue";
-import MgInputData from "@components/MgInputData.vue";
+import { ref } from 'vue'
+import { wooStore } from 'stores/woo'
+import { Notify } from 'quasar'
+import MgInputValor from '@components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
 
-const sWoo = wooStore();
+const sWoo = wooStore()
 
 // torna reativo e inicializa com as opções do store
-const statusOptions = ref([...sWoo.opcoes.status]);
+const statusOptions = ref([...sWoo.opcoes.status])
 
 // Função de filtro para o QSelect
 // - quando o valor estiver vazio, restaura lista completa
@@ -17,37 +17,35 @@ const filterFn = (val, update, abort) => {
   // se input estiver vazio, restaura opções completas
   if (!val) {
     update(() => {
-      statusOptions.value = [...sWoo.opcoes.status];
-    });
-    return;
+      statusOptions.value = [...sWoo.opcoes.status]
+    })
+    return
   }
   update(() => {
-    const needle = String(val).toLowerCase();
-    statusOptions.value = sWoo.opcoes.status.filter((v) =>
-      v.label.toLowerCase().includes(needle)
-    );
-  });
-};
+    const needle = String(val).toLowerCase()
+    statusOptions.value = sWoo.opcoes.status.filter((v) => v.label.toLowerCase().includes(needle))
+  })
+}
 
 const buscarNovos = async () => {
-  const ret = await sWoo.buscarNovos();
+  const ret = await sWoo.buscarNovos()
   Notify.create({
-    type: "positive",
-    message: ret + " Pedido(s) encontrados!",
+    type: 'positive',
+    message: ret + ' Pedido(s) encontrados!',
     timeout: 3000, // 3 segundos
-    actions: [{ icon: "close", color: "white" }],
-  });
-};
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
 
 const buscarPorAlteracao = async () => {
-  const ret = await sWoo.buscarPorAlteracao();
+  const ret = await sWoo.buscarPorAlteracao()
   Notify.create({
-    type: "positive",
-    message: ret + " Pedido(s) encontrados!",
+    type: 'positive',
+    message: ret + ' Pedido(s) encontrados!',
     timeout: 3000, // 3 segundos
-    actions: [{ icon: "close", color: "white" }],
-  });
-};
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
 </script>
 
 <template>
@@ -65,9 +63,7 @@ const buscarPorAlteracao = async () => {
         class="q-ml-md"
         @click="buscarPorAlteracao(pedido)"
       >
-        <q-tooltip>
-          Busca novos pedidos no Woo pela data de alteração.
-        </q-tooltip>
+        <q-tooltip> Busca novos pedidos no Woo pela data de alteração. </q-tooltip>
       </q-btn>
 
       <q-btn
@@ -162,12 +158,7 @@ const buscarPorAlteracao = async () => {
             label="De"
             class="col-6"
           />
-          <MgInputData
-            type="date"
-            v-model="sWoo.filtro.criacaowoo_ate"
-            label="Até"
-            class="col-6"
-          />
+          <MgInputData type="date" v-model="sWoo.filtro.criacaowoo_ate" label="Até" class="col-6" />
         </div>
       </q-item-section>
     </q-item>
@@ -185,9 +176,7 @@ const buscarPorAlteracao = async () => {
             prefix="R$"
           />
           <MgInputValor
-            :min="
-              sWoo.filtro.valortotal_de > 0 ? sWoo.filtro.valortotal_de : 0.01
-            "
+            :min="sWoo.filtro.valortotal_de > 0 ? sWoo.filtro.valortotal_de : 0.01"
             v-model="sWoo.filtro.valortotal_ate"
             label="até"
             class="col-6"

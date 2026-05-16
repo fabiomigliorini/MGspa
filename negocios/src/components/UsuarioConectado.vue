@@ -1,47 +1,47 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { usuarioStore } from "stores/usuario";
-import { sincronizacaoStore } from "src/stores/sincronizacao";
-import { tempoRelativo } from "@components/formatters";
+import { ref, onMounted } from 'vue'
+import { usuarioStore } from 'stores/usuario'
+import { sincronizacaoStore } from 'src/stores/sincronizacao'
+import { tempoRelativo } from '@components/formatters'
 
-const sUsuario = usuarioStore();
-const sSinc = sincronizacaoStore();
-const usuario = ref(null);
-const senha = ref(null);
-const mostrarSenha = ref(false);
-const inputSenha = ref();
+const sUsuario = usuarioStore()
+const sSinc = sincronizacaoStore()
+const usuario = ref(null)
+const senha = ref(null)
+const mostrarSenha = ref(false)
+const inputSenha = ref()
 
 const logout = async () => {
-  sUsuario.logout();
-};
+  sUsuario.logout()
+}
 
 const refresh = async () => {
-  sUsuario.refreshToken();
-};
+  sUsuario.refreshToken()
+}
 
 const abrirLogin = () => {
-  usuario.value = null;
-  senha.value = null;
-  sUsuario.dialog.login = true;
-};
+  usuario.value = null
+  senha.value = null
+  sUsuario.dialog.login = true
+}
 
 const login = async () => {
-  const ret = await sUsuario.login(usuario.value, senha.value);
+  const ret = await sUsuario.login(usuario.value, senha.value)
   if (ret) {
-    sUsuario.dialog.login = false;
+    sUsuario.dialog.login = false
   }
-};
+}
 
 const togglePassword = () => {
-  mostrarSenha.value = !mostrarSenha.value;
-  const temp = senha.value;
-  inputSenha.value.focus();
-  senha.value = temp;
-};
+  mostrarSenha.value = !mostrarSenha.value
+  const temp = senha.value
+  inputSenha.value.focus()
+  senha.value = temp
+}
 
 onMounted(() => {
-  sUsuario.getUsuario();
-});
+  sUsuario.getUsuario()
+})
 </script>
 <template>
   <q-dialog v-model="sUsuario.dialog.login">
@@ -89,12 +89,7 @@ onMounted(() => {
       </q-form>
     </q-card>
   </q-dialog>
-  <q-btn-dropdown
-    dense
-    flat
-    :label="sUsuario.usuario.usuario"
-    v-if="sUsuario.usuario.usuario"
-  >
+  <q-btn-dropdown dense flat :label="sUsuario.usuario.usuario" v-if="sUsuario.usuario.usuario">
     <div class="row no-wrap q-pa-md justify-center">
       <div class="column items-center">
         <q-avatar size="150px" color="yellow-8">
@@ -117,22 +112,8 @@ onMounted(() => {
         </div>
 
         <q-btn-group>
-          <q-btn
-            color="primary"
-            label="Renovar"
-            push
-            size="sm"
-            v-close-popup
-            @click="refresh()"
-          />
-          <q-btn
-            color="primary"
-            label="Sair"
-            push
-            size="sm"
-            v-close-popup
-            @click="logout()"
-          />
+          <q-btn color="primary" label="Renovar" push size="sm" v-close-popup @click="refresh()" />
+          <q-btn color="primary" label="Sair" push size="sm" v-close-popup @click="logout()" />
         </q-btn-group>
       </div>
     </div>

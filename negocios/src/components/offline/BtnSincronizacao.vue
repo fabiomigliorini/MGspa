@@ -1,46 +1,42 @@
 <script setup>
-import { formataNumero } from "@components/formatters";
-import { computed, ref } from "vue";
-import { sincronizacaoStore } from "stores/sincronizacao";
-import DialogEditarPdv from "components/pdv/DialogEditarPdv.vue";
-import moment from "moment";
+import { formataNumero } from '@components/formatters'
+import { computed, ref } from 'vue'
+import { sincronizacaoStore } from 'stores/sincronizacao'
+import DialogEditarPdv from 'components/pdv/DialogEditarPdv.vue'
+import moment from 'moment'
 
-moment.locale("pt-br");
-const sSinc = sincronizacaoStore();
-const dialogCadastroPdv = ref(false);
+moment.locale('pt-br')
+const sSinc = sincronizacaoStore()
+const dialogCadastroPdv = ref(false)
 
 const abrirSincronizacao = () => {
   if (!sSinc.pdv.codpdv) {
-    dialogCadastroPdv.value = true;
+    dialogCadastroPdv.value = true
   } else {
-    sSinc.importacao.dialog = true;
+    sSinc.importacao.dialog = true
   }
-};
+}
 
 const cadastrarPdv = (model) => {
-  sSinc.pdv.apelido = model.apelido;
-  sSinc.pdv.codfilial = model.codfilial;
-  sSinc.pdv.codsetor = model.codsetor;
-  sSinc.pdv.observacoes = model.observacoes;
-  dialogCadastroPdv.value = false;
-  sSinc.importacao.dialog = true;
-};
+  sSinc.pdv.apelido = model.apelido
+  sSinc.pdv.codfilial = model.codfilial
+  sSinc.pdv.codsetor = model.codsetor
+  sSinc.pdv.observacoes = model.observacoes
+  dialogCadastroPdv.value = false
+  sSinc.importacao.dialog = true
+}
 
 const btnSincronizarColor = computed({
   get() {
     if (!sSinc.ultimaSincronizacao.completa) {
-      return "red-4";
+      return 'red-4'
     }
-    if (
-      moment(sSinc.ultimaSincronizacao.completa).isAfter(
-        moment().subtract(4, "hours")
-      )
-    ) {
-      return null;
+    if (moment(sSinc.ultimaSincronizacao.completa).isAfter(moment().subtract(4, 'hours'))) {
+      return null
     }
-    return "red-4";
+    return 'red-4'
   },
-});
+})
 </script>
 <template>
   <!-- Dialog Sincronizacao  -->
@@ -53,9 +49,7 @@ const btnSincronizarColor = computed({
         <div class="flex flex-center q-my-md">
           <q-circular-progress
             show-value
-            :indeterminate="
-              sSinc.importacao.totalRegistros == 0 && sSinc.importacao.rodando
-            "
+            :indeterminate="sSinc.importacao.totalRegistros == 0 && sSinc.importacao.rodando"
             rounded
             size="200px"
             color="secondary"
@@ -67,18 +61,12 @@ const btnSincronizarColor = computed({
           </q-circular-progress>
         </div>
         <div class="text-center text-weight-bold">
-          {{
-            formataNumero(sSinc.importacao.totalSincronizados, 0)
-          }}
+          {{ formataNumero(sSinc.importacao.totalSincronizados, 0) }}
           /
-          {{
-            formataNumero(sSinc.importacao.totalRegistros, 0)
-          }}
+          {{ formataNumero(sSinc.importacao.totalRegistros, 0) }}
           {{ sSinc.labelSincronizacao }}
         </div>
-        <div class="text-center text-grey">
-          {{ sSinc.importacao.tempoTotal }} Segundos
-        </div>
+        <div class="text-center text-grey">{{ sSinc.importacao.tempoTotal }} Segundos</div>
         <div class="q-pa-md">
           <q-toggle
             v-model="sSinc.sincronizacao.config"

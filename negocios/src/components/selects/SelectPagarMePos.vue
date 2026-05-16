@@ -1,6 +1,6 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { db } from "boot/db";
+import { ref, onMounted, watch } from 'vue'
+import { db } from 'boot/db'
 
 const props = defineProps({
   modelValue: {
@@ -10,60 +10,60 @@ const props = defineProps({
     type: Number,
     default: null,
   },
-});
+})
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue'])
 
-const opcoes = ref([]);
-const filtrado = ref([]);
+const opcoes = ref([])
+const filtrado = ref([])
 
 const alterar = (value) => {
-  emit("update:modelValue", value);
-};
+  emit('update:modelValue', value)
+}
 
 const buscarOpcoes = async () => {
   if (!props.codestoquelocal) {
-    return;
+    return
   }
-  const loc = await db.estoqueLocal.get(props.codestoquelocal);
+  const loc = await db.estoqueLocal.get(props.codestoquelocal)
   loc.PagarMePosS.sort((a, b) => {
     if (a.apelido > b.apelido) {
-      return 1;
+      return 1
     }
-    return -1;
-  });
-  opcoes.value = loc.PagarMePosS;
-  filtrado.value = opcoes.value;
-};
+    return -1
+  })
+  opcoes.value = loc.PagarMePosS
+  filtrado.value = opcoes.value
+}
 
 watch(
   () => props.codestoquelocal,
   (newValue, oldValue) => {
-    buscarOpcoes();
-  }
-);
+    buscarOpcoes()
+  },
+)
 
 onMounted(async () => {
-  buscarOpcoes();
-});
+  buscarOpcoes()
+})
 
 const pesquisa = (val, update) => {
-  if (val === "") {
+  if (val === '') {
     update(() => {
-      filtrado.value = opcoes.value;
-    });
-    return;
+      filtrado.value = opcoes.value
+    })
+    return
   }
   update(() => {
-    const pesquisa = val.toLowerCase();
+    const pesquisa = val.toLowerCase()
     filtrado.value = opcoes.value.filter((item) => {
       return (
         item.estoquelocal.toLowerCase().indexOf(pesquisa) > -1 ||
         item.sigla.toLowerCase().indexOf(pesquisa) > -1
-      );
-    });
-  });
-};
+      )
+    })
+  })
+}
 </script>
 <template>
   <q-select

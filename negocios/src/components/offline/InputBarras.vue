@@ -1,190 +1,188 @@
 <script setup>
-import { formataNumero, formataCodNegocio } from "@components/formatters";
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
-import { useRouter } from "vue-router";
-import { produtoStore } from "stores/produto";
-import { negocioStore } from "stores/negocio";
-import { listagemStore } from "stores/listagem";
-import { Notify, Dialog, debounce } from "quasar";
-import { falar } from "../../utils/falar.js";
-import emitter from "../../utils/emitter.js";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { formataNumero, formataCodNegocio } from '@components/formatters'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { produtoStore } from 'stores/produto'
+import { negocioStore } from 'stores/negocio'
+import { listagemStore } from 'stores/listagem'
+import { Notify, Dialog, debounce } from 'quasar'
+import { falar } from '../../utils/falar.js'
+import emitter from '../../utils/emitter.js'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const router = useRouter();
-const sProduto = produtoStore();
-const sNegocio = negocioStore();
-const sListagem = listagemStore();
-const quantidade = ref(1);
-const barras = ref(null);
-const barcodeVideo = ref(null);
-const dialogOrcamento = ref(false);
-const uuidOrcamento = ref(null);
+const router = useRouter()
+const sProduto = produtoStore()
+const sNegocio = negocioStore()
+const sListagem = listagemStore()
+const quantidade = ref(1)
+const barras = ref(null)
+const barcodeVideo = ref(null)
+const dialogOrcamento = ref(false)
+const uuidOrcamento = ref(null)
 
-var stream = null;
-var leitorLigado = ref(false);
+var stream = null
+var leitorLigado = ref(false)
 
 const labelQuantidade = computed({
   get() {
-    let lbl = formataNumero(quantidade.value, 0);
-    lbl += " x";
-    return lbl;
+    let lbl = formataNumero(quantidade.value, 0)
+    lbl += ' x'
+    return lbl
   },
-});
+})
 
 const orcamento = (inicioUuid) => {
-  uuidOrcamento.value = inicioUuid;
-  dialogOrcamento.value = true;
-};
+  uuidOrcamento.value = inicioUuid
+  dialogOrcamento.value = true
+}
 
 watch(
   () => uuidOrcamento.value,
   () => {
-    buscarOrcamento();
-  }
-);
+    buscarOrcamento()
+  },
+)
 
 const buscarOrcamento = debounce(() => {
   if (!uuidOrcamento.value) {
-    sListagem.orcamentos = [];
-    return;
+    sListagem.orcamentos = []
+    return
   }
-  sListagem.getOrcamentos(uuidOrcamento.value);
-});
+  sListagem.getOrcamentos(uuidOrcamento.value)
+})
 
 const unificarOrcamento = (orc) => {
   Dialog.create({
-    title: "Abrir como Comanda",
+    title: 'Abrir como Comanda',
     message:
-      "Tem certeza que deseja abrir esse orçamento como uma comanda? Esta operação não poderá ser desfeita.",
+      'Tem certeza que deseja abrir esse orçamento como uma comanda? Esta operação não poderá ser desfeita.',
     cancel: true,
   }).onOk(() => {
-    unificarComanda(parseInt(orc.codnegocio));
-    dialogOrcamento.value = false;
-  });
-};
+    unificarComanda(parseInt(orc.codnegocio))
+    dialogOrcamento.value = false
+  })
+}
 
 const informarVendedor = async (codpessoavendedor) => {
-  await sNegocio.informarVendedor(codpessoavendedor);
+  await sNegocio.informarVendedor(codpessoavendedor)
   Notify.create({
-    type: "positive",
+    type: 'positive',
     message: "Vendedor '" + sNegocio.negocio.fantasiavendedor + "' informado.",
     timeout: 1000, // 1 segundo
-    actions: [{ icon: "close", color: "white" }],
-  });
+    actions: [{ icon: 'close', color: 'white' }],
+  })
   if (sNegocio.negocio.codpessoavendedor) {
-    falar("Vendedor " + sNegocio.negocio.fantasiavendedor.split(" ")[0]);
+    falar('Vendedor ' + sNegocio.negocio.fantasiavendedor.split(' ')[0])
   }
-  var audio = new Audio("successo.mp3");
-  audio.play();
-};
+  var audio = new Audio('successo.mp3')
+  audio.play()
+}
 
 const unificarComanda = async (codnegociocomanda) => {
-  let sucesso = false;
+  let sucesso = false
   try {
-    sucesso = await sNegocio.unificarComanda(codnegociocomanda);
+    sucesso = await sNegocio.unificarComanda(codnegociocomanda)
   } catch (error) {}
   if (sucesso) {
-    router.push("/offline/" + sNegocio.negocio.uuid);
-    var audio = new Audio("sucesso.mp3");
-    audio.play();
-    falar("Comanda Lida!");
+    router.push('/offline/' + sNegocio.negocio.uuid)
+    var audio = new Audio('sucesso.mp3')
+    audio.play()
+    falar('Comanda Lida!')
   } else {
-    var audio = new Audio("erro.mp3");
-    audio.play();
-    falar("Falha ao buscar comanda!");
+    var audio = new Audio('erro.mp3')
+    audio.play()
+    falar('Falha ao buscar comanda!')
   }
-};
+}
 
 const valeCompras = async (codigo) => {
-  emitter.emit("valeComprasLido", codigo);
-  falar("Vale Compras Lido!");
-};
+  emitter.emit('valeComprasLido', codigo)
+  falar('Vale Compras Lido!')
+}
 
 const comanda = async () => {
   Dialog.create({
-    title: "Informe o número da Comanda",
-    message: "Informe o número da comanda ou negócio que deseja unificar!",
+    title: 'Informe o número da Comanda',
+    message: 'Informe o número da comanda ou negócio que deseja unificar!',
     prompt: {
-      model: "",
+      model: '',
       isValid: (val) => val > 100,
       outlined: true,
-      type: "Number", // optional
+      type: 'Number', // optional
       min: 1, // optional
       max: 99999999, // optional
       step: 1, // optional
-      placeholder: "Comanda...",
+      placeholder: 'Comanda...',
       // inputClass: "text-center",
     },
     cancel: true,
   }).onOk(async (codnegociocomanda) => {
-    unificarComanda(parseInt(codnegociocomanda));
-  });
-};
+    unificarComanda(parseInt(codnegociocomanda))
+  })
+}
 
 watch(barras, (newValue, oldValue) => {
   if (!barras.value instanceof String) {
-    return;
+    return
   }
   if (barras.value.length < 2) {
-    return;
+    return
   }
-  const ultimo = barras.value.charAt(barras.value.length - 1);
-  if (ultimo != "*") {
-    return;
+  const ultimo = barras.value.charAt(barras.value.length - 1)
+  if (ultimo != '*') {
+    return
   }
-  const resto = barras.value
-    .substring(0, barras.value.length - 1)
-    .replace(",", ".");
-  const quant = parseFloat(resto);
+  const resto = barras.value.substring(0, barras.value.length - 1).replace(',', '.')
+  const quant = parseFloat(resto)
   if (isNaN(quant)) {
-    return;
+    return
   }
-  quantidade.value = Math.abs(quant);
-  barras.value = "";
-});
+  quantidade.value = Math.abs(quant)
+  barras.value = ''
+})
 
 const buscarBarras = async () => {
   if (!barras.value) {
-    return;
+    return
   }
-  const txt = barras.value;
-  barras.value = "";
-  adicionarPeloCodigoBarras(txt);
-};
+  const txt = barras.value
+  barras.value = ''
+  adicionarPeloCodigoBarras(txt)
+}
 
 const adicionarPeloCodigoBarras = async (txt) => {
   if (txt.length == 11) {
-    const prefixo = txt.substring(0, 3);
-    const codigo = txt.substring(3, 11);
+    const prefixo = txt.substring(0, 3)
+    const codigo = txt.substring(3, 11)
     switch (prefixo.toUpperCase()) {
       // Comanda Vendedor (Ex VDD00010022)
-      case "VDD":
-        informarVendedor(parseInt(codigo));
-        return;
+      case 'VDD':
+        informarVendedor(parseInt(codigo))
+        return
 
       // Comanda Negocio (Ex NEG03386672)
-      case "NEG":
-        unificarComanda(parseInt(codigo));
-        return;
+      case 'NEG':
+        unificarComanda(parseInt(codigo))
+        return
 
       // Orçamento (Ex ORC7d5864f5)
-      case "ORC":
-        orcamento(codigo);
-        return;
+      case 'ORC':
+        orcamento(codigo)
+        return
 
       // Vale compras (Ex VAL00532214)
-      case "VAL":
-        valeCompras(parseInt(codigo));
-        return;
+      case 'VAL':
+        valeCompras(parseInt(codigo))
+        return
     }
   }
 
-  let ret = await sProduto.buscarBarras(txt);
+  let ret = await sProduto.buscarBarras(txt)
 
   if (ret.length == 1) {
-    const qtd = parseFloat(quantidade.value);
-    quantidade.value = 1;
+    const qtd = parseFloat(quantidade.value)
+    quantidade.value = 1
     await sNegocio.itemAdicionar(
       ret[0].codprodutobarra,
       ret[0].barras,
@@ -192,29 +190,29 @@ const adicionarPeloCodigoBarras = async (txt) => {
       ret[0].produto,
       ret[0].codimagem,
       qtd,
-      ret[0].preco
-    );
+      ret[0].preco,
+    )
     Notify.create({
-      type: "positive",
-      message: "Código " + txt + " adicionado.",
+      type: 'positive',
+      message: 'Código ' + txt + ' adicionado.',
       timeout: 1000, // 1 segundo
-      actions: [{ icon: "close", color: "white" }],
-    });
-    sNegocio.paginaAtual = 1;
-    var audio = new Audio("successo.mp3");
-    audio.play();
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    sNegocio.paginaAtual = 1
+    var audio = new Audio('successo.mp3')
+    audio.play()
   } else {
     Notify.create({
-      type: "negative",
-      message: "Falha ao buscar código " + txt + "!",
+      type: 'negative',
+      message: 'Falha ao buscar código ' + txt + '!',
       timeout: 0, // 20 minutos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    var audio = new Audio("erro.mp3");
-    audio.play();
-    falar("Não encontrei!");
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    var audio = new Audio('erro.mp3')
+    audio.play()
+    falar('Não encontrei!')
   }
-};
+}
 
 const adicionarPelaListagem = async (
   codprodutobarra,
@@ -222,7 +220,7 @@ const adicionarPelaListagem = async (
   codproduto,
   produto,
   codimagem,
-  preco
+  preco,
 ) => {
   await sNegocio.itemAdicionar(
     codprodutobarra,
@@ -231,111 +229,111 @@ const adicionarPelaListagem = async (
     produto,
     codimagem,
     quantidade.value,
-    preco
-  );
-  sProduto.dialogPesquisa = false;
-  sNegocio.paginaAtual = 1;
-  quantidade.value = 1;
-  var audio = new Audio("successo.mp3");
-  audio.play();
-};
+    preco,
+  )
+  sProduto.dialogPesquisa = false
+  sNegocio.paginaAtual = 1
+  quantidade.value = 1
+  var audio = new Audio('successo.mp3')
+  audio.play()
+}
 
 const leitor = async () => {
   if (leitorLigado.value) {
-    desligarLeitor();
+    desligarLeitor()
   } else {
-    ligarLeitor();
+    ligarLeitor()
   }
-};
+}
 
 const ligarLeitor = async () => {
-  leitorLigado.value = true;
+  leitorLigado.value = true
   setTimeout(async () => {
     stream = await navigator.mediaDevices.getUserMedia({
       video: {
         height: { exact: barcodeVideo.value.offsetWidth * 2 },
         width: { exact: barcodeVideo.value.offsetHeight * 2 },
-        focusMode: "continuous",
+        focusMode: 'continuous',
         focusDistance: 0.03,
         colorTemperature: 5000,
         zoom: 1.2,
         facingMode: {
-          ideal: "environment",
+          ideal: 'environment',
         },
       },
       audio: false,
-    });
-    barcodeVideo.value.srcObject = stream;
-    await barcodeVideo.value.play();
-  }, 200);
-};
+    })
+    barcodeVideo.value.srcObject = stream
+    await barcodeVideo.value.play()
+  }, 200)
+}
 
 const desligarLeitor = async () => {
   if (stream) {
     stream.getTracks().forEach((track) => {
-      track.stop();
-    });
+      track.stop()
+    })
   }
-  barcodeVideo.value.srcObject = null;
-  leitorLigado.value = false;
-};
+  barcodeVideo.value.srcObject = null
+  leitorLigado.value = false
+}
 
 const lerCodigoBarras = async () => {
   const barcodeDetector = new BarcodeDetector({
     formats: [
       // "aztec",
-      "code_128",
-      "code_39",
-      "code_93",
-      "codabar",
+      'code_128',
+      'code_39',
+      'code_93',
+      'codabar',
       // "data_matrix",
-      "ean_13",
-      "ean_8",
-      "itf",
+      'ean_13',
+      'ean_8',
+      'itf',
       // "pdf417",
       // "qr_code",
-      "upc_a",
-      "upc_e",
+      'upc_a',
+      'upc_e',
     ],
-  });
-  var barras = null;
-  var barcodes = [];
-  var tentativas = 0;
+  })
+  var barras = null
+  var barcodes = []
+  var tentativas = 0
   do {
-    tentativas++;
+    tentativas++
     try {
-      barcodes = await barcodeDetector.detect(barcodeVideo.value);
+      barcodes = await barcodeDetector.detect(barcodeVideo.value)
       if (barcodes.length <= 0) {
-        continue;
+        continue
       }
       barcodes.forEach((barcode) => {
-        barras = barcode.rawValue;
-      });
+        barras = barcode.rawValue
+      })
     } catch (error) {}
-  } while (!barras && tentativas < 20);
+  } while (!barras && tentativas < 20)
   if (barras) {
-    adicionarPeloCodigoBarras(barras);
+    adicionarPeloCodigoBarras(barras)
   } else {
-    falar("Não consigo ler!");
+    falar('Não consigo ler!')
   }
-};
+}
 
 onMounted(() => {
-  emitter.on("adicionarProduto", (prod) => {
+  emitter.on('adicionarProduto', (prod) => {
     adicionarPelaListagem(
       prod.codprodutobarra,
       prod.barras,
       prod.codproduto,
       prod.produto,
       prod.codimagem,
-      prod.preco
-    );
-  });
-});
+      prod.preco,
+    )
+  })
+})
 
 onUnmounted(() => {
-  emitter.off("adicionarProduto");
-});
+  emitter.off('adicionarProduto')
+})
 </script>
 
 <template>
@@ -367,13 +365,7 @@ onUnmounted(() => {
       <q-btn round dense flat icon="mdi-barcode-scan" @click="leitor()">
         <q-tooltip class="bg-accent">Leitor de Codigo de Barras</q-tooltip>
       </q-btn>
-      <q-btn
-        round
-        dense
-        flat
-        icon="search"
-        @click="sProduto.dialogPesquisa = true"
-      >
+      <q-btn round dense flat icon="search" @click="sProduto.dialogPesquisa = true">
         <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
       </q-btn>
       <q-fab icon="receipt" flat padding="5px" direction="down">
@@ -424,12 +416,7 @@ onUnmounted(() => {
       "
     ></div>
     <video ref="barcodeVideo" style="width: 100%; height: 100px"></video>
-    <q-btn
-      color="primary"
-      icon="mdi-barcode"
-      @click="lerCodigoBarras()"
-      style="width: 100%"
-    >
+    <q-btn color="primary" icon="mdi-barcode" @click="lerCodigoBarras()" style="width: 100%">
       Ler código de Barras!
     </q-btn>
   </div>
@@ -474,9 +461,7 @@ onUnmounted(() => {
                 <q-item-section side top>
                   <q-item-label>
                     R$
-                    {{
-                      formataNumero(orc.valortotal)
-                    }}
+                    {{ formataNumero(orc.valortotal) }}
                   </q-item-label>
                   <q-item-label caption>
                     {{ moment(orc.lancamento).fromNow() }}
@@ -489,8 +474,8 @@ onUnmounted(() => {
           </q-list>
           <template v-else-if="uuidOrcamento">
             <h4>Nenhum Orçamento Localizado!</h4>
-            Confirme se você digitou o código UUID correto ou ainda se quem
-            emitiu o orçamento fez o processo de sincronização!
+            Confirme se você digitou o código UUID correto ou ainda se quem emitiu o orçamento fez o
+            processo de sincronização!
           </template>
           <template v-else>
             <h4>Digite o UUID!</h4>
@@ -526,31 +511,13 @@ onUnmounted(() => {
             @keydown.enter.prevent="sProduto.pesquisar()"
           >
             <template v-slot:append>
-              <q-btn
-                round
-                dense
-                flat
-                icon="close"
-                @click="sProduto.textoPesquisa = ''"
-              >
+              <q-btn round dense flat icon="close" @click="sProduto.textoPesquisa = ''">
                 <q-tooltip class="bg-accent">Limpar</q-tooltip>
               </q-btn>
-              <q-btn
-                round
-                dense
-                flat
-                icon="search"
-                @click="sProduto.pesquisar()"
-              >
+              <q-btn round dense flat icon="search" @click="sProduto.pesquisar()">
                 <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
               </q-btn>
-              <q-btn
-                round
-                dense
-                flat
-                icon="logout"
-                @click="sProduto.dialogPesquisa = false"
-              >
+              <q-btn round dense flat icon="logout" @click="sProduto.dialogPesquisa = false">
                 <q-tooltip class="bg-accent">Fechar</q-tooltip>
               </q-btn>
             </template>
@@ -585,7 +552,7 @@ onUnmounted(() => {
                     produto.codproduto,
                     produto.produto,
                     produto.codimagem,
-                    produto.preco
+                    produto.preco,
                   )
                 "
               >
@@ -593,25 +560,18 @@ onUnmounted(() => {
                 <q-img ratio="1" :src="sProduto.urlImagem(produto.codimagem)" />
 
                 <q-card-section>
-                  <div
-                    class="absolute"
-                    style="top: 0; right: 5px; transform: translateY(-37px)"
-                  >
+                  <div class="absolute" style="top: 0; right: 5px; transform: translateY(-37px)">
                     <q-chip color="grey-2" text-color="grey-7">
                       {{ produto.sigla }}
                       <template v-if="produto.quantidade > 0">
-                        C/{{
-                          formataNumero(produto.quantidade, 0)
-                        }}
+                        C/{{ formataNumero(produto.quantidade, 0) }}
                       </template>
                     </q-chip>
                   </div>
 
                   <div class="text-h5">
                     <small class="text-grey-7">R$</small>
-                    {{
-                      formataNumero(produto.preco)
-                    }}
+                    {{ formataNumero(produto.preco) }}
                   </div>
                   <div class="text-caption text-grey-7">
                     {{ produto.barras }} |
