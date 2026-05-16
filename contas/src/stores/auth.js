@@ -12,6 +12,7 @@ const api = axios.create({
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('access_token'))
   const usuario = ref(null)
+  const expiresAt = ref(null)
   const carregando = ref(false)
   const urlRetorno = ref(localStorage.getItem('redirect_after_login'))
 
@@ -51,6 +52,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (response.data?.data?.usuario) {
         usuario.value = response.data.data
+        const expAt = response.data?.meta?.expires_at
+        expiresAt.value = expAt ? new Date(expAt) : null
         return true
       }
       return false
@@ -58,6 +61,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Erro ao validar token:', error)
       gravarToken(null)
       usuario.value = null
+      expiresAt.value = null
       return false
     } finally {
       carregando.value = false
@@ -130,6 +134,7 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       gravarToken(null)
       usuario.value = null
+      expiresAt.value = null
       localStorage.removeItem('access_token')
       localStorage.removeItem('usuario')
       window.location.href = '/'
@@ -139,6 +144,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     usuario,
+    expiresAt,
     carregando,
     urlRetorno,
     gravarToken,

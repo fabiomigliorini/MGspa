@@ -10,9 +10,10 @@ const props = defineProps({
 const usuario = computed(() => unref(props.auth.usuario))
 const permissoes = computed(() => unref(props.auth.permissoes) || [])
 const ehAdmin = computed(() => !!unref(props.auth.ehAdmin))
-const expiresEm = computed(() => unref(props.auth.expiresEm))
+const expiresAt = computed(() => unref(props.auth.expiresAt))
 const uuidPdv = computed(() => unref(props.auth.uuidPdv))
 const permiteLogin = computed(() => !!unref(props.auth.permiteLogin))
+const estaAutenticado = computed(() => !!unref(props.auth.estaAutenticado))
 
 const nome = computed(() => usuario.value?.usuario || '')
 const inicial = computed(() => nome.value.charAt(0).toUpperCase())
@@ -25,7 +26,7 @@ function confirmarLogout() {
     title: 'Confirmar',
     message: 'Deseja realmente sair do sistema?',
     cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Sair', color: 'negative' },
+    ok: { label: 'Sair', color: 'negative', flat: true },
   }).onOk(() => props.auth.logout?.())
 }
 
@@ -38,61 +39,56 @@ async function renovar() {
   }
 }
 
-const perfilUrl = () => {
-  if (!!process.env.PESSOAS_URL) {
+const perfilUrl = computed(() => {
+  if (!process.env.PESSOAS_URL) {
     return '/perfil'
   }
   return `${process.env.PESSOAS_URL}/perfil`
-}
+})
 </script>
 
 <template>
-  <q-btn v-if="usuario" flat round icon="account_circle" :aria-label="nome || 'Usuário'">
+  <q-btn v-if="usuario" flat round icon="person" aria-label="Usuário">
     <q-menu>
-      <q-card flat bordered style="width: 400px; max-width: 65vw">
+      <q-card flat bordered style="width: 320px; max-width: 65vw">
         <!-- NOME -->
+        <q-item :href="perfilUrl" class="q-pa-lg">
+          <q-item-section avatar>
+            <q-avatar color="primary" text-color="white" size="50px">
+              {{ inicial }}
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-weight-bold text-primary">{{ nome }}</q-item-label>
+            <q-item-label v-if="pessoa" caption>{{ pessoa }}</q-item-label>
+            <q-item-label v-if="ehAdmin" caption>
+              Administrador
+              <q-icon name="star" size="xs" color="amber" />
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <!-- EXPIRA -->
+        <!-- <pre>{{ props.auth }}</pre> -->
+        <q-separator />
         <q-card-section class="q-pa-sm">
-          <q-item :href="perfilUrl">
-            <q-item-section avatar>
-              <q-avatar color="primary" text-color="white" size="50px">
-                {{ inicial }}
-              </q-avatar>
-            </q-item-section>
+          <q-item>
             <q-item-section>
-              <q-item-label class="text-weight-bold text-primary">{{ nome }}</q-item-label>
-              <q-item-label v-if="pessoa" caption>{{ pessoa }}</q-item-label>
-              <q-item-label v-if="ehAdmin" caption>
-                Administrador
-                <q-icon name="star" size="xs" color="amber" />
+              <q-item-label v-if="expiresAt" caption class="text-grey-7">
+                Expira {{ tempoRelativo(expiresAt) }}
+                <q-btn flat dense size="sm" @click="renovar" icon="refresh"></q-btn>
+              </q-item-label>
+              <q-item-label v-if="uuidPdv" caption class="text-grey-7 ellipsis">
+                PDV {{ uuidPdv }}
               </q-item-label>
             </q-item-section>
           </q-item>
         </q-card-section>
 
-        <!-- EXPIRA -->
-        <!-- <pre>{{ props.auth }}</pre> -->
-        <template>
-          <q-separator />
-          <q-card-section class="q-pa-sm">
-            <q-item>
-              <q-item-section>
-                <q-item-label v-if="expiresEm" caption class="text-grey-7">
-                  Expira {{ tempoRelativo(expiresEm) }}
-                  <q-btn flat dense @click="renovar" icon="new"></q-btn>
-                </q-item-label>
-                <q-item-label v-if="uuidPdv" caption class="text-grey-7 ellipsis">
-                  PDV {{ uuidPdv }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-card-section>
-        </template>
-
         <!-- GRUPOS -->
         <template v-if="permissoes.length">
           <q-separator />
-          <q-card-section class="q-pa-sm">
-            <!-- <q-item-label overline class="text-grey-7">Permissões</q-item-label> -->
+          <q-card-section class="q-pa-md">
             <q-chip
               v-for="perm in permissoes"
               :key="perm"
@@ -104,20 +100,10 @@ const perfilUrl = () => {
             </q-chip>
           </q-card-section>
         </template>
-      </q-card>
-      <q-list>
+
+        <!-- SAIR -->
         <q-separator />
-
-        <q-item v-if="auth.renovarToken" clickable v-close-popup>
-          <q-item-section avatar>
-            <q-icon name="refresh" color="primary" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Renovar</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-item clickable v-close-popup @click="confirmarLogout">
+        <q-item clickable v-close-popup @click="confirmarLogout" class="q-pa-lg">
           <q-item-section avatar>
             <q-icon name="logout" color="negative" />
           </q-item-section>
@@ -125,16 +111,16 @@ const perfilUrl = () => {
             <q-item-label>Sair</q-item-label>
           </q-item-section>
         </q-item>
-      </q-list>
+      </q-card>
     </q-menu>
   </q-btn>
 
+  <!-- BOTAO LOGIN -->
   <q-btn
     v-else-if="permiteLogin"
     flat
     round
     icon="login"
-    color="negative"
     aria-label="Conectar"
     @click="auth.login?.()"
   />

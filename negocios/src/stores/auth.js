@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia'
 import { api } from 'boot/axios'
 import { Notify } from 'quasar'
-import moment from 'moment'
 import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', {
@@ -35,9 +34,7 @@ export const useAuthStore = defineStore('auth', {
           { withCredentials: true },
         )
         if (data.access_token) {
-          this.token = data
-          this.token.expires_at = moment().add(data.expires_in, 'seconds')
-          this.carregarUsuario()
+          await this.aplicarToken(data)
         }
         return true
       } catch (error) {
@@ -74,6 +71,13 @@ export const useAuthStore = defineStore('auth', {
     },
 
     async renovarToken() {
+      // Sem refresh_token (caso típico de login via cookie SSO compartilhado entre apps),
+      // o /api/refresh do MGAuth não funciona. Cai pra revalidação via v1/auth/user.
+      if (!this.token.refresh_token) {
+        await this.carregarUsuario()
+        return
+      }
+
       const params = {
         refresh_token: this.token.refresh_token,
         grant_type: 'refresh_token',
@@ -85,9 +89,7 @@ export const useAuthStore = defineStore('auth', {
           withCredentials: true,
         })
         if (data.access_token) {
-          this.token = data
-          this.token.expires_at = moment().add(data.expires_in, 'seconds')
-          this.carregarUsuario()
+          await this.aplicarToken(data)
         }
       } catch (error) {
         Notify.create({
@@ -128,12 +130,34 @@ export const useAuthStore = defineStore('auth', {
         try {
           let { data } = await api.get('/api/v1/auth/user')
           this.usuario = data.data
+          if (data.meta?.expires_at) {
+            this.token.expires_at = data.meta.expires_at
+          }
         } catch (error) {
           console.log(error)
           this.usuario = {}
         }
       }
       return this.usuario
+    },
+
+    // Aplica token novo (login/refresh) atomicamente: busca o usuário com o token
+    // antes de substituir o estado, evitando "pisca" do expires_at no UI.
+    async aplicarToken(novoToken) {
+      try {
+        const { data } = await api.get('/api/v1/auth/user', {
+          headers: { Authorization: 'Bearer ' + novoToken.access_token },
+        })
+        if (data.meta?.expires_at) {
+          novoToken.expires_at = data.meta.expires_at
+        }
+        this.usuario = data.data
+        this.token = novoToken
+      } catch (error) {
+        console.log(error)
+        this.token = novoToken
+        this.usuario = {}
+      }
     },
   },
 })

@@ -11,6 +11,7 @@ const api = axios.create({
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('access_token'))
   const usuario = ref(null)
+  const expiresAt = ref(null)
   const carregando = ref(false)
 
   function gravarToken(novoToken) {
@@ -39,6 +40,8 @@ export const useAuthStore = defineStore('auth', () => {
 
       if (response.data?.data?.usuario) {
         usuario.value = response.data.data
+        const expAt = response.data?.meta?.expires_at
+        expiresAt.value = expAt ? new Date(expAt) : null
         if (tokenAtivo !== token.value) gravarToken(tokenAtivo)
         return true
       }
@@ -47,6 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Erro ao validar token:', error)
       gravarToken(null)
       usuario.value = null
+      expiresAt.value = null
       return false
     } finally {
       carregando.value = false
@@ -70,6 +74,7 @@ export const useAuthStore = defineStore('auth', () => {
   function limparSessao() {
     gravarToken(null)
     usuario.value = null
+    expiresAt.value = null
     localStorage.removeItem('usuario')
     document.cookie =
       'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;'
@@ -99,6 +104,7 @@ export const useAuthStore = defineStore('auth', () => {
   return {
     token,
     usuario,
+    expiresAt,
     carregando,
     gravarToken,
     validarToken,

@@ -14,7 +14,7 @@ export function useAuth() {
   )
   const ehAdmin = computed(() => permissoes.value.includes('Administrador'))
   const estaAutenticado = computed(() => !!usuario.value)
-  const expiresEm = computed(() => token.value?.expires_at || null)
+  const expiresAt = computed(() => token.value?.expires_at || null)
   const uuidPdv = computed(() => sSinc.pdv?.uuid || null)
 
   function logout() {
@@ -44,7 +44,7 @@ export function useAuth() {
     permissoes,
     ehAdmin,
     estaAutenticado,
-    expiresEm,
+    expiresAt,
     uuidPdv,
     permiteLogin: true,
     logout,

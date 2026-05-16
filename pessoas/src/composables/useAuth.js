@@ -4,7 +4,7 @@ import { useAuthStore } from 'src/stores/auth'
 
 export function useAuth() {
   const store = useAuthStore()
-  const { token, usuario, carregando } = storeToRefs(store)
+  const { token, usuario, expiresAt, carregando } = storeToRefs(store)
 
   const estaAutenticado = computed(() => !!token.value && !!usuario.value)
 
@@ -25,6 +25,7 @@ export function useAuth() {
   return {
     token,
     usuario,
+    expiresAt,
     carregando,
     permissoes,
     ehAdmin,
