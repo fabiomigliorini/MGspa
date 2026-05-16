@@ -896,6 +896,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('liquidacao-titulo/relatorio', '\Mg\Titulo\LiquidacaoTituloController@relatorio');
         Route::get('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@show')->where('id', '[0-9]+');
         Route::post('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@store');
+        Route::put('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@update')->where('id', '[0-9]+');
         Route::post('liquidacao-titulo/{id}/estornar', '\Mg\Titulo\LiquidacaoTituloController@estornar')->where('id', '[0-9]+');
 
         // Agrupamento de Títulos

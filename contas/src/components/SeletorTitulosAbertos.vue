@@ -368,10 +368,9 @@ function classeVencimento(t) {
             <q-tooltip>Atualizar Listagem</q-tooltip>
           </q-btn>
         </div>
-        <div class="row q-col-gutter-sm">
+        <div class="row q-col-gutter-md">
           <div class="col-xs-12 col-sm-3">
             <SelectGrupoEconomico
-              dense
               v-model="filtros.codgrupoeconomico"
               class="text-caption"
               outlined
@@ -380,9 +379,8 @@ function classeVencimento(t) {
               :bottom-slots="false"
             />
           </div>
-          <div class="col-xs-12 col-sm-3">
+          <div class="col-xs-12 col-sm-4">
             <SelectPessoa
-              dense
               class="text-caption"
               v-model="filtros.codpessoa"
               outlined
@@ -395,7 +393,6 @@ function classeVencimento(t) {
 
           <div class="col-xs-4 col-sm-2">
             <q-select
-              dense
               class="text-caption"
               v-model="filtros.credito"
               :options="operacaoOptions"
@@ -406,31 +403,8 @@ function classeVencimento(t) {
               :bottom-slots="false"
             />
           </div>
-          <div class="col-xs-6 col-sm-2">
-            <MgInputData
-              dense
-              input-class="text-caption"
-              v-model="filtros.vencimento_de"
-              type="date"
-              label="Vencimento de"
-              stack-label
-              :bottom-slots="false"
-            />
-          </div>
-          <div class="col-xs-6 col-sm-2">
-            <MgInputData
-              dense
-              v-model="filtros.vencimento_ate"
-              input-class="text-caption"
-              type="date"
-              label="Até"
-              stack-label
-              :bottom-slots="false"
-            />
-          </div>
-          <div class="col-xs-6 col-sm-3">
+          <div class="col-xs-8 col-sm-3">
             <SelectFilial
-              dense
               class="text-caption"
               v-model="filtros.codfilial"
               outlined
@@ -439,9 +413,33 @@ function classeVencimento(t) {
               :bottom-slots="false"
             />
           </div>
+          <div class="col-xs-6 col-sm-3">
+            <div class="row q-col-gutter-md">
+              <div class="col-6">
+                <mgInputData
+                  input-class="text-caption"
+                  v-model="filtros.vencimento_de"
+                  type="date"
+                  label="Vencimento de"
+                  stack-label
+                  :year-digits="2"
+                  :bottom-slots="false"
+                />
+              </div>
+              <div class="col-6">
+                <MgInputData
+                  v-model="filtros.vencimento_ate"
+                  input-class="text-caption"
+                  type="date"
+                  label="Até"
+                  stack-label
+                  :bottom-slots="false"
+                />
+              </div>
+            </div>
+          </div>
           <div class="col-xs-12 col-sm-3">
             <SelectTipoTitulo
-              dense
               class="text-caption"
               v-model="filtros.codtipotitulo"
               outlined
@@ -452,7 +450,6 @@ function classeVencimento(t) {
           </div>
           <div class="col-xs-12 col-sm-3">
             <SelectContaContabil
-              dense
               class="text-caption"
               v-model="filtros.codcontacontabil"
               outlined
@@ -463,7 +460,6 @@ function classeVencimento(t) {
           </div>
           <div class="col-xs-12 col-sm-3">
             <SelectPortador
-              dense
               class="text-caption"
               v-model="filtros.codportador"
               outlined
@@ -481,7 +477,7 @@ function classeVencimento(t) {
     <div v-if="!titulos.length" class="text-center text-grey q-ma-xl">
       Nenhum título encontrado para esses filtros.
     </div>
-    <q-card v-else flat bordered class="text-caption text-weight-bold">
+    <q-card v-else flat bordered class="text-caption">
       <!-- TOTAIS -->
       <q-card-section class="text-grey-9 text-overline">
         <div class="row q-col-gutter-md">
@@ -491,7 +487,6 @@ function classeVencimento(t) {
               <q-btn
                 flat
                 round
-                dense
                 size="sm"
                 icon="event_busy"
                 color="red-7"
@@ -499,43 +494,18 @@ function classeVencimento(t) {
               >
                 <q-tooltip>Selecionar somente títulos vencidos</q-tooltip>
               </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                icon="done_all"
-                color="grey-8"
-                @click="selecionarTodos"
-              >
+              <q-btn flat round size="sm" icon="done_all" color="grey-8" @click="selecionarTodos">
                 <q-tooltip>Selecionar todos</q-tooltip>
               </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                icon="block"
-                color="grey-8"
-                @click="deselecionarTodos"
-              >
+              <q-btn flat round size="sm" icon="block" color="grey-8" @click="deselecionarTodos">
                 <q-tooltip>Limpar seleção</q-tooltip>
               </q-btn>
               <q-space />
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                icon="money_off"
-                color="grey-8"
-                @click="limparJurosMulta"
-              >
+              <q-btn flat round size="sm" icon="money_off" color="grey-8" @click="limparJurosMulta">
                 <q-tooltip>Zerar juros e multa de todos os títulos</q-tooltip>
               </q-btn>
               <q-btn
                 flat
-                dense
                 round
                 size="sm"
                 icon="calculate"
@@ -579,13 +549,13 @@ function classeVencimento(t) {
       <!-- TITULOS -->
       <template v-for="(titulo, i) in titulos" :key="titulo.codtitulo">
         <q-card-section
-          class="text-caption cursor-pointer q-py-sm"
-          :class="{ 'bg-blue-1': titulo.selecionado }"
+          class="cursor-pointer q-py-sm"
+          :class="{ 'bg-blue-2': titulo.selecionado }"
           @click="toggle(titulo)"
         >
           <div class="row q-col-gutter-md items-center">
             <!-- NUMERO -->
-            <div class="col-xs-12 col-sm-3 ellipsis text-weight-bold">
+            <div class="col-xs-12 col-sm-3 ellipsis">
               <div class="row">
                 <router-link
                   :to="'/titulo/' + titulo.codtitulo"
@@ -599,7 +569,7 @@ function classeVencimento(t) {
                   <q-icon name="launch" />
                 </router-link>
                 <q-space />
-                <span :class="classeOperacao(titulo.operacao)">
+                <span :class="classeOperacao(titulo.operacao)" class="text-body2 text-weight-bold">
                   {{ formataNumero(titulo.saldo) }} {{ titulo.operacao }}
                 </span>
               </div>
@@ -614,10 +584,9 @@ function classeVencimento(t) {
 
             <!-- VALORES -->
             <div class="col-xs-12 col-sm-7 col-md-6">
-              <div class="row q-col-gutter-sm">
+              <div class="row q-col-gutter-md">
                 <div class="col-xs-4 col-sm-3" @click.stop>
                   <MgInputValor
-                    dense
                     input-class="text-caption"
                     label="Capital"
                     :bottom-slots="false"
@@ -630,7 +599,6 @@ function classeVencimento(t) {
 
                 <div class="col-xs-4 col-sm-2" @click.stop>
                   <MgInputValor
-                    dense
                     input-class="text-caption"
                     label="Multa"
                     :bottom-slots="false"
@@ -642,7 +610,6 @@ function classeVencimento(t) {
 
                 <div class="col-xs-4 col-sm-2" @click.stop>
                   <MgInputValor
-                    dense
                     input-class="text-caption"
                     label="Juros"
                     :bottom-slots="false"
@@ -654,7 +621,6 @@ function classeVencimento(t) {
 
                 <div class="col-xs-4 col-sm-2" @click.stop>
                   <MgInputValor
-                    dense
                     input-class="text-caption"
                     label="Desconto"
                     :bottom-slots="false"
@@ -671,7 +637,6 @@ function classeVencimento(t) {
 
                 <div class="col" @click.stop>
                   <MgInputValor
-                    dense
                     input-class="text-caption"
                     label="Total"
                     :bottom-slots="false"
@@ -684,12 +649,12 @@ function classeVencimento(t) {
               </div>
             </div>
 
-            <div class="col ellipsis text-weight-bold">
+            <div class="col ellipsis">
+              <div class="text-grey-7 text-weight-bold">
+                {{ titulo.fantasia }}
+              </div>
               <div :class="titulo.gerencial ? 'text-orange' : 'text-green'">
                 {{ titulo.filial }}
-              </div>
-              <div class="text-grey-7">
-                {{ titulo.fantasia }}
               </div>
             </div>
           </div>

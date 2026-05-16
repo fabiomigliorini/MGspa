@@ -9,7 +9,7 @@ use Mg\Usuario\UsuarioService;
 class LiquidacaoTituloAutorizador
 {
     private const GRUPOS_IRRESTRITOS = ['Administrador', 'Financeiro', 'Cobranca'];
-    private const JANELA_ESTORNO_CAIXA_MIN = 120;
+    private const JANELA_CAIXA_MIN = 120;
 
     public static function temAcessoIrrestrito(int $codusuario): bool
     {
@@ -57,8 +57,9 @@ class LiquidacaoTituloAutorizador
 
     /**
      * Retorna null se autorizado, ou string com mensagem de erro.
+     * $acao usado apenas para compor as mensagens (ex: 'estornar', 'editar').
      */
-    public static function motivoBloqueioEstorno(LiquidacaoTitulo $liq, int $codusuario): ?string
+    public static function motivoBloqueioMutacao(LiquidacaoTitulo $liq, int $codusuario, string $acao = 'alterar'): ?string
     {
         if (self::temAcessoIrrestrito($codusuario)) {
             return null;
@@ -74,15 +75,25 @@ class LiquidacaoTituloAutorizador
 
         if (UsuarioService::temGrupo($codusuario, 'Caixa')) {
             if ((int)$liq->codusuariocriacao !== $codusuario) {
-                return 'Caixa só pode estornar suas próprias liquidações.';
+                return "Caixa só pode {$acao} suas próprias liquidações.";
             }
             $minutos = Carbon::parse($liq->criacao)->diffInMinutes(Carbon::now());
-            if ($minutos > self::JANELA_ESTORNO_CAIXA_MIN) {
-                return 'Caixa só pode estornar suas próprias liquidações nas primeiras 2 horas.';
+            if ($minutos > self::JANELA_CAIXA_MIN) {
+                return "Caixa só pode {$acao} suas próprias liquidações nas primeiras 2 horas.";
             }
             return null;
         }
 
         return 'Liquidação não pertence à sua filial.';
+    }
+
+    public static function motivoBloqueioEstorno(LiquidacaoTitulo $liq, int $codusuario): ?string
+    {
+        return self::motivoBloqueioMutacao($liq, $codusuario, 'estornar');
+    }
+
+    public static function motivoBloqueioEdicao(LiquidacaoTitulo $liq, int $codusuario): ?string
+    {
+        return self::motivoBloqueioMutacao($liq, $codusuario, 'editar');
     }
 }

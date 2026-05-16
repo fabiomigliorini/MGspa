@@ -129,8 +129,8 @@ const formataNumeroNota = (n) => {
   const serie = n.serie ? String(n.serie).padStart(3, '0') : '000'
   const numero = n.numero ? String(n.numero).padStart(9, '0') : '000000000'
   const tipo = n.modelo === 65 ? 'NFC-e' : 'NF-e'
-  const status = n.emitida ? '' : ' (não emitida)'
-  return `${tipo} ${serie}-${numero}${status}`
+  const status = n.emitida ? '' : 'T'
+  return `${tipo} ${status}-${serie}-${numero}`
 }
 
 function abrirDialogModelo() {
@@ -253,7 +253,7 @@ watch(() => route.fullPath, carregar)
         <!-- Linha 2 -->
         <div class="row q-col-gutter-md">
           <!-- DETALHES -->
-          <div class="col-xs-12 col-sm-6">
+          <div class="col-xs-12 col-sm-8">
             <q-card bordered flat>
               <q-card-section class="text-grey-9 text-overline row items-center">
                 DETALHES DO AGRUPAMENTO
@@ -312,25 +312,22 @@ watch(() => route.fullPath, carregar)
                   :alteracao="ag.alteracao"
                 />
               </q-card-section>
-              <q-separator />
-              <q-card-section>
-                <div class="text-overline text-grey-7">Observações</div>
+              <q-card-section class="q-pt-none">
                 <div
-                  class="text-body2 bg-grey-2 rounded-borders q-pa-sm"
+                  class="text-body2 bg-grey-2 rounded-borders q-pa-md"
                   style="white-space: pre-line"
                 >
                   <span v-if="ag.observacao">
                     {{ ag.observacao }}
                   </span>
-                  <span v-else> &mdash; </span>
+                  <span v-else class="text-italic text-grey-7"> Sem Observações </span>
                 </div>
-                <!-- <pre>{{ ag }}</pre> -->
               </q-card-section>
             </q-card>
           </div>
 
           <!-- WHATSAPP -->
-          <div class="col-xs-12 col-sm-6">
+          <div class="col-xs-12 col-sm-4">
             <!-- WhatsApp -->
             <q-card bordered flat>
               <q-card-section class="text-grey-9 text-overline">
@@ -481,6 +478,10 @@ watch(() => route.fullPath, carregar)
                     <q-item-label class="text-weight-medium text-primary">
                       {{ m.titulo?.numero }}
                     </q-item-label>
+                    <q-item-label caption v-if="m.titulo.codpessoa != ag.codpessoa">
+                      {{ m.titulo?.fantasia }}
+                    </q-item-label>
+
                     <q-item-label
                       caption
                       :class="m.titulo?.gerencial ? 'text-orange' : 'text-green'"

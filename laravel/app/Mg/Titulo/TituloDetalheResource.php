@@ -18,15 +18,19 @@ class TituloDetalheResource extends Resource
                 nf.codnotafiscal,
                 nf.codfilial,
                 f.filial,
+                nat.naturezaoperacao,
+                nf.emitida,
                 nf.serie,
                 nf.modelo,
                 nf.numero,
+                nf.status,
                 nf.emissao,
                 nf.valortotal
             from tblnotafiscal nf
             inner join tblfilial f on (f.codfilial = nf.codfilial)
             inner join tblnotafiscalprodutobarra nfpb on (nfpb.codnotafiscal = nf.codnotafiscal)
             inner join tblnegocioprodutobarra npb on (npb.codnegocioprodutobarra = nfpb.codnegocioprodutobarra)
+            inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = nf.codnaturezaoperacao)
             where npb.codnegocio in (
                 select nfp.codnegocio
                 from tbltitulo t
@@ -53,9 +57,12 @@ class TituloDetalheResource extends Resource
             'codnotafiscal' => (int)$r->codnotafiscal,
             'codfilial'     => (int)$r->codfilial,
             'filial'        => $r->filial,
+            'naturezaoperacao' => $r->naturezaoperacao,
+            'emitida' => $r->emitida,
             'serie'         => $r->serie,
             'modelo'        => $r->modelo,
             'numero'        => $r->numero,
+            'status'        => $r->status,
             'emissao'       => $r->emissao,
             'valortotal'    => (float)$r->valortotal,
         ], $rows);

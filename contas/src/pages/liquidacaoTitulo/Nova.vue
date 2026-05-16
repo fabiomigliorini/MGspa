@@ -145,6 +145,7 @@ async function salvar() {
               {{ operacao }}
             </div>
           </q-card-section>
+          <q-separator inset />
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-xs-12 col-sm-4">
@@ -186,7 +187,7 @@ async function salvar() {
               </div>
             </div>
           </q-card-section>
-          <q-separator />
+          <q-separator inset />
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn flat label="Salvar" type="submit" color="primary" :loading="saving" />

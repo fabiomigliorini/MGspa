@@ -69,6 +69,37 @@ class LiquidacaoTituloController extends Controller
         }
     }
 
+    public function update(LiquidacaoTituloUpdateRequest $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
+
+        DB::beginTransaction();
+        try {
+            $liq = LiquidacaoTitulo::with('Portador')->findOrFail($id);
+            $bloqueio = LiquidacaoTituloAutorizador::motivoBloqueioEdicao($liq, Auth::user()->codusuario);
+            if ($bloqueio !== null) {
+                DB::rollBack();
+                abort(403, $bloqueio);
+            }
+            if (!LiquidacaoTituloAutorizador::podeCriar(Auth::user()->codusuario, (int)$request->codportador)) {
+                DB::rollBack();
+                abort(403, 'Portador não pertence à sua filial.');
+            }
+            $liq = LiquidacaoTituloService::atualizar($liq, $request->validated());
+            DB::commit();
+            return new LiquidacaoTituloDetalheResource($liq);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            DB::rollBack();
+            throw $e;
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
     public function estornar(int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);

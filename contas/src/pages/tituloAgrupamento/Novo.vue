@@ -348,8 +348,9 @@ async function salvar() {
               </span>
             </div>
           </q-card-section>
+          <q-separator inset />
 
-          <q-card-section class="q-pt-none">
+          <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-xs-12">
                 <SelectPessoa
@@ -489,7 +490,7 @@ async function salvar() {
             </div>
           </q-card-section>
 
-          <q-separator />
+          <q-separator inset />
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn

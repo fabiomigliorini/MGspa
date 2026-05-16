@@ -153,6 +153,43 @@ class LiquidacaoTituloService
         return self::carregar($liq->codliquidacaotitulo);
     }
 
+    public static function atualizar(LiquidacaoTitulo $liq, array $dados): LiquidacaoTitulo
+    {
+        if (!empty($liq->estornado)) {
+            throw new \Exception('Liquidação estornada, não pode ser editada!', 1);
+        }
+        if (!empty($liq->codperiodo)) {
+            throw new \Exception('Liquidação fechada em um período de RH. Não é possível editar.', 1);
+        }
+
+        $codpessoa   = (int)$dados['codpessoa'];
+        $codportador = (int)$dados['codportador'];
+        $transacao   = Carbon::parse($dados['transacao'])->format('Y-m-d');
+
+        $mudouPortador  = (int)$liq->codportador !== $codportador;
+        $mudouTransacao = Carbon::parse($liq->transacao)->format('Y-m-d') !== $transacao;
+
+        $liq->codpessoa   = $codpessoa;
+        $liq->codportador = $codportador;
+        $liq->transacao   = $transacao;
+        $liq->observacao  = $dados['observacao'] ?? null;
+        $liq->save();
+
+        if ($mudouPortador || $mudouTransacao) {
+            foreach ($liq->MovimentoTituloS as $mov) {
+                if ($mudouPortador) {
+                    $mov->codportador = $codportador;
+                }
+                if ($mudouTransacao) {
+                    $mov->transacao = $transacao;
+                }
+                $mov->save();
+            }
+        }
+
+        return self::carregar($liq->codliquidacaotitulo);
+    }
+
     public static function estornar(LiquidacaoTitulo $liq): LiquidacaoTitulo
     {
         if (!empty($liq->estornado)) {
