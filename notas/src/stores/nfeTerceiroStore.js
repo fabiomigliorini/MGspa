@@ -243,7 +243,11 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
 
     async updateItem(codnfeterceiro, codnfeterceiroitem, data) {
       try {
-        const response = await nfeTerceiroService.updateItem(codnfeterceiro, codnfeterceiroitem, data)
+        const response = await nfeTerceiroService.updateItem(
+          codnfeterceiro,
+          codnfeterceiroitem,
+          data,
+        )
         this.currentNfeTerceiro = response.data
         this.syncCurrentToList()
         delete this.analiseItens[codnfeterceiroitem]
@@ -273,7 +277,10 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
 
     async toggleConferenciaItem(codnfeterceiro, codnfeterceiroitem) {
       try {
-        const response = await nfeTerceiroService.conferenciaItem(codnfeterceiro, codnfeterceiroitem)
+        const response = await nfeTerceiroService.conferenciaItem(
+          codnfeterceiro,
+          codnfeterceiroitem,
+        )
         this.currentNfeTerceiro = response.data
         this.syncCurrentToList()
         return response.data
@@ -285,7 +292,11 @@ export const useNfeTerceiroStore = defineStore('nfeTerceiro', {
 
     async dividirItem(codnfeterceiro, codnfeterceiroitem, parcelas) {
       try {
-        const response = await nfeTerceiroService.dividirItem(codnfeterceiro, codnfeterceiroitem, parcelas)
+        const response = await nfeTerceiroService.dividirItem(
+          codnfeterceiro,
+          codnfeterceiroitem,
+          parcelas,
+        )
         this.currentNfeTerceiro = response.data
         this.syncCurrentToList()
         this.analiseItens = {}

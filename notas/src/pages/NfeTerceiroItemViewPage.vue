@@ -5,7 +5,7 @@ import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import SelectProdutoBarra from 'src/components/selects/SelectProdutoBarra.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataNumero, formataData, formataTimestamp } from "@components/formatters"
+import { formataNumero, formataData, formataTimestamp } from '@components/formatters'
 import { conformidades, corConformidade } from 'src/utils/nfeTerceiroItemConformidade'
 
 const route = useRoute()
@@ -27,7 +27,7 @@ const variacao = computed(() => item.value?.produtoBarra?.variacao || null)
 
 const analise = computed(() => nfeTerceiroStore.analiseItens[codnfeterceiroitem.value] || null)
 const loadingAnalise = computed(
-  () => !!nfeTerceiroStore.loadingAnaliseItens[codnfeterceiroitem.value]
+  () => !!nfeTerceiroStore.loadingAnaliseItens[codnfeterceiroitem.value],
 )
 
 const conf = computed(() => conformidades(item.value || {}, analise.value?.codtributacao))
@@ -160,7 +160,7 @@ const vendasPorEmbalagem = computed(() => {
   const a = analise.value
   if (!a?.vendas?.length) return []
   return a.vendas.filter(
-    (v) => v.codprodutoembalagem !== null && v.codprodutoembalagem !== undefined
+    (v) => v.codprodutoembalagem !== null && v.codprodutoembalagem !== undefined,
   )
 })
 
@@ -182,7 +182,7 @@ const salvarDetalhes = async () => {
     await nfeTerceiroStore.updateItem(
       codnfeterceiro.value,
       codnfeterceiroitem.value,
-      formDetalhes.value
+      formDetalhes.value,
     )
     showDetalhes.value = false
     $q.notify({ type: 'positive', message: 'Item atualizado' })
@@ -385,7 +385,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                   <td>
                     <template
                       v-for="b in (variacao?.produtoBarras || []).filter(
-                        (pb) => pb.codprodutoembalagem === v.codprodutoembalagem
+                        (pb) => pb.codprodutoembalagem === v.codprodutoembalagem,
                       )"
                       :key="b.codprodutobarra"
                     >
@@ -870,110 +870,110 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               </div>
             </q-card-section>
 
-          <q-card-section class="q-pb-none">
-            <SelectProdutoBarra
-              v-model="formDetalhes.codprodutobarra"
-              label="Produto"
-              :bottom-slots="false"
-              dense
-            />
-            <div class="text-caption text-grey-7 q-mt-xs" v-if="item.xprod">
-              Descrição na NFe: {{ item.xprod }}
-            </div>
-          </q-card-section>
+            <q-card-section class="q-pb-none">
+              <SelectProdutoBarra
+                v-model="formDetalhes.codprodutobarra"
+                label="Produto"
+                :bottom-slots="false"
+                dense
+              />
+              <div class="text-caption text-grey-7 q-mt-xs" v-if="item.xprod">
+                Descrição na NFe: {{ item.xprod }}
+              </div>
+            </q-card-section>
 
-          <q-card-section class="q-py-none">
-            <div class="row q-col-gutter-sm">
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">EAN</div>
-                <div class="text-body2">{{ item.cean || '-' }}</div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">Referência</div>
-                <div class="text-body2">{{ item.cprod }}</div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">Total</div>
-                <div class="text-body2">R$ {{ formataNumero(item.vprod) }}</div>
-              </div>
+            <q-card-section class="q-py-none">
+              <div class="row q-col-gutter-sm">
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">EAN</div>
+                  <div class="text-body2">{{ item.cean || '-' }}</div>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">Referência</div>
+                  <div class="text-body2">{{ item.cprod }}</div>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">Total</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vprod) }}</div>
+                </div>
 
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">EAN Trib</div>
-                <div class="text-body2">{{ item.ceantrib || '-' }}</div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">NCM</div>
-                <div class="text-body2">{{ item.ncm }}</div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">IPI Valor</div>
-                <div class="text-body2">R$ {{ formataNumero(item.ipivipi) }}</div>
-              </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">EAN Trib</div>
+                  <div class="text-body2">{{ item.ceantrib || '-' }}</div>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">NCM</div>
+                  <div class="text-body2">{{ item.ncm }}</div>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">IPI Valor</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.ipivipi) }}</div>
+                </div>
 
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">Quantidade / UM</div>
-                <div class="text-body2">{{ formataNumero(item.qcom, 2) }} {{ item.ucom }}</div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">CEST</div>
-                <div class="text-body2">{{ item.cest || '-' }}</div>
-              </div>
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">ICMS ST Valor</div>
-                <div class="text-body2">R$ {{ formataNumero(item.vicmsst) }}</div>
-              </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">Quantidade / UM</div>
+                  <div class="text-body2">{{ formataNumero(item.qcom, 2) }} {{ item.ucom }}</div>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">CEST</div>
+                  <div class="text-body2">{{ item.cest || '-' }}</div>
+                </div>
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">ICMS ST Valor</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vicmsst) }}</div>
+                </div>
 
-              <div class="col-6 col-sm-4">
-                <div class="text-caption text-grey-7">Preço</div>
-                <div class="text-body2">{{ formataNumero(item.vuncom, 2) }}</div>
-              </div>
-            </div>
-          </q-card-section>
-
-          <q-separator class="q-my-md" />
-
-          <q-card-section class="q-py-none">
-            <div class="row q-col-gutter-md items-start">
-              <div class="col-4">
-                <MgInputValor v-model="formDetalhes.margem" label="Margem %" dense />
-              </div>
-              <div class="col-4">
-                <MgInputValor v-model="formDetalhes.complemento" label="Outros Custos" dense />
-              </div>
-              <div class="col-4">
-                <div class="text-caption text-grey-7">Total Custo</div>
-                <div class="text-subtitle1 text-weight-bold">
-                  R$
-                  {{
-                    analise?.vcusto !== null && analise?.vcusto !== undefined
-                      ? formataNumero(
-                          analise.vcusto -
-                            (Number(item.complemento) || 0) +
-                            (Number(formDetalhes.complemento) || 0)
-                        )
-                      : formataNumero(
-                          (item.vprod || 0) +
-                            (item.ipivipi || 0) +
-                            (item.vicmsst || 0) +
-                            (formDetalhes.complemento || 0)
-                        )
-                  }}
+                <div class="col-6 col-sm-4">
+                  <div class="text-caption text-grey-7">Preço</div>
+                  <div class="text-body2">{{ formataNumero(item.vuncom, 2) }}</div>
                 </div>
               </div>
-            </div>
-          </q-card-section>
+            </q-card-section>
 
-          <q-card-section class="q-pt-md">
-            <q-input
-              v-model="formDetalhes.observacoes"
-              label="Observações"
-              outlined
-              dense
-              maxlength="500"
-            />
-          </q-card-section>
+            <q-separator class="q-my-md" />
 
-          <q-separator />
+            <q-card-section class="q-py-none">
+              <div class="row q-col-gutter-md items-start">
+                <div class="col-4">
+                  <MgInputValor v-model="formDetalhes.margem" label="Margem %" dense />
+                </div>
+                <div class="col-4">
+                  <MgInputValor v-model="formDetalhes.complemento" label="Outros Custos" dense />
+                </div>
+                <div class="col-4">
+                  <div class="text-caption text-grey-7">Total Custo</div>
+                  <div class="text-subtitle1 text-weight-bold">
+                    R$
+                    {{
+                      analise?.vcusto !== null && analise?.vcusto !== undefined
+                        ? formataNumero(
+                            analise.vcusto -
+                              (Number(item.complemento) || 0) +
+                              (Number(formDetalhes.complemento) || 0),
+                          )
+                        : formataNumero(
+                            (item.vprod || 0) +
+                              (item.ipivipi || 0) +
+                              (item.vicmsst || 0) +
+                              (formDetalhes.complemento || 0),
+                          )
+                    }}
+                  </div>
+                </div>
+              </div>
+            </q-card-section>
+
+            <q-card-section class="q-pt-md">
+              <q-input
+                v-model="formDetalhes.observacoes"
+                label="Observações"
+                outlined
+                dense
+                maxlength="500"
+              />
+            </q-card-section>
+
+            <q-separator />
 
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" v-close-popup />

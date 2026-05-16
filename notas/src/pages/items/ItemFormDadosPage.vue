@@ -24,7 +24,7 @@ const form = ref({
   valorfrete: 0,
   valorseguro: 0,
   valoroutras: 0,
-  informacoesadicionais: null
+  informacoesadicionais: null,
 })
 
 // Computed
@@ -38,7 +38,7 @@ const loadItem = async () => {
   try {
     const itemData = await notaFiscalStore.fetchItem(
       route.params.codnotafiscal,
-      route.params.codnotafiscalprodutobarra
+      route.params.codnotafiscalprodutobarra,
     )
 
     item.value = itemData
@@ -52,7 +52,7 @@ const loadItem = async () => {
       valorfrete: parseFloat(itemData.valorfrete) || 0,
       valorseguro: parseFloat(itemData.valorseguro) || 0,
       valoroutras: parseFloat(itemData.valoroutras) || 0,
-      informacoesadicionais: itemData.informacoesadicionais
+      informacoesadicionais: itemData.informacoesadicionais,
     }
 
     valorTotalOriginal.value = form.value.valortotal
@@ -60,7 +60,7 @@ const loadItem = async () => {
     $q.notify({
       type: 'negative',
       message: 'Erro ao carregar item',
-      caption: error.response?.data?.message || error.message
+      caption: error.response?.data?.message || error.message,
     })
   } finally {
     loadingItem.value = false
@@ -84,25 +84,25 @@ const handleSubmit = async () => {
     await notaFiscalStore.updateItem(
       route.params.codnotafiscal,
       route.params.codnotafiscalprodutobarra,
-      form.value
+      form.value,
     )
 
     $q.notify({
       type: 'positive',
       message: 'Item atualizado com sucesso',
-      caption: 'Os tributos foram recalculados automaticamente'
+      caption: 'Os tributos foram recalculados automaticamente',
     })
 
     router.push({
       name: 'nota-fiscal-view',
       params: { codnotafiscal: route.params.codnotafiscal },
-      hash: '#itens'
+      hash: '#itens',
     })
   } catch (error) {
     $q.notify({
       type: 'negative',
       message: 'Erro ao atualizar item',
-      caption: error.response?.data?.message || error.message
+      caption: error.response?.data?.message || error.message,
     })
   } finally {
     loading.value = false
@@ -112,7 +112,7 @@ const handleSubmit = async () => {
 const handleCancel = () => {
   router.push({
     name: 'nota-fiscal-view',
-    params: { codnotafiscal: route.params.codnotafiscal }
+    params: { codnotafiscal: route.params.codnotafiscal },
   })
 }
 
@@ -134,20 +134,8 @@ onMounted(() => {
           </div>
         </div>
         <div class="col-auto">
-          <q-btn
-            flat
-            icon="close"
-            label="Cancelar"
-            @click="handleCancel"
-            :disable="loading"
-          />
-          <q-btn
-            color="primary"
-            icon="save"
-            label="Salvar"
-            type="submit"
-            :loading="loading"
-          />
+          <q-btn flat icon="close" label="Cancelar" @click="handleCancel" :disable="loading" />
+          <q-btn color="primary" icon="save" label="Salvar" type="submit" :loading="loading" />
         </div>
       </div>
 
@@ -190,22 +178,12 @@ onMounted(() => {
 
               <!-- NCM -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  :model-value="item.produtoBarra?.ncm"
-                  label="NCM"
-                  outlined
-                  readonly
-                />
+                <q-input :model-value="item.produtoBarra?.ncm" label="NCM" outlined readonly />
               </div>
 
               <!-- CEST -->
               <div class="col-12 col-sm-6">
-                <q-input
-                  :model-value="item.produtoBarra?.cest"
-                  label="CEST"
-                  outlined
-                  readonly
-                />
+                <q-input :model-value="item.produtoBarra?.cest" label="CEST" outlined readonly />
               </div>
             </div>
           </q-card-section>
@@ -227,8 +205,8 @@ onMounted(() => {
                   step="0.001"
                   min="0.001"
                   :rules="[
-                    val => !!val || 'Campo obrigatório',
-                    val => val > 0 || 'Quantidade deve ser maior que zero'
+                    (val) => !!val || 'Campo obrigatório',
+                    (val) => val > 0 || 'Quantidade deve ser maior que zero',
                   ]"
                   :suffix="item.produtoBarra?.unidade || 'UN'"
                   @update:model-value="calcularTotal"
@@ -242,8 +220,8 @@ onMounted(() => {
                   label="Valor Unitário *"
                   :min="0"
                   :rules="[
-                    val => val !== null && val !== undefined || 'Campo obrigatório',
-                    val => val >= 0 || 'Valor deve ser maior ou igual a zero'
+                    (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
+                    (val) => val >= 0 || 'Valor deve ser maior ou igual a zero',
                   ]"
                   prefix="R$"
                   @update:model-value="calcularTotal"
@@ -257,8 +235,8 @@ onMounted(() => {
                   label="Valor Total *"
                   :min="0"
                   :rules="[
-                    val => val !== null && val !== undefined || 'Campo obrigatório',
-                    val => val >= 0 || 'Valor deve ser maior ou igual a zero'
+                    (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
+                    (val) => val >= 0 || 'Valor deve ser maior ou igual a zero',
                   ]"
                   prefix="R$"
                   hint="Calculado automaticamente"
@@ -341,7 +319,8 @@ onMounted(() => {
             <q-icon name="warning" color="orange" />
           </template>
           <div class="text-body2">
-            <strong>Atenção:</strong> Ao salvar, os tributos serão recalculados automaticamente com base nos novos valores.
+            <strong>Atenção:</strong> Ao salvar, os tributos serão recalculados automaticamente com
+            base nos novos valores.
           </div>
         </q-banner>
       </div>

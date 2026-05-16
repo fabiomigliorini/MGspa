@@ -43,7 +43,7 @@ watch(
         nfechave: '',
       }
     }
-  }
+  },
 )
 
 // Methods
@@ -98,7 +98,7 @@ watch(
     if (!newVal) {
       resetForm()
     }
-  }
+  },
 )
 </script>
 

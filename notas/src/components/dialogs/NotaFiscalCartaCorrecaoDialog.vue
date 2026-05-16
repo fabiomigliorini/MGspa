@@ -44,7 +44,7 @@ watch(
     if (!newVal) {
       resetForm()
     }
-  }
+  },
 )
 
 // Expose para o pai poder controlar o loading

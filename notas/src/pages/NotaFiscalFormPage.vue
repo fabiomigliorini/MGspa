@@ -12,7 +12,7 @@ import SelectEstado from '../components/selects/SelectEstado.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
-import { formataNumeroNotaFiscal } from "@components/formatters"
+import { formataNumeroNotaFiscal } from '@components/formatters'
 import { validarChaveNFe } from 'src/utils/validators'
 
 const router = useRouter()
@@ -284,7 +284,7 @@ watch(
       // Armazena o CNPJ para usar na pesquisa de pessoa
       cnpjPessoaRef.value = dados.cnpj
     }
-  }
+  },
 )
 
 // Atualiza a série conforme a filial selecionada
@@ -302,7 +302,7 @@ watch(
     if (filial?.nfeserie) {
       form.value.serie = filial.nfeserie
     }
-  }
+  },
 )
 
 // Computed: Valor Total calculado da Nota Fiscal

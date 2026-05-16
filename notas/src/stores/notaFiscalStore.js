@@ -595,7 +595,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalItemService.update(
           codnotafiscal,
           codnotafiscalprodutobarra,
-          data
+          data,
         )
         if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
           this.currentNota = response.data
@@ -615,7 +615,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         const response = await notaFiscalItemService.delete(
           codnotafiscal,
-          codnotafiscalprodutobarra
+          codnotafiscalprodutobarra,
         )
         if (this.currentNota?.codnotafiscal == response.data?.codnotafiscal) {
           this.currentNota = response.data
@@ -636,7 +636,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       try {
         // Busca o item no array currentNota.itens
         const item = this.currentNota?.itens?.find(
-          (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra)
+          (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
         )
         if (item) {
           this.currentItem = item
@@ -656,7 +656,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
      */
     startEditingItem(codnotafiscalprodutobarra) {
       const item = this.currentNota?.itens?.find(
-        (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra)
+        (i) => i.codnotafiscalprodutobarra === parseInt(codnotafiscalprodutobarra),
       )
       if (item) {
         // Cria uma cópia profunda do item para edição
@@ -720,13 +720,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalPagamentoService.update(
           codnotafiscal,
           codnotafiscalpagamento,
-          data
+          data,
         )
 
         // Atualiza na lista do currentNota
         if (this.currentNota && this.currentNota.pagamentos) {
           const index = this.currentNota.pagamentos.findIndex(
-            (p) => p.codnotafiscalpagamento === codnotafiscalpagamento
+            (p) => p.codnotafiscalpagamento === codnotafiscalpagamento,
           )
           if (index !== -1) {
             this.currentNota.pagamentos[index] = response.data
@@ -750,7 +750,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove da lista do currentNota
         if (this.currentNota && this.currentNota.pagamentos) {
           this.currentNota.pagamentos = this.currentNota.pagamentos.filter(
-            (p) => p.codnotafiscalpagamento !== codnotafiscalpagamento
+            (p) => p.codnotafiscalpagamento !== codnotafiscalpagamento,
           )
         }
       } catch (error) {
@@ -803,13 +803,13 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         const response = await notaFiscalDuplicataService.update(
           codnotafiscal,
           codnotafiscalduplicatas,
-          data
+          data,
         )
 
         // Atualiza na lista do currentNota
         if (this.currentNota && this.currentNota.duplicatas) {
           const index = this.currentNota.duplicatas.findIndex(
-            (d) => d.codnotafiscalduplicatas === codnotafiscalduplicatas
+            (d) => d.codnotafiscalduplicatas === codnotafiscalduplicatas,
           )
           if (index !== -1) {
             this.currentNota.duplicatas[index] = response.data
@@ -833,7 +833,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove da lista do currentNota
         if (this.currentNota && this.currentNota.duplicatas) {
           this.currentNota.duplicatas = this.currentNota.duplicatas.filter(
-            (d) => d.codnotafiscalduplicatas !== codnotafiscalduplicatas
+            (d) => d.codnotafiscalduplicatas !== codnotafiscalduplicatas,
           )
         }
       } catch (error) {
@@ -888,7 +888,7 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
         // Remove da lista do currentNota
         if (this.currentNota && this.currentNota.notasReferenciadas) {
           this.currentNota.notasReferenciadas = this.currentNota.notasReferenciadas.filter(
-            (r) => r.codnotafiscalreferenciada !== codnotafiscalreferenciada
+            (r) => r.codnotafiscalreferenciada !== codnotafiscalreferenciada,
           )
         }
       } catch (error) {

@@ -8,7 +8,7 @@ export default {
 
   async get(codnotafiscal, codnotafiscalprodutobarra) {
     const response = await api.get(
-      `/v1/nota-fiscal/${codnotafiscal}/item/${codnotafiscalprodutobarra}`
+      `/v1/nota-fiscal/${codnotafiscal}/item/${codnotafiscalprodutobarra}`,
     )
     return response.data
   },
@@ -21,14 +21,14 @@ export default {
   async update(codnotafiscal, codnotafiscalprodutobarra, data) {
     const response = await api.put(
       `/v1/nota-fiscal/${codnotafiscal}/item/${codnotafiscalprodutobarra}`,
-      data
+      data,
     )
     return response.data
   },
 
   async delete(codnotafiscal, codnotafiscalprodutobarra) {
     const response = await api.delete(
-      `/v1/nota-fiscal/${codnotafiscal}/item/${codnotafiscalprodutobarra}`
+      `/v1/nota-fiscal/${codnotafiscal}/item/${codnotafiscalprodutobarra}`,
     )
     return response.data
   },

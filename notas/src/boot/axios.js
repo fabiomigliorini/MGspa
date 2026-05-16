@@ -20,7 +20,7 @@ export default boot(({ app }) => {
     },
     (error) => {
       return Promise.reject(error)
-    }
+    },
   )
 
   // ===== RESPONSE INTERCEPTOR =====
@@ -86,11 +86,10 @@ export default boot(({ app }) => {
       }
 
       return Promise.reject(error)
-    }
+    },
   )
 
   // Disponibiliza globalmente
   app.config.globalProperties.$axios = axios
   app.config.globalProperties.$api = api
 })
-

@@ -13,7 +13,16 @@ import {
   getFreteLabel,
   STATUS_OPTIONS,
 } from '../constants/notaFiscal'
-import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataNumeroNotaFiscal, formataChave, formataProtocolo, formataCodNegocio } from "@components/formatters"
+import {
+  formataCnpjCpf,
+  formataTimestamp,
+  formataData,
+  formataNumero,
+  formataNumeroNotaFiscal,
+  formataChave,
+  formataProtocolo,
+  formataCodNegocio,
+} from '@components/formatters'
 import NotaFiscalItemCard from '../components/NotaFiscalItemCard.vue'
 import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamentoDialog.vue'
 import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicataDialog.vue'
@@ -125,7 +134,9 @@ const itensPorPagina = computed(() => {
 })
 const paginaAtualItens = computed({
   get: () => notaFiscalStore.paginaAtualItens,
-  set: (val) => { notaFiscalStore.paginaAtualItens = val },
+  set: (val) => {
+    notaFiscalStore.paginaAtualItens = val
+  },
 })
 
 const totalPaginasItens = computed(() => Math.ceil(itens.value.length / itensPorPagina.value))
@@ -288,7 +299,7 @@ const salvarPagamento = async (data) => {
       await notaFiscalStore.updatePagamento(
         route.params.codnotafiscal,
         data.codnotafiscalpagamento,
-        data
+        data,
       )
       $q.notify({
         type: 'positive',
@@ -321,7 +332,7 @@ const excluirPagamento = (pagamento) => {
     try {
       await notaFiscalStore.deletePagamento(
         route.params.codnotafiscal,
-        pagamento.codnotafiscalpagamento
+        pagamento.codnotafiscalpagamento,
       )
       $q.notify({
         type: 'positive',
@@ -358,7 +369,7 @@ const salvarDuplicata = async (data) => {
       await notaFiscalStore.updateDuplicata(
         route.params.codnotafiscal,
         data.codnotafiscalduplicatas,
-        data
+        data,
       )
       $q.notify({
         type: 'positive',
@@ -391,7 +402,7 @@ const excluirDuplicata = (duplicata) => {
     try {
       await notaFiscalStore.deleteDuplicata(
         route.params.codnotafiscal,
-        duplicata.codnotafiscalduplicatas
+        duplicata.codnotafiscalduplicatas,
       )
       $q.notify({
         type: 'positive',
@@ -458,7 +469,7 @@ const excluirReferenciada = (referenciada) => {
     try {
       await notaFiscalStore.deleteReferenciada(
         route.params.codnotafiscal,
-        referenciada.codnotafiscalreferenciada
+        referenciada.codnotafiscalreferenciada,
       )
       $q.notify({
         type: 'positive',
@@ -488,7 +499,7 @@ const novaCartaCorrecao = () => {
 const abrirCartaCorrecaoPdf = async () => {
   try {
     cartaCorrecaoPdfUrl.value = await notaFiscalStore.getCartaCorrecaoPdfUrl(
-      nota.value.codnotafiscal
+      nota.value.codnotafiscal,
     )
     cartaCorrecaoPdfDialog.value = true
   } catch (error) {
@@ -753,8 +764,6 @@ const toggleNotaSelecionada = (codnotafiscal) => {
 // ==================== NFE ACTIONS ====================
 const loadingCartaCorrecao = ref(false)
 
-
-
 const podeIncorporar = computed(() => {
   return (
     nota.value && nota.value.status === 'DIG' && nota.value.valortotal != nota.value.valorprodutos
@@ -955,7 +964,7 @@ watch(
       paginaAtualItens.value = 1
       loadData()
     }
-  }
+  },
 )
 
 onUnmounted(() => {
@@ -1243,7 +1252,10 @@ onUnmounted(() => {
                 <div class="text-caption text-grey-7">NFe Terceiro</div>
                 <div v-for="nfeTerceiro in nota.nfeTerceiros" :key="nfeTerceiro.codnfeterceiro">
                   <router-link
-                    :to="{ name: 'nfe-terceiro-view', params: { codnfeterceiro: nfeTerceiro.codnfeterceiro } }"
+                    :to="{
+                      name: 'nfe-terceiro-view',
+                      params: { codnfeterceiro: nfeTerceiro.codnfeterceiro },
+                    }"
                     class="text-primary text-body2"
                     style="text-decoration: none"
                   >
@@ -1709,7 +1721,9 @@ onUnmounted(() => {
                     </a>
                     <span v-else>{{ nota.usuarioCriacao?.usuario || '-' }}</span>
                   </div>
-                  <div class="text-caption text-grey-7">{{ formataTimestamp(nota.criacao, 4, true) }}</div>
+                  <div class="text-caption text-grey-7">
+                    {{ formataTimestamp(nota.criacao, 4, true) }}
+                  </div>
                 </div>
                 <div class="col-12 col-sm-6" v-if="nota.alteracao">
                   <div class="text-caption text-grey-7">Última alteração por</div>
@@ -1725,7 +1739,9 @@ onUnmounted(() => {
                     </a>
                     <span v-else>{{ nota.usuarioAlteracao?.usuario || '-' }}</span>
                   </div>
-                  <div class="text-caption text-grey-7">{{ formataTimestamp(nota.alteracao, 4, true) }}</div>
+                  <div class="text-caption text-grey-7">
+                    {{ formataTimestamp(nota.alteracao, 4, true) }}
+                  </div>
                 </div>
               </div>
             </q-card-section>
@@ -2031,7 +2047,10 @@ onUnmounted(() => {
                           icon="open_in_new"
                           color="grey-7"
                           size="sm"
-                          :to="{ name: 'nfe-terceiro-view', params: { codnfeterceiro: n.codnfeterceiro } }"
+                          :to="{
+                            name: 'nfe-terceiro-view',
+                            params: { codnfeterceiro: n.codnfeterceiro },
+                          }"
                         >
                           <q-tooltip>Abrir Nfe Terceiro</q-tooltip>
                         </q-btn>
@@ -2213,7 +2232,6 @@ onUnmounted(() => {
       @save="enviarCartaCorrecao"
     />
 
-
     <!-- Dialog PDF Carta de Correção -->
     <q-dialog v-model="cartaCorrecaoPdfDialog">
       <q-card style="width: 800px; max-width: 90vw; height: 90vh">
@@ -2243,7 +2261,6 @@ onUnmounted(() => {
         </q-card-section>
       </q-card>
     </q-dialog>
-
 
     <!-- Dialog Alterar Status -->
     <q-dialog v-model="statusDialog">

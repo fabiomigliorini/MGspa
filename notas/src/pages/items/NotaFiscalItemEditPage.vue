@@ -90,7 +90,7 @@ const handleSubmit = async () => {
     await notaFiscalStore.updateItem(
       codnotafiscal.value,
       codnotafiscalitem.value,
-      editingItem.value
+      editingItem.value,
     )
     $q.notify({
       type: 'positive',

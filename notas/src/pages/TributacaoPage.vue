@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
-import { formataPercentual, formataData } from "@components/formatters"
+import { formataPercentual, formataData } from '@components/formatters'
 import { getEnteIcon } from 'src/composables/useTributoIcons'
 import SelectEstado from 'src/components/selects/SelectEstado.vue'
 import SelectCidade from 'src/components/selects/SelectCidade.vue'
@@ -94,7 +94,6 @@ const onLoad = async (_index, done) => {
 const onTabChange = (newTab) => {
   store.setActiveTab(newTab)
 }
-
 
 // Retorna a cor do badge de tipo de cliente
 const getTipoClienteColor = (tipo) => {

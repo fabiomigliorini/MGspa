@@ -1,5 +1,5 @@
 <script setup>
-import { formataTimestamp } from "@components/formatters"
+import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -151,7 +151,7 @@ const handleSubmit = async () => {
       if (isEditMode.value) {
         await tributacaoStore.updateTributacao(
           route.params.codtributacaonaturezaoperacao,
-          form.value
+          form.value,
         )
         $q.notify({ type: 'positive', message: 'Tributação atualizada com sucesso' })
       } else {
@@ -292,11 +292,7 @@ onMounted(async () => {
                 </q-input>
               </div>
               <div class="col-12 col-sm-4">
-                <MgInputValor
-                  v-model="form.icmsbase"
-                  label="Base ICMS (%)"
-                  :readonly="loading"
-                />
+                <MgInputValor v-model="form.icmsbase" label="Base ICMS (%)" :readonly="loading" />
               </div>
               <div class="col-12 col-sm-4">
                 <MgInputValor
@@ -327,11 +323,7 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-3">
-                <MgInputValor
-                  v-model="form.icmslpbase"
-                  label="Base (%)"
-                  :readonly="loading"
-                />
+                <MgInputValor v-model="form.icmslpbase" label="Base (%)" :readonly="loading" />
               </div>
               <div class="col-12 col-sm-3">
                 <MgInputValor
@@ -369,11 +361,7 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-3">
-                <MgInputValor
-                  v-model="form.pispercentual"
-                  label="PIS (%)"
-                  :readonly="loading"
-                />
+                <MgInputValor v-model="form.pispercentual" label="PIS (%)" :readonly="loading" />
               </div>
               <div class="col-12 col-sm-3">
                 <q-input
@@ -413,18 +401,10 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <MgInputValor
-                  v-model="form.csllpercentual"
-                  label="CSLL (%)"
-                  :readonly="loading"
-                />
+                <MgInputValor v-model="form.csllpercentual" label="CSLL (%)" :readonly="loading" />
               </div>
               <div class="col-12 col-sm-4">
-                <MgInputValor
-                  v-model="form.irpjpercentual"
-                  label="IRPJ (%)"
-                  :readonly="loading"
-                />
+                <MgInputValor v-model="form.irpjpercentual" label="IRPJ (%)" :readonly="loading" />
               </div>
             </div>
           </q-card-section>

@@ -62,7 +62,7 @@ watch(
     } else {
       resetForm()
     }
-  }
+  },
 )
 
 // Watch tipo para limpar campos condicionais
@@ -81,7 +81,7 @@ watch(
     if (newTipo !== 1) {
       form.value.troco = null
     }
-  }
+  },
 )
 
 // Methods
@@ -142,7 +142,7 @@ watch(
       // Quando fecha, reseta o formulário
       resetForm()
     }
-  }
+  },
 )
 </script>
 

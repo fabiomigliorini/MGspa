@@ -1,5 +1,5 @@
 <script setup>
-import { formataTimestamp } from "@components/formatters"
+import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'

@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from 'stores/notaFiscalStore'
-import { formataNumero } from "@components/formatters"
+import { formataNumero } from '@components/formatters'
 import SelectPessoa from 'src/components/selects/SelectPessoa.vue'
 
 const route = useRoute()

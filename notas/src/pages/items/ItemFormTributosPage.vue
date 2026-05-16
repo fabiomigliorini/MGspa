@@ -23,7 +23,7 @@ const form = ref({
   ibsvalor: 0,
   isbase: 0,
   isaliquota: 0,
-  isvalor: 0
+  isvalor: 0,
 })
 
 const loadItem = async () => {
@@ -31,7 +31,7 @@ const loadItem = async () => {
   try {
     const itemData = await notaFiscalStore.fetchItem(
       route.params.codnotafiscal,
-      route.params.codnotafiscalprodutobarra
+      route.params.codnotafiscalprodutobarra,
     )
     item.value = itemData
 
@@ -45,7 +45,7 @@ const loadItem = async () => {
       ibsvalor: itemData.tributos?.ibsvalor || 0,
       isbase: itemData.tributos?.isbase || 0,
       isaliquota: itemData.tributos?.isaliquota || 0,
-      isvalor: itemData.tributos?.isvalor || 0
+      isvalor: itemData.tributos?.isvalor || 0,
     }
   } catch {
     $q.notify({ type: 'negative', message: 'Erro ao carregar item' })
@@ -71,7 +71,9 @@ const handleCancel = () => {
   router.push({ name: 'nota-fiscal-view', params: { codnotafiscal: route.params.codnotafiscal } })
 }
 
-onMounted(() => { loadItem() })
+onMounted(() => {
+  loadItem()
+})
 </script>
 
 <template>
@@ -103,7 +105,8 @@ onMounted(() => { loadItem() })
             <q-icon name="info" color="primary" />
           </template>
           <div class="text-body2">
-            Tributos da Reforma Tributária armazenados na tabela <strong>tblnotafiscalitemtributo</strong>
+            Tributos da Reforma Tributária armazenados na tabela
+            <strong>tblnotafiscalitemtributo</strong>
           </div>
         </q-banner>
 
@@ -122,20 +125,10 @@ onMounted(() => { loadItem() })
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <MgInputValor
-                  v-model="form.cbsaliquota"
-                  label="Alíquota CBS"
-                  :min="0"
-                  suffix="%"
-                />
+                <MgInputValor v-model="form.cbsaliquota" label="Alíquota CBS" :min="0" suffix="%" />
               </div>
               <div class="col-12 col-sm-6">
-                <MgInputValor
-                  v-model="form.cbsvalor"
-                  label="Valor CBS"
-                  :min="0"
-                  prefix="R$"
-                />
+                <MgInputValor v-model="form.cbsvalor" label="Valor CBS" :min="0" prefix="R$" />
               </div>
             </div>
           </q-card-section>
@@ -156,20 +149,10 @@ onMounted(() => { loadItem() })
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <MgInputValor
-                  v-model="form.ibsaliquota"
-                  label="Alíquota IBS"
-                  :min="0"
-                  suffix="%"
-                />
+                <MgInputValor v-model="form.ibsaliquota" label="Alíquota IBS" :min="0" suffix="%" />
               </div>
               <div class="col-12 col-sm-6">
-                <MgInputValor
-                  v-model="form.ibsvalor"
-                  label="Valor IBS"
-                  :min="0"
-                  prefix="R$"
-                />
+                <MgInputValor v-model="form.ibsvalor" label="Valor IBS" :min="0" prefix="R$" />
               </div>
             </div>
           </q-card-section>
@@ -190,20 +173,10 @@ onMounted(() => { loadItem() })
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <MgInputValor
-                  v-model="form.isaliquota"
-                  label="Alíquota IS"
-                  :min="0"
-                  suffix="%"
-                />
+                <MgInputValor v-model="form.isaliquota" label="Alíquota IS" :min="0" suffix="%" />
               </div>
               <div class="col-12 col-sm-6">
-                <MgInputValor
-                  v-model="form.isvalor"
-                  label="Valor IS"
-                  :min="0"
-                  prefix="R$"
-                />
+                <MgInputValor v-model="form.isvalor" label="Valor IS" :min="0" prefix="R$" />
               </div>
             </div>
           </q-card-section>

@@ -1,5 +1,5 @@
 <script setup>
-import { formataTimestamp, formataCodNegocio } from "@components/formatters"
+import { formataTimestamp, formataCodNegocio } from '@components/formatters'
 import { computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'

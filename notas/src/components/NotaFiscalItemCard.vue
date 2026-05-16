@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { formataNumero, formataNcm, formataCest, formataCodNegocio } from "@components/formatters"
+import { formataNumero, formataNcm, formataCest, formataCodNegocio } from '@components/formatters'
 import { getEnteIcon } from 'src/composables/useTributoIcons'
 
 // const props = defineProps({

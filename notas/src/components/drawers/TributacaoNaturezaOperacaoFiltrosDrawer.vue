@@ -70,7 +70,7 @@ onMounted(async () => {
       () => {
         debouncedApplyFilters()
       },
-      { deep: true }
+      { deep: true },
     )
   }, 200)
 })

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useSelectPessoaStore } from 'stores/selects/pessoa'
-import { formataCnpjCpf } from "@components/formatters"
+import { formataCnpjCpf } from '@components/formatters'
 
 const props = defineProps({
   modelValue: {
@@ -108,7 +108,7 @@ watch(
         // Abre o select automaticamente se houver resultados
         if (results.length > 0 && selectRef.value) {
           // Aguarda um pouco para garantir que o DOM foi atualizado
-          await new Promise(resolve => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 100))
 
           // Foca no campo e abre o popup
           selectRef.value.focus()
@@ -189,27 +189,45 @@ const handleUpdate = (value) => {
     optionsFromCnpj.value = []
   }
 }
-
-
 </script>
 
 <template>
-  <q-select ref="selectRef" :model-value="modelValue" @update:model-value="handleUpdate" :label="label" outlined clearable
-    :options="options" option-value="value" option-label="label" emit-value map-options use-input input-debounce="500"
-    @filter="filterPessoa" :placeholder="placeholder" :bottom-slots="bottomSlots" :class="customClass"
-    :disable="disable" :readonly="readonly" :loading="loading" :dense="dense">
+  <q-select
+    ref="selectRef"
+    :model-value="modelValue"
+    @update:model-value="handleUpdate"
+    :label="label"
+    outlined
+    clearable
+    :options="options"
+    option-value="value"
+    option-label="label"
+    emit-value
+    map-options
+    use-input
+    input-debounce="500"
+    @filter="filterPessoa"
+    :placeholder="placeholder"
+    :bottom-slots="bottomSlots"
+    :class="customClass"
+    :disable="disable"
+    :readonly="readonly"
+    :loading="loading"
+    :dense="dense"
+  >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section avatar>
-          <q-icon :name="scope.opt.fisica ? 'person' : 'business'" :color="scope.opt.fisica ? 'blue' : 'purple'" />
+          <q-icon
+            :name="scope.opt.fisica ? 'person' : 'business'"
+            :color="scope.opt.fisica ? 'blue' : 'purple'"
+          />
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
           <q-item-label caption class="text-grey-7">
             {{ formataCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
-            <span v-if="scope.opt.ie">
-              | IE: {{ scope.opt.ie }}
-            </span>
+            <span v-if="scope.opt.ie"> | IE: {{ scope.opt.ie }} </span>
             <span v-if="scope.opt.cidade">
               | {{ scope.opt.cidade }}<span v-if="scope.opt.uf">/{{ scope.opt.uf }}</span>
             </span>
@@ -225,8 +243,14 @@ const handleUpdate = (value) => {
     </template>
 
     <template v-slot:selected-item="scope">
-      <q-chip removable dense @remove="handleUpdate(null)" :color="scope.opt.fisica ? 'blue' : 'purple'"
-        text-color="white" :icon="scope.opt.fisica ? 'person' : 'business'">
+      <q-chip
+        removable
+        dense
+        @remove="handleUpdate(null)"
+        :color="scope.opt.fisica ? 'blue' : 'purple'"
+        text-color="white"
+        :icon="scope.opt.fisica ? 'person' : 'business'"
+      >
         {{ truncateLabel(scope.opt.label) }}
       </q-chip>
     </template>

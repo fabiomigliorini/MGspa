@@ -61,7 +61,7 @@ watch(
     } else {
       resetForm()
     }
-  }
+  },
 )
 
 // Methods
@@ -109,7 +109,7 @@ watch(
     if (!newVal) {
       resetForm()
     }
-  }
+  },
 )
 </script>
 

@@ -270,7 +270,7 @@ export const useCidadeStore = defineStore('cidade', {
         const response = await cidadeService.listCidades(
           this.selectedPais,
           this.selectedEstado,
-          params
+          params,
         )
 
         const newCidades = response.data || []
@@ -316,7 +316,7 @@ export const useCidadeStore = defineStore('cidade', {
         const response = await cidadeService.getCidade(
           this.selectedPais,
           this.selectedEstado,
-          codcidadeNum
+          codcidadeNum,
         )
         this.currentCidade = response.data
         return response.data
@@ -334,7 +334,7 @@ export const useCidadeStore = defineStore('cidade', {
         const response = await cidadeService.createCidade(
           this.selectedPais,
           this.selectedEstado,
-          data
+          data,
         )
         this.currentCidade = response.data
 
@@ -357,7 +357,7 @@ export const useCidadeStore = defineStore('cidade', {
           this.selectedPais,
           this.selectedEstado,
           codcidade,
-          data
+          data,
         )
         this.currentCidade = response.data
 

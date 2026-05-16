@@ -3,7 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useDfeDistribuicaoStore } from '../stores/dfeDistribuicaoStore'
 import dfeDistribuicaoService from '../services/dfeDistribuicaoService'
-import { formataChave, formataCnpjCpf, formataNumero, tempoRelativo } from "@components/formatters"
+import { formataChave, formataCnpjCpf, formataNumero, tempoRelativo } from '@components/formatters'
 
 const $q = useQuasar()
 const dfeStore = useDfeDistribuicaoStore()

@@ -3,7 +3,7 @@ import { onMounted, computed, watch, shallowRef } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuth } from 'src/composables/useAuth'
 import { useDashboardStore } from 'src/stores/dashboard'
-import { formataTimestamp, formataNumero } from "@components/formatters"
+import { formataTimestamp, formataNumero } from '@components/formatters'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -165,7 +165,7 @@ watch(
       ],
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const canceladasChartOption = shallowRef({})
@@ -183,7 +183,7 @@ watch(
     lastCanceladasPorFilialHash = hash
 
     const sorted = [...data].sort(
-      (a, b) => (b.percent_canceladas || 0) - (a.percent_canceladas || 0)
+      (a, b) => (b.percent_canceladas || 0) - (a.percent_canceladas || 0),
     )
     const maxCanceladas =
       Math.ceil(Math.max(...data.map((d) => d.percent_canceladas || 0)) * 10) / 10 || 1
@@ -214,7 +214,7 @@ watch(
       ],
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const filialColumns = [
@@ -345,51 +345,54 @@ onMounted(async () => {
     </div>
 
     <!-- LINHA 1: Cards KPI -->
-    <div flat :class="isMobile ? 'row q-col-gutter-xs q-mb-sm' : 'row q-col-gutter-md q-mb-md'" style="flex-wrap: wrap">
+    <div
+      flat
+      :class="isMobile ? 'row q-col-gutter-xs q-mb-sm' : 'row q-col-gutter-md q-mb-md'"
+      style="flex-wrap: wrap"
+    >
       <div v-for="kpi in kpiCards" :key="kpi.label" :class="isMobile ? 'col-4' : 'col-2'">
         <component
           :is="kpi.status ? 'router-link' : 'div'"
           :to="kpi.status ? { path: '/nota', query: { status: kpi.status } } : undefined"
           style="text-decoration: none; color: inherit; display: block"
         >
-        <q-card
-          flat bordered
-          :class="kpi.status ? 'cursor-pointer' : ''"
-        >
-          <q-card-section
-            :horizontal="!isMobile"
-            :class="isMobile ? 'items-center text-center q-pa-xs' : 'items-center q-pa-sm'"
-          >
-            <q-avatar
-              :color="kpi.color"
-              text-color="white"
-              :size="isMobile ? '24px' : '36px'"
-              square
-              style="border-radius: 4px"
-              :class="isMobile ? 'q-mb-xs' : 'q-mr-sm'"
+          <q-card flat bordered :class="kpi.status ? 'cursor-pointer' : ''">
+            <q-card-section
+              :horizontal="!isMobile"
+              :class="isMobile ? 'items-center text-center q-pa-xs' : 'items-center q-pa-sm'"
             >
-              <q-icon :name="kpi.icon" :size="isMobile ? '14px' : '20px'" />
-            </q-avatar>
-            <div>
-              <div
-                :class="
-                  isMobile ? 'text-subtitle2 text-weight-bold' : 'text-body1 text-weight-bold'
-                "
+              <q-avatar
+                :color="kpi.color"
+                text-color="white"
+                :size="isMobile ? '24px' : '36px'"
+                square
+                style="border-radius: 4px"
+                :class="isMobile ? 'q-mb-xs' : 'q-mr-sm'"
               >
-                {{ loading ? '...' : kpi.value }}
+                <q-icon :name="kpi.icon" :size="isMobile ? '14px' : '20px'" />
+              </q-avatar>
+              <div>
+                <div
+                  :class="
+                    isMobile ? 'text-subtitle2 text-weight-bold' : 'text-body1 text-weight-bold'
+                  "
+                >
+                  {{ loading ? '...' : kpi.value }}
+                </div>
+                <div
+                  :class="
+                    isMobile ? 'text-caption text-grey-7' : 'text-caption text-grey-7 ellipsis'
+                  "
+                >
+                  <template v-if="kpi.subtitle && !isMobile">
+                    {{ kpi.subtitle }}
+                  </template>
+                  {{ isMobile ? kpi.labelShort : kpi.label }}
+                </div>
               </div>
-              <div
-                :class="isMobile ? 'text-caption text-grey-7' : 'text-caption text-grey-7 ellipsis'"
-              >
-                <template v-if="kpi.subtitle && !isMobile">
-                  {{ kpi.subtitle }}
-                </template>
-                {{ isMobile ? kpi.labelShort : kpi.label }}
-              </div>
-            </div>
-          </q-card-section>
-          <q-tooltip v-if="kpi.status">Clique para ver notas</q-tooltip>
-        </q-card>
+            </q-card-section>
+            <q-tooltip v-if="kpi.status">Clique para ver notas</q-tooltip>
+          </q-card>
         </component>
       </div>
     </div>

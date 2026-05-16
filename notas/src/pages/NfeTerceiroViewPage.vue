@@ -5,7 +5,13 @@ import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
 import MgInputData from '@components/MgInputData.vue'
-import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataChave } from "@components/formatters"
+import {
+  formataCnpjCpf,
+  formataTimestamp,
+  formataData,
+  formataNumero,
+  formataChave,
+} from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -35,7 +41,7 @@ const itens = computed(() => nfeTerceiroStore.itens)
 const duplicatas = computed(() => nfeTerceiroStore.duplicatas)
 const pagamentos = computed(() => nfeTerceiroStore.pagamentos)
 const todosConferidos = computed(
-  () => itens.value.length > 0 && itens.value.every((i) => i.conferencia)
+  () => itens.value.length > 0 && itens.value.every((i) => i.conferencia),
 )
 
 const manifestacaoLabel = (indmanifestacao) => {
@@ -288,7 +294,7 @@ const handleOpenDanfe = () => {
 const handleOpenGuiaStPdf = (codtitulonfeterceiro) => {
   window.open(
     nfeTerceiroService.guiaStPdfUrl(nfe.value.codnfeterceiro, codtitulonfeterceiro),
-    '_blank'
+    '_blank',
   )
 }
 
@@ -346,7 +352,7 @@ const handleDividirItem = (item) => {
       await nfeTerceiroStore.dividirItem(
         nfe.value.codnfeterceiro,
         item.codnfeterceiroitem,
-        parcelas
+        parcelas,
       )
       $q.notify({ type: 'positive', message: `Item dividido em ${parcelas} partes` })
     } catch (error) {
@@ -369,7 +375,7 @@ const handleMarcarTipoProduto = async () => {
     try {
       await nfeTerceiroStore.marcarTipoProduto(
         nfe.value.codnfeterceiro,
-        tipoProdutoSelecionado.value
+        tipoProdutoSelecionado.value,
       )
       $q.notify({ type: 'positive', message: 'Itens marcados' })
     } catch (error) {
@@ -1084,7 +1090,11 @@ onMounted(async () => {
                     <q-item-section>
                       <q-item-label caption>Autorizacao</q-item-label>
                       <q-item-label>
-                        {{ nfe.nfedataautorizacao ? formataTimestamp(nfe.nfedataautorizacao, 4, true) : '-' }}
+                        {{
+                          nfe.nfedataautorizacao
+                            ? formataTimestamp(nfe.nfedataautorizacao, 4, true)
+                            : '-'
+                        }}
                       </q-item-label>
                     </q-item-section>
                   </q-item>
@@ -1169,7 +1179,13 @@ onMounted(async () => {
           </q-card-section>
 
           <q-card-section>
-            <MgInputData v-model="entradaModel" label="Entrada" type="timestamp" :seconds="false" clearable />
+            <MgInputData
+              v-model="entradaModel"
+              label="Entrada"
+              type="timestamp"
+              :seconds="false"
+              clearable
+            />
             <div class="q-mt-sm">
               <q-btn
                 flat
@@ -1186,12 +1202,7 @@ onMounted(async () => {
 
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" v-close-popup />
-            <q-btn
-              color="primary"
-              label="Salvar"
-              :loading="loadingAction"
-              @click="salvarEntrada"
-            />
+            <q-btn color="primary" label="Salvar" :loading="loadingAction" @click="salvarEntrada" />
           </q-card-actions>
         </q-card>
       </q-dialog>

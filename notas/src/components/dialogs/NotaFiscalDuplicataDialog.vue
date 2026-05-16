@@ -50,7 +50,7 @@ watch(
         valor: null,
       }
     }
-  }
+  },
 )
 
 // Methods
@@ -91,7 +91,7 @@ watch(
     if (!newVal) {
       resetForm()
     }
-  }
+  },
 )
 </script>
 

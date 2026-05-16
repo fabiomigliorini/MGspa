@@ -17,7 +17,7 @@ export function useAuth() {
 
   const permissions = computed(() => {
     if (!user.value?.permissoes) return []
-    return user.value.permissoes.map(p => p.grupousuario)
+    return user.value.permissoes.map((p) => p.grupousuario)
   })
 
   const isAdmin = computed(() => permissions.value.includes('Administrador'))
@@ -46,6 +46,6 @@ export function useAuth() {
     validateToken,
     logout,
     hasPermission,
-    hasAnyPermission
+    hasAnyPermission,
   }
 }

@@ -1,5 +1,5 @@
 import { watch } from 'vue'
-import { arredonda } from "@components/formatters"
+import { arredonda } from '@components/formatters'
 
 // CSTs de ICMS onde não há ICMS próprio (base, percentual e valor devem ser zero)
 const ICMS_CST_SEM_ICMS_PROPRIO = [30, 40, 41, 50, 60]
@@ -26,8 +26,14 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     // Não recalcula se quantidade ou valor unitário estão vazios (usuário digitando)
     const quantidade = form.value.quantidade
     const valorunitario = form.value.valorunitario
-    if (quantidade === null || quantidade === undefined || quantidade === '' ||
-        valorunitario === null || valorunitario === undefined || valorunitario === '') {
+    if (
+      quantidade === null ||
+      quantidade === undefined ||
+      quantidade === '' ||
+      valorunitario === null ||
+      valorunitario === undefined ||
+      valorunitario === ''
+    ) {
       return
     }
 
@@ -332,14 +338,17 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     watch(() => form.value.valoroutras, atualizaTotalFinal)
 
     // Watcher para CST do ICMS - zera campos quando CST não tem ICMS próprio
-    watch(() => form.value.icmscst, (novoCst) => {
-      if (ICMS_CST_SEM_ICMS_PROPRIO.includes(Number(novoCst))) {
-        form.value.icmsbase = null
-        form.value.icmsbasepercentual = null
-        form.value.icmspercentual = null
-        form.value.icmsvalor = null
-      }
-    })
+    watch(
+      () => form.value.icmscst,
+      (novoCst) => {
+        if (ICMS_CST_SEM_ICMS_PROPRIO.includes(Number(novoCst))) {
+          form.value.icmsbase = null
+          form.value.icmsbasepercentual = null
+          form.value.icmspercentual = null
+          form.value.icmsvalor = null
+        }
+      },
+    )
 
     // Watchers para ICMS
     watch(

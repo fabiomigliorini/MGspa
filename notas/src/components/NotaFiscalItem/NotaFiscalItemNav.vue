@@ -61,9 +61,23 @@ const tabTo = (tab) => ({
 </script>
 
 <template>
-  <q-tabs v-model="currentSection" class="text-grey-7 bg-grey-2" active-color="white" active-bg-color="primary"
-    indicator-color="transparent" align="left" inline-label no-caps>
-    <q-tab v-for="tab in tabs" :key="tab.name" :name="tab.name" :icon="tab.icon" :label="tab.label"
-      :to="tabTo(tab)" />
+  <q-tabs
+    v-model="currentSection"
+    class="text-grey-7 bg-grey-2"
+    active-color="white"
+    active-bg-color="primary"
+    indicator-color="transparent"
+    align="left"
+    inline-label
+    no-caps
+  >
+    <q-tab
+      v-for="tab in tabs"
+      :key="tab.name"
+      :name="tab.name"
+      :icon="tab.icon"
+      :label="tab.label"
+      :to="tabTo(tab)"
+    />
   </q-tabs>
 </template>

@@ -7,7 +7,7 @@ import { useControleStore } from '../stores/controle'
 import { useSelectFilialStore } from 'stores/selects/filial'
 import { useAuth } from 'src/composables/useAuth'
 import { getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
-import { formataTimestamp, formataNumero, formataNumeroNotaFiscal } from "@components/formatters"
+import { formataTimestamp, formataNumero, formataNumeroNotaFiscal } from '@components/formatters'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import api from '../services/api'
 import notaFiscalService from '../services/notaFiscalService'
@@ -700,10 +700,7 @@ onMounted(async () => {
                     {{ transferenciasProgresso[filial.value].erros.length }} erro(s)
                   </q-badge>
                 </q-item-section>
-                <q-item-section
-                  side
-                  v-if="transferenciasProgresso[filial.value]?.erros?.length"
-                >
+                <q-item-section side v-if="transferenciasProgresso[filial.value]?.erros?.length">
                   <q-btn
                     flat
                     dense

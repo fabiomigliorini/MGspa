@@ -4,7 +4,12 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
-import { formataChave, formataCnpjCpf, formataNumero, formataTimestamp } from "@components/formatters"
+import {
+  formataChave,
+  formataCnpjCpf,
+  formataNumero,
+  formataTimestamp,
+} from '@components/formatters'
 
 const $q = useQuasar()
 const router = useRouter()

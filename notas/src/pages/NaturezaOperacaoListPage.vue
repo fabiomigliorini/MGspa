@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumeroNotaFiscal } from "@components/formatters"
+import { formataNumeroNotaFiscal } from '@components/formatters'
 import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import {
@@ -14,8 +14,8 @@ const naturezaOperacaoStore = useNaturezaOperacaoStore()
 const loading = computed(() => naturezaOperacaoStore.pagination.loading)
 const naturezaOperacoes = computed(() =>
   [...naturezaOperacaoStore.naturezaOperacoes].sort((a, b) =>
-    (a.naturezaoperacao || '').localeCompare(b.naturezaoperacao || '', 'pt-BR')
-  )
+    (a.naturezaoperacao || '').localeCompare(b.naturezaoperacao || '', 'pt-BR'),
+  ),
 )
 const hasActiveFilters = computed(() => naturezaOperacaoStore.hasActiveFilters)
 

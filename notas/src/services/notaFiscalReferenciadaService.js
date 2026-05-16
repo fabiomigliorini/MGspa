@@ -13,5 +13,5 @@ export default {
 
   async delete(codnotafiscal, codnotafiscalreferenciada) {
     await api.delete(`/v1/nota-fiscal/${codnotafiscal}/referenciada/${codnotafiscalreferenciada}`)
-  }
+  },
 }

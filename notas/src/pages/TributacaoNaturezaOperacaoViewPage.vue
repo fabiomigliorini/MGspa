@@ -1,5 +1,11 @@
 <script setup>
-import { formataTimestamp, formataCfop, formataPercentual, formataNumero, formataCodNegocio } from "@components/formatters"
+import {
+  formataTimestamp,
+  formataCfop,
+  formataPercentual,
+  formataNumero,
+  formataCodNegocio,
+} from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -22,7 +28,6 @@ const getTipoProdutoLabel = (codtipoproduto) => {
   const opt = TIPO_PRODUTO_OPTIONS.find((o) => o.value === codtipoproduto)
   return opt ? opt.label : '-'
 }
-
 
 // Monta título da tributação
 const titulo = computed(() => {
@@ -418,7 +423,9 @@ onMounted(loadData)
                   <q-item-label caption>SENAR %</q-item-label>
                   <q-item-label>
                     {{
-                      tributacao.senarpercentual ? formataPercentual(tributacao.senarpercentual) : '-'
+                      tributacao.senarpercentual
+                        ? formataPercentual(tributacao.senarpercentual)
+                        : '-'
                     }}
                   </q-item-label>
                 </q-item-section>

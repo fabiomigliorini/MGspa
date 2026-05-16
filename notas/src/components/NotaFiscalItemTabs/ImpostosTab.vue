@@ -36,11 +36,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
       <div class="row q-col-gutter-md">
         <!-- CFOP -->
         <div class="col-6 col-sm-4">
-          <SelectCfop
-            v-model="editingItem.codcfop"
-            label="CFOP *"
-            :disable="notaBloqueada"
-          />
+          <SelectCfop v-model="editingItem.codcfop" label="CFOP *" :disable="notaBloqueada" />
         </div>
 
         <!-- CST / CSOSN -->
