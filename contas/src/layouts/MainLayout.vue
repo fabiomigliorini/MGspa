@@ -3,17 +3,13 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
-import { version } from '../../package.json'
-import { formataTimestampIso } from '@components/formatters'
+import MgAppFooter from '@components/MgAppFooter.vue'
 
 const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
 const pageTitle = computed(() => route.meta?.title || 'Contas')
-
-const buildDate = formataTimestampIso(process.env.BUILD_DATE)
-const commitNumber = process.env.COMMIT_NUMBER
 </script>
 
 <template>
@@ -78,12 +74,7 @@ const commitNumber = process.env.COMMIT_NUMBER
     </q-page-container>
 
     <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
-      <div class="q-ma-xs text-center">
-        <span class="gt-xs"> App Contas | MG Papelaria &copy; | </span>
-        <span class="gt-xs"> v{{ version }} | </span>
-        <span v-if="commitNumber"> #{{ commitNumber }}</span>
-        <span v-if="buildDate"> | {{ buildDate }}</span>
-      </div>
+      <MgAppFooter app-name="Contas" />
     </q-footer>
   </q-layout>
 </template>

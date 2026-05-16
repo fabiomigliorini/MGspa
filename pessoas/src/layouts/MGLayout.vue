@@ -1,14 +1,9 @@
 <script setup>
 import { ref } from 'vue'
 import { Dialog } from 'quasar'
-import pkg from '../../package.json'
-const version = pkg.version
 import MgMenu from 'layouts/MGMenu.vue'
+import MgAppFooter from '@components/MgAppFooter.vue'
 import axios from 'axios'
-import { formataTimestampCompleto } from '@components/formatters'
-
-const buildDate = formataTimestampCompleto(process.env.BUILD_DATE)
-const commitNumber = process.env.COMMIT_NUMBER
 
 const leftDrawerOpen = ref(false)
 const user = ref(localStorage.getItem('usuario'))
@@ -94,8 +89,6 @@ const toggleLeftDrawer = () => {
           <slot name="tituloPagina"></slot>
         </q-toolbar-title>
 
-        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
-
         <!-- Renderiza o menu -->
         <mg-menu></mg-menu>
 
@@ -145,12 +138,7 @@ const toggleLeftDrawer = () => {
 
     <!-- RODAPE -->
     <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
-      <div class="q-ma-xs text-center">
-        <span class="gt-xs"> App Pessoas | MG Papelaria &copy; | </span>
-        v{{ version }}
-        <span v-if="commitNumber"> | commit #{{ commitNumber }}</span>
-        <span class="gt-xs" v-if="buildDate"> | {{ buildDate }}</span>
-      </div>
+      <MgAppFooter app-name="Pessoas" />
     </q-footer>
   </q-layout>
 </template>

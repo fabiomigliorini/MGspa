@@ -11,6 +11,7 @@
 const path = require("path");
 const { execSync } = require("node:child_process");
 const ESLintPlugin = require("eslint-webpack-plugin");
+const pkg = require("./package.json");
 
 const { configure } = require("quasar/wrappers");
 
@@ -61,6 +62,7 @@ module.exports = configure(function (ctx) {
       vueRouterMode: "history", // available values: 'hash', 'history'
       env: {
         ...(require("dotenv").config().parsed || {}),
+        APP_VERSION: pkg.version,
         BUILD_DATE: new Date().toISOString(),
         COMMIT_NUMBER: gitCommitNumber(),
       },

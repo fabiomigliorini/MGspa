@@ -4,6 +4,7 @@
 import { defineConfig } from '#q-app/wrappers'
 import path from 'node:path'
 import { execSync } from 'node:child_process'
+import pkg from './package.json' with { type: 'json' }
 
 function gitCommitNumber() {
   if (process.env.COMMIT_NUMBER) return process.env.COMMIT_NUMBER
@@ -53,6 +54,7 @@ export default defineConfig((/* ctx */) => {
       },
 
       env: {
+        APP_VERSION: pkg.version,
         BUILD_DATE: new Date().toISOString(),
         COMMIT_NUMBER: gitCommitNumber(),
       },

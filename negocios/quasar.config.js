@@ -10,6 +10,7 @@
 
 const path = require("path");
 const { execSync } = require("node:child_process");
+const pkg = require("./package.json");
 const { configure } = require("quasar/wrappers");
 
 function gitCommitNumber() {
@@ -65,6 +66,7 @@ module.exports = configure(function (ctx) {
     build: {
       env: {
         ...(require("dotenv").config().parsed || {}),
+        APP_VERSION: pkg.version,
         BUILD_DATE: new Date().toISOString(),
         COMMIT_NUMBER: gitCommitNumber(),
       },

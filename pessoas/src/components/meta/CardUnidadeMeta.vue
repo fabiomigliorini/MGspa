@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { metaStore } from 'src/stores/meta'
-import { formataNumero, formataPercentual } from '@components/formatters'
+import { formataNumero, formataPercentual, formataDataAbreviada } from '@components/formatters'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -61,41 +61,16 @@ const siglaFuncao = (pessoa) => {
   return null
 }
 
-const mesesAbrev = [
-  'jan',
-  'fev',
-  'mar',
-  'abr',
-  'mai',
-  'jun',
-  'jul',
-  'ago',
-  'set',
-  'out',
-  'nov',
-  'dez',
-]
-
 const formataPeriodoPessoa = (di, df) => {
   if (!di || !df) return ''
-  const partesDi = String(di).match(/^(\d{4})-(\d{2})-(\d{2})/)
-  const partesDf = String(df).match(/^(\d{4})-(\d{2})-(\d{2})/)
-  if (!partesDi || !partesDf) return `${di} a ${df}`
-
-  const diaI = parseInt(partesDi[3])
-  const mesI = parseInt(partesDi[2]) - 1
-  const anoI = parseInt(partesDi[1])
-  const diaF = parseInt(partesDf[3])
-  const mesF = parseInt(partesDf[2]) - 1
-  const anoF = parseInt(partesDf[1])
-
-  const dateI = new Date(anoI, mesI, diaI)
-  const dateF = new Date(anoF, mesF, diaF)
+  const dateI = new Date(String(di).slice(0, 10) + 'T12:00:00')
+  const dateF = new Date(String(df).slice(0, 10) + 'T12:00:00')
+  if (isNaN(dateI) || isNaN(dateF)) return `${di} a ${df}`
   const dias = Math.round((dateF - dateI) / 86400000) + 1
-
-  const inicio = mesI === mesF && anoI === anoF ? `${diaI}` : `${diaI}/${mesesAbrev[mesI]}`
-  const fim = `${diaF}/${mesesAbrev[mesF]}`
-
+  const mesmoMes =
+    dateI.getMonth() === dateF.getMonth() && dateI.getFullYear() === dateF.getFullYear()
+  const inicio = mesmoMes ? String(dateI.getDate()) : formataDataAbreviada(dateI, 0)
+  const fim = formataDataAbreviada(dateF, 0)
   return `de ${inicio} a ${fim} (${dias} dias)`
 }
 

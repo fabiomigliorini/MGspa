@@ -5,9 +5,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
 import { guardaToken } from 'src/stores'
 import { feriadoStore } from 'src/stores/feriado'
-import { formataData } from '@components/formatters'
+import { formataData, formataNumero } from '@components/formatters'
 import { extrairErro } from 'src/utils/rhFormatters'
-import { formataNumero } from '@components/formatters'
 import Dashboard from './Dashboard.vue'
 import Colaboradores from './Colaboradores.vue'
 import Indicadores from './Indicadores.vue'
@@ -114,12 +113,6 @@ const nomeMes = computed(() => {
   ]
   return meses[parseInt(partes[2]) - 1] + ' ' + partes[1]
 })
-
-const formataDataCurta = (data) => {
-  if (!data) return ''
-  const d = data.substring(0, 10).split('-')
-  return d[2] + '/' + d[1]
-}
 
 // --- DIALOG EDITAR PERÍODO ---
 
@@ -790,7 +783,7 @@ watch(
                 </div>
                 <q-tooltip v-if="feriadosDoPeriodo.length > 0">
                   <div v-for="f in feriadosDoPeriodo" :key="f.codferiado">
-                    {{ formataDataCurta(f.data) }} — {{ f.feriado }}
+                    {{ formataData(f.data, 0) }} — {{ f.feriado }}
                   </div>
                 </q-tooltip>
               </q-card-section>
