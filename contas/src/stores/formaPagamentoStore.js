@@ -81,18 +81,14 @@ export const useFormaPagamentoStore = defineStore(
     }
 
     function upsertLocal(item) {
-      const idx = items.value.findIndex(
-        (i) => i.codformapagamento === item.codformapagamento,
-      )
+      const idx = items.value.findIndex((i) => i.codformapagamento === item.codformapagamento)
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
       useSelectCacheStore().invalidate('formaPagamento')
     }
 
     function removeLocal(codformapagamento) {
-      items.value = items.value.filter(
-        (i) => i.codformapagamento !== codformapagamento,
-      )
+      items.value = items.value.filter((i) => i.codformapagamento !== codformapagamento)
       useSelectCacheStore().invalidate('formaPagamento')
     }
 

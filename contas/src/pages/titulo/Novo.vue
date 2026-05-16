@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { date } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataData, formataDataIso } from "@components/formatters"
+import { formataNumero, formataData, formataDataIso } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 import PessoaInfo from 'src/components/PessoaInfo.vue'

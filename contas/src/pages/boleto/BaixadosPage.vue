@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, watch } from 'vue'
-import { formataNumero, formataData } from "@components/formatters"
+import { formataNumero, formataData } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA, TIPO_BAIXA } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'

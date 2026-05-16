@@ -1,4 +1,4 @@
-import { formataDataIso } from "@components/formatters";
+import { formataDataIso } from '@components/formatters'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
@@ -71,9 +71,7 @@ export const useLiquidacaoTituloStore = defineStore(
     }
 
     function upsertLocal(item) {
-      const idx = items.value.findIndex(
-        (i) => i.codliquidacaotitulo === item.codliquidacaotitulo,
-      )
+      const idx = items.value.findIndex((i) => i.codliquidacaotitulo === item.codliquidacaotitulo)
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
     }

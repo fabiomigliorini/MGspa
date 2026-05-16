@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { date } from 'quasar'
-import { formataNumero, formataData } from "@components/formatters"
+import { formataNumero, formataData } from '@components/formatters'
 import { useExtratoStore } from 'src/stores/extratoStore'
 
 const route = useRoute()
@@ -137,11 +137,7 @@ onMounted(async () => {
       </q-table>
     </div>
 
-    <q-page-sticky
-      position="bottom-right"
-      :offset="[18, 18]"
-      v-if="store.portador?.codbanco == 1"
-    >
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="store.portador?.codbanco == 1">
       <q-btn
         fab
         icon="cloud_download"

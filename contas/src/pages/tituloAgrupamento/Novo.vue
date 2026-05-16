@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { useQuasar } from "quasar"
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
@@ -10,7 +10,7 @@ import SelectPortador from 'src/components/select/SelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
-import { formataNumero, formataDataIso } from "@components/formatters"
+import { formataNumero, formataDataIso } from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()

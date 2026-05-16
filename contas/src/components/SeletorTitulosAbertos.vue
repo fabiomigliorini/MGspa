@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { api } from 'src/services/api'
-import { formataNumero, formataData } from "@components/formatters"
+import { formataNumero, formataData } from '@components/formatters'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
@@ -343,7 +343,6 @@ function somar(campo) {
 function classeOperacao(op) {
   return op === 'CR' ? 'text-orange' : 'text-green'
 }
-
 
 function classeVencimento(t) {
   const dias = diasAtraso(t.vencimento)

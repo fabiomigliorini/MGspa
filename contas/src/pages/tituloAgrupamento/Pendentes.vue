@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, computed } from 'vue'
-import { formataNumero, formataData } from "@components/formatters"
+import { formataNumero, formataData } from '@components/formatters'
 import { useAgrupamentoPendenteStore } from 'src/stores/agrupamentoPendenteStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 

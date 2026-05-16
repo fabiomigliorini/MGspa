@@ -1,4 +1,4 @@
-import { formataDataIso } from "@components/formatters";
+import { formataDataIso } from '@components/formatters'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from 'src/services/api'

@@ -78,9 +78,7 @@ export const useTipoMovimentoTituloStore = defineStore(
     }
 
     function removeLocal(codtipomovimentotitulo) {
-      items.value = items.value.filter(
-        (i) => i.codtipomovimentotitulo !== codtipomovimentotitulo,
-      )
+      items.value = items.value.filter((i) => i.codtipomovimentotitulo !== codtipomovimentotitulo)
       useSelectCacheStore().invalidate('tipoMovimentoTitulo')
     }
 

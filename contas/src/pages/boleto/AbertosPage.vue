@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { formataNumero, formataData } from "@components/formatters"
+import { formataNumero, formataData } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA, TIPOS_ABERTOS } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'

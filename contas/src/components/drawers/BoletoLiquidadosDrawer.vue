@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { formataNumero } from "@components/formatters"
+import { formataNumero } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 
 const route = useRoute()

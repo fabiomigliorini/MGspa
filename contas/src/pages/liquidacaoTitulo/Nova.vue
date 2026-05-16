@@ -1,14 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useQuasar } from "quasar"
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
-import { formataNumero, formataDataIso } from "@components/formatters"
+import { formataNumero, formataDataIso } from '@components/formatters'
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
@@ -146,13 +146,7 @@ async function salvar() {
 
     <!-- FAB Salvar -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        fab
-        icon="save"
-        color="primary"
-        :disable="!podeAvancar"
-        @click="abrirFinalizar"
-      >
+      <q-btn fab icon="save" color="primary" :disable="!podeAvancar" @click="abrirFinalizar">
         <q-tooltip>Finalizar Liquidação</q-tooltip>
       </q-btn>
     </q-page-sticky>

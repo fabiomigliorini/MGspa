@@ -3,7 +3,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataData, formataTelefone, formataNumeroNota, formataCodNegocio } from "@components/formatters"
+import {
+  formataNumero,
+  formataData,
+  formataTelefone,
+  formataNumeroNota,
+  formataCodNegocio,
+} from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'

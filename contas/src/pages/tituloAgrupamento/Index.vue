@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import { formataNumero, formataData, formataCodNegocio } from "@components/formatters"
+import { formataNumero, formataData, formataCodNegocio } from '@components/formatters'
 import { useTituloAgrupamentoStore } from 'src/stores/tituloAgrupamentoStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
