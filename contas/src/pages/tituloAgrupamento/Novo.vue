@@ -10,7 +10,7 @@ import SelectPortador from 'src/components/select/SelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()

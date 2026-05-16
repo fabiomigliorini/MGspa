@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { date } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'

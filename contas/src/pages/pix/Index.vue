@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { api } from 'src/services/api'
 import { usePixStore } from 'src/stores/pixStore'
 import { notifyError } from 'src/utils/notify'
-import { formataCPF, formataCNPJ, formataNumero, tempoRelativo } from 'src/utils/formatters'
+import { formataCPF, formataCNPJ, formataNumero, tempoRelativo } from '@components/formatters'
 
 const store = usePixStore()
 

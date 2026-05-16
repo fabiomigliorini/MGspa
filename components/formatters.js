@@ -54,6 +54,11 @@ export const formataCnpjCpf = (cnpjcpf, fisica) => {
   return fisica ? formataCPF(cnpjcpf) : formataCNPJ(cnpjcpf)
 }
 
+export function formataTelefone(t) {
+  if (!t) return ''
+  return `+${t.pais} (${t.ddd}) ${t.telefone}`
+}
+
 const rtf = new Intl.RelativeTimeFormat(navigator.language || 'pt-BR', { numeric: 'auto' })
 
 export function tempoRelativo(dataStr) {

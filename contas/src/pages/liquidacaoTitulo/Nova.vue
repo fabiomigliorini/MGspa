@@ -8,7 +8,7 @@ import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 

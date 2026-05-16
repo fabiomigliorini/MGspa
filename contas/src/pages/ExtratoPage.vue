@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 import { useExtratoStore } from 'src/stores/extratoStore'
 
 const route = useRoute()

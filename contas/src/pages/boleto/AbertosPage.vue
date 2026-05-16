@@ -2,7 +2,7 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA, TIPOS_ABERTOS } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'

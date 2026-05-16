@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 

@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useQuasar, date } from 'quasar'
 import { useAuthStore } from 'stores/auth'
 import { useSaldoStore } from 'src/stores/saldoStore'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 
 const route = useRoute()
 const $q = useQuasar()
