@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar, date } from 'quasar'
 import { api } from 'src/services/api'
@@ -11,11 +11,13 @@ import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
 import { formataNumero } from '@components/formatters'
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
+import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 
 const router = useRouter()
 const $q = useQuasar()
 const auth = useAuthStore()
 const store = useLiquidacaoTituloStore()
+const selectCache = useSelectCacheStore()
 
 const filiaisPortador = computed(() => auth.filiaisRestritas())
 
@@ -36,14 +38,33 @@ const finalizar = ref({
 
 const podeAvancar = computed(() => titulos.value.length > 0)
 
-const codpessoaSugerido = computed(() => {
-  const set = new Set(titulos.value.map((l) => l.codpessoa).filter((v) => v != null))
-  return set.size === 1 ? [...set][0] : null
-})
+const portadorCacheKey = () =>
+  auth.user?.codusuario ? `liquidacao-titulo:ultimoPortador:${auth.user.codusuario}` : null
 
-watch(codpessoaSugerido, (v) => {
-  finalizar.value.codpessoa = v
-})
+async function abrirFinalizar() {
+  // Sugere pessoa quando todos os títulos têm a mesma
+  const codpessoas = new Set(titulos.value.map((l) => l.codpessoa).filter((v) => v != null))
+  finalizar.value.codpessoa = codpessoas.size === 1 ? [...codpessoas][0] : null
+
+  // Sugere último portador do usuário (se disponível na sua filial)
+  finalizar.value.codportador = null
+  const key = portadorCacheKey()
+  const cod = key ? Number(localStorage.getItem(key)) : null
+  if (cod) {
+    await selectCache.loadList('portador', 'v1/select/portador', (data) =>
+      Array.isArray(data) ? data : data.data || [],
+    )
+    const filiais = filiaisPortador.value
+    const disponivel = selectCache.portador.items.some((p) => {
+      if (Number(p.codportador) !== cod) return false
+      if (filiais == null) return true
+      return filiais.map(Number).includes(Number(p.codfilial))
+    })
+    if (disponivel) finalizar.value.codportador = cod
+  }
+
+  dialogFinalizar.value = true
+}
 
 async function salvar() {
   if (!finalizar.value.codpessoa) {
@@ -77,6 +98,8 @@ async function salvar() {
       }
       const { data } = await api.post('v1/liquidacao-titulo', payload)
       store.upsertLocal(data.data)
+      const key = portadorCacheKey()
+      if (key) localStorage.setItem(key, String(payload.codportador))
       notifySuccess('Liquidação criada')
       router.replace({
         name: 'liquidacao-titulo-detalhe',
@@ -128,7 +151,7 @@ async function salvar() {
         icon="save"
         color="primary"
         :disable="!podeAvancar"
-        @click="dialogFinalizar = true"
+        @click="abrirFinalizar"
       >
         <q-tooltip>Finalizar Liquidação</q-tooltip>
       </q-btn>
