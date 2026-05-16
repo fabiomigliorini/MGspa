@@ -1,4 +1,5 @@
 <script setup>
+import { formataDataIso } from "@components/formatters";
 import { ref, watch, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
@@ -14,22 +15,22 @@ const sGrupoEconomico = GrupoEconomicoStore();
 const canvasRef = ref(null);
 const graficoInstance = ref(null);
 const filtroPessoa = ref({
-  desde: moment().subtract(1, "year").startOf("month").format("YYYY-MM-DD"),
+  desde: formataDataIso(moment().subtract(1, "year").startOf("month").toDate()),
   codpessoa: null,
 });
 
 const opcoesDesde = [
   {
     label: "Este Ano",
-    value: moment().startOf("year").format("YYYY-MM-DD"),
+    value: formataDataIso(moment().startOf("year").toDate()),
   },
   {
     label: "1 Ano",
-    value: moment().subtract(1, "year").startOf("month").format("YYYY-MM-DD"),
+    value: formataDataIso(moment().subtract(1, "year").startOf("month").toDate()),
   },
   {
     label: "2 Anos",
-    value: moment().subtract(2, "year").startOf("month").format("YYYY-MM-DD"),
+    value: formataDataIso(moment().subtract(2, "year").startOf("month").toDate()),
   },
   { label: "Tudo", value: null },
 ];

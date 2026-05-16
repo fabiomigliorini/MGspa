@@ -1,3 +1,4 @@
+import { formataTimestampIso } from "@components/formatters";
 import { defineStore } from "pinia";
 import { toRaw } from "vue";
 import { db } from "boot/db";
@@ -398,7 +399,7 @@ export const negocioStore = defineStore("negocio", {
         codusuariorecebimento: null,
         cpf: null,
         entrega: false,
-        lancamento: moment().format("YYYY-MM-DD HH:mm:ss"),
+        lancamento: formataTimestampIso(new Date()),
         observacoes: null,
         recebimento: null,
         valorprodutos: 0,
@@ -409,8 +410,8 @@ export const negocioStore = defineStore("negocio", {
         valoroutras: null,
         valorjuros: null,
         valortotal: 0,
-        criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
-        alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
+        criacao: formataTimestampIso(new Date()),
+        alteracao: formataTimestampIso(new Date()),
         codusuarioalteracao: null,
         codusuariocriacao: null,
         sincronizado: false,
@@ -568,9 +569,9 @@ export const negocioStore = defineStore("negocio", {
       negocio.uuid = uuid;
       negocio.codnegociostatus = 1;
       negocio.justificativa = null;
-      negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
-      negocio.criacao = moment().format("YYYY-MM-DD HH:mm:ss");
-      negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
+      negocio.lancamento = formataTimestampIso(new Date());
+      negocio.criacao = formataTimestampIso(new Date());
+      negocio.alteracao = formataTimestampIso(new Date());
       negocio.sincronizado = false;
       negocio.codpdv = sSinc.pdv.codpdv;
       negocio.Pdv = { ...sSinc.pdv };
@@ -753,8 +754,8 @@ export const negocioStore = defineStore("negocio", {
       // marca alteracao
       if (sincronizar) {
         if (this.negocio.codnegociostatus == 1) {
-          this.negocio.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
-          this.negocio.lancamento = moment().format("YYYY-MM-DD HH:mm:ss");
+          this.negocio.alteracao = formataTimestampIso(new Date());
+          this.negocio.lancamento = formataTimestampIso(new Date());
         }
         this.negocio.sincronizado = false;
       }
@@ -795,7 +796,7 @@ export const negocioStore = defineStore("negocio", {
         var item = this.negocio.itens.splice(index, 1);
         item = item[0];
         item.quantidade = parseFloat(item.quantidade) + parseFloat(quantidade);
-        item.alteracao = moment().format("YYYY-MM-DD HH:mm:ss");
+        item.alteracao = formataTimestampIso(new Date());
         item.ordenacao = item.alteracao;
       } else {
         var item = {
@@ -814,9 +815,9 @@ export const negocioStore = defineStore("negocio", {
           valorseguro: null,
           valoroutras: null,
           valortotal: null,
-          criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
-          alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
-          ordenacao: moment().format("YYYY-MM-DD HH:mm:ss"),
+          criacao: formataTimestampIso(new Date()),
+          alteracao: formataTimestampIso(new Date()),
+          ordenacao: formataTimestampIso(new Date()),
           inativo: null,
         };
         try {
@@ -883,7 +884,7 @@ export const negocioStore = defineStore("negocio", {
       );
       const alvo = grupo[0];
       const outros = grupo.slice(1);
-      const carimbo = moment().format("YYYY-MM-DD HH:mm:ss");
+      const carimbo = formataTimestampIso(new Date());
       // inativa os outros antes de recalcular para que recalcularValorTotal
       // (cascateado por itemRecalcularValorProdutos) só some o alvo
       for (const x of outros) {
@@ -963,7 +964,7 @@ export const negocioStore = defineStore("negocio", {
           return item.inativo === null && item.uuid == uuid;
         });
         if (inativar) {
-          inativar.inativo = moment().format("YYYY-MM-DD HH:mm:ss");
+          inativar.inativo = formataTimestampIso(new Date());
           this.recalcularValorTotal();
           await this.salvar();
         }
@@ -1292,8 +1293,8 @@ export const negocioStore = defineStore("negocio", {
         uuid: uid(),
         codformapagamento: codformapagamento,
         formapagamento: fp.formapagamento,
-        alteracao: moment().format("YYYY-MM-DD HH:mm:ss"),
-        criacao: moment().format("YYYY-MM-DD HH:mm:ss"),
+        alteracao: formataTimestampIso(new Date()),
+        criacao: formataTimestampIso(new Date()),
         valorpagamento: valorpagamento,
         codtitulo: codtitulo,
         valorjuros: valorjuros,

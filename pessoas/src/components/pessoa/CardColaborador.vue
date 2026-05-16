@@ -1,4 +1,5 @@
 <script setup>
+import { formataDataIso } from "@components/formatters";
 import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
@@ -459,7 +460,7 @@ const alterouVinculo = () => {
 const abrirNovoColaborador = () => {
   editColaborador.value = false;
   modelColaborador.value = {
-    contratacao: moment().format("YYYY-MM-DD"),
+    contratacao: formataDataIso(new Date()),
     vinculo: 1,
     diasExperiencia: DIAS_EXPERIENCIA,
     diasRenovacao: DIAS_EXPERIENCIA,

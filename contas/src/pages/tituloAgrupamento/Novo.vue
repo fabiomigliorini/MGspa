@@ -10,7 +10,7 @@ import SelectPortador from 'src/components/select/SelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataDataIso } from "@components/formatters"
 
 const route = useRoute()
 const router = useRouter()
@@ -35,7 +35,7 @@ const vencimentos = ref({
 })
 
 const finalizar = ref({
-  emissao: date.formatDate(new Date(), 'YYYY-MM-DD'),
+  emissao: formataDataIso(new Date()),
   codpessoa: null,
   observacao: '',
 })
@@ -124,7 +124,7 @@ function calcularParcelas() {
   for (let i = 0; i < parcelas; i++) {
     if (i === 0) dia.setDate(dia.getDate() + primeira)
     else dia.setDate(dia.getDate() + demais)
-    datas.push(date.formatDate(new Date(dia), 'YYYY-MM-DD'))
+    datas.push(formataDataIso(new Date(dia)))
     let v
     if (i === parcelas - 1) v = +(total - acumulado).toFixed(2)
     else {
@@ -167,7 +167,7 @@ function adicionarParcela() {
   }
   baseDate.setDate(baseDate.getDate() + (Number(vencimentos.value.demais) || 0))
   lista.push({
-    vencimento: date.formatDate(baseDate, 'YYYY-MM-DD'),
+    vencimento: formataDataIso(baseDate),
     valor: 0,
   })
   redistribuirValores()
@@ -221,7 +221,7 @@ function getDias(i) {
 function setDias(i, dias) {
   const base = dataEmissao()
   base.setDate(base.getDate() + (Number(dias) || 0))
-  vencimentos.value.parcelasGeradas[i].vencimento = date.formatDate(base, 'YYYY-MM-DD')
+  vencimentos.value.parcelasGeradas[i].vencimento = formataDataIso(base)
 }
 
 watch(dialogFinalizar, (v) => {

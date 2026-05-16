@@ -3,7 +3,7 @@ import { ref, watch, onMounted } from "vue";
 import { useQuasar, debounce } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "src/stores/pessoa";
-import { formataDataSemHora } from "@components/formatters";
+import { formataDataSemHora, formataDataIso } from "@components/formatters";
 import SelectPessoas from "components/pessoa/SelectPessoas.vue";
 import moment from "moment";
 
@@ -113,10 +113,10 @@ const linkMgSis = (codtitulo) => {
 };
 
 const coresVencimento = (vencimento) => {
-  if (vencimento >= moment().format("YYYY-MM-DD")) return "text-green";
+  if (vencimento >= formataDataIso(new Date())) return "text-green";
   if (
     vencimento >=
-    moment().subtract(5, "day").startOf("day").format("YYYY-MM-DD")
+    formataDataIso(moment().subtract(5, "day").startOf("day").toDate())
   )
     return "text-orange";
   return "text-red";

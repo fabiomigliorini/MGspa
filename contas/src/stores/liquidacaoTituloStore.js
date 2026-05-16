@@ -1,3 +1,4 @@
+import { formataDataIso } from "@components/formatters";
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { date } from 'quasar'
@@ -16,8 +17,8 @@ const defaultFilters = () => {
     estornado: '0',
     criacao_de: null,
     criacao_ate: null,
-    transacao_de: date.formatDate(de, 'YYYY-MM-DD'),
-    transacao_ate: date.formatDate(ate, 'YYYY-MM-DD'),
+    transacao_de: formataDataIso(de),
+    transacao_ate: formataDataIso(ate),
   }
 }
 

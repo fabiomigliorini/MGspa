@@ -1,3 +1,4 @@
+import { formataDataIso } from "@components/formatters";
 import { defineStore } from "pinia";
 import { api } from "src/boot/axios";
 import { Notify } from "quasar";
@@ -22,7 +23,7 @@ export const conferenciaStore = defineStore("conferencia", {
         return;
       }
       const filtro = {
-        dia: moment().format("YYYY-MM-DD"),
+        dia: formataDataIso(new Date()),
         codpdv: null,
       };
       const pdv = await sPdv.findByUuid(sSinc.pdv.uuid);

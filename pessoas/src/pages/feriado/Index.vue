@@ -3,7 +3,12 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { feriadoStore } from "src/stores/feriado";
 import { guardaToken } from "src/stores";
-import { formataData } from "@components/formatters";
+import {
+  formataData,
+  formataDataSemHora,
+  formataDiaSemana,
+  formataDataDiaMes,
+} from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import MgInputData from "@components/MgInputData.vue";
 
@@ -53,34 +58,6 @@ const extrairErro = (error, fallback) => {
     if (primeiro) return primeiro;
   }
   return data.mensagem || data.message || fallback;
-};
-
-const parseData = (dataStr) => {
-  if (!dataStr) return null;
-  const iso = dataStr.substring(0, 10);
-  return new Date(iso + "T12:00:00");
-};
-
-const formataDataCurta = (dataStr) => {
-  const d = parseData(dataStr);
-  if (!d) return "";
-  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
-};
-
-const diaSemana = (dataStr) => {
-  const d = parseData(dataStr);
-  if (!d) return "";
-  return d.toLocaleDateString("pt-BR", { weekday: "short" });
-};
-
-const formataDataMovel = (dataStr) => {
-  const d = parseData(dataStr);
-  if (!d) return "";
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
 };
 
 // --- DIALOG ---
@@ -349,9 +326,9 @@ onMounted(async () => {
                 <q-item-section>
                   <q-item-label>{{ m.feriado }}</q-item-label>
                   <q-item-label caption>
-                    {{ formataDataMovel(m.data_anterior) }}
+                    {{ formataDataSemHora(m.data_anterior) }}
                     →
-                    {{ formataDataMovel(m.data_nova) }}
+                    {{ formataDataSemHora(m.data_nova) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -386,7 +363,7 @@ onMounted(async () => {
               >
                 <q-item-section>
                   <q-item-label class="text-orange-9">
-                    {{ p.feriado }} — {{ formataDataMovel(p.data) }}
+                    {{ p.feriado }} — {{ formataDataSemHora(p.data) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -500,10 +477,10 @@ onMounted(async () => {
                     <q-item-section avatar>
                       <div class="text-center">
                         <div class="text-subtitle2 text-primary">
-                          {{ formataDataCurta(feriado.data) }}
+                          {{ formataDataDiaMes(feriado.data) }}
                         </div>
                         <div class="text-caption text-grey">
-                          {{ diaSemana(feriado.data) }}
+                          {{ formataDiaSemana(feriado.data) }}
                         </div>
                       </div>
                     </q-item-section>

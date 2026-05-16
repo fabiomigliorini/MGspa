@@ -32,9 +32,19 @@ export function arredonda(valor, casas = 2) {
 
 // ---------- Datas ----------
 
+// Helper interno: cria Date evitando shift de TZ para strings YYYY-MM-DD puras.
+// new Date("2026-05-16") interpreta UTC 00:00, que em GMT-3 vira 2026-05-15 21:00.
+// Aqui forçamos meio-dia local para strings que são só data.
+function parseLocalDate(data) {
+  if (data instanceof Date) return data;
+  const s = String(data);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + "T12:00:00");
+  return new Date(s);
+}
+
 export function formataData(data) {
   if (!data) return "";
-  const d = new Date(data);
+  const d = parseLocalDate(data);
   return d.toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -46,7 +56,7 @@ export function formataData(data) {
 
 export function formataDataSemHora(data) {
   if (!data) return "";
-  const d = new Date(data);
+  const d = parseLocalDate(data);
   return d.toLocaleDateString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -56,7 +66,7 @@ export function formataDataSemHora(data) {
 
 export function formataDataHoraSegundos(data) {
   if (!data) return "";
-  const d = new Date(data);
+  const d = parseLocalDate(data);
   return d.toLocaleString("pt-BR", {
     day: "2-digit",
     month: "2-digit",
@@ -69,7 +79,7 @@ export function formataDataHoraSegundos(data) {
 
 export function formataDataCompleta(data) {
   if (!data) return "";
-  const d = new Date(data);
+  const d = parseLocalDate(data);
   return d.toLocaleString("pt-BR", {
     weekday: "short",
     day: "2-digit",
@@ -82,23 +92,40 @@ export function formataDataCompleta(data) {
 
 export function formataDiaSemana(data, short = true) {
   if (!data) return "";
-  const d = new Date(data);
+  const d = parseLocalDate(data);
   return d.toLocaleDateString("pt-BR", { weekday: short ? "short" : "long" });
 }
 
-export function dataAtual() {
-  const d = new Date();
+export function formataDataDiaMes(data, short = true) {
+  if (!data) return "";
+  const d = parseLocalDate(data);
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: short ? "short" : "long",
+  });
+}
+
+// Para envio ao backend (que é naive): YYYY-MM-DD, em horário local
+export function formataDataIso(data) {
+  if (!data) return "";
+  const d = parseLocalDate(data);
+  if (isNaN(d.getTime())) return "";
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
 
-export function dataFormatoSql(data) {
+// Para envio ao backend (que é naive): YYYY-MM-DD HH:mm:ss, em horário local
+export function formataTimestampIso(data) {
   if (!data) return "";
-  const m = String(data).match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-  if (!m) return "";
-  return `${m[3]}-${m[2]}-${m[1]}`;
+  const d = parseLocalDate(data);
+  if (isNaN(d.getTime())) return "";
+  const base = formataDataIso(d);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const ii = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${base} ${hh}:${ii}:${ss}`;
 }
 
 const rtf = new Intl.RelativeTimeFormat(
@@ -108,7 +135,7 @@ const rtf = new Intl.RelativeTimeFormat(
 
 export function tempoRelativo(dataStr) {
   if (!dataStr) return "";
-  const diff = new Date(dataStr) - new Date();
+  const diff = parseLocalDate(dataStr) - new Date();
   const seconds = Math.round(diff / 1000);
   const minutes = Math.round(diff / 60000);
   const hours = Math.round(diff / 3600000);
@@ -128,12 +155,12 @@ export const formataFromNow = tempoRelativo;
 
 export function verificaPassadoFuturo(data) {
   if (!data) return null;
-  return new Date(data).getTime() < Date.now();
+  return parseLocalDate(data).getTime() < Date.now();
 }
 
 export function verificaIdade(dataNascimento) {
   if (!dataNascimento) return null;
-  const nasc = new Date(dataNascimento);
+  const nasc = parseLocalDate(dataNascimento);
   const hoje = new Date();
   let idade = hoje.getFullYear() - nasc.getFullYear();
   const m = hoje.getMonth() - nasc.getMonth();

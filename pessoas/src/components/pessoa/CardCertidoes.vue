@@ -8,7 +8,7 @@ import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectCertidaoEmissor from "components/pessoa/SelectCertidaoEmissor.vue";
 import SelectCertidaoTipo from "components/pessoa/SelectCertidaoTipo.vue";
 import MgInputData from "@components/MgInputData.vue";
-import { formataDataSemHora, dataAtual } from "@components/formatters";
+import { formataDataSemHora, formataDataIso } from "@components/formatters";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -22,7 +22,7 @@ const filtroCertidaomodel = ref("validas");
 const certidoesFiltradas = computed(() => {
   const lista = sPessoa.item?.PessoaCertidaoS || [];
   if (filtroCertidaomodel.value === "validas")
-    return lista.filter((x) => x.validade >= dataAtual());
+    return lista.filter((x) => x.validade >= formataDataIso(new Date()));
   return lista;
 });
 
@@ -303,7 +303,7 @@ const submit = () => {
             <q-item-label
               v-if="certidao.validade"
               class="text-weight-bold"
-              :class="certidao.validade < dataAtual() ? 'text-strike' : null"
+              :class="certidao.validade < formataDataIso(new Date()) ? 'text-strike' : null"
             >
               Validade: {{ formataDataSemHora(certidao.validade) }}
               <!-- INFO -->
@@ -323,7 +323,7 @@ const submit = () => {
             <q-item-label
               caption
               v-if="certidao.autenticacao"
-              :class="certidao.validade < dataAtual() ? 'text-strike' : null"
+              :class="certidao.validade < formataDataIso(new Date()) ? 'text-strike' : null"
             >
               {{ certidao.autenticacao }}
             </q-item-label>

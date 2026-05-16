@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero } from "@components/formatters";
+import { formataNumero, formataDataIso } from "@components/formatters";
 import { onMounted, ref, watch } from "vue";
 import { exportFile, Notify, Dialog } from "quasar";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
@@ -68,7 +68,7 @@ const inicializaAnosMeses = async () => {
     i++;
   } while (i <= ano.value);
   mes.value = moment().month() + 1;
-  data.value = moment().format('YYYY-MM-DD');
+  data.value = formataDataIso(new Date());
   inicializaDiaInicialFinal();
 }
 

@@ -5,7 +5,11 @@ import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
 import MGLayout from "layouts/MGLayout.vue";
-import { formataNumero, formataCodNegocio, formataData } from "@components/formatters";
+import {
+  formataNumero,
+  formataCodNegocio,
+  formataData,
+} from "@components/formatters";
 import { getTipo } from "src/config/bonificacaoTipos";
 
 const $q = useQuasar();
@@ -78,8 +82,7 @@ const carregar = async (codmeta, codpessoa) => {
       color: "red-5",
       textColor: "white",
       icon: "error",
-      message:
-        error.response?.data?.mensagem || "Erro ao carregar dashboard",
+      message: error.response?.data?.mensagem || "Erro ao carregar dashboard",
     });
   } finally {
     loading.value = false;
@@ -146,9 +149,7 @@ watch(
               <div class="col-xs-12 col-sm-6">
                 <q-card bordered flat>
                   <q-card-section class="text-center">
-                    <div class="text-caption text-grey">
-                      Total Acumulado
-                    </div>
+                    <div class="text-caption text-grey">Total Acumulado</div>
                     <div class="text-h5 text-grey-9">
                       {{ formataNumero(dash.totalGeral) }}
                     </div>
@@ -158,9 +159,7 @@ watch(
               <div class="col-xs-12 col-sm-6">
                 <q-card bordered flat>
                   <q-card-section class="text-center">
-                    <div class="text-caption text-grey">
-                      Tipos de Evento
-                    </div>
+                    <div class="text-caption text-grey">Tipos de Evento</div>
                     <div class="text-h5 text-grey-9">
                       {{ eventosLista.length }}
                     </div>
@@ -170,11 +169,7 @@ watch(
             </div>
 
             <!-- AVISO -->
-            <q-banner
-              class="bg-yellow-2 text-grey-8 q-mb-md"
-              rounded
-              dense
-            >
+            <q-banner class="bg-yellow-2 text-grey-8 q-mb-md" rounded dense>
               <template v-slot:avatar>
                 <q-icon name="info" color="orange" />
               </template>
@@ -248,7 +243,10 @@ watch(
                   :offset="100"
                 >
                   <q-list separator>
-                    <q-item v-for="ev in eventos" :key="ev.codbonificacaoevento">
+                    <q-item
+                      v-for="ev in eventos"
+                      :key="ev.codbonificacaoevento"
+                    >
                       <q-item-section avatar>
                         <q-icon
                           :name="getTipo(ev.tipo).icon"
@@ -289,7 +287,6 @@ watch(
                           :class="ev.valor < 0 ? 'text-red' : 'text-green-8'"
                         >
                           {{ formataNumero(ev.valor, 5) }}
-                          </span>
                         </span>
                       </q-item-section>
                     </q-item>

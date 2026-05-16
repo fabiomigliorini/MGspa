@@ -2,7 +2,7 @@
 import { defineAsyncComponent, ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { colaboradorStore } from "stores/colaborador";
-import { tempoRelativo } from "@components/formatters";
+import { tempoRelativo, formataDataIso } from "@components/formatters";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
@@ -31,7 +31,7 @@ const editarCargo = ref(false);
 function preencheCargo(colaborador) {
   if (colaborador.ColaboradorCargo.length > 0) {
     modelColaboradorCargo.value = {
-      inicio: moment().format("YYYY-MM-DD"),
+      inicio: formataDataIso(new Date()),
       codcolaborador: colaborador.codcolaborador,
     };
   } else {

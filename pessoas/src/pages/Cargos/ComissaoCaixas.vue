@@ -1,4 +1,5 @@
 <script setup>
+import { formataTimestampIso } from "@components/formatters";
 import { ref, onMounted, watch } from "vue";
 import { debounce } from "quasar";
 import { guardaToken } from "src/stores";
@@ -11,8 +12,8 @@ const user = guardaToken();
 const caixas = ref([]);
 
 const filtro = ref({
-  inicio: moment().add(-10, "days").startOf("month").format("YYYY-MM-DD HH:mm"),
-  fim: moment().add(-10, "days").endOf("month").format("YYYY-MM-DD HH:mm"),
+  inicio: formataTimestampIso(moment().add(-10, "days").startOf("month").toDate()),
+  fim: formataTimestampIso(moment().add(-10, "days").endOf("month").toDate()),
 });
 
 const buscar = debounce(async () => {

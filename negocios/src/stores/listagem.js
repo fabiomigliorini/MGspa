@@ -1,3 +1,4 @@
+import { formataTimestampIso } from "@components/formatters";
 import { defineStore } from "pinia";
 import { api } from "src/boot/axios";
 import { Notify } from "quasar";
@@ -86,7 +87,7 @@ export const listagemStore = defineStore("listagem", {
           .subtract(7, "d")
           .startOf("day")
           .format("YYYY-MM-DD HH:mm"),
-        lancamento_ate: moment().endOf("day").format("YYYY-MM-DD HH:mm"),
+        lancamento_ate: formataTimestampIso(moment().endOf("day").toDate()),
         codestoquelocal: sNegocio.padrao.codestoquelocal,
         codusuario: null,
         codnegociostatus: null,

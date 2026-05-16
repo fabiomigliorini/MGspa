@@ -1,3 +1,4 @@
+import { formataDataIso } from "@components/formatters";
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { date } from 'quasar'
@@ -5,7 +6,7 @@ import { api } from 'src/services/api'
 import { notifyError } from 'src/utils/notify'
 
 export const useSaldoStore = defineStore('saldo', () => {
-  const dataSelecionada = ref(date.formatDate(Date.now(), 'YYYY-MM-DD'))
+  const dataSelecionada = ref(formataDataIso(new Date()))
   const intervalo = ref(null)
   const filiais = ref([])
   const totalPorBanco = ref([])

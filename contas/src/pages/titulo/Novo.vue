@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { date } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataDataSemHora, formataDataIso } from "@components/formatters"
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 import PessoaInfo from 'src/components/PessoaInfo.vue'
@@ -41,8 +41,8 @@ const step = ref(STEP.FILIAL)
 const carregando = ref(true)
 const saving = ref(false)
 
-const hoje = () => date.formatDate(new Date(), 'YYYY-MM-DD')
-const hojeMais30 = () => date.formatDate(date.addToDate(new Date(), { days: 30 }), 'YYYY-MM-DD')
+const hoje = () => formataDataIso(new Date())
+const hojeMais30 = () => formataDataIso(date.addToDate(new Date(), { days: 30 }))
 
 const model = ref({
   codfilial: null,

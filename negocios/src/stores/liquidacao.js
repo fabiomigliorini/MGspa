@@ -1,3 +1,4 @@
+import { formataTimestampIso } from "@components/formatters";
 import { defineStore } from "pinia";
 import { api } from "src/boot/axios";
 import { pdvStore } from "./pdv";
@@ -49,7 +50,7 @@ export const liquidacaoStore = defineStore("liquidacao", {
           .subtract(7, "d")
           .startOf("day")
           .format("YYYY-MM-DD HH:mm"),
-        transacao_ate: moment().endOf("day").format("YYYY-MM-DD HH:mm"),
+        transacao_ate: formataTimestampIso(moment().endOf("day").toDate()),
         pesquisar: "LIQ",
         codpessoa: null,
         tipo: null,

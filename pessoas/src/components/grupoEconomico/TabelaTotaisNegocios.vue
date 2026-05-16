@@ -3,7 +3,7 @@ import { ref, watch, onMounted } from "vue";
 import { useQuasar, debounce } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "src/stores/pessoa";
-import { formataDataSemHora } from "@components/formatters";
+import { formataDataSemHora, formataDataIso } from "@components/formatters";
 import SelectPessoas from "components/pessoa/SelectPessoas.vue";
 import moment from "moment";
 
@@ -15,7 +15,7 @@ const totaisNegocios = ref([]);
 const filter = ref("");
 const showFilter = ref(true);
 const modelPessoas = ref({
-  desde: moment().subtract(1, "year").startOf("month").format("YYYY-MM-DD"),
+  desde: formataDataIso(moment().subtract(1, "year").startOf("month").toDate()),
 });
 const pagination = ref({
   rowsPerPage: 7,
@@ -25,15 +25,15 @@ const pagination = ref({
 const opcoesDesde = [
   {
     label: "Este Ano",
-    value: moment().startOf("year").format("YYYY-MM-DD"),
+    value: formataDataIso(moment().startOf("year").toDate()),
   },
   {
     label: "1 Ano",
-    value: moment().subtract(1, "year").startOf("month").format("YYYY-MM-DD"),
+    value: formataDataIso(moment().subtract(1, "year").startOf("month").toDate()),
   },
   {
     label: "2 Anos",
-    value: moment().subtract(2, "year").startOf("month").format("YYYY-MM-DD"),
+    value: formataDataIso(moment().subtract(2, "year").startOf("month").toDate()),
   },
   { label: "Tudo", value: null },
 ];

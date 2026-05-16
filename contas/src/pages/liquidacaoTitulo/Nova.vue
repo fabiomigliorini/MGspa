@@ -8,7 +8,7 @@ import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataDataIso } from "@components/formatters"
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
@@ -30,7 +30,7 @@ const totalLiquido = ref(0)
 const operacao = ref('DB')
 
 const finalizar = ref({
-  transacao: date.formatDate(new Date(), 'YYYY-MM-DD'),
+  transacao: formataDataIso(new Date()),
   codpessoa: null,
   codportador: null,
   observacao: '',
