@@ -7,6 +7,6 @@ MAINTAINER mgpapelaria.com.br
 WORKDIR /opt/www/MGspa/notas
 
 RUN apk upgrade --update --no-cache
-RUN apk add --no-cache bash-completion coreutils autoconf
+RUN apk add --no-cache bash-completion coreutils autoconf git
 
 

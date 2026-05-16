@@ -3,6 +3,20 @@
 
 import { defineConfig } from '#q-app/wrappers'
 import path from 'node:path'
+import { execSync } from 'node:child_process'
+
+function gitCommitNumber() {
+  if (process.env.COMMIT_NUMBER) return process.env.COMMIT_NUMBER
+  try {
+    return execSync("git -c safe.directory='*' rev-list --count HEAD -- .", {
+      cwd: import.meta.dirname,
+    })
+      .toString()
+      .trim()
+  } catch {
+    return ''
+  }
+}
 
 export default defineConfig((/* ctx */) => {
   return {
@@ -36,6 +50,11 @@ export default defineConfig((/* ctx */) => {
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
         node: 'node20',
+      },
+
+      env: {
+        BUILD_DATE: new Date().toISOString(),
+        COMMIT_NUMBER: gitCommitNumber(),
       },
 
       alias: {

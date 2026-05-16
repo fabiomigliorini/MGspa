@@ -9,7 +9,21 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
 const path = require("path");
+const { execSync } = require("node:child_process");
 const { configure } = require("quasar/wrappers");
+
+function gitCommitNumber() {
+  if (process.env.COMMIT_NUMBER) return process.env.COMMIT_NUMBER;
+  try {
+    return execSync("git -c safe.directory='*' rev-list --count HEAD -- .", {
+      cwd: __dirname,
+    })
+      .toString()
+      .trim();
+  } catch {
+    return "";
+  }
+}
 
 module.exports = configure(function (ctx) {
   return {
@@ -49,7 +63,11 @@ module.exports = configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
-      env: require("dotenv").config().parsed,
+      env: {
+        ...(require("dotenv").config().parsed || {}),
+        BUILD_DATE: new Date().toISOString(),
+        COMMIT_NUMBER: gitCommitNumber(),
+      },
       target: {
         browser: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
         node: "node16",

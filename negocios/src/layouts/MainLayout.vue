@@ -1,6 +1,10 @@
 <script setup>
 import { ref } from 'vue'
 import { version } from '../../package.json'
+import { formataTimestampCompleto } from '@components/formatters'
+
+const buildDate = formataTimestampCompleto(process.env.BUILD_DATE)
+const commitNumber = process.env.COMMIT_NUMBER
 
 const props = defineProps({
   backTo: {
@@ -181,5 +185,14 @@ const toggleRightDrawer = () => {
     <q-page-container>
       <slot name="content" />
     </q-page-container>
+
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <div class="q-ma-xs text-center">
+        <span class="gt-xs"> App Negócios | MG Papelaria &copy; | </span>
+        v{{ version }}
+        <span v-if="commitNumber"> | commit #{{ commitNumber }}</span>
+        <span class="gt-xs" v-if="buildDate"> | {{ buildDate }}</span>
+      </div>
+    </q-footer>
   </q-layout>
 </template>

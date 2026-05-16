@@ -4,12 +4,16 @@ import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import { version } from '../../package.json'
+import { formataTimestampIso } from '@components/formatters'
 
 const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
 const pageTitle = computed(() => route.meta?.title || 'Contas')
+
+const buildDate = formataTimestampIso(process.env.BUILD_DATE)
+const commitNumber = process.env.COMMIT_NUMBER
 </script>
 
 <template>
@@ -34,8 +38,6 @@ const pageTitle = computed(() => route.meta?.title || 'Contas')
           </router-link>
           {{ pageTitle }}
         </q-toolbar-title>
-
-        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
 
         <MgUserMenu />
 
@@ -74,5 +76,14 @@ const pageTitle = computed(() => route.meta?.title || 'Contas')
     <q-page-container class="bg-grey-2">
       <router-view />
     </q-page-container>
+
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <div class="q-ma-xs text-center">
+        <span class="gt-xs"> App Contas | MG Papelaria &copy; | </span>
+        <span class="gt-xs"> v{{ version }} | </span>
+        <span v-if="commitNumber"> #{{ commitNumber }}</span>
+        <span v-if="buildDate"> | {{ buildDate }}</span>
+      </div>
+    </q-footer>
   </q-layout>
 </template>

@@ -5,6 +5,10 @@ import pkg from '../../package.json'
 const version = pkg.version
 import MgMenu from 'layouts/MGMenu.vue'
 import axios from 'axios'
+import { formataTimestampCompleto } from '@components/formatters'
+
+const buildDate = formataTimestampCompleto(process.env.BUILD_DATE)
+const commitNumber = process.env.COMMIT_NUMBER
 
 const leftDrawerOpen = ref(false)
 const user = ref(localStorage.getItem('usuario'))
@@ -70,7 +74,7 @@ const toggleLeftDrawer = () => {
 <template>
   <q-layout view="Hhh lpR fff">
     <!-- CABECALHO -->
-    <q-header reveal bordered class="bg-yellow text-grey-9">
+    <q-header reveal bordered class="bg-primary text-white">
       <q-toolbar>
         <q-btn
           flat
@@ -96,7 +100,7 @@ const toggleLeftDrawer = () => {
         <mg-menu></mg-menu>
 
         <!-- Usuario logout -->
-        <q-btn-dropdown flat dense color="grey-9 " icon="person" :label="user">
+        <q-btn-dropdown flat dense icon="person" :label="user">
           <div class="row no-wrap q-pa-md justify-center">
             <div class="column items-center">
               <q-avatar size="72px">
@@ -140,9 +144,12 @@ const toggleLeftDrawer = () => {
     </q-page-container>
 
     <!-- RODAPE -->
-    <q-footer bordered reveal class="bg-grey-8 text-white">
-      <div class="q-ma-xs text-weight-light text-center">
-        Pessoas | MG Papelaria &copy; | v{{ version }}
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <div class="q-ma-xs text-center">
+        <span class="gt-xs"> App Pessoas | MG Papelaria &copy; | </span>
+        v{{ version }}
+        <span v-if="commitNumber"> | commit #{{ commitNumber }}</span>
+        <span class="gt-xs" v-if="buildDate"> | {{ buildDate }}</span>
       </div>
     </q-footer>
   </q-layout>

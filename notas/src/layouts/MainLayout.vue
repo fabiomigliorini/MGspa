@@ -4,18 +4,22 @@ import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import { version } from '../../package.json'
+import { formataTimestampCompleto } from '@components/formatters'
 
 const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
 const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscais')
+
+const buildDate = formataTimestampCompleto(process.env.BUILD_DATE)
+const commitNumber = process.env.COMMIT_NUMBER
 </script>
 
 <template>
   <q-layout view="hHh lpR fFf">
     <!-- Header -->
-    <q-header elevated class="bg-primary text-white">
+    <q-header bordered reveal class="bg-primary text-white">
       <q-toolbar>
         <!-- Hamburger ESQUERDO -->
         <q-btn
@@ -36,8 +40,6 @@ const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscai
           </router-link>
           {{ pageTitle }}
         </q-toolbar-title>
-
-        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
 
         <!-- Menu do Usuário -->
         <MgUserMenu />
@@ -91,5 +93,14 @@ const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscai
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <div class="q-ma-xs text-center">
+        <span class="gt-xs"> App Notas | MG Papelaria &copy; | </span>
+        v{{ version }}
+        <span v-if="commitNumber"> | commit #{{ commitNumber }}</span>
+        <span class="gt-xs" v-if="buildDate"> | {{ buildDate }}</span>
+      </div>
+    </q-footer>
   </q-layout>
 </template>
