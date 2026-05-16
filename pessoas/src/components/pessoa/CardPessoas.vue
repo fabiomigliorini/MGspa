@@ -1,11 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import {
-  formataData,
-  formataCpf,
-  formataCnpj,
-  formataFone,
-} from "@components/formatters";
+import { formataData, formataCpf, formataCnpj, formataFone } from "@components/formatters";
 
 const props = defineProps({
   listagempessoas: {

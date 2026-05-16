@@ -12,7 +12,7 @@ import SelectEstado from '../components/selects/SelectEstado.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
-import { formataNumeroNotaFiscal } from '@components/formatters'
+import { formataNumeroNotaFiscal } from "@components/formatters"
 import { validarChaveNFe } from 'src/utils/validators'
 
 const router = useRouter()

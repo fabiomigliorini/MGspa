@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Notify } from 'quasar'
 import { useSelectProdutoBarraStore } from 'src/stores/selects/produtoBarra'
-import { formataCodProduto, formataNumero } from '@components/formatters'
+import { formataCodProduto, formataNumero } from "@components/formatters"
 
 const store = useSelectProdutoBarraStore()
 const emit = defineEmits(['update:modelValue', 'save'])

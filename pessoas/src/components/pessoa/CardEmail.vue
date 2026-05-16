@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataData } from "@components/formatters";
+import { formataData, formataTimestamp } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import MgInputFormatado from "@components/MgInputFormatado.vue";
 
@@ -424,7 +424,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
 
               <!-- INATIVO -->
               <q-item-label caption class="text-red-14" v-if="element.inativo">
-                Inativo desde: {{ formataData(element.inativo) }}
+                Inativo desde: {{ formataTimestamp(element.inativo) }}
               </q-item-label>
 
               <!-- APELIDO -->

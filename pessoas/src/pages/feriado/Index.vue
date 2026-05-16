@@ -3,12 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { feriadoStore } from "src/stores/feriado";
 import { guardaToken } from "src/stores";
-import {
-  formataData,
-  formataDataSemHora,
-  formataDiaSemana,
-  formataDataDiaMes,
-} from "@components/formatters";
+import { formataDataAbreviada, formataData, formataDiaSemana, formataTimestamp } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import MgInputData from "@components/MgInputData.vue";
 
@@ -326,9 +321,9 @@ onMounted(async () => {
                 <q-item-section>
                   <q-item-label>{{ m.feriado }}</q-item-label>
                   <q-item-label caption>
-                    {{ formataDataSemHora(m.data_anterior) }}
+                    {{ formataData(m.data_anterior) }}
                     →
-                    {{ formataDataSemHora(m.data_nova) }}
+                    {{ formataData(m.data_nova) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -363,7 +358,7 @@ onMounted(async () => {
               >
                 <q-item-section>
                   <q-item-label class="text-orange-9">
-                    {{ p.feriado }} — {{ formataDataSemHora(p.data) }}
+                    {{ p.feriado }} — {{ formataData(p.data) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -477,7 +472,7 @@ onMounted(async () => {
                     <q-item-section avatar>
                       <div class="text-center">
                         <div class="text-subtitle2 text-primary">
-                          {{ formataDataDiaMes(feriado.data) }}
+                          {{ formataDataAbreviada(feriado.data, 0) }}
                         </div>
                         <div class="text-caption text-grey">
                           {{ formataDiaSemana(feriado.data) }}
@@ -496,7 +491,7 @@ onMounted(async () => {
                         class="text-red-14"
                         v-if="feriado.inativo"
                       >
-                        Inativo desde: {{ formataData(feriado.inativo) }}
+                        Inativo desde: {{ formataTimestamp(feriado.inativo) }}
                       </q-item-label>
                     </q-item-section>
 

@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { feriadoStore } from "src/stores/feriado";
-import { formataDataSemHora } from "@components/formatters";
+import { formataData } from "@components/formatters";
 import { extrairErro } from "src/utils/rhFormatters";
 import { formataNumero } from "@components/formatters";
 import Dashboard from "./Dashboard.vue";
@@ -617,8 +617,8 @@ watch(tab, async (newTab) => {
         </q-item-section>
         <q-item-section>
           <div class="text-h4 text-grey-9">
-            {{ formataDataSemHora(periodo.periodoinicial) }} a
-            {{ formataDataSemHora(periodo.periodofinal) }}
+            {{ formataData(periodo.periodoinicial) }} a
+            {{ formataData(periodo.periodofinal) }}
             <q-badge
               :color="periodo.status === 'A' ? 'green' : 'grey'"
               :label="periodo.status === 'A' ? 'Aberto' : 'Fechado'"

@@ -3,7 +3,7 @@ import { ref, watch, onMounted } from "vue";
 import { useQuasar, debounce } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "src/stores/pessoa";
-import { formataDataSemHora, formataDataIso } from "@components/formatters";
+import { formataData, formataDataIso } from "@components/formatters";
 import SelectPessoas from "components/pessoa/SelectPessoas.vue";
 import moment from "moment";
 
@@ -71,7 +71,7 @@ const columns = [
     label: "Emissão",
     field: "emissao",
     align: "center",
-    format: (val) => formataDataSemHora(val),
+    format: (val) => formataData(val),
     sortable: true,
   },
   {
@@ -79,7 +79,7 @@ const columns = [
     label: "Vencimento",
     field: "vencimento",
     align: "center",
-    format: (val) => formataDataSemHora(val),
+    format: (val) => formataData(val),
     sortable: true,
   },
 ];
@@ -241,14 +241,14 @@ onMounted(() => {
               }}
             </q-td>
             <q-td key="emissao" :props="scope">
-              {{ formataDataSemHora(scope.row.emissao) }}
+              {{ formataData(scope.row.emissao) }}
             </q-td>
             <q-td
               key="vencimento"
               :props="scope"
               :class="coresVencimento(scope.row.vencimento)"
             >
-              {{ formataDataSemHora(scope.row.vencimento) }}
+              {{ formataData(scope.row.vencimento) }}
             </q-td>
           </q-tr>
         </template>

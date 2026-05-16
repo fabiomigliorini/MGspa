@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
-import { formataNumero, formataPercentual, formataDataHoraSegundos, formataCodNegocio } from "@components/formatters";
+import { formataNumero, formataPercentual, formataTimestamp, formataCodNegocio } from "@components/formatters";
 import moment from "moment";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
 import MgInputValor from "@components/MgInputValor.vue";
@@ -346,7 +346,7 @@ onMounted(() => {
                   :class="l.estorno ? 'text-grey-5' : ''"
                 >
                   <td>
-                    {{ formataDataHoraSegundos(l.negocio?.lancamento || l.criacao) }}
+                    {{ formataTimestamp(l.negocio?.lancamento || l.criacao, 4, true) }}
                   </td>
                   <td>
                     <q-btn

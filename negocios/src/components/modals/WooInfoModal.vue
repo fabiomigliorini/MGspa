@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
-import { formataNumero, formataDataCompleta } from "@components/formatters";
+import { formataNumero, formataTimestampCompleto } from "@components/formatters";
 import { debounce } from "quasar";
 import { wooStore } from "src/stores/woo";
 import WooChangeStatusModal from "src/components/modals/WooChangeStatusModal.vue";
@@ -124,7 +124,7 @@ const pedidoData = computed(() => {
                     <q-item-section>
                       <q-item-label caption>Data do Pedido (Woo)</q-item-label>
                       <q-item-label>{{
-                        formataDataCompleta(sWoo.pedido.criacaowoo)
+                        formataTimestampCompleto(sWoo.pedido.criacaowoo)
                       }}</q-item-label>
                     </q-item-section>
                   </q-item>

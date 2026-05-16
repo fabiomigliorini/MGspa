@@ -47,9 +47,9 @@
                 </q-td>
                 <q-td key="data" :props="ferias">
                   <div v-for="feriasS in ferias.row.ferias" v-bind:key="feriasS.codferias">
-                    {{ moment(feriasS.gozoinicio).format('ddd, D/MMM') }} <br>
+                    {{ (formataDiaSemana(feriasS.gozoinicio) + ", " + formataDataAbreviada(feriasS.gozoinicio, 0)) }} <br>
                     a
-                    {{ moment(feriasS.gozofim).format('D/MMM/YYYY') }}
+                    {{ formataDataAbreviada(feriasS.gozofim, 4) }}
                   </div>
                 </q-td>
               </q-tr>
@@ -70,6 +70,7 @@
 </template>
 
 <script>
+import { formataDataAbreviada, formataDiaSemana } from "@components/formatters";
 import { ref, defineAsyncComponent } from "vue";
 import moment from "moment";
 import { pessoaStore } from "src/stores/pessoa";

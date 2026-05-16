@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
-import { formataPercentual, formataDataSemHora } from '@components/formatters'
+import { formataPercentual, formataData } from "@components/formatters"
 import { getEnteIcon } from 'src/composables/useTributoIcons'
 import SelectEstado from 'src/components/selects/SelectEstado.vue'
 import SelectCidade from 'src/components/selects/SelectCidade.vue'
@@ -651,10 +651,10 @@ const confirmarExclusaoTributo = () => {
                 <q-td :props="props">
                   <div v-if="props.row.vigenciainicio">
                     <div class="text-caption">
-                      {{ formataDataSemHora(props.row.vigenciainicio) }}
+                      {{ formataData(props.row.vigenciainicio) }}
                     </div>
                     <div v-if="props.row.vigenciafim" class="text-caption text-grey-6">
-                      até {{ formataDataSemHora(props.row.vigenciafim) }}
+                      até {{ formataData(props.row.vigenciafim) }}
                     </div>
                   </div>
                   <span v-else class="text-grey-5">-</span>

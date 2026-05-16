@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "@components/formatters";
+import { formataData } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import MgInputData from "@components/MgInputData.vue";
 
@@ -284,7 +284,7 @@ const submit = () => {
             <q-item-label caption v-if="registro.baixa">
               Baixado em:
               <span class="text-weight-bold">{{
-                formataDataSemHora(registro.baixa)
+                formataData(registro.baixa)
               }}</span>
             </q-item-label>
           </q-item-section>

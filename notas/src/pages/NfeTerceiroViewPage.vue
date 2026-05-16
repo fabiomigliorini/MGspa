@@ -5,14 +5,7 @@ import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
 import MgInputData from '@components/MgInputData.vue'
-import {
-  formataCnpjCpf,
-  formataDataHoraSegundos,
-  formataDataSemHora,
-  formataNumero,
-  formataNumero,
-  formataChave,
-} from '@components/formatters'
+import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataChave } from "@components/formatters"
 
 const route = useRoute()
 const router = useRouter()
@@ -557,12 +550,12 @@ onMounted(async () => {
               </template>
 
               <div class="text-caption text-grey-7 q-mt-sm">Emissão</div>
-              <div class="text-body2">{{ formataDataHoraSegundos(nfe.emissao) }}</div>
+              <div class="text-body2">{{ formataTimestamp(nfe.emissao, 4, true) }}</div>
 
               <div class="text-caption text-grey-7 q-mt-sm">Entrada</div>
               <div class="row items-center no-wrap">
                 <div class="text-body2 col">
-                  {{ nfe.entrada ? formataDataHoraSegundos(nfe.entrada) : '-' }}
+                  {{ nfe.entrada ? formataTimestamp(nfe.entrada, 4, true) : '-' }}
                 </div>
                 <q-btn
                   flat
@@ -928,7 +921,7 @@ onMounted(async () => {
               <q-item v-for="dup in duplicatas" :key="dup.codnfeterceiroduplicata">
                 <q-item-section>
                   <q-item-label>Parcela {{ dup.ndup }}</q-item-label>
-                  <q-item-label caption>Vencimento: {{ formataDataSemHora(dup.dvenc) }}</q-item-label>
+                  <q-item-label caption>Vencimento: {{ formataData(dup.dvenc) }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-item-label class="text-weight-bold">
@@ -1032,7 +1025,7 @@ onMounted(async () => {
                     <q-item-section>
                       <q-item-label>{{ guia.numero }}</q-item-label>
                       <q-item-label caption>
-                        Vencimento: {{ formataDataSemHora(guia.vencimento) }}
+                        Vencimento: {{ formataData(guia.vencimento) }}
                       </q-item-label>
                     </q-item-section>
                     <q-item-section side>
@@ -1091,7 +1084,7 @@ onMounted(async () => {
                     <q-item-section>
                       <q-item-label caption>Autorizacao</q-item-label>
                       <q-item-label>
-                        {{ nfe.nfedataautorizacao ? formataDataHoraSegundos(nfe.nfedataautorizacao) : '-' }}
+                        {{ nfe.nfedataautorizacao ? formataTimestamp(nfe.nfedataautorizacao, 4, true) : '-' }}
                       </q-item-label>
                     </q-item-section>
                   </q-item>
@@ -1144,14 +1137,14 @@ onMounted(async () => {
                   <q-item v-if="nfe.criacao">
                     <q-item-section>
                       <q-item-label caption>Criacao</q-item-label>
-                      <q-item-label>{{ formataDataHoraSegundos(nfe.criacao) }}</q-item-label>
+                      <q-item-label>{{ formataTimestamp(nfe.criacao, 4, true) }}</q-item-label>
                     </q-item-section>
                   </q-item>
                   <q-item v-if="nfe.alteracao">
                     <q-item-section>
                       <q-item-label caption>Ultima Alteracao</q-item-label>
                       <q-item-label>
-                        {{ formataDataHoraSegundos(nfe.alteracao) }}
+                        {{ formataTimestamp(nfe.alteracao, 4, true) }}
                         <span v-if="nfe.usuarioAlteracao" class="text-grey-7">
                           por {{ nfe.usuarioAlteracao.usuario }}
                         </span>

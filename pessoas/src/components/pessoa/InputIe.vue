@@ -12,7 +12,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { pessoaStore } from 'src/stores/pessoa'
-import { mascaraIe } from '@components/formatters'
+import { mascaraIe } from "@components/formatters"
 
 const sPessoa = pessoaStore()
 const model = ref(null)

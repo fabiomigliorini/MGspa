@@ -1,10 +1,5 @@
 <script setup>
-import {
-  formataNumero,
-  formataCodNegocio,
-  formataDataCompleta,
-  formataNumeroNota,
-} from "@components/formatters";
+import { formataNumero, formataCodNegocio, formataTimestampCompleto, formataNumeroNota } from "@components/formatters";
 import { ref } from "vue";
 import { Dialog, Notify, Platform } from "quasar";
 import { api } from "boot/axios";
@@ -509,7 +504,7 @@ defineExpose({
           </q-item-label>
           <q-item-label caption>
             {{ moment(nota.saida).fromNow() }},
-            {{ formataDataCompleta(nota.saida) }}
+            {{ formataTimestampCompleto(nota.saida) }}
           </q-item-label>
         </q-item-section>
       </q-item>

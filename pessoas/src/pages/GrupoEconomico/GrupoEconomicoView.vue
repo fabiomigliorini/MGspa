@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute, useRouter } from "vue-router";
 import { GrupoEconomicoStore } from "src/stores/GrupoEconomico";
 import { guardaToken } from "src/stores";
-import { formataData } from "@components/formatters";
+import { formataData, formataTimestamp } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import MGLayout from "layouts/MGLayout.vue";
 import CardPessoas from "components/pessoa/CardPessoas.vue";
@@ -222,7 +222,7 @@ watch(
                 v-if="grupoEconomico.inativo"
                 class="text-caption text-red-14"
               >
-                Inativo desde: {{ formataData(grupoEconomico.inativo) }}
+                Inativo desde: {{ formataTimestamp(grupoEconomico.inativo) }}
               </div>
             </q-item-section>
             <q-item-section

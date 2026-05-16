@@ -1,5 +1,5 @@
 <script setup>
-import { formataCodNegocio, formataDataHoraSegundos } from "@components/formatters";
+import { formataCodNegocio, formataTimestamp } from "@components/formatters";
 import { onMounted, ref, watch } from "vue";
 import { pdvStore } from "src/stores/pdv";
 import moment from "moment/min/moment-with-locales";
@@ -175,7 +175,7 @@ onMounted(() => {
               {{ pdv.plataforma }} {{ pdv.navegador }} {{ pdv.versaonavegador }}
             </q-item-label>
             <q-item-label caption>
-              {{ formataDataHoraSegundos(pdv.criacao) }}
+              {{ formataTimestamp(pdv.criacao, 4, true) }}
             </q-item-label>
           </q-item-section>
 

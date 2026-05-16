@@ -1,5 +1,5 @@
 <script setup>
-import { formataDataHoraSegundos } from '@components/formatters'
+import { formataTimestamp } from "@components/formatters"
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -552,7 +552,7 @@ onMounted(async () => {
         <!-- Auditoria -->
         <div v-if="isEditMode && tributacao" class="text-caption text-grey q-mt-md">
           <span v-if="tributacao.usuarioAlteracao">
-            Alterado em {{ formataDataHoraSegundos(tributacao.alteracao) }} por
+            Alterado em {{ formataTimestamp(tributacao.alteracao, 4, true) }} por
             {{ tributacao.usuarioAlteracao.usuario }}
           </span>
         </div>

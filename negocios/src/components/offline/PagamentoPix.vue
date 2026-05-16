@@ -4,7 +4,7 @@ import { Notify, debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
 import { db } from "src/boot/db";
-import { formataCpf, formataCnpj, formataNumero, formataDataCompleta } from "@components/formatters";
+import { formataCpf, formataCnpj, formataNumero, formataTimestampCompleto } from "@components/formatters";
 import emitter from "../../utils/emitter.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
@@ -315,7 +315,7 @@ const whatsapp = () => {
                     {{ sPix.pixCob.portador }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ formataDataCompleta(pix.horario) }}
+                    {{ formataTimestampCompleto(pix.horario) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -361,7 +361,7 @@ const whatsapp = () => {
                     {{ sPix.pixCob.portador }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ formataDataCompleta(sPix.pixCob.criacao) }}
+                    {{ formataTimestampCompleto(sPix.pixCob.criacao) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>

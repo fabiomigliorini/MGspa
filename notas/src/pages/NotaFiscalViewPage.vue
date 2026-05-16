@@ -13,17 +13,7 @@ import {
   getFreteLabel,
   STATUS_OPTIONS,
 } from '../constants/notaFiscal'
-import {
-  formataCnpjCpf,
-  formataDataHoraSegundos,
-  formataDataSemHora,
-  formataNumero,
-  formataNumero,
-  formataNumeroNotaFiscal,
-  formataChave,
-  formataProtocolo,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataNumeroNotaFiscal, formataChave, formataProtocolo, formataCodNegocio } from "@components/formatters"
 import NotaFiscalItemCard from '../components/NotaFiscalItemCard.vue'
 import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamentoDialog.vue'
 import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicataDialog.vue'
@@ -1116,11 +1106,11 @@ onUnmounted(() => {
 
               <!-- Emissao -->
               <div class="text-caption text-grey-7">Emissão</div>
-              <div class="text-body2">{{ formataDataHoraSegundos(nota.emissao) }}</div>
+              <div class="text-body2">{{ formataTimestamp(nota.emissao, 4, true) }}</div>
 
               <!-- saida  -->
               <div class="text-caption text-grey-7">Saída/Entrada</div>
-              <div class="text-body2">{{ formataDataHoraSegundos(nota.saida) }}</div>
+              <div class="text-body2">{{ formataTimestamp(nota.saida, 4, true) }}</div>
 
               <!-- Negócios Vinculados -->
               <template v-if="negociosVinculados.length > 0">
@@ -1271,7 +1261,7 @@ onUnmounted(() => {
                   </span>
                   <span class="text-grey-7">
                     |
-                    {{ formataDataHoraSegundos(nota.nfedataautorizacao) }}
+                    {{ formataTimestamp(nota.nfedataautorizacao, 4, true) }}
                   </span>
                   <q-btn
                     flat
@@ -1297,7 +1287,7 @@ onUnmounted(() => {
                   </span>
                   <span class="text-grey-7">
                     |
-                    {{ formataDataHoraSegundos(nota.nfedatacancelamento) }}
+                    {{ formataTimestamp(nota.nfedatacancelamento, 4, true) }}
                   </span>
                   <q-btn
                     flat
@@ -1323,7 +1313,7 @@ onUnmounted(() => {
                   </span>
                   <span class="text-grey-7">
                     |
-                    {{ formataDataHoraSegundos(nota.nfedatainutilizacao) }}
+                    {{ formataTimestamp(nota.nfedatainutilizacao, 4, true) }}
                   </span>
                   <q-btn
                     flat
@@ -1719,7 +1709,7 @@ onUnmounted(() => {
                     </a>
                     <span v-else>{{ nota.usuarioCriacao?.usuario || '-' }}</span>
                   </div>
-                  <div class="text-caption text-grey-7">{{ formataDataHoraSegundos(nota.criacao) }}</div>
+                  <div class="text-caption text-grey-7">{{ formataTimestamp(nota.criacao, 4, true) }}</div>
                 </div>
                 <div class="col-12 col-sm-6" v-if="nota.alteracao">
                   <div class="text-caption text-grey-7">Última alteração por</div>
@@ -1735,7 +1725,7 @@ onUnmounted(() => {
                     </a>
                     <span v-else>{{ nota.usuarioAlteracao?.usuario || '-' }}</span>
                   </div>
-                  <div class="text-caption text-grey-7">{{ formataDataHoraSegundos(nota.alteracao) }}</div>
+                  <div class="text-caption text-grey-7">{{ formataTimestamp(nota.alteracao, 4, true) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -1925,7 +1915,7 @@ onUnmounted(() => {
                       </div>
 
                       <div class="text-caption text-grey-7">Vencimento</div>
-                      <div class="text-body2 q-mb-sm">{{ formataDataSemHora(dup.vencimento) }}</div>
+                      <div class="text-body2 q-mb-sm">{{ formataData(dup.vencimento) }}</div>
 
                       <div class="text-caption text-grey-7">Valor</div>
                       <div class="text-h5 text-primary text-weight-bold">
@@ -2149,7 +2139,7 @@ onUnmounted(() => {
                               {{ formataProtocolo(carta.protocolo) }}
                             </span>
                             <span class="text-grey-7">
-                              | {{ formataDataHoraSegundos(carta.protocolodata) }}
+                              | {{ formataTimestamp(carta.protocolodata, 4, true) }}
                             </span>
                           </div>
                         </div>
@@ -2325,7 +2315,7 @@ onUnmounted(() => {
                   | {{ notaUnificar.natureza }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ formataDataHoraSegundos(notaUnificar.emissao) }}
+                  {{ formataTimestamp(notaUnificar.emissao, 4, true) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side class="text-right">

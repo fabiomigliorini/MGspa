@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { cargoStore } from "src/stores/cargo";
 import { guardaToken } from "src/stores";
-import { formataData, formataNumero } from "@components/formatters";
+import { formataNumero, formataData, formataTimestamp } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import DialogCargo from "components/cargo/DialogCargo.vue";
 
@@ -220,7 +220,7 @@ onMounted(async () => {
                       class="text-red-14"
                       v-if="cargo.inativo"
                     >
-                      Inativo desde: {{ formataData(cargo.inativo) }}
+                      Inativo desde: {{ formataTimestamp(cargo.inativo) }}
                     </q-item-label>
                   </q-item-section>
 

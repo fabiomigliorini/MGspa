@@ -2,7 +2,7 @@
 import { defineAsyncComponent, ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { colaboradorStore } from "stores/colaborador";
-import { tempoRelativo, formataDataIso } from "@components/formatters";
+import { tempoRelativo, formataDataIso, formataDataAbreviada } from "@components/formatters";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
@@ -218,13 +218,13 @@ defineExpose({ novoColaboradorCargo });
           </q-item-label>
 
           <q-item-label caption v-if="!colaboradorCargo.fim">
-            {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a ({{
+            {{ formataDataAbreviada(colaboradorCargo.inicio, 4) }} a ({{
               tempoRelativo(colaboradorCargo.inicio)
             }})
           </q-item-label>
           <q-item-label caption v-else>
-            {{ moment(colaboradorCargo.inicio).format("DD/MMM") }} a
-            {{ moment(colaboradorCargo.fim).format("DD/MMM/YYYY") }}
+            {{ formataDataAbreviada(colaboradorCargo.inicio, 0) }} a
+            {{ formataDataAbreviada(colaboradorCargo.fim, 4) }}
           </q-item-label>
 
           <q-item-label caption v-if="colaboradorCargo.salario">

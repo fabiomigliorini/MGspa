@@ -1,7 +1,7 @@
 <script setup>
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataData } from "@components/formatters"
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'
@@ -137,7 +137,7 @@ watch(
           <q-item-section>
             <div class="row items-center q-col-gutter-x-sm">
               <div class="col-12 col-sm-3 col-md-1 ellipsis">
-                {{ formataDataSemHora(b.datarecebimento) }}
+                {{ formataData(b.datarecebimento) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
                 {{ formataNumero(b.valoratual) }}

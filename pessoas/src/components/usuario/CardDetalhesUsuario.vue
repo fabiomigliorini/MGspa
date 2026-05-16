@@ -1,5 +1,5 @@
 <script setup>
-import { formataData } from "@components/formatters";
+import { formataData, formataTimestamp, formataDataAbreviada } from "@components/formatters";
 import { useQuasar } from "quasar";
 import { useRouter, useRoute } from "vue-router";
 import { usuarioStore } from "src/stores/usuario";
@@ -194,7 +194,7 @@ const ativar = async (codusuario) => {
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis text-caption">
-            {{ moment(sUsuario.detalheUsuarios.ultimoacesso).format("DD/MMM/YYYY") }}
+            {{ formataDataAbreviada(sUsuario.detalheUsuarios.ultimoacesso, 4) }}
             - {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
           </q-item-label>
           <q-item-label caption>Último acesso</q-item-label>
@@ -208,7 +208,7 @@ const ativar = async (codusuario) => {
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis text-caption">
-            {{ formataData(sUsuario.detalheUsuarios.inativo) }}
+            {{ formataTimestamp(sUsuario.detalheUsuarios.inativo) }}
           </q-item-label>
           <q-item-label caption>Data de inativação</q-item-label>
         </q-item-section>

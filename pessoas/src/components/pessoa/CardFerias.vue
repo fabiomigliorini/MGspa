@@ -1,4 +1,5 @@
 <script setup>
+import { formataDataAbreviada, formataMesAno } from "@components/formatters";
 import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { colaboradorStore } from "stores/colaborador";
@@ -339,15 +340,15 @@ defineExpose({ nova });
         <q-item-section>
           <q-item-label class="text-weight-bold">
             {{ ferias.dias }} dias em
-            {{ moment(ferias.gozoinicio).format("MMM/YY") }}
+            {{ formataMesAno(ferias.gozoinicio, 2) }}
             <q-badge v-if="ferias.prevista" color="orange" class="q-ml-sm">
               Prevista
             </q-badge>
           </q-item-label>
 
           <q-item-label caption v-if="ferias.diasgozo">
-            Gozo: {{ moment(ferias.gozoinicio).format("DD/MMM") }} a
-            {{ moment(ferias.gozofim).format("DD/MMM/YYYY") }}
+            Gozo: {{ formataDataAbreviada(ferias.gozoinicio, 0) }} a
+            {{ formataDataAbreviada(ferias.gozofim, 4) }}
           </q-item-label>
 
           <q-item-label caption v-if="ferias.diasgozo">
@@ -364,8 +365,8 @@ defineExpose({ nova });
           </q-item-label>
 
           <q-item-label caption>
-            Aquisitivo: {{ moment(ferias.aquisitivoinicio).format("DD/MMM") }} a
-            {{ moment(ferias.aquisitivofim).format("DD/MMM/YYYY") }}
+            Aquisitivo: {{ formataDataAbreviada(ferias.aquisitivoinicio, 0) }} a
+            {{ formataDataAbreviada(ferias.aquisitivofim, 4) }}
           </q-item-label>
 
           <q-item-label caption v-if="ferias.observacoes">

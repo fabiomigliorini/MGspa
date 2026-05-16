@@ -3,7 +3,7 @@ import { ref, watch, onMounted } from "vue";
 import { useQuasar, debounce } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "src/stores/pessoa";
-import { formataDataSemHora, formataDataIso } from "@components/formatters";
+import { formataData, formataDataIso } from "@components/formatters";
 import SelectPessoas from "components/pessoa/SelectPessoas.vue";
 import moment from "moment";
 
@@ -65,7 +65,7 @@ const columns = [
     label: "Emissão",
     field: "emissao",
     align: "left",
-    format: (val) => formataDataSemHora(val),
+    format: (val) => formataData(val),
     sortable: true,
   },
   {
@@ -73,7 +73,7 @@ const columns = [
     label: "Entrada",
     field: "entrada",
     align: "left",
-    format: (val) => formataDataSemHora(val),
+    format: (val) => formataData(val),
     sortable: true,
   },
   {

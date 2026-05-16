@@ -5,7 +5,7 @@ import { unidadeNegocioStore } from "src/stores/unidadenegocio";
 import { setorStore } from "src/stores/setor";
 import { tipoSetorStore } from "src/stores/tiposetor";
 import { guardaToken } from "src/stores";
-import { formataData } from "@components/formatters";
+import { formataData, formataTimestamp } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import SelectFilial from "components/select/SelectFilial.vue";
 import SelectUnidadeNegocio from "components/select/SelectUnidadeNegocio.vue";
@@ -674,7 +674,7 @@ onMounted(async () => {
                           class="text-red-14"
                           v-if="unidade.inativo"
                         >
-                          Inativo desde: {{ formataData(unidade.inativo) }}
+                          Inativo desde: {{ formataTimestamp(unidade.inativo) }}
                         </q-item-label>
                         <q-item-label caption v-if="unidade.Filial">
                           {{ unidade.Filial.filial }}
@@ -792,7 +792,7 @@ onMounted(async () => {
                           class="text-red-14"
                           v-if="tipo.inativo"
                         >
-                          Inativo desde: {{ formataData(tipo.inativo) }}
+                          Inativo desde: {{ formataTimestamp(tipo.inativo) }}
                         </q-item-label>
                       </q-item-section>
 
@@ -918,7 +918,7 @@ onMounted(async () => {
                           class="text-red-14"
                           v-if="setor.inativo"
                         >
-                          Inativo desde: {{ formataData(setor.inativo) }}
+                          Inativo desde: {{ formataTimestamp(setor.inativo) }}
                         </q-item-label>
                         <q-item-label caption v-if="!setor.inativo">
                           <q-badge

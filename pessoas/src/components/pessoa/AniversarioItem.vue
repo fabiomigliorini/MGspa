@@ -1,7 +1,5 @@
 <script setup>
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
+import { formataDataAbreviada } from "@components/formatters";
 
 // Props
 const props = defineProps({
@@ -21,10 +19,6 @@ const idadeClass = "text-body1 text-grey-7";
 const listStyle = "max-height: 400px; overflow-y: auto";
 
 // Functions
-const formataDataDiaMes = (data) => {
-  return moment(data, "YYYY/MM/DD").format("ddd, D/MMM");
-};
-
 const formataTipo = (item) => {
   if (item.fisica === false) {
     return "Fundação da Empresa";
@@ -49,7 +43,7 @@ const getCategoria = (item) => {
 };
 
 const formataCaption = (item) => {
-  const data = formataDataDiaMes(item.data);
+  const data = formataDataAbreviada(item.data, 0);
   const categoria = getCategoria(item);
   const tipo = formataTipo(item);
 

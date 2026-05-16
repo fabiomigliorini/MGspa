@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
-import { formataDataSemHora, formataFromNow } from "@components/formatters";
+import { formataData, formataFromNow } from "@components/formatters";
 import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
 import { formataNumero, formataPercentual } from "@components/formatters";
 import CardIndicadores from "src/components/rh/CardIndicadores.vue";
@@ -135,7 +135,7 @@ watch(() => route.params.codperiodo, () => {
           <div class="text-h5 text-grey-9">{{ nome }}</div>
           <div class="text-body2 text-grey-7" v-if="cargo">{{ cargo }}</div>
           <div class="text-caption text-grey" v-if="colaborador.colaborador?.contratacao">
-            Contratação: {{ formataDataSemHora(colaborador.colaborador.contratacao) }}
+            Contratação: {{ formataData(colaborador.colaborador.contratacao) }}
             ({{ formataFromNow(colaborador.colaborador.contratacao) }})
           </div>
         </q-item-section>

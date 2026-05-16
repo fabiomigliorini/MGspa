@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, watch } from 'vue'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataData } from "@components/formatters"
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA, TIPO_BAIXA } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'
@@ -52,7 +52,7 @@ onMounted(() => store.carregarBaixados())
           <q-item-section>
             <div class="row items-center q-col-gutter-x-sm">
               <div class="col-12 col-sm-4 col-md-1 ellipsis">
-                {{ formataDataSemHora(b.vencimento) }}
+                {{ formataData(b.vencimento) }}
               </div>
               <div
                 class="col-12 col-sm-4 col-md-1 text-right text-weight-bold ellipsis text-primary"

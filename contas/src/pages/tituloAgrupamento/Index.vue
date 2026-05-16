@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import { formataNumero, formataDataSemHora, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataData, formataCodNegocio } from "@components/formatters"
 import { useTituloAgrupamentoStore } from 'src/stores/tituloAgrupamentoStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -68,7 +68,7 @@ onMounted(() => {
                 Estornado
               </q-item-label>
               <q-item-label caption class="ellipsis text-grey-7">
-                {{ formataDataSemHora(ag.emissao) }}
+                {{ formataData(ag.emissao) }}
               </q-item-label>
             </q-item-section>
           </q-item>

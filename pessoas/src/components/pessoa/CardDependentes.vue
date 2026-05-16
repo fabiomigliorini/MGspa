@@ -5,7 +5,7 @@ import { useQuasar } from "quasar";
 import { pessoaStore } from "stores/pessoa";
 import { dependenteStore } from "stores/dependente";
 import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "@components/formatters";
+import { formataData } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectPessoa from "components/select/SelectPessoa.vue";
 import MgInputData from "@components/MgInputData.vue";
@@ -560,9 +560,9 @@ const ativar = async (coddependente) => {
             </q-item-label>
 
             <q-item-label caption v-if="dep.datainicio || dep.datafim">
-              Início: {{ formataDataSemHora(dep.datainicio) }}
+              Início: {{ formataData(dep.datainicio) }}
               <template v-if="dep.datafim">
-                | Fim: {{ formataDataSemHora(dep.datafim) }}
+                | Fim: {{ formataData(dep.datafim) }}
               </template>
             </q-item-label>
 

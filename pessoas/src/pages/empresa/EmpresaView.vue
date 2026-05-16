@@ -1,5 +1,5 @@
 <script>
-import { formataData, formataCodNegocio } from "@components/formatters";
+import { formataData, formataCodNegocio, formataTimestamp } from "@components/formatters";
 import { ref, onMounted, defineAsyncComponent, computed } from "vue";
 import { empresaStore } from "src/stores/empresa";
 import { useQuasar } from "quasar";
@@ -38,17 +38,17 @@ export default {
 
     const contingenciaFormatada = computed(() => {
       if (!sEmpresa.item.contingenciadata) return "-";
-      return formataData(sEmpresa.item.contingenciadata);
+      return formataTimestamp(sEmpresa.item.contingenciadata);
     });
 
     const criacaoFormatada = computed(() => {
       if (!sEmpresa.item.criacao) return "-";
-      return formataData(sEmpresa.item.criacao);
+      return formataTimestamp(sEmpresa.item.criacao);
     });
 
     const alteracaoFormatada = computed(() => {
       if (!sEmpresa.item.alteracao) return "-";
-      return formataData(sEmpresa.item.alteracao);
+      return formataTimestamp(sEmpresa.item.alteracao);
     });
 
     const carregarEmpresa = async () => {

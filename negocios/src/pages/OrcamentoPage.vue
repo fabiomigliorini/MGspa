@@ -5,7 +5,7 @@ import { db } from "boot/db";
 import { negocioStore } from "src/stores/negocio";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
-import { formataCnpjCpf, formataCnpj, formataNumero, formataDataHoraSegundos, formataCodNegocio } from "@components/formatters";
+import { formataCnpjCpf, formataCnpj, formataNumero, formataTimestamp, formataCodNegocio } from "@components/formatters";
 import { produtoStore } from "src/stores/produto";
 import BarCode from "components/BarCode.vue";
 
@@ -48,7 +48,7 @@ onMounted(async () => {
           <td class="text-bold text-right">Data</td>
           <td>
             {{
-              formataDataHoraSegundos(sNegocio.negocio.lancamento)
+              formataTimestamp(sNegocio.negocio.lancamento, 4, true)
             }}
           </td>
         </tr>

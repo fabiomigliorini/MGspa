@@ -3,13 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import {
-  formataNumero,
-  formataDataSemHora,
-  formataTelefone,
-  formataNumeroNota,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataNumero, formataData, formataTelefone, formataNumeroNota, formataCodNegocio } from "@components/formatters"
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
@@ -206,7 +200,7 @@ watch(() => route.fullPath, carregar)
               Agrupamento {{ formataCodNegocio(ag.codtituloagrupamento) }}
             </div>
             <div v-if="estornado" class="text-negative">
-              Estornado em {{ formataDataSemHora(ag.cancelamento) }}
+              Estornado em {{ formataData(ag.cancelamento) }}
             </div>
           </q-item-section>
         </q-item>
@@ -232,7 +226,7 @@ watch(() => route.fullPath, carregar)
           <div class="col-xs-6 col-sm-4">
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Emissão</div>
-              <div class="text-h6 text-grey-7">{{ formataDataSemHora(ag.emissao) }}</div>
+              <div class="text-h6 text-grey-7">{{ formataData(ag.emissao) }}</div>
             </q-card>
           </div>
           <div class="col-xs-12 col-sm-4">
@@ -408,7 +402,7 @@ watch(() => route.fullPath, carregar)
                     </q-item-label>
                     <q-item-label caption class="ellipsis">{{ n.naturezaoperacao }}</q-item-label>
                     <q-item-label caption class="ellipsis">
-                      {{ formataDataSemHora(n.emissao) }}
+                      {{ formataData(n.emissao) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -448,7 +442,7 @@ watch(() => route.fullPath, carregar)
                       {{ formataNumero(t.valor) }} {{ t.operacao }}
                     </q-item-label>
                     <q-item-label caption>
-                      {{ formataDataSemHora(t.vencimento) }}
+                      {{ formataData(t.vencimento) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -496,7 +490,7 @@ watch(() => route.fullPath, carregar)
                     </q-item-label>
                     <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                     <q-item-label caption>
-                      {{ formataDataSemHora(m.titulo?.vencimento) }}
+                      {{ formataData(m.titulo?.vencimento) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>

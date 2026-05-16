@@ -39,7 +39,7 @@
             Inativo
           </q-item-label>
           <q-item-label caption v-if="sUsuario.detalheUsuarios.inativo">
-            {{ formataData(sUsuario.detalheUsuarios.inativo) }}
+            {{ formataTimestamp(sUsuario.detalheUsuarios.inativo) }}
           </q-item-label>
         </q-item-label>
 
@@ -93,7 +93,7 @@
         </q-item-section>
         <q-item-section top>
           <q-item-label>
-            {{ moment(sUsuario.detalheUsuarios.ultimoacesso).format("DD/MMM/YYYY") }} -
+            {{ formataDataAbreviada(sUsuario.detalheUsuarios.ultimoacesso, 4) }} -
             {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
           </q-item-label>
           <q-item-label caption>
@@ -107,7 +107,7 @@
 </template>
 
 <script>
-import { formataData } from "@components/formatters";
+import { formataData, formataTimestamp, formataDataAbreviada } from "@components/formatters";
 import { defineComponent, defineAsyncComponent } from 'vue'
 import { useQuasar } from "quasar"
 import { ref } from 'vue'

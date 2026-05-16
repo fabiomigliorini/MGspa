@@ -1,5 +1,5 @@
 <script setup>
-import { formataData } from "@components/formatters";
+import { formataData, formataTimestamp } from "@components/formatters";
 import { computed } from "vue";
 import moment from "moment";
 
@@ -20,7 +20,7 @@ const modoEmissaoLabel = computed(() => {
 
 const contingenciaFormatada = computed(() => {
   if (!props.empresa.contingenciadata) return null;
-  return formataData(props.empresa.contingenciadata);
+  return formataTimestamp(props.empresa.contingenciadata);
 });
 </script>
 

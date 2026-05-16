@@ -1,5 +1,5 @@
 <script>
-import { formataData, formataDataSemHora, formataCodNegocio } from "@components/formatters";
+import { formataData, formataCodNegocio, formataTimestamp } from "@components/formatters";
 import { ref, onMounted, defineAsyncComponent, computed } from "vue";
 import { empresaStore } from "src/stores/empresa";
 import { useQuasar } from "quasar";
@@ -34,17 +34,17 @@ export default {
 
     const criacaoFormatada = computed(() => {
       if (!sEmpresa.filial.criacao) return "-";
-      return formataData(sEmpresa.filial.criacao);
+      return formataTimestamp(sEmpresa.filial.criacao);
     });
 
     const alteracaoFormatada = computed(() => {
       if (!sEmpresa.filial.alteracao) return "-";
-      return formataData(sEmpresa.filial.alteracao);
+      return formataTimestamp(sEmpresa.filial.alteracao);
     });
 
     const validadeCertificadoFormatada = computed(() => {
       if (!sEmpresa.filial.validadecertificado) return "-";
-      return formataDataSemHora(sEmpresa.filial.validadecertificado);
+      return formataData(sEmpresa.filial.validadecertificado);
     });
 
     const carregarFilial = async () => {

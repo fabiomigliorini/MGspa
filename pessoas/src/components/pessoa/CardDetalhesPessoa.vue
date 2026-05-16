@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
-import { formataData, formataDataSemHora, formataCpf, formataCnpj, formataPisPasep, formataTitulo, formataIe, verificaIdade, formataCodNegocio } from "@components/formatters";
+import { formataData, formataPisPasep, formataIe, formataCpf, formataTitulo, formataCnpj, formataCodNegocio, verificaIdade, formataTimestamp } from "@components/formatters";
 import { guardaToken } from "stores/index";
 import SelectGrupoEconomico from "components/pessoa/SelectGrupoEconomico.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
@@ -569,11 +569,11 @@ const salvarDetalhes = async () => {
           <q-tooltip>
             <div>
               Criado por {{ sPessoa.item.usuariocriacao }} em
-              {{ formataData(sPessoa.item.criacao) }}
+              {{ formataTimestamp(sPessoa.item.criacao) }}
             </div>
             <div>
               Alterado por {{ sPessoa.item.usuarioalteracao }} em
-              {{ formataData(sPessoa.item.alteracao) }}
+              {{ formataTimestamp(sPessoa.item.alteracao) }}
             </div>
           </q-tooltip>
         </q-btn>
@@ -664,7 +664,7 @@ const salvarDetalhes = async () => {
               sPessoa.item.ufnascimento
             }}
           </template>
-          , {{ formataDataSemHora(sPessoa.item.nascimento) }}
+          , {{ formataData(sPessoa.item.nascimento) }}
         </div>
       </div>
 
@@ -718,7 +718,7 @@ const salvarDetalhes = async () => {
         <div class="text-body2">
           {{ sPessoa.item.ctps }} / Serie {{ sPessoa.item.seriectps }} /
           {{ sPessoa.item.ufctpsS }} /
-          {{ formataDataSemHora(sPessoa.item.emissaoctps) }}
+          {{ formataData(sPessoa.item.emissaoctps) }}
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter, useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
-import { formataDataSemHora } from "@components/formatters";
+import { formataData } from "@components/formatters";
 import { extrairErro } from "src/utils/rhFormatters";
 import MGLayout from "layouts/MGLayout.vue";
 
@@ -80,8 +80,8 @@ onMounted(() => {
           >
             <q-item-section>
               <q-item-label>
-                {{ formataDataSemHora(periodo.periodoinicial) }} a
-                {{ formataDataSemHora(periodo.periodofinal) }}
+                {{ formataData(periodo.periodoinicial) }} a
+                {{ formataData(periodo.periodofinal) }}
               </q-item-label>
             </q-item-section>
             <q-item-section side>

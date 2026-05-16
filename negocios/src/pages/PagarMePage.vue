@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataDataCompleta } from "@components/formatters";
+import { formataNumero, formataTimestampCompleto } from "@components/formatters";
 import { onMounted, ref } from "vue";
 import { Notify } from "quasar";
 import { pagarMeStore } from "src/stores/pagar-me";
@@ -140,7 +140,7 @@ onMounted(() => {
               </q-item-label>
               <q-item-label caption>
                 {{ moment(ped.criacao).fromNow() }}
-                {{ formataDataCompleta(ped.criacao) }}
+                {{ formataTimestampCompleto(ped.criacao) }}
               </q-item-label>
             </q-item-section>
 

@@ -3,7 +3,7 @@ import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { rhStore } from "src/stores/rh";
 import { extrairErro } from "src/utils/rhFormatters";
-import { formataNumero, formataDataSemHora } from "@components/formatters";
+import { formataNumero, formataData } from "@components/formatters";
 import MgInputValor from "@components/MgInputValor.vue";
 
 const props = defineProps({
@@ -224,7 +224,7 @@ const confirmar = async () => {
                   {{ titulo.numero }}
                 </div>
                 <div class="col-2 text-body2 q-px-sm q-py-xs">
-                  {{ formataDataSemHora(titulo.vencimento) }}
+                  {{ formataData(titulo.vencimento) }}
                 </div>
                 <div
                   class="col-3 text-right text-weight-medium"

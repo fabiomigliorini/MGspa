@@ -1,11 +1,5 @@
 <script setup>
-import {
-  formataDataHoraSegundos,
-  formataCfop,
-  formataPercentual,
-  formataNumero,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataTimestamp, formataCfop, formataPercentual, formataNumero, formataCodNegocio } from "@components/formatters"
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -447,7 +441,7 @@ onMounted(loadData)
 
       <!-- Auditoria -->
       <div v-if="tributacao.usuarioAlteracao" class="text-caption text-grey q-mt-lg">
-        Alterado em {{ formataDataHoraSegundos(tributacao.alteracao) }} por
+        Alterado em {{ formataTimestamp(tributacao.alteracao, 4, true) }} por
         {{ tributacao.usuarioAlteracao.usuario }}
       </div>
     </template>

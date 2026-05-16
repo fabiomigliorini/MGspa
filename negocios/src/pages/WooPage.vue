@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { wooStore } from "src/stores/woo";
-import { formataNumero, formataDataCompleta } from "@components/formatters";
+import { formataNumero, formataTimestampCompleto } from "@components/formatters";
 import { Notify, debounce } from "quasar";
 import moment from "moment/min/moment-with-locales";
 import WooInfoModal from "src/components/modals/WooInfoModal.vue";
@@ -118,7 +118,7 @@ function openPedido(p) {
                 <div class="row q-col-gutter-xs">
                   <div class="col-12">#{{ pedido.id }}</div>
                   <div class="col-12">
-                    {{ formataDataCompleta(pedido.criacaowoo) }}
+                    {{ formataTimestampCompleto(pedido.criacaowoo) }}
                   </div>
                   <div class="col-12">
                     {{ pedido.pagamento }}

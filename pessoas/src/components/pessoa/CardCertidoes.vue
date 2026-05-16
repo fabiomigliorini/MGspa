@@ -8,7 +8,7 @@ import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectCertidaoEmissor from "components/pessoa/SelectCertidaoEmissor.vue";
 import SelectCertidaoTipo from "components/pessoa/SelectCertidaoTipo.vue";
 import MgInputData from "@components/MgInputData.vue";
-import { formataDataSemHora, formataDataIso } from "@components/formatters";
+import { formataData, formataDataIso } from "@components/formatters";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -305,7 +305,7 @@ const submit = () => {
               class="text-weight-bold"
               :class="certidao.validade < formataDataIso(new Date()) ? 'text-strike' : null"
             >
-              Validade: {{ formataDataSemHora(certidao.validade) }}
+              Validade: {{ formataData(certidao.validade) }}
               <!-- INFO -->
               <MgInfoCriacao
                 :usuariocriacao="certidao.usuariocriacao"

@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute, useRouter } from "vue-router";
 import { cargoStore } from "src/stores/cargo";
 import { pessoaStore } from "src/stores/pessoa";
-import { formataData, formataDataSemHora, formataNumero } from "@components/formatters";
+import { formataNumero, formataData, formataTimestamp } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import DialogCargo from "components/cargo/DialogCargo.vue";
@@ -241,7 +241,7 @@ onMounted(async () => {
               class="text-red-14 q-px-md q-pb-sm"
               v-if="cargo.inativo"
             >
-              Inativo desde: {{ formataData(cargo.inativo) }}
+              Inativo desde: {{ formataTimestamp(cargo.inativo) }}
             </q-item-label>
           </q-card>
 
@@ -278,7 +278,7 @@ onMounted(async () => {
                       {{ formataNumero(pessoa.salario) }}
                     </q-item-label>
                     <q-item-label caption>
-                      {{ formataDataSemHora(pessoa.inicio) }}
+                      {{ formataData(pessoa.inicio) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -327,8 +327,8 @@ onMounted(async () => {
                       {{ formataNumero(pessoa.salario) }}
                     </q-item-label>
                     <q-item-label caption>
-                      {{ formataDataSemHora(pessoa.inicio) }}
-                      a {{ formataDataSemHora(pessoa.fim) }}
+                      {{ formataData(pessoa.inicio) }}
+                      a {{ formataData(pessoa.fim) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>

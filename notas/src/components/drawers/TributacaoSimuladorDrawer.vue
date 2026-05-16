@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataPercentual, formataNumero } from '@components/formatters'
+import { formataPercentual, formataNumero } from "@components/formatters"
 
 const $q = useQuasar()
 

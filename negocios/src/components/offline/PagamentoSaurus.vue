@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataDataCompleta } from "@components/formatters";
+import { formataNumero, formataTimestampCompleto } from "@components/formatters";
 import { ref, watch, computed } from "vue";
 import { debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
@@ -459,7 +459,7 @@ const toStone = async () => {
                   POS {{ pag.apelido }} Serial {{ pag.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ formataDataCompleta(pag.horario) }}
+                  {{ formataTimestampCompleto(pag.horario) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -495,7 +495,7 @@ const toStone = async () => {
                   {{ sSaurus.pedido.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ formataDataCompleta(sSaurus.pedido.criacao) }}
+                  {{ formataTimestampCompleto(sSaurus.pedido.criacao) }}
                 </q-item-label>
               </q-item-section>
             </q-item>

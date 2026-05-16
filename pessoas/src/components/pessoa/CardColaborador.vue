@@ -1,5 +1,5 @@
 <script setup>
-import { formataDataIso } from "@components/formatters";
+import { formataDataIso, formataDataAbreviada } from "@components/formatters";
 import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
@@ -625,10 +625,10 @@ watch(
         <div class="col-xs-12 col-sm-6">
           <div class="text-overline text-grey-7">Contratação / Rescisão</div>
           <div class="text-body2">
-            {{ moment(colaborador.contratacao).format("DD/MMM/YYYY") }}
+            {{ formataDataAbreviada(colaborador.contratacao, 4) }}
             <template v-if="colaborador.rescisao">
               até
-              {{ moment(colaborador.rescisao).format("DD/MMM/YYYY") }}
+              {{ formataDataAbreviada(colaborador.rescisao, 4) }}
             </template>
           </div>
           <div class="text-caption text-grey-7">
@@ -646,11 +646,11 @@ watch(
         <div class="col-xs-12 col-sm-6" v-if="colaborador.experiencia">
           <div class="text-overline text-grey-7">Experiência / Renovação</div>
           <div class="text-body2">
-            {{ moment(colaborador.experiencia).format("DD/MMM/YYYY") }}
+            {{ formataDataAbreviada(colaborador.experiencia, 4) }}
             <template v-if="colaborador.renovacaoexperiencia">
               e
               {{
-                moment(colaborador.renovacaoexperiencia).format("DD/MMM/YYYY")
+                formataDataAbreviada(colaborador.renovacaoexperiencia, 4)
               }}
             </template>
           </div>

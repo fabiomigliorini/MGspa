@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { api } from 'src/services/api'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataData } from "@components/formatters"
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
@@ -573,7 +573,7 @@ function classeVencimento(t) {
                 <span class="text-grey-7" v-if="titulo.fatura"> {{ titulo.fatura }} </span>
                 <q-space />
                 <span :class="classeVencimento(titulo)">
-                  {{ formataDataSemHora(titulo.vencimento) }}
+                  {{ formataData(titulo.vencimento) }}
                 </span>
               </div>
             </div>

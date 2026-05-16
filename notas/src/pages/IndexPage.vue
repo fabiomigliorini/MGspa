@@ -3,7 +3,7 @@ import { onMounted, computed, watch, shallowRef } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuth } from 'src/composables/useAuth'
 import { useDashboardStore } from 'src/stores/dashboard'
-import { formataDataHoraSegundos, formataNumero } from '@components/formatters'
+import { formataTimestamp, formataNumero } from "@components/formatters"
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -249,14 +249,14 @@ const filialColumns = [
     label: 'Ultima Nota',
     field: 'ultima_nota_emitida',
     align: 'center',
-    format: (v) => (v ? formataDataHoraSegundos(v) : '-'),
+    format: (v) => (v ? formataTimestamp(v, 4, true) : '-'),
   },
   {
     name: 'ultimo_erro',
     label: 'Ultimo Erro',
     field: 'ultima_nota_com_erro',
     align: 'center',
-    format: (v) => (v ? formataDataHoraSegundos(v) : '-'),
+    format: (v) => (v ? formataTimestamp(v, 4, true) : '-'),
   },
 ]
 

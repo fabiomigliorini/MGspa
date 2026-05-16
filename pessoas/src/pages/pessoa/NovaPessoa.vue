@@ -160,11 +160,7 @@ import { useRouter } from "vue-router";
 import { guardaToken } from "src/stores";
 import { pessoaStore } from "src/stores/pessoa";
 import { isCnpjCpfValido } from "src/utils/validador";
-import {
-  formataIe,
-  primeiraLetraMaiuscula,
-  removerAcentos,
-} from "@components/formatters";
+import { formataIe, primeiraLetraMaiuscula, removerAcentos } from "@components/formatters";
 
 export default {
   components: {

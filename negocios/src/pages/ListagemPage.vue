@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataDataHoraSegundos, formataCodNegocio } from "@components/formatters";
+import { formataNumero, formataTimestamp, formataCodNegocio } from "@components/formatters";
 import { ref, watch } from "vue";
 import { debounce } from "quasar";
 import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
@@ -122,7 +122,7 @@ const statusClass = (codnegociostatus) => {
               side
             >
               <q-item-label caption>
-                {{ formataDataHoraSegundos(item.lancamento) }}
+                {{ formataTimestamp(item.lancamento, 4, true) }}
               </q-item-label>
               <q-item-label caption>
                 {{ item.negociostatus }}

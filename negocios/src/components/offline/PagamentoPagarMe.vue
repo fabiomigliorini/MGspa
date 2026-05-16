@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataDataCompleta } from "@components/formatters";
+import { formataNumero, formataTimestampCompleto } from "@components/formatters";
 import { ref, watch, computed } from "vue";
 import { Notify, debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
@@ -841,7 +841,7 @@ const toSafrapay = async () => {
                   POS {{ pag.apelido }} Serial {{ pag.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ formataDataCompleta(pag.horario) }}
+                  {{ formataTimestampCompleto(pag.horario) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -877,7 +877,7 @@ const toSafrapay = async () => {
                   {{ sPagarMe.pedido.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ formataDataCompleta(sPagarMe.pedido.criacao) }}
+                  {{ formataTimestampCompleto(sPagarMe.pedido.criacao) }}
                 </q-item-label>
               </q-item-section>
             </q-item>

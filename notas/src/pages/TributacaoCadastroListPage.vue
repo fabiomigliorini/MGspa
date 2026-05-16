@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumeroNotaFiscal } from '@components/formatters'
+import { formataNumeroNotaFiscal } from "@components/formatters"
 import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useTributacaoCadastroStore } from '../stores/tributacaoCadastroStore'

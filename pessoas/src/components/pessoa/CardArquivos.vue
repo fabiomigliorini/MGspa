@@ -5,7 +5,7 @@ import { ref } from "vue";
 import { guardaToken } from "src/stores";
 import { pessoaStore } from "stores/pessoa";
 import { api } from "src/boot/axios";
-import { formataFromNow, formataDataCompleta } from "@components/formatters";
+import { formataFromNow, formataTimestampCompleto } from "@components/formatters";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();
@@ -449,7 +449,7 @@ const buscarListagem = async () => {
               <q-item-label caption>
                 {{ fileSize(arquivo.size) }} |
                 {{ formataFromNow(arquivo.lastModified) }} |
-                {{ formataDataCompleta(arquivo.lastModified) }}
+                {{ formataTimestampCompleto(arquivo.lastModified) }}
               </q-item-label>
             </q-item-section>
 
@@ -515,7 +515,7 @@ const buscarListagem = async () => {
               <q-item-label caption>
                 {{ fileSize(arquivo.size) }} |
                 {{ formataFromNow(arquivo.lastModified) }} |
-                {{ formataDataCompleta(arquivo.lastModified) }}
+                {{ formataTimestampCompleto(arquivo.lastModified) }}
               </q-item-label>
             </q-item-section>
 

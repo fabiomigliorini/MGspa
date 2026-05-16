@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { formataCnpjCpf } from '@components/formatters'
+import { formataCnpjCpf } from "@components/formatters"
 
 const props = defineProps({
   pessoa: { type: Object, required: true },

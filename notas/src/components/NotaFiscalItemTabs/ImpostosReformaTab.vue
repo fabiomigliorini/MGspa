@@ -6,7 +6,7 @@ import { CBS_CST_OPTIONS, CBS_CCLASSTRIB_OPTIONS } from 'src/constants/notaFisca
 import SelectTributo from '../selects/SelectTributo.vue'
 import { Notify } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { arredonda } from '@components/formatters'
+import { arredonda } from "@components/formatters"
 import MgInputValor from '@components/MgInputValor.vue'
 
 const notaFiscalStore = useNotaFiscalStore()

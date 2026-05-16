@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { metaStore } from "src/stores/meta";
-import { formataDataSemHora } from "@components/formatters";
+import { formataData } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import MgInputData from "@components/MgInputData.vue";
 
@@ -371,8 +371,8 @@ onMounted(() => {
                   v-for="meta in sMeta.listagem"
                   :key="meta.codmeta"
                 >
-                  <td>{{ formataDataSemHora(meta.periodoinicial) }}</td>
-                  <td>{{ formataDataSemHora(meta.periodofinal) }}</td>
+                  <td>{{ formataData(meta.periodoinicial) }}</td>
+                  <td>{{ formataData(meta.periodofinal) }}</td>
                   <td>
                     <q-badge
                       :color="statusColor(meta.status)"

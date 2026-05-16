@@ -1,5 +1,5 @@
 <script setup>
-import { formataDataIso } from "@components/formatters";
+import { formataDataIso, formataMesAno } from "@components/formatters";
 import { ref, watch, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
@@ -70,7 +70,7 @@ const montaGrafico = async () => {
     });
 
     const mesesFormatado = meses.map((m) =>
-      moment(m, "YYYY-MM-DD 00:00:00").locale("pt-br").format("MMM/YYYY")
+      formataMesAno(m)
     );
 
     if (graficoInstance.value) {

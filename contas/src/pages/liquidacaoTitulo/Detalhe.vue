@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataDataSemHora, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataData, formataCodNegocio } from "@components/formatters"
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
@@ -152,7 +152,7 @@ watch(() => route.fullPath, carregar)
               Liquidação {{ formataCodNegocio(liq.codliquidacaotitulo) }}
             </div>
             <div v-if="estornado" class="text-negative">
-              Estornada em {{ formataDataSemHora(liq.estornado) }}
+              Estornada em {{ formataData(liq.estornado) }}
             </div>
             <div v-if="fechadaPeriodo" class="text-orange-8">
               Fechada em período RH #{{ liq.codperiodo }}
@@ -183,7 +183,7 @@ watch(() => route.fullPath, carregar)
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Transação</div>
               <div class="text-h6 text-grey-9">
-                {{ formataDataSemHora(liq.transacao) }}
+                {{ formataData(liq.transacao) }}
               </div>
             </q-card>
           </div>
@@ -317,7 +317,7 @@ watch(() => route.fullPath, carregar)
               </q-item-section>
               <q-item-section class="gt-xs">
                 <q-item-label caption>
-                  {{ formataDataSemHora(m.titulo?.vencimento) }}
+                  {{ formataData(m.titulo?.vencimento) }}
                 </q-item-label>
                 <q-item-label caption v-if="m.titulo?.boleto">
                   Boleto {{ m.titulo?.nossonumero }}
@@ -379,7 +379,7 @@ watch(() => route.fullPath, carregar)
                     </q-item-label>
                     <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                     <q-item-label caption>
-                      {{ formataDataSemHora(m.titulo?.vencimento) }}
+                      {{ formataData(m.titulo?.vencimento) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>

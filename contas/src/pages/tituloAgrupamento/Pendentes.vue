@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted, computed } from 'vue'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataData } from "@components/formatters"
 import { useAgrupamentoPendenteStore } from 'src/stores/agrupamentoPendenteStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -110,7 +110,7 @@ onMounted(() => {
                   {{ formataNumero(r.saldo) }}
                 </q-item-label>
                 <q-item-label class="text-right" caption>
-                  {{ formataDataSemHora(r.vencimento) }}
+                  {{ formataData(r.vencimento) }}
                 </q-item-label>
               </q-item-section>
             </q-item>

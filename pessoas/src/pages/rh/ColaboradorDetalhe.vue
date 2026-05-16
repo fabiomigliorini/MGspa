@@ -5,7 +5,7 @@ import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { api } from "src/boot/axios";
-import { formataDataSemHora, formataFromNow } from "@components/formatters";
+import { formataData, formataFromNow } from "@components/formatters";
 import { tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
 import { formataNumero } from "@components/formatters";
 import SelectSetor from "src/components/select/SelectSetor.vue";
@@ -763,7 +763,7 @@ watch(
             class="text-caption text-grey"
           >
             Contratação:
-            {{ formataDataSemHora(colaborador.colaborador.contratacao) }}
+            {{ formataData(colaborador.colaborador.contratacao) }}
             ({{ formataFromNow(colaborador.colaborador.contratacao) }})
           </div>
         </q-item-section>

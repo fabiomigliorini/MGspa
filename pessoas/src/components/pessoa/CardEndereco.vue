@@ -5,12 +5,7 @@ import { useRoute } from "vue-router";
 import { api } from "boot/axios";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import {
-  formataData,
-  formataCep,
-  linkMaps,
-  removerAcentos,
-} from "@components/formatters";
+import { linkMaps, formataData, formataCep, removerAcentos, formataTimestamp } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
 import MgInputFormatado from "@components/MgInputFormatado.vue";
@@ -568,7 +563,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
 
             <!-- INATIVO -->
             <q-item-label caption class="text-red-14" v-if="element.inativo">
-              Inativo desde: {{ formataData(element.inativo) }}
+              Inativo desde: {{ formataTimestamp(element.inativo) }}
             </q-item-label>
 
             <!-- APELIDO -->

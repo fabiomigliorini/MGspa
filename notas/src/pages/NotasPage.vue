@@ -7,7 +7,7 @@ import { useControleStore } from '../stores/controle'
 import { useSelectFilialStore } from 'stores/selects/filial'
 import { useAuth } from 'src/composables/useAuth'
 import { getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
-import { formataDataHoraSegundos, formataNumero, formataNumeroNotaFiscal } from '@components/formatters'
+import { formataTimestamp, formataNumero, formataNumeroNotaFiscal } from "@components/formatters"
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import api from '../services/api'
 import notaFiscalService from '../services/notaFiscalService'
@@ -410,7 +410,7 @@ onMounted(async () => {
 
               <!-- Data -->
               <div class="q-px-sm col-6 col-md-2 text-caption text-grey-7 ellipsis">
-                {{ formataDataHoraSegundos(nota.saida) }}
+                {{ formataTimestamp(nota.saida, 4, true) }}
               </div>
 
               <!-- Valor -->
@@ -605,7 +605,7 @@ onMounted(async () => {
                   <q-item-section>
                     <q-item-label>{{ neg.filial }} - {{ neg.cliente }}</q-item-label>
                     <q-item-label caption>
-                      #{{ neg.codnegocio }} | {{ formataDataHoraSegundos(neg.lancamento) }} | R$
+                      #{{ neg.codnegocio }} | {{ formataTimestamp(neg.lancamento, 4, true) }} | R$
                       {{ formataNumero(neg.valortotal) }}
                     </q-item-label>
                   </q-item-section>

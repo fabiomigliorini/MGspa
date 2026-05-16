@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { negocioStore } from "stores/negocio";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import { Dialog, Notify } from "quasar";
-import { formataCpf, formataCnpjCpf, formataCodNegocio, formataDataCompleta } from "@components/formatters";
+import { formataCpf, formataCnpjCpf, formataCodNegocio, formataTimestampCompleto } from "@components/formatters";
 import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
 import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
 import WizardPessoa from "./WizardPessoa.vue";
@@ -300,7 +300,7 @@ const apropriar = () => {
           {{ sNegocio.negocio.estoquelocal }}
         </q-item-label>
         <q-item-label caption>
-          {{ formataDataCompleta(sNegocio.negocio.lancamento) }}
+          {{ formataTimestampCompleto(sNegocio.negocio.lancamento) }}
         </q-item-label>
       </q-item-section>
     </q-item>

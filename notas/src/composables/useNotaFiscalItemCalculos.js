@@ -1,5 +1,5 @@
 import { watch } from 'vue'
-import { arredonda } from '@components/formatters'
+import { arredonda } from "@components/formatters"
 
 // CSTs de ICMS onde não há ICMS próprio (base, percentual e valor devem ser zero)
 const ICMS_CST_SEM_ICMS_PROPRIO = [30, 40, 41, 50, 60]

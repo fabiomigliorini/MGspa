@@ -3,12 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import {
-  formataNumero,
-  formataDataSemHora,
-  formataNumeroNota,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataNumero, formataData, formataNumeroNota, formataCodNegocio } from "@components/formatters"
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
@@ -360,11 +355,11 @@ watch(() => route.fullPath, carregar)
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Emissão</div>
               <div class="text-h6 text-grey-7">
-                {{ formataDataSemHora(titulo.emissao) }}
+                {{ formataData(titulo.emissao) }}
               </div>
               <div class="text-caption text-grey-7">
                 Transação
-                {{ formataDataSemHora(titulo.transacao) }}
+                {{ formataData(titulo.transacao) }}
               </div>
             </q-card>
           </div>
@@ -374,11 +369,11 @@ watch(() => route.fullPath, carregar)
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Vencimento</div>
               <div class="text-h6" :class="classeVencimento">
-                {{ formataDataSemHora(titulo.vencimento) }}
+                {{ formataData(titulo.vencimento) }}
               </div>
               <div class="text-caption text-grey-7">
                 Original
-                {{ formataDataSemHora(titulo.vencimentooriginal) }}
+                {{ formataData(titulo.vencimentooriginal) }}
               </div>
             </q-card>
           </div>
@@ -508,7 +503,7 @@ watch(() => route.fullPath, carregar)
             <!-- LIQUIDACAO -->
             <div class="col-xs-6 col-sm-4 col-md-2" v-if="titulo.transacaoliquidacao">
               <div class="text-overline text-grey-7">Liquidação</div>
-              <div class="text-body2">{{ formataDataSemHora(titulo.transacaoliquidacao) }}</div>
+              <div class="text-body2">{{ formataData(titulo.transacaoliquidacao) }}</div>
             </div>
           </div>
         </q-card>
@@ -629,7 +624,7 @@ watch(() => route.fullPath, carregar)
                       {{ m.tipomovimentotitulo }}
                     </q-item-label>
                     <q-item-label caption>
-                      {{ formataDataSemHora(m.transacao) }}
+                      {{ formataData(m.transacao) }}
                     </q-item-label>
 
                     <!-- ORIGEM -->
@@ -682,27 +677,27 @@ watch(() => route.fullPath, carregar)
 
                     <!-- VENCIMENTO -->
                     <q-item-label caption>
-                      Vencimento {{ formataDataSemHora(b.vencimento) }}
+                      Vencimento {{ formataData(b.vencimento) }}
                     </q-item-label>
 
                     <!-- REGISTRO -->
                     <q-item-label caption v-if="b.dataregistro">
-                      Registro {{ formataDataSemHora(b.dataregistro) }}
+                      Registro {{ formataData(b.dataregistro) }}
                     </q-item-label>
 
                     <!-- RECEBIMENTO -->
                     <q-item-label caption v-if="b.datarecebimento">
-                      Recebimento {{ formataDataSemHora(b.datarecebimento) }}
+                      Recebimento {{ formataData(b.datarecebimento) }}
                     </q-item-label>
 
                     <!-- CREDITO -->
                     <q-item-label caption v-if="b.datacredito">
-                      Crédito {{ formataDataSemHora(b.datacredito) }}
+                      Crédito {{ formataData(b.datacredito) }}
                     </q-item-label>
 
                     <!-- BAIXA -->
                     <q-item-label caption v-if="b.databaixaautomatica">
-                      Baixa {{ formataDataSemHora(b.databaixaautomatica) }}
+                      Baixa {{ formataData(b.databaixaautomatica) }}
                     </q-item-label>
 
                     <!-- VALOR ORIGINAL -->
@@ -815,7 +810,7 @@ watch(() => route.fullPath, carregar)
                     </q-item-label>
                     <q-item-label caption class="ellipsis">{{ n.naturezaoperacao }}</q-item-label>
                     <q-item-label caption class="ellipsis">
-                      {{ formataDataSemHora(n.emissao) }}
+                      {{ formataData(n.emissao) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>

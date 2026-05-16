@@ -42,70 +42,109 @@ function parseLocalDate(data) {
   return new Date(s);
 }
 
-export function formataData(data) {
-  if (!data) return "";
-  const d = parseLocalDate(data);
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+// Helper: monta a parte do ano conforme digitosAno (4 = YYYY, 2 = YY, 0 = sem ano)
+function anoStr(d, digitosAno) {
+  if (digitosAno === 0) return "";
+  if (digitosAno === 2) return String(d.getFullYear()).slice(-2);
+  return String(d.getFullYear());
 }
 
-export function formataDataSemHora(data) {
+const MESES_ABREV = [
+  "jan", "fev", "mar", "abr", "mai", "jun",
+  "jul", "ago", "set", "out", "nov", "dez",
+];
+const MESES_LONGO = [
+  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+];
+const DIAS_ABREV = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
+const DIAS_LONGO = [
+  "domingo", "segunda-feira", "terça-feira", "quarta-feira",
+  "quinta-feira", "sexta-feira", "sábado",
+];
+
+// Data numérica: DD/MM/YYYY (4) | DD/MM/YY (2) | DD/MM (0)
+export function formataData(data, digitosAno = 4) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  if (isNaN(d.getTime())) return "";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const ano = anoStr(d, digitosAno);
+  return ano ? `${dd}/${mm}/${ano}` : `${dd}/${mm}`;
 }
 
-export function formataDataHoraSegundos(data) {
+// Data + hora: DD/MM/YYYY HH:mm [:ss]
+export function formataTimestamp(data, digitosAno = 4, segundos = false) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  if (isNaN(d.getTime())) return "";
+  const base = formataData(d, digitosAno);
+  const hora = formataHora(d, segundos);
+  return `${base} ${hora}`;
 }
 
-export function formataDataCompleta(data) {
+// Hora: HH:mm [:ss]
+export function formataHora(data, segundos = false) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  return d.toLocaleString("pt-BR", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  if (isNaN(d.getTime())) return "";
+  const hh = String(d.getHours()).padStart(2, "0");
+  const ii = String(d.getMinutes()).padStart(2, "0");
+  if (!segundos) return `${hh}:${ii}`;
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  return `${hh}:${ii}:${ss}`;
 }
 
+// Data com mês abreviado em letras: DD/mmm/YY (default) | DD/mmm/YYYY | DD/mmm
+export function formataDataAbreviada(data, digitosAno = 2) {
+  if (!data) return "";
+  const d = parseLocalDate(data);
+  if (isNaN(d.getTime())) return "";
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mmm = MESES_ABREV[d.getMonth()];
+  const ano = anoStr(d, digitosAno);
+  return ano ? `${dd}/${mmm}/${ano}` : `${dd}/${mmm}`;
+}
+
+// Mês/ano abreviado: mmm/YYYY (default) | mmm/YY
+export function formataMesAno(data, digitosAno = 4) {
+  if (!data) return "";
+  const d = parseLocalDate(data);
+  if (isNaN(d.getTime())) return "";
+  const mmm = MESES_ABREV[d.getMonth()];
+  const ano = anoStr(d, digitosAno);
+  return ano ? `${mmm}/${ano}` : mmm;
+}
+
+// Dia da semana: "seg" (short=true) | "segunda-feira" (short=false)
 export function formataDiaSemana(data, short = true) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  return d.toLocaleDateString("pt-BR", { weekday: short ? "short" : "long" });
+  if (isNaN(d.getTime())) return "";
+  return short ? DIAS_ABREV[d.getDay()] : DIAS_LONGO[d.getDay()];
 }
 
-export function formataDataDiaMes(data, short = true) {
+// Data extensa: "quarta-feira, 5 janeiro 2026"
+export function formataDataCompleta(data) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  return d.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: short ? "short" : "long",
-  });
+  if (isNaN(d.getTime())) return "";
+  const semana = DIAS_LONGO[d.getDay()];
+  const dd = d.getDate();
+  const mes = MESES_LONGO[d.getMonth()];
+  return `${semana}, ${dd} ${mes} ${d.getFullYear()}`;
 }
 
-// Para envio ao backend (que é naive): YYYY-MM-DD, em horário local
+// Data extensa com hora: "quarta-feira, 5 janeiro 2026 14:30"
+export function formataTimestampCompleto(data) {
+  if (!data) return "";
+  const d = parseLocalDate(data);
+  if (isNaN(d.getTime())) return "";
+  return `${formataDataCompleta(d)} ${formataHora(d)}`;
+}
+
+// Para envio ao backend (naive): YYYY-MM-DD, em horário local
 export function formataDataIso(data) {
   if (!data) return "";
   const d = parseLocalDate(data);
@@ -116,7 +155,7 @@ export function formataDataIso(data) {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-// Para envio ao backend (que é naive): YYYY-MM-DD HH:mm:ss, em horário local
+// Para envio ao backend (naive): YYYY-MM-DD HH:mm:ss, em horário local
 export function formataTimestampIso(data) {
   if (!data) return "";
   const d = parseLocalDate(data);

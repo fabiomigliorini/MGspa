@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useSelectPessoaStore } from 'stores/selects/pessoa'
-import { formataCnpjCpf } from '@components/formatters'
+import { formataCnpjCpf } from "@components/formatters"
 
 const props = defineProps({
   modelValue: {

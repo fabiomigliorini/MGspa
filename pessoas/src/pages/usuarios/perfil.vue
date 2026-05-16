@@ -1,4 +1,5 @@
 <script setup>
+import { formataDataAbreviada } from "@components/formatters";
 import { ref, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { usuarioStore } from "src/stores/usuario";
@@ -160,7 +161,7 @@ onMounted(async () => {
                   </q-item-section>
                   <q-item-section>
                     <q-item-label class="ellipsis text-caption">
-                      {{ moment(sUsuario.detalheUsuarios.ultimoacesso).format("DD/MMM/YYYY") }}
+                      {{ formataDataAbreviada(sUsuario.detalheUsuarios.ultimoacesso, 4) }}
                       - {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
                     </q-item-label>
                     <q-item-label caption>Último acesso</q-item-label>

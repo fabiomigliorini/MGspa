@@ -1,12 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import {
-  formataNumero,
-  tempoRelativo,
-  formataDataSemHora,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataNumero, tempoRelativo, formataData, formataCodNegocio } from "@components/formatters"
 import { useTituloStore } from 'src/stores/tituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -119,20 +114,20 @@ onMounted(() => {
             <!-- Datas (gt-xs) -->
             <q-item-section class="gt-xs" style="flex: 0 0 130px; min-width: 0">
               <q-item-label class="text-weight-bold ellipsis" :class="classeVencimento(t)">
-                {{ formataDataSemHora(t.vencimento) }}
+                {{ formataData(t.vencimento) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 {{ tempoRelativo(t.vencimento) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formataDataSemHora(t.emissao) }}
+                {{ formataData(t.emissao) }}
               </q-item-label>
             </q-item-section>
 
             <!-- Valor / Saldo (sempre visível) -->
             <q-item-section style="flex: 0 0 95px; min-width: 0">
               <q-item-label class="lt-sm text-weight-bold text-right" :class="classeVencimento(t)">
-                {{ formataDataSemHora(t.vencimento) }}
+                {{ formataData(t.vencimento) }}
               </q-item-label>
               <q-item-label class="text-weight-bold text-right" :class="classeValor(t)">
                 <span v-if="Number(t.saldo) !== 0">

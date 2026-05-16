@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
-import { formataDataSemHora, formataNumero } from "@components/formatters";
+import { formataData, formataNumero } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import SelectUnidadeNegocio from "src/components/select/SelectUnidadeNegocio.vue";
 import CardUnidadeMeta from "src/components/meta/CardUnidadeMeta.vue";
@@ -174,8 +174,8 @@ watch(
           v-if="config.periodoinicial"
           class="text-caption text-grey-6 q-ml-sm"
         >
-          {{ formataDataSemHora(config.periodoinicial) }} a
-          {{ formataDataSemHora(config.periodofinal) }}
+          {{ formataData(config.periodoinicial) }} a
+          {{ formataData(config.periodofinal) }}
         </span>
       </span>
     </template>

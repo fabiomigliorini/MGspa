@@ -5,7 +5,7 @@ import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import SelectProdutoBarra from 'src/components/selects/SelectProdutoBarra.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataNumero, formataDataSemHora, formataDataHoraSegundos, formataNumero } from '@components/formatters'
+import { formataNumero, formataData, formataTimestamp } from "@components/formatters"
 import { conformidades, corConformidade } from 'src/utils/nfeTerceiroItemConformidade'
 
 const route = useRoute()
@@ -219,7 +219,7 @@ const handleConferencia = () => {
 const conferenciaTooltip = computed(() => {
   if (!item.value?.conferencia) return 'Marcar como conferido'
   const usuario = item.value.usuarioConferencia?.usuario
-  const quando = formataDataHoraSegundos(item.value.conferencia)
+  const quando = formataTimestamp(item.value.conferencia, 4, true)
   return usuario ? `Conferido por ${usuario} em ${quando}` : `Conferido em ${quando}`
 })
 
@@ -303,7 +303,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <q-tooltip>Classificação ABC</q-tooltip>
             </q-badge>
             <q-badge v-if="produto.inativo" color="red" class="q-ml-xs">
-              Inativo desde {{ formataDataSemHora(produto.inativo) }}
+              Inativo desde {{ formataData(produto.inativo) }}
             </q-badge>
           </div>
         </div>

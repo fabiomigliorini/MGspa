@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodNegocio, formataDataSemHora } from "@components/formatters";
+import { formataNumero, formataCodNegocio, formataData } from "@components/formatters";
 import { negocioStore } from "stores/negocio";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
@@ -42,7 +42,7 @@ const urlTitulo = (codtitulo) => {
       <q-item>
         <q-item-section>
           <q-item-label class="ellipsis">
-            {{ formataDataSemHora(titulo.vencimento) }}
+            {{ formataData(titulo.vencimento) }}
           </q-item-label>
           <q-item-label class="ellipsis" caption lines="1">
             {{ moment(titulo.vencimento).fromNow() }}

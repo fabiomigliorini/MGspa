@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { date } from 'quasar'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataData } from "@components/formatters"
 import { useExtratoStore } from 'src/stores/extratoStore'
 
 const route = useRoute()
@@ -15,7 +15,7 @@ const columns = [
     label: 'Dia',
     field: 'dia',
     align: 'left',
-    format: (v) => formataDataSemHora(v),
+    format: (v) => formataData(v),
   },
   { name: 'observacoes', label: 'Observação', field: 'observacoes', align: 'left' },
   { name: 'numero', label: 'Documento', field: 'numero', align: 'left' },

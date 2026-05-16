@@ -4,7 +4,7 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
-import { formataChave, formataCnpjCpf, formataNumero, formataDataHoraSegundos } from '@components/formatters'
+import { formataChave, formataCnpjCpf, formataNumero, formataTimestamp } from "@components/formatters"
 
 const $q = useQuasar()
 const router = useRouter()
@@ -173,7 +173,7 @@ onMounted(async () => {
               {{ item.filial?.filial }}
             </q-item-label>
             <q-item-label class="text-caption text-grey-7">
-              {{ formataDataHoraSegundos(item.emissao) }}
+              {{ formataTimestamp(item.emissao, 4, true) }}
             </q-item-label>
             <q-item-label v-if="!item.codnotafiscal" class="text-orange text-caption">
               Pendente Importação

@@ -5,11 +5,7 @@ import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
 import MGLayout from "layouts/MGLayout.vue";
-import {
-  formataNumero,
-  formataCodNegocio,
-  formataData,
-} from "@components/formatters";
+import { formataNumero, formataCodNegocio, formataData, formataTimestamp } from "@components/formatters";
 import { getTipo } from "src/config/bonificacaoTipos";
 
 const $q = useQuasar();
@@ -272,7 +268,7 @@ watch(
                             type="a"
                             class="q-pa-none"
                           />
-                          {{ formataData(ev.lancamento) }}
+                          {{ formataTimestamp(ev.lancamento) }}
                           <q-badge
                             v-if="ev.manual"
                             color="orange"

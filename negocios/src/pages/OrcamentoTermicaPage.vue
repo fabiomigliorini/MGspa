@@ -2,12 +2,7 @@
 import { onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { negocioStore } from "src/stores/negocio";
-import {
-  formataCnpjCpf,
-  formataNumero,
-  formataDataHoraSegundos,
-  formataCodNegocio,
-} from "@components/formatters";
+import { formataCnpjCpf, formataNumero, formataTimestamp, formataCodNegocio } from "@components/formatters";
 import { produtoStore } from "src/stores/produto";
 import BarCode from "components/BarCode.vue";
 
@@ -44,7 +39,7 @@ onMounted(() => {
             <span class="row" v-if="sNegocio.negocio.fantasiavendedor">
               Vendedor: {{ sNegocio.negocio.fantasiavendedor }}
             </span>
-            {{ formataDataHoraSegundos(sNegocio.negocio.lancamento) }}
+            {{ formataTimestamp(sNegocio.negocio.lancamento, 4, true) }}
           </td>
         </tr>
       </table>

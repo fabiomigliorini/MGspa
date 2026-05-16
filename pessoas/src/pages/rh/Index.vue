@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRouter, useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "@components/formatters";
+import { formataData } from "@components/formatters";
 import { extrairErro } from "src/utils/rhFormatters";
 import MGLayout from "layouts/MGLayout.vue";
 import MgInputData from "@components/MgInputData.vue";
@@ -239,8 +239,8 @@ onMounted(() => {
           >
             <q-item-section>
               <q-item-label>
-                {{ formataDataSemHora(periodo.periodoinicial) }} a
-                {{ formataDataSemHora(periodo.periodofinal) }}
+                {{ formataData(periodo.periodoinicial) }} a
+                {{ formataData(periodo.periodofinal) }}
               </q-item-label>
               <q-item-label caption :class="periodoSelecionado(periodo.codperiodo) ? 'text-white' : ''">
                 {{ periodo.total_colaboradores || 0 }} colaboradores

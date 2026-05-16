@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import { formataNumero, formataDataSemHora, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataData, formataCodNegocio } from "@components/formatters"
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -54,7 +54,7 @@ onMounted(() => {
                 · {{ l.usuariocriacao || '' }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formataDataSemHora(l.criacao) }}
+                {{ formataData(l.criacao) }}
               </q-item-label>
             </q-item-section>
 
@@ -63,7 +63,7 @@ onMounted(() => {
                 {{ l.portador }}
               </q-item-label>
               <q-item-label caption>
-                {{ formataDataSemHora(l.transacao) }}
+                {{ formataData(l.transacao) }}
               </q-item-label>
             </q-item-section>
 

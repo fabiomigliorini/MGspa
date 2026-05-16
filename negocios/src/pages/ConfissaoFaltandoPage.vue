@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataDataIso } from "@components/formatters";
+import { formataNumero, formataDataIso, formataHora, formataDataCompleta } from "@components/formatters";
 import { onMounted, ref, watch } from "vue";
 import { exportFile, Notify, Dialog } from "quasar";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
@@ -53,7 +53,7 @@ const colunasTabelaNegocios = [
     format: val => formataNumero(val), sortable: true
   },
   { name: 'fantasia', label: 'Fantasia', field: 'fantasia', align: 'left', sortable: true },
-  { name: 'lancamento', label: 'Hora', field: 'lancamento', format: val => moment(val).format('HH:mm'), sortable: true },
+  { name: 'lancamento', label: 'Hora', field: 'lancamento', format: val => formataHora(val), sortable: true },
   { name: 'usuario', align: 'left', label: 'Usuário', field: 'usuario', sortable: true },
   {
     name: 'pdv', label: 'PDV', align: 'left', field: 'pdv', sortable: true
@@ -274,7 +274,7 @@ watch(data, () => {
             <q-btn dense round flat color="white" icon="archive" class="float-right" no-caps @click="exportTable" />
             <div class="text-h6">
               {{ detalhado.faltando }} confissões faltando |
-              {{ moment(data).format('dddd, D MMMM YYYY') }}
+              {{ formataDataCompleta(data) }}
             </div>
           </q-card-section>
 
