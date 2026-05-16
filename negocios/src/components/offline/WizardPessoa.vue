@@ -593,10 +593,7 @@ watch(
                         flat
                         dense
                         round
-                        @click="
-                          cnpj = null
-                          inputCnpj.focus()
-                        "
+                        @click=";(cnpj = null), inputCnpj.focus()"
                         icon="close"
                         tabindex="-1"
                       />
@@ -604,10 +601,7 @@ watch(
                         flat
                         dense
                         round
-                        @click="
-                          inputCnpjModeNumeric = !inputCnpjModeNumeric
-                          inputCnpj.focus()
-                        "
+                        @click=";(inputCnpjModeNumeric = !inputCnpjModeNumeric), inputCnpj.focus()"
                         :icon="inputCnpjModeNumeric ? 'mdi-alphabetical-variant' : 'mdi-numeric'"
                         tabindex="-1"
                         class="desktop-hide"
