@@ -3,14 +3,15 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataDataSemHora, formataTelefone } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInputData from '@components/MgInputData.vue'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
+import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import {
-  getNotaFiscalStatusIcon,
   getNotaFiscalStatusColor,
   getNotaFiscalStatusLabel,
   isNotaFiscalCanceladaInutilizada,
@@ -59,6 +60,37 @@ function abrirRelatorio() {
   )
 }
 
+const dialogEditar = ref(false)
+const editar = ref({ codpessoa: null, emissao: null, observacao: '' })
+const salvandoEdicao = ref(false)
+
+function abrirDialogEditar() {
+  editar.value = {
+    codpessoa: ag.value?.codpessoa ?? null,
+    emissao: ag.value?.emissao ? String(ag.value.emissao).slice(0, 10) : null,
+    observacao: ag.value?.observacao ?? '',
+  }
+  dialogEditar.value = true
+}
+
+async function salvarEdicao() {
+  salvandoEdicao.value = true
+  try {
+    const { data } = await api.put(`v1/titulo-agrupamento/${id.value}`, {
+      codpessoa: editar.value.codpessoa,
+      emissao: editar.value.emissao,
+      observacao: editar.value.observacao || null,
+    })
+    ag.value = data.data
+    notifySuccess('Agrupamento atualizado')
+    dialogEditar.value = false
+  } catch (e) {
+    notifyError(e, 'Erro ao atualizar agrupamento')
+  } finally {
+    salvandoEdicao.value = false
+  }
+}
+
 function estornar() {
   $q.dialog({
     title: 'Estornar',
@@ -76,7 +108,15 @@ function estornar() {
 }
 
 const dialogEmail = ref(false)
-const emailDest = ref('')
+const emailsSelecionados = ref([])
+const emailsExtras = ref([''])
+
+const mensagemWhatsapp = encodeURIComponent(
+  'Olá! Aqui é do departamento de Cobrança da MG Papelaria! ' +
+    'Acabamos de enviar os documentos do fechamento de(s) sua(s) compra(s). ' +
+    'Por favor, poderia confirmar se você recebeu?',
+)
+const urlWhatsapp = (t) => `https://wa.me/${t.pais}${t.ddd}${t.telefone}?text=${mensagemWhatsapp}`
 
 const dialogModelo = ref(false)
 const gerandoNota = ref(false)
@@ -116,14 +156,23 @@ async function gerarNota(modelo) {
 }
 
 function abrirDialogEmail() {
-  emailDest.value = ''
+  emailsSelecionados.value = (ag.value?.pessoa_emails || [])
+    .filter((e) => e.cobranca)
+    .map((e) => e.email)
+  emailsExtras.value = ['']
   dialogEmail.value = true
 }
 
 async function enviarEmail() {
+  const extras = emailsExtras.value.map((s) => s.trim()).filter(Boolean)
+  const todos = [...emailsSelecionados.value, ...extras]
+  if (!todos.length) {
+    notifyError('Selecione ou informe ao menos um e-mail')
+    return
+  }
   try {
     const { data } = await api.post(`v1/titulo/agrupamento/${id.value}/mail`, {
-      destinatario: emailDest.value || null,
+      destinatario: todos.join(','),
     })
     if (data.sucesso === false) {
       notifyError(data.mensagem || 'Erro ao enviar e-mail')
@@ -201,232 +250,314 @@ watch(() => route.fullPath, carregar)
           </div>
         </div>
 
-        <q-card bordered flat>
-          <q-card-section class="text-grey-9 text-overline row items-center">
-            DETALHES DO AGRUPAMENTO
-            <q-space />
-            <q-btn
-              flat
-              round
-              dense
-              icon="email"
-              size="sm"
-              color="grey-7"
-              @click="abrirDialogEmail"
-              v-if="!estornado"
-            >
-              <q-tooltip>Enviar por e-mail</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="podeMutar && !estornado"
-              flat
-              round
-              dense
-              icon="receipt_long"
-              size="sm"
-              color="grey-7"
-              @click="abrirDialogModelo"
-            >
-              <q-tooltip>Gerar Nota Fiscal</q-tooltip>
-            </q-btn>
-            <q-btn
-              flat
-              round
-              dense
-              icon="print"
-              size="sm"
-              color="grey-7"
-              @click="abrirRelatorio"
-              v-if="!estornado"
-            >
-              <q-tooltip>Relatório</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="podeEstornar"
-              flat
-              round
-              dense
-              icon="undo"
-              size="sm"
-              color="grey-7"
-              @click="estornar"
-            >
-              <q-tooltip>Estornar</q-tooltip>
-            </q-btn>
-            <MgInfoCriacao
-              :usuariocriacao="ag.usuariocriacao"
-              :criacao="ag.criacao"
-              :usuarioalteracao="ag.usuarioalteracao"
-              :alteracao="ag.alteracao"
-            />
-          </q-card-section>
-          <template v-if="ag.observacao">
-            <q-separator />
-            <q-card-section>
-              <div class="text-overline text-grey-7">Observação</div>
-              <div
-                class="text-body2 bg-grey-2 rounded-borders q-pa-sm"
-                style="white-space: pre-line"
-              >
-                {{ ag.observacao }}
-              </div>
-            </q-card-section>
-          </template>
-        </q-card>
-
-        <!-- Notas Fiscais -->
-        <q-card bordered flat class="q-mt-md" v-if="ag.notas_fiscais?.length">
-          <q-card-section class="text-grey-9 text-overline">
-            NOTAS FISCAIS ({{ ag.notas_fiscais.length }})
-          </q-card-section>
-          <q-list separator>
-            <q-item
-              v-for="n in ag.notas_fiscais"
-              :key="n.codnotafiscal"
-              :class="isNotaFiscalCanceladaInutilizada(n.status) ? 'bg-red-1' : ''"
-            >
-              <q-item-section avatar>
-                <q-icon
-                  :name="getNotaFiscalStatusIcon(n.status)"
-                  :color="getNotaFiscalStatusColor(n.status)"
+        <!-- Linha 2 -->
+        <div class="row q-col-gutter-md">
+          <!-- DETALHES -->
+          <div class="col-xs-12 col-sm-6">
+            <q-card bordered flat>
+              <q-card-section class="text-grey-9 text-overline row items-center">
+                DETALHES DO AGRUPAMENTO
+                <q-space />
+                <q-btn
+                  v-if="podeMutar"
+                  flat
+                  round
                   size="sm"
-                />
-              </q-item-section>
-              <q-item-section style="flex: 0 0 90px" class="gt-xs">
-                <q-item-label caption>{{ n.filial }}</q-item-label>
-                <q-item-label caption :class="`text-${getNotaFiscalStatusColor(n.status)} `">
-                  {{ getNotaFiscalStatusLabel(n.status) }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section style="min-width: 0">
-                <q-item-label class="text-weight-medium">
-                  <q-btn
-                    flat
-                    dense
-                    no-caps
-                    padding="0"
-                    color="primary"
-                    :label="formataNumeroNota(n)"
-                    :href="urlNotaFiscal(n.codnotafiscal)"
-                    target="_blank"
-                  />
-                </q-item-label>
-                <q-item-label caption>{{ n.naturezaoperacao }}</q-item-label>
-              </q-item-section>
-              <q-item-section style="flex: 0 0 130px" class="gt-xs">
-                <q-item-label caption> Emissão {{ formataDataSemHora(n.emissao) }} </q-item-label>
-              </q-item-section>
-              <q-item-section style="flex: 0 0 110px">
-                <q-item-label class="text-weight-bold text-right">
-                  {{ formataNumero(n.valortotal) }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <MgNotaFiscalAcoes
-                  compact
-                  show-extras
-                  :nota="n"
-                  :api="api"
-                  @action-completed="carregar"
-                />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
-
-        <!-- Títulos Gerados -->
-        <q-card bordered flat class="q-mt-md">
-          <q-card-section class="text-grey-9 text-overline">
-            TÍTULOS GERADOS ({{ ag.titulos_gerados?.length || 0 }})
-          </q-card-section>
-          <q-list separator v-if="ag.titulos_gerados?.length">
-            <q-item v-for="t in ag.titulos_gerados" :key="t.codtitulo">
-              <q-item-section style="flex: 0 0 90px" class="gt-xs">
-                <q-item-label caption :class="t.gerencial ? 'text-orange' : 'text-green'">
-                  {{ t.filial }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section style="min-width: 0">
-                <q-item-label class="text-weight-medium">
-                  <q-btn
-                    flat
-                    dense
-                    no-caps
-                    padding="0"
-                    color="primary"
-                    :label="t.numero"
-                    :to="{ name: 'titulo-detalhe', params: { codtitulo: t.codtitulo } }"
-                  />
-                </q-item-label>
-                <q-item-label caption v-if="t.boleto"> Boleto {{ t.nossonumero }} </q-item-label>
-              </q-item-section>
-              <q-item-section style="flex: 0 0 130px" class="gt-xs">
-                <q-item-label caption>
-                  Vencimento {{ formataDataSemHora(t.vencimento) }}
-                </q-item-label>
-                <q-item-label caption>{{ t.portador }}</q-item-label>
-              </q-item-section>
-              <q-item-section style="flex: 0 0 110px">
-                <q-item-label
-                  class="text-weight-bold text-right"
-                  :class="t.operacao === 'CR' ? 'text-orange' : 'text-green'"
+                  icon="edit"
+                  color="grey-7"
+                  @click="abrirDialogEditar"
                 >
-                  {{ formataNumero(t.valor) }} {{ t.operacao }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
-
-        <!-- Títulos Baixados -->
-        <q-card bordered flat class="q-mt-md">
-          <q-card-section class="text-grey-9 text-overline">
-            TÍTULOS BAIXADOS ({{ ag.titulos_baixados?.length || 0 }})
-          </q-card-section>
-          <q-list separator v-if="ag.titulos_baixados?.length">
-            <q-item v-for="m in ag.titulos_baixados" :key="m.codmovimentotitulo">
-              <q-item-section style="flex: 0 0 90px" class="gt-xs">
-                <q-item-label caption :class="m.titulo?.gerencial ? 'text-orange' : 'text-green'">
-                  {{ m.titulo?.filial }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section style="min-width: 0">
-                <q-item-label class="text-weight-medium">
-                  <q-btn
-                    flat
-                    dense
-                    no-caps
-                    padding="0"
-                    color="primary"
-                    :label="m.titulo?.numero"
-                    :to="{ name: 'titulo-detalhe', params: { codtitulo: m.titulo?.codtitulo } }"
-                  />
-                </q-item-label>
-                <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
-              </q-item-section>
-              <q-item-section style="flex: 0 0 130px" class="gt-xs">
-                <q-item-label caption>
-                  Vencimento {{ formataDataSemHora(m.titulo?.vencimento) }}
-                </q-item-label>
-                <q-item-label caption v-if="m.titulo?.boleto">
-                  Boleto {{ m.titulo?.nossonumero }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section style="flex: 0 0 110px">
-                <q-item-label
-                  class="text-weight-bold text-right"
-                  :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
+                  <q-tooltip>Editar</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  round
+                  dense
+                  icon="email"
+                  size="sm"
+                  color="grey-7"
+                  @click="abrirDialogEmail"
+                  v-if="!estornado"
                 >
-                  {{ formataNumero(m.valor) }} {{ m.operacao }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
+                  <q-tooltip>Enviar por e-mail</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  round
+                  dense
+                  icon="print"
+                  size="sm"
+                  color="grey-7"
+                  @click="abrirRelatorio"
+                  v-if="!estornado"
+                >
+                  <q-tooltip>Relatório</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-if="podeEstornar"
+                  flat
+                  round
+                  dense
+                  icon="undo"
+                  size="sm"
+                  color="grey-7"
+                  @click="estornar"
+                >
+                  <q-tooltip>Estornar</q-tooltip>
+                </q-btn>
+                <MgInfoCriacao
+                  :usuariocriacao="ag.usuariocriacao"
+                  :criacao="ag.criacao"
+                  :usuarioalteracao="ag.usuarioalteracao"
+                  :alteracao="ag.alteracao"
+                />
+              </q-card-section>
+              <q-separator />
+              <q-card-section>
+                <div class="text-overline text-grey-7">Observações</div>
+                <div
+                  class="text-body2 bg-grey-2 rounded-borders q-pa-sm"
+                  style="white-space: pre-line"
+                >
+                  <span v-if="ag.observacao">
+                    {{ ag.observacao }}
+                  </span>
+                  <span v-else> &mdash; </span>
+                </div>
+                <!-- <pre>{{ ag }}</pre> -->
+              </q-card-section>
+            </q-card>
+          </div>
+
+          <!-- WHATSAPP -->
+          <div class="col-xs-12 col-sm-6">
+            <!-- WhatsApp -->
+            <q-card bordered flat>
+              <q-card-section class="text-grey-9 text-overline">
+                WHATSAPP ({{ ag.pessoa_telefones.length }})
+              </q-card-section>
+              <q-list separator>
+                <q-item
+                  v-for="t in ag.pessoa_telefones"
+                  :key="t.codpessoatelefone"
+                  clickable
+                  tag="a"
+                  :href="urlWhatsapp(t)"
+                  target="_blank"
+                >
+                  <q-item-section avatar>
+                    <q-icon name="chat" color="green-6" />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ formataTelefone(t) }}</q-item-label>
+                    <q-item-label caption v-if="t.apelido">{{ t.apelido }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <q-card-section class="text-caption text-grey-7 q-pt-none">
+                Clique em um número de telefone acima para enviar a mensagem de confirmação de
+                recebimento dos documentos por email.
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <!-- Linha 3 -->
+        <div class="row q-col-gutter-md">
+          <!-- NOTAS -->
+          <div class="col-xs-12 col-sm-4">
+            <!-- Notas Fiscais -->
+            <q-card bordered flat class="q-mt-md">
+              <q-card-section class="text-grey-9 text-overline row">
+                NOTAS FISCAIS ({{ ag.notas_fiscais.length }})
+                <q-space />
+                <q-btn
+                  v-if="podeMutar && !estornado"
+                  flat
+                  round
+                  dense
+                  icon="receipt_long"
+                  size="sm"
+                  color="grey-7"
+                  @click="abrirDialogModelo"
+                >
+                  <q-tooltip>Gerar Nota Fiscal</q-tooltip>
+                </q-btn>
+              </q-card-section>
+              <q-list separator>
+                <q-item
+                  v-for="n in ag.notas_fiscais"
+                  :key="n.codnotafiscal"
+                  :class="isNotaFiscalCanceladaInutilizada(n.status) ? 'bg-red-1' : ''"
+                  :href="urlNotaFiscal(n.codnotafiscal)"
+                >
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium text-primary">
+                      {{ formataNumeroNota(n) }}
+                    </q-item-label>
+                    <q-item-label caption :class="`text-${getNotaFiscalStatusColor(n.status)} `">
+                      {{ n.filial }}
+                      &#8226;
+                      <span> {{ getNotaFiscalStatusLabel(n.status) }}</span>
+                    </q-item-label>
+                    <q-item-label caption>
+                      <MgNotaFiscalAcoes
+                        compact
+                        show-extras
+                        :nota="n"
+                        :api="api"
+                        @action-completed="carregar"
+                      />
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label class="text-weight-bold text-primary ellipsis">
+                      {{ formataNumero(n.valortotal) }}
+                    </q-item-label>
+                    <q-item-label caption class="ellipsis">{{ n.naturezaoperacao }}</q-item-label>
+                    <q-item-label caption class="ellipsis">
+                      {{ formataDataSemHora(n.emissao) }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+
+          <!-- GERADOS -->
+          <div class="col-xs-12 col-sm-4">
+            <!-- Títulos Gerados -->
+            <q-card bordered flat class="q-mt-md">
+              <q-card-section class="text-grey-9 text-overline">
+                TÍTULOS GERADOS ({{ ag.titulos_gerados?.length || 0 }})
+              </q-card-section>
+              <q-list separator v-if="ag.titulos_gerados?.length">
+                <q-item
+                  v-for="t in ag.titulos_gerados"
+                  :key="t.codtitulo"
+                  :to="{ name: 'titulo-detalhe', params: { codtitulo: t.codtitulo } }"
+                >
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium text-primary">
+                      {{ t.numero }}
+                    </q-item-label>
+                    <q-item-label caption :class="t.gerencial ? 'text-orange' : 'text-green'">
+                      {{ t.filial }}
+                    </q-item-label>
+                    <q-item-label caption v-if="t.boleto">
+                      Boleto {{ t.nossonumero }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label
+                      class="text-weight-bold text-right"
+                      :class="t.operacao === 'CR' ? 'text-orange' : 'text-green'"
+                    >
+                      {{ formataNumero(t.valor) }} {{ t.operacao }}
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ formataDataSemHora(t.vencimento) }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+
+          <!-- BAIXADOS -->
+          <div class="col-xs-12 col-sm-4">
+            <!-- Títulos Baixados -->
+            <q-card bordered flat class="q-mt-md">
+              <q-card-section class="text-grey-9 text-overline">
+                TÍTULOS BAIXADOS ({{ ag.titulos_baixados?.length || 0 }})
+              </q-card-section>
+              <q-list separator v-if="ag.titulos_baixados?.length">
+                <q-item
+                  v-for="m in ag.titulos_baixados"
+                  :key="m.codmovimentotitulo"
+                  :to="{ name: 'titulo-detalhe', params: { codtitulo: m.titulo?.codtitulo } }"
+                >
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium text-primary">
+                      {{ m.titulo?.numero }}
+                    </q-item-label>
+                    <q-item-label
+                      caption
+                      :class="m.titulo?.gerencial ? 'text-orange' : 'text-green'"
+                    >
+                      {{ m.titulo?.filial }}
+                    </q-item-label>
+                    <q-item-label caption v-if="m.titulo?.boleto">
+                      Boleto {{ m.titulo?.nossonumero }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label
+                      class="text-weight-bold text-right"
+                      :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
+                    >
+                      {{ formataNumero(m.valor) }} {{ m.operacao }}
+                    </q-item-label>
+                    <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
+                    <q-item-label caption>
+                      {{ formataDataSemHora(m.titulo?.vencimento) }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+        </div>
       </template>
     </div>
 
-    <q-inner-loading :showing="loading || gerandoNota" color="primary" />
+    <q-inner-loading :showing="loading || gerandoNota || salvandoEdicao" color="primary" />
+
+    <!-- Dialog Editar -->
+    <q-dialog v-model="dialogEditar">
+      <q-card bordered flat style="width: 500px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline">EDITAR AGRUPAMENTO</q-card-section>
+        <q-form @submit.prevent="salvarEdicao">
+          <q-separator inset />
+          <q-card-section class="">
+            <div class="row q-col-gutter-md">
+              <div class="col-9">
+                <SelectPessoa
+                  v-model="editar.codpessoa"
+                  outlined
+                  label="Pessoa"
+                  autofocus
+                  :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+              <div class="col-3">
+                <MgInputData
+                  v-model="editar.emissao"
+                  type="date"
+                  label="Emissão"
+                  year-digits="2"
+                  stack-label
+                  :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+            </div>
+            <q-input
+              v-model="editar.observacao"
+              outlined
+              type="textarea"
+              label="Observações"
+              autogrow
+              maxlength="200"
+            />
+          </q-card-section>
+          <q-separator inset />
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn flat label="Salvar" type="submit" color="primary" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <!-- Dialog Modelo Nota Fiscal -->
     <q-dialog v-model="dialogModelo">
@@ -452,17 +583,49 @@ watch(() => route.fullPath, carregar)
 
     <!-- Dialog Email -->
     <q-dialog v-model="dialogEmail">
-      <q-card bordered flat style="width: 400px; max-width: 90vw">
+      <q-card bordered flat style="width: 500px; max-width: 90vw">
         <q-card-section class="text-grey-9 text-overline">ENVIAR POR E-MAIL</q-card-section>
         <q-form @submit.prevent="enviarEmail">
           <q-separator inset />
+          <q-card-section v-if="ag?.pessoa_emails?.length">
+            <div class="text-caption text-grey-7 q-mb-xs">E-mails cadastrados</div>
+            <div v-for="e in ag.pessoa_emails" :key="e.codpessoaemail">
+              <q-checkbox
+                v-model="emailsSelecionados"
+                :val="e.email"
+                :label="e.apelido ? `${e.email} (${e.apelido})` : e.email"
+              />
+            </div>
+          </q-card-section>
+          <q-separator inset v-if="ag?.pessoa_emails?.length" />
           <q-card-section>
+            <div class="row items-center q-mb-xs">
+              <div class="text-caption text-grey-7">E-mails adicionais</div>
+              <q-space />
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                icon="add"
+                color="primary"
+                @click="emailsExtras.push('')"
+                tabindex="-1"
+              >
+                <q-tooltip>Adicionar e-mail</q-tooltip>
+              </q-btn>
+            </div>
             <q-input
-              v-model="emailDest"
+              v-for="(_, i) in emailsExtras"
+              :key="i"
+              v-model="emailsExtras[i]"
               outlined
-              label="Destinatário (vazio usa cobrança da pessoa)"
               type="email"
-              autofocus
+              placeholder="E-mail adicional"
+              class="q-mb-sm"
+              lazy-rules
+              :rules="[(v) => !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) || 'E-mail inválido']"
+              :autofocus="i === 0 && !ag?.pessoa_emails?.length"
             />
           </q-card-section>
           <q-separator inset />

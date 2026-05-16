@@ -232,6 +232,35 @@ class TituloAgrupamentoService
         }
     }
 
+    public static function atualizar(TituloAgrupamento $ag, array $dados): TituloAgrupamento
+    {
+        $codpessoa  = (int)$dados['codpessoa'];
+        $emissao    = Carbon::parse($dados['emissao'])->format('Y-m-d');
+        $observacao = $dados['observacao'] ?? null;
+
+        $mudouPessoa  = (int)$ag->codpessoa !== $codpessoa;
+        $mudouEmissao = Carbon::parse($ag->emissao)->format('Y-m-d') !== $emissao;
+
+        $ag->codpessoa  = $codpessoa;
+        $ag->emissao    = $emissao;
+        $ag->observacao = $observacao;
+        $ag->save();
+
+        if ($mudouPessoa || $mudouEmissao) {
+            foreach ($ag->TituloS as $titulo) {
+                if ($mudouPessoa) {
+                    $titulo->codpessoa = $codpessoa;
+                }
+                if ($mudouEmissao) {
+                    $titulo->emissao = $emissao;
+                }
+                $titulo->save();
+            }
+        }
+
+        return self::carregar($ag->codtituloagrupamento);
+    }
+
     public static function estornar(TituloAgrupamento $ag): TituloAgrupamento
     {
         if (!empty($ag->cancelamento)) {

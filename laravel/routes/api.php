@@ -906,6 +906,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('titulo-agrupamento/{id}', '\Mg\Titulo\TituloAgrupamentoController@show')->where('id', '[0-9]+');
         Route::get('titulo-agrupamento/{id}/relatorio', '\Mg\Titulo\TituloAgrupamentoController@relatorioDetalhe')->where('id', '[0-9]+');
         Route::post('titulo-agrupamento', '\Mg\Titulo\TituloAgrupamentoController@store');
+        Route::put('titulo-agrupamento/{id}', '\Mg\Titulo\TituloAgrupamentoController@update')->where('id', '[0-9]+');
         Route::post('titulo-agrupamento/{id}/estornar', '\Mg\Titulo\TituloAgrupamentoController@estornar')->where('id', '[0-9]+');
         Route::post('titulo-agrupamento/{id}/gerar-nota-fiscal', '\Mg\Titulo\TituloAgrupamentoController@gerarNotaFiscal')->where('id', '[0-9]+');
 
