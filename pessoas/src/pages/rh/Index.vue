@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData } from '@components/formatters'
 import { extrairErro } from 'src/utils/rhFormatters'
 import MGLayout from 'layouts/MGLayout.vue'
@@ -13,7 +13,7 @@ const $q = useQuasar()
 const router = useRouter()
 const route = useRoute()
 const sRh = rhStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 // --- DIALOG NOVO PERÍODO ---
 const dialogNovoPeriodo = ref(false)
@@ -196,7 +196,7 @@ onMounted(() => {
                 icon="add"
                 size="sm"
                 color="primary"
-                v-if="user.verificaPermissaoUsuario('Recursos Humanos')"
+                v-if="user.temPermissao('Recursos Humanos')"
                 @click="abrirNovoPeriodo()"
               >
                 <q-tooltip>Novo Período</q-tooltip>
@@ -251,7 +251,7 @@ onMounted(() => {
           <q-icon name="event_note" size="64px" color="grey-5" />
           <div class="text-h6 text-grey-7 q-mt-md">Nenhum período cadastrado</div>
           <q-btn
-            v-if="user.verificaPermissaoUsuario('Recursos Humanos')"
+            v-if="user.temPermissao('Recursos Humanos')"
             color="primary"
             label="Criar Primeiro Período"
             class="q-mt-md"

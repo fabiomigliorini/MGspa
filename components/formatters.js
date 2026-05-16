@@ -239,15 +239,11 @@ export function formataCnpj(cnpj) {
   );
 }
 
-export function formataCnpjCpf(cnpjcpf, fisica) {
+// fisica: true=CPF, false=CNPJ, null/undefined=auto-detecta pelo length (≤11 dígitos = CPF)
+export function formataCnpjCpf(cnpjcpf, fisica = null) {
   if (cnpjcpf == null) return null;
+  if (fisica == null) fisica = String(cnpjcpf).length <= 11;
   return fisica ? formataCpf(cnpjcpf) : formataCnpj(cnpjcpf);
-}
-
-export function formataCnpjEcpf(cnpjcpf) {
-  if (cnpjcpf == null) return null;
-  const fisica = String(cnpjcpf).length <= 11 ? true : false;
-  return formataCnpjCpf(cnpjcpf, fisica);
 }
 
 export function formataPisPasep(pispasep) {
@@ -375,42 +371,38 @@ export function formataIe(ie, uf) {
 
 // ---------- Telefone ----------
 
-export function formataTelefone(t) {
-  if (!t) return "";
-  return `+${t.pais} (${t.ddd}) ${t.telefone}`;
-}
-
-export function formataCelular(cel) {
-  if (cel == null) return null;
-  const s = String(cel).padStart(9, "0");
-  return s.slice(0, 1) + " " + s.slice(1, 5) + "-" + s.slice(5, 9);
-}
-
-export function formataCelularComDDD(cel) {
-  if (cel == null) return null;
-  const s = String(cel).padStart(11, "0");
-  return (
-    "(" +
-    s.slice(0, 2) +
-    ") " +
-    s.slice(2, 3) +
-    " " +
-    s.slice(3, 7) +
-    "-" +
-    s.slice(7, 11)
-  );
-}
-
-export function formataFixo(fixo) {
-  if (fixo == null) return null;
-  const s = String(fixo).padStart(8, "0");
-  return s.slice(0, 4) + "-" + s.slice(4, 8);
-}
-
-export function formataFone(tipo, fone) {
-  if (tipo === 2) return formataCelular(fone);
-  if (tipo === 1) return formataFixo(fone);
-  return fone;
+// fone pode ser:
+//   - objeto { pais, ddd, telefone } → formato internacional "+pais (ddd) telefone"
+//   - string/number raw → autodetecta pelo length (8=fixo, 9=cel, 10=fixo+DDD, 11=cel+DDD)
+// tipo (1=fixo, 2=celular) é opcional — força o formato em casos ambíguos
+export function formataTelefone(fone, tipo = null) {
+  if (fone == null) return null;
+  // Objeto estruturado
+  if (typeof fone === "object" && !Array.isArray(fone)) {
+    if (!fone.telefone) return "";
+    return `+${fone.pais} (${fone.ddd}) ${fone.telefone}`;
+  }
+  // Raw → autodetecta
+  const s = String(fone).replace(/\D/g, "");
+  if (!s) return "";
+  const len = s.length;
+  const comDDD = len === 10 || len === 11;
+  const isCel = tipo === 2 || (tipo == null && (len === 9 || len === 11));
+  if (isCel) {
+    if (comDDD) {
+      const p = s.padStart(11, "0");
+      return `(${p.slice(0, 2)}) ${p.slice(2, 3)} ${p.slice(3, 7)}-${p.slice(7, 11)}`;
+    }
+    const p = s.padStart(9, "0");
+    return `${p.slice(0, 1)} ${p.slice(1, 5)}-${p.slice(5, 9)}`;
+  }
+  // Fixo (tipo === 1 ou autodetectado por length 8/10)
+  if (comDDD) {
+    const p = s.padStart(10, "0");
+    return `(${p.slice(0, 2)}) ${p.slice(2, 6)}-${p.slice(6, 10)}`;
+  }
+  const p = s.padStart(8, "0");
+  return `${p.slice(0, 4)}-${p.slice(4, 8)}`;
 }
 
 // ---------- Códigos / Fiscal ----------
@@ -445,19 +437,9 @@ export function formataProtocolo(protocolo) {
   );
 }
 
-export function formataCodProduto(numero) {
-  if (!numero) return "#000000";
-  return "#" + String(numero).padStart(6, "0");
-}
-
-export function formataCodNegocio(codnegocio) {
-  if (!codnegocio) return "#00000000";
-  return "#" + String(codnegocio).padStart(8, "0");
-}
-
-export function formataNumeroNotaFiscal(numero) {
-  if (!numero) return "00000000";
-  return String(numero).padStart(8, "0");
+export function formataCodigo(codigo, digitos = 8) {
+  if (!codigo) return "#" + "0".repeat(digitos);
+  return "#" + String(codigo).padStart(digitos, "0");
 }
 
 export function formataNumeroNota(

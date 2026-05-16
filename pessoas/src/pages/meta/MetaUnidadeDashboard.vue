@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { metaStore } from 'src/stores/meta'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData } from '@components/formatters'
 import MGLayout from 'layouts/MGLayout.vue'
 import CardUnidadeMeta from 'src/components/meta/CardUnidadeMeta.vue'
@@ -11,14 +11,14 @@ import CardUnidadeMeta from 'src/components/meta/CardUnidadeMeta.vue'
 const $q = useQuasar()
 const route = useRoute()
 const sMeta = metaStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const loading = ref(false)
 
 const dash = computed(() => sMeta.dashboard || {})
 const config = computed(() => sMeta.item || {})
 const podeEditar = computed(
-  () => user.verificaPermissaoUsuario('Recursos Humanos') && config.value.status !== 'F',
+  () => user.temPermissao('Recursos Humanos') && config.value.status !== 'F',
 )
 
 const unidade = computed(() => {

@@ -46,7 +46,7 @@ export default route(function (/* { store, ssrContext } */) {
 
     if (to.meta?.auth) {
       if (!authStore.token) {
-        authStore.setRedirectUrl(to.fullPath)
+        authStore.gravarUrlRetorno(to.fullPath)
         const count = parseInt(loopCheck || 0) + 1
         sessionStorage.setItem('login_redirect_check', count)
         const currentUrl = encodeURIComponent(window.location.origin + '/login')
@@ -56,10 +56,10 @@ export default route(function (/* { store, ssrContext } */) {
 
       sessionStorage.removeItem('login_redirect_check')
 
-      if (!authStore.user) {
-        const isValid = await authStore.validateToken()
-        if (!isValid) {
-          authStore.setRedirectUrl(to.fullPath)
+      if (!authStore.usuario) {
+        const valido = await authStore.validarToken()
+        if (!valido) {
+          authStore.gravarUrlRetorno(to.fullPath)
           const currentUrl = encodeURIComponent(window.location.origin + '/login')
           window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
           return next(false)
@@ -67,8 +67,8 @@ export default route(function (/* { store, ssrContext } */) {
       }
 
       if (to.meta?.permissions && to.meta.permissions.length > 0) {
-        const hasPermission = authStore.hasAnyPermission(to.meta.permissions)
-        if (!hasPermission) {
+        const podeAcessar = authStore.temAlgumaPermissao(to.meta.permissions)
+        if (!podeAcessar) {
           console.warn('Usuário sem permissão para:', to.path)
           return next({ name: 'sem-permissao' })
         }

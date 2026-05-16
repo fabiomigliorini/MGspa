@@ -7,7 +7,7 @@ import { useControleStore } from '../stores/controle'
 import { useSelectFilialStore } from 'stores/selects/filial'
 import { useAuth } from 'src/composables/useAuth'
 import { getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
-import { formataTimestamp, formataNumero, formataNumeroNotaFiscal } from '@components/formatters'
+import { formataTimestamp, formataNumero, formataNumeroNota } from '@components/formatters'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import api from '../services/api'
 import notaFiscalService from '../services/notaFiscalService'
@@ -17,10 +17,10 @@ const route = useRoute()
 const notaFiscalStore = useNotaFiscalStore()
 const controleStore = useControleStore()
 const filialStore = useSelectFilialStore()
-const { hasPermission } = useAuth()
+const { temPermissao } = useAuth()
 
 // Permissão para FABs
-const podeGerar = computed(() => hasPermission('Administrador') || hasPermission('Financeiro'))
+const podeGerar = computed(() => temPermissao('Administrador') || temPermissao('Financeiro'))
 
 // Dialogs
 const showDialogNfce = ref(false)
@@ -386,7 +386,7 @@ onMounted(async () => {
             <div class="row items-center">
               <!-- Número -->
               <div class="q-px-sm col-6 col-md-3 text-weight-medium text-caption">
-                {{ getModeloLabel(nota.modelo) }} {{ formataNumeroNotaFiscal(nota.numero) }} - S{{
+                {{ getModeloLabel(nota.modelo) }} {{ formataNumeroNota(nota.numero) }} - S{{
                   nota.serie
                 }}
               </div>

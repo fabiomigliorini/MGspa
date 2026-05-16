@@ -2,19 +2,14 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { feriadoStore } from 'src/stores/feriado'
-import { guardaToken } from 'src/stores'
-import {
-  formataDataAbreviada,
-  formataData,
-  formataDiaSemana,
-  formataTimestamp,
-} from '@components/formatters'
+import { useAuthStore } from 'src/stores'
+import { formataDataAbreviada, formataData, formataDiaSemana, formataTimestamp } from '@components/formatters'
 import MGLayout from 'layouts/MGLayout.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const $q = useQuasar()
 const sFeriado = feriadoStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 // --- FILTRO ---
 

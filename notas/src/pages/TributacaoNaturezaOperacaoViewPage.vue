@@ -1,11 +1,5 @@
 <script setup>
-import {
-  formataTimestamp,
-  formataCfop,
-  formataPercentual,
-  formataNumero,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataTimestamp, formataCfop, formataPercentual, formataNumero, formataCodigo } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -134,7 +128,7 @@ onMounted(loadData)
                 <q-item-section>
                   <q-item-label caption>Código</q-item-label>
                   <q-item-label>
-                    {{ formataCodNegocio(tributacao.codtributacaonaturezaoperacao) }}
+                    {{ formataCodigo(tributacao.codtributacaonaturezaoperacao) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>

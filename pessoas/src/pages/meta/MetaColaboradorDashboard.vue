@@ -3,20 +3,15 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { metaStore } from 'src/stores/meta'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import MGLayout from 'layouts/MGLayout.vue'
-import {
-  formataNumero,
-  formataCodNegocio,
-  formataData,
-  formataTimestamp,
-} from '@components/formatters'
+import { formataNumero, formataCodigo, formataData, formataTimestamp } from '@components/formatters'
 import { getTipo } from 'src/config/bonificacaoTipos'
 
 const $q = useQuasar()
 const route = useRoute()
 const sMeta = metaStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const loading = ref(false)
 const eventos = ref([])
@@ -248,7 +243,7 @@ watch(
                             color="primary"
                             :href="negocioUrl(ev.codnegocio)"
                             target="_blank"
-                            :label="formataCodNegocio(ev.codnegocio)"
+                            :label="formataCodigo(ev.codnegocio)"
                             type="a"
                             class="q-pa-none"
                           />

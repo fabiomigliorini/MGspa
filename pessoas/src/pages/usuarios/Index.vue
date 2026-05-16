@@ -2,7 +2,7 @@
   <MGLayout drawer>
     <template #tituloPagina>Usuários</template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <q-infinite-scroll @load="scrollUsuario" :disable="loading" style="min-height: 100vh">
         <div class="row q-pa-md q-col-gutter-md">
           <div
@@ -18,7 +18,7 @@
       <q-page-sticky
         position="bottom-right"
         :offset="[18, 18]"
-        v-if="user.verificaPermissaoUsuario('Administrador')"
+        v-if="user.temPermissao('Administrador')"
       >
         <q-btn fab icon="add" color="accent" :to="{ name: 'usuarionovo' }" />
       </q-page-sticky>
@@ -28,7 +28,7 @@
       <nao-autorizado />
     </template>
 
-    <template #drawer v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #drawer v-if="user.temPermissao('Administrador')">
       <div class="q-pa-none q-pt-sm">
         <q-card flat>
           <q-list>
@@ -67,7 +67,7 @@ import { ref, onMounted, watch } from 'vue'
 
 // 2. Imports de stores
 import { usuarioStore } from 'src/stores/usuario'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 
 // 3. Imports de utilitários
 import { useQuasar, debounce } from 'quasar'
@@ -79,7 +79,7 @@ import CardUsuario from 'components/usuario/CardUsuario.vue'
 
 // 5. Instâncias
 const sUsuario = usuarioStore()
-const user = guardaToken()
+const user = useAuthStore()
 const $q = useQuasar()
 
 // 6. Refs

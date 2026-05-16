@@ -3,14 +3,14 @@ import { ref, onMounted, watch } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData, formataFromNow } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const $q = useQuasar()
 const sPessoa = pessoaStore()
 const route = useRoute()
-const user = guardaToken()
+const user = useAuthStore()
 const dialogEditarHistorico = ref(false)
 const modelCobrancaHistorico = ref([])
 const loading = ref(true)
@@ -201,7 +201,7 @@ watch(
           icon="add"
           size="sm"
           color="primary"
-          v-if="user.verificaPermissaoUsuario('Publico')"
+          v-if="user.temPermissao('Publico')"
           @click="
             ;(dialogEditarHistorico = true), (modelCobrancaHistorico = {}), (cobrancaNova = true)
           "
@@ -239,7 +239,7 @@ watch(
             </q-item-section>
 
             <q-item-section side>
-              <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+              <q-item-label caption v-if="user.temPermissao('Publico')">
                 <!-- EDITAR -->
                 <q-btn
                   flat

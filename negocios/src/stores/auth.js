@@ -4,7 +4,7 @@ import { Notify } from 'quasar'
 import moment from 'moment'
 import axios from 'axios'
 
-export const usuarioStore = defineStore('usuario', {
+export const useAuthStore = defineStore('auth', {
   persist: {
     paths: ['usuario', 'token'],
   },
@@ -37,7 +37,7 @@ export const usuarioStore = defineStore('usuario', {
         if (data.access_token) {
           this.token = data
           this.token.expires_at = moment().add(data.expires_in, 'seconds')
-          this.getUsuario()
+          this.carregarUsuario()
         }
         return true
       } catch (error) {
@@ -66,14 +66,14 @@ export const usuarioStore = defineStore('usuario', {
         Notify.create({
           type: 'negative',
           message: message,
-          timeout: 3000, // 3 segundos
+          timeout: 3000,
           actions: [{ icon: 'close', color: 'white' }],
         })
         return false
       }
     },
 
-    async refreshToken() {
+    async renovarToken() {
       const params = {
         refresh_token: this.token.refresh_token,
         grant_type: 'refresh_token',
@@ -87,13 +87,13 @@ export const usuarioStore = defineStore('usuario', {
         if (data.access_token) {
           this.token = data
           this.token.expires_at = moment().add(data.expires_in, 'seconds')
-          this.getUsuario()
+          this.carregarUsuario()
         }
       } catch (error) {
         Notify.create({
           type: 'negative',
           message: 'Falha ao renovar token de autenticação!',
-          timeout: 3000, // 3 segundos
+          timeout: 3000,
           actions: [{ icon: 'close', color: 'white' }],
         })
         console.log(error)
@@ -102,7 +102,7 @@ export const usuarioStore = defineStore('usuario', {
 
     async logout() {
       try {
-        let { data } = await axios.post(
+        await axios.post(
           process.env.API_AUTH_URL + '/api/logout',
           {},
           {
@@ -118,7 +118,7 @@ export const usuarioStore = defineStore('usuario', {
       }
     },
 
-    async getUsuario() {
+    async carregarUsuario() {
       let tokenCookie = document.cookie.split(';').find((c) => c.trim().startsWith('access_token='))
       if (tokenCookie) {
         this.token.access_token = tokenCookie.split('=')[1]

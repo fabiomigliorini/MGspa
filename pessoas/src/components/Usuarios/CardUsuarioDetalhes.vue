@@ -26,14 +26,14 @@
               round
               icon="edit"
               :to="'/usuarios/' + route.params.codusuario + '/editar'"
-              v-if="user.verificaPermissaoUsuario('Administrador')"
+              v-if="user.temPermissao('Administrador')"
             />
 
             <q-btn flat round icon="delete" @click="excluir(sUsuario.detalheUsuarios.codusuario)" />
 
             <q-btn
               v-if="
-                user.verificaPermissaoUsuario('Administrador') && !sUsuario.detalheUsuarios.inativo
+                user.temPermissao('Administrador') && !sUsuario.detalheUsuarios.inativo
               "
               flat
               round
@@ -45,7 +45,7 @@
 
             <q-btn
               v-if="
-                user.verificaPermissaoUsuario('Administrador') && sUsuario.detalheUsuarios.inativo
+                user.temPermissao('Administrador') && sUsuario.detalheUsuarios.inativo
               "
               flat
               round
@@ -132,7 +132,7 @@ import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { usuarioStore } from 'stores/usuario'
 import { useRoute } from 'vue-router'
-import { guardaToken } from 'stores/index'
+import { useAuthStore } from 'stores/index'
 import moment from 'moment'
 import 'moment/min/locales'
 moment.locale('pt-br')
@@ -264,7 +264,7 @@ export default defineComponent({
     const $q = useQuasar()
     const sUsuario = usuarioStore()
     const route = useRoute()
-    const user = guardaToken()
+    const user = useAuthStore()
 
     return {
       formapagamento: ref({}),

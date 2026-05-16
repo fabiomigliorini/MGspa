@@ -130,7 +130,7 @@ import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { usuarioStore } from 'stores/usuario'
 import { useRoute } from 'vue-router'
-import { guardaToken } from 'stores/index'
+import { useAuthStore } from 'stores/index'
 import moment from 'moment'
 import 'moment/min/locales'
 moment.locale('pt-br')
@@ -237,7 +237,7 @@ export default defineComponent({
     const $q = useQuasar()
     const sUsuario = usuarioStore()
     const route = useRoute()
-    const user = guardaToken()
+    const user = useAuthStore()
     const model = ref({
       codusuario: null,
       usuario: null,

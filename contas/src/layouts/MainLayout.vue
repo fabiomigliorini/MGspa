@@ -4,12 +4,15 @@ import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
+import { useAuth } from 'src/composables/useAuth'
 
 const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
 const pageTitle = computed(() => route.meta?.title || 'Contas')
+
+const auth = useAuth()
 </script>
 
 <template>
@@ -35,7 +38,7 @@ const pageTitle = computed(() => route.meta?.title || 'Contas')
           {{ pageTitle }}
         </q-toolbar-title>
 
-        <MgUserMenu />
+        <MgUserMenu :auth="auth" />
 
         <app-launcher />
 

@@ -1,12 +1,12 @@
 <script setup>
-import { ref } from 'vue'
-import { Dialog } from 'quasar'
+import { ref, onMounted } from 'vue'
 import MgMenu from 'layouts/MGMenu.vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
-import axios from 'axios'
+import MgUserMenu from '@components/MgUserMenu.vue'
+import { useAuth } from 'src/composables/useAuth'
 
+const auth = useAuth()
 const leftDrawerOpen = ref(false)
-const user = ref(localStorage.getItem('usuario'))
 
 defineProps({
   drawer: {
@@ -19,47 +19,9 @@ defineProps({
   },
 })
 
-const limparSessao = () => {
-  localStorage.removeItem('access_token')
-  localStorage.removeItem('usuario')
-  document.cookie =
-    'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;'
-  document.cookie =
-    'user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;'
-  let url = encodeURIComponent(window.location.href)
-  window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
-}
-
-const deslogar = async () => {
-  Dialog.create({
-    title: 'Sair da conta',
-    message: 'Tem certeza que deseja sair?',
-    cancel: true,
-    persistent: true,
-  }).onOk(async () => {
-    let token = document.cookie.split(';').find((item) => item.trim().startsWith('access_token='))
-
-    if (token) {
-      token = token.split('=')[1]
-    }
-    axios
-      .post(
-        process.env.API_AUTH_URL + '/api/logout',
-        {},
-        {
-          headers: {
-            Authorization: 'Bearer ' + token,
-          },
-        },
-      )
-      .then(() => {
-        limparSessao()
-      })
-      .catch(() => {
-        limparSessao()
-      })
-  })
-}
+onMounted(() => {
+  if (!auth.usuario.value) auth.validarToken()
+})
 
 const toggleLeftDrawer = () => {
   leftDrawerOpen.value = !leftDrawerOpen.value
@@ -93,35 +55,7 @@ const toggleLeftDrawer = () => {
         <mg-menu></mg-menu>
 
         <!-- Usuario logout -->
-        <q-btn-dropdown flat dense icon="person" :label="user">
-          <div class="row no-wrap q-pa-md justify-center">
-            <div class="column items-center">
-              <q-avatar size="72px">
-                <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
-              </q-avatar>
-              <div class="text-subtitle1 q-mt-md q-mb-xs">{{ user }}</div>
-
-              <q-btn
-                color="primary"
-                :to="'/perfil'"
-                class="q-mb-md"
-                label="Perfil"
-                push
-                size="sm"
-                v-close-popup
-              />
-
-              <q-btn
-                color="primary"
-                label="Sair"
-                push
-                size="sm"
-                v-close-popup
-                @click="deslogar()"
-              />
-            </div>
-          </div>
-        </q-btn-dropdown>
+        <MgUserMenu :auth="auth" />
       </q-toolbar>
     </q-header>
 

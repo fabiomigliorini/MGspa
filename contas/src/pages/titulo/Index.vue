@@ -1,12 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import {
-  formataNumero,
-  tempoRelativo,
-  formataData,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataNumero, tempoRelativo, formataData, formataCodigo } from '@components/formatters'
 import { useTituloStore } from 'src/stores/tituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -92,7 +87,7 @@ onMounted(() => {
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 <span class="text-weight-bold">{{ t.numero }}</span>
-                · {{ formataCodNegocio(t.codtitulo) }}
+                · {{ formataCodigo(t.codtitulo) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 {{ t.tipotitulo }} · {{ t.contacontabil }}

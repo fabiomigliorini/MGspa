@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { grupoUsuarioStore } from 'src/stores/grupo-usuario'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import MGLayout from 'layouts/MGLayout.vue'
 import NaoAutorizado from 'components/NaoAutorizado.vue'
 
@@ -11,7 +11,7 @@ const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const sGrupoUsuario = grupoUsuarioStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 // Dialog
 const dialogEditar = ref(false)
@@ -147,7 +147,7 @@ watch(
 
     <template #tituloPagina>Grupo Usuário</template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <div
         style="max-width: 1280px; margin: auto; min-height: 100vh"
         v-if="sGrupoUsuario.detalheGrupoUsuarios"

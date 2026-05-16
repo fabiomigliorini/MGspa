@@ -3,18 +3,8 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import {
-  formataData,
-  formataPisPasep,
-  formataIe,
-  formataCpf,
-  formataTitulo,
-  formataCnpj,
-  formataCodNegocio,
-  verificaIdade,
-  formataTimestamp,
-} from '@components/formatters'
-import { guardaToken } from 'stores/index'
+import { formataData, formataPisPasep, formataIe, formataCpf, formataTitulo, formataCnpj, formataCodigo, verificaIdade, formataTimestamp } from '@components/formatters'
+import { useAuthStore } from 'stores/index'
 import SelectGrupoEconomico from 'components/pessoa/SelectGrupoEconomico.vue'
 import SelectCidade from 'components/pessoa/SelectCidade.vue'
 import SelectEstado from 'components/pessoa/SelectEstado.vue'
@@ -29,7 +19,7 @@ import SelectGrauInstrucao from 'components/pessoa/SelectGrauInstrucao.vue'
 const $q = useQuasar()
 const router = useRouter()
 const sPessoa = pessoaStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const ufNfe = computed(() => {
   const enderecos = sPessoa.item?.PessoaEnderecoS || []
@@ -501,7 +491,7 @@ const salvarDetalhes = async () => {
     <q-card-section class="text-grey-9 text-overline row items-center">
       DETALHES DA PESSOA
       <q-space />
-      <template v-if="user.verificaPermissaoUsuario('Publico')">
+      <template v-if="user.temPermissao('Publico')">
         <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="editarDetalhes()">
           <q-tooltip>Editar</q-tooltip>
         </q-btn>
@@ -560,7 +550,7 @@ const salvarDetalhes = async () => {
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Codigo</div>
         <div class="text-body2">
-          {{ formataCodNegocio(sPessoa.item.codpessoa) }}
+          {{ formataCodigo(sPessoa.item.codpessoa) }}
         </div>
       </div>
 

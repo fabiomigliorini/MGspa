@@ -3,12 +3,7 @@ import { ref } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { Dialog, Notify } from 'quasar'
-import {
-  formataCpf,
-  formataCnpjCpf,
-  formataCodNegocio,
-  formataTimestampCompleto,
-} from '@components/formatters'
+import { formataCpf, formataCnpjCpf, formataCodigo, formataTimestampCompleto } from '@components/formatters'
 import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
 import SelectEstoqueLocal from 'components/selects/SelectEstoqueLocal.vue'
 import WizardPessoa from './WizardPessoa.vue'
@@ -519,7 +514,7 @@ const apropriar = () => {
 
       <q-item-section>
         <q-item-label lines="1" v-if="sNegocio.negocio.codnegocio">
-          {{ formataCodNegocio(sNegocio.negocio.codnegocio) }}
+          {{ formataCodigo(sNegocio.negocio.codnegocio) }}
         </q-item-label>
         <q-item-label lines="1" v-else> Não Integrado </q-item-label>
         <q-item-label caption>{{ sNegocio.negocio.uuid }}</q-item-label>
@@ -558,7 +553,7 @@ const apropriar = () => {
             </q-item-label>
           </template>
           <q-item-label lines="1" v-else>
-            {{ formataCodNegocio(sNegocio.negocio.codpdv) }}
+            {{ formataCodigo(sNegocio.negocio.codpdv) }}
           </q-item-label>
         </template>
       </q-item-section>

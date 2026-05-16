@@ -7,7 +7,7 @@ import {
   formataNumero,
   formataData,
   formataNumeroNota,
-  formataCodNegocio,
+  formataCodigo,
 } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
@@ -35,7 +35,7 @@ const auth = useAuthStore()
 // Permissão para criar/alterar/estornar e mexer em boletos.
 // Visualização (carregar/PDF) é livre para qualquer usuário autenticado.
 const podeMutar = computed(() =>
-  auth.hasAnyPermission([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
+  auth.temAlgumaPermissao([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
 )
 
 const titulo = ref(null)
@@ -460,7 +460,7 @@ watch(() => route.fullPath, carregar)
             <div class="col-xs-6 col-sm-4 col-md-2">
               <div class="text-overline text-grey-7">#</div>
               <div class="text-body2">
-                {{ formataCodNegocio(titulo.codtitulo) }}
+                {{ formataCodigo(titulo.codtitulo) }}
               </div>
             </div>
 
@@ -526,7 +526,7 @@ watch(() => route.fullPath, carregar)
             color="primary"
             :href="urlNegocio(titulo.codnegocio)"
             target="_blank"
-            :label="`Negócio ${formataCodNegocio(titulo.codnegocio)}`"
+            :label="`Negócio ${formataCodigo(titulo.codnegocio)}`"
           />
           <q-btn
             v-if="titulo?.codtituloagrupamento"
@@ -536,7 +536,7 @@ watch(() => route.fullPath, carregar)
             padding="0 4px"
             color="primary"
             :to="{ name: 'agrupamento-detalhe', params: { id: titulo.codtituloagrupamento } }"
-            :label="`Agrupamento ${formataCodNegocio(titulo.codtituloagrupamento)}`"
+            :label="`Agrupamento ${formataCodigo(titulo.codtituloagrupamento)}`"
           />
         </q-banner>
 
@@ -559,7 +559,7 @@ watch(() => route.fullPath, carregar)
               name: 'agrupamento-detalhe',
               params: { id: codtituloagrupamentoLiquidacao },
             }"
-            :label="`Agrupamento ${formataCodNegocio(codtituloagrupamentoLiquidacao)}`"
+            :label="`Agrupamento ${formataCodigo(codtituloagrupamentoLiquidacao)}`"
           />
         </q-banner>
         -->
@@ -599,15 +599,15 @@ watch(() => route.fullPath, carregar)
                   <q-item-section>
                     <q-item-label class="ellipsis text-primary text-weight-bold">
                       <span v-if="m.codliquidacaotitulo">
-                        Liquidação {{ formataCodNegocio(m.codliquidacaotitulo) }}
+                        Liquidação {{ formataCodigo(m.codliquidacaotitulo) }}
                       </span>
                       <span v-else-if="m.codtituloagrupamento">
-                        Agrupamento {{ formataCodNegocio(m.codtituloagrupamento) }}
+                        Agrupamento {{ formataCodigo(m.codtituloagrupamento) }}
                       </span>
                       <span v-else-if="m.codboletoretorno">Retorno Boleto</span>
                       <span v-else-if="m.codcobranca">Cobrança</span>
                       <span v-else-if="titulo.codnegocio">
-                        Negócio {{ formataCodNegocio(titulo.codnegocio) }}
+                        Negócio {{ formataCodigo(titulo.codnegocio) }}
                       </span>
                       <span v-else class="text-italic text-grey-7 text-weight-regular">
                         Sem Identificação de Origem

@@ -4,9 +4,9 @@ import { db } from 'boot/db'
 import { uid } from 'quasar'
 import { Platform } from 'quasar'
 import { Notify } from 'quasar'
-import { usuarioStore } from './usuario'
+import { useAuthStore } from './auth'
 
-const sUsuario = usuarioStore()
+const sAuth = useAuthStore()
 
 export const sincronizacaoStore = defineStore('sincronizacao', {
   persist: {
@@ -134,8 +134,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
 
       // verifica se Está logado
-      await sUsuario.getUsuario()
-      if (!sUsuario.token.access_token) {
+      await sAuth.carregarUsuario()
+      if (!sAuth.token.access_token) {
         Notify.create({
           type: 'negative',
           message: 'Antes de sincronizar você deve fazer Login!',

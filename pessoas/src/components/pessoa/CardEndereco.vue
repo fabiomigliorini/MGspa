@@ -4,14 +4,8 @@ import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
-import {
-  linkMaps,
-  formataData,
-  formataCep,
-  removerAcentos,
-  formataTimestamp,
-} from '@components/formatters'
+import { useAuthStore } from 'src/stores'
+import { linkMaps, formataData, formataCep, removerAcentos, formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import SelectCidade from 'components/pessoa/SelectCidade.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
@@ -19,7 +13,7 @@ import MgInputFormatado from '@components/MgInputFormatado.vue'
 const $q = useQuasar()
 const route = useRoute()
 const sPessoa = pessoaStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const filtroEndereco = ref('ativos')
 const enderecosFiltrados = computed(() => {
@@ -454,7 +448,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         @click="modalNovoEndereco()"
       />
     </q-card-section>
@@ -514,7 +508,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
 
           <q-item-section side>
             <!-- BOTOES -->
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <template v-if="sPessoa.item?.PessoaEnderecoS.length > 1">
                 <!-- CIMA -->
                 <q-btn

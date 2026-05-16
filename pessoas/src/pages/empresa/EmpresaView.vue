@@ -1,5 +1,5 @@
 <script>
-import { formataData, formataCodNegocio, formataTimestamp } from '@components/formatters'
+import { formataData, formataCodigo, formataTimestamp } from '@components/formatters'
 import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
@@ -25,7 +25,7 @@ export default {
     }
 
     const formatarCodigo = (cod) => {
-      return formataCodNegocio(cod)
+      return formataCodigo(cod)
     }
 
     const modoEmissaoLabel = computed(() => {
@@ -203,7 +203,7 @@ export default {
                       <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">Codigo</div>
                         <div class="text-body2">
-                          {{ formataCodNegocio(sEmpresa.item.codempresa) }}
+                          {{ formataCodigo(sEmpresa.item.codempresa) }}
                         </div>
                       </div>
 

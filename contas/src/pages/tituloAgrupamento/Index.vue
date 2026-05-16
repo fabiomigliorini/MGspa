@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import { formataNumero, formataData, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataData, formataCodigo } from '@components/formatters'
 import { useTituloAgrupamentoStore } from 'src/stores/tituloAgrupamentoStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -52,7 +52,7 @@ onMounted(() => {
                 {{ ag.fantasia }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formataCodNegocio(ag.codtituloagrupamento) }}
+                {{ formataCodigo(ag.codtituloagrupamento) }}
               </q-item-label>
             </q-item-section>
 

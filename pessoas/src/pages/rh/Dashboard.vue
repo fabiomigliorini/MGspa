@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { corProgresso, extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataPercentual } from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -11,9 +11,9 @@ import MgInputValor from '@components/MgInputValor.vue'
 const $q = useQuasar()
 const route = useRoute()
 const sRh = rhStore()
-const user = guardaToken()
+const user = useAuthStore()
 
-const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
+const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 
 const dash = computed(() => sRh.dashboard || {})
 const periodo = computed(() => dash.value.periodo || {})

@@ -2,12 +2,7 @@
 import { ref, watch } from 'vue'
 import { LoadingBar, Notify, debounce, Dialog } from 'quasar'
 import { db } from 'boot/db'
-import {
-  formataCnpjCpf,
-  formataIe,
-  primeiraLetraMaiuscula,
-  mascaraTelefone,
-} from '@components/formatters'
+import { formataCnpjCpf, formataIe, primeiraLetraMaiuscula, mascaraTelefone } from '@components/formatters'
 import {
   isCpfValido,
   isCnpjValido,

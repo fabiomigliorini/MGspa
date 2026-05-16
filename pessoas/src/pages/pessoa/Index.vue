@@ -19,7 +19,7 @@
       <q-page-sticky
         position="bottom-right"
         :offset="[18, 18]"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
       >
         <q-btn fab icon="add" color="accent" :to="{ name: 'pessoanova' }" />
       </q-page-sticky>
@@ -120,7 +120,7 @@
 import { ref, onMounted, defineAsyncComponent, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { pessoaStore } from 'src/stores/pessoa'
 import { debounce } from 'quasar'
 
@@ -144,7 +144,7 @@ export default {
     const loading = ref(true)
     const $q = useQuasar()
     const router = useRouter()
-    const user = guardaToken()
+    const user = useAuthStore()
     const sPessoa = pessoaStore()
     const filtro = ref([])
 

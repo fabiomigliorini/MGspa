@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataCodigo } from '@components/formatters'
 import { ref, watch } from 'vue'
 import { debounce } from 'quasar'
 
@@ -34,7 +34,7 @@ watch(
           <q-item-section class="col-xs-3">
             <q-item-label> {{ item.fantasia }} </q-item-label>
             <q-item-label class="ellipsis" caption>
-              {{ formataCodNegocio(item.codnegocio) }}
+              {{ formataCodigo(item.codnegocio) }}
             </q-item-label>
           </q-item-section>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataCodigo } from '@components/formatters'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { produtoStore } from 'stores/produto'
@@ -452,7 +452,7 @@ onUnmounted(() => {
                     {{ orc.fantasiavendedor }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ formataCodNegocio(orc.codnegocio) }}
+                    {{ formataCodigo(orc.codnegocio) }}
                   </q-item-label>
                   <q-item-label caption class="ellipsis">
                     {{ orc.uuid }}

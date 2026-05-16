@@ -3,7 +3,7 @@ import { formataDataAbreviada } from '@components/formatters'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { usuarioStore } from 'src/stores/usuario'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import MGLayout from 'layouts/MGLayout.vue'
 import moment from 'moment'
 import 'moment/min/locales'
@@ -11,7 +11,7 @@ moment.locale('pt-br')
 
 const $q = useQuasar()
 const sUsuario = usuarioStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 // Refs
 const dialogAlterarSenha = ref(false)
@@ -35,8 +35,8 @@ const confirmacaoValida = (val) => {
 
 const editar = () => {
   modelPerfilUsuario.value = {
-    codusuario: user.usuarioLogado.codusuario,
-    usuario: user.usuarioLogado.usuario,
+    codusuario: user.usuario.codusuario,
+    usuario: user.usuario.usuario,
   }
   dialogAlterarSenha.value = true
 }
@@ -81,7 +81,7 @@ const salvar = async () => {
 
 // Lifecycle
 onMounted(async () => {
-  await sUsuario.getUsuario(user.usuarioLogado.codusuario)
+  await sUsuario.getUsuario(user.usuario.codusuario)
 })
 </script>
 

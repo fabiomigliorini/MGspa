@@ -5,13 +5,7 @@ import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
 import MgInputData from '@components/MgInputData.vue'
-import {
-  formataCnpjCpf,
-  formataTimestamp,
-  formataData,
-  formataNumero,
-  formataChave,
-} from '@components/formatters'
+import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataChave } from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()

@@ -2,7 +2,7 @@
 import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import CardDetalhesUsuario from 'components/usuario/CardDetalhesUsuario.vue'
 import CardPermissoesUsuario from 'components/usuario/CardPermissoesUsuario.vue'
 import MGLayout from 'layouts/MGLayout.vue'
@@ -10,7 +10,7 @@ import NaoAutorizado from 'components/NaoAutorizado.vue'
 
 const route = useRoute()
 const sUsuario = usuarioStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 function carregarUsuario(id) {
   sUsuario.detalheUsuarios = []
@@ -41,7 +41,7 @@ watch(
       <q-btn flat dense round :to="{ name: 'usuarios' }" icon="arrow_back" aria-label="Voltar" />
     </template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <div style="max-width: 1280px; margin: auto; min-height: 100vh">
         <div v-if="sUsuario.detalheUsuarios">
           <q-item class="q-pt-lg q-pb-sm">

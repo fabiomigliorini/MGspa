@@ -3,14 +3,14 @@ import { ref, onMounted } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRouter } from 'vue-router'
 import { GrupoEconomicoStore } from 'stores/GrupoEconomico'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import MGLayout from 'layouts/MGLayout.vue'
 
 const $q = useQuasar()
 const router = useRouter()
 const sPessoa = GrupoEconomicoStore()
 const loading = ref(true)
-const user = guardaToken()
+const user = useAuthStore()
 
 const buscarGrupos = debounce(async () => {
   $q.loadingBar.start()
@@ -146,7 +146,7 @@ onMounted(() => {
       <q-page-sticky
         position="bottom-right"
         :offset="[18, 18]"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
       >
         <q-fab icon="add" direction="up" color="accent" @click="novoGrupo()" />
       </q-page-sticky>

@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodNegocio, formataData } from '@components/formatters'
+import { formataNumero, formataCodigo, formataData } from '@components/formatters'
 import { ref, watch } from 'vue'
 import { debounce } from 'quasar'
 import { iconeNegocio, corIconeNegocio } from '../utils/iconeNegocio.js'
@@ -93,7 +93,7 @@ const corIconeLiquidacao = (liq) => {
                 {{ item.portador }}
               </q-item-label>
               <q-item-label class="ellipsis" caption>
-                {{ formataCodNegocio(item.codliquidacaotitulo) }}
+                {{ formataCodigo(item.codliquidacaotitulo) }}
               </q-item-label>
             </q-item-section>
 

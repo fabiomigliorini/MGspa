@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataData, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataData, formataCodigo } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
@@ -20,7 +20,7 @@ const auth = useAuthStore()
 const store = useLiquidacaoTituloStore()
 
 const podeMutar = computed(() =>
-  auth.hasAnyPermission([
+  auth.temAlgumaPermissao([
     PERMISSOES.ADMINISTRADOR,
     PERMISSOES.FINANCEIRO,
     PERMISSOES.COBRANCA,
@@ -149,7 +149,7 @@ watch(() => route.fullPath, carregar)
           </q-item-section>
           <q-item-section>
             <div class="text-h4 text-grey-9">
-              Liquidação {{ formataCodNegocio(liq.codliquidacaotitulo) }}
+              Liquidação {{ formataCodigo(liq.codliquidacaotitulo) }}
             </div>
             <div v-if="estornado" class="text-negative">
               Estornada em {{ formataData(liq.estornado) }}

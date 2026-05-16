@@ -4,7 +4,7 @@ import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { pessoaStore } from 'stores/pessoa'
 import { dependenteStore } from 'stores/dependente'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import SelectPessoa from 'components/select/SelectPessoa.vue'
@@ -15,7 +15,7 @@ const $q = useQuasar()
 const route = useRoute()
 const sPessoa = pessoaStore()
 const sDependente = dependenteStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const filtroResponsavel = ref('ativos')
 const filtroDependenteDe = ref('ativos')
@@ -461,7 +461,7 @@ const ativar = async (coddependente) => {
         ]"
       />
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         flat
         round
         dense
@@ -543,7 +543,7 @@ const ativar = async (coddependente) => {
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat

@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodNegocio, formataData } from '@components/formatters'
+import { formataNumero, formataCodigo, formataData } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
@@ -27,7 +27,7 @@ const urlTitulo = (codtitulo) => {
             {{ titulo.numero }}
           </q-item-label>
           <q-item-label caption class="ellipsis">
-            {{ formataCodNegocio(titulo.codtitulo) }}
+            {{ formataCodigo(titulo.codtitulo) }}
           </q-item-label>
         </q-item-section>
       </q-item>

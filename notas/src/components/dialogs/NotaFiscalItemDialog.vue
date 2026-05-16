@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Notify } from 'quasar'
 import { useSelectProdutoBarraStore } from 'src/stores/selects/produtoBarra'
-import { formataCodProduto, formataNumero } from '@components/formatters'
+import { formataCodigo, formataNumero } from '@components/formatters'
 
 const store = useSelectProdutoBarraStore()
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -215,7 +215,7 @@ const handleKeyNavigation = (event) => {
                         {{ prod.descricao }}
                       </q-item-label>
                       <q-item-label caption>
-                        {{ formataCodProduto(prod.codproduto) }} | Barras {{ prod.barras }} |
+                        {{ formataCodigo(prod.codproduto, 6) }} | Barras {{ prod.barras }} |
                         {{ prod.referencia }}
                       </q-item-label>
                     </q-item-section>

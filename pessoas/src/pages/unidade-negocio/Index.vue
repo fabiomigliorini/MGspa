@@ -4,7 +4,7 @@ import { useQuasar } from 'quasar'
 import { unidadeNegocioStore } from 'src/stores/unidadenegocio'
 import { setorStore } from 'src/stores/setor'
 import { tipoSetorStore } from 'src/stores/tiposetor'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData, formataTimestamp } from '@components/formatters'
 import MGLayout from 'layouts/MGLayout.vue'
 import SelectFilial from 'components/select/SelectFilial.vue'
@@ -15,7 +15,7 @@ const $q = useQuasar()
 const sUnidade = unidadeNegocioStore()
 const sSetor = setorStore()
 const sTipoSetor = tipoSetorStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 // --- FILTROS ---
 

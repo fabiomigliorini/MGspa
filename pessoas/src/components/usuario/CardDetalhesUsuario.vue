@@ -3,7 +3,7 @@ import { formataData, formataTimestamp, formataDataAbreviada } from '@components
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import moment from 'moment'
 import 'moment/min/locales'
 moment.locale('pt-br')
@@ -12,7 +12,7 @@ const $q = useQuasar()
 const router = useRouter()
 const route = useRoute()
 const sUsuario = usuarioStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const excluir = (codusuario) => {
   $q.dialog({
@@ -91,7 +91,7 @@ const ativar = async (codusuario) => {
       DETALHES DO USUÁRIO
       <q-space />
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Administrador')"
+        v-if="user.temPermissao('Administrador')"
         flat
         round
         dense
@@ -116,7 +116,7 @@ const ativar = async (codusuario) => {
       </q-btn>
 
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Administrador') && !sUsuario.detalheUsuarios.inativo"
+        v-if="user.temPermissao('Administrador') && !sUsuario.detalheUsuarios.inativo"
         flat
         round
         dense
@@ -129,7 +129,7 @@ const ativar = async (codusuario) => {
       </q-btn>
 
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Administrador') && sUsuario.detalheUsuarios.inativo"
+        v-if="user.temPermissao('Administrador') && sUsuario.detalheUsuarios.inativo"
         flat
         round
         dense

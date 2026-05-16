@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataCodigo } from '@components/formatters'
 import { ref, computed } from 'vue'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
@@ -426,7 +426,7 @@ const linkProduto = (codproduto) => {
           >
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
-                Devolvido de {{ formataCodNegocio(item.devolucao.codnegocio) }}
+                Devolvido de {{ formataCodigo(item.devolucao.codnegocio) }}
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -443,7 +443,7 @@ const linkProduto = (codproduto) => {
               </q-item-label>
               <q-item-label>
                 {{ moment(devolucao.lancamento).fromNow() }} em
-                {{ formataCodNegocio(devolucao.codnegocio) }}
+                {{ formataCodigo(devolucao.codnegocio) }}
               </q-item-label>
             </q-item-section>
           </q-item>

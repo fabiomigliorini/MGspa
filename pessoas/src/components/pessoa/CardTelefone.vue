@@ -3,15 +3,15 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
-import { formataData, formataCelular, formataFone, formataTimestamp } from '@components/formatters'
+import { useAuthStore } from 'src/stores'
+import { formataData, formataTelefone, formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 
 const $q = useQuasar()
 const route = useRoute()
 const sPessoa = pessoaStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const filtroTelefone = ref('ativos')
 const telefonesFiltrados = computed(() => {
@@ -43,7 +43,8 @@ const linkTel = (ddd, telefone) => {
 const confirmaSmsCel = (ddd, telefone, codpessoatelefone) => {
   $q.dialog({
     title: 'Verificação via SMS',
-    message: 'Digite o código enviado para o número ' + '(' + ddd + ') ' + formataCelular(telefone),
+    message:
+      'Digite o código enviado para o número ' + '(' + ddd + ') ' + formataTelefone(telefone),
     prompt: { model: '', type: 'number', step: '1' },
     cancel: true,
     persistent: true,
@@ -86,7 +87,7 @@ const enviarSms = async (pais, ddd, telefone, codpessoatelefone) => {
       '(' +
       ddd +
       ') ' +
-      formataCelular(telefone) +
+      formataTelefone(telefone) +
       ' ?',
     cancel: true,
   }).onOk(() => {
@@ -453,7 +454,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         @click=";(dialogTel = true), (modelTel = { tipo: 2, pais: '+55' }), (telNovo = true)"
       />
     </q-card-section>
@@ -477,7 +478,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
             <!-- NUMERO -->
             <q-item-label :class="element.inativo ? 'text-strike' : null">
               <template v-if="element.ddd"> ({{ element.ddd }}) </template>
-              {{ formataFone(element.tipo, element.telefone) }}
+              {{ formataTelefone(element.telefone, element.tipo) }}
               <q-icon v-if="element.verificacao" color="primary" name="verified" class="q-ml-xs">
                 <q-tooltip>Verificado</q-tooltip>
               </q-icon>
@@ -502,7 +503,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
             </q-item-label>
 
             <!-- VERIFICAR -->
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <q-btn
                 v-if="!element.verificacao && element.tipo === 2"
                 flat
@@ -518,7 +519,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
           </q-item-section>
           <q-item-section side>
             <!-- BOTOES -->
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <template v-if="sPessoa.item?.PessoaTelefoneS.length > 1">
                 <!-- CIMA -->
                 <q-btn

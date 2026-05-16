@@ -2,14 +2,14 @@
 import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import FormUsuario from 'components/usuario/FormUsuario.vue'
 import MGLayout from 'layouts/MGLayout.vue'
 import NaoAutorizado from 'components/NaoAutorizado.vue'
 
 const route = useRoute()
 const sUsuario = usuarioStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 function carregarUsuario(id) {
   sUsuario.detalheUsuarios = []
@@ -47,7 +47,7 @@ watch(
       />
     </template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <div style="max-width: 1280px; margin: auto; min-height: 100vh">
         <div class="row q-pa-md">
           <div class="col-12" v-if="sUsuario.detalheUsuarios">

@@ -1,6 +1,6 @@
 <script setup>
 import { tipoIndicadorLabel } from 'src/utils/rhFormatters'
-import { formataNumero, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataCodigo } from '@components/formatters'
 
 const props = defineProps({
   rubricas: { type: Array, default: () => [] },
@@ -200,7 +200,7 @@ const condicaoLabel = (rubrica) => {
               target="_blank"
               class="text-primary text-caption"
             >
-              {{ formataCodNegocio(codtitulo) }}
+              {{ formataCodigo(codtitulo) }}
               <q-icon name="open_in_new" size="xs" />
             </a>
           </td>

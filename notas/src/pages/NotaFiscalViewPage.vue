@@ -13,16 +13,7 @@ import {
   getFreteLabel,
   STATUS_OPTIONS,
 } from '../constants/notaFiscal'
-import {
-  formataCnpjCpf,
-  formataTimestamp,
-  formataData,
-  formataNumero,
-  formataNumeroNotaFiscal,
-  formataChave,
-  formataProtocolo,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataNumeroNota, formataChave, formataProtocolo, formataCodigo } from '@components/formatters'
 import NotaFiscalItemCard from '../components/NotaFiscalItemCard.vue'
 import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamentoDialog.vue'
 import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicataDialog.vue'
@@ -994,7 +985,7 @@ onUnmounted(() => {
         />
         <div class="text-h5 ellipsis" style="flex: 1; min-width: 0">
           {{ getModeloLabel(nota.modelo) }}
-          {{ formataNumeroNotaFiscal(nota.numero) }}
+          {{ formataNumeroNota(nota.numero) }}
           - Série
           {{ nota.serie }}
         </div>
@@ -1133,7 +1124,7 @@ onUnmounted(() => {
                     class="text-primary text-weight-medium"
                     style="text-decoration: none"
                   >
-                    {{ formataCodNegocio(codnegocio) }}
+                    {{ formataCodigo(codnegocio) }}
                     <span v-if="index < negociosVinculados.length - 1">,</span>
                   </a>
                 </div>
@@ -1212,7 +1203,7 @@ onUnmounted(() => {
                   {{ getModeloLabel(nota.modelo) }}
                 </div>
                 <div class="text-caption" style="font-family: monospace">
-                  {{ formataNumeroNotaFiscal(nota.numero) }} - Série {{ nota.serie }}
+                  {{ formataNumeroNota(nota.numero) }} - Série {{ nota.serie }}
                 </div>
               </template>
 

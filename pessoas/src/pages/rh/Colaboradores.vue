@@ -3,16 +3,16 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { corProgresso, tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataPercentual } from '@components/formatters'
 
 const $q = useQuasar()
 const route = useRoute()
 const sRh = rhStore()
-const user = guardaToken()
+const user = useAuthStore()
 
-const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
+const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 
 const diasUteisPeriodo = computed(() => sRh.dashboard?.periodo?.diasuteis || 0)
 const alertas = computed(() => sRh.dashboard?.alertas || [])

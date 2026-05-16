@@ -39,7 +39,7 @@ const finalizar = ref({
 const podeAvancar = computed(() => titulos.value.length > 0)
 
 const portadorCacheKey = () =>
-  auth.user?.codusuario ? `liquidacao-titulo:ultimoPortador:${auth.user.codusuario}` : null
+  auth.usuario?.codusuario ? `liquidacao-titulo:ultimoPortador:${auth.usuario.codusuario}` : null
 
 async function abrirFinalizar() {
   // Sugere pessoa quando todos os títulos têm a mesma

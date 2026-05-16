@@ -1,10 +1,5 @@
 <script setup>
-import {
-  formataNumero,
-  formataDataIso,
-  formataHora,
-  formataDataCompleta,
-} from '@components/formatters'
+import { formataNumero, formataDataIso, formataHora, formataDataCompleta } from '@components/formatters'
 import { onMounted, ref, watch } from 'vue'
 import { exportFile, Notify, Dialog } from 'quasar'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'

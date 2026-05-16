@@ -8,7 +8,7 @@ import {
   formataData,
   formataTelefone,
   formataNumeroNota,
-  formataCodNegocio,
+  formataCodigo,
 } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
@@ -29,7 +29,7 @@ const $q = useQuasar()
 const auth = useAuthStore()
 
 const podeMutar = computed(() =>
-  auth.hasAnyPermission([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
+  auth.temAlgumaPermissao([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
 )
 
 const ag = ref(null)
@@ -203,7 +203,7 @@ watch(() => route.fullPath, carregar)
           </q-item-section>
           <q-item-section>
             <div class="text-h4 text-grey-9">
-              Agrupamento {{ formataCodNegocio(ag.codtituloagrupamento) }}
+              Agrupamento {{ formataCodigo(ag.codtituloagrupamento) }}
             </div>
             <div v-if="estornado" class="text-negative">
               Estornado em {{ formataData(ag.cancelamento) }}

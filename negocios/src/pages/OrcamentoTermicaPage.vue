@@ -2,12 +2,7 @@
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { negocioStore } from 'src/stores/negocio'
-import {
-  formataCnpjCpf,
-  formataNumero,
-  formataTimestamp,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataCnpjCpf, formataNumero, formataTimestamp, formataCodigo } from '@components/formatters'
 import { produtoStore } from 'src/stores/produto'
 import BarCode from 'components/BarCode.vue'
 
@@ -33,7 +28,7 @@ onMounted(() => {
           <td>
             <span class="row">
               <template v-if="sNegocio.negocio.codnegocio">
-                {{ formataCodNegocio(sNegocio.negocio.codnegocio) }}
+                {{ formataCodigo(sNegocio.negocio.codnegocio) }}
               </template>
               <template v-else>
                 {{ sNegocio.negocio.uuid }}
@@ -58,7 +53,7 @@ onMounted(() => {
         <tr>
           <td v-if="sNegocio.negocio.Pessoa.codpessoa != 1">
             <span class="row">
-              {{ formataCodNegocio(sNegocio.negocio.codpessoa) }} |
+              {{ formataCodigo(sNegocio.negocio.codpessoa) }} |
               {{ formataCnpjCpf(sNegocio.negocio.Pessoa.cnpj, sNegocio.negocio.Pessoa.fisica) }}
             </span>
             <div class="row">
@@ -172,7 +167,7 @@ onMounted(() => {
     <!-- <hr class="q-mb-md" /> -->
     <template v-if="sNegocio.negocio.sincronizado">
       <div class="text-center text-h5 text-bold q-pt-md">
-        Negocio {{ formataCodNegocio(sNegocio.negocio.codnegocio) }}
+        Negocio {{ formataCodigo(sNegocio.negocio.codnegocio) }}
       </div>
       <div class="barcode">
         <BarCode

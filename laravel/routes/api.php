@@ -40,10 +40,6 @@ Route::group(['prefix' => 'v1/cielo-lio'], function () {
 
 Route::group(['prefix' => 'v1/auth'], function () {
     Route::post('login', 'Auth\SSOController@login');
-    // Route::get('logout', 'Auth\LoginController@logoutt');
-    // Route::get('check', 'Auth\LoginController@check');
-    // Route::get('refresh', 'Auth\LoginController@refreshToken');
-    // Route::get('user', 'Auth\SSOController@getAuthenticatedUser');
 });
 
 Route::group(['prefix' => 'v1'], function () {

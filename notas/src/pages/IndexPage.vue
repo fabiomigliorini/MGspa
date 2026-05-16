@@ -13,7 +13,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 use([CanvasRenderer, LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent])
 
 const $q = useQuasar()
-const { validateToken } = useAuth()
+const { validarToken } = useAuth()
 const store = useDashboardStore()
 
 const loading = computed(() => store.loading)
@@ -275,7 +275,7 @@ const refresh = async () => {
 }
 
 onMounted(async () => {
-  await validateToken()
+  await validarToken()
   await store.fetchAll()
 })
 </script>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { formataData, formataCpf, formataCnpj, formataFone } from '@components/formatters'
+import { formataData, formataCpf, formataCnpj, formataTelefone } from '@components/formatters'
 
 const props = defineProps({
   listagempessoas: {
@@ -111,7 +111,7 @@ const primeiroTelefone = computed(() => {
           <q-item-section>
             <q-item-label class="ellipsis text-caption">
               ({{ primeiroTelefone.ddd }})
-              {{ formataFone(primeiroTelefone.tipo, primeiroTelefone.telefone) }}
+              {{ formataTelefone(primeiroTelefone.telefone, primeiroTelefone.tipo) }}
             </q-item-label>
           </q-item-section>
         </q-item>

@@ -1,10 +1,10 @@
 <script setup>
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import moment from 'moment'
 import 'moment/min/locales'
 moment.locale('pt-br')
 
-const user = guardaToken()
+const user = useAuthStore()
 </script>
 
 <template>
@@ -40,7 +40,7 @@ const user = guardaToken()
           </q-btn>
         </div>
 
-        <template v-if="user.verificaPermissaoUsuario('Administrador')">
+        <template v-if="user.temPermissao('Administrador')">
           <div class="row">
             <q-btn flat stack class="col-4 menu-btn" :to="{ name: 'usuarios' }">
               <q-icon name="admin_panel_settings" size="35px" />
@@ -57,7 +57,7 @@ const user = guardaToken()
           </div>
         </template>
 
-        <template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
+        <template v-if="user.temPermissao('Recursos Humanos')">
           <div class="row">
             <q-btn flat stack class="col-4 menu-btn" :to="'/ferias/' + moment().year()">
               <q-icon name="hotel" size="35px" />

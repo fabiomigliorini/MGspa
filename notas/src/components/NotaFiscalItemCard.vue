@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
-import { formataNumero, formataNcm, formataCest, formataCodNegocio } from '@components/formatters'
+import { formataNumero, formataNcm, formataCest, formataCodigo } from '@components/formatters'
 import { getEnteIcon } from 'src/composables/useTributoIcons'
 
 // const props = defineProps({
@@ -166,7 +166,7 @@ const getProdutoUrl = (codproduto) => {
                 class="text-primary text-weight-medium"
                 style="text-decoration: none"
               >
-                {{ formataCodNegocio(item.codnegocio) }}
+                {{ formataCodigo(item.codnegocio) }}
               </a>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { negocioStore } from 'stores/negocio'
 import { produtoStore } from 'stores/produto'
-import { usuarioStore } from 'stores/usuario'
+import { useAuthStore } from 'stores/auth'
 import { pagarMeStore } from 'stores/pagar-me'
 import { pixStore } from 'stores/pix'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
@@ -21,7 +21,7 @@ const route = useRoute()
 const router = useRouter()
 const sNegocio = negocioStore()
 const sProduto = produtoStore()
-const sUsuario = usuarioStore()
+const sAuth = useAuthStore()
 const sPagarMe = pagarMeStore()
 const sPix = pixStore()
 const dialogRomaneio = ref(false)
@@ -177,7 +177,7 @@ const fecharDialogs = async () => {
   sNegocio.dialog.pagamentoPix = false
   sNegocio.dialog.pagamentoPagarMe = false
   sNegocio.dialog.pagamentoCartaoManual = false
-  sUsuario.dialog.login = false
+  sAuth.dialog.login = false
   sPagarMe.dialog.detalhesPedido = false
   dialogRomaneio.value = false
   dialogVale.value = false

@@ -3,14 +3,8 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
-import {
-  formataFromNow,
-  formataCpf,
-  formataCnpj,
-  formataCelularComDDD,
-  formataCnpjEcpf,
-} from '@components/formatters'
+import { useAuthStore } from 'src/stores'
+import { formataFromNow, formataCpf, formataCnpj, formataTelefone, formataCnpjCpf } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import SelectBanco from 'components/pessoa/SelectBanco.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
@@ -18,7 +12,7 @@ import MgInputFormatado from '@components/MgInputFormatado.vue'
 const $q = useQuasar()
 const sPessoa = pessoaStore()
 const route = useRoute()
-const user = guardaToken()
+const user = useAuthStore()
 const filtroConta = ref('ativos')
 const contasFiltradas = computed(() => {
   const lista = sPessoa.item?.PessoaContaS || []
@@ -471,7 +465,7 @@ const submit = () => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         @click=";(dialogNovaConta = true), (editarConta = false), (modelContaBancaria = {})"
       />
     </q-card-section>
@@ -502,7 +496,7 @@ const submit = () => {
                 {{ formataCnpj(contas.pixcnpj.toString().padStart(14, '0')) }}
               </span>
               <span v-if="contas.pixtelefone">
-                {{ formataCelularComDDD(contas.pixtelefone) }}
+                {{ formataTelefone(contas.pixtelefone) }}
               </span>
               <span v-if="contas.pixemail">{{ contas.pixemail }}</span>
               <span v-if="contas.pixaleatoria">{{ contas.pixaleatoria }}</span>
@@ -517,7 +511,7 @@ const submit = () => {
             </q-item-label>
 
             <q-item-label caption v-if="contas.cnpj">
-              {{ formataCnpjEcpf(contas.cnpj) }}
+              {{ formataCnpjCpf(contas.cnpj) }}
             </q-item-label>
             <q-item-label caption v-if="contas.titular">
               {{ contas.titular }}
@@ -531,7 +525,7 @@ const submit = () => {
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat

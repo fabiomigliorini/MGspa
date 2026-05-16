@@ -8,15 +8,13 @@
 
 <script>
 import { defineComponent, onMounted } from 'vue'
-import { guardaToken } from 'stores/index'
-import { useRoute, useRouter } from 'vue-router'
-import { pessoaStore } from 'src/stores/pessoa'
-const auth = guardaToken()
+import { useAuthStore } from 'stores/index'
+import { useRoute } from 'vue-router'
 
 export default defineComponent({
   setup() {
     const route = useRoute()
-    const sPessoa = pessoaStore()
+    const auth = useAuthStore()
 
     // Se existir o token redireciona o usuario para home
     const verificaauth = async () => {
@@ -26,8 +24,7 @@ export default defineComponent({
       if (tokenCookie) {
         const Token = tokenCookie.split('=')[1]
         if (Token) {
-          auth.accessToken(Token)
-          localStorage.setItem('access_token', Token)
+          auth.gravarToken(Token)
           window.location.replace(urlRetorno)
           return
         }

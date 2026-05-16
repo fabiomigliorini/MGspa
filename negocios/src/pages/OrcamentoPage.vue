@@ -5,13 +5,7 @@ import { db } from 'boot/db'
 import { negocioStore } from 'src/stores/negocio'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
-import {
-  formataCnpjCpf,
-  formataCnpj,
-  formataNumero,
-  formataTimestamp,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataCnpjCpf, formataCnpj, formataNumero, formataTimestamp, formataCodigo } from '@components/formatters'
 import { produtoStore } from 'src/stores/produto'
 import BarCode from 'components/BarCode.vue'
 
@@ -39,7 +33,7 @@ onMounted(async () => {
           <td class="local text-bold">Local</td>
           <td>{{ sNegocio.negocio.estoquelocal }}</td>
           <td class="text-bold text-right">Negócio</td>
-          <td>{{ formataCodNegocio(sNegocio.negocio.codnegocio) }}</td>
+          <td>{{ formataCodigo(sNegocio.negocio.codnegocio) }}</td>
         </tr>
         <tr>
           <td v-if="sNegocio.negocio.fantasiavendedor" class="text-bold text-right">Vendedor</td>
@@ -220,7 +214,7 @@ onMounted(async () => {
     <hr />
     <template v-if="sNegocio.negocio.sincronizado">
       <div class="text-center text-h5 text-bold">
-        Negocio {{ formataCodNegocio(sNegocio.negocio.codnegocio) }}
+        Negocio {{ formataCodigo(sNegocio.negocio.codnegocio) }}
       </div>
       <div class="barcode">
         <BarCode

@@ -1,7 +1,7 @@
 <template>
   <MGLayout>
     <template #tituloPagina> Férias </template>
-    <template #content v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
+    <template #content v-if="user.temPermissao('Recursos Humanos')">
       <div class="q-pa-md">
         <q-card bordered>
           <q-table
@@ -110,7 +110,7 @@ import { ref, defineAsyncComponent } from 'vue'
 import moment from 'moment'
 import { pessoaStore } from 'src/stores/pessoa'
 import { useQuasar } from 'quasar'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { useRoute, useRouter } from 'vue-router'
 import { colaboradorStore } from 'src/stores/colaborador'
 
@@ -252,7 +252,7 @@ export default {
     const $q = useQuasar()
     const max = ref([])
     const ano = ref([])
-    const user = guardaToken()
+    const user = useAuthStore()
     const filter = ref('')
     const show_filter = ref(true)
     const separator = ref('cell')

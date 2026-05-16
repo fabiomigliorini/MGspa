@@ -5,7 +5,7 @@ import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { colaboradorStore } from 'stores/colaborador'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import moment from 'moment'
 import 'moment/min/locales'
 moment.locale('pt-br')
@@ -21,7 +21,7 @@ const $q = useQuasar()
 const sPessoa = pessoaStore()
 const sColaborador = colaboradorStore()
 const route = useRoute()
-const user = guardaToken()
+const user = useAuthStore()
 
 const modelColaborador = ref({})
 const editColaborador = ref(false)
@@ -460,7 +460,7 @@ watch(
 )
 </script>
 
-<template v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
+<template v-if="user.temPermissao('Recursos Humanos')">
   <q-card bordered flat class="q-mb-md" v-if="sColaborador.colaboradores.length === 0">
     <q-card-section class="text-grey-9 text-overline row items-center">
       REGISTRO DE COLABORADOR

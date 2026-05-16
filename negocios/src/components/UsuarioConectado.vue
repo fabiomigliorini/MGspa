@@ -1,34 +1,21 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { usuarioStore } from 'stores/usuario'
-import { sincronizacaoStore } from 'src/stores/sincronizacao'
-import { tempoRelativo } from '@components/formatters'
+import { useAuthStore } from 'stores/auth'
+import { useAuth } from 'src/composables/useAuth'
+import MgUserMenu from '@components/MgUserMenu.vue'
 
-const sUsuario = usuarioStore()
-const sSinc = sincronizacaoStore()
+const store = useAuthStore()
+const auth = useAuth()
+
 const usuario = ref(null)
 const senha = ref(null)
 const mostrarSenha = ref(false)
 const inputSenha = ref()
 
-const logout = async () => {
-  sUsuario.logout()
-}
-
-const refresh = async () => {
-  sUsuario.refreshToken()
-}
-
-const abrirLogin = () => {
-  usuario.value = null
-  senha.value = null
-  sUsuario.dialog.login = true
-}
-
 const login = async () => {
-  const ret = await sUsuario.login(usuario.value, senha.value)
+  const ret = await store.login(usuario.value, senha.value)
   if (ret) {
-    sUsuario.dialog.login = false
+    store.dialog.login = false
   }
 }
 
@@ -40,11 +27,11 @@ const togglePassword = () => {
 }
 
 onMounted(() => {
-  sUsuario.getUsuario()
+  store.carregarUsuario()
 })
 </script>
 <template>
-  <q-dialog v-model="sUsuario.dialog.login">
+  <q-dialog v-model="store.dialog.login">
     <q-card style="width: 350px; max-width: 80vw">
       <q-form @submit="login()">
         <q-card-section>
@@ -81,7 +68,7 @@ onMounted(() => {
             label="Cancelar"
             color="primary"
             class="q-ml-sm"
-            @click="sUsuario.dialog.login = false"
+            @click="store.dialog.login = false"
             tabindex="-1"
           />
           <q-btn flat label="Entrar" type="submit" color="primary" />
@@ -89,34 +76,6 @@ onMounted(() => {
       </q-form>
     </q-card>
   </q-dialog>
-  <q-btn-dropdown dense flat :label="sUsuario.usuario.usuario" v-if="sUsuario.usuario.usuario">
-    <div class="row no-wrap q-pa-md justify-center">
-      <div class="column items-center">
-        <q-avatar size="150px" color="yellow-8">
-          <q-icon name="person_outline" color="grey-6" size="140px" />
-          <!-- <img src="https://cdn.quasar.dev/img/boy-avatar.png" /> -->
-        </q-avatar>
-        <div class="text-subtitle1 q-mt-md q-mb-xs text-center">
-          <b>{{ sUsuario.usuario.usuario }}</b>
-          <div v-if="sUsuario.usuario.Pessoa" class="text-grey-8">
-            {{ sUsuario.usuario.Pessoa.pessoa }}
-          </div>
-          <div class="text-grey-8">
-            expira
-            {{ tempoRelativo(sUsuario.token.expires_at) }}
-          </div>
-          <div class="text-grey-8 text-caption q-my-md" v-if="sSinc.pdv.uuid">
-            {{ sSinc.pdv.uuid }}
-          </div>
-          <div class="text-grey-8 text-caption q-my-md" v-else>Sem UUID</div>
-        </div>
 
-        <q-btn-group>
-          <q-btn color="primary" label="Renovar" push size="sm" v-close-popup @click="refresh()" />
-          <q-btn color="primary" label="Sair" push size="sm" v-close-popup @click="logout()" />
-        </q-btn-group>
-      </div>
-    </div>
-  </q-btn-dropdown>
-  <q-btn dense label="Conectar" v-else color="negative" @click="abrirLogin()" />
+  <MgUserMenu :auth="auth" />
 </template>

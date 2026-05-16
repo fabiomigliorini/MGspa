@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData, formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MGLayout from 'layouts/MGLayout.vue'
@@ -18,7 +18,7 @@ const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const sGrupoEconomico = GrupoEconomicoStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const grupoEconomico = ref({})
 const pessoasGrupo = ref([])
@@ -212,7 +212,7 @@ watch(
                 Inativo desde: {{ formataTimestamp(grupoEconomico.inativo) }}
               </div>
             </q-item-section>
-            <q-item-section side v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-section side v-if="user.temPermissao('Publico')">
               <div class="row">
                 <q-btn flat round dense icon="edit" color="grey-7" @click="editar()">
                   <q-tooltip>Editar</q-tooltip>

@@ -3,7 +3,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { feriadoStore } from 'src/stores/feriado'
 import { formataData, formataNumero } from '@components/formatters'
 import { extrairErro } from 'src/utils/rhFormatters'
@@ -18,7 +18,7 @@ const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const sRh = rhStore()
-const user = guardaToken()
+const user = useAuthStore()
 const sFeriado = feriadoStore()
 
 const loading = ref(false)
@@ -26,7 +26,7 @@ const tab = ref(route.query.tab || 'resumo')
 const indicadoresCarregados = ref(false)
 const loadingIndicadores = ref(false)
 
-const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
+const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 
 const dash = computed(() => sRh.dashboard || {})
 const periodo = computed(() => dash.value.periodo || {})

@@ -3,19 +3,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import {
   corProgresso,
   tipoIndicadorLabel,
   tipoIndicadorColor,
   extrairErro,
 } from 'src/utils/rhFormatters'
-import {
-  formataNumero,
-  formataPercentual,
-  formataTimestamp,
-  formataCodNegocio,
-} from '@components/formatters'
+import { formataNumero, formataPercentual, formataTimestamp, formataCodigo } from '@components/formatters'
 import moment from 'moment'
 import DialogEditarMeta from './DialogEditarMeta.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -24,9 +19,9 @@ const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const sRh = rhStore()
-const user = guardaToken()
+const user = useAuthStore()
 
-const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
+const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 
 const loading = ref(false)
 const indicador = ref(null)
@@ -354,7 +349,7 @@ onMounted(() => {
                       color="primary"
                       :href="negocioUrl(l.codnegocio)"
                       target="_blank"
-                      :label="formataCodNegocio(l.codnegocio)"
+                      :label="formataCodigo(l.codnegocio)"
                       type="a"
                       class="q-pa-none"
                     />

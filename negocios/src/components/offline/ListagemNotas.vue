@@ -1,10 +1,5 @@
 <script setup>
-import {
-  formataNumero,
-  formataCodNegocio,
-  formataTimestampCompleto,
-  formataNumeroNota,
-} from '@components/formatters'
+import { formataNumero, formataCodigo, formataTimestampCompleto, formataNumeroNota } from '@components/formatters'
 import { ref } from 'vue'
 import { Dialog, Notify, Platform } from 'quasar'
 import { api } from 'boot/axios'
@@ -476,7 +471,7 @@ defineExpose({
             {{ formataNumeroNota(nota.numero, nota.modelo, nota.serie, nota.emitida) }}
           </q-item-label>
           <q-item-label caption class="ellipsis">
-            {{ formataCodNegocio(nota.codnotafiscal) }}
+            {{ formataCodigo(nota.codnotafiscal) }}
           </q-item-label>
         </q-item-section>
       </q-item>

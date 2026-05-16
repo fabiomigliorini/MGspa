@@ -2,7 +2,7 @@
   <MGLayout drawer>
     <template #tituloPagina>Grupo Usuários</template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <q-infinite-scroll @load="scrollGrupoUsuario" :disable="loading" style="min-height: 100vh">
         <div class="row q-pa-md q-col-gutter-md">
           <div
@@ -20,7 +20,7 @@
       <nao-autorizado />
     </template>
 
-    <template #drawer v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #drawer v-if="user.temPermissao('Administrador')">
       <div class="q-pa-none q-pt-sm">
         <q-card flat>
           <q-list>
@@ -63,7 +63,7 @@ import { ref, onMounted, watch } from 'vue'
 
 // 2. Imports de stores
 import { grupoUsuarioStore } from 'src/stores/grupo-usuario'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 
 // 3. Imports de utilitários
 import { useQuasar, debounce } from 'quasar'
@@ -75,7 +75,7 @@ import CardGrupoUsuario from 'components/usuario/CardGrupoUsuario.vue'
 
 // 5. Instâncias
 const sGrupoUsuario = grupoUsuarioStore()
-const user = guardaToken()
+const user = useAuthStore()
 const $q = useQuasar()
 
 // 6. Refs

@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { api } from 'src/boot/axios'
 import { formataData, formataFromNow } from '@components/formatters'
 import { tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
@@ -19,10 +19,10 @@ const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const sRh = rhStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const loading = ref(false)
-const podeEditar = computed(() => user.verificaPermissaoUsuario('Recursos Humanos'))
+const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 
 // --- DADOS DO COLABORADOR ---
 

@@ -1,5 +1,5 @@
 <script setup>
-import { formataTimestamp, formataCodNegocio } from '@components/formatters'
+import { formataTimestamp, formataCodigo } from '@components/formatters'
 import { computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -171,7 +171,7 @@ onMounted(loadData)
               <q-item>
                 <q-item-section class="text-caption">
                   <q-item-label class="text-subtitle2 text-grey-7">Código</q-item-label>
-                  {{ formataCodNegocio(naturezaOperacao.codnaturezaoperacao) }}
+                  {{ formataCodigo(naturezaOperacao.codnaturezaoperacao) }}
                 </q-item-section>
               </q-item>
               <q-item>
@@ -383,7 +383,7 @@ onMounted(loadData)
                     >
                       <div class="row items-center q-gutter-sm text-caption">
                         <q-badge color="primary" class="text-weight-bold">
-                          {{ formataCodNegocio(trib.codtributacaonaturezaoperacao) }}
+                          {{ formataCodigo(trib.codtributacaonaturezaoperacao) }}
                         </q-badge>
                         <span class="text-weight-bold text-secondary">
                           {{ trib.tributacao?.tributacao || trib.tributacao || '-' }}

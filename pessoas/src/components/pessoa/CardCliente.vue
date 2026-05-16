@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataFromNow, verificaPassadoFuturo } from '@components/formatters'
 import { api } from 'src/boot/axios'
 
@@ -14,7 +14,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 const $q = useQuasar()
 const sPessoa = pessoaStore()
 const route = useRoute()
-const user = guardaToken()
+const user = useAuthStore()
 
 const modelDialogCliente = ref(false)
 const modelEditar = ref([])
@@ -110,7 +110,7 @@ const fecharRelatorio = () => {
         icon="edit"
         size="sm"
         color="grey-7"
-        v-if="user.verificaPermissaoUsuario('Financeiro')"
+        v-if="user.temPermissao('Financeiro')"
         @click="editarCliente()"
       />
       <q-btn
@@ -290,7 +290,7 @@ const fecharRelatorio = () => {
           <q-toggle outlined v-model="modelEditar.creditobloqueado" label="Crédito Bloqueado" />
 
           <div class="row" v-if="!modelEditar.creditobloqueado">
-            <div class="col-9" v-if="user.verificaPermissaoUsuario('Financeiro')">
+            <div class="col-9" v-if="user.temPermissao('Financeiro')">
               <MgInputValor
                 v-model="modelEditar.credito"
                 label="Limite de Crédito"
@@ -298,7 +298,7 @@ const fecharRelatorio = () => {
                 class="q-pr-md"
               />
             </div>
-            <div :class="user.verificaPermissaoUsuario('Financeiro') ? 'col-3' : 'col-9 q-pr-md'">
+            <div :class="user.temPermissao('Financeiro') ? 'col-3' : 'col-9 q-pr-md'">
               <q-input
                 outlined
                 v-model="modelEditar.toleranciaatraso"

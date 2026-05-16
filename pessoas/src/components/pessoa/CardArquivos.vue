@@ -2,15 +2,15 @@
 import { onBeforeUnmount, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { ref } from 'vue'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { pessoaStore } from 'stores/pessoa'
 import { api } from 'src/boot/axios'
 import { formataFromNow, formataTimestampCompleto } from '@components/formatters'
 
 const $q = useQuasar()
 const sPessoa = pessoaStore()
-const user = guardaToken()
-const permitido = user.verificaPermissaoUsuario('Financeiro')
+const user = useAuthStore()
+const permitido = user.temPermissao('Financeiro')
 
 const filtro = ref('ativos')
 

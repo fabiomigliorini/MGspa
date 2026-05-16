@@ -1,5 +1,5 @@
 <script>
-import { formataData, formataCodNegocio, formataTimestamp } from '@components/formatters'
+import { formataData, formataCodigo, formataTimestamp } from '@components/formatters'
 import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
@@ -21,7 +21,7 @@ export default {
 
     const formatarCodigo = (cod) => {
       if (!cod) return ''
-      return formataCodNegocio(cod)
+      return formataCodigo(cod)
     }
 
     const ambienteNfeLabel = computed(() => {

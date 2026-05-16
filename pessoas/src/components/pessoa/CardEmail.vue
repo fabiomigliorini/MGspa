@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData, formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
@@ -11,7 +11,7 @@ import MgInputFormatado from '@components/MgInputFormatado.vue'
 const $q = useQuasar()
 const route = useRoute()
 const sPessoa = pessoaStore()
-const user = guardaToken()
+const user = useAuthStore()
 
 const filtroEmail = ref('ativos')
 const emailsFiltrados = computed(() => {
@@ -351,7 +351,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         @click="modalNovoEmail()"
       />
     </q-card-section>
@@ -399,7 +399,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
             </q-item-label>
 
             <!-- VERIFICAR -->
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <q-btn
                 v-if="!element.verificacao"
                 flat
@@ -414,7 +414,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
 
           <q-item-section side>
             <!-- BOTOES -->
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <template v-if="sPessoa.item?.PessoaEmailS.length > 1">
                 <!-- CIMA -->
                 <q-btn

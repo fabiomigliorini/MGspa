@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import SelectCertidaoEmissor from 'components/pessoa/SelectCertidaoEmissor.vue'
 import SelectCertidaoTipo from 'components/pessoa/SelectCertidaoTipo.vue'
@@ -13,7 +13,7 @@ import { formataData, formataDataIso } from '@components/formatters'
 const $q = useQuasar()
 const sPessoa = pessoaStore()
 const route = useRoute()
-const user = guardaToken()
+const user = useAuthStore()
 const editCertidao = ref(false)
 const dialogCertidao = ref(false)
 const modelCertidao = ref({})
@@ -267,7 +267,7 @@ const submit = () => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         @click=";(dialogCertidao = true), (modelCertidao = {}), (editCertidao = false)"
       />
     </q-card-section>
@@ -311,7 +311,7 @@ const submit = () => {
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat

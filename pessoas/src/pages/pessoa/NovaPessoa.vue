@@ -220,7 +220,7 @@
 import { ref, defineAsyncComponent } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { pessoaStore } from 'src/stores/pessoa'
 import { isCnpjCpfValido } from 'src/utils/validador'
 import { formataIe, primeiraLetraMaiuscula, removerAcentos } from '@components/formatters'
@@ -299,7 +299,7 @@ export default {
 
     async verificaIeSefaz() {
       try {
-        var codfilial = this.user.usuarioLogado.codfilial
+        var codfilial = this.user.usuario.codfilial
         const ret = await this.sPessoa.verificaIeSefaz(101, this.model.fisica, this.model.cnpj)
         this.sefazCadastro = ret.data.retSefaz
         this.receitaWsCadastro = ret.data.retReceita
@@ -482,7 +482,7 @@ export default {
     const cadastrosEncontrados = ref([])
     const sefazCadastro = ref([])
     const receitaWsCadastro = ref([])
-    const user = guardaToken()
+    const user = useAuthStore()
 
     return {
       step,

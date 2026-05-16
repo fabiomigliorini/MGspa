@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -11,7 +11,7 @@ import MgInputData from '@components/MgInputData.vue'
 const $q = useQuasar()
 const sPessoa = pessoaStore()
 const route = useRoute()
-const user = guardaToken()
+const user = useAuthStore()
 const dialogNovoRegistroSpc = ref(false)
 const modelRegistroSpc = ref({})
 const editarRegistro = ref(false)
@@ -222,7 +222,7 @@ const submit = () => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         @click=";(dialogNovoRegistroSpc = true), (editarRegistro = false), (modelRegistroSpc = {})"
       />
     </q-card-section>
@@ -263,7 +263,7 @@ const submit = () => {
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label caption v-if="user.verificaPermissaoUsuario('Publico')">
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat

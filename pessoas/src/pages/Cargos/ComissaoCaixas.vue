@@ -2,13 +2,13 @@
 import { formataTimestampIso } from '@components/formatters'
 import { ref, onMounted, watch } from 'vue'
 import { debounce } from 'quasar'
-import { guardaToken } from 'src/stores'
+import { useAuthStore } from 'src/stores'
 import MGLayout from 'src/layouts/MGLayout.vue'
 import MgInputData from '@components/MgInputData.vue'
 import moment from 'moment'
 import { api } from 'src/boot/axios'
 
-const user = guardaToken()
+const user = useAuthStore()
 const caixas = ref([])
 
 const filtro = ref({
@@ -122,7 +122,7 @@ onMounted(() => {
 const filter = ref('')
 </script>
 <template>
-  <MGLayout drawer v-if="user.verificaPermissaoUsuario('Recursos Humanos')">
+  <MGLayout drawer v-if="user.temPermissao('Recursos Humanos')">
     <template #tituloPagina> Comissão Caixas </template>
     <template #content>
       <div class="q-pa-md">
