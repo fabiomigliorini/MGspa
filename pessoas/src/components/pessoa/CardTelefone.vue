@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataData, formataFone, formataCelular } from "src/utils/formatador";
+import { formataData, formataFone, formataCelular } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import MgInputFormatado from "@components/MgInputFormatado.vue";
 

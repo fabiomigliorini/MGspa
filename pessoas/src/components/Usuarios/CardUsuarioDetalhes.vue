@@ -39,7 +39,7 @@
             Inativo
           </q-item-label>
           <q-item-label caption v-if="sUsuario.detalheUsuarios.inativo">
-            {{ moment(sUsuario.detalheUsuarios.inativo).format('DD/MM/YYYY hh:mm') }}
+            {{ formataData(sUsuario.detalheUsuarios.inativo) }}
           </q-item-label>
         </q-item-label>
 
@@ -107,12 +107,12 @@
 </template>
 
 <script>
+import { formataData } from "@components/formatters";
 import { defineComponent, defineAsyncComponent } from 'vue'
 import { useQuasar } from "quasar"
 import { ref } from 'vue'
 import { usuarioStore } from 'stores/usuario'
 import { useRoute } from 'vue-router'
-import { formataDocumetos } from 'src/stores/formataDocumentos'
 import { guardaToken } from 'stores/index'
 import moment from "moment";
 import "moment/min/locales";
@@ -246,14 +246,12 @@ export default defineComponent({
     const $q = useQuasar()
     const sUsuario = usuarioStore()
     const route = useRoute()
-    const Documentos = formataDocumetos()
     const user = guardaToken()
 
     return {
       formapagamento: ref({}),
       sUsuario,
       route,
-      Documentos,
       user,
       moment,
       DialogDetalhes: ref(false),

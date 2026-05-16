@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataDataSemHora } from '@components/formatters'
+import { formataNumero, formataDataSemHora, formataCodNegocio } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
@@ -79,8 +79,6 @@ async function salvarEdicao() {
   }
 }
 
-const formatCodigo = (v) => (v ? '#' + String(v).padStart(8, '0') : '')
-
 async function carregar() {
   if (!id.value) return
   loading.value = true
@@ -151,7 +149,7 @@ watch(() => route.fullPath, carregar)
           </q-item-section>
           <q-item-section>
             <div class="text-h4 text-grey-9">
-              Liquidação {{ formatCodigo(liq.codliquidacaotitulo) }}
+              Liquidação {{ formataCodNegocio(liq.codliquidacaotitulo) }}
             </div>
             <div v-if="estornado" class="text-negative">
               Estornada em {{ formataDataSemHora(liq.estornado) }}
@@ -346,7 +344,7 @@ watch(() => route.fullPath, carregar)
           <div class="col-xs-12 col-sm-4">
             <q-card bordered flat>
               <q-card-section class="text-grey-9 text-overline">
-                MOVIMENTOS DA LIQUIDAÇÃO ({{ liq.movimentos?.length || 0 }})
+                MOVIMENTOS ({{ liq.movimentos?.length || 0 }})
               </q-card-section>
               <q-list separator v-if="liq.movimentos?.length">
                 <q-item

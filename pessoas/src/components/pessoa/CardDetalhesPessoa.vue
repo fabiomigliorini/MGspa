@@ -3,16 +3,7 @@ import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
-import { formataDocumetos } from "src/stores/formataDocumentos";
-import {
-  formataData,
-  formataDataSemHora,
-  formataCPF,
-  formataCNPJ,
-  formataPisPasep,
-  formataTitulo,
-  verificaIdade,
-} from "src/utils/formatador";
+import { formataData, formataDataSemHora, formataCpf, formataCnpj, formataPisPasep, formataTitulo, formataIe, verificaIdade, formataCodNegocio } from "@components/formatters";
 import { guardaToken } from "stores/index";
 import SelectGrupoEconomico from "components/pessoa/SelectGrupoEconomico.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
@@ -28,8 +19,13 @@ import SelectGrauInstrucao from "components/pessoa/SelectGrauInstrucao.vue";
 const $q = useQuasar();
 const router = useRouter();
 const sPessoa = pessoaStore();
-const Documentos = formataDocumetos();
 const user = guardaToken();
+
+const ufNfe = computed(() => {
+  const enderecos = sPessoa.item?.PessoaEnderecoS || [];
+  const nfe = enderecos.find((e) => e.nfe === true);
+  return nfe?.uf || null;
+});
 
 const DialogDetalhes = ref(false);
 const DialogMercos = ref(false);
@@ -589,7 +585,7 @@ const salvarDetalhes = async () => {
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Codigo</div>
         <div class="text-body2">
-          #{{ String(sPessoa.item.codpessoa).padStart(8, "0") }}
+          {{ formataCodNegocio(sPessoa.item.codpessoa) }}
         </div>
       </div>
 
@@ -649,11 +645,11 @@ const salvarDetalhes = async () => {
         <div class="text-body2">
           {{
             sPessoa.item.fisica
-              ? formataCPF(sPessoa.item.cnpj)
-              : formataCNPJ(sPessoa.item.cnpj)
+              ? formataCpf(sPessoa.item.cnpj)
+              : formataCnpj(sPessoa.item.cnpj)
           }}
           <span v-if="sPessoa.item.ie">
-            / {{ Documentos.formataIePorSigla(sPessoa.item.ie) }}
+            / {{ formataIe(sPessoa.item.ie, ufNfe) }}
           </span>
           <span v-if="sPessoa.item.rg"> / {{ sPessoa.item.rg }} </span>
         </div>

@@ -4,7 +4,7 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
-import { formatChave, formatCnpjCpf, formatCurrency, formatDateTime } from 'src/utils/formatters'
+import { formataChave, formataCnpjCpf, formataNumero, formataDataHoraSegundos } from '@components/formatters'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -160,10 +160,10 @@ onMounted(async () => {
               <q-badge v-if="item.ignorada" color="grey" label="Ignorada" class="q-ml-sm" />
             </q-item-label>
             <q-item-label class="text-caption text-grey-7">
-              {{ item.cnpj ? formatCnpjCpf(item.cnpj, false) : '' }}-{{ item.natureza }}
+              {{ item.cnpj ? formataCnpjCpf(item.cnpj, false) : '' }}-{{ item.natureza }}
             </q-item-label>
             <q-item-label caption class="text-caption text-grey-7">
-              {{ formatChave(item.nfechave) }}
+              {{ formataChave(item.nfechave) }}
             </q-item-label>
           </q-item-section>
 
@@ -173,7 +173,7 @@ onMounted(async () => {
               {{ item.filial?.filial }}
             </q-item-label>
             <q-item-label class="text-caption text-grey-7">
-              {{ formatDateTime(item.emissao) }}
+              {{ formataDataHoraSegundos(item.emissao) }}
             </q-item-label>
             <q-item-label v-if="!item.codnotafiscal" class="text-orange text-caption">
               Pendente Importação
@@ -183,7 +183,7 @@ onMounted(async () => {
           <!-- Valor -->
           <q-item-section top side class="gt-xs">
             <q-item-label class="text-weight-bold text-primary">
-              R$ {{ formatCurrency(item.valortotal) }}
+              R$ {{ formataNumero(item.valortotal) }}
             </q-item-label>
             <q-item-label caption :class="`text-${manifestacaoLabel(item.indmanifestacao).color}`">
               {{ manifestacaoLabel(item.indmanifestacao).label }}

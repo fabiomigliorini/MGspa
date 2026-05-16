@@ -6,6 +6,14 @@
       "Read(//opt/www/MGspa/laravel/routes/**)",
       "Bash(git --git-dir=/opt/www/MGspa/.git --work-tree=/opt/www/MGspa show 5083954a -- notas/src/pages/NfeTerceiroItemViewPage.vue)",
       "Read(//opt/www/MGspa/laravel/app/Mg/NfeTerceiro/**)"
+    ],
+    "additionalDirectories": [
+      "/opt/www/MGspa/components",
+      "/opt/www/MGspa/contas/src/pages/liquidacaoTitulo",
+      "/opt/www/MGspa/contas/src/pages/titulo",
+      "/opt/www/MGspa/contas/src/pages/tituloAgrupamento",
+      "/opt/www/MGspa/contas/src/pages/boleto",
+      "/opt/www/MGspa/contas/src/components"
     ]
   }
 }

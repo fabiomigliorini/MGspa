@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "src/utils/formatador";
+import { formataDataSemHora } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import CardUnidadeMeta from "src/components/meta/CardUnidadeMeta.vue";
 

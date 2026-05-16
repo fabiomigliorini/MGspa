@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from "vue";
 import { db } from "boot/db";
 import { LoadingBar } from "quasar";
-import { formataCnpjCpf } from "../../utils/formatador.js";
+import { formataCnpjCpf } from "@components/formatters";
 
 const props = defineProps({
   modelValue: {

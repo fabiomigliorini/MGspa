@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRouter, useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "src/utils/formatador";
+import { formataDataSemHora } from "@components/formatters";
 import { extrairErro } from "src/utils/rhFormatters";
 import MGLayout from "layouts/MGLayout.vue";
 import MgInputData from "@components/MgInputData.vue";

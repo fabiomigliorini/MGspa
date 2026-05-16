@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataFromNow, formataCPF, formataCNPJ, formataCelularComDDD, formataCnpjEcpf } from "src/utils/formatador";
+import { formataFromNow, formataCpf, formataCnpj, formataCelularComDDD, formataCnpjEcpf } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectBanco from "components/pessoa/SelectBanco.vue";
 import MgInputFormatado from "@components/MgInputFormatado.vue";
@@ -530,14 +530,14 @@ const submit = () => {
               </span>
               <span v-if="contas.pixcpf">
                 {{
-                  formataCPF(
+                  formataCpf(
                     contas.pixcpf.toString().padStart(11, "0")
                   )
                 }}
               </span>
               <span v-if="contas.pixcnpj">
                 {{
-                  formataCNPJ(
+                  formataCnpj(
                     contas.pixcnpj.toString().padStart(14, "0")
                   )
                 }}

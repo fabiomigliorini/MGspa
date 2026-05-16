@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataCodNegocio } from "@components/formatters";
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { useRouter } from "vue-router";
 import { produtoStore } from "stores/produto";
@@ -25,7 +26,7 @@ var leitorLigado = ref(false);
 
 const labelQuantidade = computed({
   get() {
-    let lbl = new Intl.NumberFormat("pt-BR").format(quantidade.value);
+    let lbl = formataNumero(quantidade.value, 0);
     lbl += " x";
     return lbl;
   },
@@ -464,7 +465,7 @@ onUnmounted(() => {
                     {{ orc.fantasiavendedor }}
                   </q-item-label>
                   <q-item-label caption>
-                    #{{ String(orc.codnegocio).padStart(8, "0") }}
+                    {{ formataCodNegocio(orc.codnegocio) }}
                   </q-item-label>
                   <q-item-label caption class="ellipsis">
                     {{ orc.uuid }}
@@ -474,11 +475,7 @@ onUnmounted(() => {
                   <q-item-label>
                     R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(orc.valortotal)
+                      formataNumero(orc.valortotal)
                     }}
                   </q-item-label>
                   <q-item-label caption>
@@ -604,9 +601,7 @@ onUnmounted(() => {
                       {{ produto.sigla }}
                       <template v-if="produto.quantidade > 0">
                         C/{{
-                          new Intl.NumberFormat("pt-BR").format(
-                            produto.quantidade
-                          )
+                          formataNumero(produto.quantidade, 0)
                         }}
                       </template>
                     </q-chip>
@@ -615,11 +610,7 @@ onUnmounted(() => {
                   <div class="text-h5">
                     <small class="text-grey-7">R$</small>
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(produto.preco)
+                      formataNumero(produto.preco)
                     }}
                   </div>
                   <div class="text-caption text-grey-7">

@@ -3,7 +3,7 @@ import { onMounted, computed, watch, shallowRef } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuth } from 'src/composables/useAuth'
 import { useDashboardStore } from 'src/stores/dashboard'
-import { formatDateTime } from 'src/utils/formatters'
+import { formataDataHoraSegundos, formataNumero } from '@components/formatters'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -76,7 +76,7 @@ const kpiCards = computed(() => [
   {
     label: 'Total de Notas',
     labelShort: 'Total',
-    value: (kpisGerais.value?.total_notas || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.total_notas || 0, 0),
     subtitle: null,
     icon: 'description',
     color: 'primary',
@@ -85,7 +85,7 @@ const kpiCards = computed(() => [
   {
     label: 'Autorizadas',
     labelShort: 'Aut.',
-    value: (kpisGerais.value?.autorizadas?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.autorizadas?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.autorizadas?.percentual || 0).toFixed(1)}%`,
     icon: 'check_circle',
     color: 'positive',
@@ -94,7 +94,7 @@ const kpiCards = computed(() => [
   {
     label: 'Erro',
     labelShort: 'Erro',
-    value: (kpisGerais.value?.erro?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.erro?.quantidade || 0, 0),
     subtitle: `${Math.ceil((kpisGerais.value?.erro?.percentual || 0) * 10) / 10}%`,
     icon: 'highlight_off',
     color: (kpisGerais.value?.erro?.quantidade || 0) > 0 ? 'negative' : 'grey-7',
@@ -103,7 +103,7 @@ const kpiCards = computed(() => [
   {
     label: 'Digitação',
     labelShort: 'Dig.',
-    value: (kpisGerais.value?.digitacao?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.digitacao?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.digitacao?.percentual || 0).toFixed(1)}%`,
     icon: 'edit_note',
     color: (kpisGerais.value?.digitacao?.quantidade || 0) > 0 ? 'blue' : 'grey-7',
@@ -112,7 +112,7 @@ const kpiCards = computed(() => [
   {
     label: 'Canceladas',
     labelShort: 'Canc.',
-    value: (kpisGerais.value?.canceladas?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.canceladas?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.canceladas?.percentual || 0).toFixed(1)}%`,
     icon: 'highlight_off',
     color: 'negative',
@@ -121,7 +121,7 @@ const kpiCards = computed(() => [
   {
     label: 'Inutilizadas',
     labelShort: 'Inut.',
-    value: (kpisGerais.value?.inutilizadas?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.inutilizadas?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.inutilizadas?.percentual || 0).toFixed(1)}%`,
     icon: 'block',
     color: 'warning',
@@ -249,14 +249,14 @@ const filialColumns = [
     label: 'Ultima Nota',
     field: 'ultima_nota_emitida',
     align: 'center',
-    format: (v) => (v ? formatDateTime(v) : '-'),
+    format: (v) => (v ? formataDataHoraSegundos(v) : '-'),
   },
   {
     name: 'ultimo_erro',
     label: 'Ultimo Erro',
     field: 'ultima_nota_com_erro',
     align: 'center',
-    format: (v) => (v ? formatDateTime(v) : '-'),
+    format: (v) => (v ? formataDataHoraSegundos(v) : '-'),
   },
 ]
 

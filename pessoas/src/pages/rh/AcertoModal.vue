@@ -2,7 +2,8 @@
 import { ref, computed, watch } from "vue";
 import { useQuasar } from "quasar";
 import { rhStore } from "src/stores/rh";
-import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
+import { extrairErro } from "src/utils/rhFormatters";
+import { formataNumero, formataDataSemHora } from "@components/formatters";
 import MgInputValor from "@components/MgInputValor.vue";
 
 const props = defineProps({
@@ -24,12 +25,6 @@ const titulos = ref([]);
 const observacao = ref("");
 
 // --- HELPERS ---
-
-const formataData = (data) => {
-  if (!data) return "";
-  const [y, m, d] = data.substring(0, 10).split("-");
-  return `${d}/${m}/${y}`;
-};
 
 // --- COMPUTED TOTAIS ---
 
@@ -201,7 +196,7 @@ const confirmar = async () => {
             <template v-if="dadosColaborador.tempo_casa">
               · {{ dadosColaborador.tempo_casa }}
             </template>
-            · Salário: {{ formataMoeda(dadosColaborador.salario) }}
+            · Salário: {{ formataNumero(dadosColaborador.salario) }}
           </div>
         </q-card-section>
 
@@ -229,13 +224,13 @@ const confirmar = async () => {
                   {{ titulo.numero }}
                 </div>
                 <div class="col-2 text-body2 q-px-sm q-py-xs">
-                  {{ formataData(titulo.vencimento) }}
+                  {{ formataDataSemHora(titulo.vencimento) }}
                 </div>
                 <div
                   class="col-3 text-right text-weight-medium"
                   :class="titulo.saldo < 0 ? 'text-green-8' : 'text-red-7'"
                 >
-                  {{ formataMoeda(Math.abs(titulo.saldo)) }}
+                  {{ formataNumero(Math.abs(titulo.saldo)) }}
                   <q-icon
                     :name="titulo.saldo < 0 ? 'south' : 'north'"
                     size="12px"
@@ -300,10 +295,10 @@ const confirmar = async () => {
           >
             <div class="col-8"></div>
             <div class="col-2 text-center text-positive">
-              {{ formataMoeda(totalPagando) }}
+              {{ formataNumero(totalPagando) }}
             </div>
             <div class="col-2 text-center text-negative">
-              {{ formataMoeda(totalDescontando) }}
+              {{ formataNumero(totalDescontando) }}
             </div>
           </div>
           <div
@@ -320,7 +315,7 @@ const confirmar = async () => {
               :class="'text-' + labelResultado.color"
             >
               <template v-if="resultado >= 0">
-                {{ formataMoeda(Math.abs(resultado)) }}
+                {{ formataNumero(Math.abs(resultado)) }}
               </template>
             </div>
             <div
@@ -328,7 +323,7 @@ const confirmar = async () => {
               :class="'text-' + labelResultado.color"
             >
               <template v-if="resultado < 0">
-                {{ formataMoeda(Math.abs(resultado)) }}
+                {{ formataNumero(Math.abs(resultado)) }}
               </template>
             </div>
           </div>
@@ -344,9 +339,9 @@ const confirmar = async () => {
             <q-icon name="warning" color="orange" />
           </template>
           Atenção: desconto de
-          {{ formataMoeda(Math.abs(resultado)) }} representa
+          {{ formataNumero(Math.abs(resultado)) }} representa
           {{ pctDesconto.toFixed(1) }}% do salário ({{
-            formataMoeda(dadosColaborador.salario)
+            formataNumero(dadosColaborador.salario)
           }}). Limite configurado:
           {{ dadosColaborador.percentual_max_desconto }}%.
         </q-banner>

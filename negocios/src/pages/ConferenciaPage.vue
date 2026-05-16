@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataCodNegocio } from "@components/formatters";
 import { ref, watch } from "vue";
 import { debounce } from "quasar";
 
@@ -33,7 +34,7 @@ watch(
           <q-item-section class="col-xs-3">
             <q-item-label> {{ item.fantasia }} </q-item-label>
             <q-item-label class="ellipsis" caption>
-              #{{ String(item.codnegocio).padStart(8, "0") }}
+              {{ formataCodNegocio(item.codnegocio) }}
             </q-item-label>
           </q-item-section>
 
@@ -42,11 +43,7 @@ watch(
               <template v-if="item.valortotal">
                 R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortotal)
+                  formataNumero(item.valortotal)
                 }}
               </template>
             </q-item-label>
@@ -58,11 +55,7 @@ watch(
               <template v-if="item.valorpix">
                 R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valorpix)
+                  formataNumero(item.valorpix)
                 }}
               </template>
               &nbsp;
@@ -75,11 +68,7 @@ watch(
               <template v-if="item.valorstone">
                 R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valorstone)
+                  formataNumero(item.valorstone)
                 }}
               </template>
               &nbsp;
@@ -92,11 +81,7 @@ watch(
               <template v-if="item.valortitulo">
                 R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortitulo)
+                  formataNumero(item.valortitulo)
                 }}
               </template>
               &nbsp;
@@ -109,11 +94,7 @@ watch(
               <template v-if="item.valordiferenca">
                 R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valordiferenca)
+                  formataNumero(item.valordiferenca)
                 }}
               </template>
               &nbsp;

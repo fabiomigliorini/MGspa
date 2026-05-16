@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataCodNegocio, formataDataSemHora } from "@components/formatters";
 import { ref, watch } from "vue";
 import { debounce } from "quasar";
 import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
@@ -95,7 +96,7 @@ const corIconeLiquidacao = (liq) => {
                 {{ item.portador }}
               </q-item-label>
               <q-item-label class="ellipsis" caption>
-                #{{ String(item.codliquidacaotitulo).padStart(8, "0") }}
+                {{ formataCodNegocio(item.codliquidacaotitulo) }}
               </q-item-label>
             </q-item-section>
 
@@ -103,11 +104,7 @@ const corIconeLiquidacao = (liq) => {
             <q-item-section class="col-xs-2 col-sm-1">
               <q-item-label class="text-right">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.credito)
+                  formataNumero(item.credito)
                 }}
               </q-item-label>
               <q-item-label class="ellipsis text-right" caption>
@@ -119,11 +116,7 @@ const corIconeLiquidacao = (liq) => {
             <q-item-section class="col-xs-2 col-sm-1">
               <q-item-label class="text-right">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.debito)
+                  formataNumero(item.debito)
                 }}
               </q-item-label>
               <q-item-label class="ellipsis text-right" caption>
@@ -164,7 +157,7 @@ const corIconeLiquidacao = (liq) => {
               side
             >
               <q-item-label caption>
-                {{ moment(item.transacao).format("DD/MM/YY") }}
+                {{ formataDataSemHora(item.transacao) }}
               </q-item-label>
               <q-item-label caption>
                 {{ item.usuario }}

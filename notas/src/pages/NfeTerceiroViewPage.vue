@@ -6,13 +6,13 @@ import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
 import MgInputData from '@components/MgInputData.vue'
 import {
-  formatCnpjCpf,
-  formatDateTime,
-  formatDate,
-  formatCurrency,
-  formatDecimal,
-  formatChave,
-} from 'src/utils/formatters'
+  formataCnpjCpf,
+  formataDataHoraSegundos,
+  formataDataSemHora,
+  formataNumero,
+  formataNumero,
+  formataChave,
+} from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -557,12 +557,12 @@ onMounted(async () => {
               </template>
 
               <div class="text-caption text-grey-7 q-mt-sm">Emissão</div>
-              <div class="text-body2">{{ formatDateTime(nfe.emissao) }}</div>
+              <div class="text-body2">{{ formataDataHoraSegundos(nfe.emissao) }}</div>
 
               <div class="text-caption text-grey-7 q-mt-sm">Entrada</div>
               <div class="row items-center no-wrap">
                 <div class="text-body2 col">
-                  {{ nfe.entrada ? formatDateTime(nfe.entrada) : '-' }}
+                  {{ nfe.entrada ? formataDataHoraSegundos(nfe.entrada) : '-' }}
                 </div>
                 <q-btn
                   flat
@@ -592,39 +592,39 @@ onMounted(async () => {
             <q-card-section>
               <div class="text-caption text-grey-7">Valor Total</div>
               <div class="text-subtitle1 text-weight-bold text-primary">
-                R$ {{ formatCurrency(nfe.valortotal) }}
+                R$ {{ formataNumero(nfe.valortotal) }}
               </div>
 
               <div class="row q-col-gutter-sm q-mt-sm">
                 <div class="col-6">
                   <div class="text-caption text-grey-7">Produtos</div>
-                  <div class="text-body2">R$ {{ formatCurrency(nfe.valorprodutos) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(nfe.valorprodutos) }}</div>
                 </div>
                 <div class="col-6">
                   <div class="text-caption text-grey-7">Frete</div>
-                  <div class="text-body2">R$ {{ formatCurrency(nfe.valorfrete) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(nfe.valorfrete) }}</div>
                 </div>
                 <div class="col-6">
                   <div class="text-caption text-grey-7">Desconto</div>
-                  <div class="text-body2">R$ {{ formatCurrency(nfe.valordesconto) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(nfe.valordesconto) }}</div>
                 </div>
                 <div class="col-6">
                   <div class="text-caption text-grey-7">Outras / Seguro</div>
                   <div class="text-body2">
-                    R$ {{ formatCurrency(nfe.valoroutras + nfe.valorseguro) }}
+                    R$ {{ formataNumero(nfe.valoroutras + nfe.valorseguro) }}
                   </div>
                 </div>
                 <div class="col-6">
                   <div class="text-caption text-grey-7">ICMS</div>
-                  <div class="text-body2">R$ {{ formatCurrency(nfe.icmsvalor) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(nfe.icmsvalor) }}</div>
                 </div>
                 <div class="col-6">
                   <div class="text-caption text-grey-7">ICMS ST</div>
-                  <div class="text-body2">R$ {{ formatCurrency(nfe.icmsstvalor) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(nfe.icmsstvalor) }}</div>
                 </div>
                 <div class="col-6">
                   <div class="text-caption text-grey-7">IPI</div>
-                  <div class="text-body2">R$ {{ formatCurrency(nfe.ipivalor) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(nfe.ipivalor) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -644,7 +644,7 @@ onMounted(async () => {
             <q-card-section class="col-grow">
               <div class="text-caption text-grey-7">Chave</div>
               <div class="text-caption" style="font-family: monospace">
-                {{ formatChave(nfe.nfechave) }}
+                {{ formataChave(nfe.nfechave) }}
               </div>
 
               <div class="text-caption text-grey-7 q-mt-sm">Status</div>
@@ -731,7 +731,7 @@ onMounted(async () => {
                     {{ nfe.pessoa?.fisica ? 'CPF' : 'CNPJ' }}
                   </div>
                   <div class="text-body1 text-weight-bold text-primary ellipsis">
-                    {{ formatCnpjCpf(nfe.pessoa?.cnpj || nfe.cnpj, nfe.pessoa?.fisica) }}
+                    {{ formataCnpjCpf(nfe.pessoa?.cnpj || nfe.cnpj, nfe.pessoa?.fisica) }}
                   </div>
                 </div>
 
@@ -880,13 +880,13 @@ onMounted(async () => {
                     <span class="text-grey-7">{{ item.produtoBarra.variacao?.variacao }}</span>
                   </q-item-label>
                   <q-item-label caption v-if="item.complemento">
-                    Complemento: R$ {{ formatCurrency(item.complemento) }}
+                    Complemento: R$ {{ formataNumero(item.complemento) }}
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side top>
-                  <q-item-label>{{ formatDecimal(item.qcom, 4) }} {{ item.ucom }}</q-item-label>
+                  <q-item-label>{{ formataNumero(item.qcom, 4) }} {{ item.ucom }}</q-item-label>
                   <q-item-label class="text-weight-bold">
-                    R$ {{ formatCurrency(item.vprod) }}
+                    R$ {{ formataNumero(item.vprod) }}
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side top>
@@ -928,11 +928,11 @@ onMounted(async () => {
               <q-item v-for="dup in duplicatas" :key="dup.codnfeterceiroduplicata">
                 <q-item-section>
                   <q-item-label>Parcela {{ dup.ndup }}</q-item-label>
-                  <q-item-label caption>Vencimento: {{ formatDate(dup.dvenc) }}</q-item-label>
+                  <q-item-label caption>Vencimento: {{ formataDataSemHora(dup.dvenc) }}</q-item-label>
                 </q-item-section>
                 <q-item-section side>
                   <q-item-label class="text-weight-bold">
-                    R$ {{ formatCurrency(dup.vdup) }}
+                    R$ {{ formataNumero(dup.vdup) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -950,7 +950,7 @@ onMounted(async () => {
                 </q-item-section>
                 <q-item-section side>
                   <q-item-label class="text-weight-bold">
-                    R$ {{ formatCurrency(pag.vpag) }}
+                    R$ {{ formataNumero(pag.vpag) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -992,33 +992,33 @@ onMounted(async () => {
                     <td class="text-right">
                       {{ item.mva ? ((item.mva - 1) * 100).toFixed(2) : '-' }}
                     </td>
-                    <td class="text-right">{{ formatCurrency(item.valor) }}</td>
+                    <td class="text-right">{{ formataNumero(item.valor) }}</td>
                     <td class="text-right">
                       {{ item.reducao !== 1 ? (item.reducao * 100).toFixed(2) + '%' : '-' }}
                     </td>
-                    <td class="text-right">{{ formatCurrency(item.vicms) }}</td>
-                    <td class="text-right">{{ formatCurrency(item.vicmsst) }}</td>
-                    <td class="text-right">{{ formatCurrency(item.vicmsstcalculado) }}</td>
+                    <td class="text-right">{{ formataNumero(item.vicms) }}</td>
+                    <td class="text-right">{{ formataNumero(item.vicmsst) }}</td>
+                    <td class="text-right">{{ formataNumero(item.vicmsstcalculado) }}</td>
                     <td
                       class="text-right"
                       :class="item.diferenca > 0.01 ? 'text-red text-weight-bold' : ''"
                     >
-                      {{ formatCurrency(item.diferenca) }}
+                      {{ formataNumero(item.diferenca) }}
                     </td>
                   </tr>
                 </tbody>
                 <tfoot>
                   <tr class="text-weight-bold">
                     <td colspan="8" class="text-right">Totais:</td>
-                    <td class="text-right">{{ formatCurrency(icmsStData.totais.vicmsst) }}</td>
+                    <td class="text-right">{{ formataNumero(icmsStData.totais.vicmsst) }}</td>
                     <td class="text-right">
-                      {{ formatCurrency(icmsStData.totais.vicmsstcalculado) }}
+                      {{ formataNumero(icmsStData.totais.vicmsstcalculado) }}
                     </td>
                     <td
                       class="text-right"
                       :class="icmsStData.totais.diferenca > 0.01 ? 'text-red' : ''"
                     >
-                      {{ formatCurrency(icmsStData.totais.diferenca) }}
+                      {{ formataNumero(icmsStData.totais.diferenca) }}
                     </td>
                   </tr>
                 </tfoot>
@@ -1032,12 +1032,12 @@ onMounted(async () => {
                     <q-item-section>
                       <q-item-label>{{ guia.numero }}</q-item-label>
                       <q-item-label caption>
-                        Vencimento: {{ formatDate(guia.vencimento) }}
+                        Vencimento: {{ formataDataSemHora(guia.vencimento) }}
                       </q-item-label>
                     </q-item-section>
                     <q-item-section side>
                       <q-item-label class="text-weight-bold">
-                        R$ {{ formatCurrency(guia.credito) }}
+                        R$ {{ formataNumero(guia.credito) }}
                       </q-item-label>
                     </q-item-section>
                     <q-item-section side>
@@ -1091,7 +1091,7 @@ onMounted(async () => {
                     <q-item-section>
                       <q-item-label caption>Autorizacao</q-item-label>
                       <q-item-label>
-                        {{ nfe.nfedataautorizacao ? formatDateTime(nfe.nfedataautorizacao) : '-' }}
+                        {{ nfe.nfedataautorizacao ? formataDataHoraSegundos(nfe.nfedataautorizacao) : '-' }}
                       </q-item-label>
                     </q-item-section>
                   </q-item>
@@ -1144,14 +1144,14 @@ onMounted(async () => {
                   <q-item v-if="nfe.criacao">
                     <q-item-section>
                       <q-item-label caption>Criacao</q-item-label>
-                      <q-item-label>{{ formatDateTime(nfe.criacao) }}</q-item-label>
+                      <q-item-label>{{ formataDataHoraSegundos(nfe.criacao) }}</q-item-label>
                     </q-item-section>
                   </q-item>
                   <q-item v-if="nfe.alteracao">
                     <q-item-section>
                       <q-item-label caption>Ultima Alteracao</q-item-label>
                       <q-item-label>
-                        {{ formatDateTime(nfe.alteracao) }}
+                        {{ formataDataHoraSegundos(nfe.alteracao) }}
                         <span v-if="nfe.usuarioAlteracao" class="text-grey-7">
                           por {{ nfe.usuarioAlteracao.usuario }}
                         </span>

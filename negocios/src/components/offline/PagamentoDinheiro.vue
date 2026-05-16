@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { ref, computed } from "vue";
 import { negocioStore } from "stores/negocio";
 import MgInputValor from "@components/MgInputValor.vue";
@@ -71,11 +72,7 @@ const salvar = () => {
                   class="text-h2 text-primary text-weight-bolder text-right"
                 >
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(sNegocio.valorapagar)
+                    formataNumero(sNegocio.valorapagar)
                   }}
                 </q-item-label>
                 <q-item-label caption class="text-right">
@@ -119,11 +116,7 @@ const salvar = () => {
                   class="text-h2 text-weight-bolder text-right"
                 >
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(Math.abs(valorSaldo))
+                    formataNumero(Math.abs(valorSaldo))
                   }}
                 </q-item-label>
                 <q-item-label caption class="text-right">

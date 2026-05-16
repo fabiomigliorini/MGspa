@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useSelectPessoaStore } from 'stores/selects/pessoa'
-import { formatCnpjCpf } from 'src/utils/formatters'
+import { formataCnpjCpf } from '@components/formatters'
 
 const props = defineProps({
   modelValue: {
@@ -206,7 +206,7 @@ const handleUpdate = (value) => {
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
           <q-item-label caption class="text-grey-7">
-            {{ formatCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
+            {{ formataCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
             <span v-if="scope.opt.ie">
               | IE: {{ scope.opt.ie }}
             </span>

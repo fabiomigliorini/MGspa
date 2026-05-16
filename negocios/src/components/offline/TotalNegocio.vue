@@ -12,8 +12,7 @@ import PagamentoPagarMe from "components/offline/PagamentoPagarMe.vue";
 import PagamentoSaurus from "components/offline/PagamentoSaurus.vue";
 import PagamentoPrazo from "components/offline/PagamentoPrazo.vue";
 import MgInputValor from "@components/MgInputValor.vue";
-import { formataCpf } from "../../utils/formatador.js";
-import { formataCnpj } from "../../utils/formatador.js";
+import { formataCpf, formataCnpj, formataNumero } from "@components/formatters";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
 
@@ -289,11 +288,7 @@ const creditCardColorPagamento = (pag) => {
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-grey-6">
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(sNegocio.negocio.valorprodutos)
+              formataNumero(sNegocio.negocio.valorprodutos)
             }}
           </q-item-label>
         </q-item-section>
@@ -306,11 +301,7 @@ const creditCardColorPagamento = (pag) => {
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-weight-bolder text-green-8">
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(sNegocio.negocio.valordesconto)
+              formataNumero(sNegocio.negocio.valordesconto)
             }}
           </q-item-label>
         </q-item-section>
@@ -323,11 +314,7 @@ const creditCardColorPagamento = (pag) => {
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-grey-6">
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(sNegocio.negocio.valorfrete)
+              formataNumero(sNegocio.negocio.valorfrete)
             }}
           </q-item-label>
         </q-item-section>
@@ -340,11 +327,7 @@ const creditCardColorPagamento = (pag) => {
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-grey-6">
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(sNegocio.negocio.valorseguro)
+              formataNumero(sNegocio.negocio.valorseguro)
             }}
           </q-item-label>
         </q-item-section>
@@ -357,11 +340,7 @@ const creditCardColorPagamento = (pag) => {
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-grey-6">
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(sNegocio.negocio.valoroutras)
+              formataNumero(sNegocio.negocio.valoroutras)
             }}
           </q-item-label>
         </q-item-section>
@@ -374,11 +353,7 @@ const creditCardColorPagamento = (pag) => {
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-grey-6">
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(sNegocio.negocio.valorjuros)
+              formataNumero(sNegocio.negocio.valorjuros)
             }}
           </q-item-label>
         </q-item-section>
@@ -393,11 +368,7 @@ const creditCardColorPagamento = (pag) => {
               <span class="float-left text-grey">R$ </span>
               <span class="text-h3 text-primary text-weight-bolder">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(sNegocio.negocio.valortotal)
+                  formataNumero(sNegocio.negocio.valortotal)
                 }}
               </span>
             </q-item-label>
@@ -420,11 +391,7 @@ const creditCardColorPagamento = (pag) => {
                 {{ pag.parcelas }}
                 x de R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(pag.valorparcela)
+                  formataNumero(pag.valorparcela)
                 }}
               </q-item-label>
               <q-item-label caption v-else-if="pag.dias && pag.dias != 30">
@@ -440,11 +407,7 @@ const creditCardColorPagamento = (pag) => {
             <q-item-section class="text-right">
               <q-item-label class="text-h5 text-grey-6">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(pag.valortotal)
+                  formataNumero(pag.valortotal)
                 }}
                 <q-btn flat round @click="excluirPagamento(pag)" icon="delete" size="sm" v-if="
                   !pag.integracao && sNegocio.negocio.codnegociostatus == 1
@@ -467,11 +430,7 @@ const creditCardColorPagamento = (pag) => {
           <q-item-section>
             <q-item-label :class="valorSaldoClass" class="text-right text-h5">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(Math.abs(sNegocio.valorapagar))
+                formataNumero(Math.abs(sNegocio.valorapagar))
               }}
             </q-item-label>
           </q-item-section>
@@ -517,11 +476,7 @@ const creditCardColorPagamento = (pag) => {
         <q-item-section v-if="cob.status != 'CONCLUIDA'">
           <q-item-label lines="1">
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(cob.valororiginal)
+              formataNumero(cob.valororiginal)
             }}
           </q-item-label>
           <q-item-label caption>
@@ -532,11 +487,7 @@ const creditCardColorPagamento = (pag) => {
           <q-item-section v-for="pix in cob.PixS" :key="pix.codpix">
             <q-item-label lines="1">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(pix.valor)
+                formataNumero(pix.valor)
               }}
             </q-item-label>
             <q-item-label caption>
@@ -562,29 +513,17 @@ const creditCardColorPagamento = (pag) => {
             <q-item-section>
               <q-item-label lines="1">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valortotal)
+                  formataNumero(ped.valortotal)
                 }}
               </q-item-label>
               <q-item-label caption v-if="ped.parcelas > 1">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valor)
+                  formataNumero(ped.valor)
                 }}
                 em {{ ped.parcelas }}
                 parcelas de R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valorparcela)
+                  formataNumero(ped.valorparcela)
                 }}
                 <span v-if="ped.valorjuros"> C/Juros </span>
               </q-item-label>
@@ -608,39 +547,23 @@ const creditCardColorPagamento = (pag) => {
             <q-item-section>
               <q-item-label lines="1" v-if="pag.valorpagamento">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(pag.valorpagamento)
+                  formataNumero(pag.valorpagamento)
                 }}
               </q-item-label>
               <q-item-label lines="1" v-if="pag.valorcancelamento" class="text-negative">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(pag.valorcancelamento)
+                  formataNumero(pag.valorcancelamento)
                 }}
                 Cancelamento
               </q-item-label>
               <q-item-label caption v-if="pag.parcelas > 1">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valor)
+                  formataNumero(ped.valor)
                 }}
                 em {{ pag.parcelas }}
                 parcelas de R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valorparcela)
+                  formataNumero(ped.valorparcela)
                 }}
                 <span v-if="ped.valorjuros"> C/Juros </span>
               </q-item-label>
@@ -669,29 +592,17 @@ const creditCardColorPagamento = (pag) => {
             <q-item-section>
               <q-item-label lines="1">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valortotal)
+                  formataNumero(ped.valortotal)
                 }}
               </q-item-label>
               <q-item-label caption v-if="ped.parcelas > 1">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valor)
+                  formataNumero(ped.valor)
                 }}
                 em {{ ped.parcelas }}
                 parcelas de R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valorparcela)
+                  formataNumero(ped.valorparcela)
                 }}
                 <span v-if="ped.valorjuros"> C/Juros </span>
               </q-item-label>
@@ -715,39 +626,23 @@ const creditCardColorPagamento = (pag) => {
             <q-item-section>
               <q-item-label lines="1" v-if="pag.valortotal">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(pag.valortotal)
+                  formataNumero(pag.valortotal)
                 }}
               </q-item-label>
               <q-item-label lines="1" v-if="pag.valorcancelamento" class="text-negative">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(pag.valorcancelamento)
+                  formataNumero(pag.valorcancelamento)
                 }}
                 Cancelamento
               </q-item-label>
               <q-item-label caption v-if="pag.parcelas > 1">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valor)
+                  formataNumero(ped.valor)
                 }}
                 em {{ pag.parcelas }}
                 parcelas de R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(ped.valorparcela)
+                  formataNumero(ped.valorparcela)
                 }}
                 <span v-if="ped.valorjuros"> C/Juros </span>
               </q-item-label>

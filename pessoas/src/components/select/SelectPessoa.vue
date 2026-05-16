@@ -2,9 +2,7 @@
 import { ref, onMounted, watch } from "vue";
 import { api } from "src/boot/axios.js";
 import { LoadingBar } from "quasar";
-import { formataDocumetos } from "src/stores/formataDocumentos.js";
-
-const fDocs = formataDocumetos();
+import { formataCnpjCpf } from "@components/formatters";
 
 const props = defineProps({
   modelValue: {
@@ -107,7 +105,7 @@ const pesquisa = (textoPesquisa, update) => {
             {{ scope.opt.pessoa }}
           </q-item-label>
           <q-item-label caption v-if="scope.opt.cnpj">
-            {{ fDocs.formataCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
+            {{ formataCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
             {{ scope.opt.ie }}
           </q-item-label>
           <q-item-label caption>

@@ -5,8 +5,9 @@ import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { api } from "src/boot/axios";
-import { formataDataSemHora, formataFromNow } from "src/utils/formatador";
-import { formataMoeda, tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
+import { formataDataSemHora, formataFromNow } from "@components/formatters";
+import { tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
+import { formataNumero } from "@components/formatters";
 import SelectSetor from "src/components/select/SelectSetor.vue";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
 import CardIndicadores from "src/components/rh/CardIndicadores.vue";
@@ -437,7 +438,7 @@ const indicadorOptions = computed(() =>
       label += " — " + [un, setor].filter(Boolean).join(" / ");
     }
     if (ind.valoracumulado) {
-      label += " (" + formataMoeda(ind.valoracumulado) + ")";
+      label += " (" + formataNumero(ind.valoracumulado) + ")";
     }
     return { label, value: ind.codindicador };
   })

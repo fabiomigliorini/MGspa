@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { feriadoStore } from "src/stores/feriado";
 import { guardaToken } from "src/stores";
-import { formataData } from "src/utils/formatador";
+import { formataData } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import MgInputData from "@components/MgInputData.vue";
 

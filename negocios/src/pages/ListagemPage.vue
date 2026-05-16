@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataDataHoraSegundos, formataCodNegocio } from "@components/formatters";
 import { ref, watch } from "vue";
 import { debounce } from "quasar";
 import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
@@ -78,11 +79,7 @@ const statusClass = (codnegociostatus) => {
             <q-item-section class="col-xs-2 col-sm-1">
               <q-item-label class="text-right">
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortotal)
+                  formataNumero(item.valortotal)
                 }}
               </q-item-label>
               <q-item-label class="text-right" caption>
@@ -102,7 +99,7 @@ const statusClass = (codnegociostatus) => {
               </q-item-label>
 
               <q-item-label class="ellipsis" caption>
-                #{{ String(item.codnegocio).padStart(8, "0") }}
+                {{ formataCodNegocio(item.codnegocio) }}
                 {{ item.naturezaoperacao }}
               </q-item-label>
             </q-item-section>
@@ -125,7 +122,7 @@ const statusClass = (codnegociostatus) => {
               side
             >
               <q-item-label caption>
-                {{ moment(item.lancamento).format("DD/MM/YY HH:mm:ss") }}
+                {{ formataDataHoraSegundos(item.lancamento) }}
               </q-item-label>
               <q-item-label caption>
                 {{ item.negociostatus }}

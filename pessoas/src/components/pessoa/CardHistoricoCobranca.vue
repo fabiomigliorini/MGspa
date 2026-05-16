@@ -4,7 +4,7 @@ import { useQuasar, debounce } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataData, formataFromNow } from "src/utils/formatador";
+import { formataData, formataFromNow } from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 
 const $q = useQuasar();

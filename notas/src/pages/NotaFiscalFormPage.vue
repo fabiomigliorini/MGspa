@@ -12,7 +12,7 @@ import SelectEstado from '../components/selects/SelectEstado.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
-import { formatNumero } from 'src/utils/formatters'
+import { formataNumeroNotaFiscal } from '@components/formatters'
 import { validarChaveNFe } from 'src/utils/validators'
 
 const router = useRouter()
@@ -356,7 +356,7 @@ onMounted(() => {
           <div class="text-h5 ellipsis" style="flex: 1; min-width: 0">
             <template v-if="isEditMode">
               {{ getModeloLabel(form.modelo) }}
-              {{ formatNumero(form.numero) }}
+              {{ formataNumeroNotaFiscal(form.numero) }}
               - Série
               {{ form.serie }}
             </template>

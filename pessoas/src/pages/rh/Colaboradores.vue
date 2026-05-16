@@ -4,7 +4,8 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
-import { formataMoeda, formataPercentual, corProgresso, tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
+import { corProgresso, tipoIndicadorLabel, extrairErro } from "src/utils/rhFormatters";
+import { formataNumero, formataPercentual } from "@components/formatters";
 
 const $q = useQuasar();
 const route = useRoute();
@@ -541,14 +542,14 @@ const estornar = (pc) => {
                 <td class="text-right">
                   {{
                     vendasInd(ind) != null
-                      ? formataMoeda(vendasInd(ind))
+                      ? formataNumero(vendasInd(ind))
                       : "—"
                   }}
                 </td>
                 <td class="text-right">
                   {{
                     metaInd(ind) != null
-                      ? formataMoeda(metaInd(ind))
+                      ? formataNumero(metaInd(ind))
                       : "—"
                   }}
                 </td>
@@ -571,7 +572,7 @@ const estornar = (pc) => {
                   :rowspan="indicadoresLinha(item.pcs).length"
                   class="text-right"
                 >
-                  {{ formataMoeda(item.pc.valortotal) }}
+                  {{ formataNumero(item.pc.valortotal) }}
                 </td>
                 <td
                   v-if="idx === 0"

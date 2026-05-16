@@ -4,7 +4,8 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
-import { formataMoeda, formataPercentual, corProgresso, extrairErro } from "src/utils/rhFormatters";
+import { corProgresso, extrairErro } from "src/utils/rhFormatters";
+import { formataNumero, formataPercentual } from "@components/formatters";
 import MgInputValor from "@components/MgInputValor.vue";
 
 const $q = useQuasar();
@@ -168,9 +169,9 @@ const salvarMeta = async () => {
         <tbody>
           <tr v-for="u in grupo.unidades" :key="u.codunidadenegocio">
             <td class="text-weight-medium">{{ u.descricao }}</td>
-            <td class="text-right">{{ formataMoeda(u.vendas) }}</td>
+            <td class="text-right">{{ formataNumero(u.vendas) }}</td>
             <td class="text-right">
-              <template v-if="u.meta">{{ formataMoeda(u.meta) }}</template>
+              <template v-if="u.meta">{{ formataNumero(u.meta) }}</template>
               <template v-else>—</template>
               <q-btn
                 v-if="podeEditar && u.codindicador && periodo.status === 'A'"
@@ -203,12 +204,12 @@ const salvarMeta = async () => {
               />
               <span v-else class="text-grey">—</span>
             </td>
-            <td class="text-right">{{ formataMoeda(u.totalsalario) }}</td>
-            <td class="text-right">{{ formataMoeda(u.totaladicional) }}</td>
-            <td class="text-right">{{ formataMoeda(u.totalencargos) }}</td>
-            <td class="text-right">{{ formataMoeda(u.totalvariaveis) }}</td>
+            <td class="text-right">{{ formataNumero(u.totalsalario) }}</td>
+            <td class="text-right">{{ formataNumero(u.totaladicional) }}</td>
+            <td class="text-right">{{ formataNumero(u.totalencargos) }}</td>
+            <td class="text-right">{{ formataNumero(u.totalvariaveis) }}</td>
             <td class="text-right text-weight-medium">
-              {{ formataMoeda(u.total) }}
+              {{ formataNumero(u.total) }}
             </td>
             <td class="text-right text-weight-medium">
               {{ u.vendas ? formataPercentual((u.total / u.vendas) * 100) : "—" }}
@@ -218,15 +219,15 @@ const salvarMeta = async () => {
         <tfoot v-if="grupo.unidades.length > 1">
           <tr class="text-weight-bold">
             <td>Subtotal</td>
-            <td class="text-right">{{ formataMoeda(somaGrupo(grupo).vendas) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).vendas) }}</td>
             <td></td>
             <td></td>
             <td></td>
-            <td class="text-right">{{ formataMoeda(somaGrupo(grupo).totalsalario) }}</td>
-            <td class="text-right">{{ formataMoeda(somaGrupo(grupo).totaladicional) }}</td>
-            <td class="text-right">{{ formataMoeda(somaGrupo(grupo).totalencargos) }}</td>
-            <td class="text-right">{{ formataMoeda(somaGrupo(grupo).totalvariaveis) }}</td>
-            <td class="text-right">{{ formataMoeda(somaGrupo(grupo).total) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totalsalario) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totaladicional) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totalencargos) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totalvariaveis) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).total) }}</td>
             <td class="text-right">
               {{ somaGrupo(grupo).vendas ? formataPercentual((somaGrupo(grupo).total / somaGrupo(grupo).vendas) * 100) : "—" }}
             </td>
@@ -255,15 +256,15 @@ const salvarMeta = async () => {
       <tbody>
         <tr class="text-weight-bold">
           <td>Total Geral</td>
-          <td class="text-right">{{ formataMoeda(totalVendas) }}</td>
+          <td class="text-right">{{ formataNumero(totalVendas) }}</td>
           <td></td>
           <td></td>
           <td></td>
-          <td class="text-right">{{ formataMoeda(dash.totalsalario) }}</td>
-          <td class="text-right">{{ formataMoeda(dash.totaladicional) }}</td>
-          <td class="text-right">{{ formataMoeda(dash.totalencargos) }}</td>
-          <td class="text-right">{{ formataMoeda(dash.totalvariaveis) }}</td>
-          <td class="text-right">{{ formataMoeda(dash.total) }}</td>
+          <td class="text-right">{{ formataNumero(dash.totalsalario) }}</td>
+          <td class="text-right">{{ formataNumero(dash.totaladicional) }}</td>
+          <td class="text-right">{{ formataNumero(dash.totalencargos) }}</td>
+          <td class="text-right">{{ formataNumero(dash.totalvariaveis) }}</td>
+          <td class="text-right">{{ formataNumero(dash.total) }}</td>
           <td class="text-right">
             {{ totalVendas ? formataPercentual((dash.total / totalVendas) * 100) : "—" }}
           </td>

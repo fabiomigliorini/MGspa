@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from "vue";
 import { wooStore } from "src/stores/woo";
-import { formataNumero } from "src/utils/formatador";
+import { formataNumero } from "@components/formatters";
 import { Notify, debounce } from "quasar";
 import moment from "moment/min/moment-with-locales";
 import WooInfoModal from "src/components/modals/WooInfoModal.vue";

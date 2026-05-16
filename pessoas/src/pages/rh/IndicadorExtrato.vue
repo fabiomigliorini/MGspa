@@ -4,7 +4,8 @@ import { useQuasar } from "quasar";
 import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
-import { formataMoeda, formataPercentual, corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
+import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
+import { formataNumero, formataPercentual, formataDataHoraSegundos, formataCodNegocio } from "@components/formatters";
 import moment from "moment";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
 import MgInputValor from "@components/MgInputValor.vue";
@@ -157,7 +158,7 @@ const submitLancamento = async () => {
 const excluirLancamento = (lancamento) => {
   $q.dialog({
     title: "Excluir Lançamento",
-    message: `Excluir lançamento manual de ${formataMoeda(lancamento.valor)}?`,
+    message: `Excluir lançamento manual de ${formataNumero(lancamento.valor)}?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
@@ -237,7 +238,7 @@ onMounted(() => {
               <q-card-section class="text-center">
                 <div class="text-caption text-grey">Valor Acumulado</div>
                 <div class="text-h6 text-grey-9">
-                  {{ formataMoeda(valorAcumulado) }}
+                  {{ formataNumero(valorAcumulado) }}
                 </div>
               </q-card-section>
             </q-card>
@@ -247,7 +248,7 @@ onMounted(() => {
               <q-card-section class="text-center">
                 <div class="text-caption text-grey">Meta</div>
                 <div class="text-h6 text-grey-9">
-                  {{ meta ? formataMoeda(meta) : "—" }}
+                  {{ meta ? formataNumero(meta) : "—" }}
                   <q-btn
                     v-if="podeEditar"
                     flat
@@ -345,7 +346,7 @@ onMounted(() => {
                   :class="l.estorno ? 'text-grey-5' : ''"
                 >
                   <td>
-                    {{ moment(l.negocio?.lancamento || l.criacao).format("DD/MM/YYYY HH:mm:ss") }}
+                    {{ formataDataHoraSegundos(l.negocio?.lancamento || l.criacao) }}
                   </td>
                   <td>
                     <q-btn
@@ -357,7 +358,7 @@ onMounted(() => {
                       color="primary"
                       :href="negocioUrl(l.codnegocio)"
                       target="_blank"
-                      :label="'#' + String(l.codnegocio).padStart(8, '0')"
+                      :label="formataCodNegocio(l.codnegocio)"
                       type="a"
                       class="q-pa-none"
                     />
@@ -370,7 +371,7 @@ onMounted(() => {
                     class="text-right text-weight-medium"
                     :class="l.valor < 0 || l.estorno ? 'text-red' : 'text-green-8'"
                   >
-                    {{ formataMoeda(l.valor) }}
+                    {{ formataNumero(l.valor) }}
                   </td>
                   <td class="text-center">
                     <q-badge

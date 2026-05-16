@@ -3,7 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useDfeDistribuicaoStore } from '../stores/dfeDistribuicaoStore'
 import dfeDistribuicaoService from '../services/dfeDistribuicaoService'
-import { formatChave, formatCnpjCpf, formatCurrency } from 'src/utils/formatters'
+import { formataChave, formataCnpjCpf, formataNumero, tempoRelativo } from '@components/formatters'
 
 const $q = useQuasar()
 const dfeStore = useDfeDistribuicaoStore()
@@ -27,25 +27,9 @@ const iconeDfeTipo = (schemaxml) => {
   }
 }
 
-const formatTimeAgo = (dateStr) => {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now - date
-  const diffMinutes = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMs / 3600000)
-  const diffDays = Math.floor(diffMs / 86400000)
-
-  if (diffMinutes < 1) return 'agora'
-  if (diffMinutes < 60) return `há ${diffMinutes} min`
-  if (diffHours < 24) return `há ${diffHours}h`
-  if (diffDays === 1) return 'há 1 dia'
-  return `há ${diffDays} dias`
-}
-
 const formatNsu = (nsu) => {
   if (!nsu) return '0'
-  return Number(nsu).toLocaleString('pt-BR')
+  return formataNumero(nsu, 0)
 }
 
 const onLoad = async (index, done) => {
@@ -179,7 +163,7 @@ onMounted(async () => {
                   class="text-grey-8 text-weight-medium"
                   v-if="item.NotaFiscalTerceiro?.valortotal"
                 >
-                  R$ {{ formatCurrency(item.NotaFiscalTerceiro.valortotal) }}
+                  R$ {{ formataNumero(item.NotaFiscalTerceiro.valortotal) }}
                 </span>
                 <span class="text-grey-8" v-if="item.NotaFiscalTerceiro?.natop">
                   - {{ item.NotaFiscalTerceiro.natop }}
@@ -196,12 +180,12 @@ onMounted(async () => {
                 <span class="text-weight-medium">
                   {{
                     item.DistribuicaoDfeEvento?.cnpj
-                      ? formatCnpjCpf(item.DistribuicaoDfeEvento.cnpj, false)
+                      ? formataCnpjCpf(item.DistribuicaoDfeEvento.cnpj, false)
                       : ''
                   }}
                   {{
                     item.DistribuicaoDfeEvento?.cpf
-                      ? formatCnpjCpf(item.DistribuicaoDfeEvento.cpf, true)
+                      ? formataCnpjCpf(item.DistribuicaoDfeEvento.cpf, true)
                       : ''
                   }}
                 </span>
@@ -219,7 +203,7 @@ onMounted(async () => {
 
             <!-- Chave -->
             <q-item-label caption lines="1">
-              {{ formatChave(item.nfechave) }}
+              {{ formataChave(item.nfechave) }}
             </q-item-label>
           </q-item-section>
 
@@ -229,7 +213,7 @@ onMounted(async () => {
               {{ formatNsu(item.nsu) }}
             </q-chip>
             <span class="text-caption">
-              {{ formatTimeAgo(item.data) }}
+              {{ tempoRelativo(item.data) }}
             </span>
           </q-item-section>
 

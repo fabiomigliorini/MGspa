@@ -1,4 +1,5 @@
 <script>
+import { formataData, formataCodNegocio } from "@components/formatters";
 import { ref, onMounted, defineAsyncComponent, computed } from "vue";
 import { empresaStore } from "src/stores/empresa";
 import { useQuasar } from "quasar";
@@ -24,7 +25,7 @@ export default {
     };
 
     const formatarCodigo = (cod) => {
-      return "#" + String(cod).padStart(8, "0");
+      return formataCodNegocio(cod);
     };
 
     const modoEmissaoLabel = computed(() => {
@@ -37,17 +38,17 @@ export default {
 
     const contingenciaFormatada = computed(() => {
       if (!sEmpresa.item.contingenciadata) return "-";
-      return moment(sEmpresa.item.contingenciadata).format("DD/MM/YYYY HH:mm");
+      return formataData(sEmpresa.item.contingenciadata);
     });
 
     const criacaoFormatada = computed(() => {
       if (!sEmpresa.item.criacao) return "-";
-      return moment(sEmpresa.item.criacao).format("DD/MM/YYYY - HH:mm");
+      return formataData(sEmpresa.item.criacao);
     });
 
     const alteracaoFormatada = computed(() => {
       if (!sEmpresa.item.alteracao) return "-";
-      return moment(sEmpresa.item.alteracao).format("DD/MM/YYYY - HH:mm");
+      return formataData(sEmpresa.item.alteracao);
     });
 
     const carregarEmpresa = async () => {
@@ -226,9 +227,7 @@ export default {
                       <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">Codigo</div>
                         <div class="text-body2">
-                          #{{
-                            String(sEmpresa.item.codempresa).padStart(8, "0")
-                          }}
+                          {{ formataCodNegocio(sEmpresa.item.codempresa) }}
                         </div>
                       </div>
 

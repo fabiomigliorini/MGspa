@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { onMounted, ref, watch } from "vue";
 import { exportFile, Notify, Dialog } from "quasar";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
@@ -43,21 +44,13 @@ const colunasTabelaNegocios = [
     name: 'valortotal',
     label: 'Valor',
     field: row => parseFloat(row.valortotal),
-    format: val => new Intl.NumberFormat("pt-BR", {
-      style: "decimal",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(val), sortable: true
+    format: val => formataNumero(val), sortable: true
   },
   {
     name: 'valorsaldo',
     label: 'Saldo',
     field: row => parseFloat(row.valorsaldo),
-    format: val => new Intl.NumberFormat("pt-BR", {
-      style: "decimal",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(val), sortable: true
+    format: val => formataNumero(val), sortable: true
   },
   { name: 'fantasia', label: 'Fantasia', field: 'fantasia', align: 'left', sortable: true },
   { name: 'lancamento', label: 'Hora', field: 'lancamento', format: val => moment(val).format('HH:mm'), sortable: true },

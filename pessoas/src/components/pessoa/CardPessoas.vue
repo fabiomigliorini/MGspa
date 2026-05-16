@@ -2,10 +2,10 @@
 import { computed } from "vue";
 import {
   formataData,
-  formataCPF,
-  formataCNPJ,
+  formataCpf,
+  formataCnpj,
   formataFone,
-} from "src/utils/formatador";
+} from "@components/formatters";
 
 const props = defineProps({
   listagempessoas: {
@@ -75,10 +75,10 @@ const primeiroTelefone = computed(() => {
         <q-item-section>
           <q-item-label class="ellipsis text-caption">
             <template v-if="listagempessoas.fisica">
-              {{ formataCPF(listagempessoas.cnpj) }}
+              {{ formataCpf(listagempessoas.cnpj) }}
             </template>
             <template v-else>
-              {{ formataCNPJ(listagempessoas.cnpj) }}
+              {{ formataCnpj(listagempessoas.cnpj) }}
             </template>
           </q-item-label>
           <q-item-label caption class="ellipsis" v-if="listagempessoas.ie">

@@ -1,14 +1,11 @@
 <script setup>
 import { onMounted, watch } from 'vue'
-import { date } from 'quasar'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataDataSemHora } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA, TIPO_BAIXA } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'
 
 const store = useBoletoStore()
-
-const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
 
 watch(
   () => [store.baixadosFiltros.codportador, store.baixadosFiltros.tipobaixa],
@@ -55,7 +52,7 @@ onMounted(() => store.carregarBaixados())
           <q-item-section>
             <div class="row items-center q-col-gutter-x-sm">
               <div class="col-12 col-sm-4 col-md-1 ellipsis">
-                {{ formatData(b.vencimento) }}
+                {{ formataDataSemHora(b.vencimento) }}
               </div>
               <div
                 class="col-12 col-sm-4 col-md-1 text-right text-weight-bold ellipsis text-primary"

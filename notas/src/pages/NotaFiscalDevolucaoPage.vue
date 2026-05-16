@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from 'stores/notaFiscalStore'
-import { formatCurrency, formatDecimal } from 'src/utils/formatters'
+import { formataNumero, formataNumero } from '@components/formatters'
 import SelectPessoa from 'src/components/selects/SelectPessoa.vue'
 
 const route = useRoute()
@@ -112,7 +112,7 @@ const confirmarDevolucao = () => {
 
   $q.dialog({
     title: 'Confirmar Devolução',
-    message: `Deseja criar uma nota fiscal de devolução no valor de ${formatCurrency(valorTotalDevolucao.value)}?`,
+    message: `Deseja criar uma nota fiscal de devolução no valor de ${formataNumero(valorTotalDevolucao.value)}?`,
     cancel: true,
   }).onOk(() => {
     submitDevolucao()
@@ -232,9 +232,9 @@ const submitDevolucao = async () => {
                   </q-item-label>
                   <q-item-label caption>{{ item.produtoBarra?.barras || '-' }}</q-item-label>
                   <q-item-label caption class="text-grey-7">
-                    {{ formatDecimal(item.quantidade, 3) }} de
-                    {{ formatCurrency(item.valorunitario) }} =
-                    {{ formatCurrency(item.valortotal) }}
+                    {{ formataNumero(item.quantidade, 3) }} de
+                    {{ formataNumero(item.valorunitario) }} =
+                    {{ formataNumero(item.valortotal) }}
                   </q-item-label>
                 </q-item-section>
 
@@ -265,7 +265,7 @@ const submitDevolucao = async () => {
             <div class="text-subtitle1 text-right">
               Valor total da devolução:
               <span class="text-weight-bold text-primary">
-                {{ formatCurrency(valorTotalDevolucao) }}
+                {{ formataNumero(valorTotalDevolucao) }}
               </span>
             </div>
           </q-card-section>

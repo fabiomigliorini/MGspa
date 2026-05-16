@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "src/utils/formatador";
+import { formataDataSemHora, formataNumero } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import SelectUnidadeNegocio from "src/components/select/SelectUnidadeNegocio.vue";
 import CardUnidadeMeta from "src/components/meta/CardUnidadeMeta.vue";
@@ -58,15 +58,6 @@ const totalMeta = computed(() =>
     0
   )
 );
-
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 5,
-  }).format(parseFloat(valor) || 0);
-};
 
 const extrairErro = (error, fallback) => {
   const data = error.response?.data;
@@ -212,7 +203,7 @@ watch(
                   <q-card-section class="text-center">
                     <div class="text-caption text-grey">Total Vendas</div>
                     <div class="text-h5 text-grey-9">
-                      {{ formataMoeda(totalVendas) }}
+                      {{ formataNumero(totalVendas) }}
                     </div>
                   </q-card-section>
                 </q-card>
@@ -222,7 +213,7 @@ watch(
                   <q-card-section class="text-center">
                     <div class="text-caption text-grey">Total Meta</div>
                     <div class="text-h5 text-grey-9">
-                      {{ formataMoeda(totalMeta) }}
+                      {{ formataNumero(totalMeta) }}
                     </div>
                   </q-card-section>
                 </q-card>

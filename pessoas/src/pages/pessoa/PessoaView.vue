@@ -15,7 +15,7 @@ import CardArquivos from "components/pessoa/CardArquivos.vue";
 import CardRegistroSpc from "components/pessoa/CardRegistroSpc.vue";
 import CardCertidoes from "components/pessoa/CardCertidoes.vue";
 import MGLayout from "layouts/MGLayout.vue";
-import { formataFromNow } from "src/utils/formatador";
+import { formataFromNow } from "@components/formatters";
 
 const route = useRoute();
 const sPessoa = pessoaStore();

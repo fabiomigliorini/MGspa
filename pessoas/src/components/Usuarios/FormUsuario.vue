@@ -125,7 +125,6 @@ import { useQuasar } from "quasar"
 import { ref } from 'vue'
 import { usuarioStore } from 'stores/usuario'
 import { useRoute } from 'vue-router'
-import { formataDocumetos } from 'src/stores/formataDocumentos'
 import { guardaToken } from 'stores/index'
 import moment from "moment";
 import "moment/min/locales";
@@ -236,7 +235,6 @@ export default defineComponent({
     const $q = useQuasar()
     const sUsuario = usuarioStore()
     const route = useRoute()
-    const Documentos = formataDocumetos()
     const user = guardaToken()
     const model = ref({
       codusuario: null,
@@ -266,7 +264,6 @@ export default defineComponent({
       formapagamento: ref({}),
       sUsuario,
       route,
-      Documentos,
       user,
       moment,
       usuarioValido,

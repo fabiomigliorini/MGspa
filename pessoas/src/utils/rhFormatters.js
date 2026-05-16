@@ -1,22 +1,3 @@
-export const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(valor) || 0);
-};
-
-export const formataPercentual = (valor) => {
-  if (valor == null) return "—";
-  return (
-    new Intl.NumberFormat("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(parseFloat(valor) || 0) + "%"
-  );
-};
-
 export const corProgresso = (percentual) => {
   if (!percentual) return "grey";
   if (percentual >= 100) return "green";

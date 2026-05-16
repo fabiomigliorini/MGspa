@@ -5,7 +5,7 @@ import { unidadeNegocioStore } from "src/stores/unidadenegocio";
 import { setorStore } from "src/stores/setor";
 import { tipoSetorStore } from "src/stores/tiposetor";
 import { guardaToken } from "src/stores";
-import { formataData } from "src/utils/formatador";
+import { formataData } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import SelectFilial from "components/select/SelectFilial.vue";
 import SelectUnidadeNegocio from "components/select/SelectUnidadeNegocio.vue";

@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { ref, onMounted } from "vue";
 import { negocioStore } from "stores/negocio";
 import { useRoute } from "vue-router";
@@ -146,71 +147,43 @@ const salvarDevolucao = async () => {
                   </q-item-label>
                   <q-item-label caption lines="1">
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 3,
-                        maximumFractionDigits: 3,
-                      }).format(item.quantidade)
+                      formataNumero(item.quantidade, 3)
                     }}
                     de R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(item.valorunitario)
+                      formataNumero(item.valorunitario)
                     }}
                     <template v-if="item.valordesconto">
                       - R$
                       {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(item.valordesconto)
+                        formataNumero(item.valordesconto)
                       }}
                       (desconto)
                     </template>
                     <template v-if="item.valorfrete">
                       + R$
                       {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(item.valorfrete)
+                        formataNumero(item.valorfrete)
                       }}
                       (Frete)
                     </template>
                     <template v-if="item.valorseguro">
                       + R$
                       {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(item.valorseguro)
+                        formataNumero(item.valorseguro)
                       }}
                       (Seguro)
                     </template>
                     <template v-if="item.valoroutras">
                       + R$
                       {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(item.valoroutras)
+                        formataNumero(item.valoroutras)
                       }}
                       (Outras)
                     </template>
                     = R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(item.valortotal)
+                      formataNumero(item.valortotal)
                     }}
                   </q-item-label>
                   <q-item-label
@@ -219,11 +192,7 @@ const salvarDevolucao = async () => {
                     v-if="item.devolvido > 0"
                   >
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 3,
-                        maximumFractionDigits: 3,
-                      }).format(item.devolvido)
+                      formataNumero(item.devolvido, 3)
                     }}
                     já devolvido anteriormente
                   </q-item-label>
@@ -248,11 +217,7 @@ const salvarDevolucao = async () => {
                   <template v-if="item.valorDevolucao">
                     R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(item.valorDevolucao)
+                      formataNumero(item.valorDevolucao)
                     }}
                   </template>
                 </q-item-section>
@@ -266,11 +231,7 @@ const salvarDevolucao = async () => {
             <h6 class="text-right q-pa-md q-ma-sm">
               Total Devolução: R$
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(totalDevolucao)
+                formataNumero(totalDevolucao)
               }}
             </h6>
           </template>

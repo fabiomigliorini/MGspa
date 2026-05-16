@@ -2,7 +2,7 @@
 import { defineAsyncComponent, ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { colaboradorStore } from "stores/colaborador";
-import { formataDocumetos } from "src/stores/formataDocumentos";
+import { tempoRelativo } from "@components/formatters";
 import moment from "moment";
 import "moment/min/locales";
 moment.locale("pt-br");
@@ -17,7 +17,6 @@ const props = defineProps(["colaboradorCargos"]);
 
 const $q = useQuasar();
 const sColaborador = colaboradorStore();
-const Documentos = formataDocumetos();
 
 const cargosOrdenados = computed(() =>
   [...(props.colaboradorCargos.ColaboradorCargo || [])].sort(
@@ -220,7 +219,7 @@ defineExpose({ novoColaboradorCargo });
 
           <q-item-label caption v-if="!colaboradorCargo.fim">
             {{ moment(colaboradorCargo.inicio).format("DD/MMM/YYYY") }} a ({{
-              Documentos.formataFromNow(colaboradorCargo.inicio)
+              tempoRelativo(colaboradorCargo.inicio)
             }})
           </q-item-label>
           <q-item-label caption v-else>

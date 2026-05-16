@@ -2,18 +2,21 @@
 import { onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { negocioStore } from "src/stores/negocio";
-import { formataCnpjCpf } from "../utils/formatador.js";
+import {
+  formataCnpjCpf,
+  formataNumero,
+  formataDataHoraSegundos,
+  formataCodNegocio,
+} from "@components/formatters";
 import { produtoStore } from "src/stores/produto";
 import BarCode from "components/BarCode.vue";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
 
 const route = useRoute();
 const sNegocio = negocioStore();
 const sProduto = produtoStore();
 
 onMounted(() => {
-  const ret = sNegocio.carregarPeloUuid(route.params.uuid);
+  sNegocio.carregarPeloUuid(route.params.uuid);
 });
 </script>
 <template>
@@ -30,7 +33,7 @@ onMounted(() => {
           <td>
             <span class="row">
               <template v-if="sNegocio.negocio.codnegocio">
-                #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+                {{ formataCodNegocio(sNegocio.negocio.codnegocio) }}
               </template>
               <template v-else>
                 {{ sNegocio.negocio.uuid }}
@@ -41,9 +44,7 @@ onMounted(() => {
             <span class="row" v-if="sNegocio.negocio.fantasiavendedor">
               Vendedor: {{ sNegocio.negocio.fantasiavendedor }}
             </span>
-            {{
-              moment(sNegocio.negocio.lancamento).format("DD/MM/YYYY HH:mm:SS")
-            }}
+            {{ formataDataHoraSegundos(sNegocio.negocio.lancamento) }}
           </td>
         </tr>
       </table>
@@ -57,7 +58,7 @@ onMounted(() => {
         <tr>
           <td v-if="sNegocio.negocio.Pessoa.codpessoa != 1">
             <span class="row">
-              #{{ String(sNegocio.negocio.codpessoa).padStart(8, "0") }} |
+              {{ formataCodNegocio(sNegocio.negocio.codpessoa) }} |
               {{
                 formataCnpjCpf(
                   sNegocio.negocio.Pessoa.cnpj,
@@ -115,31 +116,11 @@ onMounted(() => {
             </tr>
             <tr>
               <td class="valor text-right">
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 3,
-                    maximumFractionDigits: 3,
-                  }).format(produto.quantidade)
-                }}
+                {{ formataNumero(produto.quantidade, 3) }}
                 de R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(produto.valorunitario)
-                }}
+                {{ formataNumero(produto.valorunitario) }}
                 = R$
-                <b>
-                  {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(produto.valorprodutos)
-                  }}</b
-                >
+                <b>{{ formataNumero(produto.valorprodutos) }}</b>
               </td>
             </tr>
           </template>
@@ -149,79 +130,37 @@ onMounted(() => {
             v-if="sNegocio.negocio.valorprodutos != sNegocio.negocio.valortotal"
           >
             <td class="subtotal text-right">
-              Produtos R$
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valorprodutos)
-              }}
+              Produtos R$ {{ formataNumero(sNegocio.negocio.valorprodutos) }}
             </td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valordesconto">
             <td class="text-right">
-              Desconto R$
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valordesconto)
-              }}
+              Desconto R$ {{ formataNumero(sNegocio.negocio.valordesconto) }}
             </td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valorfrete">
             <td class="text-right">
-              Frete R$
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valorfrete)
-              }}
+              Frete R$ {{ formataNumero(sNegocio.negocio.valorfrete) }}
             </td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valorseguro">
             <td class="text-right">
-              Seguro R$
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valorseguro)
-              }}
+              Seguro R$ {{ formataNumero(sNegocio.negocio.valorseguro) }}
             </td>
           </tr>
 
           <tr v-if="sNegocio.negocio.valoroutras">
             <td class="text-right">
-              Outras R$
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valoroutras)
-              }}
+              Outras R$ {{ formataNumero(sNegocio.negocio.valoroutras) }}
             </td>
           </tr>
 
           <tr>
             <td class="text-right">
-              Total R$
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valortotal)
-              }}
+              Total R$ {{ formataNumero(sNegocio.negocio.valortotal) }}
             </td>
           </tr>
         </tbody>
@@ -234,15 +173,7 @@ onMounted(() => {
             v-bind:key="formapagamento.uuid"
           >
             <td>
-              R$
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(formapagamento.valorpagamento)
-              }}
-              -
+              R$ {{ formataNumero(formapagamento.valorpagamento) }} -
               {{ formapagamento.formapagamento }}
             </td>
           </tr>
@@ -261,7 +192,7 @@ onMounted(() => {
     <!-- <hr class="q-mb-md" /> -->
     <template v-if="sNegocio.negocio.sincronizado">
       <div class="text-center text-h5 text-bold q-pt-md">
-        Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+        Negocio {{ formataCodNegocio(sNegocio.negocio.codnegocio) }}
       </div>
       <div class="barcode">
         <BarCode
@@ -293,14 +224,7 @@ onMounted(() => {
       </div>
     </template>
     <div class="text-center text-h5 text-bold">
-      R$
-      {{
-        new Intl.NumberFormat("pt-BR", {
-          style: "decimal",
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(sNegocio.negocio.valortotal)
-      }}
+      R$ {{ formataNumero(sNegocio.negocio.valortotal) }}
     </div>
   </template>
 </template>

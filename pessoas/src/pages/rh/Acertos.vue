@@ -4,7 +4,8 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { api } from "boot/axios";
-import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
+import { extrairErro } from "src/utils/rhFormatters";
+import { formataNumero } from "@components/formatters";
 import AcertoModal from "./AcertoModal.vue";
 
 const $q = useQuasar();
@@ -44,7 +45,7 @@ const temEfetivados = computed(() =>
 const formataRemanescente = (item) => {
   if (!item.remanescente_qtd) return "—";
   return (
-    formataMoeda(item.remanescente_valor) + " (" + item.remanescente_qtd + ")"
+    formataNumero(item.remanescente_valor) + " (" + item.remanescente_qtd + ")"
   );
 };
 
@@ -285,10 +286,10 @@ onMounted(carregarAcertos);
                 <q-tooltip>Colaborador não encerrado</q-tooltip>
               </q-icon>
             </td>
-            <td class="text-right">{{ formataMoeda(item.creditos) }}</td>
-            <td class="text-right">{{ formataMoeda(item.debitos) }}</td>
-            <td class="text-right">{{ formataMoeda(item.financeiro) }}</td>
-            <td class="text-right">{{ formataMoeda(item.folha) }}</td>
+            <td class="text-right">{{ formataNumero(item.creditos) }}</td>
+            <td class="text-right">{{ formataNumero(item.debitos) }}</td>
+            <td class="text-right">{{ formataNumero(item.financeiro) }}</td>
+            <td class="text-right">{{ formataNumero(item.folha) }}</td>
             <td class="text-right">{{ formataRemanescente(item) }}</td>
             <td class="text-center">
               <q-badge

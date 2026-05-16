@@ -1,4 +1,5 @@
 <script setup>
+import { formataData } from "@components/formatters";
 import { useQuasar } from "quasar";
 import { useRouter, useRoute } from "vue-router";
 import { usuarioStore } from "src/stores/usuario";
@@ -207,7 +208,7 @@ const ativar = async (codusuario) => {
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis text-caption">
-            {{ moment(sUsuario.detalheUsuarios.inativo).format("DD/MM/YYYY HH:mm") }}
+            {{ formataData(sUsuario.detalheUsuarios.inativo) }}
           </q-item-label>
           <q-item-label caption>Data de inativação</q-item-label>
         </q-item-section>

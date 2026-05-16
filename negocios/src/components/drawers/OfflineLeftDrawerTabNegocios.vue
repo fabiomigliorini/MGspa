@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { onMounted, ref } from "vue";
 import { Dialog, Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
@@ -108,11 +109,7 @@ onMounted(async () => {
         <q-item-section side class="text-bold">
           <q-item-label>
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(n.valortotal)
+              formataNumero(n.valortotal)
             }}
             <q-badge color="orange" text-color="white" rounded v-if="n.codpdv != sSinc.pdv.codpdv" />
           </q-item-label>
@@ -156,11 +153,7 @@ onMounted(async () => {
         <q-item-section side class="text-bold">
           <q-item-label>
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(n.valortotal)
+              formataNumero(n.valortotal)
             }}
             <q-badge color="orange" text-color="white" rounded v-if="n.codpdv != sSinc.pdv.codpdv" />
           </q-item-label>

@@ -4,8 +4,7 @@ import { Notify, debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
 import { pixStore } from "stores/pix";
 import { db } from "src/boot/db";
-import { formataCpf } from "../../utils/formatador.js";
-import { formataCnpj } from "../../utils/formatador.js";
+import { formataCpf, formataCnpj, formataNumero, formataDataCompleta } from "@components/formatters";
 import emitter from "../../utils/emitter.js";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
@@ -244,14 +243,7 @@ const whatsapp = () => {
     <q-card>
       <q-card-section>
         <div class="text-h6">
-          Cobrança PIX de R$
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sPix.pixCob.valororiginal)
-          }}
+          Cobrança PIX de R$ {{ formataNumero(sPix.pixCob.valororiginal) }}
         </div>
         <div class="text-subtitle2 text-grey">
           {{ sPix.pixCob.status }}
@@ -269,14 +261,7 @@ const whatsapp = () => {
                 </q-item-section>
                 <q-item-section>
                   <q-item-label>
-                    R$
-                    {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(pix.valor)
-                    }}
+                    R$ {{ formataNumero(pix.valor) }}
                   </q-item-label>
                   <q-item-label caption> Valor efetivamente Pago </q-item-label>
                 </q-item-section>
@@ -330,7 +315,7 @@ const whatsapp = () => {
                     {{ sPix.pixCob.portador }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ moment(pix.horario).format("LLLL") }}
+                    {{ formataDataCompleta(pix.horario) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -376,7 +361,7 @@ const whatsapp = () => {
                     {{ sPix.pixCob.portador }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ moment(sPix.pixCob.criacao).format("LLLL") }}
+                    {{ formataDataCompleta(sPix.pixCob.criacao) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>

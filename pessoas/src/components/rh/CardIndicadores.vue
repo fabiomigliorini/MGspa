@@ -1,11 +1,6 @@
 <script setup>
-import {
-  formataMoeda,
-  formataPercentual,
-  corProgresso,
-  tipoIndicadorLabel,
-  tipoIndicadorColor,
-} from "src/utils/rhFormatters";
+import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor } from "src/utils/rhFormatters";
+import { formataNumero, formataPercentual } from "@components/formatters";
 
 import { computed } from "vue";
 
@@ -102,13 +97,13 @@ const atingimento = (ind) => {
             <div>
               Vendas:
               <span class="text-weight-bold">
-                {{ formataMoeda(ind.valoracumulado) }}
+                {{ formataNumero(ind.valoracumulado) }}
               </span>
             </div>
             <div>
               Meta:
               <span class="text-weight-bold">
-                {{ ind.meta ? formataMoeda(ind.meta) : "—" }}
+                {{ ind.meta ? formataNumero(ind.meta) : "—" }}
               </span>
             </div>
             <div v-if="ind.meta">

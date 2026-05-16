@@ -5,8 +5,9 @@ import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
 import { guardaToken } from "src/stores";
 import { feriadoStore } from "src/stores/feriado";
-import { formataDataSemHora } from "src/utils/formatador";
-import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
+import { formataDataSemHora } from "@components/formatters";
+import { extrairErro } from "src/utils/rhFormatters";
+import { formataNumero } from "@components/formatters";
 import Dashboard from "./Dashboard.vue";
 import Colaboradores from "./Colaboradores.vue";
 import Indicadores from "./Indicadores.vue";
@@ -832,13 +833,13 @@ watch(tab, async (newTab) => {
                 <q-icon name="info_outline" size="14px" />
               </div>
               <div class="text-h5 text-grey-9">
-                {{ formataMoeda(custoTotal) }}
+                {{ formataNumero(custoTotal) }}
               </div>
               <q-tooltip>
-                <div>Salários: {{ formataMoeda(totalSalario) }}</div>
-                <div>Adicional: {{ formataMoeda(totalAdicional) }}</div>
-                <div>Encargos: {{ formataMoeda(totalEncargos) }}</div>
-                <div>Variáveis: {{ formataMoeda(totalVariaveis) }}</div>
+                <div>Salários: {{ formataNumero(totalSalario) }}</div>
+                <div>Adicional: {{ formataNumero(totalAdicional) }}</div>
+                <div>Encargos: {{ formataNumero(totalEncargos) }}</div>
+                <div>Variáveis: {{ formataNumero(totalVariaveis) }}</div>
               </q-tooltip>
             </q-card-section>
           </q-card>

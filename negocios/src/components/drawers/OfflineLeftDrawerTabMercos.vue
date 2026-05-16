@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { onMounted, onUnmounted } from "vue";
 import { Dialog } from "quasar";
 import emitter from "src/utils/emitter";
@@ -63,11 +64,7 @@ onUnmounted(() => {
         <q-item-section side class="text-bold">
           <q-item-label>
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(n.valortotal)
+              formataNumero(n.valortotal)
             }}
             <q-badge color="orange" text-color="white" rounded v-if="n.codpdv != sSinc.pdv.codpdv" />
           </q-item-label>

@@ -1,4 +1,5 @@
 <script setup>
+import { formataDataHoraSegundos } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -606,7 +607,7 @@ onMounted(() => {
         <!-- Auditoria -->
         <div v-if="isEditMode && naturezaOperacao" class="text-caption text-grey q-mt-md">
           <span v-if="naturezaOperacao.usuarioAlteracao">
-            Alterado em {{ new Date(naturezaOperacao.alteracao).toLocaleString('pt-BR') }} por
+            Alterado em {{ formataDataHoraSegundos(naturezaOperacao.alteracao) }} por
             {{ naturezaOperacao.usuarioAlteracao.usuario }}
           </span>
         </div>

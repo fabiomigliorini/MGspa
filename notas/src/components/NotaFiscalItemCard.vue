@@ -1,12 +1,12 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue'
 import {
-  formatCurrency,
-  formatDecimal,
-  formatNCM,
-  formatCEST,
-  formatCodNegocio,
-} from '../utils/formatters'
+  formataNumero,
+  formataNumero,
+  formataNcm,
+  formataCest,
+  formataCodNegocio,
+} from '@components/formatters'
 import { getEnteIcon } from 'src/composables/useTributoIcons'
 
 // const props = defineProps({
@@ -115,39 +115,39 @@ const getProdutoUrl = (codproduto) => {
           <!-- Valor Unitário -->
           <div class="col-4">
             <div class="text-caption text-grey-7">Preço</div>
-            <div class="text-body2">{{ formatCurrency(item.valorunitario) }}</div>
+            <div class="text-body2">{{ formataNumero(item.valorunitario) }}</div>
           </div>
 
           <!-- Total -->
           <div class="col-4">
             <div class="text-caption text-grey-7">Total</div>
             <div class="text-body1 text-primary text-weight-bold">
-              {{ formatCurrency(item.valortotal) }}
+              {{ formataNumero(item.valortotal) }}
             </div>
           </div>
 
           <!-- Desconto -->
           <div class="col-4" v-if="item.valordesconto">
             <div class="text-caption text-grey-7">Desconto</div>
-            <div class="text-caption">{{ formatCurrency(item.valordesconto) }}</div>
+            <div class="text-caption">{{ formataNumero(item.valordesconto) }}</div>
           </div>
 
           <!-- Frete -->
           <div class="col-4" v-if="item.valorfrete">
             <div class="text-caption text-grey-7">Frete</div>
-            <div class="text-caption">{{ formatCurrency(item.valorfrete) }}</div>
+            <div class="text-caption">{{ formataNumero(item.valorfrete) }}</div>
           </div>
 
           <!-- Seguro -->
           <div class="col-4" v-if="item.valorseguro">
             <div class="text-caption text-grey-7">Seguro</div>
-            <div class="text-bodycaption2">{{ formatCurrency(item.valorseguro) }}</div>
+            <div class="text-bodycaption2">{{ formataNumero(item.valorseguro) }}</div>
           </div>
 
           <!-- Outras Despesas -->
           <div class="col-4" v-if="item.valoroutras">
             <div class="text-caption text-grey-7">Outras Despesas</div>
-            <div class="text-caption">{{ formatCurrency(item.valoroutras) }}</div>
+            <div class="text-caption">{{ formataNumero(item.valoroutras) }}</div>
           </div>
 
           <!-- Pedido -->
@@ -172,7 +172,7 @@ const getProdutoUrl = (codproduto) => {
                 class="text-primary text-weight-medium"
                 style="text-decoration: none"
               >
-                {{ formatCodNegocio(item.codnegocio) }}
+                {{ formataCodNegocio(item.codnegocio) }}
               </a>
             </div>
           </div>
@@ -180,7 +180,7 @@ const getProdutoUrl = (codproduto) => {
           <!-- Devolução Percentual -->
           <div v-if="item.devolucaopercentual" class="col-6">
             <div class="text-caption text-grey-7">% Devolução</div>
-            <div class="text-caption">{{ formatDecimal(item.devolucaopercentual, 2) }}%</div>
+            <div class="text-caption">{{ formataNumero(item.devolucaopercentual, 2) }}%</div>
           </div>
 
           <!-- Observações -->
@@ -224,9 +224,9 @@ const getProdutoUrl = (codproduto) => {
               <div class="col-6">
                 <div class="text-caption text-grey-7">NCM/CEST</div>
                 <div class="text-caption ellipsis">
-                  {{ formatNCM(item.produtoBarra?.ncm) }}
+                  {{ formataNcm(item.produtoBarra?.ncm) }}
                   <template v-if="item.produtoBarra?.cest">
-                    / {{ formatCEST(item.produtoBarra?.cest) }}
+                    / {{ formataCest(item.produtoBarra?.cest) }}
                   </template>
                 </div>
               </div>
@@ -258,9 +258,9 @@ const getProdutoUrl = (codproduto) => {
               <div v-if="item.icmsbase" class="col-6">
                 <div class="text-caption text-grey-7">Base</div>
                 <div class="text-caption ellipsis">
-                  {{ formatCurrency(item.icmsbase) }}
+                  {{ formataNumero(item.icmsbase) }}
                   <template v-if="item.icmsbasepercentual && item.icmsbasepercentual != 100">
-                    ({{ formatDecimal(item.icmsbasepercentual, 2) }}%)
+                    ({{ formataNumero(item.icmsbasepercentual, 2) }}%)
                   </template>
                 </div>
               </div>
@@ -269,7 +269,7 @@ const getProdutoUrl = (codproduto) => {
               <div v-if="item.icmspercentual" class="col-2">
                 <div class="text-caption text-grey-7">Alíq</div>
                 <div class="text-caption ellipsis">
-                  {{ formatDecimal(item.icmspercentual, 2) }}%
+                  {{ formataNumero(item.icmspercentual, 2) }}%
                 </div>
               </div>
 
@@ -277,27 +277,27 @@ const getProdutoUrl = (codproduto) => {
               <div v-if="item.icmsvalor" class="col-4">
                 <div class="text-caption text-grey-7">Valor</div>
                 <div class="text-caption ellipsis text-weight-bold">
-                  {{ formatCurrency(item.icmsvalor) }}
+                  {{ formataNumero(item.icmsvalor) }}
                 </div>
               </div>
 
               <!-- ICMS ST Base -->
               <div v-if="item.icmsstbase" class="col-6 col-sm-6">
                 <div class="text-caption text-grey-7">Base ST</div>
-                <div class="text-caption">{{ formatCurrency(item.icmsstbase) }}</div>
+                <div class="text-caption">{{ formataNumero(item.icmsstbase) }}</div>
               </div>
 
               <!-- ICMS ST % -->
               <div v-if="item.icmsstpercentual" class="col-2">
                 <div class="text-caption text-grey-7">Alíq.</div>
-                <div class="text-caption">{{ formatDecimal(item.icmsstpercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.icmsstpercentual, 2) }}%</div>
               </div>
 
               <!-- ICMS ST Valor -->
               <div v-if="item.icmsstvalor" class="col-4">
                 <div class="text-caption text-grey-7">Valor ST</div>
                 <div class="text-caption text-weight-bold">
-                  {{ formatCurrency(item.icmsstvalor) }}
+                  {{ formataNumero(item.icmsstvalor) }}
                 </div>
               </div>
             </div>
@@ -314,25 +314,25 @@ const getProdutoUrl = (codproduto) => {
               <!-- IPI Base -->
               <div v-if="item.ipibase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">{{ formatCurrency(item.ipibase) }}</div>
+                <div class="text-caption">{{ formataNumero(item.ipibase) }}</div>
               </div>
 
               <!-- IPI % -->
               <div v-if="item.ipipercentual" class="col-3">
                 <div class="text-caption text-grey-7">Alíquota</div>
-                <div class="text-caption">{{ formatDecimal(item.ipipercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.ipipercentual, 2) }}%</div>
               </div>
 
               <!-- IPI Valor -->
               <div v-if="item.ipivalor" class="col-3">
                 <div class="text-caption text-grey-7">Valor</div>
-                <div class="text-caption text-weight-bold">{{ formatCurrency(item.ipivalor) }}</div>
+                <div class="text-caption text-weight-bold">{{ formataNumero(item.ipivalor) }}</div>
               </div>
 
               <!-- IPI Devolução Valor -->
               <div v-if="item.ipidevolucaovalor" class="col-3">
                 <div class="text-caption text-grey-7">Vlr. Devolução</div>
-                <div class="text-caption">{{ formatCurrency(item.ipidevolucaovalor) }}</div>
+                <div class="text-caption">{{ formataNumero(item.ipidevolucaovalor) }}</div>
               </div>
             </div>
           </q-tab-panel>
@@ -344,19 +344,19 @@ const getProdutoUrl = (codproduto) => {
               <!-- PIS Base -->
               <div v-if="item.pisbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">{{ formatCurrency(item.pisbase) }}</div>
+                <div class="text-caption">{{ formataNumero(item.pisbase) }}</div>
               </div>
 
               <!-- PIS % -->
               <div v-if="item.pispercentual" class="col-3">
                 <div class="text-caption text-grey-7">Alíquota</div>
-                <div class="text-caption">{{ formatDecimal(item.pispercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.pispercentual, 2) }}%</div>
               </div>
 
               <!-- PIS Valor -->
               <div v-if="item.pisvalor" class="col-3">
                 <div class="text-caption text-grey-7">PIS</div>
-                <div class="text-caption text-weight-bold">{{ formatCurrency(item.pisvalor) }}</div>
+                <div class="text-caption text-weight-bold">{{ formataNumero(item.pisvalor) }}</div>
               </div>
 
               <!-- PIS CST -->
@@ -370,20 +370,20 @@ const getProdutoUrl = (codproduto) => {
               <!-- COFINS Base -->
               <div v-if="item.cofinsbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">{{ formatCurrency(item.cofinsbase) }}</div>
+                <div class="text-caption">{{ formataNumero(item.cofinsbase) }}</div>
               </div>
 
               <!-- COFINS % -->
               <div v-if="item.cofinspercentual" class="col-3">
                 <div class="text-caption text-grey-7">Alíquota</div>
-                <div class="text-caption">{{ formatDecimal(item.cofinspercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.cofinspercentual, 2) }}%</div>
               </div>
 
               <!-- COFINS Valor -->
               <div v-if="item.cofinsvalor" class="col-3">
                 <div class="text-caption text-grey-7">COFINS</div>
                 <div class="text-caption text-weight-bold">
-                  {{ formatCurrency(item.cofinsvalor) }}
+                  {{ formataNumero(item.cofinsvalor) }}
                 </div>
               </div>
 
@@ -398,20 +398,20 @@ const getProdutoUrl = (codproduto) => {
               <!-- IRPJ Base -->
               <div v-if="item.irpjbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">{{ formatCurrency(item.irpjbase) }}</div>
+                <div class="text-caption">{{ formataNumero(item.irpjbase) }}</div>
               </div>
 
               <!-- IRPJ % -->
               <div v-if="item.irpjpercentual" class="col-3">
                 <div class="text-caption text-grey-7">Alíquota</div>
-                <div class="text-caption">{{ formatDecimal(item.irpjpercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.irpjpercentual, 2) }}%</div>
               </div>
 
               <!-- IRPJ Valor -->
               <div v-if="item.irpjvalor" class="col-6">
                 <div class="text-caption text-grey-7">IRPJ</div>
                 <div class="text-caption text-weight-bold">
-                  {{ formatCurrency(item.irpjvalor) }}
+                  {{ formataNumero(item.irpjvalor) }}
                 </div>
               </div>
 
@@ -420,20 +420,20 @@ const getProdutoUrl = (codproduto) => {
               <!-- CSLL Base -->
               <div v-if="item.csllbase" class="col-3">
                 <div class="text-caption text-grey-7">Base</div>
-                <div class="text-caption">{{ formatCurrency(item.csllbase) }}</div>
+                <div class="text-caption">{{ formataNumero(item.csllbase) }}</div>
               </div>
 
               <!-- CSLL % -->
               <div v-if="item.csllpercentual" class="col-3">
                 <div class="text-caption text-grey-7">Alíquota</div>
-                <div class="text-caption">{{ formatDecimal(item.csllpercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.csllpercentual, 2) }}%</div>
               </div>
 
               <!-- CSLL Valor -->
               <div v-if="item.csllvalor" class="col-6">
                 <div class="text-caption text-grey-7">CSLL</div>
                 <div class="text-caption text-weight-bold">
-                  {{ formatCurrency(item.csllvalor) }}
+                  {{ formataNumero(item.csllvalor) }}
                 </div>
               </div>
             </div>
@@ -452,20 +452,20 @@ const getProdutoUrl = (codproduto) => {
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Base</div>
                   <div class="text-caption">
-                    {{ formatCurrency(trib.base) }}
+                    {{ formataNumero(trib.base) }}
                   </div>
                 </div>
 
                 <!-- Alíquota -->
                 <div class="col-2">
                   <div class="text-caption text-grey-7">Alíq</div>
-                  <div class="text-caption">{{ formatDecimal(trib.aliquota, 2) }}%</div>
+                  <div class="text-caption">{{ formataNumero(trib.aliquota, 2) }}%</div>
                 </div>
 
                 <!-- Valor -->
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Valor</div>
-                  <div class="text-caption text-weight-bold">{{ formatCurrency(trib.valor) }}</div>
+                  <div class="text-caption text-weight-bold">{{ formataNumero(trib.valor) }}</div>
                 </div>
 
                 <!-- geracredito -->
@@ -478,7 +478,7 @@ const getProdutoUrl = (codproduto) => {
                 <div v-if="trib.valorcredito" class="col-4">
                   <div class="text-caption text-grey-7">Crédito</div>
                   <div class="text-caption text-weight-bold">
-                    {{ formatCurrency(trib.valorcredito) }}
+                    {{ formataNumero(trib.valorcredito) }}
                   </div>
                 </div>
 
@@ -500,9 +500,9 @@ const getProdutoUrl = (codproduto) => {
                 <div v-if="trib.basereducao" class="col-3">
                   <div class="text-caption text-grey-7">Base</div>
                   <div class="text-caption">
-                    {{ formatCurrency(trib.basereducao) }}
+                    {{ formataNumero(trib.basereducao) }}
                     <template v-if="trib.basereducaopercentual">
-                      ({{ formatDecimal(trib.basereducaopercentual, 2) }}%)
+                      ({{ formataNumero(trib.basereducaopercentual, 2) }}%)
                     </template>
                   </div>
                 </div>
@@ -534,46 +534,46 @@ const getProdutoUrl = (codproduto) => {
               <!-- Funrural -->
               <div v-if="item.funruralpercentual" class="col-6">
                 <div class="text-caption text-grey-7">Alíquota</div>
-                <div class="text-caption">{{ formatDecimal(item.funruralpercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.funruralpercentual, 2) }}%</div>
               </div>
 
               <div v-if="item.funruralvalor" class="col-6">
                 <div class="text-caption text-grey-7">Funrural</div>
-                <div class="text-caption">{{ formatCurrency(item.funruralvalor) }}</div>
+                <div class="text-caption">{{ formataNumero(item.funruralvalor) }}</div>
               </div>
 
               <!-- Senar -->
               <div v-if="item.senarpercentual" class="col-6">
                 <div class="text-caption text-grey-7">Alíquota</div>
-                <div class="text-caption">{{ formatDecimal(item.senarpercentual, 2) }}%</div>
+                <div class="text-caption">{{ formataNumero(item.senarpercentual, 2) }}%</div>
               </div>
 
               <div v-if="item.senarvalor" class="col-6">
                 <div class="text-caption text-grey-7">Senar</div>
-                <div class="text-caption">{{ formatCurrency(item.senarvalor) }}</div>
+                <div class="text-caption">{{ formataNumero(item.senarvalor) }}</div>
               </div>
 
               <!-- Fethab -->
               <div v-if="item.fethabkg" class="col-6">
                 <div class="text-caption text-grey-7">Por Kg</div>
-                <div class="text-caption">{{ formatDecimal(item.fethabkg, 6) }}</div>
+                <div class="text-caption">{{ formataNumero(item.fethabkg, 6) }}</div>
               </div>
 
               <!-- Fethab Valor -->
               <div v-if="item.fethabvalor" class="col-6">
                 <div class="text-caption text-grey-7">Fethab</div>
-                <div class="text-caption">{{ formatCurrency(item.fethabvalor) }}</div>
+                <div class="text-caption">{{ formataNumero(item.fethabvalor) }}</div>
               </div>
 
               <!-- IAgro -->
               <div v-if="item.iagrokg" class="col-6">
                 <div class="text-caption text-grey-7">Por Kg</div>
-                <div class="text-caption">{{ formatDecimal(item.iagrokg, 6) }}</div>
+                <div class="text-caption">{{ formataNumero(item.iagrokg, 6) }}</div>
               </div>
 
               <div v-if="item.iagrovalor" class="col-6">
                 <div class="text-caption text-grey-7">IAgro</div>
-                <div class="text-caption">{{ formatCurrency(item.iagrovalor) }}</div>
+                <div class="text-caption">{{ formataNumero(item.iagrovalor) }}</div>
               </div>
             </div>
           </q-tab-panel>

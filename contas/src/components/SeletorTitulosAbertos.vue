@@ -1,8 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { date } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataDataSemHora } from '@components/formatters'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
@@ -345,9 +344,6 @@ function classeOperacao(op) {
   return op === 'CR' ? 'text-orange' : 'text-green'
 }
 
-function formatVcto(v) {
-  return v ? date.formatDate(v, 'DD/MM/YYYY') : ''
-}
 
 function classeVencimento(t) {
   const dias = diasAtraso(t.vencimento)
@@ -577,7 +573,7 @@ function classeVencimento(t) {
                 <span class="text-grey-7" v-if="titulo.fatura"> {{ titulo.fatura }} </span>
                 <q-space />
                 <span :class="classeVencimento(titulo)">
-                  {{ formatVcto(titulo.vencimento) }}
+                  {{ formataDataSemHora(titulo.vencimento) }}
                 </span>
               </div>
             </div>

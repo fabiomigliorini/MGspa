@@ -5,6 +5,7 @@ import { useRoute } from "vue-router";
 import { metaStore } from "src/stores/meta";
 import { guardaToken } from "src/stores";
 import MGLayout from "layouts/MGLayout.vue";
+import { formataNumero, formataCodNegocio, formataData } from "@components/formatters";
 import { getTipo } from "src/config/bonificacaoTipos";
 
 const $q = useQuasar();
@@ -27,26 +28,6 @@ const eventosLista = computed(() => {
     total: parseFloat(total) || 0,
   }));
 });
-
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(parseFloat(valor) || 0);
-};
-
-const formataMoedaPrecisa = (valor) => {
-  const v = parseFloat(valor) || 0;
-  const base = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 5,
-    maximumFractionDigits: 5,
-  }).format(v);
-  const idx = base.length - 3;
-  return { principal: base.substring(0, idx), extra: base.substring(idx) };
-};
-
 
 const negocioUrl = (codnegocio) =>
   process.env.APP_NEGOCIOS_URL + "/negocio/" + codnegocio;
@@ -84,12 +65,6 @@ const scrollEventos = async (index, done) => {
   } catch {
     done(true);
   }
-};
-
-const formataData = (data) => {
-  if (!data) return "";
-  const d = new Date(data);
-  return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 };
 
 const carregar = async (codmeta, codpessoa) => {
@@ -175,7 +150,7 @@ watch(
                       Total Acumulado
                     </div>
                     <div class="text-h5 text-grey-9">
-                      {{ formataMoeda(dash.totalGeral) }}
+                      {{ formataNumero(dash.totalGeral) }}
                     </div>
                   </q-card-section>
                 </q-card>
@@ -242,13 +217,13 @@ watch(
                       class="text-right"
                       :class="ev.total < 0 ? 'text-red' : ''"
                     >
-                      {{ formataMoeda(ev.total) }}
+                      {{ formataNumero(ev.total) }}
                     </td>
                   </tr>
                   <tr class="text-weight-bold">
                     <td>Total</td>
                     <td class="text-right">
-                      {{ formataMoeda(dash.totalGeral) }}
+                      {{ formataNumero(dash.totalGeral) }}
                     </td>
                   </tr>
                 </tbody>
@@ -295,7 +270,7 @@ watch(
                             color="primary"
                             :href="negocioUrl(ev.codnegocio)"
                             target="_blank"
-                            :label="'#' + String(ev.codnegocio).padStart(8, '0')"
+                            :label="formataCodNegocio(ev.codnegocio)"
                             type="a"
                             class="q-pa-none"
                           />
@@ -313,10 +288,8 @@ watch(
                           class="text-weight-medium"
                           :class="ev.valor < 0 ? 'text-red' : 'text-green-8'"
                         >
-                          {{ formataMoedaPrecisa(ev.valor).principal
-                          }}<span style="font-size: 0.7em; vertical-align: super; opacity: 0.5">{{
-                            formataMoedaPrecisa(ev.valor).extra
-                          }}</span>
+                          {{ formataNumero(ev.valor, 5) }}
+                          </span>
                         </span>
                       </q-item-section>
                     </q-item>

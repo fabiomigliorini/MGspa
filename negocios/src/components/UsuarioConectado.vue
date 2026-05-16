@@ -2,8 +2,7 @@
 import { ref, onMounted } from "vue";
 import { usuarioStore } from "stores/usuario";
 import { sincronizacaoStore } from "src/stores/sincronizacao";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { tempoRelativo } from "@components/formatters";
 
 const sUsuario = usuarioStore();
 const sSinc = sincronizacaoStore();
@@ -38,13 +37,6 @@ const togglePassword = () => {
   const temp = senha.value;
   inputSenha.value.focus();
   senha.value = temp;
-};
-
-const formataTempoPercorridoDesde = (desde) => {
-  if (!desde) {
-    return null;
-  }
-  return moment(desde).fromNow();
 };
 
 onMounted(() => {
@@ -116,7 +108,7 @@ onMounted(() => {
           </div>
           <div class="text-grey-8">
             expira
-            {{ moment(sUsuario.token.expires_at).fromNow() }}
+            {{ tempoRelativo(sUsuario.token.expires_at) }}
           </div>
           <div class="text-grey-8 text-caption q-my-md" v-if="sSinc.pdv.uuid">
             {{ sSinc.pdv.uuid }}

@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute, useRouter } from "vue-router";
 import { rhStore } from "src/stores/rh";
-import { formataDataSemHora, formataFromNow } from "src/utils/formatador";
+import { formataDataSemHora, formataFromNow } from "@components/formatters";
 import { extrairErro } from "src/utils/rhFormatters";
 import CardIndicadores from "src/components/rh/CardIndicadores.vue";
 import CardRubricas from "src/components/rh/CardRubricas.vue";

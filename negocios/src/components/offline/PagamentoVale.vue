@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import { negocioStore } from "stores/negocio";
 import { debounce, Notify } from "quasar";
@@ -78,21 +79,13 @@ const valorMax = [
     if (parseFloat(value) > titulo.value.creditosaldo) {
       return (
         "o valor máximo do vale que pode ser usado é R$ " +
-        new Intl.NumberFormat("pt-BR", {
-          style: "decimal",
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(titulo.value.creditosaldo)
+        formataNumero(titulo.value.creditosaldo)
       );
     }
     if (parseFloat(value) > sNegocio.valorapagar) {
       return (
         "o valor máximo do vale que pode ser usado é R$ " +
-        new Intl.NumberFormat("pt-BR", {
-          style: "decimal",
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(sNegocio.valorapagar)
+        formataNumero(sNegocio.valorapagar)
       );
     }
     return true;
@@ -196,11 +189,7 @@ onUnmounted(() => {
                     class="text-h4 text-secondary text-weight-bolder text-right"
                   >
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(titulo.creditosaldo)
+                      formataNumero(titulo.creditosaldo)
                     }}
                   </q-item-label>
                   <q-item-label caption class="text-right">
@@ -242,11 +231,7 @@ onUnmounted(() => {
                     class="text-h4 text-secondary text-weight-bolder text-right"
                   >
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(titulo.creditosaldo - valorPagamento)
+                      formataNumero(titulo.creditosaldo - valorPagamento)
                     }}
                   </q-item-label>
                   <q-item-label caption class="text-right">

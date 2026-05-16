@@ -138,7 +138,6 @@
 <script>
 import { ref, onMounted, defineAsyncComponent, watch } from "vue";
 import { useQuasar } from "quasar";
-import { formataDocumetos } from "src/stores/formataDocumentos";
 import { useRouter } from "vue-router";
 import { guardaToken } from "src/stores";
 import { pessoaStore } from "src/stores/pessoa";
@@ -169,7 +168,6 @@ export default {
     const $q = useQuasar();
     const router = useRouter();
     const user = guardaToken();
-    const Documentos = formataDocumetos();
     const sPessoa = pessoaStore();
     const filtro = ref([]);
 
@@ -235,7 +233,6 @@ export default {
       model: ref(null),
       listapessoas,
       filtro,
-      Documentos,
       user,
       router,
       buscarPessoas,

@@ -1,7 +1,6 @@
 <script setup>
 import { onMounted, computed } from 'vue'
-import { date } from 'quasar'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataDataSemHora } from '@components/formatters'
 import { useAgrupamentoPendenteStore } from 'src/stores/agrupamentoPendenteStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -17,10 +16,6 @@ function classeVencimento(v) {
   if (diff < -30) return 'text-red'
   if (diff > 45) return 'text-green'
   return 'text-orange'
-}
-
-function formatData(v) {
-  return v ? date.formatDate(v, 'DD/MM/YYYY') : ''
 }
 
 function abrirRelatorio() {
@@ -115,7 +110,7 @@ onMounted(() => {
                   {{ formataNumero(r.saldo) }}
                 </q-item-label>
                 <q-item-label class="text-right" caption>
-                  {{ formatData(r.vencimento) }}
+                  {{ formataDataSemHora(r.vencimento) }}
                 </q-item-label>
               </q-item-section>
             </q-item>

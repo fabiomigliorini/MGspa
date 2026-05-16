@@ -5,7 +5,7 @@ import { ref } from "vue";
 import { guardaToken } from "src/stores";
 import { pessoaStore } from "stores/pessoa";
 import { api } from "src/boot/axios";
-import { formataFromNow, formataDataCompleta } from "src/utils/formatador";
+import { formataFromNow, formataDataCompleta } from "@components/formatters";
 
 const $q = useQuasar();
 const sPessoa = pessoaStore();

@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataDataCompleta } from "@components/formatters";
 import { onMounted, ref } from "vue";
 import { Notify } from "quasar";
 import { pagarMeStore } from "src/stores/pagar-me";
@@ -119,11 +120,7 @@ onMounted(() => {
                 R$
                 <span class="text-weight-bold">
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(ped.valor)
+                    formataNumero(ped.valor)
                   }}
                 </span>
                 {{ ped.tipodescricao }}
@@ -143,7 +140,7 @@ onMounted(() => {
               </q-item-label>
               <q-item-label caption>
                 {{ moment(ped.criacao).fromNow() }}
-                {{ moment(ped.criacao).format("llll") }}
+                {{ formataDataCompleta(ped.criacao) }}
               </q-item-label>
             </q-item-section>
 

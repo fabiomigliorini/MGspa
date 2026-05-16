@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { ref, watch, computed } from "vue";
 import { Notify } from "quasar";
 import { negocioStore } from "stores/negocio";
@@ -360,11 +361,7 @@ const salvar = async () => {
                             {{ parc.parcelas }}
                             parcela(s) de R$
                             {{
-                              new Intl.NumberFormat("pt-BR", {
-                                style: "decimal",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              }).format(parc.valorparcela)
+                              formataNumero(parc.valorparcela)
                             }}
                           </q-item-label>
                           <q-item-label caption v-if="parc.valorjuros">

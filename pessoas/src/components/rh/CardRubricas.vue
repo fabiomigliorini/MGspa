@@ -1,8 +1,6 @@
 <script setup>
-import {
-  formataMoeda,
-  tipoIndicadorLabel,
-} from "src/utils/rhFormatters";
+import { tipoIndicadorLabel } from "src/utils/rhFormatters";
+import { formataNumero, formataCodNegocio } from "@components/formatters";
 
 const props = defineProps({
   rubricas: { type: Array, default: () => [] },
@@ -107,7 +105,7 @@ const condicaoLabel = (rubrica) => {
               {{ r.percentual }}%
             </template>
             <template v-else>
-              {{ formataMoeda(r.valorfixo) }}
+              {{ formataNumero(r.valorfixo) }}
             </template>
           </td>
           <td>
@@ -118,7 +116,7 @@ const condicaoLabel = (rubrica) => {
           </td>
           <td>{{ condicaoLabel(r) }}</td>
           <td class="text-right text-weight-bold">
-            {{ formataMoeda(r.valorcalculado) }}
+            {{ formataNumero(r.valorcalculado) }}
             <q-icon
               v-if="r.descontaabsenteismo && status === 'A'"
               name="schedule"
@@ -164,7 +162,7 @@ const condicaoLabel = (rubrica) => {
         <tr class="text-weight-bold bg-grey-2">
           <td colspan="5" class="text-right">TOTAL</td>
           <td class="text-right">
-            {{ formataMoeda(valortotal) }}
+            {{ formataNumero(valortotal) }}
           </td>
           <td class="text-center">
             <q-badge
@@ -179,7 +177,7 @@ const condicaoLabel = (rubrica) => {
               target="_blank"
               class="text-primary text-caption"
             >
-              #{{ String(codtitulo).padStart(8, "0") }}
+              {{ formataCodNegocio(codtitulo) }}
               <q-icon name="open_in_new" size="xs" />
             </a>
           </td>

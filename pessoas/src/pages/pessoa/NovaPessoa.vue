@@ -87,7 +87,7 @@
                     </q-item-section>
                     <q-item-section>
                       <q-item-label overline>
-                        {{ formataIe(ie.UF, ie.IE) }}
+                        {{ formataIe(ie.IE, ie.UF) }}
                       </q-item-label>
                       <q-item-label v-if="ie.xFant">
                         {{ ie.xFant }}
@@ -164,7 +164,7 @@ import {
   formataIe,
   primeiraLetraMaiuscula,
   removerAcentos,
-} from "src/utils/formatador";
+} from "@components/formatters";
 
 export default {
   components: {

@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumeroNotaFiscal } from '@components/formatters'
 import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import {
@@ -44,7 +45,7 @@ const getOperacaoIcon = (codoperacao) => {
 
 // Formata o código com zeros à esquerda
 const formatCodigo = (codigo) => {
-  return String(codigo).padStart(8, '0')
+  return formataNumeroNotaFiscal(codigo)
 }
 
 onMounted(async () => {

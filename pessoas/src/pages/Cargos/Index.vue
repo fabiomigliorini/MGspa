@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { cargoStore } from "src/stores/cargo";
 import { guardaToken } from "src/stores";
-import { formataData } from "src/utils/formatador";
+import { formataData, formataNumero } from "@components/formatters";
 import MGLayout from "layouts/MGLayout.vue";
 import DialogCargo from "components/cargo/DialogCargo.vue";
 
@@ -33,12 +33,6 @@ const extrairErro = (error, fallback) => {
   return data.mensagem || data.message || fallback;
 };
 
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(valor || 0);
-};
 
 // --- DIALOG CARGO ---
 
@@ -210,7 +204,7 @@ onMounted(async () => {
                       {{ cargo.cargo }}
                     </q-item-label>
                     <q-item-label caption>
-                      {{ formataMoeda(cargo.salario) }}
+                      {{ formataNumero(cargo.salario) }}
                       <span v-if="cargo.adicional" class="text-grey-5">
                         — {{ cargo.adicional }}% adicional
                       </span>

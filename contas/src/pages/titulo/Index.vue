@@ -1,7 +1,12 @@
 <script setup>
 import { onMounted } from 'vue'
-import { date, useQuasar } from 'quasar'
-import { formataNumero, tempoRelativo } from '@components/formatters'
+import { useQuasar } from 'quasar'
+import {
+  formataNumero,
+  tempoRelativo,
+  formataDataSemHora,
+  formataCodNegocio,
+} from '@components/formatters'
 import { useTituloStore } from 'src/stores/tituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -28,9 +33,6 @@ function gerarPdf(detalhado) {
   }
   abrirPdf('v1/titulo/listagem/relatorio', params, { title: 'Títulos' })
 }
-
-const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
-const formatCodigo = (v) => '#' + String(v).padStart(8, '0')
 
 function classeVencimento(t) {
   if (!t.saldo || Number(t.saldo) === 0) return 'text-grey'
@@ -90,7 +92,7 @@ onMounted(() => {
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 <span class="text-weight-bold">{{ t.numero }}</span>
-                · {{ formatCodigo(t.codtitulo) }}
+                · {{ formataCodNegocio(t.codtitulo) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 {{ t.tipotitulo }} · {{ t.contacontabil }}
@@ -117,20 +119,20 @@ onMounted(() => {
             <!-- Datas (gt-xs) -->
             <q-item-section class="gt-xs" style="flex: 0 0 130px; min-width: 0">
               <q-item-label class="text-weight-bold ellipsis" :class="classeVencimento(t)">
-                {{ formatData(t.vencimento) }}
+                {{ formataDataSemHora(t.vencimento) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 {{ tempoRelativo(t.vencimento) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formatData(t.emissao) }}
+                {{ formataDataSemHora(t.emissao) }}
               </q-item-label>
             </q-item-section>
 
             <!-- Valor / Saldo (sempre visível) -->
             <q-item-section style="flex: 0 0 95px; min-width: 0">
               <q-item-label class="lt-sm text-weight-bold text-right" :class="classeVencimento(t)">
-                {{ formatData(t.vencimento) }}
+                {{ formataDataSemHora(t.vencimento) }}
               </q-item-label>
               <q-item-label class="text-weight-bold text-right" :class="classeValor(t)">
                 <span v-if="Number(t.saldo) !== 0">

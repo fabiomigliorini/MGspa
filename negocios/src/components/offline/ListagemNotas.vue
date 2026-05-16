@@ -1,4 +1,10 @@
 <script setup>
+import {
+  formataNumero,
+  formataCodNegocio,
+  formataDataCompleta,
+  formataNumeroNota,
+} from "@components/formatters";
 import { ref } from "vue";
 import { Dialog, Notify, Platform } from "quasar";
 import { api } from "boot/axios";
@@ -83,11 +89,6 @@ const urlNotaFiscal = (codnotafiscal) => {
   return process.env.NOTAS_URL + "/nota/" + codnotafiscal;
 };
 
-const formataNumeroNota = (nota) => {
-  const prefixo = nota.emitida ? "N" : "T";
-  const numero = String(nota.numero).padStart(8, "0");
-  return `${prefixo}-${nota.serie}-${nota.modelo}-${numero}`;
-};
 
 const nova = async (modelo) => {
   try {
@@ -492,10 +493,10 @@ defineExpose({
             <template v-else> Documento</template>
           </q-item-label>
           <q-item-label caption class="ellipsis">
-            {{ formataNumeroNota(nota) }}
+            {{ formataNumeroNota(nota.numero, nota.modelo, nota.serie, nota.emitida) }}
           </q-item-label>
           <q-item-label caption class="ellipsis">
-            #{{ String(nota.codnotafiscal).padStart(8, "0") }}
+            {{ formataCodNegocio(nota.codnotafiscal) }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -508,7 +509,7 @@ defineExpose({
           </q-item-label>
           <q-item-label caption>
             {{ moment(nota.saida).fromNow() }},
-            {{ moment(nota.saida).format("LLLL") }}
+            {{ formataDataCompleta(nota.saida) }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -527,11 +528,7 @@ defineExpose({
           <q-item-label class="ellipsis">
             R$
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(nota.valortotal)
+              formataNumero(nota.valortotal)
             }}
           </q-item-label>
           <q-item-label caption class="ellipsis">

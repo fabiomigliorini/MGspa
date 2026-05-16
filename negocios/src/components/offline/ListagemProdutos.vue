@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataCodNegocio } from "@components/formatters";
 import { ref, computed } from "vue";
 import { produtoStore } from "stores/produto";
 import { negocioStore } from "stores/negocio";
@@ -20,11 +21,7 @@ const columns = [
     align: "right",
     field: (row) => row.valortotal,
     format: (val) =>
-      new Intl.NumberFormat("pt-BR", {
-        style: "decimal",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(val),
+      formataNumero(val),
     sortable: true,
   },
   {
@@ -34,11 +31,7 @@ const columns = [
     align: "right",
     field: (row) => row.quantidade,
     format: (val) =>
-      new Intl.NumberFormat("pt-BR", {
-        style: "decimal",
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3,
-      }).format(val),
+      formataNumero(val, 3),
     sortable: true,
   },
   {
@@ -387,11 +380,7 @@ const linkProduto = (codproduto) => {
               <div class="text-h5" :key="item.valortotal">
                 <small class="text-grey-7">R$</small>
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortotal)
+                  formataNumero(item.valortotal)
                 }}
               </div>
             </Transition>
@@ -406,7 +395,7 @@ const linkProduto = (codproduto) => {
                 flat
                 @click="sNegocio.itemAdicionarQuantidade(item.uuid, -1)"
               />
-              {{ new Intl.NumberFormat("pt-BR").format(item.quantidade) }}
+              {{ formataNumero(item.quantidade, 0) }}
               <q-btn
                 v-if="sNegocio.podeEditar"
                 size="xs"
@@ -418,49 +407,34 @@ const linkProduto = (codproduto) => {
               />
               de
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                }).format(item.valorunitario)
+                formataNumero(item.valorunitario)
               }}
               <template v-if="item.valordesconto">
                 <br />
                 -
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valordesconto)
+                  formataNumero(item.valordesconto)
                 }}
                 (Desconto)
               </template>
               <template v-if="item.valorfrete">
                 <br />+
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valorfrete)
+                  formataNumero(item.valorfrete)
                 }}
                 (Frete)
               </template>
               <template v-if="item.valorseguro">
                 <br />+
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valorseguro)
+                  formataNumero(item.valorseguro)
                 }}
                 (Seguro)
               </template>
               <template v-if="item.valoroutras">
                 <br />+
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valoroutras)
+                  formataNumero(item.valoroutras)
                 }}
                 (Outras)
               </template>
@@ -473,9 +447,7 @@ const linkProduto = (codproduto) => {
           >
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
-                Devolvido de #{{
-                  String(item.devolucao.codnegocio).padStart(8, "0")
-                }}
+                Devolvido de {{ formataCodNegocio(item.devolucao.codnegocio) }}
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -489,17 +461,11 @@ const linkProduto = (codproduto) => {
               <q-item-label overline class="text-orange-7">
                 Devolvido
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 3,
-                    maximumFractionDigits: 3,
-                  }).format(devolucao.quantidade)
+                  formataNumero(devolucao.quantidade, 3)
                 }}
               </q-item-label>
               <q-item-label>
-                {{ moment(devolucao.lancamento).fromNow() }} em #{{
-                  String(devolucao.codnegocio).padStart(8, "0")
-                }}
+                {{ moment(devolucao.lancamento).fromNow() }} em {{ formataCodNegocio(devolucao.codnegocio) }}
               </q-item-label>
             </q-item-section>
           </q-item>

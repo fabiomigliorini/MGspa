@@ -5,7 +5,7 @@ import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import SelectProdutoBarra from 'src/components/selects/SelectProdutoBarra.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formatCurrency, formatDate, formatDateTime, formatDecimal } from 'src/utils/formatters'
+import { formataNumero, formataDataSemHora, formataDataHoraSegundos, formataNumero } from '@components/formatters'
 import { conformidades, corConformidade } from 'src/utils/nfeTerceiroItemConformidade'
 
 const route = useRoute()
@@ -135,19 +135,19 @@ const linhasCusto = computed(() => {
 const quantidadeCalculadaTexto = computed(() => {
   const a = analise.value
   if (!a || !a.quantidade) return null
-  const base = formatDecimal(a.quantidade, 3)
+  const base = formataNumero(a.quantidade, 3)
   const emb = a.embalagemBase
   const qcom = item.value?.qcom
   if (!emb || !qcom) return base
-  return `${base} (${formatDecimal(qcom, 3)} ${emb.sigla || ''} × ${formatDecimal(emb.quantidade, 3)})`
+  return `${base} (${formataNumero(qcom, 3)} ${emb.sigla || ''} × ${formataNumero(emb.quantidade, 3)})`
 })
 
 // Linha "ICMS Venda" com sufixo (alíquota @ redução)
 const linhaIcmsVenda = computed(() => {
   const a = analise.value
   if (!a || !a.vicmsvenda) return null
-  const aliquota = formatDecimal(a.picmsvenda || 0, 2)
-  const reducao = formatDecimal((a.picmsbasereducao || 0) * 100, 2)
+  const aliquota = formataNumero(a.picmsvenda || 0, 2)
+  const reducao = formataNumero((a.picmsbasereducao || 0) * 100, 2)
   return {
     total: a.vicmsvenda,
     unitario: a.quantidade > 0 ? a.vicmsvenda / a.quantidade : null,
@@ -219,7 +219,7 @@ const handleConferencia = () => {
 const conferenciaTooltip = computed(() => {
   if (!item.value?.conferencia) return 'Marcar como conferido'
   const usuario = item.value.usuarioConferencia?.usuario
-  const quando = formatDateTime(item.value.conferencia)
+  const quando = formataDataHoraSegundos(item.value.conferencia)
   return usuario ? `Conferido por ${usuario} em ${quando}` : `Conferido em ${quando}`
 })
 
@@ -303,7 +303,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <q-tooltip>Classificação ABC</q-tooltip>
             </q-badge>
             <q-badge v-if="produto.inativo" color="red" class="q-ml-xs">
-              Inativo desde {{ formatDate(produto.inativo) }}
+              Inativo desde {{ formataDataSemHora(produto.inativo) }}
             </q-badge>
           </div>
         </div>
@@ -374,12 +374,12 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                   :class="statusEmbalagemClasses(v.status)"
                 >
                   <td class="text-right text-weight-medium">
-                    {{ v.qtd_convertida !== null ? formatDecimal(v.qtd_convertida, 2) : '-' }}
+                    {{ v.qtd_convertida !== null ? formataNumero(v.qtd_convertida, 2) : '-' }}
                   </td>
                   <td>
                     {{ v.sigla || '-' }}
                     <span v-if="v.quantidade_emb > 1" class="text-weight-bold">
-                      C/{{ formatDecimal(v.quantidade_emb, 0) }}
+                      C/{{ formataNumero(v.quantidade_emb, 0) }}
                     </span>
                   </td>
                   <td>
@@ -405,10 +405,10 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                     class="text-right"
                     :class="`text-weight-bold ${statusEmbalagemText(v.status)}`"
                   >
-                    {{ formatCurrency(v.preco_atual) }}
+                    {{ formataNumero(v.preco_atual) }}
                   </td>
                   <td class="text-right text-grey-8">
-                    {{ v.sugestao !== null ? formatCurrency(v.sugestao) : '-' }}
+                    {{ v.sugestao !== null ? formataNumero(v.sugestao) : '-' }}
                   </td>
                 </tr>
               </tbody>
@@ -441,9 +441,9 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                 </q-item-section>
                 <q-item-section side>
                   <q-item-label :class="l.destaque ? 'text-weight-bold text-primary' : ''">
-                    R$ {{ formatCurrency(l.total) }}
+                    R$ {{ formataNumero(l.total) }}
                     <span v-if="l.unitario !== null" class="text-grey-7 text-caption q-ml-xs">
-                      ({{ formatCurrency(l.unitario) }})
+                      ({{ formataNumero(l.unitario) }})
                     </span>
                   </q-item-label>
                 </q-item-section>
@@ -466,12 +466,12 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                 </q-item-section>
                 <q-item-section side>
                   <q-item-label>
-                    R$ {{ formatCurrency(linhaIcmsVenda.total) }}
+                    R$ {{ formataNumero(linhaIcmsVenda.total) }}
                     <span
                       v-if="linhaIcmsVenda.unitario !== null"
                       class="text-grey-7 text-caption q-ml-xs"
                     >
-                      ({{ formatCurrency(linhaIcmsVenda.unitario) }})
+                      ({{ formataNumero(linhaIcmsVenda.unitario) }})
                     </span>
                     <span class="text-grey-7 text-caption q-ml-xs">
                       {{ linhaIcmsVenda.suffix }}
@@ -485,7 +485,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                   <q-item-label>Margem</q-item-label>
                 </q-item-section>
                 <q-item-section side>
-                  <q-item-label>{{ formatDecimal(item.margem, 2) }}%</q-item-label>
+                  <q-item-label>{{ formataNumero(item.margem, 2) }}%</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item v-if="analise?.vsugestaovenda">
@@ -494,7 +494,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                 </q-item-section>
                 <q-item-section side>
                   <q-item-label class="text-weight-bold text-primary">
-                    R$ {{ formatCurrency(analise.vsugestaovenda) }}
+                    R$ {{ formataNumero(analise.vsugestaovenda) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -507,7 +507,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                   </q-item-section>
                   <q-item-section side>
                     <q-item-label class="text-grey-8">
-                      R$ {{ formatCurrency(v.sugestao) }}
+                      R$ {{ formataNumero(v.sugestao) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -516,15 +516,15 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                     <q-item-label>
                       {{ v.sigla }}
                       <span v-if="v.quantidade_emb > 1" class="text-weight-bold">
-                        C/{{ formatDecimal(v.quantidade_emb, 0) }}
+                        C/{{ formataNumero(v.quantidade_emb, 0) }}
                       </span>
                     </q-item-label>
                   </q-item-section>
                   <q-item-section side>
                     <q-item-label :class="`text-weight-bold ${statusEmbalagemText(v.status)}`">
-                      R$ {{ formatCurrency(v.preco_atual) }}
+                      R$ {{ formataNumero(v.preco_atual) }}
                       <span v-if="v.quantidade_emb > 0" class="text-grey-7 text-caption q-ml-xs">
-                        ({{ formatCurrency(v.preco_atual / v.quantidade_emb) }})
+                        ({{ formataNumero(v.preco_atual / v.quantidade_emb) }})
                       </span>
                     </q-item-label>
                   </q-item-section>
@@ -684,16 +684,16 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">Quantidade</div>
-                  <div class="text-body2">{{ formatDecimal(item.qcom, 3) }} {{ item.ucom }}</div>
+                  <div class="text-body2">{{ formataNumero(item.qcom, 3) }} {{ item.ucom }}</div>
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">Preço</div>
-                  <div class="text-body2">{{ formatDecimal(item.vuncom, 6) }}</div>
+                  <div class="text-body2">{{ formataNumero(item.vuncom, 6) }}</div>
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">Total</div>
                   <div class="text-subtitle1 text-weight-bold">
-                    R$ {{ formatCurrency(item.vprod) }}
+                    R$ {{ formataNumero(item.vprod) }}
                   </div>
                 </div>
               </div>
@@ -706,11 +706,11 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">Quantidade</div>
-                  <div class="text-body2">{{ formatDecimal(item.qtrib, 3) }} {{ item.utrib }}</div>
+                  <div class="text-body2">{{ formataNumero(item.qtrib, 3) }} {{ item.utrib }}</div>
                 </div>
                 <div class="col-6 col-sm-4">
                   <div class="text-caption text-grey-7">Preço</div>
-                  <div class="text-body2">{{ formatDecimal(item.vuntrib, 6) }}</div>
+                  <div class="text-body2">{{ formataNumero(item.vuntrib, 6) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -731,15 +731,15 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Base</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.vbc) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vbc) }}</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Alíquota</div>
-                  <div class="text-body2">{{ formatDecimal(item.picms, 2) }}%</div>
+                  <div class="text-body2">{{ formataNumero(item.picms, 2) }}%</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Valor</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.vicms) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vicms) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -751,15 +751,15 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Base</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.vbcst) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vbcst) }}</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Alíquota</div>
-                  <div class="text-body2">{{ formatDecimal(item.picmsst, 2) }}%</div>
+                  <div class="text-body2">{{ formataNumero(item.picmsst, 2) }}%</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Valor</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.vicmsst) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vicmsst) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -771,15 +771,15 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Base</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.ipivbc) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.ipivbc) }}</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Alíquota</div>
-                  <div class="text-body2">{{ formatDecimal(item.ipipipi, 2) }}%</div>
+                  <div class="text-body2">{{ formataNumero(item.ipipipi, 2) }}%</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Valor</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.ipivipi) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.ipivipi) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -791,15 +791,15 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Base</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.pisvbc) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.pisvbc) }}</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Alíquota</div>
-                  <div class="text-body2">{{ formatDecimal(item.pisppis, 2) }}%</div>
+                  <div class="text-body2">{{ formataNumero(item.pisppis, 2) }}%</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Valor</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.pisvpis) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.pisvpis) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -811,15 +811,15 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Base</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.cofinsvbc) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.cofinsvbc) }}</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Alíquota</div>
-                  <div class="text-body2">{{ formatDecimal(item.cofinspcofins, 2) }}%</div>
+                  <div class="text-body2">{{ formataNumero(item.cofinspcofins, 2) }}%</div>
                 </div>
                 <div class="col-4">
                   <div class="text-caption text-grey-7">Valor</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.cofinsvcofins) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.cofinsvcofins) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -831,27 +831,27 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               <div class="row q-col-gutter-sm">
                 <div class="col-4" v-if="item.vfrete">
                   <div class="text-caption text-grey-7">Frete</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.vfrete) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vfrete) }}</div>
                 </div>
                 <div class="col-4" v-if="item.vseg">
                   <div class="text-caption text-grey-7">Seguro</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.vseg) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vseg) }}</div>
                 </div>
                 <div class="col-4" v-if="item.vdesc">
                   <div class="text-caption text-grey-7">Desconto</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.vdesc) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.vdesc) }}</div>
                 </div>
                 <div class="col-4" v-if="item.voutro">
                   <div class="text-caption text-grey-7">Outras</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.voutro) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.voutro) }}</div>
                 </div>
                 <div class="col-4" v-if="item.complemento">
                   <div class="text-caption text-grey-7">Complemento</div>
-                  <div class="text-body2">R$ {{ formatCurrency(item.complemento) }}</div>
+                  <div class="text-body2">R$ {{ formataNumero(item.complemento) }}</div>
                 </div>
                 <div class="col-4" v-if="item.margem">
                   <div class="text-caption text-grey-7">Margem</div>
-                  <div class="text-body2">{{ formatDecimal(item.margem, 2) }}%</div>
+                  <div class="text-body2">{{ formataNumero(item.margem, 2) }}%</div>
                 </div>
               </div>
             </q-card-section>
@@ -894,7 +894,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               </div>
               <div class="col-6 col-sm-4">
                 <div class="text-caption text-grey-7">Total</div>
-                <div class="text-body2">R$ {{ formatCurrency(item.vprod) }}</div>
+                <div class="text-body2">R$ {{ formataNumero(item.vprod) }}</div>
               </div>
 
               <div class="col-6 col-sm-4">
@@ -907,12 +907,12 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               </div>
               <div class="col-6 col-sm-4">
                 <div class="text-caption text-grey-7">IPI Valor</div>
-                <div class="text-body2">R$ {{ formatCurrency(item.ipivipi) }}</div>
+                <div class="text-body2">R$ {{ formataNumero(item.ipivipi) }}</div>
               </div>
 
               <div class="col-6 col-sm-4">
                 <div class="text-caption text-grey-7">Quantidade / UM</div>
-                <div class="text-body2">{{ formatDecimal(item.qcom, 2) }} {{ item.ucom }}</div>
+                <div class="text-body2">{{ formataNumero(item.qcom, 2) }} {{ item.ucom }}</div>
               </div>
               <div class="col-6 col-sm-4">
                 <div class="text-caption text-grey-7">CEST</div>
@@ -920,12 +920,12 @@ watch(codnfeterceiroitem, () => carregarAnalise())
               </div>
               <div class="col-6 col-sm-4">
                 <div class="text-caption text-grey-7">ICMS ST Valor</div>
-                <div class="text-body2">R$ {{ formatCurrency(item.vicmsst) }}</div>
+                <div class="text-body2">R$ {{ formataNumero(item.vicmsst) }}</div>
               </div>
 
               <div class="col-6 col-sm-4">
                 <div class="text-caption text-grey-7">Preço</div>
-                <div class="text-body2">{{ formatDecimal(item.vuncom, 2) }}</div>
+                <div class="text-body2">{{ formataNumero(item.vuncom, 2) }}</div>
               </div>
             </div>
           </q-card-section>
@@ -946,12 +946,12 @@ watch(codnfeterceiroitem, () => carregarAnalise())
                   R$
                   {{
                     analise?.vcusto !== null && analise?.vcusto !== undefined
-                      ? formatCurrency(
+                      ? formataNumero(
                           analise.vcusto -
                             (Number(item.complemento) || 0) +
                             (Number(formDetalhes.complemento) || 0)
                         )
-                      : formatCurrency(
+                      : formataNumero(
                           (item.vprod || 0) +
                             (item.ipivipi || 0) +
                             (item.vicmsst || 0) +

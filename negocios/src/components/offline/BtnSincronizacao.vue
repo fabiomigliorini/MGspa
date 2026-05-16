@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { computed, ref } from "vue";
 import { sincronizacaoStore } from "stores/sincronizacao";
 import DialogEditarPdv from "components/pdv/DialogEditarPdv.vue";
@@ -67,15 +68,11 @@ const btnSincronizarColor = computed({
         </div>
         <div class="text-center text-weight-bold">
           {{
-            new Intl.NumberFormat("pt-BR").format(
-              sSinc.importacao.totalSincronizados
-            )
+            formataNumero(sSinc.importacao.totalSincronizados, 0)
           }}
           /
           {{
-            new Intl.NumberFormat("pt-BR").format(
-              sSinc.importacao.totalRegistros
-            )
+            formataNumero(sSinc.importacao.totalRegistros, 0)
           }}
           {{ sSinc.labelSincronizacao }}
         </div>

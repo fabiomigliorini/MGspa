@@ -4,7 +4,7 @@ import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { pessoaStore } from "stores/pessoa";
 import { guardaToken } from "src/stores";
-import { formataFromNow, verificaPassadoFuturo } from "src/utils/formatador";
+import { formataFromNow, verificaPassadoFuturo } from "@components/formatters";
 import { api } from "src/boot/axios";
 
 import SelectGrupoCliente from "components/pessoa/SelectGrupoCliente.vue";

@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formatPercent, formatCurrency } from 'src/utils/formatters'
+import { formataPercentual, formataNumero } from '@components/formatters'
 
 const $q = useQuasar()
 
@@ -260,7 +260,7 @@ const limparResultados = () => {
             :key="index"
             expand-separator
             :label="resultado.tributo"
-            :caption="`Valor: ${formatCurrency(resultado.valor)}`"
+            :caption="`Valor: ${formataNumero(resultado.valor)}`"
             class="q-mb-sm bg-grey-2 rounded-borders"
             header-class="text-weight-medium"
             default-opened
@@ -271,7 +271,7 @@ const limparResultados = () => {
                 <div class="row items-center q-mb-sm">
                   <div class="col-6 text-grey-7">Base Redução %:</div>
                   <div class="col-6 text-right text-weight-medium">
-                    {{ formatPercent(resultado.basereducaopercentual) }}
+                    {{ formataPercentual(resultado.basereducaopercentual) }}
                   </div>
                 </div>
 
@@ -279,7 +279,7 @@ const limparResultados = () => {
                 <div class="row items-center q-mb-sm">
                   <div class="col-6 text-grey-7">Base Redução R$:</div>
                   <div class="col-6 text-right text-weight-medium">
-                    {{ formatCurrency(resultado.basereducao) }}
+                    {{ formataNumero(resultado.basereducao) }}
                   </div>
                 </div>
 
@@ -289,7 +289,7 @@ const limparResultados = () => {
                 <div class="row items-center q-mb-sm">
                   <div class="col-6 text-grey-7">Base de Cálculo:</div>
                   <div class="col-6 text-right text-weight-medium text-primary">
-                    {{ formatCurrency(resultado.base) }}
+                    {{ formataNumero(resultado.base) }}
                   </div>
                 </div>
 
@@ -297,7 +297,7 @@ const limparResultados = () => {
                 <div class="row items-center q-mb-sm">
                   <div class="col-6 text-grey-7">Alíquota:</div>
                   <div class="col-6 text-right text-weight-medium">
-                    {{ formatPercent(resultado.aliquota) }}
+                    {{ formataPercentual(resultado.aliquota) }}
                   </div>
                 </div>
 
@@ -307,7 +307,7 @@ const limparResultados = () => {
                 <div class="row items-center q-mb-sm">
                   <div class="col-6 text-grey-7 text-weight-bold">Valor:</div>
                   <div class="col-6 text-right text-weight-bold text-green text-h6">
-                    {{ formatCurrency(resultado.valor) }}
+                    {{ formataNumero(resultado.valor) }}
                   </div>
                 </div>
 
@@ -349,7 +349,7 @@ const limparResultados = () => {
                 <div v-if="resultado.geracredito" class="row items-center q-mb-sm">
                   <div class="col-6 text-grey-7">Valor Crédito:</div>
                   <div class="col-6 text-right text-weight-medium text-positive">
-                    {{ formatCurrency(resultado.valorcredito) }}
+                    {{ formataNumero(resultado.valorcredito) }}
                   </div>
                 </div>
 
@@ -378,7 +378,7 @@ const limparResultados = () => {
               <div class="row items-center">
                 <div class="col text-h6 text-weight-bold">TOTAL GERAL</div>
                 <div class="col text-right text-h5 text-weight-bold text-green">
-                  {{ formatCurrency(totalGeral) }}
+                  {{ formataNumero(totalGeral) }}
                 </div>
               </div>
             </q-card-section>

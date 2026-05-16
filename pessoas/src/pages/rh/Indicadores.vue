@@ -3,7 +3,8 @@ import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
-import { formataMoeda, formataPercentual, corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
+import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
+import { formataNumero, formataPercentual } from "@components/formatters";
 import DialogEditarMeta from "./DialogEditarMeta.vue";
 import MgInputValor from "@components/MgInputValor.vue";
 
@@ -337,10 +338,10 @@ const excluirIndicador = (ind) => {
                 {{ ind.colaborador_nome || "—" }}
               </td>
               <td class="text-right">
-                {{ formataMoeda(ind.valoracumulado) }}
+                {{ formataNumero(ind.valoracumulado) }}
               </td>
               <td class="text-right">
-                {{ ind.meta ? formataMoeda(ind.meta) : "—" }}
+                {{ ind.meta ? formataNumero(ind.meta) : "—" }}
                 <q-btn
                   flat
                   dense

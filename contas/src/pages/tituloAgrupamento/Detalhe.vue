@@ -3,7 +3,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataDataSemHora, formataTelefone } from '@components/formatters'
+import {
+  formataNumero,
+  formataDataSemHora,
+  formataTelefone,
+  formataNumeroNota,
+  formataCodNegocio,
+} from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
@@ -33,8 +39,6 @@ const id = computed(() => (route.params.id ? Number(route.params.id) : null))
 
 const estornado = computed(() => !!ag.value?.cancelamento)
 const podeEstornar = computed(() => podeMutar.value && ag.value && !estornado.value)
-
-const formatCodigo = (v) => (v ? '#' + String(v).padStart(8, '0') : '')
 
 async function carregar() {
   if (!id.value) return
@@ -124,15 +128,6 @@ const gerarTodos = ref(false)
 
 const NOTAS_URL = process.env.NOTAS_URL
 const urlNotaFiscal = (cod) => (cod ? `${NOTAS_URL}/nota/${cod}` : null)
-const formataNumeroNota = (n) => {
-  if (!n) return ''
-  const serie = n.serie ? String(n.serie).padStart(3, '0') : '000'
-  const numero = n.numero ? String(n.numero).padStart(9, '0') : '000000000'
-  const tipo = n.modelo === 65 ? 'NFC-e' : 'NF-e'
-  const status = n.emitida ? '' : 'T'
-  return `${tipo} ${status}-${serie}-${numero}`
-}
-
 function abrirDialogModelo() {
   gerarTodos.value = false
   dialogModelo.value = true
@@ -208,7 +203,7 @@ watch(() => route.fullPath, carregar)
           </q-item-section>
           <q-item-section>
             <div class="text-h4 text-grey-9">
-              Agrupamento {{ formatCodigo(ag.codtituloagrupamento) }}
+              Agrupamento {{ formataCodNegocio(ag.codtituloagrupamento) }}
             </div>
             <div v-if="estornado" class="text-negative">
               Estornado em {{ formataDataSemHora(ag.cancelamento) }}
@@ -390,7 +385,7 @@ watch(() => route.fullPath, carregar)
                 >
                   <q-item-section>
                     <q-item-label class="text-weight-medium text-primary">
-                      {{ formataNumeroNota(n) }}
+                      {{ formataNumeroNota(n.numero, n.modelo, n.serie, n.emitida) }}
                     </q-item-label>
                     <q-item-label caption :class="`text-${getNotaFiscalStatusColor(n.status)} `">
                       {{ n.filial }}
@@ -466,7 +461,7 @@ watch(() => route.fullPath, carregar)
             <!-- Títulos Baixados -->
             <q-card bordered flat class="q-mt-md">
               <q-card-section class="text-grey-9 text-overline">
-                TÍTULOS BAIXADOS ({{ ag.titulos_baixados?.length || 0 }})
+                MOVIMENTOS ({{ ag.titulos_baixados?.length || 0 }})
               </q-card-section>
               <q-list separator v-if="ag.titulos_baixados?.length">
                 <q-item

@@ -2,6 +2,7 @@
 import { ref, computed } from "vue";
 import { useQuasar } from "quasar";
 import { metaStore } from "src/stores/meta";
+import { formataNumero, formataPercentual } from "@components/formatters";
 import SelectPessoa from "src/components/select/SelectPessoa.vue";
 import MgInputData from "@components/MgInputData.vue";
 import MgInputValor from "@components/MgInputValor.vue";
@@ -37,25 +38,6 @@ const idPessoaFixo = ref(null);
 const idFixoEditando = ref(null);
 
 // --- FORMATTERS ---
-
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 5,
-  }).format(parseFloat(valor) || 0);
-};
-
-const formataPercentual = (valor) => {
-  return (
-    new Intl.NumberFormat("pt-BR", {
-      style: "decimal",
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(parseFloat(valor) || 0) + "%"
-  );
-};
 
 const corProgresso = (percentual) => {
   if (!percentual) return "grey";
@@ -808,13 +790,13 @@ const removerFixo = (fixo) => {
         <div class="col-xs-6 col-sm-3">
           <div class="text-caption text-grey">Vendas</div>
           <div class="text-subtitle1">
-            {{ formataMoeda(unidade.totalvendas) }}
+            {{ formataNumero(unidade.totalvendas) }}
           </div>
         </div>
         <div class="col-xs-6 col-sm-3">
           <div class="text-caption text-grey">Meta</div>
           <div class="text-subtitle1">
-            {{ formataMoeda(unidade.valormeta) }}
+            {{ formataNumero(unidade.valormeta) }}
           </div>
         </div>
         <div class="col-xs-6 col-sm-3">
@@ -910,7 +892,7 @@ const removerFixo = (fixo) => {
           </q-item-section>
           <q-item-section side v-if="pessoa.totalvendas">
             <q-item-label>
-              {{ formataMoeda(pessoa.totalvendas) }}
+              {{ formataNumero(pessoa.totalvendas) }}
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -985,7 +967,7 @@ const removerFixo = (fixo) => {
               <q-item-label caption>
                 {{ fixo.tipo }}
                 <template v-if="fixo.valor">
-                  — {{ formataMoeda(fixo.valor) }}</template
+                  — {{ formataNumero(fixo.valor) }}</template
                 >
                 <template v-if="fixo.quantidade">
                   x {{ fixo.quantidade }}</template

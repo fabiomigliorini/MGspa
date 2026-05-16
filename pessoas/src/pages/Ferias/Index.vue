@@ -73,7 +73,6 @@
 import { ref, defineAsyncComponent } from "vue";
 import moment from "moment";
 import { pessoaStore } from "src/stores/pessoa";
-import { formataDocumetos } from "src/stores/formataDocumentos";
 import { useQuasar } from "quasar";
 import { guardaToken } from "src/stores";
 import { useRoute, useRouter } from "vue-router";
@@ -209,7 +208,6 @@ export default {
     const sPessoa = pessoaStore();
     const sColaborador = colaboradorStore()
     const ferias = ref([]);
-    const Documentos = formataDocumetos();
     const $q = useQuasar();
     const max = ref([]);
     const ano = ref([]);
@@ -341,7 +339,6 @@ export default {
       modelRange,
       sPessoa,
       ferias,
-      Documentos,
       max,
       ano,
       user,

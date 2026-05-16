@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataCodNegocio, formataDataSemHora } from "@components/formatters";
 import { negocioStore } from "stores/negocio";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
@@ -32,7 +33,7 @@ const urlTitulo = (codtitulo) => {
             {{ titulo.numero }}
           </q-item-label>
           <q-item-label caption class="ellipsis">
-            #{{ String(titulo.codtitulo).padStart(8, "0") }}
+            {{ formataCodNegocio(titulo.codtitulo) }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -41,7 +42,7 @@ const urlTitulo = (codtitulo) => {
       <q-item>
         <q-item-section>
           <q-item-label class="ellipsis">
-            {{ moment(titulo.vencimento).format("L") }}
+            {{ formataDataSemHora(titulo.vencimento) }}
           </q-item-label>
           <q-item-label class="ellipsis" caption lines="1">
             {{ moment(titulo.vencimento).fromNow() }}
@@ -54,11 +55,7 @@ const urlTitulo = (codtitulo) => {
           <q-item-label>
             R$
             {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(titulo.debito + titulo.credito)
+              formataNumero(titulo.debito + titulo.credito)
             }}
           </q-item-label>
           <q-item-label caption lines="1">
@@ -68,11 +65,7 @@ const urlTitulo = (codtitulo) => {
               >
                 R$
                 {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(titulo.saldo)
+                  formataNumero(titulo.saldo)
                 }}
               </template>
               Em aberto

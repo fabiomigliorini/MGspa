@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { ref, onMounted, onUnmounted, computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { negocioStore } from "stores/negocio";
@@ -732,10 +733,7 @@ onUnmounted(() => {
                       <q-item-label caption>
                         Qtd: {{ it.quantidade }} ×
                         {{
-                          new Intl.NumberFormat("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          }).format(it.valorunitario)
+                          formataNumero(it.valorunitario)
                         }}
                         <span v-if="it.percentualdesconto">
                           (desc {{ it.percentualdesconto }}%)

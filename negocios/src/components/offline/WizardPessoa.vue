@@ -6,7 +6,8 @@ import {
   formataCnpjCpf,
   formataIe,
   primeiraLetraMaiuscula,
-} from "src/utils/formatador.js";
+  mascaraTelefone,
+} from "@components/formatters";
 import {
   isCpfValido,
   isCnpjValido,
@@ -486,16 +487,6 @@ const removerEndereco = (i) => {
   pessoa.value.enderecos.splice(i, 1);
 };
 
-const mascaraTelefone = (tipo) => {
-  switch (tipo) {
-    case 1:
-      return "(##) ####-####";
-    case 2:
-      return "(##) #-####-####";
-    default:
-      return "";
-  }
-};
 
 const consultarCep = async (i) => {
   const cep = pessoa.value.enderecos[i].cep.replace(/\D/g, "");
@@ -721,7 +712,7 @@ watch(
                             class="text-weight-bolder text-grey-7"
                             v-if="p.ie"
                           >
-                            {{ formataIe(p.uf, p.ie) }}
+                            {{ formataIe(p.ie, p.uf) }}
                           </q-item-label>
                           <q-item-label caption>
                             {{ p.pessoa }}
@@ -776,7 +767,7 @@ watch(
                           <b class="text-negative" v-if="ie.cSit == '0'">
                             Não Habilitada!
                           </b>
-                          {{ formataIe(ie.UF, ie.IE) }}/{{ ie.UF }}
+                          {{ formataIe(ie.IE, ie.UF) }}/{{ ie.UF }}
                         </q-item-label>
                         <q-item-label
                           class="text-weight-bolder text-grey-7"

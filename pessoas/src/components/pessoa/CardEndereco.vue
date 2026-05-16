@@ -10,7 +10,7 @@ import {
   formataCep,
   linkMaps,
   removerAcentos,
-} from "src/utils/formatador";
+} from "@components/formatters";
 import MgInfoCriacao from "@components/MgInfoCriacao.vue";
 import SelectCidade from "components/pessoa/SelectCidade.vue";
 import MgInputFormatado from "@components/MgInputFormatado.vue";

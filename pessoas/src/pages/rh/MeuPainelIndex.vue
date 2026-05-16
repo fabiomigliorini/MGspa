@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import { useQuasar } from "quasar";
 import { useRouter, useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
-import { formataDataSemHora } from "src/utils/formatador";
+import { formataDataSemHora } from "@components/formatters";
 import { extrairErro } from "src/utils/rhFormatters";
 import MGLayout from "layouts/MGLayout.vue";
 

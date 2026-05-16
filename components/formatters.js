@@ -1,79 +1,514 @@
-export function formataNumero(value, casas = 2) {
-  return new Intl.NumberFormat('pt-BR', {
+// =====================================================================
+// Formatters compartilhados MGspa
+// Importar como: import { ... } from '@components/formatters'
+// =====================================================================
+
+// ---------- Números / Moeda ----------
+export function formataNumero(valor, casas = 2) {
+  if (valor === null || valor === undefined || valor === "") return "";
+  const n =
+    typeof valor === "number"
+      ? valor
+      : Number(
+          String(valor)
+            .replace(/[^0-9,\-.]/g, "")
+            .replace(",", "."),
+        );
+  if (Number.isNaN(n)) return "";
+  return new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: casas,
     maximumFractionDigits: casas,
-  }).format(value || 0)
+  }).format(n);
 }
 
+export function formataPercentual(valor, casas = 2) {
+  return formataNumero(valor, casas) + "%";
+}
+
+export function arredonda(valor, casas = 2) {
+  const factor = Math.pow(10, casas);
+  return Math.round((valor || 0) * factor) / factor;
+}
+
+// ---------- Datas ----------
+
 export function formataData(data) {
-  if (!data) return ''
-  const d = new Date(data)
-  return d.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  if (!data) return "";
+  const d = new Date(data);
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 export function formataDataSemHora(data) {
-  if (!data) return ''
-  const d = new Date(data)
-  return d.toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
+  if (!data) return "";
+  const d = new Date(data);
+  return d.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 }
 
-export function formataCPF(cpf) {
-  if (cpf == null) return null
-  const s = String(cpf).padStart(11, '0')
-  return s.slice(0, 3) + '.' + s.slice(3, 6) + '.' + s.slice(6, 9) + '-' + s.slice(9, 11)
+export function formataDataHoraSegundos(data) {
+  if (!data) return "";
+  const d = new Date(data);
+  return d.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 }
 
-export function formataCNPJ(cnpj) {
-  if (cnpj == null) return null
-  const s = String(cnpj).padStart(14, '0')
-  return (
-    s.slice(0, 2) +
-    '.' +
-    s.slice(2, 5) +
-    '.' +
-    s.slice(5, 8) +
-    '/' +
-    s.slice(8, 12) +
-    '-' +
-    s.slice(12, 14)
-  )
+export function formataDataCompleta(data) {
+  if (!data) return "";
+  const d = new Date(data);
+  return d.toLocaleString("pt-BR", {
+    weekday: "short",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
-export const formataCnpjCpf = (cnpjcpf, fisica) => {
-  if (cnpjcpf == null) return null
-  return fisica ? formataCPF(cnpjcpf) : formataCNPJ(cnpjcpf)
+export function formataDiaSemana(data, short = true) {
+  if (!data) return "";
+  const d = new Date(data);
+  return d.toLocaleDateString("pt-BR", { weekday: short ? "short" : "long" });
 }
 
-export function formataTelefone(t) {
-  if (!t) return ''
-  return `+${t.pais} (${t.ddd}) ${t.telefone}`
+export function dataAtual() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
-const rtf = new Intl.RelativeTimeFormat(navigator.language || 'pt-BR', { numeric: 'auto' })
+export function dataFormatoSql(data) {
+  if (!data) return "";
+  const m = String(data).match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+  if (!m) return "";
+  return `${m[3]}-${m[2]}-${m[1]}`;
+}
+
+const rtf = new Intl.RelativeTimeFormat(
+  typeof navigator !== "undefined" ? navigator.language || "pt-BR" : "pt-BR",
+  { numeric: "auto" },
+);
 
 export function tempoRelativo(dataStr) {
-  const diff = new Date(dataStr) - new Date()
-  const seconds = Math.round(diff / 1000)
-  const minutes = Math.round(diff / 60000)
-  const hours = Math.round(diff / 3600000)
-  const days = Math.round(diff / 86400000)
-  const months = Math.round(days / 30)
-  const years = Math.round(days / 365)
+  if (!dataStr) return "";
+  const diff = new Date(dataStr) - new Date();
+  const seconds = Math.round(diff / 1000);
+  const minutes = Math.round(diff / 60000);
+  const hours = Math.round(diff / 3600000);
+  const days = Math.round(diff / 86400000);
+  const months = Math.round(days / 30);
+  const years = Math.round(days / 365);
 
-  if (Math.abs(seconds) < 60) return rtf.format(seconds, 'second')
-  if (Math.abs(minutes) < 60) return rtf.format(minutes, 'minute')
-  if (Math.abs(hours) < 24) return rtf.format(hours, 'hour')
-  if (Math.abs(days) < 30) return rtf.format(days, 'day')
-  if (Math.abs(months) < 12) return rtf.format(months, 'month')
-  return rtf.format(years, 'year')
+  if (Math.abs(seconds) < 60) return rtf.format(seconds, "second");
+  if (Math.abs(minutes) < 60) return rtf.format(minutes, "minute");
+  if (Math.abs(hours) < 24) return rtf.format(hours, "hour");
+  if (Math.abs(days) < 30) return rtf.format(days, "day");
+  if (Math.abs(months) < 12) return rtf.format(months, "month");
+  return rtf.format(years, "year");
+}
+
+export const formataFromNow = tempoRelativo;
+
+export function verificaPassadoFuturo(data) {
+  if (!data) return null;
+  return new Date(data).getTime() < Date.now();
+}
+
+export function verificaIdade(dataNascimento) {
+  if (!dataNascimento) return null;
+  const nasc = new Date(dataNascimento);
+  const hoje = new Date();
+  let idade = hoje.getFullYear() - nasc.getFullYear();
+  const m = hoje.getMonth() - nasc.getMonth();
+  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
+  return idade;
+}
+
+// ---------- Documentos ----------
+
+export function formataCpf(cpf) {
+  if (cpf == null) return null;
+  const s = String(cpf).padStart(11, "0");
+  return (
+    s.slice(0, 3) +
+    "." +
+    s.slice(3, 6) +
+    "." +
+    s.slice(6, 9) +
+    "-" +
+    s.slice(9, 11)
+  );
+}
+
+export function formataCnpj(cnpj) {
+  if (cnpj == null) return null;
+  const s = String(cnpj).padStart(14, "0");
+  return (
+    s.slice(0, 2) +
+    "." +
+    s.slice(2, 5) +
+    "." +
+    s.slice(5, 8) +
+    "/" +
+    s.slice(8, 12) +
+    "-" +
+    s.slice(12, 14)
+  );
+}
+
+export function formataCnpjCpf(cnpjcpf, fisica) {
+  if (cnpjcpf == null) return null;
+  return fisica ? formataCpf(cnpjcpf) : formataCnpj(cnpjcpf);
+}
+
+export function formataCnpjEcpf(cnpjcpf) {
+  if (cnpjcpf == null) return null;
+  const fisica = String(cnpjcpf).length <= 11 ? true : false;
+  return formataCnpjCpf(cnpjcpf, fisica);
+}
+
+export function formataPisPasep(pispasep) {
+  if (pispasep == null) return null;
+  const s = String(pispasep).padStart(11, "0");
+  return (
+    s.slice(0, 3) +
+    "." +
+    s.slice(3, 8) +
+    "." +
+    s.slice(8, 10) +
+    "-" +
+    s.slice(10, 11)
+  );
+}
+
+export function formataCep(cep) {
+  if (cep == null) return null;
+  const s = String(cep).padStart(8, "0");
+  return s.slice(0, 2) + "." + s.slice(2, 5) + "-" + s.slice(5, 8);
+}
+
+// Inscrição Estadual — merge "best-of-breed" das 3 versões anteriores
+export function formataIe(ie, uf) {
+  if (ie == null || ie === "") return "";
+  const ieStr = String(ie).replace(/\D/g, "");
+  if (!ieStr) return "";
+  if (!uf) return ieStr;
+  const ufUpper = String(uf).toUpperCase();
+  try {
+    switch (ufUpper) {
+      case "AC":
+        return ieStr
+          .padStart(13, "0")
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3/$4-$5");
+      case "AL":
+        return ieStr.padStart(9, "0");
+      case "AP":
+        return ieStr.padStart(9, "0").replace(/(\d{8})(\d{1})/, "$1-$2");
+      case "AM":
+        return ieStr
+          .padStart(9, "0")
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+      case "BA":
+        return ieStr.padStart(9, "0").replace(/(\d{7})(\d{2})/, "$1-$2");
+      case "CE":
+        return ieStr.padStart(9, "0").replace(/(\d{8})(\d{1})/, "$1-$2");
+      case "DF":
+        return ieStr.padStart(13, "0").replace(/(\d{11})(\d{2})/, "$1-$2");
+      case "ES":
+        return ieStr
+          .padStart(9, "0")
+          .replace(/(\d{3})(\d{3})(\d{2})(\d{1})/, "$1.$2.$3.$4");
+      case "GO":
+        return ieStr
+          .padStart(9, "0")
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+      case "MA":
+        return ieStr.padStart(9, "0").replace(/(\d{8})(\d{1})/, "$1-$2");
+      case "MT":
+        return ieStr
+          .padStart(9, "0")
+          .replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+      case "MS":
+        return ieStr.padStart(9, "0").replace(/(\d{8})(\d{1})/, "$1-$2");
+      case "MG":
+        return ieStr
+          .padStart(13, "0")
+          .replace(/(\d{3})(\d{3})(\d{3})(\d{4})/, "$1.$2.$3/$4");
+      case "PA":
+        return ieStr
+          .padStart(9, "0")
+          .replace(/(\d{2})(\d{6})(\d{1})/, "$1-$2-$3");
+      case "PB":
+        return ieStr.padStart(9, "0").replace(/(\d{8})(\d{1})/, "$1-$2");
+      case "PR":
+        return ieStr
+          .padStart(10, "0")
+          .replace(/(\d{3})(\d{5})(\d{2})/, "$1.$2-$3");
+      case "PE":
+        return ieStr
+          .padStart(14, "0")
+          .replace(/(\d{2})(\d{1})(\d{3})(\d{7})(\d{1})/, "$1.$2.$3.$4-$5");
+      case "PI":
+        return ieStr.padStart(9, "0").replace(/(\d{8})(\d{1})/, "$1-$2");
+      case "RJ":
+        return ieStr
+          .padStart(8, "0")
+          .replace(/(\d{2})(\d{3})(\d{2})(\d{1})/, "$1.$2.$3-$4");
+      case "RN":
+        if (ieStr.length <= 9) {
+          return ieStr
+            .padStart(9, "0")
+            .replace(/(\d{2})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3-$4");
+        }
+        return ieStr
+          .padStart(10, "0")
+          .replace(/(\d{2})(\d{1})(\d{3})(\d{3})(\d{1})/, "$1.$2.$3.$4-$5");
+      case "RS":
+        return ieStr.padStart(10, "0").replace(/(\d{3})(\d{7})/, "$1/$2");
+      case "RO":
+        return ieStr.padStart(14, "0").replace(/(\d{13})(\d{1})/, "$1-$2");
+      case "RR":
+        return ieStr.padStart(9, "0").replace(/(\d{8})(\d{1})/, "$1-$2");
+      case "SC":
+        return ieStr
+          .padStart(9, "0")
+          .replace(/(\d{3})(\d{3})(\d{3})/, "$1.$2.$3");
+      case "SP":
+        return ieStr
+          .padStart(12, "0")
+          .replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, "$1.$2.$3.$4");
+      case "SE":
+        return ieStr.padStart(10, "0").replace(/(\d{9})(\d{1})/, "$1-$2");
+      case "TO":
+        return ieStr.padStart(11, "0");
+      default:
+        return ieStr;
+    }
+  } catch (e) {
+    console.log(e);
+    return ieStr;
+  }
+}
+
+// ---------- Telefone ----------
+
+export function formataTelefone(t) {
+  if (!t) return "";
+  return `+${t.pais} (${t.ddd}) ${t.telefone}`;
+}
+
+export function formataCelular(cel) {
+  if (cel == null) return null;
+  const s = String(cel).padStart(9, "0");
+  return s.slice(0, 1) + " " + s.slice(1, 5) + "-" + s.slice(5, 9);
+}
+
+export function formataCelularComDDD(cel) {
+  if (cel == null) return null;
+  const s = String(cel).padStart(11, "0");
+  return (
+    "(" +
+    s.slice(0, 2) +
+    ") " +
+    s.slice(2, 3) +
+    " " +
+    s.slice(3, 7) +
+    "-" +
+    s.slice(7, 11)
+  );
+}
+
+export function formataFixo(fixo) {
+  if (fixo == null) return null;
+  const s = String(fixo).padStart(8, "0");
+  return s.slice(0, 4) + "-" + s.slice(4, 8);
+}
+
+export function formataFone(tipo, fone) {
+  if (tipo === 2) return formataCelular(fone);
+  if (tipo === 1) return formataFixo(fone);
+  return fone;
+}
+
+// ---------- Códigos / Fiscal ----------
+
+export function formataNcm(ncm) {
+  if (!ncm) return "-";
+  const s = String(ncm).padStart(8, "0");
+  return `${s.substring(0, 4)}.${s.substring(4, 6)}.${s.substring(6, 8)}`;
+}
+
+export function formataCest(cest) {
+  if (!cest) return "-";
+  const s = String(cest).padStart(7, "0");
+  return `${s.substring(0, 2)}.${s.substring(2, 5)}.${s.substring(5, 7)}`;
+}
+
+export function formataChave(chave) {
+  if (!chave) return "-";
+  return (
+    String(chave)
+      .match(/.{1,4}/g)
+      ?.join(" ") || String(chave)
+  );
+}
+
+export function formataProtocolo(protocolo) {
+  if (!protocolo) return "-";
+  return (
+    String(protocolo)
+      .match(/.{1,5}/g)
+      ?.join(" ") || String(protocolo)
+  );
+}
+
+export function formataCodProduto(numero) {
+  if (!numero) return "#000000";
+  return "#" + String(numero).padStart(6, "0");
+}
+
+export function formataCodNegocio(codnegocio) {
+  if (!codnegocio) return "#00000000";
+  return "#" + String(codnegocio).padStart(8, "0");
+}
+
+export function formataNumeroNotaFiscal(numero) {
+  if (!numero) return "00000000";
+  return String(numero).padStart(8, "0");
+}
+
+export function formataNumeroNota(
+  numero,
+  tipo = null,
+  serie = null,
+  emitida = null,
+) {
+  if (numero == null) return "";
+  let resultado = String(numero).padStart(9, "0");
+  if (serie != null) resultado = String(serie).padStart(3, "0") + "-" + resultado;
+  if (emitida === false) resultado = "T-" + resultado;
+  if (tipo === 55) resultado = "NFe " + resultado;
+  else if (tipo === 65) resultado = "NFCe " + resultado;
+  return resultado;
+}
+
+export function formataTitulo(titulo) {
+  if (titulo == null) return null;
+  const s = String(titulo).padStart(12, "0");
+  return s.slice(0, 4) + "." + s.slice(4, 8) + "." + s.slice(8, 12);
+}
+
+export function formataCfop(cfop) {
+  if (!cfop) return "";
+  const s = String(cfop).padStart(4, "0");
+  return s.slice(0, 1) + "." + s.slice(1, 4);
+}
+
+// ---------- Strings ----------
+
+export function removerAcentos(str) {
+  if (!str) return str;
+  return str.normalize("NFD").replace(/\p{Mn}/gu, "");
+}
+
+export function primeiraLetraMaiuscula(str) {
+  if (!str) return str;
+  return removerAcentos(str)
+    .trimStart()
+    .replace(/\s+/g, " ")
+    .replace(
+      /\w\S*/g,
+      (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
+    );
+}
+
+// ---------- Diversos ----------
+
+export function linkMaps(cidade, endereco, numero, cep) {
+  return (
+    "https://www.google.com/maps/search/?api=1&query=" +
+    encodeURIComponent(
+      [endereco, numero, cidade, cep].filter(Boolean).join(","),
+    )
+  );
+}
+
+export const localeBrasil = {
+  days: "Domingo_Segunda_Terça_Quarta_Quinta_Sexta_Sábado".split("_"),
+  daysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
+  months:
+    "Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro".split(
+      "_",
+    ),
+  monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
+  firstDayOfWeek: 1,
+  format24h: true,
+  pluralDay: "dias",
+};
+
+// ---------- Máscaras de input (q-input :mask) ----------
+
+export const MASCARA_CPF = "###.###.###-##";
+export const MASCARA_CNPJ = "##.###.###/####-##";
+export const MASCARA_CEP = "#####-###";
+export const MASCARA_DATA = "##/##/####";
+export const MASCARA_TELEFONE_FIXO = "(##) ####-####";
+export const MASCARA_TELEFONE_CELULAR = "(##) #-####-####";
+
+export function mascaraTelefone(tipo) {
+  if (tipo === 1) return MASCARA_TELEFONE_FIXO;
+  if (tipo === 2) return MASCARA_TELEFONE_CELULAR;
+  return "";
+}
+
+const MASCARAS_IE = {
+  AC: "##.###.###/###-##",
+  AL: "#########",
+  AP: "#########",
+  AM: "##.###.###-#",
+  BA: "#######-##",
+  CE: "########-#",
+  DF: "###########-##",
+  ES: "###.###.##-#",
+  GO: "##.###.###-#",
+  MA: "#########",
+  MT: "##.###.###-#",
+  MS: "#########",
+  MG: "###.###.###/####",
+  PA: "##-######-#",
+  PB: "########-#",
+  PR: "########-##",
+  PE: "##.#.###.#######-#",
+  PI: "#########",
+  RJ: "##.###.##-#",
+  RN: "##.###.###-#",
+  RS: "###-#######",
+  RO: "#############-#",
+  RR: "########-#",
+  SC: "###.###.###",
+  SP: "###.###.###.###",
+  SE: "#########-#",
+  TO: "###########",
+};
+
+export function mascaraIe(uf) {
+  if (!uf) return "";
+  return MASCARAS_IE[String(uf).toUpperCase()] || "";
 }

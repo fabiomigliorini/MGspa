@@ -14,16 +14,16 @@ import {
   STATUS_OPTIONS,
 } from '../constants/notaFiscal'
 import {
-  formatCnpjCpf,
-  formatDateTime,
-  formatDate,
-  formatCurrency,
-  formatDecimal,
-  formatNumero,
-  formatChave,
-  formatProtocolo,
-  formatCodNegocio,
-} from 'src/utils/formatters'
+  formataCnpjCpf,
+  formataDataHoraSegundos,
+  formataDataSemHora,
+  formataNumero,
+  formataNumero,
+  formataNumeroNotaFiscal,
+  formataChave,
+  formataProtocolo,
+  formataCodNegocio,
+} from '@components/formatters'
 import NotaFiscalItemCard from '../components/NotaFiscalItemCard.vue'
 import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamentoDialog.vue'
 import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicataDialog.vue'
@@ -995,7 +995,7 @@ onUnmounted(() => {
         />
         <div class="text-h5 ellipsis" style="flex: 1; min-width: 0">
           {{ getModeloLabel(nota.modelo) }}
-          {{ formatNumero(nota.numero) }}
+          {{ formataNumeroNotaFiscal(nota.numero) }}
           - Série
           {{ nota.serie }}
         </div>
@@ -1116,11 +1116,11 @@ onUnmounted(() => {
 
               <!-- Emissao -->
               <div class="text-caption text-grey-7">Emissão</div>
-              <div class="text-body2">{{ formatDateTime(nota.emissao) }}</div>
+              <div class="text-body2">{{ formataDataHoraSegundos(nota.emissao) }}</div>
 
               <!-- saida  -->
               <div class="text-caption text-grey-7">Saída/Entrada</div>
-              <div class="text-body2">{{ formatDateTime(nota.saida) }}</div>
+              <div class="text-body2">{{ formataDataHoraSegundos(nota.saida) }}</div>
 
               <!-- Negócios Vinculados -->
               <template v-if="negociosVinculados.length > 0">
@@ -1134,7 +1134,7 @@ onUnmounted(() => {
                     class="text-primary text-weight-medium"
                     style="text-decoration: none"
                   >
-                    {{ formatCodNegocio(codnegocio) }}
+                    {{ formataCodNegocio(codnegocio) }}
                     <span v-if="index < negociosVinculados.length - 1">,</span>
                   </a>
                 </div>
@@ -1184,12 +1184,12 @@ onUnmounted(() => {
 
               <div class="col-6 col-md-2" v-if="nota.pesobruto">
                 <div class="text-caption text-grey-7">Peso Bruto</div>
-                <div class="text-body2 ellipsis">{{ formatDecimal(nota.pesobruto, 3) }} kg</div>
+                <div class="text-body2 ellipsis">{{ formataNumero(nota.pesobruto, 3) }} kg</div>
               </div>
 
               <div class="col-6 col-md-2" v-if="nota.pesoliquido">
                 <div class="text-caption text-grey-7">Peso Líquido</div>
-                <div class="text-body2 ellipsis">{{ formatDecimal(nota.pesoliquido, 3) }} kg</div>
+                <div class="text-body2 ellipsis">{{ formataNumero(nota.pesoliquido, 3) }} kg</div>
               </div>
             </q-card-section>
           </q-card>
@@ -1213,7 +1213,7 @@ onUnmounted(() => {
                   {{ getModeloLabel(nota.modelo) }}
                 </div>
                 <div class="text-caption" style="font-family: monospace">
-                  {{ formatNumero(nota.numero) }} - Série {{ nota.serie }}
+                  {{ formataNumeroNotaFiscal(nota.numero) }} - Série {{ nota.serie }}
                 </div>
               </template>
 
@@ -1222,7 +1222,7 @@ onUnmounted(() => {
                 <div class="text-caption text-grey-7">Chave</div>
                 <div class="text-caption row items-center">
                   <span style="font-family: monospace">
-                    {{ formatChave(nota.nfechave) }}
+                    {{ formataChave(nota.nfechave) }}
                   </span>
                   <q-btn
                     flat
@@ -1267,11 +1267,11 @@ onUnmounted(() => {
                 <div class="text-caption text-grey-7">Autorização</div>
                 <div class="text-caption row items-center">
                   <span style="font-family: monospace">
-                    {{ formatProtocolo(nota.nfeautorizacao) }}
+                    {{ formataProtocolo(nota.nfeautorizacao) }}
                   </span>
                   <span class="text-grey-7">
                     |
-                    {{ formatDateTime(nota.nfedataautorizacao) }}
+                    {{ formataDataHoraSegundos(nota.nfedataautorizacao) }}
                   </span>
                   <q-btn
                     flat
@@ -1293,11 +1293,11 @@ onUnmounted(() => {
                 <div class="text-caption text-grey-7">Cancelamento</div>
                 <div class="text-caption row items-center">
                   <span style="font-family: monospace">
-                    {{ formatProtocolo(nota.nfecancelamento) }}
+                    {{ formataProtocolo(nota.nfecancelamento) }}
                   </span>
                   <span class="text-grey-7">
                     |
-                    {{ formatDateTime(nota.nfedatacancelamento) }}
+                    {{ formataDataHoraSegundos(nota.nfedatacancelamento) }}
                   </span>
                   <q-btn
                     flat
@@ -1319,11 +1319,11 @@ onUnmounted(() => {
                 <div class="text-caption text-grey-7">Inutilização</div>
                 <div class="text-caption row items-center">
                   <span style="font-family: monospace">
-                    {{ formatProtocolo(nota.nfeinutilizacao) }}
+                    {{ formataProtocolo(nota.nfeinutilizacao) }}
                   </span>
                   <span class="text-grey-7">
                     |
-                    {{ formatDateTime(nota.nfedatainutilizacao) }}
+                    {{ formataDataHoraSegundos(nota.nfedatainutilizacao) }}
                   </span>
                   <q-btn
                     flat
@@ -1412,7 +1412,7 @@ onUnmounted(() => {
                     {{ nota.pessoa?.fisica ? 'CPF' : 'CNPJ' }}
                   </div>
                   <div class="text-body1 text-weight-bold text-primary ellipsis">
-                    {{ formatCnpjCpf(nota.pessoa?.cnpj, nota.pessoa?.fisica) }}
+                    {{ formataCnpjCpf(nota.pessoa?.cnpj, nota.pessoa?.fisica) }}
                   </div>
                 </div>
 
@@ -1484,8 +1484,8 @@ onUnmounted(() => {
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">ICMS</div>
                   <div class="text-body2">
-                    {{ formatCurrency(nota.baseicms) }} /
-                    {{ formatCurrency(nota.valoricms) }}
+                    {{ formataNumero(nota.baseicms) }} /
+                    {{ formataNumero(nota.valoricms) }}
                   </div>
                 </div>
 
@@ -1493,8 +1493,8 @@ onUnmounted(() => {
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">ICMS ST</div>
                   <div class="text-body2">
-                    {{ formatCurrency(nota.baseicmsst) }} /
-                    {{ formatCurrency(nota.valoricmsst) }}
+                    {{ formataNumero(nota.baseicmsst) }} /
+                    {{ formataNumero(nota.valoricmsst) }}
                   </div>
                 </div>
 
@@ -1502,7 +1502,7 @@ onUnmounted(() => {
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">IPI</div>
                   <div class="text-body2">
-                    {{ formatCurrency(nota.valoripi) }}
+                    {{ formataNumero(nota.valoripi) }}
                   </div>
                 </div>
 
@@ -1510,7 +1510,7 @@ onUnmounted(() => {
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">PIS</div>
                   <div class="text-body2">
-                    {{ formatCurrency(nota.valorpis) }}
+                    {{ formataNumero(nota.valorpis) }}
                   </div>
                 </div>
 
@@ -1518,7 +1518,7 @@ onUnmounted(() => {
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">COFINS</div>
                   <div class="text-body2">
-                    {{ formatCurrency(nota.valorcofins) }}
+                    {{ formataNumero(nota.valorcofins) }}
                   </div>
                 </div>
 
@@ -1526,7 +1526,7 @@ onUnmounted(() => {
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">IBPT</div>
                   <div class="text-body2">
-                    {{ formatCurrency(nota.valoribpt) }}
+                    {{ formataNumero(nota.valoribpt) }}
                   </div>
                 </div>
 
@@ -1534,38 +1534,38 @@ onUnmounted(() => {
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Produtos</div>
                   <div class="text-body2 text-weight-bold">
-                    {{ formatCurrency(nota.valorprodutos) }}
+                    {{ formataNumero(nota.valorprodutos) }}
                   </div>
                 </div>
 
                 <!-- Desconto -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Desconto</div>
-                  <div class="text-body2">{{ formatCurrency(nota.valordesconto) }}</div>
+                  <div class="text-body2">{{ formataNumero(nota.valordesconto) }}</div>
                 </div>
 
                 <!-- Frete -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Frete</div>
-                  <div class="text-body2">{{ formatCurrency(nota.valorfrete) }}</div>
+                  <div class="text-body2">{{ formataNumero(nota.valorfrete) }}</div>
                 </div>
 
                 <!-- Seguro -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Seguro</div>
-                  <div class="text-body2">{{ formatCurrency(nota.valorseguro) }}</div>
+                  <div class="text-body2">{{ formataNumero(nota.valorseguro) }}</div>
                 </div>
 
                 <!-- Outras Despesas -->
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Outras Despesas</div>
-                  <div class="text-body2">{{ formatCurrency(nota.valoroutras) }}</div>
+                  <div class="text-body2">{{ formataNumero(nota.valoroutras) }}</div>
                 </div>
 
                 <div class="col-6 col-sm-4 col-md-2 q-py-sm">
                   <div class="text-caption text-grey-7">Total</div>
                   <div class="text-h6 text-weight-bold text-primary">
-                    {{ formatCurrency(nota.valortotal) }}
+                    {{ formataNumero(nota.valortotal) }}
                   </div>
                 </div>
               </div>
@@ -1719,7 +1719,7 @@ onUnmounted(() => {
                     </a>
                     <span v-else>{{ nota.usuarioCriacao?.usuario || '-' }}</span>
                   </div>
-                  <div class="text-caption text-grey-7">{{ formatDateTime(nota.criacao) }}</div>
+                  <div class="text-caption text-grey-7">{{ formataDataHoraSegundos(nota.criacao) }}</div>
                 </div>
                 <div class="col-12 col-sm-6" v-if="nota.alteracao">
                   <div class="text-caption text-grey-7">Última alteração por</div>
@@ -1735,7 +1735,7 @@ onUnmounted(() => {
                     </a>
                     <span v-else>{{ nota.usuarioAlteracao?.usuario || '-' }}</span>
                   </div>
-                  <div class="text-caption text-grey-7">{{ formatDateTime(nota.alteracao) }}</div>
+                  <div class="text-caption text-grey-7">{{ formataDataHoraSegundos(nota.alteracao) }}</div>
                 </div>
               </div>
             </q-card-section>
@@ -1812,7 +1812,7 @@ onUnmounted(() => {
                       </div>
 
                       <div class="text-h5 text-primary text-weight-bold q-mb-sm">
-                        {{ formatCurrency(pag.valorpagamento) }}
+                        {{ formataNumero(pag.valorpagamento) }}
                       </div>
 
                       <div v-if="pag.fantasia" class="row items-center q-mb-xs">
@@ -1830,7 +1830,7 @@ onUnmounted(() => {
                       <div v-if="pag.troco" class="row items-center">
                         <q-icon name="change_circle" size="xs" class="q-mr-xs text-grey-6" />
                         <div class="text-caption text-grey-7">
-                          Troco: {{ formatCurrency(pag.troco) }}
+                          Troco: {{ formataNumero(pag.troco) }}
                         </div>
                       </div>
                     </q-card-section>
@@ -1925,11 +1925,11 @@ onUnmounted(() => {
                       </div>
 
                       <div class="text-caption text-grey-7">Vencimento</div>
-                      <div class="text-body2 q-mb-sm">{{ formatDate(dup.vencimento) }}</div>
+                      <div class="text-body2 q-mb-sm">{{ formataDataSemHora(dup.vencimento) }}</div>
 
                       <div class="text-caption text-grey-7">Valor</div>
                       <div class="text-h5 text-primary text-weight-bold">
-                        {{ formatCurrency(dup.valor) }}
+                        {{ formataNumero(dup.valor) }}
                       </div>
                     </q-card-section>
 
@@ -2015,7 +2015,7 @@ onUnmounted(() => {
 
                       <div class="text-caption text-grey-7">Chave de Acesso</div>
                       <span style="font-family: monospace">
-                        {{ formatChave(ref.nfechave) }}
+                        {{ formataChave(ref.nfechave) }}
                       </span>
                     </q-card-section>
 
@@ -2146,10 +2146,10 @@ onUnmounted(() => {
                           <div class="text-caption text-grey-7">Protocolo</div>
                           <div class="text-caption ellipsis">
                             <span style="font-family: monospace">
-                              {{ formatProtocolo(carta.protocolo) }}
+                              {{ formataProtocolo(carta.protocolo) }}
                             </span>
                             <span class="text-grey-7">
-                              | {{ formatDateTime(carta.protocolodata) }}
+                              | {{ formataDataHoraSegundos(carta.protocolodata) }}
                             </span>
                           </div>
                         </div>
@@ -2325,12 +2325,12 @@ onUnmounted(() => {
                   | {{ notaUnificar.natureza }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ formatDateTime(notaUnificar.emissao) }}
+                  {{ formataDataHoraSegundos(notaUnificar.emissao) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side class="text-right">
                 <q-item-label class="text-weight-bold">
-                  {{ formatCurrency(notaUnificar.valortotal) }}
+                  {{ formataNumero(notaUnificar.valortotal) }}
                 </q-item-label>
                 <q-item-label caption>
                   <q-badge :color="getStatusColor(notaUnificar.status)">

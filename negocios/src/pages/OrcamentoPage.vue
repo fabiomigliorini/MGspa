@@ -5,7 +5,7 @@ import { db } from "boot/db";
 import { negocioStore } from "src/stores/negocio";
 import moment from "moment/min/moment-with-locales";
 moment.locale("pt-br");
-import { formataCnpjCpf, formataCnpj } from "../utils/formatador.js";
+import { formataCnpjCpf, formataCnpj, formataNumero, formataDataHoraSegundos, formataCodNegocio } from "@components/formatters";
 import { produtoStore } from "src/stores/produto";
 import BarCode from "components/BarCode.vue";
 
@@ -33,7 +33,7 @@ onMounted(async () => {
           <td class="local text-bold">Local</td>
           <td>{{ sNegocio.negocio.estoquelocal }}</td>
           <td class="text-bold text-right">Negócio</td>
-          <td>#{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}</td>
+          <td>{{ formataCodNegocio(sNegocio.negocio.codnegocio) }}</td>
         </tr>
         <tr>
           <td
@@ -48,7 +48,7 @@ onMounted(async () => {
           <td class="text-bold text-right">Data</td>
           <td>
             {{
-              moment(sNegocio.negocio.lancamento).format("DD/MM/YYYY HH:mm:SS")
+              formataDataHoraSegundos(sNegocio.negocio.lancamento)
             }}
           </td>
         </tr>
@@ -110,11 +110,7 @@ onMounted(async () => {
             <td class="quantidade">{{ produto.quantidade }}</td>
             <td class="valor text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(produto.valorunitario)
+                formataNumero(produto.valorunitario)
               }}
               <template
                 v-if="produto.valordesconto > 0 && produto.quantidade > 0"
@@ -122,53 +118,31 @@ onMounted(async () => {
                 <div>
                   (-
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(produto.valordesconto / produto.quantidade)
+                    formataNumero(produto.valordesconto / produto.quantidade)
                   }})
                 </div>
                 <div>
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(
-                      (produto.valorprodutos - produto.valordesconto) /
-                        produto.quantidade
-                    )
+                    formataNumero((produto.valorprodutos - produto.valordesconto) /
+                        produto.quantidade)
                   }}
                 </div>
               </template>
             </td>
             <td class="valor text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(produto.valorprodutos)
+                formataNumero(produto.valorprodutos)
               }}
               <template v-if="produto.valordesconto">
                 <div>
                   (-
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(produto.valordesconto)
+                    formataNumero(produto.valordesconto)
                   }})
                 </div>
                 <div>
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(produto.valorprodutos - produto.valordesconto)
+                    formataNumero(produto.valorprodutos - produto.valordesconto)
                   }}
                 </div>
               </template>
@@ -182,11 +156,7 @@ onMounted(async () => {
             <td colspan="6" class="text-right">Produtos</td>
             <td class="text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valorprodutos)
+                formataNumero(sNegocio.negocio.valorprodutos)
               }}
             </td>
           </tr>
@@ -194,11 +164,7 @@ onMounted(async () => {
             <td colspan="6" class="text-right">Desconto</td>
             <td class="text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valordesconto)
+                formataNumero(sNegocio.negocio.valordesconto)
               }}
             </td>
           </tr>
@@ -207,11 +173,7 @@ onMounted(async () => {
             <td colspan="6" class="text-right">Frete</td>
             <td class="text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valorfrete)
+                formataNumero(sNegocio.negocio.valorfrete)
               }}
             </td>
           </tr>
@@ -220,11 +182,7 @@ onMounted(async () => {
             <td colspan="6" class="text-right">Seguro</td>
             <td class="text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valorseguro)
+                formataNumero(sNegocio.negocio.valorseguro)
               }}
             </td>
           </tr>
@@ -233,11 +191,7 @@ onMounted(async () => {
             <td colspan="6" class="text-right">Outras</td>
             <td class="text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valoroutras)
+                formataNumero(sNegocio.negocio.valoroutras)
               }}
             </td>
           </tr>
@@ -246,11 +200,7 @@ onMounted(async () => {
             <td colspan="6" class="text-right">Total</td>
             <td class="text-right">
               {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "decimal",
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                }).format(sNegocio.negocio.valortotal)
+                formataNumero(sNegocio.negocio.valortotal)
               }}
             </td>
           </tr>
@@ -265,11 +215,7 @@ onMounted(async () => {
       <div v-for="pag in sNegocio.negocio.pagamentos" v-bind:key="pag.uuid">
         <b>
           {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(pag.valorpagamento)
+            formataNumero(pag.valorpagamento)
           }}
         </b>
         {{ pag.formapagamento }}
@@ -302,7 +248,7 @@ onMounted(async () => {
     <hr />
     <template v-if="sNegocio.negocio.sincronizado">
       <div class="text-center text-h5 text-bold">
-        Negocio #{{ String(sNegocio.negocio.codnegocio).padStart(8, "0") }}
+        Negocio {{ formataCodNegocio(sNegocio.negocio.codnegocio) }}
       </div>
       <div class="barcode">
         <BarCode
@@ -336,11 +282,7 @@ onMounted(async () => {
     <div class="text-center text-h5 text-bold">
       R$
       {{
-        new Intl.NumberFormat("pt-BR", {
-          style: "decimal",
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        }).format(sNegocio.negocio.valortotal)
+        formataNumero(sNegocio.negocio.valortotal)
       }}
     </div>
   </template>

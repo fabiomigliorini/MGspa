@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumeroNotaFiscal } from '@components/formatters'
 import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useTributacaoCadastroStore } from '../stores/tributacaoCadastroStore'
@@ -97,7 +98,7 @@ onMounted(async () => {
           <div class="q-pa-sm text-caption text-grey-8 column">
             <span>Código do Tributo:</span>
             <span class="text-caption text-black ellipsis">
-              {{ String(tributacao.codtributacao).padStart(8, '0') }}
+              {{ formataNumeroNotaFiscal(tributacao.codtributacao) }}
             </span>
           </div>
           <div class="q-px-sm q-pb-sm text-caption text-grey-8 ellipsis column">

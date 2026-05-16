@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero } from "@components/formatters";
 import { ref, onMounted, watch } from "vue";
 import { debounce } from "quasar";
 import { db } from "src/boot/db";
@@ -163,11 +164,7 @@ const pesquisar = debounce(async () => {
         </q-item-section>
         <q-item-section side class="text-bold">
           {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(prod.preco)
+            formataNumero(prod.preco)
           }}
         </q-item-section>
       </q-item>

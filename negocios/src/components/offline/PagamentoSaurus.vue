@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataDataCompleta } from "@components/formatters";
 import { ref, watch, computed } from "vue";
 import { debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
@@ -306,11 +307,7 @@ const toStone = async () => {
                       <span class="text-grey"> x R$ </span>
                       <b>
                         {{
-                          new Intl.NumberFormat("pt-BR", {
-                            style: "decimal",
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(parc.valorparcela)
+                          formataNumero(parc.valorparcela)
                         }}
                       </b>
                       <span v-if="parc.valorjuros"> C/Juros </span>
@@ -361,11 +358,7 @@ const toStone = async () => {
         <div class="text-h6">
           Cobrança Safrapay/Saurus de R$
           {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sSaurus.pedido.valor)
+            formataNumero(sSaurus.pedido.valor)
           }}
         </div>
         <div class="text-subtitle2 text-grey text-uppercase">
@@ -389,11 +382,7 @@ const toStone = async () => {
                   <q-item-label>
                     R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(pag.valorcancelamento)
+                      formataNumero(pag.valorcancelamento)
                     }}
                   </q-item-label>
                   <q-item-label caption> Valor Cancelamento </q-item-label>
@@ -409,11 +398,7 @@ const toStone = async () => {
                   <q-item-label>
                     R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(pag.valortotal)
+                      formataNumero(pag.valortotal)
                     }}
                   </q-item-label>
                   <q-item-label caption> Valor efetivamente Pago </q-item-label>
@@ -474,7 +459,7 @@ const toStone = async () => {
                   POS {{ pag.apelido }} Serial {{ pag.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ moment(pag.horario).format("LLLL") }}
+                  {{ formataDataCompleta(pag.horario) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -510,7 +495,7 @@ const toStone = async () => {
                   {{ sSaurus.pedido.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ moment(sSaurus.pedido.criacao).format("LLLL") }}
+                  {{ formataDataCompleta(sSaurus.pedido.criacao) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -525,11 +510,7 @@ const toStone = async () => {
                 <q-item-label>
                   R$
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(sSaurus.pedido.valor)
+                    formataNumero(sSaurus.pedido.valor)
                   }}
                 </q-item-label>
                 <q-item-label caption>
@@ -540,11 +521,7 @@ const toStone = async () => {
                     em {{ sSaurus.pedido.parcelas }}
                     parcelas de R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(sSaurus.pedido.valorparcela)
+                      formataNumero(sSaurus.pedido.valorparcela)
                     }}
                     <span v-if="sSaurus.pedido.valorjuros"> (C/Juros) </span>
                   </span>

@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumero, formataDataCompleta } from "@components/formatters";
 import { ref, watch, computed } from "vue";
 import { Notify, debounce } from "quasar";
 import { negocioStore } from "stores/negocio";
@@ -435,11 +436,7 @@ const toSafrapay = async () => {
                       <span class="text-grey"> x R$ </span>
                       <b>
                         {{
-                          new Intl.NumberFormat("pt-BR", {
-                            style: "decimal",
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          }).format(parc.valorparcela)
+                          formataNumero(parc.valorparcela)
                         }}
                       </b>
                       <span v-if="parc.valorjuros"> C/Juros </span>
@@ -586,11 +583,7 @@ const toSafrapay = async () => {
                 <span class="text-grey"> x R$ </span>
                 <b>
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(parc.valorparcela)
+                    formataNumero(parc.valorparcela)
                   }}
                 </b>
                 <span v-if="parc.valorjuros"> C/Juros </span>
@@ -661,11 +654,7 @@ const toSafrapay = async () => {
                   <q-item-label>
                     R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(Math.abs(pagamento.valor))
+                      formataNumero(Math.abs(pagamento.valor))
                     }}
                   </q-item-label>
                 </q-item-section>
@@ -680,11 +669,7 @@ const toSafrapay = async () => {
                     <q-item-label>
                       R$
                       {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(Math.abs(pagamento.valorjuros))
+                        formataNumero(Math.abs(pagamento.valorjuros))
                       }}
                     </q-item-label>
                   </q-item-section>
@@ -698,13 +683,7 @@ const toSafrapay = async () => {
                     <q-item-label>
                       R$
                       {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(
-                          Math.abs(pagamento.valorjuros + pagamento.valor)
-                        )
+                        formataNumero(Math.abs(pagamento.valorjuros + pagamento.valor))
                       }}
                     </q-item-label>
                   </q-item-section>
@@ -721,11 +700,7 @@ const toSafrapay = async () => {
                       {{ pagamento.parcelas }}
                       de R$
                       {{
-                        new Intl.NumberFormat("pt-BR", {
-                          style: "decimal",
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        }).format(Math.abs(pagamento.valorparcela))
+                        formataNumero(Math.abs(pagamento.valorparcela))
                       }}
                     </q-item-label>
                   </q-item-section>
@@ -765,11 +740,7 @@ const toSafrapay = async () => {
         <div class="text-h6">
           Cobrança Stone/PagarMe de R$
           {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sPagarMe.pedido.valor)
+            formataNumero(sPagarMe.pedido.valor)
           }}
         </div>
         <div class="text-subtitle2 text-grey text-uppercase">
@@ -793,11 +764,7 @@ const toSafrapay = async () => {
                   <q-item-label>
                     R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(pag.valorcancelamento)
+                      formataNumero(pag.valorcancelamento)
                     }}
                   </q-item-label>
                   <q-item-label caption> Valor Cancelamento </q-item-label>
@@ -813,11 +780,7 @@ const toSafrapay = async () => {
                   <q-item-label>
                     R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(pag.valorpagamento)
+                      formataNumero(pag.valorpagamento)
                     }}
                   </q-item-label>
                   <q-item-label caption> Valor efetivamente Pago </q-item-label>
@@ -878,7 +841,7 @@ const toSafrapay = async () => {
                   POS {{ pag.apelido }} Serial {{ pag.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ moment(pag.horario).format("LLLL") }}
+                  {{ formataDataCompleta(pag.horario) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -914,7 +877,7 @@ const toSafrapay = async () => {
                   {{ sPagarMe.pedido.pos }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ moment(sPagarMe.pedido.criacao).format("LLLL") }}
+                  {{ formataDataCompleta(sPagarMe.pedido.criacao) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -929,11 +892,7 @@ const toSafrapay = async () => {
                 <q-item-label>
                   R$
                   {{
-                    new Intl.NumberFormat("pt-BR", {
-                      style: "decimal",
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    }).format(sPagarMe.pedido.valor)
+                    formataNumero(sPagarMe.pedido.valor)
                   }}
                 </q-item-label>
                 <q-item-label caption>
@@ -944,11 +903,7 @@ const toSafrapay = async () => {
                     em {{ sPagarMe.pedido.parcelas }}
                     parcelas de R$
                     {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(sPagarMe.pedido.valorparcela)
+                      formataNumero(sPagarMe.pedido.valorparcela)
                     }}
                     <span v-if="sPagarMe.pedido.valorjuros"> (C/Juros) </span>
                   </span>

@@ -3,15 +3,9 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useQuasar } from "quasar";
 import { useRoute } from "vue-router";
 import { rhStore } from "src/stores/rh";
-import { formataDataSemHora, formataFromNow } from "src/utils/formatador";
-import {
-  formataMoeda,
-  formataPercentual,
-  corProgresso,
-  tipoIndicadorLabel,
-  tipoIndicadorColor,
-  extrairErro,
-} from "src/utils/rhFormatters";
+import { formataDataSemHora, formataFromNow } from "@components/formatters";
+import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor, extrairErro } from "src/utils/rhFormatters";
+import { formataNumero, formataPercentual } from "@components/formatters";
 import CardIndicadores from "src/components/rh/CardIndicadores.vue";
 import CardRubricas from "src/components/rh/CardRubricas.vue";
 import CardSetores from "src/components/rh/CardSetores.vue";
@@ -241,10 +235,10 @@ watch(() => route.params.codperiodo, () => {
                       <span v-else class="text-grey">—</span>
                     </td>
                     <td class="text-right">
-                      {{ vendasInd(ind) != null ? formataMoeda(vendasInd(ind)) : "—" }}
+                      {{ vendasInd(ind) != null ? formataNumero(vendasInd(ind)) : "—" }}
                     </td>
                     <td class="text-right">
-                      {{ metaInd(ind) != null ? formataMoeda(metaInd(ind)) : "—" }}
+                      {{ metaInd(ind) != null ? formataNumero(metaInd(ind)) : "—" }}
                     </td>
                     <td class="text-center">
                       <span
@@ -257,7 +251,7 @@ watch(() => route.params.codperiodo, () => {
                       <span v-else class="text-grey">—</span>
                     </td>
                     <td v-if="idx === 0" :rowspan="indicadoresLinha(pc).length" class="text-right text-weight-bold">
-                      {{ formataMoeda(pc.valortotal) }}
+                      {{ formataNumero(pc.valortotal) }}
                     </td>
                     <td v-if="idx === 0" :rowspan="indicadoresLinha(pc).length" class="text-center">
                       <q-badge
