@@ -97,7 +97,7 @@ const toggleRightDrawer = () => {
 
 <template>
   <q-layout view="hHh lpr fFf">
-    <q-header reveal elevated height-hint="98">
+    <q-header reveal bordered height-hint="98">
       <q-toolbar>
         <!-- HAMBURQUER ESQUERDO -->
         <q-btn
