@@ -13,7 +13,6 @@ const ehAdmin = computed(() => !!unref(props.auth.ehAdmin))
 const expiresAt = computed(() => unref(props.auth.expiresAt))
 const uuidPdv = computed(() => unref(props.auth.uuidPdv))
 const permiteLogin = computed(() => !!unref(props.auth.permiteLogin))
-const estaAutenticado = computed(() => !!unref(props.auth.estaAutenticado))
 
 const nome = computed(() => usuario.value?.usuario || '')
 const inicial = computed(() => nome.value.charAt(0).toUpperCase())
@@ -39,12 +38,12 @@ async function renovar() {
   }
 }
 
-const perfilUrl = computed(() => {
-  if (!process.env.PESSOAS_URL) {
-    return '/perfil'
-  }
-  return `${process.env.PESSOAS_URL}/perfil`
-})
+// `typeof process` é seguro em runtime (não dispara ReferenceError em prod sem polyfill).
+// Webpack/vite substitui `process.env.PESSOAS_URL` em build nos apps que têm a var;
+// nos que não têm (ex: pessoas), cai no fallback ''.
+const PESSOAS_URL =
+  (typeof process !== 'undefined' && process.env && process.env.PESSOAS_URL) || ''
+const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perfil'))
 </script>
 
 <template>
