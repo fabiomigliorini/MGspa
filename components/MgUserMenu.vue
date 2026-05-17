@@ -41,8 +41,7 @@ async function renovar() {
 // `typeof process` é seguro em runtime (não dispara ReferenceError em prod sem polyfill).
 // Webpack/vite substitui `process.env.PESSOAS_URL` em build nos apps que têm a var;
 // nos que não têm (ex: pessoas), cai no fallback ''.
-const PESSOAS_URL =
-  (typeof process !== 'undefined' && process.env && process.env.PESSOAS_URL) || ''
+const PESSOAS_URL = (typeof process !== 'undefined' && process.env && process.env.PESSOAS_URL) || ''
 const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perfil'))
 </script>
 
@@ -67,23 +66,6 @@ const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perf
           </q-item-section>
         </q-item>
 
-        <!-- EXPIRA -->
-        <!-- <pre>{{ props.auth }}</pre> -->
-        <q-separator />
-        <q-card-section class="q-pa-sm">
-          <q-item>
-            <q-item-section>
-              <q-item-label v-if="expiresAt" caption class="text-grey-7">
-                Expira {{ tempoRelativo(expiresAt) }}
-                <q-btn flat dense size="sm" @click="renovar" icon="refresh"></q-btn>
-              </q-item-label>
-              <q-item-label v-if="uuidPdv" caption class="text-grey-7 ellipsis">
-                PDV {{ uuidPdv }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-card-section>
-
         <!-- GRUPOS -->
         <template v-if="permissoes.length">
           <q-separator />
@@ -99,6 +81,22 @@ const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perf
             </q-chip>
           </q-card-section>
         </template>
+
+        <!-- EXPIRA -->
+        <q-separator />
+        <q-card-section class="q-pa-sm">
+          <q-item>
+            <q-item-section>
+              <q-item-label v-if="expiresAt" caption class="text-grey-7">
+                Expira {{ tempoRelativo(expiresAt) }}
+                <q-btn flat dense size="sm" @click="renovar" icon="refresh"></q-btn>
+              </q-item-label>
+              <q-item-label v-if="uuidPdv" caption class="text-grey-7 ellipsis">
+                PDV {{ uuidPdv }}
+              </q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-card-section>
 
         <!-- SAIR -->
         <q-separator />
