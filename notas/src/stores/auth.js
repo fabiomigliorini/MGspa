@@ -105,7 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
       expiresAt.value = null
       localStorage.removeItem('access_token')
       localStorage.removeItem('usuario')
-      window.location.href = '/#/'
+      window.location.href = '/'
     }
   }
 
