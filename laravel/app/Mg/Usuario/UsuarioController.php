@@ -246,10 +246,19 @@ class UsuarioController extends MgController
         return response()->json($model, 204);
     }
 
-    public function permissoesUsuarios()
+    public function permissoesUsuarios(Request $request)
     {
         $usuario = Auth::user();
-        return new UsuarioResource($usuario);
+        $token = $request->user()->token();
+        $expiresAt = $token?->expires_at;
+        $expiresIn = $expiresAt ? max(0, Carbon::now()->diffInSeconds($expiresAt, false)) : null;
+
+        return (new UsuarioResource($usuario))->additional([
+            'meta' => [
+                'expires_in' => $expiresIn,
+                'expires_at' => $expiresAt?->toIso8601String(),
+            ],
+        ]);
     }
 
     public function gruposAdicionarERemover(Request $request, $id)

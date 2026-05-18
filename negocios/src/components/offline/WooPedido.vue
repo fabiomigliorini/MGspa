@@ -1,28 +1,25 @@
 <script setup>
-import { wooStore } from "src/stores/woo";
-import { ref } from "vue";
-import { negocioStore } from "stores/negocio";
-import WooInfoModal from "src/components/modals/WooInfoModal.vue";
-const sWoo = wooStore();
+import { wooStore } from 'src/stores/woo'
+import { ref } from 'vue'
+import { negocioStore } from 'stores/negocio'
+import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
+const sWoo = wooStore()
 
-const sNegocio = negocioStore();
+const sNegocio = negocioStore()
 
-const showPedidoModal = ref(false);
+const showPedidoModal = ref(false)
 
 // Reprocessar o pedido
 function openPedido(p) {
-  sWoo.pedido = p;
-  showPedidoModal.value = true;
+  sWoo.pedido = p
+  showPedidoModal.value = true
 }
 </script>
 <template>
   <template v-if="sNegocio.negocio">
     <woo-info-modal v-model="showPedidoModal" />
     <q-list>
-      <template
-        v-for="wp in sNegocio.negocio.WooPedidoS"
-        :key="wp.codwoopedido"
-      >
+      <template v-for="wp in sNegocio.negocio.WooPedidoS" :key="wp.codwoopedido">
         <q-separator class="q-mb-sm" />
         <q-item clickable v-ripple @click="openPedido(wp)">
           <q-item-section avatar top>

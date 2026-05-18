@@ -1,28 +1,28 @@
 <script setup>
-import { ref } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import { formataFromNow, verificaPassadoFuturo } from "src/utils/formatador";
-import { api } from "src/boot/axios";
+import { ref } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import { useAuthStore } from 'src/stores'
+import { formataFromNow, verificaPassadoFuturo } from '@components/formatters'
+import { api } from 'src/boot/axios'
 
-import SelectGrupoCliente from "components/pessoa/SelectGrupoCliente.vue";
-import SelectFormaPagamento from "components/pessoa/SelectFormaPagamento.vue";
-import MgInputValor from "@components/MgInputValor.vue";
+import SelectGrupoCliente from 'components/pessoa/SelectGrupoCliente.vue'
+import SelectFormaPagamento from 'components/pessoa/SelectFormaPagamento.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
-const $q = useQuasar();
-const sPessoa = pessoaStore();
-const route = useRoute();
-const user = guardaToken();
+const $q = useQuasar()
+const sPessoa = pessoaStore()
+const route = useRoute()
+const user = useAuthStore()
 
-const modelDialogCliente = ref(false);
-const modelEditar = ref([]);
-const dialogPdfRelatorio = ref(false);
-const pdfRelatorioUrl = ref(null);
+const modelDialogCliente = ref(false)
+const modelEditar = ref([])
+const dialogPdfRelatorio = ref(false)
+const pdfRelatorioUrl = ref(null)
 
 const editarCliente = () => {
-  modelDialogCliente.value = true;
+  modelDialogCliente.value = true
   modelEditar.value = {
     credito: sPessoa.item.credito,
     consumidor: sPessoa.item.consumidor,
@@ -33,69 +33,69 @@ const editarCliente = () => {
     codgrupocliente: sPessoa.item.GrupoCliente.codgrupocliente,
     toleranciaatraso: sPessoa.item.toleranciaatraso,
     codformapagamento: sPessoa.item.codformapagamento,
-  };
-};
+  }
+}
 
 const salvarCliente = async () => {
   try {
-    const ret = await sPessoa.clienteSalvar(route.params.id, modelEditar.value);
+    const ret = await sPessoa.clienteSalvar(route.params.id, modelEditar.value)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Alterado",
-      });
-      sPessoa.item = ret.data.data;
-      modelDialogCliente.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Alterado',
+      })
+      sPessoa.item = ret.data.data
+      modelDialogCliente.value = false
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const linkTitulosAbertos = () => {
   return (
     process.env.MGSIS_URL +
-    "index.php?r=titulo/index&Titulo[status]=A&Titulo[codpessoa]=" +
+    'index.php?r=titulo/index&Titulo[status]=A&Titulo[codpessoa]=' +
     sPessoa.item.codpessoa
-  );
-};
+  )
+}
 
 const abrirRelatorio = async () => {
   try {
-    const url = "v1/titulo/relatorio-pdf?codpessoa=" + sPessoa.item.codpessoa;
-    const response = await api.get(url, { responseType: "blob" });
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const blobUrl = URL.createObjectURL(blob);
+    const url = 'v1/titulo/relatorio-pdf?codpessoa=' + sPessoa.item.codpessoa
+    const response = await api.get(url, { responseType: 'blob' })
+    const blob = new Blob([response.data], { type: 'application/pdf' })
+    const blobUrl = URL.createObjectURL(blob)
     if ($q.platform.is.android) {
-      window.open(blobUrl, "_blank");
+      window.open(blobUrl, '_blank')
     } else {
-      pdfRelatorioUrl.value = blobUrl;
-      dialogPdfRelatorio.value = true;
+      pdfRelatorioUrl.value = blobUrl
+      dialogPdfRelatorio.value = true
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: error.response?.data?.message || "Erro ao carregar o relatório",
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: error.response?.data?.message || 'Erro ao carregar o relatório',
+    })
   }
-};
+}
 
 const fecharRelatorio = () => {
   if (pdfRelatorioUrl.value) {
-    URL.revokeObjectURL(pdfRelatorioUrl.value);
-    pdfRelatorioUrl.value = null;
+    URL.revokeObjectURL(pdfRelatorioUrl.value)
+    pdfRelatorioUrl.value = null
   }
-  dialogPdfRelatorio.value = false;
-};
+  dialogPdfRelatorio.value = false
+}
 </script>
 
 <template>
@@ -110,7 +110,7 @@ const fecharRelatorio = () => {
         icon="edit"
         size="sm"
         color="grey-7"
-        v-if="user.verificaPermissaoUsuario('Financeiro')"
+        v-if="user.temPermissao('Financeiro')"
         @click="editarCliente()"
       />
       <q-btn
@@ -125,15 +125,7 @@ const fecharRelatorio = () => {
       >
         <q-tooltip>Ver títulos em aberto!</q-tooltip>
       </q-btn>
-      <q-btn
-        flat
-        round
-        dense
-        icon="print"
-        size="sm"
-        color="grey-7"
-        @click="abrirRelatorio()"
-      >
+      <q-btn flat round dense icon="print" size="sm" color="grey-7" @click="abrirRelatorio()">
         <q-tooltip>Relatório de Títulos em aberto!</q-tooltip>
       </q-btn>
     </q-card-section>
@@ -144,16 +136,13 @@ const fecharRelatorio = () => {
         <div class="text-body2" v-if="sPessoa.item.aberto.quantidade > 0">
           {{ sPessoa.item.aberto.quantidade }} Títulos totalizando
           {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "currency",
-              currency: "BRL",
+            new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
             }).format(sPessoa.item.aberto.saldo)
           }}
           <div>
-            <span
-              v-if="verificaPassadoFuturo(sPessoa.item.aberto.vencimento)"
-              class="text-red-14"
-            >
+            <span v-if="verificaPassadoFuturo(sPessoa.item.aberto.vencimento)" class="text-red-14">
               Mais atrasado vencido
               {{ formataFromNow(sPessoa.item.aberto.vencimento) }}
             </span>
@@ -170,9 +159,9 @@ const fecharRelatorio = () => {
         <div class="text-overline text-grey-7">Limite de Crédito</div>
         <div class="text-body2">
           {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "currency",
-              currency: "BRL",
+            new Intl.NumberFormat('pt-BR', {
+              style: 'currency',
+              currency: 'BRL',
             }).format(sPessoa.item.credito)
           }}
         </div>
@@ -181,7 +170,7 @@ const fecharRelatorio = () => {
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Consumidor Final</div>
         <div class="text-body2">
-          {{ sPessoa.item.consumidor ? "Sim" : "Não" }}
+          {{ sPessoa.item.consumidor ? 'Sim' : 'Não' }}
         </div>
       </div>
 
@@ -200,21 +189,21 @@ const fecharRelatorio = () => {
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Crédito Bloqueado</div>
         <div class="text-body2">
-          {{ sPessoa.item.creditobloqueado ? "Sim" : "Não" }}
+          {{ sPessoa.item.creditobloqueado ? 'Sim' : 'Não' }}
         </div>
       </div>
 
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Desconto</div>
         <div class="text-body2">
-          {{ sPessoa.item.desconto ? sPessoa.item.desconto + "%" : "0,00%" }}
+          {{ sPessoa.item.desconto ? sPessoa.item.desconto + '%' : '0,00%' }}
         </div>
       </div>
 
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Vendedor</div>
         <div class="text-body2">
-          {{ sPessoa.item.vendedor ? "Sim" : "Não" }}
+          {{ sPessoa.item.vendedor ? 'Sim' : 'Não' }}
         </div>
       </div>
 
@@ -239,23 +228,20 @@ const fecharRelatorio = () => {
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Fornecedor</div>
         <div class="text-body2">
-          {{ sPessoa.item.fornecedor ? "Sim" : "Não" }}
+          {{ sPessoa.item.fornecedor ? 'Sim' : 'Não' }}
         </div>
       </div>
 
       <div class="col-xs-12 col-sm-6">
         <div class="text-overline text-grey-7">Cliente</div>
         <div class="text-body2">
-          {{ sPessoa.item.cliente ? "Sim" : "Não" }}
+          {{ sPessoa.item.cliente ? 'Sim' : 'Não' }}
         </div>
       </div>
 
       <div class="col-12" v-if="sPessoa.item.mensagemvenda">
         <div class="text-overline text-grey-7">Mensagem de Venda</div>
-        <div
-          class="text-body2 bg-grey-2 rounded-borders q-pa-sm"
-          style="white-space: pre-line"
-        >
+        <div class="text-body2 bg-grey-2 rounded-borders q-pa-sm" style="white-space: pre-line">
           {{ sPessoa.item.mensagemvenda }}
         </div>
       </div>
@@ -283,17 +269,11 @@ const fecharRelatorio = () => {
             autofocus
           />
 
-          <select-grupo-cliente
-            v-model="modelEditar.codgrupocliente"
-            class="q-mb-md"
-          />
+          <select-grupo-cliente v-model="modelEditar.codgrupocliente" class="q-mb-md" />
 
           <div class="row">
             <div class="col-9">
-              <select-forma-pagamento
-                v-model="modelEditar.codformapagamento"
-                class="q-pr-md"
-              />
+              <select-forma-pagamento v-model="modelEditar.codformapagamento" class="q-pr-md" />
             </div>
             <div class="col-3">
               <MgInputValor
@@ -307,17 +287,10 @@ const fecharRelatorio = () => {
             </div>
           </div>
 
-          <q-toggle
-            outlined
-            v-model="modelEditar.creditobloqueado"
-            label="Crédito Bloqueado"
-          />
+          <q-toggle outlined v-model="modelEditar.creditobloqueado" label="Crédito Bloqueado" />
 
           <div class="row" v-if="!modelEditar.creditobloqueado">
-            <div
-              class="col-9"
-              v-if="user.verificaPermissaoUsuario('Financeiro')"
-            >
+            <div class="col-9" v-if="user.temPermissao('Financeiro')">
               <MgInputValor
                 v-model="modelEditar.credito"
                 label="Limite de Crédito"
@@ -325,13 +298,7 @@ const fecharRelatorio = () => {
                 class="q-pr-md"
               />
             </div>
-            <div
-              :class="
-                user.verificaPermissaoUsuario('Financeiro')
-                  ? 'col-3'
-                  : 'col-9 q-pr-md'
-              "
-            >
+            <div :class="user.temPermissao('Financeiro') ? 'col-3' : 'col-9 q-pr-md'">
               <q-input
                 outlined
                 v-model="modelEditar.toleranciaatraso"
@@ -363,23 +330,13 @@ const fecharRelatorio = () => {
             clearable
           />
 
-          <q-toggle
-            outlined
-            v-model="modelEditar.consumidor"
-            label="Consumidor Final"
-          />
+          <q-toggle outlined v-model="modelEditar.consumidor" label="Consumidor Final" />
         </q-card-section>
 
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="grey-8"
-            v-close-popup
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -392,15 +349,7 @@ const fecharRelatorio = () => {
       <q-card-section class="text-grey-9 text-overline row items-center">
         RELATÓRIO DE TÍTULOS EM ABERTO
         <q-space />
-        <q-btn
-          flat
-          round
-          dense
-          icon="close"
-          size="sm"
-          color="grey-7"
-          v-close-popup
-        />
+        <q-btn flat round dense icon="close" size="sm" color="grey-7" v-close-popup />
       </q-card-section>
       <q-card-section class="q-pt-none" style="height: calc(90vh - 80px)">
         <div
@@ -408,10 +357,7 @@ const fecharRelatorio = () => {
           class="rounded-borders"
           style="width: 100%; height: 100%; overflow: hidden"
         >
-          <iframe
-            :src="pdfRelatorioUrl"
-            style="width: 100%; height: 100%; border: none"
-          ></iframe>
+          <iframe :src="pdfRelatorioUrl" style="width: 100%; height: 100%; border: none"></iframe>
         </div>
       </q-card-section>
     </q-card>

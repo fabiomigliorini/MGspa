@@ -20,7 +20,7 @@ export default boot(({ app }) => {
     },
     (error) => {
       return Promise.reject(error)
-    }
+    },
   )
 
   // ===== RESPONSE INTERCEPTOR =====
@@ -40,8 +40,8 @@ export default boot(({ app }) => {
             // <-- ADICIONE { } para criar bloco
             // Token inválido ou expirado
             console.warn('Token expirado ou inválido (401)')
-            authStore.setToken(null)
-            authStore.user = null
+            authStore.gravarToken(null)
+            authStore.usuario = null
 
             Notify.create({
               type: 'negative',
@@ -86,11 +86,10 @@ export default boot(({ app }) => {
       }
 
       return Promise.reject(error)
-    }
+    },
   )
 
   // Disponibiliza globalmente
   app.config.globalProperties.$axios = axios
   app.config.globalProperties.$api = api
 })
-

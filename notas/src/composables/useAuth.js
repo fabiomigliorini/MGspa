@@ -2,50 +2,43 @@ import { storeToRefs } from 'pinia'
 import { useAuthStore } from 'src/stores/auth'
 import { computed } from 'vue'
 
-/**
- * Composable de Autenticação
- * Fornece acesso fácil ao estado e métodos de autenticação
- */
 export function useAuth() {
-  const authStore = useAuthStore()
+  const store = useAuthStore()
 
-  // Refs reativos do store
-  const { token, user, loading } = storeToRefs(authStore)
+  const { token, usuario, expiresAt, carregando } = storeToRefs(store)
 
-  // Computed
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const estaAutenticado = computed(() => !!token.value && !!usuario.value)
 
-  const permissions = computed(() => {
-    if (!user.value?.permissoes) return []
-    return user.value.permissoes.map(p => p.grupousuario)
+  const permissoes = computed(() => {
+    if (!usuario.value?.permissoes) return []
+    return usuario.value.permissoes.map((p) => p.grupousuario)
   })
 
-  const isAdmin = computed(() => permissions.value.includes('Administrador'))
+  const ehAdmin = computed(() => permissoes.value.includes('Administrador'))
 
-  // Métodos
-  const { validateToken, logout, hasAnyPermission } = authStore
+  const { validarToken, logout, temAlgumaPermissao } = store
 
-  /**
-   * Verifica se tem UMA permissão específica
-   */
-  function hasPermission(permission) {
-    if (isAdmin.value) return true
-    return permissions.value.includes(permission)
+  function temPermissao(nome) {
+    if (ehAdmin.value) return true
+    return permissoes.value.includes(nome)
+  }
+
+  async function renovarToken() {
+    await validarToken()
   }
 
   return {
-    // Estado
     token,
-    user,
-    loading,
-    isAuthenticated,
-    permissions,
-    isAdmin,
-
-    // Métodos
-    validateToken,
+    usuario,
+    expiresAt,
+    carregando,
+    permissoes,
+    ehAdmin,
+    estaAutenticado,
+    validarToken,
+    renovarToken,
     logout,
-    hasPermission,
-    hasAnyPermission
+    temPermissao,
+    temAlgumaPermissao,
   }
 }

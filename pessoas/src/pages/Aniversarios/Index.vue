@@ -9,9 +9,7 @@
               <!-- Coluna Esquerda - Calendário -->
               <div class="col-md-6 col-12">
                 <q-card bordered flat class="full-height">
-                  <q-card-section class="text-grey-9 text-overline">
-                    CALENDÁRIO
-                  </q-card-section>
+                  <q-card-section class="text-grey-9 text-overline"> CALENDÁRIO </q-card-section>
 
                   <q-separator inset />
 
@@ -28,11 +26,7 @@
                         />
                       </div>
                       <div class="col q-pl-md">
-                        <q-option-group
-                          v-model="tipo"
-                          :options="tipoOptions"
-                          color="primary"
-                        />
+                        <q-option-group v-model="tipo" :options="tipoOptions" color="primary" />
                       </div>
                     </div>
                   </q-card-section>
@@ -58,9 +52,7 @@
               <!-- Card Últimos Aniversários -->
               <div class="col-md-6 col-12">
                 <q-card bordered flat class="full-height">
-                  <q-card-section class="text-grey-9 text-overline">
-                    ANTERIORES
-                  </q-card-section>
+                  <q-card-section class="text-grey-9 text-overline"> ANTERIORES </q-card-section>
 
                   <q-separator inset />
 
@@ -74,9 +66,7 @@
               <!-- Card Próximos Aniversários -->
               <div class="col-md-6 col-12">
                 <q-card bordered flat class="full-height">
-                  <q-card-section class="text-grey-9 text-overline">
-                    PRÓXIMOS
-                  </q-card-section>
+                  <q-card-section class="text-grey-9 text-overline"> PRÓXIMOS </q-card-section>
 
                   <q-separator inset />
 
@@ -96,108 +86,108 @@
 
 <script setup>
 // 1. Imports do Vue
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from 'vue'
 
 // 2. Imports de stores
-import { pessoaStore } from "src/stores/pessoa";
+import { pessoaStore } from 'src/stores/pessoa'
 
 // 3. Imports de utilitários
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
+import moment from 'moment'
+import 'moment/min/locales'
+moment.locale('pt-br')
 
 // 4. Imports de componentes
-import MGLayout from "layouts/MGLayout.vue";
-import AniversarioItem from "components/pessoa/AniversarioItem.vue";
+import MGLayout from 'layouts/MGLayout.vue'
+import AniversarioItem from 'components/pessoa/AniversarioItem.vue'
 
 // 5. Instâncias
-const sPessoa = pessoaStore();
+const sPessoa = pessoaStore()
 
 // 6. Refs e computed
-const tipo = ref("todos");
-const date = ref(moment().format("YYYY/MM/DD"));
-const aniversarios = ref([]);
-const events = ref([]);
+const tipo = ref('todos')
+const date = ref(moment().format('YYYY/MM/DD'))
+const aniversarios = ref([])
+const events = ref([])
 
 const tipoOptions = [
-  { label: "Todos", value: "todos" },
-  { label: "Colaboradores", value: "colaborador" },
-  { label: "Clientes", value: "cliente" },
-  { label: "Fornecedores", value: "fornecedor" },
-];
+  { label: 'Todos', value: 'todos' },
+  { label: 'Colaboradores', value: 'colaborador' },
+  { label: 'Clientes', value: 'cliente' },
+  { label: 'Fornecedores', value: 'fornecedor' },
+]
 
 // Computed para aniversariantes do dia selecionado
 const aniversariosDoDia = computed(() => {
-  const dia = moment(date.value, "YYYY/MM/DD");
+  const dia = moment(date.value, 'YYYY/MM/DD')
   return aniversarios.value.filter((a) => {
-    return a.dia == dia.date() && a.mes == dia.month() + 1;
-  });
-});
+    return a.dia == dia.date() && a.mes == dia.month() + 1
+  })
+})
 
 // Computed para últimos 7 dias (excluindo o dia selecionado)
 const ultimosAniversarios = computed(() => {
-  const dataSelecionada = moment(date.value, "YYYY/MM/DD");
-  const dataInicio = moment(dataSelecionada).subtract(7, "days");
+  const dataSelecionada = moment(date.value, 'YYYY/MM/DD')
+  const dataInicio = moment(dataSelecionada).subtract(7, 'days')
 
   return aniversarios.value
     .filter((a) => {
-      const dataAniversario = moment(a.data, "YYYY-MM-DD");
+      const dataAniversario = moment(a.data, 'YYYY-MM-DD')
       return (
-        dataAniversario.isBefore(dataSelecionada, "day") &&
-        dataAniversario.isSameOrAfter(dataInicio, "day")
-      );
+        dataAniversario.isBefore(dataSelecionada, 'day') &&
+        dataAniversario.isSameOrAfter(dataInicio, 'day')
+      )
     })
-    .sort((a, b) => moment(b.data, "YYYY-MM-DD").valueOf() - moment(a.data, "YYYY-MM-DD").valueOf());
-});
+    .sort((a, b) => moment(b.data, 'YYYY-MM-DD').valueOf() - moment(a.data, 'YYYY-MM-DD').valueOf())
+})
 
 // Computed para próximos 7 dias (excluindo o dia selecionado)
 const proximosAniversarios = computed(() => {
-  const dataSelecionada = moment(date.value, "YYYY/MM/DD");
-  const dataFim = moment(dataSelecionada).add(7, "days");
+  const dataSelecionada = moment(date.value, 'YYYY/MM/DD')
+  const dataFim = moment(dataSelecionada).add(7, 'days')
 
   return aniversarios.value
     .filter((a) => {
-      const dataAniversario = moment(a.data, "YYYY-MM-DD");
+      const dataAniversario = moment(a.data, 'YYYY-MM-DD')
       return (
-        dataAniversario.isAfter(dataSelecionada, "day") &&
-        dataAniversario.isSameOrBefore(dataFim, "day")
-      );
+        dataAniversario.isAfter(dataSelecionada, 'day') &&
+        dataAniversario.isSameOrBefore(dataFim, 'day')
+      )
     })
-    .sort((a, b) => moment(a.data, "YYYY-MM-DD").valueOf() - moment(b.data, "YYYY-MM-DD").valueOf());
-});
+    .sort((a, b) => moment(a.data, 'YYYY-MM-DD').valueOf() - moment(b.data, 'YYYY-MM-DD').valueOf())
+})
 
 // 7. Funções
 const getAniversarios = async () => {
-  const ret = await sPessoa.buscaAniversarios(tipo.value);
-  const dados = ret.data;
+  const ret = await sPessoa.buscaAniversarios(tipo.value)
+  const dados = ret.data
 
-  const dates = [];
-  const arrAniversarios = [];
-  const anoAtual = moment().year();
+  const dates = []
+  const arrAniversarios = []
+  const anoAtual = moment().year()
 
   dados.forEach((el) => {
-    const dataOriginal = moment(el.data, "YYYY-MM-DD");
+    const dataOriginal = moment(el.data, 'YYYY-MM-DD')
 
     // Ajusta a data para o ano atual
-    const dataAnoAtual = dataOriginal.clone().year(anoAtual);
-    el.data = dataAnoAtual.format("YYYY-MM-DD");
-    el.dia = dataOriginal.date();
-    el.mes = dataOriginal.month() + 1;
-    dates.push(dataAnoAtual.format("YYYY/MM/DD"));
-    arrAniversarios.push(el);
-  });
+    const dataAnoAtual = dataOriginal.clone().year(anoAtual)
+    el.data = dataAnoAtual.format('YYYY-MM-DD')
+    el.dia = dataOriginal.date()
+    el.mes = dataOriginal.month() + 1
+    dates.push(dataAnoAtual.format('YYYY/MM/DD'))
+    arrAniversarios.push(el)
+  })
 
-  aniversarios.value = arrAniversarios;
-  events.value = dates;
-};
+  aniversarios.value = arrAniversarios
+  events.value = dates
+}
 
 // 8. Watchers
 watch(tipo, () => {
-  getAniversarios();
-});
+  getAniversarios()
+})
 
 // 9. Lifecycle
 onMounted(() => {
-  getAniversarios();
-});
+  getAniversarios()
+})
 </script>

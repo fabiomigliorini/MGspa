@@ -161,13 +161,7 @@ const handleUpdate = (value) => {
     :dense="dense"
   >
     <template v-slot:selected-item="scope">
-      <q-chip
-        removable
-        dense
-        @remove="handleUpdate(null)"
-        color="primary"
-        text-color="white"
-      >
+      <q-chip removable dense @remove="handleUpdate(null)" color="primary" text-color="white">
         {{ truncateLabel(scope.opt.label) }}
       </q-chip>
     </template>

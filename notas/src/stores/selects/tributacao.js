@@ -46,9 +46,7 @@ export const useSelectTributacaoStore = defineStore('selectTributacao', {
       }
 
       const needle = busca.toLowerCase()
-      return this.tributacoes.filter(
-        (t) => t.tributacao?.toLowerCase().indexOf(needle) > -1,
-      )
+      return this.tributacoes.filter((t) => t.tributacao?.toLowerCase().indexOf(needle) > -1)
     },
 
     /**

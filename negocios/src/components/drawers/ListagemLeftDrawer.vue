@@ -1,18 +1,18 @@
 <script setup>
-import { onMounted, onUnmounted } from "vue";
-import { listagemStore } from "stores/listagem";
-import SelectEstoqueLocal from "components/selects/SelectEstoqueLocal.vue";
-import SelectNaturezaOperacao from "components/selects/SelectNaturezaOperacao.vue";
-import SelectPessoa from "components/selects/SelectPessoa.vue";
-import SelectPdv from "components/selects/SelectPdv.vue";
-import SelectUsuario from "components/selects/SelectUsuario.vue";
-import MgInputValor from "@components/MgInputValor.vue";
-import MgInputData from "@components/MgInputData.vue";
-const sListagem = listagemStore();
+import { onMounted, onUnmounted } from 'vue'
+import { listagemStore } from 'stores/listagem'
+import SelectEstoqueLocal from 'components/selects/SelectEstoqueLocal.vue'
+import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
+import SelectPessoa from 'components/selects/SelectPessoa.vue'
+import SelectPdv from 'components/selects/SelectPdv.vue'
+import SelectUsuario from 'components/selects/SelectUsuario.vue'
+import MgInputValor from '@components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
+const sListagem = listagemStore()
 
 onMounted(() => {
-  sListagem.inicializaFiltro();
-});
+  sListagem.inicializaFiltro()
+})
 </script>
 <template>
   <q-list>
@@ -33,24 +33,14 @@ onMounted(() => {
     <!-- PDV -->
     <q-item>
       <q-item-section>
-        <select-pdv
-          outlined
-          v-model="sListagem.filtro.codpdv"
-          label="PDV"
-          clearable
-        />
+        <select-pdv outlined v-model="sListagem.filtro.codpdv" label="PDV" clearable />
       </q-item-section>
     </q-item>
 
     <!-- USUARIO -->
     <q-item>
       <q-item-section>
-        <select-usuario
-          outlined
-          v-model="sListagem.filtro.codusuario"
-          label="Usuario"
-          clearable
-        />
+        <select-usuario outlined v-model="sListagem.filtro.codusuario" label="Usuario" clearable />
       </q-item-section>
     </q-item>
 
@@ -121,9 +111,7 @@ onMounted(() => {
             prefix="R$"
           />
           <MgInputValor
-            :min="
-              sListagem.filtro.valor_de > 0 ? sListagem.filtro.valor_de : 0.01
-            "
+            :min="sListagem.filtro.valor_de > 0 ? sListagem.filtro.valor_de : 0.01"
             v-model="sListagem.filtro.valor_ate"
             label="até"
             class="col-6"
@@ -148,12 +136,7 @@ onMounted(() => {
     <!-- PESSOA -->
     <q-item>
       <q-item-section>
-        <select-pessoa
-          outlined
-          v-model="sListagem.filtro.codpessoa"
-          label="Pessoa"
-          clearable
-        />
+        <select-pessoa outlined v-model="sListagem.filtro.codpessoa" label="Pessoa" clearable />
       </q-item-section>
     </q-item>
 

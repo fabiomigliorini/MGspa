@@ -1,190 +1,188 @@
 <script setup>
-import { defineAsyncComponent, ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { grauInstrucaoStore } from "src/stores/grau-instrucao";
+import { defineAsyncComponent, ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { grauInstrucaoStore } from 'src/stores/grau-instrucao'
 
-const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
+const MGLayout = defineAsyncComponent(() => import('layouts/MGLayout.vue'))
 
-const $q = useQuasar();
-const store = grauInstrucaoStore();
+const $q = useQuasar()
+const store = grauInstrucaoStore()
 
-const grausInstrucao = ref([]);
-const loading = ref(false);
-const dialog = ref(false);
-const editando = ref(false);
-const model = ref({ grauinstrucao: "" });
+const grausInstrucao = ref([])
+const loading = ref(false)
+const dialog = ref(false)
+const editando = ref(false)
+const model = ref({ grauinstrucao: '' })
 const filtro = ref({
   grauinstrucao: null,
-  status: "ativos",
-});
+  status: 'ativos',
+})
 
 const statusOptions = [
-  { label: "Ativos", value: "ativos" },
-  { label: "Inativos", value: "inativos" },
-  { label: "Todos", value: "todos" },
-];
+  { label: 'Ativos', value: 'ativos' },
+  { label: 'Inativos', value: 'inativos' },
+  { label: 'Todos', value: 'todos' },
+]
 const pagination = ref({
   rowsPerPage: 50,
-});
+})
 
 const columns = [
   {
-    name: "codgrauinstrucao",
-    label: "Código",
-    field: "codgrauinstrucao",
-    align: "left",
+    name: 'codgrauinstrucao',
+    label: 'Código',
+    field: 'codgrauinstrucao',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "grauinstrucao",
-    label: "Descrição",
-    field: "grauinstrucao",
-    align: "left",
+    name: 'grauinstrucao',
+    label: 'Descrição',
+    field: 'grauinstrucao',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "inativo",
-    label: "Status",
-    field: "inativo",
-    align: "center",
+    name: 'inativo',
+    label: 'Status',
+    field: 'inativo',
+    align: 'center',
   },
   {
-    name: "acoes",
-    label: "Ações",
-    field: "acoes",
-    align: "center",
+    name: 'acoes',
+    label: 'Ações',
+    field: 'acoes',
+    align: 'center',
   },
-];
+]
 
 const buscar = async () => {
-  loading.value = true;
-  $q.loadingBar.start();
+  loading.value = true
+  $q.loadingBar.start()
   try {
-    store.filtro = filtro.value;
-    await store.index();
-    grausInstrucao.value = store.grausInstrucao;
+    store.filtro = filtro.value
+    await store.index()
+    grausInstrucao.value = store.grausInstrucao
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao carregar graus de instrução",
-    });
+      type: 'negative',
+      message: 'Erro ao carregar graus de instrução',
+    })
   } finally {
-    loading.value = false;
-    $q.loadingBar.stop();
+    loading.value = false
+    $q.loadingBar.stop()
   }
-};
+}
 
 const abrirNovo = () => {
-  model.value = { grauinstrucao: "" };
-  editando.value = false;
-  dialog.value = true;
-};
+  model.value = { grauinstrucao: '' }
+  editando.value = false
+  dialog.value = true
+}
 
 const abrirEditar = (item) => {
-  model.value = { ...item };
-  editando.value = true;
-  dialog.value = true;
-};
+  model.value = { ...item }
+  editando.value = true
+  dialog.value = true
+}
 
 const salvar = async () => {
-  if (!model.value.grauinstrucao || model.value.grauinstrucao.trim() === "") {
+  if (!model.value.grauinstrucao || model.value.grauinstrucao.trim() === '') {
     $q.notify({
-      type: "warning",
-      message: "Informe a descrição",
-    });
-    return;
+      type: 'warning',
+      message: 'Informe a descrição',
+    })
+    return
   }
 
-  loading.value = true;
+  loading.value = true
   try {
     if (editando.value) {
-      await store.update(model.value.codgrauinstrucao, model.value);
+      await store.update(model.value.codgrauinstrucao, model.value)
       $q.notify({
-        type: "positive",
-        message: "Grau de instrução atualizado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grau de instrução atualizado com sucesso',
+      })
     } else {
-      await store.store(model.value);
+      await store.store(model.value)
       $q.notify({
-        type: "positive",
-        message: "Grau de instrução criado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grau de instrução criado com sucesso',
+      })
     }
-    grausInstrucao.value = store.grausInstrucao;
-    dialog.value = false;
+    grausInstrucao.value = store.grausInstrucao
+    dialog.value = false
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao salvar grau de instrução",
-    });
+      type: 'negative',
+      message: 'Erro ao salvar grau de instrução',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const toggleInativo = async (item) => {
-  loading.value = true;
+  loading.value = true
   try {
     if (item.inativo) {
-      await store.ativar(item.codgrauinstrucao);
+      await store.ativar(item.codgrauinstrucao)
       $q.notify({
-        type: "positive",
-        message: "Grau de instrução ativado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grau de instrução ativado com sucesso',
+      })
     } else {
-      await store.inativar(item.codgrauinstrucao);
+      await store.inativar(item.codgrauinstrucao)
       $q.notify({
-        type: "positive",
-        message: "Grau de instrução inativado com sucesso",
-      });
+        type: 'positive',
+        message: 'Grau de instrução inativado com sucesso',
+      })
     }
-    grausInstrucao.value = store.grausInstrucao;
+    grausInstrucao.value = store.grausInstrucao
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao alterar status",
-    });
+      type: 'negative',
+      message: 'Erro ao alterar status',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const excluir = (item) => {
   $q.dialog({
-    title: "Confirmar exclusão",
+    title: 'Confirmar exclusão',
     message: `Deseja realmente excluir o grau de instrução "${item.grauinstrucao}"?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
-    loading.value = true;
+    loading.value = true
     try {
-      await store.destroy(item.codgrauinstrucao);
-      grausInstrucao.value = store.grausInstrucao;
+      await store.destroy(item.codgrauinstrucao)
+      grausInstrucao.value = store.grausInstrucao
       $q.notify({
-        type: "positive",
-        message: "Grau de instrução excluído com sucesso",
-      });
+        type: 'positive',
+        message: 'Grau de instrução excluído com sucesso',
+      })
     } catch (error) {
       $q.notify({
-        type: "negative",
-        message: "Erro ao excluir grau de instrução. Verifique se não está em uso.",
-      });
+        type: 'negative',
+        message: 'Erro ao excluir grau de instrução. Verifique se não está em uso.',
+      })
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  });
-};
+  })
+}
 
 onMounted(() => {
-  buscar();
-});
+  buscar()
+})
 </script>
 
 <template>
   <MGLayout drawer>
-    <template #tituloPagina>
-      Graus de Instrução
-    </template>
+    <template #tituloPagina> Graus de Instrução </template>
 
     <template #content>
       <div class="q-pa-md">
@@ -199,12 +197,8 @@ onMounted(() => {
         >
           <template v-slot:body-cell-inativo="props">
             <q-td :props="props">
-              <q-chip
-                :color="props.row.inativo ? 'red' : 'green'"
-                text-color="white"
-                dense
-              >
-                {{ props.row.inativo ? "Inativo" : "Ativo" }}
+              <q-chip :color="props.row.inativo ? 'red' : 'green'" text-color="white" dense>
+                {{ props.row.inativo ? 'Inativo' : 'Ativo' }}
               </q-chip>
             </q-td>
           </template>
@@ -231,9 +225,7 @@ onMounted(() => {
                 color="grey-7"
                 @click="toggleInativo(props.row)"
               >
-                <q-tooltip>{{
-                  props.row.inativo ? "Ativar" : "Inativar"
-                }}</q-tooltip>
+                <q-tooltip>{{ props.row.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
               <q-btn
                 flat
@@ -261,7 +253,7 @@ onMounted(() => {
       <q-dialog v-model="dialog">
         <q-card style="min-width: 350px">
           <q-card-section>
-            <div class="text-h6">{{ editando ? "Editar" : "Novo" }} Grau de Instrução</div>
+            <div class="text-h6">{{ editando ? 'Editar' : 'Novo' }} Grau de Instrução</div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
@@ -276,13 +268,7 @@ onMounted(() => {
 
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey" v-close-popup />
-            <q-btn
-              flat
-              label="Salvar"
-              color="primary"
-              @click="salvar"
-              :loading="loading"
-            />
+            <q-btn flat label="Salvar" color="primary" @click="salvar" :loading="loading" />
           </q-card-actions>
         </q-card>
       </q-dialog>

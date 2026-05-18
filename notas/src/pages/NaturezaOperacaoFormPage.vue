@@ -1,4 +1,5 @@
 <script setup>
+import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -118,7 +119,7 @@ const loadInitialOptions = async () => {
         })
         .then((res) => {
           naturezaDevolucaoOptions.value = res.data
-        })
+        }),
     )
   }
   if (form.value.codtipotitulo) {
@@ -129,7 +130,7 @@ const loadInitialOptions = async () => {
         })
         .then((res) => {
           tipoTituloOptions.value = res.data
-        })
+        }),
     )
   }
   if (form.value.codcontacontabil) {
@@ -140,7 +141,7 @@ const loadInitialOptions = async () => {
         })
         .then((res) => {
           contaContabilOptions.value = res.data
-        })
+        }),
     )
   }
   if (form.value.codestoquemovimentotipo) {
@@ -151,7 +152,7 @@ const loadInitialOptions = async () => {
         })
         .then((res) => {
           estoqueMovimentoTipoOptions.value = res.data
-        })
+        }),
     )
   }
   await Promise.all(promises)
@@ -253,7 +254,7 @@ const handleSubmit = async () => {
       if (isEditMode.value) {
         await naturezaOperacaoStore.updateNaturezaOperacao(
           route.params.codnaturezaoperacao,
-          form.value
+          form.value,
         )
         $q.notify({
           type: 'positive',
@@ -606,7 +607,7 @@ onMounted(() => {
         <!-- Auditoria -->
         <div v-if="isEditMode && naturezaOperacao" class="text-caption text-grey q-mt-md">
           <span v-if="naturezaOperacao.usuarioAlteracao">
-            Alterado em {{ new Date(naturezaOperacao.alteracao).toLocaleString('pt-BR') }} por
+            Alterado em {{ formataTimestamp(naturezaOperacao.alteracao, 4, true) }} por
             {{ naturezaOperacao.usuarioAlteracao.usuario }}
           </span>
         </div>

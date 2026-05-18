@@ -4,7 +4,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-});
+})
 </script>
 
 <template>
@@ -15,12 +15,7 @@ const props = defineProps({
   >
     <q-card bordered flat class="cursor-pointer full-height q-pb-md">
       <!-- BADGE INATIVO -->
-      <q-badge
-        v-if="usuario.inativo"
-        color="red"
-        floating
-        label="Inativo"
-      />
+      <q-badge v-if="usuario.inativo" color="red" floating label="Inativo" />
 
       <!-- HEADER -->
       <q-card-section class="text-grey-9 text-overline q-pb-none">
@@ -42,11 +37,7 @@ const props = defineProps({
 
       <!-- DETALHES -->
       <q-list v-if="usuario.permissoes?.length">
-        <q-item
-          v-for="permissao in usuario.permissoes"
-          :key="permissao.codgrupousuario"
-          dense
-        >
+        <q-item v-for="permissao in usuario.permissoes" :key="permissao.codgrupousuario" dense>
           <q-item-section avatar>
             <q-icon color="primary" name="security" size="xs" />
           </q-item-section>

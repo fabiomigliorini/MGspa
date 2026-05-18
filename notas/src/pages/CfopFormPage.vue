@@ -1,4 +1,5 @@
 <script setup>
+import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -170,7 +171,7 @@ onMounted(() => {
         <!-- Auditoria -->
         <div v-if="isEditMode && cfop" class="text-caption text-grey q-mt-md">
           <span v-if="cfop.usuarioAlteracao">
-            Alterado em {{ new Date(cfop.alteracao).toLocaleString('pt-BR') }} por
+            Alterado em {{ formataTimestamp(cfop.alteracao, 4, true) }} por
             {{ cfop.usuarioAlteracao.usuario }}
           </span>
         </div>

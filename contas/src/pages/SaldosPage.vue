@@ -1,10 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { useQuasar, date } from 'quasar'
+import { useQuasar } from 'quasar'
 import { useAuthStore } from 'stores/auth'
 import { useSaldoStore } from 'src/stores/saldoStore'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero, formataDataIso } from '@components/formatters'
 
 const route = useRoute()
 const $q = useQuasar()
@@ -108,7 +108,7 @@ const ofxFalha = (response) => {
 }
 
 onMounted(() => {
-  const dia = route.params.dia || date.formatDate(Date.now(), 'YYYY-MM-DD')
+  const dia = route.params.dia || formataDataIso(new Date())
   store.dataSelecionada = dia
   store.buscaIntervalo()
   store.listaSaldos()

@@ -7,6 +7,7 @@ export const PERMISSOES = Object.freeze({
   FINANCEIRO: 'Financeiro',
   CAIXA: 'Caixa',
   COBRANCA: 'Cobranca',
+  GERENTE: 'Gerente',
   PUBLICO: 'Publico',
   CONTADOR: 'Contador',
   RH: 'Recursos Humanos',

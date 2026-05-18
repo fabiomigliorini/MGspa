@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Notify } from 'quasar'
 import { useSelectProdutoBarraStore } from 'src/stores/selects/produtoBarra'
-import { formatCodProduto, formatDecimal } from 'src/utils/formatters'
+import { formataCodigo, formataNumero } from '@components/formatters'
 
 const store = useSelectProdutoBarraStore()
 const emit = defineEmits(['update:modelValue', 'save'])
@@ -37,7 +37,7 @@ watch(
   () => {
     loading.value = true
     pesquisar()
-  }
+  },
 )
 
 // pesquisa no backend
@@ -215,13 +215,13 @@ const handleKeyNavigation = (event) => {
                         {{ prod.descricao }}
                       </q-item-label>
                       <q-item-label caption>
-                        {{ formatCodProduto(prod.codproduto) }} | Barras {{ prod.barras }} |
+                        {{ formataCodigo(prod.codproduto, 6) }} | Barras {{ prod.barras }} |
                         {{ prod.referencia }}
                       </q-item-label>
                     </q-item-section>
                     <q-item-section side>
                       <q-item-label class="text-weight-bold text-body1">
-                        {{ formatDecimal(prod.preco, 2) }}
+                        {{ formataNumero(prod.preco, 2) }}
                       </q-item-label>
                       <q-item-label caption>
                         {{ prod.sigla }}

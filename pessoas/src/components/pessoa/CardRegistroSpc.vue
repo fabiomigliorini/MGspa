@@ -1,147 +1,139 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "src/utils/formatador";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
-import MgInputData from "@components/MgInputData.vue";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import { useAuthStore } from 'src/stores'
+import { formataData } from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInputData from '@components/MgInputData.vue'
 
-const $q = useQuasar();
-const sPessoa = pessoaStore();
-const route = useRoute();
-const user = guardaToken();
-const dialogNovoRegistroSpc = ref(false);
-const modelRegistroSpc = ref({});
-const editarRegistro = ref(false);
-const filtroRegistroSpc = ref("abertos");
+const $q = useQuasar()
+const sPessoa = pessoaStore()
+const route = useRoute()
+const user = useAuthStore()
+const dialogNovoRegistroSpc = ref(false)
+const modelRegistroSpc = ref({})
+const editarRegistro = ref(false)
+const filtroRegistroSpc = ref('abertos')
 
 const registrosFiltrados = computed(() => {
-  const lista = sPessoa.item?.RegistroSpc || [];
-  if (filtroRegistroSpc.value === "abertos")
-    return lista.filter((x) => !x.baixa);
-  return lista;
-});
+  const lista = sPessoa.item?.RegistroSpc || []
+  if (filtroRegistroSpc.value === 'abertos') return lista.filter((x) => !x.baixa)
+  return lista
+})
 
 const novoRegistroSpc = async () => {
-  modelRegistroSpc.value.codpessoa = route.params.id;
+  modelRegistroSpc.value.codpessoa = route.params.id
 
-  const novoRegistro = { ...modelRegistroSpc.value };
+  const novoRegistro = { ...modelRegistroSpc.value }
 
-  if (novoRegistro.valor.indexOf(",") > -1) {
-    var removeVirgula = novoRegistro.valor.replace(/,([^,]*)$/, ".$1");
-    novoRegistro.valor = removeVirgula;
+  if (novoRegistro.valor.indexOf(',') > -1) {
+    var removeVirgula = novoRegistro.valor.replace(/,([^,]*)$/, '.$1')
+    novoRegistro.valor = removeVirgula
   }
 
   try {
-    const ret = await sPessoa.novoRegistroSpc(route.params.id, novoRegistro);
+    const ret = await sPessoa.novoRegistroSpc(route.params.id, novoRegistro)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Registro Spc criado!",
-      });
-      dialogNovoRegistroSpc.value = false;
-      sPessoa.item.RegistroSpc.push(ret.data.data);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Registro Spc criado!',
+      })
+      dialogNovoRegistroSpc.value = false
+      sPessoa.item.RegistroSpc.push(ret.data.data)
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "warning",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'warning',
       message: error.response.data.message,
-    });
+    })
   }
-};
+}
 
-const editarRegistroSpc = (
-  codregistrospc,
-  valor,
-  inclusao,
-  baixa,
-  observacoes
-) => {
-  dialogNovoRegistroSpc.value = true;
-  editarRegistro.value = true;
+const editarRegistroSpc = (codregistrospc, valor, inclusao, baixa, observacoes) => {
+  dialogNovoRegistroSpc.value = true
+  editarRegistro.value = true
   modelRegistroSpc.value = {
     codregistrospc: codregistrospc,
     valor: valor,
     inclusao: inclusao,
     baixa: baixa,
     observacoes: observacoes,
-  };
-};
+  }
+}
 
 const salvarRegistro = async () => {
-  const editRegistro = { ...modelRegistroSpc.value };
+  const editRegistro = { ...modelRegistroSpc.value }
 
-  if (editRegistro.valor.toString().indexOf(",") > -1) {
-    var removeVirgula = editRegistro.valor.replace(/,([^,]*)$/, ".$1");
-    editRegistro.valor = removeVirgula;
+  if (editRegistro.valor.toString().indexOf(',') > -1) {
+    var removeVirgula = editRegistro.valor.replace(/,([^,]*)$/, '.$1')
+    editRegistro.valor = removeVirgula
   }
 
   try {
     const ret = await sPessoa.salvarEdicaoRegistro(
       route.params.id,
       editRegistro.codregistrospc,
-      editRegistro
-    );
+      editRegistro,
+    )
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Registro Spc alterado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Registro Spc alterado!',
+      })
       const i = sPessoa.item.RegistroSpc.findIndex(
-        (item) => item.codregistrospc === modelRegistroSpc.value.codregistrospc
-      );
-      sPessoa.item.RegistroSpc[i] = ret.data.data;
-      dialogNovoRegistroSpc.value = false;
-      editarRegistro.value = false;
+        (item) => item.codregistrospc === modelRegistroSpc.value.codregistrospc,
+      )
+      sPessoa.item.RegistroSpc[i] = ret.data.data
+      dialogNovoRegistroSpc.value = false
+      editarRegistro.value = false
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
+    })
   }
-};
+}
 
 const excluirRegistro = async (codregistrospc) => {
   $q.dialog({
-    title: "Excluir Registro Spc",
-    message: "Tem certeza que deseja excluir esse registro?",
+    title: 'Excluir Registro Spc',
+    message: 'Tem certeza que deseja excluir esse registro?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sPessoa.excluirRegistroSpc(route.params.id, codregistrospc);
+      await sPessoa.excluirRegistroSpc(route.params.id, codregistrospc)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Registro excluido",
-      });
-      sPessoa.get(route.params.id);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Registro excluido',
+      })
+      sPessoa.get(route.params.id)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 const submit = () => {
-  editarRegistro.value === false ? novoRegistroSpc() : salvarRegistro();
-};
-
+  editarRegistro.value === false ? novoRegistroSpc() : salvarRegistro()
+}
 </script>
 
 <template>
@@ -163,9 +155,7 @@ const submit = () => {
               v-model="modelRegistroSpc.inclusao"
               label="Inclusão"
               class="q-mb-md"
-              :rules="[
-                (val) => (val && val.length > 0) || 'Inclusão obrigatório',
-              ]"
+              :rules="[(val) => (val && val.length > 0) || 'Inclusão obrigatório']"
             />
 
             <MgInputData
@@ -181,9 +171,7 @@ const submit = () => {
               label="Valor"
               type="numeric"
               :rules="[
-                (val) =>
-                  (val !== null && val !== '' && val !== undefined) ||
-                  'Valor obrigatório',
+                (val) => (val !== null && val !== '' && val !== undefined) || 'Valor obrigatório',
               ]"
             />
 
@@ -201,13 +189,7 @@ const submit = () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="grey-8"
-            v-close-popup
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -240,20 +222,13 @@ const submit = () => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
-        @click="
-          (dialogNovoRegistroSpc = true),
-            (editarRegistro = false),
-            (modelRegistroSpc = {})
-        "
+        v-if="user.temPermissao('Publico')"
+        @click=";(dialogNovoRegistroSpc = true), (editarRegistro = false), (modelRegistroSpc = {})"
       />
     </q-card-section>
 
     <q-list v-if="registrosFiltrados.length > 0">
-      <template
-        v-for="registro in registrosFiltrados"
-        v-bind:key="registro.codregistrospc"
-      >
+      <template v-for="registro in registrosFiltrados" v-bind:key="registro.codregistrospc">
         <q-separator inset />
         <q-item>
           <q-item-section avatar>
@@ -263,9 +238,9 @@ const submit = () => {
           <q-item-section>
             <q-item-label class="text-weight-bold">
               {{
-                registro.valor.toLocaleString("pt-br", {
-                  style: "currency",
-                  currency: "BRL",
+                registro.valor.toLocaleString('pt-br', {
+                  style: 'currency',
+                  currency: 'BRL',
                 })
               }}
 
@@ -283,17 +258,12 @@ const submit = () => {
             </q-item-label>
             <q-item-label caption v-if="registro.baixa">
               Baixado em:
-              <span class="text-weight-bold">{{
-                formataDataSemHora(registro.baixa)
-              }}</span>
+              <span class="text-weight-bold">{{ formataData(registro.baixa) }}</span>
             </q-item-label>
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat
@@ -308,7 +278,7 @@ const submit = () => {
                     registro.valor,
                     registro.inclusao,
                     registro.baixa,
-                    registro.observacoes
+                    registro.observacoes,
                   )
                 "
               >

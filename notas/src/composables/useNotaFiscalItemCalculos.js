@@ -1,5 +1,5 @@
 import { watch } from 'vue'
-import { round } from 'src/utils/formatters'
+import { arredonda } from '@components/formatters'
 
 // CSTs de ICMS onde não há ICMS próprio (base, percentual e valor devem ser zero)
 const ICMS_CST_SEM_ICMS_PROPRIO = [30, 40, 41, 50, 60]
@@ -26,12 +26,18 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     // Não recalcula se quantidade ou valor unitário estão vazios (usuário digitando)
     const quantidade = form.value.quantidade
     const valorunitario = form.value.valorunitario
-    if (quantidade === null || quantidade === undefined || quantidade === '' ||
-        valorunitario === null || valorunitario === undefined || valorunitario === '') {
+    if (
+      quantidade === null ||
+      quantidade === undefined ||
+      quantidade === '' ||
+      valorunitario === null ||
+      valorunitario === undefined ||
+      valorunitario === ''
+    ) {
       return
     }
 
-    form.value.valortotal = round((quantidade || 0) * (valorunitario || 0), 2)
+    form.value.valortotal = arredonda((quantidade || 0) * (valorunitario || 0), 2)
 
     // Recalcula impostos por KG quando a quantidade muda
     atualizaImpostoKg('fethab', 'kg')
@@ -53,7 +59,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     if ((form.value.quantidade || 0) < 0.01) {
       form.value.quantidade = 1
     }
-    form.value.valorunitario = round((valortotal || 0) / (form.value.quantidade || 1), 6)
+    form.value.valorunitario = arredonda((valortotal || 0) / (form.value.quantidade || 1), 6)
     atualizaTotalFinal()
   }
 
@@ -73,7 +79,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
 
     const novoTotalFinal = valortotal - valordesconto + valorfrete + valorseguro + valoroutras
 
-    form.value.valortotalfinal = round(novoTotalFinal, 2)
+    form.value.valortotalfinal = arredonda(novoTotalFinal, 2)
 
     // Só atualiza bases se o total final mudou
     if (Math.abs(novoTotalFinal - valorTotalFinalAnterior) > 0.001) {
@@ -129,7 +135,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
         // Base = Total * (100 - %Redução) / 100
         const percentualBaseCalculo = 100 - basereducaopercentual
         novaBase = (totalNovo * percentualBaseCalculo) / 100
-        tributo.basereducao = round(totalNovo - novaBase, 2)
+        tributo.basereducao = arredonda(totalNovo - novaBase, 2)
       } else {
         // Sem redução de base, segue a lógica padrão
         // Se a base era igual ao total anterior OU era zero, atualiza para o novo total
@@ -145,10 +151,10 @@ export function useNotaFiscalItemCalculos(form, store = null) {
       }
 
       // Atualiza a base do tributo
-      tributo.base = round(novaBase, 2)
+      tributo.base = arredonda(novaBase, 2)
 
       // Recalcula o valor do tributo com base na nova base e alíquota
-      tributo.valor = round((novaBase * (tributo.aliquota || 0)) / 100, 2)
+      tributo.valor = arredonda((novaBase * (tributo.aliquota || 0)) / 100, 2)
 
       // Se gera crédito, atualiza o valor do crédito também
       if (tributo.geracredito) {
@@ -170,7 +176,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     // Recalcula o valor mantendo o percentual
     const valor = (valorprodutos * percentual) / 100
 
-    form.value[campoValor] = round(valor, 2)
+    form.value[campoValor] = arredonda(valor, 2)
   }
 
   /**
@@ -223,7 +229,7 @@ export function useNotaFiscalItemCalculos(form, store = null) {
       }
     }
 
-    form.value[campoBase] = round(novaBase, 2)
+    form.value[campoBase] = arredonda(novaBase, 2)
     atualizaImposto(imposto, 'base')
   }
 
@@ -279,13 +285,13 @@ export function useNotaFiscalItemCalculos(form, store = null) {
 
     // Atualiza os campos do formulário
     if (temBase) {
-      form.value[campoBase] = round(base || 0, 2)
+      form.value[campoBase] = arredonda(base || 0, 2)
     }
     // if (campoBasePercentual) {
-    // form.value[campoBasePercentual] = round(basepercentual || 0, 2)
+    // form.value[campoBasePercentual] = arredonda(basepercentual || 0, 2)
     // }
-    // form.value[campoPercentual] = round(percentual || 0, 2)
-    form.value[campoValor] = round(valor || 0, 2)
+    // form.value[campoPercentual] = arredonda(percentual || 0, 2)
+    form.value[campoValor] = arredonda(valor || 0, 2)
   }
 
   /**
@@ -312,8 +318,8 @@ export function useNotaFiscalItemCalculos(form, store = null) {
         break
     }
 
-    // form.value[campoKg] = round(kg || 0, 6)
-    form.value[campoValor] = round(valor || 0, 2)
+    // form.value[campoKg] = arredonda(kg || 0, 6)
+    form.value[campoValor] = arredonda(valor || 0, 2)
   }
 
   /**
@@ -332,14 +338,17 @@ export function useNotaFiscalItemCalculos(form, store = null) {
     watch(() => form.value.valoroutras, atualizaTotalFinal)
 
     // Watcher para CST do ICMS - zera campos quando CST não tem ICMS próprio
-    watch(() => form.value.icmscst, (novoCst) => {
-      if (ICMS_CST_SEM_ICMS_PROPRIO.includes(Number(novoCst))) {
-        form.value.icmsbase = null
-        form.value.icmsbasepercentual = null
-        form.value.icmspercentual = null
-        form.value.icmsvalor = null
-      }
-    })
+    watch(
+      () => form.value.icmscst,
+      (novoCst) => {
+        if (ICMS_CST_SEM_ICMS_PROPRIO.includes(Number(novoCst))) {
+          form.value.icmsbase = null
+          form.value.icmsbasepercentual = null
+          form.value.icmspercentual = null
+          form.value.icmsvalor = null
+        }
+      },
+    )
 
     // Watchers para ICMS
     watch(

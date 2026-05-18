@@ -14,11 +14,11 @@ onMounted(() => {
 
     if (tokenCookie) {
       const token = tokenCookie.split('=')[1]
-      authStore.setToken(token)
+      authStore.gravarToken(token)
       status.value = 'Redirecionando...'
 
-      const redirectUrl = authStore.getAndClearRedirectUrl()
-      router.replace(redirectUrl || '/')
+      const urlRetorno = authStore.consumirUrlRetorno()
+      router.replace(urlRetorno || '/')
     } else {
       status.value = 'Erro: Cookie não encontrado!'
       setTimeout(() => {

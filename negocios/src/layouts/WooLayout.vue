@@ -1,7 +1,7 @@
 <script setup>
-import MainLayout from "layouts/MainLayout.vue";
-import WooLeftDrawer from "components/drawers/WooLeftDrawer.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
+import MainLayout from 'layouts/MainLayout.vue'
+import WooLeftDrawer from 'components/drawers/WooLeftDrawer.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
   <main-layout title="Woo" left-drawer back-to="/woo/painel">

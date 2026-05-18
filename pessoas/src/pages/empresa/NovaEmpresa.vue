@@ -1,60 +1,58 @@
 <script>
-import { ref, defineAsyncComponent } from "vue";
-import { empresaStore } from "src/stores/empresa";
-import { useQuasar } from "quasar";
-import { useRouter } from "vue-router";
+import { ref, defineAsyncComponent } from 'vue'
+import { empresaStore } from 'src/stores/empresa'
+import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 
 export default {
   components: {
-    MGLayout: defineAsyncComponent(() => import("layouts/MGLayout.vue")),
-    FormEmpresa: defineAsyncComponent(() =>
-      import("components/empresa/FormEmpresa.vue")
-    ),
+    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
+    FormEmpresa: defineAsyncComponent(() => import('components/empresa/FormEmpresa.vue')),
   },
 
   setup() {
-    const sEmpresa = empresaStore();
-    const $q = useQuasar();
-    const router = useRouter();
-    const loading = ref(false);
+    const sEmpresa = empresaStore()
+    const $q = useQuasar()
+    const router = useRouter()
+    const loading = ref(false)
 
     const model = ref({
-      empresa: "",
+      empresa: '',
       modoemissaonfce: 1,
       contingenciadata: null,
-      contingenciajustificativa: "",
-    });
+      contingenciajustificativa: '',
+    })
 
     const salvar = async () => {
-      loading.value = true;
+      loading.value = true
       try {
-        const ret = await sEmpresa.criarEmpresa(model.value);
+        const ret = await sEmpresa.criarEmpresa(model.value)
         $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "check",
-          message: "Empresa criada com sucesso!",
-        });
-        router.push("/empresa/" + ret.data.data.codempresa);
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'check',
+          message: 'Empresa criada com sucesso!',
+        })
+        router.push('/empresa/' + ret.data.data.codempresa)
       } catch (error) {
         $q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: error.response?.data?.message || "Erro ao criar empresa",
-        });
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: error.response?.data?.message || 'Erro ao criar empresa',
+        })
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
+    }
 
     return {
       model,
       loading,
       salvar,
-    };
+    }
   },
-};
+}
 </script>
 
 <template>
@@ -64,14 +62,7 @@ export default {
     </template>
 
     <template #botaoVoltar>
-      <q-btn
-        flat
-        dense
-        round
-        to="/empresa"
-        icon="arrow_back"
-        aria-label="Voltar"
-      />
+      <q-btn flat dense round to="/empresa" icon="arrow_back" aria-label="Voltar" />
     </template>
 
     <template #content>

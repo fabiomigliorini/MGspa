@@ -1,13 +1,33 @@
 <script setup>
 import { onMounted } from 'vue'
-import { date } from 'quasar'
-import { formataNumero, tempoRelativo } from 'src/utils/formatters.js'
+import { useQuasar } from 'quasar'
+import { formataNumero, tempoRelativo, formataData, formataCodigo } from '@components/formatters'
 import { useTituloStore } from 'src/stores/tituloStore'
+import { abrirPdf } from 'src/utils/abrirPdf'
 
 const store = useTituloStore()
+const $q = useQuasar()
 
-const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
-const formatCodigo = (v) => '#' + String(v).padStart(8, '0')
+function abrirRelatorio() {
+  $q.dialog({
+    title: 'Relatório de Títulos',
+    message:
+      'Deseja o relatório com as informações de Tipo do Título, Conta Contábil e Observações?',
+    ok: { label: 'Sim, detalhado', color: 'primary', unelevated: true, flat: true },
+    cancel: { label: 'Não, simplificado', color: 'primary', unelevated: true, flat: true },
+    persistent: false,
+  })
+    .onOk(() => gerarPdf(true))
+    .onCancel(() => gerarPdf(false))
+}
+
+function gerarPdf(detalhado) {
+  const params = { detalhado: detalhado ? 1 : 0 }
+  for (const [k, v] of Object.entries(store.filters)) {
+    if (v !== null && v !== undefined && v !== '') params[k] = v
+  }
+  abrirPdf('v1/titulo/listagem/relatorio', params, { title: 'Títulos' })
+}
 
 function classeVencimento(t) {
   if (!t.saldo || Number(t.saldo) === 0) return 'text-grey'
@@ -67,7 +87,7 @@ onMounted(() => {
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 <span class="text-weight-bold">{{ t.numero }}</span>
-                · {{ formatCodigo(t.codtitulo) }}
+                · {{ formataCodigo(t.codtitulo) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 {{ t.tipotitulo }} · {{ t.contacontabil }}
@@ -94,20 +114,20 @@ onMounted(() => {
             <!-- Datas (gt-xs) -->
             <q-item-section class="gt-xs" style="flex: 0 0 130px; min-width: 0">
               <q-item-label class="text-weight-bold ellipsis" :class="classeVencimento(t)">
-                {{ formatData(t.vencimento) }}
+                {{ formataData(t.vencimento) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
                 {{ tempoRelativo(t.vencimento) }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formatData(t.emissao) }}
+                {{ formataData(t.emissao) }}
               </q-item-label>
             </q-item-section>
 
             <!-- Valor / Saldo (sempre visível) -->
             <q-item-section style="flex: 0 0 95px; min-width: 0">
               <q-item-label class="lt-sm text-weight-bold text-right" :class="classeVencimento(t)">
-                {{ formatData(t.vencimento) }}
+                {{ formataData(t.vencimento) }}
               </q-item-label>
               <q-item-label class="text-weight-bold text-right" :class="classeValor(t)">
                 <span v-if="Number(t.saldo) !== 0">
@@ -140,9 +160,14 @@ onMounted(() => {
     </q-infinite-scroll>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" :to="{ name: 'titulo-novo' }">
-        <q-tooltip anchor="center left" self="center right">Novo Título</q-tooltip>
-      </q-btn>
+      <div class="row q-gutter-sm items-end">
+        <q-btn fab-mini color="grey-8" icon="print" @click="abrirRelatorio">
+          <q-tooltip anchor="top middle" self="bottom middle">Relatório</q-tooltip>
+        </q-btn>
+        <q-btn fab icon="add" color="primary" :to="{ name: 'titulo-novo' }">
+          <q-tooltip anchor="top middle" self="bottom middle">Novo Título</q-tooltip>
+        </q-btn>
+      </div>
     </q-page-sticky>
   </q-page>
 </template>

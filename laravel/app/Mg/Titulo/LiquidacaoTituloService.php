@@ -3,6 +3,7 @@
 namespace Mg\Titulo;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class LiquidacaoTituloService
@@ -13,11 +14,21 @@ class LiquidacaoTituloService
             ->select('tblliquidacaotitulo.*')
             ->with([
                 'Pessoa:codpessoa,fantasia',
-                'Portador:codportador,portador',
+                'Portador:codportador,portador,codfilial',
                 'UsuarioCriacao:codusuario,usuario',
             ]);
 
         $q->join('tblpessoa as p', 'p.codpessoa', '=', 'tblliquidacaotitulo.codpessoa');
+
+        if (array_key_exists('filiais_permitidas', $filtros) && $filtros['filiais_permitidas'] !== null) {
+            $q->join('tblportador as pt', 'pt.codportador', '=', 'tblliquidacaotitulo.codportador');
+            $filiais = $filtros['filiais_permitidas'];
+            if (empty($filiais)) {
+                $q->whereRaw('1 = 0');
+            } else {
+                $q->whereIn('pt.codfilial', $filiais);
+            }
+        }
 
         if (!empty($filtros['codliquidacaotitulo'])) {
             $q->where('tblliquidacaotitulo.codliquidacaotitulo', preg_replace('/[^0-9]/', '', (string)$filtros['codliquidacaotitulo']));
@@ -64,7 +75,7 @@ class LiquidacaoTituloService
     {
         return LiquidacaoTitulo::with([
             'Pessoa:codpessoa,fantasia',
-            'Portador:codportador,portador',
+            'Portador:codportador,portador,codfilial',
             'UsuarioCriacao:codusuario,usuario',
             'UsuarioAlteracao:codusuario,usuario',
             'MovimentoTituloS' => function ($q) {
@@ -142,6 +153,43 @@ class LiquidacaoTituloService
         return self::carregar($liq->codliquidacaotitulo);
     }
 
+    public static function atualizar(LiquidacaoTitulo $liq, array $dados): LiquidacaoTitulo
+    {
+        if (!empty($liq->estornado)) {
+            throw new \Exception('Liquidação estornada, não pode ser editada!', 1);
+        }
+        if (!empty($liq->codperiodo)) {
+            throw new \Exception('Liquidação fechada em um período de RH. Não é possível editar.', 1);
+        }
+
+        $codpessoa   = (int)$dados['codpessoa'];
+        $codportador = (int)$dados['codportador'];
+        $transacao   = Carbon::parse($dados['transacao'])->format('Y-m-d');
+
+        $mudouPortador  = (int)$liq->codportador !== $codportador;
+        $mudouTransacao = Carbon::parse($liq->transacao)->format('Y-m-d') !== $transacao;
+
+        $liq->codpessoa   = $codpessoa;
+        $liq->codportador = $codportador;
+        $liq->transacao   = $transacao;
+        $liq->observacao  = $dados['observacao'] ?? null;
+        $liq->save();
+
+        if ($mudouPortador || $mudouTransacao) {
+            foreach ($liq->MovimentoTituloS as $mov) {
+                if ($mudouPortador) {
+                    $mov->codportador = $codportador;
+                }
+                if ($mudouTransacao) {
+                    $mov->transacao = $transacao;
+                }
+                $mov->save();
+            }
+        }
+
+        return self::carregar($liq->codliquidacaotitulo);
+    }
+
     public static function estornar(LiquidacaoTitulo $liq): LiquidacaoTitulo
     {
         if (!empty($liq->estornado)) {
@@ -157,6 +205,7 @@ class LiquidacaoTituloService
         }
 
         $liq->estornado = Carbon::now()->format('Y-m-d H:i:s');
+        $liq->codusuarioestorno = Auth::user()->codusuario;
         $liq->save();
 
         return self::carregar($liq->codliquidacaotitulo);

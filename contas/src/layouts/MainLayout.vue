@@ -3,13 +3,16 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
-import { version } from '../../package.json'
+import MgAppFooter from '@components/MgAppFooter.vue'
+import { useAuth } from 'src/composables/useAuth'
 
 const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
 const pageTitle = computed(() => route.meta?.title || 'Contas')
+
+const auth = useAuth()
 </script>
 
 <template>
@@ -35,9 +38,7 @@ const pageTitle = computed(() => route.meta?.title || 'Contas')
           {{ pageTitle }}
         </q-toolbar-title>
 
-        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
-
-        <MgUserMenu />
+        <MgUserMenu :auth="auth" />
 
         <app-launcher />
 
@@ -74,5 +75,9 @@ const pageTitle = computed(() => route.meta?.title || 'Contas')
     <q-page-container class="bg-grey-2">
       <router-view />
     </q-page-container>
+
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <MgAppFooter app-name="Contas" />
+    </q-footer>
   </q-layout>
 </template>

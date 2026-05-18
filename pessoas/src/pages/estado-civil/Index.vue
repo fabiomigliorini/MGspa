@@ -1,190 +1,188 @@
 <script setup>
-import { defineAsyncComponent, ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { estadoCivilStore } from "src/stores/estado-civil";
+import { defineAsyncComponent, ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { estadoCivilStore } from 'src/stores/estado-civil'
 
-const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
+const MGLayout = defineAsyncComponent(() => import('layouts/MGLayout.vue'))
 
-const $q = useQuasar();
-const store = estadoCivilStore();
+const $q = useQuasar()
+const store = estadoCivilStore()
 
-const estadosCivis = ref([]);
-const loading = ref(false);
-const dialog = ref(false);
-const editando = ref(false);
-const model = ref({ estadocivil: "" });
+const estadosCivis = ref([])
+const loading = ref(false)
+const dialog = ref(false)
+const editando = ref(false)
+const model = ref({ estadocivil: '' })
 const filtro = ref({
   estadocivil: null,
-  status: "ativos",
-});
+  status: 'ativos',
+})
 
 const statusOptions = [
-  { label: "Ativos", value: "ativos" },
-  { label: "Inativos", value: "inativos" },
-  { label: "Todos", value: "todos" },
-];
+  { label: 'Ativos', value: 'ativos' },
+  { label: 'Inativos', value: 'inativos' },
+  { label: 'Todos', value: 'todos' },
+]
 const pagination = ref({
   rowsPerPage: 50,
-});
+})
 
 const columns = [
   {
-    name: "codestadocivil",
-    label: "Código",
-    field: "codestadocivil",
-    align: "left",
+    name: 'codestadocivil',
+    label: 'Código',
+    field: 'codestadocivil',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "estadocivil",
-    label: "Descrição",
-    field: "estadocivil",
-    align: "left",
+    name: 'estadocivil',
+    label: 'Descrição',
+    field: 'estadocivil',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "inativo",
-    label: "Status",
-    field: "inativo",
-    align: "center",
+    name: 'inativo',
+    label: 'Status',
+    field: 'inativo',
+    align: 'center',
   },
   {
-    name: "acoes",
-    label: "Ações",
-    field: "acoes",
-    align: "center",
+    name: 'acoes',
+    label: 'Ações',
+    field: 'acoes',
+    align: 'center',
   },
-];
+]
 
 const buscar = async () => {
-  loading.value = true;
-  $q.loadingBar.start();
+  loading.value = true
+  $q.loadingBar.start()
   try {
-    store.filtro = filtro.value;
-    await store.index();
-    estadosCivis.value = store.estadosCivis;
+    store.filtro = filtro.value
+    await store.index()
+    estadosCivis.value = store.estadosCivis
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao carregar estados civis",
-    });
+      type: 'negative',
+      message: 'Erro ao carregar estados civis',
+    })
   } finally {
-    loading.value = false;
-    $q.loadingBar.stop();
+    loading.value = false
+    $q.loadingBar.stop()
   }
-};
+}
 
 const abrirNovo = () => {
-  model.value = { estadocivil: "" };
-  editando.value = false;
-  dialog.value = true;
-};
+  model.value = { estadocivil: '' }
+  editando.value = false
+  dialog.value = true
+}
 
 const abrirEditar = (item) => {
-  model.value = { ...item };
-  editando.value = true;
-  dialog.value = true;
-};
+  model.value = { ...item }
+  editando.value = true
+  dialog.value = true
+}
 
 const salvar = async () => {
-  if (!model.value.estadocivil || model.value.estadocivil.trim() === "") {
+  if (!model.value.estadocivil || model.value.estadocivil.trim() === '') {
     $q.notify({
-      type: "warning",
-      message: "Informe a descrição",
-    });
-    return;
+      type: 'warning',
+      message: 'Informe a descrição',
+    })
+    return
   }
 
-  loading.value = true;
+  loading.value = true
   try {
     if (editando.value) {
-      await store.update(model.value.codestadocivil, model.value);
+      await store.update(model.value.codestadocivil, model.value)
       $q.notify({
-        type: "positive",
-        message: "Estado civil atualizado com sucesso",
-      });
+        type: 'positive',
+        message: 'Estado civil atualizado com sucesso',
+      })
     } else {
-      await store.store(model.value);
+      await store.store(model.value)
       $q.notify({
-        type: "positive",
-        message: "Estado civil criado com sucesso",
-      });
+        type: 'positive',
+        message: 'Estado civil criado com sucesso',
+      })
     }
-    estadosCivis.value = store.estadosCivis;
-    dialog.value = false;
+    estadosCivis.value = store.estadosCivis
+    dialog.value = false
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao salvar estado civil",
-    });
+      type: 'negative',
+      message: 'Erro ao salvar estado civil',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const toggleInativo = async (item) => {
-  loading.value = true;
+  loading.value = true
   try {
     if (item.inativo) {
-      await store.ativar(item.codestadocivil);
+      await store.ativar(item.codestadocivil)
       $q.notify({
-        type: "positive",
-        message: "Estado civil ativado com sucesso",
-      });
+        type: 'positive',
+        message: 'Estado civil ativado com sucesso',
+      })
     } else {
-      await store.inativar(item.codestadocivil);
+      await store.inativar(item.codestadocivil)
       $q.notify({
-        type: "positive",
-        message: "Estado civil inativado com sucesso",
-      });
+        type: 'positive',
+        message: 'Estado civil inativado com sucesso',
+      })
     }
-    estadosCivis.value = store.estadosCivis;
+    estadosCivis.value = store.estadosCivis
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao alterar status",
-    });
+      type: 'negative',
+      message: 'Erro ao alterar status',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const excluir = (item) => {
   $q.dialog({
-    title: "Confirmar exclusão",
+    title: 'Confirmar exclusão',
     message: `Deseja realmente excluir o estado civil "${item.estadocivil}"?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
-    loading.value = true;
+    loading.value = true
     try {
-      await store.destroy(item.codestadocivil);
-      estadosCivis.value = store.estadosCivis;
+      await store.destroy(item.codestadocivil)
+      estadosCivis.value = store.estadosCivis
       $q.notify({
-        type: "positive",
-        message: "Estado civil excluído com sucesso",
-      });
+        type: 'positive',
+        message: 'Estado civil excluído com sucesso',
+      })
     } catch (error) {
       $q.notify({
-        type: "negative",
-        message: "Erro ao excluir estado civil. Verifique se não está em uso.",
-      });
+        type: 'negative',
+        message: 'Erro ao excluir estado civil. Verifique se não está em uso.',
+      })
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  });
-};
+  })
+}
 
 onMounted(() => {
-  buscar();
-});
+  buscar()
+})
 </script>
 
 <template>
   <MGLayout drawer>
-    <template #tituloPagina>
-      Estados Civis
-    </template>
+    <template #tituloPagina> Estados Civis </template>
 
     <template #content>
       <div class="q-pa-md">
@@ -199,12 +197,8 @@ onMounted(() => {
         >
           <template v-slot:body-cell-inativo="props">
             <q-td :props="props">
-              <q-chip
-                :color="props.row.inativo ? 'red' : 'green'"
-                text-color="white"
-                dense
-              >
-                {{ props.row.inativo ? "Inativo" : "Ativo" }}
+              <q-chip :color="props.row.inativo ? 'red' : 'green'" text-color="white" dense>
+                {{ props.row.inativo ? 'Inativo' : 'Ativo' }}
               </q-chip>
             </q-td>
           </template>
@@ -231,9 +225,7 @@ onMounted(() => {
                 color="grey-7"
                 @click="toggleInativo(props.row)"
               >
-                <q-tooltip>{{
-                  props.row.inativo ? "Ativar" : "Inativar"
-                }}</q-tooltip>
+                <q-tooltip>{{ props.row.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
               <q-btn
                 flat
@@ -261,7 +253,7 @@ onMounted(() => {
       <q-dialog v-model="dialog">
         <q-card style="min-width: 350px">
           <q-card-section>
-            <div class="text-h6">{{ editando ? "Editar" : "Novo" }} Estado Civil</div>
+            <div class="text-h6">{{ editando ? 'Editar' : 'Novo' }} Estado Civil</div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
@@ -276,13 +268,7 @@ onMounted(() => {
 
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey" v-close-popup />
-            <q-btn
-              flat
-              label="Salvar"
-              color="primary"
-              @click="salvar"
-              :loading="loading"
-            />
+            <q-btn flat label="Salvar" color="primary" @click="salvar" :loading="loading" />
           </q-card-actions>
         </q-card>
       </q-dialog>
@@ -303,13 +289,7 @@ onMounted(() => {
           </q-list>
         </q-card>
         <div class="q-pa-md q-gutter-md">
-          <q-input
-            outlined
-            v-model="filtro.estadocivil"
-            label="Buscar"
-            @change="buscar"
-            clearable
-          >
+          <q-input outlined v-model="filtro.estadocivil" label="Buscar" @change="buscar" clearable>
             <template v-slot:prepend>
               <q-icon name="search" />
             </template>

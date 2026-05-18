@@ -1,14 +1,10 @@
 <script setup>
 import { onMounted } from 'vue'
-import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero, formataData, formataCodigo } from '@components/formatters'
 import { useTituloAgrupamentoStore } from 'src/stores/tituloAgrupamentoStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
 const store = useTituloAgrupamentoStore()
-
-const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
-const formatCodigo = (v) => '#' + String(v).padStart(8, '0')
 
 function abrirRelatorio() {
   const params = {}
@@ -56,7 +52,7 @@ onMounted(() => {
                 {{ ag.fantasia }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formatCodigo(ag.codtituloagrupamento) }}
+                {{ formataCodigo(ag.codtituloagrupamento) }}
               </q-item-label>
             </q-item-section>
 
@@ -72,7 +68,7 @@ onMounted(() => {
                 Estornado
               </q-item-label>
               <q-item-label caption class="ellipsis text-grey-7">
-                {{ formatData(ag.emissao) }}
+                {{ formataData(ag.emissao) }}
               </q-item-label>
             </q-item-section>
           </q-item>

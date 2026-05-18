@@ -1,110 +1,110 @@
-import { defineStore } from "pinia";
-import { api } from "boot/axios";
+import { defineStore } from 'pinia'
+import { api } from 'boot/axios'
 
-export const empresaStore = defineStore("empresa", {
+export const empresaStore = defineStore('empresa', {
   persist: {
-    paths: ["empresas", "filtroPesquisa"],
+    paths: ['empresas', 'filtroPesquisa'],
   },
 
   state: () => ({
     item: {},
     empresas: [],
     filtroPesquisa: {
-      empresa: "",
-      codempresa: "",
+      empresa: '',
+      codempresa: '',
       page: 1,
       per_page: 20,
     },
     filiais: [],
     filial: {},
     filtroFilial: {
-      filial: "",
+      filial: '',
     },
     loadingFiliais: false,
   }),
 
   actions: {
     async buscarFiliais(codempresa) {
-      this.loadingFiliais = true;
+      this.loadingFiliais = true
       try {
-        const ret = await api.get("v1/filial", {
+        const ret = await api.get('v1/filial', {
           params: {
             codempresa,
             filial: this.filtroFilial.filial || undefined,
           },
-        });
-        this.filiais = ret.data.data;
-        return ret;
+        })
+        this.filiais = ret.data.data
+        return ret
       } finally {
-        this.loadingFiliais = false;
+        this.loadingFiliais = false
       }
     },
 
     async getFilial(codfilial) {
-      const ret = await api.get("v1/filial/" + codfilial);
-      this.filial = ret.data.data || {};
-      return ret;
+      const ret = await api.get('v1/filial/' + codfilial)
+      this.filial = ret.data.data || {}
+      return ret
     },
 
     async buscarEmpresas() {
-      const ret = await api.get("v1/empresa", {
+      const ret = await api.get('v1/empresa', {
         params: this.filtroPesquisa,
-      });
+      })
       if (this.filtroPesquisa.page === 1) {
-        this.empresas = ret.data.data;
+        this.empresas = ret.data.data
       } else {
-        this.empresas = [...this.empresas, ...ret.data.data];
+        this.empresas = [...this.empresas, ...ret.data.data]
       }
-      return ret;
+      return ret
     },
 
     async get(codempresa) {
-      const ret = await api.get("v1/empresa/" + codempresa);
-      this.item = ret.data.data;
-      return ret;
+      const ret = await api.get('v1/empresa/' + codempresa)
+      this.item = ret.data.data
+      return ret
     },
 
     async criarEmpresa(model) {
-      const ret = await api.post("v1/empresa", model);
-      return ret;
+      const ret = await api.post('v1/empresa', model)
+      return ret
     },
 
     async atualizarEmpresa(codempresa, model) {
-      const ret = await api.put("v1/empresa/" + codempresa, model);
-      this.item = ret.data.data;
-      return ret;
+      const ret = await api.put('v1/empresa/' + codempresa, model)
+      this.item = ret.data.data
+      return ret
     },
 
     async criarFilial(model) {
-      const ret = await api.post("v1/filial", model);
-      return ret;
+      const ret = await api.post('v1/filial', model)
+      return ret
     },
 
     async atualizarFilial(codfilial, model) {
-      const ret = await api.put("v1/filial/" + codfilial, model);
-      this.filial = ret.data.data;
-      return ret;
+      const ret = await api.put('v1/filial/' + codfilial, model)
+      this.filial = ret.data.data
+      return ret
     },
 
     async removerFilial(codfilial) {
-      const ret = await api.delete("v1/filial/" + codfilial);
-      this.filiais = this.filiais.filter((f) => f.codfilial !== codfilial);
-      return ret;
+      const ret = await api.delete('v1/filial/' + codfilial)
+      this.filiais = this.filiais.filter((f) => f.codfilial !== codfilial)
+      return ret
     },
 
     async removerEmpresa(codempresa) {
-      const ret = await api.delete("v1/empresa/" + codempresa);
-      this.empresas = this.empresas.filter((e) => e.codempresa !== codempresa);
-      return ret;
+      const ret = await api.delete('v1/empresa/' + codempresa)
+      this.empresas = this.empresas.filter((e) => e.codempresa !== codempresa)
+      return ret
     },
 
     limparFiltro() {
       this.filtroPesquisa = {
-        empresa: "",
-        codempresa: "",
+        empresa: '',
+        codempresa: '',
         page: 1,
         per_page: 20,
-      };
+      }
     },
   },
-});
+})

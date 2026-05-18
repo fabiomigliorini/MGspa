@@ -7,36 +7,42 @@ import { computed } from 'vue'
  * Fornece acesso fácil ao estado e métodos de autenticação
  */
 export function useAuth() {
-  const authStore = useAuthStore()
+  const store = useAuthStore()
 
-  const { token, user, loading } = storeToRefs(authStore)
+  const { token, usuario, expiresAt, carregando } = storeToRefs(store)
 
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const estaAutenticado = computed(() => !!token.value && !!usuario.value)
 
-  const permissions = computed(() => {
-    if (!user.value?.permissoes) return []
-    return user.value.permissoes.map((p) => p.grupousuario)
+  const permissoes = computed(() => {
+    if (!usuario.value?.permissoes) return []
+    return usuario.value.permissoes.map((p) => p.grupousuario)
   })
 
-  const isAdmin = computed(() => permissions.value.includes('Administrador'))
+  const ehAdmin = computed(() => permissoes.value.includes('Administrador'))
 
-  const { validateToken, logout, hasAnyPermission } = authStore
+  const { validarToken, logout, temAlgumaPermissao } = store
 
-  function hasPermission(permission) {
-    if (isAdmin.value) return true
-    return permissions.value.includes(permission)
+  function temPermissao(nome) {
+    if (ehAdmin.value) return true
+    return permissoes.value.includes(nome)
+  }
+
+  async function renovarToken() {
+    await validarToken()
   }
 
   return {
     token,
-    user,
-    loading,
-    isAuthenticated,
-    permissions,
-    isAdmin,
-    validateToken,
+    usuario,
+    expiresAt,
+    carregando,
+    permissoes,
+    ehAdmin,
+    estaAutenticado,
+    validarToken,
+    renovarToken,
     logout,
-    hasPermission,
-    hasAnyPermission,
+    temPermissao,
+    temAlgumaPermissao,
   }
 }

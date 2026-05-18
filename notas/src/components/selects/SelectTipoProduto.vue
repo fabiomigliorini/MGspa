@@ -122,10 +122,28 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <q-select :model-value="modelValue" @update:model-value="handleUpdate" :label="label" outlined clearable
-    :options="options" option-value="value" option-label="label" emit-value map-options use-input input-debounce="500"
-    @filter="filterTipoProduto" :placeholder="placeholder" :bottom-slots="bottomSlots" :class="customClass"
-    :disable="disable" :readonly="readonly" :loading="loading" :dense="dense">
+  <q-select
+    :model-value="modelValue"
+    @update:model-value="handleUpdate"
+    :label="label"
+    outlined
+    clearable
+    :options="options"
+    option-value="value"
+    option-label="label"
+    emit-value
+    map-options
+    use-input
+    input-debounce="500"
+    @filter="filterTipoProduto"
+    :placeholder="placeholder"
+    :bottom-slots="bottomSlots"
+    :class="customClass"
+    :disable="disable"
+    :readonly="readonly"
+    :loading="loading"
+    :dense="dense"
+  >
     <template v-slot:selected-item="scope">
       <span :title="scope.opt.label">{{ truncateLabel(scope.opt.label) }}</span>
     </template>

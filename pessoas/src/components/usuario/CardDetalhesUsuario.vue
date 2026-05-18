@@ -1,87 +1,88 @@
 <script setup>
-import { useQuasar } from "quasar";
-import { useRouter, useRoute } from "vue-router";
-import { usuarioStore } from "src/stores/usuario";
-import { guardaToken } from "src/stores";
-import moment from "moment";
-import "moment/min/locales";
-moment.locale("pt-br");
+import { formataData, formataTimestamp, formataDataAbreviada } from '@components/formatters'
+import { useQuasar } from 'quasar'
+import { useRouter, useRoute } from 'vue-router'
+import { usuarioStore } from 'src/stores/usuario'
+import { useAuthStore } from 'src/stores'
+import moment from 'moment'
+import 'moment/min/locales'
+moment.locale('pt-br')
 
-const $q = useQuasar();
-const router = useRouter();
-const route = useRoute();
-const sUsuario = usuarioStore();
-const user = guardaToken();
+const $q = useQuasar()
+const router = useRouter()
+const route = useRoute()
+const sUsuario = usuarioStore()
+const user = useAuthStore()
 
 const excluir = (codusuario) => {
   $q.dialog({
-    title: "Excluir usuário",
-    message: "Tem certeza que deseja excluir esse usuário?",
+    title: 'Excluir usuário',
+    message: 'Tem certeza que deseja excluir esse usuário?',
     cancel: true,
   }).onOk(async () => {
     try {
-      const ret = await sUsuario.excluirUsuario(codusuario);
+      const ret = await sUsuario.excluirUsuario(codusuario)
       if (ret.data.result) {
         $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Removido",
-        });
-        router.push("/usuarios");
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Removido',
+        })
+        router.push('/usuarios')
       }
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "warning",
-        message: error.response?.data?.message || "Erro ao excluir",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'warning',
+        message: error.response?.data?.message || 'Erro ao excluir',
+      })
     }
-  });
-};
+  })
+}
 
 const inativar = async (codusuario) => {
   try {
-    const ret = await sUsuario.inativar(codusuario);
+    const ret = await sUsuario.inativar(codusuario)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Inativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Inativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "negative",
-      textColor: "white",
-      icon: "error",
-      message: error.response?.data || "Erro ao inativar",
-    });
+      color: 'negative',
+      textColor: 'white',
+      icon: 'error',
+      message: error.response?.data || 'Erro ao inativar',
+    })
   }
-};
+}
 
 const ativar = async (codusuario) => {
   try {
-    const ret = await sUsuario.ativar(codusuario);
+    const ret = await sUsuario.ativar(codusuario)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Ativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Ativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "negative",
-      textColor: "white",
-      icon: "error",
-      message: error.response?.data || "Erro ao ativar",
-    });
+      color: 'negative',
+      textColor: 'white',
+      icon: 'error',
+      message: error.response?.data || 'Erro ao ativar',
+    })
   }
-};
+}
 </script>
 
 <template>
@@ -90,7 +91,7 @@ const ativar = async (codusuario) => {
       DETALHES DO USUÁRIO
       <q-space />
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Administrador')"
+        v-if="user.temPermissao('Administrador')"
         flat
         round
         dense
@@ -115,7 +116,7 @@ const ativar = async (codusuario) => {
       </q-btn>
 
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Administrador') && !sUsuario.detalheUsuarios.inativo"
+        v-if="user.temPermissao('Administrador') && !sUsuario.detalheUsuarios.inativo"
         flat
         round
         dense
@@ -128,7 +129,7 @@ const ativar = async (codusuario) => {
       </q-btn>
 
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Administrador') && sUsuario.detalheUsuarios.inativo"
+        v-if="user.temPermissao('Administrador') && sUsuario.detalheUsuarios.inativo"
         flat
         round
         dense
@@ -193,7 +194,7 @@ const ativar = async (codusuario) => {
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis text-caption">
-            {{ moment(sUsuario.detalheUsuarios.ultimoacesso).format("DD/MMM/YYYY") }}
+            {{ formataDataAbreviada(sUsuario.detalheUsuarios.ultimoacesso, 4) }}
             - {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
           </q-item-label>
           <q-item-label caption>Último acesso</q-item-label>
@@ -207,7 +208,7 @@ const ativar = async (codusuario) => {
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis text-caption">
-            {{ moment(sUsuario.detalheUsuarios.inativo).format("DD/MM/YYYY HH:mm") }}
+            {{ formataTimestamp(sUsuario.detalheUsuarios.inativo) }}
           </q-item-label>
           <q-item-label caption>Data de inativação</q-item-label>
         </q-item-section>

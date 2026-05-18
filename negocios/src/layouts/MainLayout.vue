@@ -1,6 +1,6 @@
 <script setup>
-import { ref } from "vue";
-import { version } from "../../package.json";
+import { ref } from 'vue'
+import MgAppFooter from '@components/MgAppFooter.vue'
 
 const props = defineProps({
   backTo: {
@@ -17,23 +17,23 @@ const props = defineProps({
   },
   title: {
     type: String,
-    default: "*** Título ***",
+    default: '*** Título ***',
   },
-});
+})
 
 const apps = ref([
   {
-    label: "PDV",
+    label: 'PDV',
     apps: [
       {
-        icon: "point_of_sale",
-        label: "PDV",
-        to: "/",
+        icon: 'point_of_sale',
+        label: 'PDV',
+        to: '/',
       },
       {
-        icon: "mdi-list-box-outline",
-        label: "WOO",
-        to: "/woo/painel",
+        icon: 'mdi-list-box-outline',
+        label: 'WOO',
+        to: '/woo/painel',
       },
       // {
       //   icon: "checklist_rtl",
@@ -41,24 +41,24 @@ const apps = ref([
       //   to: "/listagem",
       // },
       {
-        icon: "check",
-        label: "Conferência",
-        to: "/conferencia",
+        icon: 'check',
+        label: 'Conferência',
+        to: '/conferencia',
       },
       {
-        icon: "photo_camera",
-        label: "Conf",
-        to: "/confissao",
+        icon: 'photo_camera',
+        label: 'Conf',
+        to: '/confissao',
       },
     ],
   },
   {
-    label: "Comandas",
+    label: 'Comandas',
     apps: [
       {
-        icon: "mdi-barcode",
-        label: "Comandas",
-        to: "/comanda-vendedor",
+        icon: 'mdi-barcode',
+        label: 'Comandas',
+        to: '/comanda-vendedor',
       },
     ],
   },
@@ -73,31 +73,31 @@ const apps = ref([
   //   ],
   // },
   {
-    label: "Configurações",
+    label: 'Configurações',
     apps: [
       {
-        icon: "settings",
-        label: "Config",
-        to: "/config/padrao",
+        icon: 'settings',
+        label: 'Config',
+        to: '/config/padrao',
       },
     ],
   },
-]);
+])
 
-const leftDrawerOpen = ref(false);
-const rightDrawerOpen = ref(false);
+const leftDrawerOpen = ref(false)
+const rightDrawerOpen = ref(false)
 
 const toggleLeftDrawer = () => {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-};
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
 const toggleRightDrawer = () => {
-  rightDrawerOpen.value = !rightDrawerOpen.value;
-};
+  rightDrawerOpen.value = !rightDrawerOpen.value
+}
 </script>
 
 <template>
   <q-layout view="hHh lpr fFf">
-    <q-header reveal elevated height-hint="98">
+    <q-header reveal bordered height-hint="98">
       <q-toolbar>
         <!-- HAMBURQUER ESQUERDO -->
         <q-btn
@@ -121,9 +121,6 @@ const toggleRightDrawer = () => {
 
         <!-- BOTOES ADICIONAIS -->
         <slot name="botoes" />
-
-        <!-- VERSAO  -->
-        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
 
         <!-- USUARIO  -->
         <slot name="usuario" />
@@ -152,10 +149,7 @@ const toggleRightDrawer = () => {
                   </q-item>
                 </template>
               </div>
-              <q-separator
-                v-if="iAppBlock != apps.length - 1"
-                class="q-my-sm"
-              />
+              <q-separator v-if="iAppBlock != apps.length - 1" class="q-my-sm" />
             </template>
           </q-menu>
         </q-btn>
@@ -177,18 +171,16 @@ const toggleRightDrawer = () => {
       <slot name="left-drawer" />
     </q-drawer>
 
-    <q-drawer
-      v-model="rightDrawerOpen"
-      show-if-above
-      bordered
-      side="right"
-      v-if="rightDrawer"
-    >
+    <q-drawer v-model="rightDrawerOpen" show-if-above bordered side="right" v-if="rightDrawer">
       <slot name="right-drawer" />
     </q-drawer>
 
     <q-page-container>
       <slot name="content" />
     </q-page-container>
+
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <MgAppFooter app-name="Negócios" />
+    </q-footer>
   </q-layout>
 </template>

@@ -6,7 +6,7 @@ import { CBS_CST_OPTIONS, CBS_CCLASSTRIB_OPTIONS } from 'src/constants/notaFisca
 import SelectTributo from '../selects/SelectTributo.vue'
 import { Notify } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { round } from 'src/utils/formatters'
+import { arredonda } from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const notaFiscalStore = useNotaFiscalStore()
@@ -79,7 +79,7 @@ const updatedBaseReducaoPercentual = async (ti) => {
   if (ti.basereducao > 100) {
     return
   }
-  ti.basereducao = round(baseCheia.value * (ti.basereducaopercentual / 100), 2)
+  ti.basereducao = arredonda(baseCheia.value * (ti.basereducaopercentual / 100), 2)
   updatedBaseReducao(ti, false)
 }
 
@@ -94,7 +94,7 @@ const updatedBaseReducao = async (ti, recalcularBaseReducaoPercentual) => {
       ti.basereducaopercentual = null
       return
     }
-    ti.basereducaopercentual = round((ti.basereducao / baseCheia.value) * 100, 2)
+    ti.basereducaopercentual = arredonda((ti.basereducao / baseCheia.value) * 100, 2)
   }
 }
 
@@ -107,7 +107,7 @@ const updatedBase = async (ti, recalcularBaseReducao) => {
     ti.valorcredito = null
     return
   }
-  ti.valor = round(ti.base * (ti.aliquota / 100), 2)
+  ti.valor = arredonda(ti.base * (ti.aliquota / 100), 2)
   if (ti.geracredito) {
     ti.valorcredito = ti.valor
   }
@@ -118,7 +118,7 @@ const updatedBase = async (ti, recalcularBaseReducao) => {
       return
     }
     ti.basereducao = baseCheia.value - ti.base
-    ti.basereducaopercentual = round((ti.basereducao / baseCheia.value) * 100, 2)
+    ti.basereducaopercentual = arredonda((ti.basereducao / baseCheia.value) * 100, 2)
   }
 }
 
@@ -131,7 +131,7 @@ const updatedAliquota = async (ti) => {
     ti.valorcredito = null
     return
   }
-  ti.valor = round(ti.base * (ti.aliquota / 100), 2)
+  ti.valor = arredonda(ti.base * (ti.aliquota / 100), 2)
   if (ti.geracredito) {
     ti.valorcredito = ti.valor
   }
@@ -144,7 +144,7 @@ const updatedValor = async (ti) => {
   if (!ti.base) {
     ti.base = baseCheia.value
   }
-  ti.aliquota = round((ti.valor / ti.base) * 100, 2)
+  ti.aliquota = arredonda((ti.valor / ti.base) * 100, 2)
   if (ti.geracredito) {
     ti.valorcredito = ti.valor
   }

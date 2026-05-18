@@ -199,7 +199,7 @@ export const useNaturezaOperacaoStore = defineStore('naturezaOperacao', {
 
         // Remove da lista
         this.naturezaOperacoes = this.naturezaOperacoes.filter(
-          (n) => n.codnaturezaoperacao !== codnaturezaoperacao
+          (n) => n.codnaturezaoperacao !== codnaturezaoperacao,
         )
         this.pagination.total--
 
@@ -243,7 +243,7 @@ export const useNaturezaOperacaoStore = defineStore('naturezaOperacao', {
       if (!this.currentNaturezaOperacao) return
 
       const index = this.naturezaOperacoes.findIndex(
-        (n) => n.codnaturezaoperacao === this.currentNaturezaOperacao.codnaturezaoperacao
+        (n) => n.codnaturezaoperacao === this.currentNaturezaOperacao.codnaturezaoperacao,
       )
       if (index !== -1) {
         this.naturezaOperacoes[index] = { ...this.currentNaturezaOperacao }
@@ -251,7 +251,7 @@ export const useNaturezaOperacaoStore = defineStore('naturezaOperacao', {
         // Insere na posicao correta (ordenado por codnaturezaoperacao)
         const newNaturezaOperacao = { ...this.currentNaturezaOperacao }
         const insertIndex = this.naturezaOperacoes.findIndex(
-          (n) => n.codnaturezaoperacao > newNaturezaOperacao.codnaturezaoperacao
+          (n) => n.codnaturezaoperacao > newNaturezaOperacao.codnaturezaoperacao,
         )
         if (insertIndex === -1) {
           // E maior que todos, adiciona no final

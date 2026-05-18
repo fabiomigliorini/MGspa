@@ -1,87 +1,83 @@
 <script>
-import { ref, onMounted, defineAsyncComponent, watch } from "vue";
-import { empresaStore } from "src/stores/empresa";
-import { debounce, useQuasar } from "quasar";
+import { ref, onMounted, defineAsyncComponent, watch } from 'vue'
+import { empresaStore } from 'src/stores/empresa'
+import { debounce, useQuasar } from 'quasar'
 
 export default {
   components: {
-    MGLayout: defineAsyncComponent(() => import("layouts/MGLayout.vue")),
-    CardEmpresa: defineAsyncComponent(() =>
-      import("components/empresa/CardEmpresa.vue")
-    ),
-    FiltroEmpresa: defineAsyncComponent(() =>
-      import("components/empresa/FiltroEmpresa.vue")
-    ),
+    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
+    CardEmpresa: defineAsyncComponent(() => import('components/empresa/CardEmpresa.vue')),
+    FiltroEmpresa: defineAsyncComponent(() => import('components/empresa/FiltroEmpresa.vue')),
   },
 
   setup() {
-    const sEmpresa = empresaStore();
-    const $q = useQuasar();
-    const loading = ref(false);
-    const acabouDados = ref(false);
+    const sEmpresa = empresaStore()
+    const $q = useQuasar()
+    const loading = ref(false)
+    const acabouDados = ref(false)
 
     const buscarEmpresas = async () => {
-      loading.value = true;
-      acabouDados.value = false;
-      sEmpresa.filtroPesquisa.page = 1;
+      loading.value = true
+      acabouDados.value = false
+      sEmpresa.filtroPesquisa.page = 1
       try {
-        const ret = await sEmpresa.buscarEmpresas();
+        const ret = await sEmpresa.buscarEmpresas()
         // Se retornou menos que per_page, acabou os dados
-        const qtdRetornada = ret.data.data ? ret.data.data.length : 0;
+        const qtdRetornada = ret.data.data ? ret.data.data.length : 0
         if (qtdRetornada < sEmpresa.filtroPesquisa.per_page) {
-          acabouDados.value = true;
+          acabouDados.value = true
         }
       } catch (error) {
         $q.notify({
-          color: "red-5",
-          textColor: "white",
-          icon: "error",
-          message: "Erro ao buscar empresas",
-        });
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: 'Erro ao buscar empresas',
+        })
       } finally {
-        loading.value = false;
+        loading.value = false
       }
-    };
+    }
 
     const buscarEmpresasDebounce = debounce(() => {
-      buscarEmpresas();
-    }, 500);
+      buscarEmpresas()
+    }, 500)
 
     watch(
       () => sEmpresa.filtroPesquisa.empresa,
-      () => buscarEmpresasDebounce()
-    );
+      () => buscarEmpresasDebounce(),
+    )
 
     watch(
       () => sEmpresa.filtroPesquisa.codempresa,
-      () => buscarEmpresasDebounce()
-    );
+      () => buscarEmpresasDebounce(),
+    )
 
     onMounted(() => {
-      buscarEmpresas();
-    });
+      buscarEmpresas()
+    })
 
     const scrollInfinito = async (index, done) => {
       if (acabouDados.value) {
-        done(true);
-        return;
+        done(true)
+        return
       }
-      sEmpresa.filtroPesquisa.page++;
+      sEmpresa.filtroPesquisa.page++
       try {
-        const ret = await sEmpresa.buscarEmpresas();
+        const ret = await sEmpresa.buscarEmpresas()
         // Se retornou menos que per_page ou zero, acabou
-        const qtdRetornada = ret.data.data ? ret.data.data.length : 0;
+        const qtdRetornada = ret.data.data ? ret.data.data.length : 0
         if (qtdRetornada < sEmpresa.filtroPesquisa.per_page) {
-          acabouDados.value = true;
-          done(true);
+          acabouDados.value = true
+          done(true)
         } else {
-          done();
+          done()
         }
       } catch (error) {
-        acabouDados.value = true;
-        done(true);
+        acabouDados.value = true
+        done(true)
       }
-    };
+    }
 
     return {
       sEmpresa,
@@ -89,9 +85,9 @@ export default {
       acabouDados,
       buscarEmpresas,
       scrollInfinito,
-    };
+    }
   },
-};
+}
 </script>
 
 <template>

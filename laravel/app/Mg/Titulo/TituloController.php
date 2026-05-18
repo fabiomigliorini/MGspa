@@ -56,6 +56,16 @@ class TituloController extends MgController
         return TituloListaResource::collection($paginator);
     }
 
+    public function relatorioListagem(Request $request)
+    {
+        Autorizador::autoriza(self::GRUPOS_LEITURA);
+        $pdf = TituloListagemRelatorioService::pdf($request->all());
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="titulos.pdf"',
+        ]);
+    }
+
     public function abertosParaFechamento(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);

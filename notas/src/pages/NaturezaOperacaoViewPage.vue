@@ -1,4 +1,5 @@
 <script setup>
+import { formataTimestamp, formataCodigo } from '@components/formatters'
 import { computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -170,7 +171,7 @@ onMounted(loadData)
               <q-item>
                 <q-item-section class="text-caption">
                   <q-item-label class="text-subtitle2 text-grey-7">Código</q-item-label>
-                  #{{ String(naturezaOperacao.codnaturezaoperacao).padStart(8, '0') }}
+                  {{ formataCodigo(naturezaOperacao.codnaturezaoperacao) }}
                 </q-item-section>
               </q-item>
               <q-item>
@@ -382,7 +383,7 @@ onMounted(loadData)
                     >
                       <div class="row items-center q-gutter-sm text-caption">
                         <q-badge color="primary" class="text-weight-bold">
-                          #{{ String(trib.codtributacaonaturezaoperacao).padStart(8, '0') }}
+                          {{ formataCodigo(trib.codtributacaonaturezaoperacao) }}
                         </q-badge>
                         <span class="text-weight-bold text-secondary">
                           {{ trib.tributacao?.tributacao || trib.tributacao || '-' }}
@@ -522,7 +523,7 @@ onMounted(loadData)
 
       <!-- Auditoria -->
       <div v-if="naturezaOperacao.usuarioAlteracao" class="text-caption text-grey q-mt-lg">
-        Alterado em {{ new Date(naturezaOperacao.alteracao).toLocaleString('pt-BR') }} por
+        Alterado em {{ formataTimestamp(naturezaOperacao.alteracao, 4, true) }} por
         {{ naturezaOperacao.usuarioAlteracao.usuario }}
       </div>
     </template>

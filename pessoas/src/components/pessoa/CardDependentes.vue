@@ -1,28 +1,28 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useRoute } from "vue-router";
-import { useQuasar } from "quasar";
-import { pessoaStore } from "stores/pessoa";
-import { dependenteStore } from "stores/dependente";
-import { guardaToken } from "src/stores";
-import { formataDataSemHora } from "src/utils/formatador";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
-import SelectPessoa from "components/select/SelectPessoa.vue";
-import MgInputData from "@components/MgInputData.vue";
-import MgInputValor from "@components/MgInputValor.vue";
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { useQuasar } from 'quasar'
+import { pessoaStore } from 'stores/pessoa'
+import { dependenteStore } from 'stores/dependente'
+import { useAuthStore } from 'src/stores'
+import { formataData } from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import SelectPessoa from 'components/select/SelectPessoa.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const sPessoa = pessoaStore();
-const sDependente = dependenteStore();
-const user = guardaToken();
+const $q = useQuasar()
+const route = useRoute()
+const sPessoa = pessoaStore()
+const sDependente = dependenteStore()
+const user = useAuthStore()
 
-const filtroResponsavel = ref("ativos");
-const filtroDependenteDe = ref("ativos");
+const filtroResponsavel = ref('ativos')
+const filtroDependenteDe = ref('ativos')
 
-const dialogDependente = ref(false);
-const isNovo = ref(true);
-const modoAdicao = ref("responsavel"); // 'responsavel' ou 'dependente'
+const dialogDependente = ref(false)
+const isNovo = ref(true)
+const modoAdicao = ref('responsavel') // 'responsavel' ou 'dependente'
 
 const modelInicial = {
   coddependente: null,
@@ -45,90 +45,89 @@ const modelInicial = {
   pensaoagencia: null,
   pensaoconta: null,
   observacao: null,
-};
+}
 
-const model = ref({ ...modelInicial });
+const model = ref({ ...modelInicial })
 
 const tiposDependente = [
-  { value: "01", label: "Cônjuge" },
-  { value: "02", label: "Companheiro(a) com filho ou união >5 anos" },
-  { value: "03", label: "Filho(a) ou enteado(a) até 21 anos" },
-  { value: "04", label: "Filho(a) ou enteado(a) universitário até 24 anos" },
+  { value: '01', label: 'Cônjuge' },
+  { value: '02', label: 'Companheiro(a) com filho ou união >5 anos' },
+  { value: '03', label: 'Filho(a) ou enteado(a) até 21 anos' },
+  { value: '04', label: 'Filho(a) ou enteado(a) universitário até 24 anos' },
   {
-    value: "06",
-    label: "Irmão(ã), neto(a) ou bisneto(a) sob guarda até 21 anos",
+    value: '06',
+    label: 'Irmão(ã), neto(a) ou bisneto(a) sob guarda até 21 anos',
   },
   {
-    value: "07",
-    label: "Irmão(ã), neto(a) ou bisneto(a) universitário até 24 anos",
+    value: '07',
+    label: 'Irmão(ã), neto(a) ou bisneto(a) universitário até 24 anos',
   },
-  { value: "09", label: "Pais, avós e bisavós" },
-  { value: "10", label: "Menor pobre até 21 anos sob guarda judicial" },
-  { value: "11", label: "Pessoa incapaz (tutor/curador)" },
-  { value: "12", label: "Ex-cônjuge que recebe pensão alimentícia" },
-  { value: "99", label: "Agregado/Outros" },
-];
+  { value: '09', label: 'Pais, avós e bisavós' },
+  { value: '10', label: 'Menor pobre até 21 anos sob guarda judicial' },
+  { value: '11', label: 'Pessoa incapaz (tutor/curador)' },
+  { value: '12', label: 'Ex-cônjuge que recebe pensão alimentícia' },
+  { value: '99', label: 'Agregado/Outros' },
+]
 
 // Configuração dos cards para evitar duplicação
 const cardsConfig = computed(() => [
   {
-    key: "responsavel",
-    titulo: "MEUS DEPENDENTES",
+    key: 'responsavel',
+    titulo: 'MEUS DEPENDENTES',
     filtro: filtroResponsavel,
     dados:
-      filtroResponsavel.value === "ativos"
+      filtroResponsavel.value === 'ativos'
         ? (sPessoa.item?.DependenteResponsavelS || []).filter((x) => !x.inativo)
         : sPessoa.item?.DependenteResponsavelS || [],
-    icon: "people",
-    modo: "responsavel",
-    tooltipAdd: "Adicionar dependente",
-    emptyMessage: "Nenhum dependente cadastrado",
+    icon: 'people',
+    modo: 'responsavel',
+    tooltipAdd: 'Adicionar dependente',
+    emptyMessage: 'Nenhum dependente cadastrado',
     getNome: (dep) => dep.dependente,
     getCodPessoaLink: (dep) => dep.codpessoa,
   },
   {
-    key: "dependente",
-    titulo: "SOU DEPENDENTE DE",
+    key: 'dependente',
+    titulo: 'SOU DEPENDENTE DE',
     filtro: filtroDependenteDe,
     dados:
-      filtroDependenteDe.value === "ativos"
+      filtroDependenteDe.value === 'ativos'
         ? (sPessoa.item?.DependenteS || []).filter((x) => !x.inativo)
         : sPessoa.item?.DependenteS || [],
-    icon: "supervisor_account",
-    modo: "dependente",
-    tooltipAdd: "Adicionar responsável",
-    emptyMessage: "Não é dependente de ninguém",
+    icon: 'supervisor_account',
+    modo: 'dependente',
+    tooltipAdd: 'Adicionar responsável',
+    emptyMessage: 'Não é dependente de ninguém',
     getNome: (dep) => dep.responsavel,
     getCodPessoaLink: (dep) => dep.codpessoaresponsavel,
   },
-]);
+])
 
 const labelPessoaSelecionada = computed(() => {
-  if (modoAdicao.value === "responsavel") {
-    return "Pessoa Dependente";
+  if (modoAdicao.value === 'responsavel') {
+    return 'Pessoa Dependente'
   }
-  return "Pessoa Responsável";
-});
+  return 'Pessoa Responsável'
+})
 
 const resetModel = () => {
-  model.value = { ...modelInicial };
-};
+  model.value = { ...modelInicial }
+}
 
 const abrirNovo = (modo) => {
-  resetModel();
-  isNovo.value = true;
-  modoAdicao.value = modo;
-  dialogDependente.value = true;
-};
+  resetModel()
+  isNovo.value = true
+  modoAdicao.value = modo
+  dialogDependente.value = true
+}
 
 const editar = (dep, modo) => {
-  isNovo.value = false;
-  modoAdicao.value = modo;
+  isNovo.value = false
+  modoAdicao.value = modo
 
   model.value = {
     coddependente: dep.coddependente,
-    codpessoaselecionada:
-      modo === "responsavel" ? dep.codpessoa : dep.codpessoaresponsavel,
+    codpessoaselecionada: modo === 'responsavel' ? dep.codpessoa : dep.codpessoaresponsavel,
     tipdep: dep.tipdep,
     datainicio: dep.datainicio,
     datafim: dep.datafim,
@@ -147,13 +146,13 @@ const editar = (dep, modo) => {
     pensaoagencia: dep.pensaoagencia,
     pensaoconta: dep.pensaoconta,
     observacao: dep.observacao,
-  };
+  }
 
-  dialogDependente.value = true;
-};
+  dialogDependente.value = true
+}
 
 const submit = async () => {
-  const codpessoaAtual = route.params.id;
+  const codpessoaAtual = route.params.id
 
   // Monta o payload conforme o modo
   let payload = {
@@ -175,130 +174,130 @@ const submit = async () => {
     pensaoagencia: model.value.pensaoagencia,
     pensaoconta: model.value.pensaoconta,
     observacao: model.value.observacao,
-  };
+  }
 
   if (isNovo.value) {
-    if (modoAdicao.value === "responsavel") {
-      payload.codpessoaresponsavel = parseInt(codpessoaAtual);
-      payload.codpessoa = model.value.codpessoaselecionada;
+    if (modoAdicao.value === 'responsavel') {
+      payload.codpessoaresponsavel = parseInt(codpessoaAtual)
+      payload.codpessoa = model.value.codpessoaselecionada
     } else {
-      payload.codpessoa = parseInt(codpessoaAtual);
-      payload.codpessoaresponsavel = model.value.codpessoaselecionada;
+      payload.codpessoa = parseInt(codpessoaAtual)
+      payload.codpessoaresponsavel = model.value.codpessoaselecionada
     }
   }
 
   try {
     if (isNovo.value) {
-      await sDependente.criar(payload);
+      await sDependente.criar(payload)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Dependente cadastrado com sucesso",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Dependente cadastrado com sucesso',
+      })
     } else {
-      await sDependente.alterar(model.value.coddependente, payload);
+      await sDependente.alterar(model.value.coddependente, payload)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Dependente alterado com sucesso",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Dependente alterado com sucesso',
+      })
     }
 
-    dialogDependente.value = false;
-    await sPessoa.get(codpessoaAtual);
+    dialogDependente.value = false
+    await sPessoa.get(codpessoaAtual)
   } catch (error) {
-    const errors = error.response?.data?.errors;
+    const errors = error.response?.data?.errors
     if (errors) {
       Object.values(errors).forEach((mensagens) => {
         mensagens.forEach((msg) => {
           $q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'error',
             message: msg,
             timeout: 5000,
-          });
-        });
-      });
+          })
+        })
+      })
     } else {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: error.response?.data?.message || "Erro ao salvar",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: error.response?.data?.message || 'Erro ao salvar',
+      })
     }
   }
-};
+}
 
 const excluir = (coddependente) => {
   $q.dialog({
-    title: "Excluir Dependente",
-    message: "Tem certeza que deseja excluir este registro?",
+    title: 'Excluir Dependente',
+    message: 'Tem certeza que deseja excluir este registro?',
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     try {
-      await sDependente.excluir(coddependente);
+      await sDependente.excluir(coddependente)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Excluído com sucesso",
-      });
-      await sPessoa.get(route.params.id);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Excluído com sucesso',
+      })
+      await sPessoa.get(route.params.id)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: error.response?.data?.message || "Erro ao excluir",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: error.response?.data?.message || 'Erro ao excluir',
+      })
     }
-  });
-};
+  })
+}
 
 const inativar = async (coddependente) => {
   try {
-    await sDependente.inativar(coddependente);
+    await sDependente.inativar(coddependente)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Inativado com sucesso",
-    });
-    await sPessoa.get(route.params.id);
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Inativado com sucesso',
+    })
+    await sPessoa.get(route.params.id)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: error.response?.data?.message || "Erro ao inativar",
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: error.response?.data?.message || 'Erro ao inativar',
+    })
   }
-};
+}
 
 const ativar = async (coddependente) => {
   try {
-    await sDependente.ativar(coddependente);
+    await sDependente.ativar(coddependente)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Ativado com sucesso",
-    });
-    await sPessoa.get(route.params.id);
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Ativado com sucesso',
+    })
+    await sPessoa.get(route.params.id)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: error.response?.data?.message || "Erro ao ativar",
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: error.response?.data?.message || 'Erro ao ativar',
+    })
   }
-};
+}
 </script>
 
 <template>
@@ -333,18 +332,10 @@ const ativar = async (coddependente) => {
 
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <MgInputData
-                v-model="model.datainicio"
-                type="date"
-                label="Data Início"
-              />
+              <MgInputData v-model="model.datainicio" type="date" label="Data Início" />
             </div>
             <div class="col-6">
-              <MgInputData
-                v-model="model.datafim"
-                type="date"
-                label="Data Fim"
-              />
+              <MgInputData v-model="model.datafim" type="date" label="Data Fim" />
             </div>
           </div>
 
@@ -367,31 +358,19 @@ const ativar = async (coddependente) => {
               <q-toggle v-model="model.depplano" label="Plano de Saúde" />
             </div>
             <div class="col-6">
-              <q-toggle
-                v-model="model.incsocfam"
-                label="Incapaz para trabalho"
-              />
+              <q-toggle v-model="model.incsocfam" label="Incapaz para trabalho" />
             </div>
             <div class="col-6">
-              <q-toggle
-                v-model="model.guardajudicial"
-                label="Guarda Judicial"
-              />
+              <q-toggle v-model="model.guardajudicial" label="Guarda Judicial" />
             </div>
             <div class="col-6">
-              <q-toggle
-                v-model="model.pensaoalimenticia"
-                label="Pensão em folha"
-              />
+              <q-toggle v-model="model.pensaoalimenticia" label="Pensão em folha" />
             </div>
           </div>
 
           <!-- Seção: Pensão Alimentícia -->
           <q-slide-transition>
-            <div
-              v-if="model.pensaoalimenticia"
-              class="row q-col-gutter-md q-mb-sm"
-            >
+            <div v-if="model.pensaoalimenticia" class="row q-col-gutter-md q-mb-sm">
               <div class="col-6">
                 <MgInputValor
                   v-model="model.pensaovalor"
@@ -429,53 +408,26 @@ const ativar = async (coddependente) => {
               </div>
 
               <div class="col-4">
-                <q-input
-                  v-model="model.pensaobanco"
-                  outlined
-                  label="Banco"
-                  maxlength="3"
-                />
+                <q-input v-model="model.pensaobanco" outlined label="Banco" maxlength="3" />
               </div>
               <div class="col-4">
-                <q-input
-                  v-model="model.pensaoagencia"
-                  outlined
-                  label="Agência"
-                  maxlength="10"
-                />
+                <q-input v-model="model.pensaoagencia" outlined label="Agência" maxlength="10" />
               </div>
               <div class="col-4">
-                <q-input
-                  v-model="model.pensaoconta"
-                  outlined
-                  label="Conta"
-                  maxlength="20"
-                />
+                <q-input v-model="model.pensaoconta" outlined label="Conta" maxlength="20" />
               </div>
             </div>
           </q-slide-transition>
 
           <!-- Seção: Observações -->
           <div class="text-subtitle2 q-mb-sm">Observações</div>
-          <q-input
-            v-model="model.observacao"
-            outlined
-            type="textarea"
-            rows="2"
-            maxlength="500"
-          />
+          <q-input v-model="model.observacao" outlined type="textarea" rows="2" maxlength="500" />
         </q-card-section>
 
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            color="grey-8"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" v-close-popup color="grey-8" tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -509,7 +461,7 @@ const ativar = async (coddependente) => {
         ]"
       />
       <q-btn
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         flat
         round
         dense
@@ -542,9 +494,7 @@ const ativar = async (coddependente) => {
           <q-item-section>
             <q-item-label :class="dep.inativo ? 'text-strike' : null">
               {{ card.getNome(dep) }}
-              <q-badge v-if="dep.inativo" color="red" class="q-ml-sm">
-                Inativo
-              </q-badge>
+              <q-badge v-if="dep.inativo" color="red" class="q-ml-sm"> Inativo </q-badge>
 
               <!-- INFO -->
               <MgInfoCriacao
@@ -560,10 +510,8 @@ const ativar = async (coddependente) => {
             </q-item-label>
 
             <q-item-label caption v-if="dep.datainicio || dep.datafim">
-              Início: {{ formataDataSemHora(dep.datainicio) }}
-              <template v-if="dep.datafim">
-                | Fim: {{ formataDataSemHora(dep.datafim) }}
-              </template>
+              Início: {{ formataData(dep.datainicio) }}
+              <template v-if="dep.datafim"> | Fim: {{ formataData(dep.datafim) }} </template>
             </q-item-label>
 
             <q-item-label
@@ -578,41 +526,24 @@ const ativar = async (coddependente) => {
               "
             >
               <div class="row q-gutter-xs">
-                <q-badge v-if="dep.depirrf" color="grey" outline>
-                  Dependente IRRF
-                </q-badge>
-                <q-badge v-if="dep.depsfam" color="grey" outline>
-                  Salário-Família
-                </q-badge>
-                <q-badge v-if="dep.depplano" color="grey" outline>
-                  Plano de Saúde
-                </q-badge>
-                <q-badge v-if="dep.incsocfam" color="grey" outline>
-                  Incapaz para trabalho
-                </q-badge>
-                <q-badge v-if="dep.guardajudicial" color="grey" outline>
-                  Guarda Judicial
-                </q-badge>
+                <q-badge v-if="dep.depirrf" color="grey" outline> Dependente IRRF </q-badge>
+                <q-badge v-if="dep.depsfam" color="grey" outline> Salário-Família </q-badge>
+                <q-badge v-if="dep.depplano" color="grey" outline> Plano de Saúde </q-badge>
+                <q-badge v-if="dep.incsocfam" color="grey" outline> Incapaz para trabalho </q-badge>
+                <q-badge v-if="dep.guardajudicial" color="grey" outline> Guarda Judicial </q-badge>
                 <q-badge v-if="dep.pensaoalimenticia" color="grey" outline>
                   Pensão em folha
                 </q-badge>
               </div>
             </q-item-label>
 
-            <q-item-label
-              caption
-              style="white-space: pre-line"
-              v-if="dep.observacao"
-            >
+            <q-item-label caption style="white-space: pre-line" v-if="dep.observacao">
               {{ dep.observacao }}
             </q-item-label>
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat

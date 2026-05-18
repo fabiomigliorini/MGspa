@@ -1,85 +1,80 @@
 <script setup>
-import { computed, ref } from "vue";
-import { formataNumero } from "src/utils/formatador";
-import { debounce } from "quasar";
-import { wooStore } from "src/stores/woo";
-import WooChangeStatusModal from "src/components/modals/WooChangeStatusModal.vue";
-import { Notify } from "quasar";
-import moment from "moment";
-moment.locale("pt_br");
+import { computed, ref } from 'vue'
+import { formataNumero, formataTimestampCompleto } from '@components/formatters'
+import { debounce } from 'quasar'
+import { wooStore } from 'src/stores/woo'
+import WooChangeStatusModal from 'src/components/modals/WooChangeStatusModal.vue'
+import { Notify } from 'quasar'
+import moment from 'moment'
+moment.locale('pt_br')
 
-const sWoo = wooStore();
-const tab = ref("resumo");
+const sWoo = wooStore()
+const tab = ref('resumo')
 
 const props = defineProps({
   modelValue: Boolean,
   codwoopedido: Object,
-});
+})
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue'])
 
 const show = computed({
   get: () => props.modelValue,
-  set: (v) => emit("update:modelValue", v),
-});
+  set: (v) => emit('update:modelValue', v),
+})
 
-const showChangeStatus = ref(false);
+const showChangeStatus = ref(false)
 
 function openStatus() {
-  showChangeStatus.value = true;
+  showChangeStatus.value = true
 }
 
 const reprocessarPedido = debounce(async () => {
-  const ret = await sWoo.reprocessarPedido(sWoo.pedido.id);
+  const ret = await sWoo.reprocessarPedido(sWoo.pedido.id)
   if (ret) {
     Notify.create({
-      type: "positive",
+      type: 'positive',
       message: `Pedido ${sWoo.pedido.id} reprocessado!`,
       timeout: 3000,
-      actions: [{ icon: "close", color: "white" }],
-    });
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
-}, 500);
+}, 500)
 
 // Computed para formatar o JSON bonitinho com indentação
 const jsonFormatado = computed(() => {
   try {
     const obj =
-      typeof sWoo.pedido.jsonwoo === "string"
+      typeof sWoo.pedido.jsonwoo === 'string'
         ? JSON.parse(sWoo.pedido.jsonwoo)
-        : sWoo.pedido.jsonwoo;
-    return JSON.stringify(obj, null, 2);
+        : sWoo.pedido.jsonwoo
+    return JSON.stringify(obj, null, 2)
   } catch (e) {
-    return sWoo.pedido.jsonwoo;
+    return sWoo.pedido.jsonwoo
   }
-});
+})
 
 // Converte o jsonwoo para objeto real para facilitar o uso nas abas
 const pedidoData = computed(() => {
   try {
-    return typeof sWoo.pedido.jsonwoo === "string"
+    return typeof sWoo.pedido.jsonwoo === 'string'
       ? JSON.parse(sWoo.pedido.jsonwoo)
-      : sWoo.pedido.jsonwoo;
+      : sWoo.pedido.jsonwoo
   } catch (e) {
-    return {};
+    return {}
   }
-});
+})
 </script>
 
 <template>
   <woo-change-status-modal v-model="showChangeStatus" />
 
   <q-dialog v-model="show" transition-show="fade" transition-hide="fade">
-    <q-card
-      style="width: 700px; max-width: 90vw; height: 600px"
-      class="column no-wrap"
-    >
+    <q-card style="width: 700px; max-width: 90vw; height: 600px" class="column no-wrap">
       <q-card-section class="bg-primary text-white q-pb-none">
         <div class="row items-center no-wrap">
           <div class="col">
-            <div class="text-h6">
-              Pedido #{{ sWoo.pedido.id }} | {{ sWoo.pedido.nome }}
-            </div>
+            <div class="text-h6">Pedido #{{ sWoo.pedido.id }} | {{ sWoo.pedido.nome }}</div>
           </div>
         </div>
 
@@ -116,15 +111,14 @@ const pedidoData = computed(() => {
                       <q-tooltip>Mudar Status do Pedido</q-tooltip>
                     </q-item-section>
                     <q-item-section avatar>
-                      <q-avatar :class="sWoo.statusColor(sWoo.pedido.status)">
-                      </q-avatar>
+                      <q-avatar :class="sWoo.statusColor(sWoo.pedido.status)"> </q-avatar>
                     </q-item-section>
                   </q-item>
                   <q-item>
                     <q-item-section>
                       <q-item-label caption>Data do Pedido (Woo)</q-item-label>
                       <q-item-label>{{
-                        moment(sWoo.pedido.criacaowoo).format("LLLL")
+                        formataTimestampCompleto(sWoo.pedido.criacaowoo)
                       }}</q-item-label>
                     </q-item-section>
                   </q-item>
@@ -152,8 +146,8 @@ const pedidoData = computed(() => {
                       <q-item-label caption>Frete</q-item-label>
                       <q-item-label>{{
                         sWoo.pedido.valorfrete > 0
-                          ? "R$ " + formataNumero(sWoo.pedido.valorfrete, 2)
-                          : "Grátis/Não informado"
+                          ? 'R$ ' + formataNumero(sWoo.pedido.valorfrete, 2)
+                          : 'Grátis/Não informado'
                       }}</q-item-label>
                     </q-item-section>
                   </q-item>
@@ -177,9 +171,7 @@ const pedidoData = computed(() => {
               </div>
 
               <div class="col-12" v-if="sWoo.pedido.negocios?.length">
-                <div class="text-subtitle2 q-mb-xs text-grey-7">
-                  Negócios Vinculados
-                </div>
+                <div class="text-subtitle2 q-mb-xs text-grey-7">Negócios Vinculados</div>
                 <q-list bordered separator class="bg-white rounded-borders">
                   <q-item
                     v-for="negocio in sWoo.pedido.negocios"
@@ -192,12 +184,8 @@ const pedidoData = computed(() => {
                       <q-icon name="handshake" color="grey-7" />
                     </q-item-section>
                     <q-item-section>
-                      <q-item-label
-                        >Negócio #{{ negocio.codnegocio }}</q-item-label
-                      >
-                      <q-item-label caption>{{
-                        negocio.negociostatus
-                      }}</q-item-label>
+                      <q-item-label>Negócio #{{ negocio.codnegocio }}</q-item-label>
+                      <q-item-label caption>{{ negocio.negociostatus }}</q-item-label>
                     </q-item-section>
                     <q-item-section side>
                       <q-item-label class="text-weight-bold"
@@ -215,10 +203,7 @@ const pedidoData = computed(() => {
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-6">
                 <q-list bordered class="bg-white rounded-borders full-height">
-                  <q-item-label
-                    header
-                    class="text-weight-bold text-primary row items-center"
-                  >
+                  <q-item-label header class="text-weight-bold text-primary row items-center">
                     <q-icon name="person" size="xs" class="q-mr-xs" />
                     {{ pedidoData.billing?.first_name }}
                     {{ pedidoData.billing?.last_name }}
@@ -235,19 +220,13 @@ const pedidoData = computed(() => {
                       </q-item-label>
                       <q-item-label
                         class="text-caption"
-                        v-if="
-                          pedidoData.billing?.cpf || pedidoData.billing?.cnpj
-                        "
+                        v-if="pedidoData.billing?.cpf || pedidoData.billing?.cnpj"
                       >
-                        {{
-                          pedidoData.billing?.cpf || pedidoData.billing?.cnpj
-                        }}
+                        {{ pedidoData.billing?.cpf || pedidoData.billing?.cnpj }}
                       </q-item-label>
                       <q-item-label class="text-caption">
-                        {{ pedidoData.billing?.address_1 }},
-                        {{ pedidoData.billing?.number }}<br />
-                        {{ pedidoData.billing?.neighborhood }} -
-                        {{ pedidoData.billing?.city }}/{{
+                        {{ pedidoData.billing?.address_1 }}, {{ pedidoData.billing?.number }}<br />
+                        {{ pedidoData.billing?.neighborhood }} - {{ pedidoData.billing?.city }}/{{
                           pedidoData.billing?.state
                         }}
                       </q-item-label>
@@ -258,10 +237,7 @@ const pedidoData = computed(() => {
 
               <div class="col-12 col-md-6">
                 <q-list bordered class="bg-white rounded-borders full-height">
-                  <q-item-label
-                    header
-                    class="text-weight-bold text-orange-9 row items-center"
-                  >
+                  <q-item-label header class="text-weight-bold text-orange-9 row items-center">
                     <q-icon name="local_shipping" size="xs" class="q-mr-xs" />
                     Entrega
                   </q-item-label>
@@ -281,11 +257,10 @@ const pedidoData = computed(() => {
                     </q-item-section>
                     <q-item-section>
                       <q-item-label class="text-caption">
-                        {{ pedidoData.shipping?.address_1 }},
-                        {{ pedidoData.shipping?.number }}<br />
+                        {{ pedidoData.shipping?.address_1 }}, {{ pedidoData.shipping?.number
+                        }}<br />
                         {{ pedidoData.shipping?.neighborhood }}<br />
-                        {{ pedidoData.shipping?.city }} -
-                        {{ pedidoData.shipping?.state }}<br />
+                        {{ pedidoData.shipping?.city }} - {{ pedidoData.shipping?.state }}<br />
                         CEP: {{ pedidoData.shipping?.postcode }}
                       </q-item-label>
                     </q-item-section>
@@ -299,25 +274,15 @@ const pedidoData = computed(() => {
                   >
                     <q-item-section>
                       <q-item-label caption>Método Escolhido</q-item-label>
-                      <q-item-label class="text-caption">{{
-                        ship.method_title
-                      }}</q-item-label>
+                      <q-item-label class="text-caption">{{ ship.method_title }}</q-item-label>
                     </q-item-section>
                   </q-item>
                 </q-list>
               </div>
 
               <div class="col-12">
-                <q-list
-                  dense
-                  bordered
-                  separator
-                  class="bg-white rounded-borders"
-                >
-                  <q-item-label
-                    header
-                    class="text-weight-bold text-primary row items-center"
-                  >
+                <q-list dense bordered separator class="bg-white rounded-borders">
+                  <q-item-label header class="text-weight-bold text-primary row items-center">
                     <q-icon name="shopping_basket" size="xs" class="q-mr-xs" />
                     Itens do Pedido
                   </q-item-label>
@@ -334,7 +299,7 @@ const pedidoData = computed(() => {
 
                     <q-item-section>
                       <q-item-label class="text-caption text-grey-7">
-                        SKU: {{ item.sku || "N/A" }}
+                        SKU: {{ item.sku || 'N/A' }}
                       </q-item-label>
                       <q-item-label class="text-weight-bold">
                         {{ item.name }}
@@ -356,10 +321,7 @@ const pedidoData = computed(() => {
 
               <div class="col-12">
                 <q-list bordered class="bg-white rounded-borders full-height">
-                  <q-item-label
-                    header
-                    class="text-weight-bold text-green-9 row items-center"
-                  >
+                  <q-item-label header class="text-weight-bold text-green-9 row items-center">
                     <q-icon name="payments" size="xs" class="q-mr-xs" />
                     Forma de Pagamento
                   </q-item-label>
@@ -378,12 +340,7 @@ const pedidoData = computed(() => {
                       <div class="row justify-between">
                         <span>Subtotal:</span>
                         <span>
-                          {{
-                            formataNumero(
-                              pedidoData.total - pedidoData.shipping_total,
-                              2
-                            )
-                          }}</span
+                          {{ formataNumero(pedidoData.total - pedidoData.shipping_total, 2) }}</span
                         >
                       </div>
                       <div class="row justify-between text-orange-9">
@@ -406,8 +363,7 @@ const pedidoData = computed(() => {
                       <q-item-label caption>Dados Técnicos</q-item-label>
                       <q-item-label style="font-size: 10px" class="text-grey-7">
                         IP: {{ pedidoData.customer_ip_address }}<br />
-                        Versão: {{ pedidoData.version }} | Via:
-                        {{ pedidoData.created_via }}<br />
+                        Versão: {{ pedidoData.version }} | Via: {{ pedidoData.created_via }}<br />
                         Key: {{ pedidoData.order_key }}
                       </q-item-label>
                     </q-item-section>
@@ -432,12 +388,8 @@ const pedidoData = computed(() => {
                           :key="meta.id"
                           class="col-12 col-sm-4"
                         >
-                          <div
-                            class="bg-grey-2 q-pa-xs rounded-borders text-caption ellipsis"
-                          >
-                            <span class="text-weight-bold"
-                              >{{ meta.key }}:</span
-                            >
+                          <div class="bg-grey-2 q-pa-xs rounded-borders text-caption ellipsis">
+                            <span class="text-weight-bold">{{ meta.key }}:</span>
                             {{ meta.value }}
                           </div>
                         </div>
@@ -448,10 +400,7 @@ const pedidoData = computed(() => {
               </div>
 
               <div class="col-12" v-if="pedidoData.customer_note">
-                <q-banner
-                  dense
-                  class="bg-amber-1 text-amber-10 rounded-borders"
-                >
+                <q-banner dense class="bg-amber-1 text-amber-10 rounded-borders">
                   <template v-slot:avatar><q-icon name="chat" /></template>
                   <strong>Nota do Cliente:</strong>
                   {{ pedidoData.customer_note }}

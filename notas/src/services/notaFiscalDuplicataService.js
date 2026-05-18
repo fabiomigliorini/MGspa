@@ -12,11 +12,14 @@ export default {
   },
 
   async update(codnotafiscal, codnotafiscalduplicatas, data) {
-    const response = await api.put(`/v1/nota-fiscal/${codnotafiscal}/duplicata/${codnotafiscalduplicatas}`, data)
+    const response = await api.put(
+      `/v1/nota-fiscal/${codnotafiscal}/duplicata/${codnotafiscalduplicatas}`,
+      data,
+    )
     return response.data
   },
 
   async delete(codnotafiscal, codnotafiscalduplicatas) {
     await api.delete(`/v1/nota-fiscal/${codnotafiscal}/duplicata/${codnotafiscalduplicatas}`)
-  }
+  },
 }

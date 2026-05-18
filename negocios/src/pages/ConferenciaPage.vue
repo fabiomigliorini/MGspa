@@ -1,24 +1,25 @@
 <script setup>
-import { ref, watch } from "vue";
-import { debounce } from "quasar";
+import { formataNumero, formataCodigo } from '@components/formatters'
+import { ref, watch } from 'vue'
+import { debounce } from 'quasar'
 
-import { conferenciaStore } from "src/stores/conferencia";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { conferenciaStore } from 'src/stores/conferencia'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sConferencia = conferenciaStore();
+const sConferencia = conferenciaStore()
 
 const inicializa = debounce(async () => {
-  await sConferencia.getConferencia();
-}, 500);
+  await sConferencia.getConferencia()
+}, 500)
 
 watch(
   () => sConferencia.filtro,
   () => {
-    inicializa();
+    inicializa()
   },
-  { deep: true }
-);
+  { deep: true },
+)
 </script>
 <template>
   <q-page>
@@ -33,7 +34,7 @@ watch(
           <q-item-section class="col-xs-3">
             <q-item-label> {{ item.fantasia }} </q-item-label>
             <q-item-label class="ellipsis" caption>
-              #{{ String(item.codnegocio).padStart(8, "0") }}
+              {{ formataCodigo(item.codnegocio) }}
             </q-item-label>
           </q-item-section>
 
@@ -41,13 +42,7 @@ watch(
             <q-item-label>
               <template v-if="item.valortotal">
                 R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortotal)
-                }}
+                {{ formataNumero(item.valortotal) }}
               </template>
             </q-item-label>
             <q-item-label caption>Total</q-item-label>
@@ -57,13 +52,7 @@ watch(
             <q-item-label>
               <template v-if="item.valorpix">
                 R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valorpix)
-                }}
+                {{ formataNumero(item.valorpix) }}
               </template>
               &nbsp;
             </q-item-label>
@@ -74,13 +63,7 @@ watch(
             <q-item-label>
               <template v-if="item.valorstone">
                 R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valorstone)
-                }}
+                {{ formataNumero(item.valorstone) }}
               </template>
               &nbsp;
             </q-item-label>
@@ -91,13 +74,7 @@ watch(
             <q-item-label>
               <template v-if="item.valortitulo">
                 R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortitulo)
-                }}
+                {{ formataNumero(item.valortitulo) }}
               </template>
               &nbsp;
             </q-item-label>
@@ -108,13 +85,7 @@ watch(
             <q-item-label>
               <template v-if="item.valordiferenca">
                 R$
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valordiferenca)
-                }}
+                {{ formataNumero(item.valordiferenca) }}
               </template>
               &nbsp;
             </q-item-label>

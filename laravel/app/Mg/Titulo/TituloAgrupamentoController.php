@@ -58,6 +58,25 @@ class TituloAgrupamentoController extends Controller
         return new TituloAgrupamentoDetalheResource(TituloAgrupamentoService::carregar($ag->codtituloagrupamento));
     }
 
+    public function update(TituloAgrupamentoUpdateRequest $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
+
+        DB::beginTransaction();
+        try {
+            $ag = TituloAgrupamento::findOrFail($id);
+            $ag = TituloAgrupamentoService::atualizar($ag, $request->validated());
+            DB::commit();
+            return new TituloAgrupamentoDetalheResource($ag);
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+    }
+
     public function estornar(int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);

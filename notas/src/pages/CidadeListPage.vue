@@ -112,7 +112,7 @@ watch(
         })
       }
     }
-  }
+  },
 )
 
 const handleEditCidade = (cidade) => {

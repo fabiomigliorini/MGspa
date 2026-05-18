@@ -3,19 +3,22 @@ import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import AppLauncher from 'src/components/AppLauncher.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
-import { version } from '../../package.json'
+import MgAppFooter from '@components/MgAppFooter.vue'
+import { useAuth } from 'src/composables/useAuth'
 
 const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
 const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscais')
+
+const auth = useAuth()
 </script>
 
 <template>
   <q-layout view="hHh lpR fFf">
     <!-- Header -->
-    <q-header elevated class="bg-primary text-white">
+    <q-header bordered reveal class="bg-primary text-white">
       <q-toolbar>
         <!-- Hamburger ESQUERDO -->
         <q-btn
@@ -37,10 +40,8 @@ const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscai
           {{ pageTitle }}
         </q-toolbar-title>
 
-        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
-
         <!-- Menu do Usuário -->
-        <MgUserMenu />
+        <MgUserMenu :auth="auth" />
 
         <!-- App Launcher -->
         <app-launcher />
@@ -91,5 +92,9 @@ const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscai
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <MgAppFooter app-name="Notas" />
+    </q-footer>
   </q-layout>
 </template>

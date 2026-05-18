@@ -1,322 +1,297 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import { formataData, formataFone, formataCelular } from "src/utils/formatador";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
-import MgInputFormatado from "@components/MgInputFormatado.vue";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import { useAuthStore } from 'src/stores'
+import { formataData, formataTelefone, formataTimestamp } from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInputFormatado from '@components/MgInputFormatado.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const sPessoa = pessoaStore();
-const user = guardaToken();
+const $q = useQuasar()
+const route = useRoute()
+const sPessoa = pessoaStore()
+const user = useAuthStore()
 
-const filtroTelefone = ref("ativos");
+const filtroTelefone = ref('ativos')
 const telefonesFiltrados = computed(() => {
-  const lista = sPessoa.item?.PessoaTelefoneS || [];
-  if (filtroTelefone.value === "ativos") return lista.filter((x) => !x.inativo);
-  return lista;
-});
+  const lista = sPessoa.item?.PessoaTelefoneS || []
+  if (filtroTelefone.value === 'ativos') return lista.filter((x) => !x.inativo)
+  return lista
+})
 
-const dialogTel = ref(false);
-const telNovo = ref(false);
-const modelTel = ref({});
-const pessoatelefonecod = ref("");
+const dialogTel = ref(false)
+const telNovo = ref(false)
+const modelTel = ref({})
+const pessoatelefonecod = ref('')
 
 const iconeFone = (tipo) => {
   switch (tipo) {
     case 2:
-      return "smartphone";
+      return 'smartphone'
     case 1:
-      return "phone";
+      return 'phone'
     default:
-      return "device_unknown";
+      return 'device_unknown'
   }
-};
+}
 
 const linkTel = (ddd, telefone) => {
-  return "tel:" + ddd + telefone;
-};
+  return 'tel:' + ddd + telefone
+}
 
 const confirmaSmsCel = (ddd, telefone, codpessoatelefone) => {
   $q.dialog({
-    title: "Verificação via SMS",
+    title: 'Verificação via SMS',
     message:
-      "Digite o código enviado para o número " +
-      "(" +
-      ddd +
-      ") " +
-      formataCelular(telefone),
-    prompt: { model: "", type: "number", step: "1" },
+      'Digite o código enviado para o número ' + '(' + ddd + ') ' + formataTelefone(telefone),
+    prompt: { model: '', type: 'number', step: '1' },
     cancel: true,
     persistent: true,
   }).onOk((codverificacao) => {
-    postTelefone(ddd, telefone, codpessoatelefone, codverificacao);
-  });
-};
+    postTelefone(ddd, telefone, codpessoatelefone, codverificacao)
+  })
+}
 
-const postTelefone = async (
-  ddd,
-  telefone,
-  codpessoatelefone,
-  codverificacao
-) => {
+const postTelefone = async (ddd, telefone, codpessoatelefone, codverificacao) => {
   try {
     const ret = await sPessoa.telefoneConfirmaVerificacao(
       route.params.id,
       codpessoatelefone,
-      codverificacao
-    );
+      codverificacao,
+    )
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Telefone Verificado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Telefone Verificado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
-    confirmaSmsCel(ddd, telefone, codpessoatelefone);
+    })
+    confirmaSmsCel(ddd, telefone, codpessoatelefone)
   }
-};
+}
 
 const enviarSms = async (pais, ddd, telefone, codpessoatelefone) => {
   $q.dialog({
-    title: "Verificação via SMS",
+    title: 'Verificação via SMS',
     message:
-      "Deseja enviar o código de verificação para o número " +
-      "(" +
+      'Deseja enviar o código de verificação para o número ' +
+      '(' +
       ddd +
-      ") " +
-      formataCelular(telefone) +
-      " ?",
+      ') ' +
+      formataTelefone(telefone) +
+      ' ?',
     cancel: true,
   }).onOk(() => {
-    sPessoa
-      .telefoneVerificar(route.params.id, codpessoatelefone)
-      .then((resp) => {
-        if (resp.data["situacao"] == "OK") {
-          $q.notify({
-            color: "green-5",
-            textColor: "white",
-            icon: "done",
-            message: "Código SMS enviado",
-          });
-          confirmaSmsCel(ddd, telefone, codpessoatelefone);
-        } else {
-          $q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "error",
-            message: resp.data["descricao"],
-          });
-        }
-      });
-  });
-};
+    sPessoa.telefoneVerificar(route.params.id, codpessoatelefone).then((resp) => {
+      if (resp.data['situacao'] == 'OK') {
+        $q.notify({
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Código SMS enviado',
+        })
+        confirmaSmsCel(ddd, telefone, codpessoatelefone)
+      } else {
+        $q.notify({
+          color: 'red-5',
+          textColor: 'white',
+          icon: 'error',
+          message: resp.data['descricao'],
+        })
+      }
+    })
+  })
+}
 
 const salvarTel = async (codpessoa) => {
-  dialogTel.value = false;
+  dialogTel.value = false
   try {
-    await sPessoa.telefoneAlterar(
-      codpessoa,
-      pessoatelefonecod.value,
-      modelTel.value
-    );
+    await sPessoa.telefoneAlterar(codpessoa, pessoatelefonecod.value, modelTel.value)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Telefone alterado",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Telefone alterado',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const novoTel = async (codpessoa) => {
-  dialogTel.value = false;
+  dialogTel.value = false
   try {
-    const ret = await sPessoa.telefoneNovo(codpessoa, modelTel.value);
+    const ret = await sPessoa.telefoneNovo(codpessoa, modelTel.value)
     if (ret.data.data) {
-      telNovo.value = false;
-      sPessoa.item.PessoaTelefoneS = ret.data.data;
+      telNovo.value = false
+      sPessoa.item.PessoaTelefoneS = ret.data.data
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Telefone criado.",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Telefone criado.',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const submit = () => {
-  telNovo.value ? novoTel(route.params.id) : salvarTel(route.params.id);
-};
+  telNovo.value ? novoTel(route.params.id) : salvarTel(route.params.id)
+}
 
-const editarTel = (
-  codpessoatelefone,
-  ddd,
-  telefone,
-  apelido,
-  tipo,
-  verificacao
-) => {
-  dialogTel.value = true;
+const editarTel = (codpessoatelefone, ddd, telefone, apelido, tipo, verificacao) => {
+  dialogTel.value = true
   modelTel.value = {
     ddd: ddd,
     telefone: telefone,
     apelido: apelido,
     tipo: tipo,
     verificacao: verificacao,
-    pais: "+55",
-  };
-  pessoatelefonecod.value = codpessoatelefone;
-};
+    pais: '+55',
+  }
+  pessoatelefonecod.value = codpessoatelefone
+}
 
 const inativar = async (codpessoa, codpessoatelefone) => {
   try {
-    const ret = await sPessoa.telefoneInativar(codpessoa, codpessoatelefone);
+    const ret = await sPessoa.telefoneInativar(codpessoa, codpessoatelefone)
     if (ret.data) {
       const i = sPessoa.item.PessoaTelefoneS.findIndex(
-        (item) => item.codpessoatelefone === codpessoatelefone
-      );
-      sPessoa.item.PessoaTelefoneS[i] = ret.data.data;
+        (item) => item.codpessoatelefone === codpessoatelefone,
+      )
+      sPessoa.item.PessoaTelefoneS[i] = ret.data.data
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Inativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Inativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const ativar = async (codpessoa, codpessoatelefone) => {
   try {
-    const ret = await sPessoa.telefoneAtivar(codpessoa, codpessoatelefone);
+    const ret = await sPessoa.telefoneAtivar(codpessoa, codpessoatelefone)
     if (ret.data) {
       const i = sPessoa.item.PessoaTelefoneS.findIndex(
-        (item) => item.codpessoatelefone === codpessoatelefone
-      );
-      sPessoa.item.PessoaTelefoneS[i] = ret.data.data;
+        (item) => item.codpessoatelefone === codpessoatelefone,
+      )
+      sPessoa.item.PessoaTelefoneS[i] = ret.data.data
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Ativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Ativado!',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const excluirTel = async (codpessoatelefone) => {
   $q.dialog({
-    title: "Excluir Telefone",
-    message: "Tem certeza que deseja excluir esse telefone?",
+    title: 'Excluir Telefone',
+    message: 'Tem certeza que deseja excluir esse telefone?',
     cancel: true,
   }).onOk(async () => {
     try {
-      const ret = await sPessoa.telefoneExcluir(
-        route.params.id,
-        codpessoatelefone
-      );
+      const ret = await sPessoa.telefoneExcluir(route.params.id, codpessoatelefone)
       if (ret) {
         $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Telefone excluido",
-        });
-        sPessoa.get(route.params.id);
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Telefone excluido',
+        })
+        sPessoa.get(route.params.id)
       }
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 const cima = async (codpessoa, codpessoatelefone) => {
   try {
-    await sPessoa.telefoneParaCima(codpessoa, codpessoatelefone);
+    await sPessoa.telefoneParaCima(codpessoa, codpessoatelefone)
     $q.notify({
-      color: "green-4",
-      textColor: "white",
-      icon: "done",
-      message: "Movido para cima",
-    });
-    sPessoa.get(codpessoa);
+      color: 'green-4',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Movido para cima',
+    })
+    sPessoa.get(codpessoa)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
-    sPessoa.get(codpessoa);
+    })
+    sPessoa.get(codpessoa)
   }
-};
+}
 
 const baixo = async (codpessoa, codpessoatelefone) => {
   try {
-    await sPessoa.telefoneParaBaixo(codpessoa, codpessoatelefone);
+    await sPessoa.telefoneParaBaixo(codpessoa, codpessoatelefone)
     $q.notify({
-      color: "green-4",
-      textColor: "white",
-      icon: "done",
-      message: "Movido para baixo",
-    });
-    sPessoa.get(codpessoa);
+      color: 'green-4',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Movido para baixo',
+    })
+    sPessoa.get(codpessoa)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
-    sPessoa.get(codpessoa);
+    })
+    sPessoa.get(codpessoa)
   }
-};
+}
 </script>
 
 <template>
@@ -383,11 +358,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 v-model="modelTel.ddd"
                 mask="(##)"
                 label="DDD"
-                :rules="[
-                  telNovo == false
-                    ? null
-                    : (val) => (val && val.length > 0) || ' ',
-                ]"
+                :rules="[telNovo == false ? null : (val) => (val && val.length > 0) || ' ']"
                 unmasked-value
                 autofocus
                 v-if="modelTel.tipo != '9'"
@@ -404,11 +375,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 mask="# ####-####"
                 label="Telefone"
                 unmasked-value
-                :rules="[
-                  telNovo == false
-                    ? null
-                    : (val) => (val && val.length > 0) || ' ',
-                ]"
+                :rules="[telNovo == false ? null : (val) => (val && val.length > 0) || ' ']"
                 inputmode="numeric"
                 input-class="text-center"
               />
@@ -423,8 +390,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 :rules="[
                   telNovo == false
                     ? null
-                    : (val) =>
-                        (val && val.length > 0) || 'Telefone obrigatório',
+                    : (val) => (val && val.length > 0) || 'Telefone obrigatório',
                 ]"
                 inputmode="numeric"
                 input-class="text-center"
@@ -438,8 +404,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 :rules="[
                   telNovo == false
                     ? null
-                    : (val) =>
-                        (val && val.length > 0) || 'Telefone obrigatório',
+                    : (val) => (val && val.length > 0) || 'Telefone obrigatório',
                 ]"
                 inputmode="tel"
                 input-class="text-center"
@@ -448,12 +413,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
 
             <!-- APELIDO -->
             <div class="col-12">
-              <MgInputFormatado
-                outlined
-                v-model="modelTel.apelido"
-                label="Apelido"
-                :rules="[]"
-              />
+              <MgInputFormatado outlined v-model="modelTel.apelido" label="Apelido" :rules="[]" />
             </div>
           </div>
         </q-card-section>
@@ -461,13 +421,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -500,20 +454,13 @@ const baixo = async (codpessoa, codpessoatelefone) => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
-        @click="
-          (dialogTel = true),
-            (modelTel = { tipo: 2, pais: '+55' }),
-            (telNovo = true)
-        "
+        v-if="user.temPermissao('Publico')"
+        @click=";(dialogTel = true), (modelTel = { tipo: 2, pais: '+55' }), (telNovo = true)"
       />
     </q-card-section>
 
     <q-list v-if="telefonesFiltrados.length > 0">
-      <template
-        v-for="(element, i) in telefonesFiltrados"
-        v-bind:key="element.codpessoatelefone"
-      >
+      <template v-for="(element, i) in telefonesFiltrados" v-bind:key="element.codpessoatelefone">
         <q-separator inset />
         <q-item>
           <!-- BOTAO TELEFONE -->
@@ -531,13 +478,8 @@ const baixo = async (codpessoa, codpessoatelefone) => {
             <!-- NUMERO -->
             <q-item-label :class="element.inativo ? 'text-strike' : null">
               <template v-if="element.ddd"> ({{ element.ddd }}) </template>
-              {{ formataFone(element.tipo, element.telefone) }}
-              <q-icon
-                v-if="element.verificacao"
-                color="primary"
-                name="verified"
-                class="q-ml-xs"
-              >
+              {{ formataTelefone(element.telefone, element.tipo) }}
+              <q-icon v-if="element.verificacao" color="primary" name="verified" class="q-ml-xs">
                 <q-tooltip>Verificado</q-tooltip>
               </q-icon>
 
@@ -552,7 +494,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
 
             <!-- INATIVO -->
             <q-item-label caption class="text-red-14" v-if="element.inativo">
-              Inativo desde: {{ formataData(element.inativo) }}
+              Inativo desde: {{ formataTimestamp(element.inativo) }}
             </q-item-label>
 
             <!-- APELIDO -->
@@ -561,10 +503,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
             </q-item-label>
 
             <!-- VERIFICAR -->
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <q-btn
                 v-if="!element.verificacao && element.tipo === 2"
                 flat
@@ -573,22 +512,14 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 label="Verificar"
                 color="primary"
                 @click="
-                  enviarSms(
-                    element.pais,
-                    element.ddd,
-                    element.telefone,
-                    element.codpessoatelefone
-                  )
+                  enviarSms(element.pais, element.ddd, element.telefone, element.codpessoatelefone)
                 "
               />
             </q-item-label>
           </q-item-section>
           <q-item-section side>
             <!-- BOTOES -->
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <template v-if="sPessoa.item?.PessoaTelefoneS.length > 1">
                 <!-- CIMA -->
                 <q-btn
@@ -633,7 +564,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                     element.telefone,
                     element.apelido,
                     element.tipo,
-                    element.verificacao
+                    element.verificacao,
                   ),
                     (telNovo = false)
                 "
@@ -686,8 +617,6 @@ const baixo = async (codpessoa, codpessoatelefone) => {
         </q-item>
       </template>
     </q-list>
-    <div v-else class="q-pa-md text-center text-grey">
-      Nenhum telefone cadastrado
-    </div>
+    <div v-else class="q-pa-md text-center text-grey">Nenhum telefone cadastrado</div>
   </q-card>
 </template>

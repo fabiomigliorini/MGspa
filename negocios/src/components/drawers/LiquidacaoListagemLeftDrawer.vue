@@ -1,17 +1,17 @@
 <script setup>
-import { onMounted, onUnmounted } from "vue";
-import { liquidacaoStore } from "stores/liquidacao";
-import SelectPessoa from "components/selects/SelectPessoa.vue";
-import SelectPdv from "components/selects/SelectPdv.vue";
-import SelectUsuario from "components/selects/SelectUsuario.vue";
-import SelectPortador from "components/selects/SelectPortador.vue";
-import MgInputValor from "@components/MgInputValor.vue";
-import MgInputData from "@components/MgInputData.vue";
-const sLiquidacao = liquidacaoStore();
+import { onMounted, onUnmounted } from 'vue'
+import { liquidacaoStore } from 'stores/liquidacao'
+import SelectPessoa from 'components/selects/SelectPessoa.vue'
+import SelectPdv from 'components/selects/SelectPdv.vue'
+import SelectUsuario from 'components/selects/SelectUsuario.vue'
+import SelectPortador from 'components/selects/SelectPortador.vue'
+import MgInputValor from '@components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
+const sLiquidacao = liquidacaoStore()
 
 onMounted(() => {
-  sLiquidacao.inicializaFiltro();
-});
+  sLiquidacao.inicializaFiltro()
+})
 </script>
 <template>
   <q-list>
@@ -20,12 +20,7 @@ onMounted(() => {
     <!-- PDV -->
     <q-item>
       <q-item-section>
-        <select-pdv
-          outlined
-          v-model="sLiquidacao.filtro.codpdv"
-          label="PDV"
-          clearable
-        />
+        <select-pdv outlined v-model="sLiquidacao.filtro.codpdv" label="PDV" clearable />
       </q-item-section>
     </q-item>
 
@@ -115,12 +110,7 @@ onMounted(() => {
     <!-- PESSOA -->
     <q-item>
       <q-item-section>
-        <select-pessoa
-          outlined
-          v-model="sLiquidacao.filtro.codpessoa"
-          label="Pessoa"
-          clearable
-        />
+        <select-pessoa outlined v-model="sLiquidacao.filtro.codpessoa" label="Pessoa" clearable />
       </q-item-section>
     </q-item>
 
@@ -154,11 +144,7 @@ onMounted(() => {
             prefix="R$"
           />
           <MgInputValor
-            :min="
-              sLiquidacao.filtro.valor_de > 0
-                ? sLiquidacao.filtro.valor_de
-                : 0.01
-            "
+            :min="sLiquidacao.filtro.valor_de > 0 ? sLiquidacao.filtro.valor_de : 0.01"
             v-model="sLiquidacao.filtro.valor_ate"
             label="até"
             class="col-6"

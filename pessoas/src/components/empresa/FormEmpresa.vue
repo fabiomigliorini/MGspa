@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from "vue";
-import MgInputData from "@components/MgInputData.vue";
+import { ref, computed } from 'vue'
+import MgInputData from '@components/MgInputData.vue'
 
 const props = defineProps({
   modelValue: {
@@ -11,39 +11,39 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
-const emit = defineEmits(["update:modelValue", "submit"]);
+const emit = defineEmits(['update:modelValue', 'submit'])
 
-const formRef = ref(null);
+const formRef = ref(null)
 
 const model = computed({
   get() {
-    return props.modelValue;
+    return props.modelValue
   },
   set(value) {
-    emit("update:modelValue", value);
+    emit('update:modelValue', value)
   },
-});
+})
 
 const opcoesModoemissao = [
-  { label: "Normal", value: 1 },
-  { label: "Offline", value: 9 },
-];
+  { label: 'Normal', value: 1 },
+  { label: 'Offline', value: 9 },
+]
 
-const validaObrigatorio = (val) => !!val || "Campo obrigatório";
+const validaObrigatorio = (val) => !!val || 'Campo obrigatório'
 
 const submit = async () => {
-  const valid = await formRef.value.validate();
+  const valid = await formRef.value.validate()
   if (valid) {
-    emit("submit");
+    emit('submit')
   }
-};
+}
 
 defineExpose({
   submit,
   validate: () => formRef.value.validate(),
-});
+})
 </script>
 
 <template>
@@ -69,11 +69,7 @@ defineExpose({
       class="q-pa-none"
     />
 
-    <MgInputData
-      v-model="model.contingenciadata"
-      type="timestamp"
-      label="Data de Contingência"
-    />
+    <MgInputData v-model="model.contingenciadata" type="timestamp" label="Data de Contingência" />
 
     <q-input
       outlined
@@ -84,14 +80,7 @@ defineExpose({
     />
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        color="primary"
-        :loading="loading"
-        icon="save"
-        round
-        class="q-pa-md"
-        @click="submit"
-      />
+      <q-btn color="primary" :loading="loading" icon="save" round class="q-pa-md" @click="submit" />
     </q-page-sticky>
   </q-form>
 </template>

@@ -75,7 +75,7 @@ onMounted(() => {
       () => {
         debouncedApplyFilters()
       },
-      { deep: true }
+      { deep: true },
     )
   }, 200)
 })
@@ -117,13 +117,7 @@ onMounted(() => {
 
       <!-- Chave NFe -->
       <div class="q-mb-md">
-        <q-input
-          v-model="filters.nfechave"
-          label="Chave"
-          outlined
-          clearable
-          :bottom-slots="false"
-        >
+        <q-input v-model="filters.nfechave" label="Chave" outlined clearable :bottom-slots="false">
           <template v-slot:prepend>
             <q-icon name="vpn_key" />
           </template>

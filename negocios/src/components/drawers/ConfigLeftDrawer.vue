@@ -5,7 +5,13 @@
   <!-- ComputerSettings -->
   <q-item clickable tag="a" :to="'/config/padrao/'" v-ripple exact-active-class="bg-blue-1">
     <q-item-section avatar>
-      <q-avatar icon="mdi-monitor-cellphone-star" round color="primary" active-color="red" text-color="white" />
+      <q-avatar
+        icon="mdi-monitor-cellphone-star"
+        round
+        color="primary"
+        active-color="red"
+        text-color="white"
+      />
     </q-item-section>
     <q-item-section>
       <q-item-label class="ellipsis"> Meu Dispositivo</q-item-label>

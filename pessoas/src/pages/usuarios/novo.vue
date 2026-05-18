@@ -1,10 +1,10 @@
 <script setup>
-import { guardaToken } from "src/stores";
-import FormUsuario from "components/usuario/FormUsuario.vue";
-import MGLayout from "layouts/MGLayout.vue";
-import NaoAutorizado from "components/NaoAutorizado.vue";
+import { useAuthStore } from 'src/stores'
+import FormUsuario from 'components/usuario/FormUsuario.vue'
+import MGLayout from 'layouts/MGLayout.vue'
+import NaoAutorizado from 'components/NaoAutorizado.vue'
 
-const user = guardaToken();
+const user = useAuthStore()
 </script>
 
 <template>
@@ -14,17 +14,10 @@ const user = guardaToken();
     </template>
 
     <template #botaoVoltar>
-      <q-btn
-        flat
-        dense
-        round
-        :to="{ name: 'usuarios' }"
-        icon="arrow_back"
-        aria-label="Voltar"
-      />
+      <q-btn flat dense round :to="{ name: 'usuarios' }" icon="arrow_back" aria-label="Voltar" />
     </template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <div style="max-width: 1280px; margin: auto; min-height: 100vh">
         <div class="row q-pa-md">
           <div class="col-12">

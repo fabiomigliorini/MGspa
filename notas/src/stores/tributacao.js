@@ -3,7 +3,7 @@ import { api } from 'src/services/api'
 
 export const useTributacaoStore = defineStore('tributacao', {
   persist: {
-    pick: ['filters']
+    pick: ['filters'],
   },
   state: () => ({
     // Lista de tributos disponíveis (vem da API)

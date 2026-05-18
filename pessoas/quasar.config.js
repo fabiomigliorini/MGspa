@@ -9,9 +9,24 @@
 // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js
 
 const path = require("path");
+const { execSync } = require("node:child_process");
 const ESLintPlugin = require("eslint-webpack-plugin");
+const pkg = require("./package.json");
 
 const { configure } = require("quasar/wrappers");
+
+function gitCommitNumber() {
+  if (process.env.COMMIT_NUMBER) return process.env.COMMIT_NUMBER;
+  try {
+    return execSync("git -c safe.directory='*' rev-list --count HEAD -- .", {
+      cwd: __dirname,
+    })
+      .toString()
+      .trim();
+  } catch {
+    return "";
+  }
+}
 
 module.exports = configure(function (ctx) {
   return {
@@ -45,8 +60,12 @@ module.exports = configure(function (ctx) {
     // Full list of options: https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-build
     build: {
       vueRouterMode: "history", // available values: 'hash', 'history'
-      // env: {},
-      env: require("dotenv").config().parsed,
+      env: {
+        ...(require("dotenv").config().parsed || {}),
+        APP_VERSION: pkg.version,
+        BUILD_DATE: new Date().toISOString(),
+        COMMIT_NUMBER: gitCommitNumber(),
+      },
       // transpile: false,
       // publicPath: '/',
 

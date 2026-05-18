@@ -1,33 +1,31 @@
 <script setup>
-import { computed } from "vue";
-import moment from "moment";
+import { formataData, formataTimestamp } from '@components/formatters'
+import { computed } from 'vue'
+import moment from 'moment'
 
 const props = defineProps({
   empresa: {
     type: Object,
     required: true,
   },
-});
+})
 
 const modoEmissaoLabel = computed(() => {
   const modos = {
-    1: "Normal",
-    9: "Offline",
-  };
-  return modos[props.empresa.modoemissaonfce] || "-";
-});
+    1: 'Normal',
+    9: 'Offline',
+  }
+  return modos[props.empresa.modoemissaonfce] || '-'
+})
 
 const contingenciaFormatada = computed(() => {
-  if (!props.empresa.contingenciadata) return null;
-  return moment(props.empresa.contingenciadata).format("DD/MM/YYYY HH:mm");
-});
+  if (!props.empresa.contingenciadata) return null
+  return formataTimestamp(props.empresa.contingenciadata)
+})
 </script>
 
 <template>
-  <router-link
-    :to="'/empresa/' + empresa.codempresa"
-    class="full-height link-card"
-  >
+  <router-link :to="'/empresa/' + empresa.codempresa" class="full-height link-card">
     <q-card bordered flat class="cursor-pointer full-height q-pb-md">
       <!-- HEADER -->
       <q-card-section class="text-grey-9 text-overline q-pb-none">

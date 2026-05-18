@@ -3,69 +3,69 @@
 namespace Mg\Titulo;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
-use Mg\Negocio\NegocioNotaFiscalResource;
+use Illuminate\Support\Facades\DB;
 
 class TituloDetalheResource extends Resource
 {
     private function notasVinculadas(): array
     {
-        $origens = [];
-
-        if (!empty($this->codtituloagrupamento)) {
-            $ag = TituloAgrupamento::with([
-                'MovimentoTituloS.TipoMovimentoTitulo',
-                'MovimentoTituloS.Titulo.NegocioFormaPagamento',
-            ])->find($this->codtituloagrupamento);
-            if ($ag) {
-                foreach ($ag->MovimentoTituloS as $m) {
-                    if (optional($m->TipoMovimentoTitulo)->estorno) continue;
-                    $t = $m->Titulo;
-                    if (!$t) continue;
-                    if ($t->codtituloagrupamento === $ag->codtituloagrupamento) continue;
-                    $cn = optional($t->NegocioFormaPagamento)->codnegocio;
-                    if (!$cn) continue;
-                    $origens[] = [
-                        'codtitulo' => (int)$t->codtitulo,
-                        'numero' => $t->numero,
-                        'codnegocio' => (int)$cn,
-                    ];
-                }
-            }
-        } elseif (!empty($this->codnegocioformapagamento)) {
-            $cn = optional($this->NegocioFormaPagamento)->codnegocio;
-            if ($cn) {
-                $origens[] = [
-                    'codtitulo' => (int)$this->codtitulo,
-                    'numero' => $this->numero,
-                    'codnegocio' => (int)$cn,
-                ];
-            }
+        if (empty($this->codnegocioformapagamento) && empty($this->codtituloagrupamento)) {
+            return [];
         }
 
-        if (empty($origens)) return [];
+        $sql = "
+            select distinct
+                nf.codnotafiscal,
+                nf.codfilial,
+                f.filial,
+                nat.naturezaoperacao,
+                nf.emitida,
+                nf.serie,
+                nf.modelo,
+                nf.numero,
+                nf.status,
+                nf.emissao,
+                nf.valortotal
+            from tblnotafiscal nf
+            inner join tblfilial f on (f.codfilial = nf.codfilial)
+            inner join tblnotafiscalprodutobarra nfpb on (nfpb.codnotafiscal = nf.codnotafiscal)
+            inner join tblnegocioprodutobarra npb on (npb.codnegocioprodutobarra = nfpb.codnegocioprodutobarra)
+            inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = nf.codnaturezaoperacao)
+            where npb.codnegocio in (
+                select nfp.codnegocio
+                from tbltitulo t
+                inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+                where t.codtitulo = :codtitulo1
+                union
+                select nfp.codnegocio
+                from tbltitulo tag
+                inner join tblmovimentotitulo mt on (mt.codtituloagrupamento = tag.codtituloagrupamento)
+                inner join tbltipomovimentotitulo tmt on (tmt.codtipomovimentotitulo = mt.codtipomovimentotitulo)
+                inner join tbltitulo t on (t.codtitulo = mt.codtitulo)
+                inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+                where tag.codtitulo = :codtitulo2
+                  and tag.codtituloagrupamento is not null
+                  and coalesce(tmt.estorno, false) = false
+            )
+            order by nf.emissao desc, nf.codnotafiscal desc
+        ";
 
-        $notas = [];
-        $cacheNegocio = [];
-        foreach ($origens as $o) {
-            $cn = $o['codnegocio'];
-            if (!isset($cacheNegocio[$cn])) {
-                $cacheNegocio[$cn] = NegocioNotaFiscalResource::buscarPorCodnegocio($cn);
-            }
-            foreach ($cacheNegocio[$cn] as $nf) {
-                $notas[] = array_merge((array)$nf, [
-                    'codtitulo' => $o['codtitulo'],
-                    'numero_titulo' => $o['numero'],
-                ]);
-            }
-        }
+        $codtitulo = (int)$this->codtitulo;
+        $rows = DB::select($sql, ['codtitulo1' => $codtitulo, 'codtitulo2' => $codtitulo]);
 
-        usort($notas, function ($a, $b) {
-            $cmp = strcmp((string)($b['emissao'] ?? ''), (string)($a['emissao'] ?? ''));
-            if ($cmp !== 0) return $cmp;
-            return ($b['codnotafiscal'] ?? 0) <=> ($a['codnotafiscal'] ?? 0);
-        });
-
-        return $notas;
+        return array_map(fn($r) => [
+            'codnotafiscal' => (int)$r->codnotafiscal,
+            'codfilial'     => (int)$r->codfilial,
+            'filial'        => $r->filial,
+            'naturezaoperacao' => $r->naturezaoperacao,
+            'emitida' => $r->emitida,
+            'serie'         => $r->serie,
+            'modelo'        => $r->modelo,
+            'numero'        => $r->numero,
+            'status'        => $r->status,
+            'emissao'       => $r->emissao,
+            'valortotal'    => (float)$r->valortotal,
+        ], $rows);
     }
 
     public function toArray($request)

@@ -1,4 +1,5 @@
 <script setup>
+import { formataNumeroNota } from '@components/formatters'
 import { computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import {
@@ -13,8 +14,8 @@ const naturezaOperacaoStore = useNaturezaOperacaoStore()
 const loading = computed(() => naturezaOperacaoStore.pagination.loading)
 const naturezaOperacoes = computed(() =>
   [...naturezaOperacaoStore.naturezaOperacoes].sort((a, b) =>
-    (a.naturezaoperacao || '').localeCompare(b.naturezaoperacao || '', 'pt-BR')
-  )
+    (a.naturezaoperacao || '').localeCompare(b.naturezaoperacao || '', 'pt-BR'),
+  ),
 )
 const hasActiveFilters = computed(() => naturezaOperacaoStore.hasActiveFilters)
 
@@ -44,7 +45,7 @@ const getOperacaoIcon = (codoperacao) => {
 
 // Formata o código com zeros à esquerda
 const formatCodigo = (codigo) => {
-  return String(codigo).padStart(8, '0')
+  return formataNumeroNota(codigo)
 }
 
 onMounted(async () => {

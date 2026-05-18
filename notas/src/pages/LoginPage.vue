@@ -20,12 +20,12 @@ onMounted(() => {
       const token = tokenCookie.split('=')[1]
       console.log('Token extraído:', token.substring(0, 20) + '...')
 
-      authStore.setToken(token)
+      authStore.gravarToken(token)
       status.value = 'Redirecionando...'
 
       // Redireciona para a URL original ou home
-      const redirectUrl = authStore.getAndClearRedirectUrl()
-      router.replace(redirectUrl || '/')
+      const urlRetorno = authStore.consumirUrlRetorno()
+      router.replace(urlRetorno || '/')
     } else {
       console.error('Cookie não encontrado')
       status.value = 'Erro: Cookie não encontrado!'

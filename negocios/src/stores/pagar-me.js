@@ -1,11 +1,11 @@
-import { defineStore } from "pinia";
-import { api } from "src/boot/axios";
-import { negocioStore } from "./negocio";
-import { Notify } from "quasar";
+import { defineStore } from 'pinia'
+import { api } from 'src/boot/axios'
+import { negocioStore } from './negocio'
+import { Notify } from 'quasar'
 
-const sNegocio = negocioStore();
+const sNegocio = negocioStore()
 
-export const pagarMeStore = defineStore("pagarMe", {
+export const pagarMeStore = defineStore('pagarMe', {
   state: () => ({
     pedido: {},
     pedidosPendentes: {},
@@ -17,129 +17,125 @@ export const pagarMeStore = defineStore("pagarMe", {
   actions: {
     async consultarPedidosPendentes() {
       try {
-        const { data } = await api.get("/api/v1/pdv/pagar-me/pedido/pendentes");
-        this.pedidosPendentes = data.data;
+        const { data } = await api.get('/api/v1/pdv/pagar-me/pedido/pendentes')
+        this.pedidosPendentes = data.data
       } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
+        console.log(error)
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
 
     async importarPedidosPendentes() {
       try {
-        const { data } = await api.patch(
-          "/api/v1/pdv/pagar-me/pedido/pendentes"
-        );
-        this.pedidosPendentes = data.data;
+        const { data } = await api.patch('/api/v1/pdv/pagar-me/pedido/pendentes')
+        this.pedidosPendentes = data.data
       } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
+        console.log(error)
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
 
     async consultarPedido() {
       try {
         const { data } = await api.post(
-          "/api/v1/pdv/pagar-me/pedido/" +
-            this.pedido.codpagarmepedido +
-            "/consultar"
-        );
-        this.pedido = data.data;
-        await this.atualizarPagarMePedido();
+          '/api/v1/pdv/pagar-me/pedido/' + this.pedido.codpagarmepedido + '/consultar',
+        )
+        this.pedido = data.data
+        await this.atualizarPagarMePedido()
         Notify.create({
-          type: "positive",
-          message: "Consulta Efetuada!",
+          type: 'positive',
+          message: 'Consulta Efetuada!',
           timeout: 1000, // 1 segundo
-          actions: [{ icon: "close", color: "white" }],
-        });
+          actions: [{ icon: 'close', color: 'white' }],
+        })
       } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
+        console.log(error)
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
 
     async cancelarPedido() {
       try {
         const { data } = await api.delete(
-          "/api/v1/pdv/pagar-me/pedido/" + this.pedido.codpagarmepedido
-        );
-        this.pedido = data.data;
-        await this.atualizarPagarMePedido();
+          '/api/v1/pdv/pagar-me/pedido/' + this.pedido.codpagarmepedido,
+        )
+        this.pedido = data.data
+        await this.atualizarPagarMePedido()
         Notify.create({
-          type: "positive",
-          message: "Cancelamento Efetuado!",
+          type: 'positive',
+          message: 'Cancelamento Efetuado!',
           timeout: 1000, // 1 segundo
-          actions: [{ icon: "close", color: "white" }],
-        });
+          actions: [{ icon: 'close', color: 'white' }],
+        })
       } catch (error) {
-        console.log(error);
-        var message = error?.response?.data?.message;
+        console.log(error)
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
 
     async atualizarPagarMePedido() {
       // se nao estiver vinculado com negocio desiste
       if (!this.pedido.codnegocio) {
-        return;
+        return
       }
 
       // se nao estiver com negocio aberto desiste
       if (!sNegocio.negocio) {
-        return;
+        return
       }
 
       // se nao estiver com o mesmo negocio desiste
       if (this.pedido.codnegocio != sNegocio.negocio.codnegocio) {
-        return;
+        return
       }
 
       // se o negocio nao estiver sincronizado desiste
       if (!sNegocio.negocio.sincronizado) {
-        return;
+        return
       }
 
       // recarrega negocio da api
-      await sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio);
+      await sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio)
     },
   },
-});
+})

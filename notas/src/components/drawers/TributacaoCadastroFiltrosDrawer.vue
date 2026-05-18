@@ -60,7 +60,7 @@ onMounted(() => {
       () => {
         debouncedApplyFilters()
       },
-      { deep: true }
+      { deep: true },
     )
   }, 200)
 })

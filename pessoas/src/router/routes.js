@@ -1,258 +1,258 @@
-import router from ".";
+import router from '.'
 
 const routes = [
   // ROTAS LIVRES
   {
-    path: "/login",
-    name: "login",
-    component: () => import("pages/Login.vue"),
+    path: '/login',
+    name: 'login',
+    component: () => import('pages/Login.vue'),
   },
 
   // ROTAS AUTENTICADAS
   {
-    path: "/",
+    path: '/',
     // component: () => import('layouts/MGLayout.vue'),
     children: [
       {
-        path: "",
-        name: "inicio",
-        component: () => import("pages/Aniversarios/Index.vue"),
+        path: '',
+        name: 'inicio',
+        component: () => import('pages/Aniversarios/Index.vue'),
       },
       {
-        path: "/pessoa",
-        name: "pessoa",
-        component: () => import("pages/pessoa/Index"),
+        path: '/pessoa',
+        name: 'pessoa',
+        component: () => import('pages/pessoa/Index'),
       },
       {
-        path: "/pessoa/nova",
-        name: "pessoanova",
-        component: () => import("pages/pessoa/NovaPessoa"),
+        path: '/pessoa/nova',
+        name: 'pessoanova',
+        component: () => import('pages/pessoa/NovaPessoa'),
       },
       {
-        path: "/pessoa/:id",
-        name: "pessoaView",
-        component: () => import("pages/pessoa/PessoaView"),
-      },
-
-      {
-        path: "/grupoeconomico",
-        name: "grupoeconomicoindex",
-        component: () => import("pages/GrupoEconomico/Index.vue"),
-      },
-      {
-        path: "/grupoeconomico/:id",
-        name: "grupoeconomico",
-        component: () => import("pages/GrupoEconomico/GrupoEconomicoView"),
+        path: '/pessoa/:id',
+        name: 'pessoaView',
+        component: () => import('pages/pessoa/PessoaView'),
       },
 
       {
-        path: "/usuarios",
-        name: "usuarios",
-        component: () => import("pages/usuarios/Index.vue"),
+        path: '/grupoeconomico',
+        name: 'grupoeconomicoindex',
+        component: () => import('pages/GrupoEconomico/Index.vue'),
       },
       {
-        path: "/usuarios/:codusuario",
-        name: "usuariosview",
-        component: () => import("pages/usuarios/usuariosview"),
-      },
-      {
-        path: "/usuarios/:codusuario/editar",
-        name: "usuariosedit",
-        component: () => import("pages/usuarios/usuarioseditar"),
-      },
-      {
-        path: "/perfil",
-        name: "perfil",
-        component: () => import("pages/usuarios/perfil"),
-      },
-      {
-        path: "/usuarios/novo",
-        name: "usuarionovo",
-        component: () => import("pages/usuarios/novo"),
+        path: '/grupoeconomico/:id',
+        name: 'grupoeconomico',
+        component: () => import('pages/GrupoEconomico/GrupoEconomicoView'),
       },
 
       {
-        path: "/grupo-usuarios",
-        name: "grupousuarios",
-        component: () => import("pages/grupo-usuario/Index.vue"),
+        path: '/usuarios',
+        name: 'usuarios',
+        component: () => import('pages/usuarios/Index.vue'),
       },
       {
-        path: "/grupo-usuarios/:codgrupousuario",
-        name: "grupousuarioview",
-        component: () => import("pages/grupo-usuario/grupoUsuarioView"),
+        path: '/usuarios/:codusuario',
+        name: 'usuariosview',
+        component: () => import('pages/usuarios/usuariosview'),
+      },
+      {
+        path: '/usuarios/:codusuario/editar',
+        name: 'usuariosedit',
+        component: () => import('pages/usuarios/usuarioseditar'),
+      },
+      {
+        path: '/perfil',
+        name: 'perfil',
+        component: () => import('pages/usuarios/perfil'),
+      },
+      {
+        path: '/usuarios/novo',
+        name: 'usuarionovo',
+        component: () => import('pages/usuarios/novo'),
       },
 
       {
-        path: "/ferias/:ano",
-        name: "feriasindex",
-        component: () => import("pages/Ferias/Index.vue"),
+        path: '/grupo-usuarios',
+        name: 'grupousuarios',
+        component: () => import('pages/grupo-usuario/Index.vue'),
       },
       {
-        path: "/cargo",
-        name: "cargosindex",
-        component: () => import("pages/Cargos/Index.vue"),
+        path: '/grupo-usuarios/:codgrupousuario',
+        name: 'grupousuarioview',
+        component: () => import('pages/grupo-usuario/grupoUsuarioView'),
+      },
+
+      {
+        path: '/ferias/:ano',
+        name: 'feriasindex',
+        component: () => import('pages/Ferias/Index.vue'),
       },
       {
-        path: "/cargo/:id",
-        name: "cargoView",
-        component: () => import("pages/Cargos/cargoView.vue"),
+        path: '/cargo',
+        name: 'cargosindex',
+        component: () => import('pages/Cargos/Index.vue'),
       },
       {
-        path: "/aniversarios",
-        name: "aniversariosindex",
-        component: () => import("pages/Aniversarios/Index.vue"),
+        path: '/cargo/:id',
+        name: 'cargoView',
+        component: () => import('pages/Cargos/cargoView.vue'),
       },
       {
-        path: "/comissao-caixas",
-        name: "comissaocaixas",
-        component: () => import("pages/Cargos/ComissaoCaixas.vue"),
+        path: '/aniversarios',
+        name: 'aniversariosindex',
+        component: () => import('pages/Aniversarios/Index.vue'),
+      },
+      {
+        path: '/comissao-caixas',
+        name: 'comissaocaixas',
+        component: () => import('pages/Cargos/ComissaoCaixas.vue'),
       },
       // Feriado
       {
-        path: "/feriado",
-        name: "feriadoIndex",
-        component: () => import("pages/feriado/Index.vue"),
+        path: '/feriado',
+        name: 'feriadoIndex',
+        component: () => import('pages/feriado/Index.vue'),
       },
 
       // Unidade de Negócio
       {
-        path: "/unidade-negocio",
-        name: "unidadeNegocioIndex",
-        component: () => import("pages/unidade-negocio/Index.vue"),
+        path: '/unidade-negocio',
+        name: 'unidadeNegocioIndex',
+        component: () => import('pages/unidade-negocio/Index.vue'),
       },
 
       // Meta
       {
-        path: "/meta",
-        name: "metaIndex",
-        component: () => import("pages/meta/Index.vue"),
+        path: '/meta',
+        name: 'metaIndex',
+        component: () => import('pages/meta/Index.vue'),
       },
       {
-        path: "/meta/:codmeta/dashboard",
-        name: "metaDashboard",
-        component: () => import("pages/meta/MetaDashboard.vue"),
+        path: '/meta/:codmeta/dashboard',
+        name: 'metaDashboard',
+        component: () => import('pages/meta/MetaDashboard.vue'),
       },
       {
-        path: "/meta/:codmeta/dashboard/:codpessoa",
-        name: "metaDashboardColaborador",
-        component: () => import("pages/meta/MetaColaboradorDashboard.vue"),
+        path: '/meta/:codmeta/dashboard/:codpessoa',
+        name: 'metaDashboardColaborador',
+        component: () => import('pages/meta/MetaColaboradorDashboard.vue'),
       },
       {
-        path: "/meta/:codmeta/unidade/:codunidadenegocio",
-        name: "metaUnidadeDashboard",
-        component: () => import("pages/meta/MetaUnidadeDashboard.vue"),
+        path: '/meta/:codmeta/unidade/:codunidadenegocio',
+        name: 'metaUnidadeDashboard',
+        component: () => import('pages/meta/MetaUnidadeDashboard.vue'),
       },
       {
-        path: "/etnia",
-        name: "etnia",
-        component: () => import("pages/etnia/Index.vue"),
+        path: '/etnia',
+        name: 'etnia',
+        component: () => import('pages/etnia/Index.vue'),
       },
       {
-        path: "/grau-instrucao",
-        name: "grauinstrucao",
-        component: () => import("pages/grau-instrucao/Index.vue"),
+        path: '/grau-instrucao',
+        name: 'grauinstrucao',
+        component: () => import('pages/grau-instrucao/Index.vue'),
       },
       {
-        path: "/estado-civil",
-        name: "estadocivil",
-        component: () => import("pages/estado-civil/Index.vue"),
+        path: '/estado-civil',
+        name: 'estadocivil',
+        component: () => import('pages/estado-civil/Index.vue'),
       },
       {
-        path: "/grupo-cliente",
-        name: "grupocliente",
-        component: () => import("pages/grupo-cliente/Index.vue"),
+        path: '/grupo-cliente',
+        name: 'grupocliente',
+        component: () => import('pages/grupo-cliente/Index.vue'),
       },
 
       // Certidão Emissor
       {
-        path: "/certidao-emissor",
-        name: "certidaoemissor",
-        component: () => import("pages/certidao-emissor/Index.vue"),
+        path: '/certidao-emissor',
+        name: 'certidaoemissor',
+        component: () => import('pages/certidao-emissor/Index.vue'),
       },
 
       // RH — Meu Painel (qualquer usuário autenticado)
       {
-        path: "/rh/meu-painel",
-        name: "rhMeuPainelIndex",
-        component: () => import("pages/rh/MeuPainelIndex.vue"),
+        path: '/rh/meu-painel',
+        name: 'rhMeuPainelIndex',
+        component: () => import('pages/rh/MeuPainelIndex.vue'),
         children: [
           {
-            path: ":codperiodo",
-            name: "rhMeuPainelDashboard",
-            component: () => import("pages/rh/MeuPainelDashboard.vue"),
+            path: ':codperiodo',
+            name: 'rhMeuPainelDashboard',
+            component: () => import('pages/rh/MeuPainelDashboard.vue'),
           },
           {
-            path: ":codperiodo/colaborador/:codperiodocolaborador",
-            name: "rhMeuPainelColaborador",
-            component: () => import("pages/rh/MeuPainelColaborador.vue"),
+            path: ':codperiodo/colaborador/:codperiodocolaborador',
+            name: 'rhMeuPainelColaborador',
+            component: () => import('pages/rh/MeuPainelColaborador.vue'),
           },
           {
-            path: ":codperiodo/indicador/:codindicador",
-            name: "rhMeuPainelExtrato",
-            component: () => import("pages/rh/IndicadorExtrato.vue"),
+            path: ':codperiodo/indicador/:codindicador',
+            name: 'rhMeuPainelExtrato',
+            component: () => import('pages/rh/IndicadorExtrato.vue'),
           },
         ],
       },
 
       // RH — Metas & Variáveis (admin)
       {
-        path: "/rh",
-        name: "rhIndex",
-        component: () => import("pages/rh/Index.vue"),
+        path: '/rh',
+        name: 'rhIndex',
+        component: () => import('pages/rh/Index.vue'),
         children: [
           {
-            path: ":codperiodo",
-            name: "rhDashboard",
-            component: () => import("pages/rh/PeriodoDashboard.vue"),
+            path: ':codperiodo',
+            name: 'rhDashboard',
+            component: () => import('pages/rh/PeriodoDashboard.vue'),
           },
           {
-            path: ":codperiodo/colaborador/:codperiodocolaborador",
-            name: "rhColaboradorDetalhe",
-            component: () => import("pages/rh/ColaboradorDetalhe.vue"),
+            path: ':codperiodo/colaborador/:codperiodocolaborador',
+            name: 'rhColaboradorDetalhe',
+            component: () => import('pages/rh/ColaboradorDetalhe.vue'),
           },
           {
-            path: ":codperiodo/indicador/:codindicador",
-            name: "rhIndicadorExtrato",
-            component: () => import("pages/rh/IndicadorExtrato.vue"),
+            path: ':codperiodo/indicador/:codindicador',
+            name: 'rhIndicadorExtrato',
+            component: () => import('pages/rh/IndicadorExtrato.vue'),
           },
         ],
       },
 
       // Empresa
       {
-        path: "/empresa",
-        name: "empresa",
-        component: () => import("pages/empresa/Index.vue"),
+        path: '/empresa',
+        name: 'empresa',
+        component: () => import('pages/empresa/Index.vue'),
       },
       {
-        path: "/empresa/nova",
-        name: "empresanova",
-        component: () => import("pages/empresa/NovaEmpresa.vue"),
+        path: '/empresa/nova',
+        name: 'empresanova',
+        component: () => import('pages/empresa/NovaEmpresa.vue'),
       },
       {
-        path: "/empresa/:codempresa",
-        name: "empresaview",
-        component: () => import("pages/empresa/EmpresaView.vue"),
+        path: '/empresa/:codempresa',
+        name: 'empresaview',
+        component: () => import('pages/empresa/EmpresaView.vue'),
       },
       {
-        path: "/empresa/:codempresa/editar",
-        name: "empresaeditar",
-        component: () => import("pages/empresa/EmpresaEditar.vue"),
+        path: '/empresa/:codempresa/editar',
+        name: 'empresaeditar',
+        component: () => import('pages/empresa/EmpresaEditar.vue'),
       },
       {
-        path: "/empresa/:codempresa/filial/nova",
-        name: "filialNova",
-        component: () => import("pages/empresa/NovaFilial.vue"),
+        path: '/empresa/:codempresa/filial/nova',
+        name: 'filialNova',
+        component: () => import('pages/empresa/NovaFilial.vue'),
       },
       {
-        path: "/filial/:codfilial",
-        name: "filialview",
-        component: () => import("pages/empresa/FilialView.vue"),
+        path: '/filial/:codfilial',
+        name: 'filialview',
+        component: () => import('pages/empresa/FilialView.vue'),
       },
       {
-        path: "/filial/:codfilial/editar",
-        name: "filialeditar",
-        component: () => import("pages/empresa/FilialEditar.vue"),
+        path: '/filial/:codfilial/editar',
+        name: 'filialeditar',
+        component: () => import('pages/empresa/FilialEditar.vue'),
       },
     ],
     meta: {
@@ -263,9 +263,9 @@ const routes = [
   // Always leave this as last one,
   // but you can also remove it
   {
-    path: "/:catchAll(.*)*",
-    component: () => import("pages/ErrorNotFound.vue"),
+    path: '/:catchAll(.*)*',
+    component: () => import('pages/ErrorNotFound.vue'),
   },
-];
+]
 
-export default routes;
+export default routes

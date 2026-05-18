@@ -1,35 +1,36 @@
 <script setup>
-import { onMounted, onUnmounted } from "vue";
-import { Dialog } from "quasar";
-import emitter from "src/utils/emitter";
-import { mercosStore } from "stores/mercos";
-import { sincronizacaoStore } from "stores/sincronizacao";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { formataNumero } from '@components/formatters'
+import { onMounted, onUnmounted } from 'vue'
+import { Dialog } from 'quasar'
+import emitter from 'src/utils/emitter'
+import { mercosStore } from 'stores/mercos'
+import { sincronizacaoStore } from 'stores/sincronizacao'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sMercos = mercosStore();
-const sSinc = sincronizacaoStore();
+const sMercos = mercosStore()
+const sSinc = sincronizacaoStore()
 
 const importarPedido = async () => {
   Dialog.create({
-    title: "Sincronizar com Mercos",
-    message: "Deseja rodar a integração com o Mercos para buscar novas vendas?",
+    title: 'Sincronizar com Mercos',
+    message: 'Deseja rodar a integração com o Mercos para buscar novas vendas?',
     cancel: true,
   }).onOk(async (codnegocio) => {
-    await sMercos.importarPedido();
-  });
-};
+    await sMercos.importarPedido()
+  })
+}
 
 onMounted(() => {
-  sMercos.atualizarListagem();
+  sMercos.atualizarListagem()
   emitter.on('negocioAlterado', () => {
-    sMercos.atualizarListagem();
-  });
-});
+    sMercos.atualizarListagem()
+  })
+})
 
 onUnmounted(() => {
-  emitter.off('negocioAlterado');
-});
+  emitter.off('negocioAlterado')
+})
 </script>
 <template>
   <!-- <pre>{{ sMercos.pedidos }}</pre> -->
@@ -62,19 +63,17 @@ onUnmounted(() => {
         </q-item-section>
         <q-item-section side class="text-bold">
           <q-item-label>
-            {{
-              new Intl.NumberFormat("pt-BR", {
-                style: "decimal",
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              }).format(n.valortotal)
-            }}
-            <q-badge color="orange" text-color="white" rounded v-if="n.codpdv != sSinc.pdv.codpdv" />
+            {{ formataNumero(n.valortotal) }}
+            <q-badge
+              color="orange"
+              text-color="white"
+              rounded
+              v-if="n.codpdv != sSinc.pdv.codpdv"
+            />
           </q-item-label>
         </q-item-section>
       </q-item>
       <q-separator />
     </template>
   </template>
-
 </template>

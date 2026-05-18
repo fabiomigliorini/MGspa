@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { db } from "boot/db";
-import { LoadingBar } from "quasar";
-import { formataCnpjCpf } from "../../utils/formatador.js";
+import { ref, onMounted, watch } from 'vue'
+import { db } from 'boot/db'
+import { LoadingBar } from 'quasar'
+import { formataCnpjCpf } from '@components/formatters'
 
 const props = defineProps({
   modelValue: {
@@ -16,104 +16,102 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
-const emit = defineEmits(["update:modelValue"]);
+const emit = defineEmits(['update:modelValue'])
 
-const opcoes = ref([]);
+const opcoes = ref([])
 
 const alterar = (value) => {
-  emit("update:modelValue", value);
-};
+  emit('update:modelValue', value)
+}
 
 const buscarPeloCod = async (codpessoa) => {
   if (codpessoa) {
-    opcoes.value = await db.pessoa.where({ codpessoa: codpessoa }).toArray();
-    return;
+    opcoes.value = await db.pessoa.where({ codpessoa: codpessoa }).toArray()
+    return
   }
-  opcoes.value = [];
-};
+  opcoes.value = []
+}
 
 watch(
   () => props.modelValue,
   (newValue) => {
-    buscarPeloCod(newValue);
-  }
-);
+    buscarPeloCod(newValue)
+  },
+)
 
 onMounted(async () => {
   if (!props.modelValue) {
-    return;
+    return
   }
-  buscarPeloCod(props.modelValue);
-});
+  buscarPeloCod(props.modelValue)
+})
 
 const pesquisa = (textoPesquisa, update) => {
   update(async () => {
     // verifica se tem texto de busca
-    const texto = textoPesquisa.trim();
+    const texto = textoPesquisa.trim()
     if (texto.length < 2) {
-      return;
+      return
     }
 
     // sinaliza pro usuario que está pesquisando
-    LoadingBar.start();
+    LoadingBar.start()
 
     // monta array de palavras pra buscas
-    const numeric = texto.replace(/\D/g, "");
-    const alpha = texto.replace(/[^\w\s]/gi, "");
-    var palavras = [];
+    const numeric = texto.replace(/\D/g, '')
+    const alpha = texto.replace(/[^\w\s]/gi, '')
+    var palavras = []
     if (!/\s/g.test(texto) && numeric == alpha && numeric.length > 3) {
-      palavras = [numeric];
+      palavras = [numeric]
     } else {
-      palavras = texto.split(" ");
+      palavras = texto.split(' ')
     }
 
     // Busca Pessoas baseados na primeira palavra de pesquisa
-    var colPessoas = await db.pessoa
-      .where("buscaArr")
-      .startsWithIgnoreCase(palavras[0]);
+    var colPessoas = await db.pessoa.where('buscaArr').startsWithIgnoreCase(palavras[0])
 
     if (props.somenteAtivos) {
-      colPessoas.and((p) => p.inativo == null);
+      colPessoas.and((p) => p.inativo == null)
     }
 
     if (props.somenteVendedores) {
-      colPessoas.and((p) => p.vendedor == true);
+      colPessoas.and((p) => p.vendedor == true)
     }
 
     // se estiver buscando por mais de uma palavra
     if (palavras.length > 1) {
       // monta expressoes regulares
-      var regexes = [];
+      var regexes = []
       for (let i = 1; i < palavras.length; i++) {
-        regexes.push(new RegExp(".*" + palavras[i] + ".*", "i"));
+        regexes.push(new RegExp('.*' + palavras[i] + '.*', 'i'))
       }
 
       // percorre todos registros filtrando pelas expressoes regulares
-      const iMax = regexes.length;
+      const iMax = regexes.length
       colPessoas = await colPessoas.and(function (pessoa) {
         for (let i = 0; i < iMax; i++) {
           if (!regexes[i].test(pessoa.busca)) {
-            return false;
+            return false
           }
         }
-        return true;
-      });
+        return true
+      })
     }
-    var arrPessoas = await colPessoas.toArray();
+    var arrPessoas = await colPessoas.toArray()
     arrPessoas = arrPessoas.sort((a, b) => {
       if (a.fantasia > b.fantasia) {
-        return 1;
+        return 1
       } else {
-        return -1;
+        return -1
       }
-    });
+    })
     // esconde barra
-    LoadingBar.stop();
-    opcoes.value = arrPessoas;
-  });
-};
+    LoadingBar.stop()
+    opcoes.value = arrPessoas
+  })
+}
 </script>
 <template>
   <q-select
@@ -147,12 +145,8 @@ const pesquisa = (textoPesquisa, update) => {
             <template v-if="scope.opt.endereco">
               {{ scope.opt.endereco }}, {{ scope.opt.numero }}
             </template>
-            <template v-if="scope.opt.complemento">
-              - {{ scope.opt.complemento }}
-            </template>
-            <template v-if="scope.opt.bairro">
-              - {{ scope.opt.bairro }} -
-            </template>
+            <template v-if="scope.opt.complemento"> - {{ scope.opt.complemento }} </template>
+            <template v-if="scope.opt.bairro"> - {{ scope.opt.bairro }} - </template>
             {{ scope.opt.cidade }}/{{ scope.opt.uf }}
           </q-item-label>
         </q-item-section>

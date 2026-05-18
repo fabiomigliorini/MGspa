@@ -1,14 +1,15 @@
-import { defineStore } from "pinia";
-import { api } from "src/boot/axios";
-import { Notify } from "quasar";
-import moment from "moment";
-import { pdvStore } from "./pdv";
-import { sincronizacaoStore } from "./sincronizacao";
+import { formataDataIso } from '@components/formatters'
+import { defineStore } from 'pinia'
+import { api } from 'src/boot/axios'
+import { Notify } from 'quasar'
+import moment from 'moment'
+import { pdvStore } from './pdv'
+import { sincronizacaoStore } from './sincronizacao'
 
-const sPdv = pdvStore();
-const sSinc = sincronizacaoStore();
+const sPdv = pdvStore()
+const sSinc = sincronizacaoStore()
 
-export const conferenciaStore = defineStore("conferencia", {
+export const conferenciaStore = defineStore('conferencia', {
   persist: false,
 
   state: () => ({
@@ -19,42 +20,42 @@ export const conferenciaStore = defineStore("conferencia", {
   actions: {
     async inicializaFiltro() {
       if (Object.keys(this.filtro).length > 0) {
-        return;
+        return
       }
       const filtro = {
-        dia: moment().format("YYYY-MM-DD"),
+        dia: formataDataIso(new Date()),
         codpdv: null,
-      };
-      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid);
-      if (pdv) {
-        filtro.codpdv = pdv.codpdv;
       }
-      this.filtro = filtro;
-      await this.getConferencia();
+      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid)
+      if (pdv) {
+        filtro.codpdv = pdv.codpdv
+      }
+      this.filtro = filtro
+      await this.getConferencia()
     },
 
     async getConferencia() {
       try {
-        const filtro = { ...this.filtro };
-        filtro.pdv = sSinc.pdv.uuid;
+        const filtro = { ...this.filtro }
+        filtro.pdv = sSinc.pdv.uuid
 
-        const ret = await api.get("/api/v1/pdv/negocio/conferencia", {
+        const ret = await api.get('/api/v1/pdv/negocio/conferencia', {
           params: filtro,
-        });
-        this.conferencias = ret.data;
+        })
+        this.conferencias = ret.data
       } catch (error) {
-        var message = error?.response?.data?.message;
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
   },
-});
+})

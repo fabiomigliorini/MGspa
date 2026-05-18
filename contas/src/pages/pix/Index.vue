@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { api } from 'src/services/api'
 import { usePixStore } from 'src/stores/pixStore'
 import { notifyError } from 'src/utils/notify'
-import { formataCPF, formataCNPJ, formataNumero, tempoRelativo } from 'src/utils/formatters'
+import { formataCpf, formataCnpj, formataNumero, tempoRelativo } from '@components/formatters'
 
 const store = usePixStore()
 
@@ -131,8 +131,8 @@ onMounted(() => {
                 <template v-else>{{ item.nome }}</template>
               </q-item-label>
               <q-item-label caption>
-                {{ formataCPF(item.cpf) }}
-                {{ formataCNPJ(item.cnpj) }}
+                {{ formataCpf(item.cpf) }}
+                {{ formataCnpj(item.cnpj) }}
               </q-item-label>
               <q-item-label caption>{{ item.portador }}</q-item-label>
             </q-item-section>

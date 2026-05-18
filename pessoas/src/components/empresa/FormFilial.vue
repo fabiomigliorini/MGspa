@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed } from 'vue'
 
 const props = defineProps({
   modelValue: {
@@ -10,45 +10,45 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
-const emit = defineEmits(["update:modelValue", "submit"]);
+const emit = defineEmits(['update:modelValue', 'submit'])
 
-const formRef = ref(null);
+const formRef = ref(null)
 
 const model = computed({
   get() {
-    return props.modelValue;
+    return props.modelValue
   },
   set(value) {
-    emit("update:modelValue", value);
+    emit('update:modelValue', value)
   },
-});
+})
 
 const opcoesCrt = [
-  { label: "1 - Simples Nacional", value: 1 },
-  { label: "2 - Simples Nacional - Excesso", value: 2 },
-  { label: "3 - Regime Normal", value: 3 },
-];
+  { label: '1 - Simples Nacional', value: 1 },
+  { label: '2 - Simples Nacional - Excesso', value: 2 },
+  { label: '3 - Regime Normal', value: 3 },
+]
 
 const opcoesAmbiente = [
-  { label: "Produção", value: 1 },
-  { label: "Homologação", value: 2 },
-];
+  { label: 'Produção', value: 1 },
+  { label: 'Homologação', value: 2 },
+]
 
-const validaObrigatorio = (val) => !!val || "Campo obrigatório";
+const validaObrigatorio = (val) => !!val || 'Campo obrigatório'
 
 const submit = async () => {
-  const valid = await formRef.value.validate();
+  const valid = await formRef.value.validate()
   if (valid) {
-    emit("submit");
+    emit('submit')
   }
-};
+}
 
 defineExpose({
   submit,
   validate: () => formRef.value.validate(),
-});
+})
 </script>
 
 <template>
@@ -61,12 +61,7 @@ defineExpose({
       lazy-rules
     />
 
-    <q-input
-      outlined
-      v-model.number="model.codpessoa"
-      label="Código Pessoa"
-      type="number"
-    />
+    <q-input outlined v-model.number="model.codpessoa" label="Código Pessoa" type="number" />
 
     <q-select
       outlined
@@ -87,12 +82,7 @@ defineExpose({
       map-options
     />
 
-    <q-input
-      outlined
-      v-model.number="model.nfeserie"
-      label="Série NFe"
-      type="number"
-    />
+    <q-input outlined v-model.number="model.nfeserie" label="Série NFe" type="number" />
 
     <div class="row q-gutter-sm">
       <q-toggle v-model="model.emitenfe" label="Emite NFe" />
@@ -105,31 +95,14 @@ defineExpose({
 
     <q-input outlined v-model="model.tokenibpt" label="Token IBPT" />
 
-    <q-input
-      outlined
-      v-model.number="model.empresadominio"
-      label="Empresa Domínio"
-      type="number"
-    />
+    <q-input outlined v-model.number="model.empresadominio" label="Empresa Domínio" type="number" />
 
     <q-input outlined v-model="model.stonecode" label="Stone Code" />
 
-    <q-input
-      outlined
-      v-model="model.senhacertificado"
-      label="Senha Certificado"
-      type="password"
-    />
+    <q-input outlined v-model="model.senhacertificado" label="Senha Certificado" type="password" />
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        color="primary"
-        :loading="loading"
-        icon="save"
-        round
-        class="q-pa-md"
-        @click="submit"
-      />
+      <q-btn color="primary" :loading="loading" icon="save" round class="q-pa-md" @click="submit" />
     </q-page-sticky>
   </q-form>
 </template>

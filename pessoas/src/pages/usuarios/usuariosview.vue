@@ -1,34 +1,34 @@
 <script setup>
-import { onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
-import { usuarioStore } from "src/stores/usuario";
-import { guardaToken } from "src/stores";
-import CardDetalhesUsuario from "components/usuario/CardDetalhesUsuario.vue";
-import CardPermissoesUsuario from "components/usuario/CardPermissoesUsuario.vue";
-import MGLayout from "layouts/MGLayout.vue";
-import NaoAutorizado from "components/NaoAutorizado.vue";
+import { onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { usuarioStore } from 'src/stores/usuario'
+import { useAuthStore } from 'src/stores'
+import CardDetalhesUsuario from 'components/usuario/CardDetalhesUsuario.vue'
+import CardPermissoesUsuario from 'components/usuario/CardPermissoesUsuario.vue'
+import MGLayout from 'layouts/MGLayout.vue'
+import NaoAutorizado from 'components/NaoAutorizado.vue'
 
-const route = useRoute();
-const sUsuario = usuarioStore();
-const user = guardaToken();
+const route = useRoute()
+const sUsuario = usuarioStore()
+const user = useAuthStore()
 
 function carregarUsuario(id) {
-  sUsuario.detalheUsuarios = [];
-  sUsuario.getUsuario(id);
+  sUsuario.detalheUsuarios = []
+  sUsuario.getUsuario(id)
 }
 
 onMounted(() => {
-  carregarUsuario(route.params.codusuario);
-});
+  carregarUsuario(route.params.codusuario)
+})
 
 watch(
   () => route.params.codusuario,
   (novoId) => {
     if (novoId) {
-      carregarUsuario(novoId);
+      carregarUsuario(novoId)
     }
-  }
-);
+  },
+)
 </script>
 
 <template>
@@ -38,17 +38,10 @@ watch(
     </template>
 
     <template #botaoVoltar>
-      <q-btn
-        flat
-        dense
-        round
-        :to="{ name: 'usuarios' }"
-        icon="arrow_back"
-        aria-label="Voltar"
-      />
+      <q-btn flat dense round :to="{ name: 'usuarios' }" icon="arrow_back" aria-label="Voltar" />
     </template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <div style="max-width: 1280px; margin: auto; min-height: 100vh">
         <div v-if="sUsuario.detalheUsuarios">
           <q-item class="q-pt-lg q-pb-sm">

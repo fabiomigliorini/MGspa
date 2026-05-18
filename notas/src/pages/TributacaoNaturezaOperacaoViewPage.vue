@@ -1,4 +1,5 @@
 <script setup>
+import { formataTimestamp, formataCfop, formataPercentual, formataNumero, formataCodigo } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -20,22 +21,6 @@ const tributacao = computed(() => tributacaoStore.currentTributacao)
 const getTipoProdutoLabel = (codtipoproduto) => {
   const opt = TIPO_PRODUTO_OPTIONS.find((o) => o.value === codtipoproduto)
   return opt ? opt.label : '-'
-}
-
-const formatCfop = (cfop) => {
-  if (!cfop) return '-'
-  const str = String(cfop)
-  return str.length === 4 ? `${str[0]}.${str.slice(1)}` : str
-}
-
-const formatPercent = (value) => {
-  if (value === null || value === undefined) return '-'
-  return `${parseFloat(value).toFixed(2)}%`
-}
-
-const formatDecimal = (value) => {
-  if (value === null || value === undefined) return '-'
-  return parseFloat(value).toFixed(2)
 }
 
 // Monta título da tributação
@@ -143,7 +128,7 @@ onMounted(loadData)
                 <q-item-section>
                   <q-item-label caption>Código</q-item-label>
                   <q-item-label>
-                    #{{ String(tributacao.codtributacaonaturezaoperacao).padStart(8, '0') }}
+                    {{ formataCodigo(tributacao.codtributacaonaturezaoperacao) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -224,7 +209,7 @@ onMounted(loadData)
                 <q-item-section>
                   <q-item-label caption>CFOP</q-item-label>
                   <q-item-label class="text-primary">
-                    {{ formatCfop(tributacao.cfop?.codcfop) }} - {{ tributacao.cfop?.cfop || '' }}
+                    {{ formataCfop(tributacao.cfop?.codcfop) }} - {{ tributacao.cfop?.cfop || '' }}
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side>
@@ -303,11 +288,11 @@ onMounted(loadData)
               </div>
               <div class="text-caption">
                 <b>Base:</b>
-                {{ formatPercent(tributacao.icmslpbase) }}
+                {{ formataPercentual(tributacao.icmslpbase) }}
               </div>
               <div class="text-caption">
                 <b>Alíquota:</b>
-                {{ formatPercent(tributacao.icmslppercentual) }}
+                {{ formataPercentual(tributacao.icmslppercentual) }}
               </div>
             </div>
             <!-- PIS -->
@@ -319,7 +304,7 @@ onMounted(loadData)
               </div>
               <div class="text-caption">
                 <b>Alíquota:</b>
-                {{ formatPercent(tributacao.pispercentual) }}
+                {{ formataPercentual(tributacao.pispercentual) }}
               </div>
             </div>
             <!-- COFINS -->
@@ -331,7 +316,7 @@ onMounted(loadData)
               </div>
               <div class="text-caption">
                 <b>Alíquota:</b>
-                {{ formatPercent(tributacao.cofinspercentual) }}
+                {{ formataPercentual(tributacao.cofinspercentual) }}
               </div>
             </div>
             <!-- IPI/CSLL/IRPJ -->
@@ -343,11 +328,11 @@ onMounted(loadData)
               </div>
               <div class="text-caption">
                 <b>CSLL:</b>
-                {{ formatPercent(tributacao.csllpercentual) }}
+                {{ formataPercentual(tributacao.csllpercentual) }}
               </div>
               <div class="text-caption">
                 <b>IRPJ:</b>
-                {{ formatPercent(tributacao.irpjpercentual) }}
+                {{ formataPercentual(tributacao.irpjpercentual) }}
               </div>
             </div>
           </div>
@@ -372,13 +357,13 @@ onMounted(loadData)
               <q-item>
                 <q-item-section>
                   <q-item-label caption>ICMS Base</q-item-label>
-                  <q-item-label>{{ formatPercent(tributacao.icmsbase) }}</q-item-label>
+                  <q-item-label>{{ formataPercentual(tributacao.icmsbase) }}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item>
                 <q-item-section>
                   <q-item-label caption>ICMS %</q-item-label>
-                  <q-item-label>{{ formatPercent(tributacao.icmspercentual) }}</q-item-label>
+                  <q-item-label>{{ formataPercentual(tributacao.icmspercentual) }}</q-item-label>
                 </q-item-section>
               </q-item>
             </q-list>
@@ -403,7 +388,7 @@ onMounted(loadData)
                 <q-item-section>
                   <q-item-label caption>FETHAB por KG</q-item-label>
                   <q-item-label>
-                    {{ tributacao.fethabkg ? formatDecimal(tributacao.fethabkg) : '-' }}
+                    {{ tributacao.fethabkg ? formataNumero(tributacao.fethabkg) : '-' }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -411,7 +396,7 @@ onMounted(loadData)
                 <q-item-section>
                   <q-item-label caption>IAGRO por KG</q-item-label>
                   <q-item-label>
-                    {{ tributacao.iagrokg ? formatDecimal(tributacao.iagrokg) : '-' }}
+                    {{ tributacao.iagrokg ? formataNumero(tributacao.iagrokg) : '-' }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -421,7 +406,7 @@ onMounted(loadData)
                   <q-item-label>
                     {{
                       tributacao.funruralpercentual
-                        ? formatPercent(tributacao.funruralpercentual)
+                        ? formataPercentual(tributacao.funruralpercentual)
                         : '-'
                     }}
                   </q-item-label>
@@ -432,7 +417,9 @@ onMounted(loadData)
                   <q-item-label caption>SENAR %</q-item-label>
                   <q-item-label>
                     {{
-                      tributacao.senarpercentual ? formatPercent(tributacao.senarpercentual) : '-'
+                      tributacao.senarpercentual
+                        ? formataPercentual(tributacao.senarpercentual)
+                        : '-'
                     }}
                   </q-item-label>
                 </q-item-section>
@@ -455,7 +442,7 @@ onMounted(loadData)
 
       <!-- Auditoria -->
       <div v-if="tributacao.usuarioAlteracao" class="text-caption text-grey q-mt-lg">
-        Alterado em {{ new Date(tributacao.alteracao).toLocaleString('pt-BR') }} por
+        Alterado em {{ formataTimestamp(tributacao.alteracao, 4, true) }} por
         {{ tributacao.usuarioAlteracao.usuario }}
       </div>
     </template>

@@ -1,17 +1,25 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { useQuasar, date } from 'quasar'
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero, formataDataIso } from '@components/formatters'
+import { useAuthStore } from 'src/stores/auth'
+import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
+import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 
 const router = useRouter()
 const $q = useQuasar()
+const auth = useAuthStore()
+const store = useLiquidacaoTituloStore()
+const selectCache = useSelectCacheStore()
+
+const filiaisPortador = computed(() => auth.filiaisRestritas())
 
 const saving = ref(false)
 const dialogFinalizar = ref(false)
@@ -22,7 +30,7 @@ const totalLiquido = ref(0)
 const operacao = ref('DB')
 
 const finalizar = ref({
-  transacao: date.formatDate(new Date(), 'YYYY-MM-DD'),
+  transacao: formataDataIso(new Date()),
   codpessoa: null,
   codportador: null,
   observacao: '',
@@ -30,14 +38,33 @@ const finalizar = ref({
 
 const podeAvancar = computed(() => titulos.value.length > 0)
 
-const codpessoaSugerido = computed(() => {
-  const set = new Set(titulos.value.map((l) => l.codpessoa).filter((v) => v != null))
-  return set.size === 1 ? [...set][0] : null
-})
+const portadorCacheKey = () =>
+  auth.usuario?.codusuario ? `liquidacao-titulo:ultimoPortador:${auth.usuario.codusuario}` : null
 
-watch(codpessoaSugerido, (v) => {
-  finalizar.value.codpessoa = v
-})
+async function abrirFinalizar() {
+  // Sugere pessoa quando todos os títulos têm a mesma
+  const codpessoas = new Set(titulos.value.map((l) => l.codpessoa).filter((v) => v != null))
+  finalizar.value.codpessoa = codpessoas.size === 1 ? [...codpessoas][0] : null
+
+  // Sugere último portador do usuário (se disponível na sua filial)
+  finalizar.value.codportador = null
+  const key = portadorCacheKey()
+  const cod = key ? Number(localStorage.getItem(key)) : null
+  if (cod) {
+    await selectCache.loadList('portador', 'v1/select/portador', (data) =>
+      Array.isArray(data) ? data : data.data || [],
+    )
+    const filiais = filiaisPortador.value
+    const disponivel = selectCache.portador.items.some((p) => {
+      if (Number(p.codportador) !== cod) return false
+      if (filiais == null) return true
+      return filiais.map(Number).includes(Number(p.codfilial))
+    })
+    if (disponivel) finalizar.value.codportador = cod
+  }
+
+  dialogFinalizar.value = true
+}
 
 async function salvar() {
   if (!finalizar.value.codpessoa) {
@@ -70,6 +97,9 @@ async function salvar() {
         })),
       }
       const { data } = await api.post('v1/liquidacao-titulo', payload)
+      store.upsertLocal(data.data)
+      const key = portadorCacheKey()
+      if (key) localStorage.setItem(key, String(payload.codportador))
       notifySuccess('Liquidação criada')
       router.replace({
         name: 'liquidacao-titulo-detalhe',
@@ -116,13 +146,7 @@ async function salvar() {
 
     <!-- FAB Salvar -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        fab
-        icon="save"
-        color="primary"
-        :disable="!podeAvancar"
-        @click="dialogFinalizar = true"
-      >
+      <q-btn fab icon="save" color="primary" :disable="!podeAvancar" @click="abrirFinalizar">
         <q-tooltip>Finalizar Liquidação</q-tooltip>
       </q-btn>
     </q-page-sticky>
@@ -138,6 +162,7 @@ async function salvar() {
               {{ operacao }}
             </div>
           </q-card-section>
+          <q-separator inset />
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-xs-12 col-sm-4">
@@ -155,6 +180,7 @@ async function salvar() {
                   outlined
                   label="Portador"
                   :rules="[(v) => !!v || 'Obrigatório']"
+                  :filiais="filiaisPortador"
                   autofocus
                 />
               </div>
@@ -178,7 +204,7 @@ async function salvar() {
               </div>
             </div>
           </q-card-section>
-          <q-separator />
+          <q-separator inset />
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn flat label="Salvar" type="submit" color="primary" :loading="saving" />

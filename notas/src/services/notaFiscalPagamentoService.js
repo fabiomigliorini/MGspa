@@ -7,7 +7,9 @@ export default {
   },
 
   async get(codnotafiscal, codnotafiscalpagamento) {
-    const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/pagamento/${codnotafiscalpagamento}`)
+    const response = await api.get(
+      `/v1/nota-fiscal/${codnotafiscal}/pagamento/${codnotafiscalpagamento}`,
+    )
     return response.data
   },
 
@@ -17,11 +19,14 @@ export default {
   },
 
   async update(codnotafiscal, codnotafiscalpagamento, data) {
-    const response = await api.put(`/v1/nota-fiscal/${codnotafiscal}/pagamento/${codnotafiscalpagamento}`, data)
+    const response = await api.put(
+      `/v1/nota-fiscal/${codnotafiscal}/pagamento/${codnotafiscalpagamento}`,
+      data,
+    )
     return response.data
   },
 
   async delete(codnotafiscal, codnotafiscalpagamento) {
     await api.delete(`/v1/nota-fiscal/${codnotafiscal}/pagamento/${codnotafiscalpagamento}`)
-  }
+  },
 }

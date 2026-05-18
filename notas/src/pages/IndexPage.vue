@@ -3,7 +3,7 @@ import { onMounted, computed, watch, shallowRef } from 'vue'
 import { useQuasar } from 'quasar'
 import { useAuth } from 'src/composables/useAuth'
 import { useDashboardStore } from 'src/stores/dashboard'
-import { formatDateTime } from 'src/utils/formatters'
+import { formataTimestamp, formataNumero } from '@components/formatters'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
@@ -13,7 +13,7 @@ import { GridComponent, TooltipComponent, LegendComponent } from 'echarts/compon
 use([CanvasRenderer, LineChart, BarChart, GridComponent, TooltipComponent, LegendComponent])
 
 const $q = useQuasar()
-const { validateToken } = useAuth()
+const { validarToken } = useAuth()
 const store = useDashboardStore()
 
 const loading = computed(() => store.loading)
@@ -76,7 +76,7 @@ const kpiCards = computed(() => [
   {
     label: 'Total de Notas',
     labelShort: 'Total',
-    value: (kpisGerais.value?.total_notas || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.total_notas || 0, 0),
     subtitle: null,
     icon: 'description',
     color: 'primary',
@@ -85,7 +85,7 @@ const kpiCards = computed(() => [
   {
     label: 'Autorizadas',
     labelShort: 'Aut.',
-    value: (kpisGerais.value?.autorizadas?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.autorizadas?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.autorizadas?.percentual || 0).toFixed(1)}%`,
     icon: 'check_circle',
     color: 'positive',
@@ -94,7 +94,7 @@ const kpiCards = computed(() => [
   {
     label: 'Erro',
     labelShort: 'Erro',
-    value: (kpisGerais.value?.erro?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.erro?.quantidade || 0, 0),
     subtitle: `${Math.ceil((kpisGerais.value?.erro?.percentual || 0) * 10) / 10}%`,
     icon: 'highlight_off',
     color: (kpisGerais.value?.erro?.quantidade || 0) > 0 ? 'negative' : 'grey-7',
@@ -103,7 +103,7 @@ const kpiCards = computed(() => [
   {
     label: 'Digitação',
     labelShort: 'Dig.',
-    value: (kpisGerais.value?.digitacao?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.digitacao?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.digitacao?.percentual || 0).toFixed(1)}%`,
     icon: 'edit_note',
     color: (kpisGerais.value?.digitacao?.quantidade || 0) > 0 ? 'blue' : 'grey-7',
@@ -112,7 +112,7 @@ const kpiCards = computed(() => [
   {
     label: 'Canceladas',
     labelShort: 'Canc.',
-    value: (kpisGerais.value?.canceladas?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.canceladas?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.canceladas?.percentual || 0).toFixed(1)}%`,
     icon: 'highlight_off',
     color: 'negative',
@@ -121,7 +121,7 @@ const kpiCards = computed(() => [
   {
     label: 'Inutilizadas',
     labelShort: 'Inut.',
-    value: (kpisGerais.value?.inutilizadas?.quantidade || 0).toLocaleString('pt-BR'),
+    value: formataNumero(kpisGerais.value?.inutilizadas?.quantidade || 0, 0),
     subtitle: `${(kpisGerais.value?.inutilizadas?.percentual || 0).toFixed(1)}%`,
     icon: 'block',
     color: 'warning',
@@ -165,7 +165,7 @@ watch(
       ],
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const canceladasChartOption = shallowRef({})
@@ -183,7 +183,7 @@ watch(
     lastCanceladasPorFilialHash = hash
 
     const sorted = [...data].sort(
-      (a, b) => (b.percent_canceladas || 0) - (a.percent_canceladas || 0)
+      (a, b) => (b.percent_canceladas || 0) - (a.percent_canceladas || 0),
     )
     const maxCanceladas =
       Math.ceil(Math.max(...data.map((d) => d.percent_canceladas || 0)) * 10) / 10 || 1
@@ -214,7 +214,7 @@ watch(
       ],
     }
   },
-  { immediate: true }
+  { immediate: true },
 )
 
 const filialColumns = [
@@ -249,14 +249,14 @@ const filialColumns = [
     label: 'Ultima Nota',
     field: 'ultima_nota_emitida',
     align: 'center',
-    format: (v) => (v ? formatDateTime(v) : '-'),
+    format: (v) => (v ? formataTimestamp(v, 4, true) : '-'),
   },
   {
     name: 'ultimo_erro',
     label: 'Ultimo Erro',
     field: 'ultima_nota_com_erro',
     align: 'center',
-    format: (v) => (v ? formatDateTime(v) : '-'),
+    format: (v) => (v ? formataTimestamp(v, 4, true) : '-'),
   },
 ]
 
@@ -275,7 +275,7 @@ const refresh = async () => {
 }
 
 onMounted(async () => {
-  await validateToken()
+  await validarToken()
   await store.fetchAll()
 })
 </script>
@@ -345,51 +345,54 @@ onMounted(async () => {
     </div>
 
     <!-- LINHA 1: Cards KPI -->
-    <div flat :class="isMobile ? 'row q-col-gutter-xs q-mb-sm' : 'row q-col-gutter-md q-mb-md'" style="flex-wrap: wrap">
+    <div
+      flat
+      :class="isMobile ? 'row q-col-gutter-xs q-mb-sm' : 'row q-col-gutter-md q-mb-md'"
+      style="flex-wrap: wrap"
+    >
       <div v-for="kpi in kpiCards" :key="kpi.label" :class="isMobile ? 'col-4' : 'col-2'">
         <component
           :is="kpi.status ? 'router-link' : 'div'"
           :to="kpi.status ? { path: '/nota', query: { status: kpi.status } } : undefined"
           style="text-decoration: none; color: inherit; display: block"
         >
-        <q-card
-          flat bordered
-          :class="kpi.status ? 'cursor-pointer' : ''"
-        >
-          <q-card-section
-            :horizontal="!isMobile"
-            :class="isMobile ? 'items-center text-center q-pa-xs' : 'items-center q-pa-sm'"
-          >
-            <q-avatar
-              :color="kpi.color"
-              text-color="white"
-              :size="isMobile ? '24px' : '36px'"
-              square
-              style="border-radius: 4px"
-              :class="isMobile ? 'q-mb-xs' : 'q-mr-sm'"
+          <q-card flat bordered :class="kpi.status ? 'cursor-pointer' : ''">
+            <q-card-section
+              :horizontal="!isMobile"
+              :class="isMobile ? 'items-center text-center q-pa-xs' : 'items-center q-pa-sm'"
             >
-              <q-icon :name="kpi.icon" :size="isMobile ? '14px' : '20px'" />
-            </q-avatar>
-            <div>
-              <div
-                :class="
-                  isMobile ? 'text-subtitle2 text-weight-bold' : 'text-body1 text-weight-bold'
-                "
+              <q-avatar
+                :color="kpi.color"
+                text-color="white"
+                :size="isMobile ? '24px' : '36px'"
+                square
+                style="border-radius: 4px"
+                :class="isMobile ? 'q-mb-xs' : 'q-mr-sm'"
               >
-                {{ loading ? '...' : kpi.value }}
+                <q-icon :name="kpi.icon" :size="isMobile ? '14px' : '20px'" />
+              </q-avatar>
+              <div>
+                <div
+                  :class="
+                    isMobile ? 'text-subtitle2 text-weight-bold' : 'text-body1 text-weight-bold'
+                  "
+                >
+                  {{ loading ? '...' : kpi.value }}
+                </div>
+                <div
+                  :class="
+                    isMobile ? 'text-caption text-grey-7' : 'text-caption text-grey-7 ellipsis'
+                  "
+                >
+                  <template v-if="kpi.subtitle && !isMobile">
+                    {{ kpi.subtitle }}
+                  </template>
+                  {{ isMobile ? kpi.labelShort : kpi.label }}
+                </div>
               </div>
-              <div
-                :class="isMobile ? 'text-caption text-grey-7' : 'text-caption text-grey-7 ellipsis'"
-              >
-                <template v-if="kpi.subtitle && !isMobile">
-                  {{ kpi.subtitle }}
-                </template>
-                {{ isMobile ? kpi.labelShort : kpi.label }}
-              </div>
-            </div>
-          </q-card-section>
-          <q-tooltip v-if="kpi.status">Clique para ver notas</q-tooltip>
-        </q-card>
+            </q-card-section>
+            <q-tooltip v-if="kpi.status">Clique para ver notas</q-tooltip>
+          </q-card>
         </component>
       </div>
     </div>

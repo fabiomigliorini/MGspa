@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { metaStore } from "src/stores/meta";
-import SelectPessoa from "src/components/select/SelectPessoa.vue";
-import MgInputData from "@components/MgInputData.vue";
-import MgInputValor from "@components/MgInputValor.vue";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { metaStore } from 'src/stores/meta'
+import { formataNumero, formataPercentual, formataDataAbreviada } from '@components/formatters'
+import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
   unidade: { type: Object, required: true },
@@ -12,146 +13,101 @@ const props = defineProps({
   podeEditar: { type: Boolean, default: false },
   periodoinicial: { type: String, default: null },
   periodofinal: { type: String, default: null },
-});
+})
 
-const $q = useQuasar();
-const sMeta = metaStore();
+const $q = useQuasar()
+const sMeta = metaStore()
 
-const dataISO = (val) => (val ? val.substring(0, 10) : null);
+const dataISO = (val) => (val ? val.substring(0, 10) : null)
 
 // --- DIALOGS ---
 
-const dialogUnidade = ref(false);
-const modelUnidade = ref({});
+const dialogUnidade = ref(false)
+const modelUnidade = ref({})
 
-const dialogPessoa = ref(false);
-const isNovaPessoa = ref(false);
-const modelPessoa = ref({});
-const codunidadePessoa = ref(null);
-const idPessoaEditando = ref(null);
+const dialogPessoa = ref(false)
+const isNovaPessoa = ref(false)
+const modelPessoa = ref({})
+const codunidadePessoa = ref(null)
+const idPessoaEditando = ref(null)
 
-const dialogFixo = ref(false);
-const isNovoFixo = ref(false);
-const modelFixo = ref({});
-const idPessoaFixo = ref(null);
-const idFixoEditando = ref(null);
+const dialogFixo = ref(false)
+const isNovoFixo = ref(false)
+const modelFixo = ref({})
+const idPessoaFixo = ref(null)
+const idFixoEditando = ref(null)
 
 // --- FORMATTERS ---
 
-const formataMoeda = (valor) => {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 5,
-  }).format(parseFloat(valor) || 0);
-};
-
-const formataPercentual = (valor) => {
-  return (
-    new Intl.NumberFormat("pt-BR", {
-      style: "decimal",
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(parseFloat(valor) || 0) + "%"
-  );
-};
-
 const corProgresso = (percentual) => {
-  if (!percentual) return "grey";
-  if (percentual >= 100) return "green";
-  if (percentual >= 70) return "orange";
-  return "red";
-};
+  if (!percentual) return 'grey'
+  if (percentual >= 100) return 'green'
+  if (percentual >= 70) return 'orange'
+  return 'red'
+}
 
 const corPosicao = (posicao) => {
-  if (posicao === 1) return "amber-8";
-  if (posicao === 2) return "grey-6";
-  if (posicao === 3) return "brown-5";
-  return "grey-4";
-};
+  if (posicao === 1) return 'amber-8'
+  if (posicao === 2) return 'grey-6'
+  if (posicao === 3) return 'brown-5'
+  return 'grey-4'
+}
 
 const siglaFuncao = (pessoa) => {
-  if (pessoa.percentualsubgerente) return "S";
-  if (pessoa.percentualxerox) return "X";
-  if (pessoa.percentualcaixa) return "C";
-  if (pessoa.percentualvenda) return "V";
-  return null;
-};
-
-const mesesAbrev = [
-  "jan",
-  "fev",
-  "mar",
-  "abr",
-  "mai",
-  "jun",
-  "jul",
-  "ago",
-  "set",
-  "out",
-  "nov",
-  "dez",
-];
+  if (pessoa.percentualsubgerente) return 'S'
+  if (pessoa.percentualxerox) return 'X'
+  if (pessoa.percentualcaixa) return 'C'
+  if (pessoa.percentualvenda) return 'V'
+  return null
+}
 
 const formataPeriodoPessoa = (di, df) => {
-  if (!di || !df) return "";
-  const partesDi = String(di).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  const partesDf = String(df).match(/^(\d{4})-(\d{2})-(\d{2})/);
-  if (!partesDi || !partesDf) return `${di} a ${df}`;
-
-  const diaI = parseInt(partesDi[3]);
-  const mesI = parseInt(partesDi[2]) - 1;
-  const anoI = parseInt(partesDi[1]);
-  const diaF = parseInt(partesDf[3]);
-  const mesF = parseInt(partesDf[2]) - 1;
-  const anoF = parseInt(partesDf[1]);
-
-  const dateI = new Date(anoI, mesI, diaI);
-  const dateF = new Date(anoF, mesF, diaF);
-  const dias = Math.round((dateF - dateI) / 86400000) + 1;
-
-  const inicio =
-    mesI === mesF && anoI === anoF ? `${diaI}` : `${diaI}/${mesesAbrev[mesI]}`;
-  const fim = `${diaF}/${mesesAbrev[mesF]}`;
-
-  return `de ${inicio} a ${fim} (${dias} dias)`;
-};
+  if (!di || !df) return ''
+  const dateI = new Date(String(di).slice(0, 10) + 'T12:00:00')
+  const dateF = new Date(String(df).slice(0, 10) + 'T12:00:00')
+  if (isNaN(dateI) || isNaN(dateF)) return `${di} a ${df}`
+  const dias = Math.round((dateF - dateI) / 86400000) + 1
+  const mesmoMes =
+    dateI.getMonth() === dateF.getMonth() && dateI.getFullYear() === dateF.getFullYear()
+  const inicio = mesmoMes ? String(dateI.getDate()) : formataDataAbreviada(dateI, 0)
+  const fim = formataDataAbreviada(dateF, 0)
+  return `de ${inicio} a ${fim} (${dias} dias)`
+}
 
 const extrairErro = (error, fallback) => {
-  const data = error.response?.data;
-  if (!data) return fallback;
+  const data = error.response?.data
+  if (!data) return fallback
   if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0];
-    if (primeiro) return primeiro;
+    const primeiro = Object.values(data.errors).flat()[0]
+    if (primeiro) return primeiro
   }
-  return data.mensagem || data.message || fallback;
-};
+  return data.mensagem || data.message || fallback
+}
 
 const tiposFixo = [
-  { label: "Premio Meta", value: "PREMIO_META" },
-  { label: "Alimentacao", value: "ALIMENTACAO" },
-  { label: "Vale Transporte", value: "VALE_TRANSPORTE" },
-  { label: "Outro", value: "OUTRO" },
-];
+  { label: 'Premio Meta', value: 'PREMIO_META' },
+  { label: 'Alimentacao', value: 'ALIMENTACAO' },
+  { label: 'Vale Transporte', value: 'VALE_TRANSPORTE' },
+  { label: 'Outro', value: 'OUTRO' },
+]
 
 // --- LISTA UNIFICADA (ranking + config) ---
 
 const colaboradores = computed(() => {
-  const pessoas = props.unidade.pessoas || [];
-  const ranking = props.unidade.rankingprovisorio || [];
-  const codpessoasConfig = new Set(pessoas.map((p) => p.codpessoa));
+  const pessoas = props.unidade.pessoas || []
+  const ranking = props.unidade.rankingprovisorio || []
+  const codpessoasConfig = new Set(pessoas.map((p) => p.codpessoa))
 
   const merged = pessoas.map((p) => {
-    const rank = ranking.find((r) => r.codpessoa === p.codpessoa) || {};
+    const rank = ranking.find((r) => r.codpessoa === p.codpessoa) || {}
     return {
       ...p,
       posicao: rank.posicao || null,
       totalvendas: rank.totalvendas || 0,
       cargo: rank.cargo || null,
       somenteRanking: false,
-    };
-  });
+    }
+  })
 
   ranking.forEach((r) => {
     if (!codpessoasConfig.has(r.codpessoa)) {
@@ -162,22 +118,22 @@ const colaboradores = computed(() => {
         posicao: r.posicao,
         totalvendas: r.totalvendas || 0,
         somenteRanking: true,
-      });
+      })
     }
-  });
+  })
 
   return merged.sort((a, b) => {
-    if (a.posicao && b.posicao) return a.posicao - b.posicao;
-    if (a.posicao) return -1;
-    if (b.posicao) return 1;
-    return 0;
-  });
-});
+    if (a.posicao && b.posicao) return a.posicao - b.posicao
+    if (a.posicao) return -1
+    if (b.posicao) return 1
+    return 0
+  })
+})
 
 // --- UNIDADE EDIT ---
 
 const abrirEditarUnidade = () => {
-  const u = props.unidade;
+  const u = props.unidade
   modelUnidade.value = {
     valormeta: u.valormeta,
     valormetacaixa: u.valormetacaixa,
@@ -191,67 +147,60 @@ const abrirEditarUnidade = () => {
     premioprimeirovendedor: u.premioprimeirovendedor,
     premiosubgerentemeta: u.premiosubgerentemeta,
     premiometaxerox: u.premiometaxerox,
-  };
-  dialogUnidade.value = true;
-};
+  }
+  dialogUnidade.value = true
+}
 
 const salvarUnidade = async () => {
-  dialogUnidade.value = false;
+  dialogUnidade.value = false
   try {
-    await sMeta.atualizarUnidade(
-      props.codmeta,
-      props.unidade.codunidadenegocio,
-      modelUnidade.value
-    );
+    await sMeta.atualizarUnidade(props.codmeta, props.unidade.codunidadenegocio, modelUnidade.value)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Unidade atualizada",
-    });
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Unidade atualizada',
+    })
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao atualizar unidade"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao atualizar unidade'),
+    })
   }
-};
+}
 
 const removerUnidade = () => {
   $q.dialog({
-    title: "Remover Unidade",
+    title: 'Remover Unidade',
     message: `Deseja remover ${props.unidade.descricao}? Todas as pessoas e fixos desta unidade serao removidos.`,
     cancel: true,
   }).onOk(async () => {
     try {
-      await sMeta.removerUnidade(
-        props.codmeta,
-        props.unidade.codunidadenegocio
-      );
+      await sMeta.removerUnidade(props.codmeta, props.unidade.codunidadenegocio)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Unidade removida",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Unidade removida',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao remover unidade"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao remover unidade'),
+      })
     }
-  });
-};
+  })
+}
 
 // --- PESSOA CRUD ---
 
 const abrirAddPessoa = () => {
-  isNovaPessoa.value = true;
-  codunidadePessoa.value = props.unidade.codunidadenegocio;
+  isNovaPessoa.value = true
+  codunidadePessoa.value = props.unidade.codunidadenegocio
   modelPessoa.value = {
     codpessoa: null,
     datainicial: dataISO(props.periodoinicial),
@@ -260,13 +209,13 @@ const abrirAddPessoa = () => {
     percentualcaixa: null,
     percentualsubgerente: null,
     percentualxerox: null,
-  };
-  dialogPessoa.value = true;
-};
+  }
+  dialogPessoa.value = true
+}
 
 const abrirEditarPessoa = (pessoa) => {
-  isNovaPessoa.value = false;
-  idPessoaEditando.value = pessoa.codmetaunidadenegociopessoa;
+  isNovaPessoa.value = false
+  idPessoaEditando.value = pessoa.codmetaunidadenegociopessoa
   modelPessoa.value = {
     datainicial: pessoa.datainicial,
     datafinal: pessoa.datafinal,
@@ -274,83 +223,72 @@ const abrirEditarPessoa = (pessoa) => {
     percentualcaixa: pessoa.percentualcaixa,
     percentualsubgerente: pessoa.percentualsubgerente,
     percentualxerox: pessoa.percentualxerox,
-  };
-  dialogPessoa.value = true;
-};
+  }
+  dialogPessoa.value = true
+}
 
 const salvarPessoa = async () => {
-  dialogPessoa.value = false;
+  dialogPessoa.value = false
   try {
     if (isNovaPessoa.value) {
-      await sMeta.criarPessoa(
-        props.codmeta,
-        codunidadePessoa.value,
-        modelPessoa.value
-      );
+      await sMeta.criarPessoa(props.codmeta, codunidadePessoa.value, modelPessoa.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador adicionado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador adicionado',
+      })
     } else {
-      await sMeta.atualizarPessoa(
-        props.codmeta,
-        idPessoaEditando.value,
-        modelPessoa.value
-      );
+      await sMeta.atualizarPessoa(props.codmeta, idPessoaEditando.value, modelPessoa.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador atualizado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador atualizado',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar colaborador"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar colaborador'),
+    })
   }
-};
+}
 
 const removerPessoa = (pessoa) => {
   $q.dialog({
-    title: "Remover Colaborador",
+    title: 'Remover Colaborador',
     message: `Deseja remover ${
-      pessoa.pessoa || "este colaborador"
+      pessoa.pessoa || 'este colaborador'
     }? Os fixos associados tambem serao removidos.`,
     cancel: true,
   }).onOk(async () => {
     try {
-      await sMeta.removerPessoa(
-        props.codmeta,
-        pessoa.codmetaunidadenegociopessoa
-      );
+      await sMeta.removerPessoa(props.codmeta, pessoa.codmetaunidadenegociopessoa)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Colaborador removido",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Colaborador removido',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao remover colaborador"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao remover colaborador'),
+      })
     }
-  });
-};
+  })
+}
 
 // --- FIXO CRUD ---
 
 const abrirAddFixo = (pessoa) => {
-  isNovoFixo.value = true;
-  idPessoaFixo.value = pessoa.codmetaunidadenegociopessoa;
+  isNovoFixo.value = true
+  idPessoaFixo.value = pessoa.codmetaunidadenegociopessoa
   modelFixo.value = {
     tipo: null,
     valor: null,
@@ -358,13 +296,13 @@ const abrirAddFixo = (pessoa) => {
     descricao: null,
     datainicial: dataISO(props.periodoinicial),
     datafinal: dataISO(props.periodofinal),
-  };
-  dialogFixo.value = true;
-};
+  }
+  dialogFixo.value = true
+}
 
 const abrirEditarFixo = (fixo) => {
-  isNovoFixo.value = false;
-  idFixoEditando.value = fixo.codmetaunidadenegociopessoafixo;
+  isNovoFixo.value = false
+  idFixoEditando.value = fixo.codmetaunidadenegociopessoafixo
   modelFixo.value = {
     tipo: fixo.tipo,
     valor: fixo.valor,
@@ -372,80 +310,71 @@ const abrirEditarFixo = (fixo) => {
     descricao: fixo.descricao,
     datainicial: dataISO(fixo.datainicial),
     datafinal: dataISO(fixo.datafinal),
-  };
-  dialogFixo.value = true;
-};
+  }
+  dialogFixo.value = true
+}
 
 const salvarFixo = async () => {
-  dialogFixo.value = false;
+  dialogFixo.value = false
   try {
     if (isNovoFixo.value) {
-      await sMeta.criarFixo(props.codmeta, idPessoaFixo.value, modelFixo.value);
+      await sMeta.criarFixo(props.codmeta, idPessoaFixo.value, modelFixo.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Fixo adicionado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Fixo adicionado',
+      })
     } else {
-      await sMeta.atualizarFixo(
-        props.codmeta,
-        idFixoEditando.value,
-        modelFixo.value
-      );
+      await sMeta.atualizarFixo(props.codmeta, idFixoEditando.value, modelFixo.value)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Fixo atualizado",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Fixo atualizado',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao salvar fixo"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao salvar fixo'),
+    })
   }
-};
+}
 
 const removerFixo = (fixo) => {
   $q.dialog({
-    title: "Remover Fixo",
+    title: 'Remover Fixo',
     message: `Deseja remover este fixo (${fixo.tipo})?`,
     cancel: true,
   }).onOk(async () => {
     try {
-      await sMeta.removerFixo(
-        props.codmeta,
-        fixo.codmetaunidadenegociopessoafixo
-      );
+      await sMeta.removerFixo(props.codmeta, fixo.codmetaunidadenegociopessoafixo)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Fixo removido",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Fixo removido',
+      })
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: extrairErro(error, "Erro ao remover fixo"),
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao remover fixo'),
+      })
     }
-  });
-};
+  })
+}
 </script>
 
 <template>
   <!-- DIALOG EDITAR UNIDADE -->
   <q-dialog v-model="dialogUnidade">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
-      <q-card-section class="text-grey-9 text-overline">
-        EDITAR UNIDADE
-      </q-card-section>
+      <q-card-section class="text-grey-9 text-overline"> EDITAR UNIDADE </q-card-section>
 
       <q-form @submit="salvarUnidade()">
         <q-separator inset />
@@ -486,9 +415,7 @@ const removerFixo = (fixo) => {
             </div>
           </div>
 
-          <div class="text-subtitle2 text-grey-8 q-mb-sm q-mt-md">
-            Meta do Vendedor
-          </div>
+          <div class="text-subtitle2 text-grey-8 q-mb-sm q-mt-md">Meta do Vendedor</div>
           <div class="row q-col-gutter-md">
             <div class="col-3">
               <MgInputValor
@@ -527,48 +454,28 @@ const removerFixo = (fixo) => {
           <div class="text-subtitle2 text-grey-8 q-mb-sm">Metas</div>
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <MgInputValor
-                v-model="modelUnidade.valormetacaixa"
-                label="Meta do Caixa"
-                :min="0"
-              />
+              <MgInputValor v-model="modelUnidade.valormetacaixa" label="Meta do Caixa" :min="0" />
             </div>
 
             <div class="col-6">
-              <MgInputValor
-                v-model="modelUnidade.valormetaxerox"
-                label="Meta do Xerox"
-                :min="0"
-              />
+              <MgInputValor v-model="modelUnidade.valormetaxerox" label="Meta do Xerox" :min="0" />
             </div>
           </div>
 
-          <div class="text-subtitle2 text-grey-8 q-mt-md q-mb-sm">
-            Bonificacoes (%)
-          </div>
+          <div class="text-subtitle2 text-grey-8 q-mt-md q-mb-sm">Bonificacoes (%)</div>
           <div class="row q-col-gutter-md">
             <div class="col-6"></div>
             <div class="col-6">
-              <MgInputValor
-                v-model="modelUnidade.percentualcomissaoxerox"
-                label="Xerox"
-                :min="0"
-              />
+              <MgInputValor v-model="modelUnidade.percentualcomissaoxerox" label="Xerox" :min="0" />
             </div>
           </div>
 
-          <div class="text-subtitle2 text-grey-8 q-mt-md q-mb-sm">
-            Premios (R$)
-          </div>
+          <div class="text-subtitle2 text-grey-8 q-mt-md q-mb-sm">Premios (R$)</div>
           <div class="row q-col-gutter-md">
             <div class="col-6"></div>
 
             <div class="col-6">
-              <MgInputValor
-                v-model="modelUnidade.premiometaxerox"
-                label="Meta Xerox"
-                :min="0"
-              />
+              <MgInputValor v-model="modelUnidade.premiometaxerox" label="Meta Xerox" :min="0" />
             </div>
           </div>
         </q-card-section>
@@ -576,13 +483,7 @@ const removerFixo = (fixo) => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -627,18 +528,10 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <MgInputValor
-                v-model="modelPessoa.percentualvenda"
-                label="% Venda"
-                :min="0"
-              />
+              <MgInputValor v-model="modelPessoa.percentualvenda" label="% Venda" :min="0" />
             </div>
             <div class="col-6">
-              <MgInputValor
-                v-model="modelPessoa.percentualcaixa"
-                label="% Caixa"
-                :min="0"
-              />
+              <MgInputValor v-model="modelPessoa.percentualcaixa" label="% Caixa" :min="0" />
             </div>
             <div class="col-6">
               <MgInputValor
@@ -648,11 +541,7 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <MgInputValor
-                v-model="modelPessoa.percentualxerox"
-                label="% Xerox"
-                :min="0"
-              />
+              <MgInputValor v-model="modelPessoa.percentualxerox" label="% Xerox" :min="0" />
             </div>
           </div>
         </q-card-section>
@@ -660,13 +549,7 @@ const removerFixo = (fixo) => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -700,11 +583,7 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-6">
-              <MgInputValor
-                v-model="modelFixo.valor"
-                label="Valor"
-                :min="0"
-              />
+              <MgInputValor v-model="modelFixo.valor" label="Valor" :min="0" />
             </div>
             <div class="col-6">
               <q-input
@@ -718,25 +597,13 @@ const removerFixo = (fixo) => {
               />
             </div>
             <div class="col-12">
-              <q-input
-                outlined
-                v-model="modelFixo.descricao"
-                label="Descricao"
-              />
+              <q-input outlined v-model="modelFixo.descricao" label="Descricao" />
             </div>
             <div class="col-6">
-              <MgInputData
-                v-model="modelFixo.datainicial"
-                label="Data Inicial"
-                type="date"
-              />
+              <MgInputData v-model="modelFixo.datainicial" label="Data Inicial" type="date" />
             </div>
             <div class="col-6">
-              <MgInputData
-                v-model="modelFixo.datafinal"
-                label="Data Final"
-                type="date"
-              />
+              <MgInputData v-model="modelFixo.datafinal" label="Data Final" type="date" />
             </div>
           </div>
         </q-card-section>
@@ -744,13 +611,7 @@ const removerFixo = (fixo) => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -786,15 +647,7 @@ const removerFixo = (fixo) => {
         >
           <q-tooltip>Configurar Unidade</q-tooltip>
         </q-btn>
-        <q-btn
-          flat
-          dense
-          round
-          icon="delete"
-          size="sm"
-          color="grey-7"
-          @click="removerUnidade()"
-        >
+        <q-btn flat dense round icon="delete" size="sm" color="grey-7" @click="removerUnidade()">
           <q-tooltip>Remover Unidade</q-tooltip>
         </q-btn>
       </template>
@@ -808,13 +661,13 @@ const removerFixo = (fixo) => {
         <div class="col-xs-6 col-sm-3">
           <div class="text-caption text-grey">Vendas</div>
           <div class="text-subtitle1">
-            {{ formataMoeda(unidade.totalvendas) }}
+            {{ formataNumero(unidade.totalvendas) }}
           </div>
         </div>
         <div class="col-xs-6 col-sm-3">
           <div class="text-caption text-grey">Meta</div>
           <div class="text-subtitle1">
-            {{ formataMoeda(unidade.valormeta) }}
+            {{ formataNumero(unidade.valormeta) }}
           </div>
         </div>
         <div class="col-xs-6 col-sm-3">
@@ -910,7 +763,7 @@ const removerFixo = (fixo) => {
           </q-item-section>
           <q-item-section side v-if="pessoa.totalvendas">
             <q-item-label>
-              {{ formataMoeda(pessoa.totalvendas) }}
+              {{ formataNumero(pessoa.totalvendas) }}
             </q-item-label>
           </q-item-section>
           <q-item-section side>
@@ -984,15 +837,9 @@ const removerFixo = (fixo) => {
             <q-item-section>
               <q-item-label caption>
                 {{ fixo.tipo }}
-                <template v-if="fixo.valor">
-                  — {{ formataMoeda(fixo.valor) }}</template
-                >
-                <template v-if="fixo.quantidade">
-                  x {{ fixo.quantidade }}</template
-                >
-                <template v-if="fixo.descricao">
-                  — {{ fixo.descricao }}</template
-                >
+                <template v-if="fixo.valor"> — {{ formataNumero(fixo.valor) }}</template>
+                <template v-if="fixo.quantidade"> x {{ fixo.quantidade }}</template>
+                <template v-if="fixo.descricao"> — {{ fixo.descricao }}</template>
               </q-item-label>
               <q-item-label caption v-if="fixo.datainicial">
                 {{ formataPeriodoPessoa(fixo.datainicial, fixo.datafinal) }}
@@ -1028,8 +875,6 @@ const removerFixo = (fixo) => {
         </template>
       </template>
     </q-list>
-    <div v-else class="q-pa-sm q-pl-md text-caption text-grey">
-      Nenhum colaborador cadastrado
-    </div>
+    <div v-else class="q-pa-sm q-pl-md text-caption text-grey">Nenhum colaborador cadastrado</div>
   </q-card>
 </template>

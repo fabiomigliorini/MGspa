@@ -3,11 +3,7 @@
     <template #tituloPagina> Pessoas </template>
 
     <template #content>
-      <q-infinite-scroll
-        @load="scrollInfinito"
-        :disable="loading"
-        style="min-height: 100vh"
-      >
+      <q-infinite-scroll @load="scrollInfinito" :disable="loading" style="min-height: 100vh">
         <div class="row q-pa-md q-col-gutter-md">
           <div
             class="col-xs-12 col-sm-6 col-md-4 col-lg-4 col-xl-3"
@@ -23,7 +19,7 @@
       <q-page-sticky
         position="bottom-right"
         :offset="[18, 18]"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
       >
         <q-btn fab icon="add" color="accent" :to="{ name: 'pessoanova' }" />
       </q-page-sticky>
@@ -36,13 +32,7 @@
           <q-list>
             <q-item-label header>
               Filtro Pessoa
-              <q-btn
-                icon="replay"
-                @click="buscarPessoas()"
-                flat
-                round
-                no-caps
-              />
+              <q-btn icon="replay" @click="buscarPessoas()" flat round no-caps />
             </q-item-label>
           </q-list>
         </q-card>
@@ -82,12 +72,7 @@
               label="Cnpj/Cpf"
               unmasked-value
             />
-            <q-input
-              outlined
-              v-model="sPessoa.filtroPesquisa.email"
-              ref="email"
-              label="Email"
-            />
+            <q-input outlined v-model="sPessoa.filtroPesquisa.email" ref="email" label="Email" />
             <q-input
               outlined
               v-model="sPessoa.filtroPesquisa.fone"
@@ -100,11 +85,7 @@
               label="Grupo Econômico"
             >
             </SelectGrupoEconomico>
-            <SelectCidade
-              v-model="sPessoa.filtroPesquisa.codcidade"
-              label="Cidade"
-            >
-            </SelectCidade>
+            <SelectCidade v-model="sPessoa.filtroPesquisa.codcidade" label="Cidade"> </SelectCidade>
             <q-select
               outlined
               v-model="sPessoa.filtroPesquisa.inativo"
@@ -136,124 +117,115 @@
 </template>
 
 <script>
-import { ref, onMounted, defineAsyncComponent, watch } from "vue";
-import { useQuasar } from "quasar";
-import { formataDocumetos } from "src/stores/formataDocumentos";
-import { useRouter } from "vue-router";
-import { guardaToken } from "src/stores";
-import { pessoaStore } from "src/stores/pessoa";
-import { debounce } from "quasar";
+import { ref, onMounted, defineAsyncComponent, watch } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from 'src/stores'
+import { pessoaStore } from 'src/stores/pessoa'
+import { debounce } from 'quasar'
 
 export default {
   components: {
-    MGLayout: defineAsyncComponent(() => import("layouts/MGLayout.vue")),
+    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
     SelectGrupoEconomico: defineAsyncComponent(() =>
-      import("components/pessoa/SelectGrupoEconomico.vue")
+      import('components/pessoa/SelectGrupoEconomico.vue'),
     ),
-    SelectCidade: defineAsyncComponent(() =>
-      import("components/pessoa/SelectCidade.vue")
-    ),
+    SelectCidade: defineAsyncComponent(() => import('components/pessoa/SelectCidade.vue')),
     SelectFormaPagamento: defineAsyncComponent(() =>
-      import("components/pessoa/SelectFormaPagamento.vue")
+      import('components/pessoa/SelectFormaPagamento.vue'),
     ),
     SelectGrupoCliente: defineAsyncComponent(() =>
-      import("components/pessoa/SelectGrupoCliente.vue")
+      import('components/pessoa/SelectGrupoCliente.vue'),
     ),
-    CardPessoas: defineAsyncComponent(() =>
-      import("components/pessoa/CardPessoas.vue")
-    ),
+    CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),
   },
 
   setup() {
-    const loading = ref(true);
-    const $q = useQuasar();
-    const router = useRouter();
-    const user = guardaToken();
-    const Documentos = formataDocumetos();
-    const sPessoa = pessoaStore();
-    const filtro = ref([]);
+    const loading = ref(true)
+    const $q = useQuasar()
+    const router = useRouter()
+    const user = useAuthStore()
+    const sPessoa = pessoaStore()
+    const filtro = ref([])
 
-    const listapessoas = ref([]);
+    const listapessoas = ref([])
 
     const buscarPessoas = debounce(async () => {
-      $q.loadingBar.start();
-      sPessoa.filtroPesquisa.page = 1;
+      $q.loadingBar.start()
+      sPessoa.filtroPesquisa.page = 1
       try {
-        const ret = await sPessoa.buscarPessoas();
-        loading.value = false;
-        $q.loadingBar.stop();
+        const ret = await sPessoa.buscarPessoas()
+        loading.value = false
+        $q.loadingBar.stop()
         if (ret.data.data.length == 0) {
           return $q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "warning",
-            message: "Nenhum Registro encontrado",
-          });
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'warning',
+            message: 'Nenhum Registro encontrado',
+          })
         }
       } catch (error) {
-        $q.loadingBar.stop();
+        $q.loadingBar.stop()
       }
-    }, 500);
+    }, 500)
 
     watch(
       () => sPessoa.filtroPesquisa.codformapagamento,
       () => buscarPessoas(),
-      { deep: true }
-    );
+      { deep: true },
+    )
 
     watch(
       () => sPessoa.filtroPesquisa.inativo,
       () => buscarPessoas(),
-      { deep: true }
-    );
+      { deep: true },
+    )
 
     watch(
       () => sPessoa.filtroPesquisa.codgrupocliente,
       () => buscarPessoas(),
-      { deep: true }
-    );
+      { deep: true },
+    )
 
     watch(
       () => sPessoa.filtroPesquisa.fisica,
       () => buscarPessoas(),
-      { deep: true }
-    );
+      { deep: true },
+    )
 
     onMounted(async () => {
       if (sPessoa.arrPessoas.length == 0) {
-        buscarPessoas();
+        buscarPessoas()
       }
       if (sPessoa.filtroPesquisa.codcidade) {
-        const ret = await sPessoa.consultaCidade(
-          sPessoa.filtroPesquisa.codcidade
-        );
-        sPessoa.filtroPesquisa.codcidade = ret.data[0];
+        const ret = await sPessoa.consultaCidade(sPessoa.filtroPesquisa.codcidade)
+        sPessoa.filtroPesquisa.codcidade = ret.data[0]
       }
-    });
+    })
 
     return {
       model: ref(null),
       listapessoas,
       filtro,
-      Documentos,
       user,
       router,
       buscarPessoas,
       sPessoa,
       loading,
       async scrollInfinito(index, done) {
-        loading.value = true;
-        $q.loadingBar.start();
-        sPessoa.filtroPesquisa.page++;
-        const ret = await sPessoa.buscarPessoas();
-        loading.value = false;
-        $q.loadingBar.stop();
+        loading.value = true
+        $q.loadingBar.start()
+        sPessoa.filtroPesquisa.page++
+        const ret = await sPessoa.buscarPessoas()
+        loading.value = false
+        $q.loadingBar.stop()
         if (ret.data.data.length == 0) {
-          loading.value = true;
+          loading.value = true
         }
-        await done();
+        await done()
       },
-    };
+    }
   },
-};
+}
 </script>

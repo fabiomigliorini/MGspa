@@ -1,7 +1,7 @@
 <script setup>
-import MainLayout from "layouts/MainLayout.vue";
-import LiquidacaoListagemLeftDrawer from "components/drawers/LiquidacaoListagemLeftDrawer.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
+import MainLayout from 'layouts/MainLayout.vue'
+import LiquidacaoListagemLeftDrawer from 'components/drawers/LiquidacaoListagemLeftDrawer.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
   <main-layout title="Listagem de Liquidações" left-drawer>

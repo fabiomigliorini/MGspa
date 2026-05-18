@@ -113,13 +113,7 @@ const cadastrosItems = [
           <div class="text-subtitle2 text-grey-7 q-mb-md">Movimento</div>
           <div class="row q-col-gutter-sm">
             <div class="col-3" v-for="item in movimentoItems" :key="item.label">
-              <q-btn
-                flat
-                no-caps
-                class="full-width app-launcher-item"
-                :to="item.to"
-                v-close-popup
-              >
+              <q-btn flat no-caps class="full-width app-launcher-item" :to="item.to" v-close-popup>
                 <div class="column items-center">
                   <q-icon :name="item.icon" size="32px" :color="item.color" />
                   <div class="text-caption text-center q-mt-xs">
@@ -137,13 +131,7 @@ const cadastrosItems = [
           <div class="text-subtitle2 text-grey-7 q-mb-md">Cadastros</div>
           <div class="row q-col-gutter-sm">
             <div class="col-3" v-for="item in cadastrosItems" :key="item.label">
-              <q-btn
-                flat
-                no-caps
-                class="full-width app-launcher-item"
-                :to="item.to"
-                v-close-popup
-              >
+              <q-btn flat no-caps class="full-width app-launcher-item" :to="item.to" v-close-popup>
                 <div class="column items-center">
                   <q-icon :name="item.icon" size="32px" :color="item.color" />
                   <div class="text-caption text-center q-mt-xs">

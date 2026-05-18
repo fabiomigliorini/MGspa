@@ -3,10 +3,10 @@ const props = defineProps({
   setores: { type: Array, default: () => [] },
   diasUteisPeriodo: { type: Number, default: 0 },
   podeEditar: { type: Boolean, default: false },
-  status: { type: String, default: "A" },
-});
+  status: { type: String, default: 'A' },
+})
 
-const emit = defineEmits(["editar", "excluir", "adicionar"]);
+const emit = defineEmits(['editar', 'excluir', 'adicionar'])
 </script>
 
 <template>
@@ -15,7 +15,12 @@ const emit = defineEmits(["editar", "excluir", "adicionar"]);
       SETORES
       <q-space />
       <q-btn
-        flat round dense icon="add" size="sm" color="primary"
+        flat
+        round
+        dense
+        icon="add"
+        size="sm"
+        color="primary"
         v-if="podeEditar && status === 'A'"
         @click="emit('adicionar')"
       >
@@ -24,18 +29,15 @@ const emit = defineEmits(["editar", "excluir", "adicionar"]);
     </q-card-section>
 
     <q-list v-if="setores.length > 0">
-      <template
-        v-for="pcs in setores"
-        :key="pcs.codperiodocolaboradorsetor"
-      >
+      <template v-for="pcs in setores" :key="pcs.codperiodocolaboradorsetor">
         <q-separator inset />
         <q-item>
           <q-item-section>
             <q-item-label>
-              {{ pcs.setor?.setor || "—" }}
+              {{ pcs.setor?.setor || '—' }}
             </q-item-label>
             <q-item-label caption>
-              {{ pcs.setor?.unidade_negocio?.descricao || "" }}
+              {{ pcs.setor?.unidade_negocio?.descricao || '' }}
             </q-item-label>
             <q-item-label caption>
               Rateio: {{ pcs.percentualrateio }}% —
@@ -49,19 +51,26 @@ const emit = defineEmits(["editar", "excluir", "adicionar"]);
               </span>
             </q-item-label>
           </q-item-section>
-          <q-item-section
-            side
-            v-if="podeEditar && status === 'A'"
-          >
+          <q-item-section side v-if="podeEditar && status === 'A'">
             <q-item-label caption>
               <q-btn
-                flat dense round icon="edit" size="sm" color="grey-7"
+                flat
+                dense
+                round
+                icon="edit"
+                size="sm"
+                color="grey-7"
                 @click="emit('editar', pcs)"
               >
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
-                flat dense round icon="delete" size="sm" color="grey-7"
+                flat
+                dense
+                round
+                icon="delete"
+                size="sm"
+                color="grey-7"
                 @click="emit('excluir', pcs)"
               >
                 <q-tooltip>Excluir</q-tooltip>
@@ -71,8 +80,6 @@ const emit = defineEmits(["editar", "excluir", "adicionar"]);
         </q-item>
       </template>
     </q-list>
-    <div v-else class="q-pa-md text-center text-grey">
-      Nenhum setor vinculado
-    </div>
+    <div v-else class="q-pa-md text-center text-grey">Nenhum setor vinculado</div>
   </q-card>
 </template>

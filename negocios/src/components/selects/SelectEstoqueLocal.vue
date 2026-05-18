@@ -1,48 +1,48 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { db } from "boot/db";
+import { ref, onMounted } from 'vue'
+import { db } from 'boot/db'
 
 const props = defineProps({
   somenteAtivos: {
     type: Boolean,
     default: true,
   },
-});
+})
 
-const opcoes = ref([]);
-const filtrado = ref([]);
+const opcoes = ref([])
+const filtrado = ref([])
 
 onMounted(async () => {
-  let regs = db.estoqueLocal.orderBy("[codfilial+sigla]");
+  let regs = db.estoqueLocal.orderBy('[codfilial+sigla]')
   if (props.somenteAtivos) {
     opcoes.value = await regs
       .filter((item) => {
-        return item.inativo == null;
+        return item.inativo == null
       })
-      .toArray();
+      .toArray()
   } else {
-    opcoes.value = await regs.toArray();
+    opcoes.value = await regs.toArray()
   }
-  filtrado.value = opcoes.value;
-});
+  filtrado.value = opcoes.value
+})
 
 const pesquisa = (val, update) => {
-  if (val === "") {
+  if (val === '') {
     update(() => {
-      filtrado.value = opcoes.value;
-    });
-    return;
+      filtrado.value = opcoes.value
+    })
+    return
   }
   update(() => {
-    const pesquisa = val.toLowerCase();
+    const pesquisa = val.toLowerCase()
     filtrado.value = opcoes.value.filter((item) => {
       return (
         item.estoquelocal.toLowerCase().indexOf(pesquisa) > -1 ||
         item.sigla.toLowerCase().indexOf(pesquisa) > -1
-      );
-    });
-  });
-};
+      )
+    })
+  })
+}
 </script>
 <template>
   <q-select

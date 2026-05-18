@@ -2,7 +2,7 @@
 import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero, formataData } from '@components/formatters'
 import { useExtratoStore } from 'src/stores/extratoStore'
 
 const route = useRoute()
@@ -15,7 +15,7 @@ const columns = [
     label: 'Dia',
     field: 'dia',
     align: 'left',
-    format: (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : ''),
+    format: (v) => formataData(v),
   },
   { name: 'observacoes', label: 'Observação', field: 'observacoes', align: 'left' },
   { name: 'numero', label: 'Documento', field: 'numero', align: 'left' },
@@ -137,11 +137,7 @@ onMounted(async () => {
       </q-table>
     </div>
 
-    <q-page-sticky
-      position="bottom-right"
-      :offset="[18, 18]"
-      v-if="store.portador?.codbanco == 1"
-    >
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="store.portador?.codbanco == 1">
       <q-btn
         fab
         icon="cloud_download"

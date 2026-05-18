@@ -40,10 +40,6 @@ Route::group(['prefix' => 'v1/cielo-lio'], function () {
 
 Route::group(['prefix' => 'v1/auth'], function () {
     Route::post('login', 'Auth\SSOController@login');
-    // Route::get('logout', 'Auth\LoginController@logoutt');
-    // Route::get('check', 'Auth\LoginController@check');
-    // Route::get('refresh', 'Auth\LoginController@refreshToken');
-    // Route::get('user', 'Auth\SSOController@getAuthenticatedUser');
 });
 
 Route::group(['prefix' => 'v1'], function () {
@@ -884,6 +880,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
 
         // Titulo - CRUD
         Route::get('titulo/abertos-para-fechamento', '\Mg\Titulo\TituloController@abertosParaFechamento');
+        Route::get('titulo/listagem/relatorio', '\Mg\Titulo\TituloController@relatorioListagem');
         Route::get('titulo', '\Mg\Titulo\TituloController@index');
         Route::post('titulo', '\Mg\Titulo\TituloController@store');
         Route::get('titulo/{codtitulo}', '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
@@ -895,6 +892,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('liquidacao-titulo/relatorio', '\Mg\Titulo\LiquidacaoTituloController@relatorio');
         Route::get('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@show')->where('id', '[0-9]+');
         Route::post('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@store');
+        Route::put('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@update')->where('id', '[0-9]+');
         Route::post('liquidacao-titulo/{id}/estornar', '\Mg\Titulo\LiquidacaoTituloController@estornar')->where('id', '[0-9]+');
 
         // Agrupamento de Títulos
@@ -905,6 +903,7 @@ Route::group(['middleware' => ['auth:api', 'cors']], function () {
         Route::get('titulo-agrupamento/{id}', '\Mg\Titulo\TituloAgrupamentoController@show')->where('id', '[0-9]+');
         Route::get('titulo-agrupamento/{id}/relatorio', '\Mg\Titulo\TituloAgrupamentoController@relatorioDetalhe')->where('id', '[0-9]+');
         Route::post('titulo-agrupamento', '\Mg\Titulo\TituloAgrupamentoController@store');
+        Route::put('titulo-agrupamento/{id}', '\Mg\Titulo\TituloAgrupamentoController@update')->where('id', '[0-9]+');
         Route::post('titulo-agrupamento/{id}/estornar', '\Mg\Titulo\TituloAgrupamentoController@estornar')->where('id', '[0-9]+');
         Route::post('titulo-agrupamento/{id}/gerar-nota-fiscal', '\Mg\Titulo\TituloAgrupamentoController@gerarNotaFiscal')->where('id', '[0-9]+');
 

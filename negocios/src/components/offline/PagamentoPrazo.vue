@@ -1,47 +1,48 @@
 <script setup>
-import { ref, watch, computed } from "vue";
-import { Notify } from "quasar";
-import { negocioStore } from "stores/negocio";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
-import MgInputValor from "@components/MgInputValor.vue";
+import { formataNumero } from '@components/formatters'
+import { ref, watch, computed } from 'vue'
+import { Notify } from 'quasar'
+import { negocioStore } from 'stores/negocio'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
+import MgInputValor from '@components/MgInputValor.vue'
 
-const sNegocio = negocioStore();
+const sNegocio = negocioStore()
 
-const parcelamentoDisponivel = ref([]);
-const formPrazo = ref(null);
+const parcelamentoDisponivel = ref([])
+const formPrazo = ref(null)
 const pagamento = ref({
   valor: null,
   codformapagamento: null,
   parcelas: 1,
-});
+})
 
 watch(
   () => pagamento.value.codformapagamento,
   () => {
-    calcularParcelas();
-  }
-);
+    calcularParcelas()
+  },
+)
 
 watch(
   () => pagamento.value.valor,
   () => {
-    calcularParcelas();
-  }
-);
+    calcularParcelas()
+  },
+)
 
 const inicializarValores = () => {
-  pagamento.value.valor = sNegocio.valorapagar;
-  pagamento.value.codformapagamento = process.env.CODFORMAPAGAMENTO_ENTREGA;
-  pagamento.value.parcelas = 1;
-  calcularParcelas();
-};
+  pagamento.value.valor = sNegocio.valorapagar
+  pagamento.value.codformapagamento = process.env.CODFORMAPAGAMENTO_ENTREGA
+  pagamento.value.parcelas = 1
+  calcularParcelas()
+}
 
 const formas = ref([
   {
     codformapagamento: process.env.CODFORMAPAGAMENTO_ENTREGA,
-    nome: "Pagamento na Entrega",
-    icone: "delivery_dining",
+    nome: 'Pagamento na Entrega',
+    icone: 'delivery_dining',
     valorMinimoParcela: 0,
     valorMinimo: 0,
     maximoParcelas: 1,
@@ -49,12 +50,12 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: false,
     tipo: 5, // Credito Loja
-    diasAvulsos: []
+    diasAvulsos: [],
   },
   {
     codformapagamento: process.env.CODFORMAPAGAMENTO_FECHAMENTO,
-    nome: "Fechamento Mensal",
-    icone: "calendar_month",
+    nome: 'Fechamento Mensal',
+    icone: 'calendar_month',
     valorMinimoParcela: 40,
     valorMinimo: 0,
     maximoParcelas: 4,
@@ -62,12 +63,12 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: false,
     tipo: 5, // Credito Loja
-    diasAvulsos: []
+    diasAvulsos: [],
   },
   {
     codformapagamento: process.env.CODFORMAPAGAMENTO_BOLETO,
-    nome: "Emitir Boleto",
-    icone: "account_balance",
+    nome: 'Emitir Boleto',
+    icone: 'account_balance',
     valorMinimoParcela: 100,
     valorMinimo: 70,
     maximoParcelas: 4,
@@ -75,12 +76,12 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: true,
     tipo: 15, // Boleto Bancario
-    diasAvulsos: [7, 10, 15]
+    diasAvulsos: [7, 10, 15],
   },
   {
     codformapagamento: process.env.CODFORMAPAGAMENTO_CARTEIRA,
-    nome: "Crediário",
-    icone: "wallet",
+    nome: 'Crediário',
+    icone: 'wallet',
     valorMinimoParcela: 50,
     valorMinimo: 30,
     maximoParcelas: 4,
@@ -88,86 +89,74 @@ const formas = ref([
     abonarJurosAcima: 0,
     parcelaDez: true,
     tipo: 5, // Credito Loja
-    diasAvulsos: []
+    diasAvulsos: [],
   },
-]);
+])
 
 const valorRule = [
   (value) => {
     if (!value) {
-      return "Preencha o valor!";
+      return 'Preencha o valor!'
     }
     if (parseFloat(value) <= 0.01) {
-      return "Preencha o valor!";
+      return 'Preencha o valor!'
     }
     if (parseFloat(value) > sNegocio.valorapagar) {
-      return "Valor maior que o saldo do Negócio!";
+      return 'Valor maior que o saldo do Negócio!'
     }
-    return true;
+    return true
   },
-];
+]
 
 const forma = computed({
   get() {
     if (!pagamento.value.codformapagamento) {
-      return null;
+      return null
     }
-    return formas.value.find(
-      (el) => el.codformapagamento === pagamento.value.codformapagamento
-    );
+    return formas.value.find((el) => el.codformapagamento === pagamento.value.codformapagamento)
   },
-});
+})
 
 const isEntrega = computed({
   get() {
-    return (
-      pagamento.value.codformapagamento == process.env.CODFORMAPAGAMENTO_ENTREGA
-    );
+    return pagamento.value.codformapagamento == process.env.CODFORMAPAGAMENTO_ENTREGA
   },
-});
+})
 
 const isFechamento = computed({
   get() {
-    return (
-      pagamento.value.codformapagamento ==
-      process.env.CODFORMAPAGAMENTO_FECHAMENTO
-    );
+    return pagamento.value.codformapagamento == process.env.CODFORMAPAGAMENTO_FECHAMENTO
   },
-});
+})
 
 const isCarteira = computed({
   get() {
-    return (
-      pagamento.value.codformapagamento ==
-      process.env.CODFORMAPAGAMENTO_CARTEIRA
-    );
+    return pagamento.value.codformapagamento == process.env.CODFORMAPAGAMENTO_CARTEIRA
   },
-});
+})
 
 const isBoleto = computed({
   get() {
-    return (
-      pagamento.value.codformapagamento == process.env.CODFORMAPAGAMENTO_BOLETO
-    );
+    return pagamento.value.codformapagamento == process.env.CODFORMAPAGAMENTO_BOLETO
   },
-});
+})
 
 const calcularParcelas = async () => {
-  const taxa = 1.5;
-  const valor = pagamento.value.valor;
-  const codformapagamento = pagamento.value.codformapagamento;
+  const taxa = 1.5
+  const valor = pagamento.value.valor
+  const codformapagamento = pagamento.value.codformapagamento
 
-  const valorMinimoParcela = forma.value.valorMinimoParcela;
-  const valorMinimo = forma.value.valorMinimo;
-  const maximoParcelas = forma.value.maximoParcelas;
-  const maximoParcelasSemJuros = forma.value.maximoParcelasSemJuros;
-  const abonarJurosAcima = forma.value.abonarJurosAcima;
+  const valorMinimoParcela = forma.value.valorMinimoParcela
+  const valorMinimo = forma.value.valorMinimo
+  const maximoParcelas = forma.value.maximoParcelas
+  const maximoParcelasSemJuros = forma.value.maximoParcelasSemJuros
+  const abonarJurosAcima = forma.value.abonarJurosAcima
 
-  parcelamentoDisponivel.value = [];
-  pagamento.value.parcelas = 0;
+  parcelamentoDisponivel.value = []
+  pagamento.value.parcelas = 0
 
   if (valor < valorMinimo) {
-    return;
+    return
   }
 
   if (forma.value.codformapagamento == process.env.CODFORMAPAGAMENTO_ENTREGA) {
@@ -176,40 +165,40 @@ const calcularParcelas = async () => {
       valorjuros: 0,
       valorparcela: valor,
       label: 'Cliente paga na entrega',
-      dias: 0
-    });
-    pagamento.value.parcelas = 0;
-    return;
+      dias: 0,
+    })
+    pagamento.value.parcelas = 0
+    return
   }
 
-  let i = 0;
+  let i = 0
   for (let i of forma.value.diasAvulsos) {
     parcelamentoDisponivel.value.push({
       parcelas: 1,
       valorjuros: 0,
       valorparcela: valor,
       label: i + ' Dias',
-      dias: i
-    });
+      dias: i,
+    })
   }
-  pagamento.value.parcelas = parcelamentoDisponivel.value.length;
-  let label = '';
+  pagamento.value.parcelas = parcelamentoDisponivel.value.length
+  let label = ''
   for (let i = 1; i <= maximoParcelas; i++) {
-    var valorjuros = 0;
-    var valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100;
+    var valorjuros = 0
+    var valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100
     if (i > maximoParcelasSemJuros && valorparcela < abonarJurosAcima) {
-      valorjuros = Math.round(taxa * i * valor) / 100;
-      valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100;
-      valorjuros = Math.round((valorparcela * i - valor) * 100) / 100;
+      valorjuros = Math.round(taxa * i * valor) / 100
+      valorparcela = Math.round(((valor + valorjuros) / i) * 100) / 100
+      valorjuros = Math.round((valorparcela * i - valor) * 100) / 100
     }
     if (valorparcela < valorMinimoParcela && i > 1) {
-      break;
+      break
     }
     if (forma.value.codformapagamento == process.env.CODFORMAPAGAMENTO_FECHAMENTO) {
       if (i > 1) {
         label = label.slice(0, -3) + '/'
       }
-      label += moment().add(5, 'days').add(i, 'month').endOf('month').format('MMM/YY');
+      label += moment().add(5, 'days').add(i, 'month').endOf('month').format('MMM/YY')
     } else {
       if (i > 1) {
         label = label.slice(0, -5) + '/'
@@ -221,35 +210,32 @@ const calcularParcelas = async () => {
       valorjuros: valorjuros,
       valorparcela: valorparcela,
       label: label,
-      dias: 30
-    });
+      dias: 30,
+    })
   }
-};
+}
 
 const salvar = async () => {
   if (
-    pagamento.value.codformapagamento !=
-    process.env.CODFORMAPAGAMENTO_ENTREGA &&
+    pagamento.value.codformapagamento != process.env.CODFORMAPAGAMENTO_ENTREGA &&
     sNegocio.negocio.codpessoa == 1
   ) {
     Notify.create({
-      type: "negative",
+      type: 'negative',
       message:
-        "Não é possível adicionar pagamento à Prazo para Consumidor! Informe o Cliente primeiro!",
+        'Não é possível adicionar pagamento à Prazo para Consumidor! Informe o Cliente primeiro!',
       timeout: 3000, // 3 segundos
-      actions: [{ icon: "close", color: "white" }],
-    });
-    return;
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return
   }
-  sNegocio.dialog.pagamentoPrazo = false;
+  sNegocio.dialog.pagamentoPrazo = false
   // var parc = parcelamentoDisponivel.value.find(
   //   (i) => i.parcelas == pagamento.value.parcelas
   // );
-  var parc = parcelamentoDisponivel.value[pagamento.value.parcelas];
-  var forma = formas.value.find(
-    (i) => i.codformapagamento == pagamento.value.codformapagamento
-  );
-  console.log(forma);
+  var parc = parcelamentoDisponivel.value[pagamento.value.parcelas]
+  var forma = formas.value.find((i) => i.codformapagamento == pagamento.value.codformapagamento)
+  console.log(forma)
   sNegocio.adicionarPagamento(
     parseInt(pagamento.value.codformapagamento), // codformapagamento Prazo
     forma.tipo, // tipo Deposito Bancario
@@ -262,23 +248,36 @@ const salvar = async () => {
     null, // autorizacao
     parc.parcelas, // parcelas
     parc.valorparcela, // valorparcela
-    parc.dias // dias
-  );
-};
+    parc.dias, // dias
+  )
+}
 </script>
 <template>
   <!-- DIALOG -->
-  <q-dialog v-model="sNegocio.dialog.pagamentoPrazo" @before-show="inicializarValores()" class="full-width">
-    <q-card style="width: 700px; max-width: 80vw;">
+  <q-dialog
+    v-model="sNegocio.dialog.pagamentoPrazo"
+    @before-show="inicializarValores()"
+    class="full-width"
+  >
+    <q-card style="width: 700px; max-width: 80vw">
       <q-form @submit="salvar()" ref="formPrazo">
         <q-card-section>
           <q-list>
             <!-- VALOR -->
             <q-item>
               <q-item-section>
-                <MgInputValor prefix="R$" :min="0.01" :max="sNegocio.valorapagar"
-                  v-model="pagamento.valor" :rules="valorRule" autofocus
-                  class="text-h2 text-weight-bolder text-primary" />
+                <MgInputValor
+                  prefix="R$"
+                  :min="0.01"
+                  :max="sNegocio.valorapagar"
+                  v-model="pagamento.valor"
+                  :rules="valorRule"
+                  autofocus
+                  class="q-input-grande text-h4"
+                  input-class="text-weight-bold text-h2 text-primary"
+                  :borderless="true"
+                  :outlined="false"
+                />
               </q-item-section>
             </q-item>
             <q-item>
@@ -286,8 +285,13 @@ const salvar = async () => {
                 <!-- FORMA -->
                 <div class="col-xs-12 col-sm-6">
                   <div class="row">
-                    <q-radio class="col-12" v-model="pagamento.codformapagamento" v-for="forma in formas"
-                      :val="forma.codformapagamento" :key="forma.codformapagamento">
+                    <q-radio
+                      class="col-12"
+                      v-model="pagamento.codformapagamento"
+                      v-for="forma in formas"
+                      :val="forma.codformapagamento"
+                      :key="forma.codformapagamento"
+                    >
                       <q-avatar :icon="forma.icone" />
                       {{ forma.nome }}
                     </q-radio>
@@ -296,14 +300,14 @@ const salvar = async () => {
 
                 <!-- PARCELAMENTO -->
                 <div class="col-xs-12 col-sm-6">
-
                   <!-- OBSERVACOES -->
                   <div class="row text-caption text-grey-8" v-if="isEntrega">
                     Cliente vai pagar no momento da entrega ou retirada do produto.
                   </div>
                   <div class="row text-caption text-grey-8" v-if="isFechamento">
-                    Financeiro cuidará da cobrança. Serão somadas todas as compras do período e emitida a Nota Fiscal
-                    com todas as compras no final do mês com vencimento para o último dia do mês subsequente.
+                    Financeiro cuidará da cobrança. Serão somadas todas as compras do período e
+                    emitida a Nota Fiscal com todas as compras no final do mês com vencimento para o
+                    último dia do mês subsequente.
                   </div>
                   <div class="row text-caption text-grey-8" v-if="isCarteira">
                     Valor Mínimo: R$ 30,00. <br />
@@ -329,24 +333,14 @@ const salvar = async () => {
                           </q-item-label>
                           <q-item-label caption>
                             {{ parc.parcelas }}
-                            parcela(s) de
-                            R$
-                            {{
-                              new Intl.NumberFormat("pt-BR", {
-                                style: "decimal",
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              }).format(parc.valorparcela)
-                            }}
+                            parcela(s) de R$
+                            {{ formataNumero(parc.valorparcela) }}
                           </q-item-label>
-                          <q-item-label caption v-if="parc.valorjuros">
-                            C/Juros
-                          </q-item-label>
+                          <q-item-label caption v-if="parc.valorjuros"> C/Juros </q-item-label>
                         </q-item-section>
                       </q-item>
                     </template>
                   </q-list>
-
                 </div>
               </div>
             </q-item>
@@ -354,7 +348,13 @@ const salvar = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="sNegocio.dialog.pagamentoPrazo = false" tabindex="-1" />
+          <q-btn
+            flat
+            label="Cancelar"
+            color="primary"
+            @click="sNegocio.dialog.pagamentoPrazo = false"
+            tabindex="-1"
+          />
           <q-btn type="submit" flat label="salvar" color="primary" />
         </q-card-actions>
       </q-form>

@@ -5,19 +5,20 @@ namespace Mg\Titulo;
 use Dompdf\Dompdf;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
 class LiquidacaoTituloController extends Controller
 {
-    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca'];
-    private const GRUPOS_MUTACAO = ['Administrador', 'Financeiro', 'Cobranca'];
+    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca', 'Gerente', 'Caixa'];
+    private const GRUPOS_MUTACAO = ['Administrador', 'Financeiro', 'Cobranca', 'Gerente', 'Caixa'];
 
     public function index(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);
 
-        $paginator = LiquidacaoTituloService::listar($request->only([
+        $filtros = $request->only([
             'codliquidacaotitulo',
             'codpessoa',
             'codgrupoeconomico',
@@ -28,7 +29,10 @@ class LiquidacaoTituloController extends Controller
             'criacao_ate',
             'transacao_de',
             'transacao_ate',
-        ]));
+        ]);
+        $filtros['filiais_permitidas'] = LiquidacaoTituloAutorizador::filiaisRestritas(Auth::user()->codusuario);
+
+        $paginator = LiquidacaoTituloService::listar($filtros);
 
         return LiquidacaoTituloListaResource::collection($paginator);
     }
@@ -36,12 +40,20 @@ class LiquidacaoTituloController extends Controller
     public function show(int $id)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);
-        return new LiquidacaoTituloDetalheResource(LiquidacaoTituloService::carregar($id));
+        $liq = LiquidacaoTituloService::carregar($id);
+        if (!LiquidacaoTituloAutorizador::podeVer($liq, Auth::user()->codusuario)) {
+            abort(403, 'Liquidação não pertence à sua filial.');
+        }
+        return new LiquidacaoTituloDetalheResource($liq);
     }
 
     public function store(LiquidacaoTituloStoreRequest $request)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
+
+        if (!LiquidacaoTituloAutorizador::podeCriar(Auth::user()->codusuario, (int)$request->codportador)) {
+            abort(403, 'Portador não pertence à sua filial.');
+        }
 
         DB::beginTransaction();
         try {
@@ -57,16 +69,54 @@ class LiquidacaoTituloController extends Controller
         }
     }
 
+    public function update(LiquidacaoTituloUpdateRequest $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
+
+        DB::beginTransaction();
+        try {
+            $liq = LiquidacaoTitulo::with('Portador')->findOrFail($id);
+            $bloqueio = LiquidacaoTituloAutorizador::motivoBloqueioEdicao($liq, Auth::user()->codusuario);
+            if ($bloqueio !== null) {
+                DB::rollBack();
+                abort(403, $bloqueio);
+            }
+            if (!LiquidacaoTituloAutorizador::podeCriar(Auth::user()->codusuario, (int)$request->codportador)) {
+                DB::rollBack();
+                abort(403, 'Portador não pertence à sua filial.');
+            }
+            $liq = LiquidacaoTituloService::atualizar($liq, $request->validated());
+            DB::commit();
+            return new LiquidacaoTituloDetalheResource($liq);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            DB::rollBack();
+            throw $e;
+        } catch (\InvalidArgumentException $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
     public function estornar(int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
 
         DB::beginTransaction();
         try {
-            $liq = LiquidacaoTitulo::findOrFail($id);
+            $liq = LiquidacaoTitulo::with('Portador')->findOrFail($id);
+            $bloqueio = LiquidacaoTituloAutorizador::motivoBloqueioEstorno($liq, Auth::user()->codusuario);
+            if ($bloqueio !== null) {
+                DB::rollBack();
+                abort(403, $bloqueio);
+            }
             $liq = LiquidacaoTituloService::estornar($liq);
             DB::commit();
             return new LiquidacaoTituloDetalheResource($liq);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            throw $e;
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['message' => $e->getMessage()], 422);
@@ -76,11 +126,13 @@ class LiquidacaoTituloController extends Controller
     public function relatorio(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);
+        $params = $request->all();
+        $params['filiais_permitidas'] = LiquidacaoTituloAutorizador::filiaisRestritas(Auth::user()->codusuario);
         if ($request->boolean('html')) {
-            $html = LiquidacaoTituloRelatorioService::html($request->all());
+            $html = LiquidacaoTituloRelatorioService::html($params);
             return response($html, 200, ['Content-Type' => 'text/html; charset=UTF-8']);
         }
-        $pdf = LiquidacaoTituloRelatorioService::pdf($request->all());
+        $pdf = LiquidacaoTituloRelatorioService::pdf($params);
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="liquidacoes.pdf"',
@@ -89,10 +141,15 @@ class LiquidacaoTituloController extends Controller
 
     // ==== Recibos (mantidos do código antigo) ====
 
+    private const GRUPOS_RECIBO = ['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca', 'Gerente', 'Caixa'];
+
     public function recibo(int $id)
     {
-        Autorizador::autoriza(['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca']);
+        Autorizador::autoriza(self::GRUPOS_RECIBO);
         $liq = static::carregarLiquidacao($id);
+        if (!LiquidacaoTituloAutorizador::podeVer($liq, Auth::user()->codusuario)) {
+            abort(403, 'Liquidação não pertence à sua filial.');
+        }
 
         $html = '';
         if ($liq->credito > 0) {
@@ -111,8 +168,11 @@ class LiquidacaoTituloController extends Controller
 
     public function reciboRecebimento(int $id)
     {
-        Autorizador::autoriza(['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca']);
+        Autorizador::autoriza(self::GRUPOS_RECIBO);
         $liq = static::carregarLiquidacao($id);
+        if (!LiquidacaoTituloAutorizador::podeVer($liq, Auth::user()->codusuario)) {
+            abort(403, 'Liquidação não pertence à sua filial.');
+        }
 
         if ($liq->credito <= 0) {
             throw new \Exception('Liquidação sem créditos para recibo de recebimento.', 400);
@@ -126,8 +186,11 @@ class LiquidacaoTituloController extends Controller
 
     public function reciboPagamento(int $id)
     {
-        Autorizador::autoriza(['Recursos Humanos', 'Financeiro', 'Administrador', 'Cobranca']);
+        Autorizador::autoriza(self::GRUPOS_RECIBO);
         $liq = static::carregarLiquidacao($id);
+        if (!LiquidacaoTituloAutorizador::podeVer($liq, Auth::user()->codusuario)) {
+            abort(403, 'Liquidação não pertence à sua filial.');
+        }
 
         if ($liq->debito <= 0) {
             throw new \Exception('Liquidação sem débitos para recibo de pagamento.', 400);

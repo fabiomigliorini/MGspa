@@ -57,7 +57,7 @@ watch(
     if (newValue && options.value.length === 0) {
       await loadCfops()
     }
-  }
+  },
 )
 
 const loadCfops = async () => {
@@ -85,7 +85,7 @@ const filterCfop = async (val, update) => {
           (c) =>
             String(c.codcfop)?.toLowerCase().indexOf(needle) > -1 ||
             c.cfop?.toLowerCase().indexOf(needle) > -1 ||
-            c.descricao?.toLowerCase().indexOf(needle) > -1
+            c.descricao?.toLowerCase().indexOf(needle) > -1,
         )
       }
     }

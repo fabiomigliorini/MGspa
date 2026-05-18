@@ -1,62 +1,63 @@
-import { defineStore } from "pinia";
-import { api } from "src/boot/axios";
-import { Notify } from "quasar";
-import moment from "moment";
-import { negocioStore } from "./negocio";
-import { pdvStore } from "./pdv";
-import { sincronizacaoStore } from "./sincronizacao";
+import { formataTimestampIso } from '@components/formatters'
+import { defineStore } from 'pinia'
+import { api } from 'src/boot/axios'
+import { Notify } from 'quasar'
+import moment from 'moment'
+import { negocioStore } from './negocio'
+import { pdvStore } from './pdv'
+import { sincronizacaoStore } from './sincronizacao'
 
-const sNegocio = negocioStore();
-const sPdv = pdvStore();
-const sSinc = sincronizacaoStore();
+const sNegocio = negocioStore()
+const sPdv = pdvStore()
+const sSinc = sincronizacaoStore()
 
-export const listagemStore = defineStore("listagem", {
+export const listagemStore = defineStore('listagem', {
   persist: false,
 
   state: () => ({
     opcoes: {
       codformapagamento: [
         {
-          label: "Dinheiro",
+          label: 'Dinheiro',
           value: process.env.CODFORMAPAGAMENTO_DINHEIRO,
         },
         {
-          label: "PIX Chave",
+          label: 'PIX Chave',
           value: process.env.CODFORMAPAGAMENTO_PIXCHAVE,
         },
         {
-          label: "Cartão Manual",
+          label: 'Cartão Manual',
           value: process.env.CODFORMAPAGAMENTO_CARTAOMANUAL,
         },
         {
-          label: "Entrega",
+          label: 'Entrega',
           value: process.env.CODFORMAPAGAMENTO_ENTREGA,
         },
         {
-          label: "Fechamento",
+          label: 'Fechamento',
           value: process.env.CODFORMAPAGAMENTO_FECHAMENTO,
         },
         {
-          label: "Carteira",
+          label: 'Carteira',
           value: process.env.CODFORMAPAGAMENTO_CARTEIRA,
         },
         {
-          label: "Boleto",
+          label: 'Boleto',
           value: process.env.CODFORMAPAGAMENTO_BOLETO,
         },
       ],
-      integracao: ["Manual", "Integrado"],
+      integracao: ['Manual', 'Integrado'],
       codnegociostatus: [
         {
-          label: "Aberto",
+          label: 'Aberto',
           value: 1,
         },
         {
-          label: "Fechado",
+          label: 'Fechado',
           value: 2,
         },
         {
-          label: "Cancelado",
+          label: 'Cancelado',
           value: 3,
         },
       ],
@@ -78,15 +79,12 @@ export const listagemStore = defineStore("listagem", {
   actions: {
     async inicializaFiltro() {
       if (Object.keys(this.filtro).length > 0) {
-        return;
+        return
       }
       const filtro = {
         codnegocio: null,
-        lancamento_de: moment()
-          .subtract(7, "d")
-          .startOf("day")
-          .format("YYYY-MM-DD HH:mm"),
-        lancamento_ate: moment().endOf("day").format("YYYY-MM-DD HH:mm"),
+        lancamento_de: moment().subtract(7, 'd').startOf('day').format('YYYY-MM-DD HH:mm'),
+        lancamento_ate: formataTimestampIso(moment().endOf('day').toDate()),
         codestoquelocal: sNegocio.padrao.codestoquelocal,
         codusuario: null,
         codnegociostatus: null,
@@ -101,76 +99,76 @@ export const listagemStore = defineStore("listagem", {
         codformapagamento: [],
         valor_de: null,
         valor_ate: null,
-      };
-      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid);
-      if (pdv) {
-        filtro.codpdv = pdv.codpdv;
       }
-      this.filtro = filtro;
-      await this.getNegocios();
+      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid)
+      if (pdv) {
+        filtro.codpdv = pdv.codpdv
+      }
+      this.filtro = filtro
+      await this.getNegocios()
     },
 
     async getNegocios() {
-      this.paginacao.current_page = 0;
-      this.paginacao.last_page = 99999;
+      this.paginacao.current_page = 0
+      this.paginacao.last_page = 99999
       // this.negocios = [];
-      await this.getNegociosPaginacao();
+      await this.getNegociosPaginacao()
     },
 
     async getNegociosPaginacao() {
       if (this.paginacao.current_page >= this.paginacao.last_page) {
-        return false;
+        return false
       }
       try {
-        const filtro = { ...this.filtro };
-        filtro.pdv = sSinc.pdv.uuid;
-        filtro.page = this.paginacao.current_page + 1;
-        const { data } = await api.get("/api/v1/pdv/negocio", {
+        const filtro = { ...this.filtro }
+        filtro.pdv = sSinc.pdv.uuid
+        filtro.page = this.paginacao.current_page + 1
+        const { data } = await api.get('/api/v1/pdv/negocio', {
           params: filtro,
-        });
+        })
         if (filtro.page == 1) {
-          this.negocios = data.data;
+          this.negocios = data.data
         } else {
-          this.negocios = this.negocios.concat(data.data);
+          this.negocios = this.negocios.concat(data.data)
         }
-        this.paginacao = data.meta;
+        this.paginacao = data.meta
       } catch (error) {
-        var message = error?.response?.data?.message;
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
 
     async getOrcamentos(uuid) {
       try {
-        const { data } = await api.get("/api/v1/pdv/orcamento", {
+        const { data } = await api.get('/api/v1/pdv/orcamento', {
           params: {
             pdv: sSinc.pdv.uuid,
             uuid: uuid,
           },
-        });
-        this.orcamentos = data.data;
+        })
+        this.orcamentos = data.data
       } catch (error) {
-        var message = error?.response?.data?.message;
+        var message = error?.response?.data?.message
         if (!message) {
-          message = error?.message;
+          message = error?.message
         }
         Notify.create({
-          type: "negative",
+          type: 'negative',
           message: message,
           timeout: 3000, // 3 segundos
-          actions: [{ icon: "close", color: "white" }],
-        });
-        return false;
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
     },
   },
-});
+})

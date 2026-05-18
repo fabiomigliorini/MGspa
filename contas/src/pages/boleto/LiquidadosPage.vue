@@ -1,8 +1,7 @@
 <script setup>
 import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero, formataData } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'
@@ -21,8 +20,6 @@ const codportador = computed(() =>
 const portadorAtual = computed(() =>
   store.liqPortadores.find((p) => p.codportador === codportador.value),
 )
-
-const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
 
 function linkPortador(cp) {
   return {
@@ -140,7 +137,7 @@ watch(
           <q-item-section>
             <div class="row items-center q-col-gutter-x-sm">
               <div class="col-12 col-sm-3 col-md-1 ellipsis">
-                {{ formatData(b.datarecebimento) }}
+                {{ formataData(b.datarecebimento) }}
               </div>
               <div class="col-6 col-sm-3 col-md-1 text-right ellipsis">
                 {{ formataNumero(b.valoratual) }}

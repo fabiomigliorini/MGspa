@@ -228,7 +228,9 @@ export const useTributacaoNaturezaOperacaoStore = defineStore('tributacaoNaturez
         )
         this.pagination.total--
 
-        if (this.currentTributacao?.codtributacaonaturezaoperacao === codtributacaonaturezaoperacao) {
+        if (
+          this.currentTributacao?.codtributacaonaturezaoperacao === codtributacaonaturezaoperacao
+        ) {
           this.clearCurrentTributacao()
         }
       } catch (error) {

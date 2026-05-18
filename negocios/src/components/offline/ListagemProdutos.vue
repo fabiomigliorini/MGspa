@@ -1,88 +1,79 @@
 <script setup>
-import { ref, computed } from "vue";
-import { produtoStore } from "stores/produto";
-import { negocioStore } from "stores/negocio";
-import { Dialog } from "quasar";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
-import MgInputValor from "@components/MgInputValor.vue";
+import { formataNumero, formataCodigo } from '@components/formatters'
+import { ref, computed } from 'vue'
+import { produtoStore } from 'stores/produto'
+import { negocioStore } from 'stores/negocio'
+import { Dialog } from 'quasar'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
+import MgInputValor from '@components/MgInputValor.vue'
 
-const sProduto = produtoStore();
-const sNegocio = negocioStore();
-const dialogItem = ref(false);
-const porPagina = ref(12);
+const sProduto = produtoStore()
+const sNegocio = negocioStore()
+const dialogItem = ref(false)
+const porPagina = ref(12)
 
 const columns = [
   {
-    name: "valortotal",
+    name: 'valortotal',
     required: true,
-    label: "R$ Total",
-    align: "right",
+    label: 'R$ Total',
+    align: 'right',
     field: (row) => row.valortotal,
-    format: (val) =>
-      new Intl.NumberFormat("pt-BR", {
-        style: "decimal",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(val),
+    format: (val) => formataNumero(val),
     sortable: true,
   },
   {
-    name: "quantidade",
+    name: 'quantidade',
     required: true,
-    label: "Quant",
-    align: "right",
+    label: 'Quant',
+    align: 'right',
     field: (row) => row.quantidade,
-    format: (val) =>
-      new Intl.NumberFormat("pt-BR", {
-        style: "decimal",
-        minimumFractionDigits: 3,
-        maximumFractionDigits: 3,
-      }).format(val),
+    format: (val) => formataNumero(val, 3),
     sortable: true,
   },
   {
-    name: "produto",
-    label: "Descrição",
-    field: "produto",
+    name: 'produto',
+    label: 'Descrição',
+    field: 'produto',
     sortable: true,
-    align: "left",
+    align: 'left',
   },
   {
-    name: "barras",
-    label: "Barras",
-    field: "barras",
+    name: 'barras',
+    label: 'Barras',
+    field: 'barras',
     sortable: true,
   },
-];
+]
 
 const maiorQueZeroRule = [
   (value) => {
     if (!value || parseFloat(value) >= 0) {
-      return true;
+      return true
     }
-    return "Negativo!";
+    return 'Negativo!'
   },
-];
+]
 
 const preenchimentoObrigatorioRule = [
-  (val) => (val && parseFloat(val) >= 0.001) || "* Obrigatório!",
-];
+  (val) => (val && parseFloat(val) >= 0.001) || '* Obrigatório!',
+]
 
 const paginas = computed(() => {
-  return Math.ceil(sNegocio.quantidadeProdutosAtivos / porPagina.value);
-});
+  return Math.ceil(sNegocio.quantidadeProdutosAtivos / porPagina.value)
+})
 
 const itens = computed(() => {
-  const final = sNegocio.paginaAtual * porPagina.value;
-  const ret = sNegocio.itensAtivos.slice(final - porPagina.value, final);
-  return ret;
-});
+  const final = sNegocio.paginaAtual * porPagina.value
+  const ret = sNegocio.itensAtivos.slice(final - porPagina.value, final)
+  return ret
+})
 
 const inativos = computed(() => {
-  const ret = sNegocio.itensInativos;
-  return ret;
-});
+  const ret = sNegocio.itensInativos
+  return ret
+})
 
 const edicao = ref({
   uuid: null,
@@ -96,47 +87,44 @@ const edicao = ref({
   valorseguro: null,
   valoroutras: null,
   valortotal: null,
-});
+})
 
 const editar = async (uuid) => {
-  await sNegocio.recarregar();
+  await sNegocio.recarregar()
   const item = sNegocio.negocio.itens.find(function (item) {
-    return (
-      item.inativo === null &&
-      item.uuid == uuid
-    );
-  });
+    return item.inativo === null && item.uuid == uuid
+  })
   if (!item) {
-    return false;
+    return false
   }
-  edicao.value.uuid = uuid;
-  edicao.value.codprodutobarra = item.codprodutobarra;
-  edicao.value.quantidade = item.quantidade;
-  edicao.value.valorunitario = item.valorunitario;
-  edicao.value.valorprodutos = item.valorprodutos;
-  edicao.value.percentualdesconto = item.percentualdesconto;
-  edicao.value.valordesconto = item.valordesconto;
-  edicao.value.valorfrete = item.valorfrete;
-  edicao.value.valorseguro = item.valorseguro;
-  edicao.value.valoroutras = item.valoroutras;
-  edicao.value.valortotal = item.valortotal;
-  dialogItem.value = true;
-};
+  edicao.value.uuid = uuid
+  edicao.value.codprodutobarra = item.codprodutobarra
+  edicao.value.quantidade = item.quantidade
+  edicao.value.valorunitario = item.valorunitario
+  edicao.value.valorprodutos = item.valorprodutos
+  edicao.value.percentualdesconto = item.percentualdesconto
+  edicao.value.valordesconto = item.valordesconto
+  edicao.value.valorfrete = item.valorfrete
+  edicao.value.valorseguro = item.valorseguro
+  edicao.value.valoroutras = item.valoroutras
+  edicao.value.valortotal = item.valortotal
+  dialogItem.value = true
+}
 
 const inativar = async (uuid) => {
   Dialog.create({
-    title: "Excluir",
-    message: "Tem certeza que você deseja excluir esse item do negócio?",
+    title: 'Excluir',
+    message: 'Tem certeza que você deseja excluir esse item do negócio?',
     cancel: true,
   }).onOk(() => {
-    sNegocio.itemInativar(uuid);
-  });
-};
+    sNegocio.itemInativar(uuid)
+  })
+}
 
 const salvar = async () => {
   Dialog.create({
-    title: "Salvar",
-    message: "Tem certeza que você deseja salvar?",
+    title: 'Salvar',
+    message: 'Tem certeza que você deseja salvar?',
     cancel: true,
   }).onOk(() => {
     sNegocio.itemSalvar(
@@ -150,62 +138,58 @@ const salvar = async () => {
       parseFloat(edicao.value.valorfrete),
       parseFloat(edicao.value.valorseguro),
       parseFloat(edicao.value.valoroutras),
-      parseFloat(edicao.value.valortotal)
-    );
-    dialogItem.value = false;
-  });
-};
+      parseFloat(edicao.value.valortotal),
+    )
+    dialogItem.value = false
+  })
+}
 
 const recalcularValorProdutos = () => {
   edicao.value.valorprodutos =
-    Math.round(edicao.value.quantidade * edicao.value.valorunitario * 100) /
-    100;
-  recalcularValorDesconto();
-};
+    Math.round(edicao.value.quantidade * edicao.value.valorunitario * 100) / 100
+  recalcularValorDesconto()
+}
 
 const recalcularValorDesconto = () => {
   if (edicao.value.percentualdesconto <= 0) {
-    edicao.value.valordesconto = null;
+    edicao.value.valordesconto = null
   } else {
     edicao.value.valordesconto =
-      Math.round(edicao.value.valorprodutos * edicao.value.percentualdesconto) /
-      100;
+      Math.round(edicao.value.valorprodutos * edicao.value.percentualdesconto) / 100
   }
-  recalcularValorTotal();
-};
+  recalcularValorTotal()
+}
 
 const recalcularPercentualDesconto = () => {
   if (edicao.value.valordesconto <= 0) {
-    edicao.value.percentualdesconto = null;
+    edicao.value.percentualdesconto = null
   } else {
     edicao.value.percentualdesconto =
-      Math.round(
-        (edicao.value.valordesconto * 1000) / edicao.value.valorprodutos
-      ) / 10;
+      Math.round((edicao.value.valordesconto * 1000) / edicao.value.valorprodutos) / 10
   }
-  recalcularValorTotal();
-};
+  recalcularValorTotal()
+}
 
 const recalcularValorTotal = () => {
-  let total = parseFloat(edicao.value.valorprodutos);
+  let total = parseFloat(edicao.value.valorprodutos)
   if (edicao.value.valordesconto) {
-    total -= parseFloat(edicao.value.valordesconto);
+    total -= parseFloat(edicao.value.valordesconto)
   }
   if (edicao.value.valorfrete) {
-    total += parseFloat(edicao.value.valorfrete);
+    total += parseFloat(edicao.value.valorfrete)
   }
   if (edicao.value.valorseguro) {
-    total += parseFloat(edicao.value.valorseguro);
+    total += parseFloat(edicao.value.valorseguro)
   }
   if (edicao.value.valoroutras) {
-    total += parseFloat(edicao.value.valoroutras);
+    total += parseFloat(edicao.value.valoroutras)
   }
-  edicao.value.valortotal = Math.round(total * 100) / 100;
-};
+  edicao.value.valortotal = Math.round(total * 100) / 100
+}
 
 const linkProduto = (codproduto) => {
-  return process.env.MGLARA_URL + "produto/" + codproduto;
-};
+  return process.env.MGLARA_URL + 'produto/' + codproduto
+}
 </script>
 
 <template>
@@ -218,66 +202,118 @@ const linkProduto = (codproduto) => {
             <q-card-section>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input autofocus type="number" step="0.001" min="0.001" lazy-rules outlined
-                    v-model.number="edicao.quantidade" label="Quantidade" input-class="text-right"
-                    :rules="preenchimentoObrigatorioRule" @change="recalcularValorProdutos()" />
+                  <q-input />
+                  <MgInputValor
+                    autofocus
+                    lazy-rules
+                    :min="0.001"
+                    :decimals="3"
+                    v-model="edicao.quantidade"
+                    label="Quantidade"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor :min="0.01" v-model="edicao.valorunitario"
-                    prefix="R$" label="Preço" :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorProdutos()" />
+                  <MgInputValor
+                    :min="0.01"
+                    v-model="edicao.valorunitario"
+                    prefix="R$"
+                    label="Preço"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()"
+                  />
                 </div>
                 <div class="col-6">
-                  <MgInputValor :min="0.01" v-model="edicao.valorprodutos"
-                    prefix="R$" label="Total Produto" :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorProdutos()" />
-                </div>
-              </div>
-              <div class="row justify-end q-col-gutter-md">
-                <div class="col-6">
-                  <MgInputValor :min="0" :max="99.99"
-                    v-model="edicao.percentualdesconto" label="% Desc" suffix="%"
-                    :rules="maiorQueZeroRule" @change="recalcularValorDesconto()" />
-                </div>
-                <div class="col-6">
-                  <MgInputValor :max="edicao.valorprodutos - 0.01"
-                    v-model="edicao.valordesconto" prefix="R$" label="Desconto"
-                    :rules="maiorQueZeroRule" @change="recalcularPercentualDesconto()" />
+                  <MgInputValor
+                    :min="0.01"
+                    v-model="edicao.valorprodutos"
+                    prefix="R$"
+                    label="Total Produto"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorProdutos()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valorfrete" prefix="R$"
-                    label="Frete" :rules="maiorQueZeroRule" @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    :min="0"
+                    :max="99.99"
+                    v-model="edicao.percentualdesconto"
+                    label="% Desc"
+                    suffix="%"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorDesconto()"
+                  />
+                </div>
+                <div class="col-6">
+                  <MgInputValor
+                    :max="edicao.valorprodutos - 0.01"
+                    v-model="edicao.valordesconto"
+                    prefix="R$"
+                    label="Desconto"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularPercentualDesconto()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valorseguro" prefix="R$"
-                    label="Seguro" :rules="maiorQueZeroRule"
-                    @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    v-model="edicao.valorfrete"
+                    prefix="R$"
+                    label="Frete"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valoroutras" prefix="R$"
-                    label="Outras" :rules="maiorQueZeroRule"
-                    @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    v-model="edicao.valorseguro"
+                    prefix="R$"
+                    label="Seguro"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()"
+                  />
                 </div>
               </div>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <MgInputValor v-model="edicao.valortotal" prefix="R$"
-                    label="Total" :rules="preenchimentoObrigatorioRule"
-                    @change="recalcularValorTotal()" />
+                  <MgInputValor
+                    v-model="edicao.valoroutras"
+                    prefix="R$"
+                    label="Outras"
+                    :rules="maiorQueZeroRule"
+                    @change="recalcularValorTotal()"
+                  />
+                </div>
+              </div>
+              <div class="row justify-end q-col-gutter-md">
+                <div class="col-6">
+                  <MgInputValor
+                    v-model="edicao.valortotal"
+                    prefix="R$"
+                    label="Total"
+                    :rules="preenchimentoObrigatorioRule"
+                    @change="recalcularValorTotal()"
+                  />
                 </div>
               </div>
             </q-card-section>
 
             <q-card-actions align="right">
-              <q-btn flat label="Cancelar" color="primary" @click="dialogItem = false" tabindex="-1" />
+              <q-btn
+                flat
+                label="Cancelar"
+                color="primary"
+                @click="dialogItem = false"
+                tabindex="-1"
+              />
               <q-btn type="submit" flat label="Salvar" color="primary" />
             </q-card-actions>
           </q-form>
@@ -287,123 +323,127 @@ const linkProduto = (codproduto) => {
 
     <!-- Paginacao -->
     <div class="row q-px-md">
-      <q-pagination v-model="sNegocio.paginaAtual" :max="paginas" :max-pages="6" boundary-numbers gutter="md" />
+      <q-pagination
+        v-model="sNegocio.paginaAtual"
+        :max="paginas"
+        :max-pages="6"
+        boundary-numbers
+        gutter="md"
+      />
     </div>
 
     <!-- listagem de produto -->
     <div class="row q-pa-md q-col-gutter-md">
-      <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2" v-for="item in itens" :key="item.uuid">
+      <div
+        class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
+        v-for="item in itens"
+        :key="item.uuid"
+      >
         <q-card>
           <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
           <q-separator />
 
           <q-card-section class="q-pb-none">
             <div class="absolute" style="top: 0; right: 5px; transform: translateY(-42px)">
-              <q-btn v-if="sNegocio.podeEditar" color="primary" round icon="edit" @click="editar(item.uuid)" />
-              <q-btn v-if="sNegocio.podeEditar" round color="negative" icon="delete" class="q-ma-sm"
-                @click="inativar(item.uuid)" />
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                color="primary"
+                round
+                icon="edit"
+                @click="editar(item.uuid)"
+              />
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                round
+                color="negative"
+                icon="delete"
+                class="q-ma-sm"
+                @click="inativar(item.uuid)"
+              />
             </div>
 
-            <Transition mode="out-in" :duration="{ enter: 300, leave: 300 }" leave-active-class="animated bounceOut"
-              enter-active-class="animated bounceIn">
+            <Transition
+              mode="out-in"
+              :duration="{ enter: 300, leave: 300 }"
+              leave-active-class="animated bounceOut"
+              enter-active-class="animated bounceIn"
+            >
               <div class="text-h5" :key="item.valortotal">
                 <small class="text-grey-7">R$</small>
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortotal)
-                }}
+                {{ formataNumero(item.valortotal) }}
               </div>
             </Transition>
 
             <div class="text-overline text-grey-7">
-              <q-btn v-if="sNegocio.podeEditar" size="xs" label="-" round dense flat @click="
-                sNegocio.itemAdicionarQuantidade(item.uuid, -1)
-                " />
-              {{ new Intl.NumberFormat("pt-BR").format(item.quantidade) }}
-              <q-btn v-if="sNegocio.podeEditar" size="xs" label="+" round dense flat @click="
-                sNegocio.itemAdicionarQuantidade(item.uuid, 1)
-                " />
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                size="xs"
+                label="-"
+                round
+                dense
+                flat
+                @click="sNegocio.itemAdicionarQuantidade(item.uuid, -1)"
+              />
+              {{ formataNumero(item.quantidade, 0) }}
+              <q-btn
+                v-if="sNegocio.podeEditar"
+                size="xs"
+                label="+"
+                round
+                dense
+                flat
+                @click="sNegocio.itemAdicionarQuantidade(item.uuid, 1)"
+              />
               de
-              {{
-                new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL",
-                }).format(item.valorunitario)
-              }}
+              {{ formataNumero(item.valorunitario) }}
               <template v-if="item.valordesconto">
                 <br />
                 -
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valordesconto)
-                }}
+                {{ formataNumero(item.valordesconto) }}
                 (Desconto)
               </template>
               <template v-if="item.valorfrete">
                 <br />+
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valorfrete)
-                }}
+                {{ formataNumero(item.valorfrete) }}
                 (Frete)
               </template>
               <template v-if="item.valorseguro">
                 <br />+
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valorseguro)
-                }}
+                {{ formataNumero(item.valorseguro) }}
                 (Seguro)
               </template>
               <template v-if="item.valoroutras">
                 <br />+
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL",
-                  }).format(item.valoroutras)
-                }}
+                {{ formataNumero(item.valoroutras) }}
                 (Outras)
               </template>
             </div>
           </q-card-section>
 
-          <q-item :to="'/negocio/' + item.devolucao.codnegocio" v-if="item.devolucao && item.devolucao.codnegocio">
+          <q-item
+            :to="'/negocio/' + item.devolucao.codnegocio"
+            v-if="item.devolucao && item.devolucao.codnegocio"
+          >
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
-                Devolvido de #{{
-                  String(item.devolucao.codnegocio).padStart(8, "0")
-                }}
+                Devolvido de {{ formataCodigo(item.devolucao.codnegocio) }}
               </q-item-label>
             </q-item-section>
           </q-item>
 
-          <q-item v-for="devolucao in item.devolucoes" v-bind:key="devolucao.codnegocioprodutobarra"
-            :to="'/negocio/' + devolucao.codnegocio">
+          <q-item
+            v-for="devolucao in item.devolucoes"
+            v-bind:key="devolucao.codnegocioprodutobarra"
+            :to="'/negocio/' + devolucao.codnegocio"
+          >
             <q-item-section class="text-caption text-orange-7">
               <q-item-label overline class="text-orange-7">
                 Devolvido
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 3,
-                    maximumFractionDigits: 3,
-                  }).format(devolucao.quantidade)
-                }}
+                {{ formataNumero(devolucao.quantidade, 3) }}
               </q-item-label>
               <q-item-label>
-                {{ moment(devolucao.lancamento).fromNow() }} em #{{
-                  String(devolucao.codnegocio).padStart(8, "0")
-                }}
+                {{ moment(devolucao.lancamento).fromNow() }} em
+                {{ formataCodigo(devolucao.codnegocio) }}
               </q-item-label>
             </q-item-section>
           </q-item>
@@ -420,12 +460,24 @@ const linkProduto = (codproduto) => {
 
     <!-- Paginacao -->
     <div class="row q-px-md q-mb-lg">
-      <q-pagination v-model="sNegocio.paginaAtual" :max="paginas" :max-pages="6" boundary-numbers gutter="md" />
+      <q-pagination
+        v-model="sNegocio.paginaAtual"
+        :max="paginas"
+        :max-pages="6"
+        boundary-numbers
+        gutter="md"
+      />
     </div>
 
     <div class="q-pa-md q-mb-xl" v-if="inativos.length > 0">
-      <q-table :rows="inativos" virtual-scroll title="Itens Excluídos" :rows-per-page-options="[0]" :columns="columns"
-        selection="multiple">
+      <q-table
+        :rows="inativos"
+        virtual-scroll
+        title="Itens Excluídos"
+        :rows-per-page-options="[0]"
+        :columns="columns"
+        selection="multiple"
+      >
         <template v-slot:header-selection> </template>
         <template v-slot:body-selection="scope">
           <q-avatar>

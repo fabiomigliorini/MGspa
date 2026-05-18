@@ -1,17 +1,18 @@
 <script setup>
-import { onMounted, ref, watch } from "vue";
-import { pdvStore } from "src/stores/pdv";
-import moment from "moment/min/moment-with-locales";
-import DialogEditarPdv from "components/pdv/DialogEditarPdv.vue";
-import SelectFilial from "components/selects/SelectFilial.vue";
-import SelectSetor from "components/selects/SelectSetor.vue";
-import { Notify } from "quasar";
+import { formataCodigo, formataTimestamp } from '@components/formatters'
+import { onMounted, ref, watch } from 'vue'
+import { pdvStore } from 'src/stores/pdv'
+import moment from 'moment/min/moment-with-locales'
+import DialogEditarPdv from 'components/pdv/DialogEditarPdv.vue'
+import SelectFilial from 'components/selects/SelectFilial.vue'
+import SelectSetor from 'components/selects/SelectSetor.vue'
+import { Notify } from 'quasar'
 
-moment.locale("pt-br");
+moment.locale('pt-br')
 
-const sPdv = pdvStore();
-const model = ref({});
-const dialogEditarPdv = ref(false);
+const sPdv = pdvStore()
+const model = ref({})
+const dialogEditarPdv = ref(false)
 const filtro = ref({
   apelido: null,
   codfilial: null,
@@ -19,84 +20,77 @@ const filtro = ref({
   ip: null,
   uuid: null,
   codsetor: null,
-});
+})
 
 const buscar = () => {
-  sPdv.getDispositivos(filtro.value);
-};
+  sPdv.getDispositivos(filtro.value)
+}
 
 const googleMapsUrl = (pdv) => {
-  return `http://maps.google.com/maps?q=${pdv.latitude},${pdv.longitude}`;
-};
+  return `http://maps.google.com/maps?q=${pdv.latitude},${pdv.longitude}`
+}
 
 const editar = (pdv) => {
-  model.value = { ...pdv };
-  dialogEditarPdv.value = true;
-};
+  model.value = { ...pdv }
+  dialogEditarPdv.value = true
+}
 
 const salvarPdv = async (formData) => {
   try {
-    await sPdv.updateConfigPdv(formData);
+    await sPdv.updateConfigPdv(formData)
   } catch (error) {
     Notify.create({
-      type: "negative",
+      type: 'negative',
       message: error.response.data.message,
       timeout: 3000,
-      actions: [{ icon: "close", color: "white" }],
-    });
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
-};
+}
 
 const statusColor = (pdv) => {
-  if (pdv.autorizado) return "green";
-  if (pdv.inativo) return "red";
-  return "orange";
-};
+  if (pdv.autorizado) return 'green'
+  if (pdv.inativo) return 'red'
+  return 'orange'
+}
 
 const statusIcon = (pdv) => {
-  if (pdv.autorizado) return "check_circle";
-  if (pdv.inativo) return "cancel";
-  return "warning";
-};
+  if (pdv.autorizado) return 'check_circle'
+  if (pdv.inativo) return 'cancel'
+  return 'warning'
+}
 
 const statusLabel = (pdv) => {
-  if (pdv.autorizado) return "Autorizado";
-  if (pdv.inativo) return "Inativo";
-  return "Não Autorizado";
-};
+  if (pdv.autorizado) return 'Autorizado'
+  if (pdv.inativo) return 'Inativo'
+  return 'Não Autorizado'
+}
 
 const statusClass = (pdv) => {
-  if (pdv.autorizado) return "bg-green-1";
-  if (pdv.inativo) return "bg-red-1";
-  return "bg-orange-1";
-};
+  if (pdv.autorizado) return 'bg-green-1'
+  if (pdv.inativo) return 'bg-red-1'
+  return 'bg-orange-1'
+}
 
 watch(
   filtro,
   () => {
-    buscar();
+    buscar()
   },
-  { deep: true }
-);
+  { deep: true },
+)
 
 onMounted(() => {
-  buscar();
-});
+  buscar()
+})
 </script>
 <template>
   <q-page>
     <q-card flat class="q-pa-md">
-      <div class="text-caption text-grey-7 q-mb-sm">
-        Filtre seu dispositivo:
-      </div>
+      <div class="text-caption text-grey-7 q-mb-sm">Filtre seu dispositivo:</div>
       <div class="row q-col-gutter-md">
         <div class="col-xs-12 col-sm-4">
-          <q-input
-            outlined
-            v-model="filtro.apelido"
-            label="Apelido"
-            clearable
-          />
+          <q-input outlined v-model="filtro.apelido" label="Apelido" clearable />
         </div>
         <div class="col-xs-12 col-sm-4">
           <select-filial v-model="filtro.codfilial" clearable />
@@ -123,20 +117,12 @@ onMounted(() => {
           <q-input outlined v-model="filtro.uuid" label="UUID" clearable />
         </div>
         <div class="col-xs-12 col-sm-4">
-          <select-setor
-            v-model="filtro.codsetor"
-            outlined
-            label="Setor"
-            clearable
-          />
+          <select-setor v-model="filtro.codsetor" outlined label="Setor" clearable />
         </div>
       </div>
     </q-card>
 
-    <div
-      v-if="sPdv.dispositivos.length === 0"
-      class="absolute-center text-grey text-center"
-    >
+    <div v-if="sPdv.dispositivos.length === 0" class="absolute-center text-grey text-center">
       <q-icon name="do_not_disturb" size="300px" />
       <h3>Nenhum dispositivo localizado!</h3>
     </div>
@@ -146,11 +132,7 @@ onMounted(() => {
         <q-item class="row" :class="statusClass(pdv)">
           <!-- ICONE STATUS -->
           <q-item-section avatar>
-            <q-avatar
-              :icon="statusIcon(pdv)"
-              :color="statusColor(pdv)"
-              text-color="white"
-            />
+            <q-avatar :icon="statusIcon(pdv)" :color="statusColor(pdv)" text-color="white" />
           </q-item-section>
 
           <!-- APELIDO / COD / FILIAL / IP-->
@@ -159,7 +141,7 @@ onMounted(() => {
               {{ pdv.apelido }}
             </q-item-label>
             <q-item-label caption class="ellipsis">
-              #{{ String(pdv.codpdv).padStart(8, "0") }} | {{ pdv.filial }}
+              {{ formataCodigo(pdv.codpdv) }} | {{ pdv.filial }}
             </q-item-label>
             <q-item-label caption class="ellipsis" v-if="pdv.observacoes">
               IP: {{ pdv.ip }}
@@ -174,7 +156,7 @@ onMounted(() => {
               {{ pdv.plataforma }} {{ pdv.navegador }} {{ pdv.versaonavegador }}
             </q-item-label>
             <q-item-label caption>
-              {{ moment(pdv.criacao).format("DD/MM/YY HH:mm:ss") }}
+              {{ formataTimestamp(pdv.criacao, 4, true) }}
             </q-item-label>
           </q-item-section>
 
@@ -208,14 +190,7 @@ onMounted(() => {
               </span>
             </q-item-label>
             <q-item-label>
-              <q-btn
-                flat
-                dense
-                round
-                icon="edit"
-                size="xs"
-                @click="editar(pdv)"
-              >
+              <q-btn flat dense round icon="edit" size="xs" @click="editar(pdv)">
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn

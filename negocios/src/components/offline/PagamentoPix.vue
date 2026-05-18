@@ -1,81 +1,75 @@
 <script setup>
-import { ref } from "vue";
-import { Notify, debounce } from "quasar";
-import { negocioStore } from "stores/negocio";
-import { pixStore } from "stores/pix";
-import { db } from "src/boot/db";
-import { formataCpf } from "../../utils/formatador.js";
-import { formataCnpj } from "../../utils/formatador.js";
-import emitter from "../../utils/emitter.js";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
-import MgInputValor from "@components/MgInputValor.vue";
+import { ref } from 'vue'
+import { Notify, debounce } from 'quasar'
+import { negocioStore } from 'stores/negocio'
+import { pixStore } from 'stores/pix'
+import { db } from 'src/boot/db'
+import { formataCpf, formataCnpj, formataNumero, formataTimestampCompleto } from '@components/formatters'
+import emitter from '../../utils/emitter.js'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
+import MgInputValor from '@components/MgInputValor.vue'
 
-const sNegocio = negocioStore();
-const sPix = pixStore();
+const sNegocio = negocioStore()
+const sPix = pixStore()
 
-const valorPagamento = ref(null);
-const formPix = ref(null);
-const btnConsultarRef = ref(null);
-const portadores = ref([]);
-const codportador = ref(null);
+const valorPagamento = ref(null)
+const formPix = ref(null)
+const btnConsultarRef = ref(null)
+const portadores = ref([])
+const codportador = ref(null)
 
 const inicializarValores = async () => {
-  valorPagamento.value = sNegocio.valorapagar;
+  valorPagamento.value = sNegocio.valorapagar
   // Buscar codfilial do negócio aberto via estoquelocal
-  const estoqueLocal = await db.estoqueLocal.get(
-    sNegocio.negocio.codestoquelocal
-  );
+  const estoqueLocal = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
   if (estoqueLocal?.codfilial) {
-    portadores.value = await sPix.carregarPortadores(estoqueLocal.codfilial);
+    portadores.value = await sPix.carregarPortadores(estoqueLocal.codfilial)
   } else {
-    portadores.value = [];
+    portadores.value = []
   }
   // Pré-selecionar padrão somente se existir na lista
   if (
     sNegocio.padrao.codportador &&
     portadores.value.find((p) => p.codportador === sNegocio.padrao.codportador)
   ) {
-    codportador.value = sNegocio.padrao.codportador;
+    codportador.value = sNegocio.padrao.codportador
   } else {
-    codportador.value = null;
+    codportador.value = null
   }
-};
+}
 
 const valorRule = [
   (value) => {
     if (!value) {
-      return "Preencha o valor!";
+      return 'Preencha o valor!'
     }
     if (parseFloat(value) <= 0.01) {
-      return "Preencha o valor!";
+      return 'Preencha o valor!'
     }
     if (parseFloat(value) > sNegocio.valorapagar) {
-      return "Valor maior que o saldo do Negócio!";
+      return 'Valor maior que o saldo do Negócio!'
     }
-    return true;
+    return true
   },
-];
+]
 
 const salvar = async () => {
-  const pixCob = await sNegocio.criarPixCob(
-    valorPagamento.value,
-    codportador.value
-  );
+  const pixCob = await sNegocio.criarPixCob(valorPagamento.value, codportador.value)
   if (pixCob == false) {
-    return;
+    return
   }
-  sPix.pixCob = pixCob;
-  sPix.dialog.detalhesPixCob = true;
-  sNegocio.dialog.pagamentoPix = false;
-};
+  sPix.pixCob = pixCob
+  sPix.dialog.detalhesPixCob = true
+  sNegocio.dialog.pagamentoPix = false
+}
 
 const pixChave = async () => {
-  const valido = await formPix.value.validate();
+  const valido = await formPix.value.validate()
   if (!valido) {
-    return false;
+    return false
   }
-  sNegocio.dialog.pagamentoPix = false;
+  sNegocio.dialog.pagamentoPix = false
   sNegocio.adicionarPagamento(
     parseInt(process.env.CODFORMAPAGAMENTO_PIXCHAVE), // codformapagamento Pix
     16, // tipo Deposito Bancario
@@ -88,71 +82,66 @@ const pixChave = async () => {
     null, // autorizacao
     1, // parcelas
     valorPagamento.value, // valorparcela
-    null // dias // valorparcela
-  );
-};
+    null, // dias // valorparcela
+  )
+}
 
 const transmitir = () => {
-  sPix.transmitirPixCob();
-};
+  sPix.transmitirPixCob()
+}
 
 const transmitirSeNovo = async () => {
   if (sPix.pixCob.qrcode == null) {
-    await sPix.transmitirPixCob();
+    await sPix.transmitirPixCob()
   }
-  btnConsultarRef.value.$el.focus();
-};
+  btnConsultarRef.value.$el.focus()
+}
 
 const consultar = debounce(async () => {
-  await sPix.consultarPixCob();
-  if (sPix.pixCob.status == "CONCLUIDA") {
-    sPix.dialog.detalhesPixCob = false;
-    emitter.emit("pagamentoAdicionado");
+  await sPix.consultarPixCob()
+  if (sPix.pixCob.status == 'CONCLUIDA') {
+    sPix.dialog.detalhesPixCob = false
+    emitter.emit('pagamentoAdicionado')
   }
-}, 500);
+}, 500)
 
 const imprimir = () => {
-  sPix.imprimirPixCob();
-};
+  sPix.imprimirPixCob()
+}
 
 const textoMensagem = () => {
-  var mensagem = "Olá,\n\n";
+  var mensagem = 'Olá,\n\n'
   mensagem +=
-    "Você está recebendo um link para pagamento via PIX de sua compra na *MG Papelaria* no valor de R$ *" +
-    sPix.pixCob.valororiginal.toLocaleString("pt-br", {
+    'Você está recebendo um link para pagamento via PIX de sua compra na *MG Papelaria* no valor de R$ *' +
+    sPix.pixCob.valororiginal.toLocaleString('pt-br', {
       minimumFractionDigits: 2,
     }) +
-    "*!\n\n";
+    '*!\n\n'
   mensagem +=
-    "Abra https://pix.mgpapelaria.com.br/" +
-    sPix.pixCob.codpixcob +
-    " e siga as instruções:\n\n";
-  mensagem += "*Obrigado* pela confiança!";
-  return mensagem;
-};
+    'Abra https://pix.mgpapelaria.com.br/' + sPix.pixCob.codpixcob + ' e siga as instruções:\n\n'
+  mensagem += '*Obrigado* pela confiança!'
+  return mensagem
+}
 const mensagem = () => {
-  const mensagem = textoMensagem();
+  const mensagem = textoMensagem()
   navigator.clipboard.writeText(mensagem).then(() => {
     Notify.create({
-      type: "positive",
-      message: "Mensagem copiada para a área de transferência!",
+      type: 'positive',
+      message: 'Mensagem copiada para a área de transferência!',
       timeout: 1000, // 1 segundo
-      actions: [{ icon: "close", color: "white" }],
-    });
-  });
-};
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+  })
+}
 
 const whatsapp = () => {
-  const mensagem = textoMensagem();
-  window.open("whatsapp://send?text=" + encodeURI(mensagem));
-};
+  const mensagem = textoMensagem()
+  window.open('whatsapp://send?text=' + encodeURI(mensagem))
+}
 </script>
 <template>
   <!-- DIALOG -->
-  <q-dialog
-    v-model="sNegocio.dialog.pagamentoPix"
-    @before-show="inicializarValores()"
-  >
+  <q-dialog v-model="sNegocio.dialog.pagamentoPix" @before-show="inicializarValores()">
     <q-card>
       <q-form @submit="salvar()" ref="formPix">
         <q-card-section>
@@ -202,7 +191,10 @@ const whatsapp = () => {
                   v-model="valorPagamento"
                   :rules="valorRule"
                   autofocus
-                  class="text-h2 text-weight-bolder text-primary"
+                  class="q-input-grande text-h4"
+                  input-class="text-weight-bold text-h2 text-primary"
+                  :borderless="true"
+                  :outlined="false"
                 />
               </q-item-section>
             </q-item>
@@ -240,16 +232,7 @@ const whatsapp = () => {
   <q-dialog v-model="sPix.dialog.detalhesPixCob" @show="transmitirSeNovo()">
     <q-card>
       <q-card-section>
-        <div class="text-h6">
-          Cobrança PIX de R$
-          {{
-            new Intl.NumberFormat("pt-BR", {
-              style: "decimal",
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }).format(sPix.pixCob.valororiginal)
-          }}
-        </div>
+        <div class="text-h6">Cobrança PIX de R$ {{ formataNumero(sPix.pixCob.valororiginal) }}</div>
         <div class="text-subtitle2 text-grey">
           {{ sPix.pixCob.status }}
         </div>
@@ -265,16 +248,7 @@ const whatsapp = () => {
                   <q-icon color="primary" name="attach_money" />
                 </q-item-section>
                 <q-item-section>
-                  <q-item-label>
-                    R$
-                    {{
-                      new Intl.NumberFormat("pt-BR", {
-                        style: "decimal",
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                      }).format(pix.valor)
-                    }}
-                  </q-item-label>
+                  <q-item-label> R$ {{ formataNumero(pix.valor) }} </q-item-label>
                   <q-item-label caption> Valor efetivamente Pago </q-item-label>
                 </q-item-section>
               </q-item>
@@ -327,7 +301,7 @@ const whatsapp = () => {
                     {{ sPix.pixCob.portador }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ moment(pix.horario).format("LLLL") }}
+                    {{ formataTimestampCompleto(pix.horario) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -339,8 +313,7 @@ const whatsapp = () => {
             v-if="sPix.pixCob.qrcode"
             class="q-my-lg"
             :src="
-              'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' +
-              sPix.pixCob.qrcode
+              'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' + sPix.pixCob.qrcode
             "
             ratio="1"
           />
@@ -373,7 +346,7 @@ const whatsapp = () => {
                     {{ sPix.pixCob.portador }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ moment(sPix.pixCob.criacao).format("LLLL") }}
+                    {{ formataTimestampCompleto(sPix.pixCob.criacao) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>
@@ -383,13 +356,7 @@ const whatsapp = () => {
       </q-card-section>
       <q-card-actions align="right">
         <template v-if="sPix.pixCob.status != 'CONCLUIDA'">
-          <q-btn
-            flat
-            label="transmitir"
-            color="primary"
-            @click="transmitir()"
-            tabindex="-1"
-          />
+          <q-btn flat label="transmitir" color="primary" @click="transmitir()" tabindex="-1" />
           <q-btn
             flat
             label="whatsapp"
@@ -406,21 +373,9 @@ const whatsapp = () => {
             tabindex="-1"
             class="desktop-only"
           />
-          <q-btn
-            flat
-            label="imprimir"
-            color="primary"
-            @click="imprimir()"
-            tabindex="-1"
-          />
+          <q-btn flat label="imprimir" color="primary" @click="imprimir()" tabindex="-1" />
         </template>
-        <q-btn
-          flat
-          label="consultar"
-          color="primary"
-          @click="consultar()"
-          ref="btnConsultarRef"
-        />
+        <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
         <q-btn
           flat
           label="Fechar"

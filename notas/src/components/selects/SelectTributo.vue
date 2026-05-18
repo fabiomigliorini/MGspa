@@ -107,10 +107,28 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <q-select :model-value="modelValue" @update:model-value="handleUpdate" :label="label" outlined clearable
-    :options="options" option-value="value" option-label="label" emit-value map-options use-input input-debounce="300"
-    @filter="filterTributo" :placeholder="placeholder" :bottom-slots="bottomSlots" :class="customClass"
-    :disable="disable" :readonly="readonly" :loading="loading" :dense="dense">
+  <q-select
+    :model-value="modelValue"
+    @update:model-value="handleUpdate"
+    :label="label"
+    outlined
+    clearable
+    :options="options"
+    option-value="value"
+    option-label="label"
+    emit-value
+    map-options
+    use-input
+    input-debounce="300"
+    @filter="filterTributo"
+    :placeholder="placeholder"
+    :bottom-slots="bottomSlots"
+    :class="customClass"
+    :disable="disable"
+    :readonly="readonly"
+    :loading="loading"
+    :dense="dense"
+  >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section avatar>

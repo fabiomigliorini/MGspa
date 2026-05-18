@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
-import { formatPercent, formatDate } from 'src/utils/formatters'
+import { formataPercentual, formataData } from '@components/formatters'
 import { getEnteIcon } from 'src/composables/useTributoIcons'
 import SelectEstado from 'src/components/selects/SelectEstado.vue'
 import SelectCidade from 'src/components/selects/SelectCidade.vue'
@@ -94,7 +94,6 @@ const onLoad = async (_index, done) => {
 const onTabChange = (newTab) => {
   store.setActiveTab(newTab)
 }
-
 
 // Retorna a cor do badge de tipo de cliente
 const getTipoClienteColor = (tipo) => {
@@ -612,13 +611,13 @@ const confirmarExclusaoTributo = () => {
                 <q-td :props="props">
                   <div class="text-center">
                     <div v-if="props.row.aliquota !== null" class="text-weight-medium text-mono">
-                      {{ formatPercent(props.row.aliquota) }}
+                      {{ formataPercentual(props.row.aliquota) }}
                     </div>
                     <div
                       v-if="props.row.basepercentual !== null && props.row.basepercentual !== 100"
                       class="text-caption text-grey-7 text-mono"
                     >
-                      Base: {{ formatPercent(props.row.basepercentual) }}
+                      Base: {{ formataPercentual(props.row.basepercentual) }}
                     </div>
                     <span
                       v-if="props.row.aliquota === null && props.row.basepercentual === null"
@@ -651,10 +650,10 @@ const confirmarExclusaoTributo = () => {
                 <q-td :props="props">
                   <div v-if="props.row.vigenciainicio">
                     <div class="text-caption">
-                      {{ formatDate(props.row.vigenciainicio) }}
+                      {{ formataData(props.row.vigenciainicio) }}
                     </div>
                     <div v-if="props.row.vigenciafim" class="text-caption text-grey-6">
-                      até {{ formatDate(props.row.vigenciafim) }}
+                      até {{ formataData(props.row.vigenciafim) }}
                     </div>
                   </div>
                   <span v-else class="text-grey-5">-</span>

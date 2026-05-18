@@ -1,59 +1,57 @@
 <script setup>
-import { ref, watch } from "vue";
-import { debounce } from "quasar";
-import { iconeNegocio, corIconeNegocio } from "../utils/iconeNegocio.js";
-import { listagemStore } from "src/stores/listagem";
-import moment from "moment/min/moment-with-locales";
-moment.locale("pt-br");
+import { formataNumero, formataTimestamp, formataCodigo } from '@components/formatters'
+import { ref, watch } from 'vue'
+import { debounce } from 'quasar'
+import { iconeNegocio, corIconeNegocio } from '../utils/iconeNegocio.js'
+import { listagemStore } from 'src/stores/listagem'
+import moment from 'moment/min/moment-with-locales'
+moment.locale('pt-br')
 
-const sListagem = listagemStore();
-const scrollRef = ref(null);
+const sListagem = listagemStore()
+const scrollRef = ref(null)
 
 const onLoad = async (index, done) => {
-  await sListagem.getNegociosPaginacao();
+  await sListagem.getNegociosPaginacao()
   if (sListagem.paginacao.current_page >= sListagem.paginacao.last_page) {
-    done(true);
+    done(true)
   } else {
-    done(false);
+    done(false)
   }
-};
+}
 
 const inicializa = debounce(async () => {
-  await sListagem.getNegocios();
+  await sListagem.getNegocios()
   try {
-    scrollRef.value.reset();
-    scrollRef.value.resume();
+    scrollRef.value.reset()
+    scrollRef.value.resume()
   } catch (error) {}
-});
+})
 
 watch(
   () => sListagem.filtro,
   () => {
-    inicializa();
+    inicializa()
   },
-  { deep: true }
-);
+  { deep: true },
+)
 
 const statusClass = (codnegociostatus) => {
   switch (codnegociostatus) {
     case 1:
-      return "bg-teal-1 text-teal-10";
+      return 'bg-teal-1 text-teal-10'
     case 2:
       // return "bg-indigo-1 text-indigo-10";
-      return "";
+      return ''
     case 3:
-      return "bg-deep-orange-1 text-deep-orange-10";
+      return 'bg-deep-orange-1 text-deep-orange-10'
     default:
-      return "bg-amber-1 text-amber-10";
+      return 'bg-amber-1 text-amber-10'
   }
-};
+}
 </script>
 <template>
   <q-page>
-    <div
-      v-if="sListagem.negocios.length == 0"
-      class="absolute-center text-grey text-center"
-    >
+    <div v-if="sListagem.negocios.length == 0" class="absolute-center text-grey text-center">
       <q-icon name="do_not_disturb" color="" size="300px" />
       <h3>Nenhum registro localizado!</h3>
     </div>
@@ -77,13 +75,7 @@ const statusClass = (codnegociostatus) => {
             <!-- VALOR/FILIAL -->
             <q-item-section class="col-xs-2 col-sm-1">
               <q-item-label class="text-right">
-                {{
-                  new Intl.NumberFormat("pt-BR", {
-                    style: "decimal",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(item.valortotal)
-                }}
+                {{ formataNumero(item.valortotal) }}
               </q-item-label>
               <q-item-label class="text-right" caption>
                 {{ item.estoquelocal }}
@@ -93,16 +85,12 @@ const statusClass = (codnegociostatus) => {
             <!-- PESSOA/VENDEDOR/COD/NATUREZA -->
             <q-item-section>
               <q-item-label> {{ item.fantasia }} </q-item-label>
-              <q-item-label
-                caption
-                class="ellipsis"
-                v-if="item.fantasiavendedor"
-              >
+              <q-item-label caption class="ellipsis" v-if="item.fantasiavendedor">
                 {{ item.fantasiavendedor }}
               </q-item-label>
 
               <q-item-label class="ellipsis" caption>
-                #{{ String(item.codnegocio).padStart(8, "0") }}
+                {{ formataCodigo(item.codnegocio) }}
                 {{ item.naturezaoperacao }}
               </q-item-label>
             </q-item-section>
@@ -120,12 +108,9 @@ const statusClass = (codnegociostatus) => {
             </q-item-section>
 
             <!-- DATA/STATUS -->
-            <q-item-section
-              class="col-xs-4 col-sm-3 col-md-2 col-lg-1 ellipsis"
-              side
-            >
+            <q-item-section class="col-xs-4 col-sm-3 col-md-2 col-lg-1 ellipsis" side>
               <q-item-label caption>
-                {{ moment(item.lancamento).format("DD/MM/YY HH:mm:ss") }}
+                {{ formataTimestamp(item.lancamento, 4, true) }}
               </q-item-label>
               <q-item-label caption>
                 {{ item.negociostatus }}

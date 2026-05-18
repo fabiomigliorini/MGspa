@@ -1,73 +1,68 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
-import { wooStore } from "src/stores/woo";
-import { formataNumero } from "src/utils/formatador";
-import { Notify, debounce } from "quasar";
-import moment from "moment/min/moment-with-locales";
-import WooInfoModal from "src/components/modals/WooInfoModal.vue";
-moment.locale("pt-br");
+import { ref, onMounted, watch } from 'vue'
+import { wooStore } from 'src/stores/woo'
+import { formataNumero } from '@components/formatters'
+import { Notify, debounce } from 'quasar'
+import moment from 'moment/min/moment-with-locales'
+import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
+moment.locale('pt-br')
 
-const sWoo = wooStore();
+const sWoo = wooStore()
 
 // Função para filtrar pedidos por status
 const filtrarPedidos = (status) => {
-  return sWoo.pedidos
-    .filter((p) => p.status === status)
-    .sort((a, b) => b.id - a.id); // Já aproveitando a ordenação que você pediu
-};
+  return sWoo.pedidos.filter((p) => p.status === status).sort((a, b) => b.id - a.id) // Já aproveitando a ordenação que você pediu
+}
 
 onMounted(() => {
-  sWoo.getPedidosPainel();
-});
+  sWoo.getPedidosPainel()
+})
 
 // controle do modal
-const showPedidoModal = ref(false);
+const showPedidoModal = ref(false)
 
 // Reprocessar o pedido
 function openPedido(p) {
-  sWoo.pedido = p;
-  showPedidoModal.value = true;
+  sWoo.pedido = p
+  showPedidoModal.value = true
 }
 
 const buscarNovos = async () => {
-  const ret = await sWoo.buscarNovos();
+  const ret = await sWoo.buscarNovos()
   Notify.create({
-    type: "positive",
-    message: ret + " Pedido(s) encontrados!",
+    type: 'positive',
+    message: ret + ' Pedido(s) encontrados!',
     timeout: 3000, // 3 segundos
-    actions: [{ icon: "close", color: "white" }],
-  });
-  sWoo.getPedidosPainel();
-};
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+  sWoo.getPedidosPainel()
+}
 
 const buscarPorAlteracao = async () => {
-  const ret = await sWoo.buscarPorAlteracao();
+  const ret = await sWoo.buscarPorAlteracao()
   Notify.create({
-    type: "positive",
-    message: ret + " Pedido(s) encontrados!",
+    type: 'positive',
+    message: ret + ' Pedido(s) encontrados!',
     timeout: 3000, // 3 segundos
-    actions: [{ icon: "close", color: "white" }],
-  });
-  sWoo.getPedidosPainel();
-};
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+  sWoo.getPedidosPainel()
+}
 
 const refresh = async () => {
-  const ret = await sWoo.getPedidosPainel();
+  const ret = await sWoo.getPedidosPainel()
   Notify.create({
-    type: "positive",
-    message: ret + " Pedido(s) encontrados!",
+    type: 'positive',
+    message: ret + ' Pedido(s) encontrados!',
     timeout: 3000, // 3 segundos
-    actions: [{ icon: "close", color: "white" }],
-  });
-};
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
 </script>
 
 <template>
   <q-page class="q-pa-md bg-grey-4 flex no-wrap">
-    <div
-      v-if="sWoo.pedidos.length == 0"
-      class="absolute-center text-grey text-center"
-    >
+    <div v-if="sWoo.pedidos.length == 0" class="absolute-center text-grey text-center">
       <q-icon name="do_not_disturb" size="300px" />
       <h3>Nenhum registro localizado!</h3>
     </div>
@@ -82,9 +77,7 @@ const refresh = async () => {
           icon="mdi-cart-plus"
           @click="buscarPorAlteracao(pedido)"
         >
-          <q-tooltip>
-            Busca novos pedidos no Woo pela data de alteração.
-          </q-tooltip>
+          <q-tooltip> Busca novos pedidos no Woo pela data de alteração. </q-tooltip>
         </q-btn>
 
         <q-btn
@@ -100,25 +93,11 @@ const refresh = async () => {
           </q-tooltip>
         </q-btn>
 
-        <q-btn
-          flat
-          dense
-          size="small"
-          color="primary"
-          icon="mdi-refresh"
-          @click="refresh()"
-        >
+        <q-btn flat dense size="small" color="primary" icon="mdi-refresh" @click="refresh()">
           <q-tooltip> Atualizar listagem </q-tooltip>
         </q-btn>
 
-        <q-btn
-          flat
-          dense
-          size="small"
-          color="primary"
-          icon="mdi-magnify"
-          to="/woo"
-        >
+        <q-btn flat dense size="small" color="primary" icon="mdi-magnify" to="/woo">
           <q-tooltip> Pesquisar um pedido </q-tooltip>
         </q-btn>
       </div>
@@ -130,19 +109,12 @@ const refresh = async () => {
         >
           <q-item class="rounded-borders shadow-2" :class="col.cor">
             <q-item-section>
-              <q-item-label
-                class="text-bold text-uppercase"
-                style="height: 50px"
-              >
+              <q-item-label class="text-bold text-uppercase" style="height: 50px">
                 {{ col.label }}
               </q-item-label>
             </q-item-section>
             <q-item-section side>
-              <q-badge
-                color="white"
-                text-color="black"
-                :label="filtrarPedidos(col.value).length"
-              />
+              <q-badge color="white" text-color="black" :label="filtrarPedidos(col.value).length" />
             </q-item-section>
           </q-item>
 
@@ -151,16 +123,11 @@ const refresh = async () => {
             style="height: 60vh; max-height: 60vw"
           >
             <div class="q-gutter-y-sm">
-              <template
-                v-for="pedido in filtrarPedidos(col.value)"
-                :key="pedido.codwoopedido"
-              >
+              <template v-for="pedido in filtrarPedidos(col.value)" :key="pedido.codwoopedido">
                 <q-card flat bordered class="q-hoverable cursor-pointer">
                   <q-card-section class="q-pa-sm" @click="openPedido(pedido)">
                     <div class="row justify-between items-start">
-                      <div class="text-bold text-grey-9 text-caption">
-                        #{{ pedido.id }}
-                      </div>
+                      <div class="text-bold text-grey-9 text-caption">#{{ pedido.id }}</div>
                       <div class="text-caption text-weight-bolder text-primary">
                         R$ {{ formataNumero(pedido.valortotal, 2) }}
                       </div>

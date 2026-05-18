@@ -1,42 +1,37 @@
 <script setup>
-import {
-  formataMoeda,
-  formataPercentual,
-  corProgresso,
-  tipoIndicadorLabel,
-  tipoIndicadorColor,
-} from "src/utils/rhFormatters";
+import { corProgresso, tipoIndicadorLabel, tipoIndicadorColor } from 'src/utils/rhFormatters'
+import { formataNumero, formataPercentual } from '@components/formatters'
 
-import { computed } from "vue";
+import { computed } from 'vue'
 
 const props = defineProps({
   indicadores: { type: Array, default: () => [] },
   rubricas: { type: Array, default: () => [] },
   codperiodo: { type: [Number, String], required: true },
-  nomeRotaExtrato: { type: String, default: "rhIndicadorExtrato" },
+  nomeRotaExtrato: { type: String, default: 'rhIndicadorExtrato' },
   podeEditar: { type: Boolean, default: false },
-  status: { type: String, default: "A" },
+  status: { type: String, default: 'A' },
   somenteComRubrica: { type: Boolean, default: false },
-});
+})
 
-const emit = defineEmits(["editar-meta"]);
+const emit = defineEmits(['editar-meta'])
 
 const indicadoresFiltrados = computed(() => {
   if (!props.somenteComRubrica || props.rubricas.length === 0) {
-    return props.indicadores;
+    return props.indicadores
   }
-  const codsComRubrica = new Set();
+  const codsComRubrica = new Set()
   props.rubricas.forEach((r) => {
-    if (r.codindicador) codsComRubrica.add(r.codindicador);
-    if (r.codindicadorcondicao) codsComRubrica.add(r.codindicadorcondicao);
-  });
-  return props.indicadores.filter((ind) => codsComRubrica.has(ind.codindicador));
-});
+    if (r.codindicador) codsComRubrica.add(r.codindicador)
+    if (r.codindicadorcondicao) codsComRubrica.add(r.codindicadorcondicao)
+  })
+  return props.indicadores.filter((ind) => codsComRubrica.has(ind.codindicador))
+})
 
 const atingimento = (ind) => {
-  if (!ind.meta) return null;
-  return (parseFloat(ind.valoracumulado) / parseFloat(ind.meta)) * 100;
-};
+  if (!ind.meta) return null
+  return (parseFloat(ind.valoracumulado) / parseFloat(ind.meta)) * 100
+}
 </script>
 
 <template>
@@ -95,28 +90,23 @@ const atingimento = (ind) => {
               <template v-if="ind.unidade_negocio">
                 — {{ ind.unidade_negocio.descricao }}
               </template>
-              <template v-if="ind.setor">
-                — {{ ind.setor.setor }}
-              </template>
+              <template v-if="ind.setor"> — {{ ind.setor.setor }} </template>
             </div>
             <div>
               Vendas:
               <span class="text-weight-bold">
-                {{ formataMoeda(ind.valoracumulado) }}
+                {{ formataNumero(ind.valoracumulado) }}
               </span>
             </div>
             <div>
               Meta:
               <span class="text-weight-bold">
-                {{ ind.meta ? formataMoeda(ind.meta) : "—" }}
+                {{ ind.meta ? formataNumero(ind.meta) : '—' }}
               </span>
             </div>
             <div v-if="ind.meta">
               Ating:
-              <span
-                class="text-weight-bold"
-                :class="'text-' + corProgresso(atingimento(ind))"
-              >
+              <span class="text-weight-bold" :class="'text-' + corProgresso(atingimento(ind))">
                 {{ formataPercentual(atingimento(ind)) }}
               </span>
             </div>
@@ -133,8 +123,6 @@ const atingimento = (ind) => {
         </q-card-section>
       </template>
     </template>
-    <div v-else class="q-pa-md text-center text-grey">
-      Nenhum indicador
-    </div>
+    <div v-else class="q-pa-md text-center text-grey">Nenhum indicador</div>
   </q-card>
 </template>

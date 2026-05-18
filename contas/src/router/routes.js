@@ -18,8 +18,8 @@ const routes = [
           auth: true,
           title: 'Saldos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/SaldosFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/SaldosFiltrosDrawer.vue'),
           ),
         },
       },
@@ -31,8 +31,8 @@ const routes = [
           auth: true,
           title: 'Bancos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/BancoFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/BancoFiltrosDrawer.vue'),
           ),
         },
       },
@@ -44,8 +44,8 @@ const routes = [
           auth: true,
           title: 'Contas Contábeis',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/ContaContabilFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/ContaContabilFiltrosDrawer.vue'),
           ),
         },
       },
@@ -57,8 +57,8 @@ const routes = [
           auth: true,
           title: 'Tipos de Movimentos de Títulos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/TipoMovimentoTituloFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/TipoMovimentoTituloFiltrosDrawer.vue'),
           ),
         },
       },
@@ -70,8 +70,8 @@ const routes = [
           auth: true,
           title: 'Tipos de Títulos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/TipoTituloFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/TipoTituloFiltrosDrawer.vue'),
           ),
         },
       },
@@ -83,8 +83,8 @@ const routes = [
           auth: true,
           title: 'Portadores',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/PortadorFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/PortadorFiltrosDrawer.vue'),
           ),
         },
       },
@@ -96,8 +96,8 @@ const routes = [
           auth: true,
           title: 'Formas de Pagamento',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/FormaPagamentoFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/FormaPagamentoFiltrosDrawer.vue'),
           ),
         },
       },
@@ -109,9 +109,7 @@ const routes = [
           auth: true,
           title: 'Pix',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.CAIXA],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/PixFiltrosDrawer.vue'),
-          ),
+          leftDrawer: defineAsyncComponent(() => import('components/drawers/PixFiltrosDrawer.vue')),
         },
       },
       {
@@ -122,8 +120,8 @@ const routes = [
           auth: true,
           title: 'Extrato',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/ExtratoFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/ExtratoFiltrosDrawer.vue'),
           ),
         },
       },
@@ -135,8 +133,8 @@ const routes = [
           auth: true,
           title: 'Boletos Abertos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/BoletoAbertosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/BoletoAbertosDrawer.vue'),
           ),
         },
       },
@@ -148,8 +146,8 @@ const routes = [
           auth: true,
           title: 'Boletos Liquidados',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/BoletoLiquidadosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/BoletoLiquidadosDrawer.vue'),
           ),
         },
       },
@@ -161,8 +159,8 @@ const routes = [
           auth: true,
           title: 'Boletos Baixados',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/BoletoBaixadosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/BoletoBaixadosDrawer.vue'),
           ),
         },
       },
@@ -181,8 +179,8 @@ const routes = [
             PERMISSOES.PUBLICO,
             PERMISSOES.CAIXA,
           ],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/TituloFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/TituloFiltrosDrawer.vue'),
           ),
         },
       },
@@ -221,9 +219,15 @@ const routes = [
         meta: {
           auth: true,
           title: 'Liquidações de Títulos',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/LiquidacaoTituloFiltrosDrawer.vue'),
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.GERENTE,
+            PERMISSOES.CAIXA,
+          ],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/LiquidacaoTituloFiltrosDrawer.vue'),
           ),
         },
       },
@@ -234,7 +238,13 @@ const routes = [
         meta: {
           auth: true,
           title: 'Nova Liquidação',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.GERENTE,
+            PERMISSOES.CAIXA,
+          ],
         },
       },
       {
@@ -244,7 +254,13 @@ const routes = [
         meta: {
           auth: true,
           title: 'Liquidação',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.GERENTE,
+            PERMISSOES.CAIXA,
+          ],
         },
       },
       {
@@ -255,8 +271,8 @@ const routes = [
           auth: true,
           title: 'Agrupamentos de Títulos',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/TituloAgrupamentoFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/TituloAgrupamentoFiltrosDrawer.vue'),
           ),
         },
       },
@@ -268,8 +284,8 @@ const routes = [
           auth: true,
           title: 'Fechamentos Pendentes',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA],
-          leftDrawer: defineAsyncComponent(() =>
-            import('components/drawers/AgrupamentoPendentesFiltrosDrawer.vue'),
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/AgrupamentoPendentesFiltrosDrawer.vue'),
           ),
         },
       },

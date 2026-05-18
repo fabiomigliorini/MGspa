@@ -1,56 +1,56 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
-import SelectCertidaoEmissor from "components/pessoa/SelectCertidaoEmissor.vue";
-import SelectCertidaoTipo from "components/pessoa/SelectCertidaoTipo.vue";
-import MgInputData from "@components/MgInputData.vue";
-import { formataDataSemHora, dataAtual } from "src/utils/formatador";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { pessoaStore } from 'stores/pessoa'
+import { useAuthStore } from 'src/stores'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import SelectCertidaoEmissor from 'components/pessoa/SelectCertidaoEmissor.vue'
+import SelectCertidaoTipo from 'components/pessoa/SelectCertidaoTipo.vue'
+import MgInputData from '@components/MgInputData.vue'
+import { formataData, formataDataIso } from '@components/formatters'
 
-const $q = useQuasar();
-const sPessoa = pessoaStore();
-const route = useRoute();
-const user = guardaToken();
-const editCertidao = ref(false);
-const dialogCertidao = ref(false);
-const modelCertidao = ref({});
-const filtroCertidaomodel = ref("validas");
+const $q = useQuasar()
+const sPessoa = pessoaStore()
+const route = useRoute()
+const user = useAuthStore()
+const editCertidao = ref(false)
+const dialogCertidao = ref(false)
+const modelCertidao = ref({})
+const filtroCertidaomodel = ref('validas')
 
 const certidoesFiltradas = computed(() => {
-  const lista = sPessoa.item?.PessoaCertidaoS || [];
-  if (filtroCertidaomodel.value === "validas")
-    return lista.filter((x) => x.validade >= dataAtual());
-  return lista;
-});
+  const lista = sPessoa.item?.PessoaCertidaoS || []
+  if (filtroCertidaomodel.value === 'validas')
+    return lista.filter((x) => x.validade >= formataDataIso(new Date()))
+  return lista
+})
 
 const novaCertidao = async () => {
-  modelCertidao.value.codpessoa = route.params.id;
+  modelCertidao.value.codpessoa = route.params.id
   try {
-    const ret = await sPessoa.novaCertidao(modelCertidao.value);
+    const ret = await sPessoa.novaCertidao(modelCertidao.value)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Certidão criada!",
-      });
-      dialogCertidao.value = false;
-      sPessoa.get(route.params.id);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Certidão criada!',
+      })
+      dialogCertidao.value = false
+      sPessoa.get(route.params.id)
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.errors.codcertidaoemissor
-        ? "O campo Emissor é obrigatório"
-        : "O campo Tipo é obrigatório",
-    });
+        ? 'O campo Emissor é obrigatório'
+        : 'O campo Tipo é obrigatório',
+    })
   }
-};
+}
 
 const editarCertidao = (
   codpessoacertidao,
@@ -58,10 +58,10 @@ const editarCertidao = (
   numero,
   autenticacao,
   validade,
-  codcertidaotipo
+  codcertidaotipo,
 ) => {
-  editCertidao.value = true;
-  dialogCertidao.value = true;
+  editCertidao.value = true
+  dialogCertidao.value = true
   modelCertidao.value = {
     codpessoacertidao: codpessoacertidao,
     codcertidaoemissor: codcertidaoemissor,
@@ -69,119 +69,118 @@ const editarCertidao = (
     autenticacao: autenticacao,
     validade: validade,
     codcertidaotipo: codcertidaotipo,
-  };
-};
+  }
+}
 
 const salvarCertidao = async () => {
   try {
     const ret = await sPessoa.salvarEdicaoCertidao(
       modelCertidao.value.codpessoacertidao,
-      modelCertidao.value
-    );
+      modelCertidao.value,
+    )
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Certidão alterada!",
-      });
-      editCertidao.value = false;
-      dialogCertidao.value = false;
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Certidão alterada!',
+      })
+      editCertidao.value = false
+      dialogCertidao.value = false
       const i = sPessoa.item.PessoaCertidaoS.findIndex(
-        (item) =>
-          item.codpessoacertidao === modelCertidao.value.codpessoacertidao
-      );
-      sPessoa.item.PessoaCertidaoS[i] = ret.data.data;
+        (item) => item.codpessoacertidao === modelCertidao.value.codpessoacertidao,
+      )
+      sPessoa.item.PessoaCertidaoS[i] = ret.data.data
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
+    })
   }
-};
+}
 
 const inativaCertidao = async (codpessoacertidao) => {
   try {
-    const ret = await sPessoa.inativarCertidao(codpessoacertidao);
+    const ret = await sPessoa.inativarCertidao(codpessoacertidao)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Inativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Inativado!',
+      })
       const i = sPessoa.item.PessoaCertidaoS.findIndex(
-        (item) => item.codpessoacertidao === codpessoacertidao
-      );
-      sPessoa.item.PessoaCertidaoS[i] = ret.data.data;
+        (item) => item.codpessoacertidao === codpessoacertidao,
+      )
+      sPessoa.item.PessoaCertidaoS[i] = ret.data.data
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const ativaCertidao = async (codpessoacertidao) => {
   try {
-    const ret = await sPessoa.ativarCertidao(codpessoacertidao);
+    const ret = await sPessoa.ativarCertidao(codpessoacertidao)
     if (ret.data.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Ativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Ativado!',
+      })
       const i = sPessoa.item.PessoaCertidaoS.findIndex(
-        (item) => item.codpessoacertidao === codpessoacertidao
-      );
-      sPessoa.item.PessoaCertidaoS[i] = ret.data.data;
+        (item) => item.codpessoacertidao === codpessoacertidao,
+      )
+      sPessoa.item.PessoaCertidaoS[i] = ret.data.data
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const deletarCertidao = async (codpessoacertidao) => {
   $q.dialog({
-    title: "Excluir Histórico",
-    message: "Tem certeza que deseja excluir essa certidão?",
+    title: 'Excluir Histórico',
+    message: 'Tem certeza que deseja excluir essa certidão?',
     cancel: true,
   }).onOk(async () => {
     try {
-      await sPessoa.deletarCertidao(codpessoacertidao);
+      await sPessoa.deletarCertidao(codpessoacertidao)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Certidão excluida!",
-      });
-      sPessoa.get(route.params.id);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Certidão excluida!',
+      })
+      sPessoa.get(route.params.id)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 const submit = () => {
-  editCertidao.value === false ? novaCertidao() : salvarCertidao();
-};
+  editCertidao.value === false ? novaCertidao() : salvarCertidao()
+}
 </script>
 
 <template>
@@ -199,10 +198,7 @@ const submit = () => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-6">
-              <select-certidao-emissor
-                v-model="modelCertidao.codcertidaoemissor"
-                autofocus
-              />
+              <select-certidao-emissor v-model="modelCertidao.codcertidaoemissor" autofocus />
             </div>
             <div class="col-6">
               <select-certidao-tipo v-model="modelCertidao.codcertidaotipo" />
@@ -213,9 +209,7 @@ const submit = () => {
                 v-model="modelCertidao.numero"
                 mask="####################"
                 label="Número"
-                :rules="[
-                  (val) => (val && val.length > 0) || 'Numero obrigatório',
-                ]"
+                :rules="[(val) => (val && val.length > 0) || 'Numero obrigatório']"
               />
             </div>
             <div class="col-6">
@@ -231,9 +225,7 @@ const submit = () => {
                 type="date"
                 v-model="modelCertidao.validade"
                 label="Validade"
-                :rules="[
-                  (val) => (val && val.length > 0) || 'Validade obrigatório',
-                ]"
+                :rules="[(val) => (val && val.length > 0) || 'Validade obrigatório']"
               />
             </div>
           </div>
@@ -242,13 +234,7 @@ const submit = () => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="grey-8"
-            v-close-popup
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -281,18 +267,13 @@ const submit = () => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
-        @click="
-          (dialogCertidao = true), (modelCertidao = {}), (editCertidao = false)
-        "
+        v-if="user.temPermissao('Publico')"
+        @click=";(dialogCertidao = true), (modelCertidao = {}), (editCertidao = false)"
       />
     </q-card-section>
 
     <q-list v-if="certidoesFiltradas.length > 0">
-      <template
-        v-for="certidao in certidoesFiltradas"
-        v-bind:key="certidao.codpessoacertidao"
-      >
+      <template v-for="certidao in certidoesFiltradas" v-bind:key="certidao.codpessoacertidao">
         <q-separator inset />
         <q-item>
           <q-item-section avatar>
@@ -303,9 +284,9 @@ const submit = () => {
             <q-item-label
               v-if="certidao.validade"
               class="text-weight-bold"
-              :class="certidao.validade < dataAtual() ? 'text-strike' : null"
+              :class="certidao.validade < formataDataIso(new Date()) ? 'text-strike' : null"
             >
-              Validade: {{ formataDataSemHora(certidao.validade) }}
+              Validade: {{ formataData(certidao.validade) }}
               <!-- INFO -->
               <MgInfoCriacao
                 :usuariocriacao="certidao.usuariocriacao"
@@ -323,17 +304,14 @@ const submit = () => {
             <q-item-label
               caption
               v-if="certidao.autenticacao"
-              :class="certidao.validade < dataAtual() ? 'text-strike' : null"
+              :class="certidao.validade < formataDataIso(new Date()) ? 'text-strike' : null"
             >
               {{ certidao.autenticacao }}
             </q-item-label>
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <!-- EDITAR -->
               <q-btn
                 flat
@@ -349,7 +327,7 @@ const submit = () => {
                     certidao.numero,
                     certidao.autenticacao,
                     certidao.validade,
-                    certidao.codcertidaotipo
+                    certidao.codcertidaotipo,
                   )
                 "
               >
@@ -401,9 +379,7 @@ const submit = () => {
         </q-item>
       </template>
     </q-list>
-    <div v-else class="q-pa-md text-center text-grey">
-      Nenhuma certidão cadastrada
-    </div>
+    <div v-else class="q-pa-md text-center text-grey">Nenhuma certidão cadastrada</div>
   </q-card>
 </template>
 

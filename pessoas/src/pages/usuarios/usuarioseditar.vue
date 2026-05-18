@@ -1,33 +1,33 @@
 <script setup>
-import { onMounted, watch } from "vue";
-import { useRoute } from "vue-router";
-import { usuarioStore } from "src/stores/usuario";
-import { guardaToken } from "src/stores";
-import FormUsuario from "components/usuario/FormUsuario.vue";
-import MGLayout from "layouts/MGLayout.vue";
-import NaoAutorizado from "components/NaoAutorizado.vue";
+import { onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { usuarioStore } from 'src/stores/usuario'
+import { useAuthStore } from 'src/stores'
+import FormUsuario from 'components/usuario/FormUsuario.vue'
+import MGLayout from 'layouts/MGLayout.vue'
+import NaoAutorizado from 'components/NaoAutorizado.vue'
 
-const route = useRoute();
-const sUsuario = usuarioStore();
-const user = guardaToken();
+const route = useRoute()
+const sUsuario = usuarioStore()
+const user = useAuthStore()
 
 function carregarUsuario(id) {
-  sUsuario.detalheUsuarios = [];
-  sUsuario.getUsuario(id);
+  sUsuario.detalheUsuarios = []
+  sUsuario.getUsuario(id)
 }
 
 onMounted(() => {
-  carregarUsuario(route.params.codusuario);
-});
+  carregarUsuario(route.params.codusuario)
+})
 
 watch(
   () => route.params.codusuario,
   (novoId) => {
     if (novoId) {
-      carregarUsuario(novoId);
+      carregarUsuario(novoId)
     }
-  }
-);
+  },
+)
 </script>
 
 <template>
@@ -47,7 +47,7 @@ watch(
       />
     </template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #content v-if="user.temPermissao('Administrador')">
       <div style="max-width: 1280px; margin: auto; min-height: 100vh">
         <div class="row q-pa-md">
           <div class="col-12" v-if="sUsuario.detalheUsuarios">

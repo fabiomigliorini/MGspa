@@ -54,6 +54,41 @@ class UsuarioService extends MgService
         return DB::select($sql, $params);
     }
 
+    public static function gruposDoUsuario(int $codusuario): array
+    {
+        static $cache = [];
+        if (isset($cache[$codusuario])) {
+            return $cache[$codusuario];
+        }
+        $rows = DB::select(
+            'select distinct gu.grupousuario
+               from tblgrupousuariousuario guu
+               inner join tblgrupousuario gu on gu.codgrupousuario = guu.codgrupousuario
+              where guu.codusuario = :codusuario',
+            ['codusuario' => $codusuario]
+        );
+        return $cache[$codusuario] = array_map(fn($r) => $r->grupousuario, $rows);
+    }
+
+    public static function temGrupo(int $codusuario, string $grupo): bool
+    {
+        return in_array($grupo, self::gruposDoUsuario($codusuario), true);
+    }
+
+    public static function filiaisDoUsuarioNoGrupo(int $codusuario, string $grupo): array
+    {
+        $rows = DB::select(
+            'select guu.codfilial
+               from tblgrupousuariousuario guu
+               inner join tblgrupousuario gu on gu.codgrupousuario = guu.codgrupousuario
+              where guu.codusuario = :codusuario
+                and gu.grupousuario = :grupo
+                and guu.codfilial is not null',
+            ['codusuario' => $codusuario, 'grupo' => $grupo]
+        );
+        return array_map(fn($r) => (int)$r->codfilial, $rows);
+    }
+
 
     public static function autalizaPermissoes(Usuario $usuario, $permissoes)
     {

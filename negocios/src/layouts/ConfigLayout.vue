@@ -1,7 +1,7 @@
 <script setup>
-import MainLayout from "layouts/MainLayout.vue";
-import ConfigLeftDrawer from "components/drawers/ConfigLeftDrawer.vue";
-import UsuarioConectado from "components/UsuarioConectado.vue";
+import MainLayout from 'layouts/MainLayout.vue'
+import ConfigLeftDrawer from 'components/drawers/ConfigLeftDrawer.vue'
+import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
   <main-layout title="Configurações" left-drawer>

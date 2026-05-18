@@ -106,6 +106,27 @@ class TituloAgrupamentoDetalheResource extends Resource
             'notas_fiscais'        => $notas,
             'titulos_gerados'      => $titulosGerados,
             'titulos_baixados'     => $titulosBaixados,
+            'pessoa_emails' => collect(optional($this->Pessoa)->PessoaEmailS ?? [])
+                ->filter(fn($e) => empty($e->inativo))
+                ->sortBy('ordem')
+                ->values()
+                ->map(fn($e) => [
+                    'codpessoaemail' => (int)$e->codpessoaemail,
+                    'email'          => $e->email,
+                    'apelido'        => $e->apelido,
+                    'cobranca'       => (bool)$e->cobranca,
+                ])->all(),
+            'pessoa_telefones' => collect(optional($this->Pessoa)->PessoaTelefoneS ?? [])
+                ->filter(fn($t) => empty($t->inativo))
+                ->sortBy('ordem')
+                ->values()
+                ->map(fn($t) => [
+                    'codpessoatelefone' => (int)$t->codpessoatelefone,
+                    'pais'              => (int)$t->pais,
+                    'ddd'               => (int)$t->ddd,
+                    'telefone'          => $t->telefone,
+                    'apelido'           => $t->apelido,
+                ])->all(),
         ];
     }
 }

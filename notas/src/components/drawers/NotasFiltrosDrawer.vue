@@ -35,7 +35,7 @@ watch(
   () => {
     debouncedFetch()
   },
-  { deep: true }
+  { deep: true },
 )
 
 const handleClearFilters = () => {
@@ -59,7 +59,7 @@ watch(
     if (!updatingFromPessoa.value && newValue !== oldValue) {
       notaFiscalStore.filters.codpessoa = null
     }
-  }
+  },
 )
 </script>
 
@@ -176,7 +176,13 @@ watch(
 
       <!-- Série -->
       <div class="q-mb-md">
-        <q-input v-model="notaFiscalStore.filters.serie" label="Série" outlined clearable :bottom-slots="false">
+        <q-input
+          v-model="notaFiscalStore.filters.serie"
+          label="Série"
+          outlined
+          clearable
+          :bottom-slots="false"
+        >
           <template v-slot:prepend>
             <q-icon name="numbers" />
           </template>
@@ -204,7 +210,11 @@ watch(
 
       <!-- Filial -->
       <div class="q-mb-md">
-        <SelectFilial v-model="notaFiscalStore.filters.codfilial" label="Filial" :bottom-slots="false" />
+        <SelectFilial
+          v-model="notaFiscalStore.filters.codfilial"
+          label="Filial"
+          :bottom-slots="false"
+        />
       </div>
 
       <!-- Natureza de Operação -->
@@ -254,11 +264,21 @@ watch(
       <div class="text-caption text-grey-7 q-mb-md">Período de Emissão</div>
 
       <div class="q-mb-md">
-        <MgInputData v-model="notaFiscalStore.filters.emissao_inicio" type="date" label="Emissão - De" clearable />
+        <MgInputData
+          v-model="notaFiscalStore.filters.emissao_inicio"
+          type="date"
+          label="Emissão - De"
+          clearable
+        />
       </div>
 
       <div class="q-mb-md">
-        <MgInputData v-model="notaFiscalStore.filters.emissao_fim" type="date" label="Emissão - Até" clearable />
+        <MgInputData
+          v-model="notaFiscalStore.filters.emissao_fim"
+          type="date"
+          label="Emissão - Até"
+          clearable
+        />
       </div>
 
       <q-separator class="q-my-md" />
@@ -266,11 +286,21 @@ watch(
       <div class="text-caption text-grey-7 q-mb-md">Período de Saída</div>
 
       <div class="q-mb-md">
-        <MgInputData v-model="notaFiscalStore.filters.saida_inicio" type="date" label="Saída - De" clearable />
+        <MgInputData
+          v-model="notaFiscalStore.filters.saida_inicio"
+          type="date"
+          label="Saída - De"
+          clearable
+        />
       </div>
 
       <div class="q-mb-md">
-        <MgInputData v-model="notaFiscalStore.filters.saida_fim" type="date" label="Saída - Até" clearable />
+        <MgInputData
+          v-model="notaFiscalStore.filters.saida_fim"
+          type="date"
+          label="Saída - Até"
+          clearable
+        />
       </div>
 
       <q-separator class="q-my-md" />

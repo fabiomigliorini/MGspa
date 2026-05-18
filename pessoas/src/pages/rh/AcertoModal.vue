@@ -1,149 +1,139 @@
 <script setup>
-import { ref, computed, watch } from "vue";
-import { useQuasar } from "quasar";
-import { rhStore } from "src/stores/rh";
-import { formataMoeda, extrairErro } from "src/utils/rhFormatters";
-import MgInputValor from "@components/MgInputValor.vue";
+import { ref, computed, watch } from 'vue'
+import { useQuasar } from 'quasar'
+import { rhStore } from 'src/stores/rh'
+import { extrairErro } from 'src/utils/rhFormatters'
+import { formataNumero, formataData } from '@components/formatters'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
   modelValue: Boolean,
   colaborador: Object,
   codperiodo: [String, Number],
   dias: { type: Number, default: 5 },
-});
+})
 
-const emit = defineEmits(["update:modelValue", "efetivado"]);
+const emit = defineEmits(['update:modelValue', 'efetivado'])
 
-const $q = useQuasar();
-const sRh = rhStore();
+const $q = useQuasar()
+const sRh = rhStore()
 
-const loading = ref(false);
-const salvando = ref(false);
-const dadosColaborador = ref(null);
-const titulos = ref([]);
-const observacao = ref("");
+const loading = ref(false)
+const salvando = ref(false)
+const dadosColaborador = ref(null)
+const titulos = ref([])
+const observacao = ref('')
 
 // --- HELPERS ---
-
-const formataData = (data) => {
-  if (!data) return "";
-  const [y, m, d] = data.substring(0, 10).split("-");
-  return `${d}/${m}/${y}`;
-};
 
 // --- COMPUTED TOTAIS ---
 
 const totalPagando = computed(() =>
-  titulos.value.reduce((sum, t) => sum + (parseFloat(t.pagando) || 0), 0)
-);
+  titulos.value.reduce((sum, t) => sum + (parseFloat(t.pagando) || 0), 0),
+)
 
 const totalDescontando = computed(() =>
-  titulos.value.reduce((sum, t) => sum + (parseFloat(t.descontando) || 0), 0)
-);
+  titulos.value.reduce((sum, t) => sum + (parseFloat(t.descontando) || 0), 0),
+)
 
-const resultado = computed(() => totalPagando.value - totalDescontando.value);
+const resultado = computed(() => totalPagando.value - totalDescontando.value)
 
 const labelResultado = computed(() => {
-  if (resultado.value > 0.001)
-    return { label: "Financeiro", color: "positive" };
-  if (resultado.value < -0.001)
-    return { label: "Acerto Folha", color: "negative" };
-  return { label: "Encontro Total", color: "grey-7" };
-});
+  if (resultado.value > 0.001) return { label: 'Financeiro', color: 'positive' }
+  if (resultado.value < -0.001) return { label: 'Acerto Folha', color: 'negative' }
+  return { label: 'Encontro Total', color: 'grey-7' }
+})
 
 const pctDesconto = computed(() => {
-  const salario = dadosColaborador.value?.salario;
-  if (!salario || salario <= 0 || resultado.value >= 0) return 0;
-  return (Math.abs(resultado.value) / salario) * 100;
-});
+  const salario = dadosColaborador.value?.salario
+  if (!salario || salario <= 0 || resultado.value >= 0) return 0
+  return (Math.abs(resultado.value) / salario) * 100
+})
 
 const excedeLimite = computed(() => {
-  if (resultado.value >= 0) return false;
-  const salario = dadosColaborador.value?.salario;
-  if (!salario || salario <= 0) return false;
-  const limite = dadosColaborador.value?.percentual_max_desconto;
-  if (!limite) return false;
-  return pctDesconto.value > limite;
-});
+  if (resultado.value >= 0) return false
+  const salario = dadosColaborador.value?.salario
+  if (!salario || salario <= 0) return false
+  const limite = dadosColaborador.value?.percentual_max_desconto
+  if (!limite) return false
+  return pctDesconto.value > limite
+})
 
-const podeSalvar = computed(
-  () => totalPagando.value > 0 || totalDescontando.value > 0
-);
+const podeSalvar = computed(() => totalPagando.value > 0 || totalDescontando.value > 0)
 
 // --- VALIDAÇÃO DE INPUTS ---
 
 const atualizarPagando = (titulo, val) => {
-  const num = parseFloat(val) || 0;
-  titulo.pagando = Math.min(Math.max(num, 0), Math.abs(titulo.saldo));
-};
+  const num = parseFloat(val) || 0
+  titulo.pagando = Math.min(Math.max(num, 0), Math.abs(titulo.saldo))
+}
 
 const atualizarDescontando = (titulo, val) => {
-  const num = parseFloat(val) || 0;
-  titulo.descontando = Math.min(Math.max(num, 0), Math.abs(titulo.saldo));
-};
+  const num = parseFloat(val) || 0
+  titulo.descontando = Math.min(Math.max(num, 0), Math.abs(titulo.saldo))
+}
 
 const isPreenchido = (titulo) => {
-  if (titulo.saldo < 0) return titulo.pagando !== null;
-  if (titulo.saldo > 0) return titulo.descontando !== null;
-  return false;
-};
+  if (titulo.saldo < 0) return titulo.pagando !== null
+  if (titulo.saldo > 0) return titulo.descontando !== null
+  return false
+}
 
 const toggleLinha = (titulo) => {
   if (isPreenchido(titulo)) {
-    titulo.pagando = null;
-    titulo.descontando = null;
+    titulo.pagando = null
+    titulo.descontando = null
   } else {
-    if (titulo.saldo < 0) titulo.pagando = Math.abs(titulo.saldo);
-    if (titulo.saldo > 0) titulo.descontando = Math.abs(titulo.saldo);
+    if (titulo.saldo < 0) titulo.pagando = Math.abs(titulo.saldo)
+    if (titulo.saldo > 0) titulo.descontando = Math.abs(titulo.saldo)
   }
-};
+}
 
 // --- CARREGAMENTO ---
 
 const carregar = async () => {
-  if (!props.colaborador) return;
-  loading.value = true;
-  titulos.value = [];
-  observacao.value = "";
-  dadosColaborador.value = null;
+  if (!props.colaborador) return
+  loading.value = true
+  titulos.value = []
+  observacao.value = ''
+  dadosColaborador.value = null
   try {
     const ret = await sRh.getTitulosAcerto(
       props.codperiodo,
       props.colaborador.codperiodocolaborador,
-      props.dias
-    );
-    dadosColaborador.value = ret.data.data.colaborador;
+      props.dias,
+    )
+    dadosColaborador.value = ret.data.data.colaborador
     titulos.value = ret.data.data.titulos.map((t) => ({
       ...t,
       pagando: t.saldo < 0 ? parseFloat(t.sugestao_pagando) || null : null,
-      descontando:
-        t.saldo > 0 ? parseFloat(t.sugestao_descontando) || null : null,
-    }));
+      descontando: t.saldo > 0 ? parseFloat(t.sugestao_descontando) || null : null,
+    }))
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao carregar títulos"),
-    });
-    emit("update:modelValue", false);
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao carregar títulos'),
+    })
+    emit('update:modelValue', false)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 watch(
   () => props.modelValue,
   (val) => {
-    if (val) carregar();
+    if (val) carregar()
   },
-  { immediate: true }
-);
+  { immediate: true },
+)
 
 // --- SUBMIT ---
 
 const confirmar = async () => {
-  salvando.value = true;
+  salvando.value = true
   try {
     const payload = {
       observacao: observacao.value,
@@ -152,31 +142,27 @@ const confirmar = async () => {
         descontando: parseFloat(t.descontando) || 0,
         pagando: parseFloat(t.pagando) || 0,
       })),
-    };
-    await sRh.efetivarAcerto(
-      props.codperiodo,
-      props.colaborador.codperiodocolaborador,
-      payload
-    );
+    }
+    await sRh.efetivarAcerto(props.codperiodo, props.colaborador.codperiodocolaborador, payload)
     $q.notify({
-      color: "green-5",
-      textColor: "white",
-      icon: "done",
-      message: "Acerto efetivado com sucesso",
-    });
-    emit("efetivado");
-    emit("update:modelValue", false);
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Acerto efetivado com sucesso',
+    })
+    emit('efetivado')
+    emit('update:modelValue', false)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: extrairErro(error, "Erro ao efetivar acerto"),
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao efetivar acerto'),
+    })
   } finally {
-    salvando.value = false;
+    salvando.value = false
   }
-};
+}
 </script>
 
 <template>
@@ -185,11 +171,7 @@ const confirmar = async () => {
     @update:model-value="emit('update:modelValue', $event)"
     :maximized="$q.screen.lt.md"
   >
-    <q-card
-      bordered
-      flat
-      style="width: 780px; max-width: 95vw; min-height: 200px"
-    >
+    <q-card bordered flat style="width: 780px; max-width: 95vw; min-height: 200px">
       <q-inner-loading :showing="loading" />
 
       <template v-if="!loading && dadosColaborador">
@@ -201,7 +183,7 @@ const confirmar = async () => {
             <template v-if="dadosColaborador.tempo_casa">
               · {{ dadosColaborador.tempo_casa }}
             </template>
-            · Salário: {{ formataMoeda(dadosColaborador.salario) }}
+            · Salário: {{ formataNumero(dadosColaborador.salario) }}
           </div>
         </q-card-section>
 
@@ -235,11 +217,8 @@ const confirmar = async () => {
                   class="col-3 text-right text-weight-medium"
                   :class="titulo.saldo < 0 ? 'text-green-8' : 'text-red-7'"
                 >
-                  {{ formataMoeda(Math.abs(titulo.saldo)) }}
-                  <q-icon
-                    :name="titulo.saldo < 0 ? 'south' : 'north'"
-                    size="12px"
-                  />
+                  {{ formataNumero(Math.abs(titulo.saldo)) }}
+                  <q-icon :name="titulo.saldo < 0 ? 'south' : 'north'" size="12px" />
                   <q-btn
                     flat
                     round
@@ -249,9 +228,7 @@ const confirmar = async () => {
                     tabindex="-1"
                     @click="toggleLinha(titulo)"
                   >
-                    <q-tooltip>{{
-                      isPreenchido(titulo) ? "Remover" : "Adicionar"
-                    }}</q-tooltip>
+                    <q-tooltip>{{ isPreenchido(titulo) ? 'Remover' : 'Adicionar' }}</q-tooltip>
                   </q-btn>
                 </div>
                 <!-- Pagando -->
@@ -271,9 +248,7 @@ const confirmar = async () => {
                   <MgInputValor
                     dense
                     :model-value="titulo.descontando"
-                    @update:model-value="
-                      (val) => atualizarDescontando(titulo, val)
-                    "
+                    @update:model-value="(val) => atualizarDescontando(titulo, val)"
                     v-if="titulo.saldo > 0"
                     class="col"
                     :min="0"
@@ -285,69 +260,47 @@ const confirmar = async () => {
             </template>
 
             <!-- Vazio -->
-            <div
-              v-if="titulos.length === 0"
-              class="q-pa-md text-center text-grey"
-            >
+            <div v-if="titulos.length === 0" class="q-pa-md text-center text-grey">
               Nenhum título encontrado
             </div>
           </q-scroll-area>
           <q-separator />
 
           <!-- Totais -->
-          <div
-            class="row items-center q-px-md q-py-sm text-weight-medium bg-grey-2"
-          >
+          <div class="row items-center q-px-md q-py-sm text-weight-medium bg-grey-2">
             <div class="col-8"></div>
             <div class="col-2 text-center text-positive">
-              {{ formataMoeda(totalPagando) }}
+              {{ formataNumero(totalPagando) }}
             </div>
             <div class="col-2 text-center text-negative">
-              {{ formataMoeda(totalDescontando) }}
+              {{ formataNumero(totalDescontando) }}
             </div>
           </div>
-          <div
-            class="row items-center q-px-md q-py-sm text-weight-medium bg-grey-2"
-          >
-            <div
-              class="col-8 text-right text-weight-bold"
-              :class="'text-' + labelResultado.color"
-            >
+          <div class="row items-center q-px-md q-py-sm text-weight-medium bg-grey-2">
+            <div class="col-8 text-right text-weight-bold" :class="'text-' + labelResultado.color">
               {{ labelResultado.label }}:
             </div>
-            <div
-              class="col-2 text-center"
-              :class="'text-' + labelResultado.color"
-            >
+            <div class="col-2 text-center" :class="'text-' + labelResultado.color">
               <template v-if="resultado >= 0">
-                {{ formataMoeda(Math.abs(resultado)) }}
+                {{ formataNumero(Math.abs(resultado)) }}
               </template>
             </div>
-            <div
-              class="col-2 text-center"
-              :class="'text-' + labelResultado.color"
-            >
+            <div class="col-2 text-center" :class="'text-' + labelResultado.color">
               <template v-if="resultado < 0">
-                {{ formataMoeda(Math.abs(resultado)) }}
+                {{ formataNumero(Math.abs(resultado)) }}
               </template>
             </div>
           </div>
         </q-card-section>
 
         <!-- ALERTA LIMITE FOLHA -->
-        <q-banner
-          v-if="excedeLimite"
-          class="bg-orange-1 text-orange-9 q-mx-md q-mb-sm"
-          rounded
-        >
+        <q-banner v-if="excedeLimite" class="bg-orange-1 text-orange-9 q-mx-md q-mb-sm" rounded>
           <template v-slot:avatar>
             <q-icon name="warning" color="orange" />
           </template>
           Atenção: desconto de
-          {{ formataMoeda(Math.abs(resultado)) }} representa
-          {{ pctDesconto.toFixed(1) }}% do salário ({{
-            formataMoeda(dadosColaborador.salario)
-          }}). Limite configurado:
+          {{ formataNumero(Math.abs(resultado)) }} representa {{ pctDesconto.toFixed(1) }}% do
+          salário ({{ formataNumero(dadosColaborador.salario) }}). Limite configurado:
           {{ dadosColaborador.percentual_max_desconto }}%.
         </q-banner>
 
@@ -368,13 +321,7 @@ const confirmar = async () => {
 
         <!-- AÇÕES -->
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            tabindex="-1"
-            color="grey-8"
-          />
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn
             flat
             label="Confirmar"

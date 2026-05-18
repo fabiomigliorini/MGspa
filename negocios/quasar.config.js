@@ -9,9 +9,24 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-js
 
 const path = require("path");
+const { execSync } = require("node:child_process");
+const pkg = require("./package.json");
 const { configure } = require("quasar/wrappers");
 
-module.exports = configure(function (/* ctx */) {
+function gitCommitNumber() {
+  if (process.env.COMMIT_NUMBER) return process.env.COMMIT_NUMBER;
+  try {
+    return execSync("git -c safe.directory='*' rev-list --count HEAD -- .", {
+      cwd: __dirname,
+    })
+      .toString()
+      .trim();
+  } catch {
+    return "";
+  }
+}
+
+module.exports = configure(function (ctx) {
   return {
     eslint: {
       // fix: true,
@@ -49,7 +64,12 @@ module.exports = configure(function (/* ctx */) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-js#build
     build: {
-      env: require("dotenv").config().parsed,
+      env: {
+        ...(require("dotenv").config().parsed || {}),
+        APP_VERSION: pkg.version,
+        BUILD_DATE: new Date().toISOString(),
+        COMMIT_NUMBER: gitCommitNumber(),
+      },
       target: {
         browser: ["es2019", "edge88", "firefox78", "chrome87", "safari13.1"],
         node: "node16",
@@ -58,8 +78,13 @@ module.exports = configure(function (/* ctx */) {
       alias: {
         "@components": path.resolve(__dirname, "../components"),
         "quasar/src": path.resolve(__dirname, "node_modules/quasar/src"),
-        vue: path.resolve(__dirname, "node_modules/vue"),
-        quasar: path.resolve(__dirname, "node_modules/quasar"),
+        // Só no build: components compartilhados em ../components não têm node_modules próprio,
+        // então Rollup não consegue resolver 'vue'/'quasar' nos imports deles.
+        // Em dev esses aliases causam dupla instância e tela em branco.
+        ...(ctx.prod && {
+          vue: path.resolve(__dirname, "node_modules/vue"),
+          quasar: path.resolve(__dirname, "node_modules/quasar"),
+        }),
       },
 
       vueRouterMode: "history", // available values: 'hash', 'history'

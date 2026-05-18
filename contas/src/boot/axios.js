@@ -48,8 +48,8 @@ export default boot(({ app }) => {
         switch (status) {
           case 401: {
             console.warn('Token expirado ou inválido (401)')
-            authStore.setToken(null)
-            authStore.user = null
+            authStore.gravarToken(null)
+            authStore.usuario = null
 
             Notify.create({
               type: 'negative',

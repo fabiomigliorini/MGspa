@@ -1,129 +1,116 @@
 <script setup>
-import { ref, computed } from "vue";
-import { useQuasar } from "quasar";
-import { useRoute } from "vue-router";
-import { api } from "boot/axios";
-import { pessoaStore } from "stores/pessoa";
-import { guardaToken } from "src/stores";
-import {
-  formataData,
-  formataCep,
-  linkMaps,
-  removerAcentos,
-} from "src/utils/formatador";
-import MgInfoCriacao from "@components/MgInfoCriacao.vue";
-import SelectCidade from "components/pessoa/SelectCidade.vue";
-import MgInputFormatado from "@components/MgInputFormatado.vue";
+import { ref, computed } from 'vue'
+import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
+import { api } from 'boot/axios'
+import { pessoaStore } from 'stores/pessoa'
+import { useAuthStore } from 'src/stores'
+import { linkMaps, formataData, formataCep, removerAcentos, formataTimestamp } from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import SelectCidade from 'components/pessoa/SelectCidade.vue'
+import MgInputFormatado from '@components/MgInputFormatado.vue'
 
-const $q = useQuasar();
-const route = useRoute();
-const sPessoa = pessoaStore();
-const user = guardaToken();
+const $q = useQuasar()
+const route = useRoute()
+const sPessoa = pessoaStore()
+const user = useAuthStore()
 
-const filtroEndereco = ref("ativos");
+const filtroEndereco = ref('ativos')
 const enderecosFiltrados = computed(() => {
-  const lista = sPessoa.item?.PessoaEnderecoS || [];
-  if (filtroEndereco.value === "ativos") return lista.filter((x) => !x.inativo);
-  return lista;
-});
+  const lista = sPessoa.item?.PessoaEnderecoS || []
+  if (filtroEndereco.value === 'ativos') return lista.filter((x) => !x.inativo)
+  return lista
+})
 
-const dialogEndereco = ref(false);
-const enderecoNovo = ref(false);
-const buscandoCep = ref(false);
-const numeroRef = ref(null);
-const enderecoRef = ref(null);
+const dialogEndereco = ref(false)
+const enderecoNovo = ref(false)
+const buscandoCep = ref(false)
+const numeroRef = ref(null)
+const enderecoRef = ref(null)
 const modelEndereco = ref({
-  endereco: "",
-  numero: "",
-  cep: "",
-  complemento: "",
-  bairro: "",
-  codcidade: "",
+  endereco: '',
+  numero: '',
+  cep: '',
+  complemento: '',
+  bairro: '',
+  codcidade: '',
   entrega: true,
   cobranca: true,
-});
-const options = ref([]);
+})
+const options = ref([])
 
 const modalNovoEndereco = async () => {
-  dialogEndereco.value = true;
-  const cobranca =
-    sPessoa.item.PessoaEnderecoS.filter((end) => end.cobranca == true).length ==
-    0;
-  const entrega =
-    sPessoa.item.PessoaEnderecoS.filter((end) => end.entrega == true).length ==
-    0;
-  const nfe =
-    sPessoa.item.PessoaEnderecoS.filter((end) => end.nfe == true).length == 0;
+  dialogEndereco.value = true
+  const cobranca = sPessoa.item.PessoaEnderecoS.filter((end) => end.cobranca == true).length == 0
+  const entrega = sPessoa.item.PessoaEnderecoS.filter((end) => end.entrega == true).length == 0
+  const nfe = sPessoa.item.PessoaEnderecoS.filter((end) => end.nfe == true).length == 0
   modelEndereco.value = {
     cobranca: cobranca,
     entrega: entrega,
     nfe: nfe,
-  };
-  enderecoNovo.value = true;
-};
+  }
+  enderecoNovo.value = true
+}
 
 const novoEndereco = async () => {
-  if (modelEndereco.value.endereco !== "") {
-    modelEndereco.value.codpessoa = route.params.id;
+  if (modelEndereco.value.endereco !== '') {
+    modelEndereco.value.codpessoa = route.params.id
     try {
-      const { data } = await sPessoa.enderecoNovo(
-        route.params.id,
-        modelEndereco.value
-      );
+      const { data } = await sPessoa.enderecoNovo(route.params.id, modelEndereco.value)
       if (data) {
-        dialogEndereco.value = false;
-        enderecoNovo.value = false;
+        dialogEndereco.value = false
+        enderecoNovo.value = false
         $q.notify({
-          color: "green-5",
-          textColor: "white",
-          icon: "done",
-          message: "Endereço criado.",
-        });
+          color: 'green-5',
+          textColor: 'white',
+          icon: 'done',
+          message: 'Endereço criado.',
+        })
       }
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
   } else {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
-      message: "Campo endereço é obrigatório",
-    });
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: 'Campo endereço é obrigatório',
+    })
   }
-};
+}
 
 const excluirEndereco = async (codpessoaendereco) => {
   $q.dialog({
-    title: "Excluir Endereço",
-    message: "Tem certeza que deseja excluir esse endereço?",
+    title: 'Excluir Endereço',
+    message: 'Tem certeza que deseja excluir esse endereço?',
     cancel: true,
     persistent: true,
   }).onOk(async () => {
     try {
-      await sPessoa.enderecoExcluir(route.params.id, codpessoaendereco);
+      await sPessoa.enderecoExcluir(route.params.id, codpessoaendereco)
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Endereço excluido",
-      });
-      sPessoa.get(route.params.id);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Endereço excluido',
+      })
+      sPessoa.get(route.params.id)
     } catch (error) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: error.response.data.message,
-      });
+      })
     }
-  });
-};
+  })
+}
 
 const editarEndereco = async (
   codpessoaendereco,
@@ -137,10 +124,10 @@ const editarEndereco = async (
   nfe,
   entrega,
   apelido,
-  cidade
+  cidade,
 ) => {
-  dialogEndereco.value = true;
-  enderecoNovo.value = false;
+  dialogEndereco.value = true
+  enderecoNovo.value = false
   modelEndereco.value = {
     codpessoaendereco: codpessoaendereco,
     endereco: endereco,
@@ -153,178 +140,168 @@ const editarEndereco = async (
     nfe: nfe,
     entrega: entrega,
     apelido: apelido,
-  };
-  const ret = await sPessoa.consultaCidade(codcidade);
-  options.value = [ret.data[0]];
-};
+  }
+  const ret = await sPessoa.consultaCidade(codcidade)
+  options.value = [ret.data[0]]
+}
 
 const submit = () => {
-  enderecoNovo.value ? novoEndereco() : salvarEndereco();
-};
+  enderecoNovo.value ? novoEndereco() : salvarEndereco()
+}
 
 const salvarEndereco = async () => {
   try {
     const data = await sPessoa.enderecoSalvar(
       route.params.id,
       modelEndereco.value.codpessoaendereco,
-      modelEndereco.value
-    );
+      modelEndereco.value,
+    )
     if (data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Endereco alterado",
-      });
-      dialogEndereco.value = false;
-      sPessoa.get(route.params.id);
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Endereco alterado',
+      })
+      dialogEndereco.value = false
+      sPessoa.get(route.params.id)
     } else {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: "Erro ao alterar endereco",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: 'Erro ao alterar endereco',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.response.data.message,
-    });
+    })
   }
-};
+}
 
 const buscaCep = async () => {
-  buscandoCep.value = true;
+  buscandoCep.value = true
   if (modelEndereco.value.cep.length == 8) {
-    const { data } = await api.get(
-      "https://viacep.com.br/ws/" + modelEndereco.value.cep + "/json/"
-    );
+    const { data } = await api.get('https://viacep.com.br/ws/' + modelEndereco.value.cep + '/json/')
     if (data.logradouro) {
-      modelEndereco.value.endereco = data.logradouro;
-      modelEndereco.value.bairro = data.bairro;
-      const cidadeapicep = data.localidade.toLowerCase();
-      const buscarcidade = await api.get(
-        "v1/select/cidade?cidade=" + removerAcentos(cidadeapicep)
-      );
-      modelEndereco.value.codcidade = buscarcidade.data[0].value;
+      modelEndereco.value.endereco = data.logradouro
+      modelEndereco.value.bairro = data.bairro
+      const cidadeapicep = data.localidade.toLowerCase()
+      const buscarcidade = await api.get('v1/select/cidade?cidade=' + removerAcentos(cidadeapicep))
+      modelEndereco.value.codcidade = buscarcidade.data[0].value
     }
-    buscandoCep.value = false;
+    buscandoCep.value = false
     setTimeout(() => {
       if (data.logradouro) {
-        numeroRef.value?.focus();
+        numeroRef.value?.focus()
       } else {
-        enderecoRef.value?.$el?.querySelector("input")?.focus();
+        enderecoRef.value?.$el?.querySelector('input')?.focus()
       }
-    }, 500);
+    }, 500)
   }
-};
+}
 
 const inativar = async (codpessoaendereco) => {
   try {
-    const ret = await sPessoa.enderecoInativar(
-      route.params.id,
-      codpessoaendereco
-    );
+    const ret = await sPessoa.enderecoInativar(route.params.id, codpessoaendereco)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Inativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Inativado!',
+      })
     } else {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: "Erro ao inativar",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: 'Erro ao inativar',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const ativar = async (codpessoaendereco) => {
   try {
-    const ret = await sPessoa.enderecoAtivar(
-      route.params.id,
-      codpessoaendereco
-    );
+    const ret = await sPessoa.enderecoAtivar(route.params.id, codpessoaendereco)
     if (ret.data) {
       $q.notify({
-        color: "green-5",
-        textColor: "white",
-        icon: "done",
-        message: "Ativado!",
-      });
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'done',
+        message: 'Ativado!',
+      })
     } else {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "error",
-        message: "Erro ao ativar",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: 'Erro ao ativar',
+      })
     }
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
+    })
   }
-};
+}
 
 const cima = async (codpessoa, codpessoaendereco) => {
   try {
-    await sPessoa.enderecoParaCima(codpessoa, codpessoaendereco);
+    await sPessoa.enderecoParaCima(codpessoa, codpessoaendereco)
     $q.notify({
-      color: "green-4",
-      textColor: "white",
-      icon: "done",
-      message: "Movido para cima",
-    });
-    sPessoa.get(codpessoa);
+      color: 'green-4',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Movido para cima',
+    })
+    sPessoa.get(codpessoa)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
-    sPessoa.get(codpessoa);
+    })
+    sPessoa.get(codpessoa)
   }
-};
+}
 
 const baixo = async (codpessoa, codpessoaendereco) => {
   try {
-    await sPessoa.enderecoParaBaixo(codpessoa, codpessoaendereco);
+    await sPessoa.enderecoParaBaixo(codpessoa, codpessoaendereco)
     $q.notify({
-      color: "green-4",
-      textColor: "white",
-      icon: "done",
-      message: "Movido para baixo",
-    });
-    sPessoa.get(codpessoa);
+      color: 'green-4',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Movido para baixo',
+    })
+    sPessoa.get(codpessoa)
   } catch (error) {
     $q.notify({
-      color: "red-5",
-      textColor: "white",
-      icon: "error",
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: error.message,
-    });
-    sPessoa.get(codpessoa);
+    })
+    sPessoa.get(codpessoa)
   }
-};
+}
 </script>
 
 <template>
@@ -363,12 +340,9 @@ const baixo = async (codpessoa, codpessoaendereco) => {
                 v-model="modelEndereco.endereco"
                 label="Endereço"
                 :rules="[
+                  (val) => (val && val.length >= 5) || 'Endereço deve ter no mínimo 5 caracteres',
                   (val) =>
-                    (val && val.length >= 5) ||
-                    'Endereço deve ter no mínimo 5 caracteres',
-                  (val) =>
-                    (val && val.length <= 60) ||
-                    'Endereço não pode ter mais que 60 caracteres',
+                    (val && val.length <= 60) || 'Endereço não pode ter mais que 60 caracteres',
                 ]"
                 required
                 :disable="buscandoCep"
@@ -382,11 +356,9 @@ const baixo = async (codpessoa, codpessoaendereco) => {
                 v-model="modelEndereco.numero"
                 label="Numero"
                 :rules="[
+                  (val) => (val && val.length >= 0) || 'Número deve ser preenchido',
                   (val) =>
-                    (val && val.length >= 0) || 'Número deve ser preenchido',
-                  (val) =>
-                    (val && val.length <= 10) ||
-                    'Número não pode ter mais que 10 caracteres',
+                    (val && val.length <= 10) || 'Número não pode ter mais que 10 caracteres',
                 ]"
                 required
                 :disable="buscandoCep"
@@ -399,12 +371,9 @@ const baixo = async (codpessoa, codpessoaendereco) => {
                 v-model="modelEndereco.bairro"
                 label="Bairro"
                 :rules="[
+                  (val) => (val && val.length >= 2) || 'Bairro deve ter no mínimo 2 caracteres',
                   (val) =>
-                    (val && val.length >= 2) ||
-                    'Bairro deve ter no mínimo 2 caracteres',
-                  (val) =>
-                    (val && val.length <= 60) ||
-                    'Bairro não pode ter mais que 50 caracteres',
+                    (val && val.length <= 60) || 'Bairro não pode ter mais que 50 caracteres',
                 ]"
                 required
                 :disable="buscandoCep"
@@ -419,9 +388,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
                 :disable="buscandoCep"
                 :rules="[
                   (val) =>
-                    !val ||
-                    val.length <= 50 ||
-                    'Complemento não pode ter mais que 60 caracteres',
+                    !val || val.length <= 50 || 'Complemento não pode ter mais que 60 caracteres',
                 ]"
                 maxlength="50"
               />
@@ -435,11 +402,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               />
             </div>
             <div class="col-xs-12 col-sm-6">
-              <MgInputFormatado
-                outlined
-                v-model="modelEndereco.apelido"
-                label="Apelido"
-              />
+              <MgInputFormatado outlined v-model="modelEndereco.apelido" label="Apelido" />
             </div>
             <div class="col-12">
               <q-toggle v-model="modelEndereco.cobranca" label="Cobrança" />
@@ -452,13 +415,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
         <q-separator inset />
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn
-            flat
-            label="Cancelar"
-            v-close-popup
-            color="grey-8"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" v-close-popup color="grey-8" tabindex="-1" />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>
@@ -491,16 +448,13 @@ const baixo = async (codpessoa, codpessoaendereco) => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.verificaPermissaoUsuario('Publico')"
+        v-if="user.temPermissao('Publico')"
         @click="modalNovoEndereco()"
       />
     </q-card-section>
 
     <q-list v-if="enderecosFiltrados.length > 0">
-      <template
-        v-for="(element, i) in enderecosFiltrados"
-        v-bind:key="element.codpessoaendereco"
-      >
+      <template v-for="(element, i) in enderecosFiltrados" v-bind:key="element.codpessoaendereco">
         <q-separator inset />
         <q-item class="q-my-sm">
           <!-- BOTAO MAPA -->
@@ -510,14 +464,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               icon="place"
               color="red"
               flat
-              :href="
-                linkMaps(
-                  element.cidade,
-                  element.endereco,
-                  element.numero,
-                  element.cep
-                )
-              "
+              :href="linkMaps(element.cidade, element.endereco, element.numero, element.cep)"
               target="_blank"
             />
           </q-item-section>
@@ -525,35 +472,17 @@ const baixo = async (codpessoa, codpessoaendereco) => {
           <q-item-section>
             <!-- ENDERECO -->
             <q-item-label :class="element.inativo ? 'text-strike' : null">
-              {{ element.endereco }}, {{ element.numero }},
-              {{ element.bairro }},
-              <template v-if="element.complemento">
-                {{ element.complemento }},
-              </template>
+              {{ element.endereco }}, {{ element.numero }}, {{ element.bairro }},
+              <template v-if="element.complemento"> {{ element.complemento }}, </template>
               {{ element.cidade }}/{{ element.uf }},
               {{ formataCep(element.cep) }}
-              <q-icon
-                v-if="element.cobranca"
-                color="green"
-                name="paid"
-                class="q-ml-xs"
-              >
+              <q-icon v-if="element.cobranca" color="green" name="paid" class="q-ml-xs">
                 <q-tooltip>Cobrança</q-tooltip>
               </q-icon>
-              <q-icon
-                v-if="element.nfe"
-                color="green"
-                name="description"
-                class="q-ml-xs"
-              >
+              <q-icon v-if="element.nfe" color="green" name="description" class="q-ml-xs">
                 <q-tooltip>Endereço Fiscal</q-tooltip>
               </q-icon>
-              <q-icon
-                v-if="element.entrega"
-                color="green"
-                name="local_shipping"
-                class="q-ml-xs"
-              >
+              <q-icon v-if="element.entrega" color="green" name="local_shipping" class="q-ml-xs">
                 <q-tooltip>Entrega</q-tooltip>
               </q-icon>
 
@@ -568,7 +497,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
 
             <!-- INATIVO -->
             <q-item-label caption class="text-red-14" v-if="element.inativo">
-              Inativo desde: {{ formataData(element.inativo) }}
+              Inativo desde: {{ formataTimestamp(element.inativo) }}
             </q-item-label>
 
             <!-- APELIDO -->
@@ -579,10 +508,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
 
           <q-item-section side>
             <!-- BOTOES -->
-            <q-item-label
-              caption
-              v-if="user.verificaPermissaoUsuario('Publico')"
-            >
+            <q-item-label caption v-if="user.temPermissao('Publico')">
               <template v-if="sPessoa.item?.PessoaEnderecoS.length > 1">
                 <!-- CIMA -->
                 <q-btn
@@ -634,7 +560,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
                     element.nfe,
                     element.entrega,
                     element.apelido,
-                    element.cidade
+                    element.cidade,
                   ),
                     (enderecoNovo = false)
                 "

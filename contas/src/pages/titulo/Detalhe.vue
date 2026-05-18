@@ -3,7 +3,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataDataSemHora } from 'src/utils/formatters.js'
+import {
+  formataNumero,
+  formataData,
+  formataNumeroNota,
+  formataCodigo,
+} from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
@@ -16,6 +21,11 @@ import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
 import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import {
+  getNotaFiscalStatusColor,
+  getNotaFiscalStatusLabel,
+  isNotaFiscalCanceladaInutilizada,
+} from '@components/notaFiscalStatus'
 
 const route = useRoute()
 const router = useRouter()
@@ -25,7 +35,7 @@ const auth = useAuthStore()
 // Permissão para criar/alterar/estornar e mexer em boletos.
 // Visualização (carregar/PDF) é livre para qualquer usuário autenticado.
 const podeMutar = computed(() =>
-  auth.hasAnyPermission([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
+  auth.temAlgumaPermissao([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.COBRANCA]),
 )
 
 const titulo = ref(null)
@@ -49,12 +59,12 @@ const geradoAuto = computed(
 )
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).
-const codtituloagrupamentoLiquidacao = computed(() => {
-  const movs = titulo.value?.movimentos
-  if (!Array.isArray(movs)) return null
-  const m = movs.find((x) => x.codtituloagrupamento)
-  return m?.codtituloagrupamento ?? null
-})
+// const codtituloagrupamentoLiquidacao = computed(() => {
+//   const movs = titulo.value?.movimentos
+//   if (!Array.isArray(movs)) return null
+//   const m = movs.find((x) => x.codtituloagrupamento)
+//   return m?.codtituloagrupamento ?? null
+// })
 const liquidado = computed(() => !duplicando.value && Number(titulo.value?.saldo ?? 1) === 0)
 const estornado = computed(() => !!titulo.value?.estornado)
 
@@ -72,8 +82,6 @@ const podeEstornar = computed(
 const podeEditar = computed(() => podeMutar.value && titulo.value && !estornado.value)
 
 // === Helpers ===
-const formatCodigo = (v) => (v ? '#' + String(v).padStart(8, '0') : '')
-
 function toDateInput(v) {
   return v ? String(v).slice(0, 10) : null
 }
@@ -219,18 +227,6 @@ function bbAbrirPdf(b) {
   window.open(url, '_blank')
 }
 
-async function abrirDanfe(codnotafiscal) {
-  try {
-    const { data } = await api.get(`v1/nota-fiscal/${codnotafiscal}/danfe`, {
-      responseType: 'blob',
-    })
-    const url = URL.createObjectURL(new Blob([data], { type: 'application/pdf' }))
-    window.open(url, '_blank')
-  } catch (e) {
-    notifyError(e, 'Erro ao abrir DANFE')
-  }
-}
-
 function bbEstadoCor(estado) {
   if (estado === 6) return 'green-7' // LIQUIDADO
   if (estado === 7) return 'red-7' // BAIXADO
@@ -259,8 +255,8 @@ const urlPessoa = (codpessoa) =>
   codpessoa ? `${process.env.PESSOAS_URL}/pessoa/${codpessoa}` : null
 const urlNegocio = (codnegocio) =>
   codnegocio ? `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}` : null
-const urlAgrupamento = (codtituloagrupamento) =>
-  codtituloagrupamento ? `/agrupamento/${codtituloagrupamento}` : null
+const urlNotaFiscal = (codnotafiscal) =>
+  codnotafiscal ? `${process.env.NOTAS_URL}/nota/${codnotafiscal}` : null
 
 // === Estilos derivados ===
 // Parseia YYYY-MM-DD como data local (evita o offset UTC do `new Date(string)`).
@@ -292,6 +288,27 @@ const classeVencimento = computed(() => {
   if (atraso > 0) return 'text-orange'
   return 'text-green'
 })
+
+const urlMovimento = (m) => {
+  if (m.codliquidacaotitulo) {
+    return `/liquidacao-titulo/${m.codliquidacaotitulo}`
+  }
+  if (m.codtituloagrupamento) {
+    return `/agrupamento/${m.codtituloagrupamento}`
+  }
+  if (m.codboletoretorno) {
+    return null
+  }
+  if (m.codcobranca) {
+    return null
+  }
+  if (m.codnegocio) {
+    return urlNegocio(m.codnegocio)
+  }
+  if (titulo.value.codnegocio) {
+    return urlNegocio(titulo.value.codnegocio)
+  }
+}
 
 onMounted(carregar)
 watch(() => route.fullPath, carregar)
@@ -343,11 +360,11 @@ watch(() => route.fullPath, carregar)
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Emissão</div>
               <div class="text-h6 text-grey-7">
-                {{ formataDataSemHora(titulo.emissao) }}
+                {{ formataData(titulo.emissao) }}
               </div>
               <div class="text-caption text-grey-7">
                 Transação
-                {{ formataDataSemHora(titulo.transacao) }}
+                {{ formataData(titulo.transacao) }}
               </div>
             </q-card>
           </div>
@@ -357,11 +374,11 @@ watch(() => route.fullPath, carregar)
             <q-card bordered flat class="q-py-sm text-center">
               <div class="text-caption text-grey-7">Vencimento</div>
               <div class="text-h6" :class="classeVencimento">
-                {{ formataDataSemHora(titulo.vencimento) }}
+                {{ formataData(titulo.vencimento) }}
               </div>
               <div class="text-caption text-grey-7">
                 Original
-                {{ formataDataSemHora(titulo.vencimentooriginal) }}
+                {{ formataData(titulo.vencimentooriginal) }}
               </div>
             </q-card>
           </div>
@@ -443,7 +460,7 @@ watch(() => route.fullPath, carregar)
             <div class="col-xs-6 col-sm-4 col-md-2">
               <div class="text-overline text-grey-7">#</div>
               <div class="text-body2">
-                {{ formatCodigo(titulo.codtitulo) }}
+                {{ formataCodigo(titulo.codtitulo) }}
               </div>
             </div>
 
@@ -491,11 +508,12 @@ watch(() => route.fullPath, carregar)
             <!-- LIQUIDACAO -->
             <div class="col-xs-6 col-sm-4 col-md-2" v-if="titulo.transacaoliquidacao">
               <div class="text-overline text-grey-7">Liquidação</div>
-              <div class="text-body2">{{ formataDataSemHora(titulo.transacaoliquidacao) }}</div>
+              <div class="text-body2">{{ formataData(titulo.transacaoliquidacao) }}</div>
             </div>
           </div>
         </q-card>
 
+        <!--
         <q-banner v-if="geradoAuto" class="bg-blue-1 text-blue-9 q-mt-md" flat bordered rounded>
           <template #avatar><q-icon name="info" /></template>
           Título gerado automaticamente!
@@ -508,7 +526,7 @@ watch(() => route.fullPath, carregar)
             color="primary"
             :href="urlNegocio(titulo.codnegocio)"
             target="_blank"
-            :label="`Negócio ${formatCodigo(titulo.codnegocio)}`"
+            :label="`Negócio ${formataCodigo(titulo.codnegocio)}`"
           />
           <q-btn
             v-if="titulo?.codtituloagrupamento"
@@ -518,7 +536,7 @@ watch(() => route.fullPath, carregar)
             padding="0 4px"
             color="primary"
             :to="{ name: 'agrupamento-detalhe', params: { id: titulo.codtituloagrupamento } }"
-            :label="`Agrupamento ${formatCodigo(titulo.codtituloagrupamento)}`"
+            :label="`Agrupamento ${formataCodigo(titulo.codtituloagrupamento)}`"
           />
         </q-banner>
 
@@ -541,9 +559,10 @@ watch(() => route.fullPath, carregar)
               name: 'agrupamento-detalhe',
               params: { id: codtituloagrupamentoLiquidacao },
             }"
-            :label="`Agrupamento ${formatCodigo(codtituloagrupamentoLiquidacao)}`"
+            :label="`Agrupamento ${formataCodigo(codtituloagrupamentoLiquidacao)}`"
           />
         </q-banner>
+        -->
 
         <!-- OBSERVACAOES -->
         <template v-if="titulo.observacao">
@@ -571,70 +590,49 @@ watch(() => route.fullPath, carregar)
               </q-card-section>
 
               <q-list separator>
-                <q-item v-for="m in movimentosOrdenados" :key="m.codmovimentotitulo">
+                <q-item
+                  v-for="m in movimentosOrdenados"
+                  :key="m.codmovimentotitulo"
+                  :href="urlMovimento(m)"
+                >
                   <!-- Transacao -->
-                  <q-item-section style="flex: 0 0 70px; min-width: 0">
-                    <q-item-label caption>{{ formataDataSemHora(m.transacao) }}</q-item-label>
-                    <q-item-label caption>
-                      {{ m.tipomovimentotitulo }}
+                  <q-item-section>
+                    <q-item-label class="ellipsis text-primary text-weight-bold">
+                      <span v-if="m.codliquidacaotitulo">
+                        Liquidação {{ formataCodigo(m.codliquidacaotitulo) }}
+                      </span>
+                      <span v-else-if="m.codtituloagrupamento">
+                        Agrupamento {{ formataCodigo(m.codtituloagrupamento) }}
+                      </span>
+                      <span v-else-if="m.codboletoretorno">Retorno Boleto</span>
+                      <span v-else-if="m.codcobranca">Cobrança</span>
+                      <span v-else-if="titulo.codnegocio">
+                        Negócio {{ formataCodigo(titulo.codnegocio) }}
+                      </span>
+                      <span v-else class="text-italic text-grey-7 text-weight-regular">
+                        Sem Identificação de Origem
+                      </span>
+                      <MgInfoCriacao :usuariocriacao="m.usuariocriacao" :criacao="m.criacao" />
                     </q-item-label>
+                    <q-item-label v-if="m.portador" caption>{{ m.portador }}</q-item-label>
                   </q-item-section>
 
                   <!-- VALOR -->
-                  <q-item-section class="text-right">
+                  <q-item-section side>
                     <q-item-label
                       class="text-weight-bold"
                       :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
                     >
                       {{ formataNumero(Math.abs(m.valor)) }} {{ m.operacao }}
                     </q-item-label>
-                    <q-item-label caption class="ellipsis">
-                      <q-btn
-                        v-if="m.codnegocio"
-                        flat
-                        dense
-                        no-caps
-                        size="sm"
-                        padding="0 4px"
-                        color="primary"
-                        :href="urlNegocio(m.codnegocio)"
-                        target="_blank"
-                        :label="`Negócio ${formatCodigo(m.codnegocio)}`"
-                      />
-                      <q-btn
-                        v-if="m.codliquidacaotitulo"
-                        flat
-                        dense
-                        no-caps
-                        size="sm"
-                        padding="0 4px"
-                        color="primary"
-                        :to="{
-                          name: 'liquidacao-titulo-detalhe',
-                          params: { id: m.codliquidacaotitulo },
-                        }"
-                        :label="`Liquidação ${formatCodigo(m.codliquidacaotitulo)}`"
-                      />
-                      <q-btn
-                        v-if="m.codtituloagrupamento"
-                        flat
-                        dense
-                        no-caps
-                        size="sm"
-                        padding="0 4px"
-                        color="primary"
-                        :href="urlAgrupamento(m.codtituloagrupamento)"
-                        target="_blank"
-                        :label="`Agrupamento ${formatCodigo(m.codtituloagrupamento)}`"
-                      />
-                      <span v-if="m.codboletoretorno">Retorno Boleto</span>
-                      <span v-if="m.codcobranca">Cobrança</span>
+                    <q-item-label caption>
+                      {{ m.tipomovimentotitulo }}
                     </q-item-label>
-                    <q-item-label v-if="m.portador" caption>{{ m.portador }}</q-item-label>
-                  </q-item-section>
+                    <q-item-label caption>
+                      {{ formataData(m.transacao) }}
+                    </q-item-label>
 
-                  <q-item-section side>
-                    <MgInfoCriacao :usuariocriacao="m.usuariocriacao" :criacao="m.criacao" />
+                    <!-- ORIGEM -->
                   </q-item-section>
                 </q-item>
               </q-list>
@@ -684,27 +682,27 @@ watch(() => route.fullPath, carregar)
 
                     <!-- VENCIMENTO -->
                     <q-item-label caption>
-                      Vencimento {{ formataDataSemHora(b.vencimento) }}
+                      Vencimento {{ formataData(b.vencimento) }}
                     </q-item-label>
 
                     <!-- REGISTRO -->
                     <q-item-label caption v-if="b.dataregistro">
-                      Registro {{ formataDataSemHora(b.dataregistro) }}
+                      Registro {{ formataData(b.dataregistro) }}
                     </q-item-label>
 
                     <!-- RECEBIMENTO -->
                     <q-item-label caption v-if="b.datarecebimento">
-                      Recebimento {{ formataDataSemHora(b.datarecebimento) }}
+                      Recebimento {{ formataData(b.datarecebimento) }}
                     </q-item-label>
 
                     <!-- CREDITO -->
                     <q-item-label caption v-if="b.datacredito">
-                      Crédito {{ formataDataSemHora(b.datacredito) }}
+                      Crédito {{ formataData(b.datacredito) }}
                     </q-item-label>
 
                     <!-- BAIXA -->
                     <q-item-label caption v-if="b.databaixaautomatica">
-                      Baixa {{ formataDataSemHora(b.databaixaautomatica) }}
+                      Baixa {{ formataData(b.databaixaautomatica) }}
                     </q-item-label>
 
                     <!-- VALOR ORIGINAL -->
@@ -789,33 +787,35 @@ watch(() => route.fullPath, carregar)
             </q-card>
 
             <!-- Card Notas Fiscais -->
-            <q-card v-if="titulo.notas?.length" bordered flat class="q-mt-md">
+            <q-card bordered flat class="q-mt-md">
               <q-card-section class="text-grey-9 text-overline">
                 NOTAS FISCAIS ({{ titulo.notas.length }})
               </q-card-section>
               <q-list separator>
                 <q-item
                   v-for="n in titulo.notas"
-                  :key="`${n.codnotafiscal}-${n.codtitulo}`"
-                  clickable
-                  v-ripple
-                  @click="abrirDanfe(n.codnotafiscal)"
+                  :key="n.codnotafiscal"
+                  :class="isNotaFiscalCanceladaInutilizada(n.status) ? 'bg-red-1' : ''"
+                  :href="urlNotaFiscal(n.codnotafiscal)"
                 >
-                  <q-item-section avatar>
-                    <q-icon name="picture_as_pdf" color="red-7" />
-                  </q-item-section>
                   <q-item-section>
-                    <q-item-label>
-                      Nota {{ n.numero }} — Mod {{ n.modelo }} / Sér {{ n.serie }}
+                    <q-item-label class="text-weight-medium text-primary">
+                      {{ formataNumeroNota(n.numero, n.modelo, n.serie, n.emitida) }}
                     </q-item-label>
-                    <q-item-label caption>
-                      {{ n.filial }} • Emissão {{ formataDataSemHora(n.emissao) }}
+                    <q-item-label caption :class="`text-${getNotaFiscalStatusColor(n.status)} `">
+                      {{ n.filial }}
+                      &#8226;
+                      <!-- {{ n }} -->
+                      <span> {{ getNotaFiscalStatusLabel(n.status) }}</span>
                     </q-item-label>
-                    <q-item-label caption>Título {{ n.numero_titulo }}</q-item-label>
                   </q-item-section>
                   <q-item-section side>
-                    <q-item-label class="text-weight-bold">
+                    <q-item-label class="text-weight-bold text-primary ellipsis">
                       {{ formataNumero(n.valortotal) }}
+                    </q-item-label>
+                    <q-item-label caption class="ellipsis">{{ n.naturezaoperacao }}</q-item-label>
+                    <q-item-label caption class="ellipsis">
+                      {{ formataData(n.emissao) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>

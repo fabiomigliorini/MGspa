@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { TIPOS_ABERTOS } from 'src/constants/tituloBoleto'
 

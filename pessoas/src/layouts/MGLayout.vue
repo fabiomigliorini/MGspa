@@ -1,13 +1,12 @@
 <script setup>
-import { ref } from "vue";
-import { Dialog } from "quasar";
-import pkg from "../../package.json";
-const version = pkg.version;
-import MgMenu from "layouts/MGMenu.vue";
-import axios from "axios";
+import { ref, onMounted } from 'vue'
+import MgMenu from 'layouts/MGMenu.vue'
+import MgAppFooter from '@components/MgAppFooter.vue'
+import MgUserMenu from '@components/MgUserMenu.vue'
+import { useAuth } from 'src/composables/useAuth'
 
-const leftDrawerOpen = ref(false);
-const user = ref(localStorage.getItem("usuario"));
+const auth = useAuth()
+const leftDrawerOpen = ref(false)
 
 defineProps({
   drawer: {
@@ -18,59 +17,21 @@ defineProps({
     type: Boolean,
     default: false,
   },
-});
+})
 
-const limparSessao = () => {
-  localStorage.removeItem("access_token");
-  localStorage.removeItem("usuario");
-  document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;";
-  document.cookie = "user_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.mgpapelaria.com.br;";
-  let url = encodeURIComponent(window.location.href);
-  window.location.href = process.env.API_AUTH_URL + "/login?redirect_uri=" + url;
-};
-
-const deslogar = async () => {
-  Dialog.create({
-    title: "Sair da conta",
-    message: "Tem certeza que deseja sair?",
-    cancel: true,
-    persistent: true,
-  }).onOk(async () => {
-    let token = document.cookie
-      .split(";")
-      .find((item) => item.trim().startsWith("access_token="));
-
-    if (token) {
-      token = token.split("=")[1];
-    }
-    axios
-      .post(
-        process.env.API_AUTH_URL + "/api/logout",
-        {},
-        {
-          headers: {
-            Authorization: "Bearer " + token,
-          },
-        }
-      )
-      .then(() => {
-        limparSessao();
-      })
-      .catch(() => {
-        limparSessao();
-      });
-  });
-};
+onMounted(() => {
+  if (!auth.usuario.value) auth.validarToken()
+})
 
 const toggleLeftDrawer = () => {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-};
+  leftDrawerOpen.value = !leftDrawerOpen.value
+}
 </script>
 
 <template>
   <q-layout view="Hhh lpR fff">
     <!-- CABECALHO -->
-    <q-header reveal bordered class="bg-yellow text-grey-9">
+    <q-header reveal bordered class="bg-primary text-white">
       <q-toolbar>
         <q-btn
           flat
@@ -90,52 +51,16 @@ const toggleLeftDrawer = () => {
           <slot name="tituloPagina"></slot>
         </q-toolbar-title>
 
-        <div class="gt-xs q-mr-sm text-caption">v{{ version }}</div>
-
         <!-- Renderiza o menu -->
         <mg-menu></mg-menu>
 
         <!-- Usuario logout -->
-        <q-btn-dropdown flat dense color="grey-9 " icon="person" :label="user">
-          <div class="row no-wrap q-pa-md justify-center">
-            <div class="column items-center">
-              <q-avatar size="72px">
-                <img src="https://cdn.quasar.dev/img/boy-avatar.png" />
-              </q-avatar>
-              <div class="text-subtitle1 q-mt-md q-mb-xs">{{ user }}</div>
-
-              <q-btn
-                color="primary"
-                :to="'/perfil'"
-                class="q-mb-md"
-                label="Perfil"
-                push
-                size="sm"
-                v-close-popup
-              />
-
-              <q-btn
-                color="primary"
-                label="Sair"
-                push
-                size="sm"
-                v-close-popup
-                @click="deslogar()"
-              />
-            </div>
-          </div>
-        </q-btn-dropdown>
+        <MgUserMenu :auth="auth" />
       </q-toolbar>
     </q-header>
 
     <!-- DRAWER -->
-    <q-drawer
-      show-if-above
-      v-model="leftDrawerOpen"
-      side="left"
-      bordered
-      v-if="drawer"
-    >
+    <q-drawer show-if-above v-model="leftDrawerOpen" side="left" bordered v-if="drawer">
       <slot name="drawer"></slot>
     </q-drawer>
 
@@ -146,10 +71,8 @@ const toggleLeftDrawer = () => {
     </q-page-container>
 
     <!-- RODAPE -->
-    <q-footer bordered reveal class="bg-grey-8 text-white">
-      <div class="q-ma-xs text-weight-light text-center">
-        Pessoas | MG Papelaria &copy; | v{{ version }}
-      </div>
+    <q-footer bordered reveal class="bg-primary text-blue-3 text-caption">
+      <MgAppFooter app-name="Pessoas" />
     </q-footer>
   </q-layout>
 </template>

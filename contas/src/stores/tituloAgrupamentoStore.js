@@ -63,9 +63,7 @@ export const useTituloAgrupamentoStore = defineStore(
     }
 
     function upsertLocal(item) {
-      const idx = items.value.findIndex(
-        (i) => i.codtituloagrupamento === item.codtituloagrupamento,
-      )
+      const idx = items.value.findIndex((i) => i.codtituloagrupamento === item.codtituloagrupamento)
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
     }

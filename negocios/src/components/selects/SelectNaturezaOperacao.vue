@@ -1,31 +1,29 @@
 <script setup>
-import { ref, onMounted } from "vue";
-import { db } from "boot/db";
+import { ref, onMounted } from 'vue'
+import { db } from 'boot/db'
 
-const opcoes = ref([]);
-const filtrado = ref([]);
+const opcoes = ref([])
+const filtrado = ref([])
 
 onMounted(async () => {
-  opcoes.value = await db.naturezaOperacao
-    .orderBy("[codoperacao+naturezaoperacao]")
-    .toArray();
-  filtrado.value = opcoes.value;
-});
+  opcoes.value = await db.naturezaOperacao.orderBy('[codoperacao+naturezaoperacao]').toArray()
+  filtrado.value = opcoes.value
+})
 
 const pesquisa = (val, update) => {
-  if (val === "") {
+  if (val === '') {
     update(() => {
-      filtrado.value = opcoes.value;
-    });
-    return;
+      filtrado.value = opcoes.value
+    })
+    return
   }
   update(() => {
-    const pesquisa = val.toLowerCase();
+    const pesquisa = val.toLowerCase()
     filtrado.value = opcoes.value.filter(
-      (item) => item.naturezaoperacao.toLowerCase().indexOf(pesquisa) > -1
-    );
-  });
-};
+      (item) => item.naturezaoperacao.toLowerCase().indexOf(pesquisa) > -1,
+    )
+  })
+}
 </script>
 <template>
   <q-select
@@ -47,9 +45,7 @@ const pesquisa = (val, update) => {
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.naturezaoperacao }}</q-item-label>
-          <q-item-label caption v-if="scope.opt.codoperacao == 1">
-            Entradavenda
-          </q-item-label>
+          <q-item-label caption v-if="scope.opt.codoperacao == 1"> Entradavenda </q-item-label>
           <q-item-label caption v-else> Saída </q-item-label>
         </q-item-section>
       </q-item>

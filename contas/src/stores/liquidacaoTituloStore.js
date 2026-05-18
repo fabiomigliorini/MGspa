@@ -1,6 +1,6 @@
+import { formataDataIso } from '@components/formatters'
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { date } from 'quasar'
 import { api } from 'src/services/api'
 
 const defaultFilters = () => {
@@ -16,8 +16,8 @@ const defaultFilters = () => {
     estornado: '0',
     criacao_de: null,
     criacao_ate: null,
-    transacao_de: date.formatDate(de, 'YYYY-MM-DD'),
-    transacao_ate: date.formatDate(ate, 'YYYY-MM-DD'),
+    transacao_de: formataDataIso(de),
+    transacao_ate: formataDataIso(ate),
   }
 }
 
@@ -71,9 +71,7 @@ export const useLiquidacaoTituloStore = defineStore(
     }
 
     function upsertLocal(item) {
-      const idx = items.value.findIndex(
-        (i) => i.codliquidacaotitulo === item.codliquidacaotitulo,
-      )
+      const idx = items.value.findIndex((i) => i.codliquidacaotitulo === item.codliquidacaotitulo)
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
     }

@@ -1,30 +1,39 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useSelectCacheStore } from 'src/stores/selectCacheStore'
 
-defineProps({
+const props = defineProps({
   modelValue: { type: [Number, String], default: null },
+  // Se null, sem restrição. Se array, mostra só portadores cujo codfilial está na lista.
+  filiais: { type: Array, default: null },
 })
 const emit = defineEmits(['update:modelValue'])
 
 const cache = useSelectCacheStore()
 const opcoes = ref([])
 
+const itensPermitidos = computed(() => {
+  const all = cache.portador?.items || []
+  if (!props.filiais) return all
+  const set = new Set(props.filiais.map((f) => Number(f)))
+  return all.filter((v) => set.has(Number(v.codfilial)))
+})
+
 onMounted(async () => {
   await cache.loadList('portador', 'v1/select/portador', (data) =>
     Array.isArray(data) ? data : data.data || [],
   )
-  opcoes.value = cache.portador.items
+  opcoes.value = itensPermitidos.value
 })
 
 const filterFn = (val, update) => {
   update(() => {
     if (!val) {
-      opcoes.value = cache.portador.items
+      opcoes.value = itensPermitidos.value
       return
     }
     const needle = val.toLowerCase()
-    opcoes.value = cache.portador.items.filter((v) =>
+    opcoes.value = itensPermitidos.value.filter((v) =>
       (v.portador || '').toLowerCase().includes(needle),
     )
   })

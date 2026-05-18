@@ -117,9 +117,7 @@ const handleUpdate = (value) => {
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
-          <q-item-label caption class="text-grey-7">
-            Código: {{ scope.opt.value }}
-          </q-item-label>
+          <q-item-label caption class="text-grey-7"> Código: {{ scope.opt.value }} </q-item-label>
         </q-item-section>
       </q-item>
     </template>
@@ -139,9 +137,7 @@ const handleUpdate = (value) => {
 
     <template v-slot:no-option>
       <q-item>
-        <q-item-section class="text-grey">
-          Nenhuma filial encontrada
-        </q-item-section>
+        <q-item-section class="text-grey"> Nenhuma filial encontrada </q-item-section>
       </q-item>
     </template>
 

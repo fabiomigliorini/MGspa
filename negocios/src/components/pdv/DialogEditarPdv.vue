@@ -1,7 +1,7 @@
 <script setup>
-import { ref, watch } from "vue";
-import SelectFilial from "components/selects/SelectFilial.vue";
-import SelectSetor from "src/components/selects/SelectSetor.vue";
+import { ref, watch } from 'vue'
+import SelectFilial from 'components/selects/SelectFilial.vue'
+import SelectSetor from 'src/components/selects/SelectSetor.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -10,39 +10,36 @@ const props = defineProps({
     type: String,
     required: true,
   },
-});
+})
 
-const form = ref(null);
+const form = ref(null)
 
 const onSubmit = () => {
   if (form.value && form.value.validate()) {
-    salvar();
+    salvar()
   }
-};
+}
 
-const emit = defineEmits(["update:modelValue", "salvar"]);
+const emit = defineEmits(['update:modelValue', 'salvar'])
 
-const model = ref({});
+const model = ref({})
 
 watch(
   () => props.modelValue,
   (val) => {
     if (val) {
-      model.value = { ...props.pdv };
+      model.value = { ...props.pdv }
     }
-  }
-);
+  },
+)
 
 const salvar = () => {
-  emit("salvar", model.value);
-  emit("update:modelValue", false);
-};
+  emit('salvar', model.value)
+  emit('update:modelValue', false)
+}
 </script>
 <template>
-  <q-dialog
-    :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
-  >
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card style="width: 400px; max-width: 95vw">
       <q-form ref="form" @submit.prevent="onSubmit">
         <q-card-section class="text-h6">

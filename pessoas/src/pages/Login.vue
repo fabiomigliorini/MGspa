@@ -7,52 +7,46 @@
 </template>
 
 <script>
-import { defineComponent, onMounted } from "vue";
-import { guardaToken } from "stores/index";
-import { useRoute, useRouter } from "vue-router";
-import { pessoaStore } from "src/stores/pessoa";
-const auth = guardaToken();
+import { defineComponent, onMounted } from 'vue'
+import { useAuthStore } from 'stores/index'
+import { useRoute } from 'vue-router'
 
 export default defineComponent({
   setup() {
-    const route = useRoute();
-    const sPessoa = pessoaStore();
+    const route = useRoute()
+    const auth = useAuthStore()
 
     // Se existir o token redireciona o usuario para home
     const verificaauth = async () => {
-      const urlRetorno = route.query.redirect || "/";
+      const urlRetorno = route.query.redirect || '/'
 
-      let tokenCookie = document.cookie
-        .split(";")
-        .find((c) => c.trim().startsWith("access_token="));
+      let tokenCookie = document.cookie.split(';').find((c) => c.trim().startsWith('access_token='))
       if (tokenCookie) {
-        const Token = tokenCookie.split("=")[1];
+        const Token = tokenCookie.split('=')[1]
         if (Token) {
-          auth.accessToken(Token);
-          localStorage.setItem("access_token", Token);
-          window.location.replace(urlRetorno);
-          return;
+          auth.gravarToken(Token)
+          window.location.replace(urlRetorno)
+          return
         }
       }
 
-      if (localStorage.getItem("access_token")) {
-        window.location.replace(urlRetorno);
+      if (localStorage.getItem('access_token')) {
+        window.location.replace(urlRetorno)
       } else {
-        let url = encodeURIComponent(window.location.origin + urlRetorno);
-        window.location.href =
-          process.env.API_AUTH_URL + "/login?redirect_uri=" + url;
+        let url = encodeURIComponent(window.location.origin + urlRetorno)
+        window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
       }
-    };
+    }
 
     onMounted(() => {
-      verificaauth();
-    });
+      verificaauth()
+    })
 
     return {
       verificaauth,
-    };
+    }
   },
-});
+})
 </script>
 
 <style>

@@ -1,28 +1,28 @@
 export const iconeNegocio = (n) => {
   switch (n.codnegociostatus) {
     case 1:
-      return "mdi-cart-outline";
+      return 'mdi-cart-outline'
     case 3:
-      return "mdi-cart-remove";
+      return 'mdi-cart-remove'
   }
   if (n.codoperacao == 2) {
-    return "mdi-cart-arrow-up";
+    return 'mdi-cart-arrow-up'
   }
-  return "mdi-cart-arrow-down";
-};
+  return 'mdi-cart-arrow-down'
+}
 
 export const corIconeNegocio = (n) => {
   switch (n.codnegociostatus) {
     case 1:
       if (!n.sincronizado) {
-        return "accent";
+        return 'accent'
       }
-      return "secondary";
+      return 'secondary'
     case 3:
-      return "negative";
+      return 'negative'
   }
   if (n.codoperacao == 2) {
-    return "primary";
+    return 'primary'
   }
-  return "warning";
-};
+  return 'warning'
+}

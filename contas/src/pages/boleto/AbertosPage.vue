@@ -1,8 +1,7 @@
 <script setup>
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero, formataData } from '@components/formatters'
 import { useBoletoStore } from 'src/stores/boletoStore'
 import { ESTADO_COBRANCA, TIPOS_ABERTOS } from 'src/constants/tituloBoleto'
 import BoletoTabs from 'src/components/BoletoTabs.vue'
@@ -17,8 +16,6 @@ const categoriaAtual = computed(
     store.abertosResumo.find((c) => c.tipo === tipoAtual.value) ||
     TIPOS_ABERTOS.find((t) => t.tipo === tipoAtual.value) || { label: tipoAtual.value },
 )
-
-const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
 
 watch(
   () => route.query.tipo,
@@ -84,7 +81,7 @@ onMounted(async () => {
           <q-item-section>
             <div class="row items-center q-col-gutter-x-sm">
               <div class="col-12 col-sm-4 col-md-1 ellipsis">
-                {{ formatData(b.vencimento) }}
+                {{ formataData(b.vencimento) }}
               </div>
               <div
                 class="col-12 col-sm-4 col-md-1 text-right text-weight-bold ellipsis text-primary"

@@ -15,7 +15,7 @@ import { useRouter } from 'vue-router'
 export default defineComponent({
   name: 'IndexPage',
   components: {
-    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue'))
+    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
   },
 
   setup() {
@@ -24,9 +24,6 @@ export default defineComponent({
     onMounted(() => {
       router.replace('/', null)
     })
-
-
-  }
-
+  },
 })
 </script>

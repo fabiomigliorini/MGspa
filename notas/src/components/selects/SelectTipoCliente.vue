@@ -85,10 +85,7 @@ const handleUpdate = (value) => {
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section avatar>
-          <q-icon
-            name="person"
-            :color="getColor(scope.opt.value)"
-          />
+          <q-icon name="person" :color="getColor(scope.opt.value)" />
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ scope.opt.label }}</q-item-label>
@@ -114,9 +111,7 @@ const handleUpdate = (value) => {
 
     <template v-slot:no-option>
       <q-item>
-        <q-item-section class="text-grey">
-          Nenhum resultado
-        </q-item-section>
+        <q-item-section class="text-grey"> Nenhum resultado </q-item-section>
       </q-item>
     </template>
 

@@ -1,187 +1,183 @@
 <script setup>
-import { defineAsyncComponent, ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
-import { certidaoEmissorStore } from "src/stores/certidao-emissor";
+import { defineAsyncComponent, ref, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
+import { certidaoEmissorStore } from 'src/stores/certidao-emissor'
 
-const MGLayout = defineAsyncComponent(() => import("layouts/MGLayout.vue"));
+const MGLayout = defineAsyncComponent(() => import('layouts/MGLayout.vue'))
 
-const $q = useQuasar();
-const store = certidaoEmissorStore();
+const $q = useQuasar()
+const store = certidaoEmissorStore()
 
-const certidaoEmissores = ref([]);
-const loading = ref(false);
-const dialog = ref(false);
-const editando = ref(false);
-const model = ref({ certidaoemissor: "" });
+const certidaoEmissores = ref([])
+const loading = ref(false)
+const dialog = ref(false)
+const editando = ref(false)
+const model = ref({ certidaoemissor: '' })
 const filtro = ref({
   certidaoemissor: null,
   inativo: 1,
-});
+})
 
 const statusOptions = [
-  { label: "Ativos", value: 1 },
-  { label: "Inativos", value: 2 },
-  { label: "Todos", value: 9 },
-];
+  { label: 'Ativos', value: 1 },
+  { label: 'Inativos', value: 2 },
+  { label: 'Todos', value: 9 },
+]
 const pagination = ref({
   rowsPerPage: 50,
-});
+})
 
 const columns = [
   {
-    name: "codcertidaoemissor",
-    label: "Código",
-    field: "codcertidaoemissor",
-    align: "left",
+    name: 'codcertidaoemissor',
+    label: 'Código',
+    field: 'codcertidaoemissor',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "certidaoemissor",
-    label: "Descrição",
-    field: "certidaoemissor",
-    align: "left",
+    name: 'certidaoemissor',
+    label: 'Descrição',
+    field: 'certidaoemissor',
+    align: 'left',
     sortable: true,
   },
   {
-    name: "inativo",
-    label: "Status",
-    field: "inativo",
-    align: "center",
+    name: 'inativo',
+    label: 'Status',
+    field: 'inativo',
+    align: 'center',
   },
   {
-    name: "acoes",
-    label: "Ações",
-    field: "acoes",
-    align: "center",
+    name: 'acoes',
+    label: 'Ações',
+    field: 'acoes',
+    align: 'center',
   },
-];
+]
 
 const buscar = async () => {
-  loading.value = true;
-  $q.loadingBar.start();
+  loading.value = true
+  $q.loadingBar.start()
   try {
-    store.filtro = filtro.value;
-    await store.index();
-    certidaoEmissores.value = store.certidaoEmissores;
+    store.filtro = filtro.value
+    await store.index()
+    certidaoEmissores.value = store.certidaoEmissores
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao carregar certidão emissores",
-    });
+      type: 'negative',
+      message: 'Erro ao carregar certidão emissores',
+    })
   } finally {
-    loading.value = false;
-    $q.loadingBar.stop();
+    loading.value = false
+    $q.loadingBar.stop()
   }
-};
+}
 
 const abrirNovo = () => {
-  model.value = { certidaoemissor: "" };
-  editando.value = false;
-  dialog.value = true;
-};
+  model.value = { certidaoemissor: '' }
+  editando.value = false
+  dialog.value = true
+}
 
 const abrirEditar = (item) => {
-  model.value = { ...item };
-  editando.value = true;
-  dialog.value = true;
-};
+  model.value = { ...item }
+  editando.value = true
+  dialog.value = true
+}
 
 const salvar = async () => {
-  if (
-    !model.value.certidaoemissor ||
-    model.value.certidaoemissor.trim() === ""
-  ) {
+  if (!model.value.certidaoemissor || model.value.certidaoemissor.trim() === '') {
     $q.notify({
-      type: "warning",
-      message: "Informe a descrição",
-    });
-    return;
+      type: 'warning',
+      message: 'Informe a descrição',
+    })
+    return
   }
 
-  loading.value = true;
+  loading.value = true
   try {
     if (editando.value) {
-      await store.update(model.value.codcertidaoemissor, model.value);
+      await store.update(model.value.codcertidaoemissor, model.value)
       $q.notify({
-        type: "positive",
-        message: "Certidão emissor atualizada com sucesso",
-      });
+        type: 'positive',
+        message: 'Certidão emissor atualizada com sucesso',
+      })
     } else {
-      await store.store(model.value);
+      await store.store(model.value)
       $q.notify({
-        type: "positive",
-        message: "Certidão emissor criada com sucesso",
-      });
+        type: 'positive',
+        message: 'Certidão emissor criada com sucesso',
+      })
     }
-    certidaoEmissores.value = store.certidaoEmissores;
-    dialog.value = false;
+    certidaoEmissores.value = store.certidaoEmissores
+    dialog.value = false
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao salvar certidão emissor",
-    });
+      type: 'negative',
+      message: 'Erro ao salvar certidão emissor',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const toggleInativo = async (item) => {
-  loading.value = true;
+  loading.value = true
   try {
     if (item.inativo) {
-      await store.ativar(item.codcertidaoemissor);
+      await store.ativar(item.codcertidaoemissor)
       $q.notify({
-        type: "positive",
-        message: "Certidão emissor ativada com sucesso",
-      });
+        type: 'positive',
+        message: 'Certidão emissor ativada com sucesso',
+      })
     } else {
-      await store.inativar(item.codcertidaoemissor);
+      await store.inativar(item.codcertidaoemissor)
       $q.notify({
-        type: "positive",
-        message: "Certidão emissor inativada com sucesso",
-      });
+        type: 'positive',
+        message: 'Certidão emissor inativada com sucesso',
+      })
     }
-    certidaoEmissores.value = store.certidaoEmissores;
+    certidaoEmissores.value = store.certidaoEmissores
   } catch (error) {
     $q.notify({
-      type: "negative",
-      message: "Erro ao alterar status",
-    });
+      type: 'negative',
+      message: 'Erro ao alterar status',
+    })
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const excluir = (item) => {
   $q.dialog({
-    title: "Confirmar exclusão",
+    title: 'Confirmar exclusão',
     message: `Deseja realmente excluir a certidão emissor "${item.certidaoemissor}"?`,
     cancel: true,
     persistent: true,
   }).onOk(async () => {
-    loading.value = true;
+    loading.value = true
     try {
-      await store.destroy(item.codcertidaoemissor);
-      certidaoEmissores.value = store.certidaoEmissores;
+      await store.destroy(item.codcertidaoemissor)
+      certidaoEmissores.value = store.certidaoEmissores
       $q.notify({
-        type: "positive",
-        message: "Certidão emissor excluída com sucesso",
-      });
+        type: 'positive',
+        message: 'Certidão emissor excluída com sucesso',
+      })
     } catch (error) {
       $q.notify({
-        type: "negative",
-        message:
-          "Erro ao excluir certidão emissor. Verifique se não está em uso.",
-      });
+        type: 'negative',
+        message: 'Erro ao excluir certidão emissor. Verifique se não está em uso.',
+      })
     } finally {
-      loading.value = false;
+      loading.value = false
     }
-  });
-};
+  })
+}
 
 onMounted(() => {
-  buscar();
-});
+  buscar()
+})
 </script>
 
 <template>
@@ -202,11 +198,8 @@ onMounted(() => {
         >
           <template v-slot:body-cell-inativo="props">
             <q-td :props="props">
-              <q-chip
-                :color="props.row.inativo ? 'red' : 'green'"
-                text-color="white"
-              >
-                {{ props.row.inativo ? "Inativo" : "Ativo" }}
+              <q-chip :color="props.row.inativo ? 'red' : 'green'" text-color="white">
+                {{ props.row.inativo ? 'Inativo' : 'Ativo' }}
               </q-chip>
             </q-td>
           </template>
@@ -233,9 +226,7 @@ onMounted(() => {
                 color="grey-7"
                 @click="toggleInativo(props.row)"
               >
-                <q-tooltip>{{
-                  props.row.inativo ? "Ativar" : "Inativar"
-                }}</q-tooltip>
+                <q-tooltip>{{ props.row.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
               <q-btn
                 flat
@@ -263,9 +254,7 @@ onMounted(() => {
       <q-dialog v-model="dialog">
         <q-card style="min-width: 400px" class="q-pa-md">
           <q-card-section>
-            <div class="caption">
-              {{ editando ? "Editar" : "Nova" }} Certidão Emissor
-            </div>
+            <div class="caption">{{ editando ? 'Editar' : 'Nova' }} Certidão Emissor</div>
           </q-card-section>
 
           <q-card-section class="q-pt-none">
@@ -281,13 +270,7 @@ onMounted(() => {
 
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="red" v-close-popup />
-            <q-btn
-              flat
-              label="Salvar"
-              color="primary"
-              @click="salvar"
-              :loading="loading"
-            />
+            <q-btn flat label="Salvar" color="primary" @click="salvar" :loading="loading" />
           </q-card-actions>
         </q-card>
       </q-dialog>

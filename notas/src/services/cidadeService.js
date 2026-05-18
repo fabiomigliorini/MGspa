@@ -52,7 +52,10 @@ export default {
   },
 
   async updateCidade(codpais, codestado, codcidade, data) {
-    const response = await api.put(`/v1/pais/${codpais}/estado/${codestado}/cidade/${codcidade}`, data)
+    const response = await api.put(
+      `/v1/pais/${codpais}/estado/${codestado}/cidade/${codcidade}`,
+      data,
+    )
     return response.data
   },
 

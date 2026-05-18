@@ -2,12 +2,8 @@
   <MGLayout drawer>
     <template #tituloPagina>Grupo Usuários</template>
 
-    <template #content v-if="user.verificaPermissaoUsuario('Administrador')">
-      <q-infinite-scroll
-        @load="scrollGrupoUsuario"
-        :disable="loading"
-        style="min-height: 100vh"
-      >
+    <template #content v-if="user.temPermissao('Administrador')">
+      <q-infinite-scroll @load="scrollGrupoUsuario" :disable="loading" style="min-height: 100vh">
         <div class="row q-pa-md q-col-gutter-md">
           <div
             class="col-xs-12 col-sm-6 col-md-4 col-lg-3"
@@ -24,19 +20,13 @@
       <nao-autorizado />
     </template>
 
-    <template #drawer v-if="user.verificaPermissaoUsuario('Administrador')">
+    <template #drawer v-if="user.temPermissao('Administrador')">
       <div class="q-pa-none q-pt-sm">
         <q-card flat>
           <q-list>
             <q-item-label header>
               Filtro Grupo Usuário
-              <q-btn
-                icon="replay"
-                @click="buscarGruposUsuarios()"
-                flat
-                round
-                no-caps
-              />
+              <q-btn icon="replay" @click="buscarGruposUsuarios()" flat round no-caps />
             </q-item-label>
           </q-list>
         </q-card>
@@ -69,70 +59,70 @@
 
 <script setup>
 // 1. Imports do Vue
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted, watch } from 'vue'
 
 // 2. Imports de stores
-import { grupoUsuarioStore } from "src/stores/grupo-usuario";
-import { guardaToken } from "src/stores";
+import { grupoUsuarioStore } from 'src/stores/grupo-usuario'
+import { useAuthStore } from 'src/stores'
 
 // 3. Imports de utilitários
-import { useQuasar, debounce } from "quasar";
+import { useQuasar, debounce } from 'quasar'
 
 // 4. Imports de componentes
-import MGLayout from "layouts/MGLayout.vue";
-import NaoAutorizado from "components/NaoAutorizado.vue";
-import CardGrupoUsuario from "components/usuario/CardGrupoUsuario.vue";
+import MGLayout from 'layouts/MGLayout.vue'
+import NaoAutorizado from 'components/NaoAutorizado.vue'
+import CardGrupoUsuario from 'components/usuario/CardGrupoUsuario.vue'
 
 // 5. Instâncias
-const sGrupoUsuario = grupoUsuarioStore();
-const user = guardaToken();
-const $q = useQuasar();
+const sGrupoUsuario = grupoUsuarioStore()
+const user = useAuthStore()
+const $q = useQuasar()
 
 // 6. Refs
-const loading = ref(true);
+const loading = ref(true)
 
 // 7. Funções
 const buscarGruposUsuarios = debounce(async () => {
-  $q.loadingBar.start();
-  sGrupoUsuario.filtroGrupoUsuarioPesquisa.page = 1;
+  $q.loadingBar.start()
+  sGrupoUsuario.filtroGrupoUsuarioPesquisa.page = 1
   try {
-    const ret = await sGrupoUsuario.todosGruposUsuarios();
-    loading.value = false;
-    $q.loadingBar.stop();
+    const ret = await sGrupoUsuario.todosGruposUsuarios()
+    loading.value = false
+    $q.loadingBar.stop()
     if (ret.data.data.length === 0) {
       $q.notify({
-        color: "red-5",
-        textColor: "white",
-        icon: "warning",
-        message: "Nenhum Registro encontrado",
-      });
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'warning',
+        message: 'Nenhum Registro encontrado',
+      })
     }
   } catch (error) {
-    $q.loadingBar.stop();
+    $q.loadingBar.stop()
   }
-}, 500);
+}, 500)
 
 const scrollGrupoUsuario = async (_index, done) => {
-  loading.value = true;
-  sGrupoUsuario.filtroGrupoUsuarioPesquisa.page++;
-  const ret = await sGrupoUsuario.todosGruposUsuarios();
-  loading.value = false;
+  loading.value = true
+  sGrupoUsuario.filtroGrupoUsuarioPesquisa.page++
+  const ret = await sGrupoUsuario.todosGruposUsuarios()
+  loading.value = false
   if (ret.data.data.length === 0) {
-    loading.value = true;
+    loading.value = true
   }
-  await done();
-};
+  await done()
+}
 
 // 8. Watchers
 watch(
   () => sGrupoUsuario.filtroGrupoUsuarioPesquisa.inativo,
-  () => buscarGruposUsuarios()
-);
+  () => buscarGruposUsuarios(),
+)
 
 // 9. Lifecycle
 onMounted(() => {
   if (sGrupoUsuario.grupoUsuarios.length === 0) {
-    buscarGruposUsuarios();
+    buscarGruposUsuarios()
   }
-});
+})
 </script>

@@ -1,14 +1,10 @@
 <script setup>
 import { onMounted } from 'vue'
-import { date } from 'quasar'
-import { formataNumero } from 'src/utils/formatters.js'
+import { formataNumero, formataData, formataCodigo } from '@components/formatters'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
 const store = useLiquidacaoTituloStore()
-
-const formatData = (v) => (v ? date.formatDate(v, 'DD/MM/YYYY') : '')
-const formatCodigo = (v) => '#' + String(v).padStart(8, '0')
 
 function abrirRelatorio() {
   const params = {}
@@ -54,11 +50,11 @@ onMounted(() => {
                 {{ l.fantasia }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formatCodigo(l.codliquidacaotitulo) }}
+                {{ formataCodigo(l.codliquidacaotitulo) }}
                 · {{ l.usuariocriacao || '' }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formatData(l.criacao) }}
+                {{ formataData(l.criacao) }}
               </q-item-label>
             </q-item-section>
 
@@ -67,7 +63,7 @@ onMounted(() => {
                 {{ l.portador }}
               </q-item-label>
               <q-item-label caption>
-                {{ formatData(l.transacao) }}
+                {{ formataData(l.transacao) }}
               </q-item-label>
             </q-item-section>
 
