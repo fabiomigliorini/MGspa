@@ -35,7 +35,7 @@ const buscarPeloCod = async () => {
   opcoes.value = ret.data
 }
 
-const buscar = async (val, update, abort) => {
+const buscar = async (val, update) => {
   // if (val.length < 1) {
   //   abort();
   //   return;

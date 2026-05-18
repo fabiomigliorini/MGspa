@@ -22,8 +22,6 @@ const opcoesPos = ref([
   { name: 'POS Safrapay/Saurus', value: 'saurus' },
 ])
 
-const opcaoPosSelecionado = ref('')
-
 onMounted(() => {
   inicializaModel()
 })

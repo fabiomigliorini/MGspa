@@ -1,8 +1,8 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted } from 'vue'
 import { wooStore } from 'src/stores/woo'
 import { formataNumero } from '@components/formatters'
-import { Notify, debounce } from 'quasar'
+import { Notify } from 'quasar'
 import moment from 'moment/min/moment-with-locales'
 import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
 moment.locale('pt-br')

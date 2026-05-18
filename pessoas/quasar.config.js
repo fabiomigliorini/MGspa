@@ -62,6 +62,7 @@ module.exports = configure(function (ctx) {
       vueRouterMode: "history", // available values: 'hash', 'history'
       env: {
         ...(require("dotenv").config().parsed || {}),
+        APP_NAME: pkg.name.toLowerCase(),
         APP_VERSION: pkg.version,
         BUILD_DATE: new Date().toISOString(),
         COMMIT_NUMBER: gitCommitNumber(),

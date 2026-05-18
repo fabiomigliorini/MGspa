@@ -4,7 +4,6 @@ import { toRaw } from 'vue'
 import { db } from 'boot/db'
 import { Notify, uid } from 'quasar'
 import { sincronizacaoStore } from 'stores/sincronizacao'
-import moment from 'moment'
 import tiposPagamento from '../data/tipos-pagamento.json'
 import bandeirasCartao from '../data/bandeiras-cartao.json'
 import { falar } from '../utils/falar.js'
@@ -72,7 +71,7 @@ function descontosIguais(a, b) {
 
 export const negocioStore = defineStore('negocio', {
   persist: {
-    paths: ['padrao', 'paginaAtual', 'ultimos'],
+    pick: ['padrao', 'paginaAtual', 'ultimos'],
   },
 
   state: () => ({
@@ -256,7 +255,7 @@ export const negocioStore = defineStore('negocio', {
           const ret = await sSinc.getNegocio(neg.uuid)
 
           // salva no banco local
-          let retDb = await db.negocio.put(ret)
+          await db.negocio.put(ret)
 
           // se for o negocio aberto, atualiza o objeto da tela
           if (this.negocio.uuid == ret.uuid) {
@@ -371,7 +370,7 @@ export const negocioStore = defineStore('negocio', {
         venda: this.padrao.venda,
         naturezaoperacao: null,
         financeiro: false,
-        codnegociostatus: 1,
+        codnegociostatus: 1, //aberto
         codpessoa: this.padrao.codpessoa,
         pessoa: null,
         codpessoatransportador: null,
@@ -397,7 +396,6 @@ export const negocioStore = defineStore('negocio', {
         codusuarioalteracao: null,
         codusuariocriacao: null,
         sincronizado: false,
-        codnegociostatus: 1, //aberto
         itens: [],
         pagamentos: [],
         titulos: [],
@@ -593,6 +591,7 @@ export const negocioStore = defineStore('negocio', {
         }
         return true
       } catch (error) {
+        console.log(error)
         return false
       }
     },
@@ -763,14 +762,14 @@ export const negocioStore = defineStore('negocio', {
         })
 
         // se ja existe adiciona a quantiade, se nao cria um novo item
+        let item
         if (index >= 0) {
-          var item = this.negocio.itens.splice(index, 1)
-          item = item[0]
+          item = this.negocio.itens.splice(index, 1)[0]
           item.quantidade = parseFloat(item.quantidade) + parseFloat(quantidade)
           item.alteracao = formataTimestampIso(new Date())
           item.ordenacao = item.alteracao
         } else {
-          var item = {
+          item = {
             uuid: uid(),
             codprodutobarra,
             barras,
@@ -796,6 +795,7 @@ export const negocioStore = defineStore('negocio', {
               item.percentualdesconto = this.negocio.Pessoa.desconto
             }
           } catch (error) {
+            console.log(error)
             item.percentualdesconto = null
           }
         }

@@ -15,7 +15,7 @@ const sProduto = produtoStore()
 const loc = ref(null)
 
 onMounted(async () => {
-  const ret = await sNegocio.carregarPeloUuid(route.params.uuid)
+  await sNegocio.carregarPeloUuid(route.params.uuid)
   loc.value = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
 })
 </script>

@@ -38,7 +38,7 @@ const buscarOpcoes = async () => {
 
 watch(
   () => props.codestoquelocal,
-  (newValue, oldValue) => {
+  () => {
     buscarOpcoes()
   },
 )

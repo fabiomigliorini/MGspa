@@ -24,7 +24,9 @@ const inicializa = debounce(async () => {
   try {
     scrollRef.value.reset()
     scrollRef.value.resume()
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 watch(

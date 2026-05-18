@@ -1,6 +1,6 @@
 <script setup>
 import { formataNumero, formataCodigo } from '@components/formatters'
-import { ref, watch } from 'vue'
+import { watch } from 'vue'
 import { debounce } from 'quasar'
 
 import { conferenciaStore } from 'src/stores/conferencia'

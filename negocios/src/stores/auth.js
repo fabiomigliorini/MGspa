@@ -5,7 +5,7 @@ import axios from 'axios'
 
 export const useAuthStore = defineStore('auth', {
   persist: {
-    paths: ['usuario', 'token'],
+    pick: ['usuario', 'token'],
   },
 
   state: () => ({

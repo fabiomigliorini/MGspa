@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from 'vue'
-import { db } from 'boot/db'
 import { pdvStore } from 'src/stores/pdv'
 
 const sPdv = pdvStore()

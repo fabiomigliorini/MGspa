@@ -144,7 +144,6 @@ const isBoleto = computed({
 const calcularParcelas = async () => {
   const taxa = 1.5
   const valor = pagamento.value.valor
-  const codformapagamento = pagamento.value.codformapagamento
 
   const valorMinimoParcela = forma.value.valorMinimoParcela
   const valorMinimo = forma.value.valorMinimo
@@ -171,7 +170,6 @@ const calcularParcelas = async () => {
     return
   }
 
-  let i = 0
   for (let i of forma.value.diasAvulsos) {
     parcelamentoDisponivel.value.push({
       parcelas: 1,

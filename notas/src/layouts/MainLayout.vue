@@ -1,18 +1,38 @@
 <script setup>
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
-import AppLauncher from 'src/components/AppLauncher.vue'
+import { ref } from 'vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
+import MgAppsMenu from '@components/MgAppsMenu.vue'
+import MgScreensMenu from '@components/MgScreensMenu.vue'
+import MgPageTitle from '@components/MgPageTitle.vue'
 import { useAuth } from 'src/composables/useAuth'
 
-const route = useRoute()
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
-const pageTitle = computed(() => route.meta?.title || 'Notas & Documentos Fiscais')
-
 const auth = useAuth()
+
+const menuGroups = [
+  {
+    label: 'Emissões',
+    items: [
+      { label: 'Início', icon: 'home', color: 'brown', to: '/' },
+      { label: 'Notas', icon: 'description', color: 'blue', to: '/nota' },
+      { label: 'NFe Terceiro', icon: 'move_to_inbox', color: 'orange', to: '/nfe-terceiro' },
+    ],
+  },
+  {
+    label: 'Parametrização',
+    items: [
+      { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
+      { label: 'Naturezas', icon: 'percent', color: 'green', to: '/natureza-operacao' },
+      { label: 'Tributações', icon: 'receipt_long', color: 'teal', to: '/tributacao-cadastro' },
+      { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
+      { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
+      { label: 'Distribuição DFe', icon: 'sync', color: 'blue', to: '/dfe' },
+    ],
+  },
+]
 </script>
 
 <template>
@@ -30,21 +50,14 @@ const auth = useAuth()
           :disable="!$route.meta.leftDrawer"
         />
 
-        <q-toolbar-title class="q-ml-sm">
-          <router-link :to="{ name: 'home' }" class="text-white" style="text-decoration: none">
-            <q-avatar size="36px" class="q-mr-sm cursor-pointer">
-              <img src="/MGPapelariaQuadrado.svg" alt="MG Papelaria" />
-              <q-tooltip>Inicio</q-tooltip>
-            </q-avatar>
-          </router-link>
-          {{ pageTitle }}
-        </q-toolbar-title>
+        <MgPageTitle app-name="Notas & Documentos Fiscais" :home-route="{ name: 'home' }" />
 
         <!-- Menu do Usuário -->
         <MgUserMenu :auth="auth" />
 
-        <!-- App Launcher -->
-        <app-launcher />
+        <!-- Apps + Screens -->
+        <MgAppsMenu />
+        <MgScreensMenu :groups="menuGroups" />
 
         <!-- Hamburger DIREITO -->
         <q-btn
@@ -71,22 +84,6 @@ const auth = useAuth()
         <component :is="$route.meta.leftDrawer" />
       </q-scroll-area>
     </q-drawer>
-
-    <!-- Drawer DIREITA -->
-    <!-- <q-drawer
-      v-if="$route.meta.rightDrawer"
-      v-model="rightDrawerOpen"
-      side="right"
-      bordered
-      overlay
-      behavior="mobile"
-      class="bg-grey-2"
-      :width="350"
-    > -->
-    <!-- <q-scroll-area class="fit">
-        <component :is="$route.meta.rightDrawer" />
-      </q-scroll-area>
-    </q-drawer> -->
 
     <!-- Conteúdo -->
     <q-page-container>

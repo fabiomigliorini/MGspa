@@ -3,8 +3,12 @@ import { api } from 'src/boot/axios'
 import { Notify } from 'quasar'
 import { unionBy, orderBy } from 'lodash'
 import { negocioStore } from './negocio'
+import { pdvStore } from './pdv'
+import { sincronizacaoStore } from './sincronizacao'
 import moment from 'moment'
 const sNegocio = negocioStore()
+const sPdv = pdvStore()
+const sSinc = sincronizacaoStore()
 
 export const wooStore = defineStore('woo', {
   persist: false,

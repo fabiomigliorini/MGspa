@@ -1,5 +1,6 @@
 import { formataTimestampIso } from '@components/formatters'
 import { defineStore } from 'pinia'
+import { Notify } from 'quasar'
 import { api } from 'src/boot/axios'
 import { pdvStore } from './pdv'
 import { sincronizacaoStore } from './sincronizacao'
@@ -10,7 +11,7 @@ const sSinc = sincronizacaoStore()
 
 export const liquidacaoStore = defineStore('liquidacao', {
   persist: {
-    paths: ['filtroListagem', 'listagem'],
+    pick: ['filtroListagem', 'listagem'],
   },
   state: () => ({
     opcoes: {

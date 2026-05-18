@@ -1,6 +1,8 @@
 services:
   negocios:
     build: ./
+    container_name: negocios
+    restart: unless-stopped
     tty: true
     volumes:
       - /opt/www:/opt/www
@@ -10,6 +12,6 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /usr/share/zoneinfo:/usr/share/zoneinfo
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - 'host.docker.internal:host-gateway'
     ports:
-      - "9900:9900"
+      - '9900:9900'

@@ -2,7 +2,6 @@
 import { formataNumero, formataCodigo, formataData } from '@components/formatters'
 import { ref, watch } from 'vue'
 import { debounce } from 'quasar'
-import { iconeNegocio, corIconeNegocio } from '../utils/iconeNegocio.js'
 import { liquidacaoStore } from 'src/stores/liquidacao'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
@@ -24,7 +23,9 @@ const inicializa = debounce(async () => {
   try {
     scrollRef.value.reset()
     scrollRef.value.resume()
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+  }
 })
 
 watch(

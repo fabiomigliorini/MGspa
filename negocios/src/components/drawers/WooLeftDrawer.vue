@@ -13,7 +13,7 @@ const statusOptions = ref([...sWoo.opcoes.status])
 // Função de filtro para o QSelect
 // - quando o valor estiver vazio, restaura lista completa
 // - usa includes() para legibilidade
-const filterFn = (val, update, abort) => {
+const filterFn = (val, update) => {
   // se input estiver vazio, restaura opções completas
   if (!val) {
     update(() => {

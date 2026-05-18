@@ -62,7 +62,7 @@ const salvar = async () => {
         prancheta: JSON.parse(JSON.stringify(prancheta.value)),
         pdv: sSinc.pdv.uuid,
       }
-      const ret = await api.put('/api/v1/pdv/prancheta/', data)
+      await api.put('/api/v1/pdv/prancheta/', data)
       await sSinc.sincronizarPrancheta(true)
       prancheta.value = await db.prancheta.orderBy('ordem').toArray()
       Notify.create({

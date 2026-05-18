@@ -129,9 +129,11 @@ const vazioOuCriar = async () => {
     return false
   }
   try {
-    var audio = new Audio('novo.mp3')
+    let audio = new Audio('/novo.mp3')
     audio.play()
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+  }
   router.push('/offline/' + neg.uuid)
 }
 
@@ -144,11 +146,13 @@ const duplicar = async () => {
     persistent: true,
   }).onOk(async () => {
     try {
-      const neg = await sNegocio.duplicar()
+      await sNegocio.duplicar()
       router.push('/offline/' + sNegocio.negocio.uuid)
-      var audio = new Audio('novo.mp3')
+      let audio = new Audio('/novo.mp3')
       audio.play()
-    } catch (error) {}
+    } catch (error) {
+      console.log(error)
+    }
   })
 }
 
@@ -189,7 +193,7 @@ const fecharDialogs = async () => {
 
 const abrirDocumentoSeFechado = async () => {
   if (sNegocio.negocio.codnegociostatus == 2) {
-    var audio = new Audio('registradora.mp3')
+    let audio = new Audio('/registradora.mp3')
     audio.play()
     romaneioOuNota()
   }
@@ -429,10 +433,6 @@ const imprimirAbrirRomaneio = async () => {
   await imprimirRomaneio()
   await romaneio()
 }
-const imprimirAbrirVale = async () => {
-  await imprimirVale()
-  await vale()
-}
 
 const imprimirOrcamento = () => {
   iFrameOrcamentoRef.value.contentWindow.print()
@@ -490,7 +490,7 @@ const romaneioOuNotaVenda = async () => {
 
     // age de acordo com o cadastro
     switch (p.notafiscal) {
-      case 0: // 1 - Sempre
+      case 1: // 1 - Sempre
         novaNota(55)
         return
 

@@ -10,7 +10,7 @@ const sAuth = useAuthStore()
 
 export const sincronizacaoStore = defineStore('sincronizacao', {
   persist: {
-    paths: ['ultimaSincronizacao', 'pdv'],
+    pick: ['ultimaSincronizacao', 'pdv'],
   },
 
   state: () => ({
@@ -84,7 +84,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           timeout: 3000, // 3 segundos
           actions: [{ icon: 'close', color: 'white' }],
         })
-        var audio = new Audio('erro.mp3')
+        let audio = new Audio('/erro.mp3')
         audio.play()
       }
 
@@ -128,7 +128,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
-        var audio = new Audio('erro.mp3')
+        let audio = new Audio('/erro.mp3')
         audio.play()
         return
       }
@@ -142,7 +142,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           timeout: 3000, // 3 segundos
           actions: [{ icon: 'close', color: 'white' }],
         })
-        var audio = new Audio('erro.mp3')
+        let audio = new Audio('/erro.mp3')
         audio.play()
         return
       }
@@ -928,14 +928,18 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         let message = 'Falha ao salvar a pessoa!'
         try {
           message = error.response.data.message
-        } catch (error) {}
+        } catch (e) {
+          console.log(e)
+        }
         try {
           Object.values(error.response.data.errors).forEach((e) => {
             e.forEach((m) => {
               message = m
             })
           })
-        } catch (error) {}
+        } catch (e) {
+          console.log(e)
+        }
         Notify.create({
           type: 'negative',
           message: message,
@@ -957,7 +961,9 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         let message = 'Falha ao pesquisar CNPJ/CPF no servidor! Operando Offline!'
         try {
           message = error.response.data.message
-        } catch (error) {}
+        } catch (e) {
+          console.log(e)
+        }
         Notify.create({
           type: 'negative',
           message: message,

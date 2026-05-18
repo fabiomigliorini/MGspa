@@ -164,7 +164,9 @@ const pesquisa = debounce(async () => {
     for (let i = 1; i < palavras.length; i++) {
       try {
         regexes.push(new RegExp('.*' + palavras[i] + '.*', 'i'))
-      } catch (error) {}
+      } catch (error) {
+        console.log(error)
+      }
     }
 
     // percorre todos registros filtrando pelas expressoes regulares
