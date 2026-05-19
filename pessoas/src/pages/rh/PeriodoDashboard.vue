@@ -93,27 +93,6 @@ const feriadosDoPeriodo = computed(() => {
   })
 })
 
-const nomeMes = computed(() => {
-  if (!periodo.value.periodoinicial) return ''
-  const partes = periodo.value.periodoinicial.match(/^(\d{4})-(\d{2})/)
-  if (!partes) return ''
-  const meses = [
-    'Janeiro',
-    'Fevereiro',
-    'Março',
-    'Abril',
-    'Maio',
-    'Junho',
-    'Julho',
-    'Agosto',
-    'Setembro',
-    'Outubro',
-    'Novembro',
-    'Dezembro',
-  ]
-  return meses[parseInt(partes[2]) - 1] + ' ' + partes[1]
-})
-
 // --- DIALOG EDITAR PERÍODO ---
 
 const dialogPeriodo = ref(false)

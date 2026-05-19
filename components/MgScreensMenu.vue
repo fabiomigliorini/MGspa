@@ -21,35 +21,29 @@ const visibleGroups = computed(() =>
 
 <template>
   <q-btn flat round icon="apps" aria-label="Telas">
-    <q-menu anchor="bottom left" self="top left" :offset="[0, 8]">
-      <q-card flat style="min-width: 360px">
+    <q-menu anchor="bottom left" self="top left" :offset="[0, 4]" class="bg-grey-4">
+      <q-list dense style="width: 200px">
         <template v-for="(group, gi) in visibleGroups" :key="gi">
-          <q-separator v-if="gi > 0" />
-          <q-card-section class="q-pa-md">
-            <div v-if="group.label" class="text-subtitle2 text-grey-7 q-mb-md">
-              {{ group.label }}
-            </div>
-            <div class="row q-col-gutter-sm">
-              <div class="col-3" v-for="item in group.items" :key="item.label">
-                <q-btn
-                  flat
-                  no-caps
-                  class="full-width mg-screens-menu-item"
-                  :to="item.to"
-                  :href="item.href"
-                  :target="item.target"
-                  v-close-popup
-                >
-                  <div class="column items-center">
-                    <q-icon :name="item.icon" size="32px" :color="item.color || 'grey-8'" />
-                    <div class="text-caption text-center q-mt-xs">{{ item.label }}</div>
-                  </div>
-                </q-btn>
-              </div>
-            </div>
-          </q-card-section>
+          <!-- <q-separator v-if="gi > 0" /> -->
+          <q-item-label header class="text-weight-bold">
+            {{ group.label }}
+          </q-item-label>
+          <template v-for="item in group.items" :key="item.label">
+            <q-item class="q-mb-sm" clickable v-ripple :to="item.to">
+              <q-item-section side>
+                <q-icon :name="item.icon" size="24px" :color="item.color" />
+                <!-- <q-avatar rounded :icon="item.icon" size="36px" :text-color="item.color" /> -->
+              </q-item-section>
+
+              <q-item-section>
+                <q-item-label class="text-weight-bold ellipsis text-grey-8">
+                  {{ item.label }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </template>
         </template>
-      </q-card>
+      </q-list>
     </q-menu>
   </q-btn>
 </template>

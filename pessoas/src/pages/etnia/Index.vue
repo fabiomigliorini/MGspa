@@ -64,6 +64,7 @@ const buscar = async () => {
     await store.index()
     etnias.value = store.etnias
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao carregar etnias',
@@ -113,6 +114,7 @@ const salvar = async () => {
     etnias.value = store.etnias
     dialog.value = false
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao salvar etnia',
@@ -140,6 +142,7 @@ const toggleInativo = async (item) => {
     }
     etnias.value = store.etnias
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao alterar status',
@@ -165,6 +168,7 @@ const excluir = (item) => {
         message: 'Etnia excluída com sucesso',
       })
     } catch (error) {
+      console.log(error)
       $q.notify({
         type: 'negative',
         message: 'Erro ao excluir etnia. Verifique se não está em uso.',

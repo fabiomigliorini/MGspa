@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
 import { useRoute } from 'vue-router'
 

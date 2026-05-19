@@ -65,6 +65,7 @@ const buscar = async () => {
     await store.index()
     grupos.value = store.grupos
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao carregar grupos de cliente',
@@ -114,6 +115,7 @@ const salvar = async () => {
     grupos.value = store.grupos
     dialog.value = false
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao salvar grupo de cliente',
@@ -141,6 +143,7 @@ const toggleInativo = async (item) => {
     }
     grupos.value = store.grupos
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao alterar status',
@@ -166,6 +169,7 @@ const excluir = (item) => {
         message: 'Grupo de cliente excluído com sucesso',
       })
     } catch (error) {
+      console.log(error)
       $q.notify({
         type: 'negative',
         message: 'Erro ao excluir grupo de cliente. Verifique se não está em uso.',

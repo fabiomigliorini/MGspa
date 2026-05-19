@@ -1,12 +1,7 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useQuasar, debounce } from 'quasar'
-import { useRoute } from 'vue-router'
-import moment from 'moment'
+import { ref, onMounted } from 'vue'
 import { usuarioStore } from 'src/stores/usuario'
 
-const $q = useQuasar()
-const route = useRoute()
 const grupoUsuarios = ref([])
 const filial = ref([])
 

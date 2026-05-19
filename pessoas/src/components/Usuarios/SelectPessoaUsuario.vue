@@ -1,10 +1,8 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { pessoaStore } from 'src/stores/pessoa'
-import { useRoute } from 'vue-router'
 
 const sPessoa = pessoaStore()
-const route = useRoute()
 
 onMounted(async () => {
   // pessoas()

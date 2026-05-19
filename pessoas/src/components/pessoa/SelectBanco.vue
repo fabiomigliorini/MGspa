@@ -1,9 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { pessoaStore } from 'stores/pessoa'
-import { useQuasar } from 'quasar'
 
-const $q = useQuasar()
 const sPessoa = pessoaStore()
 
 const props = defineProps({

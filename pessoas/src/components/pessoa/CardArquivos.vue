@@ -93,6 +93,7 @@ const uploadFile = async (index) => {
       progress.error = false
     }, 1000)
   } catch (error) {
+    console.log(error)
     $q.notify({
       color: 'red-5',
       textColor: 'white',
@@ -169,6 +170,7 @@ const salvar = async (evt) => {
       arquivos.value = ret.data.data
       dialogEditar.value = false
     } catch (error) {
+      console.log(error)
       $q.notify({
         color: 'red-5',
         textColor: 'white',
@@ -190,6 +192,7 @@ const inativar = (arquivo) => {
       const ret = await api.delete(url)
       arquivos.value = ret.data.data
     } catch (error) {
+      console.log(error)
       $q.notify({
         color: 'red-5',
         textColor: 'white',
@@ -211,6 +214,7 @@ const restaurar = (arquivo) => {
       const ret = await api.patch(url)
       arquivos.value = ret.data.data
     } catch (error) {
+      console.log(error)
       $q.notify({
         color: 'red-5',
         textColor: 'white',
@@ -233,6 +237,7 @@ const excluir = (arquivo) => {
       const ret = await api.delete(url)
       arquivos.value = ret.data.data
     } catch (error) {
+      console.log(error)
       $q.notify({
         color: 'red-5',
         textColor: 'white',
@@ -275,6 +280,7 @@ const buscarListagem = async () => {
     const ret = await api.get(url)
     arquivos.value = ret.data.data
   } catch (error) {
+    console.log(error)
     $q.notify({
       color: 'red-5',
       textColor: 'white',

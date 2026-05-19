@@ -1,10 +1,9 @@
 <script>
-import { formataData, formataCodigo, formataTimestamp } from '@components/formatters'
+import { formataCodigo, formataTimestamp } from '@components/formatters'
 import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
-import moment from 'moment'
 
 export default {
   components: {
@@ -56,6 +55,7 @@ export default {
       try {
         await sEmpresa.get(route.params.codempresa)
       } catch (error) {
+        console.log(error)
         $q.notify({
           color: 'red-5',
           textColor: 'white',

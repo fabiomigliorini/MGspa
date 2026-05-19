@@ -105,11 +105,9 @@
 </template>
 
 <script>
-import { formataDataAbreviada, formataDiaSemana } from '@components/formatters'
 import { ref, defineAsyncComponent } from 'vue'
 import moment from 'moment'
 import { pessoaStore } from 'src/stores/pessoa'
-import { useQuasar } from 'quasar'
 import { useAuthStore } from 'src/stores'
 import { useRoute, useRouter } from 'vue-router'
 import { colaboradorStore } from 'src/stores/colaborador'
@@ -136,8 +134,6 @@ export default {
     },
 
     async filtroAno(anoFiltro) {
-      var anoAtual = moment().year()
-
       if (anoFiltro == -1) {
         this.ano = this.ano - 1
       }
@@ -240,7 +236,7 @@ export default {
     },
   },
 
-  setup(props, ctx) {
+  setup() {
     const modelRange = ref({
       min: 0,
       max: 0,
@@ -249,7 +245,6 @@ export default {
     const sPessoa = pessoaStore()
     const sColaborador = colaboradorStore()
     const ferias = ref([])
-    const $q = useQuasar()
     const max = ref([])
     const ano = ref([])
     const user = useAuthStore()

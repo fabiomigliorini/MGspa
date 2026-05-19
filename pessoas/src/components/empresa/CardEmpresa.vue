@@ -1,7 +1,6 @@
 <script setup>
-import { formataData, formataTimestamp } from '@components/formatters'
+import { formataTimestamp } from '@components/formatters'
 import { computed } from 'vue'
-import moment from 'moment'
 
 const props = defineProps({
   empresa: {

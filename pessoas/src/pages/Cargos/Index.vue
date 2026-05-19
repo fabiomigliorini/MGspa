@@ -2,14 +2,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { cargoStore } from 'src/stores/cargo'
-import { useAuthStore } from 'src/stores'
-import { formataNumero, formataData, formataTimestamp } from '@components/formatters'
+import { formataNumero, formataTimestamp } from '@components/formatters'
 import MGLayout from 'layouts/MGLayout.vue'
 import DialogCargo from 'components/cargo/DialogCargo.vue'
 
 const $q = useQuasar()
 const sCargo = cargoStore()
-const user = useAuthStore()
 
 // --- FILTROS ---
 

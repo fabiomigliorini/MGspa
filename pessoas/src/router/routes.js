@@ -1,5 +1,3 @@
-import router from '.'
-
 const routes = [
   // ROTAS LIVRES
   {
@@ -21,17 +19,17 @@ const routes = [
       {
         path: '/pessoa',
         name: 'pessoa',
-        component: () => import('pages/pessoa/Index'),
+        component: () => import('pages/pessoa/Index.vue'),
       },
       {
         path: '/pessoa/nova',
         name: 'pessoanova',
-        component: () => import('pages/pessoa/NovaPessoa'),
+        component: () => import('pages/pessoa/NovaPessoa.vue'),
       },
       {
         path: '/pessoa/:id',
         name: 'pessoaView',
-        component: () => import('pages/pessoa/PessoaView'),
+        component: () => import('pages/pessoa/PessoaView.vue'),
       },
 
       {
@@ -42,7 +40,7 @@ const routes = [
       {
         path: '/grupoeconomico/:id',
         name: 'grupoeconomico',
-        component: () => import('pages/GrupoEconomico/GrupoEconomicoView'),
+        component: () => import('pages/GrupoEconomico/GrupoEconomicoView.vue'),
       },
 
       {
@@ -53,22 +51,22 @@ const routes = [
       {
         path: '/usuarios/:codusuario',
         name: 'usuariosview',
-        component: () => import('pages/usuarios/usuariosview'),
+        component: () => import('pages/usuarios/usuariosview.vue'),
       },
       {
         path: '/usuarios/:codusuario/editar',
         name: 'usuariosedit',
-        component: () => import('pages/usuarios/usuarioseditar'),
+        component: () => import('pages/usuarios/usuarioseditar.vue'),
       },
       {
         path: '/perfil',
         name: 'perfil',
-        component: () => import('pages/usuarios/perfil'),
+        component: () => import('pages/usuarios/perfil.vue'),
       },
       {
         path: '/usuarios/novo',
         name: 'usuarionovo',
-        component: () => import('pages/usuarios/novo'),
+        component: () => import('pages/usuarios/novo.vue'),
       },
 
       {
@@ -79,7 +77,7 @@ const routes = [
       {
         path: '/grupo-usuarios/:codgrupousuario',
         name: 'grupousuarioview',
-        component: () => import('pages/grupo-usuario/grupoUsuarioView'),
+        component: () => import('pages/grupo-usuario/grupoUsuarioView.vue'),
       },
 
       {

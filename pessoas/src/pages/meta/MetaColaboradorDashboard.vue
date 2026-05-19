@@ -3,15 +3,13 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { metaStore } from 'src/stores/meta'
-import { useAuthStore } from 'src/stores'
 import MGLayout from 'layouts/MGLayout.vue'
-import { formataNumero, formataCodigo, formataData, formataTimestamp } from '@components/formatters'
+import { formataNumero, formataCodigo, formataTimestamp } from '@components/formatters'
 import { getTipo } from 'src/config/bonificacaoTipos'
 
 const $q = useQuasar()
 const route = useRoute()
 const sMeta = metaStore()
-const user = useAuthStore()
 
 const loading = ref(false)
 const eventos = ref([])

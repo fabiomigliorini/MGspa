@@ -64,6 +64,7 @@ const buscar = async () => {
     await store.index()
     estadosCivis.value = store.estadosCivis
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao carregar estados civis',
@@ -113,6 +114,7 @@ const salvar = async () => {
     estadosCivis.value = store.estadosCivis
     dialog.value = false
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao salvar estado civil',
@@ -140,6 +142,7 @@ const toggleInativo = async (item) => {
     }
     estadosCivis.value = store.estadosCivis
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao alterar status',
@@ -165,6 +168,7 @@ const excluir = (item) => {
         message: 'Estado civil excluído com sucesso',
       })
     } catch (error) {
+      console.log(error)
       $q.notify({
         type: 'negative',
         message: 'Erro ao excluir estado civil. Verifique se não está em uso.',

@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 import { api } from 'boot/axios'
-import { ref } from 'vue'
 
 export const colaboradorStore = defineStore('colaborador', {
   state: () => ({
@@ -24,7 +23,7 @@ export const colaboradorStore = defineStore('colaborador', {
     },
 
     async deleteFerias(model) {
-      const ret = await api.delete(
+      await api.delete(
         'v1/colaborador/' + model.codcolaborador + '/ferias/' + model.codferias,
       )
       const colaborador = this.findColaborador(model.codcolaborador)
@@ -78,7 +77,7 @@ export const colaboradorStore = defineStore('colaborador', {
     },
 
     async deleteColaboradorCargo(model) {
-      const ret = await api.delete('v1/colaborador/cargo/' + model.codcolaboradorcargo)
+      await api.delete('v1/colaborador/cargo/' + model.codcolaboradorcargo)
       const colaborador = this.findColaborador(model.codcolaborador)
       const i = colaborador.ColaboradorCargo.findIndex((el) => {
         return el.codcolaboradorcargo == model.codcolaboradorcargo
@@ -88,7 +87,7 @@ export const colaboradorStore = defineStore('colaborador', {
     },
 
     async excluirColaborador(model) {
-      const ret = await api.delete('v1/colaborador/' + model.codcolaborador)
+      await api.delete('v1/colaborador/' + model.codcolaborador)
 
       const colaborador = this.colaboradores.findIndex((el) => {
         return el.codcolaborador == model.codcolaborador

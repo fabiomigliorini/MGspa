@@ -11,7 +11,6 @@ import {
   extrairErro,
 } from 'src/utils/rhFormatters'
 import { formataNumero, formataPercentual, formataTimestamp, formataCodigo } from '@components/formatters'
-import moment from 'moment'
 import DialogEditarMeta from './DialogEditarMeta.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 

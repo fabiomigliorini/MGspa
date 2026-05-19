@@ -2,7 +2,7 @@
 import { formataDataAbreviada } from '@components/formatters'
 
 // Props
-const props = defineProps({
+defineProps({
   items: {
     type: Array,
     required: true,

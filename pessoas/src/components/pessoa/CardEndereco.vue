@@ -5,7 +5,7 @@ import { useRoute } from 'vue-router'
 import { api } from 'boot/axios'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
-import { linkMaps, formataData, formataCep, removerAcentos, formataTimestamp } from '@components/formatters'
+import { linkMaps, formataCep, removerAcentos, formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import SelectCidade from 'components/pessoa/SelectCidade.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
@@ -124,7 +124,6 @@ const editarEndereco = async (
   nfe,
   entrega,
   apelido,
-  cidade,
 ) => {
   dialogEndereco.value = true
   enderecoNovo.value = false

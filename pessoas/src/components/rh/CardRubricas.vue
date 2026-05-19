@@ -2,7 +2,7 @@
 import { tipoIndicadorLabel } from 'src/utils/rhFormatters'
 import { formataNumero, formataCodigo } from '@components/formatters'
 
-const props = defineProps({
+defineProps({
   rubricas: { type: Array, default: () => [] },
   valortotal: { type: Number, default: 0 },
   status: { type: String, default: 'A' },

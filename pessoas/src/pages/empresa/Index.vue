@@ -28,6 +28,7 @@ export default {
           acabouDados.value = true
         }
       } catch (error) {
+        console.log(error)
         $q.notify({
           color: 'red-5',
           textColor: 'white',
@@ -74,6 +75,7 @@ export default {
           done()
         }
       } catch (error) {
+        console.log(error)
         acabouDados.value = true
         done(true)
       }

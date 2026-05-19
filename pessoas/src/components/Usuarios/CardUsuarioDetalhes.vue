@@ -126,9 +126,7 @@
 </template>
 
 <script>
-import { formataData, formataTimestamp, formataDataAbreviada } from '@components/formatters'
-import { defineComponent, defineAsyncComponent } from 'vue'
-import { useQuasar } from 'quasar'
+import { defineComponent } from 'vue'
 import { ref } from 'vue'
 import { usuarioStore } from 'stores/usuario'
 import { useRoute } from 'vue-router'
@@ -261,7 +259,6 @@ export default defineComponent({
   },
 
   setup() {
-    const $q = useQuasar()
     const sUsuario = usuarioStore()
     const route = useRoute()
     const user = useAuthStore()

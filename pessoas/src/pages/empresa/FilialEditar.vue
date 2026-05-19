@@ -55,6 +55,7 @@ export default {
           senhacertificado: '',
         }
       } catch (error) {
+        console.log(error)
         $q.notify({
           color: 'red-5',
           textColor: 'white',
