@@ -1,4 +1,4 @@
-FROM node:20.19.1-alpine
+FROM node:22.22.0-alpine
 RUN npm i --location=global @quasar/cli@2.5.0
 LABEL maintainer="mgpapelaria.com.br"
 
