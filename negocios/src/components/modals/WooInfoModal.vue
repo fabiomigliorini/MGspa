@@ -50,6 +50,7 @@ const jsonFormatado = computed(() => {
         : sWoo.pedido.jsonwoo
     return JSON.stringify(obj, null, 2)
   } catch (e) {
+    console.log(e)
     return sWoo.pedido.jsonwoo
   }
 })
@@ -61,6 +62,7 @@ const pedidoData = computed(() => {
       ? JSON.parse(sWoo.pedido.jsonwoo)
       : sWoo.pedido.jsonwoo
   } catch (e) {
+    console.log(e)
     return {}
   }
 })

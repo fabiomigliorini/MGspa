@@ -1,9 +1,8 @@
-FROM node:20.10.0-alpine
-RUN npm i --location=global @quasar/cli@2.3.0
-MAINTAINER mgpapelaria.com.br
+FROM node:20.19.1-alpine
+RUN npm i --location=global @quasar/cli@2.5.0
+LABEL maintainer="mgpapelaria.com.br"
 
 WORKDIR /opt/www/MGspa/pessoas
 
 RUN apk upgrade --update --no-cache
 RUN apk add --no-cache bash-completion coreutils autoconf git
-#RUN npm install -g @quasar/app@1.9.6 --loglevel verbose

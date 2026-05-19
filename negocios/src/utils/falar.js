@@ -1,5 +1,6 @@
 const synth = window.speechSynthesis
 const voices = synth.getVoices()
+// eslint-disable-next-line no-unused-vars
 const voice = voices.find((e) => {
   return e.lang == 'pt-BR'
 })

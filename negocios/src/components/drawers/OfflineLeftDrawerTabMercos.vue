@@ -16,7 +16,7 @@ const importarPedido = async () => {
     title: 'Sincronizar com Mercos',
     message: 'Deseja rodar a integração com o Mercos para buscar novas vendas?',
     cancel: true,
-  }).onOk(async (codnegocio) => {
+  }).onOk(async () => {
     await sMercos.importarPedido()
   })
 }

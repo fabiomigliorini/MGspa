@@ -54,6 +54,7 @@ export default defineConfig((/* ctx */) => {
       },
 
       env: {
+        APP_NAME: pkg.name.toLowerCase(),
         APP_VERSION: pkg.version,
         BUILD_DATE: new Date().toISOString(),
         COMMIT_NUMBER: gitCommitNumber(),

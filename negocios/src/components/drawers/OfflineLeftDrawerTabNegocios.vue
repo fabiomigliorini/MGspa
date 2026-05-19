@@ -20,7 +20,7 @@ const criar = async () => {
     return false
   }
   router.push('/offline/' + n.uuid)
-  var audio = new Audio('novo.mp3')
+  let audio = new Audio('/novo.mp3')
   audio.play()
 }
 

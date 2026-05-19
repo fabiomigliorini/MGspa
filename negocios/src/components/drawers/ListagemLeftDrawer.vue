@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted } from 'vue'
 import { listagemStore } from 'stores/listagem'
 import SelectEstoqueLocal from 'components/selects/SelectEstoqueLocal.vue'
 import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'

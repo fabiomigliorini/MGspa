@@ -100,12 +100,9 @@ export const pixStore = defineStore('pix', {
         return false
       }
       try {
-        const { data } = await api.post(
-          '/api/v1/pix/cob/' + this.pixCob.codpixcob + '/imprimir-qr-code',
-          {
-            impressora: sNegocio.padrao.impressora,
-          },
-        )
+        await api.post('/api/v1/pix/cob/' + this.pixCob.codpixcob + '/imprimir-qr-code', {
+          impressora: sNegocio.padrao.impressora,
+        })
         Notify.create({
           type: 'positive',
           message: 'Impressão solicitada!',

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted } from 'vue'
 import { liquidacaoStore } from 'stores/liquidacao'
 import SelectPessoa from 'components/selects/SelectPessoa.vue'
 import SelectPdv from 'components/selects/SelectPdv.vue'

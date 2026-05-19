@@ -78,7 +78,9 @@ const salvarDevolucao = async () => {
       if (ret.data.data) {
         router.push('/negocio/' + ret.data.data.codnegocio)
       }
-    } catch (error) {}
+    } catch (error) {
+      console.log(error)
+    }
   })
 }
 </script>

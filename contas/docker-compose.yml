@@ -1,7 +1,7 @@
-#version: '3.7'
 services:
   contas:
     build: ./
+    container_name: contas
     restart: unless-stopped
     tty: true
     volumes:

@@ -2,7 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { wooStore } from 'src/stores/woo'
 import { formataNumero, formataTimestampCompleto } from '@components/formatters'
-import { Notify, debounce } from 'quasar'
+import { debounce } from 'quasar'
 import moment from 'moment/min/moment-with-locales'
 import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
 moment.locale('pt-br')
@@ -24,18 +24,8 @@ const inicializa = debounce(async () => {
     await sWoo.getPedidos()
     scrollRef.value.reset()
     scrollRef.value.resume()
-  } catch (error) {}
-})
-
-const reprocessarPedido = debounce(async (pedido) => {
-  const ret = await sWoo.reprocessarPedido(pedido.id)
-  if (ret) {
-    Notify.create({
-      type: 'positive',
-      message: 'Pedido ' + pedido.id + ' reprocessado!',
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
+  } catch (error) {
+    console.log(error)
   }
 })
 

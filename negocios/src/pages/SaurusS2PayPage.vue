@@ -1,17 +1,14 @@
 <script setup>
 import { computed, onMounted, ref, watch } from 'vue'
 import { Notify } from 'quasar'
-import { db } from 'boot/db'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import SelectFilial from 'src/components/selects/SelectFilial.vue'
-import { negocioStore } from 'src/stores/negocio'
 import moment from 'moment/min/moment-with-locales'
 import { api } from 'boot/axios'
 import qrcode from 'qrcode'
 moment.locale('pt-br')
 
 const sSinc = sincronizacaoStore()
-const sNegocios = negocioStore()
 
 const openModalCadastro = ref(false)
 const openModalEditCadastro = ref(false)
@@ -65,6 +62,7 @@ const gerarQrCode = async () => {
       loading.value = false
     })
     .catch((error) => {
+      console.log(error)
       Notify.create({
         type: 'negative',
         message: 'Falha ao gerar QrCode, tente novamente!',
@@ -101,6 +99,7 @@ const checkLeitura = async () => {
       }
     })
     .catch((error) => {
+      console.log(error)
       Notify.create({
         type: 'negative',
         message: 'Falha ao verificar leitura, tente novamente!',
@@ -139,7 +138,7 @@ const salvarMaquineta = async () => {
       apelido: apelido.value,
       codfilial: filial.value,
     })
-    .then(async ({ data }) => {
+    .then(async () => {
       Notify.create({
         type: 'positive',
         message: 'Maquineta salva com sucesso!',
@@ -152,6 +151,7 @@ const salvarMaquineta = async () => {
       getPinpads()
     })
     .catch((error) => {
+      console.log(error)
       Notify.create({
         type: 'negative',
         message: 'Falha ao salvar maquineta, tente novamente!',
@@ -174,7 +174,7 @@ const inativarMaquineta = async (pdv) => {
         handler: async () => {
           await api
             .get('api/v1/pdv/saurus/pdv/' + pdv.codsauruspdv + '/inativar')
-            .then(async ({ data }) => {
+            .then(async () => {
               Notify.create({
                 type: 'positive',
                 message: 'Maquineta inativada com sucesso!',
@@ -185,6 +185,7 @@ const inativarMaquineta = async (pdv) => {
               getPinpads()
             })
             .catch((error) => {
+              console.log(error)
               Notify.create({
                 type: 'negative',
                 message: 'Falha ao inativar maquineta, tente novamente!',
@@ -217,7 +218,7 @@ const ativarMaquineta = async (pdv) => {
         handler: async () => {
           await api
             .get('api/v1/pdv/saurus/pdv/' + pdv.codsauruspdv + '/ativar')
-            .then(async ({ data }) => {
+            .then(async () => {
               Notify.create({
                 type: 'positive',
                 message: 'Maquineta ativada com sucesso!',
@@ -228,6 +229,7 @@ const ativarMaquineta = async (pdv) => {
               getPinpads()
             })
             .catch((error) => {
+              console.log(error)
               Notify.create({
                 type: 'negative',
                 message: 'Falha ao ativar maquineta, tente novamente!',

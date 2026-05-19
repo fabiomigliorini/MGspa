@@ -1,8 +1,11 @@
 <script setup>
 import { ref } from 'vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
+import MgAppsMenu from '@components/MgAppsMenu.vue'
+import MgScreensMenu from '@components/MgScreensMenu.vue'
+import MgPageTitle from '@components/MgPageTitle.vue'
 
-const props = defineProps({
+defineProps({
   backTo: {
     type: String,
     default: null,
@@ -21,68 +24,29 @@ const props = defineProps({
   },
 })
 
-const apps = ref([
+const menuGroups = [
   {
     label: 'PDV',
-    apps: [
-      {
-        icon: 'point_of_sale',
-        label: 'PDV',
-        to: '/',
-      },
-      {
-        icon: 'mdi-list-box-outline',
-        label: 'WOO',
-        to: '/woo/painel',
-      },
-      // {
-      //   icon: "checklist_rtl",
-      //   label: "Listagem",
-      //   to: "/listagem",
-      // },
-      {
-        icon: 'check',
-        label: 'Conferência',
-        to: '/conferencia',
-      },
-      {
-        icon: 'photo_camera',
-        label: 'Conf',
-        to: '/confissao',
-      },
+    items: [
+      { label: 'PDV', icon: 'point_of_sale', color: 'grey-8', to: '/' },
+      { label: 'WOO', icon: 'mdi-list-box-outline', color: 'grey-8', to: '/woo/painel' },
+      { label: 'Conferência', icon: 'check', color: 'grey-8', to: '/conferencia' },
+      { label: 'Conf', icon: 'photo_camera', color: 'grey-8', to: '/confissao' },
     ],
   },
   {
     label: 'Comandas',
-    apps: [
-      {
-        icon: 'mdi-barcode',
-        label: 'Comandas',
-        to: '/comanda-vendedor',
-      },
+    items: [
+      { label: 'Comandas', icon: 'mdi-barcode', color: 'grey-8', to: '/comanda-vendedor' },
     ],
   },
-  // {
-  //   label: "Liquidações",
-  //   apps: [
-  //     {
-  //       icon: "mdi-checkbook",
-  //       label: "Liquidações",
-  //       to: "/liquidacao",
-  //     },
-  //   ],
-  // },
   {
     label: 'Configurações',
-    apps: [
-      {
-        icon: 'settings',
-        label: 'Config',
-        to: '/config/padrao',
-      },
+    items: [
+      { label: 'Config', icon: 'settings', color: 'grey-8', to: '/config/padrao' },
     ],
   },
-])
+]
 
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
@@ -112,12 +76,7 @@ const toggleRightDrawer = () => {
         <q-btn dense flat round icon="arrow_back" :to="backTo" v-if="backTo" />
 
         <!-- TITULO -->
-        <q-toolbar-title>
-          <q-avatar class="q-mr-sm">
-            <img src="/MGPapelariaQuadrado.svg" />
-          </q-avatar>
-          {{ title }}
-        </q-toolbar-title>
+        <MgPageTitle app-name="Negócios" :title="title" home-route="/" />
 
         <!-- BOTOES ADICIONAIS -->
         <slot name="botoes" />
@@ -125,34 +84,9 @@ const toggleRightDrawer = () => {
         <!-- USUARIO  -->
         <slot name="usuario" />
 
-        <!-- MENU -->
-        <q-btn round icon="apps" flat>
-          <q-menu style="width: 300px" class="q-pa-sm">
-            <template v-for="(appBlock, iAppBlock) in apps" :key="iAppBlock">
-              <!-- <q-item-label header>
-                {{ appBlock.label }}
-              </q-item-label> -->
-              <div class="row">
-                <template v-for="(app, iApp) in appBlock.apps" :key="iApp">
-                  <q-item
-                    class="col-4 text-grey-8"
-                    :to="app.to"
-                    clickable
-                    active-class="bg-teal-1 text-grey-8"
-                  >
-                    <q-item-section class="flex-center">
-                      <q-icon :name="app.icon" size="40px" />
-                      <q-item-label class="text-caption ellipsis">
-                        {{ app.label }}
-                      </q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </div>
-              <q-separator v-if="iAppBlock != apps.length - 1" class="q-my-sm" />
-            </template>
-          </q-menu>
-        </q-btn>
+        <!-- APPS + TELAS -->
+        <MgAppsMenu />
+        <MgScreensMenu :groups="menuGroups" />
 
         <!-- HAMBURGER DIREITO -->
         <q-btn

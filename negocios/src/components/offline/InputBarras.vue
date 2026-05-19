@@ -75,7 +75,7 @@ const informarVendedor = async (codpessoavendedor) => {
   if (sNegocio.negocio.codpessoavendedor) {
     falar('Vendedor ' + sNegocio.negocio.fantasiavendedor.split(' ')[0])
   }
-  var audio = new Audio('successo.mp3')
+  let audio = new Audio('/sucesso.mp3')
   audio.play()
 }
 
@@ -83,14 +83,16 @@ const unificarComanda = async (codnegociocomanda) => {
   let sucesso = false
   try {
     sucesso = await sNegocio.unificarComanda(codnegociocomanda)
-  } catch (error) {}
+  } catch (error) {
+    console.log(error)
+  }
   if (sucesso) {
     router.push('/offline/' + sNegocio.negocio.uuid)
-    var audio = new Audio('sucesso.mp3')
+    let audio = new Audio('/sucesso.mp3')
     audio.play()
     falar('Comanda Lida!')
   } else {
-    var audio = new Audio('erro.mp3')
+    let audio = new Audio('/erro.mp3')
     audio.play()
     falar('Falha ao buscar comanda!')
   }
@@ -122,8 +124,8 @@ const comanda = async () => {
   })
 }
 
-watch(barras, (newValue, oldValue) => {
-  if (!barras.value instanceof String) {
+watch(barras, () => {
+  if (!(barras.value instanceof String)) {
     return
   }
   if (barras.value.length < 2) {
@@ -199,7 +201,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
       actions: [{ icon: 'close', color: 'white' }],
     })
     sNegocio.paginaAtual = 1
-    var audio = new Audio('successo.mp3')
+    let audio = new Audio('/sucesso.mp3')
     audio.play()
   } else {
     Notify.create({
@@ -208,7 +210,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
       timeout: 0, // 20 minutos
       actions: [{ icon: 'close', color: 'white' }],
     })
-    var audio = new Audio('erro.mp3')
+    let audio = new Audio('/erro.mp3')
     audio.play()
     falar('Não encontrei!')
   }
@@ -234,7 +236,7 @@ const adicionarPelaListagem = async (
   sProduto.dialogPesquisa = false
   sNegocio.paginaAtual = 1
   quantidade.value = 1
-  var audio = new Audio('successo.mp3')
+  let audio = new Audio('/sucesso.mp3')
   audio.play()
 }
 
@@ -309,7 +311,9 @@ const lerCodigoBarras = async () => {
       barcodes.forEach((barcode) => {
         barras = barcode.rawValue
       })
-    } catch (error) {}
+    } catch (error) {
+      console.log(error)
+    }
   } while (!barras && tentativas < 20)
   if (barras) {
     adicionarPeloCodigoBarras(barras)

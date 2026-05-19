@@ -86,9 +86,7 @@ export const saurusStore = defineStore('saurus', {
 
     async reenviarPedido() {
       try {
-        const { data } = await api.get(
-          '/api/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido + '/reenviar',
-        )
+        await api.get('/api/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido + '/reenviar')
         Notify.create({
           type: 'positive',
           message: 'Reenvio Efetuado!',

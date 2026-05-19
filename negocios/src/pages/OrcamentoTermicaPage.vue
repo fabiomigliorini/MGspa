@@ -3,12 +3,10 @@ import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { negocioStore } from 'src/stores/negocio'
 import { formataCnpjCpf, formataNumero, formataTimestamp, formataCodigo } from '@components/formatters'
-import { produtoStore } from 'src/stores/produto'
 import BarCode from 'components/BarCode.vue'
 
 const route = useRoute()
 const sNegocio = negocioStore()
-const sProduto = produtoStore()
 
 onMounted(() => {
   sNegocio.carregarPeloUuid(route.params.uuid)

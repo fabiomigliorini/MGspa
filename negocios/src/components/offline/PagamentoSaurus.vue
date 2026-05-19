@@ -3,7 +3,6 @@ import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { ref, watch, computed } from 'vue'
 import { debounce } from 'quasar'
 import { negocioStore } from 'stores/negocio'
-import { pagarMeStore } from 'stores/pagar-me'
 import { saurusStore } from 'stores/saurus'
 import emitter from '../../utils/emitter.js'
 import SelectSaurusPos from '../selects/SelectSaurusPos.vue'
@@ -13,7 +12,6 @@ moment.locale('pt-br')
 import MgInputValor from '@components/MgInputValor.vue'
 
 const sNegocio = negocioStore()
-const sPagarMe = pagarMeStore()
 const edicao = ref({})
 const sSaurus = saurusStore()
 const pagamento = ref({})
@@ -34,7 +32,6 @@ const inicializarValores = () => {
     codpessoa: null,
     autorizacao: null,
     bandeira: null,
-    codpessoa: null,
   }
   if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
     padrao.codsauruspos = null
@@ -202,30 +199,6 @@ const bandeirasManuais = computed(() => {
     return pagamento.value.codpessoa == el.codpessoa
   })
   return pes.bandeiras
-})
-
-const labelParceiro = computed(() => {
-  if (!pagamento.value.codpessoa) {
-    return []
-  }
-  let ret = ''
-  const pes = cartoesManuais.find((el) => {
-    return pagamento.value.codpessoa == el.codpessoa
-  })
-  ret += pes.apelido
-  if (tiposManuais.value.length > 1) {
-    const tipo = tiposManuais.value.find((el) => {
-      return pagamento.value.tipo == el.tipo
-    })
-    ret += '\n' + tipo.apelido
-  }
-  if (bandeirasManuais.value.length > 1) {
-    const band = bandeirasManuais.value.find((el) => {
-      return pagamento.value.bandeira == el.bandeira
-    })
-    ret += '\n' + band.apelido
-  }
-  return ret
 })
 
 const toStone = async () => {

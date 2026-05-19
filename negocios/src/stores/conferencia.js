@@ -2,7 +2,6 @@ import { formataDataIso } from '@components/formatters'
 import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
 import { Notify } from 'quasar'
-import moment from 'moment'
 import { pdvStore } from './pdv'
 import { sincronizacaoStore } from './sincronizacao'
 

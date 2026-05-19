@@ -324,7 +324,7 @@ const imprimir = async (codnotafiscal) => {
     return
   }
   try {
-    var { data } = await api.post(`/api/v1/pdv/nota-fiscal/${codnotafiscal}/imprimir`, {
+    await api.post(`/api/v1/pdv/nota-fiscal/${codnotafiscal}/imprimir`, {
       pdv: sSinc.pdv.uuid,
       impressora: sNegocio.padrao.impressora,
     })

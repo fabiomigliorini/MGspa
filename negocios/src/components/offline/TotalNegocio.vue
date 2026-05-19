@@ -132,10 +132,6 @@ const dialogPagamentoPrazo = () => {
   sNegocio.dialog.pagamentoPrazo = true
 }
 
-const dialogPagamentoPagarMe = () => {
-  sNegocio.dialog.pagamentoPagarMe = true
-}
-
 const dialogDetalhesPixCob = (pixCob) => {
   sPix.pixCob = pixCob
   sPix.dialog.detalhesPixCob = true

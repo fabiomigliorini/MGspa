@@ -31,7 +31,6 @@ const inicializarValores = () => {
     codpessoa: null,
     autorizacao: null,
     bandeira: null,
-    codpessoa: null,
   }
   if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
     padrao.codpagarmepos = null
