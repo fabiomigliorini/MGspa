@@ -4,8 +4,6 @@ import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
-import moment from 'moment'
-
 export default {
   components: {
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
@@ -62,6 +60,7 @@ export default {
           })
         }
       } catch (error) {
+        console.log(error)
         erro.value = true
         $q.notify({
           color: 'red-5',

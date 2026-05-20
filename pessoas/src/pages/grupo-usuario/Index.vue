@@ -98,6 +98,7 @@ const buscarGruposUsuarios = debounce(async () => {
       })
     }
   } catch (error) {
+    console.log(error)
     $q.loadingBar.stop()
   }
 }, 500)

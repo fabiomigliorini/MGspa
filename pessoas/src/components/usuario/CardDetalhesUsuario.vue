@@ -1,5 +1,5 @@
 <script setup>
-import { formataData, formataTimestamp, formataDataAbreviada } from '@components/formatters'
+import { formataTimestamp, formataDataAbreviada } from '@components/formatters'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'

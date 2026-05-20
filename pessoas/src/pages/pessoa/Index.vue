@@ -166,6 +166,7 @@ export default {
           })
         }
       } catch (error) {
+        console.log(error)
         $q.loadingBar.stop()
       }
     }, 500)

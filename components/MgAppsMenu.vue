@@ -5,11 +5,18 @@ import { computed } from 'vue'
 // substituir estaticamente em build time. process.env[key] dinâmico retorna undefined.
 const APPS = [
   {
-    id: 'pessoas',
-    label: 'Pessoas',
-    icon: 'people',
-    color: 'teal',
-    href: process.env.PESSOAS_URL || '',
+    id: 'outros',
+    label: 'Início',
+    icon: 'home',
+    color: 'brown',
+    href: process.env.SISTEMA_URL || '',
+  },
+  {
+    id: 'negocios',
+    label: 'Negócios',
+    icon: 'handshake',
+    color: 'orange',
+    href: process.env.NEGOCIOS_URL || '',
   },
   {
     id: 'notas',
@@ -26,18 +33,11 @@ const APPS = [
     href: process.env.CONTAS_URL || '',
   },
   {
-    id: 'negocios',
-    label: 'Negócios',
-    icon: 'handshake',
-    color: 'orange',
-    href: process.env.NEGOCIOS_URL || '',
-  },
-  {
-    id: 'mgsis',
-    label: 'MGsis',
-    icon: 'apps',
-    color: 'brown',
-    href: process.env.MGSIS_URL || '',
+    id: 'pessoas',
+    label: 'Pessoas',
+    icon: 'people',
+    color: 'teal',
+    href: process.env.PESSOAS_URL || '',
   },
 ]
 
@@ -53,11 +53,11 @@ const items = computed(() =>
 <template>
   <q-btn flat round icon="workspaces" aria-label="Aplicações">
     <q-menu anchor="bottom left" self="top left" :offset="[0, 8]">
-      <q-card flat style="min-width: 360px">
+      <q-card flat style="width: 250px; max-width: 80vw">
         <q-card-section class="q-pa-md">
-          <div class="text-subtitle2 text-grey-7 q-mb-md">Aplicações</div>
+          <div class="text-subtitle2 text-grey-7 q-mb-md">Apps</div>
           <div class="row q-col-gutter-sm">
-            <div class="col-3" v-for="app in items" :key="app.id">
+            <div class="col-xs-6 col-sm-4" v-for="app in items" :key="app.id">
               <q-btn
                 flat
                 no-caps
@@ -68,7 +68,7 @@ const items = computed(() =>
                 v-close-popup
               >
                 <div class="column items-center">
-                  <q-icon :name="app.icon" size="32px" :color="app.color" />
+                  <q-icon :name="app.icon" size="48px" :color="app.color" />
                   <div class="text-caption text-center q-mt-xs">{{ app.label }}</div>
                 </div>
               </q-btn>

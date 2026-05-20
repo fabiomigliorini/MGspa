@@ -4,7 +4,7 @@ import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
-import { formataData, formataTimestamp } from '@components/formatters'
+import { formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 

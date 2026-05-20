@@ -218,7 +218,6 @@
 
 <script>
 import { ref, defineAsyncComponent } from 'vue'
-import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from 'src/stores'
 import { pessoaStore } from 'src/stores/pessoa'
@@ -235,7 +234,7 @@ export default {
   },
 
   methods: {
-    fantasiaFocus(evt) {
+    fantasiaFocus() {
       if (this.model.pessoa == this.model.fantasia) {
         this.razaoVazia = true
         return
@@ -299,7 +298,6 @@ export default {
 
     async verificaIeSefaz() {
       try {
-        var codfilial = this.user.usuario.codfilial
         const ret = await this.sPessoa.verificaIeSefaz(101, this.model.fisica, this.model.cnpj)
         this.sefazCadastro = ret.data.retSefaz
         this.receitaWsCadastro = ret.data.retReceita
@@ -461,8 +459,6 @@ export default {
   },
 
   setup() {
-    const cnpjConsultado = ref(null)
-    const $q = useQuasar()
     const sPessoa = pessoaStore()
     const router = useRouter()
     const step = ref(0)

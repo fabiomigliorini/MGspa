@@ -64,6 +64,7 @@ const buscar = async () => {
     await store.index()
     grausInstrucao.value = store.grausInstrucao
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao carregar graus de instrução',
@@ -113,6 +114,7 @@ const salvar = async () => {
     grausInstrucao.value = store.grausInstrucao
     dialog.value = false
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao salvar grau de instrução',
@@ -140,6 +142,7 @@ const toggleInativo = async (item) => {
     }
     grausInstrucao.value = store.grausInstrucao
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao alterar status',
@@ -165,6 +168,7 @@ const excluir = (item) => {
         message: 'Grau de instrução excluído com sucesso',
       })
     } catch (error) {
+      console.log(error)
       $q.notify({
         type: 'negative',
         message: 'Erro ao excluir grau de instrução. Verifique se não está em uso.',

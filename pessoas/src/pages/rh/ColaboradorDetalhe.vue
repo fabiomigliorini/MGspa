@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
 import { useAuthStore } from 'src/stores'
 import { api } from 'src/boot/axios'
@@ -17,7 +17,6 @@ import MgInputValor from '@components/MgInputValor.vue'
 
 const $q = useQuasar()
 const route = useRoute()
-const router = useRouter()
 const sRh = rhStore()
 const user = useAuthStore()
 
@@ -91,6 +90,7 @@ const abrirNovoSetor = async () => {
       diasUteis = calcularDiasUteis(periodo.periodoinicial, periodo.periodofinal, feriados)
     }
   } catch (e) {
+    console.log(e)
     // fallback 22
   }
   modelSetor.value = {

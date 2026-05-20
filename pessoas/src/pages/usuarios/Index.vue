@@ -102,6 +102,7 @@ const buscarUsuarios = debounce(async () => {
       })
     }
   } catch (error) {
+    console.log(error)
     $q.loadingBar.stop()
   }
 }, 500)

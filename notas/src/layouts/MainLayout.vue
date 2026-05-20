@@ -29,7 +29,7 @@ const menuGroups = [
       { label: 'Tributações', icon: 'receipt_long', color: 'teal', to: '/tributacao-cadastro' },
       { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
       { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
-      { label: 'Distribuição DFe', icon: 'sync', color: 'blue', to: '/dfe' },
+      { label: 'DFe', icon: 'sync', color: 'blue', to: '/dfe' },
     ],
   },
 ]

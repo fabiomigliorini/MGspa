@@ -4,7 +4,7 @@ import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
-import { formataData, formataFromNow } from '@components/formatters'
+import { formataFromNow } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const $q = useQuasar()
@@ -29,6 +29,7 @@ const buscarCobrancas = debounce(async () => {
       loading.value = true
     }
   } catch (error) {
+    console.log(error)
     $q.loadingBar.stop()
   }
 }, 500)

@@ -1,5 +1,5 @@
 <script setup>
-const props = defineProps({
+defineProps({
   setores: { type: Array, default: () => [] },
   diasUteisPeriodo: { type: Number, default: 0 },
   podeEditar: { type: Boolean, default: false },

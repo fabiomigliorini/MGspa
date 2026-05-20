@@ -126,7 +126,6 @@
 
 <script>
 import { defineComponent, defineAsyncComponent } from 'vue'
-import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { usuarioStore } from 'stores/usuario'
 import { useRoute } from 'vue-router'
@@ -165,7 +164,7 @@ export default defineComponent({
         })
         .onOk(async () => {
           try {
-            const ret = await this.sUsuario.postUsuario(this.model)
+            await this.sUsuario.postUsuario(this.model)
             this.$q.notify({
               color: 'green-5',
               textColor: 'white',
@@ -194,7 +193,7 @@ export default defineComponent({
         })
         .onOk(async () => {
           try {
-            const ret = await this.sUsuario.putUsuario(this.model)
+            await this.sUsuario.putUsuario(this.model)
             this.$q.notify({
               color: 'green-5',
               textColor: 'white',
@@ -221,20 +220,19 @@ export default defineComponent({
     },
 
     marcarTodos(codgrupousuario) {
-      for (var [codfilial, value] of Object.entries(this.model.permissoes[codgrupousuario])) {
+      for (const codfilial of Object.keys(this.model.permissoes[codgrupousuario])) {
         this.model.permissoes[codgrupousuario][codfilial] = true
       }
     },
 
     marcarNenhum(codgrupousuario) {
-      for (var [codfilial, value] of Object.entries(this.model.permissoes[codgrupousuario])) {
+      for (const codfilial of Object.keys(this.model.permissoes[codgrupousuario])) {
         this.model.permissoes[codgrupousuario][codfilial] = false
       }
     },
   },
 
   setup() {
-    const $q = useQuasar()
     const sUsuario = usuarioStore()
     const route = useRoute()
     const user = useAuthStore()
@@ -299,7 +297,6 @@ export default defineComponent({
 
     var existe = false
     var permGrupo = {}
-    var codsfiliais = []
     this.grupos.forEach((grupo) => {
       this.model.permissoes[grupo.codgrupousuario] = {}
       this.filiais.forEach((filial) => {

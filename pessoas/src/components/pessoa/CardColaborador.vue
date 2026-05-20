@@ -3,9 +3,7 @@ import { formataDataIso, formataDataAbreviada } from '@components/formatters'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
-import { pessoaStore } from 'stores/pessoa'
 import { colaboradorStore } from 'stores/colaborador'
-import { useAuthStore } from 'src/stores'
 import moment from 'moment'
 import 'moment/min/locales'
 moment.locale('pt-br')
@@ -18,15 +16,12 @@ import SelectFilial from 'components/pessoa/SelectFilial.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const $q = useQuasar()
-const sPessoa = pessoaStore()
 const sColaborador = colaboradorStore()
 const route = useRoute()
-const user = useAuthStore()
 
 const modelColaborador = ref({})
 const editColaborador = ref(false)
 const dialogNovoColaborador = ref(false)
-const colaboradores = ref([])
 const refCardFerias = ref(null)
 const refCardColaboradorCargo = ref(null)
 const dialogPdfFicha = ref(false)

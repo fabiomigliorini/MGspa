@@ -64,6 +64,7 @@ const buscar = async () => {
     await store.index()
     certidaoEmissores.value = store.certidaoEmissores
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao carregar certidão emissores',
@@ -113,6 +114,7 @@ const salvar = async () => {
     certidaoEmissores.value = store.certidaoEmissores
     dialog.value = false
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao salvar certidão emissor',
@@ -140,6 +142,7 @@ const toggleInativo = async (item) => {
     }
     certidaoEmissores.value = store.certidaoEmissores
   } catch (error) {
+    console.log(error)
     $q.notify({
       type: 'negative',
       message: 'Erro ao alterar status',
@@ -165,6 +168,7 @@ const excluir = (item) => {
         message: 'Certidão emissor excluída com sucesso',
       })
     } catch (error) {
+      console.log(error)
       $q.notify({
         type: 'negative',
         message: 'Erro ao excluir certidão emissor. Verifique se não está em uso.',
