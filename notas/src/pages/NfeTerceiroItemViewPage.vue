@@ -286,7 +286,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
           <div class="row items-center q-gutter-xs q-mt-xs" v-if="produto">
             <a
               v-if="produto.codproduto"
-              :href="`${mglaraUrl}/produto/${produto.codproduto}`"
+              :href="`${mglaraUrl}produto/${produto.codproduto}`"
               target="_blank"
               class="text-primary text-weight-bold"
               style="text-decoration: none"

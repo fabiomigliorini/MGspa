@@ -15,8 +15,8 @@ const dialogPdf = ref(false)
 
 const urlAnexo = (pasta, anexo) => {
   const url =
-    process.env.API_BASE_URL +
-    '/api/v1/pdv/negocio/' +
+    process.env.API_URL +
+    'v1/pdv/negocio/' +
     sNegocio.negocio.codnegocio +
     '/anexo/' +
     pasta +

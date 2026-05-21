@@ -37,7 +37,7 @@ const isNovoLancamento = computed(() => !modelLancamento.value.codindicadorlanca
 
 // --- HELPERS ---
 
-const negocioUrl = (codnegocio) => process.env.APP_NEGOCIOS_URL + '/negocio/' + codnegocio
+const negocioUrl = (codnegocio) => process.env.NEGOCIOS_URL + '/negocio/' + codnegocio
 
 // --- COMPUTED ---
 

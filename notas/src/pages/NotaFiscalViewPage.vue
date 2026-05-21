@@ -90,9 +90,9 @@ const statusDisponiveis = computed(() => {
 })
 
 // URL base para negócios
-const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
+const negociosUrl = process.env.NEGOCIOS_URL
 
-const pessoasUrl = import.meta.env.VITE_PESSOAS_URL || process.env.PESSOAS_URL
+const pessoasUrl = process.env.PESSOAS_URL
 
 // Lista de negócios únicos vinculados à nota
 const negociosVinculados = computed(() => {

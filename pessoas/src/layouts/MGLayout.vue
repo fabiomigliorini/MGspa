@@ -6,7 +6,6 @@ import { useAuthStore } from 'src/stores'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
-import MgScreensMenu from '@components/MgScreensMenu.vue'
 import MgPageTitle from '@components/MgPageTitle.vue'
 import { useAuth } from 'src/composables/useAuth'
 
@@ -38,6 +37,7 @@ const toggleLeftDrawer = () => {
 const menuGroups = computed(() => {
   const groups = [
     {
+      label: 'Pessoas',
       items: [
         { label: 'Pessoas', icon: 'person', color: 'teal-7', to: { name: 'pessoa' } },
         {
@@ -52,13 +52,18 @@ const menuGroups = computed(() => {
           color: 'pink-6',
           to: { name: 'aniversariosindex' },
         },
-        { label: 'Metas', icon: 'trending_up', color: 'green-7', to: { name: 'metaIndex' } },
         {
           label: 'Unidades & Setores',
           icon: 'store',
           color: 'brown-6',
           to: { name: 'unidadeNegocioIndex' },
         },
+      ],
+    },
+    {
+      label: 'Metas',
+      items: [
+        { label: 'Metas', icon: 'trending_up', color: 'green-7', to: { name: 'metaIndex' } },
         {
           label: 'Meu Painel',
           icon: 'assignment_ind',
@@ -190,9 +195,7 @@ const menuGroups = computed(() => {
         <!-- Usuario logout -->
         <MgUserMenu :auth="auth" />
 
-        <!-- Apps + Telas -->
-        <MgAppsMenu />
-        <MgScreensMenu :groups="menuGroups" />
+        <MgAppsMenu :groups="menuGroups" />
       </q-toolbar>
     </q-header>
 

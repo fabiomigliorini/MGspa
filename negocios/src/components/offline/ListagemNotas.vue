@@ -400,11 +400,11 @@ const offline = (nota) => {
 }
 
 const montarUrlXml = (nota) => {
-  return `${process.env.API_BASE_URL}/api/v1/nfe-php/${nota.codnotafiscal}/xml`
+  return `${process.env.API_URL}v1/nfe-php/${nota.codnotafiscal}/xml`
 }
 
 const montarUrlPdf = (nota) => {
-  return `${process.env.API_BASE_URL}/api/v1/nfe-php/${nota.codnotafiscal}/danfe`
+  return `${process.env.API_URL}v1/nfe-php/${nota.codnotafiscal}/danfe`
 }
 
 const abrirPdf = (nota) => {

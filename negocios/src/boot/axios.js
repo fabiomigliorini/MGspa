@@ -3,7 +3,8 @@ import axios from 'axios'
 import { useAuthStore } from 'stores/auth'
 const sAuth = useAuthStore()
 
-const api = axios.create({ baseURL: process.env.API_BASE_URL })
+// API_URL inclui o sufixo /api/ ; o baseURL da instancia e so o host
+const api = axios.create({ baseURL: process.env.API_URL.replace(/\/api\/?$/, '') })
 
 api.interceptors.request.use(
   (config) => {

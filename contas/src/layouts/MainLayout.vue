@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
-import MgScreensMenu from '@components/MgScreensMenu.vue'
 import MgPageTitle from '@components/MgPageTitle.vue'
 import { useAuth } from 'src/composables/useAuth'
 
@@ -89,8 +88,7 @@ const menuGroups = [
         <MgPageTitle app-name="Contas" :home-route="{ name: 'pix' }" />
 
         <MgUserMenu :auth="auth" />
-        <MgAppsMenu />
-        <MgScreensMenu :groups="menuGroups" />
+        <MgAppsMenu :groups="menuGroups" />
 
         <q-btn
           v-if="$route.meta.rightDrawer"
