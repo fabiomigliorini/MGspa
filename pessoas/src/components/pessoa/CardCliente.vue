@@ -59,13 +59,11 @@ const salvarCliente = async () => {
   }
 }
 
-const linkTitulosAbertos = () => {
-  return (
-    process.env.MGSIS_URL +
-    'index.php?r=titulo/index&Titulo[status]=A&Titulo[codpessoa]=' +
-    sPessoa.item.codpessoa
+const abrirTitulosContas = () =>
+  window.open(
+    `${process.env.CONTAS_URL}/titulo?codpessoa=${sPessoa.item.codpessoa}&status=A`,
+    '_blank',
   )
-}
 
 const abrirRelatorio = async () => {
   try {
@@ -120,8 +118,7 @@ const fecharRelatorio = () => {
         icon="list"
         size="sm"
         color="grey-7"
-        :href="linkTitulosAbertos()"
-        target="_blank"
+        @click="abrirTitulosContas"
       >
         <q-tooltip>Ver títulos em aberto!</q-tooltip>
       </q-btn>

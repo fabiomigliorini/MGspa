@@ -39,6 +39,9 @@ class LiquidacaoTituloService
         if (!empty($filtros['codgrupoeconomico'])) {
             $q->where('p.codgrupoeconomico', $filtros['codgrupoeconomico']);
         }
+        if (!empty($filtros['codgrupocliente'])) {
+            $q->where('p.codgrupocliente', $filtros['codgrupocliente']);
+        }
         if (!empty($filtros['codportador'])) {
             $q->where('tblliquidacaotitulo.codportador', $filtros['codportador']);
         }

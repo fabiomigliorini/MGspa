@@ -38,6 +38,9 @@ class TituloAgrupamentoService
         if (!empty($filtros['codgrupoeconomico'])) {
             $q->where('p.codgrupoeconomico', $filtros['codgrupoeconomico']);
         }
+        if (!empty($filtros['codgrupocliente'])) {
+            $q->where('p.codgrupocliente', $filtros['codgrupocliente']);
+        }
 
         $estornado = $filtros['estornado'] ?? '0';
         if ((string)$estornado === '0') {

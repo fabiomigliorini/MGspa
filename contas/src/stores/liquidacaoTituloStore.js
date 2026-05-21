@@ -11,6 +11,7 @@ const defaultFilters = () => {
     codliquidacaotitulo: null,
     codpessoa: null,
     codgrupoeconomico: null,
+    codgrupocliente: null,
     codportador: null,
     codusuariocriacao: null,
     estornado: '0',

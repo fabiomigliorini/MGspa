@@ -1,12 +1,14 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useQuasar } from 'quasar'
+import { useRoute } from 'vue-router'
 import { formataNumero, tempoRelativo, formataData, formataCodigo } from '@components/formatters'
 import { useTituloStore } from 'src/stores/tituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
 const store = useTituloStore()
 const $q = useQuasar()
+const route = useRoute()
 
 function abrirRelatorio() {
   $q.dialog({
@@ -52,7 +54,14 @@ async function carregarMais(index, done) {
 }
 
 onMounted(() => {
-  if (store.items.length === 0) {
+  let queryApplied = false
+  for (const key of Object.keys(store.filters)) {
+    if (route.query[key] === undefined) continue
+    const raw = route.query[key]
+    store.filters[key] = /^cod/.test(key) ? Number(raw) : raw
+    queryApplied = true
+  }
+  if (queryApplied || store.items.length === 0) {
     store.fetchItems(true)
   }
 })

@@ -10,6 +10,7 @@ import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
 import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
 import SelectPessoa from 'src/components/select/SelectPessoa.vue'
 import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
+import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -123,6 +124,15 @@ const pagarReceberOptions = [
         clearable
         :bottom-slots="false"
         label="Grupo Econômico"
+        class="q-mb-md"
+      />
+
+      <SelectGrupoCliente
+        v-model="store.filters.codgrupocliente"
+        outlined
+        clearable
+        :bottom-slots="false"
+        label="Grupo de Cliente"
       />
     </FilterGroup>
 

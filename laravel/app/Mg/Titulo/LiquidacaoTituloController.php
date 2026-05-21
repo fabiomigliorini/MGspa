@@ -22,6 +22,7 @@ class LiquidacaoTituloController extends Controller
             'codliquidacaotitulo',
             'codpessoa',
             'codgrupoeconomico',
+            'codgrupocliente',
             'codportador',
             'codusuariocriacao',
             'estornado',

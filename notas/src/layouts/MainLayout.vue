@@ -42,12 +42,12 @@ const menuGroups = [
       <q-toolbar>
         <!-- Hamburger ESQUERDO -->
         <q-btn
+          v-if="$route.meta.leftDrawer"
           dense
           flat
           round
           icon="menu"
           @click="leftDrawerOpen = !leftDrawerOpen"
-          :disable="!$route.meta.leftDrawer"
         />
 
         <MgPageTitle app-name="Notas & Documentos Fiscais" :home-route="{ name: 'home' }" />
@@ -61,12 +61,12 @@ const menuGroups = [
 
         <!-- Hamburger DIREITO -->
         <q-btn
+          v-if="$route.meta.rightDrawer"
           dense
           flat
           round
           icon="menu"
           @click="rightDrawerOpen = !rightDrawerOpen"
-          :disable="!$route.meta.rightDrawer"
         />
       </q-toolbar>
     </q-header>

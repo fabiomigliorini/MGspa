@@ -65,13 +65,12 @@ const toggleRightDrawer = () => {
       <q-toolbar>
         <!-- HAMBURQUER ESQUERDO -->
         <q-btn
+          v-if="leftDrawer"
           dense
           flat
           round
           icon="menu"
           @click="toggleLeftDrawer"
-          :disable="!leftDrawer"
-          v-if="leftDrawer"
         />
         <q-btn dense flat round icon="arrow_back" :to="backTo" v-if="backTo" />
 
@@ -90,13 +89,12 @@ const toggleRightDrawer = () => {
 
         <!-- HAMBURGER DIREITO -->
         <q-btn
+          v-if="rightDrawer"
           dense
           flat
           round
           icon="menu"
           @click="toggleRightDrawer"
-          :disable="!rightDrawer"
-          v-if="rightDrawer"
         />
       </q-toolbar>
     </q-header>
