@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   groups: {
@@ -72,7 +72,7 @@ const colsPerRow = computed(() => {
 const normalize = (s) => (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
 const visibleGroups = computed(() => {
-  const merged = [{ label: 'Apps', items: appsItems.value }, ...props.groups]
+  const merged = [...props.groups, { label: 'Outros Apps', items: appsItems.value }]
   return merged
     .map((g) => ({
       ...g,
@@ -204,10 +204,23 @@ function abrirDialog() {
   viewportWidth.value = window.innerWidth
   dialogOpen.value = true
 }
+
+function handleShortcut(e) {
+  if (e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey && e.code === 'KeyM') {
+    e.preventDefault()
+    if (dialogOpen.value) dialogOpen.value = false
+    else abrirDialog()
+  }
+}
+
+onMounted(() => window.addEventListener('keydown', handleShortcut))
+onBeforeUnmount(() => window.removeEventListener('keydown', handleShortcut))
 </script>
 
 <template>
-  <q-btn flat round icon="apps" aria-label="Telas" @click="abrirDialog()" />
+  <q-btn flat round icon="apps" aria-label="Telas" @click="abrirDialog()">
+    <q-tooltip>Apps e Telas · Ctrl+M</q-tooltip>
+  </q-btn>
 
   <q-dialog v-model="dialogOpen" :maximized="isMobile">
     <q-card
