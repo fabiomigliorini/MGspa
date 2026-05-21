@@ -191,14 +191,6 @@ export default defineConfig((/* ctx */) => {
       manifestFilename: 'manifest.json',
       useCredentialsForManifestTag: false,
 
-      extendManifestJson(json) {
-        json.name = 'MG Papelaria - Contas'
-        json.short_name = 'MG Contas'
-        json.description = 'Controle de Contas Bancárias'
-        json.theme_color = '#C62828'
-        json.background_color = '#ffffff'
-      },
-
       extendGenerateSWOptions(cfg) {
         cfg.skipWaiting = true
         cfg.clientsClaim = true

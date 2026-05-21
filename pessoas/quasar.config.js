@@ -129,14 +129,6 @@ export default defineConfig((/* ctx */) => {
       manifestFilename: 'manifest.json',
       useCredentialsForManifestTag: false,
 
-      extendManifestJson(json) {
-        json.name = 'MG Papelaria - Pessoas'
-        json.short_name = 'MG Pessoas'
-        json.description = 'Pessoas'
-        json.theme_color = '#FFFF00'
-        json.background_color = '#ffffff'
-      },
-
       extendGenerateSWOptions(cfg) {
         cfg.skipWaiting = true
         cfg.clientsClaim = true
