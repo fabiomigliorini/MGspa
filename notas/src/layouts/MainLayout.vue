@@ -3,7 +3,6 @@ import { ref } from 'vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
-import MgScreensMenu from '@components/MgScreensMenu.vue'
 import MgPageTitle from '@components/MgPageTitle.vue'
 import { useAuth } from 'src/composables/useAuth'
 
@@ -55,9 +54,7 @@ const menuGroups = [
         <!-- Menu do Usuário -->
         <MgUserMenu :auth="auth" />
 
-        <!-- Apps + Screens -->
-        <MgAppsMenu />
-        <MgScreensMenu :groups="menuGroups" />
+        <MgAppsMenu :groups="menuGroups" />
 
         <!-- Hamburger DIREITO -->
         <q-btn

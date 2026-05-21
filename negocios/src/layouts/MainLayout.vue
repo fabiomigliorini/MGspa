@@ -2,7 +2,6 @@
 import { ref } from 'vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
-import MgScreensMenu from '@components/MgScreensMenu.vue'
 import MgPageTitle from '@components/MgPageTitle.vue'
 
 defineProps({
@@ -84,9 +83,7 @@ const toggleRightDrawer = () => {
         <!-- USUARIO  -->
         <slot name="usuario" />
 
-        <!-- APPS + TELAS -->
-        <MgAppsMenu />
-        <MgScreensMenu :groups="menuGroups" />
+        <MgAppsMenu :groups="menuGroups" />
 
         <!-- HAMBURGER DIREITO -->
         <q-btn
