@@ -20,6 +20,7 @@ class TituloAgrupamentoController extends Controller
             'codtituloagrupamento',
             'codpessoa',
             'codgrupoeconomico',
+            'codgrupocliente',
             'estornado',
             'emissao_de',
             'emissao_ate',

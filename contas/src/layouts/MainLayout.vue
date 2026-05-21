@@ -77,12 +77,12 @@ const menuGroups = [
     <q-header reveal bordered class="bg-primary text-white">
       <q-toolbar>
         <q-btn
+          v-if="$route.meta.leftDrawer"
           dense
           flat
           round
           icon="menu"
           @click="leftDrawerOpen = !leftDrawerOpen"
-          :disable="!$route.meta.leftDrawer"
         />
 
         <MgPageTitle app-name="Contas" :home-route="{ name: 'pix' }" />
@@ -91,12 +91,12 @@ const menuGroups = [
         <MgAppsMenu :groups="menuGroups" />
 
         <q-btn
+          v-if="$route.meta.rightDrawer"
           dense
           flat
           round
           icon="menu"
           @click="rightDrawerOpen = !rightDrawerOpen"
-          :disable="!$route.meta.rightDrawer"
         />
       </q-toolbar>
     </q-header>

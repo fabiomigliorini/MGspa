@@ -116,13 +116,11 @@ const coresSaldo = (saldo) => {
   return saldo > 0 ? 'text-blue' : 'text-orange'
 }
 
-const linkTitulosAbertos = () => {
-  return (
-    process.env.MGSIS_URL +
-    'index.php?r=titulo/index&Titulo[status]=A&Titulo[codgrupoeconomico]=' +
-    props.codgrupoeconomico
+const abrirTitulosContas = () =>
+  window.open(
+    `${process.env.CONTAS_URL}/titulo?codgrupoeconomico=${props.codgrupoeconomico}&status=A`,
+    '_blank',
   )
-}
 
 const linkRelatorioTitulosAbertos = () => {
   return (
@@ -175,7 +173,7 @@ onMounted(() => {
         </q-input>
         <q-btn-group flat>
           <q-btn flat icon="filter_list" @click="showFilter = !showFilter" />
-          <q-btn flat icon="list" :href="linkTitulosAbertos()" target="_blank">
+          <q-btn flat icon="list" @click="abrirTitulosContas">
             <q-tooltip class="bg-primary" :offset="[10, 10]"> Ver títulos em aberto! </q-tooltip>
           </q-btn>
           <q-btn flat icon="print" :href="linkRelatorioTitulosAbertos()" target="_blank">

@@ -6,6 +6,7 @@ const defaultFilters = () => ({
   codtituloagrupamento: null,
   codpessoa: null,
   codgrupoeconomico: null,
+  codgrupocliente: null,
   estornado: '0',
   emissao_de: null,
   emissao_ate: null,

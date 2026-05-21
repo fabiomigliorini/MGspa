@@ -3,7 +3,7 @@
 namespace Mg\NotaFiscal\Dashboard;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Mg\Filial\Filial;
 use Mg\NFePHP\NFePHPService;
 
@@ -27,7 +27,16 @@ class DashboardSefazController extends Controller
     public function status(int $codfilial)
     {
         $filial = Filial::findOrFail($codfilial);
-        $result = NFePHPService::sefazStatus($filial);
+
+        try {
+            $result = NFePHPService::sefazStatus($filial);
+        } catch (\Throwable $e) {
+            Log::warning("Status SEFAZ indisponível (filial {$codfilial}): {$e->getMessage()}");
+            return response()->json([
+                'status' => 'offline',
+                'mensagem' => $e->getMessage(),
+            ]);
+        }
 
         return response()->json($result);
     }

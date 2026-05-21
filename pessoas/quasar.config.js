@@ -93,7 +93,7 @@ export default defineConfig((/* ctx */) => {
       },
       hmr: {
         protocol: 'wss',
-        host: 'pessoas-dev.mgpapelaria.com.br',
+        host: 'sistema-dev.mgpapelaria.com.br',
         port: 8081,
       },
     },
