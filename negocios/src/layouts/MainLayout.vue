@@ -25,25 +25,18 @@ defineProps({
 
 const menuGroups = [
   {
-    label: 'PDV',
+    label: 'Ponto de Venda',
     items: [
-      { label: 'PDV', icon: 'point_of_sale', color: 'grey-8', to: '/' },
-      { label: 'WOO', icon: 'mdi-list-box-outline', color: 'grey-8', to: '/woo/painel' },
-      { label: 'Conferência', icon: 'check', color: 'grey-8', to: '/conferencia' },
-      { label: 'Conf', icon: 'photo_camera', color: 'grey-8', to: '/confissao' },
-    ],
-  },
-  {
-    label: 'Comandas',
-    items: [
-      { label: 'Comandas', icon: 'mdi-barcode', color: 'grey-8', to: '/comanda-vendedor' },
+      { label: 'PDV', icon: 'point_of_sale', color: 'secondary', to: '/' },
+      { label: 'Confissão de Dívida', icon: 'photo_camera', color: 'negative', to: '/confissao' },
+      { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
+      { label: 'Conferência', icon: 'check', color: 'orange', to: '/conferencia' },
+      { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
     ],
   },
   {
     label: 'Configurações',
-    items: [
-      { label: 'Config', icon: 'settings', color: 'grey-8', to: '/config/padrao' },
-    ],
+    items: [{ label: 'Config', icon: 'settings', color: 'grey-8', to: '/config/padrao' }],
   },
 ]
 
@@ -63,14 +56,7 @@ const toggleRightDrawer = () => {
     <q-header reveal bordered height-hint="98">
       <q-toolbar>
         <!-- HAMBURQUER ESQUERDO -->
-        <q-btn
-          v-if="leftDrawer"
-          dense
-          flat
-          round
-          icon="menu"
-          @click="toggleLeftDrawer"
-        />
+        <q-btn v-if="leftDrawer" dense flat round icon="menu" @click="toggleLeftDrawer" />
         <q-btn dense flat round icon="arrow_back" :to="backTo" v-if="backTo" />
 
         <!-- TITULO -->
@@ -85,14 +71,7 @@ const toggleRightDrawer = () => {
         <MgAppsMenu :groups="menuGroups" />
 
         <!-- HAMBURGER DIREITO -->
-        <q-btn
-          v-if="rightDrawer"
-          dense
-          flat
-          round
-          icon="menu"
-          @click="toggleRightDrawer"
-        />
+        <q-btn v-if="rightDrawer" dense flat round icon="menu" @click="toggleRightDrawer" />
       </q-toolbar>
     </q-header>
 

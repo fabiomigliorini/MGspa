@@ -16,7 +16,7 @@ const props = defineProps({
 })
 
 // URL base para negócios
-const negociosUrl = import.meta.env.VITE_NEGOCIOS_URL || process.env.NEGOCIOS_URL
+const negociosUrl = process.env.NEGOCIOS_URL
 
 const imagem = computed(() => {
   if (props.item.produtoBarra?.imagem) {
@@ -41,7 +41,7 @@ const negocioUrl = computed(() => {
 })
 
 // URL base para MGLara
-const mglaraUrl = import.meta.env.VITE_MGLARA_URL || process.env.MGLARA_URL
+const mglaraUrl = process.env.MGLARA_URL
 
 const emit = defineEmits(['delete'])
 
@@ -54,7 +54,7 @@ onMounted(() => {
 })
 
 const getProdutoUrl = (codproduto) => {
-  return `${mglaraUrl}/produto/${codproduto}`
+  return `${mglaraUrl}produto/${codproduto}`
 }
 </script>
 

@@ -27,7 +27,7 @@ const eventosLista = computed(() => {
   }))
 })
 
-const negocioUrl = (codnegocio) => process.env.APP_NEGOCIOS_URL + '/negocio/' + codnegocio
+const negocioUrl = (codnegocio) => process.env.NEGOCIOS_URL + '/negocio/' + codnegocio
 
 const carregarEventos = async () => {
   paginaEventos.value = 1
