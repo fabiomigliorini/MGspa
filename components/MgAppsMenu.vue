@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
-import { useQuasar } from 'quasar'
 
 const props = defineProps({
   groups: {
@@ -9,8 +8,6 @@ const props = defineProps({
     // [{ label?: string, items: [{ label, icon, color?, to?, href?, target?, hide?: boolean }] }]
   },
 })
-
-const $q = useQuasar()
 
 const APPS = [
   {
@@ -62,6 +59,15 @@ const dialogOpen = ref(false)
 const search = ref('')
 const selectedIndex = ref(0)
 const itemRefs = ref([])
+const viewportWidth = ref(window.innerWidth)
+
+const isMobile = computed(() => viewportWidth.value < 600)
+
+const colsPerRow = computed(() => {
+  if (viewportWidth.value < 600) return 3
+  if (viewportWidth.value < 1024) return 4
+  return 6
+})
 
 const normalize = (s) => (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 
@@ -86,14 +92,6 @@ const flatItems = computed(() => {
     }
   }
   return out
-})
-
-const isMobile = computed(() => $q.screen.lt.sm)
-
-const colsPerRow = computed(() => {
-  if (isMobile.value) return 3
-  if ($q.screen.lt.md) return 4
-  return 6
 })
 
 watch([dialogOpen, search], () => {
@@ -203,6 +201,7 @@ function setItemRef(el, idx) {
 
 function abrirDialog() {
   search.value = ''
+  viewportWidth.value = window.innerWidth
   dialogOpen.value = true
 }
 </script>
@@ -210,37 +209,35 @@ function abrirDialog() {
 <template>
   <q-btn flat round icon="apps" aria-label="Telas" @click="abrirDialog()" />
 
-  <q-dialog
-    v-model="dialogOpen"
-    :maximized="isMobile"
-    content-class="mg-apps-menu-content"
-  >
+  <q-dialog v-model="dialogOpen" :maximized="isMobile">
     <q-card
       flat
-      class="mg-apps-menu-card"
-      :style="isMobile ? '' : 'width: 800px; max-width: 90vw'"
+      class="column no-wrap"
+      :style="isMobile ? '' : 'width: 800px; max-width: 90vw; height: 600px; max-height: 80vh'"
     >
-      <q-card-section class="q-pa-md row items-center no-wrap q-gutter-sm">
-        <q-input
-          v-model="search"
-          autofocus
-          outlined
-          rounded
-          clearable
-          placeholder="Digite para pesquisar"
-          class="col"
-          @keydown="onKey"
-        >
-          <template #prepend>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-        <q-btn flat round icon="close" aria-label="Fechar" v-close-popup />
+      <q-card-section class="q-pa-md">
+        <div class="row no-wrap items-center q-gutter-sm">
+          <q-input
+            v-model="search"
+            autofocus
+            outlined
+            rounded
+            clearable
+            placeholder="Digite para pesquisar"
+            class="col"
+            @keydown="onKey"
+          >
+            <template #prepend>
+              <q-icon name="search" />
+            </template>
+          </q-input>
+          <q-btn flat round icon="close" aria-label="Fechar" v-close-popup />
+        </div>
       </q-card-section>
 
       <q-separator inset />
 
-      <q-card-section class="q-pt-none" style="max-height: 70vh; overflow-y: auto">
+      <q-card-section class="q-pt-none col scroll">
         <template v-if="!isFiltering">
           <template v-for="(group, gi) in visibleGroups" :key="gi">
             <div class="text-subtitle2 text-grey-7 q-mt-md q-mb-sm">{{ group.label }}</div>
@@ -313,54 +310,17 @@ function abrirDialog() {
   min-height: 96px;
   padding: 8px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0);
+  border: 1px solid transparent;
 }
 .mg-screens-menu-item:hover {
   background-color: rgba(25, 118, 210, 0.12);
-  border: 1px solid rgba(25, 118, 210, 0.4);
+  border-color: rgba(25, 118, 210, 0.4);
 }
 .mg-screens-menu-item--active {
   background-color: rgba(25, 118, 210, 0.12);
-  border: 1px solid rgba(25, 118, 210, 0.4);
-}
-.mg-apps-menu-card {
-  background-color: rgba(255, 255, 255, 1) !important;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-}
-@media (max-width: 599.98px) {
-  .mg-apps-menu-content,
-  .mg-apps-menu-content.q-dialog__inner,
-  .mg-apps-menu-content.q-dialog__inner--minimized,
-  .mg-apps-menu-content.q-dialog__inner--standard {
-    padding: 0 !important;
-    align-items: stretch !important;
-    justify-content: stretch !important;
-  }
-  .mg-apps-menu-card,
-  .q-dialog__inner > .mg-apps-menu-card,
-  .mg-apps-menu-content > .mg-apps-menu-card {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: 100vw !important;
-    max-height: 100vh !important;
-    min-width: 100vw !important;
-    min-height: 100vh !important;
-    border-radius: 0 !important;
-    margin: 0 !important;
-  }
+  border-color: rgba(25, 118, 210, 0.4);
 }
 .mg-screens-menu-item.q-btn--disable {
   opacity: 1 !important;
-}
-.ellipsis-2-lines {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  line-height: 1.2;
 }
 </style>
