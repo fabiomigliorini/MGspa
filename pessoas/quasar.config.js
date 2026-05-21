@@ -61,6 +61,7 @@ export default defineConfig((/* ctx */) => {
       alias: {
         '@components': path.resolve(import.meta.dirname, '../components'),
         'quasar/src': path.resolve(import.meta.dirname, 'node_modules/quasar/src'),
+        'vue-router': path.resolve(import.meta.dirname, 'node_modules/vue-router'),
       },
 
       vueRouterMode: 'history',
