@@ -12,9 +12,9 @@ const props = defineProps({
 const APPS = [
   {
     id: 'outros',
-    label: 'Início',
-    icon: 'home',
-    color: 'brown',
+    label: 'Sistemas',
+    icon: 'apps',
+    color: 'green',
     href: process.env.SISTEMA_URL || '',
   },
   {
@@ -49,11 +49,7 @@ const APPS = [
 
 const currentApp = (process.env.APP_NAME || '').toLowerCase()
 
-const appsItems = computed(() =>
-  APPS.map((app) => ({ ...app, ativo: app.id === currentApp })).filter(
-    (app) => app.ativo || app.href,
-  ),
-)
+const appsItems = computed(() => APPS.filter((app) => app.id !== currentApp && app.href))
 
 const dialogOpen = ref(false)
 const search = ref('')

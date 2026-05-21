@@ -325,21 +325,21 @@ const prazo = async () => {
 const urlRomaneio = computed({
   get() {
     return (
-      process.env.API_BASE_URL + '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio'
+      process.env.API_URL + 'v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio'
     )
   },
 })
 
 const urlVale = computed({
   get() {
-    return process.env.API_BASE_URL + '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
+    return process.env.API_URL + 'v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
   },
 })
 
 const urlComanda = computed({
   get() {
     return (
-      process.env.API_BASE_URL + '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda'
+      process.env.API_URL + 'v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda'
     )
   },
 })
