@@ -15,8 +15,20 @@ const menuGroups = [
   {
     label: 'Movimento',
     items: [
+      { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
+      {
+        label: 'Liquidações',
+        icon: 'paid',
+        color: 'indigo-7',
+        to: { name: 'liquidacao-titulo' },
+      },
+      {
+        label: 'Agrupamentos',
+        icon: 'receipt_long',
+        color: 'amber-8',
+        to: { name: 'agrupamento' },
+      },
       { label: 'Títulos', icon: 'request_quote', color: 'indigo-7', to: { name: 'titulo' } },
-      { label: 'Pix', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
         label: 'Saldos',
         icon: 'account_balance_wallet',
@@ -24,22 +36,10 @@ const menuGroups = [
         to: { name: 'portador-saldos' },
       },
       {
-        label: 'Boletos',
+        label: 'Boletos Emitidos',
         icon: 'receipt',
         color: 'red-7',
         to: { name: 'boleto-abertos', query: { tipo: 'vencer7' } },
-      },
-      {
-        label: 'Agrupamentos',
-        icon: 'receipt_long',
-        color: 'indigo-7',
-        to: { name: 'agrupamento' },
-      },
-      {
-        label: 'Liquidações',
-        icon: 'paid',
-        color: 'green-7',
-        to: { name: 'liquidacao-titulo' },
       },
     ],
   },
@@ -53,7 +53,12 @@ const menuGroups = [
         color: 'indigo-8',
         to: { name: 'conta-contabil' },
       },
-      { label: 'Tipos de Título', icon: 'receipt_long', color: 'teal-8', to: { name: 'tipo-titulo' } },
+      {
+        label: 'Tipos de Título',
+        icon: 'receipt_long',
+        color: 'teal-8',
+        to: { name: 'tipo-titulo' },
+      },
       {
         label: 'Tipos de Movimento',
         icon: 'sync_alt',

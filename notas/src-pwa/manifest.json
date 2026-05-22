@@ -1,7 +1,7 @@
 {
-  "name": "Notas",
+  "name": "Notas - MG Papelaria",
   "short_name": "Notas",
-  "description": "Sistema de Notas Fiscais e Documentos Eletrônicos",
+  "description": "Notas Fiscais e Documentos Eletrônicos",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",

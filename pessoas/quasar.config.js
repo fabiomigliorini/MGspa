@@ -61,6 +61,7 @@ export default defineConfig((/* ctx */) => {
       alias: {
         '@components': path.resolve(import.meta.dirname, '../components'),
         'quasar/src': path.resolve(import.meta.dirname, 'node_modules/quasar/src'),
+        'vue-router': path.resolve(import.meta.dirname, 'node_modules/vue-router'),
       },
 
       vueRouterMode: 'history',
@@ -127,14 +128,6 @@ export default defineConfig((/* ctx */) => {
       swFilename: 'sw.js',
       manifestFilename: 'manifest.json',
       useCredentialsForManifestTag: false,
-
-      extendManifestJson(json) {
-        json.name = 'MG Papelaria - Pessoas'
-        json.short_name = 'MG Pessoas'
-        json.description = 'Pessoas'
-        json.theme_color = '#FFFF00'
-        json.background_color = '#ffffff'
-      },
 
       extendGenerateSWOptions(cfg) {
         cfg.skipWaiting = true

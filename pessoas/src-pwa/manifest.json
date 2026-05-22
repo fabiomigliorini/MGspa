@@ -1,13 +1,13 @@
 {
-  "name": "Negócios - MG Papelaria",
-  "short_name": "Negócios",
-  "description": "Vendas e Negócios",
+  "name": "Pessoas - MG Papelaria",
+  "short_name": "Pessoas",
+  "description": "Cadastro de Pessoas, Empresas e Usuários",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
   "theme_color": "#1976D2",
   "start_url": "/",
-  "id": "com.mgpapelaria.negocios",
+  "id": "com.mgpapelaria.pessoas",
   "scope": "/",
   "prefer_related_applications": false,
   "icons": [

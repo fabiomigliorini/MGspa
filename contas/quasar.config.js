@@ -63,6 +63,7 @@ export default defineConfig((/* ctx */) => {
       alias: {
         '@components': path.resolve(import.meta.dirname, '../components'),
         'quasar/src': path.resolve(import.meta.dirname, 'node_modules/quasar/src'),
+        'vue-router': path.resolve(import.meta.dirname, 'node_modules/vue-router'),
       },
 
       vueRouterMode: 'history', // available values: 'hash', 'history'
@@ -189,14 +190,6 @@ export default defineConfig((/* ctx */) => {
       swFilename: 'sw.js',
       manifestFilename: 'manifest.json',
       useCredentialsForManifestTag: false,
-
-      extendManifestJson(json) {
-        json.name = 'MG Papelaria - Contas'
-        json.short_name = 'MG Contas'
-        json.description = 'Controle de Contas Bancárias'
-        json.theme_color = '#C62828'
-        json.background_color = '#ffffff'
-      },
 
       extendGenerateSWOptions(cfg) {
         cfg.skipWaiting = true

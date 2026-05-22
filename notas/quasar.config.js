@@ -63,6 +63,7 @@ export default defineConfig((/* ctx */) => {
       alias: {
         '@components': path.resolve(import.meta.dirname, '../components'),
         'quasar/src': path.resolve(import.meta.dirname, 'node_modules/quasar/src'),
+        'vue-router': path.resolve(import.meta.dirname, 'node_modules/vue-router'),
       },
 
       // vueRouterMode: 'hash', // available values: 'hash', 'history'
@@ -175,43 +176,21 @@ export default defineConfig((/* ctx */) => {
       // manualStoreHydration: true,
       // manualPostHydrationTrigger: true,
 
-      pwa: {
-        workboxMode: 'GenerateSW', // ou 'InjectManifest' para mais controle
-        injectPwaMetaTags: true,
-        swFilename: 'sw.js',
-        manifestFilename: 'manifest.json',
-        useCredentialsForManifestTag: false,
-
-        extendManifestJson(json) {
-          json.name = 'MG Papelaria - Notas Fiscais'
-          json.short_name = 'MG Notas'
-          json.description = 'Sistema de Notas Fiscais e Documentos Eletrônicos'
-          json.theme_color = '#1976D2'
-          json.background_color = '#ffffff'
-        },
-
-        extendGenerateSWOptions(cfg) {
-          cfg.skipWaiting = true
-          cfg.clientsClaim = true
-        },
-      },
-      // pwaOfflineHtmlFilename: 'offline.html', // do NOT use index.html as name!
-
-      // pwaExtendGenerateSWOptions (cfg) {},
-      // pwaExtendInjectManifestOptions (cfg) {}
+      pwa: false,
     },
 
     // https://v2.quasar.dev/quasar-cli-vite/developing-pwa/configuring-pwa
     pwa: {
-      workboxMode: 'GenerateSW', // 'GenerateSW' or 'InjectManifest'
-      // swFilename: 'sw.js',
-      // manifestFilename: 'manifest.json',
-      // extendManifestJson (json) {},
-      // useCredentialsForManifestTag: true,
-      // injectPwaMetaTags: false,
-      // extendPWACustomSWConf (esbuildConf) {},
-      // extendGenerateSWOptions (cfg) {},
-      // extendInjectManifestOptions (cfg) {}
+      workboxMode: 'GenerateSW',
+      injectPwaMetaTags: true,
+      swFilename: 'sw.js',
+      manifestFilename: 'manifest.json',
+      useCredentialsForManifestTag: false,
+
+      extendGenerateSWOptions(cfg) {
+        cfg.skipWaiting = true
+        cfg.clientsClaim = true
+      },
     },
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-cordova-apps/configuring-cordova

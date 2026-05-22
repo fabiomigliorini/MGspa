@@ -53,7 +53,7 @@ const appsItems = computed(() => APPS.filter((app) => app.id !== currentApp && a
 
 const dialogOpen = ref(false)
 const search = ref('')
-const selectedIndex = ref(0)
+const selectedIndex = ref(-1)
 const itemRefs = ref([])
 const viewportWidth = ref(window.innerWidth)
 
@@ -90,12 +90,20 @@ const flatItems = computed(() => {
   return out
 })
 
-watch([dialogOpen, search], () => {
-  selectedIndex.value = 0
+watch(dialogOpen, () => {
+  selectedIndex.value = -1
+})
+
+watch(search, () => {
+  if (isFiltering.value) {
+    if (selectedIndex.value < 0) selectedIndex.value = 0
+  } else {
+    selectedIndex.value = -1
+  }
 })
 
 watch(flatItems, () => {
-  if (selectedIndex.value >= flatItems.value.length) selectedIndex.value = 0
+  if (selectedIndex.value >= flatItems.value.length) selectedIndex.value = -1
 })
 
 watch(selectedIndex, async () => {
@@ -166,6 +174,13 @@ function onKey(e) {
   if (!flatItems.value.length) return
   const n = flatItems.value.length
   const key = e.key
+  const isArrow =
+    key === 'ArrowDown' || key === 'ArrowUp' || key === 'ArrowRight' || key === 'ArrowLeft'
+  if (isArrow && selectedIndex.value < 0) {
+    e.preventDefault()
+    selectedIndex.value = 0
+    return
+  }
   if (key === 'ArrowDown') {
     e.preventDefault()
     moveVertical(1)
@@ -228,7 +243,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleShortcut))
         <div class="row no-wrap items-center q-gutter-sm">
           <q-input
             v-model="search"
-            autofocus
+            :autofocus="!isMobile"
             outlined
             rounded
             clearable
