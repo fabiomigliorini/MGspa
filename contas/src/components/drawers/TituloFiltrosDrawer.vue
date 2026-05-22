@@ -130,7 +130,6 @@ const pagarReceberOptions = [
       <SelectGrupoCliente
         v-model="store.filters.codgrupocliente"
         outlined
-        clearable
         :bottom-slots="false"
         label="Grupo de Cliente"
       />

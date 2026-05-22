@@ -120,6 +120,16 @@ onMounted(() => {
               </q-item-label>
             </q-item-section>
 
+            <!-- Boleto -->
+            <q-item-section class="gt-xs" style="flex: 0 0 70px; min-width: 0">
+              <q-item-label class="text-caption text-weight-bold text-grey-7">
+                Boleto
+              </q-item-label>
+              <q-item-label :class="t.boleto ? 'text-green' : 'text-red'">
+                {{ t.boleto ? 'Sim' : 'Não' }}
+              </q-item-label>
+            </q-item-section>
+
             <!-- Datas (gt-xs) -->
             <q-item-section class="gt-xs" style="flex: 0 0 130px; min-width: 0">
               <q-item-label class="text-weight-bold ellipsis" :class="classeVencimento(t)">

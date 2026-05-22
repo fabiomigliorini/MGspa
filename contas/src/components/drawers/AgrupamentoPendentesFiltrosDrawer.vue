@@ -29,9 +29,7 @@ function clear() {
     <FilterGroup title="Cliente / Portador" first>
       <SelectGrupoCliente
         v-model="store.filters.codgrupocliente"
-        multiple
         outlined
-        clearable
         :bottom-slots="false"
         label="Grupos de Cliente"
         class="q-mb-md"
