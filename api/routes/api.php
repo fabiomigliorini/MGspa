@@ -338,6 +338,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::put('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'updateItem']);
     Route::delete('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'destroyItem']);
     Route::apiResource('pedido', \Mg\Pedido\PedidoController::class)->parameters(['pedido' => 'id']);
+
+    // CaixaMercadoria (stub literal do legacy — migrado em 23/05/2026)
+    Route::apiResource('caixa-mercadoria', \Mg\CaixaMercadoria\CaixaMercadoriaController::class)->parameters(['caixa-mercadoria' => 'id']);
 });
 
 /*
