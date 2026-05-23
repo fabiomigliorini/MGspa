@@ -263,6 +263,16 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('pessoa/conta/banco/select', [\Mg\Pessoa\PessoaContaController::class, 'selectBanco']);
     Route::post('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'inativar']);
     Route::delete('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'ativar']);
+
+    // Tributacao + TributacaoRegra + Tributo (migrado em 23/05/2026)
+    Route::apiResource('tributacao/tributo', \Mg\Tributacao\TributoController::class)->parameters(['tributo' => 'tributo']);
+    Route::apiResource('tributacao/regra', \Mg\Tributacao\TributacaoRegraController::class)->parameters(['regra' => 'regra']);
+    Route::apiResource('tributacao', \Mg\Tributacao\TributacaoController::class)->parameters(['tributacao' => 'codtributacao']);
+
+    // NaturezaOperacao trio (migrado em 23/05/2026)
+    Route::apiResource('natureza-operacao/cfop', \Mg\NaturezaOperacao\CfopController::class)->parameters(['cfop' => 'codcfop']);
+    Route::apiResource('natureza-operacao/{codnaturezaoperacao}/tributacao', \Mg\NaturezaOperacao\TributacaoNaturezaOperacaoController::class)->parameters(['tributacao' => 'codtributacaonaturezaoperacao']);
+    Route::apiResource('natureza-operacao', \Mg\NaturezaOperacao\NaturezaOperacaoController::class)->parameters(['natureza-operacao' => 'codnaturezaoperacao']);
 });
 
 /*
