@@ -310,6 +310,26 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('grupo-usuario', \Mg\Usuario\GrupoUsuarioController::class)->parameters(['grupo-usuario' => 'id']);
     Route::delete('grupo-usuario/{id}', [\Mg\Usuario\GrupoUsuarioController::class, 'destroy']);
     Route::put('grupo-usuario/{id}/alterar', [\Mg\Usuario\GrupoUsuarioController::class, 'update']);
+
+    // Filial (migrado em 23/05/2026)
+    Route::get('filial/{id}/autor', [\Mg\Filial\FilialController::class, 'autor']);
+    Route::apiResource('filial', \Mg\Filial\FilialController::class)->parameters(['filial' => 'id']);
+
+    // GrupoEconomico (migrado em 23/05/2026)
+    Route::get('grupoeconomico/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'index']);
+    Route::get('grupoeconomico/select', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'pesquisaGrupoEconomico']);
+    Route::post('grupoeconomico/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'create']);
+    Route::delete('pessoa/{codpessoa}/grupoeconomico/{codgrupoeconomico}/removerdogrupo', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'deletaPessoadoGrupo']);
+    Route::get('grupo-economico/{codgrupoeconomico}/totais-negocios', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'totaisNegocios']);
+    Route::get('grupo-economico/{codgrupoeconomico}/titulos-abertos', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'titulosAbertos']);
+    Route::get('grupo-economico/{codgrupoeconomico}/nfe-terceiro', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'nfeTerceiro']);
+    Route::get('grupo-economico/{codgrupoeconomico}/negocios', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'negocios']);
+    Route::get('grupo-economico/{codgrupoeconomico}/top-produtos', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'topProdutos']);
+    Route::get('grupoeconomico/{codgrupoeconomico}/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'show']);
+    Route::post('grupoeconomico/{codgrupoeconomico}/inativo', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'inativar']);
+    Route::delete('grupoeconomico/{codgrupoeconomico}/inativo', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'ativar']);
+    Route::put('grupoeconomico/{codgrupoeconomico}/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'update']);
+    Route::delete('grupoeconomico/{codgrupoeconomico}/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'delete']);
 });
 
 /*
