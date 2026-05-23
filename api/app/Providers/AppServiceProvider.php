@@ -31,5 +31,15 @@ class AppServiceProvider extends ServiceProvider
                 $request->user()?->getAuthIdentifier() ?: $request->ip()
             );
         });
+
+        // Observers — registrar quando as classes referenciadas estiverem
+        // estáveis. Comentados por padrão pra evitar quebra em controllers
+        // que só precisam fazer leitura simples. Para ativar, descomentar:
+        // \Mg\Pessoa\Pessoa::observe(\Mg\Pessoa\PessoaObserver::class);
+        // \Mg\Pessoa\Dependente::observe(\Mg\Pessoa\DependenteObserver::class);
+        // \Mg\Colaborador\Colaborador::observe(\Mg\Colaborador\ColaboradorObserver::class);
+        // \Mg\Colaborador\Ferias::observe(\Mg\Colaborador\FeriasObserver::class);
+        // \Mg\NotaFiscal\NotaFiscal::observe(\Mg\NotaFiscal\Observers\NotaFiscalObserver::class);
+        // \Mg\Pessoa\Calendario\EventoCalendario::observe(\Mg\Pessoa\Calendario\EventoCalendarioObserver::class);
     }
 }

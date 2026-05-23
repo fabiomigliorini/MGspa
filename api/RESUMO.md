@@ -1,7 +1,69 @@
 # Resumo da execução — Marcos 1+3 do strangler-fig
 
-> **Status:** ✅ O novo projeto Laravel 13 está em pé, com **paridade total de auth com o MGAuth** (Marco 1) **+ 62 controllers já migradas** do MGspa/laravel (Marco 3 — 48% de 128) **+ proxy fallback ativo** pras rotas ainda não migradas. **Login real validado e testado pelo usuário no frontend Quasar `pessoas`.**
+> **Status (sessão de 24/05/2026 — bulk-port autônomo):** ✅ TODOS os 128 controllers do MGspa/laravel foram copiados em massa pra `/opt/www/MGspa/api/app/Mg/`, mais 21 Console/Commands, 7 Jobs, 6 Observers, App\\Http\\Requests, App\\Rules, App\\Libraries. **Todas as rotas legacy registradas** em `routes/api.php` (1072 linhas, ~250+ rotas v1). Proxy fallback continua ativo como rede de segurança.
+> 
+> ⚠️ **NÃO TESTADO** — o usuário pediu pra fazer tudo sem rodar comandos. Vai testar segunda-feira. Há **pontos de atenção** críticos listados na seção [Pontos de atenção pra testes de segunda](#pontos-de-atenção-pra-testes-de-segunda).
+>
 > **Nada em produção foi tocado** — só foi adicionado. O cutover (trocar `AUTH_API_URL` dos consumidores) fica pra você fazer manualmente após validar os testes.
+
+## Pontos de atenção pra testes de segunda
+
+### Esperado funcionar de cara
+- Controllers que já tinham sido testados nas sessões anteriores: Feriado, Filial trio, Pessoa lookups (Etnia/EstadoCivil/GrauInstrucao/GrupoCliente), Tributacao trio, NaturezaOperacao trio, Cidade trio, Marca CRUD, Usuario+GrupoUsuario, GrupoEconomico CRUD, Pedido CRUD, todas Select\\*, Banco/ContaContabil/FormaPagamento/TipoMovimentoTitulo/TipoTitulo, Empresa, CertidaoEmissor, EstoqueLocal, Veiculo suite, PessoaCertidao/Conta/RegistroSpc/CobrancaHistorico.
+
+### Provavelmente quebra (precisa ajuste)
+- **PessoaResource**: campo `aberto` retorna 0 (PdvNegocioPrazoService::emAberto não foi adaptado). Frontends que dependem desse campo mostram 0 até ajuste.
+- **PessoaService::importar**: simplificado pra usar SÓ ReceitaWS. A versão original consultava SEFAZ via NFePHPService::sefazCadastro — depende de lib `nfephp-org/*` no composer (não está no api/composer.json). Quando ajustar, restaurar bloco try/catch.
+- **PessoaController::comandaVendedor/comandaVendedorImprimir**: retornam 501 (PessoaComandaVendedorService não portado — depende de dompdf + jrxml).
+- **PermissaoController::index**: a rota NÃO está no bloco de rotas (apiResource('permissao') está, mas o index enumera Route::getRoutes() — vai listar SÓ as rotas registradas no api novo, não todas do legacy. Se quiser que retorne tudo, manter proxy.
+
+### Observers — NÃO registrados
+Os observers foram copiados pra `app/Mg/.../*/Observer.php` mas o L13 slim NÃO tem `EventServiceProvider.php` — observers precisam ser registrados via `Model::observe(...)` em `AppServiceProvider::boot()`. Observers que estão lá:
+- `PessoaObserver` (audit)
+- `DependenteObserver` (observer puxa GoogleCalendarService — vai falhar até a env var existir)
+- `ColaboradorObserver`
+- `FeriasObserver`
+- `NotaFiscalObserver`
+- `EventoCalendarioObserver`
+
+Pra ativar: editar `/opt/www/MGspa/api/app/Providers/AppServiceProvider.php::boot()` e adicionar `Pessoa::observe(PessoaObserver::class)` etc.
+
+### Commands — copiados mas não testados
+21 commands em `app/Console/Commands/`. L13 auto-descobre. Possíveis falhas:
+- `BoletoBbConsultarLiquidados` — depende de `Mg\Titulo\BoletoBb\BoletoBbService` (copiado, mas usa lib BB)
+- `ExtratoBbConsultarApi` — depende de credenciais BB no .env (`BB_*`)
+- `PixConsultar` — depende de credenciais Pix no .env
+- `WooBuscarPedidos` / `WooExportarProduto` — depende de credenciais WooCommerce no .env
+- `PagarMeProcessarArquivoCommand` — depende de credenciais Pagar.me
+- `NFePHPCommandDistDfe` / `NFePHPCommandResolverPendentes` — depende de `nfephp-org/*` no composer
+- `NotaFiscalTransferenciaEntrada` — depende de NotaFiscalService + nfephp
+- `Email*Command` — depende de mailables (em `app/Mg/Pessoa/EmailAniversarioGeral.php` + `EmailAniversarioIndividual.php` copiados)
+- `Estoque*` (BaixarEmbalagens, CalcularMinimoMaximo, DistribuirSaldoDeposito) — depende de Mg\\Estoque\\MinimoMaximo (verificar se copiou)
+- `RefreshMvRankingVendasProduto` — apenas SQL VIEW refresh
+- `ReprocessaMetaCommand` / `FinalizaMetaCommand` / `CriarNovaMetaCommand` — Meta + ProcessarVendaService
+- `ProdutoUnificaBarrasCommand` / `ProdutoUnificaVariacoesCommand` — Produto core
+- `CalendarioInicializarCommand` — Google Calendar (skip se faltar credencial)
+
+### Composer packages possivelmente faltando
+O api novo composer.json é enxuto. Para os controllers funcionarem 100%, vai precisar instalar:
+- `nfephp-org/sped-nfe` (NFePHP, MDFe, DFe, NotaFiscal)
+- `nfephp-org/sped-mdfe`
+- `nfephp-org/sped-da` (DANFE)
+- `dompdf/dompdf` (vários PDFs)
+- `mpdf/mpdf` (relatórios grandes)
+- `phpoffice/phpspreadsheet` (planilhas Marca/Estoque)
+- `picqer/php-barcode-generator` (etiquetas)
+- `simplesoftwareio/simple-qrcode` (Pix QR Code)
+- `prgayman/jasperphp` ou `quilhasoft/jasperphp` (Comanda PessoaComandaVendedorService — dev-master)
+- `automattic/woocommerce` (Woo integração)
+- `google/apiclient` (Google Drive PessoaAnexoService, Google Calendar Dependente)
+
+Cada uma a ser adicionada conforme o controller for testado.
+
+### Stubs ainda em uso
+Veja o ls em `app/Mg/`. Stubs originais que ficaram (porque a versão completa não foi copiada por colisão de nome ou porque é só FK):
+- `Sexo`, `Portador` (criado nesta sessão), `EstoqueMovimentoTipo` (criado anteriormente)
+- Vários models são tabelas referenciadas como FK mas não usadas ativamente.
 
 ## O que existe agora
 

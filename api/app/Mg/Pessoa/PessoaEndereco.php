@@ -2,23 +2,63 @@
 
 namespace Mg\Pessoa;
 
+use App\Models\Usuario;
+use Mg\Cidade\Cidade;
 use Mg\MgModel;
 
-/**
- * Stub minimal — preenche somente o necessário para checagens
- * de uso (FK codcidade) em Cidade::destroy(). Substituir
- * quando o domínio PessoaEndereco for migrado integralmente.
- */
 class PessoaEndereco extends MgModel
 {
     protected $table = 'tblpessoaendereco';
     protected $primaryKey = 'codpessoaendereco';
 
-    public $timestamps = false;
+    protected $fillable = [
+        'apelido',
+        'bairro',
+        'cep',
+        'cobranca',
+        'codcidade',
+        'codpessoa',
+        'complemento',
+        'endereco',
+        'entrega',
+        'inativo',
+        'nfe',
+        'numero',
+        'ordem',
+    ];
 
     protected $casts = [
-        'codpessoaendereco' => 'integer',
-        'codpessoa' => 'integer',
+        'cobranca' => 'boolean',
         'codcidade' => 'integer',
+        'codpessoa' => 'integer',
+        'codpessoaendereco' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'entrega' => 'boolean',
+        'nfe' => 'boolean',
+        'ordem' => 'integer',
+        'alteracao' => 'datetime',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
     ];
+
+    public function Cidade()
+    {
+        return $this->belongsTo(Cidade::class, 'codcidade', 'codcidade');
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
 }

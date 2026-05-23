@@ -1,0 +1,138 @@
+<?php
+
+namespace Mg\Pessoa;
+
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Support\Facades\Http;
+
+class PessoaTelefoneService
+{
+    public static function create(array $data): PessoaTelefone
+    {
+        if (empty($data['ordem'])) {
+            $data['ordem'] = PessoaTelefone::where('codpessoa', $data['codpessoa'])->max('ordem') + 1;
+        }
+        $telefone = new PessoaTelefone($data);
+        if ($telefone->tipo == 9 && empty($telefone->ddd)) {
+            $telefone->ddd = null;
+        }
+        $telefone->save();
+        PessoaService::atualizaCamposLegado($telefone->Pessoa);
+        return $telefone->refresh();
+    }
+
+    public static function update(PessoaTelefone $telefone, array $data): PessoaTelefone
+    {
+        if (isset($data['tipo']) && $telefone->tipo != $data['tipo']) {
+            $data['verificacao'] = null;
+        }
+        if (isset($data['pais']) && $telefone->pais != $data['pais']) {
+            $data['verificacao'] = null;
+        }
+        if (isset($data['ddd']) && $telefone->ddd != $data['ddd']) {
+            $data['verificacao'] = null;
+        }
+        if (isset($data['telefone']) && $telefone->telefone != $data['telefone']) {
+            $data['verificacao'] = null;
+        }
+        $telefone->fill($data);
+        $telefone->save();
+        PessoaService::atualizaCamposLegado($telefone->Pessoa);
+        return $telefone;
+    }
+
+    public static function createOrUpdate(array $data): PessoaTelefone
+    {
+        $telefone = PessoaTelefone::where('codpessoa', $data['codpessoa'])
+            ->where('ddd', $data['ddd'])
+            ->where('telefone', $data['telefone'])
+            ->first();
+        if ($telefone) {
+            $telefone = static::update($telefone, $data);
+        } else {
+            $telefone = static::create($data);
+        }
+        PessoaService::atualizaCamposLegado($telefone->Pessoa);
+        return $telefone;
+    }
+
+    public static function delete(PessoaTelefone $telefone)
+    {
+        $pessoa = $telefone->Pessoa;
+        $ret = $telefone->delete();
+        PessoaService::atualizaCamposLegado($pessoa);
+        return $ret;
+    }
+
+    public static function cima(PessoaTelefone $pe): PessoaTelefone
+    {
+        $anterior = $pe->ordem - 1;
+        $ret = PessoaTelefone::where('codpessoa', $pe->codpessoa)
+            ->where('ordem', $anterior)
+            ->update(['ordem' => $pe->ordem]);
+        if ($ret > 0) {
+            $pe->update(['ordem' => $anterior]);
+        }
+        PessoaService::atualizaCamposLegado($pe->Pessoa);
+        return $pe;
+    }
+
+    public static function baixo(PessoaTelefone $pe): PessoaTelefone
+    {
+        $posterior = $pe->ordem + 1;
+        $ret = PessoaTelefone::where('codpessoa', $pe->codpessoa)
+            ->where('ordem', $posterior)
+            ->update(['ordem' => $pe->ordem]);
+        if ($ret > 0) {
+            $pe->update(['ordem' => $posterior]);
+        }
+        PessoaService::atualizaCamposLegado($pe->Pessoa);
+        return $pe;
+    }
+
+    public static function ativar(PessoaTelefone $model): PessoaTelefone
+    {
+        $model->inativo = null;
+        $model->update();
+        PessoaService::atualizaCamposLegado($model->Pessoa);
+        return $model;
+    }
+
+    public static function inativar(PessoaTelefone $model, $date = null): PessoaTelefone
+    {
+        if (empty($date)) {
+            $date = Carbon::now();
+        }
+        $model->inativo = $date;
+        $model->update();
+        PessoaService::atualizaCamposLegado($model->Pessoa);
+        return $model;
+    }
+
+    public static function verificarsms(PessoaTelefone $tel)
+    {
+        $random = rand(1000, 9999);
+        $tel->codverificacao = $random;
+        $tel->update();
+
+        $telefone = "{$tel->pais}{$tel->ddd}{$tel->telefone}";
+        $msg = 'Código de verificação MG Papelaria: ';
+
+        $response = Http::withHeaders(['Accept' => 'application/json'])
+            ->get('https://api.smsdev.com.br/v1/send?key=' . env('CHAVE_API_SMS')
+                . '&type=9&number=' . $telefone . '&msg=' . $msg . $random);
+
+        return $response->json();
+    }
+
+    public static function confirmaVerificacao(PessoaTelefone $tel, $codverificacao): PessoaTelefone
+    {
+        if ($tel->codverificacao != $codverificacao) {
+            throw new Exception('Código informado incorreto!', 1);
+        }
+        $tel->verificacao = Carbon::now();
+        $tel->update();
+        return $tel;
+    }
+}
