@@ -2,21 +2,54 @@
 
 namespace Mg\Cidade;
 
+use App\Models\Usuario;
 use Mg\MgModel;
+use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
 
-/**
- * Stub minimal do Estado — usado por Veiculo::Estado() etc. Substituir
- * quando o domínio Cidade for migrado integralmente.
- */
 class Estado extends MgModel
 {
     protected $table = 'tblestado';
     protected $primaryKey = 'codestado';
 
-    public $timestamps = false;
+    protected $fillable = [
+        'codigooficial',
+        'codpais',
+        'estado',
+        'sigla',
+    ];
 
     protected $casts = [
         'codestado' => 'integer',
+        'codigooficial' => 'integer',
         'codpais' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'alteracao' => 'datetime',
+        'criacao' => 'datetime',
     ];
+
+    public function Pais()
+    {
+        return $this->belongsTo(Pais::class, 'codpais', 'codpais');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+    public function CidadeS()
+    {
+        return $this->hasMany(Cidade::class, 'codestado', 'codestado');
+    }
+
+    public function TributacaoNaturezaOperacaoS()
+    {
+        return $this->hasMany(TributacaoNaturezaOperacao::class, 'codestado', 'codestado');
+    }
 }

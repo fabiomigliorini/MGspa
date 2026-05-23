@@ -273,6 +273,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('natureza-operacao/cfop', \Mg\NaturezaOperacao\CfopController::class)->parameters(['cfop' => 'codcfop']);
     Route::apiResource('natureza-operacao/{codnaturezaoperacao}/tributacao', \Mg\NaturezaOperacao\TributacaoNaturezaOperacaoController::class)->parameters(['tributacao' => 'codtributacaonaturezaoperacao']);
     Route::apiResource('natureza-operacao', \Mg\NaturezaOperacao\NaturezaOperacaoController::class)->parameters(['natureza-operacao' => 'codnaturezaoperacao']);
+
+    // Cidade trio (migrado em 23/05/2026)
+    Route::apiResource('pais', \Mg\Cidade\PaisController::class)->parameters(['pais' => 'codpais']);
+    Route::apiResource('pais.estado', \Mg\Cidade\EstadoController::class)->parameters(['pais' => 'codpais', 'estado' => 'codestado']);
+    Route::apiResource('pais.estado.cidade', \Mg\Cidade\CidadeController::class)->parameters(['pais' => 'codpais', 'estado' => 'codestado', 'cidade' => 'codcidade']);
 });
 
 /*
