@@ -184,6 +184,58 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/banco', [\Mg\Select\SelectBancoController::class, 'index']);
     Route::get('select/estoque-movimento-tipo', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'index']);
     Route::get('select/tributacao', [\Mg\Select\SelectTributacaoController::class, 'index']);
+
+    // Banco (migrado em 23/05/2026)
+    Route::get('banco', [\Mg\Banco\BancoController::class, 'index']);
+    Route::get('banco/{codbanco}', [\Mg\Banco\BancoController::class, 'show']);
+    Route::post('banco', [\Mg\Banco\BancoController::class, 'store']);
+    Route::put('banco/{codbanco}', [\Mg\Banco\BancoController::class, 'update']);
+    Route::delete('banco/{codbanco}', [\Mg\Banco\BancoController::class, 'destroy']);
+    Route::post('banco/{codbanco}/inativo', [\Mg\Banco\BancoController::class, 'inativar']);
+    Route::delete('banco/{codbanco}/inativo', [\Mg\Banco\BancoController::class, 'ativar']);
+
+    // ContaContabil (migrado em 23/05/2026)
+    Route::get('conta-contabil', [\Mg\ContaContabil\ContaContabilController::class, 'index']);
+    Route::get('conta-contabil/{codcontacontabil}', [\Mg\ContaContabil\ContaContabilController::class, 'show']);
+    Route::post('conta-contabil', [\Mg\ContaContabil\ContaContabilController::class, 'store']);
+    Route::put('conta-contabil/{codcontacontabil}', [\Mg\ContaContabil\ContaContabilController::class, 'update']);
+    Route::delete('conta-contabil/{codcontacontabil}', [\Mg\ContaContabil\ContaContabilController::class, 'destroy']);
+    Route::post('conta-contabil/{codcontacontabil}/inativo', [\Mg\ContaContabil\ContaContabilController::class, 'inativar']);
+    Route::delete('conta-contabil/{codcontacontabil}/inativo', [\Mg\ContaContabil\ContaContabilController::class, 'ativar']);
+
+    // FormaPagamento (migrado em 23/05/2026)
+    Route::get('forma-pagamento', [\Mg\FormaPagamento\FormaPagamentoController::class, 'index']);
+    Route::get('forma-pagamento/{codformapagamento}', [\Mg\FormaPagamento\FormaPagamentoController::class, 'show']);
+    Route::post('forma-pagamento', [\Mg\FormaPagamento\FormaPagamentoController::class, 'store']);
+    Route::put('forma-pagamento/{codformapagamento}', [\Mg\FormaPagamento\FormaPagamentoController::class, 'update']);
+    Route::delete('forma-pagamento/{codformapagamento}', [\Mg\FormaPagamento\FormaPagamentoController::class, 'destroy']);
+    Route::post('forma-pagamento/{codformapagamento}/inativo', [\Mg\FormaPagamento\FormaPagamentoController::class, 'inativar']);
+    Route::delete('forma-pagamento/{codformapagamento}/inativo', [\Mg\FormaPagamento\FormaPagamentoController::class, 'ativar']);
+
+    // TipoMovimentoTitulo (migrado em 23/05/2026)
+    Route::get('tipo-movimento-titulo', [\Mg\Titulo\TipoMovimentoTituloController::class, 'index']);
+    Route::get('tipo-movimento-titulo/{codtipomovimentotitulo}', [\Mg\Titulo\TipoMovimentoTituloController::class, 'show']);
+    Route::post('tipo-movimento-titulo', [\Mg\Titulo\TipoMovimentoTituloController::class, 'store']);
+    Route::put('tipo-movimento-titulo/{codtipomovimentotitulo}', [\Mg\Titulo\TipoMovimentoTituloController::class, 'update']);
+    Route::delete('tipo-movimento-titulo/{codtipomovimentotitulo}', [\Mg\Titulo\TipoMovimentoTituloController::class, 'destroy']);
+    Route::post('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo', [\Mg\Titulo\TipoMovimentoTituloController::class, 'inativar']);
+    Route::delete('tipo-movimento-titulo/{codtipomovimentotitulo}/inativo', [\Mg\Titulo\TipoMovimentoTituloController::class, 'ativar']);
+
+    // TipoTitulo (migrado em 23/05/2026)
+    Route::get('tipo-titulo', [\Mg\Titulo\TipoTituloController::class, 'index']);
+    Route::get('tipo-titulo/{codtipotitulo}', [\Mg\Titulo\TipoTituloController::class, 'show']);
+    Route::post('tipo-titulo', [\Mg\Titulo\TipoTituloController::class, 'store']);
+    Route::put('tipo-titulo/{codtipotitulo}', [\Mg\Titulo\TipoTituloController::class, 'update']);
+    Route::delete('tipo-titulo/{codtipotitulo}', [\Mg\Titulo\TipoTituloController::class, 'destroy']);
+    Route::post('tipo-titulo/{codtipotitulo}/inativo', [\Mg\Titulo\TipoTituloController::class, 'inativar']);
+    Route::delete('tipo-titulo/{codtipotitulo}/inativo', [\Mg\Titulo\TipoTituloController::class, 'ativar']);
+
+    // CobrancaHistorico (nested em pessoa, migrado em 23/05/2026)
+    Route::get('pessoa/{codpessoa}/cobrancahistorico/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'index']);
+    Route::post('pessoa/{codpessoa}/cobrancahistorico/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'create']);
+    Route::get('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'show']);
+    Route::put('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'update']);
+    Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'delete']);
 });
 
 /*
