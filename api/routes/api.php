@@ -162,6 +162,28 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('veiculo-conjunto/{id}/inativo', [\Mg\Veiculo\VeiculoConjuntoController::class, 'inativar']);
     Route::delete('veiculo-conjunto/{id}/inativo', [\Mg\Veiculo\VeiculoConjuntoController::class, 'ativar']);
     Route::delete('veiculo-conjunto/{id}', [\Mg\Veiculo\VeiculoConjuntoController::class, 'delete']);
+
+    // Selects (migrados em 23/05/2026) — todos GET com index estático
+    Route::get('select/pessoa', [\Mg\Select\SelectPessoaController::class, 'index']);
+    Route::get('select/cidade', [\Mg\Select\SelectCidadeController::class, 'index']);
+    Route::get('select/impressora', [\Mg\Select\SelectImpressoraController::class, 'index']);
+    Route::get('select/filial', [\Mg\Select\SelectFilialController::class, 'index']);
+    Route::get('select/estoque-local', [\Mg\Select\SelectEstoqueLocalController::class, 'index']);
+    Route::get('select/estado', [\Mg\Select\SelectEstadoController::class, 'index']);
+    Route::get('select/veiculo-tipo', [\Mg\Select\SelectVeiculoTipoController::class, 'index']);
+    Route::get('select/veiculo', [\Mg\Select\SelectVeiculoController::class, 'index']);
+    Route::get('select/produto-barra', [\Mg\Select\SelectProdutoBarraController::class, 'index']);
+    Route::get('select/usuario', [\Mg\Select\SelectUsuarioController::class, 'index']);
+    Route::get('select/portador', [\Mg\Select\SelectPortadorController::class, 'index']);
+    Route::get('select/natureza-operacao', [\Mg\Select\SelectNaturezaOperacaoController::class, 'index']);
+    Route::get('select/grupo-economico', [\Mg\Select\SelectGrupoEconomicoController::class, 'index']);
+    Route::get('select/tipo-produto', [\Mg\Select\SelectTipoProdutoController::class, 'index']);
+    Route::get('select/tributo', [\Mg\Select\SelectTributoController::class, 'index']);
+    Route::get('select/tipo-titulo', [\Mg\Select\SelectTipoTituloController::class, 'index']);
+    Route::get('select/conta-contabil', [\Mg\Select\SelectContaContabilController::class, 'index']);
+    Route::get('select/banco', [\Mg\Select\SelectBancoController::class, 'index']);
+    Route::get('select/estoque-movimento-tipo', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'index']);
+    Route::get('select/tributacao', [\Mg\Select\SelectTributacaoController::class, 'index']);
 });
 
 /*

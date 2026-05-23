@@ -22,7 +22,10 @@
             "Mg\\": "app/Mg/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Mg/Helpers/MgHelpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
