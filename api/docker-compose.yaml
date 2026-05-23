@@ -1,0 +1,24 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile
+    image: mgspa-api
+    container_name: mgspa-api
+    restart: unless-stopped
+    working_dir: /opt/www/MGspa/api
+    ports:
+      - "9007:9000"
+    volumes:
+      - /opt/www:/opt/www
+      - /tmp:/tmp/host
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "sistema-dev.mgpapelaria.com.br:host-gateway"
+      - "api-dev.mgpapelaria.com.br:host-gateway"
+      - "api.mgpapelaria.com.br:host-gateway"
+      - "auth-dev.mgpapelaria.com.br:host-gateway"
+      - "api-mgspa-dev.mgpapelaria.com.br:host-gateway"
