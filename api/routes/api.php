@@ -278,6 +278,13 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('pais', \Mg\Cidade\PaisController::class)->parameters(['pais' => 'codpais']);
     Route::apiResource('pais.estado', \Mg\Cidade\EstadoController::class)->parameters(['pais' => 'codpais', 'estado' => 'codestado']);
     Route::apiResource('pais.estado.cidade', \Mg\Cidade\CidadeController::class)->parameters(['pais' => 'codpais', 'estado' => 'codestado', 'cidade' => 'codcidade']);
+
+    // Marca (migrado em 23/05/2026 — planilha-pedido/distribuição ficam proxiadas pro legacy)
+    Route::get('marca/autocompletar', [\Mg\Marca\MarcaController::class, 'autocompletar']);
+    Route::get('marca/{id}/detalhes', [\Mg\Marca\MarcaController::class, 'detalhes']);
+    Route::post('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'inativar']);
+    Route::delete('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'ativar']);
+    Route::apiResource('marca', \Mg\Marca\MarcaController::class)->parameters(['marca' => 'id']);
 });
 
 /*
