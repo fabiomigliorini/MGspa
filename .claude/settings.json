@@ -2,10 +2,6 @@
   "permissions": {
     "defaultMode": "bypassPermissions",
     "allow": [
-      "Bash(php -i)",
-      "Bash(php -r \"echo php_ini_loaded_file\\(\\) . PHP_EOL;\")",
-      "Bash(php -r \"echo php_ini_scanned_files\\(\\) . PHP_EOL;\")",
-      "Read(//etc/php/8.3/**)",
       "Bash(cd *)",
       "Bash(echo *)",
       "Bash(set -e*)",
@@ -58,15 +54,18 @@
       "Write(/opt/www/MGspa/laravel/.env)",
       "Write(/opt/www/MGweb/data/nginx/api*.conf)",
       "Write(/opt/www/MGweb/data/nginx-dev/api*.conf)",
+      "Write(/opt/www/MGspa/.claude/**)",
+      "Write(/opt/www/MGspa/laravel/.claude/**)",
       "Edit(/opt/www/MGspa/api/**)",
       "Edit(/opt/www/MGspa/laravel/.env)",
       "Edit(/opt/www/MGweb/data/nginx/api*.conf)",
-      "Edit(/opt/www/MGweb/data/nginx-dev/api*.conf)"
+      "Edit(/opt/www/MGweb/data/nginx-dev/api*.conf)",
+      "Edit(/opt/www/MGspa/.claude/**)",
+      "Edit(/opt/www/MGspa/laravel/.claude/**)"
     ],
     "additionalDirectories": [
-      "/opt/www/MGspa/components",
-      "/opt/www/MGspa/notas/src/components",
       "/opt/www/MGspa/api",
+      "/opt/www/MGspa/components",
       "/opt/www/MGAuth",
       "/opt/www/MGweb"
     ]

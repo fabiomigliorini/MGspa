@@ -285,6 +285,31 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'inativar']);
     Route::delete('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'ativar']);
     Route::apiResource('marca', \Mg\Marca\MarcaController::class)->parameters(['marca' => 'id']);
+
+    // Usuario + GrupoUsuario (migrado em 23/05/2026)
+    Route::get('usuario/todos', [\Mg\Usuario\UsuarioController::class, 'index']);
+    Route::get('usuario/{id}/autor', [\Mg\Usuario\UsuarioController::class, 'autor']);
+    Route::get('usuario/{id}/grupos', [\Mg\Usuario\UsuarioController::class, 'grupos'])->name('usuario.grupos');
+    Route::post('usuario/{id}/grupos', [\Mg\Usuario\UsuarioController::class, 'gruposAdicionar'])->name('usuario.grupos.adicionar');
+    Route::delete('usuario/{id}/grupos', [\Mg\Usuario\UsuarioController::class, 'gruposRemover'])->name('usuario.grupos.remover');
+    Route::get('usuario/{id}/detalhes', [\Mg\Usuario\UsuarioController::class, 'detalhes'])->name('usuario.detalhes');
+    Route::delete('usuario/{id}/inativo', [\Mg\Usuario\UsuarioController::class, 'ativar'])->name('usuario.ativar');
+    Route::delete('usuario/{id}', [\Mg\Usuario\UsuarioController::class, 'destroy']);
+    Route::put('usuario/{id}/alterar', [\Mg\Usuario\UsuarioController::class, 'update']);
+    Route::put('usuario/{id}/grupos-usuarios', [\Mg\Usuario\UsuarioController::class, 'gruposAdicionarERemover']);
+    Route::post('usuario/criar', [\Mg\Usuario\UsuarioController::class, 'novoUsuario']);
+    Route::get('usuario/{id}/reset-senha', [\Mg\Usuario\UsuarioController::class, 'resetSenha']);
+    Route::post('usuario/{id}/inativo', [\Mg\Usuario\UsuarioController::class, 'inativar'])->name('usuario.inativar');
+    Route::apiResource('usuario', \Mg\Usuario\UsuarioController::class)->parameters(['usuario' => 'id']);
+
+    Route::get('grupo-usuario/todos', [\Mg\Usuario\GrupoUsuarioController::class, 'index']);
+    Route::get('grupo-usuario/{id}/autor', [\Mg\Usuario\GrupoUsuarioController::class, 'autor']);
+    Route::get('grupo-usuario/{id}', [\Mg\Usuario\GrupoUsuarioController::class, 'detalhes']);
+    Route::delete('grupo-usuario/{id}/inativo', [\Mg\Usuario\GrupoUsuarioController::class, 'ativar'])->name('grupo-usuario.ativar');
+    Route::post('grupo-usuario/{id}/inativo', [\Mg\Usuario\GrupoUsuarioController::class, 'inativar'])->name('grupo-usuario.inativar');
+    Route::apiResource('grupo-usuario', \Mg\Usuario\GrupoUsuarioController::class)->parameters(['grupo-usuario' => 'id']);
+    Route::delete('grupo-usuario/{id}', [\Mg\Usuario\GrupoUsuarioController::class, 'destroy']);
+    Route::put('grupo-usuario/{id}/alterar', [\Mg\Usuario\GrupoUsuarioController::class, 'update']);
 });
 
 /*

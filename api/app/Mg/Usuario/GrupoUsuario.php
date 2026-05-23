@@ -40,4 +40,9 @@ class GrupoUsuario extends MgModel
     {
         return $this->hasMany(GrupoUsuarioPermissao::class, 'codgrupousuario', 'codgrupousuario');
     }
+
+    public function GrupoUsuarioUsuarioS()
+    {
+        return $this->hasMany(GrupoUsuarioUsuario::class, 'codgrupousuario', 'codgrupousuario');
+    }
 }
