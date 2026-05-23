@@ -1,6 +1,6 @@
 # Resumo da execução — Marcos 1+3 do strangler-fig
 
-> **Status:** ✅ O novo projeto Laravel 13 está em pé, com **paridade total de auth com o MGAuth** (Marco 1) **+ 9 controllers já migradas** do MGspa/laravel (Marco 3) **+ proxy fallback ativo** pras rotas ainda não migradas.
+> **Status:** ✅ O novo projeto Laravel 13 está em pé, com **paridade total de auth com o MGAuth** (Marco 1) **+ 11 controllers já migradas** do MGspa/laravel (Marco 3) **+ proxy fallback ativo** pras rotas ainda não migradas. **Login real validado e testado pelo usuário no frontend Quasar `pessoas`.**
 > **Nada em produção foi tocado** — só foi adicionado. O cutover (trocar `AUTH_API_URL` dos consumidores) fica pra você fazer manualmente após validar os testes.
 
 ## O que existe agora
@@ -31,7 +31,7 @@
 | `GET`  | `/` | Redirect pra `/login` |
 | `GET`  | `/up` | Health-check L13 |
 
-### Controllers migradas (Marco 3) — 9 controllers, 63 rotas v1
+### Controllers migradas (Marco 3) — 11 controllers, 74 rotas v1
 
 Todas sob `/api/v1/` com `auth:api` aplicado, **paths idênticos ao legacy**.
 
@@ -46,6 +46,8 @@ Todas sob `/api/v1/` com `auth:api` aplicado, **paths idênticos ao legacy**.
 | 7 | `GrauInstrucao` | Mg\Pessoa | 7 | (qualquer auth) | filtro `grauinstrucao` + `status` |
 | 8 | `Cargo` | Mg\Colaborador | 8 | `Recursos Humanos` (mutations) | SQL raw + `pessoas-cargo` |
 | 9 | `GrupoCliente` | Mg\Pessoa | 8 | `Administrador`/`Financeiro` | paginação 25/pg + tratamento FK 23503 |
+| 10 | `Empresa` | Mg\Filial | 5 | (qualquer auth) | CRUD básico, sem ativar/inativar |
+| 11 | `CertidaoEmissor` | Mg\Certidao | 6 | (qualquer auth) | paginação, MgController::filtros() + scopes |
 
 ### Proxy fallback (transparente)
 Catch-all em `Route::any('{any}')` repassa rotas ainda não migradas pro MGspa/laravel antigo. Controlado por `LEGACY_PROXY_ENABLED=true` no `.env`. Quando o cutover dos consumidores for feito, os frontends apontam só pra `api-dev` e a migração das outras controllers fica transparente (cada controller migrada simplesmente "promove" da camada de proxy pra nativa).
@@ -70,8 +72,15 @@ Catch-all em `Route::any('{any}')` repassa rotas ainda não migradas pro MGspa/l
 **Stubs minimais** (vão ser substituídos por versão completa quando o domínio for migrado):
 - `app/Mg/Filial/Filial.php`
 - `app/Mg/Pessoa/Pessoa.php`
+- `app/Mg/Pessoa/PessoaCertidao.php`
 - `app/Mg/Meta/MetaUnidadeNegocio.php`
 - `app/Mg/Rh/PeriodoColaboradorSetor.php`
+
+**Base classes** (`app/Mg/`):
+- `MgModel.php` — audit trail + scopes
+- `MgController.php` — helper `filtros()` pra sort/fields/page
+- `MgService.php` — ativar/inativar + qryOrdem/qryColunas
+- `Usuario/Autorizador.php` — verificação de grupos de usuário
 
 ## Estrutura dos usuários/grupos — preservada
 
