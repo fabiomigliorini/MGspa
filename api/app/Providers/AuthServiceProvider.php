@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Passport\PlainOrHashedClientRepository;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
+use Laravel\Passport\Bridge\ClientRepository as BridgeClientRepository;
 use Laravel\Passport\Passport;
 
 class AuthServiceProvider extends ServiceProvider
@@ -18,6 +20,11 @@ class AuthServiceProvider extends ServiceProvider
         // das rotas /oauth/*. Usamos wrappers próprios em routes/api.php
         // (paths /api/oauth/token, etc.) espelhando o contrato do MGAuth.
         Passport::ignoreRoutes();
+
+        // Substitui o ClientRepository do Passport pra aceitar client_secret
+        // em plain text (compat com mgsis.oauth_clients legado, que ainda
+        // tem secrets não-hashados). Ver app/Passport/PlainOrHashedClientRepository.
+        $this->app->bind(BridgeClientRepository::class, PlainOrHashedClientRepository::class);
     }
 
     public function boot(): void

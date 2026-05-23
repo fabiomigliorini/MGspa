@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\Exceptions\OAuthServerException;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
+use GuzzleHttp\Psr7\HttpFactory;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -56,7 +57,7 @@ class AuthController extends Controller
         $usuarioId = $this->findUsuarioIdByUsername($body['username'] ?? '');
 
         try {
-            $response = app(AccessTokenController::class)->issueToken($updatedRequest);
+            $response = $this->issueToken($updatedRequest);
             $payload = json_decode((string) $response->getContent(), true);
 
             return $this->withAuthCookies(
@@ -89,7 +90,7 @@ class AuthController extends Controller
         $usuarioId = $this->findUsuarioIdByUsername($body['username'] ?? '');
 
         try {
-            $response = app(AccessTokenController::class)->issueToken($request);
+            $response = $this->issueToken($request);
             $payload = json_decode((string) $response->getContent(), true);
 
             return $this->withAuthCookies(
@@ -127,7 +128,7 @@ class AuthController extends Controller
         }
 
         try {
-            $response = app(AccessTokenController::class)->issueToken($request);
+            $response = $this->issueToken($request);
             $payload = json_decode((string) $response->getContent(), true);
 
             return $this->withAuthCookies(
@@ -199,6 +200,21 @@ class AuthController extends Controller
         }
         $usuario = Usuario::where('usuario', $username)->first();
         return $usuario?->codusuario;
+    }
+
+    /**
+     * Emite o access token via Passport. No Passport 13, `issueToken()`
+     * passou a exigir 2 args: o ServerRequestInterface PSR-7 e uma
+     * ResponseInterface PSR-7 vazia (que o servidor OAuth preenche).
+     *
+     * Usa GuzzleHttp\Psr7\HttpFactory direto: o Passport 13 traz
+     * guzzlehttp/psr7 como dep mas não registra a interface
+     * ResponseFactoryInterface no container do Laravel.
+     */
+    private function issueToken(ServerRequestInterface $request): \Symfony\Component\HttpFoundation\Response
+    {
+        $psrResponse = (new HttpFactory())->createResponse();
+        return app(AccessTokenController::class)->issueToken($request, $psrResponse);
     }
 
     /**
