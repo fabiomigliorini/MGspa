@@ -116,6 +116,21 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('grupo-cliente/{codgrupocliente}/inativo', [\Mg\Pessoa\GrupoClienteController::class, 'inativar']);
     Route::delete('grupo-cliente/{codgrupocliente}/inativo', [\Mg\Pessoa\GrupoClienteController::class, 'ativar']);
     Route::delete('grupo-cliente/{codgrupocliente}', [\Mg\Pessoa\GrupoClienteController::class, 'destroy']);
+
+    // Empresa (migrado em 23/05/2026)
+    Route::get('empresa/', [\Mg\Filial\EmpresaController::class, 'index']);
+    Route::post('empresa/', [\Mg\Filial\EmpresaController::class, 'store']);
+    Route::get('empresa/{codempresa}', [\Mg\Filial\EmpresaController::class, 'show']);
+    Route::put('empresa/{codempresa}', [\Mg\Filial\EmpresaController::class, 'update']);
+    Route::delete('empresa/{codempresa}', [\Mg\Filial\EmpresaController::class, 'destroy']);
+
+    // CertidaoEmissor (migrado em 23/05/2026)
+    Route::get('certidao-emissor/', [\Mg\Certidao\CertidaoEmissorController::class, 'index']);
+    Route::post('certidao-emissor/', [\Mg\Certidao\CertidaoEmissorController::class, 'store']);
+    Route::put('certidao-emissor/{codcertidaoemissor}', [\Mg\Certidao\CertidaoEmissorController::class, 'update']);
+    Route::delete('certidao-emissor/{codcertidaoemissor}', [\Mg\Certidao\CertidaoEmissorController::class, 'destroy']);
+    Route::post('certidao-emissor/{codcertidaoemissor}/inativo', [\Mg\Certidao\CertidaoEmissorController::class, 'inativar']);
+    Route::delete('certidao-emissor/{codcertidaoemissor}/inativo', [\Mg\Certidao\CertidaoEmissorController::class, 'ativar']);
 });
 
 /*
