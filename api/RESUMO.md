@@ -1,6 +1,6 @@
 # Resumo da execução — Marcos 1+3 do strangler-fig
 
-> **Status:** ✅ O novo projeto Laravel 13 está em pé, com **paridade total de auth com o MGAuth** (Marco 1) **+ 11 controllers já migradas** do MGspa/laravel (Marco 3) **+ proxy fallback ativo** pras rotas ainda não migradas. **Login real validado e testado pelo usuário no frontend Quasar `pessoas`.**
+> **Status:** ✅ O novo projeto Laravel 13 está em pé, com **paridade total de auth com o MGAuth** (Marco 1) **+ 15 controllers já migradas** do MGspa/laravel (Marco 3 — 12% de 128) **+ proxy fallback ativo** pras rotas ainda não migradas. **Login real validado e testado pelo usuário no frontend Quasar `pessoas`.**
 > **Nada em produção foi tocado** — só foi adicionado. O cutover (trocar `AUTH_API_URL` dos consumidores) fica pra você fazer manualmente após validar os testes.
 
 ## O que existe agora
@@ -31,7 +31,7 @@
 | `GET`  | `/` | Redirect pra `/login` |
 | `GET`  | `/up` | Health-check L13 |
 
-### Controllers migradas (Marco 3) — 11 controllers, 74 rotas v1
+### Controllers migradas (Marco 3) — 15 controllers, 92 rotas v1
 
 Todas sob `/api/v1/` com `auth:api` aplicado, **paths idênticos ao legacy**.
 
@@ -48,6 +48,354 @@ Todas sob `/api/v1/` com `auth:api` aplicado, **paths idênticos ao legacy**.
 | 9 | `GrupoCliente` | Mg\Pessoa | 8 | `Administrador`/`Financeiro` | paginação 25/pg + tratamento FK 23503 |
 | 10 | `Empresa` | Mg\Filial | 5 | (qualquer auth) | CRUD básico, sem ativar/inativar |
 | 11 | `CertidaoEmissor` | Mg\Certidao | 6 | (qualquer auth) | paginação, MgController::filtros() + scopes |
+| 12 | `EstadoLocal` | Mg\Estoque | 2 | (qualquer auth) | só GET (index + show), HTTP 206 + paginação |
+| 13 | `Veiculo` | Mg\Veiculo | 7 | (qualquer auth) | CRUD + ativar/inativar, validação unique |
+| 14 | `VeiculoTipo` | Mg\Veiculo | 7 | (qualquer auth) | CRUD + ativar/inativar |
+| 15 | `VeiculoConjunto` | Mg\Veiculo | 7 | (qualquer auth) | CRUD + sync pivot VeiculoConjuntoVeiculo |
+
+## Inventário COMPLETO — 128 controllers no legacy
+
+Legenda: ✅ migrado · ⏭️ pulado · 🟢 candidato leve · 🟡 médio · 🔴 pesado/integração externa
+
+### Mg\Banco
+| Status | Controller | Notas |
+|---|---|---|
+| 🟢 | `BancoController` | 112 linhas, lookup |
+
+### Mg\Boleto
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `BoletoController` | financeiro, integra com BB |
+
+### Mg\CaixaMercadoria
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `CaixaMercadoriaController` | provavelmente médio |
+
+### Mg\Certidao
+| Status | Controller | Notas |
+|---|---|---|
+| ✅ | `CertidaoEmissorController` | migrado (#11) |
+| ⏭️ | `CertidaoTipoController` | **código quebrado no legacy** — `dd()` em todos os métodos, usa `PessoaResource`, Service copiado de Pessoa. Reescrever do zero quando precisar |
+
+### Mg\Cidade
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `PaisController` | nested resource L11+ style |
+| 🟡 | `EstadoController` | nested `/pais/{codpais}/estado` |
+| 🟡 | `CidadeController` | nested `/pais/{codpais}/estado/{codestado}/cidade` + sub-namespaces `Requests/` e `Resources/` (Detail vs List) |
+
+### Mg\Cobranca
+| Status | Controller | Notas |
+|---|---|---|
+| 🟢 | `CobrancaHistoricoController` | 53 linhas, nested em pessoa |
+
+### Mg\Colaborador
+| Status | Controller | Notas |
+|---|---|---|
+| ✅ | `CargoController` | migrado (#8) |
+| 🟡 | `ColaboradorCargoController` | nested em colaborador |
+| 🔴 | `ColaboradorController` | core do RH, ferias, integra com Negocio |
+| 🟡 | `ColaboradorFichaController` | upload de ficha PDF |
+| 🟡 | `FeriasController` | nested em colaborador |
+
+### Mg\ContaContabil
+| Status | Controller | Notas |
+|---|---|---|
+| 🟢 | `ContaContabilController` | 112 linhas, lookup |
+
+### Mg\Dfe
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `DfeController` | distribuição de DFe, integra com SEFAZ |
+
+### Mg\Dominio
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `DominioController` | empresas |
+
+### Mg\Estoque
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `EstoqueEstatisticaController` | relatórios pesados |
+| ✅ | `EstoqueLocalController` | migrado (#12) |
+| 🟡 | `EstoqueSaldoConferenciaController` | conferência de saldos |
+
+### Mg\Etiqueta
+| Status | Controller | Notas |
+|---|---|---|
+| 🟢 | `EtiquetaController` | só GET `/etiqueta/arquivo/{arquivo}` (download), simples |
+
+### Mg\Feriado
+| Status | Controller | Notas |
+|---|---|---|
+| ✅ | `FeriadoController` | migrado (#1) |
+
+### Mg\Filial
+| Status | Controller | Notas |
+|---|---|---|
+| ✅ | `EmpresaController` | migrado (#10) |
+| 🟡 | `FilialController` | core, várias dependências |
+| ✅ | `SetorController` | migrado (#3) |
+| ✅ | `TipoSetorController` | migrado (#2) |
+| ✅ | `UnidadeNegocioController` | migrado (#4) |
+
+### Mg\FormaPagamento
+| Status | Controller | Notas |
+|---|---|---|
+| 🟢 | `FormaPagamentoController` | 115 linhas, lookup |
+
+### Mg\GrupoEconomico
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `GrupoEconomicoController` | CRUD + 5 endpoints especiais (totais-negocios, titulos-abertos, nfe-terceiro, top-produtos, negocios) que puxam Negocio/Titulo/NfeTerceiro |
+
+### Mg\Imagem
+| Status | Controller | Notas |
+|---|---|---|
+| ⏭️ | `ImagemController` | usa `App\Libraries\SlimImageCropper` + Service com dependências em 5 domínios de produto (FamiliaProduto, GrupoProduto, SecaoProduto, SubGrupoProduto, ProdutoImagem). Migrar junto com Produto |
+
+### Mg\Lio
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `LioController` | integração Cielo LIO (callback webhook) |
+
+### Mg\Marca
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `MarcaController` | 187 linhas, lookup com Imagem |
+
+### Mg\Mdfe
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `MdfeController` | manifesto eletrônico transporte (SEFAZ) |
+
+### Mg\Meta
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `MetaController` | CRUD + nested (unidade/pessoa/fixo) |
+| 🟡 | `MetaDashboardController` | dashboard + dashboard por pessoa + eventos |
+
+### Mg\_Modelo
+| Status | Controller | Notas |
+|---|---|---|
+| ⏭️ | `ModeloController` | template/scaffold do gerador — ignorar |
+
+### Mg\NaturezaOperacao
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `CfopController` | tabela CFOP |
+| 🟡 | `NaturezaOperacaoController` | apiResource, médio |
+| 🟡 | `TributacaoNaturezaOperacaoController` | nested |
+
+### Mg\Negocio
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `NegocioController` | core do PDV/vendas |
+
+### Mg\NFePHP
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `NFePHPController` | NFe via lib `nfephp-org/*` (criar/enviar/cancelar/inutilizar/danfe/xml/mail/dist-dfe) |
+
+### Mg\NfeTerceiro
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `NfeTerceiroController` | manifestação de NFe de terceiros |
+
+### Mg\NotaFiscal (8 controllers)
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `Controle\ControleController` | dashboard de controle |
+| 🔴 | `Dashboard\DashboardGraficosController` | dashboard |
+| 🔴 | `Dashboard\DashboardKpisController` | dashboard |
+| 🔴 | `Dashboard\DashboardSefazController` | dashboard SEFAZ |
+| 🔴 | `NotaFiscalCartaCorrecaoController` | CC-e |
+| 🔴 | `NotaFiscalController` | core fiscal, 30+ rotas (criar/enviar/cancelar/inutilizar/danfe/duplicar/devolução/unificar/CC-e/mail/imprimir/carta-correcao/espelho/etc) |
+| 🔴 | `NotaFiscalDuplicatasController` | nested |
+| 🔴 | `NotaFiscalPagamentoController` | nested |
+| 🔴 | `NotaFiscalProdutoBarraController` | nested |
+| 🔴 | `NotaFiscalReferenciadaController` | nested |
+| 🔴 | `NotaFiscalTransferenciaController` | scheduled command |
+
+### Mg\NotaFiscalTerceiro
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `NotaFiscalTerceiroController` | nota fiscal de terceiros |
+
+### Mg\PagarMe
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `PagarMeController` | integração PagarMe (webhook, criar/consultar/cancelar pedido) |
+
+### Mg\Pdv (5 controllers)
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `PdvController` | core do PDV — 30+ rotas (produto, pessoa, negocio, dispositivo, saurus) |
+| 🔴 | `PdvAnexoController` | upload/listagem de anexos de negócio |
+| 🔴 | `PdvLiquidacaoController` | liquidação de títulos do PDV |
+| 🔴 | `PdvMercosController` | integração Mercos B2B |
+| 🔴 | `PdvNotaFiscalController` | nota fiscal a partir do PDV |
+
+### Mg\Pedido
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `PedidoController` | pedidos |
+
+### Mg\Permissao
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `PermissaoController` | grupos/permissões de usuário |
+
+### Mg\Pessoa (12 controllers)
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `DependenteController` | 67 linhas, nested |
+| ✅ | `EstadoCivilController` | migrado (#6) |
+| ✅ | `EtniaController` | migrado (#5) |
+| ✅ | `GrauInstrucaoController` | migrado (#7) |
+| ✅ | `GrupoClienteController` | migrado (#9) |
+| 🔴 | `PessoaAnexoController` | upload/download de anexos |
+| 🟡 | `PessoaCertidaoController` | nested certidões |
+| 🟡 | `PessoaContaController` | nested contas bancárias |
+| 🔴 | `PessoaController` | 258 linhas, integração SEFAZ IE + Mercos + autocomplete + importar + comanda-vendedor + aniversariosColaboradores |
+| 🟡 | `PessoaEmailController` | nested email com verificação |
+| 🟡 | `PessoaEnderecoController` | nested endereço |
+| 🟡 | `PessoaTelefoneController` | nested telefone com verificação SMS |
+| 🟢 | `RegistroSpcController` | 55 linhas, nested SPC |
+
+### Mg\Pix
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `PixController` | Pix BB v2 (criar/transmitir/consultar/brcode/webhook) |
+
+### Mg\Portador
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `PortadorController` | 199 linhas, lookup |
+
+### Mg\Produto
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `ProdutoController` | core de produto (unifica-variacoes, unifica-barras, embalagem-para-unidade) |
+
+### Mg\Rh (8 controllers)
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `AcertoController` | acertos (encontro de contas) |
+| 🟡 | `ColaboradorRubricaController` | rubricas |
+| 🔴 | `DashboardController` | dashboard RH |
+| 🟡 | `IndicadorController` | indicadores |
+| 🟡 | `MeuPainelController` | painel pessoal |
+| 🟡 | `PeriodoColaboradorController` | nested |
+| 🟡 | `PeriodoColaboradorSetorController` | nested |
+| 🟡 | `PeriodoController` | períodos RH (master do módulo) |
+
+### Mg\Select (18 controllers — todos lookups de autocomplete)
+| Status | Controller | Notas |
+|---|---|---|
+| 🟢 | `SelectBancoController` | autocomplete |
+| 🟢 | `SelectCidadeController` | autocomplete |
+| 🟢 | `SelectContaContabilController` | autocomplete |
+| 🟢 | `SelectEstadoController` | autocomplete |
+| 🟢 | `SelectEstoqueLocalController` | autocomplete |
+| 🟢 | `SelectEstoqueMovimentoTipoController` | autocomplete |
+| 🟢 | `SelectFilialController` | autocomplete |
+| 🟢 | `SelectGrupoEconomicoController` | autocomplete |
+| 🟢 | `SelectImpressoraController` | autocomplete |
+| 🟢 | `SelectNaturezaOperacaoController` | autocomplete |
+| 🟢 | `SelectPessoaController` | autocomplete |
+| 🟢 | `SelectPortadorController` | autocomplete |
+| 🟢 | `SelectProdutoBarraController` | autocomplete |
+| 🟢 | `SelectTipoProdutoController` | autocomplete |
+| 🟢 | `SelectTipoTituloController` | autocomplete |
+| 🟢 | `SelectTributacaoController` | autocomplete |
+| 🟢 | `SelectTributoController` | autocomplete |
+| 🟢 | `SelectUsuarioController` | autocomplete |
+| 🟢 | `SelectVeiculoController` | autocomplete |
+| 🟢 | `SelectVeiculoTipoController` | autocomplete |
+
+### Mg\Stone\Connect
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `FilialController` | Stone Connect |
+| 🔴 | `PosController` | Stone POS |
+| 🔴 | `PreTranscaoController` | pré-transação |
+| 🔴 | `WebhookController` | webhooks Stone (pos-application, pre-transaction-status, processed-transaction, print-note-status) |
+
+### Mg\Titulo (8 controllers)
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `BoletoBb\BoletoBbController` | boleto BB (PDF) |
+| 🟡 | `LiquidacaoTituloController` | liquidações |
+| 🟢 | `TipoMovimentoTituloController` | 114 linhas, lookup |
+| 🟢 | `TipoTituloController` | 113 linhas, lookup |
+| 🟡 | `TituloAgrupamentoController` | agrupamento + mail |
+| 🟡 | `TituloBoletoController` | boleto genérico |
+| 🔴 | `TituloController` | core financeiro |
+| 🔴 | `TituloRelatorioController` | relatório + PDF |
+
+### Mg\Tributacao
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `TributacaoController` | apiResource (regra) |
+| 🟡 | `TributacaoRegraController` | apiResource |
+| 🟡 | `TributoController` | apiResource |
+
+### Mg\Usuario
+| Status | Controller | Notas |
+|---|---|---|
+| 🟡 | `GrupoUsuarioController` | grupos de usuário |
+| 🟡 | `UsuarioController` | CRUD usuário + permissoesUsuarios (já usado pelo auth) |
+
+### Mg\Veiculo
+| Status | Controller | Notas |
+|---|---|---|
+| ✅ | `VeiculoController` | migrado (#13) |
+| ✅ | `VeiculoConjuntoController` | migrado (#15) |
+| ✅ | `VeiculoTipoController` | migrado (#14) |
+
+### Mg\Woo
+| Status | Controller | Notas |
+|---|---|---|
+| 🔴 | `WooPedidoController` | WooCommerce pedidos |
+| 🔴 | `WooProdutoController` | WooCommerce produtos |
+
+### Resumo do inventário
+
+| Categoria | Quantidade | % |
+|---|---|---|
+| ✅ Migrado | 15 | 12% |
+| ⏭️ Pulado | 3 | 2% |
+| 🟢 Leve (candidatos próximos) | ~25 | 19% |
+| 🟡 Médio | ~50 | 39% |
+| 🔴 Pesado/integração externa | ~35 | 28% |
+| **Total** | **128** | **100%** |
+
+### Próximas candidatas (mais baratas / impacto maior)
+
+**Os 20 `Mg\Select\*` controllers** são uma classe inteira de lookups simples — migrar todos em batch deve ser rápido e libera as telas de autocomplete dos frontends.
+
+**Lookups isolados** (5-7 controllers, 1h cada):
+- `Banco`, `ContaContabil`, `Portador`, `FormaPagamento`
+- `TipoMovimentoTitulo`, `TipoTitulo`
+- `Etiqueta` (só 1 rota GET)
+
+**Domínios completos médios** (1-2 dias cada):
+- Pessoa nested (`PessoaTelefone`, `PessoaEmail`, `PessoaEndereco`, `PessoaCertidao`, `PessoaConta`, `Dependente`, `RegistroSpc`)
+- Cidade (Pais + Estado + Cidade, nested)
+- Tributacao (3 controllers apiResource)
+- NaturezaOperacao (3 controllers)
+- Rh (8 controllers)
+
+**Bloqueadores** (precisam quebrar em chunks ou refactor):
+- `PessoaController` (258 linhas, SEFAZ + Mercos)
+- `NotaFiscalController` (30+ rotas, NFe)
+- `PdvController` (30+ rotas, PDV)
+- `NFePHPController`, `MdfeController`, `DfeController` (NFe/SEFAZ)
+- `PixController` (Pix BB v2)
+- `Stone\Connect\*` (4 controllers)
+- `PagarMe`, `Lio`, `Woo*` (integrações externas)
 
 ### Proxy fallback (transparente)
 Catch-all em `Route::any('{any}')` repassa rotas ainda não migradas pro MGspa/laravel antigo. Controlado por `LEGACY_PROXY_ENABLED=true` no `.env`. Quando o cutover dos consumidores for feito, os frontends apontam só pra `api-dev` e a migração das outras controllers fica transparente (cada controller migrada simplesmente "promove" da camada de proxy pra nativa).
