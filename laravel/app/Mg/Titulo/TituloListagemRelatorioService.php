@@ -2,7 +2,6 @@
 
 namespace Mg\Titulo;
 
-use Carbon\Carbon;
 use Mpdf\Mpdf;
 
 class TituloListagemRelatorioService
@@ -47,12 +46,6 @@ class TituloListagemRelatorioService
             'ContaContabil:codcontacontabil,contacontabil',
         ])->get();
 
-        // Calcula juros/multa/total em PHP (porta de MGJuros)
-        $hoje = Carbon::now()->startOfDay();
-        $percentualJuros = 4.0;       // 4% ao mes
-        $percentualMulta = 2.0;       // 2%
-        $diasTolerancia = 3;
-
         $grupos = [];
         $totGeral = [
             'original' => 0.0,
@@ -75,22 +68,16 @@ class TituloListagemRelatorioService
 
             $original = (float)$t->debito - (float)$t->credito;
             $saldo = (float)$t->saldo;
-            $vcto = $t->vencimento ? Carbon::parse($t->vencimento)->startOfDay() : null;
-            $diasAtraso = $vcto ? $vcto->diffInDays($hoje, false) : 0;
-
-            $multa = 0.0;
-            $juros = 0.0;
-            if ($diasAtraso > $diasTolerancia && $saldo > 0) {
-                $multa = round($saldo * ($percentualMulta / 100), 2);
-                $juros = round($saldo * (($percentualJuros / 30) / 100) * $diasAtraso, 2);
-            }
-            $total = $saldo + $multa + $juros;
+            $atualizacao = TituloService::calcularAtualizacao($saldo, $t->vencimento);
+            $multa = $atualizacao['multa'];
+            $juros = $atualizacao['juros'];
+            $total = $atualizacao['valoratualizado'];
 
             $grupos[$cod]['linhas'][] = [
                 'titulo' => $t,
                 'original' => $original,
                 'saldo' => $saldo,
-                'diasAtraso' => $diasAtraso,
+                'diasAtraso' => $atualizacao['diasatraso'],
                 'multa' => $multa,
                 'juros' => $juros,
                 'total' => $total,
@@ -113,7 +100,7 @@ class TituloListagemRelatorioService
             'grupos' => array_values($grupos),
             'totGeral' => $totGeral,
             'detalhado' => $detalhado,
-            'diasTolerancia' => $diasTolerancia,
+            'diasTolerancia' => TituloService::DIAS_TOLERANCIA_ATRASO,
         ])->render();
     }
 }

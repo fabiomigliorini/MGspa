@@ -10,6 +10,11 @@ class TituloService
     const TIPO_VALE = 3;
     const TIPO_RH = 952;
 
+    // Regras de atualização de título em atraso (porta de MGJuros)
+    const DIAS_TOLERANCIA_ATRASO = 3;
+    const PERCENTUAL_JUROS_MES = 4.0;
+    const PERCENTUAL_MULTA = 2.0;
+
     public static function criar(array $dados): Titulo
     {
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo']);
@@ -231,5 +236,31 @@ class TituloService
             }
             $i++;
         }
+    }
+
+    /**
+     * Calcula juros, multa e valor atualizado de um título em atraso.
+     * Juros de PERCENTUAL_JUROS_MES% ao mês (pro rata die) e multa de
+     * PERCENTUAL_MULTA%, aplicados após DIAS_TOLERANCIA_ATRASO dias de atraso.
+     */
+    public static function calcularAtualizacao($saldo, $vencimento): array
+    {
+        $saldo = (float)$saldo;
+        $vcto = $vencimento ? Carbon::parse($vencimento)->startOfDay() : null;
+        $diasAtraso = $vcto ? (int)$vcto->diffInDays(Carbon::now()->startOfDay(), false) : 0;
+
+        $multa = 0.0;
+        $juros = 0.0;
+        if ($diasAtraso > self::DIAS_TOLERANCIA_ATRASO && $saldo > 0) {
+            $multa = round($saldo * (self::PERCENTUAL_MULTA / 100), 2);
+            $juros = round($saldo * ((self::PERCENTUAL_JUROS_MES / 30) / 100) * $diasAtraso, 2);
+        }
+
+        return [
+            'diasatraso'      => $diasAtraso,
+            'multa'           => $multa,
+            'juros'           => $juros,
+            'valoratualizado' => round($saldo + $multa + $juros, 2),
+        ];
     }
 }

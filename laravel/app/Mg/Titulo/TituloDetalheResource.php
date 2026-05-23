@@ -79,6 +79,8 @@ class TituloDetalheResource extends Resource
         $operacao = ($valor < 0) ? 'CR' : 'DB';
         $operacaosaldo = ($saldo < 0 || $credito > $debito) ? 'CR' : 'DB';
 
+        $atualizacao = TituloService::calcularAtualizacao($saldo, $this->vencimento);
+
         $boletos = $this->TituloBoletoS->map(function ($b) {
             return [
                 'codtituloboleto'      => (int)$b->codtituloboleto,
@@ -182,6 +184,10 @@ class TituloDetalheResource extends Resource
             'valor'            => $valor,
             'operacao'         => $operacao,
             'operacaosaldo'    => $operacaosaldo,
+            'diasatraso'       => $atualizacao['diasatraso'],
+            'juros'            => $atualizacao['juros'],
+            'multa'            => $atualizacao['multa'],
+            'valoratualizado'  => $atualizacao['valoratualizado'],
             'observacao'       => $this->observacao,
             'criacao'          => $this->criacao,
             'alteracao'        => $this->alteracao,

@@ -39,7 +39,18 @@ class TituloAgrupamentoService
             $q->where('p.codgrupoeconomico', $filtros['codgrupoeconomico']);
         }
         if (!empty($filtros['codgrupocliente'])) {
-            $q->where('p.codgrupocliente', $filtros['codgrupocliente']);
+            $valores = is_array($filtros['codgrupocliente'])
+                ? $filtros['codgrupocliente'] : [$filtros['codgrupocliente']];
+            $q->where(function ($w) use ($valores) {
+                $semGrupo = false;
+                $cods = [];
+                foreach ($valores as $v) {
+                    if ((int)$v === -1) $semGrupo = true;
+                    else $cods[] = $v;
+                }
+                if (!empty($cods)) $w->whereIn('p.codgrupocliente', $cods);
+                if ($semGrupo) $w->orWhereNull('p.codgrupocliente');
+            });
         }
 
         $estornado = $filtros['estornado'] ?? '0';

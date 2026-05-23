@@ -19,6 +19,7 @@ class TituloAbertosFechamentoService
                 'Filial:codfilial,filial',
                 'Portador:codportador,portador',
                 'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
+                'NegocioFormaPagamento.Negocio:codnegocio,confissao',
             ])
             ->join('tblpessoa as p', 'p.codpessoa', '=', 'tbltitulo.codpessoa')
             ->where('tbltitulo.saldo', '<>', 0);
@@ -81,6 +82,7 @@ class TituloAbertosFechamentoService
                 'boleto'      => (bool)$t->boleto,
                 'nossonumero' => $t->nossonumero,
                 'codnegocio'  => optional($t->NegocioFormaPagamento)->codnegocio,
+                'confissao'   => optional(optional($t->NegocioFormaPagamento)->Negocio)->confissao !== null,
                 'saldo'       => abs($saldo),
                 'operacao'    => $operacao,
             ];
