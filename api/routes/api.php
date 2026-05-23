@@ -236,6 +236,33 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'show']);
     Route::put('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'update']);
     Route::delete('pessoa/{codpessoa}/cobrancahistorico/{codcobrancahistorico}/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'delete']);
+
+    // RegistroSpc (nested em pessoa, migrado em 23/05/2026)
+    Route::get('pessoa/{codpessoa}/registrospc/', [\Mg\Pessoa\RegistroSpcController::class, 'index']);
+    Route::post('pessoa/{codpessoa}/registrospc/', [\Mg\Pessoa\RegistroSpcController::class, 'create']);
+    Route::get('pessoa/{codpessoa}/registrospc/{codregistrospc}/', [\Mg\Pessoa\RegistroSpcController::class, 'show']);
+    Route::put('pessoa/{codpessoa}/registrospc/{codregistrospc}/', [\Mg\Pessoa\RegistroSpcController::class, 'update']);
+    Route::delete('pessoa/{codpessoa}/registrospc/{codregistrospc}/', [\Mg\Pessoa\RegistroSpcController::class, 'delete']);
+
+    // PessoaCertidao (migrado em 23/05/2026)
+    Route::post('certidao/', [\Mg\Pessoa\PessoaCertidaoController::class, 'create']);
+    Route::get('certidao/{codpessoacertidao}/', [\Mg\Pessoa\PessoaCertidaoController::class, 'show']);
+    Route::put('certidao/{codpessoacertidao}/', [\Mg\Pessoa\PessoaCertidaoController::class, 'update']);
+    Route::delete('certidao/{codpessoacertidao}/', [\Mg\Pessoa\PessoaCertidaoController::class, 'delete']);
+    Route::get('select/certidao/emissor', [\Mg\Pessoa\PessoaCertidaoController::class, 'selectCertidaoEmissor']);
+    Route::get('select/certidao/tipo', [\Mg\Pessoa\PessoaCertidaoController::class, 'selectCertidaoTipo']);
+    Route::post('certidao/{codpessoacertidao}/inativo', [\Mg\Pessoa\PessoaCertidaoController::class, 'inativar']);
+    Route::delete('certidao/{codpessoacertidao}/inativo', [\Mg\Pessoa\PessoaCertidaoController::class, 'ativar']);
+
+    // PessoaConta (nested em pessoa, migrado em 23/05/2026)
+    Route::get('pessoa/{codpessoa}/conta/', [\Mg\Pessoa\PessoaContaController::class, 'index']);
+    Route::post('pessoa/{codpessoa}/conta/', [\Mg\Pessoa\PessoaContaController::class, 'create']);
+    Route::get('pessoa/{codpessoa}/conta/{codpessoaconta}/', [\Mg\Pessoa\PessoaContaController::class, 'show']);
+    Route::put('pessoa/{codpessoa}/conta/{codpessoaconta}/', [\Mg\Pessoa\PessoaContaController::class, 'update']);
+    Route::delete('pessoa/{codpessoa}/conta/{codpessoaconta}/', [\Mg\Pessoa\PessoaContaController::class, 'delete']);
+    Route::get('pessoa/conta/banco/select', [\Mg\Pessoa\PessoaContaController::class, 'selectBanco']);
+    Route::post('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'inativar']);
+    Route::delete('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'ativar']);
 });
 
 /*
