@@ -330,6 +330,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('grupoeconomico/{codgrupoeconomico}/inativo', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'ativar']);
     Route::put('grupoeconomico/{codgrupoeconomico}/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'update']);
     Route::delete('grupoeconomico/{codgrupoeconomico}/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'delete']);
+
+    // Pedido (migrado em 23/05/2026 — produtos-para-transferir fica proxiado pro legacy)
+    Route::get('pedido/{id}/item', [\Mg\Pedido\PedidoController::class, 'indexItem']);
+    Route::get('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'showItem']);
+    Route::post('pedido/{id}/item', [\Mg\Pedido\PedidoController::class, 'storeItem']);
+    Route::put('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'updateItem']);
+    Route::delete('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'destroyItem']);
+    Route::apiResource('pedido', \Mg\Pedido\PedidoController::class)->parameters(['pedido' => 'id']);
 });
 
 /*
