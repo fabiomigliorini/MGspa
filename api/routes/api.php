@@ -131,6 +131,37 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('certidao-emissor/{codcertidaoemissor}', [\Mg\Certidao\CertidaoEmissorController::class, 'destroy']);
     Route::post('certidao-emissor/{codcertidaoemissor}/inativo', [\Mg\Certidao\CertidaoEmissorController::class, 'inativar']);
     Route::delete('certidao-emissor/{codcertidaoemissor}/inativo', [\Mg\Certidao\CertidaoEmissorController::class, 'ativar']);
+
+    // EstoqueLocal (migrado em 23/05/2026) — só leitura
+    Route::get('estoque-local', [\Mg\Estoque\EstoqueLocalController::class, 'index']);
+    Route::get('estoque-local/{id}', [\Mg\Estoque\EstoqueLocalController::class, 'show']);
+
+    // Veiculo (migrado em 23/05/2026)
+    Route::get('veiculo', [\Mg\Veiculo\VeiculoController::class, 'index']);
+    Route::get('veiculo/{id}', [\Mg\Veiculo\VeiculoController::class, 'show']);
+    Route::put('veiculo/{id}', [\Mg\Veiculo\VeiculoController::class, 'update']);
+    Route::post('veiculo', [\Mg\Veiculo\VeiculoController::class, 'store']);
+    Route::post('veiculo/{id}/inativo', [\Mg\Veiculo\VeiculoController::class, 'inativar']);
+    Route::delete('veiculo/{id}/inativo', [\Mg\Veiculo\VeiculoController::class, 'ativar']);
+    Route::delete('veiculo/{id}', [\Mg\Veiculo\VeiculoController::class, 'delete']);
+
+    // VeiculoTipo (migrado em 23/05/2026)
+    Route::get('veiculo-tipo', [\Mg\Veiculo\VeiculoTipoController::class, 'index']);
+    Route::get('veiculo-tipo/{id}', [\Mg\Veiculo\VeiculoTipoController::class, 'show']);
+    Route::put('veiculo-tipo/{id}', [\Mg\Veiculo\VeiculoTipoController::class, 'update']);
+    Route::post('veiculo-tipo', [\Mg\Veiculo\VeiculoTipoController::class, 'store']);
+    Route::post('veiculo-tipo/{id}/inativo', [\Mg\Veiculo\VeiculoTipoController::class, 'inativar']);
+    Route::delete('veiculo-tipo/{id}/inativo', [\Mg\Veiculo\VeiculoTipoController::class, 'ativar']);
+    Route::delete('veiculo-tipo/{id}', [\Mg\Veiculo\VeiculoTipoController::class, 'delete']);
+
+    // VeiculoConjunto (migrado em 23/05/2026)
+    Route::get('veiculo-conjunto', [\Mg\Veiculo\VeiculoConjuntoController::class, 'index']);
+    Route::get('veiculo-conjunto/{id}', [\Mg\Veiculo\VeiculoConjuntoController::class, 'show']);
+    Route::put('veiculo-conjunto/{id}', [\Mg\Veiculo\VeiculoConjuntoController::class, 'update']);
+    Route::post('veiculo-conjunto', [\Mg\Veiculo\VeiculoConjuntoController::class, 'store']);
+    Route::post('veiculo-conjunto/{id}/inativo', [\Mg\Veiculo\VeiculoConjuntoController::class, 'inativar']);
+    Route::delete('veiculo-conjunto/{id}/inativo', [\Mg\Veiculo\VeiculoConjuntoController::class, 'ativar']);
+    Route::delete('veiculo-conjunto/{id}', [\Mg\Veiculo\VeiculoConjuntoController::class, 'delete']);
 });
 
 /*
