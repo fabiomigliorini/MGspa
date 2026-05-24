@@ -7,7 +7,9 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use Mg\MgController;
 
-use App\Libraries\SlimImageCropper\Slim;
+// SlimImageCropper não disponível — store/update vão quebrar
+// quando alguém uploadar. Substituir por intervention/image ou similar.
+// use App\Libraries\SlimImageCropper\Slim;
 
 class ImagemController extends MgController
 {

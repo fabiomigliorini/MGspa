@@ -6,13 +6,13 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
-        "laravel/framework": "^13.0",
-        "laravel/passport": "^13.0",
-        "dompdf/dompdf": "^3.0",
         "ext-soap": "*",
+        "dompdf/dompdf": "^3.0",
         "google/apiclient": "^2.19",
         "guzzlehttp/guzzle": "^7.5",
+        "laravel/framework": "^13.0",
         "laravel/helpers": "^1.7",
+        "laravel/passport": "^13.0",
         "mpdf/mpdf": "^8.3",
         "nfephp-org/sped-common": "^5.1",
         "nfephp-org/sped-da": "^1.1",
@@ -22,6 +22,7 @@
         "openboleto/openboleto": "dev-master",
         "phpoffice/phpspreadsheet": "^3.0",
         "picqer/php-barcode-generator": "^3.0",
+        "quilhasoft/jasperphp": "dev-master",
         "simplesoftwareio/simple-qrcode": "^4.2"
     },
     "require-dev": {

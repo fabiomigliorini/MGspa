@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f5256a9b242a87d26734e07c8268cb5e",
+    "content-hash": "bd03c3804a23a543e5cef33e20dceb7e",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -5868,6 +5868,72 @@
             "time": "2021-10-29T13:26:27+00:00"
         },
         {
+            "name": "quilhasoft/jasperphp",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/QuilhaSoft/JasperPHP.git",
+                "reference": "b71b8d145173a1d3fd6305260a75c438edd75cbe"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/QuilhaSoft/JasperPHP/zipball/b71b8d145173a1d3fd6305260a75c438edd75cbe",
+                "reference": "b71b8d145173a1d3fd6305260a75c438edd75cbe",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.4 || ^8.0",
+                "tecnickcom/tcpdf": "^6.3.5"
+            },
+            "default-branch": true,
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "JasperPHP\\JasperPHPServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "JasperPHP\\": "src/",
+                    "JasperPHP\\core\\": "src/core/",
+                    "JasperPHP\\database\\": "src/database/",
+                    "JasperPHP\\elements\\": "src/elements/",
+                    "JasperPHP\\exception\\": "src/exception/",
+                    "JasperPHP\\processors\\": "src/processors/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Rogerio Muniz de Castro",
+                    "email": "rogerio@quilhasoft.net"
+                }
+            ],
+            "description": "Pure PHP library to read JRXML files made with 'JasperSoft Studio' and generate reports in PDF",
+            "keywords": [
+                "jaspersoft",
+                "jrxml",
+                "pdf",
+                "report"
+            ],
+            "support": {
+                "issues": "https://github.com/QuilhaSoft/JasperPHP/issues",
+                "source": "https://github.com/QuilhaSoft/JasperPHP/tree/master"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/Rctnet",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-03-17T10:44:05+00:00"
+        },
+        {
             "name": "ralouphie/getallheaders",
             "version": "3.0.3",
             "source": {
@@ -9132,6 +9198,83 @@
             "time": "2023-10-23T09:28:20+00:00"
         },
         {
+            "name": "tecnickcom/tcpdf",
+            "version": "6.11.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tecnickcom/TCPDF.git",
+                "reference": "b18f6119161019916c5bb07cb8da5205ae5c1b63"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tecnickcom/TCPDF/zipball/b18f6119161019916c5bb07cb8da5205ae5c1b63",
+                "reference": "b18f6119161019916c5bb07cb8da5205ae5c1b63",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "php": ">=7.1.0"
+            },
+            "suggest": {
+                "ext-gd": "Enables additional image handling in some workflows.",
+                "ext-imagick": "Enables additional image format support when available.",
+                "ext-zlib": "Recommended for compressed streams and related features.",
+                "tecnickcom/tc-lib-pdf": "Modern replacement for TCPDF for new projects."
+            },
+            "type": "library",
+            "autoload": {
+                "classmap": [
+                    "config",
+                    "include",
+                    "tcpdf.php",
+                    "tcpdf_barcodes_1d.php",
+                    "tcpdf_barcodes_2d.php",
+                    "include/tcpdf_colors.php",
+                    "include/tcpdf_filters.php",
+                    "include/tcpdf_font_data.php",
+                    "include/tcpdf_fonts.php",
+                    "include/tcpdf_images.php",
+                    "include/tcpdf_static.php",
+                    "include/barcodes/datamatrix.php",
+                    "include/barcodes/pdf417.php",
+                    "include/barcodes/qrcode.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "LGPL-3.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "Nicola Asuni",
+                    "email": "info@tecnick.com",
+                    "role": "lead"
+                }
+            ],
+            "description": "Deprecated legacy PDF engine for PHP. For new projects use tecnickcom/tc-lib-pdf.",
+            "homepage": "https://tcpdf.org",
+            "keywords": [
+                "PDFD32000-2008",
+                "TCPDF",
+                "barcodes",
+                "datamatrix",
+                "pdf",
+                "pdf417",
+                "qrcode"
+            ],
+            "support": {
+                "issues": "https://github.com/tecnickcom/TCPDF/issues",
+                "source": "https://github.com/tecnickcom/TCPDF"
+            },
+            "funding": [
+                {
+                    "url": "https://www.paypal.com/donate/?hosted_button_id=NZUEC5XS8MFBJ",
+                    "type": "paypal"
+                }
+            ],
+            "time": "2026-04-21T17:00:18+00:00"
+        },
+        {
             "name": "thecodingmachine/safe",
             "version": "v3.4.0",
             "source": {
@@ -11646,7 +11789,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "openboleto/openboleto": 20
+        "openboleto/openboleto": 20,
+        "quilhasoft/jasperphp": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,

@@ -5,10 +5,13 @@ namespace Mg\Imagem;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
-use App\Models\Imagem;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Libraries\SlimImageCropper\Slim;
+// SlimImageCropper não existe (não está no composer nem como código local).
+// ImagemController/ImagemService dependem dele para upload de imagens —
+// vai quebrar em runtime quando usado. Deixar comentado até substituir
+// por intervention/image ou similar:
+// use App\Libraries\SlimImageCropper\Slim;
 use Mg\Marca\Marca;
 use Mg\Usuario\Usuario;
 
