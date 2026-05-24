@@ -27,7 +27,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 
 # Extensões PHP
 RUN docker-php-ext-configure gd --with-jpeg && \
-    docker-php-ext-install pdo pdo_pgsql pgsql gd zip intl bcmath
+    docker-php-ext-install pdo pdo_pgsql pgsql gd zip intl bcmath soap
 
 # Limites de memória
 RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/99-custom.ini
