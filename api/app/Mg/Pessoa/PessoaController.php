@@ -126,13 +126,28 @@ class PessoaController extends MgController
         if (!$pessoa->vendedor) {
             throw new Exception("\"{$pessoa->fantasia}\" não é vendedor!", 1);
         }
-        // PessoaComandaVendedorService::pdf — TODO portar (gera PDF com dompdf)
-        abort(501, 'comandaVendedor pendente de migração (PessoaComandaVendedorService).');
+        $pdf = PessoaComandaVendedorService::pdf($pessoa);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Comanda' . $codpessoa . '.pdf"',
+        ]);
     }
 
     public function comandaVendedorImprimir(Request $request, $codpessoa)
     {
-        abort(501, 'comandaVendedorImprimir pendente de migração (PessoaComandaVendedorService).');
+        $request->validate([
+            'impressora' => ['required', 'string'],
+            'copias' => ['required', 'integer'],
+        ]);
+        $pessoa = Pessoa::findOrFail($codpessoa);
+        if (!$pessoa->vendedor) {
+            throw new Exception("\"{$pessoa->fantasia}\" não é vendedor!", 1);
+        }
+        $pdf = PessoaComandaVendedorService::imprimir($pessoa, $request->impressora, (int) $request->copias);
+        return response()->make($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Comanda' . $codpessoa . '.pdf"',
+        ]);
     }
 
     public function autocomplete(Request $request)

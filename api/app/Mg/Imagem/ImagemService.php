@@ -7,11 +7,6 @@ use Illuminate\Validation\Rule;
 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-// SlimImageCropper não existe (não está no composer nem como código local).
-// ImagemController/ImagemService dependem dele para upload de imagens —
-// vai quebrar em runtime quando usado. Deixar comentado até substituir
-// por intervention/image ou similar:
-// use App\Libraries\SlimImageCropper\Slim;
 use Mg\Marca\Marca;
 use Mg\Usuario\Usuario;
 
@@ -28,10 +23,9 @@ class ImagemService
         // TODO: Remover isto depois que desativar o MGLara
         $model->observacoes = $model->arquivo;
 
-        // Salva o arquivo
-        //$data['file']->storeAs('imagens', $model->arquivo);
-
-        Slim::saveFile($data['imagem'], $model->arquivo, $model->directory, false);
+        // Salva o arquivo via SlimAdapter (substituto do antigo
+        // App\Libraries\SlimImageCropper, agora usando Intervention\Image)
+        SlimAdapter::saveFile($data['imagem'], $model->arquivo, $model->directory, false);
 
         if (!$model->save()) {
             return false;

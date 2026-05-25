@@ -39,4 +39,16 @@ class Imagem extends MgModel
         $base = rtrim(config('services.legacy.imagens_url'), '/');
         return $base . '/' . $this->arquivo;
     }
+
+    public function getDirectoryAttribute(): string
+    {
+        // Diretório de gravação local (volume compartilhado /opt/www/Arquivos/Imagens
+        // ou /media/publico/Arquivos/Imagens — configurável via env IMAGEM_PATH).
+        return rtrim(env('IMAGEM_PATH', public_path('imagens')), '/');
+    }
+
+    public function getPathAttribute(): string
+    {
+        return $this->directory . '/' . $this->arquivo;
+    }
 }

@@ -3,23 +3,18 @@
 namespace Mg\Imagem;
 
 use Illuminate\Http\Request;
-
-use App\Http\Requests;
 use Mg\MgController;
-
-// SlimImageCropper não disponível — store/update vão quebrar
-// quando alguém uploadar. Substituir por intervention/image ou similar.
-// use App\Libraries\SlimImageCropper\Slim;
 
 class ImagemController extends MgController
 {
-
     public function store(Request $request)
     {
-        $_POST['slim'] = $request->get('slim[]');
-        $images = Slim::getImages();
+        $images = SlimAdapter::getImages('slim');
+        if (empty($images)) {
+            abort(422, 'Nenhuma imagem recebida no campo "slim".');
+        }
         $data = $request->all();
-        $data['imagem'] = $images[0]['output']['data'];
+        $data['imagem'] = $images[0]['output']['data'] ?? $images[0]['output']['image'] ?? null;
 
         $model = new Imagem();
         $model = ImagemService::criar($model, $data);
@@ -28,10 +23,13 @@ class ImagemController extends MgController
 
     public function update(Request $request, $id)
     {
-        $_POST['slim'] = $request->get('slim[]');
-        $images = Slim::getImages();
+        $images = SlimAdapter::getImages('slim');
+        if (empty($images)) {
+            abort(422, 'Nenhuma imagem recebida no campo "slim".');
+        }
         $data = $request->all();
-        $data['imagem'] = $images[0]['output']['data'];
+        $data['imagem'] = $images[0]['output']['data'] ?? $images[0]['output']['image'] ?? null;
+
         $model = Imagem::findOrFail($id);
         $model = ImagemService::atualizar($model, $data);
         return response()->json($model, 200);
