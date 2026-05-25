@@ -16,6 +16,11 @@ class CertidaoEmissorController extends MgController
         return CertidaoEmissorResource::collection($regs);
     }
 
+    public function show(int $codcertidaoemissor)
+    {
+        return new CertidaoEmissorResource(CertidaoEmissor::findOrFail($codcertidaoemissor));
+    }
+
     public function store(CertidaoEmissorStoreRequest $request)
     {
         $reg = CertidaoEmissor::create($request->validated());

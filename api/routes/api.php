@@ -44,6 +44,7 @@ Route::post('v1/auth/login', [SSOController::class, 'login']);
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Feriado (migrado em 23/05/2026)
     Route::get('feriado/', [\Mg\Feriado\FeriadoController::class, 'index']);
+    Route::get('feriado/{codferiado}', [\Mg\Feriado\FeriadoController::class, 'show'])->whereNumber('codferiado');
     Route::post('feriado/', [\Mg\Feriado\FeriadoController::class, 'store']);
     Route::put('feriado/{codferiado}', [\Mg\Feriado\FeriadoController::class, 'update']);
     Route::delete('feriado/{codferiado}', [\Mg\Feriado\FeriadoController::class, 'destroy']);
@@ -53,6 +54,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // TipoSetor (migrado em 23/05/2026)
     Route::get('tipo-setor/', [\Mg\Filial\TipoSetorController::class, 'index']);
+    Route::get('tipo-setor/{codtiposetor}', [\Mg\Filial\TipoSetorController::class, 'show'])->whereNumber('codtiposetor');
     Route::post('tipo-setor/', [\Mg\Filial\TipoSetorController::class, 'store']);
     Route::put('tipo-setor/{codtiposetor}', [\Mg\Filial\TipoSetorController::class, 'update']);
     Route::delete('tipo-setor/{codtiposetor}', [\Mg\Filial\TipoSetorController::class, 'destroy']);
@@ -132,6 +134,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // CertidaoEmissor (migrado em 23/05/2026)
     Route::get('certidao-emissor/', [\Mg\Certidao\CertidaoEmissorController::class, 'index']);
+    Route::get('certidao-emissor/{codcertidaoemissor}', [\Mg\Certidao\CertidaoEmissorController::class, 'show'])->whereNumber('codcertidaoemissor');
     Route::post('certidao-emissor/', [\Mg\Certidao\CertidaoEmissorController::class, 'store']);
     Route::put('certidao-emissor/{codcertidaoemissor}', [\Mg\Certidao\CertidaoEmissorController::class, 'update']);
     Route::delete('certidao-emissor/{codcertidaoemissor}', [\Mg\Certidao\CertidaoEmissorController::class, 'destroy']);

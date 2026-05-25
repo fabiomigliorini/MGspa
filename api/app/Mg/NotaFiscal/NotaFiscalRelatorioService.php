@@ -95,7 +95,7 @@ class NotaFiscalRelatorioService
         $relevantes = Arr::only($filtros, static::$filtrosAceitos);
         $temFiltro = collect($relevantes)->filter(fn($v) => $v !== null && $v !== '')->isNotEmpty();
         if (!$temFiltro) {
-            throw new Exception('Informe ao menos um filtro para gerar o relatório.');
+            abort(422, 'Informe ao menos um filtro para gerar o relatório.');
         }
 
         $q = DB::table('tblnotafiscal as nf')

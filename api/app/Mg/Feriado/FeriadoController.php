@@ -15,6 +15,11 @@ class FeriadoController extends Controller
         return FeriadoResource::collection($regs);
     }
 
+    public function show(int $codferiado)
+    {
+        return new FeriadoResource(Feriado::findOrFail($codferiado));
+    }
+
     public function store(FeriadoStoreRequest $request)
     {
         Autorizador::autoriza(['Recursos Humanos']);
