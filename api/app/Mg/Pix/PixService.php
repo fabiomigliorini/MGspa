@@ -10,7 +10,6 @@ use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Portador\Portador;
-use Mg\Pix\GerenciaNet\GerenciaNetService;
 use Mg\Pix\Sicredi\PixSicrediService;
 use Mg\FormaPagamento\FormaPagamento;
 use Illuminate\Support\Facades\DB;
@@ -183,10 +182,6 @@ class PixService
                 return PixBbService::transmitirPixCob($cob);
                 break;
 
-            case 364:
-                return GerenciaNetService::transmitirPixCob($cob);
-                break;
-
             case 748:
                 return PixSicrediService::transmitirPixCob($cob);
                 break;
@@ -205,10 +200,6 @@ class PixService
         switch ($cob->Portador->Banco->numerobanco) {
             case 1:
                 $cob = PixBbService::consultarPixCob($cob);
-                break;
-
-            case 364:
-                $cob = GerenciaNetService::consultarPixCob($cob);
                 break;
 
             case 748:
@@ -332,10 +323,6 @@ class PixService
                 );
                 break;
 
-            case 364:
-                $pixRecebidos = GerenciaNetService::consultarPix($portador);
-                break;
-
             case 748:
                 $pixRecebidos = PixSicrediService::consultarPix(
                     $portador,
@@ -361,14 +348,6 @@ class PixService
                 }
                 $qrcode = PixBbApiService::qrCode($cob->qrcode);
                 $qrcode = 'data:image/png;base64,' . base64_encode($qrcode);
-                break;
-
-            case 364:
-                if (empty($cob->locationid)) {
-                    throw new \Exception('Sem LocationID registrado!', 1);
-                }
-                $qrcode = GerenciaNetService::qrCode($cob->locationid);
-                $qrcode = $qrcode['imagemQrcode'];
                 break;
 
             case 748:

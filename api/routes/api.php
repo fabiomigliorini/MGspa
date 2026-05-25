@@ -457,20 +457,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Boleto BB sem header de auth
     Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf');
 
-    // Stone
-    Route::group(['prefix' => 'stone-connect'], function () {
-        Route::group(['prefix' => 'pre-transacao'], function () {
-            Route::post('', '\Mg\Stone\Connect\PreTranscaoController@store');
-            Route::get('{codstonepretransacao}', '\Mg\Stone\Connect\PreTranscaoController@show');
-        });
-        Route::group(['prefix' => 'webhook'], function () {
-            Route::post('pos-application', '\Mg\Stone\Connect\WebhookController@posApplication');
-            Route::post('pre-transaction-status', '\Mg\Stone\Connect\WebhookController@preTransactionStatus');
-            Route::post('processed-transaction', '\Mg\Stone\Connect\WebhookController@processedTransaction');
-            Route::post('print-note-status', '\Mg\Stone\Connect\WebhookController@printNoteStatus');
-        });
-    });
-
     // PagarMe
     Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');
     Route::post('pagar-me/pedido/', '\Mg\PagarMe\PagarMeController@criarPedido');
@@ -769,20 +755,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('{codproduto}', '\Mg\Produto\ProdutoController@show');
     });
 
-    // Stone Connect (com auth)
-    Route::group(['prefix' => 'stone-connect'], function () {
-        Route::group(['prefix' => 'filial'], function () {
-            Route::post('', '\Mg\Stone\Connect\FilialController@store');
-            Route::get('', '\Mg\Stone\Connect\FilialController@index');
-            Route::get('{codstonefilial}', '\Mg\Stone\Connect\FilialController@show');
-            Route::get('{codstonefilial}/webhook', '\Mg\Stone\Connect\FilialController@showWebhook');
-        });
-        Route::group(['prefix' => 'pos'], function () {
-            Route::post('', '\Mg\Stone\Connect\PosController@store');
-            Route::delete('{codstonepos}', '\Mg\Stone\Connect\PosController@destroy');
-        });
-    });
-
     // NotaFiscal Dashboard
     Route::prefix('nota-fiscal/dashboard')->group(function () {
         Route::get('sefaz/status/{codfilial}', '\Mg\NotaFiscal\Dashboard\DashboardSefazController@status');
@@ -821,11 +793,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('mdfe/{codmdfe}', '\Mg\Mdfe\MdfeController@show');
     Route::get('mdfe', '\Mg\Mdfe\MdfeController@index');
     Route::put('mdfe/{codmdfe}', '\Mg\Mdfe\MdfeController@update');
-
-    // Cielo Lio
-    Route::get('lio/vendas-abertas', '\Mg\Lio\LioController@vendasAbertas');
-    Route::post('lio/order', '\Mg\Lio\LioController@order');
-    Route::post('lio/{id}/parse', '\Mg\Lio\LioController@parse');
 
     // Etiquetas
     Route::get('etiqueta/barras', '\Mg\Etiqueta\EtiquetaController@barras');

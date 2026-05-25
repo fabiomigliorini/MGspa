@@ -13,9 +13,7 @@ use Mg\Titulo\MovimentoTitulo;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
-use Mg\Lio\LioPedido;
 use Mg\Pix\PixCob;
-use Mg\Stone\StoneTransacao;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\SaurusPedido;
@@ -89,11 +87,6 @@ class NegocioFormaPagamento extends MgModel
         return $this->belongsTo(FormaPagamento::class, 'codformapagamento', 'codformapagamento');
     }
 
-    public function LioPedido()
-    {
-        return $this->belongsTo(LioPedido::class, 'codliopedido', 'codliopedido');
-    }
-
     public function Negocio()
     {
         return $this->belongsTo(Negocio::class, 'codnegocio', 'codnegocio');
@@ -117,11 +110,6 @@ class NegocioFormaPagamento extends MgModel
     public function SaurusPedido()
     {
         return $this->belongsTo(SaurusPedido::class, 'codsauruspedido', 'codsauruspedido');
-    }
-
-    public function StoneTransacao()
-    {
-        return $this->belongsTo(StoneTransacao::class, 'codstonetransacao', 'codstonetransacao');
     }
 
     public function Titulo()
