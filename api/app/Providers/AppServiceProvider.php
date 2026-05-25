@@ -47,14 +47,19 @@ class AppServiceProvider extends ServiceProvider
             return false;
         }, 'O campo :attribute deve ser um CPF ou CNPJ válido.');
 
-        // Observers — registrar quando as classes referenciadas estiverem
-        // estáveis. Comentados por padrão pra evitar quebra em controllers
-        // que só precisam fazer leitura simples. Para ativar, descomentar:
+        // Observers ATIVOS:
+        // - NotaFiscalObserver: recalcula status interno e tributação dos itens
+        //   quando campos críticos mudam (emitida, numero, nfeautorizacao, etc.).
+        //   Não depende de integrações externas.
+        \Mg\NotaFiscal\NotaFiscal::observe(\Mg\NotaFiscal\Observers\NotaFiscalObserver::class);
+
+        // Observers PENDENTES (dependem de Google Calendar/Drive — precisam
+        // credentials em storage/app/google/credentials.json + GOOGLE_DRIVE_*_ID
+        // configurados. Ativar individualmente após validar credenciais):
         // \Mg\Pessoa\Pessoa::observe(\Mg\Pessoa\PessoaObserver::class);
         // \Mg\Pessoa\Dependente::observe(\Mg\Pessoa\DependenteObserver::class);
         // \Mg\Colaborador\Colaborador::observe(\Mg\Colaborador\ColaboradorObserver::class);
         // \Mg\Colaborador\Ferias::observe(\Mg\Colaborador\FeriasObserver::class);
-        // \Mg\NotaFiscal\NotaFiscal::observe(\Mg\NotaFiscal\Observers\NotaFiscalObserver::class);
         // \Mg\Pessoa\Calendario\EventoCalendario::observe(\Mg\Pessoa\Calendario\EventoCalendarioObserver::class);
     }
 
