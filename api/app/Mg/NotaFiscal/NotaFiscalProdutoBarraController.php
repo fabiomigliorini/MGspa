@@ -13,11 +13,7 @@ use Illuminate\Http\Request;
 
 class NotaFiscalProdutoBarraController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth:api');
-    }
-
+    // Middleware aplicado via routes/api.php
     public function index(Request $request, int $codnotafiscal)
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);

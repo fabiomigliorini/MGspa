@@ -38,7 +38,7 @@ class ProdutoVariacaoService
         $binds = [
             'codprodutovariacao' => $codprodutovariacaoorigem
         ];
-        $meses = collect(DB::select(DB::raw($sql), $binds));
+        $meses = collect(DB::select($sql, $binds));
 
         // Percorre todos meses, associando ao novo mes
         foreach ($meses as $mes) {

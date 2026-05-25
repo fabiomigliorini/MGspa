@@ -248,7 +248,7 @@ class EstoqueEstatisticaService
             order by meses.mes asc
         ';
 
-        $regs = collect(DB::select(DB::raw($sql), $binds));
+        $regs = collect(DB::select($sql, $binds));
         return $regs;
     }
 
@@ -393,7 +393,7 @@ class EstoqueEstatisticaService
             order by codestoquelocal
         ';
 
-        $regs = collect(DB::select(DB::raw($sql), $binds));
+        $regs = collect(DB::select($sql, $binds));
         return $regs;
     }
 
@@ -459,7 +459,7 @@ class EstoqueEstatisticaService
             order by variacao
         ';
 
-        $regs = collect(DB::select(DB::raw($sql), $binds));
+        $regs = collect(DB::select($sql, $binds));
         return $regs;
     }
 

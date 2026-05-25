@@ -16,11 +16,9 @@ use Mg\NotaFiscal\NotaFiscalDevolucaoService;
 
 class NotaFiscalController extends Controller
 {
-
-    public function __construct()
-    {
-        $this->middleware('auth:api');
-    }
+    // Middleware aplicado via routes/api.php (Route::middleware(['auth:api'])).
+    // Em L13 slim, $this->middleware() no constructor não funciona —
+    // o Controller base não tem mais esse helper.
 
     public function index(Request $request)
     {

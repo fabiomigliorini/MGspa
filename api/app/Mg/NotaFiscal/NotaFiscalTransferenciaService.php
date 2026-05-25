@@ -289,7 +289,7 @@ class NotaFiscalTransferenciaService extends MGModel
         group by f.codfilial, f.filial, nat.codnaturezaoperacao, nat.naturezaoperacao
         order by f.codfilial, nat.naturezaoperacao';
 
-        $notasemitir = DB::select(DB::raw($sql));
+        $notasemitir = DB::select($sql);
 
         return $notasemitir;
     }
@@ -308,7 +308,7 @@ class NotaFiscalTransferenciaService extends MGModel
         group by f.codfilial, f.filial, nat.codnaturezaoperacao, nat.naturezaoperacao
         order by f.codfilial, nat.naturezaoperacao';
 
-        $notasnaoautorizadas = DB::select(DB::raw($sql));
+        $notasnaoautorizadas = DB::select($sql);
 
         return $notasnaoautorizadas;
     }

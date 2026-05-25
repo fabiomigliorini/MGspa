@@ -23,6 +23,26 @@ abstract class MgModel extends Model
 
     public $timestamps = true;
 
+    /**
+     * Compat L13: `protected $dates` foi removido do Eloquent moderno.
+     * Os models do bulk-import do legacy ainda declaram esse array — aqui
+     * intercepta-mos `getCasts()` e mergiamos os campos como `datetime`,
+     * para manter comportamento (Carbon nas datas) sem precisar editar
+     * cada um dos ~70 models.
+     */
+    public function getCasts()
+    {
+        $casts = parent::getCasts();
+        // @phpstan-ignore-next-line: $dates é removido no L13 mas existe nos models legacy
+        $dates = $this->dates ?? [];
+        foreach ($dates as $field) {
+            if (!isset($casts[$field])) {
+                $casts[$field] = 'datetime';
+            }
+        }
+        return $casts;
+    }
+
     public static function boot()
     {
         parent::boot();

@@ -8,6 +8,14 @@ use Mg\Usuario\Autorizador;
 
 class PessoaEnderecoController extends MgController
 {
+    public function index(Request $request, $codpessoa)
+    {
+        $items = PessoaEndereco::where('codpessoa', $codpessoa)
+            ->orderBy('ordem', 'asc')
+            ->get();
+        return PessoaEnderecoResource::collection($items);
+    }
+
     public function create(Request $request, $codpessoa)
     {
         Autorizador::autoriza(['Publico']);

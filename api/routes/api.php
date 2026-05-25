@@ -415,6 +415,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('lacunas', '\Mg\NotaFiscal\NotaFiscalController@detectarLacunas');
         Route::post('criar-para-inutilizar', '\Mg\NotaFiscal\NotaFiscalController@criarParaInutilizar');
         Route::get('relatorio', '\Mg\NotaFiscal\NotaFiscalController@relatorio');
+        // Rotas específicas de Transferencia/Dashboard ANTES do apiResource
+        // (caso contrário `nota-fiscal/notas-por-emitir` casa com `nota-fiscal/{codnotafiscal}`)
+        Route::get('notas-por-emitir', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasPorEmitir');
+        Route::get('notas-nao-autorizadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasNaoAutorizadas');
+        Route::get('notas-emitidas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasEmitidas');
+        Route::get('notas-lancadas', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@NotasLancadas');
+        Route::get('dashboard-transferencia', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@index');
+        Route::get('gera-transferencias/{codfilial}', '\Mg\NotaFiscal\NotaFiscalTransferenciaController@GerarNovaTransferencia');
         Route::apiResource('/', '\Mg\NotaFiscal\NotaFiscalController')->parameters(['' => 'codnotafiscal']);
         Route::put('{codnotafiscal}/status', '\Mg\NotaFiscal\NotaFiscalController@updateStatus');
         Route::post('{codnotafiscal}/duplicar', '\Mg\NotaFiscal\NotaFiscalController@duplicar');

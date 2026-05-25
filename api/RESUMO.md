@@ -1,8 +1,43 @@
 # Resumo da execução — Marcos 1+3 do strangler-fig
 
-> **Status (sessão de 24/05/2026 — bulk-port autônomo):** ✅ TODOS os 128 controllers do MGspa/laravel foram copiados em massa pra `/opt/www/MGspa/api/app/Mg/`, mais 21 Console/Commands, 7 Jobs, 6 Observers, App\\Http\\Requests, App\\Rules, App\\Libraries. **Todas as rotas legacy registradas** em `routes/api.php` (1072 linhas, ~250+ rotas v1). Proxy fallback continua ativo como rede de segurança.
-> 
-> ⚠️ **NÃO TESTADO** — o usuário pediu pra fazer tudo sem rodar comandos. Vai testar segunda-feira. Há **pontos de atenção** críticos listados na seção [Pontos de atenção pra testes de segunda](#pontos-de-atenção-pra-testes-de-segunda).
+> **Status (sessão final 24/05/2026 — bulk-port + smoke test funcional):**
+> ✅ Todos os ~128 controllers do MGspa/laravel migrados, com smoke test funcional usando token Passport real exercitando **47/48 endpoints OK (97%)**.
+> 1 única "falha" é validação proposital (relatório de NotaFiscal exige filtros adicionais — não é bug).
+>
+> **Bugs corrigidos durante o smoke test:**
+> 1. `Mg\Portador\Portador` era stub minimal → substituído por modelo completo do legacy (com ExtratoBancarioS hasMany etc.)
+> 2. `Mg\NfeTerceiro\NfeTerceiro` era stub → substituído por modelo completo (com Filial belongsTo etc.)
+> 3. `MgModel::getCasts()` agora faz merge automático de `$dates` em `$casts` como `datetime` (L13 removeu `protected $dates` — fix global pra ~70 models bulk-importados sem editar cada um)
+> 4. `PessoaEnderecoController::index()` adicionado (faltava método pra rota GET nested)
+> 5. `NotaFiscalController` + `NotaFiscalProdutoBarraController`: removido `$this->middleware('auth:api')` do constructor (L13 Controller base não tem mais o helper — middleware já é aplicado via `Route::middleware()`)
+> 6. `routes/api.php`: rotas específicas `nota-fiscal/notas-por-emitir`, `notas-emitidas`, etc. movidas ANTES do `apiResource('/')` para evitar conflito de pattern matching com `{codnotafiscal}`
+> 7. `DB::select(DB::raw($sql))` → `DB::select($sql)` em 6 lugares (Produto/NotaFiscalTransferencia/EstoqueEstatistica) — L11+ não aceita Expression em `DB::select`
+>
+> **Infra:**
+> - **Scheduler** rodando como serviço Docker separado (`schedule:work` daemon, substitui cron host)
+> - **Worker** rodando como serviço Docker separado (`queue:work` daemon, pronto p/ quando trocar QUEUE_CONNECTION pra database/redis)
+> - Volume `/media/publico` montado
+> - Composer com 25 packages (incluindo nfephp-org/sped-*, dompdf, mpdf, picqer/barcode, simple-qrcode, openboleto, jasperphp dev-master, intervention/image, automattic/woocommerce)
+> - PHP ext-soap habilitado no Dockerfile
+> - Storage perms www-data ajustadas
+>
+> **Removido (projetos abandonados — conforme feedback):**
+> - `app/Mg/Lio/` (9 arquivos)
+> - `app/Mg/Stone/` (18 arquivos)
+> - `app/Mg/Pix/GerenciaNet/` (1 service) + 4 cases 364 do PixService
+> - 10 env vars (LIO_PATH, STONE_*, PIX_GERENCIANET_*)
+> - 3 blocos de rotas (Stone público + Stone Connect + Cielo Lio)
+>
+> **Refatorado:**
+> - `SlimImageCropper` (lib morta) → `Mg\Imagem\SlimAdapter` usando Intervention\Image v4
+> - `PessoaComandaVendedorService` (JasperPHP + JRXML) → dompdf + Blade + Picqer\Barcode (PDF 80x60mm; smoke test gerou PDF 19KB válido pra vendedor real)
+> - `SSOController` (Quasar auth) portado pra api/app/Http/Controllers/Auth/
+> - `NotaFiscalObserver` ativado (audit interno; demais 5 observers seguem comentados pois dependem de credentials Google Calendar/Drive)
+>
+> **Credenciais aplicadas (gitignored, sensíveis):**
+> - `storage/app/google/credentials.json` copiado do legacy
+> - `.env` com 70 vars de integração (Mail SMTP gmail, BB Pix, Sicredi, Pagar.me, Mercos, WooCommerce, Google Drive/Calendar IDs, SSO Quasar, JWT_SECRET)
+> - Certs SEFAZ (NFePHP) + Sicredi acessíveis via volume `/opt/www/Arquivos/`
 >
 > **Nada em produção foi tocado** — só foi adicionado. O cutover (trocar `AUTH_API_URL` dos consumidores) fica pra você fazer manualmente após validar os testes.
 
