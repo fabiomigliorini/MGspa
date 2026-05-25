@@ -102,11 +102,13 @@
     }
 
     .modern-btn:hover {
-        transform: translateY(-4px) scale(1.02);
+        transform: scale(1.05);
+        /*
         box-shadow: 0 20px 35px -5px rgba(255, 237, 0, 0.5);
         background: #fff566;
+        */
     }
-    
+
     .modern-btn:active {
         transform: translateY(0) scale(0.98);
     }
@@ -127,8 +129,8 @@
     }
 
     .error-badge svg {
-        width: 20px; 
-        height: 20px; 
+        width: 20px;
+        height: 20px;
         margin-right: 8px;
         flex-shrink: 0;
         fill: currentColor;
@@ -140,7 +142,7 @@
         display: flex;
         justify-content: center;
     }
-    
+
     .logo-container img {
         width: 100%;
         max-width: 140px;
@@ -149,7 +151,7 @@
         box-shadow: 0 15px 35px rgba(0,0,0,0.3);
         transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    
+
     .logo-container img:hover {
         transform: scale(1.8) rotate(-10deg);
     }
@@ -160,20 +162,20 @@
         <div class="logo-container">
             <img src="{{ asset('MG Papelaria Selo.svg') }}" alt="MG Papelaria Selo">
         </div>
-        
+
         <form method="POST" action="{{ route('auth') }}">
             @csrf
             <input type="text" name="redirect_uri" value="{{ $redirect_uri ?? '' }}" hidden>
-            
+
             <div class="form-group">
                 <label for="username">{{ __('Usuário') }}</label>
                 <input id="username" class="modern-input" type="text" name="username" placeholder="Digite seu usuário" autofocus required>
             </div>
-            
+
             <div class="form-group">
                 <label for="password">{{ __('Senha') }}</label>
                 <input id="password" type="password" class="modern-input" name="password" placeholder="Digite sua senha" required>
-                
+
                 @if (!empty($error))
                     <div class="error-badge">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
@@ -181,7 +183,7 @@
                     </div>
                 @endif
             </div>
-            
+
             <button type="submit" class="modern-btn">
                 {{ __('Entrar') }}
             </button>
