@@ -12,9 +12,9 @@ use Dompdf\Dompdf;
 use OpenBoleto\Banco\BancoDoBrasil;
 use OpenBoleto\Agente;
 
-use JasperPHP\Instructions;
-use JasperPHP\Report;
-use JasperPHP\PdfProcessor;
+use JasperPHP\core\Instructions;
+use JasperPHP\elements\Report;
+use JasperPHP\processors\PdfProcessor;
 
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;

@@ -2,7 +2,6 @@
 
 namespace Mg\NotaFiscalTerceiro;
 
-use Mg\NFeTerceiro\NotaFiscalTerceiroDistribuicaoDfe;
 use Mg\Filial\Filial;
 
 class NotaFiscalTerceiroPathService

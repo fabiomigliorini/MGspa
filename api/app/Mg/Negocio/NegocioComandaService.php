@@ -4,9 +4,9 @@ namespace Mg\Negocio;
 
 use Illuminate\Support\Str;
 
-use JasperPHP\Instructions;
-use JasperPHP\Report;
-use JasperPHP\PdfProcessor;
+use JasperPHP\core\Instructions;
+use JasperPHP\elements\Report;
+use JasperPHP\processors\PdfProcessor;
 use Mg\Pdv\Pdv;
 
 class NegocioComandaService

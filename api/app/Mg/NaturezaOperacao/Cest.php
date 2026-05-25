@@ -8,7 +8,7 @@ namespace Mg\NaturezaOperacao;
 
 use Mg\MgModel;
 use Mg\Produto\Produto;
-use Mg\Ncm\Ncm;
+// Ncm fica no mesmo namespace Mg\NaturezaOperacao
 use Mg\Usuario\Usuario;
 
 class Cest extends MgModel

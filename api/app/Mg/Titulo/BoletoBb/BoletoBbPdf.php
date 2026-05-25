@@ -6,7 +6,7 @@ use Mg\Titulo\TituloBoleto;
 
 use OpenBoleto\Banco\BancoDoBrasil;
 use OpenBoleto\Agente;
-use JasperPHP\Report;
+use JasperPHP\elements\Report;
 //use JasperPHP\ado\TTransaction;
 //use JasperPHP\ado\TLoggerHTML;
 
