@@ -7,9 +7,11 @@
     "require": {
         "php": "^8.3",
         "ext-soap": "*",
+        "automattic/woocommerce": "^3.1",
         "dompdf/dompdf": "^3.0",
         "google/apiclient": "^2.19",
         "guzzlehttp/guzzle": "^7.5",
+        "intervention/image": "^4.1",
         "laravel/framework": "^13.0",
         "laravel/helpers": "^1.7",
         "laravel/passport": "^13.0",

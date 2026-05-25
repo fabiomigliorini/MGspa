@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Auth\SSOController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,11 @@ Route::middleware(['throttle:api'])->group(function () {
 Route::middleware('throttle:600,1')->group(function () {
     Route::get('check-token', [AuthController::class, 'checkToken']);
 });
+
+// SSO Quasar (paridade com legacy /api/quasar, /api/quasar/callback, /api/v1/auth/login)
+Route::get('quasar', [SSOController::class, 'getLoginQuasar']);
+Route::get('quasar/callback', [SSOController::class, 'getCallback']);
+Route::post('v1/auth/login', [SSOController::class, 'login']);
 
 /*
 |--------------------------------------------------------------------------
