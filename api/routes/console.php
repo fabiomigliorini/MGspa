@@ -24,7 +24,7 @@ Schedule::command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);
 Schedule::command('pix:consultar --horas=36')->everyTenMinutes();
 Schedule::command('aniversariantes:individual')->dailyAt('08:00');
 Schedule::command('aniversariantes:geral')->dailyAt('08:00');
-Schedule::command('ranking:refresh')
+Schedule::command('ranking-produto:refresh')
     ->dailyAt('05:00')
     ->runInBackground()
     ->withoutOverlapping();
