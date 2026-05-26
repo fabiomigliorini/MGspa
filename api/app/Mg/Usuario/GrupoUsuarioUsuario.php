@@ -2,16 +2,10 @@
 
 namespace Mg\Usuario;
 
-use Mg\Usuario\Usuario;
+use App\Usuario\Usuario;
 use Mg\Filial\Filial;
 use Mg\MgModel;
 
-/**
- * Vínculo Usuário × Grupo × Filial — necessário pro UsuarioResource
- * montar `data.permissoes[]` no endpoint v1/auth/user.
- *
- * `Usuario()` aponta para `Mg\Usuario\Usuario` (model do Passport).
- */
 class GrupoUsuarioUsuario extends MgModel
 {
     protected $table = 'tblgrupousuariousuario';
@@ -30,6 +24,8 @@ class GrupoUsuarioUsuario extends MgModel
         'codusuario' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'alteracao' => 'datetime',
+        'criacao' => 'datetime',
     ];
 
     public function Filial()
@@ -45,5 +41,15 @@ class GrupoUsuarioUsuario extends MgModel
     public function Usuario()
     {
         return $this->belongsTo(Usuario::class, 'codusuario', 'codusuario');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 }

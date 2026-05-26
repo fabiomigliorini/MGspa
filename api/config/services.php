@@ -53,6 +53,7 @@ return [
     */
     'legacy' => [
         'url' => env('LEGACY_API_URL', 'https://api-mgspa-dev.mgpapelaria.com.br/api'),
+        'imagens_url' => env('LEGACY_IMAGENS_URL', 'https://api-mgspa-dev.mgpapelaria.com.br/imagens'),
     ],
 
 ];

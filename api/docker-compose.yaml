@@ -11,7 +11,58 @@ services:
       - "9007:9000"
     volumes:
       - /opt/www:/opt/www
+      - /media/publico:/media/publico
       - /tmp:/tmp/host
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "sistema-dev.mgpapelaria.com.br:host-gateway"
+      - "api-dev.mgpapelaria.com.br:host-gateway"
+      - "api.mgpapelaria.com.br:host-gateway"
+      - "auth-dev.mgpapelaria.com.br:host-gateway"
+      - "api-mgspa-dev.mgpapelaria.com.br:host-gateway"
+
+  # Scheduler nativo do Laravel — substitui cron (não precisa cron host nem
+  # supervisord no container). O comando `schedule:work` é um foreground
+  # daemon que executa o `Schedule::command(...)` em routes/console.php
+  # (ranking:refresh diário, pix:consultar a cada 10min, etc.).
+  scheduler:
+    image: mgspa-api
+    container_name: mgspa-api-scheduler
+    restart: unless-stopped
+    working_dir: /opt/www/MGspa/api
+    depends_on:
+      - api
+    command: ["php", "artisan", "schedule:work"]
+    volumes:
+      - /opt/www:/opt/www
+      - /media/publico:/media/publico
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "sistema-dev.mgpapelaria.com.br:host-gateway"
+      - "api-dev.mgpapelaria.com.br:host-gateway"
+      - "api.mgpapelaria.com.br:host-gateway"
+      - "auth-dev.mgpapelaria.com.br:host-gateway"
+      - "api-mgspa-dev.mgpapelaria.com.br:host-gateway"
+
+  # Worker de queue (sync por padrão no .env, mas se mudar para
+  # database/redis o worker já fica disponível).
+  worker:
+    image: mgspa-api
+    container_name: mgspa-api-worker
+    restart: unless-stopped
+    working_dir: /opt/www/MGspa/api
+    depends_on:
+      - api
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+    volumes:
+      - /opt/www:/opt/www
+      - /media/publico:/media/publico
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /usr/share/zoneinfo:/usr/share/zoneinfo

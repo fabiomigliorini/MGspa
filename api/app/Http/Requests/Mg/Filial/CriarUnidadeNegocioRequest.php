@@ -6,12 +6,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class CriarUnidadeNegocioRequest extends FormRequest
 {
-    public function authorize(): bool
+    public function authorize()
     {
         return true;
     }
 
-    public function rules(): array
+    public function rules()
     {
         return [
             'descricao' => ['required', 'string', 'max:100'],
@@ -19,7 +19,7 @@ class CriarUnidadeNegocioRequest extends FormRequest
         ];
     }
 
-    public function messages(): array
+    public function messages()
     {
         return [
             'descricao.required' => 'Descricao e obrigatoria.',

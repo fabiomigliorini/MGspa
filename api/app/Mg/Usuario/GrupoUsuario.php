@@ -2,12 +2,10 @@
 
 namespace Mg\Usuario;
 
+use App\Models\Usuario;
 use Mg\MgModel;
+use Mg\Permissao\GrupoUsuarioPermissao;
 
-/**
- * Grupo de usuário (perfil/role) — versão enxuta com só o necessário
- * pro UsuarioResource (v1/auth/user) montar a lista de permissões.
- */
 class GrupoUsuario extends MgModel
 {
     protected $table = 'tblgrupousuario';
@@ -23,8 +21,25 @@ class GrupoUsuario extends MgModel
         'codgrupousuario' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'alteracao' => 'datetime',
+        'criacao' => 'datetime',
         'inativo' => 'datetime',
     ];
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+    public function GrupoUsuarioPermissaoS()
+    {
+        return $this->hasMany(GrupoUsuarioPermissao::class, 'codgrupousuario', 'codgrupousuario');
+    }
 
     public function GrupoUsuarioUsuarioS()
     {

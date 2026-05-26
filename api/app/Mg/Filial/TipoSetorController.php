@@ -15,6 +15,11 @@ class TipoSetorController extends MgController
         return TipoSetorResource::collection($regs);
     }
 
+    public function show(int $codtiposetor)
+    {
+        return new TipoSetorResource(TipoSetor::findOrFail($codtiposetor));
+    }
+
     public function store(Request $request)
     {
         Autorizador::autoriza(['Recursos Humanos']);

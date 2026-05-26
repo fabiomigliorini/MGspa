@@ -1,6 +1,6 @@
 <?php
 
-namespace Mg\Usuario;
+namespace App\Models;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -10,24 +10,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Laravel\Passport\HasApiTokens;
 use Mg\Filial\Filial;
+use Mg\Imagem\Imagem;
 use Mg\Pessoa\Pessoa;
 use Mg\Portador\Portador;
+use Mg\Usuario\GrupoUsuarioUsuario;
 
 /**
- * Model de usuário do banco mgsis.tblusuario.
+ * Model de usuário do banco mgsis.tblusuario. Versão enxuta — só o que
+ * importa pra autenticação. Os relacionamentos de domínio (Filial,
+ * Pessoa, Portador, etc.) ficam no MGspa/laravel até as controllers
+ * correspondentes serem migradas pra cá.
  *
  * Compatível com o que o MGAuth e o MGspa/laravel fazem hoje:
  *  - findForPassport($username): busca por `usuario`
  *  - getAuthPassword(): retorna null se o usuário estiver inativo
- *
- * Não estende MgModel propositalmente — os hooks de audit (creating/
- * updating com Auth::user()->codusuario) gerariam recursão durante o
- * próprio fluxo de autenticação.
- *
- * Relacionamentos de domínio (Pessoa, Portador, Filial, GrupoUsuarioUsuarioS)
- * são consumidos pelo UsuarioResource em `v1/auth/user`. Outros vínculos
- * (Ecf, Imagem, Operacao, Negocio*, NfeTerceiro*, etc.) serão adicionados
- * conforme as features dependentes forem migradas.
  */
 class Usuario extends Model implements AuthenticatableContract, CanResetPasswordContract
 {
@@ -90,6 +86,16 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         return $this->senha;
     }
 
+    public function Filial()
+    {
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function Imagem()
+    {
+        return $this->belongsTo(Imagem::class, 'codimagem', 'codimagem');
+    }
+
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
@@ -98,11 +104,6 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
     public function Portador()
     {
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');
-    }
-
-    public function Filial()
-    {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
     public function GrupoUsuarioUsuarioS()
