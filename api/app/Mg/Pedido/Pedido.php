@@ -2,7 +2,7 @@
 
 namespace Mg\Pedido;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\Estoque\EstoqueLocal;
 use Mg\GrupoEconomico\GrupoEconomico;
 use Mg\MgModel;

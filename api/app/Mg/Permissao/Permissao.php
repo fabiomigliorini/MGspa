@@ -2,7 +2,7 @@
 
 namespace Mg\Permissao;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class Permissao extends MgModel

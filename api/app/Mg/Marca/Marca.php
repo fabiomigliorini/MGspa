@@ -2,7 +2,7 @@
 
 namespace Mg\Marca;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\Imagem\Imagem;
 use Mg\MgModel;
 

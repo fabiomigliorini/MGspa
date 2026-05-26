@@ -2,7 +2,7 @@
 
 namespace Mg\Cidade;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class Cidade extends MgModel

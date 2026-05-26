@@ -2,7 +2,7 @@
 
 namespace Mg\Pessoa;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\Cidade\Cidade;
 use Mg\MgModel;
 

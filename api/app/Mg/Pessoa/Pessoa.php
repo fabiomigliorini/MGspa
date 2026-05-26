@@ -2,7 +2,7 @@
 
 namespace Mg\Pessoa;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Carbon\Carbon;
 use Mg\Certidao\CertidaoEmissor;
 use Mg\Cidade\Cidade;

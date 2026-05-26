@@ -2,7 +2,7 @@
 
 namespace Mg\GrupoEconomico;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\Marca\Marca;
 use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
