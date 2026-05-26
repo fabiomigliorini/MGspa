@@ -11,7 +11,7 @@ return [
     | de SSO no domínio .mgpapelaria.com.br.
     */
 
-    'paths' => ['api/*', 'oauth/*', 'login', 'logout', 'refresh', 'check-token'],
+    'paths' => ['api/*', 'oauth/*', 'userinfo', 'login'],
 
     'allowed_methods' => ['*'],
 

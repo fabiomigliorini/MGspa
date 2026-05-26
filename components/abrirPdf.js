@@ -19,6 +19,9 @@ function extrairErro(error, fallback) {
  * @param {Object} [params] - query params
  * @param {Object} [options]
  * @param {string} [options.title] - título exibido no header do modal
+ * @param {('a4'|'cupom')} [options.size] - tamanho do modal: 'a4' (padrão) ou 'cupom' (~500px)
+ * @param {Function} [options.onImprimir] - se definido, exibe botão "Imprimir" no rodapé que dispara essa função
+ * @param {string} [options.imprimirLabel] - label do botão imprimir (default: 'Imprimir')
  */
 export async function abrirPdf(api, url, params = {}, options = {}) {
   try {
@@ -40,6 +43,9 @@ export async function abrirPdf(api, url, params = {}, options = {}) {
       componentProps: {
         pdfUrl: blobUrl,
         title: options.title || 'Relatório',
+        size: options.size || 'a4',
+        onImprimir: options.onImprimir || null,
+        imprimirLabel: options.imprimirLabel || 'Imprimir',
       },
     }).onDismiss(() => {
       URL.revokeObjectURL(blobUrl)

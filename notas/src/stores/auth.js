@@ -2,9 +2,8 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: process.env.API_URL,
-})
+// /userinfo e /oauth/revoke vivem em path raiz do API_AUTH_URL —
+// usamos axios direto (sem instância com baseURL=API_URL).
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('access_token'))
@@ -42,12 +41,14 @@ export const useAuthStore = defineStore('auth', () => {
 
     carregando.value = true
     try {
-      const response = await api.get('v1/auth/user', {
+      // OIDC Core 1.0 §5.3 — /userinfo (raiz) retorna claims OIDC + custom MGspa
+      // num único objeto plano (sem wrapper `data`).
+      const response = await axios.get(`${process.env.API_AUTH_URL}/userinfo`, {
         headers: { Authorization: `Bearer ${token.value}` },
       })
 
-      if (response.data?.data?.usuario) {
-        usuario.value = response.data.data
+      if (response.data?.usuario) {
+        usuario.value = response.data
         const expAt = response.data?.meta?.expires_at
         expiresAt.value = expAt ? new Date(expAt) : null
         return true
@@ -87,15 +88,14 @@ export const useAuthStore = defineStore('auth', () => {
       }
 
       if (tokenUsado) {
-        await api.post(
-          `${process.env.API_AUTH_URL}/api/logout`,
-          {},
-          {
-            headers: {
-              Authorization: `Bearer ${tokenUsado}`,
-            },
-          },
-        )
+        // RFC 7009 — revoga o token passando-o no body + client_credentials
+        const params = new URLSearchParams({
+          token: tokenUsado,
+          token_type_hint: 'access_token',
+          client_id: process.env.CLIENT_ID,
+          client_secret: process.env.CLIENT_SECRET,
+        })
+        await axios.post(`${process.env.API_AUTH_URL}/oauth/revoke`, params)
       }
     } catch (error) {
       console.warn('Erro ao fazer logout no backend:', error)
