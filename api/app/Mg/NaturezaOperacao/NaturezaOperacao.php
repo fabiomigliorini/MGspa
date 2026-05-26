@@ -2,7 +2,7 @@
 
 namespace Mg\NaturezaOperacao;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\ContaContabil\ContaContabil;
 use Mg\Estoque\EstoqueMovimentoTipo;
 use Mg\MgModel;

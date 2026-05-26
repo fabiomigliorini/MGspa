@@ -2,7 +2,7 @@
 
 namespace Mg\NaturezaOperacao;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 

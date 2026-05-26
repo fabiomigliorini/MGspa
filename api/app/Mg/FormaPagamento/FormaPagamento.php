@@ -2,7 +2,7 @@
 
 namespace Mg\FormaPagamento;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class FormaPagamento extends MgModel

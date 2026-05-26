@@ -2,7 +2,7 @@
 
 namespace Mg\ContaContabil;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class ContaContabil extends MgModel

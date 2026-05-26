@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Mg\Usuario;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;
@@ -9,16 +9,25 @@ use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Laravel\Passport\HasApiTokens;
+use Mg\Filial\Filial;
+use Mg\Pessoa\Pessoa;
+use Mg\Portador\Portador;
 
 /**
- * Model de usuário do banco mgsis.tblusuario. Versão enxuta — só o que
- * importa pra autenticação. Os relacionamentos de domínio (Filial,
- * Pessoa, Portador, etc.) ficam no MGspa/laravel até as controllers
- * correspondentes serem migradas pra cá.
+ * Model de usuário do banco mgsis.tblusuario.
  *
  * Compatível com o que o MGAuth e o MGspa/laravel fazem hoje:
  *  - findForPassport($username): busca por `usuario`
  *  - getAuthPassword(): retorna null se o usuário estiver inativo
+ *
+ * Não estende MgModel propositalmente — os hooks de audit (creating/
+ * updating com Auth::user()->codusuario) gerariam recursão durante o
+ * próprio fluxo de autenticação.
+ *
+ * Relacionamentos de domínio (Pessoa, Portador, Filial, GrupoUsuarioUsuarioS)
+ * são consumidos pelo UsuarioResource em `v1/auth/user`. Outros vínculos
+ * (Ecf, Imagem, Operacao, Negocio*, NfeTerceiro*, etc.) serão adicionados
+ * conforme as features dependentes forem migradas.
  */
 class Usuario extends Model implements AuthenticatableContract, CanResetPasswordContract
 {
@@ -79,5 +88,25 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
             return null;
         }
         return $this->senha;
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function Portador()
+    {
+        return $this->belongsTo(Portador::class, 'codportador', 'codportador');
+    }
+
+    public function Filial()
+    {
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function GrupoUsuarioUsuarioS()
+    {
+        return $this->hasMany(GrupoUsuarioUsuario::class, 'codusuario', 'codusuario');
     }
 }

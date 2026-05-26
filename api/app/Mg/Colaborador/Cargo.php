@@ -2,7 +2,7 @@
 
 namespace Mg\Colaborador;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class Cargo extends MgModel

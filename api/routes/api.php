@@ -36,6 +36,11 @@ Route::middleware('throttle:600,1')->group(function () {
 */
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
+    // Auth/User — validação de sessão usada pelos 4 frontends Quasar
+    // (pessoas/notas/contas/negocios). Substitui o endpoint `v1/auth/user`
+    // do MGspa/laravel legado.
+    Route::get('auth/user', [\Mg\Usuario\UsuarioController::class, 'permissoesUsuarios']);
+
     // Feriado (migrado em 23/05/2026)
     Route::get('feriado/', [\Mg\Feriado\FeriadoController::class, 'index']);
     Route::post('feriado/', [\Mg\Feriado\FeriadoController::class, 'store']);

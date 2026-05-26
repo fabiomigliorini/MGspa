@@ -2,7 +2,7 @@
 
 namespace Mg\Estoque;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\Filial\Filial;
 use Mg\MgModel;
 
