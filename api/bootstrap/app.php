@@ -22,6 +22,15 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
 
         // CORS é nativo no L13 — controlado por config/cors.php
+
+        // OAuth2/OIDC endpoints (RFC 6749/7009/7662 + OIDC Core) NÃO devem exigir
+        // CSRF — são autenticados via client_credentials no body/Basic Auth ou
+        // Bearer token. CSRF é proteção pra sessões web, irrelevante aqui.
+        $middleware->validateCsrfTokens(except: [
+            'oauth/token',
+            'oauth/revoke',
+            'oauth/introspect',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

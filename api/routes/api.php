@@ -1,36 +1,21 @@
 <?php
 
-use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\Auth\SSOController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
-| Rotas de auth — paridade com o antigo MGAuth
+| Rotas de Auth/OAuth/OIDC
 |--------------------------------------------------------------------------
-| Paths reais ficam sob /api (prefixo automático do api: do withRouting).
-| MGLara/MGsis/frontends Quasar batem nas mesmas URLs que batiam no MGAuth.
+| Vivem em routes/web.php sob paths raiz spec-compliant:
+|   /oauth/token, /oauth/revoke, /oauth/introspect (RFC 6749/7009/7662)
+|   /oauth/authorize × 3 (consent + approve + deny — RFC 6749)
+|   /userinfo (OIDC Core 1.0 §5.3)
+|   /login (HTML page com fetch JS pra /oauth/token)
+|
+| Aqui em routes/api.php só ficam as rotas de domínio (v1/...).
 */
-
-Route::middleware(['throttle:api'])->group(function () {
-    Route::post('oauth/token', [AuthController::class, 'getToken'])->name('auth');
-    Route::post('oauth/token/json', [AuthController::class, 'getTokenJson']);
-    Route::post('refresh', [AuthController::class, 'refreshToken']);
-    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:api');
-});
-
-// check-token tem throttle próprio (600/min) porque é chamado a cada request
-// pelos consumidores (MGLara/MGsis/frontends) — mesmo comportamento do MGAuth.
-Route::middleware('throttle:600,1')->group(function () {
-    Route::get('check-token', [AuthController::class, 'checkToken']);
-});
-
-// SSO Quasar (paridade com legacy /api/quasar, /api/quasar/callback, /api/v1/auth/login)
-Route::get('quasar', [SSOController::class, 'getLoginQuasar']);
-Route::get('quasar/callback', [SSOController::class, 'getCallback']);
-Route::post('v1/auth/login', [SSOController::class, 'login']);
 
 /*
 |--------------------------------------------------------------------------
@@ -42,11 +27,6 @@ Route::post('v1/auth/login', [SSOController::class, 'login']);
 */
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
-    // Auth/User — validação de sessão usada pelos 4 frontends Quasar
-    // (pessoas/notas/contas/negocios). Substitui o endpoint `v1/auth/user`
-    // do MGspa/laravel legado.
-    Route::get('auth/user', [\Mg\Usuario\UsuarioController::class, 'permissoesUsuarios']);
-
     // Feriado (migrado em 23/05/2026)
     Route::get('feriado/', [\Mg\Feriado\FeriadoController::class, 'index']);
     Route::get('feriado/{codferiado}', [\Mg\Feriado\FeriadoController::class, 'show'])->whereNumber('codferiado');
@@ -1010,8 +990,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('{codnfeterceiro}/informar-complemento', '\Mg\NfeTerceiro\NfeTerceiroController@informarComplemento');
     });
 
-    // Auth user (mesma do legacy /v1/auth/user) — depende de PessoaResource carregar
-    Route::get('auth/user', '\Mg\Usuario\UsuarioController@permissoesUsuarios');
 });
 
 /*

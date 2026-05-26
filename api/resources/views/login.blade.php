@@ -163,10 +163,14 @@
             <img src="{{ asset('MG Papelaria Selo.svg') }}" alt="MG Papelaria Selo">
         </div>
 
-        <form method="POST" action="{{ route('auth') }}">
-            @csrf
-            <input type="text" name="redirect_uri" value="{{ $redirect_uri ?? '' }}" hidden>
+        <noscript>
+            <div class="error-badge">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+                JavaScript é necessário para fazer login.
+            </div>
+        </noscript>
 
+        <form id="loginForm">
             <div class="form-group">
                 <label for="username">{{ __('Usuário') }}</label>
                 <input id="username" class="modern-input" type="text" name="username" placeholder="Digite seu usuário" autofocus required>
@@ -176,18 +180,74 @@
                 <label for="password">{{ __('Senha') }}</label>
                 <input id="password" type="password" class="modern-input" name="password" placeholder="Digite sua senha" required>
 
-                @if (!empty($error))
-                    <div class="error-badge">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
-                        Usuário ou senha inválidos
-                    </div>
-                @endif
+                <div id="errorMsg" class="error-badge" hidden>
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 15h2v2h-2zm0-8h2v6h-2zm.99-5C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/></svg>
+                    <span id="errorMsgText">Usuário ou senha inválidos</span>
+                </div>
             </div>
 
-            <button type="submit" class="modern-btn">
+            <button type="submit" id="submitBtn" class="modern-btn">
                 {{ __('Entrar') }}
             </button>
         </form>
+
+        <script>
+            (function () {
+                const REDIRECT_URI = @json($redirect_uri) || @json(config('services.auth.default_redirect'));
+                const CLIENT_ID = @json(config('services.auth.client_id'));
+                const CLIENT_SECRET = @json(config('services.auth.client_secret'));
+
+                const form = document.getElementById('loginForm');
+                const errorEl = document.getElementById('errorMsg');
+                const errorTxt = document.getElementById('errorMsgText');
+                const btn = document.getElementById('submitBtn');
+
+                function showError(msg) {
+                    errorTxt.textContent = msg;
+                    errorEl.hidden = false;
+                }
+
+                form.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    errorEl.hidden = true;
+                    btn.disabled = true;
+
+                    const fd = new FormData(form);
+                    try {
+                        const res = await fetch('/oauth/token', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            credentials: 'include',
+                            body: new URLSearchParams({
+                                grant_type: 'password',
+                                client_id: CLIENT_ID,
+                                client_secret: CLIENT_SECRET,
+                                username: fd.get('username'),
+                                password: fd.get('password'),
+                                scope: 'view-user',
+                            }),
+                        });
+
+                        if (!res.ok) {
+                            showError('Usuário ou senha inválidos');
+                            return;
+                        }
+                        // Cookies access_token + user_id setados via Set-Cookie pelo backend
+                        // — basta redirecionar.
+                        window.location.href = REDIRECT_URI;
+                    } catch (err) {
+                        showError('Erro de comunicação. Tente novamente.');
+                    } finally {
+                        btn.disabled = false;
+                    }
+                });
+
+                // Mostra erro se chegou com ?error=true na URL (legado)
+                if (@json($error ?? false)) {
+                    showError('Usuário ou senha inválidos');
+                }
+            })();
+        </script>
     </div>
 </div>
 @endsection
