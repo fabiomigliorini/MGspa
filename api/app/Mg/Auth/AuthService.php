@@ -10,11 +10,9 @@ use Illuminate\Http\Response;
 use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
-use Lcobucci\JWT\Token\Plain;
 use Lcobucci\JWT\UnencryptedToken;
 use Laravel\Passport\Bridge\ClientRepository;
 use Laravel\Passport\Http\Controllers\AccessTokenController;
-use Laravel\Passport\Passport;
 use Laravel\Passport\RefreshToken;
 use Laravel\Passport\Token;
 use Mg\Usuario\Usuario;
@@ -139,12 +137,18 @@ class AuthService
         if (empty($clientId) || empty($clientSecret)) {
             return false;
         }
-        /** @var ClientRepository $repo */
-        $repo = app(ClientRepository::class);
-        // Passport ClientRepository requer grantType, mas pro revoke/introspect
-        // não validamos grant — passamos null que o nosso PlainOrHashedClientRepository
-        // ignora (só compara secret).
-        return $repo->validateClient($clientId, $clientSecret, null);
+        try {
+            /** @var ClientRepository $repo */
+            $repo = app(ClientRepository::class);
+            // Passport ClientRepository requer grantType, mas pro revoke/introspect
+            // não validamos grant — passamos null que o nosso PlainOrHashedClientRepository
+            // ignora (só compara secret).
+            return $repo->validateClient($clientId, $clientSecret, null);
+        } catch (\Throwable $e) {
+            // clientId malformado (ex: não-UUID quando schema espera UUID) ou
+            // qualquer outro erro de lookup = client inválido per spec.
+            return false;
+        }
     }
 
     /**

@@ -63,10 +63,11 @@ Route::middleware('throttle:600,1')->group(function () {
 });
 
 // GET /userinfo (OIDC Core 1.0 §5.3) — Bearer auth
-Route::middleware('auth:api')->group(function () {
-    Route::get('/userinfo', [UserInfoController::class, 'show'])
-        ->name('oidc.userinfo');
-});
+// Sem middleware auth:api porque o Passport's BearerTokenValidator redireciona
+// (302) quando token é inválido/revogado; queremos 401 JSON com WWW-Authenticate
+// header per spec OIDC. O controller resolve guard manualmente.
+Route::get('/userinfo', [UserInfoController::class, 'show'])
+    ->name('oidc.userinfo');
 
 // /oauth/authorize × 3 (RFC 6749 §3.1) — consent screen do Passport
 // Route names `passport.authorizations.*` LITERAIS — a view de consent depende

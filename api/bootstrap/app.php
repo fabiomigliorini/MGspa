@@ -26,10 +26,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // OAuth2/OIDC endpoints (RFC 6749/7009/7662 + OIDC Core) NÃO devem exigir
         // CSRF — são autenticados via client_credentials no body/Basic Auth ou
         // Bearer token. CSRF é proteção pra sessões web, irrelevante aqui.
-        $middleware->validateCsrfTokens(except: [
+        $middleware->preventRequestForgery(except: [
             'oauth/token',
             'oauth/revoke',
             'oauth/introspect',
+        ]);
+
+        // Cookies access_token e user_id são lidos como string raw pelos
+        // consumers (JWT no Bearer, int em document.cookie). NÃO devem ser
+        // encriptados pelo EncryptCookies middleware.
+        $middleware->encryptCookies(except: [
+            'access_token',
+            'user_id',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
