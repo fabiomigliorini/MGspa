@@ -21,6 +21,36 @@ return [
             'throw' => false,
             'report' => false,
         ],
+
+        'boleto' => [
+            'driver' => 'local',
+            'root' => env('BOLETO_PATH'),
+        ],
+
+        'dominio' => [
+            'driver' => 'local',
+            'root' => env('DOMINIO_PATH'),
+        ],
+
+        'pagar-me' => [
+            'driver' => 'local',
+            'root' => env('PAGAR_ME_PATH'),
+        ],
+
+        'pix' => [
+            'driver' => 'local',
+            'root' => env('PIX_PATH'),
+        ],
+
+        'negocio-anexo' => [
+            'driver' => 'local',
+            'root' => env('NEGOCIO_ANEXO_PATH'),
+        ],
+
+        'pessoa-anexo' => [
+            'driver' => 'local',
+            'root' => env('PESSOA_ANEXO_PATH'),
+        ],
     ],
 
     'links' => [
