@@ -675,7 +675,9 @@ docker compose exec -T mgdb pg_dump -U mgsis -d mgsis -t 'oauth_*' > /tmp/oauth_
 
 ## Detalhes técnicos não-óbvios
 
-1. **Permissões do container**: `php-fpm` roda como `www-data` (uid 82). `storage/` e `bootstrap/cache/` foram `chown`-eados pra `www-data` (`0775`). Chaves OAuth em `0600` (Passport exige).
+1. **Permissões do container**: `php-fpm` roda como `www-data` (uid 82). `storage/` e `bootstrap/cache/` foram `chown`-eados pra `www-data` (`0775`).
+
+   Chaves OAuth precisam ficar em `0600/0660` **E** pertencer a `www-data:www-data` (uid 82 dentro do container). `php artisan passport:keys` rodado dentro do container já gera tudo certo; se as chaves vierem de outra origem (cópia do projeto antigo, regeneração no host) podem cair em `0644` ou com owner errado. Sintoma: login mostra "Usuário ou senha inválidos" pra credenciais corretas, porque `league/oauth2-server` dispara `E_USER_NOTICE` ("Key file permissions are not correct") quando perm ≠ 600/660, ou um erro de leitura quando owner ≠ www-data — o Laravel converte ambos em `ErrorException` e o `try/catch` do `AuthController::getToken` redireciona pra `/login?error=true` mascarando o erro real. Fix: `docker exec mgspa-api chown www-data:www-data storage/oauth-*.key && docker exec mgspa-api chmod 600 storage/oauth-private.key && docker exec mgspa-api chmod 660 storage/oauth-public.key`.
 
 2. **`laravel/tinker` removido** do `composer.json`: a versão 2.11.1 (mais recente) ainda não declara compatibilidade com Laravel 13. Quando sair release, é só `composer require laravel/tinker`.
 

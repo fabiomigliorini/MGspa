@@ -2,7 +2,7 @@
 
 namespace Mg\Tributacao;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\Cidade\Cidade;
 use Mg\Cidade\Estado;
 use Mg\MgModel;

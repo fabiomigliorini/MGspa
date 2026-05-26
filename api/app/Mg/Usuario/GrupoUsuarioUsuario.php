@@ -2,7 +2,7 @@
 
 namespace Mg\Usuario;
 
-use App\Models\Usuario;
+use App\Usuario\Usuario;
 use Mg\Filial\Filial;
 use Mg\MgModel;
 

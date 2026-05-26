@@ -2,7 +2,7 @@
 
 namespace Mg\Filial;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class Empresa extends MgModel

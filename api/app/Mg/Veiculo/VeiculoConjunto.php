@@ -2,7 +2,7 @@
 
 namespace Mg\Veiculo;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class VeiculoConjunto extends MgModel

@@ -170,8 +170,7 @@ class UsuarioController extends MgController
         if (!$model->GrupoUsuarioUsuarioS()
             ->where('codgrupousuario', $request->get('codgrupousuario'))
             ->where('codfilial', $request->get('codfilial'))
-            ->first()
-        ) {
+            ->first()) {
             $grupo_usuario = GrupoUsuarioUsuario::create([
                 'codusuario' => $model->codusuario,
                 'codgrupousuario' => $request->get('codgrupousuario'),

@@ -13,7 +13,12 @@ class UsuarioResource extends JsonResource
 
         if ($this->codpessoa) {
             $ret['Pessoa'] = $this->Pessoa?->only([
-                'codpessoa', 'pessoa', 'fantasia', 'cnpj', 'cpf', 'email',
+                'codpessoa',
+                'pessoa',
+                'fantasia',
+                'cnpj',
+                'cpf',
+                'email',
             ]);
         }
 

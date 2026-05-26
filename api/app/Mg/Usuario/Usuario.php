@@ -1,28 +1,39 @@
 <?php
 
-namespace Mg\Usuario;
+namespace App\Models;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Laravel\Passport\HasApiTokens;
 use Mg\Filial\Filial;
 use Mg\Imagem\Imagem;
-use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
 use Mg\Portador\Portador;
+use Mg\Usuario\GrupoUsuarioUsuario;
 
-class Usuario extends MgModel implements AuthenticatableContract, CanResetPasswordContract
+/**
+ * Model de usuário do banco mgsis.tblusuario. Versão enxuta — só o que
+ * importa pra autenticação. Os relacionamentos de domínio (Filial,
+ * Pessoa, Portador, etc.) ficam no MGspa/laravel até as controllers
+ * correspondentes serem migradas pra cá.
+ *
+ * Compatível com o que o MGAuth e o MGspa/laravel fazem hoje:
+ *  - findForPassport($username): busca por `usuario`
+ *  - getAuthPassword(): retorna null se o usuário estiver inativo
+ */
+class Usuario extends Model implements AuthenticatableContract, CanResetPasswordContract
 {
-    use Authenticatable;
-    use Authorizable;
-    use CanResetPassword;
-    use HasApiTokens;
+    use Authenticatable, Authorizable, CanResetPassword, HasApiTokens;
 
     protected $table = 'tblusuario';
+
     protected $primaryKey = 'codusuario';
+
+    public $timestamps = false;
 
     protected $fillable = [
         'codecf',
@@ -41,11 +52,6 @@ class Usuario extends MgModel implements AuthenticatableContract, CanResetPasswo
         'usuario',
     ];
 
-    protected $hidden = [
-        'senha',
-        'remember_token',
-    ];
-
     protected $casts = [
         'codecf' => 'integer',
         'codfilial' => 'integer',
@@ -60,6 +66,11 @@ class Usuario extends MgModel implements AuthenticatableContract, CanResetPasswo
         'criacao' => 'datetime',
         'inativo' => 'datetime',
         'ultimoacesso' => 'datetime',
+    ];
+
+    protected $hidden = [
+        'senha',
+        'remember_token',
     ];
 
     public function findForPassport(string $username): ?self
@@ -93,16 +104,6 @@ class Usuario extends MgModel implements AuthenticatableContract, CanResetPasswo
     public function Portador()
     {
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');
-    }
-
-    public function UsuarioAlteracao()
-    {
-        return $this->belongsTo(self::class, 'codusuarioalteracao', 'codusuario');
-    }
-
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(self::class, 'codusuariocriacao', 'codusuario');
     }
 
     public function GrupoUsuarioUsuarioS()

@@ -2,7 +2,7 @@
 
 namespace Mg\Titulo;
 
-use App\Models\Usuario;
+use Mg\Usuario\Usuario;
 use Mg\MgModel;
 
 class TipoMovimentoTitulo extends MgModel

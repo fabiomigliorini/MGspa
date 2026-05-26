@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Created by php artisan gerador:model.
  * Date: 24/Sep/2025 12:03:50
@@ -186,5 +187,4 @@ class Portador extends MgModel
     {
         return $this->hasMany(Usuario::class, 'codportador', 'codportador');
     }
-
 }
