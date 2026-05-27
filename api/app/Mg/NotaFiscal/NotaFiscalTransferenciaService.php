@@ -357,7 +357,7 @@ class NotaFiscalTransferenciaService extends MGModel
     public static function buscarNotasTransferenciaSaidaSemEntrada()
     {
         $sql = '
-            select 
+            select
                 nf.*
             from tblnotafiscal nf
             inner join tblfilial orig on (orig.codfilial = nf.codfilial)

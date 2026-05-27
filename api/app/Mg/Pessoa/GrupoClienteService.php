@@ -82,4 +82,28 @@ class GrupoClienteService
             throw $e;
         }
     }
+
+    public static function buscarPeloCnpjCpfGrupoCliente(bool $fisica, string $cnpj)
+    {
+        $cnpj = trim(numeroLimpo($cnpj));
+        if ($fisica) {
+            $pessoa = Pessoa::where('cnpj', $cnpj)
+                ->where('fisica', $fisica)
+                ->whereNotNull('codgrupocliente')
+                ->orderBy('alteracao', 'desc')
+                ->first();
+        } else {
+            $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
+            $raiz = substr($cnpj, 0, 8);
+            $pessoa = Pessoa::whereRaw("substring(trim(to_char(cnpj, '00000000000000')), 1, 8) ilike '{$raiz}%'")
+                ->where('fisica', $fisica)
+                ->whereNotNull('codgrupocliente')
+                ->orderBy('alteracao', 'desc')
+                ->first();
+        }
+        if ($pessoa) {
+            return $pessoa->GrupoCliente;
+        }
+        return null;
+    }
 }

@@ -6,6 +6,7 @@ use App\Rules\InscricaoEstadual;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Mercos\MercosCliente;
 use Mg\MgController;
@@ -43,15 +44,36 @@ class PessoaController extends MgController
 
     public function index(Request $request)
     {
+
+        $codpessoa = $request->codpessoa ?? null;
+        $pessoa = $request->pessoa ?? null;
+        $cnpj = $request->cnpj ?? null;
+        $email = $request->email ?? null;
+        $fone = $request->fone ?? null;
+        $codgrupoeconomico = $request->codgrupoeconomico ?? null;
+        $codcidade = $request->codcidade ?? null;
+        $inativo = $request->inativo ?? null;
+        $codformapagamento = $request->codformapagamento ?? null;
+        $codgrupocliente = $request->codgrupocliente ?? null;
+        $fisica = $request->fisica ?? null;
+
         $limit = $request->per_page ?? 108;
         $offset = (($request->page ?? 1) - 1) * $limit;
 
         $pessoas = PessoaService::index(
-            $limit, $offset,
-            $request->codpessoa, $request->pessoa, $request->cnpj,
-            $request->email, $request->fone, $request->codgrupoeconomico,
-            $request->codcidade, $request->inativo, $request->codformapagamento,
-            $request->codgrupocliente, $request->fisica
+            $limit,
+            $offset,
+            $codpessoa,
+            $pessoa,
+            $cnpj,
+            $email,
+            $fone,
+            $codgrupoeconomico,
+            $codcidade,
+            $inativo,
+            $codformapagamento,
+            $codgrupocliente,
+            $fisica,
         );
 
         return PessoaResource::collection($pessoas);
@@ -113,10 +135,15 @@ class PessoaController extends MgController
 
     public function importar(Request $request)
     {
-        $pessoas = PessoaService::importar(
-            $request->codfilial, $request->uf ?? '',
-            $request->cnpj ?? '', $request->cpf ?? '', $request->ie ?? ''
-        );
+        $request->validate([
+            // 'cnpj' => 'required'
+        ]);
+        $cnpj = $request->cnpj ?? '';
+        $codfilial = $request->codfilial;
+        $cpf = $request->cpf ?? '';
+        $ie = $request->ie ?? '';
+        $uf = $request->uf ?? '';
+        $pessoas = PessoaService::importar($codfilial, $uf, $cnpj, $cpf, $ie);
         return PessoaResource::collection($pessoas);
     }
 
@@ -158,10 +185,14 @@ class PessoaController extends MgController
 
     public function verificaIeSefaz(Request $request)
     {
-        $pessoas = PessoaService::verificaIeSefaz(
-            $request->codfilial, $request->uf ?? '',
-            $request->cnpj ?? '', $request->cpf ?? '', $request->ie ?? ''
-        );
+        $cnpj = $request->cnpj ?? '';
+        $codfilial = $request->codfilial;
+        $cpf = $request->cpf ?? '';
+        $ie = $request->ie ?? '';
+        $uf = $request->uf ?? '';
+
+        $pessoas = PessoaService::verificaIeSefaz($codfilial, $uf, $cnpj, $cpf, $ie);
+
         return response()->json($pessoas, 200);
     }
 

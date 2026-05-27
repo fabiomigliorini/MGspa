@@ -4,6 +4,7 @@ namespace Mg\Pedido;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+
 use Mg\MgController;
 
 class PedidoController extends MgController
@@ -13,20 +14,28 @@ class PedidoController extends MgController
         $filter = $request->all();
 
         $sql = '
-            SELECT
-                p.codpedido, p.indtipo, p.indstatus, p.codestoquelocal,
-                el.estoquelocal,
-                p.codestoquelocalorigem, el_o.estoquelocal as estoquelocalorigem,
-                p.observacoes,
-                p.codgrupoeconomico, ge.grupoeconomico,
-                p.criacao, p.codusuariocriacao, u_c.usuario as usuariocriacao,
-                p.alteracao, p.codusuarioalteracao,
-                (SELECT COUNT(pi.codpedidoitem) FROM tblpedidoitem pi WHERE pi.codpedido = p.codpedido) as itens
-            FROM tblpedido p
-            LEFT JOIN tblestoquelocal el ON (el.codestoquelocal = p.codestoquelocal)
-            LEFT JOIN tblestoquelocal el_o ON (el_o.codestoquelocal = p.codestoquelocalorigem)
-            LEFT JOIN tblgrupoeconomico ge ON (ge.codgrupoeconomico = p.codgrupoeconomico)
-            LEFT JOIN tblusuario u_c ON (u_c.codusuario = p.codusuariocriacao)
+          SELECT
+            p.codpedido
+            , p.indtipo
+            , p.indstatus
+            , p.codestoquelocal
+            , el.estoquelocal
+            , p.codestoquelocalorigem
+            , el_o.estoquelocal as estoquelocalorigem
+            , p.observacoes
+            , p.codgrupoeconomico
+            , ge.grupoeconomico
+            , p.criacao
+            , p.codusuariocriacao
+            , u_c.usuario as usuariocriacao
+            , p.alteracao
+            , p.codusuarioalteracao
+            , (SELECT COUNT(pi.codpedidoitem) FROM tblpedidoitem pi WHERE pi.codpedido = p.codpedido) as itens
+          FROM tblpedido p
+          LEFT JOIN tblestoquelocal el ON (el.codestoquelocal = p.codestoquelocal)
+          LEFT JOIN tblestoquelocal el_o ON (el_o.codestoquelocal = p.codestoquelocalorigem)
+          LEFT JOIN tblgrupoeconomico ge ON (ge.codgrupoeconomico = p.codgrupoeconomico)
+          LEFT JOIN tblusuario u_c ON (u_c.codusuario = p.codusuariocriacao)
         ';
 
         $params = [];
@@ -157,5 +166,11 @@ class PedidoController extends MgController
         PedidoItemService::delete($model);
         DB::commit();
         return response()->noContent();
+    }
+
+    public function produtosParaTransferir(Request $request, $codestoquelocalorigem, $codestoquelocaldestino)
+    {
+        $res = PedidoService::produtosParaTransferir($codestoquelocalorigem, $codestoquelocaldestino);
+        return response()->json($res, 200);
     }
 }
