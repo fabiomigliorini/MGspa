@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withCommands([
         // Auto-discovery do L13 vê só app/Console/Commands/. Commands em
         // outros namespaces (Mg\Rh\*, etc.) precisam ser listados aqui.
+        \Mg\Gerador\GeradorModelCommand::class,
         \Mg\Rh\RhCargaInicialCommand::class,
         \Mg\Rh\RhReprocessarPeriodoCommand::class,
     ])
