@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 31/Jan/2026 16:53:52
+ * Date: 27/May/2026 11:37:25
  */
 
 namespace Mg\Colaborador;
@@ -9,6 +9,7 @@ namespace Mg\Colaborador;
 use Mg\MgModel;
 use Mg\Colaborador\Cargo;
 use Mg\Colaborador\Colaborador;
+use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 
 class ColaboradorCargo extends MgModel
@@ -26,19 +27,16 @@ class ColaboradorCargo extends MgModel
         'salario'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'fim',
-        'inicio'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcargo' => 'integer',
         'codcolaborador' => 'integer',
         'codcolaboradorcargo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'fim' => 'date',
+        'inicio' => 'date',
         'salario' => 'float'
     ];
 

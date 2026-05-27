@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jun/2020 01:58:12
+ * Date: 27/May/2026 11:23:53
  */
 
 namespace Mg\Boleto;
@@ -20,15 +21,12 @@ class BoletoTipoOcorrencia extends MgModel
         'ocorrencia'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codboletotipoocorrencia' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 
@@ -49,5 +47,4 @@ class BoletoTipoOcorrencia extends MgModel
     {
         return $this->hasMany(BoletoMotivoOcorrencia::class, 'codboletotipoocorrencia', 'codboletotipoocorrencia');
     }
-
 }

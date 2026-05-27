@@ -1,31 +1,40 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:24:39
+ */
 
 namespace Mg\Cidade;
 
-use Mg\Usuario\Usuario;
 use Mg\MgModel;
+use Mg\Cidade\Estado;
+use Mg\Usuario\Usuario;
 
 class Pais extends MgModel
 {
     protected $table = 'tblpais';
     protected $primaryKey = 'codpais';
 
+
     protected $fillable = [
-        'pais',
-        'sigla',
         'codigooficial',
+        'inativo',
+        'pais',
+        'sigla'
     ];
 
     protected $casts = [
-        'codpais' => 'integer',
+        'alteracao' => 'datetime',
         'codigooficial' => 'integer',
+        'codpais' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'alteracao' => 'datetime',
         'criacao' => 'datetime',
-        'inativo' => 'datetime',
+        'inativo' => 'datetime'
     ];
 
+
+    // Chaves Estrangeiras
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -36,8 +45,11 @@ class Pais extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
+    // Tabelas Filhas
     public function EstadoS()
     {
         return $this->hasMany(Estado::class, 'codpais', 'codpais');
     }
+
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 11:34:04
+ * Date: 27/May/2026 11:38:42
  */
 
 namespace Mg\CaixaMercadoria;
@@ -23,17 +23,14 @@ class CaixaMercadoria extends MgModel
         'observacoes'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcaixamercadoria' => 'integer',
         'codcaixamercadoriamodelo' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime'
     ];
 
 

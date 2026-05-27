@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Apr/2024 12:21:21
+ * Date: 27/May/2026 11:21:43
  */
 
 namespace Mg\Cheque;
@@ -24,18 +24,15 @@ class ChequeRepasseCheque extends MgModel
         'compensacao'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'compensacao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcheque' => 'integer',
         'codchequerepasse' => 'integer',
         'codchequerepassecheque' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'compensacao' => 'date',
+        'criacao' => 'datetime'
     ];
 
 

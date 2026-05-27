@@ -13,11 +13,13 @@ class CidadeRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'cidade' => 'required|string|max:100',
             'sigla' => 'nullable|string|max:10',
             'codigooficial' => 'nullable|integer',
         ];
+
+        return $rules;
     }
 
     public function messages(): array

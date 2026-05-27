@@ -14,7 +14,11 @@ class CidadeDetailResource extends JsonResource
             'cidade' => $this->cidade,
             'sigla' => $this->sigla,
             'codigooficial' => $this->codigooficial,
+
+            // Relacionamentos
             'estado' => $this->formatEstado(),
+
+            // Auditoria
             'usuarioCriacao' => $this->relationLoaded('UsuarioCriacao') ? $this->UsuarioCriacao?->only(['codusuario', 'usuario']) : null,
             'usuarioAlteracao' => $this->relationLoaded('UsuarioAlteracao') ? $this->UsuarioAlteracao?->only(['codusuario', 'usuario']) : null,
             'criacao' => $this->criacao,
@@ -27,14 +31,18 @@ class CidadeDetailResource extends JsonResource
         if (!$this->relationLoaded('Estado')) {
             return null;
         }
+
         $estado = $this->Estado;
         if (!$estado) {
             return null;
         }
+
         $ret = $estado->only(['codestado', 'estado', 'sigla', 'codpais']);
+
         if ($estado->relationLoaded('Pais') && $estado->Pais) {
             $ret['pais'] = $estado->Pais->only(['codpais', 'pais', 'sigla']);
         }
+
         return $ret;
     }
 }
