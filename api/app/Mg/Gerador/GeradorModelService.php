@@ -32,14 +32,15 @@ class GeradorModelService
         $this->inicializarParametros($tabela);
         $this->buscarCamposTabela();
         $this->montarFillable();
-        $this->montarDates();
         $this->montarCasts();
         $this->montarChavesExtrangeiras();
         $this->montarCabecalho();
         $this->montarRodape();
         $this->salvarArquivo();
         $this->salvarIndiceModels();
-        $this->testar();
+        if (!$this->command->option('no-test')) {
+            $this->testar();
+        }
     }
 
     public function inicializarParametros($tabela)
@@ -80,15 +81,14 @@ class GeradorModelService
 
     public function salvarArquivo()
     {
-        // se diretornio nao existe, cria
+        // se diretorio nao existe, cria
         $caminho = dirname($this->arquivo);
         if (!is_dir($caminho)) {
-            mkdir($caminho, '0775', true);
+            mkdir($caminho, 0775, true);
         }
         // grava o arquivo
         $code = $this->conteudo['Cabecalho'];
         $code .= $this->conteudo['Fillable'];
-        $code .= $this->conteudo['Dates'];
         $code .= $this->conteudo['Casts'];
         if (!empty($this->conteudo['BelongsTo'])) {
             $code .= $this->conteudo['BelongsTo'];
@@ -114,10 +114,10 @@ use Mg\\MgModel;
 ";
 
         $uses = [];
-        foreach ($this->models[$this->tabela]['hasMany'] as $rel) {
+        foreach ($this->models[$this->tabela]['hasMany'] ?? [] as $rel) {
             $uses[$rel['tabela']] = $rel['tabela'];
         }
-        foreach ($this->models[$this->tabela]['belongsTo'] as $rel) {
+        foreach ($this->models[$this->tabela]['belongsTo'] ?? [] as $rel) {
             $uses[$rel['tabela']] = $rel['tabela'];
         }
         foreach ($uses as $use) {
@@ -138,7 +138,8 @@ class {$this->classe} extends MgModel
     public function montarRodape()
     {
         $this->conteudo['Rodape'] = "
-}";
+}
+";
     }
 
     public function buscarCamposTabela()
@@ -146,7 +147,7 @@ class {$this->classe} extends MgModel
         $sql = "
             SELECT
                 column_name as nome,
-             	  data_type as tipo
+                data_type as tipo
             FROM information_schema.columns
             WHERE table_schema = 'mgsis'
             and table_name = '{$this->tabela}'
@@ -182,33 +183,10 @@ class {$this->classe} extends MgModel
 ";
     }
 
-    public function montarDates()
-    {
-        $considerar = [
-            'date',
-            'timestamp without time zone',
-        ];
-        $campos = [];
-        foreach ($this->colunas as $coluna) {
-            if (!in_array($coluna->tipo, $considerar)) {
-                continue;
-            }
-            $campos[] = "'{$coluna->nome}'";
-        }
-        $campos = implode(',
-        ', $campos);
-
-        $this->conteudo['Dates'] = "
-    protected \$dates = [
-        $campos
-    ];
-";
-    }
-
     public function montarCasts()
     {
+        // L13: $dates foi removido; datas viram cast 'datetime'/'date' dentro de $casts
         $tipos = [
-
             'bigint' => 'integer',
             'integer' => 'integer',
             'smallint' => 'integer',
@@ -218,6 +196,9 @@ class {$this->classe} extends MgModel
             'double precision' => 'float',
             'numeric' => 'float',
 
+            'date' => 'date',
+            'timestamp without time zone' => 'datetime',
+            'timestamp with time zone' => 'datetime',
         ];
         $campos = [];
         foreach ($this->colunas as $coluna) {
@@ -254,13 +235,12 @@ class {$this->classe} extends MgModel
         } else {
             $obj = new $cmd();
         }
-        print_r($obj->getAttributes());
         $this->command->line('OK');
 
         // TESTE RELACIONAMENTOS BELONGS TO
         $this->command->line('');
         $this->command->info('Teste de Relacionamentos belongsTo...');
-        foreach ($this->models[$this->tabela]['belongsTo'] as $relacao) {
+        foreach ($this->models[$this->tabela]['belongsTo'] ?? [] as $relacao) {
             $metodo = $relacao['metodo'];
             $this->command->info("{$this->classe}::$metodo()...");
             $count = $obj->$metodo()->count();
@@ -270,7 +250,7 @@ class {$this->classe} extends MgModel
         // TESTES RELACIONAMENTOS HAS MANY
         $this->command->line('');
         $this->command->info('Teste de Relacionamentos hasMany...');
-        foreach ($this->models[$this->tabela]['hasMany'] as $relacao) {
+        foreach ($this->models[$this->tabela]['hasMany'] ?? [] as $relacao) {
             $metodo = $relacao['metodo'];
             $this->command->info("{$this->classe}::$metodo()...");
             $count = $obj->$metodo()->count();
@@ -337,12 +317,18 @@ class {$this->classe} extends MgModel
 
     public function descobrirModel($tabela)
     {
-        if (@$model = $this->models[$tabela]) {
+        if (isset($this->models[$tabela])) {
+            $model = $this->models[$tabela];
+            // Sempre recompute via base_path(). O JSON pode ter vindo de outro
+            // ambiente (ex.: legado /opt/www/MGspa/laravel/...) e o path absoluto
+            // ficaria apontando pro lugar errado.
+            $model['arquivo'] = $this->montarCaminhoArquivoModel($model['namespace'], $model['classe']);
+            $this->models[$tabela] = $model;
             return $model;
         }
-        $namespace = "Mg";
+        $namespaceBase = 'Mg';
         $palavras = explode('_', $tabela);
-        $class = [];
+        $classe = [];
         foreach ($palavras as $palavra) {
             $classe[] = Str::singular($palavra);
         }
@@ -353,7 +339,7 @@ class {$this->classe} extends MgModel
             $this->command->line('');
             $this->command->line("A tabela {$tabela} não possui model listado no Indice. Por favor confirme o nome da classe e o namespace.");
             $classe = $this->command->ask("Qual a Classe para a tabela '{$tabela}'?", $classe);
-            $namespace = "$namespace\\$classe";
+            $namespace = "{$namespaceBase}\\{$classe}";
             $namespace = $this->command->ask("Qual a Namespace para a tabela '{$tabela}'?", $namespace);
             $arquivo = $this->montarCaminhoArquivoModel($namespace, $classe);
         } while (!$this->command->confirm("Confirmar {$arquivo}?", true));
@@ -385,7 +371,7 @@ class {$this->classe} extends MgModel
     {
         if (isset($this->models[$tabela])) {
             $metodo = $this->models[$tabela]['classe'];
-            if ($this->models[$tabela]['campocodigo'] != $coluna) {
+            if ($this->models[$tabela]['campocodigo'] !== $coluna) {
                 $sufixo = str_replace($this->models[$tabela]['campocodigo'], '', $coluna);
                 $metodo = $metodo . Str::studly($sufixo);
                 return $metodo;
@@ -399,7 +385,8 @@ class {$this->classe} extends MgModel
 
     public function descobrirMetodoBelongsTo($coluna, $tabela)
     {
-        if (!@$metodo = $this->models[$this->tabela]['belongsTo'][$coluna]['metodo']) {
+        $metodo = $this->models[$this->tabela]['belongsTo'][$coluna]['metodo'] ?? null;
+        if (!$metodo) {
             switch ($coluna) {
                 case 'codusuariocriacao':
                     $metodo = 'UsuarioCriacao';
@@ -455,7 +442,8 @@ class {$this->classe} extends MgModel
 
         // Sem backup válido, gera sugestão com sufixo
         if (!$metodo) {
-            if (!@$metodo = $this->models[$tabela]['classe']) {
+            $metodo = $this->models[$tabela]['classe'] ?? null;
+            if (!$metodo) {
                 $metodo = preg_replace('/(tbl(?!.tbl*))/', '', $tabela);
                 $metodo = Str::studly($metodo);
             }
@@ -465,9 +453,12 @@ class {$this->classe} extends MgModel
                     $metodo .= Str::studly($sufixo);
                 }
             }
-            $metodo .= "S";
+            $metodo .= 'S';
         }
-        do {
+        $interativo = !$this->command->option('no-interaction');
+        $metodoBase = $metodo;
+        $tentativa = 1;
+        while (true) {
             $metodo = $this->command->ask("Metodo HasMany: '{$chave}'", $metodo);
             $duplicado = false;
             foreach ($this->models[$this->tabela]['hasMany'] as $k => $rel) {
@@ -477,7 +468,19 @@ class {$this->classe} extends MgModel
                     break;
                 }
             }
-        } while ($duplicado);
+            if (!$duplicado) {
+                break;
+            }
+            // Modo não-interativo: ask() devolve sempre o default, então loop infinito.
+            // Auto-incrementa sufixo até resolver (limite p/ não travar).
+            if (!$interativo) {
+                $tentativa++;
+                $metodo = $metodoBase . $tentativa;
+                if ($tentativa > 20) {
+                    throw new \RuntimeException("Não foi possível gerar nome único para HasMany {$chave}");
+                }
+            }
+        }
         $this->models[$this->tabela]['hasMany'][$chave] = [
             'tabela' => $tabela,
             'coluna' => $coluna,
@@ -503,7 +506,15 @@ class {$this->classe} extends MgModel
 
     public function salvarIndiceModels()
     {
-        $json = json_encode($this->models, JSON_PRETTY_PRINT);
-        file_put_contents($this->arquivoIndice, $json);
+        $json = json_encode(
+            $this->models,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+        $json = preg_replace_callback(
+            '/^( +)/m',
+            fn($m) => str_repeat(' ', strlen($m[1]) / 2),
+            $json
+        );
+        file_put_contents($this->arquivoIndice, $json . "\n");
     }
 }
