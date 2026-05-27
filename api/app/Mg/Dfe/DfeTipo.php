@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 11:28:40
+ * Date: 27/May/2026 11:27:40
  */
 
 namespace Mg\Dfe;
@@ -21,15 +21,12 @@ class DfeTipo extends MgModel
         'schemaxml'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'coddfetipo' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

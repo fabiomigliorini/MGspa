@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jan/2024 17:28:29
+ * Date: 27/May/2026 11:35:38
  */
 
 namespace Mg\PagarMe;
@@ -39,13 +39,8 @@ class PagarMePagamento extends MgModel
         'valorpagamento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'transacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfilial' => 'integer',
         'codpagarmebandeira' => 'integer',
         'codpagarmepagamento' => 'integer',
@@ -54,9 +49,11 @@ class PagarMePagamento extends MgModel
         'codpdv' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'jurosloja' => 'boolean',
         'parcelas' => 'integer',
         'tipo' => 'integer',
+        'transacao' => 'datetime',
         'valorcancelamento' => 'float',
         'valorpagamento' => 'float'
     ];

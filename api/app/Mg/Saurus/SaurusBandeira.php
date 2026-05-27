@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 09/Dec/2024 11:29:30
+ * Date: 27/May/2026 11:41:02
  */
 
 namespace Mg\Saurus;
@@ -21,15 +21,12 @@ class SaurusBandeira extends MgModel
         'tband'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codsaurusbandeira' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'tband' => 'integer'
     ];
 

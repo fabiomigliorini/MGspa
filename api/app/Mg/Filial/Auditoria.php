@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Oct/2024 12:28:20
+ * Date: 27/May/2026 11:40:36
  */
 
 namespace Mg\Filial;
@@ -27,14 +27,13 @@ class Auditoria extends MgModel
         'tabela'
     ];
 
-    protected $dates = [
-        'data'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codantigo' => 'integer',
         'codauditoria' => 'integer',
-        'codnovo' => 'integer'
+        'codnovo' => 'integer',
+        'criacao' => 'datetime',
+        'data' => 'datetime'
     ];
 
 

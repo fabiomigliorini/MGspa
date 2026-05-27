@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Sep/2024 15:09:14
+ * Date: 27/May/2026 11:26:45
  */
 
 namespace Mg\Meta;
@@ -26,17 +26,14 @@ class MetaFilial extends MgModel
         'valormetavendedor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfilial' => 'integer',
         'codmeta' => 'integer',
         'codmetafilial' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'valormetafilial' => 'float',
         'valormetavendedor' => 'float'
     ];

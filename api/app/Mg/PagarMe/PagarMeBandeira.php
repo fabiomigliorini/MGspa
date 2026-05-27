@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/Nov/2022 18:19:14
+ * Date: 27/May/2026 11:35:32
  */
 
 namespace Mg\PagarMe;
@@ -21,15 +21,12 @@ class PagarMeBandeira extends MgModel
         'scheme'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codpagarmebandeira' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

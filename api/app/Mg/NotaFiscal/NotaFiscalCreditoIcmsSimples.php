@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jan/2021 08:51:59
+ * Date: 27/May/2026 11:31:44
  */
 
 namespace Mg\NotaFiscal;
@@ -21,13 +21,11 @@ class NotaFiscalCreditoIcmsSimples extends MgModel
         'percentual'
     ];
 
-    protected $dates = [
-        
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnotafiscal' => 'integer',
         'codnotafiscalcreditoicmssimples' => 'integer',
+        'criacao' => 'datetime',
         'percentual' => 'float'
     ];
 

@@ -1,39 +1,56 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:36:35
+ */
 
 namespace Mg\Pessoa;
 
-use Mg\Usuario\Usuario;
-use Mg\Banco\Banco;
 use Mg\MgModel;
+use Mg\Pessoa\Pessoa;
+use Mg\Usuario\Usuario;
 
 class PessoaConta extends MgModel
 {
     protected $table = 'tblpessoaconta';
     protected $primaryKey = 'codpessoaconta';
 
+
     protected $fillable = [
-        'agencia', 'banco', 'cnpj', 'codpessoa', 'conta', 'inativo',
-        'pixaleatoria', 'pixcnpj', 'pixcpf', 'pixemail', 'pixtelefone',
-        'tipo', 'titular', 'observacoes',
+        'agencia',
+        'banco',
+        'cnpj',
+        'codpessoa',
+        'conta',
+        'inativo',
+        'observacoes',
+        'pixaleatoria',
+        'pixcnpj',
+        'pixcpf',
+        'pixemail',
+        'pixtelefone',
+        'tipo',
+        'titular'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'criacao' => 'datetime',
-        'inativo' => 'datetime',
         'banco' => 'float',
         'cnpj' => 'float',
         'codpessoa' => 'integer',
         'codpessoaconta' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codbanco' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
         'pixcnpj' => 'integer',
         'pixcpf' => 'integer',
         'pixtelefone' => 'float',
-        'tipo' => 'float',
+        'tipo' => 'float'
     ];
 
+
+    // Chaves Estrangeiras
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
@@ -49,8 +66,4 @@ class PessoaConta extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
-    public function Banco()
-    {
-        return $this->belongsTo(Banco::class, 'banco', 'codbanco');
-    }
 }

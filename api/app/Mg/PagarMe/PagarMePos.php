@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Dec/2023 10:03:07
+ * Date: 27/May/2026 11:35:51
  */
 
 namespace Mg\PagarMe;
@@ -25,17 +25,14 @@ class PagarMePos extends MgModel
         'serial'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfilial' => 'integer',
         'codpagarmepos' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime'
     ];
 
 

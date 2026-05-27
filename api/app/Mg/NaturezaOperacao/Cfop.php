@@ -1,26 +1,37 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:24:06
+ */
 
 namespace Mg\NaturezaOperacao;
 
-use Mg\Usuario\Usuario;
 use Mg\MgModel;
+use Mg\NaturezaOperacao\DominioAcumulador;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
+use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
+use Mg\Usuario\Usuario;
 
 class Cfop extends MgModel
 {
     protected $table = 'tblcfop';
     protected $primaryKey = 'codcfop';
 
-    protected $fillable = ['codcfop', 'cfop', 'descricao'];
+
+    protected $fillable = [
+        'cfop'
+    ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'criacao' => 'datetime',
         'codcfop' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
+
+    // Chaves Estrangeiras
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -31,6 +42,8 @@ class Cfop extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
+    // Tabelas Filhas
     public function DominioAcumuladorS()
     {
         return $this->hasMany(DominioAcumulador::class, 'codcfop', 'codcfop');
@@ -45,4 +58,5 @@ class Cfop extends MgModel
     {
         return $this->hasMany(TributacaoNaturezaOperacao::class, 'codcfop', 'codcfop');
     }
+
 }

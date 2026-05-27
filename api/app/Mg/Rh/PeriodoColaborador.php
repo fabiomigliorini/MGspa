@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 16:58:39
+ * Date: 27/May/2026 11:43:34
  */
 
 namespace Mg\Rh;
@@ -29,19 +29,16 @@ class PeriodoColaborador extends MgModel
         'valortotal'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'encerramento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcolaborador' => 'integer',
         'codperiodo' => 'integer',
         'codperiodocolaborador' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'encerramento' => 'datetime',
         'gestor' => 'boolean',
         'valortotal' => 'float'
     ];

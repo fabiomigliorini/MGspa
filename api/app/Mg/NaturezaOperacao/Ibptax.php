@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:19:27
+ * Date: 27/May/2026 11:33:44
  */
 
 namespace Mg\NaturezaOperacao;
@@ -33,23 +33,20 @@ class Ibptax extends MgModel
         'vigenciainicio'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'vigenciafim',
-        'vigenciainicio'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codibptax' => 'integer',
         'codncm' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'estadual' => 'float',
         'importadosfederal' => 'float',
         'municipal' => 'float',
         'nacionalfederal' => 'float',
-        'tipo' => 'integer'
+        'tipo' => 'integer',
+        'vigenciafim' => 'date',
+        'vigenciainicio' => 'date'
     ];
 
 

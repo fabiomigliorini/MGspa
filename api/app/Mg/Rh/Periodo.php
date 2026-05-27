@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Feb/2026 15:28:50
+ * Date: 27/May/2026 11:43:27
  */
 
 namespace Mg\Rh;
@@ -26,19 +26,16 @@ class Periodo extends MgModel
         'status'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'periodofinal',
-        'periodoinicial'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codperiodo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'diasuteis' => 'integer',
-        'percentualmaxdesconto' => 'float'
+        'percentualmaxdesconto' => 'float',
+        'periodofinal' => 'datetime',
+        'periodoinicial' => 'datetime'
     ];
 
 

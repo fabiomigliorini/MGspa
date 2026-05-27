@@ -1,4 +1,8 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:23:09
+ */
 
 namespace Mg\Negocio;
 
@@ -6,15 +10,20 @@ use Mg\MgModel;
 use Mg\Meta\BonificacaoEvento;
 use Mg\Rh\IndicadorLancamento;
 use Mg\Mercos\MercosPedido;
+use Mg\Negocio\NegocioCaixaMercadoria;
+use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\PixCob;
 use Mg\Saurus\SaurusPedido;
+use Mg\Stone\StonePreTransacao;
 use Mg\Woo\WooPedidoNegocio;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
 use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\Negocio\NegocioStatus;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
@@ -24,6 +33,7 @@ class Negocio extends MgModel
 {
     protected $table = 'tblnegocio';
     protected $primaryKey = 'codnegocio';
+
 
     protected $fillable = [
         'acertoentrega',
@@ -57,19 +67,12 @@ class Negocio extends MgModel
         'valoroutras',
         'valorprodutos',
         'valorseguro',
-        'valortotal',
-    ];
-
-    protected $dates = [
-        'acertoentrega',
-        'alteracao',
-        'confissao',
-        'criacao',
-        'lancamento',
-        'recebimento',
+        'valortotal'
     ];
 
     protected $casts = [
+        'acertoentrega' => 'datetime',
+        'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',
         'codestoquelocaldestino' => 'integer',
         'codfilial' => 'integer',
@@ -87,8 +90,12 @@ class Negocio extends MgModel
         'codusuarioconfissao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codusuariorecebimento' => 'integer',
+        'confissao' => 'datetime',
         'cpf' => 'float',
+        'criacao' => 'datetime',
         'entrega' => 'boolean',
+        'lancamento' => 'datetime',
+        'recebimento' => 'datetime',
         'valoraprazo' => 'float',
         'valoravista' => 'float',
         'valordesconto' => 'float',
@@ -97,7 +104,7 @@ class Negocio extends MgModel
         'valoroutras' => 'float',
         'valorprodutos' => 'float',
         'valorseguro' => 'float',
-        'valortotal' => 'float',
+        'valortotal' => 'float'
     ];
 
 
@@ -239,8 +246,14 @@ class Negocio extends MgModel
         return $this->hasMany(SaurusPedido::class, 'codnegocio', 'codnegocio');
     }
 
+    public function StonePreTransacaoS()
+    {
+        return $this->hasMany(StonePreTransacao::class, 'codnegocio', 'codnegocio');
+    }
+
     public function WooPedidoNegocioS()
     {
         return $this->hasMany(WooPedidoNegocio::class, 'codnegocio', 'codnegocio');
     }
+
 }

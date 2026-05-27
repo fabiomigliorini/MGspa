@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jan/2024 15:01:19
+ * Date: 27/May/2026 11:26:59
  */
 
 namespace Mg\Meta;
@@ -21,21 +21,29 @@ class MetaFilialPessoa extends MgModel
     protected $fillable = [
         'codcargo',
         'codmetafilial',
-        'codpessoa'
-    ];
-
-    protected $dates = [
-        'alteracao',
-        'criacao'
+        'codpessoa',
+        'descricaovalorfixo',
+        'percentualcaixa',
+        'percentualsubgerente',
+        'percentualvenda',
+        'percentualxerox',
+        'valorfixo'
     ];
 
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcargo' => 'integer',
         'codmetafilial' => 'integer',
         'codmetafilialpessoa' => 'integer',
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'percentualcaixa' => 'float',
+        'percentualsubgerente' => 'float',
+        'percentualvenda' => 'float',
+        'percentualxerox' => 'float',
+        'valorfixo' => 'float'
     ];
 
 

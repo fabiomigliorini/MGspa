@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 10/Feb/2026 11:13:52
+ * Date: 27/May/2026 11:37:13
  */
 
 namespace Mg\Colaborador;
@@ -31,24 +31,21 @@ class Ferias extends MgModel
         'prevista'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'aquisitivofim',
-        'aquisitivoinicio',
-        'criacao',
-        'gozofim',
-        'gozoinicio'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
+        'aquisitivofim' => 'date',
+        'aquisitivoinicio' => 'date',
         'codcolaborador' => 'integer',
         'codferias' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'dias' => 'integer',
         'diasabono' => 'integer',
         'diasdescontados' => 'integer',
         'diasgozo' => 'integer',
+        'gozofim' => 'date',
+        'gozoinicio' => 'date',
         'prevista' => 'boolean'
     ];
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 13:36:32
+ * Date: 27/May/2026 11:27:54
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -24,19 +24,16 @@ class NotaFiscalTerceiroDuplicata extends MgModel
         'vencimento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'vencimento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnotafiscalterceiro' => 'integer',
         'codnotafiscalterceiroduplicata' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'valor' => 'float'
+        'criacao' => 'datetime',
+        'valor' => 'float',
+        'vencimento' => 'date'
     ];
 
 

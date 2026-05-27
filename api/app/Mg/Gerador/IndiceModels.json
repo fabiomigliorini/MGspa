@@ -48,6 +48,11 @@
         "coluna": "codportador",
         "metodo": "CobrancaS"
       },
+      "tblextratobancario.codportador": {
+        "tabela": "tblextratobancario",
+        "coluna": "codportador",
+        "metodo": "ExtratoBancarioS"
+      },
       "tblliquidacaotitulo.codportador": {
         "tabela": "tblliquidacaotitulo",
         "coluna": "codportador",
@@ -58,40 +63,30 @@
         "coluna": "codportador",
         "metodo": "MovimentoTituloS"
       },
-      "tbltitulo.codportador": {
-        "tabela": "tbltitulo",
+      "tblpdv.codportador": {
+        "tabela": "tblpdv",
         "coluna": "codportador",
-        "metodo": "TituloS"
-      },
-      "tblusuario.codportador": {
-        "tabela": "tblusuario",
-        "coluna": "codportador",
-        "metodo": "UsuarioS"
-      },
-      "tblpixcob.codportador": {
-        "tabela": "tblpixcob",
-        "coluna": "codportador",
-        "metodo": "PixCobS"
+        "metodo": "PdvS"
       },
       "tblpix.codportador": {
         "tabela": "tblpix",
         "coluna": "codportador",
         "metodo": "PixS"
       },
-      "tbltituloboleto.codportador": {
-        "tabela": "tbltituloboleto",
+      "tblpixcob.codportador": {
+        "tabela": "tblpixcob",
         "coluna": "codportador",
-        "metodo": "TituloBoletoS"
-      },
-      "tblextratobancario.codportador": {
-        "tabela": "tblextratobancario",
-        "coluna": "codportador",
-        "metodo": "ExtratoBancarioS"
+        "metodo": "PixCobS"
       },
       "tblportadormovimento.codportador": {
         "tabela": "tblportadormovimento",
         "coluna": "codportador",
         "metodo": "PortadorMovimentoS"
+      },
+      "tblportadorsaldo.codportador": {
+        "tabela": "tblportadorsaldo",
+        "coluna": "codportador",
+        "metodo": "PortadorSaldoS"
       },
       "tblportadortransferencia.codportadordestino": {
         "tabela": "tblportadortransferencia",
@@ -103,15 +98,20 @@
         "coluna": "codportadororigem",
         "metodo": "PortadorTransferenciaOrigemS"
       },
-      "tblpdv.codportador": {
-        "tabela": "tblpdv",
+      "tbltitulo.codportador": {
+        "tabela": "tbltitulo",
         "coluna": "codportador",
-        "metodo": "PdvS"
+        "metodo": "TituloS"
       },
-      "tblportadorsaldo.codportador": {
-        "tabela": "tblportadorsaldo",
+      "tbltituloboleto.codportador": {
+        "tabela": "tbltituloboleto",
         "coluna": "codportador",
-        "metodo": "PortadorSaldoS"
+        "metodo": "TituloBoletoS"
+      },
+      "tblusuario.codportador": {
+        "tabela": "tblusuario",
+        "coluna": "codportador",
+        "metodo": "UsuarioS"
       }
     }
   },
@@ -151,7 +151,7 @@
     "campocodigo": "codfilial",
     "namespace": "Mg\\Filial",
     "classe": "Filial",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/Filial.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/Filial.php",
     "belongsTo": {
       "acbrnfemonitorcodusuario": {
         "tabela": "tblusuario",
@@ -180,10 +180,20 @@
       }
     },
     "hasMany": {
+      "tblcolaborador.codfilial": {
+        "tabela": "tblcolaborador",
+        "coluna": "codfilial",
+        "metodo": "ColaboradorS"
+      },
       "tbldistribuicaodfe.codfilial": {
         "tabela": "tbldistribuicaodfe",
         "coluna": "codfilial",
         "metodo": "DistribuicaoDfeS"
+      },
+      "tbldominioacumulador.codfilial": {
+        "tabela": "tbldominioacumulador",
+        "coluna": "codfilial",
+        "metodo": "DominioAcumuladorS"
       },
       "tblecf.codfilial": {
         "tabela": "tblecf",
@@ -204,6 +214,16 @@
         "tabela": "tblibptcache",
         "coluna": "codfilial",
         "metodo": "IbptCacheS"
+      },
+      "tbllioterminal.codfilial": {
+        "tabela": "tbllioterminal",
+        "coluna": "codfilial",
+        "metodo": "LioTerminalS"
+      },
+      "tblmdfe.codfilial": {
+        "tabela": "tblmdfe",
+        "coluna": "codfilial",
+        "metodo": "MdfeS"
       },
       "tblmetafilial.codfilial": {
         "tabela": "tblmetafilial",
@@ -230,41 +250,6 @@
         "coluna": "codfilial",
         "metodo": "NotaFiscalTerceiroS"
       },
-      "tblportador.codfilial": {
-        "tabela": "tblportador",
-        "coluna": "codfilial",
-        "metodo": "PortadorS"
-      },
-      "tbltitulo.codfilial": {
-        "tabela": "tbltitulo",
-        "coluna": "codfilial",
-        "metodo": "TituloS"
-      },
-      "tblusuario.codfilial": {
-        "tabela": "tblusuario",
-        "coluna": "codfilial",
-        "metodo": "UsuarioS"
-      },
-      "tblvalecompra.codfilial": {
-        "tabela": "tblvalecompra",
-        "coluna": "codfilial",
-        "metodo": "ValeCompraS"
-      },
-      "tbllioterminal.codfilial": {
-        "tabela": "tbllioterminal",
-        "coluna": "codfilial",
-        "metodo": "LioTerminalS"
-      },
-      "tblmdfe.codfilial": {
-        "tabela": "tblmdfe",
-        "coluna": "codfilial",
-        "metodo": "MdfeS"
-      },
-      "tblstonefilial.codfilial": {
-        "tabela": "tblstonefilial",
-        "coluna": "codfilial",
-        "metodo": "StoneFilialS"
-      },
       "tblpagarmepagamento.codfilial": {
         "tabela": "tblpagarmepagamento",
         "coluna": "codfilial",
@@ -285,20 +270,10 @@
         "coluna": "codfilial",
         "metodo": "PdvS"
       },
-      "tblcolaborador.codfilial": {
-        "tabela": "tblcolaborador",
+      "tblportador.codfilial": {
+        "tabela": "tblportador",
         "coluna": "codfilial",
-        "metodo": "ColaboradorS"
-      },
-      "tblcolaboradorcargo.codfilial": {
-        "tabela": "tblcolaboradorcargo",
-        "coluna": "codfilial",
-        "metodo": "ColaboradorCargoS"
-      },
-      "tbldominioacumulador.codfilial": {
-        "tabela": "tbldominioacumulador",
-        "coluna": "codfilial",
-        "metodo": "DominioAcumuladorS"
+        "metodo": "PortadorS"
       },
       "tblsauruspdv.codfilial": {
         "tabela": "tblsauruspdv",
@@ -310,10 +285,30 @@
         "coluna": "codfilial",
         "metodo": "SaurusPinPadS"
       },
+      "tblstonefilial.codfilial": {
+        "tabela": "tblstonefilial",
+        "coluna": "codfilial",
+        "metodo": "StoneFilialS"
+      },
+      "tbltitulo.codfilial": {
+        "tabela": "tbltitulo",
+        "coluna": "codfilial",
+        "metodo": "TituloS"
+      },
       "tblunidadenegocio.codfilial": {
         "tabela": "tblunidadenegocio",
         "coluna": "codfilial",
         "metodo": "UnidadeNegocioS"
+      },
+      "tblusuario.codfilial": {
+        "tabela": "tblusuario",
+        "coluna": "codfilial",
+        "metodo": "UsuarioS"
+      },
+      "tblvalecompra.codfilial": {
+        "tabela": "tblvalecompra",
+        "coluna": "codfilial",
+        "metodo": "ValeCompraS"
       }
     }
   },
@@ -448,7 +443,7 @@
     "campocodigo": "codboletoretorno",
     "namespace": "Mg\\Boleto",
     "classe": "BoletoRetorno",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Boleto/BoletoRetorno.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Boleto/BoletoRetorno.php",
     "belongsTo": {
       "codportador": {
         "tabela": "tblportador",
@@ -489,7 +484,7 @@
     "campocodigo": "codchequerepasse",
     "namespace": "Mg\\Cheque",
     "classe": "ChequeRepasse",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cheque/ChequeRepasse.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cheque/ChequeRepasse.php",
     "belongsTo": {
       "codportador": {
         "tabela": "tblportador",
@@ -520,7 +515,7 @@
     "campocodigo": "codcobranca",
     "namespace": "Mg\\Cobranca",
     "classe": "Cobranca",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cobranca/Cobranca.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cobranca/Cobranca.php",
     "belongsTo": {
       "codcheque": {
         "tabela": "tblcheque",
@@ -561,7 +556,7 @@
     "campocodigo": "codliquidacaotitulo",
     "namespace": "Mg\\Titulo",
     "classe": "LiquidacaoTitulo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/LiquidacaoTitulo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/LiquidacaoTitulo.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -637,7 +632,7 @@
     "campocodigo": "codmovimentotitulo",
     "namespace": "Mg\\Titulo",
     "classe": "MovimentoTitulo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/MovimentoTitulo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/MovimentoTitulo.php",
     "belongsTo": {
       "codboletoretorno": {
         "tabela": "tblboletoretorno",
@@ -713,7 +708,7 @@
     "campocodigo": "codtitulo",
     "namespace": "Mg\\Titulo",
     "classe": "Titulo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/Titulo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/Titulo.php",
     "belongsTo": {
       "codcontacontabil": {
         "tabela": "tblcontacontabil",
@@ -890,7 +885,7 @@
     "campocodigo": "codpessoa",
     "namespace": "Mg\\Pessoa",
     "classe": "Pessoa",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/Pessoa.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/Pessoa.php",
     "belongsTo": {
       "codcidade": {
         "tabela": "tblcidade",
@@ -959,6 +954,11 @@
       }
     },
     "hasMany": {
+      "tblbonificacaoevento.codpessoa": {
+        "tabela": "tblbonificacaoevento",
+        "coluna": "codpessoa",
+        "metodo": "BonificacaoEventoS"
+      },
       "tblcheque.codpessoa": {
         "tabela": "tblcheque",
         "coluna": "codpessoa",
@@ -969,10 +969,25 @@
         "coluna": "codpessoa",
         "metodo": "CobrancaHistoricoS"
       },
+      "tblcolaborador.codpessoa": {
+        "tabela": "tblcolaborador",
+        "coluna": "codpessoa",
+        "metodo": "ColaboradorS"
+      },
       "tblcupomfiscal.codpessoa": {
         "tabela": "tblcupomfiscal",
         "coluna": "codpessoa",
         "metodo": "CupomFiscalS"
+      },
+      "tbldependente.codpessoa": {
+        "tabela": "tbldependente",
+        "coluna": "codpessoa",
+        "metodo": "DependenteS"
+      },
+      "tbldependente.codpessoaresponsavel": {
+        "tabela": "tbldependente",
+        "coluna": "codpessoaresponsavel",
+        "metodo": "DependeteResponsavelS"
       },
       "tblfilial.codpessoa": {
         "tabela": "tblfilial",
@@ -984,20 +999,60 @@
         "coluna": "codpessoa",
         "metodo": "LiquidacaoTituloS"
       },
+      "tblliquidacaotitulo.codpessoacartao": {
+        "tabela": "tblliquidacaotitulo",
+        "coluna": "codpessoacartao",
+        "metodo": "LiquidacaoTituloCartaoS"
+      },
+      "tblmdfeveiculo.codpessoacondutor": {
+        "tabela": "tblmdfeveiculo",
+        "coluna": "codpessoacondutor",
+        "metodo": "MdfeVeiculoCondutorS"
+      },
+      "tblmercoscliente.codpessoa": {
+        "tabela": "tblmercoscliente",
+        "coluna": "codpessoa",
+        "metodo": "MercosClienteS"
+      },
       "tblmetafilialpessoa.codpessoa": {
         "tabela": "tblmetafilialpessoa",
         "coluna": "codpessoa",
         "metodo": "MetaFilialPessoaS"
+      },
+      "tblmetaunidadenegociopessoa.codpessoa": {
+        "tabela": "tblmetaunidadenegociopessoa",
+        "coluna": "codpessoa",
+        "metodo": "MetaUnidadeNegocioPessoaS"
+      },
+      "tblmetaunidadenegociopessoafixo.codpessoa": {
+        "tabela": "tblmetaunidadenegociopessoafixo",
+        "coluna": "codpessoa",
+        "metodo": "MetaUnidadeNegocioPessoaFixoS"
+      },
+      "tblmetavendedor.codpessoa": {
+        "tabela": "tblmetavendedor",
+        "coluna": "codpessoa",
+        "metodo": "MetaVendedorS"
       },
       "tblnegocio.codpessoa": {
         "tabela": "tblnegocio",
         "coluna": "codpessoa",
         "metodo": "NegocioS"
       },
+      "tblnegocio.codpessoatransportador": {
+        "tabela": "tblnegocio",
+        "coluna": "codpessoatransportador",
+        "metodo": "NegocioTransportadorS"
+      },
       "tblnegocio.codpessoavendedor": {
         "tabela": "tblnegocio",
         "coluna": "codpessoavendedor",
         "metodo": "NegocioVendedorS"
+      },
+      "tblnegocioformapagamento.codpessoa": {
+        "tabela": "tblnegocioformapagamento",
+        "coluna": "codpessoa",
+        "metodo": "NegocioFormaPagamentoS"
       },
       "tblnfeterceiro.codpessoa": {
         "tabela": "tblnfeterceiro",
@@ -1014,15 +1069,50 @@
         "coluna": "codpessoatransportador",
         "metodo": "NotaFiscalTransportadorS"
       },
+      "tblnotafiscalpagamento.codpessoa": {
+        "tabela": "tblnotafiscalpagamento",
+        "coluna": "codpessoa",
+        "metodo": "NotaFiscalPagamentoS"
+      },
       "tblnotafiscalterceiro.codpessoa": {
         "tabela": "tblnotafiscalterceiro",
         "coluna": "codpessoa",
         "metodo": "NotaFiscalTerceiroS"
       },
+      "tblpagarmepedido.codpessoa": {
+        "tabela": "tblpagarmepedido",
+        "coluna": "codpessoa",
+        "metodo": "PagarMePedidoS"
+      },
       "tblpessoacertidao.codpessoa": {
         "tabela": "tblpessoacertidao",
         "coluna": "codpessoa",
         "metodo": "PessoaCertidaoS"
+      },
+      "tblpessoaconta.codpessoa": {
+        "tabela": "tblpessoaconta",
+        "coluna": "codpessoa",
+        "metodo": "PessoaContaS"
+      },
+      "tblpessoaemail.codpessoa": {
+        "tabela": "tblpessoaemail",
+        "coluna": "codpessoa",
+        "metodo": "PessoaEmailS"
+      },
+      "tblpessoaendereco.codpessoa": {
+        "tabela": "tblpessoaendereco",
+        "coluna": "codpessoa",
+        "metodo": "PessoaEnderecoS"
+      },
+      "tblpessoatelefone.codpessoa": {
+        "tabela": "tblpessoatelefone",
+        "coluna": "codpessoa",
+        "metodo": "PessoaTelefoneS"
+      },
+      "tblportador.codpessoa": {
+        "tabela": "tblportador",
+        "coluna": "codpessoa",
+        "metodo": "PortadorS"
       },
       "tblregistrospc.codpessoa": {
         "tabela": "tblregistrospc",
@@ -1063,96 +1153,6 @@
         "tabela": "tblveiculo",
         "coluna": "codpessoaproprietario",
         "metodo": "VeiculoS"
-      },
-      "tblmdfeveiculo.codpessoacondutor": {
-        "tabela": "tblmdfeveiculo",
-        "coluna": "codpessoacondutor",
-        "metodo": "MdfeVeiculoCondutorS"
-      },
-      "tblnegocio.codpessoatransportador": {
-        "tabela": "tblnegocio",
-        "coluna": "codpessoatransportador",
-        "metodo": "NegocioTransportadorS"
-      },
-      "tblmercoscliente.codpessoa": {
-        "tabela": "tblmercoscliente",
-        "coluna": "codpessoa",
-        "metodo": "MercosClienteS"
-      },
-      "tblpagarmepedido.codpessoa": {
-        "tabela": "tblpagarmepedido",
-        "coluna": "codpessoa",
-        "metodo": "PagarMePedidoS"
-      },
-      "tblpessoaconta.codpessoa": {
-        "tabela": "tblpessoaconta",
-        "coluna": "codpessoa",
-        "metodo": "PessoaContaS"
-      },
-      "tblpessoaemail.codpessoa": {
-        "tabela": "tblpessoaemail",
-        "coluna": "codpessoa",
-        "metodo": "PessoaEmailS"
-      },
-      "tblpessoaendereco.codpessoa": {
-        "tabela": "tblpessoaendereco",
-        "coluna": "codpessoa",
-        "metodo": "PessoaEnderecoS"
-      },
-      "tblpessoatelefone.codpessoa": {
-        "tabela": "tblpessoatelefone",
-        "coluna": "codpessoa",
-        "metodo": "PessoaTelefoneS"
-      },
-      "tblnegocioformapagamento.codpessoa": {
-        "tabela": "tblnegocioformapagamento",
-        "coluna": "codpessoa",
-        "metodo": "NegocioFormaPagamentoS"
-      },
-      "tblcolaborador.codpessoa": {
-        "tabela": "tblcolaborador",
-        "coluna": "codpessoa",
-        "metodo": "ColaboradorS"
-      },
-      "tblnotafiscalpagamento.codpessoa": {
-        "tabela": "tblnotafiscalpagamento",
-        "coluna": "codpessoa",
-        "metodo": "NotaFiscalPagamentoS"
-      },
-      "tblliquidacaotitulo.codpessoacartao": {
-        "tabela": "tblliquidacaotitulo",
-        "coluna": "codpessoacartao",
-        "metodo": "LiquidacaoTituloCartaoS"
-      },
-      "tblmetavendedor.codpessoa": {
-        "tabela": "tblmetavendedor",
-        "coluna": "codpessoa",
-        "metodo": "MetaVendedorS"
-      },
-      "tblportador.codpessoa": {
-        "tabela": "tblportador",
-        "coluna": "codpessoa",
-        "metodo": "PortadorS"
-      },
-      "tbldependente.codpessoa": {
-        "tabela": "tbldependente",
-        "coluna": "codpessoa",
-        "metodo": "DependenteS"
-      },
-      "tbldependente.codpessoaresponsavel": {
-        "tabela": "tbldependente",
-        "coluna": "codpessoaresponsavel",
-        "metodo": "DependeteResponsavelS"
-      },
-      "tblbonificacaoevento.codpessoa": {
-        "tabela": "tblbonificacaoevento",
-        "coluna": "codpessoa",
-        "metodo": "BonificacaoEventoS"
-      },
-      "tblmetaunidadenegociopessoa.codpessoa": {
-        "tabela": "tblmetaunidadenegociopessoa",
-        "coluna": "codpessoa",
-        "metodo": "MetaUnidadeNegocioPessoaS"
       }
     }
   },
@@ -1161,7 +1161,7 @@
     "campocodigo": "codchequeemitente",
     "namespace": "Mg\\Cheque",
     "classe": "ChequeEmitente",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cheque/ChequeEmitente.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cheque/ChequeEmitente.php",
     "belongsTo": {
       "codcheque": {
         "tabela": "tblcheque",
@@ -1186,7 +1186,7 @@
     "campocodigo": "codchequerepassecheque",
     "namespace": "Mg\\Cheque",
     "classe": "ChequeRepasseCheque",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cheque/ChequeRepasseCheque.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cheque/ChequeRepasseCheque.php",
     "belongsTo": {
       "codcheque": {
         "tabela": "tblcheque",
@@ -1222,7 +1222,7 @@
     "campocodigo": "codcontacontabil",
     "namespace": "Mg\\ContaContabil",
     "classe": "ContaContabil",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/ContaContabil/ContaContabil.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/ContaContabil/ContaContabil.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -1253,7 +1253,7 @@
     "campocodigo": "codnegocioformapagamento",
     "namespace": "Mg\\Negocio",
     "classe": "NegocioFormaPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Negocio/NegocioFormaPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Negocio/NegocioFormaPagamento.php",
     "belongsTo": {
       "codformapagamento": {
         "tabela": "tblformapagamento",
@@ -1312,20 +1312,20 @@
       }
     },
     "hasMany": {
-      "tbltitulo.codnegocioformapagamento": {
-        "tabela": "tbltitulo",
+      "tblmovimentotitulo.codnegocioformapagamento": {
+        "tabela": "tblmovimentotitulo",
         "coluna": "codnegocioformapagamento",
-        "metodo": "TituloS"
+        "metodo": "MovimentoTituloS"
       },
       "tblportadormovimento.codnegocioformapagamento": {
         "tabela": "tblportadormovimento",
         "coluna": "codnegocioformapagamento",
         "metodo": "PortadorMovimentoS"
       },
-      "tblmovimentotitulo.codnegocioformapagamento": {
-        "tabela": "tblmovimentotitulo",
+      "tbltitulo.codnegocioformapagamento": {
+        "tabela": "tbltitulo",
         "coluna": "codnegocioformapagamento",
-        "metodo": "MovimentoTituloS"
+        "metodo": "TituloS"
       }
     }
   },
@@ -1334,7 +1334,7 @@
     "campocodigo": "codtipotitulo",
     "namespace": "Mg\\Titulo",
     "classe": "TipoTitulo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/TipoTitulo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/TipoTitulo.php",
     "belongsTo": {
       "codtipomovimentotitulo": {
         "tabela": "tbltipomovimentotitulo",
@@ -1370,7 +1370,7 @@
     "campocodigo": "codtituloagrupamento",
     "namespace": "Mg\\Titulo",
     "classe": "TituloAgrupamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/TituloAgrupamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/TituloAgrupamento.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -1406,7 +1406,7 @@
     "campocodigo": "codvalecompraformapagamento",
     "namespace": "Mg\\ValeCompra",
     "classe": "ValeCompraFormaPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/ValeCompra/ValeCompraFormaPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraFormaPagamento.php",
     "belongsTo": {
       "codformapagamento": {
         "tabela": "tblformapagamento",
@@ -1442,7 +1442,7 @@
     "campocodigo": "codcobrancahistoricotitulo",
     "namespace": "Mg\\Cobranca",
     "classe": "CobrancaHistoricoTitulo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cobranca/CobrancaHistoricoTitulo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cobranca/CobrancaHistoricoTitulo.php",
     "belongsTo": {
       "codcobrancahistorico": {
         "tabela": "tblcobrancahistorico",
@@ -1472,7 +1472,7 @@
     "campocodigo": "codnfeterceiroduplicata",
     "namespace": "Mg\\NfeTerceiro",
     "classe": "NfeTerceiroDuplicata",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NfeTerceiro/NfeTerceiroDuplicata.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NfeTerceiro/NfeTerceiroDuplicata.php",
     "belongsTo": {
       "codnfeterceiro": {
         "tabela": "tblnfeterceiro",
@@ -1502,7 +1502,7 @@
     "campocodigo": "codvalecompra",
     "namespace": "Mg\\ValeCompra",
     "classe": "ValeCompra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/ValeCompra/ValeCompra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompra.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -1558,7 +1558,7 @@
     "campocodigo": "codtipomovimentotitulo",
     "namespace": "Mg\\Titulo",
     "classe": "TipoMovimentoTitulo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/TipoMovimentoTitulo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/TipoMovimentoTitulo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -1589,7 +1589,7 @@
     "campocodigo": "codnaturezaoperacao",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "NaturezaOperacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/NaturezaOperacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/NaturezaOperacao.php",
     "belongsTo": {
       "codcontacontabil": {
         "tabela": "tblcontacontabil",
@@ -1665,7 +1665,7 @@
     "campocodigo": "codformapagamento",
     "namespace": "Mg\\FormaPagamento",
     "classe": "FormaPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/FormaPagamento/FormaPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/FormaPagamento/FormaPagamento.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -1701,7 +1701,7 @@
     "campocodigo": "codnegocio",
     "namespace": "Mg\\Negocio",
     "classe": "Negocio",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Negocio/Negocio.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Negocio/Negocio.php",
     "belongsTo": {
       "codestoquelocal": {
         "tabela": "tblestoquelocal",
@@ -1857,7 +1857,7 @@
     "campocodigo": "codcobrancahistorico",
     "namespace": "Mg\\Cobranca",
     "classe": "CobrancaHistorico",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cobranca/CobrancaHistorico.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cobranca/CobrancaHistorico.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -1888,7 +1888,7 @@
     "campocodigo": "codnfeterceiro",
     "namespace": "Mg\\NfeTerceiro",
     "classe": "NfeTerceiro",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NfeTerceiro/NfeTerceiro.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NfeTerceiro/NfeTerceiro.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -1934,9 +1934,19 @@
         "tabela": "tblusuario",
         "coluna": "codusuariorevisao",
         "metodo": "UsuarioRevisao"
+      },
+      "codusuarioconferencia": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioconferencia",
+        "metodo": "UsuarioConferencia"
       }
     },
     "hasMany": {
+      "tbldistribuicaodfe.codnfeterceiro": {
+        "tabela": "tbldistribuicaodfe",
+        "coluna": "codnfeterceiro",
+        "metodo": "DistribuicaoDfeS"
+      },
       "tblnfeterceiroduplicata.codnfeterceiro": {
         "tabela": "tblnfeterceiroduplicata",
         "coluna": "codnfeterceiro",
@@ -1946,11 +1956,6 @@
         "tabela": "tblnfeterceiroitem",
         "coluna": "codnfeterceiro",
         "metodo": "NfeTerceiroItemS"
-      },
-      "tbldistribuicaodfe.codnfeterceiro": {
-        "tabela": "tbldistribuicaodfe",
-        "coluna": "codnfeterceiro",
-        "metodo": "DistribuicaoDfeS"
       },
       "tblnfeterceiropagamento.codnfeterceiro": {
         "tabela": "tblnfeterceiropagamento",
@@ -1969,7 +1974,7 @@
     "campocodigo": "codvalecompramodelo",
     "namespace": "Mg\\ValeCompra",
     "classe": "ValeCompraModelo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/ValeCompra/ValeCompraModelo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraModelo.php",
     "belongsTo": {
       "codpessoafavorecido": {
         "tabela": "tblpessoa",
@@ -2005,7 +2010,7 @@
     "campocodigo": "codvalecompraprodutobarra",
     "namespace": "Mg\\ValeCompra",
     "classe": "ValeCompraProdutoBarra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/ValeCompra/ValeCompraProdutoBarra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraProdutoBarra.php",
     "belongsTo": {
       "codprodutobarra": {
         "tabela": "tblprodutobarra",
@@ -2035,7 +2040,7 @@
     "campocodigo": "codboletomotivoocorrencia",
     "namespace": "Mg\\Boleto",
     "classe": "BoletoMotivoOcorrencia",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Boleto/BoletoMotivoOcorrencia.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Boleto/BoletoMotivoOcorrencia.php",
     "belongsTo": {
       "codboletotipoocorrencia": {
         "tabela": "tblboletotipoocorrencia",
@@ -2066,7 +2071,7 @@
     "campocodigo": "codboletotipoocorrencia",
     "namespace": "Mg\\Boleto",
     "classe": "BoletoTipoOcorrencia",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Boleto/BoletoTipoOcorrencia.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Boleto/BoletoTipoOcorrencia.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -2092,7 +2097,7 @@
     "campocodigo": "codtributacaonaturezaoperacao",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "TributacaoNaturezaOperacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/TributacaoNaturezaOperacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/TributacaoNaturezaOperacao.php",
     "belongsTo": {
       "codcfop": {
         "tabela": "tblcfop",
@@ -2137,7 +2142,7 @@
     "campocodigo": "codcfop",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "Cfop",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/Cfop.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/Cfop.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -2151,6 +2156,11 @@
       }
     },
     "hasMany": {
+      "tbldominioacumulador.codcfop": {
+        "tabela": "tbldominioacumulador",
+        "coluna": "codcfop",
+        "metodo": "DominioAcumuladorS"
+      },
       "tblnotafiscalprodutobarra.codcfop": {
         "tabela": "tblnotafiscalprodutobarra",
         "coluna": "codcfop",
@@ -2160,11 +2170,6 @@
         "tabela": "tbltributacaonaturezaoperacao",
         "coluna": "codcfop",
         "metodo": "TributacaoNaturezaOperacaoS"
-      },
-      "tbldominioacumulador.codcfop": {
-        "tabela": "tbldominioacumulador",
-        "coluna": "codcfop",
-        "metodo": "DominioAcumuladorS"
       }
     }
   },
@@ -2173,7 +2178,7 @@
     "campocodigo": "codestado",
     "namespace": "Mg\\Cidade",
     "classe": "Estado",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cidade/Estado.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cidade/Estado.php",
     "belongsTo": {
       "codpais": {
         "tabela": "tblpais",
@@ -2202,16 +2207,6 @@
         "coluna": "codestado",
         "metodo": "IbptCacheS"
       },
-      "tblnotafiscal.codestadoplaca": {
-        "tabela": "tblnotafiscal",
-        "coluna": "codestadoplaca",
-        "metodo": "NotaFiscalPlacaS"
-      },
-      "tbltributacaonaturezaoperacao.codestado": {
-        "tabela": "tbltributacaonaturezaoperacao",
-        "coluna": "codestado",
-        "metodo": "TributacaoNaturezaOperacaoS"
-      },
       "tblmdfe.codestadofim": {
         "tabela": "tblmdfe",
         "coluna": "codestadofim",
@@ -2221,6 +2216,26 @@
         "tabela": "tblmdfeestado",
         "coluna": "codestado",
         "metodo": "MdfeEstadoS"
+      },
+      "tblnotafiscal.codestadoplaca": {
+        "tabela": "tblnotafiscal",
+        "coluna": "codestadoplaca",
+        "metodo": "NotaFiscalPlacaS"
+      },
+      "tblpessoa.codestadoctps": {
+        "tabela": "tblpessoa",
+        "coluna": "codestadoctps",
+        "metodo": "PessoaCtpsS"
+      },
+      "tbltributacaonaturezaoperacao.codestado": {
+        "tabela": "tbltributacaonaturezaoperacao",
+        "coluna": "codestado",
+        "metodo": "TributacaoNaturezaOperacaoS"
+      },
+      "tbltributacaoregra.codestadodestino": {
+        "tabela": "tbltributacaoregra",
+        "coluna": "codestadodestino",
+        "metodo": "TributacaoRegraDestinoS"
       },
       "tblveiculo.codestado": {
         "tabela": "tblveiculo",
@@ -2234,7 +2249,7 @@
     "campocodigo": "codtipoproduto",
     "namespace": "Mg\\Produto",
     "classe": "TipoProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/TipoProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/TipoProduto.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -2257,6 +2272,11 @@
         "tabela": "tbltributacaonaturezaoperacao",
         "coluna": "codtipoproduto",
         "metodo": "TributacaoNaturezaOperacaoS"
+      },
+      "tbltributacaoregra.codtipoproduto": {
+        "tabela": "tbltributacaoregra",
+        "coluna": "codtipoproduto",
+        "metodo": "TributacaoRegraS"
       }
     }
   },
@@ -2265,7 +2285,7 @@
     "campocodigo": "codtributacao",
     "namespace": "Mg\\Tributacao",
     "classe": "Tributacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Tributacao/Tributacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Tributacao/Tributacao.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -2301,7 +2321,7 @@
     "campocodigo": "codnotafiscalprodutobarra",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscalProdutoBarra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscalProdutoBarra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscalProdutoBarra.php",
     "belongsTo": {
       "codcfop": {
         "tabela": "tblcfop",
@@ -2345,15 +2365,15 @@
         "coluna": "codnotafiscalprodutobarra",
         "metodo": "EstoqueMovimentoS"
       },
-      "tblnotafiscalprodutobarra.codnotafiscalprodutobarraorigem": {
-        "tabela": "tblnotafiscalprodutobarra",
-        "coluna": "codnotafiscalprodutobarraorigem",
-        "metodo": "NotaFiscalProdutoBarraS"
-      },
       "tblnotafiscalitemtributo.codnotafiscalprodutobarra": {
         "tabela": "tblnotafiscalitemtributo",
         "coluna": "codnotafiscalprodutobarra",
         "metodo": "NotaFiscalItemTributoS"
+      },
+      "tblnotafiscalprodutobarra.codnotafiscalprodutobarraorigem": {
+        "tabela": "tblnotafiscalprodutobarra",
+        "coluna": "codnotafiscalprodutobarraorigem",
+        "metodo": "NotaFiscalProdutoBarraS"
       }
     }
   },
@@ -2362,16 +2382,33 @@
     "campocodigo": "codpais",
     "namespace": "Mg\\Cidade",
     "classe": "Pais",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cidade/Pais.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cidade/Pais.php",
+    "belongsTo": {
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblestado.codpais": {
+        "tabela": "tblestado",
+        "coluna": "codpais",
+        "metodo": "EstadoS"
+      }
+    }
   },
   "tblcidade": {
     "tabela": "tblcidade",
     "campocodigo": "codcidade",
     "namespace": "Mg\\Cidade",
     "classe": "Cidade",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cidade/Cidade.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cidade/Cidade.php",
     "belongsTo": {
       "codestado": {
         "tabela": "tblestado",
@@ -2390,16 +2427,6 @@
       }
     },
     "hasMany": {
-      "tblpessoa.codcidade": {
-        "tabela": "tblpessoa",
-        "coluna": "codcidade",
-        "metodo": "PessoaS"
-      },
-      "tblpessoa.codcidadecobranca": {
-        "tabela": "tblpessoa",
-        "coluna": "codcidadecobranca",
-        "metodo": "PessoaCobrancaS"
-      },
       "tblmdfe.codcidadecarregamento": {
         "tabela": "tblmdfe",
         "coluna": "codcidadecarregamento",
@@ -2410,10 +2437,30 @@
         "coluna": "codcidadedescarga",
         "metodo": "MdfeNfeDescargaS"
       },
+      "tblpessoa.codcidade": {
+        "tabela": "tblpessoa",
+        "coluna": "codcidade",
+        "metodo": "PessoaS"
+      },
+      "tblpessoa.codcidadecobranca": {
+        "tabela": "tblpessoa",
+        "coluna": "codcidadecobranca",
+        "metodo": "PessoaCobrancaS"
+      },
+      "tblpessoa.codcidadenascimento": {
+        "tabela": "tblpessoa",
+        "coluna": "codcidadenascimento",
+        "metodo": "PessoaNascimentoS"
+      },
       "tblpessoaendereco.codcidade": {
         "tabela": "tblpessoaendereco",
         "coluna": "codcidade",
         "metodo": "PessoaEnderecoS"
+      },
+      "tbltributacaoregra.codcidadedestino": {
+        "tabela": "tbltributacaoregra",
+        "coluna": "codcidadedestino",
+        "metodo": "TributacaoRegraDestinoS"
       }
     }
   },
@@ -2422,7 +2469,7 @@
     "campocodigo": "codibptcache",
     "namespace": "Mg\\NFePHP",
     "classe": "IbptCache",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NFePHP/IbptCache.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NFePHP/IbptCache.php",
     "belongsTo": {
       "codestado": {
         "tabela": "tblestado",
@@ -2452,7 +2499,7 @@
     "campocodigo": "codnotafiscal",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscal",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscal.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscal.php",
     "belongsTo": {
       "codestadoplaca": {
         "tabela": "tblestado",
@@ -2526,6 +2573,11 @@
         "coluna": "codnotafiscal",
         "metodo": "NotaFiscalDuplicatasS"
       },
+      "tblnotafiscalpagamento.codnotafiscal": {
+        "tabela": "tblnotafiscalpagamento",
+        "coluna": "codnotafiscal",
+        "metodo": "NotaFiscalPagamentoS"
+      },
       "tblnotafiscalprodutobarra.codnotafiscal": {
         "tabela": "tblnotafiscalprodutobarra",
         "coluna": "codnotafiscal",
@@ -2540,11 +2592,6 @@
         "tabela": "tblnotafiscalterceiro",
         "coluna": "codnotafiscal",
         "metodo": "NotaFiscalTerceiroS"
-      },
-      "tblnotafiscalpagamento.codnotafiscal": {
-        "tabela": "tblnotafiscalpagamento",
-        "coluna": "codnotafiscal",
-        "metodo": "NotaFiscalPagamentoS"
       }
     }
   },
@@ -2553,7 +2600,7 @@
     "campocodigo": "codproduto",
     "namespace": "Mg\\Produto",
     "classe": "Produto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/Produto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/Produto.php",
     "belongsTo": {
       "codcest": {
         "tabela": "tblcest",
@@ -2669,7 +2716,7 @@
     "campocodigo": "codncmtributacao",
     "namespace": "Mg\\Tributacao",
     "classe": "NcmTributacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Tributacao/NcmTributacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Tributacao/NcmTributacao.php",
     "belongsTo": {
       "codtributacao": {
         "tabela": "tbltributacao",
@@ -2684,7 +2731,7 @@
     "campocodigo": "codnegocioprodutobarra",
     "namespace": "Mg\\Negocio",
     "classe": "NegocioProdutoBarra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Negocio/NegocioProdutoBarra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Negocio/NegocioProdutoBarra.php",
     "belongsTo": {
       "codnegocio": {
         "tabela": "tblnegocio",
@@ -2765,7 +2812,7 @@
     "campocodigo": "codprodutobarra",
     "namespace": "Mg\\Produto",
     "classe": "ProdutoBarra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/ProdutoBarra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/ProdutoBarra.php",
     "belongsTo": {
       "codmarca": {
         "tabela": "tblmarca",
@@ -2824,6 +2871,11 @@
         "coluna": "codprodutobarra",
         "metodo": "NotaFiscalTerceiroProdutoBarraS"
       },
+      "tblprancheta.codprodutobarra": {
+        "tabela": "tblprancheta",
+        "coluna": "codprodutobarra",
+        "metodo": "PranchetaS"
+      },
       "tblvalecompramodeloprodutobarra.codprodutobarra": {
         "tabela": "tblvalecompramodeloprodutobarra",
         "coluna": "codprodutobarra",
@@ -2833,11 +2885,6 @@
         "tabela": "tblvalecompraprodutobarra",
         "coluna": "codprodutobarra",
         "metodo": "ValeCompraProdutoBarraS"
-      },
-      "tblprancheta.codprodutobarra": {
-        "tabela": "tblprancheta",
-        "coluna": "codprodutobarra",
-        "metodo": "PranchetaS"
       },
       "tblwooproduto.codprodutobarraunidade": {
         "tabela": "tblwooproduto",
@@ -2851,7 +2898,7 @@
     "campocodigo": "codcupomfiscalprodutobarra",
     "namespace": "Mg\\CupomFiscal",
     "classe": "CupomFiscalProdutoBarra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/CupomFiscal/CupomFiscalProdutoBarra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/CupomFiscal/CupomFiscalProdutoBarra.php",
     "belongsTo": {
       "codcupomfiscal": {
         "tabela": "tblcupomfiscal",
@@ -2886,16 +2933,63 @@
     "campocodigo": "codestoquemovimento",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueMovimento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueMovimento.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueMovimento.php",
+    "belongsTo": {
+      "codestoquemes": {
+        "tabela": "tblestoquemes",
+        "coluna": "codestoquemes",
+        "metodo": "EstoqueMes"
+      },
+      "codestoquemovimentoorigem": {
+        "tabela": "tblestoquemovimento",
+        "coluna": "codestoquemovimentoorigem",
+        "metodo": "EstoqueMovimentoOrigem"
+      },
+      "codestoquemovimentotipo": {
+        "tabela": "tblestoquemovimentotipo",
+        "coluna": "codestoquemovimentotipo",
+        "metodo": "EstoqueMovimentoTipo"
+      },
+      "codestoquesaldoconferencia": {
+        "tabela": "tblestoquesaldoconferencia",
+        "coluna": "codestoquesaldoconferencia",
+        "metodo": "EstoqueSaldoConferencia"
+      },
+      "codnegocioprodutobarra": {
+        "tabela": "tblnegocioprodutobarra",
+        "coluna": "codnegocioprodutobarra",
+        "metodo": "NegocioProdutoBarra"
+      },
+      "codnotafiscalprodutobarra": {
+        "tabela": "tblnotafiscalprodutobarra",
+        "coluna": "codnotafiscalprodutobarra",
+        "metodo": "NotaFiscalProdutoBarra"
+      },
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblestoquemovimento.codestoquemovimentoorigem": {
+        "tabela": "tblestoquemovimento",
+        "coluna": "codestoquemovimentoorigem",
+        "metodo": "EstoqueMovimentoOrigemS"
+      }
+    }
   },
   "tblnegocioprodutobarrapedidoitem": {
     "tabela": "tblnegocioprodutobarrapedidoitem",
     "campocodigo": "codnegocioprodutobarrapedidoitem",
     "namespace": "Mg\\Negocio",
     "classe": "NegocioProdutoBarraPedidoItem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Negocio/NegocioProdutoBarraPedidoItem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Negocio/NegocioProdutoBarraPedidoItem.php",
     "belongsTo": {
       "codnegocioprodutobarra": {
         "tabela": "tblnegocioprodutobarra",
@@ -2925,7 +3019,7 @@
     "campocodigo": "codcupomfiscal",
     "namespace": "Mg\\CupomFiscal",
     "classe": "CupomFiscal",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/CupomFiscal/CupomFiscal.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/CupomFiscal/CupomFiscal.php",
     "belongsTo": {
       "codecf": {
         "tabela": "tblecf",
@@ -2961,7 +3055,7 @@
     "campocodigo": "codecf",
     "namespace": "Mg\\CupomFiscal",
     "classe": "Ecf",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/CupomFiscal/Ecf.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/CupomFiscal/Ecf.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -3007,7 +3101,7 @@
     "campocodigo": "codecfreducaoz",
     "namespace": "Mg\\EcfReducaoZ",
     "classe": "EcfReducaoZ",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/EcfReducaoZ/EcfReducaoZ.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/EcfReducaoZ/EcfReducaoZ.php",
     "belongsTo": {
       "codecf": {
         "tabela": "tblecf",
@@ -3032,7 +3126,7 @@
     "campocodigo": "codnotafiscalterceiro",
     "namespace": "Mg\\NotaFiscalTerceiro",
     "classe": "NotaFiscalTerceiro",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiro.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiro.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -3098,7 +3192,7 @@
     "campocodigo": "codempresa",
     "namespace": "Mg\\Filial",
     "classe": "Empresa",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/Empresa.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/Empresa.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3124,7 +3218,7 @@
     "campocodigo": "codestoquelocal",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueLocal",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueLocal.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueLocal.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -3172,6 +3266,11 @@
         "tabela": "tblpedido",
         "coluna": "codestoquelocalorigem",
         "metodo": "PedidoOrigemS"
+      },
+      "tblproduto.codestoquelocal": {
+        "tabela": "tblproduto",
+        "coluna": "codestoquelocal",
+        "metodo": "ProdutoS"
       }
     }
   },
@@ -3180,7 +3279,7 @@
     "campocodigo": "codgrupousuariousuario",
     "namespace": "Mg\\Usuario",
     "classe": "GrupoUsuarioUsuario",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Usuario/GrupoUsuarioUsuario.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Usuario/GrupoUsuarioUsuario.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -3215,7 +3314,7 @@
     "campocodigo": "codmetafilial",
     "namespace": "Mg\\Meta",
     "classe": "MetaFilial",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/MetaFilial.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/MetaFilial.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -3251,7 +3350,7 @@
     "campocodigo": "codmeta",
     "namespace": "Mg\\Meta",
     "classe": "Meta",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/Meta.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/Meta.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3265,20 +3364,15 @@
       }
     },
     "hasMany": {
-      "tblmetafilial.codmeta": {
-        "tabela": "tblmetafilial",
-        "coluna": "codmeta",
-        "metodo": "MetaFilialS"
-      },
-      "tblmetavendedor.codmeta": {
-        "tabela": "tblmetavendedor",
-        "coluna": "codmeta",
-        "metodo": "MetaVendedorS"
-      },
       "tblbonificacaoevento.codmeta": {
         "tabela": "tblbonificacaoevento",
         "coluna": "codmeta",
         "metodo": "BonificacaoEventoS"
+      },
+      "tblmetafilial.codmeta": {
+        "tabela": "tblmetafilial",
+        "coluna": "codmeta",
+        "metodo": "MetaFilialS"
       },
       "tblmetaunidadenegocio.codmeta": {
         "tabela": "tblmetaunidadenegocio",
@@ -3289,6 +3383,16 @@
         "tabela": "tblmetaunidadenegociopessoa",
         "coluna": "codmeta",
         "metodo": "MetaUnidadeNegocioPessoaS"
+      },
+      "tblmetaunidadenegociopessoafixo.codmeta": {
+        "tabela": "tblmetaunidadenegociopessoafixo",
+        "coluna": "codmeta",
+        "metodo": "MetaUnidadeNegocioPessoaFixoS"
+      },
+      "tblmetavendedor.codmeta": {
+        "tabela": "tblmetavendedor",
+        "coluna": "codmeta",
+        "metodo": "MetaVendedorS"
       }
     }
   },
@@ -3297,7 +3401,7 @@
     "campocodigo": "codmetafilialpessoa",
     "namespace": "Mg\\Meta",
     "classe": "MetaFilialPessoa",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/MetaFilialPessoa.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/MetaFilialPessoa.php",
     "belongsTo": {
       "codcargo": {
         "tabela": "tblcargo",
@@ -3332,16 +3436,48 @@
     "campocodigo": "codoperacao",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "Operacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/Operacao.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/Operacao.php",
+    "belongsTo": {
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblnegocio.codoperacao": {
+        "tabela": "tblnegocio",
+        "coluna": "codoperacao",
+        "metodo": "NegocioS"
+      },
+      "tblnfeterceiro.codoperacao": {
+        "tabela": "tblnfeterceiro",
+        "coluna": "codoperacao",
+        "metodo": "NfeTerceiroS"
+      },
+      "tblnotafiscal.codoperacao": {
+        "tabela": "tblnotafiscal",
+        "coluna": "codoperacao",
+        "metodo": "NotaFiscalS"
+      },
+      "tblusuario.codoperacao": {
+        "tabela": "tblusuario",
+        "coluna": "codoperacao",
+        "metodo": "UsuarioS"
+      }
+    }
   },
   "tblnfeterceiroitem": {
     "tabela": "tblnfeterceiroitem",
     "campocodigo": "codnfeterceiroitem",
     "namespace": "Mg\\NfeTerceiro",
     "classe": "NfeTerceiroItem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NfeTerceiro/NfeTerceiroItem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NfeTerceiro/NfeTerceiroItem.php",
     "belongsTo": {
       "codnfeterceiro": {
         "tabela": "tblnfeterceiro",
@@ -3362,6 +3498,11 @@
         "tabela": "tblusuario",
         "coluna": "codusuariocriacao",
         "metodo": "UsuarioCriacao"
+      },
+      "codusuarioconferencia": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioconferencia",
+        "metodo": "UsuarioConferencia"
       }
     },
     "hasMany": []
@@ -3371,7 +3512,7 @@
     "campocodigo": "coddistribuicaodfeevento",
     "namespace": "Mg\\Dfe",
     "classe": "DistribuicaoDfeEvento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Dfe/DistribuicaoDfeEvento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Dfe/DistribuicaoDfeEvento.php",
     "belongsTo": {
       "coddfeevento": {
         "tabela": "tbldfeevento",
@@ -3402,7 +3543,7 @@
     "campocodigo": "coddfeevento",
     "namespace": "Mg\\Dfe",
     "classe": "DfeEvento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Dfe/DfeEvento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Dfe/DfeEvento.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3428,7 +3569,7 @@
     "campocodigo": "coddfetipo",
     "namespace": "Mg\\Dfe",
     "classe": "DfeTipo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Dfe/DfeTipo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Dfe/DfeTipo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3454,7 +3595,7 @@
     "campocodigo": "coddistribuicaodfe",
     "namespace": "Mg\\Dfe",
     "classe": "DistribuicaoDfe",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Dfe/DistribuicaoDfe.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Dfe/DistribuicaoDfe.php",
     "belongsTo": {
       "coddfetipo": {
         "tabela": "tbldfetipo",
@@ -3489,7 +3630,7 @@
     "campocodigo": "codnotafiscalterceiroduplicata",
     "namespace": "Mg\\NotaFiscalTerceiro",
     "classe": "NotaFiscalTerceiroDuplicata",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroDuplicata.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroDuplicata.php",
     "belongsTo": {
       "codnotafiscalterceiro": {
         "tabela": "tblnotafiscalterceiro",
@@ -3514,7 +3655,7 @@
     "campocodigo": "codnotafiscalterceirogrupo",
     "namespace": "Mg\\NotaFiscalTerceiro",
     "classe": "NotaFiscalTerceiroGrupo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroGrupo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroGrupo.php",
     "belongsTo": {
       "codnotafiscalterceiro": {
         "tabela": "tblnotafiscalterceiro",
@@ -3550,7 +3691,7 @@
     "campocodigo": "codnotafiscalterceiroitem",
     "namespace": "Mg\\NotaFiscalTerceiro",
     "classe": "NotaFiscalTerceiroItem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroItem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroItem.php",
     "belongsTo": {
       "codnotafiscalterceirogrupo": {
         "tabela": "tblnotafiscalterceirogrupo",
@@ -3575,7 +3716,7 @@
     "campocodigo": "codnotafiscalterceiroprodutobarra",
     "namespace": "Mg\\NotaFiscalTerceiro",
     "classe": "NotaFiscalTerceiroProdutoBarra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroProdutoBarra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroProdutoBarra.php",
     "belongsTo": {
       "codnotafiscalterceirogrupo": {
         "tabela": "tblnotafiscalterceirogrupo",
@@ -3605,7 +3746,7 @@
     "campocodigo": "codnotafiscalterceiropagamento",
     "namespace": "Mg\\NotaFiscalTerceiro",
     "classe": "NotaFiscalTerceiroPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroPagamento.php",
     "belongsTo": {
       "codnotafiscalterceiro": {
         "tabela": "tblnotafiscalterceiro",
@@ -3630,7 +3771,7 @@
     "campocodigo": "codestadocivil",
     "namespace": "Mg\\Pessoa",
     "classe": "EstadoCivil",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/EstadoCivil.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/EstadoCivil.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3656,7 +3797,7 @@
     "campocodigo": "codgrupocliente",
     "namespace": "Mg\\Pessoa",
     "classe": "GrupoCliente",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/GrupoCliente.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/GrupoCliente.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3682,7 +3823,7 @@
     "campocodigo": "codgrupoeconomico",
     "namespace": "Mg\\GrupoEconomico",
     "classe": "GrupoEconomico",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/GrupoEconomico/GrupoEconomico.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/GrupoEconomico/GrupoEconomico.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3718,7 +3859,7 @@
     "campocodigo": "codsexo",
     "namespace": "Mg\\Pessoa",
     "classe": "Sexo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/Sexo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/Sexo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3744,7 +3885,7 @@
     "campocodigo": "codpessoacertidao",
     "namespace": "Mg\\Pessoa",
     "classe": "PessoaCertidao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/PessoaCertidao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/PessoaCertidao.php",
     "belongsTo": {
       "codcertidaoemissor": {
         "tabela": "tblcertidaoemissor",
@@ -3779,7 +3920,7 @@
     "campocodigo": "codregistrospc",
     "namespace": "Mg\\Pessoa",
     "classe": "RegistroSpc",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/RegistroSpc.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/RegistroSpc.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -3804,7 +3945,7 @@
     "campocodigo": "codnegociostatus",
     "namespace": "Mg\\Negocio",
     "classe": "NegocioStatus",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Negocio/NegocioStatus.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Negocio/NegocioStatus.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3830,7 +3971,7 @@
     "campocodigo": "codnegociocaixamercadoria",
     "namespace": "Mg\\Negocio",
     "classe": "NegocioCaixaMercadoria",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Negocio/NegocioCaixaMercadoria.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Negocio/NegocioCaixaMercadoria.php",
     "belongsTo": {
       "codcaixamercadoria": {
         "tabela": "tblcaixamercadoria",
@@ -3865,7 +4006,7 @@
     "campocodigo": "codcargo",
     "namespace": "Mg\\Colaborador",
     "classe": "Cargo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Colaborador/Cargo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Colaborador/Cargo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3896,7 +4037,7 @@
     "campocodigo": "codliopedidostatus",
     "namespace": "Mg\\Lio",
     "classe": "LioPedidoStatus",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Lio/LioPedidoStatus.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Lio/LioPedidoStatus.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -3922,7 +4063,7 @@
     "campocodigo": "codliopedido",
     "namespace": "Mg\\Lio",
     "classe": "LioPedido",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Lio/LioPedido.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Lio/LioPedido.php",
     "belongsTo": {
       "codliopedidostatus": {
         "tabela": "tblliopedidostatus",
@@ -3958,7 +4099,7 @@
     "campocodigo": "codliopedidopagamento",
     "namespace": "Mg\\Lio",
     "classe": "LioPedidoPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Lio/LioPedidoPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Lio/LioPedidoPagamento.php",
     "belongsTo": {
       "codliobandeiracartao": {
         "tabela": "tblliobandeiracartao",
@@ -3998,7 +4139,7 @@
     "campocodigo": "codliobandeiracartao",
     "namespace": "Mg\\Lio",
     "classe": "LioBandeiraCartao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Lio/LioBandeiraCartao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Lio/LioBandeiraCartao.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4024,7 +4165,7 @@
     "campocodigo": "codlioproduto",
     "namespace": "Mg\\Lio",
     "classe": "LioProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Lio/LioProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Lio/LioProduto.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4050,7 +4191,7 @@
     "campocodigo": "codlioterminal",
     "namespace": "Mg\\Lio",
     "classe": "LioTerminal",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Lio/LioTerminal.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Lio/LioTerminal.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -4081,7 +4222,7 @@
     "campocodigo": "codpixcobstatus",
     "namespace": "Mg\\Pix",
     "classe": "PixCobStatus",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pix/PixCobStatus.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pix/PixCobStatus.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4107,7 +4248,7 @@
     "campocodigo": "codpixcob",
     "namespace": "Mg\\Pix",
     "classe": "PixCob",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pix/PixCob.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pix/PixCob.php",
     "belongsTo": {
       "codnegocio": {
         "tabela": "tblnegocio",
@@ -4141,15 +4282,15 @@
       }
     },
     "hasMany": {
-      "tblpix.codpixcob": {
-        "tabela": "tblpix",
-        "coluna": "codpixcob",
-        "metodo": "PixS"
-      },
       "tblnegocioformapagamento.codpixcob": {
         "tabela": "tblnegocioformapagamento",
         "coluna": "codpixcob",
         "metodo": "NegocioFormaPagamentoS"
+      },
+      "tblpix.codpixcob": {
+        "tabela": "tblpix",
+        "coluna": "codpixcob",
+        "metodo": "PixS"
       }
     }
   },
@@ -4158,7 +4299,7 @@
     "campocodigo": "codpix",
     "namespace": "Mg\\Pix",
     "classe": "Pix",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pix/Pix.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pix/Pix.php",
     "belongsTo": {
       "codpixcob": {
         "tabela": "tblpixcob",
@@ -4187,6 +4328,11 @@
       }
     },
     "hasMany": {
+      "tblliquidacaotitulo.codpix": {
+        "tabela": "tblliquidacaotitulo",
+        "coluna": "codpix",
+        "metodo": "LiquidacaoTituloS"
+      },
       "tblpixdevolucao.codpix": {
         "tabela": "tblpixdevolucao",
         "coluna": "codpix",
@@ -4196,11 +4342,6 @@
         "tabela": "tblportadormovimento",
         "coluna": "codpix",
         "metodo": "PortadorMovimentoS"
-      },
-      "tblliquidacaotitulo.codpix": {
-        "tabela": "tblliquidacaotitulo",
-        "coluna": "codpix",
-        "metodo": "LiquidacaoTituloS"
       }
     }
   },
@@ -4209,7 +4350,7 @@
     "campocodigo": "codpixdevolucao",
     "namespace": "Mg\\Pix",
     "classe": "PixDevolucao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pix/PixDevolucao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pix/PixDevolucao.php",
     "belongsTo": {
       "codpix": {
         "tabela": "tblpix",
@@ -4239,7 +4380,7 @@
     "campocodigo": "codpixdevolucaostatus",
     "namespace": "Mg\\Pix",
     "classe": "PixDevolucaoStatus",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pix/PixDevolucaoStatus.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pix/PixDevolucaoStatus.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4265,7 +4406,7 @@
     "campocodigo": "codveiculotipo",
     "namespace": "Mg\\Veiculo",
     "classe": "VeiculoTipo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Veiculo/VeiculoTipo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Veiculo/VeiculoTipo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4291,7 +4432,7 @@
     "campocodigo": "codveiculo",
     "namespace": "Mg\\Veiculo",
     "classe": "Veiculo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Veiculo/Veiculo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Veiculo/Veiculo.php",
     "belongsTo": {
       "codestado": {
         "tabela": "tblestado",
@@ -4337,7 +4478,7 @@
     "campocodigo": "codveiculoconjunto",
     "namespace": "Mg\\Veiculo",
     "classe": "VeiculoConjunto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Veiculo/VeiculoConjunto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Veiculo/VeiculoConjunto.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4363,7 +4504,7 @@
     "campocodigo": "codveiculoconjuntoveiculo",
     "namespace": "Mg\\Veiculo",
     "classe": "VeiculoConjuntoVeiculo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Veiculo/VeiculoConjuntoVeiculo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Veiculo/VeiculoConjuntoVeiculo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4393,7 +4534,7 @@
     "campocodigo": "codmdfeveiculo",
     "namespace": "Mg\\Mdfe",
     "classe": "MdfeVeiculo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mdfe/MdfeVeiculo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mdfe/MdfeVeiculo.php",
     "belongsTo": {
       "codmdfe": {
         "tabela": "tblmdfe",
@@ -4428,7 +4569,7 @@
     "campocodigo": "codmdfe",
     "namespace": "Mg\\Mdfe",
     "classe": "Mdfe",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mdfe/Mdfe.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mdfe/Mdfe.php",
     "belongsTo": {
       "codcidadecarregamento": {
         "tabela": "tblcidade",
@@ -4462,6 +4603,11 @@
       }
     },
     "hasMany": {
+      "tblmdfeenviosefaz.codmdfe": {
+        "tabela": "tblmdfeenviosefaz",
+        "coluna": "codmdfe",
+        "metodo": "MdfeEnvioSefazS"
+      },
       "tblmdfeestado.codmdfe": {
         "tabela": "tblmdfeestado",
         "coluna": "codmdfe",
@@ -4476,11 +4622,6 @@
         "tabela": "tblmdfeveiculo",
         "coluna": "codmdfe",
         "metodo": "MdfeVeiculoS"
-      },
-      "tblmdfeenviosefaz.codmdfe": {
-        "tabela": "tblmdfeenviosefaz",
-        "coluna": "codmdfe",
-        "metodo": "MdfeEnvioSefazS"
       }
     }
   },
@@ -4489,7 +4630,7 @@
     "campocodigo": "codmdfestatus",
     "namespace": "Mg\\Mdfe",
     "classe": "MdfeStatus",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mdfe/MdfeStatus.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mdfe/MdfeStatus.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4515,7 +4656,7 @@
     "campocodigo": "codmdfeestado",
     "namespace": "Mg\\Mdfe",
     "classe": "MdfeEstado",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mdfe/MdfeEstado.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mdfe/MdfeEstado.php",
     "belongsTo": {
       "codestado": {
         "tabela": "tblestado",
@@ -4545,7 +4686,7 @@
     "campocodigo": "codmdfenfe",
     "namespace": "Mg\\Mdfe",
     "classe": "MdfeNfe",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mdfe/MdfeNfe.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mdfe/MdfeNfe.php",
     "belongsTo": {
       "codcidadedescarga": {
         "tabela": "tblcidade",
@@ -4580,7 +4721,7 @@
     "campocodigo": "codnotafiscalcartacorrecao",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscalCartaCorrecao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscalCartaCorrecao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscalCartaCorrecao.php",
     "belongsTo": {
       "codnotafiscal": {
         "tabela": "tblnotafiscal",
@@ -4605,7 +4746,7 @@
     "campocodigo": "codnotafiscalcreditoicmssimples",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscalCreditoIcmsSimples",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscalCreditoIcmsSimples.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscalCreditoIcmsSimples.php",
     "belongsTo": {
       "codnotafiscal": {
         "tabela": "tblnotafiscal",
@@ -4620,7 +4761,7 @@
     "campocodigo": "codnotafiscalduplicatas",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscalDuplicatas",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscalDuplicatas.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscalDuplicatas.php",
     "belongsTo": {
       "codnotafiscal": {
         "tabela": "tblnotafiscal",
@@ -4645,7 +4786,7 @@
     "campocodigo": "codnotafiscalreferenciada",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscalReferenciada",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscalReferenciada.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscalReferenciada.php",
     "belongsTo": {
       "codnotafiscal": {
         "tabela": "tblnotafiscal",
@@ -4670,7 +4811,7 @@
     "campocodigo": "codmdfeenviosefaz",
     "namespace": "Mg\\Mdfe",
     "classe": "MdfeEnvioSefaz",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mdfe/MdfeEnvioSefaz.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mdfe/MdfeEnvioSefaz.php",
     "belongsTo": {
       "codmdfe": {
         "tabela": "tblmdfe",
@@ -4695,7 +4836,7 @@
     "campocodigo": "codstonebandeira",
     "namespace": "Mg\\Stone",
     "classe": "StoneBandeira",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Stone/StoneBandeira.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Stone/StoneBandeira.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -4721,7 +4862,7 @@
     "campocodigo": "codstonetransacao",
     "namespace": "Mg\\Stone",
     "classe": "StoneTransacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Stone/StoneTransacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Stone/StoneTransacao.php",
     "belongsTo": {
       "codstonebandeira": {
         "tabela": "tblstonebandeira",
@@ -4767,7 +4908,7 @@
     "campocodigo": "codstonetransacaoparcela",
     "namespace": "Mg\\Stone",
     "classe": "StoneTransacaoParcela",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Stone/StoneTransacaoParcela.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Stone/StoneTransacaoParcela.php",
     "belongsTo": {
       "codstonetransacao": {
         "tabela": "tblstonetransacao",
@@ -4792,7 +4933,7 @@
     "campocodigo": "codstonefilial",
     "namespace": "Mg\\Stone",
     "classe": "StoneFilial",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Stone/StoneFilial.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Stone/StoneFilial.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -4811,6 +4952,11 @@
       }
     },
     "hasMany": {
+      "tblstonepos.codstonefilial": {
+        "tabela": "tblstonepos",
+        "coluna": "codstonefilial",
+        "metodo": "StonePosS"
+      },
       "tblstonepretransacao.codstonefilial": {
         "tabela": "tblstonepretransacao",
         "coluna": "codstonefilial",
@@ -4820,11 +4966,6 @@
         "tabela": "tblstonetransacao",
         "coluna": "codstonefilial",
         "metodo": "StoneTransacaoS"
-      },
-      "tblstonepos.codstonefilial": {
-        "tabela": "tblstonepos",
-        "coluna": "codstonefilial",
-        "metodo": "StonePosS"
       }
     }
   },
@@ -4833,7 +4974,7 @@
     "campocodigo": "codstonepretransacao",
     "namespace": "Mg\\Stone",
     "classe": "StonePreTransacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Stone/StonePreTransacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Stone/StonePreTransacao.php",
     "belongsTo": {
       "codnegocio": {
         "tabela": "tblnegocio",
@@ -4874,7 +5015,7 @@
     "campocodigo": "codstonepos",
     "namespace": "Mg\\Stone",
     "classe": "StonePos",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Stone/StonePos.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Stone/StonePos.php",
     "belongsTo": {
       "codstonefilial": {
         "tabela": "tblstonefilial",
@@ -4905,7 +5046,7 @@
     "campocodigo": "codprodutoembalagem",
     "namespace": "Mg\\Produto",
     "classe": "ProdutoEmbalagem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/ProdutoEmbalagem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/ProdutoEmbalagem.php",
     "belongsTo": {
       "codproduto": {
         "tabela": "tblproduto",
@@ -4934,6 +5075,21 @@
       }
     },
     "hasMany": {
+      "tblmercosproduto.codprodutoembalagem": {
+        "tabela": "tblmercosproduto",
+        "coluna": "codprodutoembalagem",
+        "metodo": "MercosProdutoS"
+      },
+      "tblproduto.codprodutoembalagemcompra": {
+        "tabela": "tblproduto",
+        "coluna": "codprodutoembalagemcompra",
+        "metodo": "ProdutoCompraS"
+      },
+      "tblproduto.codprodutoembalagemtransferencia": {
+        "tabela": "tblproduto",
+        "coluna": "codprodutoembalagemtransferencia",
+        "metodo": "ProdutoTransferenciaS"
+      },
       "tblprodutobarra.codprodutoembalagem": {
         "tabela": "tblprodutobarra",
         "coluna": "codprodutoembalagem",
@@ -4951,7 +5107,7 @@
     "campocodigo": "codprodutoimagem",
     "namespace": "Mg\\Produto",
     "classe": "ProdutoImagem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/ProdutoImagem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/ProdutoImagem.php",
     "belongsTo": {
       "codimagem": {
         "tabela": "tblimagem",
@@ -4985,15 +5141,15 @@
         "coluna": "codprodutoimagem",
         "metodo": "ProdutoEmbalagemS"
       },
-      "tblprodutovariacao.codprodutoimagem": {
-        "tabela": "tblprodutovariacao",
-        "coluna": "codprodutoimagem",
-        "metodo": "ProdutoVariacaoS"
-      },
       "tblprodutoimagemprodutovariacao.codprodutoimagem": {
         "tabela": "tblprodutoimagemprodutovariacao",
         "coluna": "codprodutoimagem",
         "metodo": "ProdutoImagemProdutoVariacaoS"
+      },
+      "tblprodutovariacao.codprodutoimagem": {
+        "tabela": "tblprodutovariacao",
+        "coluna": "codprodutoimagem",
+        "metodo": "ProdutoVariacaoS"
       },
       "tblwooprodutoimagem.codprodutoimagem": {
         "tabela": "tblwooprodutoimagem",
@@ -5007,16 +5163,68 @@
     "campocodigo": "codimagem",
     "namespace": "Mg\\Imagem",
     "classe": "Imagem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Imagem/Imagem.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Imagem/Imagem.php",
+    "belongsTo": {
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblfamiliaproduto.codimagem": {
+        "tabela": "tblfamiliaproduto",
+        "coluna": "codimagem",
+        "metodo": "FamiliaProdutoS"
+      },
+      "tblgrupoproduto.codimagem": {
+        "tabela": "tblgrupoproduto",
+        "coluna": "codimagem",
+        "metodo": "GrupoProdutoS"
+      },
+      "tblmarca.codimagem": {
+        "tabela": "tblmarca",
+        "coluna": "codimagem",
+        "metodo": "MarcaS"
+      },
+      "tblmercosprodutoimagem.codimagem": {
+        "tabela": "tblmercosprodutoimagem",
+        "coluna": "codimagem",
+        "metodo": "MercosProdutoImagemS"
+      },
+      "tblprodutoimagem.codimagem": {
+        "tabela": "tblprodutoimagem",
+        "coluna": "codimagem",
+        "metodo": "ProdutoImagemS"
+      },
+      "tblsecaoproduto.codimagem": {
+        "tabela": "tblsecaoproduto",
+        "coluna": "codimagem",
+        "metodo": "SecaoProdutoS"
+      },
+      "tblsubgrupoproduto.codimagem": {
+        "tabela": "tblsubgrupoproduto",
+        "coluna": "codimagem",
+        "metodo": "SubGrupoProdutoS"
+      },
+      "tblusuario.codimagem": {
+        "tabela": "tblusuario",
+        "coluna": "codimagem",
+        "metodo": "UsuarioS"
+      }
+    }
   },
   "tblprodutovariacao": {
     "tabela": "tblprodutovariacao",
     "campocodigo": "codprodutovariacao",
     "namespace": "Mg\\Produto",
     "classe": "ProdutoVariacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/ProdutoVariacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/ProdutoVariacao.php",
     "belongsTo": {
       "codmarca": {
         "tabela": "tblmarca",
@@ -5050,6 +5258,11 @@
         "coluna": "codprodutovariacao",
         "metodo": "EstoqueLocalProdutoVariacaoS"
       },
+      "tblmercosproduto.codprodutovariacao": {
+        "tabela": "tblmercosproduto",
+        "coluna": "codprodutovariacao",
+        "metodo": "MercosProdutoS"
+      },
       "tblpedidoitem.codprodutovariacao": {
         "tabela": "tblpedidoitem",
         "coluna": "codprodutovariacao",
@@ -5059,11 +5272,6 @@
         "tabela": "tblprodutobarra",
         "coluna": "codprodutovariacao",
         "metodo": "ProdutoBarraS"
-      },
-      "tblmercosproduto.codprodutovariacao": {
-        "tabela": "tblmercosproduto",
-        "coluna": "codprodutovariacao",
-        "metodo": "MercosProdutoS"
       },
       "tblprodutoimagemprodutovariacao.codprodutovariacao": {
         "tabela": "tblprodutoimagemprodutovariacao",
@@ -5082,7 +5290,7 @@
     "campocodigo": "codprodutohistoricopreco",
     "namespace": "Mg\\Produto",
     "classe": "ProdutoHistoricoPreco",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/ProdutoHistoricoPreco.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/ProdutoHistoricoPreco.php",
     "belongsTo": {
       "codproduto": {
         "tabela": "tblproduto",
@@ -5112,7 +5320,7 @@
     "campocodigo": "codmarca",
     "namespace": "Mg\\Marca",
     "classe": "Marca",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Marca/Marca.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Marca/Marca.php",
     "belongsTo": {
       "codgrupoeconomico": {
         "tabela": "tblgrupoeconomico",
@@ -5158,7 +5366,7 @@
     "campocodigo": "codsubgrupoproduto",
     "namespace": "Mg\\Produto",
     "classe": "SubGrupoProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/SubGrupoProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/SubGrupoProduto.php",
     "belongsTo": {
       "codgrupoproduto": {
         "tabela": "tblgrupoproduto",
@@ -5194,7 +5402,7 @@
     "campocodigo": "codcest",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "Cest",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/Cest.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/Cest.php",
     "belongsTo": {
       "codncm": {
         "tabela": "tblncm",
@@ -5225,7 +5433,7 @@
     "campocodigo": "codncm",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "Ncm",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/Ncm.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/Ncm.php",
     "belongsTo": {
       "codncmpai": {
         "tabela": "tblncm",
@@ -5276,7 +5484,7 @@
     "campocodigo": "codibptax",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "Ibptax",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/Ibptax.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/Ibptax.php",
     "belongsTo": {
       "codncm": {
         "tabela": "tblncm",
@@ -5301,7 +5509,7 @@
     "campocodigo": "codregulamentoicmsstmt",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "RegulamentoIcmsStMt",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/RegulamentoIcmsStMt.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/RegulamentoIcmsStMt.php",
     "belongsTo": {
       "codncm": {
         "tabela": "tblncm",
@@ -5326,7 +5534,7 @@
     "campocodigo": "codgrupoproduto",
     "namespace": "Mg\\Produto",
     "classe": "GrupoProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/GrupoProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/GrupoProduto.php",
     "belongsTo": {
       "codfamiliaproduto": {
         "tabela": "tblfamiliaproduto",
@@ -5362,7 +5570,7 @@
     "campocodigo": "codsecaoproduto",
     "namespace": "Mg\\Produto",
     "classe": "SecaoProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/SecaoProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/SecaoProduto.php",
     "belongsTo": {
       "codimagem": {
         "tabela": "tblimagem",
@@ -5393,7 +5601,7 @@
     "campocodigo": "codfamiliaproduto",
     "namespace": "Mg\\Produto",
     "classe": "FamiliaProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/FamiliaProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/FamiliaProduto.php",
     "belongsTo": {
       "codimagem": {
         "tabela": "tblimagem",
@@ -5429,16 +5637,48 @@
     "campocodigo": "codestoquelocalprodutovariacao",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueLocalProdutoVariacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueLocalProdutoVariacao.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueLocalProdutoVariacao.php",
+    "belongsTo": {
+      "codestoquelocal": {
+        "tabela": "tblestoquelocal",
+        "coluna": "codestoquelocal",
+        "metodo": "EstoqueLocal"
+      },
+      "codprodutovariacao": {
+        "tabela": "tblprodutovariacao",
+        "coluna": "codprodutovariacao",
+        "metodo": "ProdutoVariacao"
+      },
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblestoquelocalprodutovariacaovenda.codestoquelocalprodutovariacao": {
+        "tabela": "tblestoquelocalprodutovariacaovenda",
+        "coluna": "codestoquelocalprodutovariacao",
+        "metodo": "EstoqueLocalProdutoVariacaoVendaS"
+      },
+      "tblestoquesaldo.codestoquelocalprodutovariacao": {
+        "tabela": "tblestoquesaldo",
+        "coluna": "codestoquelocalprodutovariacao",
+        "metodo": "EstoqueSaldoS"
+      }
+    }
   },
   "tblpedidoitem": {
     "tabela": "tblpedidoitem",
     "campocodigo": "codpedidoitem",
     "namespace": "Mg\\Pedido",
     "classe": "PedidoItem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pedido/PedidoItem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pedido/PedidoItem.php",
     "belongsTo": {
       "codpedido": {
         "tabela": "tblpedido",
@@ -5474,7 +5714,7 @@
     "campocodigo": "codvalecompramodeloprodutobarra",
     "namespace": "Mg\\ValeCompra",
     "classe": "ValeCompraModeloProdutoBarra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/ValeCompra/ValeCompraModeloProdutoBarra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraModeloProdutoBarra.php",
     "belongsTo": {
       "codprodutobarra": {
         "tabela": "tblprodutobarra",
@@ -5504,7 +5744,7 @@
     "campocodigo": "codunidademedida",
     "namespace": "Mg\\Produto",
     "classe": "UnidadeMedida",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/UnidadeMedida.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/UnidadeMedida.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -5535,7 +5775,7 @@
     "campocodigo": "codtituloboleto",
     "namespace": "Mg\\Titulo",
     "classe": "TituloBoleto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/TituloBoleto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/TituloBoleto.php",
     "belongsTo": {
       "codtitulo": {
         "tabela": "tbltitulo",
@@ -5571,7 +5811,7 @@
     "campocodigo": "codtitulonfeterceiro",
     "namespace": "Mg\\Titulo",
     "classe": "TituloNfeTerceiro",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Titulo/TituloNfeTerceiro.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Titulo/TituloNfeTerceiro.php",
     "belongsTo": {
       "codnfeterceiro": {
         "tabela": "tblnfeterceiro",
@@ -5601,7 +5841,7 @@
     "campocodigo": "codnfeterceiropagamento",
     "namespace": "Mg\\NfeTerceiro",
     "classe": "NfeTerceiroPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NfeTerceiro/NfeTerceiroPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NfeTerceiro/NfeTerceiroPagamento.php",
     "belongsTo": {
       "codnfeterceiro": {
         "tabela": "tblnfeterceiro",
@@ -5626,7 +5866,7 @@
     "campocodigo": "codextratobancariotipomovimento",
     "namespace": "Mg\\Portador",
     "classe": "ExtratoBancarioTipoMovimento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Portador/ExtratoBancarioTipoMovimento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Portador/ExtratoBancarioTipoMovimento.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -5652,7 +5892,7 @@
     "campocodigo": "codextratobancario",
     "namespace": "Mg\\Portador",
     "classe": "ExtratoBancario",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Portador/ExtratoBancario.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Portador/ExtratoBancario.php",
     "belongsTo": {
       "codextratobancariotipomovimento": {
         "tabela": "tblextratobancariotipomovimento",
@@ -5688,7 +5928,7 @@
     "campocodigo": "codportadormovimento",
     "namespace": "Mg\\Portador",
     "classe": "PortadorMovimento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Portador/PortadorMovimento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Portador/PortadorMovimento.php",
     "belongsTo": {
       "codmovimentotitulo": {
         "tabela": "tblmovimentotitulo",
@@ -5729,7 +5969,7 @@
     "campocodigo": "codportadortransferencia",
     "namespace": "Mg\\Portador",
     "classe": "PortadorTransferencia",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Portador/PortadorTransferencia.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Portador/PortadorTransferencia.php",
     "belongsTo": {
       "codportadordestino": {
         "tabela": "tblportador",
@@ -5755,7 +5995,7 @@
     "campocodigo": "codextratobancarioportadormovimento",
     "namespace": "Mg\\Portador",
     "classe": "ExtratoBancarioPortadorMovimento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Portador/ExtratoBancarioPortadorMovimento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Portador/ExtratoBancarioPortadorMovimento.php",
     "belongsTo": {
       "codextratobancario": {
         "tabela": "tblextratobancario",
@@ -5775,7 +6015,7 @@
     "campocodigo": "codpagarmebandeira",
     "namespace": "Mg\\PagarMe",
     "classe": "PagarMeBandeira",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/PagarMe/PagarMeBandeira.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/PagarMe/PagarMeBandeira.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -5801,7 +6041,7 @@
     "campocodigo": "codpagarmepagamento",
     "namespace": "Mg\\PagarMe",
     "classe": "PagarMePagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/PagarMe/PagarMePagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/PagarMe/PagarMePagamento.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -5846,7 +6086,7 @@
     "campocodigo": "codpagarmepedido",
     "namespace": "Mg\\PagarMe",
     "classe": "PagarMePedido",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/PagarMe/PagarMePedido.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/PagarMe/PagarMePedido.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -5885,20 +6125,20 @@
       }
     },
     "hasMany": {
-      "tblpagarmepagamento.codpagarmepedido": {
-        "tabela": "tblpagarmepagamento",
+      "tblliquidacaotitulo.codpagarmepedido": {
+        "tabela": "tblliquidacaotitulo",
         "coluna": "codpagarmepedido",
-        "metodo": "PagarMePagamentoS"
+        "metodo": "LiquidacaoTituloS"
       },
       "tblnegocioformapagamento.codpagarmepedido": {
         "tabela": "tblnegocioformapagamento",
         "coluna": "codpagarmepedido",
         "metodo": "NegocioFormaPagamentoS"
       },
-      "tblliquidacaotitulo.codpagarmepedido": {
-        "tabela": "tblliquidacaotitulo",
+      "tblpagarmepagamento.codpagarmepedido": {
+        "tabela": "tblpagarmepagamento",
         "coluna": "codpagarmepedido",
-        "metodo": "LiquidacaoTituloS"
+        "metodo": "PagarMePagamentoS"
       }
     }
   },
@@ -5907,7 +6147,7 @@
     "campocodigo": "codpagarmepos",
     "namespace": "Mg\\PagarMe",
     "classe": "PagarMePos",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/PagarMe/PagarMePos.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/PagarMe/PagarMePos.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -5943,7 +6183,7 @@
     "campocodigo": "codmercoscliente",
     "namespace": "Mg\\Mercos",
     "classe": "MercosCliente",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mercos/MercosCliente.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mercos/MercosCliente.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -5974,7 +6214,7 @@
     "campocodigo": "codmercospedido",
     "namespace": "Mg\\Mercos",
     "classe": "MercosPedido",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mercos/MercosPedido.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mercos/MercosPedido.php",
     "belongsTo": {
       "codmercoscliente": {
         "tabela": "tblmercoscliente",
@@ -6010,7 +6250,7 @@
     "campocodigo": "codmercospedidoitem",
     "namespace": "Mg\\Mercos",
     "classe": "MercosPedidoItem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mercos/MercosPedidoItem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mercos/MercosPedidoItem.php",
     "belongsTo": {
       "codmercospedido": {
         "tabela": "tblmercospedido",
@@ -6040,7 +6280,7 @@
     "campocodigo": "codpessoatelefone",
     "namespace": "Mg\\Pessoa",
     "classe": "PessoaTelefone",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/PessoaTelefone.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/PessoaTelefone.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -6065,7 +6305,7 @@
     "campocodigo": "codpessoaemail",
     "namespace": "Mg\\Pessoa",
     "classe": "PessoaEmail",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/PessoaEmail.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/PessoaEmail.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -6090,7 +6330,7 @@
     "campocodigo": "codpessoaendereco",
     "namespace": "Mg\\Pessoa",
     "classe": "PessoaEndereco",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/PessoaEndereco.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/PessoaEndereco.php",
     "belongsTo": {
       "codcidade": {
         "tabela": "tblcidade",
@@ -6120,7 +6360,7 @@
     "campocodigo": "codpessoaconta",
     "namespace": "Mg\\Pessoa",
     "classe": "PessoaConta",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/PessoaConta.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/PessoaConta.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -6145,7 +6385,7 @@
     "campocodigo": "codpedido",
     "namespace": "Mg\\Pedido",
     "classe": "Pedido",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pedido/Pedido.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pedido/Pedido.php",
     "belongsTo": {
       "codestoquelocal": {
         "tabela": "tblestoquelocal",
@@ -6186,7 +6426,7 @@
     "campocodigo": "codcertidaoemissor",
     "namespace": "Mg\\Certidao",
     "classe": "CertidaoEmissor",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Certidao/CertidaoEmissor.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Certidao/CertidaoEmissor.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6212,7 +6452,7 @@
     "campocodigo": "codcertidaotipo",
     "namespace": "Mg\\Certidao",
     "classe": "CertidaoTipo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Certidao/CertidaoTipo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Certidao/CertidaoTipo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6238,7 +6478,7 @@
     "campocodigo": "codpdv",
     "namespace": "Mg\\Pdv",
     "classe": "Pdv",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pdv/Pdv.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pdv/Pdv.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -6304,7 +6544,7 @@
     "campocodigo": "codestoquemovimentotipo",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueMovimentoTipo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueMovimentoTipo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueMovimentoTipo.php",
     "belongsTo": {
       "codestoquemovimentotipoorigem": {
         "tabela": "tblestoquemovimentotipo",
@@ -6345,7 +6585,7 @@
     "campocodigo": "codferias",
     "namespace": "Mg\\Colaborador",
     "classe": "Ferias",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Colaborador/Ferias.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Colaborador/Ferias.php",
     "belongsTo": {
       "codcolaborador": {
         "tabela": "tblcolaborador",
@@ -6376,7 +6616,7 @@
     "campocodigo": "codcolaborador",
     "namespace": "Mg\\Colaborador",
     "classe": "Colaborador",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Colaborador/Colaborador.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Colaborador/Colaborador.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -6432,7 +6672,7 @@
     "campocodigo": "codcolaboradorcargo",
     "namespace": "Mg\\Colaborador",
     "classe": "ColaboradorCargo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Colaborador/ColaboradorCargo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Colaborador/ColaboradorCargo.php",
     "belongsTo": {
       "codcargo": {
         "tabela": "tblcargo",
@@ -6467,7 +6707,7 @@
     "campocodigo": "codnotafiscalpagamento",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscalPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscalPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscalPagamento.php",
     "belongsTo": {
       "codnotafiscal": {
         "tabela": "tblnotafiscal",
@@ -6497,7 +6737,7 @@
     "campocodigo": "codchequedevolucao",
     "namespace": "Mg\\Cheque",
     "classe": "ChequeDevolucao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cheque/ChequeDevolucao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cheque/ChequeDevolucao.php",
     "belongsTo": {
       "codchequemotivodevolucao": {
         "tabela": "tblchequemotivodevolucao",
@@ -6527,7 +6767,7 @@
     "campocodigo": "codchequemotivodevolucao",
     "namespace": "Mg\\Cheque",
     "classe": "ChequeMotivoDevolucao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Cheque/ChequeMotivoDevolucao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cheque/ChequeMotivoDevolucao.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6553,7 +6793,7 @@
     "campocodigo": "codmercosproduto",
     "namespace": "Mg\\Mercos",
     "classe": "MercosProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mercos/MercosProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mercos/MercosProduto.php",
     "belongsTo": {
       "codproduto": {
         "tabela": "tblproduto",
@@ -6594,7 +6834,7 @@
     "campocodigo": "codmercosprodutoimagem",
     "namespace": "Mg\\Mercos",
     "classe": "MercosProdutoImagem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Mercos/MercosProdutoImagem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Mercos/MercosProdutoImagem.php",
     "belongsTo": {
       "codimagem": {
         "tabela": "tblimagem",
@@ -6624,7 +6864,7 @@
     "campocodigo": "codprancheta",
     "namespace": "Mg\\Produto",
     "classe": "Prancheta",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/Prancheta.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/Prancheta.php",
     "belongsTo": {
       "codpranchetacategoria": {
         "tabela": "tblpranchetacategoria",
@@ -6644,13 +6884,24 @@
     "campocodigo": "codpranchetacategoria",
     "namespace": "Mg\\Produto",
     "classe": "PranchetaCategoria",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/PranchetaCategoria.php",
-    "belongsTo": [],
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/PranchetaCategoria.php",
+    "belongsTo": {
+      "codpranchetacategoriapai": {
+        "tabela": "tblpranchetacategoria",
+        "coluna": "codpranchetacategoriapai",
+        "metodo": "PranchetaCategoriaPai"
+      }
+    },
     "hasMany": {
       "tblprancheta.codpranchetacategoria": {
         "tabela": "tblprancheta",
         "coluna": "codpranchetacategoria",
         "metodo": "PranchetaS"
+      },
+      "tblpranchetacategoria.codpranchetacategoriapai": {
+        "tabela": "tblpranchetacategoria",
+        "coluna": "codpranchetacategoriapai",
+        "metodo": "PranchetaCategoriaPaiS"
       }
     }
   },
@@ -6659,7 +6910,7 @@
     "campocodigo": "codmetavendedor",
     "namespace": "Mg\\Meta",
     "classe": "MetaVendedor",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/MetaVendedor.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/MetaVendedor.php",
     "belongsTo": {
       "codmeta": {
         "tabela": "tblmeta",
@@ -6689,7 +6940,7 @@
     "campocodigo": "coddominioacumulador",
     "namespace": "Mg\\NaturezaOperacao",
     "classe": "DominioAcumulador",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NaturezaOperacao/DominioAcumulador.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NaturezaOperacao/DominioAcumulador.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -6719,7 +6970,7 @@
     "campocodigo": "itemname",
     "namespace": "Mg\\Usuario",
     "classe": "AuthAssignment",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Usuario/AuthAssignment.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Usuario/AuthAssignment.php",
     "belongsTo": {
       "itemname": {
         "tabela": "tblauthitem",
@@ -6739,7 +6990,7 @@
     "campocodigo": "codbaseremota",
     "namespace": "Mg\\Filial",
     "classe": "BaseRemota",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/BaseRemota.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/BaseRemota.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6765,7 +7016,7 @@
     "campocodigo": "codcaixamercadoria",
     "namespace": "Mg\\CaixaMercadoria",
     "classe": "CaixaMercadoria",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/CaixaMercadoria/CaixaMercadoria.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/CaixaMercadoria/CaixaMercadoria.php",
     "belongsTo": {
       "codcaixamercadoriamodelo": {
         "tabela": "tblcaixamercadoriamodelo",
@@ -6796,7 +7047,7 @@
     "campocodigo": "codcaixamercadoriamodelo",
     "namespace": "Mg\\CaixaMercadoria",
     "classe": "CaixaMercadoriaModelo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/CaixaMercadoria/CaixaMercadoriaModelo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/CaixaMercadoria/CaixaMercadoriaModelo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6822,7 +7073,7 @@
     "campocodigo": "tabela",
     "namespace": "Mg\\Filial",
     "classe": "Codigo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/Codigo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/Codigo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6842,8 +7093,24 @@
     "campocodigo": "codestoquelocalprodutovariacaovenda",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueLocalProdutoVariacaoVenda",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueLocalProdutoVariacaoVenda.php",
-    "belongsTo": [],
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueLocalProdutoVariacaoVenda.php",
+    "belongsTo": {
+      "codestoquelocalprodutovariacao": {
+        "tabela": "tblestoquelocalprodutovariacao",
+        "coluna": "codestoquelocalprodutovariacao",
+        "metodo": "EstoqueLocalProdutoVariacao"
+      },
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
     "hasMany": []
   },
   "tblestoquemes": {
@@ -6851,34 +7118,105 @@
     "campocodigo": "codestoquemes",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueMes",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueMes.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueMes.php",
+    "belongsTo": {
+      "codestoquesaldo": {
+        "tabela": "tblestoquesaldo",
+        "coluna": "codestoquesaldo",
+        "metodo": "EstoqueSaldo"
+      },
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblestoquemovimento.codestoquemes": {
+        "tabela": "tblestoquemovimento",
+        "coluna": "codestoquemes",
+        "metodo": "EstoqueMovimentoS"
+      }
+    }
   },
   "tblestoquesaldo": {
     "tabela": "tblestoquesaldo",
     "campocodigo": "codestoquesaldo",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueSaldo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueSaldo.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueSaldo.php",
+    "belongsTo": {
+      "codestoquelocalprodutovariacao": {
+        "tabela": "tblestoquelocalprodutovariacao",
+        "coluna": "codestoquelocalprodutovariacao",
+        "metodo": "EstoqueLocalProdutoVariacao"
+      },
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblestoquemes.codestoquesaldo": {
+        "tabela": "tblestoquemes",
+        "coluna": "codestoquesaldo",
+        "metodo": "EstoqueMesS"
+      },
+      "tblestoquesaldoconferencia.codestoquesaldo": {
+        "tabela": "tblestoquesaldoconferencia",
+        "coluna": "codestoquesaldo",
+        "metodo": "EstoqueSaldoConferenciaS"
+      }
+    }
   },
   "tblestoquesaldoconferencia": {
     "tabela": "tblestoquesaldoconferencia",
     "campocodigo": "codestoquesaldoconferencia",
     "namespace": "Mg\\Estoque",
     "classe": "EstoqueSaldoConferencia",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Estoque/EstoqueSaldoConferencia.php",
-    "belongsTo": [],
-    "hasMany": []
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Estoque/EstoqueSaldoConferencia.php",
+    "belongsTo": {
+      "codestoquesaldo": {
+        "tabela": "tblestoquesaldo",
+        "coluna": "codestoquesaldo",
+        "metodo": "EstoqueSaldo"
+      },
+      "codusuarioalteracao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuarioalteracao",
+        "metodo": "UsuarioAlteracao"
+      },
+      "codusuariocriacao": {
+        "tabela": "tblusuario",
+        "coluna": "codusuariocriacao",
+        "metodo": "UsuarioCriacao"
+      }
+    },
+    "hasMany": {
+      "tblestoquemovimento.codestoquesaldoconferencia": {
+        "tabela": "tblestoquemovimento",
+        "coluna": "codestoquesaldoconferencia",
+        "metodo": "EstoqueMovimentoS"
+      }
+    }
   },
   "tblferiado": {
     "tabela": "tblferiado",
     "campocodigo": "codferiado",
-    "namespace": "Mg\\Filial",
+    "namespace": "Mg\\Feriado",
     "classe": "Feriado",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/Feriado.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Feriado/Feriado.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6898,7 +7236,7 @@
     "campocodigo": "codgrupousuario",
     "namespace": "Mg\\Usuario",
     "classe": "GrupoUsuario",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Usuario/GrupoUsuario.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Usuario/GrupoUsuario.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6929,7 +7267,7 @@
     "campocodigo": "codgrupousuariopermissao",
     "namespace": "Mg\\Permissao",
     "classe": "GrupoUsuarioPermissao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Permissao/GrupoUsuarioPermissao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Permissao/GrupoUsuarioPermissao.php",
     "belongsTo": {
       "codgrupousuario": {
         "tabela": "tblgrupousuario",
@@ -6959,7 +7297,7 @@
     "campocodigo": "codmenu",
     "namespace": "Mg\\Filial",
     "classe": "Menu",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/Menu.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/Menu.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6979,7 +7317,7 @@
     "campocodigo": "codparametrosgerais",
     "namespace": "Mg\\Filial",
     "classe": "ParametrosGerais",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/ParametrosGerais.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/ParametrosGerais.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -6999,7 +7337,7 @@
     "campocodigo": "codpermissao",
     "namespace": "Mg\\Permissao",
     "classe": "Permissao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Permissao/Permissao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Permissao/Permissao.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7025,7 +7363,7 @@
     "campocodigo": "codprefixogs1",
     "namespace": "Mg\\Filial",
     "classe": "PrefixoGs1",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/PrefixoGs1.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/PrefixoGs1.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7045,7 +7383,7 @@
     "campocodigo": "codprodutoimagemprodutovariacao",
     "namespace": "Mg\\Produto",
     "classe": "ProdutoImagemProdutoVariacao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Produto/ProdutoImagemProdutoVariacao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Produto/ProdutoImagemProdutoVariacao.php",
     "belongsTo": {
       "codprodutoimagem": {
         "tabela": "tblprodutoimagem",
@@ -7075,7 +7413,7 @@
     "campocodigo": "name",
     "namespace": "Mg\\Usuario",
     "classe": "AuthItem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Usuario/AuthItem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Usuario/AuthItem.php",
     "belongsTo": [],
     "hasMany": {
       "tblauthassignment.itemname": {
@@ -7100,7 +7438,7 @@
     "campocodigo": "parent",
     "namespace": "Mg\\Usuario",
     "classe": "AuthItemChild",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Usuario/AuthItemChild.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Usuario/AuthItemChild.php",
     "belongsTo": {
       "child": {
         "tabela": "tblauthitem",
@@ -7120,7 +7458,7 @@
     "campocodigo": "codauditoria",
     "namespace": "Mg\\Filial",
     "classe": "AuditoriaTransmissao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/AuditoriaTransmissao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/AuditoriaTransmissao.php",
     "belongsTo": {
       "codauditoria": {
         "tabela": "tblauditoria",
@@ -7140,7 +7478,7 @@
     "campocodigo": "codauditoria",
     "namespace": "Mg\\Filial",
     "classe": "Auditoria",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/Auditoria.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/Auditoria.php",
     "belongsTo": [],
     "hasMany": {
       "tblauditoriatransmissao.codauditoria": {
@@ -7155,7 +7493,7 @@
     "campocodigo": "codsauruspdv",
     "namespace": "Mg\\Saurus",
     "classe": "SaurusPdv",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Saurus/SaurusPdv.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Saurus/SaurusPdv.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -7191,7 +7529,7 @@
     "campocodigo": "codsauruspedido",
     "namespace": "Mg\\Saurus",
     "classe": "SaurusPedido",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Saurus/SaurusPedido.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Saurus/SaurusPedido.php",
     "belongsTo": {
       "codnegocio": {
         "tabela": "tblnegocio",
@@ -7215,15 +7553,15 @@
       }
     },
     "hasMany": {
-      "tblsauruspagamento.codsauruspedido": {
-        "tabela": "tblsauruspagamento",
-        "coluna": "codsauruspedido",
-        "metodo": "SaurusPagamentoS"
-      },
       "tblnegocioformapagamento.codsauruspedido": {
         "tabela": "tblnegocioformapagamento",
         "coluna": "codsauruspedido",
         "metodo": "NegocioFormaPagamentoS"
+      },
+      "tblsauruspagamento.codsauruspedido": {
+        "tabela": "tblsauruspagamento",
+        "coluna": "codsauruspedido",
+        "metodo": "SaurusPagamentoS"
       }
     }
   },
@@ -7232,7 +7570,7 @@
     "campocodigo": "codsauruspagamento",
     "namespace": "Mg\\Saurus",
     "classe": "SaurusPagamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Saurus/SaurusPagamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Saurus/SaurusPagamento.php",
     "belongsTo": {
       "codsaurusbandeira": {
         "tabela": "tblsaurusbandeira",
@@ -7267,7 +7605,7 @@
     "campocodigo": "codsaurusbandeira",
     "namespace": "Mg\\Saurus",
     "classe": "SaurusBandeira",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Saurus/SaurusBandeira.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Saurus/SaurusBandeira.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7293,7 +7631,7 @@
     "campocodigo": "codsauruspinpad",
     "namespace": "Mg\\Saurus",
     "classe": "SaurusPinPad",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Saurus/SaurusPinPad.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Saurus/SaurusPinPad.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7329,7 +7667,7 @@
     "campocodigo": "codportadorsaldo",
     "namespace": "Mg\\Portador",
     "classe": "PortadorSaldo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Portador/PortadorSaldo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Portador/PortadorSaldo.php",
     "belongsTo": {
       "codportador": {
         "tabela": "tblportador",
@@ -7344,7 +7682,7 @@
     "campocodigo": "codwooproduto",
     "namespace": "Mg\\Woo",
     "classe": "WooProduto",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Woo/WooProduto.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Woo/WooProduto.php",
     "belongsTo": {
       "codproduto": {
         "tabela": "tblproduto",
@@ -7375,7 +7713,7 @@
     "campocodigo": "codwooprodutoimagem",
     "namespace": "Mg\\Woo",
     "classe": "WooProdutoImagem",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Woo/WooProdutoImagem.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Woo/WooProdutoImagem.php",
     "belongsTo": {
       "codprodutoimagem": {
         "tabela": "tblprodutoimagem",
@@ -7395,7 +7733,7 @@
     "campocodigo": "codwoopedido",
     "namespace": "Mg\\Woo",
     "classe": "WooPedido",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Woo/WooPedido.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Woo/WooPedido.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7421,7 +7759,7 @@
     "campocodigo": "codwoopedidonegocio",
     "namespace": "Mg\\Woo",
     "classe": "WooPedidoNegocio",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Woo/WooPedidoNegocio.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Woo/WooPedidoNegocio.php",
     "belongsTo": {
       "codnegocio": {
         "tabela": "tblnegocio",
@@ -7451,7 +7789,7 @@
     "campocodigo": "codtributacaoregra",
     "namespace": "Mg\\Tributacao",
     "classe": "TributacaoRegra",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Tributacao/TributacaoRegra.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Tributacao/TributacaoRegra.php",
     "belongsTo": {
       "codnaturezaoperacao": {
         "tabela": "tblnaturezaoperacao",
@@ -7496,7 +7834,7 @@
     "campocodigo": "codtributo",
     "namespace": "Mg\\Tributacao",
     "classe": "Tributo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Tributacao/Tributo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Tributacao/Tributo.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7527,7 +7865,7 @@
     "campocodigo": "codnotafiscalitemtributo",
     "namespace": "Mg\\NotaFiscal",
     "classe": "NotaFiscalItemTributo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/NotaFiscal/NotaFiscalItemTributo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscal/NotaFiscalItemTributo.php",
     "belongsTo": {
       "codnotafiscalprodutobarra": {
         "tabela": "tblnotafiscalprodutobarra",
@@ -7557,7 +7895,7 @@
     "campocodigo": "codetnia",
     "namespace": "Mg\\Pessoa",
     "classe": "Etnia",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/Etnia.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/Etnia.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7583,7 +7921,7 @@
     "campocodigo": "codgrauinstrucao",
     "namespace": "Mg\\Pessoa",
     "classe": "GrauInstrucao",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/GrauInstrucao.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/GrauInstrucao.php",
     "belongsTo": {
       "codusuarioalteracao": {
         "tabela": "tblusuario",
@@ -7609,7 +7947,7 @@
     "campocodigo": "coddependente",
     "namespace": "Mg\\Pessoa",
     "classe": "Dependente",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/Dependente.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/Dependente.php",
     "belongsTo": {
       "codpessoa": {
         "tabela": "tblpessoa",
@@ -7645,7 +7983,7 @@
     "campocodigo": "codeventocalendario",
     "namespace": "Mg\\Pessoa\\Calendario",
     "classe": "EventoCalendario",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Pessoa/Calendario/EventoCalendario.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Pessoa/Calendario/EventoCalendario.php",
     "belongsTo": {
       "codcolaborador": {
         "tabela": "tblcolaborador",
@@ -7680,7 +8018,7 @@
     "campocodigo": "codbonificacaoevento",
     "namespace": "Mg\\Meta",
     "classe": "BonificacaoEvento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/BonificacaoEvento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/BonificacaoEvento.php",
     "belongsTo": {
       "codmeta": {
         "tabela": "tblmeta",
@@ -7715,7 +8053,7 @@
     "campocodigo": "codmetaunidadenegocio",
     "namespace": "Mg\\Meta",
     "classe": "MetaUnidadeNegocio",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/MetaUnidadeNegocio.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/MetaUnidadeNegocio.php",
     "belongsTo": {
       "codmeta": {
         "tabela": "tblmeta",
@@ -7735,7 +8073,7 @@
     "campocodigo": "codmetaunidadenegociopessoa",
     "namespace": "Mg\\Meta",
     "classe": "MetaUnidadeNegocioPessoa",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/MetaUnidadeNegocioPessoa.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/MetaUnidadeNegocioPessoa.php",
     "belongsTo": {
       "codmeta": {
         "tabela": "tblmeta",
@@ -7760,7 +8098,7 @@
     "campocodigo": "codunidadenegocio",
     "namespace": "Mg\\Filial",
     "classe": "UnidadeNegocio",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/UnidadeNegocio.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/UnidadeNegocio.php",
     "belongsTo": {
       "codfilial": {
         "tabela": "tblfilial",
@@ -7806,7 +8144,7 @@
     "campocodigo": "codtiposetor",
     "namespace": "Mg\\Filial",
     "classe": "TipoSetor",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/TipoSetor.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/TipoSetor.php",
     "belongsTo": [],
     "hasMany": {
       "tblproduto.codtiposetor": {
@@ -7826,7 +8164,7 @@
     "campocodigo": "codsetor",
     "namespace": "Mg\\Filial",
     "classe": "Setor",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Filial/Setor.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/Setor.php",
     "belongsTo": {
       "codtiposetor": {
         "tabela": "tbltiposetor",
@@ -7862,7 +8200,7 @@
     "campocodigo": "codindicador",
     "namespace": "Mg\\Rh",
     "classe": "Indicador",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Rh/Indicador.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Rh/Indicador.php",
     "belongsTo": {
       "codcolaborador": {
         "tabela": "tblcolaborador",
@@ -7908,7 +8246,7 @@
     "campocodigo": "codperiodocolaboradorsetor",
     "namespace": "Mg\\Rh",
     "classe": "PeriodoColaboradorSetor",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Rh/PeriodoColaboradorSetor.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Rh/PeriodoColaboradorSetor.php",
     "belongsTo": {
       "codperiodocolaborador": {
         "tabela": "tblperiodocolaborador",
@@ -7934,7 +8272,7 @@
     "campocodigo": "codperiodo",
     "namespace": "Mg\\Rh",
     "classe": "Periodo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Rh/Periodo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Rh/Periodo.php",
     "belongsTo": [],
     "hasMany": {
       "tblindicador.codperiodo": {
@@ -7959,7 +8297,7 @@
     "campocodigo": "codperiodocolaborador",
     "namespace": "Mg\\Rh",
     "classe": "PeriodoColaborador",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Rh/PeriodoColaborador.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Rh/PeriodoColaborador.php",
     "belongsTo": {
       "codcolaborador": {
         "tabela": "tblcolaborador",
@@ -7995,7 +8333,7 @@
     "campocodigo": "codcolaboradorrubrica",
     "namespace": "Mg\\Rh",
     "classe": "ColaboradorRubrica",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Rh/ColaboradorRubrica.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Rh/ColaboradorRubrica.php",
     "belongsTo": {
       "codindicador": {
         "tabela": "tblindicador",
@@ -8025,7 +8363,7 @@
     "campocodigo": "codindicadorlancamento",
     "namespace": "Mg\\Rh",
     "classe": "IndicadorLancamento",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Rh/IndicadorLancamento.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Rh/IndicadorLancamento.php",
     "belongsTo": {
       "codindicador": {
         "tabela": "tblindicador",
@@ -8048,9 +8386,9 @@
   "tblmetaunidadenegociopessoafixo": {
     "tabela": "tblmetaunidadenegociopessoafixo",
     "campocodigo": "codmetaunidadenegociopessoafixo",
-    "namespace": "Mg\\MetaUnidadeNegocioPessoaFixo",
+    "namespace": "Mg\\Meta\\MetaUnidadeNegocioPessoaFixo",
     "classe": "MetaUnidadeNegocioPessoaFixo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/MetaUnidadeNegocioPessoaFixo/MetaUnidadeNegocioPessoaFixo.php",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Meta/MetaUnidadeNegocioPessoaFixo/MetaUnidadeNegocioPessoaFixo.php",
     "belongsTo": {
       "codmeta": {
         "tabela": "tblmeta",
@@ -8068,15 +8406,6 @@
         "metodo": "UnidadeNegocio"
       }
     },
-    "hasMany": []
-  },
-  "tblMetaUnidadeNegocioPessoaFixo": {
-    "tabela": "tblMetaUnidadeNegocioPessoaFixo",
-    "campocodigo": "codmetaunidadenegociopessoafixo",
-    "namespace": "Mg\\Meta\\MetaUnidadeNegocioPessoaFixo",
-    "classe": "MetaUnidadeNegocioPessoaFixo",
-    "arquivo": "/opt/www/MGspa/laravel/app/Mg/Meta/MetaUnidadeNegocioPessoaFixo.php",
-    "belongsTo": [],
     "hasMany": []
   },
   "tblauditoriaexcecao": {

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 11:29:52
+ * Date: 27/May/2026 11:22:36
  */
 
 namespace Mg\NfeTerceiro;
@@ -25,18 +25,15 @@ class NfeTerceiroDuplicata extends MgModel
         'vdup'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'dvenc'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnfeterceiro' => 'integer',
         'codnfeterceiroduplicata' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'dvenc' => 'date',
         'vdup' => 'float'
     ];
 

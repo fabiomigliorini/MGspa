@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2020 15:27:10
+ * Date: 27/May/2026 11:24:52
  */
 
 namespace Mg\NFePHP;
@@ -35,25 +35,22 @@ class IbptCache extends MgModel
         'vigenciainicio'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'vigenciafim',
-        'vigenciainicio'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codestado' => 'integer',
         'codfilial' => 'integer',
         'codibptcache' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'estadual' => 'float',
         'extarif' => 'integer',
         'importado' => 'float',
         'municipal' => 'float',
         'nacional' => 'float',
-        'tipo' => 'integer'
+        'tipo' => 'integer',
+        'vigenciafim' => 'date',
+        'vigenciainicio' => 'date'
     ];
 
 

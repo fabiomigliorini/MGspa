@@ -1,70 +1,60 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:25:40
+ */
 
 namespace Mg\Estoque;
-use Mg\MgModel;
 
-/**
- * Campos
- * @property  bigint                         $codestoquemovimento                NOT NULL DEFAULT nextval('tblestoquemovimento_codestoquemovimento_seq'::regclass)
- * @property  bigint                         $codestoquemovimentotipo            NOT NULL
- * @property  numeric(14,3)                  $entradaquantidade
- * @property  numeric(14,2)                  $entradavalor
- * @property  numeric(14,3)                  $saidaquantidade
- * @property  numeric(14,2)                  $saidavalor
- * @property  bigint                         $codnegocioprodutobarra
- * @property  bigint                         $codnotafiscalprodutobarra
- * @property  bigint                         $codestoquemes                      NOT NULL
- * @property  boolean                        $manual                             NOT NULL DEFAULT false
- * @property  timestamp                      $data                               NOT NULL
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  bigint                         $codestoquemovimentoorigem
- * @property  varchar(200)                   $observacoes
- * @property  bigint                         $codestoquesaldoconferencia
- *
- * Chaves Estrangeiras
- * @property  EstoqueMes                     $EstoqueMes
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- * @property  EstoqueMovimento               $EstoqueMovimentoOrigem
- * @property  EstoqueSaldoConferencia        $EstoqueSaldoConferencia
- * @property  EstoqueMovimentoTipo           $EstoqueMovimentoTipo
- * @property  NegocioProdutoBarra            $NegocioProdutoBarra
- * @property  NotaFiscalProdutoBarra         $NotaFiscalProdutoBarra
- *
- * Tabelas Filhas
- * @property  EstoqueMovimento[]             $EstoqueMovimentoDestinoS
- */
+use Mg\MgModel;
+use Mg\Estoque\EstoqueMovimento;
+use Mg\Estoque\EstoqueMes;
+use Mg\Estoque\EstoqueMovimentoTipo;
+use Mg\Estoque\EstoqueSaldoConferencia;
+use Mg\Negocio\NegocioProdutoBarra;
+use Mg\NotaFiscal\NotaFiscalProdutoBarra;
+use Mg\Usuario\Usuario;
 
 class EstoqueMovimento extends MgModel
 {
     protected $table = 'tblestoquemovimento';
     protected $primaryKey = 'codestoquemovimento';
+
+
     protected $fillable = [
+        'codestoquemes',
+        'codestoquemovimentoorigem',
         'codestoquemovimentotipo',
-        'entradaquantidade',
-        'entradavalor',
-        'saidaquantidade',
-        'saidavalor',
+        'codestoquesaldoconferencia',
         'codnegocioprodutobarra',
         'codnotafiscalprodutobarra',
-        'codestoquemes',
+        'data',
+        'entradaquantidade',
+        'entradavalor',
         'manual',
-        'data',
-        'codestoquemovimentoorigem',
         'observacoes',
-        'codestoquesaldoconferencia',
-        'codestoquelocal',
-        'codprodutovariacao',
-        'codproduto',
-        'fiscal',
+        'saidaquantidade',
+        'saidavalor'
     ];
-    protected $dates = [
-        'data',
-        'alteracao',
-        'criacao',
+
+    protected $casts = [
+        'alteracao' => 'datetime',
+        'codestoquemes' => 'integer',
+        'codestoquemovimento' => 'integer',
+        'codestoquemovimentoorigem' => 'integer',
+        'codestoquemovimentotipo' => 'integer',
+        'codestoquesaldoconferencia' => 'integer',
+        'codnegocioprodutobarra' => 'integer',
+        'codnotafiscalprodutobarra' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'data' => 'datetime',
+        'entradaquantidade' => 'float',
+        'entradavalor' => 'float',
+        'manual' => 'boolean',
+        'saidaquantidade' => 'float',
+        'saidavalor' => 'float'
     ];
 
 
@@ -74,29 +64,19 @@ class EstoqueMovimento extends MgModel
         return $this->belongsTo(EstoqueMes::class, 'codestoquemes', 'codestoquemes');
     }
 
-    public function UsuarioAlteracao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
-    }
-
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
     public function EstoqueMovimentoOrigem()
     {
         return $this->belongsTo(EstoqueMovimento::class, 'codestoquemovimentoorigem', 'codestoquemovimento');
     }
 
-    public function EstoqueSaldoConferencia()
-    {
-        return $this->belongsTo(EstoqueSaldoConferencia::class, 'codestoquesaldoconferencia', 'codestoquesaldoconferencia');
-    }
-
     public function EstoqueMovimentoTipo()
     {
         return $this->belongsTo(EstoqueMovimentoTipo::class, 'codestoquemovimentotipo', 'codestoquemovimentotipo');
+    }
+
+    public function EstoqueSaldoConferencia()
+    {
+        return $this->belongsTo(EstoqueSaldoConferencia::class, 'codestoquesaldoconferencia', 'codestoquesaldoconferencia');
     }
 
     public function NegocioProdutoBarra()
@@ -109,12 +89,21 @@ class EstoqueMovimento extends MgModel
         return $this->belongsTo(NotaFiscalProdutoBarra::class, 'codnotafiscalprodutobarra', 'codnotafiscalprodutobarra');
     }
 
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
 
     // Tabelas Filhas
-    public function EstoqueMovimentoDestinoS()
+    public function EstoqueMovimentoOrigemS()
     {
         return $this->hasMany(EstoqueMovimento::class, 'codestoquemovimentoorigem', 'codestoquemovimento');
     }
-
 
 }

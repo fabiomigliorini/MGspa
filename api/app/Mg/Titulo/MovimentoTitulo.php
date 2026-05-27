@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Apr/2024 12:21:49
+ * Date: 27/May/2026 11:21:08
  */
 
 namespace Mg\Titulo;
@@ -43,14 +43,8 @@ class MovimentoTitulo extends MgModel
         'transacao'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'sistema',
-        'transacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codboletoretorno' => 'integer',
         'codcobranca' => 'integer',
         'codliquidacaotitulo' => 'integer',
@@ -65,7 +59,10 @@ class MovimentoTitulo extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'credito' => 'float',
-        'debito' => 'float'
+        'criacao' => 'datetime',
+        'debito' => 'float',
+        'sistema' => 'datetime',
+        'transacao' => 'date'
     ];
 
 

@@ -1,36 +1,39 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:36:42
+ */
 
 namespace Mg\Pedido;
 
-use Mg\Usuario\Usuario;
+use Mg\MgModel;
+use Mg\Pedido\PedidoItem;
 use Mg\Estoque\EstoqueLocal;
 use Mg\GrupoEconomico\GrupoEconomico;
-use Mg\MgModel;
+use Mg\Usuario\Usuario;
 
 class Pedido extends MgModel
 {
-    public const STATUS_PENDENTE = 10;
-    public const STATUS_ATENDIDO = 20;
-    public const STATUS_CANCELADO = 90;
-
-    public const STATUS = [
-        self::STATUS_PENDENTE => 'Pendente',
-        self::STATUS_ATENDIDO => 'Atendido',
-        self::STATUS_CANCELADO => 'Cancelado',
+    const STATUS_PENDENTE         = 10;
+    const STATUS_ATENDIDO         = 20;
+    const STATUS_CANCELADO        = 90;
+    const STATUS = [
+      self::STATUS_PENDENTE => 'Pendente',
+      self::STATUS_ATENDIDO => 'Atendido',
+      self::STATUS_CANCELADO => 'Cancelado',
     ];
-
-    public const TIPO_COMPRA = 10;
-    public const TIPO_TRANSFERENCIA = 20;
-    public const TIPO_VENDA = 90;
-
-    public const TIPO = [
-        self::TIPO_COMPRA => 'Compra',
-        self::TIPO_TRANSFERENCIA => 'Transferência',
-        self::TIPO_VENDA => 'Venda',
+    const TIPO_COMPRA             = 10;
+    const TIPO_TRANSFERENCIA      = 20;
+    const TIPO_VENDA              = 90;
+    const TIPO = [
+      self::TIPO_COMPRA => 'Compra',
+      self::TIPO_TRANSFERENCIA => 'Transferência',
+      self::TIPO_VENDA => 'Venda',
     ];
 
     protected $table = 'tblpedido';
     protected $primaryKey = 'codpedido';
+
 
     protected $fillable = [
         'codestoquelocal',
@@ -38,22 +41,24 @@ class Pedido extends MgModel
         'codgrupoeconomico',
         'indstatus',
         'indtipo',
-        'observacoes',
+        'observacoes'
     ];
 
     protected $casts = [
+        'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',
         'codestoquelocalorigem' => 'integer',
         'codgrupoeconomico' => 'integer',
         'codpedido' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'indstatus' => 'integer',
-        'indtipo' => 'integer',
-        'alteracao' => 'datetime',
         'criacao' => 'datetime',
+        'indstatus' => 'integer',
+        'indtipo' => 'integer'
     ];
 
+
+    // Chaves Estrangeiras
     public function EstoqueLocal()
     {
         return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
@@ -79,8 +84,11 @@ class Pedido extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
+    // Tabelas Filhas
     public function PedidoItemS()
     {
         return $this->hasMany(PedidoItem::class, 'codpedido', 'codpedido');
     }
+
 }

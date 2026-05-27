@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:19:40
+ * Date: 27/May/2026 11:33:50
  */
 
 namespace Mg\NaturezaOperacao;
@@ -26,16 +26,13 @@ class RegulamentoIcmsStMt extends MgModel
         'subitem'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codncm' => 'integer',
         'codregulamentoicmsstmt' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'icmsstnorte' => 'float',
         'icmsstsul' => 'float'
     ];

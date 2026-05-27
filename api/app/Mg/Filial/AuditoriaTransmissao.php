@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Oct/2024 12:28:06
+ * Date: 27/May/2026 11:40:30
  */
 
 namespace Mg\Filial;
@@ -23,13 +23,12 @@ class AuditoriaTransmissao extends MgModel
         'transmitida'
     ];
 
-    protected $dates = [
-        'data'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codauditoria' => 'integer',
         'codbaseremota' => 'integer',
+        'criacao' => 'datetime',
+        'data' => 'datetime',
         'transmitida' => 'boolean'
     ];
 

@@ -1,8 +1,7 @@
 <?php
-
 /**
  * Created by php artisan gerador:model.
- * Date: 24/Sep/2025 12:03:50
+ * Date: 27/May/2026 11:24:43
  */
 
 namespace Mg\Portador;
@@ -11,25 +10,24 @@ use Mg\MgModel;
 use Mg\Boleto\BoletoRetorno;
 use Mg\Cheque\ChequeRepasse;
 use Mg\Cobranca\Cobranca;
+use Mg\Portador\ExtratoBancario;
 use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Titulo\MovimentoTitulo;
-use Mg\Titulo\Titulo;
-use Mg\Usuario\Usuario;
-use Mg\Pix\PixCob;
-use Mg\Pix\Pix;
-use Mg\Titulo\TituloBoleto;
-use Mg\Portador\ExtratoBancario;
-use Mg\Portador\PortadorMovimento;
-use Mg\Portador\PortadorTransferencia;
 use Mg\Pdv\Pdv;
+use Mg\Pix\Pix;
+use Mg\Pix\PixCob;
+use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorSaldo;
+use Mg\Portador\PortadorTransferencia;
+use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloBoleto;
+use Mg\Usuario\Usuario;
 use Mg\Banco\Banco;
 use Mg\Filial\Filial;
 use Mg\Pessoa\Pessoa;
 
 class Portador extends MgModel
 {
-    // TODO: passar constante para Service
     const CARTEIRA = 999;
 
     protected $table = 'tblportador';
@@ -56,15 +54,10 @@ class Portador extends MgModel
         'portador'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
         'agencia' => 'integer',
         'agenciadigito' => 'integer',
+        'alteracao' => 'datetime',
         'carteira' => 'integer',
         'carteiravariacao' => 'integer',
         'codbanco' => 'integer',
@@ -76,7 +69,9 @@ class Portador extends MgModel
         'conta' => 'integer',
         'contadigito' => 'integer',
         'convenio' => 'float',
-        'emiteboleto' => 'boolean'
+        'criacao' => 'datetime',
+        'emiteboleto' => 'boolean',
+        'inativo' => 'datetime'
     ];
 
 
@@ -187,4 +182,5 @@ class Portador extends MgModel
     {
         return $this->hasMany(Usuario::class, 'codportador', 'codportador');
     }
+
 }

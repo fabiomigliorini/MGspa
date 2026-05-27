@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Oct/2024 12:28:32
+ * Date: 27/May/2026 11:38:36
  */
 
 namespace Mg\Filial;
@@ -22,16 +22,13 @@ class BaseRemota extends MgModel
         'inicioreplicacao'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inicioreplicacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codbaseremota' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inicioreplicacao' => 'datetime'
     ];
 
 

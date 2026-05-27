@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:27:16
+ * Date: 27/May/2026 11:33:37
  */
 
 namespace Mg\NaturezaOperacao;
@@ -9,6 +9,7 @@ namespace Mg\NaturezaOperacao;
 use Mg\MgModel;
 use Mg\NaturezaOperacao\Cest;
 use Mg\NaturezaOperacao\Ibptax;
+use Mg\NaturezaOperacao\Ncm;
 use Mg\Produto\Produto;
 use Mg\NaturezaOperacao\RegulamentoIcmsStMt;
 use Mg\Usuario\Usuario;
@@ -24,23 +25,26 @@ class Ncm extends MgModel
         'codncm2020',
         'codncmpai',
         'descricao',
+        'fecep',
+        'fim',
         'inativo',
+        'inicio',
         'ncm'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'bit' => 'boolean',
         'codncm' => 'integer',
         'codncm2020' => 'integer',
         'codncmpai' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'fecep' => 'boolean',
+        'fim' => 'date',
+        'inativo' => 'datetime',
+        'inicio' => 'date'
     ];
 
 

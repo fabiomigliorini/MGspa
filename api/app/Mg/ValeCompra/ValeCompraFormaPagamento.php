@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:51:18
+ * Date: 27/May/2026 11:22:21
  */
 
 namespace Mg\ValeCompra;
@@ -24,17 +24,14 @@ class ValeCompraFormaPagamento extends MgModel
         'valorpagamento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codformapagamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codvalecompra' => 'integer',
         'codvalecompraformapagamento' => 'integer',
+        'criacao' => 'datetime',
         'valorpagamento' => 'float'
     ];
 

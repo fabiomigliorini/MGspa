@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Jan/2025 11:05:06
+ * Date: 27/May/2026 11:40:55
  */
 
 namespace Mg\Saurus;
@@ -37,22 +37,19 @@ class SaurusPagamento extends MgModel
         'valortotal'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'transacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codsaurusbandeira' => 'integer',
         'codsauruspagamento' => 'integer',
         'codsauruspedido' => 'integer',
         'codsauruspinpad' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'modpagamento' => 'integer',
         'parcelas' => 'integer',
         'status' => 'integer',
+        'transacao' => 'datetime',
         'valor' => 'float',
         'valorjuros' => 'float',
         'valorparcela' => 'float',

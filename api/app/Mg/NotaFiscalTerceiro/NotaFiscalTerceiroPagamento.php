@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 13:36:10
+ * Date: 27/May/2026 11:28:25
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -22,7 +22,6 @@ class NotaFiscalTerceiroPagamento extends MgModel
     const FORMA_VALE_PRESENTE = 12;
     const FORMA_VALE_COMBUSTIVEL = 13;
     const FORMA_OUTROS = 99;
-
     const BANDEIRA_VISA = 1;
     const BANDEIRA_MASTERCARD = 2;
     const BANDEIRA_AMERICAN_EXPRESS = 3;
@@ -31,6 +30,7 @@ class NotaFiscalTerceiroPagamento extends MgModel
 
     protected $table = 'tblnotafiscalterceiropagamento';
     protected $primaryKey = 'codnotafiscalterceiropagamento';
+
 
     protected $fillable = [
         'autorizacao',
@@ -41,18 +41,15 @@ class NotaFiscalTerceiroPagamento extends MgModel
         'valor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'bandeira' => 'integer',
         'cnpj' => 'float',
         'codnotafiscalterceiro' => 'integer',
         'codnotafiscalterceiropagamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'forma' => 'integer',
         'valor' => 'float'
     ];

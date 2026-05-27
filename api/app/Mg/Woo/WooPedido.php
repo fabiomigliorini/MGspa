@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Dec/2025 11:00:37
+ * Date: 27/May/2026 11:41:35
  */
 
 namespace Mg\Woo;
@@ -30,17 +30,14 @@ class WooPedido extends MgModel
         'valortotal'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'alteracaowoo',
-        'criacao',
-        'criacaowoo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
+        'alteracaowoo' => 'datetime',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codwoopedido' => 'integer',
+        'criacao' => 'datetime',
+        'criacaowoo' => 'datetime',
         'id' => 'integer',
         'valorfrete' => 'float',
         'valortotal' => 'float'

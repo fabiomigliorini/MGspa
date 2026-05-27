@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 17:01:40
+ * Date: 27/May/2026 11:21:15
  */
 
 namespace Mg\Titulo;
@@ -65,19 +65,8 @@ class Titulo extends MgModel
         'vencimentooriginal'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'emissao',
-        'estornado',
-        'sistema',
-        'transacao',
-        'transacaoliquidacao',
-        'vencimento',
-        'vencimentooriginal'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'boleto' => 'boolean',
         'codcontacontabil' => 'integer',
         'codfilial' => 'integer',
@@ -93,12 +82,20 @@ class Titulo extends MgModel
         'credito' => 'float',
         'creditosaldo' => 'float',
         'creditototal' => 'float',
+        'criacao' => 'datetime',
         'debito' => 'float',
         'debitosaldo' => 'float',
         'debitototal' => 'float',
+        'emissao' => 'date',
+        'estornado' => 'datetime',
         'gerencial' => 'boolean',
         'remessa' => 'integer',
-        'saldo' => 'float'
+        'saldo' => 'float',
+        'sistema' => 'datetime',
+        'transacao' => 'date',
+        'transacaoliquidacao' => 'date',
+        'vencimento' => 'date',
+        'vencimentooriginal' => 'date'
     ];
 
 

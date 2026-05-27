@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 11/May/2024 15:59:50
+ * Date: 27/May/2026 11:37:51
  */
 
 namespace Mg\Mercos;
@@ -31,24 +31,21 @@ class MercosProduto extends MgModel
         'saldoquantidadeatualizado'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo',
-        'precoatualizado',
-        'saldoquantidadeatualizado'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmercosproduto' => 'integer',
         'codproduto' => 'integer',
         'codprodutoembalagem' => 'integer',
         'codprodutovariacao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
         'preco' => 'float',
+        'precoatualizado' => 'datetime',
         'produtoid' => 'integer',
-        'saldoquantidade' => 'float'
+        'saldoquantidade' => 'float',
+        'saldoquantidadeatualizado' => 'datetime'
     ];
 
 

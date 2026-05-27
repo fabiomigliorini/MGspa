@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Jan/2025 11:02:45
+ * Date: 27/May/2026 11:40:43
  */
 
 namespace Mg\Saurus;
@@ -30,19 +30,16 @@ class SaurusPdv extends MgModel
         'vencimento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo',
-        'vencimento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfilial' => 'integer',
         'codsauruspdv' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'numero' => 'integer'
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
+        'numero' => 'integer',
+        'vencimento' => 'datetime'
     ];
 
 

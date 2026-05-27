@@ -1,15 +1,24 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:33:19
+ */
 
 namespace Mg\Marca;
 
-use Mg\Usuario\Usuario;
-use Mg\Imagem\Imagem;
 use Mg\MgModel;
+use Mg\Produto\Produto;
+use Mg\Produto\ProdutoBarra;
+use Mg\Produto\ProdutoVariacao;
+use Mg\GrupoEconomico\GrupoEconomico;
+use Mg\Imagem\Imagem;
+use Mg\Usuario\Usuario;
 
 class Marca extends MgModel
 {
     protected $table = 'tblmarca';
     protected $primaryKey = 'codmarca';
+
 
     protected $fillable = [
         'abccategoria',
@@ -32,13 +41,14 @@ class Marca extends MgModel
         'vendaanovalor',
         'vendabimestrevalor',
         'vendasemestrevalor',
-        'vendaultimocalculo',
+        'vendaultimocalculo'
     ];
 
     protected $casts = [
         'abccategoria' => 'integer',
         'abcignorar' => 'boolean',
         'abcposicao' => 'integer',
+        'alteracao' => 'datetime',
         'codgrupoeconomico' => 'integer',
         'codimagem' => 'integer',
         'codmarca' => 'integer',
@@ -46,8 +56,11 @@ class Marca extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'controlada' => 'boolean',
+        'criacao' => 'datetime',
+        'dataultimacompra' => 'date',
         'estoquemaximodias' => 'integer',
         'estoqueminimodias' => 'integer',
+        'inativo' => 'datetime',
         'itensabaixominimo' => 'integer',
         'itensacimamaximo' => 'integer',
         'site' => 'boolean',
@@ -55,12 +68,15 @@ class Marca extends MgModel
         'vendaanovalor' => 'float',
         'vendabimestrevalor' => 'float',
         'vendasemestrevalor' => 'float',
-        'alteracao' => 'datetime',
-        'criacao' => 'datetime',
-        'dataultimacompra' => 'datetime',
-        'inativo' => 'datetime',
-        'vendaultimocalculo' => 'datetime',
+        'vendaultimocalculo' => 'datetime'
     ];
+
+
+    // Chaves Estrangeiras
+    public function GrupoEconomico()
+    {
+        return $this->belongsTo(GrupoEconomico::class, 'codgrupoeconomico', 'codgrupoeconomico');
+    }
 
     public function Imagem()
     {
@@ -76,4 +92,22 @@ class Marca extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
+
+    // Tabelas Filhas
+    public function ProdutoS()
+    {
+        return $this->hasMany(Produto::class, 'codmarca', 'codmarca');
+    }
+
+    public function ProdutoBarraS()
+    {
+        return $this->hasMany(ProdutoBarra::class, 'codmarca', 'codmarca');
+    }
+
+    public function ProdutoVariacaoS()
+    {
+        return $this->hasMany(ProdutoVariacao::class, 'codmarca', 'codmarca');
+    }
+
 }

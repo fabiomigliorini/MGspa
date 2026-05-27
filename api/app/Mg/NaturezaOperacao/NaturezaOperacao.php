@@ -1,28 +1,30 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:22:56
+ */
 
 namespace Mg\NaturezaOperacao;
 
-use Mg\Usuario\Usuario;
-use Mg\ContaContabil\ContaContabil;
-use Mg\Estoque\EstoqueMovimentoTipo;
 use Mg\MgModel;
+use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
-use Mg\Titulo\TipoTitulo;
+use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
 use Mg\Tributacao\TributacaoRegra;
+use Mg\ContaContabil\ContaContabil;
+use Mg\Estoque\EstoqueMovimentoTipo;
+use Mg\Titulo\TipoTitulo;
+use Mg\Usuario\Usuario;
 
 class NaturezaOperacao extends MgModel
 {
-    protected $table = 'tblnaturezaoperacao';
-    protected $primaryKey = 'codnaturezaoperacao';
-
     const FINNFE_NORMAL = 1;
     const FINNFE_COMPLEMENTAR = 2;
     const FINNFE_AJUSTE = 3;
     const FINNFE_DEVOLUCAO = 4;
-
     const FINNFE_DESCRICOES = [
         self::FINNFE_NORMAL => 'Normal',
         self::FINNFE_COMPLEMENTAR => 'Complementar',
@@ -30,16 +32,33 @@ class NaturezaOperacao extends MgModel
         self::FINNFE_DEVOLUCAO => 'Devolução / Retorno',
     ];
 
+    protected $table = 'tblnaturezaoperacao';
+    protected $primaryKey = 'codnaturezaoperacao';
+
+
     protected $fillable = [
-        'codcontacontabil', 'codestoquemovimentotipo', 'codnaturezaoperacaodevolucao',
-        'codoperacao', 'codtipotitulo', 'compra', 'emitida', 'estoque',
-        'financeiro', 'finnfe', 'ibpt', 'mensagemprocom', 'naturezaoperacao',
-        'observacoesnf', 'preco', 'transferencia', 'venda', 'vendadevolucao',
+        'codcontacontabil',
+        'codestoquemovimentotipo',
+        'codnaturezaoperacaodevolucao',
+        'codoperacao',
+        'codtipotitulo',
+        'compra',
+        'emitida',
+        'estoque',
+        'financeiro',
+        'finnfe',
+        'ibpt',
+        'mensagemprocom',
+        'naturezaoperacao',
+        'observacoesnf',
+        'preco',
+        'transferencia',
+        'venda',
+        'vendadevolucao'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'criacao' => 'datetime',
         'codcontacontabil' => 'integer',
         'codestoquemovimentotipo' => 'integer',
         'codnaturezaoperacao' => 'integer',
@@ -49,6 +68,7 @@ class NaturezaOperacao extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'compra' => 'boolean',
+        'criacao' => 'datetime',
         'emitida' => 'boolean',
         'estoque' => 'boolean',
         'financeiro' => 'boolean',
@@ -57,9 +77,11 @@ class NaturezaOperacao extends MgModel
         'preco' => 'integer',
         'transferencia' => 'boolean',
         'venda' => 'boolean',
-        'vendadevolucao' => 'boolean',
+        'vendadevolucao' => 'boolean'
     ];
 
+
+    // Chaves Estrangeiras
     public function ContaContabil()
     {
         return $this->belongsTo(ContaContabil::class, 'codcontacontabil', 'codcontacontabil');
@@ -80,11 +102,6 @@ class NaturezaOperacao extends MgModel
         return $this->belongsTo(TipoTitulo::class, 'codtipotitulo', 'codtipotitulo');
     }
 
-    public function Operacao()
-    {
-        return $this->belongsTo(Operacao::class, 'codoperacao', 'codoperacao');
-    }
-
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -95,6 +112,8 @@ class NaturezaOperacao extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
+    // Tabelas Filhas
     public function NaturezaOperacaoS()
     {
         return $this->hasMany(NaturezaOperacao::class, 'codnaturezaoperacaodevolucao', 'codnaturezaoperacao');
@@ -130,6 +149,8 @@ class NaturezaOperacao extends MgModel
         return $this->hasMany(TributacaoRegra::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
     }
 
+
+    // Customizado
     public function getFinnfeDescricaoAttribute(): ?string
     {
         return self::FINNFE_DESCRICOES[$this->finnfe] ?? null;

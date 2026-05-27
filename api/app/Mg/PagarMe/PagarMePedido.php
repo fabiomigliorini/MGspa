@@ -1,15 +1,15 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Apr/2024 12:13:13
+ * Date: 27/May/2026 11:35:45
  */
 
 namespace Mg\PagarMe;
 
 use Mg\MgModel;
-use Mg\PagarMe\PagarMePagamento;
-use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Titulo\LiquidacaoTitulo;
+use Mg\Negocio\NegocioFormaPagamento;
+use Mg\PagarMe\PagarMePagamento;
 use Mg\Filial\Filial;
 use Mg\Negocio\Negocio;
 use Mg\PagarMe\PagarMePos;
@@ -45,12 +45,8 @@ class PagarMePedido extends MgModel
         'valortotal'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfilial' => 'integer',
         'codnegocio' => 'integer',
         'codpagarmepedido' => 'integer',
@@ -59,6 +55,7 @@ class PagarMePedido extends MgModel
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'fechado' => 'boolean',
         'jurosloja' => 'boolean',
         'parcelas' => 'integer',

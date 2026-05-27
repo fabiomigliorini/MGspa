@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 13:36:54
+ * Date: 27/May/2026 11:28:18
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -26,18 +26,15 @@ class NotaFiscalTerceiroProdutoBarra extends MgModel
         'valorproduto'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnotafiscalterceirogrupo' => 'integer',
         'codnotafiscalterceiroprodutobarra' => 'integer',
         'codprodutobarra' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'complemento' => 'float',
+        'criacao' => 'datetime',
         'margem' => 'float',
         'quantidade' => 'float',
         'valorproduto' => 'float'

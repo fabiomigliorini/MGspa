@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 11/Jun/2025 10:01:14
+ * Date: 27/May/2026 11:32:53
  */
 
 namespace Mg\Produto;
@@ -9,8 +9,8 @@ namespace Mg\Produto;
 use Mg\MgModel;
 use Mg\Produto\Produto;
 use Mg\Produto\ProdutoEmbalagem;
-use Mg\Produto\ProdutoVariacao;
 use Mg\Produto\ProdutoImagemProdutoVariacao;
+use Mg\Produto\ProdutoVariacao;
 use Mg\Woo\WooProdutoImagem;
 use Mg\Imagem\Imagem;
 use Mg\Usuario\Usuario;
@@ -27,17 +27,14 @@ class ProdutoImagem extends MgModel
         'ordem'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codimagem' => 'integer',
         'codproduto' => 'integer',
         'codprodutoimagem' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'ordem' => 'integer'
     ];
 

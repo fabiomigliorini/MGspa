@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 26/Jun/2021 08:50:14
+ * Date: 27/May/2026 11:34:41
  */
 
 namespace Mg\Titulo;
@@ -49,25 +49,21 @@ class TituloBoleto extends MgModel
         'vencimento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'databaixaautomatica',
-        'datacredito',
-        'datarecebimento',
-        'dataregistro',
-        'inativo',
-        'vencimento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'canalpagamento' => 'integer',
         'codportador' => 'integer',
         'codtitulo' => 'integer',
         'codtituloboleto' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'databaixaautomatica' => 'date',
+        'datacredito' => 'date',
+        'datarecebimento' => 'date',
+        'dataregistro' => 'date',
         'estadotitulocobranca' => 'integer',
+        'inativo' => 'datetime',
         'tipobaixatitulo' => 'integer',
         'valorabatimento' => 'float',
         'valoratual' => 'float',
@@ -79,7 +75,8 @@ class TituloBoleto extends MgModel
         'valoroutro' => 'float',
         'valorpagamentoparcial' => 'float',
         'valorpago' => 'float',
-        'valorreajuste' => 'float'
+        'valorreajuste' => 'float',
+        'vencimento' => 'date'
     ];
 
 

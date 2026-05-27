@@ -1,15 +1,15 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Apr/2024 12:13:56
+ * Date: 27/May/2026 11:30:22
  */
 
 namespace Mg\Pix;
 
 use Mg\MgModel;
+use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Pix\PixDevolucao;
 use Mg\Portador\PortadorMovimento;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
@@ -35,13 +35,8 @@ class Pix extends MgModel
         'valor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'horario'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'cnpj' => 'float',
         'codpdv' => 'integer',
         'codpix' => 'integer',
@@ -50,6 +45,8 @@ class Pix extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'cpf' => 'float',
+        'criacao' => 'datetime',
+        'horario' => 'datetime',
         'valor' => 'float'
     ];
 

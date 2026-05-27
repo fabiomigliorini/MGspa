@@ -1,64 +1,55 @@
 <?php
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:39:14
  */
 
 namespace Mg\Estoque;
-use Carbon\Carbon;
 
-use Illuminate\Support\Facades\DB;
-
-/**
- * Campos
- * @property  bigint                         $codestoquesaldo                    NOT NULL DEFAULT nextval('tblestoquesaldo_codestoquesaldo_seq'::regclass)
- * @property  bigint                         $codestoquelocalprodutovariacao             NOT NULL
- * @property  boolean                        $fiscal                             NOT NULL
- * @property  numeric(14,3)                  $saldoquantidade
- * @property  numeric(14,2)                  $saldovalor
- * @property  numeric(14,6)                  $customedio
- * @property  timestamp                      $dataentrada
- * @property  timestamp                      $ultimaconferencia
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  bigint                         $codestoquelocal                    NOT NULL
- *
- * Chaves Estrangeiras
- * @property  Produto                        $Produto
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- * @property  EstoqueLocalProdutoVariacao    $EstoqueLocalProdutoVariacao
- *
- * Tabelas Filhas
- * @property  EstoqueMes[]                   $EstoqueMesS
- * @property  EstoqueSaldoConferencia[]      $EstoqueSaldoConferenciaS
- */
- use Mg\MgModel;
+use Mg\MgModel;
+use Mg\Estoque\EstoqueMes;
+use Mg\Estoque\EstoqueSaldoConferencia;
+use Mg\Estoque\EstoqueLocalProdutoVariacao;
+use Mg\Usuario\Usuario;
 
 class EstoqueSaldo extends MgModel
 {
     protected $table = 'tblestoquesaldo';
     protected $primaryKey = 'codestoquesaldo';
+
+
     protected $fillable = [
+        'codestoquelocalprodutovariacao',
+        'customedio',
+        'dataentrada',
         'fiscal',
         'saldoquantidade',
         'saldovalor',
-        'customedio',
-        'codestoquelocalprodutovariacao',
-        'ultimaconferencia',
-    ];
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'ultimaconferencia',
-        'dataentrada',
+        'ultimaconferencia'
     ];
 
+    protected $casts = [
+        'alteracao' => 'datetime',
+        'codestoquelocalprodutovariacao' => 'integer',
+        'codestoquesaldo' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'customedio' => 'float',
+        'dataentrada' => 'datetime',
+        'fiscal' => 'boolean',
+        'saldoquantidade' => 'float',
+        'saldovalor' => 'float',
+        'ultimaconferencia' => 'datetime'
+    ];
+
+
     // Chaves Estrangeiras
+    public function EstoqueLocalProdutoVariacao()
+    {
+        return $this->belongsTo(EstoqueLocalProdutoVariacao::class, 'codestoquelocalprodutovariacao', 'codestoquelocalprodutovariacao');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -67,11 +58,6 @@ class EstoqueSaldo extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
-    public function EstoqueLocalProdutoVariacao()
-    {
-        return $this->belongsTo(EstoqueLocalProdutoVariacao::class, 'codestoquelocalprodutovariacao', 'codestoquelocalprodutovariacao');
     }
 
 
@@ -86,6 +72,8 @@ class EstoqueSaldo extends MgModel
         return $this->hasMany(EstoqueSaldoConferencia::class, 'codestoquesaldo', 'codestoquesaldo');
     }
 
+
+    // Customizado
     public function scopeFiscal($query) {
         $query->where("{$this->table}.fiscal", true);
     }
@@ -93,5 +81,4 @@ class EstoqueSaldo extends MgModel
     public function scopeFisico($query) {
         $query->where("{$this->table}.fiscal", false);
     }
-
 }

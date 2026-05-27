@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Oct/2021 14:25:11
+ * Date: 27/May/2026 11:35:00
  */
 
 namespace Mg\Portador;
@@ -22,15 +22,12 @@ class ExtratoBancarioTipoMovimento extends MgModel
         'trntype'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codextratobancariotipomovimento' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

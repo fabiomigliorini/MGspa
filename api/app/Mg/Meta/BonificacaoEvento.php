@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:59:46
+ * Date: 27/May/2026 11:42:36
  */
 
 namespace Mg\Meta;
@@ -25,19 +25,15 @@ class BonificacaoEvento extends MgModel
         'codnegocioprodutobarra',
         'codpessoa',
         'codunidadenegocio',
+        'descricao',
         'lancamento',
         'manual',
         'tipo',
         'valor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'lancamento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codbonificacaoevento' => 'integer',
         'codmeta' => 'integer',
         'codnegocio' => 'integer',
@@ -46,6 +42,8 @@ class BonificacaoEvento extends MgModel
         'codunidadenegocio' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'lancamento' => 'datetime',
         'manual' => 'boolean',
         'valor' => 'float'
     ];

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 10:50:31
+ * Date: 27/May/2026 11:40:05
  */
 
 namespace Mg\Filial;
@@ -22,15 +22,12 @@ class PrefixoGs1 extends MgModel
         'inicial'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codprefixogs1' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'especial' => 'boolean'
     ];
 

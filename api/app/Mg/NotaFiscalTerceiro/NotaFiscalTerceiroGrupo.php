@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 13:36:41
+ * Date: 27/May/2026 11:28:01
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -23,17 +23,14 @@ class NotaFiscalTerceiroGrupo extends MgModel
         'conferido'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnotafiscalterceiro' => 'integer',
         'codnotafiscalterceirogrupo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'conferido' => 'boolean'
+        'conferido' => 'boolean',
+        'criacao' => 'datetime'
     ];
 
 

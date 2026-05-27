@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Jan/2025 11:05:21
+ * Date: 27/May/2026 11:41:08
  */
 
 namespace Mg\Saurus;
@@ -28,18 +28,15 @@ class SaurusPinPad extends MgModel
         'serial'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfilial' => 'integer',
         'codsauruspdv' => 'integer',
         'codsauruspinpad' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime'
     ];
 
 

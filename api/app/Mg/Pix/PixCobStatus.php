@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/Dec/2020 16:15:14
+ * Date: 27/May/2026 11:30:09
  */
 
 namespace Mg\Pix;
@@ -20,15 +20,12 @@ class PixCobStatus extends MgModel
         'pixcobstatus'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codpixcobstatus' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

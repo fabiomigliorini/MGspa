@@ -1,57 +1,53 @@
 <?php
-namespace Mg\Estoque;
-use Mg\MgService;
-use Mg\MgModel;
-
 /**
- * Campos
- * @property  bigint                         $codestoquemes                      NOT NULL DEFAULT nextval('tblestoquemes_codestoquemes_seq'::regclass)
- * @property  bigint                         $codestoquesaldo                    NOT NULL
- * @property  date                           $mes                                NOT NULL
- * @property  numeric(14,3)                  $inicialquantidade
- * @property  numeric(14,2)                  $inicialvalor
- * @property  numeric(14,3)                  $entradaquantidade
- * @property  numeric(14,2)                  $entradavalor
- * @property  numeric(14,3)                  $saidaquantidade
- * @property  numeric(14,2)                  $saidavalor
- * @property  numeric(14,3)                  $saldoquantidade
- * @property  numeric(14,2)                  $saldovalor
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  numeric(14,6)                  $customedio
- *
- * Chaves Estrangeiras
- * @property  EstoqueSaldo                   $EstoqueSaldo
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- *
- * Tabelas Filhas
- * @property  EstoqueMovimento[]             $EstoqueMovimentoS
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:39:08
  */
+
+namespace Mg\Estoque;
+
+use Mg\MgModel;
+use Mg\Estoque\EstoqueMovimento;
+use Mg\Estoque\EstoqueSaldo;
+use Mg\Usuario\Usuario;
 
 class EstoqueMes extends MgModel
 {
     protected $table = 'tblestoquemes';
     protected $primaryKey = 'codestoquemes';
+
+
     protected $fillable = [
-          'codestoquesaldo',
-         'mes',
-         'inicialquantidade',
-         'inicialvalor',
-         'entradaquantidade',
-         'entradavalor',
-         'saidaquantidade',
-         'saidavalor',
-         'saldoquantidade',
-         'saldovalor',
-             'customedio',
-    ];
-    protected $dates = [
+        'codestoquesaldo',
+        'customedio',
+        'entradaquantidade',
+        'entradavalor',
+        'inicialquantidade',
+        'inicialvalor',
         'mes',
-        'alteracao',
-        'criacao',
+        'saidaquantidade',
+        'saidavalor',
+        'saldoquantidade',
+        'saldovalor'
+    ];
+
+    protected $casts = [
+        'alteracao' => 'datetime',
+        'codestoquemes' => 'integer',
+        'codestoquesaldo' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'customedio' => 'float',
+        'entradaquantidade' => 'float',
+        'entradavalor' => 'float',
+        'inicialquantidade' => 'float',
+        'inicialvalor' => 'float',
+        'mes' => 'date',
+        'saidaquantidade' => 'float',
+        'saidavalor' => 'float',
+        'saldoquantidade' => 'float',
+        'saldovalor' => 'float'
     ];
 
 
@@ -77,6 +73,5 @@ class EstoqueMes extends MgModel
     {
         return $this->hasMany(EstoqueMovimento::class, 'codestoquemes', 'codestoquemes');
     }
-
 
 }

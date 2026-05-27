@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:21:52
+ * Date: 27/May/2026 11:33:56
  */
 
 namespace Mg\Produto;
@@ -26,19 +26,16 @@ class GrupoProduto extends MgModel
         'inativo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfamiliaproduto' => 'integer',
         'codgrupoproduto' => 'integer',
         'codimagem' => 'integer',
         'codopencart' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime'
     ];
 
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 11:29:36
+ * Date: 27/May/2026 11:27:32
  */
 
 namespace Mg\Dfe;
@@ -21,15 +21,12 @@ class DfeEvento extends MgModel
         'tpevento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'coddfeevento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'tpevento' => 'integer'
     ];
 

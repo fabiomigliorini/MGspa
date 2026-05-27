@@ -1,16 +1,16 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 12/Mar/2021 23:04:17
+ * Date: 27/May/2026 11:31:12
  */
 
 namespace Mg\Mdfe;
 
 use Mg\MgModel;
+use Mg\Mdfe\MdfeEnvioSefaz;
 use Mg\Mdfe\MdfeEstado;
 use Mg\Mdfe\MdfeNfe;
 use Mg\Mdfe\MdfeVeiculo;
-use Mg\Mdfe\MdfeEnvioSefaz;
 use Mg\Cidade\Cidade;
 use Mg\Cidade\Estado;
 use Mg\Filial\Filial;
@@ -22,17 +22,13 @@ class Mdfe extends MgModel
     const TIPO_EMITENTE_PRESTADOR_SERVICO = 1;
     const TIPO_EMITENTE_CARGA_PROPRIA = 2;
     const TIPO_EMITENTE_CTE_GLOBALIZADO = 3;
-
     const MODELO = 58;
-
     const MODAL_RODOVIARIO = 1;
     const MODAL_AEREO = 2;
     const MODAL_AQUAVIARIO = 3;
     const MODAL_FERROVIARIO = 4;
-
     const TIPO_EMISSAO_NORMAL = 1;
     const TIPO_EMISSAO_CONTINGENCIA = 2;
-
     const TIPO_TRANSPORTADOR_ETC = 1; // Empresa
     const TIPO_TRANSPORTADOR_TAC = 2; // Autonomo
     const TIPO_TRANSPORTADOR_CTC = 3; // Cooperativa
@@ -65,16 +61,8 @@ class Mdfe extends MgModel
         'tipotransportador'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'emissao',
-        'encerramento',
-        'inativo',
-        'inicioviagem'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcidadecarregamento' => 'integer',
         'codestadofim' => 'integer',
         'codfilial' => 'integer',
@@ -82,6 +70,11 @@ class Mdfe extends MgModel
         'codmdfestatus' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'emissao' => 'datetime',
+        'encerramento' => 'datetime',
+        'inativo' => 'datetime',
+        'inicioviagem' => 'datetime',
         'modal' => 'integer',
         'modelo' => 'integer',
         'numero' => 'integer',

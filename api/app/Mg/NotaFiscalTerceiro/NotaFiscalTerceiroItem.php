@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 18/Jul/2020 13:37:01
+ * Date: 27/May/2026 11:28:10
  */
 
 namespace Mg\NotaFiscalTerceiro;
@@ -67,12 +67,8 @@ class NotaFiscalTerceiroItem extends MgModel
         'valorunitariotributavel'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'cfop' => 'integer',
         'codnotafiscalterceirogrupo' => 'integer',
         'codnotafiscalterceiroitem' => 'integer',
@@ -83,6 +79,7 @@ class NotaFiscalTerceiroItem extends MgModel
         'cofinspercentual' => 'float',
         'cofinsvalor' => 'float',
         'compoetotal' => 'boolean',
+        'criacao' => 'datetime',
         'csosn' => 'integer',
         'icmsbase' => 'float',
         'icmsbasemodalidade' => 'integer',

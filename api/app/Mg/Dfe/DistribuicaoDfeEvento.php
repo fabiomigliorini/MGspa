@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 11:29:23
+ * Date: 27/May/2026 11:27:24
  */
 
 namespace Mg\Dfe;
@@ -28,20 +28,17 @@ class DistribuicaoDfeEvento extends MgModel
         'sequencia'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'recebimento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'cnpj' => 'float',
         'coddfeevento' => 'integer',
         'coddistribuicaodfeevento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'cpf' => 'float',
+        'criacao' => 'datetime',
         'orgao' => 'integer',
+        'recebimento' => 'datetime',
         'sequencia' => 'integer'
     ];
 

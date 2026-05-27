@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Jul/2020 15:53:22
+ * Date: 27/May/2026 11:25:33
  */
 
 namespace Mg\CupomFiscal;
@@ -27,18 +27,15 @@ class CupomFiscalProdutoBarra extends MgModel
         'valorunitario'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcupomfiscal' => 'integer',
         'codcupomfiscalprodutobarra' => 'integer',
         'codnegocioprodutobarra' => 'integer',
         'codprodutobarra' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'quantidade' => 'float',
         'valorunitario' => 'float'
     ];

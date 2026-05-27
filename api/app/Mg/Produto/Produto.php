@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 16:59:05
+ * Date: 27/May/2026 11:25:05
  */
 
 namespace Mg\Produto;
@@ -73,17 +73,11 @@ class Produto extends MgModel
         'vendesite'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo',
-        'revisao'
-    ];
-
     protected $casts = [
         'abccategoria' => 'integer',
         'abcignorar' => 'boolean',
         'abcposicao' => 'integer',
+        'alteracao' => 'datetime',
         'altura' => 'float',
         'bonificacaoxerox' => 'boolean',
         'codcest' => 'integer',
@@ -105,12 +99,15 @@ class Produto extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'conferenciaperiodica' => 'boolean',
+        'criacao' => 'datetime',
         'estoque' => 'boolean',
         'importado' => 'boolean',
+        'inativo' => 'datetime',
         'largura' => 'float',
         'peso' => 'float',
         'preco' => 'float',
         'profundidade' => 'float',
+        'revisao' => 'datetime',
         'site' => 'boolean',
         'vendesite' => 'boolean'
     ];

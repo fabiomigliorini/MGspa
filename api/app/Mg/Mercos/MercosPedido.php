@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 11/May/2024 16:00:19
+ * Date: 27/May/2026 11:36:04
  */
 
 namespace Mg\Mercos;
@@ -29,21 +29,18 @@ class MercosPedido extends MgModel
         'ultimaalteracaomercos'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'ultimaalteracaomercos'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmercoscliente' => 'integer',
         'codmercospedido' => 'integer',
         'codnegocio' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'faturamentoid' => 'integer',
         'numero' => 'integer',
-        'pedidoid' => 'integer'
+        'pedidoid' => 'integer',
+        'ultimaalteracaomercos' => 'datetime'
     ];
 
 

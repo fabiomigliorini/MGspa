@@ -1,16 +1,16 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Sep/2025 17:32:36
+ * Date: 27/May/2026 11:33:06
  */
 
 namespace Mg\Produto;
 
 use Mg\MgModel;
 use Mg\Estoque\EstoqueLocalProdutoVariacao;
+use Mg\Mercos\MercosProduto;
 use Mg\Pedido\PedidoItem;
 use Mg\Produto\ProdutoBarra;
-use Mg\Mercos\MercosProduto;
 use Mg\Produto\ProdutoImagemProdutoVariacao;
 use Mg\Woo\WooProduto;
 use Mg\Marca\Marca;
@@ -50,17 +50,8 @@ class ProdutoVariacao extends MgModel
         'vendaultimocalculo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'dataultimacompra',
-        'descontinuado',
-        'inativo',
-        'vendainicio',
-        'vendaultimocalculo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmarca' => 'integer',
         'codopencart' => 'integer',
         'codproduto' => 'integer',
@@ -68,9 +59,13 @@ class ProdutoVariacao extends MgModel
         'codprodutovariacao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'custoultimacompra' => 'float',
+        'dataultimacompra' => 'date',
+        'descontinuado' => 'datetime',
         'estoquemaximo' => 'integer',
         'estoqueminimo' => 'integer',
+        'inativo' => 'datetime',
         'lotecompra' => 'float',
         'quantidadeultimacompra' => 'float',
         'vendaanoquantidade' => 'float',
@@ -78,8 +73,10 @@ class ProdutoVariacao extends MgModel
         'vendabimestrequantidade' => 'float',
         'vendabimestrevalor' => 'float',
         'vendadiaquantidadeprevisao' => 'float',
+        'vendainicio' => 'date',
         'vendasemestrequantidade' => 'float',
-        'vendasemestrevalor' => 'float'
+        'vendasemestrevalor' => 'float',
+        'vendaultimocalculo' => 'datetime'
     ];
 
 

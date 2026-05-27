@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Jul/2020 15:53:13
+ * Date: 27/May/2026 11:26:01
  */
 
 namespace Mg\CupomFiscal;
@@ -30,18 +30,15 @@ class Ecf extends MgModel
         'serie'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'bloqueado',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
+        'bloqueado' => 'datetime',
         'codecf' => 'integer',
         'codfilial' => 'integer',
         'codusuario' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'numero' => 'integer'
     ];
 

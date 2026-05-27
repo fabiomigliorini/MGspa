@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Oct/2021 14:25:44
+ * Date: 27/May/2026 11:35:06
  */
 
 namespace Mg\Portador;
@@ -20,41 +20,40 @@ class ExtratoBancario extends MgModel
 
     protected $fillable = [
         'codextratobancariotipomovimento',
+        'codigoagenciacontrapartida',
+        'codigoagenciaorigem',
+        'codigobancocontrapartida',
+        'codigohistorico',
         'codportador',
         'conciliado',
         'fitid',
-        'lancamento',
-        'numero',
-        'observacoes',
-        'valor',
-        'indicadortipolancamento',
-        'codigoagenciaorigem',
-        'numerolote',
-        'codigohistorico',
-        'textodescricaohistorico',
         'indicadorsinallancamento',
-        'textoinformacaocomplementar',
-        'numerocpfcnpjcontrapartida',
+        'indicadortipolancamento',
         'indicadortipopessoacontrapartida',
-        'codigobancocontrapartida',
-        'numerocontacontrapartida',
-        'textodvcontacontrapartida'
-    ];
-
-    protected $dates = [
-        'alteracao',
-        'criacao',
         'lancamento',
-        'movimento'
+        'movimento',
+        'numero',
+        'numerocontacontrapartida',
+        'numerocpfcnpjcontrapartida',
+        'numerolote',
+        'observacoes',
+        'textodescricaohistorico',
+        'textodvcontacontrapartida',
+        'textoinformacaocomplementar',
+        'valor'
     ];
 
     protected $casts = [
+        'alteracao' => 'datetime',
         'codextratobancario' => 'integer',
         'codextratobancariotipomovimento' => 'integer',
         'codportador' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'conciliado' => 'boolean',
+        'criacao' => 'datetime',
+        'lancamento' => 'datetime',
+        'movimento' => 'datetime',
         'valor' => 'float'
     ];
 

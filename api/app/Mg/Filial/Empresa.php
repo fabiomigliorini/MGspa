@@ -1,9 +1,14 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:26:23
+ */
 
 namespace Mg\Filial;
 
-use Mg\Usuario\Usuario;
 use Mg\MgModel;
+use Mg\Filial\Filial;
+use Mg\Usuario\Usuario;
 
 class Empresa extends MgModel
 {
@@ -13,25 +18,28 @@ class Empresa extends MgModel
     protected $table = 'tblempresa';
     protected $primaryKey = 'codempresa';
 
+
     protected $fillable = [
         'contingenciadata',
         'contingenciajustificativa',
         'empresa',
         'fatorencargos',
-        'modoemissaonfce',
+        'modoemissaonfce'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'contingenciadata' => 'datetime',
-        'criacao' => 'datetime',
         'codempresa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'contingenciadata' => 'datetime',
+        'criacao' => 'datetime',
         'fatorencargos' => 'float',
-        'modoemissaonfce' => 'integer',
+        'modoemissaonfce' => 'integer'
     ];
 
+
+    // Chaves Estrangeiras
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -42,8 +50,11 @@ class Empresa extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
+    // Tabelas Filhas
     public function FilialS()
     {
         return $this->hasMany(Filial::class, 'codempresa', 'codempresa');
     }
+
 }

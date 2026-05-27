@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 16:58:50
+ * Date: 27/May/2026 11:43:40
  */
 
 namespace Mg\Rh;
@@ -33,12 +33,8 @@ class ColaboradorRubrica extends MgModel
         'valorfixo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcolaboradorrubrica' => 'integer',
         'codindicador' => 'integer',
         'codindicadorcondicao' => 'integer',
@@ -47,6 +43,7 @@ class ColaboradorRubrica extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'concedido' => 'boolean',
+        'criacao' => 'datetime',
         'descontaabsenteismo' => 'boolean',
         'percentual' => 'float',
         'recorrente' => 'boolean',

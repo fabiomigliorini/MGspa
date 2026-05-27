@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 16:58:57
+ * Date: 27/May/2026 11:37:00
  */
 
 namespace Mg\Pdv;
@@ -44,13 +44,8 @@ class Pdv extends MgModel
         'versaonavegador'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'autorizado' => 'boolean',
         'codfilial' => 'integer',
         'codpdv' => 'integer',
@@ -58,7 +53,9 @@ class Pdv extends MgModel
         'codsetor' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'desktop' => 'boolean',
+        'inativo' => 'datetime',
         'latitude' => 'float',
         'longitude' => 'float',
         'precisao' => 'float'

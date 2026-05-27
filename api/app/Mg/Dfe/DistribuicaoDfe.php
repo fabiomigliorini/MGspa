@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 11:29:03
+ * Date: 27/May/2026 11:27:46
  */
 
 namespace Mg\Dfe;
@@ -30,13 +30,8 @@ class DistribuicaoDfe extends MgModel
         'nsu'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'data'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'coddfetipo' => 'integer',
         'coddistribuicaodfe' => 'integer',
         'coddistribuicaodfeevento' => 'integer',
@@ -44,7 +39,10 @@ class DistribuicaoDfe extends MgModel
         'codnfeterceiro' => 'integer',
         'codnotafiscalterceiro' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'data' => 'datetime',
+        'nsu' => 'float'
     ];
 
 

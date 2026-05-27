@@ -1,20 +1,20 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/May/2026 11:42:48
+ * Date: 27/May/2026 12:07:01
  */
 
-namespace Mg\Meta;
+namespace Mg\Meta\MetaUnidadeNegocioPessoaFixo;
 
 use Mg\MgModel;
 use Mg\Meta\Meta;
 use Mg\Pessoa\Pessoa;
 use Mg\Filial\UnidadeNegocio;
 
-class MetaUnidadeNegocioPessoa extends MgModel
+class MetaUnidadeNegocioPessoaFixo extends MgModel
 {
-    protected $table = 'tblmetaunidadenegociopessoa';
-    protected $primaryKey = 'codmetaunidadenegociopessoa';
+    protected $table = 'tblmetaunidadenegociopessoafixo';
+    protected $primaryKey = 'codmetaunidadenegociopessoafixo';
 
 
     protected $fillable = [
@@ -23,16 +23,16 @@ class MetaUnidadeNegocioPessoa extends MgModel
         'codunidadenegocio',
         'datafinal',
         'datainicial',
-        'percentualcaixa',
-        'percentualsubgerente',
-        'percentualvenda',
-        'percentualxerox'
+        'descricao',
+        'quantidade',
+        'tipo',
+        'valor'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
         'codmeta' => 'integer',
-        'codmetaunidadenegociopessoa' => 'integer',
+        'codmetaunidadenegociopessoafixo' => 'integer',
         'codpessoa' => 'integer',
         'codunidadenegocio' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -40,10 +40,8 @@ class MetaUnidadeNegocioPessoa extends MgModel
         'criacao' => 'datetime',
         'datafinal' => 'date',
         'datainicial' => 'date',
-        'percentualcaixa' => 'float',
-        'percentualsubgerente' => 'float',
-        'percentualvenda' => 'float',
-        'percentualxerox' => 'float'
+        'quantidade' => 'float',
+        'valor' => 'float'
     ];
 
 

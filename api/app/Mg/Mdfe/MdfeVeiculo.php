@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Jan/2021 11:00:27
+ * Date: 27/May/2026 11:31:06
  */
 
 namespace Mg\Mdfe;
@@ -24,18 +24,15 @@ class MdfeVeiculo extends MgModel
         'codveiculo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmdfe' => 'integer',
         'codmdfeveiculo' => 'integer',
         'codpessoacondutor' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'codveiculo' => 'integer'
+        'codveiculo' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

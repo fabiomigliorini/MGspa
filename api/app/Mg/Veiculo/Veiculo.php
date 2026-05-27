@@ -1,16 +1,24 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:30:47
+ */
 
 namespace Mg\Veiculo;
 
-use Mg\Usuario\Usuario;
-use Mg\Cidade\Estado;
 use Mg\MgModel;
+use Mg\Mdfe\MdfeVeiculo;
+use Mg\Veiculo\VeiculoConjuntoVeiculo;
+use Mg\Cidade\Estado;
 use Mg\Pessoa\Pessoa;
+use Mg\Usuario\Usuario;
+use Mg\Veiculo\VeiculoTipo;
 
 class Veiculo extends MgModel
 {
     protected $table = 'tblveiculo';
     protected $primaryKey = 'codveiculo';
+
 
     protected $fillable = [
         'capacidade',
@@ -23,13 +31,11 @@ class Veiculo extends MgModel
         'renavam',
         'tara',
         'tipoproprietario',
-        'veiculo',
+        'veiculo'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'criacao' => 'datetime',
-        'inativo' => 'datetime',
         'capacidade' => 'integer',
         'capacidadem3' => 'integer',
         'codestado' => 'integer',
@@ -38,10 +44,14 @@ class Veiculo extends MgModel
         'codusuariocriacao' => 'integer',
         'codveiculo' => 'integer',
         'codveiculotipo' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
         'tara' => 'integer',
-        'tipoproprietario' => 'integer',
+        'tipoproprietario' => 'integer'
     ];
 
+
+    // Chaves Estrangeiras
     public function Estado()
     {
         return $this->belongsTo(Estado::class, 'codestado', 'codestado');
@@ -67,8 +77,16 @@ class Veiculo extends MgModel
         return $this->belongsTo(VeiculoTipo::class, 'codveiculotipo', 'codveiculotipo');
     }
 
+
+    // Tabelas Filhas
+    public function MdfeVeiculoS()
+    {
+        return $this->hasMany(MdfeVeiculo::class, 'codveiculo', 'codveiculo');
+    }
+
     public function VeiculoConjuntoVeiculoS()
     {
         return $this->hasMany(VeiculoConjuntoVeiculo::class, 'codveiculo', 'codveiculo');
     }
+
 }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Dec/2025 18:44:54
+ * Date: 27/May/2026 11:31:38
  */
 
 namespace Mg\NotaFiscal;
@@ -26,19 +26,16 @@ class NotaFiscalCartaCorrecao extends MgModel
         'texto'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'data',
-        'protocolodata'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnotafiscal' => 'integer',
         'codnotafiscalcartacorrecao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'data' => 'datetime',
         'lote' => 'integer',
+        'protocolodata' => 'datetime',
         'sequencia' => 'integer'
     ];
 
