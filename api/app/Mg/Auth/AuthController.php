@@ -37,9 +37,22 @@ class AuthController extends Controller
     {
         $grant = (string) $request->input('grant_type');
 
+        // Garante que o PSR-7 enxergue todos os campos do form. A ponte
+        // Symfony→PSR-7 do Laravel deveria popular ParsedBody a partir do
+        // POST bag, mas em alguns pipelines (CSRF check, FormRequest, etc.)
+        // o body é consumido antes e ParsedBody chega vazio — League OAuth
+        // então estoura `invalid_request`.
+        $psrRequest = $psrRequest->withParsedBody($request->all());
+
         try {
             $payload = AuthService::issueToken($psrRequest);
         } catch (OAuthServerException $e) {
+            Log::warning('AuthController::token — OAuthServerException', [
+                'grant_type' => $grant,
+                'error_type' => $e->getErrorType(),
+                'message' => $e->getMessage(),
+                'hint' => method_exists($e, 'getHint') ? $e->getHint() : null,
+            ]);
             return $this->oauthErrorResponse($e);
         } catch (Exception $e) {
             Log::error('AuthController::token — erro inesperado ao emitir token', [
