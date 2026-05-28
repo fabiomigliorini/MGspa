@@ -125,7 +125,8 @@ const comanda = async () => {
 }
 
 watch(barras, () => {
-  if (!(barras.value instanceof String)) {
+  // if (!(barras.value instanceof String)) {
+  if (typeof barras.value !== 'string') {
     return
   }
   if (barras.value.length < 2) {
