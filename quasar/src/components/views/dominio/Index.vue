@@ -19,7 +19,7 @@
         </div>
         <div class="col-9">
           <div class="row">
-            <div class="q-px-md q-mb-md col-12" v-for="empresa in empresas">
+            <div class="q-px-md q-mb-md col-12" v-for="empresa in empresas" :key="empresa.codempresa">
               <q-card class="col-6" flat bordered>
                 <q-card-section class="bg-primary text-white">
                   <div class="text-h6">#{{ empresa.codempresa }} - {{ empresa.empresa }}</div>
@@ -104,7 +104,7 @@
                             <q-btn  flat icon="add" color="primary" class="col-6 q-ml-md" label="Nova Combinação de CFOP e CST"
                               @click="novoDominioAcumulador(filial.codfilial)" />
                             <q-list  separator>
-                              <q-item v-for="ac in sortArrayAcumuladores(filial.acumuladores)">
+                              <q-item v-for="ac in sortArrayAcumuladores(filial.acumuladores)" :key="ac.coddominioacumulador">
                                 <q-item-section side>
                                   <q-chip square color="primary" text-color="white">
                                     {{ ac.codcfop }}

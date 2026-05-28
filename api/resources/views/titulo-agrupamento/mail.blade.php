@@ -35,7 +35,7 @@ $tits = collect($ta->TituloS->sortBy('vencimento')->sortBy('numero')->all());
         Segue em anexo os documentos referente ao agrupamento de títulos
         <b>{{ formataCodigo($ta->codtituloagrupamento) }}</b>
         emitido em
-        <b>{{ $ta->emissao->formatLocalized('%d de %B de %Y (%A)') }}</b>.
+        <b>{{ $ta->emissao->isoFormat('DD [de] MMMM [de] YYYY (dddd)') }}</b>.
     </p>
 
     <p>

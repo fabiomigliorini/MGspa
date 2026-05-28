@@ -26,13 +26,12 @@ if (!function_exists('formataData')) {
 
             case 'E':
             case 'EXTENSO':
-                // ('%A %d %B %Y');  // Mittwoch 21 Mai 1975
-                return $data->formatLocalized('%d %B %Y');
+                return $data->isoFormat('DD MMMM YYYY');
                 break;
 
             case 'EC':
             case 'EXTENSOCURTO':
-                return $data->formatLocalized('%b/%Y');
+                return $data->isoFormat('MMM/YYYY');
                 break;
 
             case 'L':

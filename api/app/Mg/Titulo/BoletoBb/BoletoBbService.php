@@ -67,6 +67,11 @@ class BoletoBbService
      */
     public static function registrar(Titulo $titulo)
     {
+        // Boleto só faz sentido para título a receber com saldo positivo.
+        // Sem isso o BB rejeita com mensagem confusa de "desconto + abatimento >= valor".
+        if ($titulo->debitosaldo <= 0) {
+            throw new \Exception('Boleto só pode ser emitido para título a receber com saldo positivo!');
+        }
 
         // se tem portador de outro banco
         if (empty($titulo->codportador) || $titulo->Portador->codbanco != 1) {
@@ -276,16 +281,19 @@ class BoletoBbService
      */
     public static function pdf(TituloBoleto $tituloBoleto)
     {
-        $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
-        Instructions::prepare($report); // prepara o relatorio lendo o arquivo
-        $data = [
-            new BoletoBbPdf($tituloBoleto),
-        ];
-        $report->dbData = $data; // aqui voce pode construir seu array de boletos em qualquer estrutura incluindo
-        $report->generate();                // gera o relatorio
-        $report->out();                     // gera o pdf
-        $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
-        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        $data = [new BoletoBbPdf($tituloBoleto)];
+        $report = new Report(
+            app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'),
+            [],
+            null,
+            false,
+            ['type' => 'array', 'data' => $data],
+        );
+        Instructions::prepare($report);
+        $report->generate();
+        $report->out();
+        $pdfProcessor = PdfProcessor::get();
+        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');
         return $pdf;
     }
 
@@ -294,8 +302,6 @@ class BoletoBbService
      */
     public static function pdfPeloNegocio(Negocio $negocio)
     {
-        $report = new Report(app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'), []);
-        Instructions::prepare($report); // prepara o relatorio lendo o arquivo
         $data = [];
         foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
             foreach ($nfp->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
@@ -307,11 +313,18 @@ class BoletoBbService
         if (count($data) == 0) {
             throw new \Exception("Nenhum boleto para o Negócio!");
         }
-        $report->dbData = $data; // aqui voce pode construir seu array de boletos em qualquer estrutura incluindo
-        $report->generate();                // gera o relatorio
-        $report->out();                     // gera o pdf
-        $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
-        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        $report = new Report(
+            app_path('/Mg/Titulo/BoletoBb/boletoA4.jrxml'),
+            [],
+            null,
+            false,
+            ['type' => 'array', 'data' => $data],
+        );
+        Instructions::prepare($report);
+        $report->generate();
+        $report->out();
+        $pdfProcessor = PdfProcessor::get();
+        $pdf = $pdfProcessor->Output('boleto.pdf', 'S');
         return $pdf;
     }
 
