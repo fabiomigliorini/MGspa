@@ -1,4 +1,14 @@
 services:
+  # Redis para SESSION_DRIVER e CACHE_STORE.
+  # Sem `ports:` → só acessível pela network interna do compose (REDIS_HOST=redis).
+  redis:
+    image: redis:7-alpine
+    container_name: mgspa-api-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+
   api:
     build:
       context: .
@@ -9,6 +19,8 @@ services:
     working_dir: /opt/www/MGspa/api
     ports:
       - "9007:9000"
+    depends_on:
+      - redis
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
@@ -35,6 +47,7 @@ services:
     working_dir: /opt/www/MGspa/api
     depends_on:
       - api
+      - redis
     command: ["php", "artisan", "schedule:work"]
     volumes:
       - /opt/www:/opt/www
@@ -59,6 +72,7 @@ services:
     working_dir: /opt/www/MGspa/api
     depends_on:
       - api
+      - redis
     command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
     volumes:
       - /opt/www:/opt/www
@@ -73,3 +87,6 @@ services:
       - "api.mgpapelaria.com.br:host-gateway"
       - "auth-dev.mgpapelaria.com.br:host-gateway"
       - "api-mgspa-dev.mgpapelaria.com.br:host-gateway"
+
+volumes:
+  redis-data:

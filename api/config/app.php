@@ -10,7 +10,7 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
-    'timezone' => env('APP_TIMEZONE', 'America/Sao_Paulo'),
+    'timezone' => env('APP_TIMEZONE', 'America/Cuiaba'),
 
     'locale' => env('APP_LOCALE', 'pt_BR'),
 
