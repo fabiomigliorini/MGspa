@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Oct/2024 12:23:40
+ * Date: 27/May/2026 11:40:24
  */
 
 namespace Mg\Usuario;
@@ -19,12 +19,9 @@ class AuthItemChild extends MgModel
         'child'
     ];
 
-    protected $dates = [
-        
-    ];
-
     protected $casts = [
-        
+        'alteracao' => 'datetime',
+        'criacao' => 'datetime'
     ];
 
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jun/2021 08:42:33
+ * Date: 27/May/2026 11:34:47
  */
 
 namespace Mg\Titulo;
@@ -22,17 +22,14 @@ class TituloNfeTerceiro extends MgModel
         'codtitulo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnfeterceiro' => 'integer',
         'codtitulo' => 'integer',
         'codtitulonfeterceiro' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

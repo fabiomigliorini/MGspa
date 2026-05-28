@@ -45,7 +45,10 @@ class UsuarioResource extends JsonResource
             ];
         }
 
-        $ret['permissoes'] = $usuarios->sortBy('grupousuario', SORT_NATURAL | SORT_FLAG_CASE)->toArray();
+        // ->values() reseta as chaves pra 0..N-1 (lista) — caso contrário a
+        // serialização JSON vira `{"1": {...}, "6": {...}}` (objeto, não array),
+        // e os consumers que fazem `permissoes.map(...)` quebram.
+        $ret['permissoes'] = $usuarios->sortBy('grupousuario', SORT_NATURAL | SORT_FLAG_CASE)->values()->toArray();
 
         if ($this->codfilial) {
             $ret['filial'] = $this->Filial->filial ?? null;

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Oct/2021 14:29:17
+ * Date: 27/May/2026 11:35:19
  */
 
 namespace Mg\Portador;
@@ -24,19 +24,16 @@ class PortadorTransferencia extends MgModel
         'valor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo',
-        'lancamento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codportadordestino' => 'integer',
         'codportadororigem' => 'integer',
         'codportadortransferencia' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
+        'lancamento' => 'datetime',
         'valor' => 'float'
     ];
 

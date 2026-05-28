@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Oct/2024 12:25:45
+ * Date: 27/May/2026 11:38:30
  */
 
 namespace Mg\Usuario;
@@ -22,11 +22,9 @@ class AuthAssignment extends MgModel
         'userid'
     ];
 
-    protected $dates = [
-        
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
+        'criacao' => 'datetime',
         'userid' => 'integer'
     ];
 

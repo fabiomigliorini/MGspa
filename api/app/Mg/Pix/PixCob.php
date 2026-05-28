@@ -1,14 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Jan/2024 17:27:56
+ * Date: 27/May/2026 11:30:15
  */
 
 namespace Mg\Pix;
 
 use Mg\MgModel;
-use Mg\Pix\Pix;
 use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pix\Pix;
 use Mg\Negocio\Negocio;
 use Mg\Pix\PixCobStatus;
 use Mg\Portador\Portador;
@@ -38,12 +38,8 @@ class PixCob extends MgModel
         'valororiginal'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'cnpj' => 'float',
         'codnegocio' => 'integer',
         'codpdv' => 'integer',
@@ -53,6 +49,7 @@ class PixCob extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'cpf' => 'float',
+        'criacao' => 'datetime',
         'expiracao' => 'integer',
         'locationid' => 'integer',
         'valororiginal' => 'float'

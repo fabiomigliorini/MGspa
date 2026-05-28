@@ -199,14 +199,14 @@ class NotaFiscalRelatorioService
 
         $mpdf->SetHTMLHeader(
             '<div style="font-size:14pt;font-weight:bold;border-bottom:2px solid #000;padding-bottom:3px;">'
-          . 'Relat&oacute;rio de Notas Fiscais'
-          . '</div>'
+                . 'Relat&oacute;rio de Notas Fiscais'
+                . '</div>'
         );
 
         $mpdf->SetHTMLFooter(
             '<div style="text-align:right;font-size:6pt;color:#666;border-top:1px solid #000;padding-top:2px;">'
-          . 'MGsis &mdash; {DATE j/m/Y H:i} &mdash; P&aacute;gina {PAGENO} de {nbpg}'
-          . '</div>'
+                . 'MGsis &mdash; {DATE j/m/Y H:i} &mdash; P&aacute;gina {PAGENO} de {nbpg}'
+                . '</div>'
         );
 
         $mpdf->WriteHTML($html);

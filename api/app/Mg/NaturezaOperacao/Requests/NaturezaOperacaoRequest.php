@@ -34,4 +34,20 @@ class NaturezaOperacaoRequest extends FormRequest
             'preco' => 'nullable|integer|in:1,2,3,4',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'naturezaoperacao.required' => 'A natureza da operação é obrigatória!',
+            'naturezaoperacao.max' => 'A natureza da operação deve ter no máximo 50 caracteres!',
+            'codoperacao.required' => 'A operação é obrigatória!',
+            'codoperacao.exists' => 'A operação selecionada não existe!',
+            'codnaturezaoperacaodevolucao.exists' => 'A natureza de operação de devolução selecionada não existe!',
+            'codtipotitulo.required' => 'O tipo de título é obrigatório!',
+            'codtipotitulo.exists' => 'O tipo de título selecionado não existe!',
+            'codcontacontabil.exists' => 'A conta contábil selecionada não existe!',
+            'finnfe.in' => 'A finalidade NFe deve ser 1 (Normal), 2 (Complementar), 3 (Ajuste) ou 4 (Devolução/Retorno)!',
+            'codestoquemovimentotipo.exists' => 'O tipo de movimento de estoque selecionado não existe!',
+        ];
+    }
 }

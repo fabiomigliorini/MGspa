@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 10:50:23
+ * Date: 27/May/2026 11:39:52
  */
 
 namespace Mg\Filial;
@@ -20,17 +20,14 @@ class ParametrosGerais extends MgModel
         'transacaoinicial'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'transacaofinal',
-        'transacaoinicial'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codparametrosgerais' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'transacaofinal' => 'date',
+        'transacaoinicial' => 'date'
     ];
 
 

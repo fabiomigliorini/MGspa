@@ -20,16 +20,17 @@ export const useAuthStore = defineStore('auth', {
 
   actions: {
     async login(usuario, senha) {
-      const params = {
+      const params = new URLSearchParams({
         username: usuario,
         password: senha,
         grant_type: 'password',
         client_id: process.env.CLIENT_ID,
         client_secret: process.env.CLIENT_SECRET,
-      }
+        scope: 'view-user',
+      })
       try {
         let { data } = await axios.post(
-          process.env.API_AUTH_URL + '/api/oauth/token/json',
+          process.env.API_AUTH_URL + '/oauth/token',
           params,
           { withCredentials: true },
         )
@@ -72,20 +73,20 @@ export const useAuthStore = defineStore('auth', {
 
     async renovarToken() {
       // Sem refresh_token (caso típico de login via cookie SSO compartilhado entre apps),
-      // o /api/refresh do MGAuth não funciona. Cai pra revalidação via v1/auth/user.
+      // cai pra revalidação via /userinfo.
       if (!this.token.refresh_token) {
         await this.carregarUsuario()
         return
       }
 
-      const params = {
+      const params = new URLSearchParams({
         refresh_token: this.token.refresh_token,
         grant_type: 'refresh_token',
         client_id: process.env.CLIENT_ID,
         client_secret: process.env.CLIENT_SECRET,
-      }
+      })
       try {
-        let { data } = await axios.post(process.env.API_AUTH_URL + '/api/refresh', params, {
+        let { data } = await axios.post(process.env.API_AUTH_URL + '/oauth/token', params, {
           withCredentials: true,
         })
         if (data.access_token) {
@@ -104,15 +105,14 @@ export const useAuthStore = defineStore('auth', {
 
     async logout() {
       try {
-        await axios.post(
-          process.env.API_AUTH_URL + '/api/logout',
-          {},
-          {
-            headers: {
-              Authorization: 'Bearer ' + this.token.access_token,
-            },
-          },
-        )
+        // RFC 7009 — revoga o token passando-o no body + client_credentials
+        const params = new URLSearchParams({
+          token: this.token.access_token,
+          token_type_hint: 'access_token',
+          client_id: process.env.CLIENT_ID,
+          client_secret: process.env.CLIENT_SECRET,
+        })
+        await axios.post(process.env.API_AUTH_URL + '/oauth/revoke', params)
         this.usuario = {}
         this.token = {}
       } catch (error) {
@@ -128,8 +128,10 @@ export const useAuthStore = defineStore('auth', {
 
       if (this.token.access_token) {
         try {
-          let { data } = await api.get('/api/v1/auth/user')
-          this.usuario = data.data
+          // OIDC Core 1.0 §5.3 — /userinfo retorna claims OIDC + custom MGspa
+          // num único objeto plano (sem wrapper `data`)
+          let { data } = await api.get('/userinfo')
+          this.usuario = data
           if (data.meta?.expires_at) {
             this.token.expires_at = data.meta.expires_at
           }
@@ -145,13 +147,13 @@ export const useAuthStore = defineStore('auth', {
     // antes de substituir o estado, evitando "pisca" do expires_at no UI.
     async aplicarToken(novoToken) {
       try {
-        const { data } = await api.get('/api/v1/auth/user', {
+        const { data } = await api.get('/userinfo', {
           headers: { Authorization: 'Bearer ' + novoToken.access_token },
         })
         if (data.meta?.expires_at) {
           novoToken.expires_at = data.meta.expires_at
         }
-        this.usuario = data.data
+        this.usuario = data
         this.token = novoToken
       } catch (error) {
         console.log(error)

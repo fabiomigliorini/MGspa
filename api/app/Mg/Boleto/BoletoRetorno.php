@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jun/2020 02:01:12
+ * Date: 27/May/2026 11:20:41
  */
 
 namespace Mg\Boleto;
@@ -41,14 +42,9 @@ class BoletoRetorno extends MgModel
         'valor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'dataretorno'
-    ];
-
     protected $casts = [
         'abatimento' => 'float',
+        'alteracao' => 'datetime',
         'codbancocobrador' => 'integer',
         'codboletomotivoocorrencia' => 'integer',
         'codboletoretorno' => 'integer',
@@ -56,6 +52,8 @@ class BoletoRetorno extends MgModel
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'dataretorno' => 'date',
         'desconto' => 'float',
         'despesas' => 'float',
         'jurosatraso' => 'float',
@@ -99,5 +97,4 @@ class BoletoRetorno extends MgModel
     {
         return $this->hasMany(MovimentoTitulo::class, 'codboletoretorno', 'codboletoretorno');
     }
-
 }

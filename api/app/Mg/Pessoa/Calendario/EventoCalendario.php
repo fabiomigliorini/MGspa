@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 10/Feb/2026 11:12:35
+ * Date: 27/May/2026 11:42:29
  */
 
 namespace Mg\Pessoa\Calendario;
@@ -31,20 +31,17 @@ class EventoCalendario extends MgModel
         'tipo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'dataevento',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcolaborador' => 'integer',
         'coddependente' => 'integer',
         'codeventocalendario' => 'integer',
         'codferias' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'dataevento' => 'date',
+        'inativo' => 'datetime',
         'recorrente' => 'boolean'
     ];
 

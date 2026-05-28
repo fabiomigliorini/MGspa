@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:31:47
+ * Date: 27/May/2026 11:34:35
  */
 
 namespace Mg\Produto;
@@ -23,16 +23,13 @@ class UnidadeMedida extends MgModel
         'unidademedida'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codunidademedida' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime'
     ];
 
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 11/May/2024 15:59:29
+ * Date: 27/May/2026 11:37:57
  */
 
 namespace Mg\Mercos;
@@ -22,17 +22,14 @@ class MercosProdutoImagem extends MgModel
         'codmercosproduto'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codimagem' => 'integer',
         'codmercosproduto' => 'integer',
         'codmercosprodutoimagem' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

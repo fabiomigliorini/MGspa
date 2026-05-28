@@ -1,14 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 25/Jan/2025 11:03:00
+ * Date: 27/May/2026 11:40:49
  */
 
 namespace Mg\Saurus;
 
 use Mg\MgModel;
-use Mg\Saurus\SaurusPagamento;
 use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Saurus\SaurusPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Saurus\SaurusPdv;
 use Mg\Usuario\Usuario;
@@ -34,17 +34,14 @@ class SaurusPedido extends MgModel
         'valortotal'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnegocio' => 'integer',
         'codsauruspdv' => 'integer',
         'codsauruspedido' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'modpagamento' => 'integer',
         'parcelas' => 'integer',
         'status' => 'integer',

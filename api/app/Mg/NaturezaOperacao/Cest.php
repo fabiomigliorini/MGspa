@@ -1,14 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:17:21
+ * Date: 27/May/2026 11:33:31
  */
 
 namespace Mg\NaturezaOperacao;
 
 use Mg\MgModel;
 use Mg\Produto\Produto;
-// Ncm fica no mesmo namespace Mg\NaturezaOperacao
+use Mg\NaturezaOperacao\Ncm;
 use Mg\Usuario\Usuario;
 
 class Cest extends MgModel
@@ -26,17 +26,14 @@ class Cest extends MgModel
         'ncm'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcest' => 'integer',
         'coddecreto271' => 'integer',
         'codncm' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'mva' => 'float'
     ];
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:54:40
+ * Date: 27/May/2026 11:22:43
  */
 
 namespace Mg\ValeCompra;
@@ -29,19 +29,15 @@ class ValeCompra extends MgModel
         'codtitulo',
         'codvalecompramodelo',
         'desconto',
+        'inativo',
         'observacoes',
         'total',
         'totalprodutos',
         'turma'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codfilial' => 'integer',
         'codpessoa' => 'integer',
         'codpessoafavorecido' => 'integer',
@@ -50,7 +46,9 @@ class ValeCompra extends MgModel
         'codusuariocriacao' => 'integer',
         'codvalecompra' => 'integer',
         'codvalecompramodelo' => 'integer',
+        'criacao' => 'datetime',
         'desconto' => 'float',
+        'inativo' => 'datetime',
         'total' => 'float',
         'totalprodutos' => 'float'
     ];

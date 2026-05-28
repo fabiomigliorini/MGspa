@@ -1,14 +1,21 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:42:23
+ */
 
 namespace Mg\Pessoa;
 
-use App\Models\Usuario;
 use Mg\MgModel;
+use Mg\Pessoa\Calendario\EventoCalendario;
+use Mg\Pessoa\Pessoa;
+use Mg\Usuario\Usuario;
 
 class Dependente extends MgModel
 {
     protected $table = 'tbldependente';
     protected $primaryKey = 'coddependente';
+
 
     protected $fillable = [
         'codpessoa',
@@ -31,30 +38,32 @@ class Dependente extends MgModel
         'pensaocpfbeneficiario',
         'pensaopercentual',
         'pensaovalor',
-        'tipdep',
+        'tipdep'
     ];
 
     protected $casts = [
+        'alteracao' => 'datetime',
         'coddependente' => 'integer',
         'codpessoa' => 'integer',
         'codpessoaresponsavel' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'datafim' => 'date',
+        'datainicio' => 'date',
         'depirrf' => 'boolean',
         'depplano' => 'boolean',
         'depsfam' => 'boolean',
         'guardajudicial' => 'boolean',
+        'inativo' => 'datetime',
         'incsocfam' => 'boolean',
         'pensaoalimenticia' => 'boolean',
         'pensaopercentual' => 'float',
-        'pensaovalor' => 'float',
-        'alteracao' => 'datetime',
-        'criacao' => 'datetime',
-        'datafim' => 'datetime',
-        'datainicio' => 'datetime',
-        'inativo' => 'datetime',
+        'pensaovalor' => 'float'
     ];
 
+
+    // Chaves Estrangeiras
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
@@ -74,4 +83,12 @@ class Dependente extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
+
+    // Tabelas Filhas
+    public function EventoCalendarioS()
+    {
+        return $this->hasMany(EventoCalendario::class, 'coddependente', 'coddependente');
+    }
+
 }

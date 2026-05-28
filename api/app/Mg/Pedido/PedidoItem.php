@@ -1,41 +1,56 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:34:22
+ */
 
 namespace Mg\Pedido;
 
-use App\Models\Usuario;
 use Mg\MgModel;
+use Mg\Negocio\NegocioProdutoBarraPedidoItem;
+use Mg\Pedido\Pedido;
+use Mg\Produto\ProdutoVariacao;
+use Mg\Usuario\Usuario;
 
 class PedidoItem extends MgModel
 {
-    public const STATUS_PENDENTE = 10;
-    public const STATUS_ATENDIDO = 20;
-    public const STATUS_CANCELADO = 90;
+    const STATUS_PENDENTE         = 10;
+    const STATUS_ATENDIDO         = 20;
+    const STATUS_CANCELADO        = 90;
 
     protected $table = 'tblpedidoitem';
     protected $primaryKey = 'codpedidoitem';
+
 
     protected $fillable = [
         'codpedido',
         'codprodutovariacao',
         'indstatus',
-        'quantidade',
+        'quantidade'
     ];
 
     protected $casts = [
+        'alteracao' => 'datetime',
         'codpedido' => 'integer',
         'codpedidoitem' => 'integer',
         'codprodutovariacao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'indstatus' => 'integer',
-        'quantidade' => 'float',
-        'alteracao' => 'datetime',
         'criacao' => 'datetime',
+        'indstatus' => 'integer',
+        'quantidade' => 'float'
     ];
 
+
+    // Chaves Estrangeiras
     public function Pedido()
     {
         return $this->belongsTo(Pedido::class, 'codpedido', 'codpedido');
+    }
+
+    public function ProdutoVariacao()
+    {
+        return $this->belongsTo(ProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
     }
 
     public function UsuarioAlteracao()
@@ -47,4 +62,12 @@ class PedidoItem extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
+
+    // Tabelas Filhas
+    public function NegocioProdutoBarraPedidoItemS()
+    {
+        return $this->hasMany(NegocioProdutoBarraPedidoItem::class, 'codpedidoitem', 'codpedidoitem');
+    }
+
 }

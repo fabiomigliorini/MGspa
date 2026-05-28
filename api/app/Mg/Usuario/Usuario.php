@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Models;
+namespace Mg\Usuario;
 
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;

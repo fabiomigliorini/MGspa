@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 10:49:01
+ * Date: 27/May/2026 11:38:55
  */
 
 namespace Mg\Filial;
@@ -19,15 +19,12 @@ class Codigo extends MgModel
         'codproximo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codproximo' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

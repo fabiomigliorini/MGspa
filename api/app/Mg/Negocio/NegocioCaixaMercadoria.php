@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 11:59:51
+ * Date: 27/May/2026 11:29:19
  */
 
 namespace Mg\Negocio;
@@ -24,19 +24,16 @@ class NegocioCaixaMercadoria extends MgModel
         'recebimento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'recebimento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcaixamercadoria' => 'integer',
         'codnegocio' => 'integer',
         'codnegociocaixamercadoria' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'codusuariorecebimento' => 'integer'
+        'codusuariorecebimento' => 'integer',
+        'criacao' => 'datetime',
+        'recebimento' => 'datetime'
     ];
 
 

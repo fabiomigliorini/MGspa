@@ -1,34 +1,64 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:24:00
+ */
 
 namespace Mg\NaturezaOperacao;
 
-use Mg\Usuario\Usuario;
-use Mg\Cidade\Estado;
 use Mg\MgModel;
+use Mg\NaturezaOperacao\Cfop;
+use Mg\Cidade\Estado;
+use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Produto\TipoProduto;
 use Mg\Tributacao\Tributacao;
+use Mg\Usuario\Usuario;
 
 class TributacaoNaturezaOperacao extends MgModel
 {
     protected $table = 'tbltributacaonaturezaoperacao';
     protected $primaryKey = 'codtributacaonaturezaoperacao';
 
+
     protected $fillable = [
-        'acumuladordominioprazo', 'acumuladordominiovista', 'bit',
-        'certidaosefazmt', 'codcfop', 'codestado', 'codnaturezaoperacao',
-        'codtipoproduto', 'codtributacao', 'cofinscst', 'cofinspercentual',
-        'csllpercentual', 'csosn', 'fethabkg', 'funruralpercentual',
-        'historicodominio', 'iagrokg', 'icmsbase', 'icmscst', 'icmslpbase',
-        'icmslppercentual', 'icmslppercentualimportado', 'icmspercentual',
-        'ipicst', 'irpjpercentual', 'movimentacaocontabil', 'movimentacaofisica',
-        'ncm', 'observacoesnf', 'piscst', 'pispercentual', 'senarpercentual',
+        'acumuladordominioprazo',
+        'acumuladordominiovista',
+        'bit',
+        'certidaosefazmt',
+        'codcfop',
+        'codestado',
+        'codnaturezaoperacao',
+        'codtipoproduto',
+        'codtributacao',
+        'cofinscst',
+        'cofinspercentual',
+        'csllpercentual',
+        'csosn',
+        'fethabkg',
+        'funruralpercentual',
+        'historicodominio',
+        'iagrokg',
+        'icmsbase',
+        'icmscst',
+        'icmslpbase',
+        'icmslppercentual',
+        'icmslppercentualimportado',
+        'icmspercentual',
+        'ipicst',
+        'irpjpercentual',
+        'movimentacaocontabil',
+        'movimentacaofisica',
+        'ncm',
+        'observacoesnf',
+        'piscst',
+        'pispercentual',
+        'senarpercentual'
     ];
 
     protected $casts = [
-        'alteracao' => 'datetime',
-        'criacao' => 'datetime',
         'acumuladordominioprazo' => 'integer',
         'acumuladordominiovista' => 'integer',
+        'alteracao' => 'datetime',
         'bit' => 'boolean',
         'certidaosefazmt' => 'boolean',
         'codcfop' => 'integer',
@@ -41,6 +71,7 @@ class TributacaoNaturezaOperacao extends MgModel
         'codusuariocriacao' => 'integer',
         'cofinscst' => 'float',
         'cofinspercentual' => 'float',
+        'criacao' => 'datetime',
         'csllpercentual' => 'float',
         'fethabkg' => 'float',
         'funruralpercentual' => 'float',
@@ -57,9 +88,11 @@ class TributacaoNaturezaOperacao extends MgModel
         'movimentacaofisica' => 'boolean',
         'piscst' => 'float',
         'pispercentual' => 'float',
-        'senarpercentual' => 'float',
+        'senarpercentual' => 'float'
     ];
 
+
+    // Chaves Estrangeiras
     public function Cfop()
     {
         return $this->belongsTo(Cfop::class, 'codcfop', 'codcfop');
@@ -94,4 +127,5 @@ class TributacaoNaturezaOperacao extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
 }

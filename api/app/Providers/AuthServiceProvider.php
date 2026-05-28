@@ -34,5 +34,12 @@ class AuthServiceProvider extends ServiceProvider
 
         // Tokens expiram à meia-noite (comportamento herdado do MGAuth).
         Passport::tokensExpireIn(now()->endOfDay());
+
+        // Scope `view-user` herdado do MGAuth (registrava em AppServiceProvider).
+        // MGLara/MGsis pedem esse scope via SSO_SCOPES no fluxo authorization_code
+        // — sem registrar, Passport rejeita o scope solicitado.
+        Passport::tokensCan([
+            'view-user' => 'View e Usuários',
+        ]);
     }
 }

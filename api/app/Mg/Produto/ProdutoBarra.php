@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 22/Sep/2025 17:58:36
+ * Date: 27/May/2026 11:25:26
  */
 
 namespace Mg\Produto;
@@ -12,9 +12,9 @@ use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NfeTerceiro\NfeTerceiroItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroProdutoBarra;
+use Mg\Produto\Prancheta;
 use Mg\ValeCompra\ValeCompraModeloProdutoBarra;
 use Mg\ValeCompra\ValeCompraProdutoBarra;
-use Mg\Produto\Prancheta;
 use Mg\Woo\WooProduto;
 use Mg\Marca\Marca;
 use Mg\Produto\Produto;
@@ -38,19 +38,16 @@ class ProdutoBarra extends MgModel
         'variacao'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmarca' => 'integer',
         'codproduto' => 'integer',
         'codprodutobarra' => 'integer',
         'codprodutoembalagem' => 'integer',
         'codprodutovariacao' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 
@@ -132,7 +129,8 @@ class ProdutoBarra extends MgModel
         return $this->hasMany(WooProduto::class, 'codprodutobarraunidade', 'codprodutobarra');
     }
 
-    // Atributo descricao
+
+    // Customizado
     public function getDescricaoAttribute()
     {
         $descr = "{$this->Produto->produto} {$this->ProdutoVariacao->variacao}";
@@ -154,14 +152,11 @@ class ProdutoBarra extends MgModel
         return $this->ProdutoVariacao->Produto->preco;
     }
 
-
-    // Atributo unidade
     public function getUnidadeAttribute()
     {
         return $this->UnidadeMedida?->sigla;
     }
 
-    // Unidade Medida
     public function UnidadeMedida()
     {
         if (!empty($this->codprodutoembalagem)) {
@@ -169,5 +164,4 @@ class ProdutoBarra extends MgModel
         }
         return $this->Produto->UnidadeMedida();
     }
-
 }

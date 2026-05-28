@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 17:01:21
+ * Date: 27/May/2026 11:25:19
  */
 
 namespace Mg\Negocio;
@@ -46,15 +46,8 @@ class NegocioProdutoBarra extends MgModel
         'valorunitario'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'conferencia',
-        'criacao',
-        'inativo',
-        'ordenacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnegocio' => 'integer',
         'codnegocioprodutobarra' => 'integer',
         'codnegocioprodutobarradevolucao' => 'integer',
@@ -62,6 +55,10 @@ class NegocioProdutoBarra extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuarioconferencia' => 'integer',
         'codusuariocriacao' => 'integer',
+        'conferencia' => 'datetime',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
+        'ordenacao' => 'datetime',
         'percentualdesconto' => 'float',
         'quantidade' => 'float',
         'valordesconto' => 'float',

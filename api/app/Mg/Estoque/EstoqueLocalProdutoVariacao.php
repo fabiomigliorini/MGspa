@@ -1,75 +1,83 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:34:16
+ */
 
 namespace Mg\Estoque;
 
-/**
- * Campos
- * @property  bigint                         $codestoquelocalprodutovariacao     NOT NULL DEFAULT nextval('tblestoquelocalproduto_codestoquelocalproduto_seq'::regclass)
- * @property  bigint                         $codestoquelocal                    NOT NULL
- * @property  bigint                         $corredor
- * @property  bigint                         $prateleira
- * @property  bigint                         $coluna
- * @property  bigint                         $bloco
- * @property  timestamp                      $alteracao
- * @property  bigint                         $codusuarioalteracao
- * @property  timestamp                      $criacao
- * @property  bigint                         $codusuariocriacao
- * @property  bigint                         $estoqueminimo
- * @property  bigint                         $estoquemaximo
- * @property  bigint                         $codprodutovariacao                 NOT NULL
- * @property  numeric(14,3)                  $vendabimestrequantidade
- * @property  numeric(14,2)                  $vendabimestrevalor
- * @property  numeric(14,3)                  $vendasemestrequantidade
- * @property  numeric(14,2)                  $vendasemestrevalor
- * @property  numeric(14,3)                  $vendaanoquantidade
- * @property  numeric(14,2)                  $vendaanovalor
- * @property  timestamp                      $vendaultimocalculo
- * @property  date                           $vencimento
- * @property  float8                         $vendadiaquantidadeprevisao
- *
- * Chaves Estrangeiras
- * @property  Usuario                        $UsuarioAlteracao
- * @property  Usuario                        $UsuarioCriacao
- * @property  EstoqueLocal                   $EstoqueLocal
- * @property  ProdutoVariacao                $ProdutoVariacao
- *
- * Tabelas Filhas
- * @property  EstoqueLocalProdutoVariacaoVenda[] $EstoqueLocalProdutoVariacaoVendaS
- * @property  EstoqueSaldo[]                 $EstoqueSaldoS
- */
- use Mg\MgModel;
+use Mg\MgModel;
+use Mg\Estoque\EstoqueLocalProdutoVariacaoVenda;
+use Mg\Estoque\EstoqueSaldo;
+use Mg\Estoque\EstoqueLocal;
+use Mg\Produto\ProdutoVariacao;
+use Mg\Usuario\Usuario;
 
 class EstoqueLocalProdutoVariacao extends MgModel
 {
     protected $table = 'tblestoquelocalprodutovariacao';
     protected $primaryKey = 'codestoquelocalprodutovariacao';
+
+
     protected $fillable = [
-        'codestoquelocal',
-        'corredor',
-        'prateleira',
-        'coluna',
         'bloco',
-        'estoqueminimo',
-        'estoquemaximo',
+        'codestoquelocal',
         'codprodutovariacao',
-        'vendabimestrequantidade',
-        'vendabimestrevalor',
-        'vendasemestrequantidade',
-        'vendasemestrevalor',
+        'coluna',
+        'corredor',
+        'estoquemaximo',
+        'estoqueminimo',
+        'lotetransferencia',
+        'prateleira',
+        'vencimento',
         'vendaanoquantidade',
         'vendaanovalor',
-        'vendaultimocalculo',
-        'vencimento',
+        'vendabimestrequantidade',
+        'vendabimestrevalor',
         'vendadiaquantidadeprevisao',
-    ];
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'vendaultimocalculo',
-        'vencimento',
+        'vendasemestrequantidade',
+        'vendasemestrevalor',
+        'vendaultimocalculo'
     ];
 
+    protected $casts = [
+        'alteracao' => 'datetime',
+        'bloco' => 'integer',
+        'codestoquelocal' => 'integer',
+        'codestoquelocalprodutovariacao' => 'integer',
+        'codprodutovariacao' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'coluna' => 'integer',
+        'corredor' => 'integer',
+        'criacao' => 'datetime',
+        'estoquemaximo' => 'integer',
+        'estoqueminimo' => 'integer',
+        'lotetransferencia' => 'float',
+        'prateleira' => 'integer',
+        'vencimento' => 'date',
+        'vendaanoquantidade' => 'float',
+        'vendaanovalor' => 'float',
+        'vendabimestrequantidade' => 'float',
+        'vendabimestrevalor' => 'float',
+        'vendadiaquantidadeprevisao' => 'float',
+        'vendasemestrequantidade' => 'float',
+        'vendasemestrevalor' => 'float',
+        'vendaultimocalculo' => 'datetime'
+    ];
+
+
     // Chaves Estrangeiras
+    public function EstoqueLocal()
+    {
+        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
+    }
+
+    public function ProdutoVariacao()
+    {
+        return $this->belongsTo(ProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
+    }
+
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -80,15 +88,6 @@ class EstoqueLocalProdutoVariacao extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
-    public function EstoqueLocal()
-    {
-        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
-    }
-
-    public function ProdutoVariacao()
-    {
-        return $this->belongsTo(ProdutoVariacao::class, 'codprodutovariacao', 'codprodutovariacao');
-    }
 
     // Tabelas Filhas
     public function EstoqueLocalProdutoVariacaoVendaS()
@@ -100,6 +99,5 @@ class EstoqueLocalProdutoVariacao extends MgModel
     {
         return $this->hasMany(EstoqueSaldo::class, 'codestoquelocalprodutovariacao', 'codestoquelocalprodutovariacao');
     }
-
 
 }

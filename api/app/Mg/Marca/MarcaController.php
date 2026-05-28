@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Mg\MgController;
 
+use Mg\Estoque\MinimoMaximo\ComprasService;
+use Mg\Estoque\MinimoMaximo\DistribuicaoService;
+
 class MarcaController extends MgController
 {
     public function index(Request $request)
@@ -100,9 +103,42 @@ class MarcaController extends MgController
         return response()->json($model, 200);
     }
 
+    public function autor(Request $request, $id)
+    {
+        $model = Marca::findOrFail($id);
+        $res = [
+            'codusuario' => $model->codusuario,
+            'usuario' => $model->usuario,
+            'pessoa' => null,
+            'imagem' => null,
+        ];
+        if (!empty($model->codpessoa)) {
+            $res['pessoa'] = $model->Pessoa->pessoa;
+        }
+        if (!empty($model->codimagem)) {
+            $res['imagem'] = $model->Imagem->url;
+        }
+
+        return response()->json($res, 200);
+    }
+
     public function autocompletar(Request $request)
     {
         $res = MarcaService::autocompletar($request->all());
+        return response()->json($res, 200);
+    }
+
+    public function criarPlanilhaPedido(Request $request, $id)
+    {
+        $model = Marca::findOrFail($id);
+        $res = ComprasService::criarPlanilhaPedido($model);
+        return response()->json($res, 200);
+    }
+
+    public function criarPlanilhaDistribuicaoSaldoDeposito(Request $request, $id)
+    {
+        $model = Marca::findOrFail($id);
+        $res = DistribuicaoService::criarPlanilhaDistribuicaoSaldoDeposito($model);
         return response()->json($res, 200);
     }
 }

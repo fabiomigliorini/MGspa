@@ -1,6 +1,10 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 12:07:01
+ */
 
-namespace Mg\Meta;
+namespace Mg\Meta\MetaUnidadeNegocioPessoaFixo;
 
 use Mg\MgModel;
 use Mg\Meta\Meta;
@@ -17,28 +21,25 @@ class MetaUnidadeNegocioPessoaFixo extends MgModel
         'codmeta',
         'codpessoa',
         'codunidadenegocio',
-        'datainicial',
         'datafinal',
+        'datainicial',
         'descricao',
         'quantidade',
         'tipo',
         'valor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'datainicial',
-        'datafinal'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmeta' => 'integer',
         'codmetaunidadenegociopessoafixo' => 'integer',
         'codpessoa' => 'integer',
         'codunidadenegocio' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'datafinal' => 'date',
+        'datainicial' => 'date',
         'quantidade' => 'float',
         'valor' => 'float'
     ];

@@ -13,11 +13,13 @@ class EstadoRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'estado' => 'required|string|max:100',
             'sigla' => 'required|string|max:10',
             'codigooficial' => 'nullable|integer',
         ];
+
+        return $rules;
     }
 
     public function messages(): array

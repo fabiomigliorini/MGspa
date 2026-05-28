@@ -1,19 +1,21 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 10/Oct/2025 18:53:36
+ * Date: 27/May/2026 11:21:59
  */
 
 namespace Mg\Negocio;
 
 use Mg\MgModel;
-use Mg\Titulo\Titulo;
-use Mg\Portador\PortadorMovimento;
 use Mg\Titulo\MovimentoTitulo;
+use Mg\Portador\PortadorMovimento;
+use Mg\Titulo\Titulo;
 use Mg\FormaPagamento\FormaPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
+use Mg\Lio\LioPedido;
 use Mg\Pix\PixCob;
+use Mg\Stone\StoneTransacao;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\SaurusPedido;
@@ -49,12 +51,8 @@ class NegocioFormaPagamento extends MgModel
         'valortroco'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'avista' => 'boolean',
         'bandeira' => 'integer',
         'codformapagamento' => 'integer',
@@ -69,6 +67,7 @@ class NegocioFormaPagamento extends MgModel
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'dias' => 'integer',
         'integracao' => 'boolean',
         'parcelas' => 'integer',
@@ -85,6 +84,11 @@ class NegocioFormaPagamento extends MgModel
     public function FormaPagamento()
     {
         return $this->belongsTo(FormaPagamento::class, 'codformapagamento', 'codformapagamento');
+    }
+
+    public function LioPedido()
+    {
+        return $this->belongsTo(LioPedido::class, 'codliopedido', 'codliopedido');
     }
 
     public function Negocio()
@@ -110,6 +114,11 @@ class NegocioFormaPagamento extends MgModel
     public function SaurusPedido()
     {
         return $this->belongsTo(SaurusPedido::class, 'codsauruspedido', 'codsauruspedido');
+    }
+
+    public function StoneTransacao()
+    {
+        return $this->belongsTo(StoneTransacao::class, 'codstonetransacao', 'codstonetransacao');
     }
 
     public function Titulo()

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 27/Jan/2021 19:11:20
+ * Date: 27/May/2026 11:32:03
  */
 
 namespace Mg\Mdfe;
@@ -25,19 +25,16 @@ class MdfeEnvioSefaz extends MgModel
         'xmotivo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'recebimento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmdfe' => 'integer',
         'codmdfeenviosefaz' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'cstatenvio' => 'integer',
-        'cstatretorno' => 'integer'
+        'cstatretorno' => 'integer',
+        'recebimento' => 'datetime'
     ];
 
 

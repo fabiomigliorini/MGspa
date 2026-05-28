@@ -13,11 +13,13 @@ class PaisRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $rules = [
             'pais' => 'required|string|max:100',
             'sigla' => 'required|string|max:10',
             'codigooficial' => 'nullable|integer',
         ];
+
+        return $rules;
     }
 
     public function messages(): array

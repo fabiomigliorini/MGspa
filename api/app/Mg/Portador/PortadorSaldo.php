@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 19/May/2025 15:57:08
+ * Date: 27/May/2026 11:41:14
  */
 
 namespace Mg\Portador;
@@ -24,17 +24,14 @@ class PortadorSaldo extends MgModel
         'saldobancariodisponivel'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'dia'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codportador' => 'integer',
         'codportadorsaldo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'dia' => 'date',
         'saldobancario' => 'float',
         'saldobancarioanterior' => 'float',
         'saldobancarioatual' => 'float',

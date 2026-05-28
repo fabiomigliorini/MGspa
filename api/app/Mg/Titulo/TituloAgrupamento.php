@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:50:54
+ * Date: 27/May/2026 11:22:13
  */
 
 namespace Mg\Titulo;
@@ -27,20 +27,17 @@ class TituloAgrupamento extends MgModel
         'observacao'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'cancelamento',
-        'criacao',
-        'emissao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
+        'cancelamento' => 'date',
         'codpessoa' => 'integer',
         'codtituloagrupamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'credito' => 'float',
-        'debito' => 'float'
+        'criacao' => 'datetime',
+        'debito' => 'float',
+        'emissao' => 'date'
     ];
 
 

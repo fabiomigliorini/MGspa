@@ -2,8 +2,8 @@
 
 namespace Mg\Banco;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
@@ -14,9 +14,16 @@ class BancoController extends Controller
     public function index(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS);
+
         $result = BancoService::listar($request->only([
-            'codbanco', 'banco', 'sigla', 'numerobanco', 'inativo', 'todos',
+            'codbanco',
+            'banco',
+            'sigla',
+            'numerobanco',
+            'inativo',
+            'todos',
         ]));
+
         return BancoResource::collection($result);
     }
 
@@ -29,6 +36,7 @@ class BancoController extends Controller
     public function store(BancoStoreRequest $request)
     {
         Autorizador::autoriza(self::GRUPOS);
+
         DB::beginTransaction();
         try {
             $banco = BancoService::criar($request->validated());
@@ -43,6 +51,7 @@ class BancoController extends Controller
     public function update(int $codbanco, BancoUpdateRequest $request)
     {
         Autorizador::autoriza(self::GRUPOS);
+
         DB::beginTransaction();
         try {
             $banco = Banco::findOrFail($codbanco);
@@ -58,6 +67,7 @@ class BancoController extends Controller
     public function inativar(int $codbanco)
     {
         Autorizador::autoriza(self::GRUPOS);
+
         DB::beginTransaction();
         try {
             $banco = Banco::findOrFail($codbanco);
@@ -73,6 +83,7 @@ class BancoController extends Controller
     public function ativar(int $codbanco)
     {
         Autorizador::autoriza(self::GRUPOS);
+
         DB::beginTransaction();
         try {
             $banco = Banco::findOrFail($codbanco);
@@ -88,6 +99,7 @@ class BancoController extends Controller
     public function destroy(int $codbanco)
     {
         Autorizador::autoriza(self::GRUPOS);
+
         DB::beginTransaction();
         try {
             $banco = Banco::findOrFail($codbanco);

@@ -1,11 +1,17 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:41:48
+ */
 
 namespace Mg\Tributacao;
 
+use Mg\MgModel;
+use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\Tributacao\Tributo;
 use Mg\Usuario\Usuario;
 use Mg\Cidade\Cidade;
 use Mg\Cidade\Estado;
-use Mg\MgModel;
 use Mg\Produto\TipoProduto;
 
 class TributacaoRegra extends MgModel
@@ -13,19 +19,29 @@ class TributacaoRegra extends MgModel
     protected $table = 'tbltributacaoregra';
     protected $primaryKey = 'codtributacaoregra';
 
+
     protected $fillable = [
-        'aliquota', 'basepercentual', 'beneficiocodigo', 'cclasstrib',
-        'codcidadedestino', 'codestadodestino', 'codnaturezaoperacao',
-        'codtipoproduto', 'codtributo', 'cst', 'geracredito', 'ncm',
-        'observacoes', 'tipocliente', 'vigenciafim', 'vigenciainicio',
+        'aliquota',
+        'basepercentual',
+        'beneficiocodigo',
+        'cclasstrib',
+        'codcidadedestino',
+        'codestadodestino',
+        'codnaturezaoperacao',
+        'codtipoproduto',
+        'codtributo',
+        'cst',
+        'geracredito',
+        'ncm',
+        'observacoes',
+        'tipocliente',
+        'vigenciafim',
+        'vigenciainicio'
     ];
 
     protected $casts = [
-        'alteracao' => 'datetime',
-        'criacao' => 'datetime',
-        'vigenciafim' => 'datetime',
-        'vigenciainicio' => 'datetime',
         'aliquota' => 'float',
+        'alteracao' => 'datetime',
         'basepercentual' => 'float',
         'codcidadedestino' => 'integer',
         'codestadodestino' => 'integer',
@@ -35,9 +51,14 @@ class TributacaoRegra extends MgModel
         'codtributo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'geracredito' => 'boolean',
+        'vigenciafim' => 'date',
+        'vigenciainicio' => 'date'
     ];
 
+
+    // Chaves Estrangeiras
     public function CidadeDestino()
     {
         return $this->belongsTo(Cidade::class, 'codcidadedestino', 'codcidade');
@@ -50,8 +71,7 @@ class TributacaoRegra extends MgModel
 
     public function NaturezaOperacao()
     {
-        // Resolve via string (NaturezaOperacao será migrado em seguida)
-        return $this->belongsTo('Mg\\NaturezaOperacao\\NaturezaOperacao', 'codnaturezaoperacao', 'codnaturezaoperacao');
+        return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
     }
 
     public function TipoProduto()
@@ -73,4 +93,5 @@ class TributacaoRegra extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
 }

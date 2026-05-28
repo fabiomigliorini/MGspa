@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 17:47:57
+ * Date: 27/May/2026 11:34:54
  */
 
 namespace Mg\NfeTerceiro;
@@ -26,17 +26,14 @@ class NfeTerceiroPagamento extends MgModel
         'vpag'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'cnpj' => 'float',
         'codnfeterceiro' => 'integer',
         'codnfeterceiropagamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'indpag' => 'integer',
         'tband' => 'integer',
         'tpag' => 'integer',

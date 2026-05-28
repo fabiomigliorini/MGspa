@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:52:02
+ * Date: 27/May/2026 11:22:28
  */
 
 namespace Mg\Cobranca;
@@ -22,17 +22,14 @@ class CobrancaHistoricoTitulo extends MgModel
         'codtitulo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcobrancahistorico' => 'integer',
         'codcobrancahistoricotitulo' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

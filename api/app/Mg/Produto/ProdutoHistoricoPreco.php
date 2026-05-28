@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:03:49
+ * Date: 27/May/2026 11:33:12
  */
 
 namespace Mg\Produto;
@@ -24,17 +24,14 @@ class ProdutoHistoricoPreco extends MgModel
         'preconovo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codproduto' => 'integer',
         'codprodutoembalagem' => 'integer',
         'codprodutohistoricopreco' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'precoantigo' => 'float',
         'preconovo' => 'float'
     ];

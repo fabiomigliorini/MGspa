@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Dec/2025 18:43:26
+ * Date: 27/May/2026 11:42:02
  */
 
 namespace Mg\NotaFiscal;
@@ -33,13 +33,9 @@ class NotaFiscalItemTributo extends MgModel
         'valorcredito'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
         'aliquota' => 'float',
+        'alteracao' => 'datetime',
         'base' => 'float',
         'basereducao' => 'float',
         'basereducaopercentual' => 'float',
@@ -48,6 +44,7 @@ class NotaFiscalItemTributo extends MgModel
         'codtributo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'geracredito' => 'boolean',
         'valor' => 'float',
         'valorcredito' => 'float'

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 17/Feb/2026 10:18:20
+ * Date: 27/May/2026 11:38:04
  */
 
 namespace Mg\Produto;
@@ -24,17 +24,14 @@ class Prancheta extends MgModel
         'ordem'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codprancheta' => 'integer',
         'codpranchetacategoria' => 'integer',
         'codprodutobarra' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'ordem' => 'integer'
     ];
 

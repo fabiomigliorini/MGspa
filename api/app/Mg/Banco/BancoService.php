@@ -15,12 +15,15 @@ class BancoService
         if (!empty($filtros['codbanco'])) {
             $q->where('codbanco', $filtros['codbanco']);
         }
+
         if (!empty($filtros['banco'])) {
             $q->palavras('banco', $filtros['banco']);
         }
+
         if (!empty($filtros['sigla'])) {
             $q->where('sigla', 'ilike', "%{$filtros['sigla']}%");
         }
+
         if (!empty($filtros['numerobanco'])) {
             $q->where('numerobanco', $filtros['numerobanco']);
         }

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Feb/2026 16:58:28
+ * Date: 27/May/2026 11:43:14
  */
 
 namespace Mg\Rh;
@@ -30,12 +30,8 @@ class Indicador extends MgModel
         'valoracumulado'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codcolaborador' => 'integer',
         'codindicador' => 'integer',
         'codperiodo' => 'integer',
@@ -43,6 +39,7 @@ class Indicador extends MgModel
         'codunidadenegocio' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'meta' => 'float',
         'valoracumulado' => 'float'
     ];

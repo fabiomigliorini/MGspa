@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 02/Oct/2024 14:46:59
+ * Date: 27/May/2026 11:38:17
  */
 
 namespace Mg\Meta;
@@ -23,17 +23,14 @@ class MetaVendedor extends MgModel
         'valormeta'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmeta' => 'integer',
         'codmetavendedor' => 'integer',
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'valormeta' => 'float'
     ];
 

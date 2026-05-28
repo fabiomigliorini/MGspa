@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 13/Jul/2020 15:53:18
+ * Date: 27/May/2026 11:25:54
  */
 
 namespace Mg\CupomFiscal;
@@ -27,19 +27,16 @@ class CupomFiscal extends MgModel
         'numero'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'datamovimento'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'cancelado' => 'boolean',
         'codcupomfiscal' => 'integer',
         'codecf' => 'integer',
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'datamovimento' => 'date',
         'descontoacrescimo' => 'float',
         'numero' => 'integer'
     ];

@@ -1,12 +1,13 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jun/2020 01:58:16
+ * Date: 27/May/2026 11:23:46
  */
 
 namespace Mg\Boleto;
 
 use Mg\MgModel;
+use Mg\Boleto\BoletoRetorno;
 use Mg\Boleto\BoletoTipoOcorrencia;
 use Mg\Usuario\Usuario;
 
@@ -21,16 +22,13 @@ class BoletoMotivoOcorrencia extends MgModel
         'motivo'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codboletomotivoocorrencia' => 'integer',
         'codboletotipoocorrencia' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 
@@ -48,6 +46,13 @@ class BoletoMotivoOcorrencia extends MgModel
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
+    public function BoletoRetornoS()
+    {
+        return $this->hasMany(BoletoRetorno::class, 'codboletomotivoocorrencia', 'codboletomotivoocorrencia');
     }
 
 }

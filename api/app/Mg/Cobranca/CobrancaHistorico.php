@@ -1,28 +1,40 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:23:16
+ */
 
 namespace Mg\Cobranca;
 
-use Mg\Usuario\Usuario;
 use Mg\MgModel;
+use Mg\Cobranca\CobrancaHistoricoTitulo;
 use Mg\Pessoa\Pessoa;
+use Mg\Usuario\Usuario;
 
 class CobrancaHistorico extends MgModel
 {
     protected $table = 'tblcobrancahistorico';
     protected $primaryKey = 'codcobrancahistorico';
 
-    protected $fillable = ['codpessoa', 'emailautomatico', 'historico'];
+
+    protected $fillable = [
+        'codpessoa',
+        'emailautomatico',
+        'historico'
+    ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'criacao' => 'datetime',
         'codcobrancahistorico' => 'integer',
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'emailautomatico' => 'boolean',
+        'criacao' => 'datetime',
+        'emailautomatico' => 'boolean'
     ];
 
+
+    // Chaves Estrangeiras
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
@@ -37,4 +49,12 @@ class CobrancaHistorico extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
+
+    // Tabelas Filhas
+    public function CobrancaHistoricoTituloS()
+    {
+        return $this->hasMany(CobrancaHistoricoTitulo::class, 'codcobrancahistorico', 'codcobrancahistorico');
+    }
+
 }

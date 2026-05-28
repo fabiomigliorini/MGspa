@@ -1,15 +1,16 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 28/May/2021 15:32:03
+ * Date: 27/May/2026 11:32:47
  */
 
 namespace Mg\Produto;
 
 use Mg\MgModel;
+use Mg\Mercos\MercosProduto;
+use Mg\Produto\Produto;
 use Mg\Produto\ProdutoBarra;
 use Mg\Produto\ProdutoHistoricoPreco;
-use Mg\Produto\Produto;
 use Mg\Produto\ProdutoImagem;
 use Mg\Produto\UnidadeMedida;
 use Mg\Usuario\Usuario;
@@ -35,12 +36,8 @@ class ProdutoEmbalagem extends MgModel
         'vendesite'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'altura' => 'float',
         'codopencart' => 'integer',
         'codproduto' => 'integer',
@@ -49,6 +46,7 @@ class ProdutoEmbalagem extends MgModel
         'codunidademedida' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'largura' => 'float',
         'peso' => 'float',
         'preco' => 'float',
@@ -86,6 +84,21 @@ class ProdutoEmbalagem extends MgModel
 
 
     // Tabelas Filhas
+    public function MercosProdutoS()
+    {
+        return $this->hasMany(MercosProduto::class, 'codprodutoembalagem', 'codprodutoembalagem');
+    }
+
+    public function ProdutoCompraS()
+    {
+        return $this->hasMany(Produto::class, 'codprodutoembalagemcompra', 'codprodutoembalagem');
+    }
+
+    public function ProdutoTransferenciaS()
+    {
+        return $this->hasMany(Produto::class, 'codprodutoembalagemtransferencia', 'codprodutoembalagem');
+    }
+
     public function ProdutoBarraS()
     {
         return $this->hasMany(ProdutoBarra::class, 'codprodutoembalagem', 'codprodutoembalagem');

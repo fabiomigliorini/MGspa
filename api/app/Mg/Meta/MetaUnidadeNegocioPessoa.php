@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:57:15
+ * Date: 27/May/2026 11:42:48
  */
 
 namespace Mg\Meta;
@@ -21,28 +21,25 @@ class MetaUnidadeNegocioPessoa extends MgModel
         'codmeta',
         'codpessoa',
         'codunidadenegocio',
-        'datainicial',
         'datafinal',
+        'datainicial',
         'percentualcaixa',
         'percentualsubgerente',
         'percentualvenda',
         'percentualxerox'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'datainicial',
-        'datafinal'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmeta' => 'integer',
         'codmetaunidadenegociopessoa' => 'integer',
         'codpessoa' => 'integer',
         'codunidadenegocio' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'datafinal' => 'date',
+        'datainicial' => 'date',
         'percentualcaixa' => 'float',
         'percentualsubgerente' => 'float',
         'percentualvenda' => 'float',

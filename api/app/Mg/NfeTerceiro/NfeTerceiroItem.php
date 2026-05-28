@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Jul/2021 11:31:35
+ * Date: 27/May/2026 11:27:16
  */
 
 namespace Mg\NfeTerceiro;
@@ -25,13 +25,13 @@ class NfeTerceiroItem extends MgModel
         'codnfeterceiro',
         'codprodutobarra',
         'codusuarioconferencia',
-        'conferencia',
         'cofinscst',
         'cofinspcofins',
         'cofinsvbc',
         'cofinsvcofins',
         'complemento',
         'compoetotal',
+        'conferencia',
         'cprod',
         'csosn',
         'cst',
@@ -75,13 +75,8 @@ class NfeTerceiroItem extends MgModel
         'xprod'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'conferencia',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'cfop' => 'integer',
         'codnfeterceiro' => 'integer',
         'codnfeterceiroitem' => 'integer',
@@ -95,6 +90,8 @@ class NfeTerceiroItem extends MgModel
         'cofinsvcofins' => 'float',
         'complemento' => 'float',
         'compoetotal' => 'boolean',
+        'conferencia' => 'datetime',
+        'criacao' => 'datetime',
         'ipicst' => 'integer',
         'ipipipi' => 'float',
         'ipivbc' => 'float',
@@ -146,14 +143,14 @@ class NfeTerceiroItem extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
     }
 
-    public function UsuarioCriacao()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
-    }
-
     public function UsuarioConferencia()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
 }

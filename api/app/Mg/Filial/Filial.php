@@ -1,22 +1,52 @@
 <?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:20:28
+ */
 
 namespace Mg\Filial;
 
-use App\Models\Usuario;
 use Mg\MgModel;
+use Mg\Colaborador\Colaborador;
+use Mg\Dfe\DistribuicaoDfe;
+use Mg\NaturezaOperacao\DominioAcumulador;
+use Mg\CupomFiscal\Ecf;
+use Mg\Estoque\EstoqueLocal;
+use Mg\Usuario\GrupoUsuarioUsuario;
+use Mg\NFePHP\IbptCache;
+use Mg\Lio\LioTerminal;
+use Mg\Mdfe\Mdfe;
+use Mg\Meta\MetaFilial;
+use Mg\Negocio\Negocio;
+use Mg\NfeTerceiro\NfeTerceiro;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
+use Mg\PagarMe\PagarMePagamento;
+use Mg\PagarMe\PagarMePedido;
+use Mg\PagarMe\PagarMePos;
+use Mg\Pdv\Pdv;
+use Mg\Portador\Portador;
+use Mg\Saurus\SaurusPdv;
+use Mg\Saurus\SaurusPinPad;
+use Mg\Stone\StoneFilial;
+use Mg\Titulo\Titulo;
+use Mg\Filial\UnidadeNegocio;
+use Mg\Usuario\Usuario;
+use Mg\ValeCompra\ValeCompra;
+use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
 class Filial extends MgModel
 {
-    public const CRT_SIMPLES = 1;
-    public const CRT_SIMPLES_EXCESSO = 2;
-    public const CRT_REGIME_NORMAL = 3;
-
-    public const NFEAMBIENTE_PRODUCAO = 1;
-    public const NFEAMBIENTE_HOMOLOGACAO = 2;
+    const CRT_SIMPLES = 1;
+    const CRT_SIMPLES_EXCESSO = 2;
+    const CRT_REGIME_NORMAL = 3;
+    const NFEAMBIENTE_PRODUCAO = 1;
+    const NFEAMBIENTE_HOMOLOGACAO = 2;
 
     protected $table = 'tblfilial';
     protected $primaryKey = 'codfilial';
+
 
     protected $fillable = [
         'acbrnfemonitorbloqueado',
@@ -44,31 +74,38 @@ class Filial extends MgModel
         'stonecode',
         'tokenibpt',
         'ultimonsu',
-        'validadecertificado',
+        'validadecertificado'
     ];
 
     protected $casts = [
+        'acbrnfemonitorbloqueado' => 'datetime',
         'acbrnfemonitorcodusuario' => 'integer',
         'acbrnfemonitorporta' => 'integer',
+        'alteracao' => 'datetime',
         'codempresa' => 'integer',
         'codfilial' => 'integer',
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'crt' => 'integer',
         'dfe' => 'boolean',
         'emitenfe' => 'boolean',
         'empresadominio' => 'float',
+        'inativo' => 'datetime',
         'nfeambiente' => 'integer',
         'nfeserie' => 'integer',
         'stonecode' => 'float',
         'ultimonsu' => 'integer',
-        'acbrnfemonitorbloqueado' => 'datetime',
-        'alteracao' => 'datetime',
-        'criacao' => 'datetime',
-        'inativo' => 'datetime',
-        'validadecertificado' => 'datetime',
+        'validadecertificado' => 'date'
     ];
+
+
+    // Chaves Estrangeiras
+    public function UsuarioAcbrNfeMonitor()
+    {
+        return $this->belongsTo(Usuario::class, 'acbrnfemonitorcodusuario', 'codusuario');
+    }
 
     public function Empresa()
     {
@@ -89,4 +126,137 @@ class Filial extends MgModel
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
+
+
+    // Tabelas Filhas
+    public function ColaboradorS()
+    {
+        return $this->hasMany(Colaborador::class, 'codfilial', 'codfilial');
+    }
+
+    public function DistribuicaoDfeS()
+    {
+        return $this->hasMany(DistribuicaoDfe::class, 'codfilial', 'codfilial');
+    }
+
+    public function DominioAcumuladorS()
+    {
+        return $this->hasMany(DominioAcumulador::class, 'codfilial', 'codfilial');
+    }
+
+    public function EcfS()
+    {
+        return $this->hasMany(Ecf::class, 'codfilial', 'codfilial');
+    }
+
+    public function EstoqueLocalS()
+    {
+        return $this->hasMany(EstoqueLocal::class, 'codfilial', 'codfilial');
+    }
+
+    public function GrupoUsuarioUsuarioS()
+    {
+        return $this->hasMany(GrupoUsuarioUsuario::class, 'codfilial', 'codfilial');
+    }
+
+    public function IbptCacheS()
+    {
+        return $this->hasMany(IbptCache::class, 'codfilial', 'codfilial');
+    }
+
+    public function LioTerminalS()
+    {
+        return $this->hasMany(LioTerminal::class, 'codfilial', 'codfilial');
+    }
+
+    public function MdfeS()
+    {
+        return $this->hasMany(Mdfe::class, 'codfilial', 'codfilial');
+    }
+
+    public function MetaFilialS()
+    {
+        return $this->hasMany(MetaFilial::class, 'codfilial', 'codfilial');
+    }
+
+    public function NegocioS()
+    {
+        return $this->hasMany(Negocio::class, 'codfilial', 'codfilial');
+    }
+
+    public function NfeTerceiroS()
+    {
+        return $this->hasMany(NfeTerceiro::class, 'codfilial', 'codfilial');
+    }
+
+    public function NotaFiscalS()
+    {
+        return $this->hasMany(NotaFiscal::class, 'codfilial', 'codfilial');
+    }
+
+    public function NotaFiscalTerceiroS()
+    {
+        return $this->hasMany(NotaFiscalTerceiro::class, 'codfilial', 'codfilial');
+    }
+
+    public function PagarMePagamentoS()
+    {
+        return $this->hasMany(PagarMePagamento::class, 'codfilial', 'codfilial');
+    }
+
+    public function PagarMePedidoS()
+    {
+        return $this->hasMany(PagarMePedido::class, 'codfilial', 'codfilial');
+    }
+
+    public function PagarMePosS()
+    {
+        return $this->hasMany(PagarMePos::class, 'codfilial', 'codfilial');
+    }
+
+    public function PdvS()
+    {
+        return $this->hasMany(Pdv::class, 'codfilial', 'codfilial');
+    }
+
+    public function PortadorS()
+    {
+        return $this->hasMany(Portador::class, 'codfilial', 'codfilial');
+    }
+
+    public function SaurusPdvS()
+    {
+        return $this->hasMany(SaurusPdv::class, 'codfilial', 'codfilial');
+    }
+
+    public function SaurusPinPadS()
+    {
+        return $this->hasMany(SaurusPinPad::class, 'codfilial', 'codfilial');
+    }
+
+    public function StoneFilialS()
+    {
+        return $this->hasMany(StoneFilial::class, 'codfilial', 'codfilial');
+    }
+
+    public function TituloS()
+    {
+        return $this->hasMany(Titulo::class, 'codfilial', 'codfilial');
+    }
+
+    public function UnidadeNegocioS()
+    {
+        return $this->hasMany(UnidadeNegocio::class, 'codfilial', 'codfilial');
+    }
+
+    public function UsuarioS()
+    {
+        return $this->hasMany(Usuario::class, 'codfilial', 'codfilial');
+    }
+
+    public function ValeCompraS()
+    {
+        return $this->hasMany(ValeCompra::class, 'codfilial', 'codfilial');
+    }
+
 }

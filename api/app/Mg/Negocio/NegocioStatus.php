@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Nov/2020 16:20:17
+ * Date: 27/May/2026 11:29:12
  */
 
 namespace Mg\Negocio;
@@ -13,25 +13,23 @@ use Mg\Usuario\Usuario;
 class NegocioStatus extends MgModel
 {
     const ABERTO = 1;
-	const FECHADO = 2;
-	const CANCELADO = 3;
+    const FECHADO = 2;
+    const CANCELADO = 3;
 
     protected $table = 'tblnegociostatus';
     protected $primaryKey = 'codnegociostatus';
+
 
     protected $fillable = [
         'negociostatus'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codnegociostatus' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer'
+        'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime'
     ];
 
 

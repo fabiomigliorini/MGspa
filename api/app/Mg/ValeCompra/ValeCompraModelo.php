@@ -1,14 +1,14 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 21/Jul/2020 11:58:29
+ * Date: 27/May/2026 11:23:32
  */
 
 namespace Mg\ValeCompra;
 
 use Mg\MgModel;
 use Mg\ValeCompra\ValeCompra;
-use Mg\Valecompramodeloprodutobarra\Valecompramodeloprodutobarra;
+use Mg\ValeCompra\ValeCompraModeloProdutoBarra;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
 
@@ -22,6 +22,7 @@ class ValeCompraModelo extends MgModel
         'ano',
         'codpessoafavorecido',
         'desconto',
+        'inativo',
         'modelo',
         'observacoes',
         'total',
@@ -29,19 +30,16 @@ class ValeCompraModelo extends MgModel
         'turma'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'ano' => 'integer',
         'codpessoafavorecido' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codvalecompramodelo' => 'integer',
+        'criacao' => 'datetime',
         'desconto' => 'float',
+        'inativo' => 'datetime',
         'total' => 'float',
         'totalprodutos' => 'float'
     ];
@@ -72,7 +70,7 @@ class ValeCompraModelo extends MgModel
 
     public function ValecompramodeloprodutobarraS()
     {
-        return $this->hasMany(Valecompramodeloprodutobarra::class, 'codvalecompramodelo', 'codvalecompramodelo');
+        return $this->hasMany(ValeCompraModeloProdutoBarra::class, 'codvalecompramodelo', 'codvalecompramodelo');
     }
 
 }

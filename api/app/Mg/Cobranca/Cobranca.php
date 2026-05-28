@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 20/Jun/2020 14:45:27
+ * Date: 27/May/2026 11:20:54
  */
 
 namespace Mg\Cobranca;
@@ -32,15 +32,10 @@ class Cobranca extends MgModel
         'reagendamento'
     ];
 
-    protected $dates = [
-        'agendamento',
-        'alteracao',
-        'criacao',
-        'reagendamento'
-    ];
-
     protected $casts = [
         'acertado' => 'boolean',
+        'agendamento' => 'date',
+        'alteracao' => 'datetime',
         'codcheque' => 'integer',
         'codcobranca' => 'integer',
         'codportador' => 'integer',
@@ -48,7 +43,9 @@ class Cobranca extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'creditoacerto' => 'float',
-        'debitoacerto' => 'float'
+        'criacao' => 'datetime',
+        'debitoacerto' => 'float',
+        'reagendamento' => 'date'
     ];
 
 

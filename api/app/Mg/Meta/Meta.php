@@ -1,18 +1,18 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 16/Feb/2026 21:56:57
+ * Date: 27/May/2026 11:26:52
  */
 
 namespace Mg\Meta;
 
 use Mg\MgModel;
-use Mg\Meta\MetaFilial;
-use Mg\Meta\MetaVendedor;
 use Mg\Meta\BonificacaoEvento;
+use Mg\Meta\MetaFilial;
 use Mg\Meta\MetaUnidadeNegocio;
 use Mg\Meta\MetaUnidadeNegocioPessoa;
-use Mg\Meta\MetaUnidadeNegocioPessoaFixo;
+use Mg\Meta\MetaUnidadeNegocioPessoaFixo\MetaUnidadeNegocioPessoaFixo;
+use Mg\Meta\MetaVendedor;
 use Mg\Usuario\Usuario;
 
 class Meta extends MgModel
@@ -24,24 +24,31 @@ class Meta extends MgModel
     protected $fillable = [
         'inativo',
         'observacoes',
+        'percentualcomissaosubgerentemeta',
+        'percentualcomissaovendedor',
+        'percentualcomissaovendedormeta',
+        'percentualcomissaoxerox',
         'periodofinal',
         'periodoinicial',
+        'premioprimeirovendedorfilial',
         'processando',
         'status'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'inativo',
-        'periodofinal',
-        'periodoinicial'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codmeta' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'inativo' => 'datetime',
+        'percentualcomissaosubgerentemeta' => 'float',
+        'percentualcomissaovendedor' => 'float',
+        'percentualcomissaovendedormeta' => 'float',
+        'percentualcomissaoxerox' => 'float',
+        'periodofinal' => 'datetime',
+        'periodoinicial' => 'datetime',
+        'premioprimeirovendedorfilial' => 'float',
         'processando' => 'boolean'
     ];
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Dec/2025 18:44:26
+ * Date: 27/May/2026 11:37:32
  */
 
 namespace Mg\NotaFiscal;
@@ -30,12 +30,8 @@ class NotaFiscalPagamento extends MgModel
         'valorpagamento'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'avista' => 'boolean',
         'bandeira' => 'integer',
         'codnotafiscal' => 'integer',
@@ -43,6 +39,7 @@ class NotaFiscalPagamento extends MgModel
         'codpessoa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
         'integracao' => 'boolean',
         'tipo' => 'integer',
         'troco' => 'float',

@@ -1,7 +1,7 @@
 <?php
 /**
  * Created by php artisan gerador:model.
- * Date: 29/Dec/2020 15:40:42
+ * Date: 27/May/2026 11:30:28
  */
 
 namespace Mg\Pix;
@@ -27,19 +27,16 @@ class PixDevolucao extends MgModel
         'valor'
     ];
 
-    protected $dates = [
-        'alteracao',
-        'criacao',
-        'liquidacao',
-        'solicitacao'
-    ];
-
     protected $casts = [
+        'alteracao' => 'datetime',
         'codpix' => 'integer',
         'codpixdevolucao' => 'integer',
         'codpixdevolucaostatus' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'criacao' => 'datetime',
+        'liquidacao' => 'datetime',
+        'solicitacao' => 'datetime',
         'valor' => 'float'
     ];
 
