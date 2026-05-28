@@ -7,6 +7,7 @@ use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 use Laravel\Passport\Exceptions\OAuthServerException;
 use Laravel\Passport\RefreshToken;
 use Laravel\Passport\Token;
@@ -41,6 +42,13 @@ class AuthController extends Controller
         } catch (OAuthServerException $e) {
             return $this->oauthErrorResponse($e);
         } catch (Exception $e) {
+            Log::error('AuthController::token — erro inesperado ao emitir token', [
+                'grant_type' => $grant,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+                'file' => $e->getFile() . ':' . $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json([
                 'error' => 'server_error',
                 'error_description' => 'Erro inesperado ao emitir token.',
