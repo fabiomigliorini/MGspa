@@ -27,7 +27,7 @@ body {
             número <b>{{ $nf->numero }}</b>,
             série <b>{{ $nf->serie }}</b>,
             chave <b>{{ formataChaveNfe($nf->nfechave) }}</b>,
-            autorizada em <b>{{ $nf->nfedataautorizacao->formatLocalized('%d de %B de %Y (%A)') }}</b>,
+            autorizada em <b>{{ $nf->nfedataautorizacao->isoFormat('DD [de] MMMM [de] YYYY (dddd)') }}</b>,
             e a sua respectiva DANFe.
           </p>
 

@@ -20,8 +20,8 @@ const { dialogRef, onDialogHide } = useDialogPluginComponent()
 
 const cardStyle = computed(() =>
   props.size === 'cupom'
-    ? { width: '500px', maxWidth: '90vw', height: '90vh' }
-    : { width: '250px', maxWidth: '90vw', height: '90vh' },
+    ? { width: '380px', maxWidth: '90vw', height: '90vh' }
+    : { width: '910px', maxWidth: '90vw', height: '90vh' },
 )
 
 const imprimindo = ref(false)
@@ -50,21 +50,23 @@ const handleImprimir = async () => {
       >
         {{ title }}
         <q-space />
+        <template v-if="onImprimir">
+          <q-btn
+            flat
+            dense
+            icon="print"
+            color="primary"
+            size="sm"
+            :label="imprimirLabel"
+            :loading="imprimindo"
+            @click="handleImprimir"
+          />
+        </template>
         <q-btn flat round dense icon="close" size="sm" color="grey-7" v-close-popup />
       </q-card-section>
       <q-card-section class="col q-pt-none">
         <iframe :src="pdfUrl" style="width: 100%; height: 100%; border: none"></iframe>
       </q-card-section>
-      <q-card-actions v-if="onImprimir" align="right">
-        <q-btn
-          flat
-          color="primary"
-          :label="imprimirLabel"
-          icon="print"
-          :loading="imprimindo"
-          @click="handleImprimir"
-        />
-      </q-card-actions>
     </q-card>
   </q-dialog>
 </template>

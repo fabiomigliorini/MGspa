@@ -1,27 +1,47 @@
 <template>
   <q-layout view="hHr LpR fFr">
     <q-header elevated reveal>
-      <q-ajax-bar size="3px"/>
+      <q-ajax-bar size="3px" />
       <q-toolbar color="primary">
         <slot name="menu">
-          <q-btn flat round dense icon="menu" @click="leftDrawer = !leftDrawer" v-if="drawer"/>
+          <q-btn
+            flat
+            round
+            dense
+            icon="menu"
+            @click="leftDrawer = !leftDrawer"
+            v-if="drawer"
+          />
         </slot>
 
         <q-toolbar-title>
           <slot name="title">Padrão</slot>
         </q-toolbar-title>
 
-        <q-btn flat round class="within-iframe-hide" v-if="backPath" :to="backPath" replace style="margin-right: 15px">
+        <q-btn
+          flat
+          round
+          class="within-iframe-hide"
+          v-if="backPath"
+          :to="backPath"
+          replace
+          style="margin-right: 15px"
+        >
           <q-icon name="arrow_back" />
         </q-btn>
 
         <slot name="menuRight">
-          <q-btn flat round dense icon="apps" @click="rightDrawer = !rightDrawer" />
+          <q-btn
+            flat
+            round
+            dense
+            icon="apps"
+            @click="rightDrawer = !rightDrawer"
+          />
         </slot>
       </q-toolbar>
- 
-      <slot name="tabHeader"></slot>
 
+      <slot name="tabHeader"></slot>
     </q-header>
 
     <!-- Left Side Panel -->
@@ -37,57 +57,49 @@
 
     <!-- Right Side Panel -->
     <q-drawer v-model="rightDrawer" side="right" behavior="mobile" bordered>
-
       <q-item>
-        <q-item-section avatar link to="/inbox/1" v-if="perfil.avatar">
-          <img :src="perfil.avatar">
+        <q-item-section avatar link to="/inbox/1">
+          <q-icon name="person" color="primary" />
         </q-item-section>
 
-        <q-item-section class="text-subtitle1">
-          <router-link to="/usuario/perfil" class="text-inherit" style="text-decoration: none; color: inherit">
-            {{ perfil.usuario }}
-          </router-link>
-          <q-tooltip anchor="center left" self="center middle">
-            Ver meu perfil
-          </q-tooltip>
+        <q-item-section class="text-subtitle1 text-primary">
+          {{ perfil.usuario }}
         </q-item-section>
 
-        <q-item-section avatar @click.native="logout" class="cursor-pointer">
-          <q-btn icon="exit_to_app" flat/>
+        <q-item-section
+          avatar
+          @click.native="logout"
+          class="cursor-pointer text-primary"
+        >
+          <q-btn icon="exit_to_app" flat />
           <q-tooltip>
             Sair do sistema
           </q-tooltip>
         </q-item-section>
       </q-item>
 
-      <q-separator/>
-
+      <q-separator />
 
       <div class="row">
         <div class="text-center col-4" v-for="aplicativo in aplicativos">
-
           <q-item :to="aplicativo.path" clickable>
-
             <q-item-section>
               <q-item-label>
-                <q-icon size="50px" :name="aplicativo.icon" color="primary"/>
+                <q-icon size="50px" :name="aplicativo.icon" color="primary" />
               </q-item-label>
               <q-item-label caption class="text-primary">
                 {{ aplicativo.title }}
               </q-item-label>
             </q-item-section>
-
           </q-item>
-
         </div>
-
       </div>
     </q-drawer>
 
     <q-page-container>
       <slot name="content">
-       <router-view />
-     </slot>
+        <router-view />
+      </slot>
     </q-page-container>
 
     <q-footer elevated reveal class="bg-grey-8 text-white">
@@ -95,31 +107,29 @@
         MGspa - &copy; MG Papelaria
       </div>
     </q-footer>
-
   </q-layout>
 </template>
 
 <script>
-import axios from 'axios'
+import auth from "../services/auth";
 export default {
-  name: 'mg-layout',
-  data () {
+  name: "mg-layout",
+  data() {
     return {
       // leftDrawer: false,
       // rightDrawer: false,
-    }
+    };
   },
-  components: {
-  },
+  components: {},
   computed: {
     aplicativos: {
-      get () {
-        return this.$store.state.aplicativos.aplicativos
+      get() {
+        return this.$store.state.aplicativos.aplicativos;
       }
     },
     perfil: {
-      get () {
-        return this.$store.state.perfil.perfilState
+      get() {
+        return this.$store.state.perfil.perfilState;
       }
     }
   },
@@ -134,53 +144,36 @@ export default {
     },
     leftDrawer: {
       type: Boolean,
-      default: false,
+      default: false
     },
     rightDrawer: {
       type: Boolean,
-      default: false,
+      default: false
     }
   },
   methods: {
-    logout () {
-      let vm = this;
-      this.$q.dialog({
-        cancel: 'Cancelar',
-        persistent: true,
-        title: 'Sair do sistema',
-        message: 'Tem certeza que deseja sair do sistema?'
-      }).onOk(() => {
-        let token = document.cookie.split(';').find((item) => item.trim().startsWith('access_token='));
-
-        if(token){
-          token = token.split('=')[1]
-        }
-        axios.post(process.env.API_AUTH_URL + '/api/logout',
-          {},
-          {
-            headers: {
-              'Authorization': 'Bearer ' + token
-            }
-          }
-        ).then(response => {
-          localStorage.removeItem('auth.token');
-          localStorage.removeItem('auth.usuario.usuario');
-          localStorage.removeItem('auth.usuario.codusuario');
-          localStorage.removeItem('auth.usuario.avatar');
-          vm.$router.push('/login')
-          vm.$q.notify({
-            message: 'Até mais...',
-            color: 'positive',
-          })
-        }).catch(error => {
-          console.log(error.response)
+    logout() {
+      const vm = this;
+      this.$q
+        .dialog({
+          cancel: "Cancelar",
+          persistent: true,
+          title: "Sair do sistema",
+          message: "Tem certeza que deseja sair do sistema?"
         })
-      }).onCancel(() => {});
-
+        .onOk(async () => {
+          // RFC 7009 — revoga o token no api-dev (mesma rota dos apps contas/notas/pessoas)
+          // e limpa estado local. auth.logout() já redireciona pra '/'.
+          vm.$q.notify({
+            message: "Até mais...",
+            color: "positive"
+          });
+          await auth.logout();
+        })
+        .onCancel(() => {});
     }
   }
-}
+};
 </script>
 
-<style>
-</style>
+<style></style>

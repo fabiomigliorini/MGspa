@@ -15,6 +15,7 @@ import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import { abrirPdf } from '@components/abrirPdf'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
@@ -222,9 +223,13 @@ function bbBaixar(b) {
   })
 }
 
-function bbAbrirPdf(b) {
-  const url = `${process.env.API_URL}v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/pdf`
-  window.open(url, '_blank')
+async function bbAbrirPdf(b) {
+  await abrirPdf(
+    api,
+    `v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/pdf`,
+    {},
+    { title: 'Boleto BB', size: 'a4' },
+  )
 }
 
 function bbEstadoCor(estado) {

@@ -13,16 +13,19 @@ class NegocioComandaService
 {
     public static function pdf(Negocio $negocio)
     {
-        $report = new Report(app_path('/Mg/Negocio/comanda.jrxml'), []);
-        Instructions::prepare($report); // prepara o relatorio lendo o arquivo
-        $data = [
-            new NegocioComanda($negocio),
-        ];
-        $report->dbData = $data; // aqui voce pode construir seu array de boletos em qualquer estrutura incluindo
-        $report->generate();                // gera o relatorio
-        $report->out();                     // gera o pdf
-        $pdfProcessor = PdfProcessor::get();       // extrai o objeto pdf de dentro do report
-        $pdf = $pdfProcessor->Output('comanda.pdf', 'S');  // metodo do TCPF para gerar saida para o browser
+        $data = [new NegocioComanda($negocio)];
+        $report = new Report(
+            app_path('/Mg/Negocio/comanda.jrxml'),
+            [],
+            null,
+            false,
+            ['type' => 'array', 'data' => $data],
+        );
+        Instructions::prepare($report);
+        $report->generate();
+        $report->out();
+        $pdfProcessor = PdfProcessor::get();
+        $pdf = $pdfProcessor->Output('comanda.pdf', 'S');
         return $pdf;
     }
 

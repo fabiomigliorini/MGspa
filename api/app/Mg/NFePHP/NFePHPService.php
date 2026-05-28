@@ -300,7 +300,8 @@ class NFePHPService extends MgService
         }
 
         // Guarda no Banco de Dados informação da Autorização
-        $nf->justificativa = $justificativa;
+        // Trunca em 200 (limite varchar do banco) — defensivo caso SEFAZ retorne texto maior.
+        $nf->justificativa = mb_substr((string) $justificativa, 0, 200);
         $nf->nfecancelamento = $infEvento->nProt;
         $nf->nfedatacancelamento = Carbon::parse($infEvento->dhRegEvento);
         $nf->save(); // Dispara observers
@@ -388,6 +389,9 @@ class NFePHPService extends MgService
         if (strlen($justificativa) < 15) {
             throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
         }
+        if (strlen($justificativa) > 200) {
+            throw new \Exception('A justificativa deve ter no máximo 200 caracteres!');
+        }
 
         // Valida Autorização
         if (empty($nf->nfeautorizacao)) {
@@ -456,6 +460,9 @@ class NFePHPService extends MgService
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
         if (strlen($justificativa) < 15) {
             throw new \Exception('A justificativa deve ter pelo menos 15 caracteres!');
+        }
+        if (strlen($justificativa) > 200) {
+            throw new \Exception('A justificativa deve ter no máximo 200 caracteres!');
         }
 
         // Valida Pessoa Juridica
@@ -537,6 +544,9 @@ class NFePHPService extends MgService
         $justificativa = Strings::replaceSpecialsChars(trim($texto));
         if (strlen($justificativa) < 15) {
             throw new \Exception('O Texto deve ter pelo menos 15 caracteres!');
+        }
+        if (strlen($justificativa) > 200) {
+            throw new \Exception('O Texto deve ter no máximo 200 caracteres!');
         }
 
         // Valida Inutilizacao
@@ -845,57 +855,64 @@ class NFePHPService extends MgService
             throw new \RuntimeException("PDF não encontrado: {$pathDanfe}");
         }
 
-        // Conversão mm → pt
-        // 1 mm = 2.834645669 pt
-        $mmToPt = 2.834645669;
-        $alturaMaxPt = 297 * $mmToPt; // A4
+        $alturaMaxMm = 297.0; // A4
 
-        // 1️⃣ Lê dimensões do PDF
-        exec('/usr/bin/pdfinfo ' . escapeshellarg($pathDanfe), $info, $ret);
-        if ($ret !== 0) {
-            throw new \RuntimeException('Erro ao executar pdfinfo');
+        $tempDir = storage_path('app/mpdf');
+        if (!is_dir($tempDir)) {
+            @mkdir($tempDir, 0775, true);
         }
 
-        $larguraPt = null;
-        $alturaPt  = null;
+        // Lê dimensões da página de origem via mPDF/FPDI (sem binários externos)
+        $mpdfLeitor = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'orientation' => 'P',
+            'margin_left' => 0, 'margin_right' => 0,
+            'margin_top' => 0, 'margin_bottom' => 0,
+            'tempDir' => $tempDir,
+        ]);
+        $mpdfLeitor->setSourceFile($pathDanfe);
+        $tplIdx = $mpdfLeitor->importPage(1);
+        $size = $mpdfLeitor->getTemplateSize($tplIdx); // ['width' => mm, 'height' => mm]
 
-        foreach ($info as $line) {
-            if (preg_match('/Page size:\s+([\d.]+)\s+x\s+([\d.]+)\s+pts/i', $line, $m)) {
-                $larguraPt = (float)$m[1];
-                $alturaPt  = (float)$m[2];
-                break;
-            }
-        }
+        $larguraMm = (float) $size['width'];
+        $alturaMm  = (float) $size['height'];
 
-        if (!$larguraPt || !$alturaPt) {
+        if (!$larguraMm || !$alturaMm) {
             throw new \RuntimeException('Não foi possível detectar o tamanho da página do PDF');
         }
 
-        // 2️⃣ Calcula número de páginas verticais
-        $paginasVerticais = (int) ceil($alturaPt / $alturaMaxPt);
-
-        // Se já for A4 ou menor, não precisa quebrar
+        $paginasVerticais = (int) ceil($alturaMm / $alturaMaxMm);
         if ($paginasVerticais <= 1) {
             return;
         }
 
-        // 3️⃣ Arquivo temporário (não sobrescreve em caso de erro)
-        $tmpOutput = $pathDanfe . '.tmp.pdf';
+        // Re-renderiza em N páginas (largura da bobina x altura A4) usando o
+        // mesmo template deslocado verticalmente — mPDF faz o clipping na página.
+        $mpdf = new \Mpdf\Mpdf([
+            'mode' => 'utf-8',
+            'format' => [$larguraMm, $alturaMaxMm],
+            'orientation' => 'P',
+            'margin_left' => 0, 'margin_right' => 0,
+            'margin_top' => 0, 'margin_bottom' => 0,
+            'tempDir' => $tempDir,
+        ]);
+        $mpdf->setSourceFile($pathDanfe);
+        $tplIdx = $mpdf->importPage(1);
 
-        // 4️⃣ Executa mutool
-        $cmd = sprintf(
-            '/usr/bin/mutool poster -x 1 -y %d %s %s',
-            $paginasVerticais,
-            escapeshellarg($pathDanfe),
-            escapeshellarg($tmpOutput)
-        );
-
-        exec($cmd, $out, $ret);
-        if ($ret !== 0 || !file_exists($tmpOutput)) {
-            throw new \RuntimeException('Erro ao executar mutool');
+        for ($i = 0; $i < $paginasVerticais; $i++) {
+            if ($i > 0) {
+                $mpdf->AddPage();
+            }
+            $mpdf->useTemplate($tplIdx, 0, -$i * $alturaMaxMm, $larguraMm, $alturaMm);
         }
 
-        // 5️⃣ Substitui o arquivo original
+        $tmpOutput = $pathDanfe . '.tmp.pdf';
+        $mpdf->Output($tmpOutput, \Mpdf\Output\Destination::FILE);
+
+        if (!file_exists($tmpOutput)) {
+            throw new \RuntimeException('Falha ao gerar PDF quebrado em páginas');
+        }
+
         rename($tmpOutput, $pathDanfe);
     }
 
