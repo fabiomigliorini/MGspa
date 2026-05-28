@@ -1,0 +1,84 @@
+{
+    "name": "mgspa/api",
+    "type": "project",
+    "description": "MGspa API — servidor OAuth (paridade MGAuth) + futuras controllers migradas do MGspa/laravel.",
+    "keywords": ["laravel", "framework", "mgspa", "oauth"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "ext-soap": "*",
+        "automattic/woocommerce": "^3.1",
+        "dompdf/dompdf": "^3.0",
+        "google/apiclient": "^2.19",
+        "guzzlehttp/guzzle": "^7.5",
+        "intervention/image": "^4.1",
+        "laravel/framework": "^13.0",
+        "laravel/helpers": "^1.7",
+        "laravel/passport": "^13.0",
+        "mpdf/mpdf": "^8.3",
+        "nfephp-org/sped-common": "^5.1",
+        "nfephp-org/sped-da": "^1.1",
+        "nfephp-org/sped-ibpt": "^2.0",
+        "nfephp-org/sped-mdfe": "^4.1",
+        "nfephp-org/sped-nfe": "^5.2",
+        "openboleto/openboleto": "dev-master",
+        "phpoffice/phpspreadsheet": "^3.0",
+        "picqer/php-barcode-generator": "^3.0",
+        "quilhasoft/jasperphp": "dev-master",
+        "simplesoftwareio/simple-qrcode": "^4.2"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.18",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Mg\\": "app/Mg/",
+            "OfxParser\\": "app/Libraries/OfxParser/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        },
+        "files": [
+            "app/Mg/Helpers/MgHelpers.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

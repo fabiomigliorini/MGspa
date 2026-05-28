@@ -1,0 +1,23 @@
+n
+M0500
+O0220
+V0
+f220
+D
+L
+D11
+A2
+1X1100000710004L409023
+A1
+1911A1400720005<DescricaoLinha1Coluna1>
+A2
+1<ModeloBarrasColuna1>04200250015<SubsetBarrasColuna1><BarrasColuna1>
+1911A0800140015<NumeroBarrasColuna1>
+1911A0800560165<MarcaColuna1>
+1911A0800420165<ReferenciaColuna1>
+1911A0800280165<CodigoColuna1> - <UnidadeMedidaColuna1>
+1911A0800140165<DataColuna1> - <ModeloBarrasColuna1><SubsetBarrasColuna1>
+1911A1200490251R$
+1922A1800080270<PrecoColuna1>
+Q0001
+E

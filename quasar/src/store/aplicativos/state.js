@@ -1,14 +1,14 @@
 export default {
   aplicativos: [
     {
-      icon: 'home',
-      title: 'Início',
-      path: '/'
+      icon: "home",
+      title: "Início",
+      path: "/"
     },
     {
-      icon: 'label_outline',
-      title: 'Marcas',
-      path: '/marca'
+      icon: "label_outline",
+      title: "Marcas",
+      path: "/marca"
     },
     /*
     {
@@ -23,24 +23,26 @@ export default {
     },
 */
     {
-      icon: 'assignment',
-      title: 'Conferência de estoque',
-      path: '/estoque-saldo-conferencia'
+      icon: "assignment",
+      title: "Conferência de estoque",
+      path: "/estoque-saldo-conferencia"
     },
     {
-      icon: 'multiline_chart',
-      title: 'Vendas',
-      path: '/estoque-estatistica/100'
+      icon: "multiline_chart",
+      title: "Vendas",
+      path: "/estoque-estatistica/100"
     },
+    /*
     {
       icon: 'subtitles',
       title: 'Boletos',
       path: '/boleto'
     },
+    */
     {
-      icon: 'fas fa-barcode',
-      title: 'Etiquetas',
-      path: '/etiqueta'
+      icon: "fas fa-barcode",
+      title: "Etiquetas",
+      path: "/etiqueta"
     },
     // {
     //   icon: 'fas fa-newspaper',
@@ -48,20 +50,21 @@ export default {
     //   path: '/nota-fiscal-terceiro'
     // },
     {
-      icon: 'sync',
-      title: 'Distribuição DFe',
-      path: '/dfe-distribuicao'
+      icon: "sync",
+      title: "Distribuição DFe",
+      path: "/dfe-distribuicao"
     },
     {
-      icon: 'local_taxi',
-      title: 'Veículos',
-      path: '/veiculo'
+      icon: "local_taxi",
+      title: "Veículos",
+      path: "/veiculo"
     },
     {
-      icon: 'local_shipping',
-      title: 'MDFe',
-      path: '/mdfe'
+      icon: "local_shipping",
+      title: "MDFe",
+      path: "/mdfe"
     },
+    /*
     {
       icon: 'credit_card',
       title: 'Stone Connect',
@@ -72,17 +75,18 @@ export default {
       title: 'Portadores',
       path: '/portador'
     },
+    */
     {
-      icon: 'share',
-      title: 'Exportação Domínio',
-      path: '/dominio'
-    },
+      icon: "share",
+      title: "Exportação Domínio",
+      path: "/dominio"
+    }
+    /*
     {
       icon: 'fas fa-money-bill-wave',
       title: 'PIX',
       path: '/pix'
     },
-    /*
     {
       icon: 'add_shopping_cart',
       title: 'Pedidos e Transferências',
@@ -90,4 +94,4 @@ export default {
     }
     */
   ]
-}
+};

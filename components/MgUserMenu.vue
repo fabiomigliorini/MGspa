@@ -26,7 +26,15 @@ function confirmarLogout() {
     message: 'Deseja realmente sair do sistema?',
     cancel: { label: 'Cancelar', flat: true },
     ok: { label: 'Sair', color: 'negative', flat: true },
-  }).onOk(() => props.auth.logout?.())
+  }).onOk(() => {
+    props.auth.logout?.()
+    Notify.create({
+      type: 'positive',
+      message: 'Logout realizado!',
+      timeout: 1000, // 1 segundo
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+  })
 }
 
 async function renovar() {

@@ -1,8 +1,9 @@
 <script setup>
 import { formataNumero, formataCodigo, formataTimestampCompleto, formataNumeroNota } from '@components/formatters'
-import { ref } from 'vue'
-import { Dialog, Notify, Platform } from 'quasar'
+import { Dialog, Notify } from 'quasar'
 import { api } from 'boot/axios'
+import { abrirPdf } from '@components/abrirPdf'
+import { blobUrlFromApi } from '@components/blobUrlFromApi'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import moment from 'moment/min/moment-with-locales'
@@ -73,11 +74,6 @@ const podeExcluir = (nota) => {
   return nota && nota.status === 'DIG'
 }
 
-const dialogPdf = ref(false)
-const urlPdf = ref(null)
-const btnImprimir = ref(false)
-const codnotafiscalAberta = ref(null)
-
 const urlNotaFiscal = (codnotafiscal) => {
   return process.env.NOTAS_URL + '/nota/' + codnotafiscal
 }
@@ -135,7 +131,7 @@ const enviar = async (nota) => {
 
     // se offline mostra o PDF
     if (offline(nota)) {
-      abrirPdf(nota)
+      abrirDanfe(nota)
       if (nota.modelo == 65) {
         imprimir(nota.codnotafiscal)
       }
@@ -164,7 +160,7 @@ const enviar = async (nota) => {
     // se tem autorizacao
     if (nota.nfeautorizacao) {
       mail(nota, null)
-      abrirPdf(nota)
+      abrirDanfe(nota)
       if (nota.modelo == 65) {
         imprimir(nota.codnotafiscal)
       }
@@ -311,9 +307,6 @@ const inutilizar = (nota) => {
 }
 
 const imprimir = async (codnotafiscal) => {
-  if (!codnotafiscal) {
-    codnotafiscal = codnotafiscalAberta.value
-  }
   if (!sNegocio.padrao.impressora) {
     Notify.create({
       type: 'negative',
@@ -399,23 +392,34 @@ const offline = (nota) => {
   return nota.nfechave.substring(34, 35) == '9' && nota.modelo == 65
 }
 
-const montarUrlXml = (nota) => {
-  return `${process.env.API_URL}v1/nfe-php/${nota.codnotafiscal}/xml`
+const abrirDanfe = async (nota) => {
+  const cupom = nota.modelo == 65
+  await abrirPdf(
+    api,
+    `/api/v1/nfe-php/${nota.codnotafiscal}/danfe`,
+    {},
+    {
+      title: cupom ? 'DANFE NFC-e' : 'DANFE NFe',
+      size: cupom ? 'cupom' : 'a4',
+      onImprimir: cupom ? () => imprimir(nota.codnotafiscal) : null,
+    },
+  )
 }
 
-const montarUrlPdf = (nota) => {
-  return `${process.env.API_URL}v1/nfe-php/${nota.codnotafiscal}/danfe`
-}
-
-const abrirPdf = (nota) => {
-  urlPdf.value = montarUrlPdf(nota)
-  btnImprimir.value = nota.modelo == 65 ? true : false
-  codnotafiscalAberta.value = nota.codnotafiscal
-  if (Platform.is.desktop) {
-    dialogPdf.value = true
-    return
+const abrirXml = async (nota) => {
+  try {
+    const url = await blobUrlFromApi(api, `/api/v1/nfe-php/${nota.codnotafiscal}/xml`, 'application/xml')
+    window.open(url, '_blank')
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
+  } catch (error) {
+    console.log(error)
+    Notify.create({
+      type: 'negative',
+      message: 'Erro ao abrir XML',
+      timeout: 3000,
+      actions: [{ icon: 'close', color: 'white' }],
+    })
   }
-  window.open(urlPdf.value, '_blank').focus()
 }
 
 defineExpose({
@@ -424,28 +428,6 @@ defineExpose({
 })
 </script>
 <template>
-  <q-dialog v-model="dialogPdf" full-width>
-    <q-card>
-      <q-card-section>
-        <iframe :src="urlPdf" style="width: 100%; height: 80vh" />
-      </q-card-section>
-
-      <q-separator />
-
-      <q-card-actions align="right">
-        <q-btn flat label="fechar" color="primary" v-close-popup />
-        <q-btn
-          flat
-          label="imprimir"
-          color="primary"
-          v-close-popup
-          @click="imprimir()"
-          v-if="btnImprimir"
-        />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
-
   <div
     class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3"
     v-for="nota in sNegocio.negocio.notas"
@@ -551,7 +533,7 @@ defineExpose({
           flat
           color="secondary"
           icon="picture_as_pdf"
-          @click="abrirPdf(nota)"
+          @click="abrirDanfe(nota)"
           v-if="podeAbrirDanfe(nota)"
         >
           <q-tooltip>Abrir DANFE</q-tooltip>
@@ -564,8 +546,7 @@ defineExpose({
           flat
           color="orange"
           icon="code"
-          :href="montarUrlXml(nota)"
-          target="_blank"
+          @click="abrirXml(nota)"
           v-if="podeAbrirXml(nota)"
         >
           <q-tooltip>Abrir XML</q-tooltip>

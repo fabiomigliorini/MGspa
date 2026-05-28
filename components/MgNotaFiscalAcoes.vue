@@ -225,11 +225,15 @@ function enviarEmailNfe(event) {
 
 async function abrirDanfe(event) {
   stop(event)
+  const cupom = props.nota?.modelo == 65
   await abrirPdf(
     props.api,
     `/v1/nota-fiscal/${codnotafiscal.value}/danfe`,
     {},
-    { title: props.nota?.modelo === 65 ? 'DANFE NFCe' : 'DANFE NFe' },
+    {
+      title: cupom ? 'DANFE NFC-e' : 'DANFE NFe',
+      size: cupom ? 'cupom' : 'a4',
+    },
   )
 }
 

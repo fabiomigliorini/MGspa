@@ -25,6 +25,7 @@
 
 <script>
 import MgLayout from '../layouts/MgLayout'
+import auth from '../services/auth'
 
 export default {
   name: 'index',
@@ -46,25 +47,17 @@ export default {
     }
   },
   methods: {
-    user: function (e) {
-      var vm = this
-      let data = {
-        usuario: '',
-        codusuario: '',
-      }
-      vm.$axios.get('auth/user').then(response => {
-        // salva código da imagem avatar do usuário
-        localStorage.setItem('auth.usuario.usuario', response.data.data.usuario)
-        localStorage.setItem('auth.usuario.codusuario', response.data.data.codusuario)
-        this.$store.commit('perfil/updatePerfil', {
-          usuario: localStorage.getItem('auth.usuario.usuario'),
-          avatar: localStorage.getItem('auth.usuario.avatar'),
-          codusuario: localStorage.getItem('auth.usuario.codusuario')
-        })
-      }).catch(error => {
-        let url = new URL(window.location.href)
-        url = encodeURI(url.origin)
-        window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
+    async user() {
+      // Valida via /userinfo (OIDC). Se falhar, o guard do router já
+      // redireciona pro SSO — aqui só atualiza o store de perfil pra UI.
+      const ok = await auth.validarToken()
+      if (!ok) return
+
+      const info = auth.state.usuario
+      this.$store.commit('perfil/updatePerfil', {
+        usuario: info.usuario,
+        avatar: info.avatar,
+        codusuario: info.codusuario
       })
     }
   },
@@ -72,15 +65,6 @@ export default {
   mounted() {
     this.user()
   }
-
 }
-// const urlParams = new URLSearchParams(window.location.search);
-// const Token = urlParams.get("accesstoken");
-// if (Token) {
-//   localStorage.setItem('auth.token', Token);
-//   setTimeout(function () {
-//     window.location.href = "/";
-//   }, 1000);
-// }
 </script>
 <style></style>

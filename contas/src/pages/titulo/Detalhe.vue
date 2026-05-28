@@ -15,6 +15,7 @@ import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import { abrirPdf } from '@components/abrirPdf'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
@@ -222,9 +223,13 @@ function bbBaixar(b) {
   })
 }
 
-function bbAbrirPdf(b) {
-  const url = `${process.env.API_URL}v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/pdf`
-  window.open(url, '_blank')
+async function bbAbrirPdf(b) {
+  await abrirPdf(
+    api,
+    `v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/pdf`,
+    {},
+    { title: 'Boleto BB', size: 'a4' },
+  )
 }
 
 function bbEstadoCor(estado) {
@@ -509,6 +514,18 @@ watch(() => route.fullPath, carregar)
             <div class="col-xs-6 col-sm-4 col-md-2" v-if="titulo.transacaoliquidacao">
               <div class="text-overline text-grey-7">Liquidação</div>
               <div class="text-body2">{{ formataData(titulo.transacaoliquidacao) }}</div>
+            </div>
+
+            <!-- VALOR ATUALIZADO -->
+            <div class="col-xs-6 col-sm-4 col-md-2" v-if="titulo.valoratualizado > titulo.saldo">
+              <div class="text-overline text-grey-7">Valor Atualizado</div>
+              <div class="col-xs-6 col-sm-4 col-md-2">
+                <div class="text-body2 text-red text-weight-medium">
+                  R$ {{ formataNumero(titulo.valoratualizado) }}
+                </div>
+                <div class="text-caption text-orange">J - R$ {{ formataNumero(titulo.juros) }}</div>
+                <div class="text-caption text-orange">M - R$ {{ formataNumero(titulo.multa) }}</div>
+              </div>
             </div>
           </div>
         </q-card>

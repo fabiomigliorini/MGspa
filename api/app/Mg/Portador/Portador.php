@@ -1,0 +1,186 @@
+<?php
+/**
+ * Created by php artisan gerador:model.
+ * Date: 27/May/2026 11:24:43
+ */
+
+namespace Mg\Portador;
+
+use Mg\MgModel;
+use Mg\Boleto\BoletoRetorno;
+use Mg\Cheque\ChequeRepasse;
+use Mg\Cobranca\Cobranca;
+use Mg\Portador\ExtratoBancario;
+use Mg\Titulo\LiquidacaoTitulo;
+use Mg\Titulo\MovimentoTitulo;
+use Mg\Pdv\Pdv;
+use Mg\Pix\Pix;
+use Mg\Pix\PixCob;
+use Mg\Portador\PortadorMovimento;
+use Mg\Portador\PortadorSaldo;
+use Mg\Portador\PortadorTransferencia;
+use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloBoleto;
+use Mg\Usuario\Usuario;
+use Mg\Banco\Banco;
+use Mg\Filial\Filial;
+use Mg\Pessoa\Pessoa;
+
+class Portador extends MgModel
+{
+    const CARTEIRA = 999;
+
+    protected $table = 'tblportador';
+    protected $primaryKey = 'codportador';
+
+
+    protected $fillable = [
+        'agencia',
+        'agenciadigito',
+        'bbclientid',
+        'bbclientsecret',
+        'bbdevappkey',
+        'carteira',
+        'carteiravariacao',
+        'codbanco',
+        'codfilial',
+        'codpessoa',
+        'conta',
+        'contadigito',
+        'convenio',
+        'emiteboleto',
+        'inativo',
+        'pixdict',
+        'portador'
+    ];
+
+    protected $casts = [
+        'agencia' => 'integer',
+        'agenciadigito' => 'integer',
+        'alteracao' => 'datetime',
+        'carteira' => 'integer',
+        'carteiravariacao' => 'integer',
+        'codbanco' => 'integer',
+        'codfilial' => 'integer',
+        'codpessoa' => 'integer',
+        'codportador' => 'integer',
+        'codusuarioalteracao' => 'integer',
+        'codusuariocriacao' => 'integer',
+        'conta' => 'integer',
+        'contadigito' => 'integer',
+        'convenio' => 'float',
+        'criacao' => 'datetime',
+        'emiteboleto' => 'boolean',
+        'inativo' => 'datetime'
+    ];
+
+
+    // Chaves Estrangeiras
+    public function Banco()
+    {
+        return $this->belongsTo(Banco::class, 'codbanco', 'codbanco');
+    }
+
+    public function Filial()
+    {
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function Pessoa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+
+    // Tabelas Filhas
+    public function BoletoRetornoS()
+    {
+        return $this->hasMany(BoletoRetorno::class, 'codportador', 'codportador');
+    }
+
+    public function ChequeRepasseS()
+    {
+        return $this->hasMany(ChequeRepasse::class, 'codportador', 'codportador');
+    }
+
+    public function CobrancaS()
+    {
+        return $this->hasMany(Cobranca::class, 'codportador', 'codportador');
+    }
+
+    public function ExtratoBancarioS()
+    {
+        return $this->hasMany(ExtratoBancario::class, 'codportador', 'codportador');
+    }
+
+    public function LiquidacaoTituloS()
+    {
+        return $this->hasMany(LiquidacaoTitulo::class, 'codportador', 'codportador');
+    }
+
+    public function MovimentoTituloS()
+    {
+        return $this->hasMany(MovimentoTitulo::class, 'codportador', 'codportador');
+    }
+
+    public function PdvS()
+    {
+        return $this->hasMany(Pdv::class, 'codportador', 'codportador');
+    }
+
+    public function PixS()
+    {
+        return $this->hasMany(Pix::class, 'codportador', 'codportador');
+    }
+
+    public function PixCobS()
+    {
+        return $this->hasMany(PixCob::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorMovimentoS()
+    {
+        return $this->hasMany(PortadorMovimento::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorSaldoS()
+    {
+        return $this->hasMany(PortadorSaldo::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorTransferenciaDestinoS()
+    {
+        return $this->hasMany(PortadorTransferencia::class, 'codportadordestino', 'codportador');
+    }
+
+    public function PortadorTransferenciaOrigemS()
+    {
+        return $this->hasMany(PortadorTransferencia::class, 'codportadororigem', 'codportador');
+    }
+
+    public function TituloS()
+    {
+        return $this->hasMany(Titulo::class, 'codportador', 'codportador');
+    }
+
+    public function TituloBoletoS()
+    {
+        return $this->hasMany(TituloBoleto::class, 'codportador', 'codportador');
+    }
+
+    public function UsuarioS()
+    {
+        return $this->hasMany(Usuario::class, 'codportador', 'codportador');
+    }
+
+}

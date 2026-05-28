@@ -1,6 +1,6 @@
 <script setup>
 import { formataNumero } from '@components/formatters'
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { negocioStore } from 'stores/negocio'
 import { produtoStore } from 'stores/produto'
@@ -13,6 +13,7 @@ import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
 import ListagemAnexos from 'components/offline/ListagemAnexos.vue'
 import { api } from 'boot/axios'
+import { abrirPdf } from '@components/abrirPdf'
 import { Dialog, Notify, debounce } from 'quasar'
 import { db } from 'boot/db'
 import emitter from '../utils/emitter.js'
@@ -24,9 +25,6 @@ const sProduto = produtoStore()
 const sAuth = useAuthStore()
 const sPagarMe = pagarMeStore()
 const sPix = pixStore()
-const dialogRomaneio = ref(false)
-const dialogVale = ref(false)
-const dialogComanda = ref(false)
 const listagemNotasRef = ref(null)
 const dialogOrcamentoSelecionar = ref(false)
 const dialogOrcamento = ref(false)
@@ -183,9 +181,6 @@ const fecharDialogs = async () => {
   sNegocio.dialog.pagamentoCartaoManual = false
   sAuth.dialog.login = false
   sPagarMe.dialog.detalhesPedido = false
-  dialogRomaneio.value = false
-  dialogVale.value = false
-  dialogComanda.value = false
   dialogOrcamentoSelecionar.value = false
   dialogOrcamento.value = false
   dialogOrcamentoTermica.value = false
@@ -322,36 +317,79 @@ const prazo = async () => {
   sNegocio.dialog.pagamentoPrazo = true
 }
 
-const urlRomaneio = computed({
-  get() {
-    return (
-      process.env.API_URL + 'v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio'
-    )
-  },
-})
+const checarImpressora = () => {
+  if (!sNegocio.padrao.impressora) {
+    Notify.create({
+      type: 'negative',
+      message: 'Nenhuma impressora térmica selecionada!',
+      timeout: 3000,
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return false
+  }
+  return true
+}
 
-const urlVale = computed({
-  get() {
-    return process.env.API_URL + 'v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
-  },
-})
+const imprimirRomaneio = async () => {
+  if (!checarImpressora()) return
+  await api.post(
+    '/api/v1/pdv/negocio/' +
+      sNegocio.negocio.codnegocio +
+      '/romaneio/' +
+      sNegocio.padrao.impressora,
+  )
+  Notify.create({
+    type: 'positive',
+    message: 'Impressão Solicitada!',
+    timeout: 1000,
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
 
-const urlComanda = computed({
-  get() {
-    return (
-      process.env.API_URL + 'v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda'
-    )
-  },
-})
+const imprimirVale = async () => {
+  if (!checarImpressora()) return
+  await api.post(
+    '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale/' + sNegocio.padrao.impressora,
+  )
+  Notify.create({
+    type: 'positive',
+    message: 'Impressão Solicitada!',
+    timeout: 1000,
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
+
+const imprimirComanda = async () => {
+  if (!checarImpressora()) return
+  await api.post(
+    '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.impressora,
+  )
+  Notify.create({
+    type: 'positive',
+    message: 'Impressão Solicitada!',
+    timeout: 1000,
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
 
 const romaneio = async () => {
   fecharDialogs()
-  dialogRomaneio.value = true
+  await abrirPdf(
+    api,
+    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/romaneio`,
+    {},
+    { title: 'Romaneio', size: 'cupom', onImprimir: imprimirRomaneio },
+  )
 }
 
 const vale = async () => {
   fecharDialogs()
-  dialogVale.value = true
+  await abrirPdf(
+    api,
+    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/vale`,
+    {},
+    { title: 'Vale', size: 'cupom', onImprimir: imprimirVale },
+  )
 }
 
 const selecionarOrcamento = (tipo) => {
@@ -368,7 +406,7 @@ const comanda = async () => {
     Notify.create({
       type: 'negative',
       message: 'Impossível imprimir comanda de um negócio não sincronizado!',
-      timeout: 3000, // 3 segundos
+      timeout: 3000,
       actions: [{ icon: 'close', color: 'white' }],
     })
     return
@@ -377,56 +415,19 @@ const comanda = async () => {
     Notify.create({
       type: 'negative',
       message: 'Nenhum item!',
-      timeout: 3000, // 3 segundos
+      timeout: 3000,
       actions: [{ icon: 'close', color: 'white' }],
     })
     return
   }
   fecharDialogs()
   imprimirComanda()
-  dialogComanda.value = true
-}
-
-const imprimirRomaneio = async () => {
-  await api.post(
-    '/api/v1/pdv/negocio/' +
-      sNegocio.negocio.codnegocio +
-      '/romaneio/' +
-      sNegocio.padrao.impressora,
+  await abrirPdf(
+    api,
+    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/comanda`,
+    {},
+    { title: 'Comanda', size: 'cupom', onImprimir: imprimirComanda },
   )
-  Notify.create({
-    type: 'positive',
-    message: 'Impressão Solicitada!',
-    timeout: 1000, // 1 segundo
-    actions: [{ icon: 'close', color: 'white' }],
-  })
-  // dialogRomaneio.value = false;
-}
-
-const imprimirVale = async () => {
-  await api.post(
-    '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale/' + sNegocio.padrao.impressora,
-  )
-  Notify.create({
-    type: 'positive',
-    message: 'Impressão Solicitada!',
-    timeout: 1000, // 1 segundo
-    actions: [{ icon: 'close', color: 'white' }],
-  })
-  // dialogRomaneio.value = false;
-}
-
-const imprimirComanda = async () => {
-  await api.post(
-    '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.impressora,
-  )
-  Notify.create({
-    type: 'positive',
-    message: 'Impressão Solicitada!',
-    timeout: 1000, // 1 segundo
-    actions: [{ icon: 'close', color: 'white' }],
-  })
-  // dialogComanda.value = false;
 }
 
 const imprimirAbrirRomaneio = async () => {
@@ -593,65 +594,6 @@ onUnmounted(() => {
       <listagem-produtos />
     </div>
     <div style="padding-bottom: 75px"></div>
-
-    <!-- ROMANEIO -->
-    <q-dialog v-model="dialogRomaneio" full-height>
-      <q-card class="full-height column" style="width: 500px">
-        <q-card-section class="col column no-wrap q-pa-sm">
-          <iframe class="col no-border" :src="urlRomaneio"></iframe>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirRomaneio()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
-          <q-btn color="primary" flat label="Fechar" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- VALE -->
-    <q-dialog v-model="dialogVale" full-height>
-      <q-card class="full-height column" style="width: 500px">
-        <q-card-section class="col column no-wrap q-pa-sm">
-          <iframe class="col no-border" :src="urlVale"></iframe>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirVale()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
-          <q-btn color="primary" flat label="Fechar" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- COMANDA -->
-    <q-dialog v-model="dialogComanda" full-height>
-      <q-card class="full-height column" style="width: 500px">
-        <q-card-section class="col column no-wrap q-pa-sm">
-          <iframe class="col no-border" :src="urlComanda"></iframe>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            color="primary"
-            flat
-            label="Imprimir"
-            @click="imprimirComanda()"
-            :disable="sNegocio.padrao.impressora == null"
-          />
-          <q-btn color="primary" flat label="Fechar" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
 
     <!-- ORCAMENTO SELECIONAR -->
     <q-dialog v-model="dialogOrcamentoSelecionar">

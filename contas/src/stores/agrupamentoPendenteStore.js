@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 
 const defaultFilters = () => ({
-  codgrupocliente: [],
+  codgrupocliente: null,
   codportador: [],
   codgrupoeconomico: null,
   codpessoa: null,

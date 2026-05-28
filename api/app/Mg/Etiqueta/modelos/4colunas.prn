@@ -1,0 +1,19 @@
+n
+M0500
+O0220
+V0
+f220
+D
+L
+D11
+A2
+1912A0600350013R$ <PrecoColuna1> | <NumeroBarrasColuna1>
+1g4203200020023<BarrasColuna1>
+1912A0600350112R$ <PrecoColuna2> | <NumeroBarrasColuna2>
+1g4203200020121<BarrasColuna2>
+1912A0600350210R$ <PrecoColuna3> | <NumeroBarrasColuna3>
+1g4203200020219<BarrasColuna3>
+1912A0600350308R$ <PrecoColuna4> | <NumeroBarrasColuna4>
+1g4203200020318<BarrasColuna4>
+Q0001
+E

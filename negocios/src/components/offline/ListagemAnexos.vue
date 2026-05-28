@@ -4,6 +4,9 @@ import { negocioStore } from 'stores/negocio'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
 import MgSlim from '../../utils/pqina/slim/MgSlim.vue'
+import MgAnexoImagem from './MgAnexoImagem.vue'
+import { api } from 'boot/axios'
+import { abrirPdf } from '@components/abrirPdf'
 import { Dialog, Notify } from 'quasar'
 
 const sNegocio = negocioStore()
@@ -13,16 +16,13 @@ const dialogConfissao = ref(false)
 const dialogImagem = ref(false)
 const dialogPdf = ref(false)
 
-const urlAnexo = (pasta, anexo) => {
-  const url =
-    process.env.API_URL +
-    'v1/pdv/negocio/' +
-    sNegocio.negocio.codnegocio +
-    '/anexo/' +
-    pasta +
-    '/' +
-    anexo
-  return url
+const abrirAnexoPdf = async (anexo) => {
+  await abrirPdf(
+    api,
+    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/anexo/pdf/${anexo}`,
+    {},
+    { title: 'PDF', size: 'a4' },
+  )
 }
 
 const excluirAnexo = (pasta, anexo) => {
@@ -196,90 +196,28 @@ const confissaoRatio = ref('1:2')
   </div>
 
   <!-- ASSINATURA CONFISSAO DE DIVIDA -->
-  <div
+  <MgAnexoImagem
     v-for="anexo in sNegocio.negocio.anexos.confissao"
     :key="anexo"
-    class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"
-  >
-    <q-card>
-      <q-item :href="urlAnexo('confissao', anexo)" target="_blank">
-        <q-item-section avatar>
-          <q-avatar icon="mdi-file-sign" color="secondary" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label class="ellipsis">Anexo</q-item-label>
-          <q-item-label caption class="ellipsis">Assinatura</q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-separator inset />
-      <q-item
-        :href="urlAnexo('confissao', anexo)"
-        target="_blank"
-        style="height: 250px"
-        class="q-pa-none"
-      >
-        <q-img :src="urlAnexo('confissao', anexo)" fit="cover" />
-      </q-item>
-      <q-card-actions>
-        <q-btn-group flat>
-          <q-btn
-            dense
-            flat
-            round
-            icon="delete"
-            color="negative"
-            @click="excluirAnexo('confissao', anexo)"
-          >
-            <q-tooltip class="bg-accent">Excluir</q-tooltip>
-          </q-btn>
-        </q-btn-group>
-      </q-card-actions>
-    </q-card>
-  </div>
+    pasta="confissao"
+    :anexo="anexo"
+    icon="mdi-file-sign"
+    label="Anexo"
+    caption="Assinatura"
+    @excluir="excluirAnexo('confissao', anexo)"
+  />
 
   <!-- OUTRAS IMAGENS -->
-  <div
+  <MgAnexoImagem
     v-for="anexo in sNegocio.negocio.anexos.imagem"
     :key="anexo"
-    class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"
-  >
-    <q-card>
-      <q-item :href="urlAnexo('imagem', anexo)" target="_blank">
-        <q-item-section avatar>
-          <q-avatar icon="image" color="secondary" text-color="white" />
-        </q-item-section>
-
-        <q-item-section>
-          <q-item-label class="ellipsis">Anexo</q-item-label>
-          <q-item-label caption class="ellipsis">Imagem</q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-separator inset />
-      <q-item
-        :href="urlAnexo('imagem', anexo)"
-        target="_blank"
-        style="height: 250px"
-        class="q-pa-none"
-      >
-        <q-img :src="urlAnexo('imagem', anexo)" fit="cover" />
-      </q-item>
-      <q-card-actions>
-        <q-btn-group flat>
-          <q-btn
-            dense
-            flat
-            round
-            icon="delete"
-            color="negative"
-            @click="excluirAnexo('imagem', anexo)"
-          >
-            <q-tooltip class="bg-accent">Excluir</q-tooltip>
-          </q-btn>
-        </q-btn-group>
-      </q-card-actions>
-    </q-card>
-  </div>
+    pasta="imagem"
+    :anexo="anexo"
+    icon="image"
+    label="Anexo"
+    caption="Imagem"
+    @excluir="excluirAnexo('imagem', anexo)"
+  />
 
   <!-- PDF -->
   <div
@@ -288,7 +226,7 @@ const confissaoRatio = ref('1:2')
     class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"
   >
     <q-card>
-      <q-item :href="urlAnexo('pdf', anexo)" target="_blank">
+      <q-item clickable v-ripple @click="abrirAnexoPdf(anexo)">
         <q-item-section avatar>
           <q-avatar icon="mdi-file-pdf-box" color="secondary" text-color="white" />
         </q-item-section>
@@ -299,12 +237,12 @@ const confissaoRatio = ref('1:2')
       </q-item>
       <q-separator inset />
       <q-item
-        :href="urlAnexo('pdf', anexo)"
-        target="_blank"
+        clickable
+        v-ripple
+        @click="abrirAnexoPdf(anexo)"
         style="height: 250px"
         class="q-pa-none"
       >
-        <!-- <q-img :src="urlAnexo('pdf', anexo)" fit="cover" /> -->
         <q-icon name="picture_as_pdf" color="grey-7" size="150px" style="margin: auto" />
       </q-item>
       <q-card-actions>

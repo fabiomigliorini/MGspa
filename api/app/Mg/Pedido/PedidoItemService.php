@@ -1,0 +1,61 @@
+<?php
+
+namespace Mg\Pedido;
+
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
+use Mg\MgService;
+
+class PedidoItemService extends MgService
+{
+    public static function validate(array $data): void
+    {
+        $rules = [
+            'codpedido' => 'required',
+            'codprodutovariacao' => 'required',
+            'quantidade' => 'required|numeric',
+        ];
+
+        $validator = Validator::make($data, $rules);
+        if (!$validator->passes()) {
+            throw new ValidationException($validator);
+        }
+    }
+
+    public static function insert(array $data): PedidoItem
+    {
+        static::validate($data);
+        $model = new PedidoItem();
+        $model->fill($data);
+        $model->indstatus = PedidoItem::STATUS_PENDENTE;
+        $model->save();
+        return $model;
+    }
+
+    public static function update(PedidoItem $model, array $data): PedidoItem
+    {
+        $model->fill($data);
+        static::validate($model->getAttributes());
+        $model->save();
+        return $model;
+    }
+
+    public static function delete(PedidoItem $model): PedidoItem
+    {
+        $sql = "
+          SELECT COUNT(npbpi.codnegocioprodutobarrapedidoitem) AS count
+          FROM tblpedidoitem pi
+          INNER JOIN tblnegocioprodutobarrapedidoitem npbpi ON (npbpi.codpedidoitem = pi.codpedidoitem)
+          WHERE pi.codpedidoitem = :codpedidoitem
+        ";
+        $res = DB::select($sql, ['codpedidoitem' => $model->codpedidoitem]);
+        if ($res[0]->count > 0) {
+            $validator = Validator::make([], []);
+            $validator->errors()->add('codpedidoitem', 'Item já vinculado à um Negócio!');
+            throw new ValidationException($validator);
+        }
+        $model->delete();
+        return $model;
+    }
+}

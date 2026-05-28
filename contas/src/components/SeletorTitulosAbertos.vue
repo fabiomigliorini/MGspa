@@ -652,6 +652,20 @@ function classeVencimento(t) {
                 {{ titulo.filial }}
               </div>
             </div>
+
+            <div v-if="titulo.codnegocio" class="col-auto text-center">
+              <div class="text-grey-7 text-weight-bold">Confissão</div>
+              <div :class="titulo.confissao ? 'text-green' : 'text-red'">
+                {{ titulo.confissao ? 'Sim' : 'Não' }}
+              </div>
+            </div>
+
+            <div class="col-auto text-center">
+              <div class="text-grey-7 text-weight-bold">Boleto</div>
+              <div :class="titulo.boleto ? 'text-green' : 'text-red'">
+                {{ titulo.boleto ? 'Sim' : 'Não' }}
+              </div>
+            </div>
           </div>
         </q-card-section>
         <q-separator v-if="i < titulos.length - 1" />
