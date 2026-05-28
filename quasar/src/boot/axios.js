@@ -1,54 +1,55 @@
 import axios from 'axios'
+import { Notify } from 'quasar'
+import { api } from '../services/api'
+import auth from '../services/auth'
 
+// Padrão OAuth/OIDC alinhado com os apps Vue 3 (contas/notas/pessoas):
+//   - Bearer token vem do auth.state.token (= localStorage 'access_token')
+//   - 401 → limpa token + redireciona pro SSO (${API_AUTH_URL}/login)
+//
+// Compat: $axios continua sendo a instância com baseURL (todo código antigo
+// usa vm.$axios.get('alguma/rota') esperando prefixo de API_URL).
 
 export default ({ Vue }) => {
-  Vue.prototype.$axios = axios.create({
-    baseURL: process.env.API_URL,
-    'X-Requested-With': 'XMLHttpRequest'
-  });
-
-  Vue.prototype.$axios.interceptors.request.use(function (config) {
-    const AUTH_TOKEN = document.cookie.split(';').find((item) => item.trim().startsWith('access_token='));
-    if(localStorage.getItem('auth.usuario.codusuario')){
-      const codusuario = localStorage.getItem('auth.usuario.codusuario')
-      const user_id_cookie = document.cookie.split(';').find((item) => item.trim().startsWith('user_id='));
-      if(user_id_cookie){
-        const user_id = user_id_cookie.split('=')[1]
-        if(codusuario !== user_id){
-          localStorage.removeItem('auth.token');
-          localStorage.removeItem('auth.usuario.usuario');
-          localStorage.removeItem('auth.usuario.codusuario');
-          localStorage.removeItem('auth.usuario.avatar');
-          let url = new URL(window.location.href)
-          url = encodeURI(url.origin)
-          window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
-        }
+  // Request: injeta Bearer se houver token
+  api.interceptors.request.use(
+    config => {
+      if (auth.state.token) {
+        config.headers.Authorization = `Bearer ${auth.state.token}`
       }
-    }
+      return config
+    },
+    error => Promise.reject(error)
+  )
 
-    if (AUTH_TOKEN) {
-      let token = AUTH_TOKEN.split('=')[1]
-      config.headers.common['Authorization'] = `Bearer ${token}`
-    }
-    return config
-  }, function (error) {
-    return Promise.reject(error)
-  });
+  // Response: trata 401 (token expirado/inválido)
+  api.interceptors.response.use(
+    response => response,
+    error => {
+      if (error.response && error.response.status === 401) {
+        console.warn('Token expirado ou inválido (401)')
+        auth.gravarToken(null)
+        auth.state.usuario = null
 
-  Vue.prototype.$axios.interceptors.response.use((response) => {
-    return response
-  }, function (error) {
-    if (error.response) {
-      if (error.response.status) {
-        const originalRequest = error.config;
-        if (error.response.status === 401){
-          console.log('Erro 401')
-          let url = new URL(window.location.href)
-          url = encodeURI(url.origin)
-          window.location.href = process.env.API_AUTH_URL + '/login?redirect_uri=' + url
-        }
+        Notify.create({
+          type: 'negative',
+          message: 'Sessão expirada. Faça login novamente.'
+        })
+
+        setTimeout(() => {
+          auth.redirecionarParaLogin(window.location.hash.slice(1) || '/')
+        }, 1500)
       }
+      return Promise.reject(error)
     }
-    return Promise.reject(error)
-  })
+  )
+
+  // $axios = instância com baseURL/interceptors (mantém compat com código antigo)
+  // $api = idem (alias por consistência com os apps Vue 3)
+  // $auth = service singleton de autenticação
+  Vue.prototype.$axios = api
+  Vue.prototype.$api = api
+  Vue.prototype.$auth = auth
 }
+
+export { axios, api }

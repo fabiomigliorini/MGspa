@@ -369,6 +369,23 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 */
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
+    // Permissões
+    Route::apiResource('permissao', '\Mg\Permissao\PermissaoController');
+
+    // Stone Connect (consumido pelo Quasar — telas stone-connect)
+    Route::group(['prefix' => 'stone-connect'], function () {
+        Route::group(['prefix' => 'filial'], function () {
+            Route::post('', '\Mg\Stone\Connect\FilialController@store');
+            Route::get('', '\Mg\Stone\Connect\FilialController@index');
+            Route::get('{codstonefilial}', '\Mg\Stone\Connect\FilialController@show');
+            Route::get('{codstonefilial}/webhook', '\Mg\Stone\Connect\FilialController@showWebhook');
+        });
+        Route::group(['prefix' => 'pos'], function () {
+            Route::post('', '\Mg\Stone\Connect\PosController@store');
+            Route::delete('{codstonepos}', '\Mg\Stone\Connect\PosController@destroy');
+        });
+    });
+
     // Pessoa
     Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
     Route::get('pessoa/verifica-ie-sefaz', '\Mg\Pessoa\PessoaController@verificaIeSefaz');
