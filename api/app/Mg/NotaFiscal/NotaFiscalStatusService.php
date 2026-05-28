@@ -110,6 +110,18 @@ class NotaFiscalStatusService
         return !in_array($nota->status, $statusBloqueados);
     }
 
+    public static function isDeletable(NotaFiscal $nota): bool
+    {
+        $statusBloqueados = [
+            static::STATUS_AUTORIZADA,
+            static::STATUS_CANCELADA,
+            static::STATUS_INUTILIZADA,
+            static::STATUS_DENEGADA,
+        ];
+
+        return !in_array($nota->status, $statusBloqueados);
+    }
+
     public static function isAtiva(NotaFiscal $nota): bool
     {
         if (static::isAutorizada($nota)) {

@@ -35,6 +35,14 @@ class NotaFiscalProdutoBarraService
             return false;
         }
 
+        if (empty($nfpb->NotaFiscal->Pessoa->Cidade)) {
+            throw new Exception('Pessoa do cliente sem Cidade cadastrada — impossível calcular tributação!', 1);
+        }
+
+        if (empty($nfpb->NotaFiscal->Filial->Pessoa->Cidade)) {
+            throw new Exception('Pessoa da Filial sem Cidade cadastrada — impossível calcular tributação!', 1);
+        }
+
         // busca tributacao no banco
         $sql = '
             SELECT t.* 
@@ -53,7 +61,7 @@ class NotaFiscalProdutoBarraService
             'ncm' => $nfpb->ProdutoBarra->Produto->Ncm->ncm,
         ];
 
-        if ($nfpb->NotaFiscal->Pessoa->Cidade->Estado == $nfpb->NotaFiscal->Filial->Pessoa->Cidade->Estado) {
+        if ($nfpb->NotaFiscal->Pessoa->Cidade->codestado == $nfpb->NotaFiscal->Filial->Pessoa->Cidade->codestado) {
             $sql .= 'AND t.codestado = :codestado';
             $params['codestado'] = $nfpb->NotaFiscal->Pessoa->Cidade->codestado;
         } else {
