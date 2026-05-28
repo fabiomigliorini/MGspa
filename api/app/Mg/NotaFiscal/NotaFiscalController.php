@@ -172,8 +172,9 @@ class NotaFiscalController extends Controller
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
-        // Verifica se a nota está bloqueada
-        $this->verificarNotaBloqueada($nota);
+        if (!NotaFiscalStatusService::isDeletable($nota)) {
+            abort(422, "Não é possível apagar uma nota com status: {$nota->status}");
+        }
 
         DB::beginTransaction();
         foreach ($nota->NfeTerceiroS as $ter) {
