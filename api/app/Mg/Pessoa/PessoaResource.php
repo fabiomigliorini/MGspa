@@ -3,24 +3,19 @@
 namespace Mg\Pessoa;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Mg\Pdv\PdvNegocioPrazoService;
 use Mg\Usuario\Autorizador;
 
-/**
- * Versão simplificada do PessoaResource — sem `PdvNegocioPrazoService::emAberto`
- * (Pdv ainda não migrado). O campo `aberto` é retornado como 0 até a
- * migração de Pdv. Os demais sub-recursos (PessoaTelefone, PessoaEmail,
- * PessoaEndereco, PessoaConta, PessoaCertidao, Dependente, RegistroSpc)
- * são carregados normalmente.
- */
 class PessoaResource extends JsonResource
 {
     public function toArray($request): array
     {
         $ret = parent::toArray($request);
 
-        // Saldo em Aberto — TODO: portar PdvNegocioPrazoService::emAberto
-        $ret['aberto'] = 0;
+        // Saldo em Aberto
+        $ret['aberto'] = PdvNegocioPrazoService::emAberto($this->resource);
 
+        // Chave Extrangeira
         $ret['GrupoCliente'] = [
             'codgrupocliente' => $this->GrupoCliente->codgrupocliente ?? null,
             'grupocliente' => $this->GrupoCliente->grupocliente ?? null,
@@ -47,35 +42,53 @@ class PessoaResource extends JsonResource
         $ret['usuarioalteracao'] = $this->UsuarioAlteracao->usuario ?? null;
         $ret['mercosId'] = $this->MercosClienteS()->orderBy('clienteid')->get()->pluck('clienteid');
 
-        $ret['PessoaCertidaoS'] = PessoaCertidaoResource::collection(
-            $this->PessoaCertidaoS()->orderBy('validade', 'desc')->get()
-        );
+        // Filhos
         $ret['RegistroSpc'] = RegistroSpcResource::collection(
             $this->RegistroSpcS()->orderBy('criacao', 'desc')->get()
         );
-
-        // PessoaTelefone/Email/Endereco/Conta — usando shape enxuto direto do model
-        // (Resources ainda não migrados nesta sessão — TODO criar quando necessário)
-        $ret['PessoaTelefoneS'] = $this->PessoaTelefoneS()->orderBy('ordem')->get();
-        $ret['PessoaEmailS'] = $this->PessoaEmailS()->orderBy('ordem')->get();
-        $ret['PessoaEnderecoS'] = $this->PessoaEnderecoS()->with('Cidade.Estado')->orderBy('ordem')->get();
+        $ret['PessoaCertidaoS'] = PessoaCertidaoResource::collection(
+            $this->PessoaCertidaoS()->orderBy('validade', 'desc')->get()
+        );
+        $ret['PessoaTelefoneS'] = PessoaTelefoneResource::collection(
+            $this->PessoaTelefoneS()->orderBy('ordem')->get()
+        );
+        $ret['PessoaEmailS'] = PessoaEmailResource::collection(
+            $this->PessoaEmailS()->orderBy('ordem')->get()
+        );
+        $ret['PessoaEnderecoS'] = PessoaEnderecoResource::collection(
+            $this->PessoaEnderecoS()->orderBy('ordem')->get()
+        );
         $ret['PessoaContaS'] = PessoaContaResource::collection(
             $this->PessoaContaS()->orderBy('alteracao')->get()
         );
-
-        $ret['DependenteS'] = $this->DependenteS()->orderBy('coddependente', 'desc')->get();
-        $ret['DependenteResponsavelS'] = $this->DependeteResponsavelS()->orderBy('coddependente', 'desc')->get();
+        $ret['DependenteS'] = DependenteResource::collection(
+            $this->DependenteS()->orderBy('coddependente', 'desc')->get()
+        );
+        $ret['DependenteResponsavelS'] = DependenteResource::collection(
+            $this->DependeteResponsavelS()->orderBy('coddependente', 'desc')->get()
+        );
         $ret['UsuarioS'] = $this->UsuarioS()->orderBy('usuario')->get(['codusuario', 'usuario']);
 
+        // Permissões para o frontend
         $ret['permissaoRH'] = Autorizador::pode(['Recursos Humanos']);
         $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
 
         if (!$ret['permissaoFinanceiro']) {
             unset(
-                $ret['RegistroSpc'], $ret['creditobloqueado'], $ret['toleranciaatraso'],
-                $ret['consumidor'], $ret['codgrupocliente'], $ret['GrupoCliente'],
-                $ret['desconto'], $ret['vendedor'], $ret['notafiscal'], $ret['fornecedor'],
-                $ret['cliente'], $ret['credito'], $ret['codformapagamento'], $ret['FormaPagamento']
+                $ret['RegistroSpc'],
+                $ret['creditobloqueado'],
+                $ret['toleranciaatraso'],
+                $ret['consumidor'],
+                $ret['codgrupocliente'],
+                $ret['GrupoCliente'],
+                $ret['desconto'],
+                $ret['vendedor'],
+                $ret['notafiscal'],
+                $ret['fornecedor'],
+                $ret['cliente'],
+                $ret['credito'],
+                $ret['codformapagamento'],
+                $ret['FormaPagamento'],
             );
         }
 
