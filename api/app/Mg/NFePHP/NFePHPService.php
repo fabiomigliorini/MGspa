@@ -4,6 +4,7 @@ namespace Mg\NFePHP;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 use Mg\MgService;
 use Mg\NotaFiscal\NotaFiscal;
@@ -12,6 +13,7 @@ use Mg\Filial\Filial;
 use Mg\Filial\Empresa;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
+use NFePHP\Common\Exception\SoapException;
 use NFePHP\NFe\Complements;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Strings;
@@ -59,10 +61,50 @@ class NFePHPService extends MgService
         };
     }
 
+    /**
+     * Executa uma chamada à SEFAZ com retry para erros transitórios de rede/TLS.
+     *
+     * Mitiga o "unexpected eof while reading" do OpenSSL 3.x quando servidores
+     * SEFAZ encerram a conexão sem o close_notify do TLS, além de timeouts e
+     * resets eventuais. Outras SoapExceptions (HTTP 500, XML inválido, etc.)
+     * propagam imediatamente — só vale retentar erro de transporte.
+     */
+    protected static function chamarSefazComRetry(callable $fn, string $operacao)
+    {
+        $atrasosMs = [500, 1500];
+        $tentativa = 0;
+
+        while (true) {
+            try {
+                return $fn();
+            } catch (SoapException $e) {
+                if (!static::ehErroTransitorioSefaz($e) || $tentativa >= count($atrasosMs)) {
+                    throw $e;
+                }
+                $espera = $atrasosMs[$tentativa];
+                $tentativa++;
+                Log::warning("SEFAZ {$operacao} falhou (tentativa {$tentativa}, retry em {$espera}ms): " . $e->getMessage());
+                usleep($espera * 1000);
+            }
+        }
+    }
+
+    protected static function ehErroTransitorioSefaz(SoapException $e): bool
+    {
+        // libcurl: 7=connect failed, 28=timeout, 35=ssl connect, 52=empty reply, 56=recv error
+        if (in_array((int) $e->getCode(), [7, 28, 35, 52, 56], true)) {
+            return true;
+        }
+        return (bool) preg_match(
+            '/unexpected eof|SSL_read|Connection reset|Operation timed out|Resolving timed out|SSL connect error|Empty reply/i',
+            $e->getMessage()
+        );
+    }
+
     public static function sefazStatus(Filial $filial)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
-        $resp = $tools->sefazStatus();
+        $resp = static::chamarSefazComRetry(fn() => $tools->sefazStatus(), 'status');
         $st = new Standardize();
         $r = $st->toStd($resp);
         return $r;
@@ -72,7 +114,7 @@ class NFePHPService extends MgService
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
         $tools->model('65');
-        $resp = $tools->sefazCsc(1);
+        $resp = static::chamarSefazComRetry(fn() => $tools->sefazCsc(1), 'csc');
         $st = new Standardize();
         $r = $st->toStd($resp);
         return $r;
@@ -125,7 +167,10 @@ class NFePHPService extends MgService
         $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
 
         // Envia Lote para Sefaz
-        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
+        $resp = static::chamarSefazComRetry(
+            fn() => $tools->sefazEnviaLote([$xmlAssinado], $idLote),
+            "enviaLote NF#{$nf->codnotafiscal}"
+        );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -189,7 +234,10 @@ class NFePHPService extends MgService
 
         // Envia Lote para Sefaz
         //$tools->timeout(5);
-        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1);
+        $resp = static::chamarSefazComRetry(
+            fn() => $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1),
+            "enviaLote sincrono NF#{$nf->codnotafiscal}"
+        );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -348,7 +396,10 @@ class NFePHPService extends MgService
         $tools->model($nf->modelo);
 
         // Busca na sefaz status do recibo
-        $resp = $tools->sefazConsultaRecibo($nf->nfereciboenvio);
+        $resp = static::chamarSefazComRetry(
+            fn() => $tools->sefazConsultaRecibo($nf->nfereciboenvio),
+            "consultaRecibo NF#{$nf->codnotafiscal}"
+        );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -419,7 +470,10 @@ class NFePHPService extends MgService
         $tools->model($nf->modelo);
 
         // solicita a sefaz cancelamento
-        $resp = $tools->sefazCancela($nf->nfechave, $justificativa, $nf->nfeautorizacao);
+        $resp = static::chamarSefazComRetry(
+            fn() => $tools->sefazCancela($nf->nfechave, $justificativa, $nf->nfeautorizacao),
+            "cancela NF#{$nf->codnotafiscal}"
+        );
         // return $resp;
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -490,7 +544,10 @@ class NFePHPService extends MgService
         $tools->model($nf->modelo);
 
         // solicita a sefaz cancelamento
-        $resp = $tools->sefazInutiliza($nf->serie, $nf->numero, $nf->numero, $justificativa, $nf->Filial->nfeambiente);
+        $resp = static::chamarSefazComRetry(
+            fn() => $tools->sefazInutiliza($nf->serie, $nf->numero, $nf->numero, $justificativa, $nf->Filial->nfeambiente),
+            "inutiliza NF#{$nf->codnotafiscal}"
+        );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -576,7 +633,10 @@ class NFePHPService extends MgService
         // solicita a sefaz cancelamento
         $nSeqEvento = NotaFiscalCartaCorrecao::where('codnotafiscal', $nf->codnotafiscal)->max('sequencia');
         $nSeqEvento++;
-        $resp = $tools->sefazCCe($nf->nfechave, $justificativa, $nSeqEvento);
+        $resp = static::chamarSefazComRetry(
+            fn() => $tools->sefazCCe($nf->nfechave, $justificativa, $nSeqEvento),
+            "cce NF#{$nf->codnotafiscal}"
+        );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -685,7 +745,10 @@ class NFePHPService extends MgService
         $tools->model($nf->modelo);
 
         // consulta chave da NFe na sefaz
-        $resp = $tools->sefazConsultaChave($nf->nfechave, $nf->Filial->nfeambiente);
+        $resp = static::chamarSefazComRetry(
+            fn() => $tools->sefazConsultaChave($nf->nfechave, $nf->Filial->nfeambiente),
+            "consultaChave NF#{$nf->codnotafiscal}"
+        );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -973,7 +1036,10 @@ class NFePHPService extends MgService
         $cnpj = $cnpj;
         $iest = $iest;
         $cpf = $cpf;
-        $response = $tools->sefazCadastro($uf, $cnpj, $iest, $cpf);
+        $response = static::chamarSefazComRetry(
+            fn() => $tools->sefazCadastro($uf, $cnpj, $iest, $cpf),
+            "cadastro {$uf} {$cnpj}{$cpf}"
+        );
         $stdCl = (new Standardize($response))->toStd();
         return $stdCl;
     }
