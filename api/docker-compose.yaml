@@ -45,6 +45,7 @@ services:
     container_name: mgspa-api-scheduler
     restart: unless-stopped
     working_dir: /opt/www/MGspa/api
+    user: "82:82"
     depends_on:
       - api
       - redis
@@ -70,6 +71,7 @@ services:
     container_name: mgspa-api-worker
     restart: unless-stopped
     working_dir: /opt/www/MGspa/api
+    user: "82:82"
     depends_on:
       - api
       - redis
