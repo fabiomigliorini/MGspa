@@ -28,7 +28,7 @@ class PessoaController extends MgController
             $data['ieoutra'] = $request->ieoutra;
         }
 
-        $this->validate($request, [
+        $request->validate([
             'cnpj' => 'required|cpf_cnpj',
             'fisica' => 'required|boolean',
             'fantasia' => 'required',
