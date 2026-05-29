@@ -477,6 +477,7 @@ class NFePHPService extends MgService
         // return $resp;
         $st = new Standardize();
         $respStd = $st->toStd($resp);
+        Log::info("Cancelamento NF {$nf->codnotafiscal}!", (array) $respStd);
 
         // inicializa variaveis para retorno
         $sucesso = false;
@@ -493,6 +494,9 @@ class NFePHPService extends MgService
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
             $cStat = $respStd->retEvento->infEvento->cStat;
             $xMotivo = $respStd->retEvento->infEvento->xMotivo;
+        } elseif (isset($respStd->cStat)) {
+            $cStat = $respStd->cStat;
+            $xMotivo = $respStd->xMotivo;
         }
 
         // Retorna Resultado do processo
