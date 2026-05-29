@@ -31,7 +31,8 @@ class PessoaComandaVendedorService
 
     public static function imprimir (Pessoa $pessoa, $impressora, $copias)
     {
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/pessoa/' . $pessoa->codpessoa . '/comanda-vendedor\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": ' . $copias . '}" }\'';
+        $url = \URL::temporarySignedRoute('pessoa.comanda-vendedor', now()->addMinutes(10), ['codpessoa' => $pessoa->codpessoa]);
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": ' . $copias . '}" }\'';
         exec($cmd);
     }
 

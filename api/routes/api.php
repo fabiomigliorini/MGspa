@@ -394,8 +394,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // PDV (público)
     Route::group(['prefix' => 'pdv'], function () {
         Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo');
-        Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio');
-        Route::get('negocio/{codnegocio}/vale', '\Mg\Pdv\PdvController@vale');
+        Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio')
+            ->name('pdv.negocio.romaneio')
+            ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
+        Route::get('negocio/{codnegocio}/vale', '\Mg\Pdv\PdvController@vale')
+            ->name('pdv.negocio.vale')
+            ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
         Route::get('negocio/{codnegocio}/comanda', '\Mg\Pdv\PdvController@comanda');
         Route::get('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@show');
     });
@@ -406,14 +410,22 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('produto/embalagem-para-unidade', '\Mg\Produto\ProdutoController@embalagemParaUnidade');
 
     // Etiqueta
-    Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo');
+    Route::get('etiqueta/arquivo/{arquivo}', '\Mg\Etiqueta\EtiquetaController@arquivo')
+        ->name('etiqueta.arquivo')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
 
-    // NFeTerceiro (sem auth do MGsis)
+    // NFeTerceiro
+    // POSTs ficam em auth:api (MGsis manda Bearer via $.ajaxSetup)
+    // GETs de XML/DANFE/guia-st são abertos via <a target=_blank>/iframe — usam
+    // auth_or_cookie pra cair no cookie access_token quando o browser navega top-level.
     Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
     Route::post('nfe-terceiro/{codnfeterceiro}/download', '\Mg\NfeTerceiro\NfeTerceiroController@download');
-    Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
-    Route::get('nfe-terceiro/{codnfeterceiro}/danfe', '\Mg\NfeTerceiro\NfeTerceiroController@danfe');
-    Route::get('nfe-terceiro/{codnfeterceiro}/guia-st/{codtitulonfeterceiro}/pdf', '\Mg\NfeTerceiro\NfeTerceiroController@guiaStPdf');
+    Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
+    Route::get('nfe-terceiro/{codnfeterceiro}/danfe', '\Mg\NfeTerceiro\NfeTerceiroController@danfe')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
+    Route::get('nfe-terceiro/{codnfeterceiro}/guia-st/{codtitulonfeterceiro}/pdf', '\Mg\NfeTerceiro\NfeTerceiroController@guiaStPdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
 
     // NOTA FISCAL
     Route::prefix('nota-fiscal')->group(function () {
@@ -460,15 +472,19 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     });
 
     // Negocio
-    Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda');
+    Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda')
+        ->name('negocio.comanda')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');
     Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Negocio\NegocioController@unificar');
-    Route::get('negocio/{codnegocio}/boleto-bb/pdf', '\Mg\Negocio\NegocioController@BoletoBbPdf');
+    Route::get('negocio/{codnegocio}/boleto-bb/pdf', '\Mg\Negocio\NegocioController@BoletoBbPdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
     Route::post('negocio/{codnegocio}/boleto-bb/registrar', '\Mg\Negocio\NegocioController@BoletoBbRegistrar');
     Route::post('negocio/{codnegocio}/identificar-vendedor/{codpessoavendedor}', '\Mg\Negocio\NegocioController@identificarVendedor');
 
-    // Boleto BB sem header de auth
-    Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf');
+    // Boleto BB PDF aberto em iframe pelo MGsis — usa auth_or_cookie
+    Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
 
     // PagarMe
     Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');
@@ -484,12 +500,16 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('pix/cob/{codpixcob}/brcode', '\Mg\Pix\PixController@brCodePixCob');
     Route::get('pix/cob/{codpixcob}', '\Mg\Pix\PixController@show');
     Route::post('pix/cob/{codpixcob}/imprimir-qr-code', '\Mg\Pix\PixController@imprimirQrCode');
-    Route::get('pix/cob/{codpixcob}/pdf', '\Mg\Pix\PixController@pdf');
+    Route::get('pix/cob/{codpixcob}/pdf', '\Mg\Pix\PixController@pdf')
+        ->name('pix.cob.pdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::match(['POST', 'PUT', 'PATCH'], 'pix/webhook', '\Mg\Pix\PixController@webhook');
 
     // Pessoa autocomplete + comanda
     Route::get('pessoa/autocomplete', '\Mg\Pessoa\PessoaController@autocomplete');
-    Route::get('pessoa/{codpessoa}/comanda-vendedor', '\Mg\Pessoa\PessoaController@comandaVendedor');
+    Route::get('pessoa/{codpessoa}/comanda-vendedor', '\Mg\Pessoa\PessoaController@comandaVendedor')
+        ->name('pessoa.comanda-vendedor')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::post('pessoa/{codpessoa}/comanda-vendedor/imprimir', '\Mg\Pessoa\PessoaController@comandaVendedorImprimir');
 
     // NFePHP
@@ -498,7 +518,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
     Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
     Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
-    Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe');
+    Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe')
+        ->name('nfe-php.danfe')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::get('nfe-php/{id}/imprimir', '\Mg\NFePHP\NFePHPController@imprimir');
     Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
     Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');

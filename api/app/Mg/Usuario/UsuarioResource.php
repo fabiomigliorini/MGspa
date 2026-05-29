@@ -3,6 +3,7 @@
 namespace Mg\Usuario;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Mg\Pessoa\PessoaResource;
 
 class UsuarioResource extends JsonResource
 {
@@ -12,14 +13,7 @@ class UsuarioResource extends JsonResource
         unset($ret['senha'], $ret['remember_token']);
 
         if ($this->codpessoa) {
-            $ret['Pessoa'] = $this->Pessoa?->only([
-                'codpessoa',
-                'pessoa',
-                'fantasia',
-                'cnpj',
-                'cpf',
-                'email',
-            ]);
+            $ret['Pessoa'] = new PessoaResource($this->Pessoa);
         }
 
         $ret['portador'] = $this->Portador->portador ?? null;

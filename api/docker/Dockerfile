@@ -29,6 +29,12 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 RUN docker-php-ext-configure gd --with-jpeg && \
     docker-php-ext-install pdo pdo_pgsql pgsql gd zip intl bcmath soap
 
+# Extensão Redis (phpredis) — usada por SESSION_DRIVER=redis e CACHE_STORE=redis
+RUN apk add --no-cache --virtual .build-deps-redis linux-headers && \
+    pecl install redis && \
+    docker-php-ext-enable redis && \
+    apk del .build-deps-redis
+
 # Limites de memória
 RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/99-custom.ini
 

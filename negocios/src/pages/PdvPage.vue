@@ -5,6 +5,7 @@ import { pdvStore } from 'src/stores/pdv'
 import moment from 'moment/min/moment-with-locales'
 import SelectFilial from 'components/selects/SelectFilial.vue'
 import SelectSetor from 'components/selects/SelectSetor.vue'
+import DialogEditarPdv from 'components/pdv/DialogEditarPdv.vue'
 import { Notify } from 'quasar'
 
 moment.locale('pt-br')
@@ -234,7 +235,7 @@ onMounted(() => {
       </template>
     </q-list>
 
-    <dialog-editar-pdv
+    <DialogEditarPdv
       v-model="dialogEditarPdv"
       :pdv="model"
       titulo="Editar Dispositivo"

@@ -31,7 +31,8 @@ class NegocioComandaService
 
     public static function imprimir(Negocio $negocio, $impressora)
     {
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/negocio/' . $negocio->codnegocio . '/comanda\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
+        $url = \URL::temporarySignedRoute('negocio.comanda', now()->addMinutes(10), ['codnegocio' => $negocio->codnegocio]);
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
         exec($cmd);
     }
 

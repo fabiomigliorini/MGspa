@@ -18,7 +18,14 @@ class Autorizador
     public static function pode(array $gruposAutorizados, ?int $codfilial = null, ?int $codusuario = null): bool
     {
         if (empty($codusuario)) {
-            $codusuario = Auth::user()->codusuario;
+            // Fallback para guard 'api' (Bearer): rotas sem middleware auth:api
+            // (ex.: /userinfo) não promovem o guard 'api' a default, então
+            // Auth::user() vem null mesmo com Bearer válido.
+            $user = Auth::user() ?? Auth::guard('api')->user();
+            if (!$user) {
+                return false;
+            }
+            $codusuario = $user->codusuario;
         }
 
         $whereGrupo = "and gu.grupousuario in ('Administrador'";

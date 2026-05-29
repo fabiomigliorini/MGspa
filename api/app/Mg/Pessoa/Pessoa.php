@@ -6,7 +6,9 @@
 
 namespace Mg\Pessoa;
 
+use Carbon\Carbon;
 use Mg\MgModel;
+use Mg\Certidao\CertidaoEmissor;
 use Mg\Meta\BonificacaoEvento;
 use Mg\Cheque\Cheque;
 use Mg\Cobranca\CobrancaHistorico;

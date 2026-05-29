@@ -161,7 +161,7 @@ class EstoqueSaldoService extends MgService
             $mes->EstoqueSaldo->save();
 
             //atualiza 'dataentrada'
-            DB::update(DB::raw("
+            DB::update("
                 update tblestoquesaldo
                 set dataentrada = (
                         select
@@ -183,7 +183,7 @@ class EstoqueSaldoService extends MgService
                         limit 1
                 )
                 where tblestoquesaldo.codestoquesaldo = :codestoquesaldo
-            "), [
+            ", [
                 'codestoquesaldo' => $mes->codestoquesaldo
             ]);
         }

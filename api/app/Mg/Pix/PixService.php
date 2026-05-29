@@ -401,7 +401,8 @@ class PixService
 
     public static function imprimirQrCode(PixCob $cob, $impressora)
     {
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/pix/cob/' . $cob->codpixcob . '/pdf\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
+        $url = \URL::temporarySignedRoute('pix.cob.pdf', now()->addMinutes(10), ['codpixcob' => $cob->codpixcob]);
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
         exec($cmd);
     }
 
