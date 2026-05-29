@@ -40,6 +40,12 @@ return Application::configure(basePath: dirname(__DIR__))
             'access_token',
             'user_id',
         ]);
+
+        // Rotas baixadas pelo MGprint (signed URL anônima) e também pelo
+        // frontend (Bearer). Cai no primeiro ramo que validar.
+        $middleware->alias([
+            'auth_or_signed' => \App\Http\Middleware\AuthOrSigned::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

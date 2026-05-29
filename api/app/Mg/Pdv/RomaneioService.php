@@ -30,10 +30,10 @@ class RomaneioService
     public static function imprimir($codnegocio, $impressora)
     {
         // Executa comando de impressao
+        $url = \URL::temporarySignedRoute('pdv.negocio.romaneio', now()->addMinutes(10), ['codnegocio' => $codnegocio]);
         $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'
             . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora
-            . '", "data": "{\"url\": \"' . env('APP_URL') . 'api/v1/pdv/negocio/'
-            . $codnegocio . '/romaneio\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
+            . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
         exec($cmd);
     }
 }
