@@ -414,12 +414,18 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->name('etiqueta.arquivo')
         ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
 
-    // NFeTerceiro (sem auth do MGsis)
+    // NFeTerceiro
+    // POSTs ficam em auth:api (MGsis manda Bearer via $.ajaxSetup)
+    // GETs de XML/DANFE/guia-st são abertos via <a target=_blank>/iframe — usam
+    // auth_or_cookie pra cair no cookie access_token quando o browser navega top-level.
     Route::post('nfe-terceiro/{codnfeterceiro}/manifestacao', '\Mg\NfeTerceiro\NfeTerceiroController@manifestacao');
     Route::post('nfe-terceiro/{codnfeterceiro}/download', '\Mg\NfeTerceiro\NfeTerceiroController@download');
-    Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml');
-    Route::get('nfe-terceiro/{codnfeterceiro}/danfe', '\Mg\NfeTerceiro\NfeTerceiroController@danfe');
-    Route::get('nfe-terceiro/{codnfeterceiro}/guia-st/{codtitulonfeterceiro}/pdf', '\Mg\NfeTerceiro\NfeTerceiroController@guiaStPdf');
+    Route::get('nfe-terceiro/{codnfeterceiro}/xml', '\Mg\NfeTerceiro\NfeTerceiroController@xml')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
+    Route::get('nfe-terceiro/{codnfeterceiro}/danfe', '\Mg\NfeTerceiro\NfeTerceiroController@danfe')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
+    Route::get('nfe-terceiro/{codnfeterceiro}/guia-st/{codtitulonfeterceiro}/pdf', '\Mg\NfeTerceiro\NfeTerceiroController@guiaStPdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
 
     // NOTA FISCAL
     Route::prefix('nota-fiscal')->group(function () {
@@ -471,12 +477,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::post('negocio/{codnegocio}/comanda/imprimir', '\Mg\Negocio\NegocioController@comandaImprimir');
     Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Negocio\NegocioController@unificar');
-    Route::get('negocio/{codnegocio}/boleto-bb/pdf', '\Mg\Negocio\NegocioController@BoletoBbPdf');
+    Route::get('negocio/{codnegocio}/boleto-bb/pdf', '\Mg\Negocio\NegocioController@BoletoBbPdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
     Route::post('negocio/{codnegocio}/boleto-bb/registrar', '\Mg\Negocio\NegocioController@BoletoBbRegistrar');
     Route::post('negocio/{codnegocio}/identificar-vendedor/{codpessoavendedor}', '\Mg\Negocio\NegocioController@identificarVendedor');
 
-    // Boleto BB sem header de auth
-    Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf');
+    // Boleto BB PDF aberto em iframe pelo MGsis — usa auth_or_cookie
+    Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
 
     // PagarMe
     Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');

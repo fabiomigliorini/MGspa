@@ -45,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // frontend (Bearer). Cai no primeiro ramo que validar.
         $middleware->alias([
             'auth_or_signed' => \App\Http\Middleware\AuthOrSigned::class,
+            'auth_or_cookie' => \App\Http\Middleware\AuthOrCookie::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
