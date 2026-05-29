@@ -15,6 +15,7 @@
         "laravel/framework": "^13.0",
         "laravel/helpers": "^1.7",
         "laravel/passport": "^13.0",
+        "laravel/tinker": "^3.0",
         "mpdf/mpdf": "^8.3",
         "nfephp-org/sped-common": "^5.1",
         "nfephp-org/sped-da": "^1.1",
