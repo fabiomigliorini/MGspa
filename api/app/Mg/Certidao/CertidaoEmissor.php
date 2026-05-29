@@ -12,6 +12,8 @@ use Mg\Usuario\Usuario;
 
 class CertidaoEmissor extends MgModel
 {
+    const SEFAZ_MT = 1;
+
     protected $table = 'tblcertidaoemissor';
     protected $primaryKey = 'codcertidaoemissor';
 
