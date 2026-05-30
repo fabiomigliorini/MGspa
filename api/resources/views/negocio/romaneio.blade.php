@@ -52,7 +52,7 @@
         <table style="height: 100%;">
             <tr>
                 <td style=" width: 2.5cm; vertical-align:middle;">
-                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents('/opt/www/MGspa/laravel/public/MGPapelariaLogoSeloPretoBranco.jpeg')) }}"
+                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents('/opt/www/MGspa/api/public/MGPapelariaLogoSeloPretoBranco.jpeg')) }}"
                         alt="Logo" border="0" style="width: 100%; ">
                 </td>
                 <td style="text-align: center; width: 4.5cm; vertical-align:middle;">

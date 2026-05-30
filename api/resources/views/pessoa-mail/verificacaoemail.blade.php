@@ -117,7 +117,7 @@
           <tr>
             <td align="center" valign="top" style="padding: 36px 24px;">
               <a href="https://www.mgpapelaria.com.br" target="_blank" style="display: inline-block;">
-                <img src="{{ $message->embed('/opt/www/MGspa/laravel/public/MGPapelariaLogo.jpeg') }}" alt="Logo" border="0" style="display: block;">
+                <img src="{{ $message->embed('/opt/www/MGspa/api/public/MGPapelariaLogo.jpeg') }}" alt="Logo" border="0" style="display: block;">
               </a>
             </td>
           </tr>
