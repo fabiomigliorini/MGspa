@@ -66,7 +66,7 @@ use Illuminate\Support\Carbon;
         <table style="height: 100%;">
             <tr>
                 <td style=" width: 2.5cm; vertical-align:middle;">
-                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents('/opt/www/MGspa/api/public/MGPapelariaLogoSeloPretoBranco.jpeg')) }}" alt="Logo" border="0" style="width: 100%; ">
+                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('MGPapelariaLogoSeloPretoBranco.jpeg'))) }}" alt="Logo" border="0" style="width: 100%; ">
                 </td>
                 <td style="text-align: center; width: 4.5cm; vertical-align:middle;">
                     <b style="font-size: 14pt">{{ $tit->Filial->filial}}</b>

@@ -26,7 +26,7 @@ $tits = collect($ta->TituloS->sortBy('vencimento')->sortBy('numero')->all());
 
 <body>
     <div>
-        <img src="{{ $message->embed('/opt/www/MGspa/api/public/MailNfeCabecalho.jpeg') }}" style="max-width:100%"> <br />
+        <img src="{{ $message->embed(public_path('MailNfeCabecalho.jpeg')) }}" style="max-width:100%"> <br />
     </div>
 
     <h2>Olá {{ $ta->Pessoa->fantasia }},</h2>
