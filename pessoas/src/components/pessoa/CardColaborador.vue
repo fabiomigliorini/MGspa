@@ -21,6 +21,7 @@ const route = useRoute()
 
 const modelColaborador = ref({})
 const editColaborador = ref(false)
+const salvando = ref(false)
 const dialogNovoColaborador = ref(false)
 const refCardFerias = ref(null)
 const refCardColaboradorCargo = ref(null)
@@ -179,6 +180,8 @@ const alterouRenovacao = () => {
 }
 
 const novoColaborador = async () => {
+  if (salvando.value) return
+  salvando.value = true
   modelColaborador.value.codpessoa = route.params.id
 
   const colab = { ...modelColaborador.value }
@@ -204,10 +207,14 @@ const novoColaborador = async () => {
       icon: 'error',
       message: error.response.data.message,
     })
+  } finally {
+    salvando.value = false
   }
 }
 
 const salvarColaborador = async () => {
+  if (salvando.value) return
+  salvando.value = true
   const colab = { ...modelColaborador.value }
   delete colab.diasExperiencia
   delete colab.diasRenovacao
@@ -235,6 +242,8 @@ const salvarColaborador = async () => {
       icon: 'error',
       message: error.response.data.message,
     })
+  } finally {
+    salvando.value = false
   }
 }
 
@@ -805,7 +814,7 @@ watch(
 
         <q-card-actions align="right" class="text-primary">
           <q-btn flat label="Cancelar" v-close-popup color="grey-8" tabindex="-1" />
-          <q-btn flat label="Salvar" type="submit" />
+          <q-btn flat label="Salvar" type="submit" :loading="salvando" :disable="salvando" />
         </q-card-actions>
       </q-form>
     </q-card>
