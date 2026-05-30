@@ -92,7 +92,7 @@ class TituloRelatorioService
         // carrega HTML da view
         $dompdf = new Dompdf();
         $html = view('titulo-relatorio.relatorio', compact('pessoas'))->render();
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
 
         // Bobina 80mm x 297 (altura A4)
         $dompdf->setPaper([0.0, 0.0, 595.27, 841.89], 'portrait');

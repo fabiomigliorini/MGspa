@@ -35,7 +35,7 @@ class ValeService
         // carrega HTML da view
         $dompdf = new Dompdf();
         $html = view('negocio.vale', compact('tits', 'barcodes'))->render();
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
 
         // Bobina 80mm x 297 (altura A4)
         $dompdf->setPaper([0.0, 0.0, 226.77, 450], 'portrait');

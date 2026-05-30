@@ -22,7 +22,7 @@ class RomaneioService
         // carrega HTML da view
         $dompdf = new Dompdf();
         $html = view('negocio.romaneio', compact('negocio', 'anexos', 'confissao', 'qrcode'))->render();
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
 
         // Bobina 80mm x 297 (altura A4)
         $dompdf->setPaper([0.0, 0.0, 226.77, 841.89], 'portrait');

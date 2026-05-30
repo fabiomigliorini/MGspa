@@ -222,7 +222,7 @@ class LiquidacaoTituloController extends Controller
     protected static function pdfResponse(string $html, string $filename)
     {
         $dompdf = new Dompdf();
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
 
         return response($dompdf->output(), 200, [

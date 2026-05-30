@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 <html>
 
 <head>
+    <meta charset="utf-8">
     <style>
         @page {
             margin: 0.5cm 0.5cm;
