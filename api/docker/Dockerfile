@@ -31,7 +31,7 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
 
 # Extensões PHP
 RUN docker-php-ext-configure gd --with-jpeg && \
-    docker-php-ext-install pdo pdo_pgsql pgsql gd zip intl bcmath soap
+    docker-php-ext-install pdo pdo_pgsql pgsql gd zip intl bcmath soap mbstring
 
 # Extensão Redis (phpredis) — usada por SESSION_DRIVER=redis e CACHE_STORE=redis
 RUN apk add --no-cache --virtual .build-deps-redis linux-headers && \
