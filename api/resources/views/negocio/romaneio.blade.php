@@ -233,6 +233,9 @@
                 @if ($loop->first)
                     <h1 style="page-break-before: always;">Confissão de Dívida</h1>
                     <p style="font-size: larger; text-align:justify">
+                        @if (!empty($qrcode))
+                            <img src="{{ $qrcode }}" style="width: 2.4cm; height: 2.4cm; float: right;">
+                        @endif
                         Confesso(amos) e me(nos) constituo(imos) devedor(es)
                         do(s) valor(es) descrito(s) abaixo, obrigando-me(nos) a pagar em moeda corrente
                         do pais, conforme os vencimento(s). Declaro(amos) ainda, ter recebido o(s)

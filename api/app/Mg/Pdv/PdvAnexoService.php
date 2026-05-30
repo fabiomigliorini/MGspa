@@ -230,7 +230,20 @@ class PdvAnexoService
         $arquivo = tempnam('/tmp', 'anexo-') . '.jpeg';
         imagejpeg($anexo, $arquivo);
 
-        // roda o tesseract OCR para extrair o texto (idioma portugues)
+        // 1) tenta ler o QR code impresso na confissao (rapido e confiavel).
+        // Confissoes novas tem o QR; se achar, nem precisa do OCR.
+        $qr = static::lerQrCode($arquivo);
+        if ($qr !== null) {
+            unlink($arquivo);
+            [$codnegocio, $valor] = $qr;
+            return [
+                'codnegocio' => $codnegocio,
+                'valor' => $valor,
+                'encontrados' => static::procurar($codnegocio, $valor),
+            ];
+        }
+
+        // 2) fallback: OCR via tesseract (confissoes antigas, sem QR)
         $cmd = "tesseract --psm 6 -l por '{$arquivo}' -";
         $ret = shell_exec($cmd);
 
@@ -314,6 +327,28 @@ class PdvAnexoService
             'valor' => $valor,
             'encontrados' => $encontrados
         ];
+    }
+
+    // Le o QR code da confissao (gerado em RomaneioService::qrCodeConfissao).
+    // Retorna [codnegocio, valor] se achar o QR no formato esperado, senao null.
+    static function lerQrCode($arquivo)
+    {
+        // zbarimg extrai o conteudo cru do QR direto da foto
+        $ret = shell_exec('zbarimg --quiet --raw ' . escapeshellarg($arquivo) . ' 2>/dev/null');
+        $ret = trim((string) $ret);
+
+        // espera "MGCONF|codnegocio|valortotal"
+        $partes = explode('|', $ret);
+        if (count($partes) !== 3 || $partes[0] !== 'MGCONF') {
+            return null;
+        }
+
+        $codnegocio = numeroLimpo($partes[1]);
+        if (empty($codnegocio)) {
+            return null;
+        }
+
+        return [$codnegocio, (float) $partes[2]];
     }
 
     static function procurar($codnegocio, $valor)

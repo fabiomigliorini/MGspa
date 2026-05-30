@@ -21,7 +21,9 @@ RUN apk upgrade --update --no-cache && \
         git \
         curl \
         tesseract-ocr \
-        tesseract-ocr-data-por
+        tesseract-ocr-data-por \
+        zbar \
+        imagemagick
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- \

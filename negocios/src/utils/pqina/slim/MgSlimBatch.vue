@@ -38,7 +38,10 @@ const inicializar = async () => {
     uploadBase64: true,
     forceType: 'jpeg',
     label: 'Clique para adicionar uma imagem!',
-    jpegCompression: 50,
+    // resolução/qualidade maiores pra o QR code da confissão sobreviver à foto
+    // (o tesseract e o leitor de QR precisam dos módulos nítidos)
+    size: { width: 800, height: 1600 },
+    jpegCompression: 80,
     willSave: function (data, ready) {
       sConfissao.novaImagem(data.output.image, props.ratio)
       ready(true)
