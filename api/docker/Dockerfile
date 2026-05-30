@@ -19,7 +19,9 @@ RUN apk upgrade --update --no-cache && \
         zip \
         unzip \
         git \
-        curl
+        curl \
+        tesseract-ocr \
+        tesseract-ocr-data-por
 
 # Composer
 RUN curl -sS https://getcomposer.org/installer | php -- \

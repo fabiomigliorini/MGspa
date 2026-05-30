@@ -230,8 +230,8 @@ class PdvAnexoService
         $arquivo = tempnam('/tmp', 'anexo-') . '.jpeg';
         imagejpeg($anexo, $arquivo);
 
-        // roda o tesseract OCR para extrair o texto
-        $cmd = "tesseract --psm 6 '{$arquivo}' -";
+        // roda o tesseract OCR para extrair o texto (idioma portugues)
+        $cmd = "tesseract --psm 6 -l por '{$arquivo}' -";
         $ret = shell_exec($cmd);
 
         // apaga arquivo temporario
