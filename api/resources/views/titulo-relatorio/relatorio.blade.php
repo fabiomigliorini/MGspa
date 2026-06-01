@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta charset="utf-8">
     <title>Titulos Abertos MG Papelaria</title>
 </head>
 <style>
@@ -95,7 +96,7 @@
             <thead>
                 <tr>
                     <td style="width: 53mm; border: none !important; padding:0mm">
-                        <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents('/opt/www/MGspa/laravel/public/MGPapelariaLogoPretoBranco.jpeg')) }}"
+                        <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('MGPapelariaLogoPretoBranco.jpeg'))) }}"
                             alt="Logo" border="0" style="height: 10mm; ">
                     </td>
                     <td style="width: 106mm; border: none !important; padding:0mm" class="text-center">

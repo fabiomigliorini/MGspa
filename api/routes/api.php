@@ -493,7 +493,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('pagar-me/pedido/{codpagarmepdido}', '\Mg\PagarMe\PagarMeController@cancelarPedido');
 
     // Pix
-    Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes');
+    // Landing page pública de pagamento PIX (cliente abre o link p/ pagar).
+    // TODO segurança: codpixcob é PK sequencial → enumerável. Migrar p/ auth_or_signed
+    // (signed URL) como a rota pix.cob.pdf logo abaixo, antes de considerar definitivo.
+    Route::get('pix/cob/{codpixcob}/detalhes', '\Mg\Pix\PixController@detalhes')
+        ->withoutMiddleware('auth:api');
     Route::post('pix/cob/criar-negocio/{codnegocio}', '\Mg\Pix\PixController@criarPixCobNegocio');
     Route::post('pix/cob/{codpixcob}/transmitir', '\Mg\Pix\PixController@transmitirPixCob');
     Route::post('pix/cob/{codpixcob}/consultar', '\Mg\Pix\PixController@consultarPixCob');

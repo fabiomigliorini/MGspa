@@ -2,6 +2,7 @@
 
 namespace Mg\Colaborador;
 
+use App\Jobs\CriarFolderGoogleDriveColaboradorJob;
 use Mg\Pessoa\PessoaGoogleDriveService;
 
 class ColaboradorService
@@ -9,9 +10,21 @@ class ColaboradorService
 
     public static function create($data)
     {
+        // Idempotencia: nao cria colaborador ativo duplicado para a mesma pessoa
+        // na mesma filial (alem do indice unico no banco). Protege contra
+        // double-submit/retry que escape do frontend.
+        $existente = Colaborador::where('codpessoa', $data['codpessoa'] ?? null)
+            ->where('codfilial', $data['codfilial'] ?? null)
+            ->whereNull('rescisao')
+            ->first();
+        if ($existente) {
+            return $existente->refresh();
+        }
         $colaborador = new Colaborador($data);
         $colaborador->save();
-        static::criarFolderGoogleDrive($colaborador);
+        // Pasta no Google Drive vai pra fila (redis): create() responde sem
+        // esperar as chamadas externas do Drive.
+        CriarFolderGoogleDriveColaboradorJob::dispatch($colaborador);
         return $colaborador->refresh();
     }
 
@@ -19,7 +32,7 @@ class ColaboradorService
     {
         $colaborador->fill($data);
         $colaborador->save();
-        static::criarFolderGoogleDrive($colaborador);
+        CriarFolderGoogleDriveColaboradorJob::dispatch($colaborador);
         return $colaborador->refresh();
     }
 

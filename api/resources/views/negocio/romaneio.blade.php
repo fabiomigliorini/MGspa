@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <meta charset="utf-8">
     <style>
         @page {
             margin: 0.5cm 0.5cm;
@@ -51,7 +52,7 @@
         <table style="height: 100%;">
             <tr>
                 <td style=" width: 2.5cm; vertical-align:middle;">
-                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents('/opt/www/MGspa/laravel/public/MGPapelariaLogoSeloPretoBranco.jpeg')) }}"
+                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents(public_path('MGPapelariaLogoSeloPretoBranco.jpeg'))) }}"
                         alt="Logo" border="0" style="width: 100%; ">
                 </td>
                 <td style="text-align: center; width: 4.5cm; vertical-align:middle;">
@@ -233,6 +234,9 @@
                 @if ($loop->first)
                     <h1 style="page-break-before: always;">Confissão de Dívida</h1>
                     <p style="font-size: larger; text-align:justify">
+                        @if (!empty($qrcode))
+                            <img src="{{ $qrcode }}" style="width: 2.4cm; height: 2.4cm; float: right;">
+                        @endif
                         Confesso(amos) e me(nos) constituo(imos) devedor(es)
                         do(s) valor(es) descrito(s) abaixo, obrigando-me(nos) a pagar em moeda corrente
                         do pais, conforme os vencimento(s). Declaro(amos) ainda, ter recebido o(s)

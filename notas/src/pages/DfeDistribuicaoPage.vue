@@ -1,12 +1,18 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useDfeDistribuicaoStore } from '../stores/dfeDistribuicaoStore'
 import dfeDistribuicaoService from '../services/dfeDistribuicaoService'
 import { formataChave, formataCnpjCpf, formataNumero, tempoRelativo } from '@components/formatters'
+import DfeConsultarSefazDialog from '../components/dialogs/DfeConsultarSefazDialog.vue'
 
 const $q = useQuasar()
 const dfeStore = useDfeDistribuicaoStore()
+const consultarSefazDialog = ref(false)
+
+const onConsultaConcluida = () => {
+  dfeStore.fetchItems(true)
+}
 
 const loading = computed(() => dfeStore.pagination.loading)
 const items = computed(() => dfeStore.items)
@@ -258,5 +264,13 @@ onMounted(async () => {
         </div>
       </template>
     </q-infinite-scroll>
+
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="cloud_download" color="primary" @click="consultarSefazDialog = true">
+        <q-tooltip>Consultar SEFAZ por novos documentos</q-tooltip>
+      </q-btn>
+    </q-page-sticky>
+
+    <DfeConsultarSefazDialog v-model="consultarSefazDialog" @done="onConsultaConcluida" />
   </q-page>
 </template>

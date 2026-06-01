@@ -92,7 +92,7 @@ class PdvAnexoService
         $anexoRedimensionada = imagecreatetruecolor($novaLargura, $novaAltura);
         imagecopyresized($anexoRedimensionada, $anexo, 0, 0, 0, 0, $novaLargura, $novaAltura, $largura, $altura);
 
-        // renderiza anexo para variavel       
+        // renderiza anexo para variavel
         ob_start();
         imagejpeg($anexoRedimensionada);
         $data = ob_get_contents();
@@ -141,7 +141,7 @@ class PdvAnexoService
         $anexoRedimensionada = imagecreatetruecolor($novaLargura, $novaAltura);
         imagecopyresized($anexoRedimensionada, $anexo, 0, 0, 0, 0, $novaLargura, $novaAltura, $largura, $altura);
 
-        // renderiza anexo para variavel       
+        // renderiza anexo para variavel
         ob_start();
         imagejpeg($anexoRedimensionada);
         $data = ob_get_contents();
@@ -230,7 +230,20 @@ class PdvAnexoService
         $arquivo = tempnam('/tmp', 'anexo-') . '.jpeg';
         imagejpeg($anexo, $arquivo);
 
-        // roda o tesseract OCR para extrair o texto (idioma portugues)
+        // 1) tenta ler o QR code impresso na confissao (rapido e confiavel).
+        // Confissoes novas tem o QR; se achar, nem precisa do OCR.
+        $qr = static::lerQrCode($arquivo);
+        if ($qr !== null) {
+            unlink($arquivo);
+            [$codnegocio, $valor] = $qr;
+            return [
+                'codnegocio' => $codnegocio,
+                'valor' => $valor,
+                'encontrados' => static::procurar($codnegocio, $valor),
+            ];
+        }
+
+        // 2) fallback: OCR via tesseract (confissoes antigas, sem QR)
         $cmd = "tesseract --psm 6 -l por '{$arquivo}' -";
         $ret = shell_exec($cmd);
 
@@ -264,24 +277,24 @@ class PdvAnexoService
                     $perc = null;
                     similar_text('conferencia', $palavra, $perc);
 
-                    // calcula o soudex da palavra                
+                    // calcula o soudex da palavra
                     $sdex  = soundex($palavra);
 
-                    // se é mais de 80% similar
-                    // ou é o mesmo soudex, a proxima palavra é o numero do negocio
-                    // Ex: Romaneio de conferência #03732930 sem
+                    // se é mais de 80% similar ou é o mesmo soudex, achou a ancora.
+                    // O numero do negocio é a primeira palavra seguinte com pelo
+                    // menos 6 digitos. Varre pra frente porque:
+                    //  - o acento de "conferência" quebra a palavra (confer + ncia)
+                    //  - o OCR pode ler o "#04395533" como "HO4395533"
+                    //    (numeroLimpo limpa as letras -> 4395533)
                     if ($perc > 80 || $sdex == $sdexConferencia) {
-                        $codnegocio = numeroLimpo($palavras[$i + 1]);
-                        continue;
-                    }
-
-                    // se comeca com #, tem exatamente 9 caracteres, 
-                    // sendo que os ultimos oito são numericos
-                    if (substr($palavra, 0, 1) == '#' && strlen($palavra) == 9) {
-                        if (numeroLimpo($palavra) == substr($palavra, 1, 8)) {
-                            $codnegocio = numeroLimpo($palavra);
-                            continue;
+                        foreach (array_slice($palavras, $i + 1) as $seguinte) {
+                            $numero = numeroLimpo($seguinte);
+                            if (strlen($numero) >= 6) {
+                                $codnegocio = $numero;
+                                break;
+                            }
                         }
+                        continue;
                     }
                 }
 
@@ -299,7 +312,7 @@ class PdvAnexoService
                     if ($perc > 80 || $sdex == $sdexTotalizando) {
                         // dd($linha);
                         // dd($palavras[$i + 2]);
-                        $valor = numeroLimpo($palavras[$i + 2]) / 100;
+                        $valor = numeroLimpo($palavras[$i + 2] ?? '') / 100;
                         break;
                     }
                 }
@@ -316,6 +329,28 @@ class PdvAnexoService
         ];
     }
 
+    // Le o QR code da confissao (gerado em RomaneioService::qrCodeConfissao).
+    // Retorna [codnegocio, valor] se achar o QR no formato esperado, senao null.
+    static function lerQrCode($arquivo)
+    {
+        // zbarimg extrai o conteudo cru do QR direto da foto
+        $ret = shell_exec('zbarimg --quiet --raw ' . escapeshellarg($arquivo) . ' 2>/dev/null');
+        $ret = trim((string) $ret);
+
+        // espera "MGCONF|codnegocio|valortotal"
+        $partes = explode('|', $ret);
+        if (count($partes) !== 3 || $partes[0] !== 'MGCONF') {
+            return null;
+        }
+
+        $codnegocio = numeroLimpo($partes[1]);
+        if (empty($codnegocio)) {
+            return null;
+        }
+
+        return [$codnegocio, (float) $partes[2]];
+    }
+
     static function procurar($codnegocio, $valor)
     {
         // verifica se encontra no banco de dados um negocio com esse valor e codnegocio
@@ -328,21 +363,21 @@ class PdvAnexoService
         $sql = "
             with s as (
                 select t.codnegocioformapagamento, abs(sum(t.saldo)) as valorsaldo
-                from tbltitulo t 
-                group by t.codnegocioformapagamento 
+                from tbltitulo t
+                group by t.codnegocioformapagamento
             )
             select distinct
-                n.codfilial, 
-                f.filial, 
-                n.codpdv, 
-                p.apelido pdv, 
-                n.codusuario, 
-                u.usuario, 
+                n.codfilial,
+                f.filial,
+                n.codpdv,
+                p.apelido pdv,
+                n.codusuario,
+                u.usuario,
                 n.codpessoa,
                 pe.fantasia,
                 date_trunc('day', n.lancamento) as data,
-                n.lancamento, 
-                n.codnegocio, 
+                n.lancamento,
+                n.codnegocio,
                 n.valortotal,
                 s.valorsaldo
             from tblnegocio n

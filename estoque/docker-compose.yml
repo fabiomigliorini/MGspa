@@ -1,0 +1,17 @@
+services:
+  estoque:
+    build: ./
+    container_name: estoque
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - /opt/www:/opt/www
+      - /tmp:/tmp/host
+      - /media/publico:/media/publico
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /usr/share/zoneinfo:/usr/share/zoneinfo
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    ports:
+      - '8087:8087'

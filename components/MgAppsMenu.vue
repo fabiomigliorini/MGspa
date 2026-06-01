@@ -45,6 +45,13 @@ const APPS = [
     color: 'teal',
     href: process.env.PESSOAS_URL || '',
   },
+  {
+    id: 'estoque',
+    label: 'Estoque',
+    icon: 'inventory_2',
+    color: 'brown',
+    href: process.env.ESTOQUE_URL || '',
+  },
 ]
 
 const currentApp = (process.env.APP_NAME || '').toLowerCase()

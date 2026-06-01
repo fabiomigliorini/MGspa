@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+    <meta charset="utf-8">
     <style>
     @page { margin: 0px; }
     </style>

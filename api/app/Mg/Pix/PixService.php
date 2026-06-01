@@ -392,7 +392,7 @@ class PixService
         $options->setDefaultFont('helvetica');
         $dompdf->setOptions($options);
 
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper([0, 0, 204, 650]);
         $dompdf->render();
         $pdf = $dompdf->output();

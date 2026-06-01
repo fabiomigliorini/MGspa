@@ -339,6 +339,77 @@ const routes = [
   },
 
   {
+    path: '/veiculo',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'veiculo',
+        component: () => import('pages/VeiculoPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Veículos',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/mdfe',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'mdfe',
+        component: () => import('pages/MdfeListPage.vue'),
+        meta: {
+          auth: true,
+          title: "MDFe's",
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+      {
+        path: ':codmdfe',
+        name: 'mdfe-view',
+        component: () => import('pages/MdfeViewPage.vue'),
+        meta: {
+          auth: true,
+          title: 'MDFe',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+      {
+        path: ':codmdfe/editar',
+        name: 'mdfe-edit',
+        component: () => import('pages/MdfeFormPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Editar MDFe',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/dominio',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'dominio',
+        component: () => import('pages/DominioPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Exportação Domínio',
+          permissions: ['Administrador', 'Contador'],
+        },
+      },
+    ],
+  },
+
+  {
     path: '/login',
     name: 'login',
     component: () => import('pages/LoginPage.vue'),
