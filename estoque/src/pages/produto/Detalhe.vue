@@ -236,6 +236,62 @@ const excluirEmb = (e) => {
   )
 }
 
+// ────────────────────────────── Imagens ───────────────────────────────
+const fileInput = ref(null)
+const uploadingImg = ref(false)
+
+const escolherImagem = () => fileInput.value?.pickFiles?.() || fileInput.value?.click?.()
+
+const uploadImagem = (file) => {
+  if (!file) return
+  const reader = new FileReader()
+  reader.onload = async () => {
+    uploadingImg.value = true
+    try {
+      await api.post('v1/imagem', {
+        slim: JSON.stringify({ output: { image: reader.result } }),
+        codproduto: codproduto.value,
+      })
+      notifySuccess('Imagem adicionada')
+      await carregar()
+    } catch (e) {
+      notifyError(e, 'Erro ao enviar imagem')
+    } finally {
+      uploadingImg.value = false
+    }
+  }
+  reader.readAsDataURL(file)
+}
+
+const removerImagem = (pi) => {
+  $q.dialog({ title: 'Remover imagem', message: 'Remover esta imagem do produto?', cancel: true }).onOk(
+    async () => {
+      try {
+        await api.delete(`v1/produto/${codproduto.value}/imagem/${pi.codprodutoimagem}`)
+        notifySuccess('Imagem removida')
+        await carregar()
+      } catch (e) {
+        notifyError(e, 'Erro ao remover imagem')
+      }
+    },
+  )
+}
+
+const moverImagem = async (index, dir) => {
+  const imgs = [...(produto.value.ProdutoImagemS || [])]
+  const novo = index + dir
+  if (novo < 0 || novo >= imgs.length) return
+  ;[imgs[index], imgs[novo]] = [imgs[novo], imgs[index]]
+  try {
+    await api.put(`v1/produto/${codproduto.value}/imagem/ordem`, {
+      ordem: imgs.map((i) => i.codprodutoimagem),
+    })
+    await carregar()
+  } catch (e) {
+    notifyError(e, 'Erro ao reordenar')
+  }
+}
+
 // ──────────────────────── Abas de leitura (lazy) ──────────────────────
 const estoque = ref(null)
 const negocios = ref(null)
@@ -454,6 +510,58 @@ onMounted(async () => {
 
               <!-- Embalagens + dados -->
               <div class="col-12 col-md-4">
+                <div class="text-overline text-grey-8 row items-center">
+                  IMAGENS
+                  <q-space />
+                  <q-file
+                    ref="fileInput"
+                    accept="image/*"
+                    style="display: none"
+                    @update:model-value="uploadImagem"
+                  />
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    size="sm"
+                    color="primary"
+                    icon="add_a_photo"
+                    :loading="uploadingImg"
+                    @click="escolherImagem"
+                  >
+                    <q-tooltip>Adicionar imagem</q-tooltip>
+                  </q-btn>
+                </div>
+                <div
+                  v-if="produto.ProdutoImagemS && produto.ProdutoImagemS.length"
+                  class="row q-col-gutter-xs q-mb-md"
+                >
+                  <div
+                    v-for="(pi, idx) in produto.ProdutoImagemS"
+                    :key="pi.codprodutoimagem"
+                    class="col-4"
+                  >
+                    <q-img :src="pi.url" :ratio="1" class="rounded-borders">
+                      <div class="absolute-top-right q-pa-none">
+                        <q-btn
+                          dense
+                          flat
+                          round
+                          size="sm"
+                          color="white"
+                          icon="close"
+                          @click="removerImagem(pi)"
+                        />
+                      </div>
+                      <div class="absolute-bottom row justify-between q-pa-none bg-transparent">
+                        <q-btn dense flat round size="sm" color="white" icon="chevron_left" @click="moverImagem(idx, -1)" />
+                        <q-btn dense flat round size="sm" color="white" icon="chevron_right" @click="moverImagem(idx, 1)" />
+                      </div>
+                    </q-img>
+                  </div>
+                </div>
+                <div v-else class="text-caption text-grey-6 q-mb-md">Nenhuma imagem</div>
+
                 <div class="text-overline text-grey-8 row items-center">
                   EMBALAGENS
                   <q-space />

@@ -156,6 +156,22 @@ class ProdutoController extends MgController
         return new ProdutoResource($produto);
     }
 
+    public function imagemRemover(Request $request, $codproduto, $codprodutoimagem)
+    {
+        $produto = Produto::findOrFail($codproduto);
+        $pi = ProdutoImagem::where('codproduto', $codproduto)->findOrFail($codprodutoimagem);
+        $pi->delete();
+
+        // Se era a imagem principal do produto, repõe pela primeira restante.
+        if ((int) $produto->codprodutoimagem === (int) $codprodutoimagem) {
+            $proxima = ProdutoImagem::where('codproduto', $codproduto)->orderBy('ordem')->first();
+            $produto->codprodutoimagem = $proxima->codprodutoimagem ?? null;
+            $produto->save();
+        }
+
+        return new ProdutoResource($produto->fresh());
+    }
+
     private function regras(Request $request, $codproduto = null): array
     {
         $unico = Rule::unique('tblproduto', 'produto')

@@ -3,9 +3,36 @@
 namespace Mg\Produto;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ProdutoBarraService
 {
+    /**
+     * Regenera os movimentos de estoque da variação no MGLara (best-effort).
+     * Quando uma barra muda de variação, as vendas/notas ligadas a ela
+     * precisam ser recontabilizadas nas duas variações (origem e destino).
+     * O MGLara é o dono da fila de jobs de estoque (mesmo padrão de
+     * `unificaVariacoes`, que delega o custo médio ao MGLara).
+     */
+    public static function geraMovimentoVariacao($codprodutovariacao): void
+    {
+        $base = rtrim((string) env('MGLARA_URL'), '/');
+        if ($base === '' || empty($codprodutovariacao)) {
+            return;
+        }
+        $url = "{$base}/estoque/gera-movimento-produto-variacao/{$codprodutovariacao}";
+        try {
+            Http::timeout(10)->get($url);
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao regenerar movimento de estoque da variação', [
+                'codprodutovariacao' => $codprodutovariacao,
+                'url' => $url,
+                'erro' => $e->getMessage(),
+            ]);
+        }
+    }
+
     /**
      * Cria ProdutoBarra. Quando 'barras' vem vazio, gera o código interno
      * (prefixo 234) a partir do próximo valor da sequence — replica o

@@ -66,8 +66,17 @@ class ProdutoBarraController extends MgController
         if (empty($dados['codprodutoembalagem'])) {
             $dados['codprodutoembalagem'] = null;
         }
+
+        $variacaoOriginal = $pb->codprodutovariacao;
         $pb->fill($dados);
         $pb->save();
+
+        // Se a barra trocou de variação, recontabiliza o estoque das duas.
+        if ((int) $variacaoOriginal !== (int) $pb->codprodutovariacao) {
+            ProdutoBarraService::geraMovimentoVariacao($pb->codprodutovariacao);
+            ProdutoBarraService::geraMovimentoVariacao($variacaoOriginal);
+        }
+
         return new ProdutoBarraResource($pb);
     }
 
