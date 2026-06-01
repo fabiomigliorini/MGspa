@@ -11,6 +11,46 @@ use Mg\Estoque\EstoqueSaldoConferencia;
 
 class ProdutoVariacaoService
 {
+    /**
+     * Cria variação e gera as barras: 1 default + 1 por embalagem existente.
+     */
+    public static function criar(array $dados): ProdutoVariacao
+    {
+        return DB::transaction(function () use ($dados) {
+            $pv = new ProdutoVariacao();
+            $pv->fill($dados);
+            $pv->save();
+
+            ProdutoBarraService::criar([
+                'codproduto' => $pv->codproduto,
+                'codprodutovariacao' => $pv->codprodutovariacao,
+            ]);
+
+            foreach (ProdutoEmbalagem::where('codproduto', $pv->codproduto)->get() as $pe) {
+                ProdutoBarraService::criar([
+                    'codproduto' => $pv->codproduto,
+                    'codprodutovariacao' => $pv->codprodutovariacao,
+                    'codprodutoembalagem' => $pe->codprodutoembalagem,
+                ]);
+            }
+
+            return $pv;
+        });
+    }
+
+    public static function descontinuar(ProdutoVariacao $pv): ProdutoVariacao
+    {
+        $pv->descontinuado = Carbon::now();
+        $pv->save();
+        return $pv;
+    }
+
+    public static function reativar(ProdutoVariacao $pv): ProdutoVariacao
+    {
+        $pv->descontinuado = null;
+        $pv->save();
+        return $pv;
+    }
 
     public static function unificaVariacoes($codprodutovariacaoorigem, $codprodutovariacaodestino)
     {

@@ -124,7 +124,7 @@ export default defineConfig((/* ctx */) => {
       // components: [],
       // directives: [],
 
-      plugins: ['Notify', 'LoadingBar', 'Dialog'],
+      plugins: ['Notify', 'LoadingBar', 'Dialog', 'AppFullscreen'],
     },
 
     animations: 'all',

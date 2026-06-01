@@ -152,6 +152,12 @@ class PdvController
         return PdvService::produto($codprodutobarra, 1);
     }
 
+    public function produtoDetalhe(PdvRequest $request, $barras)
+    {
+        PdvService::autoriza($request->pdv);
+        return ProdutoService::detalheQuiosque($barras);
+    }
+
     public function pessoaCount(PdvRequest $request)
     {
         PdvService::autoriza($request->pdv);

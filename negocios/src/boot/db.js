@@ -2,9 +2,10 @@
 import Dexie from 'dexie'
 
 export const db = new Dexie('negocios')
-db.version(5).stores({
+db.version(6).stores({
   produto:
     'codprodutobarra, codproduto, abc, barras, produto, variacao, sigla, quantidade, codimagem, preco, inativo, sincronizado, busca, *buscaArr',
+  produtoDetalhe: 'codproduto, sincronizado',
   pessoa: 'codpessoa, fantasia, pessoa, cnpj, vendedor, inativo, sincronizado, busca, *buscaArr',
   negocio:
     'uuid, codnegocio, sincronizado, codnegociostatus, codestoquelocal, valortotal, [codnegociostatus+codpdv]',

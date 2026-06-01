@@ -2,8 +2,49 @@
 
 namespace Mg\Produto;
 
+use Illuminate\Support\Facades\DB;
+
 class ProdutoBarraService
 {
+    /**
+     * Cria ProdutoBarra. Quando 'barras' vem vazio, gera o código interno
+     * (prefixo 234) a partir do próximo valor da sequence — replica o
+     * save() do legado MGLara.
+     */
+    public static function criar(array $dados): ProdutoBarra
+    {
+        $pb = new ProdutoBarra();
+        $pb->fill($dados);
+        if (empty($pb->codprodutoembalagem)) {
+            $pb->codprodutoembalagem = null;
+        }
+        if (empty($pb->barras)) {
+            $next = DB::select("select nextval('tblprodutobarra_codprodutobarra_seq') as id");
+            $pb->codprodutobarra = (int) $next[0]->id;
+            $pb->barras = self::geraBarrasInterno($pb->codprodutobarra);
+        }
+        $pb->save();
+        return $pb;
+    }
+
+    public static function geraBarrasInterno(int $codprodutobarra): string
+    {
+        $base = 234000000000 + $codprodutobarra;
+        return $base . self::calculaDigitoGtin($base . '0');
+    }
+
+    public static function calculaDigitoGtin($barras): int
+    {
+        $codigo = substr('000000000000000000' . $barras, -18);
+        $soma = 0;
+        for ($i = 1; $i < strlen($codigo); $i++) {
+            $digito = (int) substr($codigo, $i - 1, 1);
+            $multiplicador = ($i % 2 === 0) ? 1 : 3;
+            $soma += $digito * $multiplicador;
+        }
+        return (int) ((ceil($soma / 10) * 10) - $soma);
+    }
+
     public static function unificaBarras ($codprodutobarraorigem, $codprodutobarradestino)
     {
 
