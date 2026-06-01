@@ -891,8 +891,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('{codproduto}/mercos/exportar', '\Mg\Produto\ProdutoController@mercosExportar');
         Route::get('{codproduto}/woo', '\Mg\Produto\ProdutoController@woo');
 
-        // Imagens — reordenar (upload/delete reusam /imagem com Slim)
+        // Imagens — reordenar/remover (upload reusa /imagem com Slim)
         Route::put('{codproduto}/imagem/ordem', '\Mg\Produto\ProdutoController@imagemOrdem');
+        Route::delete('{codproduto}/imagem/{codprodutoimagem}', '\Mg\Produto\ProdutoController@imagemRemover');
     });
 
     // CEST select (migrado em 31/05/2026)

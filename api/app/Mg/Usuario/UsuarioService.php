@@ -17,11 +17,19 @@ class UsuarioService extends MgService
         $qry = Usuario::query();
 
         if (!empty($filter['inativo'])) {
-            $qry->AtivoInativo($filter['inativo']);
+            if ($filter['inativo'] == 1) {
+                $qry->whereNull('tblusuario.inativo');
+            } elseif ($filter['inativo'] == 2) {
+                $qry->whereNotNull('tblusuario.inativo');
+            }
         }
 
         if (!empty($filter['usuario'])) {
-            $qry->palavras('usuario', $filter['usuario']);
+            foreach (explode(' ', trim($filter['usuario'])) as $palavra) {
+                if (!empty($palavra)) {
+                    $qry->where('usuario', 'ilike', "%$palavra%");
+                }
+            }
         }
 
         if (!empty($filter['grupo'])) {
