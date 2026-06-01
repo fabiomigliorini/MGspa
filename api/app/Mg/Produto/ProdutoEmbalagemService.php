@@ -6,6 +6,51 @@ use Illuminate\Support\Facades\DB;
 
 class ProdutoEmbalagemService
 {
+    /**
+     * Cria embalagem e gera 1 barra por variação existente do produto.
+     */
+    public static function criar(array $dados): ProdutoEmbalagem
+    {
+        return DB::transaction(function () use ($dados) {
+            $pe = new ProdutoEmbalagem();
+            $pe->fill($dados);
+            $pe->save();
+
+            foreach (ProdutoVariacao::where('codproduto', $pe->codproduto)->get() as $pv) {
+                ProdutoBarraService::criar([
+                    'codproduto' => $pe->codproduto,
+                    'codprodutovariacao' => $pv->codprodutovariacao,
+                    'codprodutoembalagem' => $pe->codprodutoembalagem,
+                ]);
+            }
+
+            return $pe;
+        });
+    }
+
+    /**
+     * Atualiza embalagem; registra histórico se o preço mudar.
+     */
+    public static function atualizar(ProdutoEmbalagem $pe, array $dados): ProdutoEmbalagem
+    {
+        return DB::transaction(function () use ($pe, $dados) {
+            $precoAntigo = $pe->preco;
+            $pe->fill($dados);
+            $pe->save();
+
+            if ((float) $precoAntigo != (float) $pe->preco) {
+                $h = new ProdutoHistoricoPreco();
+                $h->codproduto = $pe->codproduto;
+                $h->codprodutoembalagem = $pe->codprodutoembalagem;
+                $h->precoantigo = $precoAntigo;
+                $h->preconovo = $pe->preco;
+                $h->save();
+            }
+
+            return $pe;
+        });
+    }
+
     public static function embalagemParaUnidade($codprodutoembalagem)
     {
         $pe = ProdutoEmbalagem::findOrFail($codprodutoembalagem);

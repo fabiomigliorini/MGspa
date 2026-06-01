@@ -41,6 +41,13 @@ const menuGroups = [
         color: 'red-7',
         to: { name: 'boleto-abertos', query: { tipo: 'vencer7' } },
       },
+      { label: 'Cheques', icon: 'payments', color: 'teal-8', to: { name: 'cheque' } },
+      {
+        label: 'Repasse de Cheques',
+        icon: 'move_up',
+        color: 'deep-purple-7',
+        to: { name: 'cheque-repasse' },
+      },
     ],
   },
   {
@@ -71,6 +78,12 @@ const menuGroups = [
         icon: 'payments',
         color: 'green-8',
         to: { name: 'forma-pagamento' },
+      },
+      {
+        label: 'Motivos Devolução Cheque',
+        icon: 'assignment_return',
+        color: 'red-8',
+        to: { name: 'cheque-motivo-devolucao' },
       },
     ],
   },

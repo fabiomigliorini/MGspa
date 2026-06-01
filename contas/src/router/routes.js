@@ -310,6 +310,95 @@ const routes = [
         },
       },
       {
+        path: 'cheque',
+        name: 'cheque',
+        component: () => import('pages/cheque/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Cheques',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/ChequeFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'cheque/novo',
+        name: 'cheque-novo',
+        component: () => import('pages/cheque/Form.vue'),
+        meta: {
+          auth: true,
+          title: 'Novo Cheque',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'cheque/:codcheque(\\d+)',
+        name: 'cheque-detalhe',
+        component: () => import('pages/cheque/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Cheque',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'cheque/:codcheque(\\d+)/editar',
+        name: 'cheque-editar',
+        component: () => import('pages/cheque/Form.vue'),
+        meta: {
+          auth: true,
+          title: 'Editar Cheque',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'cheque-repasse',
+        name: 'cheque-repasse',
+        component: () => import('pages/chequeRepasse/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Repasses de Cheques',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/ChequeRepasseFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'cheque-repasse/novo',
+        name: 'cheque-repasse-novo',
+        component: () => import('pages/chequeRepasse/Novo.vue'),
+        meta: {
+          auth: true,
+          title: 'Novo Repasse',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'cheque-repasse/:codchequerepasse(\\d+)',
+        name: 'cheque-repasse-detalhe',
+        component: () => import('pages/chequeRepasse/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Repasse',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'cheque-motivo-devolucao',
+        name: 'cheque-motivo-devolucao',
+        component: () => import('pages/chequeMotivoDevolucao/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Motivos de Devolução de Cheque',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/ChequeMotivoDevolucaoFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'sem-permissao',
         name: 'sem-permissao',
         component: () => import('pages/SemPermissaoPage.vue'),

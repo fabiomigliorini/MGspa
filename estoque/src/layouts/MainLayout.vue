@@ -17,17 +17,41 @@ const menuGroups = [
     label: 'Operações',
     items: [
       {
+        label: 'Saldos de Estoque',
+        icon: 'inventory',
+        color: 'green-7',
+        to: { name: 'estoque-saldo' },
+      },
+      {
         label: 'Conferência de Estoque',
         icon: 'fact_check',
         color: 'teal-7',
         to: { name: 'conferencia' },
       },
       { label: 'Etiquetas', icon: 'qr_code_2', color: 'indigo-7', to: { name: 'etiqueta' } },
+      { label: 'Relatórios', icon: 'print', color: 'red-7', to: { name: 'relatorios' } },
     ],
   },
   {
     label: 'Cadastros',
-    items: [{ label: 'Marcas', icon: 'sell', color: 'brown-6', to: { name: 'marca' } }],
+    items: [
+      { label: 'Produtos', icon: 'inventory_2', color: 'brown-7', to: { name: 'produto' } },
+      { label: 'Marcas', icon: 'sell', color: 'brown-6', to: { name: 'marca' } },
+      {
+        label: 'Hierarquia de Produtos',
+        icon: 'account_tree',
+        color: 'teal-7',
+        to: { name: 'secao-produto' },
+      },
+      {
+        label: 'Unidades de Medida',
+        icon: 'straighten',
+        color: 'blue-grey-6',
+        to: { name: 'unidade-medida' },
+      },
+      { label: 'Tipos de Produto', icon: 'category', color: 'deep-purple-5', to: { name: 'tipo-produto' } },
+      { label: 'NCM', icon: 'receipt_long', color: 'blue-8', to: { name: 'ncm' } },
+    ],
   },
 ]
 </script>

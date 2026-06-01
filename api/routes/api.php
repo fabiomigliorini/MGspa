@@ -224,6 +224,30 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('tipo-titulo/{codtipotitulo}/inativo', [\Mg\Titulo\TipoTituloController::class, 'inativar']);
     Route::delete('tipo-titulo/{codtipotitulo}/inativo', [\Mg\Titulo\TipoTituloController::class, 'ativar']);
 
+    // Cheque + Motivo de Devolução + Repasse (migrado de MGLara em 31/05/2026)
+    Route::get('cheque-motivo-devolucao/autocompletar', [\Mg\Cheque\ChequeMotivoDevolucaoController::class, 'autocompletar']);
+    Route::get('cheque-motivo-devolucao', [\Mg\Cheque\ChequeMotivoDevolucaoController::class, 'index']);
+    Route::get('cheque-motivo-devolucao/{codchequemotivodevolucao}', [\Mg\Cheque\ChequeMotivoDevolucaoController::class, 'show']);
+    Route::post('cheque-motivo-devolucao', [\Mg\Cheque\ChequeMotivoDevolucaoController::class, 'store']);
+    Route::put('cheque-motivo-devolucao/{codchequemotivodevolucao}', [\Mg\Cheque\ChequeMotivoDevolucaoController::class, 'update']);
+    Route::delete('cheque-motivo-devolucao/{codchequemotivodevolucao}', [\Mg\Cheque\ChequeMotivoDevolucaoController::class, 'destroy']);
+
+    Route::get('cheque-repasse/cheques-para-repassar', [\Mg\Cheque\ChequeRepasseController::class, 'chequesParaRepassar']);
+    Route::get('cheque-repasse/{codchequerepasse}/pdf', [\Mg\Cheque\ChequeRepasseController::class, 'borderoPdf']);
+    Route::get('cheque-repasse', [\Mg\Cheque\ChequeRepasseController::class, 'index']);
+    Route::get('cheque-repasse/{codchequerepasse}', [\Mg\Cheque\ChequeRepasseController::class, 'show']);
+    Route::post('cheque-repasse', [\Mg\Cheque\ChequeRepasseController::class, 'store']);
+    Route::post('cheque-repasse/{codchequerepasse}/inativo', [\Mg\Cheque\ChequeRepasseController::class, 'inativar']);
+    Route::delete('cheque-repasse/{codchequerepasse}/inativo', [\Mg\Cheque\ChequeRepasseController::class, 'ativar']);
+    Route::post('cheque-repasse/{codchequerepasse}/cheque/{codchequerepassecheque}/devolver', [\Mg\Cheque\ChequeRepasseController::class, 'devolverCheque']);
+
+    Route::get('cheque/consulta-cmc7/{cmc7}', [\Mg\Cheque\ChequeController::class, 'consultaCmc7']);
+    Route::get('cheque/consulta-emitente/{cnpj}', [\Mg\Cheque\ChequeController::class, 'consultaEmitente']);
+    Route::get('cheque', [\Mg\Cheque\ChequeController::class, 'index']);
+    Route::get('cheque/{codcheque}', [\Mg\Cheque\ChequeController::class, 'show']);
+    Route::post('cheque', [\Mg\Cheque\ChequeController::class, 'store']);
+    Route::put('cheque/{codcheque}', [\Mg\Cheque\ChequeController::class, 'update']);
+
     // CobrancaHistorico (nested em pessoa, migrado em 23/05/2026)
     Route::get('pessoa/{codpessoa}/cobrancahistorico/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'index']);
     Route::post('pessoa/{codpessoa}/cobrancahistorico/', [\Mg\Cobranca\CobrancaHistoricoController::class, 'create']);
@@ -279,6 +303,46 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'inativar']);
     Route::delete('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'ativar']);
     Route::apiResource('marca', \Mg\Marca\MarcaController::class)->parameters(['marca' => 'id']);
+
+    // UnidadeMedida (migrado em 31/05/2026)
+    Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);
+    Route::post('unidade-medida/{id}/inativo', [\Mg\Produto\UnidadeMedidaController::class, 'inativar']);
+    Route::delete('unidade-medida/{id}/inativo', [\Mg\Produto\UnidadeMedidaController::class, 'ativar']);
+    Route::apiResource('unidade-medida', \Mg\Produto\UnidadeMedidaController::class)->parameters(['unidade-medida' => 'id']);
+
+    // TipoProduto (migrado em 31/05/2026 — sem inativo, não há coluna)
+    Route::get('tipo-produto/autocompletar', [\Mg\Produto\TipoProdutoController::class, 'autocompletar']);
+    Route::apiResource('tipo-produto', \Mg\Produto\TipoProdutoController::class)->parameters(['tipo-produto' => 'id']);
+
+    // Hierarquia de Produto — seção/família/grupo/subgrupo (migrado em 31/05/2026)
+    Route::get('hierarquia-produto/filhos', [\Mg\Produto\HierarquiaProdutoController::class, 'filhos']);
+
+    Route::get('secao-produto/autocompletar', [\Mg\Produto\SecaoProdutoController::class, 'autocompletar']);
+    Route::post('secao-produto/{id}/inativo', [\Mg\Produto\SecaoProdutoController::class, 'inativar']);
+    Route::delete('secao-produto/{id}/inativo', [\Mg\Produto\SecaoProdutoController::class, 'ativar']);
+    Route::apiResource('secao-produto', \Mg\Produto\SecaoProdutoController::class)->parameters(['secao-produto' => 'id']);
+
+    Route::get('familia-produto/autocompletar', [\Mg\Produto\FamiliaProdutoController::class, 'autocompletar']);
+    Route::post('familia-produto/{id}/inativo', [\Mg\Produto\FamiliaProdutoController::class, 'inativar']);
+    Route::delete('familia-produto/{id}/inativo', [\Mg\Produto\FamiliaProdutoController::class, 'ativar']);
+    Route::apiResource('familia-produto', \Mg\Produto\FamiliaProdutoController::class)->parameters(['familia-produto' => 'id']);
+
+    Route::get('grupo-produto/autocompletar', [\Mg\Produto\GrupoProdutoController::class, 'autocompletar']);
+    Route::post('grupo-produto/{id}/inativo', [\Mg\Produto\GrupoProdutoController::class, 'inativar']);
+    Route::delete('grupo-produto/{id}/inativo', [\Mg\Produto\GrupoProdutoController::class, 'ativar']);
+    Route::apiResource('grupo-produto', \Mg\Produto\GrupoProdutoController::class)->parameters(['grupo-produto' => 'id']);
+
+    Route::get('subgrupo-produto/autocompletar', [\Mg\Produto\SubGrupoProdutoController::class, 'autocompletar']);
+    Route::post('subgrupo-produto/{id}/inativo', [\Mg\Produto\SubGrupoProdutoController::class, 'inativar']);
+    Route::delete('subgrupo-produto/{id}/inativo', [\Mg\Produto\SubGrupoProdutoController::class, 'ativar']);
+    Route::apiResource('subgrupo-produto', \Mg\Produto\SubGrupoProdutoController::class)->parameters(['subgrupo-produto' => 'id']);
+
+    // NCM — árvore pai/filho (migrado em 31/05/2026)
+    Route::get('ncm/autocompletar', [\Mg\NaturezaOperacao\NcmController::class, 'autocompletar']);
+    Route::get('ncm/arvore', [\Mg\NaturezaOperacao\NcmController::class, 'arvore']);
+    Route::post('ncm/{id}/inativo', [\Mg\NaturezaOperacao\NcmController::class, 'inativar']);
+    Route::delete('ncm/{id}/inativo', [\Mg\NaturezaOperacao\NcmController::class, 'ativar']);
+    Route::apiResource('ncm', \Mg\NaturezaOperacao\NcmController::class)->parameters(['ncm' => 'id']);
 
     // Usuario + GrupoUsuario (migrado em 23/05/2026)
     Route::get('usuario/todos', [\Mg\Usuario\UsuarioController::class, 'index']);
@@ -573,6 +637,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
         Route::get('produto', '\Mg\Pdv\PdvController@produto');
         Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
+        Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
         Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
         Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvController@pessoaPeloCnpj');
         Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
@@ -789,10 +854,57 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@inativar');
     Route::delete('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@ativar');
 
-    // Produto
+    // Produto (CRUD migrado em 31/05/2026)
     Route::group(['prefix' => 'produto'], function () {
+        Route::get('', '\Mg\Produto\ProdutoController@index');
+        Route::post('', '\Mg\Produto\ProdutoController@store');
         Route::get('{codproduto}', '\Mg\Produto\ProdutoController@show');
+        Route::put('{codproduto}', '\Mg\Produto\ProdutoController@update');
+        Route::post('{codproduto}/inativo', '\Mg\Produto\ProdutoController@inativar');
+        Route::delete('{codproduto}/inativo', '\Mg\Produto\ProdutoController@ativar');
+
+        // Variações
+        Route::post('{codproduto}/variacao', '\Mg\Produto\ProdutoVariacaoController@store');
+        Route::put('{codproduto}/variacao/{codprodutovariacao}', '\Mg\Produto\ProdutoVariacaoController@update');
+        Route::delete('{codproduto}/variacao/{codprodutovariacao}', '\Mg\Produto\ProdutoVariacaoController@destroy');
+        Route::post('{codproduto}/variacao/{codprodutovariacao}/descontinuar', '\Mg\Produto\ProdutoVariacaoController@descontinuar');
+        Route::delete('{codproduto}/variacao/{codprodutovariacao}/descontinuar', '\Mg\Produto\ProdutoVariacaoController@reativar');
+
+        // Barras
+        Route::post('{codproduto}/barra', '\Mg\Produto\ProdutoBarraController@store');
+        Route::put('{codproduto}/barra/{codprodutobarra}', '\Mg\Produto\ProdutoBarraController@update');
+        Route::delete('{codproduto}/barra/{codprodutobarra}', '\Mg\Produto\ProdutoBarraController@destroy');
+
+        // Embalagens
+        Route::post('{codproduto}/embalagem', '\Mg\Produto\ProdutoEmbalagemController@store');
+        Route::put('{codproduto}/embalagem/{codprodutoembalagem}', '\Mg\Produto\ProdutoEmbalagemController@update');
+        Route::delete('{codproduto}/embalagem/{codprodutoembalagem}', '\Mg\Produto\ProdutoEmbalagemController@destroy');
+
+        // Abas de leitura
+        Route::get('{codproduto}/estoque', '\Mg\Produto\ProdutoController@estoque');
+        Route::get('{codproduto}/negocios', '\Mg\Produto\ProdutoController@negocios');
+        Route::get('{codproduto}/notas', '\Mg\Produto\ProdutoController@notas');
+        Route::get('{codproduto}/compras', '\Mg\Produto\ProdutoController@compras');
+
+        // Integrações
+        Route::get('{codproduto}/mercos', '\Mg\Produto\ProdutoController@mercos');
+        Route::post('{codproduto}/mercos/exportar', '\Mg\Produto\ProdutoController@mercosExportar');
+        Route::get('{codproduto}/woo', '\Mg\Produto\ProdutoController@woo');
+
+        // Imagens — reordenar (upload/delete reusam /imagem com Slim)
+        Route::put('{codproduto}/imagem/ordem', '\Mg\Produto\ProdutoController@imagemOrdem');
     });
+
+    // CEST select (migrado em 31/05/2026)
+    Route::get('cest/autocompletar', '\Mg\NaturezaOperacao\CestController@autocompletar');
+
+    // Estoque-saldo grid (agrupamento/drill — migrado em 31/05/2026)
+    Route::get('estoque-saldo-grid', '\Mg\Estoque\EstoqueSaldoGridController@index');
+
+    // Estoque-saldo relatórios PDF (migrado em 31/05/2026)
+    Route::get('estoque-saldo/relatorio/comparativo-vendas', '\Mg\Estoque\EstoqueSaldoRelatorioController@comparativoVendas');
+    Route::get('estoque-saldo/relatorio/fisico-fiscal', '\Mg\Estoque\EstoqueSaldoRelatorioController@fisicoFiscal');
+    Route::get('estoque-saldo/relatorio/transferencias', '\Mg\Estoque\EstoqueSaldoRelatorioController@transferencias');
 
     // NotaFiscal Dashboard
     Route::prefix('nota-fiscal/dashboard')->group(function () {

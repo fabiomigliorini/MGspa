@@ -37,6 +37,13 @@ const routes = [
     children: [{ path: '', component: () => import('pages/DevolucaoPage.vue') }],
   },
 
+  // QUIOSQUE CONSULTA DE PRECOS
+  {
+    path: '/quiosque',
+    component: () => import('layouts/QuiosqueLayout.vue'),
+    children: [{ path: '', name: 'quiosque', component: () => import('pages/QuiosquePage.vue') }],
+  },
+
   // COMANDAS VENDEDOR
   {
     path: '/comanda-vendedor',
