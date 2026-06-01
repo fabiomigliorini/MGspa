@@ -11,8 +11,9 @@ const sProduto = produtoStore()
 
 const alternarTelaCheia = () => $q.fullscreen.toggle()
 
-const TEMPO_ESPERA = 60000 // 60s sem uso -> volta pra tela de espera
+const TEMPO_ESPERA = 90000 // 90s sem uso -> volta pra tela de espera
 const TEMPO_NAO_ENCONTRADO = 8000 // limpa o "nao encontrado" mais rapido
+const TEMPO_LIMPAR_DIGITACAO = 10000 // pausa max entre teclas antes de zerar o codigo (digitacao manual lenta)
 
 // ---- estado de exibicao ----
 const slide = ref(0)
@@ -28,7 +29,9 @@ const imagens = computed(() => {
   return [null]
 })
 
-const embalagens = computed(() => detalhe.value?.embalagens || [])
+const embalagens = computed(() =>
+  (detalhe.value?.embalagens || []).filter((e) => !e.precocalculado),
+)
 const temEmbalagens = computed(() => embalagens.value.length > 1)
 
 const estoquelocais = computed(() => detalhe.value?.estoquelocais || [])
@@ -111,8 +114,9 @@ const selecionarDoDialog = (barras) => {
 }
 
 // ---- leitor de codigo de barras via keydown global (sem input) ----
-let buffer = ''
+const codigoDigitando = ref('')
 let ultimaTecla = 0
+let timerDigitando = null
 
 const onKeydown = (e) => {
   // enquanto o dialog de pesquisa estiver aberto, o campo cuida da digitacao
@@ -127,10 +131,25 @@ const onKeydown = (e) => {
   }
 
   if (e.key === 'Enter') {
-    const txt = buffer.trim()
-    buffer = ''
+    const txt = codigoDigitando.value.trim()
+    codigoDigitando.value = ''
+    if (timerDigitando) clearTimeout(timerDigitando)
     if (txt.length) {
       consultar(txt)
+    }
+    return
+  }
+
+  // apaga o ultimo digito do codigo em digitacao
+  if (e.key === 'Backspace') {
+    e.preventDefault()
+    if (codigoDigitando.value.length) {
+      codigoDigitando.value = codigoDigitando.value.slice(0, -1)
+      ultimaTecla = performance.now()
+      if (timerDigitando) clearTimeout(timerDigitando)
+      timerDigitando = setTimeout(() => {
+        codigoDigitando.value = ''
+      }, TEMPO_LIMPAR_DIGITACAO)
     }
     return
   }
@@ -138,8 +157,8 @@ const onKeydown = (e) => {
   // acumula apenas caracteres imprimiveis; reseta se houver pausa longa (tecla avulsa)
   if (e.key.length === 1) {
     const agora = performance.now()
-    if (agora - ultimaTecla > 500) {
-      buffer = ''
+    if (agora - ultimaTecla > TEMPO_LIMPAR_DIGITACAO) {
+      codigoDigitando.value = ''
     }
     // tira o foco de botoes pra o Enter do leitor nao ser interpretado como clique
     const ativo = document.activeElement
@@ -147,7 +166,12 @@ const onKeydown = (e) => {
       ativo.blur()
     }
     ultimaTecla = agora
-    buffer += e.key
+    codigoDigitando.value += e.key
+    // some sozinho se o leitor nao finalizar com Enter
+    if (timerDigitando) clearTimeout(timerDigitando)
+    timerDigitando = setTimeout(() => {
+      codigoDigitando.value = ''
+    }, TEMPO_LIMPAR_DIGITACAO)
   }
 }
 
@@ -158,13 +182,28 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
   if (timerEspera) clearTimeout(timerEspera)
+  if (timerDigitando) clearTimeout(timerDigitando)
 })
 </script>
 
 <template>
   <q-page class="column" style="background: linear-gradient(160deg, #f4f6fb 0%, #e7ecf5 100%)">
+    <!-- feedback do codigo sendo lido/digitado -->
+    <q-page-sticky position="top" :offset="[0, 24]" class="z-fab">
+      <q-chip
+        v-if="codigoDigitando"
+        size="xl"
+        color="primary"
+        text-color="white"
+        icon="mdi-barcode-scan"
+        class="shadow-4 text-weight-bold"
+      >
+        {{ codigoDigitando }}
+      </q-chip>
+    </q-page-sticky>
+
     <!-- indicador de atualizacao (discreto, canto inferior esquerdo) -->
-    <q-page-sticky position="bottom-left" :offset="[18, 18]">
+    <q-page-sticky position="bottom-left" :offset="[18, 18]" class="z-fab">
       <q-chip v-if="sQuiosque.atualizando" color="primary" text-color="white" class="shadow-2">
         <q-spinner class="q-mr-sm" size="18px" />
         atualizando…
@@ -172,7 +211,7 @@ onUnmounted(() => {
     </q-page-sticky>
 
     <!-- controles do operador: FAB que expande os 3 botoes -->
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" class="z-fab">
       <q-fab
         icon="menu"
         active-icon="close"
@@ -205,16 +244,17 @@ onUnmounted(() => {
       class="col column flex-center text-center q-pa-xl"
     >
       <q-avatar
-        size="200px"
+        size="300px"
         color="white"
         text-color="primary"
-        class="shadow-5 q-mb-xl animated infinite pulse"
+        class="shadow-5 q-mb-xl animated infinite slower pulse"
       >
-        <q-icon name="qr_code_scanner" size="120px" />
+        <!-- <q-icon name="qr_code_scanner" size="230px" /> -->
+        <q-icon name="mdi-barcode-scan" size="200px" />
       </q-avatar>
 
-      <div class="text-h3 text-weight-bold text-grey-9 q-mb-md">Consulta de Preços</div>
-      <div class="text-h5 text-weight-light text-grey-7">
+      <div class="text-h1 text-weight-bold text-grey-9 q-mb-md">Consulta de Preços</div>
+      <div class="text-h4 text-weight-light text-grey-7">
         Passe o código de barras do produto no leitor
       </div>
 
@@ -242,7 +282,11 @@ onUnmounted(() => {
         <!-- coluna FOTO (destaque, fica fixa enquanto rola) -->
         <div class="col-12 col-md-7">
           <div style="position: sticky; top: 16px">
-            <q-card flat class="column rounded-borders shadow-5" style="overflow: hidden; height: 90vh">
+            <q-card
+              flat
+              class="column rounded-borders shadow-5"
+              style="overflow: hidden; height: 90vh"
+            >
               <!-- nome do produto acima das imagens -->
               <q-card-section class="q-pb-sm">
                 <q-chip
@@ -303,12 +347,15 @@ onUnmounted(() => {
           <!-- PRECO (destaque) + EMBALAGENS no mesmo card, full width (alinhado) -->
           <q-card flat class="rounded-borders shadow-3" style="overflow: hidden">
             <!-- preco -->
-            <div class="q-pa-lg" style="background: linear-gradient(135deg, #eafaf1 0%, #d2f2e0 100%)">
-              <div class="text-overline text-green-9" style="opacity: 0.7">Preço à vista</div>
+            <div
+              class="q-pa-lg"
+              style="background: linear-gradient(135deg, #eafaf1 0%, #d2f2e0 100%)"
+            >
+              <div class="text-overline text-green-9" style="opacity: 0.7">Preço</div>
               <div class="row items-baseline no-wrap">
                 <div class="text-h3 text-weight-medium text-green-9 q-pr-xs">R$</div>
                 <div
-                  class="text-weight-bold text-green-10"
+                  class="text-weight-bold text-green-10 text-right"
                   style="font-size: clamp(4rem, 9vw, 8rem); line-height: 0.95"
                 >
                   {{ formataNumero(produto.preco) }}
@@ -321,25 +368,35 @@ onUnmounted(() => {
             </div>
 
             <!-- embalagens (faixa menor, logo abaixo do preco) -->
-            <div
-              v-if="temEmbalagens"
-              class="q-px-lg q-py-md row items-center q-gutter-x-lg q-gutter-y-xs"
-            >
-              <div class="text-overline text-grey-6">Embalagens</div>
-              <div v-for="(emb, idx) in embalagens" :key="idx" class="row items-baseline no-wrap">
-                <span class="text-body2 text-grey-7 q-pr-xs">
-                  {{ emb.unidademedida
-                  }}<span v-if="emb.quantidade"> C/{{ formataNumero(emb.quantidade, 0) }}</span>
+            <q-card-section v-if="temEmbalagens" class="text-overline text-grey-6 q-py-sm">
+              Embalagens
+              <template v-for="(emb, idx) in embalagens" :key="idx">
+                <span class="text-grey-7 q-pr-xs">
+                  {{ emb.unidademedida }}
+                  <span v-if="emb.quantidade"> C/{{ formataNumero(emb.quantidade, 0) }}</span
+                  >:
                 </span>
-                <span class="text-subtitle1 text-weight-bold text-grey-9">
+                <span class="text-subtitle1 text-weight-bold text-grey-9 q-mr-md">
                   {{ formataNumero(emb.preco) }}
-                  <q-icon v-if="emb.precocalculado" name="star" color="amber-7" size="xs">
-                    <q-tooltip>Preço calculado</q-tooltip>
-                  </q-icon>
                 </span>
-              </div>
-            </div>
+              </template>
+            </q-card-section>
+
+            <!-- <q-card-section v-if="trilha.length" class="text-overline text-grey-6 q-py-sm">
+              <template v-for="(t, idx) in trilha" :key="idx">
+                {{ t }}
+                <q-icon
+                  v-if="idx < trilha.length - 1"
+                  name="chevron_right"
+                  color="grey-5"
+                  size="sm"
+                />
+              </template>
+            </q-card-section> -->
           </q-card>
+
+          <!-- TRILHA / CATEGORIAS -->
+          <q-card v-if="trilha.length" flat class="rounded-borders shadow-2"> </q-card>
 
           <!-- ESTOQUE (2o mais importante, logo abaixo do preco - rolavel) -->
           <q-card v-if="temEstoque" flat class="rounded-borders shadow-2">
@@ -365,7 +422,9 @@ onUnmounted(() => {
                   <tr
                     v-for="v in variacoes"
                     :key="v.codprodutovariacao"
-                    :class="v.codprodutovariacao === codprodutovariacaoSelecionada ? 'bg-green-1' : ''"
+                    :class="
+                      v.codprodutovariacao === codprodutovariacaoSelecionada ? 'bg-green-1' : ''
+                    "
                   >
                     <td
                       class="text-left"
@@ -414,19 +473,6 @@ onUnmounted(() => {
               </div>
             </q-card-section>
           </q-card>
-
-          <!-- TRILHA / CATEGORIAS -->
-          <div v-if="trilha.length" class="row items-center q-gutter-xs">
-            <template v-for="(t, idx) in trilha" :key="idx">
-              <q-chip color="white" text-color="grey-7" :label="t" class="shadow-1" />
-              <q-icon
-                v-if="idx < trilha.length - 1"
-                name="chevron_right"
-                color="grey-5"
-                size="sm"
-              />
-            </template>
-          </div>
         </div>
       </div>
     </div>
@@ -472,10 +518,7 @@ onUnmounted(() => {
 
         <q-card-section class="q-pa-none q-ma-none">
           <div class="row q-pa-md q-col-gutter-md">
-            <template
-              v-for="prod in sProduto.resultadoPesquisa"
-              v-bind:key="prod.codprodutobarra"
-            >
+            <template v-for="prod in sProduto.resultadoPesquisa" v-bind:key="prod.codprodutobarra">
               <div class="col-xl-2 col-lg-2 col-md-3 col-sm-3 col-xs-6">
                 <q-card
                   v-ripple
