@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataCodigo } from '@components/formatters'
 import { quiosqueStore } from 'stores/quiosque'
 import { produtoStore } from 'stores/produto'
 
@@ -58,18 +58,6 @@ const descricaoLinhas = computed(() => {
     .split('\n')
     .map((l) => l.replace(/^[\s\-•*]+/, '').trim())
     .filter((l) => l.length)
-})
-
-const trilha = computed(() => {
-  const d = detalhe.value
-  if (!d) return []
-  return [
-    d.secaoproduto?.secaoproduto,
-    d.familiaproduto?.familiaproduto,
-    d.grupoproduto?.grupoproduto,
-    d.subgrupoproduto?.subgrupoproduto,
-    d.marca?.marca,
-  ].filter((x) => !!x)
 })
 
 const urlImagem = (codimagem) => sProduto.urlImagem(codimagem)
@@ -285,26 +273,28 @@ onUnmounted(() => {
             <q-card
               flat
               class="column rounded-borders shadow-5"
-              style="overflow: hidden; height: 90vh"
+              style="overflow: hidden; height: 95vh"
             >
               <!-- nome do produto acima das imagens -->
               <q-card-section class="q-pb-sm">
-                <q-chip
-                  v-if="produto.inativo"
-                  color="negative"
-                  text-color="white"
-                  icon="block"
-                  class="q-mb-xs q-ml-none"
-                >
-                  Produto Inativo
-                </q-chip>
                 <div class="text-h4 text-weight-bold text-grey-9">
                   {{ produto.produto }}
                 </div>
-                <div class="row q-gutter-md q-mt-xs text-grey-6">
-                  <div class="text-subtitle2"><q-icon name="tag" /> {{ produto.codproduto }}</div>
-                  <div class="text-subtitle2">
-                    <q-icon name="mdi-barcode" /> {{ produto.barras }}
+                <div class="row q-gutter-md q-mt-none text-grey-6">
+                  <div class="self-center">
+                    <q-chip v-if="produto.inativo" color="negative" text-color="white" icon="block">
+                      Inativo
+                    </q-chip>
+                  </div>
+                  <div class="self-center">
+                    <q-icon name="mdi-key" />{{ formataCodigo(produto.codproduto, 6) }}
+                  </div>
+                  <div class="self-center">
+                    <q-icon name="mdi-barcode" /> {{ produto.barras }} <q-icon name="mdi-brand" />
+                  </div>
+                  <div class="self-center" v-if="detalhe">
+                    <q-icon name="mdi-factory" />
+                    {{ detalhe.marca.marca }}
                   </div>
                 </div>
               </q-card-section>
@@ -345,118 +335,103 @@ onUnmounted(() => {
         <!-- coluna INFORMACOES -->
         <div class="col-12 col-md-5 column q-gutter-md">
           <!-- PRECO (destaque) + EMBALAGENS no mesmo card, full width (alinhado) -->
-          <q-card flat class="rounded-borders shadow-3" style="overflow: hidden">
+          <q-card
+            flat
+            class="rounded-borders shadow-3"
+            style="overflow: hidden; position: sticky; top: 16px; z-index: 999"
+          >
             <!-- preco -->
             <div
               class="q-pa-lg"
               style="background: linear-gradient(135deg, #eafaf1 0%, #d2f2e0 100%)"
             >
-              <div class="text-overline text-green-9" style="opacity: 0.7">Preço</div>
-              <div class="row items-baseline no-wrap">
-                <div class="text-h3 text-weight-medium text-green-9 q-pr-xs">R$</div>
-                <div
-                  class="text-weight-bold text-green-10 text-right"
-                  style="font-size: clamp(4rem, 9vw, 8rem); line-height: 0.95"
-                >
-                  {{ formataNumero(produto.preco) }}
-                </div>
-                <q-space />
-                <div class="text-h5 text-weight-light text-green-9 self-center">
-                  {{ produto.sigla }}
-                </div>
+              <div class="text-h4 text-green-8">R$/{{ produto.sigla }}</div>
+              <div
+                class="text-weight-bold text-green-10 text-right"
+                style="font-size: clamp(4rem, 9vw, 8rem); line-height: 0.95"
+              >
+                {{ formataNumero(produto.preco) }}
               </div>
             </div>
 
             <!-- embalagens (faixa menor, logo abaixo do preco) -->
             <q-card-section v-if="temEmbalagens" class="text-overline text-grey-6 q-py-sm">
-              Embalagens
-              <template v-for="(emb, idx) in embalagens" :key="idx">
-                <span class="text-grey-7 q-pr-xs">
-                  {{ emb.unidademedida }}
-                  <span v-if="emb.quantidade"> C/{{ formataNumero(emb.quantidade, 0) }}</span
-                  >:
-                </span>
-                <span class="text-subtitle1 text-weight-bold text-grey-9 q-mr-md">
-                  {{ formataNumero(emb.preco) }}
-                </span>
-              </template>
+              Outros Preços
+              <div class="row">
+                <div v-for="(emb, idx) in embalagens" :key="idx" class="q-ml-md">
+                  <q-space />
+                  <span>
+                    {{ emb.unidademedida }}
+                    <span v-if="emb.quantidade"> C/{{ formataNumero(emb.quantidade, 0) }}</span>
+                  </span>
+                  <span class="text-subtitle1 text-weight-bold text-grey-9 q-ml-xs">
+                    {{ formataNumero(emb.preco) }}
+                  </span>
+                  <span v-if="emb.quantidade > 1">
+                    ({{ formataNumero(emb.preco / emb.quantidade, 4) }})
+                  </span>
+                </div>
+              </div>
             </q-card-section>
-
-            <!-- <q-card-section v-if="trilha.length" class="text-overline text-grey-6 q-py-sm">
-              <template v-for="(t, idx) in trilha" :key="idx">
-                {{ t }}
-                <q-icon
-                  v-if="idx < trilha.length - 1"
-                  name="chevron_right"
-                  color="grey-5"
-                  size="sm"
-                />
-              </template>
-            </q-card-section> -->
           </q-card>
-
-          <!-- TRILHA / CATEGORIAS -->
-          <q-card v-if="trilha.length" flat class="rounded-borders shadow-2"> </q-card>
 
           <!-- ESTOQUE (2o mais importante, logo abaixo do preco - rolavel) -->
           <q-card v-if="temEstoque" flat class="rounded-borders shadow-2">
             <q-card-section class="q-pb-none">
               <div class="text-overline text-grey-6">Estoque</div>
             </q-card-section>
-            <div class="scroll" style="max-height: 40vh">
-              <q-markup-table flat wrap-cells>
-                <thead>
-                  <tr>
-                    <th class="text-left" v-if="variacoes.length > 1">Variação</th>
-                    <th
-                      v-for="local in estoquelocais"
-                      :key="local.codestoquelocal"
-                      class="text-right"
-                    >
-                      {{ local.estoquelocal }}
-                    </th>
-                    <th class="text-right text-weight-bold">Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="v in variacoes"
-                    :key="v.codprodutovariacao"
+            <q-markup-table flat wrap-cells>
+              <thead>
+                <tr>
+                  <th class="text-left" v-if="variacoes.length > 1">Variação</th>
+                  <th
+                    v-for="local in estoquelocais"
+                    :key="local.codestoquelocal"
+                    class="text-right"
+                  >
+                    {{ local.estoquelocal }}
+                  </th>
+                  <th class="text-right text-weight-bold">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  v-for="v in variacoes"
+                  :key="v.codprodutovariacao"
+                  :class="
+                    v.codprodutovariacao === codprodutovariacaoSelecionada ? 'bg-green-1' : ''
+                  "
+                >
+                  <td
+                    class="text-left"
+                    v-if="variacoes.length > 1"
                     :class="
-                      v.codprodutovariacao === codprodutovariacaoSelecionada ? 'bg-green-1' : ''
+                      v.codprodutovariacao === codprodutovariacaoSelecionada
+                        ? 'text-weight-bold text-green-9'
+                        : ''
                     "
                   >
-                    <td
-                      class="text-left"
-                      v-if="variacoes.length > 1"
-                      :class="
-                        v.codprodutovariacao === codprodutovariacaoSelecionada
-                          ? 'text-weight-bold text-green-9'
-                          : ''
-                      "
-                    >
-                      {{ v.variacao || '—' }}
-                    </td>
-                    <td
-                      v-for="local in estoquelocais"
-                      :key="local.codestoquelocal"
-                      class="text-right"
-                      :class="
-                        (v.saldos[local.codestoquelocal] || 0) > 0 ? 'text-grey-9' : 'text-grey-5'
-                      "
-                    >
-                      {{ formataNumero(v.saldos[local.codestoquelocal] || 0, 0) }}
-                    </td>
-                    <td
-                      class="text-right text-weight-bold"
-                      :class="v.saldo > 0 ? 'text-positive' : 'text-grey-5'"
-                    >
-                      {{ formataNumero(v.saldo, 0) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </q-markup-table>
-            </div>
+                    {{ v.variacao || '—' }}
+                  </td>
+                  <td
+                    v-for="local in estoquelocais"
+                    :key="local.codestoquelocal"
+                    class="text-right"
+                    :class="
+                      (v.saldos[local.codestoquelocal] || 0) > 0 ? 'text-grey-9' : 'text-grey-5'
+                    "
+                  >
+                    {{ formataNumero(v.saldos[local.codestoquelocal] || 0, 0) }}
+                  </td>
+                  <td
+                    class="text-right text-weight-bold"
+                    :class="v.saldo > 0 ? 'text-positive' : 'text-grey-5'"
+                  >
+                    {{ formataNumero(v.saldo, 0) }}
+                  </td>
+                </tr>
+              </tbody>
+            </q-markup-table>
           </q-card>
 
           <!-- DESCRICAO DO SITE -->
