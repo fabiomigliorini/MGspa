@@ -28,4 +28,13 @@ export default {
     const response = await api.get('/v1/dfe/filiais-habilitadas')
     return response.data
   },
+
+  // Consulta a SEFAZ por novos documentos de uma filial (a partir do nsu informado).
+  // Retorna { ultNSU, maxNSU } para controlar o avanço da paginação.
+  async distDfe(codfilial, nsu = null) {
+    const url =
+      nsu != null ? `/v1/nfe-php/dist-dfe/${codfilial}/${nsu}` : `/v1/nfe-php/dist-dfe/${codfilial}`
+    const response = await api.post(url)
+    return response.data
+  },
 }

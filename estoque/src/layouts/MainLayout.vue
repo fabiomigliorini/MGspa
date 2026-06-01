@@ -11,10 +11,25 @@ const rightDrawerOpen = ref(false)
 
 const auth = useAuth()
 
-// Menu de telas internas do app. Vazio por enquanto (esqueleto).
-// Conforme os CRUDs forem criados, adicionar grupos no padrão do contas:
-//   { label: 'Cadastros', items: [{ label, icon, color, to: { name: '...' } }] }
-const menuGroups = []
+// Menu de telas internas do app (padrão do contas).
+const menuGroups = [
+  {
+    label: 'Operações',
+    items: [
+      {
+        label: 'Conferência de Estoque',
+        icon: 'fact_check',
+        color: 'teal-7',
+        to: { name: 'conferencia' },
+      },
+      { label: 'Etiquetas', icon: 'qr_code_2', color: 'indigo-7', to: { name: 'etiqueta' } },
+    ],
+  },
+  {
+    label: 'Cadastros',
+    items: [{ label: 'Marcas', icon: 'sell', color: 'brown-6', to: { name: 'marca' } }],
+  },
+]
 </script>
 
 <template>

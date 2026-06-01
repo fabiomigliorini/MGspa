@@ -29,6 +29,14 @@ const menuGroups = [
       { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
       { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
       { label: 'DFe', icon: 'sync', color: 'blue', to: '/dfe' },
+      { label: 'Domínio', icon: 'file_download', color: 'deep-orange', to: '/dominio' },
+    ],
+  },
+  {
+    label: 'Transporte',
+    items: [
+      { label: 'MDFe', icon: 'receipt_long', color: 'teal', to: '/mdfe' },
+      { label: 'Veículos', icon: 'local_shipping', color: 'indigo', to: '/veiculo' },
     ],
   },
 ]

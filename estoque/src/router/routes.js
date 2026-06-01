@@ -1,3 +1,4 @@
+import { defineAsyncComponent } from 'vue'
 import { PERMISSOES_ESTOQUE } from 'src/constants/permissoes'
 
 const routes = [
@@ -16,11 +17,55 @@ const routes = [
         },
       },
 
-      // ────────────────────────────────────────────────────────────────
-      // Próximos CRUDs do app entram aqui, no padrão do contas:
-      // cada rota com `auth: true`, `title`, `permissions` e, quando há
-      // listagem com filtros, `leftDrawer: defineAsyncComponent(...)`.
-      // ────────────────────────────────────────────────────────────────
+      // ──────────────────────────── Marcas ────────────────────────────
+      {
+        path: 'marca',
+        name: 'marca',
+        component: () => import('pages/marca/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Marcas',
+          permissions: PERMISSOES_ESTOQUE,
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/MarcaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'marca/:id',
+        name: 'marca-detalhe',
+        component: () => import('pages/marca/Detalhe.vue'),
+        meta: { auth: true, title: 'Marca', permissions: PERMISSOES_ESTOQUE },
+      },
+
+      // ─────────────────────────── Etiquetas ──────────────────────────
+      {
+        path: 'etiqueta',
+        name: 'etiqueta',
+        component: () => import('pages/etiqueta/Index.vue'),
+        meta: { auth: true, title: 'Etiquetas', permissions: PERMISSOES_ESTOQUE },
+      },
+
+      // ───────────────────── Conferência de Estoque ───────────────────
+      {
+        path: 'conferencia',
+        name: 'conferencia',
+        component: () => import('pages/conferencia/Setup.vue'),
+        meta: { auth: true, title: 'Conferência de Estoque', permissions: PERMISSOES_ESTOQUE },
+      },
+      {
+        path: 'conferencia/listagem/:codestoquelocal/:codmarca/:fiscal/:conferenciaperiodica/:data',
+        name: 'conferencia-listagem',
+        component: () => import('pages/conferencia/Listagem.vue'),
+        meta: {
+          auth: true,
+          title: 'Conferência de Estoque',
+          permissions: PERMISSOES_ESTOQUE,
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/ConferenciaFiltrosDrawer.vue'),
+          ),
+        },
+      },
 
       {
         path: 'sem-permissao',
