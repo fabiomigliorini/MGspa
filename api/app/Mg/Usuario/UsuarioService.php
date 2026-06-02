@@ -125,6 +125,18 @@ class UsuarioService extends MgService
         return $usuario;
     }
 
+    /**
+     * Único ponto que grava a senha (sempre com hash). O CRUD de usuário
+     * (store/update) nunca toca na senha — ela só muda por aqui, via os
+     * endpoints dedicados de alteração de senha (próprio usuário / admin).
+     */
+    public static function definirSenha(Usuario $usuario, string $senha): Usuario
+    {
+        $usuario->senha = bcrypt($senha);
+        $usuario->save();
+        return $usuario;
+    }
+
     public static function create(array $data): Usuario
     {
         $usuario = new Usuario($data);
@@ -134,13 +146,5 @@ class UsuarioService extends MgService
         $usuario->save();
         static::atualizaPermissoes($usuario, $data['permissoes'] ?? []);
         return $usuario;
-    }
-
-    public static function resetarSenha(Usuario $usuario): string
-    {
-        $pwd = substr(str_shuffle('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'), 0, 8);
-        $usuario->senha = bcrypt($pwd);
-        $usuario->save();
-        return $pwd;
     }
 }

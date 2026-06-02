@@ -46,10 +46,12 @@ async function renovar() {
   }
 }
 
-// `typeof process` é seguro em runtime (não dispara ReferenceError em prod sem polyfill).
-// Webpack/vite substitui `process.env.PESSOAS_URL` em build nos apps que têm a var;
-// nos que não têm (ex: pessoas), cai no fallback ''.
-const PESSOAS_URL = (typeof process !== 'undefined' && process.env && process.env.PESSOAS_URL) || ''
+// Vite/Quasar substitui textualmente `process.env.PESSOAS_URL` por um literal
+// em build. NÃO envolver em `typeof process !== 'undefined'`: esse guard
+// referencia o global `process` (inexistente no browser em prod), curto-circuita
+// ANTES de chegar no literal já inlined e cai no fallback `/perfil` — foi o que
+// quebrava em produção. Mesmo padrão (bare) usado no MgAppsMenu e nas demais telas.
+const PESSOAS_URL = process.env.PESSOAS_URL || ''
 const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perfil'))
 </script>
 

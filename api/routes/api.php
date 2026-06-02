@@ -353,10 +353,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('usuario/{id}/detalhes', [\Mg\Usuario\UsuarioController::class, 'detalhes'])->name('usuario.detalhes');
     Route::delete('usuario/{id}/inativo', [\Mg\Usuario\UsuarioController::class, 'ativar'])->name('usuario.ativar');
     Route::delete('usuario/{id}', [\Mg\Usuario\UsuarioController::class, 'destroy']);
-    Route::put('usuario/{id}/alterar', [\Mg\Usuario\UsuarioController::class, 'update']);
+    Route::put('usuario/senha', [\Mg\Usuario\UsuarioController::class, 'alterarMinhaSenha']);
+    Route::put('usuario/{id}/senha', [\Mg\Usuario\UsuarioController::class, 'alterarSenha']);
     Route::put('usuario/{id}/grupos-usuarios', [\Mg\Usuario\UsuarioController::class, 'gruposAdicionarERemover']);
     Route::post('usuario/criar', [\Mg\Usuario\UsuarioController::class, 'novoUsuario']);
-    Route::get('usuario/{id}/reset-senha', [\Mg\Usuario\UsuarioController::class, 'resetSenha']);
     Route::post('usuario/{id}/inativo', [\Mg\Usuario\UsuarioController::class, 'inativar'])->name('usuario.inativar');
     Route::apiResource('usuario', \Mg\Usuario\UsuarioController::class)->parameters(['usuario' => 'id']);
 
