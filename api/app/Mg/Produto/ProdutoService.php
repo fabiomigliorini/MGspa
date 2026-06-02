@@ -373,6 +373,7 @@ class ProdutoService extends MgService
                     $estoquelocais[$elpv->codestoquelocal] = [
                         'codestoquelocal' => $elpv->codestoquelocal,
                         'estoquelocal' => $elpv->EstoqueLocal->estoquelocal,
+                        'sigla' => $elpv->EstoqueLocal->sigla,
                     ];
                     $saldos[$elpv->codestoquelocal] = (float) $es->saldoquantidade;
                 }
@@ -387,6 +388,7 @@ class ProdutoService extends MgService
 
         // Embalagens
         $embalagens = [];
+        $qryEmb = $produto->ProdutoEmbalagemS()->orderBy('quantidade')->whereNotNull('preco');
         $embalagens[] = [
             'codprodutoembalagem' => null,
             'quantidade' => null,
@@ -394,22 +396,20 @@ class ProdutoService extends MgService
             'preco' => (float) $produto->preco,
             'precocalculado' => false,
         ];
-        foreach ($produto->ProdutoEmbalagemS()->orderBy('quantidade')->get() as $emb) {
-            $preco = !empty($emb->preco) ? $emb->preco : ($emb->quantidade * $produto->preco);
+        if ($pb->codprodutoembalagem) {
+            $qryEmb = $qryEmb->where('codprodutoembalagem', '!=', $pb->codprodutoembalagem);
+        }
+        $embs = $qryEmb->get();
+        foreach ($embs as $emb) {
             $embalagens[] = [
                 'codprodutoembalagem' => $emb->codprodutoembalagem,
                 'quantidade' => (float) $emb->quantidade,
-                'unidademedida' => $emb->UnidadeMedida->sigla,
-                'preco' => (float) $preco,
+                'sigla' => $emb->UnidadeMedida->sigla,
+                'unidademedida' => $emb->UnidadeMedida->unidademedida,
+                'preco' => $emb->preco,
                 'precocalculado' => empty($emb->preco),
             ];
         }
-
-        // Hierarquia (breadcrumb) - codimagem pro front montar a url
-        $sub = $produto->SubGrupoProduto;
-        $grupo = $sub->GrupoProduto;
-        $familia = $grupo->FamiliaProduto;
-        $secao = $familia->SecaoProduto;
 
         return [
             'resultado' => true,
@@ -417,6 +417,7 @@ class ProdutoService extends MgService
                 'codproduto' => $produto->codproduto,
                 'codprodutobarra' => $pb->codprodutobarra,
                 'codprodutovariacao' => $pb->codprodutovariacao,
+                'codprodutoembalagem' => $pb->codprodutoembalagem,
                 'barras' => $pb->barras,
                 'produto' => $pb->descricao,
                 'titulosite' => $produto->titulosite,
@@ -425,31 +426,7 @@ class ProdutoService extends MgService
                 'sigla' => $pb->unidade,
                 'referencia' => $produto->referencia,
                 'preco' => (float) $pb->preco,
-                'marca' => [
-                    'codmarca' => $produto->Marca->codmarca,
-                    'marca' => $produto->Marca->marca,
-                    'codimagem' => $produto->Marca->codimagem,
-                ],
-                'secaoproduto' => [
-                    'codsecaoproduto' => $secao->codsecaoproduto,
-                    'secaoproduto' => $secao->secaoproduto,
-                    'codimagem' => $secao->codimagem,
-                ],
-                'familiaproduto' => [
-                    'codfamiliaproduto' => $familia->codfamiliaproduto,
-                    'familiaproduto' => $familia->familiaproduto,
-                    'codimagem' => $familia->codimagem,
-                ],
-                'grupoproduto' => [
-                    'codgrupoproduto' => $grupo->codgrupoproduto,
-                    'grupoproduto' => $grupo->grupoproduto,
-                    'codimagem' => $grupo->codimagem,
-                ],
-                'subgrupoproduto' => [
-                    'codsubgrupoproduto' => $sub->codsubgrupoproduto,
-                    'subgrupoproduto' => $sub->subgrupoproduto,
-                    'codimagem' => $sub->codimagem,
-                ],
+                'marca' => $produto->Marca?->marca,
                 'imagens' => $imagens,
                 'embalagens' => $embalagens,
                 'variacoes' => $variacoes,
