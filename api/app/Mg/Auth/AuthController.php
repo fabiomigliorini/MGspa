@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Laravel\Passport\Exceptions\OAuthServerException;
+use League\OAuth2\Server\Exception\OAuthServerException as LeagueOAuthServerException;
 use Laravel\Passport\RefreshToken;
 use Laravel\Passport\Token;
 use Psr\Http\Message\ServerRequestInterface;
@@ -47,11 +48,15 @@ class AuthController extends Controller
         try {
             $payload = AuthService::issueToken($psrRequest);
         } catch (OAuthServerException $e) {
+            // O Passport re-empacota a League\OAuthServerException numa
+            // HttpResponseException; os getters ricos (getErrorType/getHint/
+            // getHttpStatusCode) ficam na exception original em getPrevious().
+            $league = $e->getPrevious();
             Log::warning('AuthController::token — OAuthServerException', [
                 'grant_type' => $grant,
-                'error_type' => $e->getErrorType(),
+                'error_type' => $league instanceof LeagueOAuthServerException ? $league->getErrorType() : null,
                 'message' => $e->getMessage(),
-                'hint' => method_exists($e, 'getHint') ? $e->getHint() : null,
+                'hint' => $league instanceof LeagueOAuthServerException ? $league->getHint() : null,
             ]);
             return $this->oauthErrorResponse($e);
         } catch (Exception $e) {
@@ -176,14 +181,19 @@ class AuthController extends Controller
 
     private function oauthErrorResponse(OAuthServerException $e): JsonResponse
     {
-        $code = $e->getCode();
+        // getCode() na wrapper do Passport devolve o código interno da League
+        // (inteiros pequenos), não o HTTP status — pegamos o status real e o
+        // error_type na exception original via getPrevious().
+        $league = $e->getPrevious();
+        $code = $league instanceof LeagueOAuthServerException ? $league->getHttpStatusCode() : 400;
         if ($code < 400 || $code >= 600) {
             $code = 400;
         }
-        // Mensagem genérica spec-compliant — a OAuthServerException do Passport
-        // já tem mensagens próprias; expomos pelo getMessage().
+        $error = $league instanceof LeagueOAuthServerException
+            ? $league->getErrorType()
+            : ($code === 401 ? 'invalid_client' : 'invalid_request');
         return response()->json([
-            'error' => $code === 401 ? 'invalid_client' : 'invalid_request',
+            'error' => $error,
             'error_description' => $e->getMessage() ?: null,
         ], $code);
     }
