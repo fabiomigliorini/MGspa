@@ -53,17 +53,20 @@ const botoesExport = (codfilial) => [
   {
     icon: 'local_shipping',
     tooltip: 'XMLs das NFe de Entrada emitidas por nós (transferências e devoluções)',
-    fn: () => exportar(() => dominioService.nfeEntrada(codfilial, mes.value), { naoLocalizados: true }),
+    fn: () =>
+      exportar(() => dominioService.nfeEntrada(codfilial, mes.value), { naoLocalizados: true }),
   },
   {
     icon: 'receipt',
     tooltip: 'XMLs das NFCe (modelo 65) de Saída',
-    fn: () => exportar(() => dominioService.nfeSaida(codfilial, 65, mes.value), { naoLocalizados: true }),
+    fn: () =>
+      exportar(() => dominioService.nfeSaida(codfilial, 65, mes.value), { naoLocalizados: true }),
   },
   {
     icon: 'description',
     tooltip: 'XMLs das NFe (modelo 55) de Saída',
-    fn: () => exportar(() => dominioService.nfeSaida(codfilial, 55, mes.value), { naoLocalizados: true }),
+    fn: () =>
+      exportar(() => dominioService.nfeSaida(codfilial, 55, mes.value), { naoLocalizados: true }),
   },
   {
     icon: 'groups',
@@ -89,9 +92,7 @@ const botoesExport = (codfilial) => [
 
 // ---- Acumuladores ----
 const sortAcumuladores = (acs) =>
-  [...acs].sort(
-    (a, b) => a.codcfop - b.codcfop || parseFloat(a.icmscst) - parseFloat(b.icmscst),
-  )
+  [...acs].sort((a, b) => a.codcfop - b.codcfop || parseFloat(a.icmscst) - parseFloat(b.icmscst))
 
 const novoAcumulador = (codfilial) => {
   acumEdit.value = { coddominioacumulador: null, codfilial }
@@ -170,8 +171,14 @@ const excluirAcumulador = (ac) => {
 
       <q-tab-panels v-else v-model="tab" animated class="bg-transparent">
         <!-- ===== Exportação ===== -->
-        <q-tab-panel name="export" class="q-pa-none q-gutter-md">
-          <q-card v-for="empresa in empresas" :key="empresa.codempresa" flat bordered>
+        <q-tab-panel name="export" class="q-pa-none">
+          <q-card
+            v-for="empresa in empresas"
+            :key="empresa.codempresa"
+            flat
+            bordered
+            class="q-mb-md"
+          >
             <q-card-section class="bg-primary text-white text-subtitle1 text-weight-medium">
               #{{ empresa.codempresa }} · {{ empresa.empresa }}
             </q-card-section>
@@ -210,8 +217,14 @@ const excluirAcumulador = (ac) => {
         </q-tab-panel>
 
         <!-- ===== Acumuladores ===== -->
-        <q-tab-panel name="acum" class="q-pa-none q-gutter-md">
-          <q-card v-for="empresa in empresas" :key="empresa.codempresa" flat bordered>
+        <q-tab-panel name="acum" class="q-pa-none">
+          <q-card
+            v-for="empresa in empresas"
+            :key="empresa.codempresa"
+            flat
+            bordered
+            class="q-mb-md"
+          >
             <q-card-section class="bg-primary text-white text-subtitle1 text-weight-medium">
               #{{ empresa.codempresa }} · {{ empresa.empresa }}
             </q-card-section>
