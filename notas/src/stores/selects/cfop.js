@@ -19,7 +19,7 @@ export const useSelectCfopStore = defineStore('selectCfop', {
       }
 
       try {
-        const response = await api.get('v1/cfop', { params: { per_page: 1000 } })
+        const response = await api.get('v1/natureza-operacao/cfop', { params: { per_page: 1000 } })
         this.cfops = (response.data?.data || []).map((item) => ({
           label: `${item.codcfop} - ${item.descricao}`,
           value: item.codcfop,

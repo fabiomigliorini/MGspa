@@ -97,6 +97,11 @@ class NaturezaOperacao extends MgModel
         return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacaodevolucao', 'codnaturezaoperacao');
     }
 
+    public function Operacao()
+    {
+        return $this->belongsTo(Operacao::class, 'codoperacao', 'codoperacao');
+    }
+
     public function TipoTitulo()
     {
         return $this->belongsTo(TipoTitulo::class, 'codtipotitulo', 'codtipotitulo');
