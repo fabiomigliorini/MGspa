@@ -75,7 +75,7 @@ services:
     depends_on:
       - api
       - redis
-    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600"]
+    command: ["php", "artisan", "queue:work", "--queue=urgent,high,default,low", "--sleep=3", "--tries=3", "--max-time=3600"]
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
