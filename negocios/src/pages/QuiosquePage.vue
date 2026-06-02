@@ -35,7 +35,7 @@ const imagens = computed(() => {
 })
 
 const embalagens = computed(() => detalhe.value?.embalagens || [])
-const temEmbalagens = computed(() => embalagens.value.length > 1)
+const temEmbalagens = computed(() => embalagens.value.length > 0)
 
 const estoquelocais = computed(() => detalhe.value?.estoquelocais || [])
 const codprodutovariacaoSelecionada = computed(() => detalhe.value?.codprodutovariacao ?? null)
