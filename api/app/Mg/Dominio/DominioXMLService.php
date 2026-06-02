@@ -20,7 +20,7 @@ class DominioXMLService
         $filial = Filial::findOrFail($codfilial);
 
         // Monta Caminho e nome do Arquivo ZIP
-        $pathZip = Storage::disk('dominio')->getDriver()->getAdapter()->getPathPrefix();
+        $pathZip = Storage::disk('dominio')->path('');
         $arquivoZip = $mes->format('Ym') . '-' . str_pad($filial->empresadominio, 4, '0', STR_PAD_LEFT) . '-';
         switch ($modelo) {
             case 55:
@@ -119,7 +119,7 @@ class DominioXMLService
         $filial = Filial::findOrFail($codfilial);
 
         // Monta Caminho e nome do Arquivo ZIP
-        $pathZip = Storage::disk('dominio')->getDriver()->getAdapter()->getPathPrefix();
+        $pathZip = Storage::disk('dominio')->path('');
         $arquivoZip = $mes->format('Ym') . '-' . str_pad($filial->empresadominio, 4, '0', STR_PAD_LEFT) . '-NFe-Entradas.zip';
 
         // Busca Notas de Entrada Aprovadas emitidas pela própria Filial
