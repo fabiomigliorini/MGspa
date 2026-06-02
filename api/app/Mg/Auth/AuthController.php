@@ -189,12 +189,32 @@ class AuthController extends Controller
         if ($code < 400 || $code >= 600) {
             $code = 400;
         }
-        $error = $league instanceof LeagueOAuthServerException
+        $errorType = $league instanceof LeagueOAuthServerException
             ? $league->getErrorType()
             : ($code === 401 ? 'invalid_client' : 'invalid_request');
         return response()->json([
-            'error' => $error,
-            'error_description' => $e->getMessage() ?: null,
+            'error' => $errorType,
+            'error_description' => $this->mensagemErroPtBr($errorType),
         ], $code);
+    }
+
+    /**
+     * Traduz o error_type do OAuth (RFC 6749) para mensagem amigável em PT-BR.
+     * O campo `error` continua em inglês conforme a spec; só o
+     * `error_description` (texto livre voltado ao humano) é traduzido.
+     */
+    private function mensagemErroPtBr(string $errorType): string
+    {
+        return match ($errorType) {
+            'invalid_grant' => 'Usuário ou senha inválidos.',
+            'invalid_client' => 'Aplicativo cliente não autorizado.',
+            'invalid_scope' => 'Permissão solicitada inválida.',
+            'unsupported_grant_type' => 'Tipo de autenticação não suportado.',
+            'unauthorized_client' => 'Cliente não autorizado para este tipo de autenticação.',
+            'invalid_request' => 'Requisição inválida. Verifique os dados informados.',
+            'access_denied' => 'Acesso negado.',
+            'server_error' => 'Erro interno ao processar a autenticação.',
+            default => 'Não foi possível efetuar o login. Tente novamente.',
+        };
     }
 }
