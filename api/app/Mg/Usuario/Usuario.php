@@ -47,7 +47,6 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         'impressoratermica',
         'inativo',
         'remember_token',
-        'senha',
         'ultimoacesso',
         'usuario',
     ];

@@ -1,5 +1,6 @@
 <script setup>
 import { formataTimestamp, formataDataAbreviada } from '@components/formatters'
+import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'
@@ -13,6 +14,35 @@ const router = useRouter()
 const route = useRoute()
 const sUsuario = usuarioStore()
 const user = useAuthStore()
+
+const dialogSenha = ref(false)
+const isPwd = ref(true)
+const modelSenha = ref({ senha: '', senha_confirmacao: '' })
+
+const senhaValida = (val) => (String(val).length >= 6 ? true : 'Mínimo 6 caracteres')
+
+const confirmacaoValida = (val) => (val === modelSenha.value.senha ? true : 'Senhas não conferem!')
+
+const abrirAlterarSenha = () => {
+  modelSenha.value = { senha: '', senha_confirmacao: '' }
+  isPwd.value = true
+  dialogSenha.value = true
+}
+
+const salvarSenha = async () => {
+  try {
+    await sUsuario.alterarSenhaUsuario(sUsuario.detalheUsuarios.codusuario, {
+      senha: modelSenha.value.senha,
+      senha_confirmacao: modelSenha.value.senha_confirmacao,
+    })
+    $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Senha alterada!' })
+    dialogSenha.value = false
+  } catch (error) {
+    const errors = error.response?.data?.errors
+    const mensagem = errors?.senha?.[0] || error.response?.data?.message || 'Erro ao alterar senha'
+    $q.notify({ color: 'red-5', textColor: 'white', icon: 'error', message: mensagem })
+  }
+}
 
 const excluir = (codusuario) => {
   $q.dialog({
@@ -101,6 +131,19 @@ const ativar = async (codusuario) => {
         :to="`/usuarios/${route.params.codusuario}/editar`"
       >
         <q-tooltip>Editar</q-tooltip>
+      </q-btn>
+
+      <q-btn
+        v-if="user.temPermissao('Administrador')"
+        flat
+        round
+        dense
+        size="sm"
+        color="grey-7"
+        icon="vpn_key"
+        @click="abrirAlterarSenha"
+      >
+        <q-tooltip>Alterar senha</q-tooltip>
       </q-btn>
 
       <q-btn
@@ -215,4 +258,61 @@ const ativar = async (codusuario) => {
       </q-item>
     </q-list>
   </q-card>
+
+  <!-- Dialog Alterar Senha (admin) -->
+  <q-dialog v-model="dialogSenha">
+    <q-card bordered flat style="width: 400px; max-width: 90vw">
+      <q-form @submit.prevent="salvarSenha">
+        <q-card-section class="text-grey-9 text-overline">ALTERAR SENHA</q-card-section>
+
+        <q-separator inset />
+
+        <q-card-section class="q-gutter-md">
+          <q-input
+            outlined
+            autofocus
+            v-model="modelSenha.senha"
+            label="Nova senha"
+            :type="isPwd ? 'password' : 'text'"
+            :rules="[senhaValida]"
+          >
+            <template #prepend>
+              <q-icon name="lock_open" />
+            </template>
+            <template #append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
+
+          <q-input
+            outlined
+            v-model="modelSenha.senha_confirmacao"
+            label="Confirmar nova senha"
+            :type="isPwd ? 'password' : 'text'"
+            :rules="[confirmacaoValida]"
+          >
+            <template #prepend>
+              <q-icon name="lock_open" />
+            </template>
+            <template #append>
+              <q-icon
+                :name="isPwd ? 'visibility_off' : 'visibility'"
+                class="cursor-pointer"
+                @click="isPwd = !isPwd"
+              />
+            </template>
+          </q-input>
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat label="Salvar" color="primary" type="submit" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
 </template>

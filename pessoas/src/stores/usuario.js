@@ -59,8 +59,13 @@ export const usuarioStore = defineStore('usuario', {
       return ret
     },
 
-    async usuarioAlterarPerfil(model) {
-      const ret = await api.put('v1/usuario/' + model.codusuario + '/alterar', model)
+    async alterarMinhaSenha(payload) {
+      const ret = await api.put('v1/usuario/senha', payload)
+      return ret
+    },
+
+    async alterarSenhaUsuario(codusuario, payload) {
+      const ret = await api.put('v1/usuario/' + codusuario + '/senha', payload)
       return ret
     },
 
@@ -72,11 +77,6 @@ export const usuarioStore = defineStore('usuario', {
     async postUsuario(model) {
       const ret = await api.post('v1/usuario/criar', model)
       this.usuarios.push(ret.data.data)
-      return ret
-    },
-
-    async resetarSenha(codusuario) {
-      const ret = await api.get('v1/usuario/' + codusuario + '/reset-senha')
       return ret
     },
   },

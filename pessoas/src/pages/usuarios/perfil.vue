@@ -43,37 +43,30 @@ const editar = () => {
 
 const salvar = async () => {
   try {
-    if (!modelPerfilUsuario.value.senha_antiga) {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: 'Digite a senha antiga',
-      })
-      return
-    }
-    const ret = await sUsuario.usuarioAlterarPerfil(modelPerfilUsuario.value)
-    if (ret.data) {
-      $q.notify({
-        color: 'green-5',
-        textColor: 'white',
-        icon: 'done',
-        message: 'Senha alterada!',
-      })
-      dialogAlterarSenha.value = false
-    }
+    await sUsuario.alterarMinhaSenha({
+      senha_antiga: modelPerfilUsuario.value.senha_antiga,
+      senha: modelPerfilUsuario.value.senha,
+      senha_confirmacao: modelPerfilUsuario.value.senha_confirmacao,
+    })
+    $q.notify({
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Senha alterada!',
+    })
+    dialogAlterarSenha.value = false
   } catch (error) {
     const errors = error.response?.data?.errors
     const mensagem =
       errors?.senha?.[0] ||
       errors?.senha_antiga?.[0] ||
-      errors?.usuario?.[0] ||
+      error.response?.data?.message ||
       'Erro ao alterar senha'
 
     $q.notify({
       color: 'red-5',
       textColor: 'white',
-      icon: 'warning',
+      icon: 'error',
       message: mensagem,
     })
   }
