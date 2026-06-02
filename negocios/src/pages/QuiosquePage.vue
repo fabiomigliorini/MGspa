@@ -205,9 +205,24 @@ onUnmounted(() => {
       <div class="text-h5 text-weight-light text-grey-7 q-mt-md">
         Solicite a autorização deste dispositivo para liberar a consulta de preços.
       </div>
-      <q-chip class="q-mt-xl text-weight-bold" color="grey-3" text-color="grey-9" size="lg">
+      <q-chip
+        class="q-mt-xl text-weight-bold"
+        color="grey-3"
+        text-color="grey-9"
+        size="lg"
+        v-if="sSinc.pdv.uuid"
+      >
         UUID: {{ sSinc.pdv.uuid || '—' }}
       </q-chip>
+      <q-btn
+        flat
+        class="q-mt-xl"
+        color="primary"
+        size="lg"
+        icon="home"
+        label="Voltar à tela inicial"
+        :to="{ path: '/' }"
+      />
     </div>
 
     <!-- conteudo normal: so quando o dispositivo esta autorizado -->
