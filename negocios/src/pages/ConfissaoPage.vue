@@ -13,39 +13,43 @@ const ratioOptions = ref([
 const confissaoRatio = ref('1:2')
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <div class="row q-pa-md">
-      <div style="max-width: 300px; margin: auto">
-        <q-select
-          outlined
-          class="q-mb-md"
-          :options="ratioOptions"
-          v-model="confissaoRatio"
-          label="Tamanho"
-          map-options
-          emit-value
-        />
-        <mg-slim-batch
-          :ratio="confissaoRatio"
-          pasta="confissao"
-          @upload="dialogConfissao = false"
-        />
-        <q-input
-          type="number"
-          min="0"
-          class="q-mt-md"
-          input-class="text-right"
-          step="1"
-          outlined
-          v-model="sConfissao.codnegocio"
-          :disable="sConfissao.encontrados == 1"
-        />
-        <MgInputValor
-          :min="0"
-          class="q-my-md"
-          v-model="sConfissao.valor"
-          :readonly="sConfissao.encontrados == 1"
-        />
+      <div style="width: 500px; max-width: 90vw; margin: auto">
+        <q-card flat bordered>
+          <q-card-section>
+            <q-select
+              outlined
+              class="q-mb-md"
+              :options="ratioOptions"
+              v-model="confissaoRatio"
+              label="Tamanho"
+              map-options
+              emit-value
+            />
+            <mg-slim-batch
+              :ratio="confissaoRatio"
+              pasta="confissao"
+              @upload="dialogConfissao = false"
+            />
+            <q-input
+              type="number"
+              min="0"
+              class="q-mt-md"
+              input-class="text-right"
+              step="1"
+              outlined
+              v-model="sConfissao.codnegocio"
+              :disable="sConfissao.encontrados == 1"
+            />
+            <MgInputValor
+              :min="0"
+              class="q-my-md"
+              v-model="sConfissao.valor"
+              :readonly="sConfissao.encontrados == 1"
+            />
+          </q-card-section>
+        </q-card>
       </div>
     </div>
     <q-page-sticky position="bottom-right" :offset="[18, 18]">

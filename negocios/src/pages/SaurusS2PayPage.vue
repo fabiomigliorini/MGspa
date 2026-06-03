@@ -283,7 +283,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <div class="row justify-center q-mt-md">
       <q-btn color="primary" label="Cadastrar Maquineta" @click="cadastrarMaquineta()" />
 

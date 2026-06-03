@@ -85,9 +85,15 @@ const salvarDevolucao = async () => {
 }
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <div class="flex flex-center">
-      <q-card style="max-width: 800px" class="q-pa-md q-ma-md" v-if="sNegocio.negocio">
+      <q-card
+        style="max-width: 800px"
+        class="q-pa-md q-ma-md"
+        v-if="sNegocio.negocio"
+        flat
+        bordered
+      >
         <h4 class="q-ma-md">Selecione os produtos para Devolução!</h4>
 
         <q-banner inline-actions class="text-white bg-red" v-if="sNegocio.negocio.codpessoa == 1">

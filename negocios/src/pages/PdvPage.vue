@@ -85,8 +85,8 @@ onMounted(() => {
 })
 </script>
 <template>
-  <q-page>
-    <q-card flat class="q-pa-md">
+  <q-page class="bg-grey-2">
+    <q-card flat bordered class="q-pa-md q-ma-md">
       <div class="text-caption text-grey-7 q-mb-sm">Filtre seu dispositivo:</div>
       <div class="row q-col-gutter-md">
         <div class="col-xs-12 col-sm-4">

@@ -113,11 +113,7 @@ async function consultarNfe(event) {
     const resp = await props.api.post(`/v1/nota-fiscal/${codnotafiscal.value}/consultar`)
     const r = resp.data?.resultado ?? resp.data
     const tipo = r?.sucesso ? 'positive' : 'negative'
-    $q.dialog({
-      title: 'Consulta NFe',
-      message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}`,
-      ok: { label: 'OK', flat: true, color: tipo },
-    })
+    $q.notify({ type: tipo, message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}` })
     emit('action-completed', 'consultar')
   } catch (error) {
     $q.notify({ type: 'negative', message: mensagemErro(error) })
@@ -147,11 +143,7 @@ function cancelarNfe(event) {
       })
       const r = resp.data?.resultado ?? resp.data
       const tipo = r?.sucesso ? 'positive' : 'negative'
-      $q.dialog({
-        title: 'Cancelamento NFe',
-        message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}`,
-        ok: { label: 'OK', flat: true, color: tipo },
-      })
+      $q.notify({ type: tipo, message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}` })
       emit('action-completed', 'cancelar')
     } catch (error) {
       $q.notify({ type: 'negative', message: mensagemErro(error) })
@@ -182,11 +174,7 @@ function inutilizarNfe(event) {
       })
       const r = resp.data?.resultado ?? resp.data
       const tipo = r?.sucesso ? 'positive' : 'negative'
-      $q.dialog({
-        title: 'Inutilização NFe',
-        message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}`,
-        ok: { label: 'OK', flat: true, color: tipo },
-      })
+      $q.notify({ type: tipo, message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}` })
       emit('action-completed', 'inutilizar')
     } catch (error) {
       $q.notify({ type: 'negative', message: mensagemErro(error) })

@@ -78,7 +78,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn @click="atualizar()" fab icon="refresh" color="secondary" :loading="rodando">
         <q-tooltip class="" :offset="[10, 10]"> Atualizar Listagem </q-tooltip>
@@ -89,7 +89,7 @@ onMounted(() => {
       </q-btn>
     </q-page-sticky>
     <div class="row q-pa-md q-pb-xl justify-center">
-      <q-list bordered class="rounded-borders" style="max-width: 650px">
+      <q-list flat bordered class="rounded-borders" style="max-width: 650px">
         <template v-for="ped in sPagarMe.pedidosPendentes" :key="ped.codpagarmepedido">
           <q-item>
             <q-item-section avatar>

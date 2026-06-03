@@ -61,7 +61,7 @@ const refresh = async () => {
 </script>
 
 <template>
-  <q-page class="q-pa-md bg-grey-4 flex no-wrap">
+  <q-page class="q-pa-md bg-grey-2 flex no-wrap">
     <div v-if="sWoo.pedidos.length == 0" class="absolute-center text-grey text-center">
       <q-icon name="do_not_disturb" size="300px" />
       <h3>Nenhum registro localizado!</h3>

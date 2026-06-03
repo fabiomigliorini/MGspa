@@ -1,5 +1,10 @@
 <script setup>
-import { formataNumero, formataDataIso, formataHora, formataDataCompleta } from '@components/formatters'
+import {
+  formataNumero,
+  formataDataIso,
+  formataHora,
+  formataDataCompleta,
+} from '@components/formatters'
 import { onMounted, ref, watch } from 'vue'
 import { exportFile, Notify, Dialog } from 'quasar'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
@@ -255,7 +260,7 @@ watch(data, () => {
 })
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <!-- ANOS -->
     <q-tabs v-model="ano" inline-label class="bg-primary text-white">
       <template v-for="a in anos" :key="a">
@@ -274,6 +279,8 @@ watch(data, () => {
       <!-- CALENDARIO -->
       <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2" style="min-width: 310px">
         <q-date
+          flat
+          bordered
           minimal
           v-model="data"
           :options="datasDisponiveis"
