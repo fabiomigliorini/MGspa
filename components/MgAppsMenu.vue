@@ -52,6 +52,13 @@ const APPS = [
     color: 'brown',
     href: process.env.ESTOQUE_URL || '',
   },
+  {
+    id: 'agro',
+    label: 'Agro',
+    icon: 'agriculture',
+    color: 'green',
+    href: process.env.AGRO_URL || '',
+  },
 ]
 
 const currentApp = (process.env.APP_NAME || '').toLowerCase()
