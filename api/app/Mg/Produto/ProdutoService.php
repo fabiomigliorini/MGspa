@@ -389,14 +389,14 @@ class ProdutoService extends MgService
         // Embalagens
         $embalagens = [];
         $qryEmb = $produto->ProdutoEmbalagemS()->orderBy('quantidade')->whereNotNull('preco');
-        $embalagens[] = [
-            'codprodutoembalagem' => null,
-            'quantidade' => null,
-            'unidademedida' => $produto->UnidadeMedida->sigla,
-            'preco' => (float) $produto->preco,
-            'precocalculado' => false,
-        ];
         if ($pb->codprodutoembalagem) {
+            $embalagens[] = [
+                'codprodutoembalagem' => null,
+                'quantidade' => null,
+                'unidademedida' => $produto->UnidadeMedida->sigla,
+                'preco' => (float) $produto->preco,
+                'precocalculado' => false,
+            ];
             $qryEmb = $qryEmb->where('codprodutoembalagem', '!=', $pb->codprodutoembalagem);
         }
         $embs = $qryEmb->get();
