@@ -5,9 +5,15 @@ import { abrirPdf } from '@components/abrirPdf'
 
 const props = defineProps({
   nota: { type: Object, required: true },
-  api: { type: Function, required: true },
+  api: { type: [Function, Object], required: true },
   compact: { type: Boolean, default: false },
   showExtras: { type: Boolean, default: false },
+  // Impressora termica: quando informada, habilita impressao do cupom (modelo 65)
+  impressora: { type: String, default: null },
+  // Exibe o botao Excluir para notas em digitacao (status DIG)
+  mostrarExcluir: { type: Boolean, default: false },
+  // Abrir a DANFE apos enviar. Quando null, segue o padrao !compact
+  abrirDanfeAposEnviar: { type: Boolean, default: null },
 })
 
 const emit = defineEmits(['action-completed'])
@@ -19,6 +25,7 @@ const loadingConsultar = ref(false)
 const loadingCancelar = ref(false)
 const loadingInutilizar = ref(false)
 const loadingEmail = ref(false)
+const loadingExcluir = ref(false)
 const progressoNfe = ref({ status: '', percent: 0 })
 
 const codnotafiscal = computed(() => props.nota?.codnotafiscal)
@@ -31,11 +38,22 @@ const podeConsultar = computed(
 const podeCancelar = computed(() => props.nota?.emitida && props.nota?.status === 'AUT')
 const podeInutilizar = computed(() => props.nota?.emitida && props.nota?.status === 'ERR')
 const podeEnviarEmail = computed(() => props.nota?.emitida && props.nota?.status === 'AUT')
-const podeAbrirDanfe = computed(() => props.nota?.emitida && props.nota?.status === 'AUT')
-const podeAbrirXml = computed(() => props.nota?.emitida && props.nota?.nfechave)
-const temAcoes = computed(
-  () => podeEnviar.value || podeConsultar.value || podeCancelar.value || podeInutilizar.value,
+const podeAbrirDanfe = computed(
+  () => props.nota?.emitida && ['AUT', 'CAN'].includes(props.nota?.status),
 )
+const podeAbrirXml = computed(() => props.nota?.emitida && props.nota?.nfechave)
+const podeExcluir = computed(() => props.nota?.emitida && props.nota?.status === 'DIG')
+const temAcoes = computed(
+  () =>
+    podeEnviar.value ||
+    podeConsultar.value ||
+    podeCancelar.value ||
+    podeInutilizar.value ||
+    (props.mostrarExcluir && podeExcluir.value),
+)
+
+const deveAbrirDanfeAposEnviar = computed(() => props.abrirDanfeAposEnviar ?? !props.compact)
+const cupom = computed(() => props.nota?.modelo == 65)
 
 const btnSize = computed(() => (props.compact ? 'sm' : undefined))
 
@@ -55,6 +73,21 @@ async function xmlUrlFromApi(url) {
   return URL.createObjectURL(new Blob([data], { type: 'application/xml' }))
 }
 
+async function imprimir() {
+  if (!props.impressora) {
+    $q.notify({ type: 'negative', message: 'Nenhuma impressora térmica selecionada!' })
+    return
+  }
+  try {
+    await props.api.post(`/v1/nota-fiscal/${codnotafiscal.value}/imprimir`, {
+      impressora: props.impressora,
+    })
+    $q.notify({ type: 'positive', message: `Enviado para impressora ${props.impressora}!` })
+  } catch (error) {
+    $q.notify({ type: 'negative', message: mensagemErro(error) })
+  }
+}
+
 async function enviarNfe(event) {
   stop(event)
   loadingEnviar.value = true
@@ -68,15 +101,19 @@ async function enviarNfe(event) {
     const xmlDoc = parser.parseFromString(typeof xml === 'string' ? xml : '', 'text/xml')
     const tpEmis = xmlDoc.querySelector('tpEmis')?.textContent
 
+    let notaAtualizada = respCriar.data?.nota
+
     if (tpEmis === '9') {
+      // Contingencia offline: nao envia para Sefaz, gera DANFE direto
+      if (cupom.value && props.impressora) {
+        await imprimir()
+      }
       await abrirDanfe()
     } else {
-      progressoNfe.value = {
-        status: 'Enviando NFe para Sefaz...',
-        percent: 50,
-      }
+      progressoNfe.value = { status: 'Enviando NFe para Sefaz...', percent: 50 }
       const respEnv = await props.api.post(`/v1/nota-fiscal/${codnotafiscal.value}/enviar-sincrono`)
       const envio = respEnv.data?.resultado ?? respEnv.data
+      notaAtualizada = respEnv.data?.nota ?? notaAtualizada
       if (envio?.sucesso) {
         progressoNfe.value = { status: 'Enviando Email...', percent: 75 }
         try {
@@ -86,14 +123,17 @@ async function enviarNfe(event) {
         }
         progressoNfe.value = { status: 'Finalizado...', percent: 100 }
         $q.notify({ type: 'positive', message: 'NFe enviada com sucesso!' })
-        if (!props.compact) {
+        if (cupom.value && props.impressora) {
+          await imprimir()
+        }
+        if (deveAbrirDanfeAposEnviar.value) {
           await abrirDanfe()
         }
       } else {
         throw new Error(`${envio?.cStat ?? ''} - ${envio?.xMotivo ?? 'Erro desconhecido'}`)
       }
     }
-    emit('action-completed', 'enviar')
+    emit('action-completed', 'enviar', notaAtualizada)
   } catch (error) {
     $q.notify({
       type: 'negative',
@@ -114,7 +154,7 @@ async function consultarNfe(event) {
     const r = resp.data?.resultado ?? resp.data
     const tipo = r?.sucesso ? 'positive' : 'negative'
     $q.notify({ type: tipo, message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}` })
-    emit('action-completed', 'consultar')
+    emit('action-completed', 'consultar', resp.data?.nota)
   } catch (error) {
     $q.notify({ type: 'negative', message: mensagemErro(error) })
   } finally {
@@ -144,7 +184,7 @@ function cancelarNfe(event) {
       const r = resp.data?.resultado ?? resp.data
       const tipo = r?.sucesso ? 'positive' : 'negative'
       $q.notify({ type: tipo, message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}` })
-      emit('action-completed', 'cancelar')
+      emit('action-completed', 'cancelar', resp.data?.nota)
     } catch (error) {
       $q.notify({ type: 'negative', message: mensagemErro(error) })
     } finally {
@@ -175,7 +215,7 @@ function inutilizarNfe(event) {
       const r = resp.data?.resultado ?? resp.data
       const tipo = r?.sucesso ? 'positive' : 'negative'
       $q.notify({ type: tipo, message: `${r?.cStat ?? ''} - ${r?.xMotivo ?? ''}` })
-      emit('action-completed', 'inutilizar')
+      emit('action-completed', 'inutilizar', resp.data?.nota)
     } catch (error) {
       $q.notify({ type: 'negative', message: mensagemErro(error) })
     } finally {
@@ -211,16 +251,37 @@ function enviarEmailNfe(event) {
   })
 }
 
+function excluirNfe(event) {
+  stop(event)
+  $q.dialog({
+    title: 'Excluir Nota Fiscal',
+    message: 'Confirma a exclusão desta nota fiscal?',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Excluir', flat: true, color: 'negative' },
+  }).onOk(async () => {
+    loadingExcluir.value = true
+    try {
+      await props.api.delete(`/v1/nota-fiscal/${codnotafiscal.value}`)
+      $q.notify({ type: 'positive', message: 'Nota fiscal excluída!' })
+      emit('action-completed', 'excluir', props.nota)
+    } catch (error) {
+      $q.notify({ type: 'negative', message: mensagemErro(error) })
+    } finally {
+      loadingExcluir.value = false
+    }
+  })
+}
+
 async function abrirDanfe(event) {
   stop(event)
-  const cupom = props.nota?.modelo == 65
   await abrirPdf(
     props.api,
     `/v1/nota-fiscal/${codnotafiscal.value}/danfe`,
     {},
     {
-      title: cupom ? 'DANFE NFC-e' : 'DANFE NFe',
-      size: cupom ? 'cupom' : 'a4',
+      title: cupom.value ? 'DANFE NFC-e' : 'DANFE NFe',
+      size: cupom.value ? 'cupom' : 'a4',
+      onImprimir: cupom.value && props.impressora ? () => imprimir() : null,
     },
   )
 }
@@ -341,6 +402,20 @@ defineExpose({ enviarNfe, podeEnviar, loadingEnviar, progressoNfe })
       @click="inutilizarNfe"
     >
       <q-tooltip>Inutilizar NFe</q-tooltip>
+    </q-btn>
+
+    <q-btn
+      v-if="mostrarExcluir && podeExcluir"
+      flat
+      dense
+      round
+      :size="btnSize"
+      color="negative"
+      icon="delete"
+      :loading="loadingExcluir"
+      @click="excluirNfe"
+    >
+      <q-tooltip>Excluir</q-tooltip>
     </q-btn>
   </div>
 

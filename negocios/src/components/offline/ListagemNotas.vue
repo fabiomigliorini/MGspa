@@ -1,14 +1,14 @@
 <script setup>
+import { nextTick } from 'vue'
 import {
   formataNumero,
   formataCodigo,
   formataTimestampCompleto,
   formataNumeroNota,
 } from '@components/formatters'
-import { Dialog, Notify } from 'quasar'
-import { api } from 'boot/axios'
-import { abrirPdf } from '@components/abrirPdf'
-import { blobUrlFromApi } from '@components/blobUrlFromApi'
+import { Notify } from 'quasar'
+import { api, apiNota } from 'boot/axios'
+import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import moment from 'moment/min/moment-with-locales'
@@ -46,41 +46,19 @@ const getStatusOption = (status) => {
   return STATUS_OPTIONS.find((opt) => opt.value === status) || STATUS_OPTIONS[0]
 }
 
-// Funções para controlar visibilidade dos botões
-const podeEnviar = (nota) => {
-  return nota && ['DIG', 'ERR'].includes(nota.status)
-}
-
-const podeConsultar = (nota) => {
-  return nota && ['AUT', 'CAN', 'ERR'].includes(nota.status)
-}
-
-const podeCancelar = (nota) => {
-  return nota && nota.status === 'AUT'
-}
-
-const podeInutilizar = (nota) => {
-  return nota && nota.status === 'ERR'
-}
-
-const podeEnviarEmail = (nota) => {
-  return nota && nota.status === 'AUT'
-}
-
-const podeAbrirDanfe = (nota) => {
-  return nota && ['AUT', 'CAN'].includes(nota.status)
-}
-
-const podeAbrirXml = (nota) => {
-  return nota && nota.emitida && nota.nfechave
-}
-
-const podeExcluir = (nota) => {
-  return nota && nota.status === 'DIG'
-}
-
 const urlNotaFiscal = (codnotafiscal) => {
   return process.env.NOTAS_URL + '/nota/' + codnotafiscal
+}
+
+// Map de instancias do MgNotaFiscalAcoes por codnotafiscal, para disparar
+// o envio da nota recem-criada (fluxo nova -> enviar).
+const notaRefs = new Map()
+const setNotaRef = (codnotafiscal, el) => {
+  if (el) {
+    notaRefs.set(codnotafiscal, el)
+  } else {
+    notaRefs.delete(codnotafiscal)
+  }
 }
 
 const nova = async (modelo) => {
@@ -110,325 +88,32 @@ const nova = async (modelo) => {
   }
 }
 
-const atualizarListagemNotas = (nota) => {
-  var i = sNegocio.negocio.notas.findIndex((item) => {
-    return item.codnotafiscal == nota.codnotafiscal
-  })
-  sNegocio.negocio.notas[i] = nota
-  sNegocio.salvar(false)
-}
-
+// Dispara o envio da nota recem-criada na instancia correta do componente.
 const enviar = async (nota) => {
-  try {
-    // cria o XML
-    var ret = await api.post(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/criar`, {
-      pdv: sSinc.pdv.uuid,
-    })
-
-    // pega nota do retorno
-    nota = ret.data.data
-    Notify.create({
-      type: 'positive',
-      message: 'XML da NFe Criado!',
-      timeout: 1000, // 1 segundo
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-
-    // se offline mostra o PDF
-    if (offline(nota)) {
-      abrirDanfe(nota)
-      if (nota.modelo == 65) {
-        imprimir(nota.codnotafiscal)
-      }
-      atualizarListagemNotas(nota)
-      return
-    }
-
-    // enviar a NFe
-    ret = await api.post(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/enviar`, {
-      pdv: sSinc.pdv.uuid,
-    })
-    Notify.create({
-      type: 'positive',
-      message: 'NFe Enviada para Sefaz!',
-      timeout: 1000, // 1 segundo
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    Notify.create({
-      type: 'positive',
-      message: `${ret.data.respostaSefaz.cStat} - ${ret.data.respostaSefaz.xMotivo}`,
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    nota = ret.data.nota
-
-    // se tem autorizacao
-    if (nota.nfeautorizacao) {
-      mail(nota, null)
-      abrirDanfe(nota)
-      if (nota.modelo == 65) {
-        imprimir(nota.codnotafiscal)
-      }
-    }
-
-    // atualiza litsagem de notas
-    atualizarListagemNotas(nota)
-  } catch (error) {
-    console.log(error)
-    Notify.create({
-      type: 'negative',
-      message: error.response.data.message,
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-  }
-}
-
-const consultar = async (nota) => {
-  try {
-    var { data } = await api.post(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/consultar`, {
-      pdv: sSinc.pdv.uuid,
-    })
-    Notify.create({
-      type: 'positive',
-      message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    atualizarListagemNotas(data.nota)
-  } catch (error) {
-    console.log(error)
-    Notify.create({
-      type: 'negative',
-      message: error.response.data.message,
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-  }
-}
-
-const excluir = async (nota) => {
-  try {
-    console.log(sSinc.pdv.uuid)
-    await api.delete(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}`, {
-      params: { pdv: sSinc.pdv.uuid },
-    })
-    Notify.create({
-      type: 'positive',
-      message: 'Nota Fiscal Exlcuída!',
-      timeout: 1000, // 1 segundo
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    var i = sNegocio.negocio.notas.findIndex((item) => {
-      return item.codnotafiscal == nota.codnotafiscal
-    })
-    sNegocio.negocio.notas.splice(i, 1)
-    sNegocio.salvar(false)
-  } catch (error) {
-    console.log(error)
-    Notify.create({
-      type: 'negative',
-      message: error.response.data.message,
-      timeout: 3000, // 3 segundo
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-  }
-}
-
-const cancelar = (nota) => {
-  Dialog.create({
-    title: 'Justificativa de Cancelamento',
-    message:
-      'Esse texto será enviado à SEFAZ justificando o cancelamento. Precisa conter no mínimo 15 caracteres!',
-    prompt: {
-      model: '',
-      isValid: (val) => val.length > 14,
-      outlined: true,
-      type: 'text', // optional
-      placeholder: 'Justificativa de Cancelamento...',
-    },
-    cancel: true,
-  }).onOk(async (justificativa) => {
-    try {
-      var { data } = await api.post(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/cancelar`, {
-        pdv: sSinc.pdv.uuid,
-        justificativa: justificativa,
-      })
-      Notify.create({
-        type: 'positive',
-        message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
-        timeout: 1000, // 1 segundo
-        actions: [{ icon: 'close', color: 'white' }],
-      })
-      atualizarListagemNotas(data.nota)
-    } catch (error) {
-      console.log(error)
-      Notify.create({
-        type: 'negative',
-        message: error.response.data.message,
-        timeout: 3000, // 3 segundos
-        actions: [{ icon: 'close', color: 'white' }],
-      })
-    }
-  })
-}
-
-const inutilizar = (nota) => {
-  Dialog.create({
-    title: 'Justificativa de Inutilização',
-    message:
-      'Esse texto será enviado à SEFAZ justificando a inutilização. Precisa conter no mínimo 15 caracteres!',
-    prompt: {
-      model: '',
-      isValid: (val) => val.length > 14,
-      outlined: true,
-      type: 'text', // optional
-      placeholder: 'Justificativa de Inutilização...',
-    },
-    cancel: true,
-  }).onOk(async (justificativa) => {
-    try {
-      var { data } = await api.post(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/inutilizar`, {
-        pdv: sSinc.pdv.uuid,
-        justificativa: justificativa,
-      })
-      Notify.create({
-        type: 'positive',
-        message: `${data.respostaSefaz.cStat} - ${data.respostaSefaz.xMotivo}`,
-        timeout: 1000, // 1 segundo
-        actions: [{ icon: 'close', color: 'white' }],
-      })
-      atualizarListagemNotas(data.nota)
-    } catch (error) {
-      console.log(error)
-      Notify.create({
-        type: 'negative',
-        message: error.response.data.message,
-        timeout: 3000, // 3 segundos
-        actions: [{ icon: 'close', color: 'white' }],
-      })
-    }
-  })
-}
-
-const imprimir = async (codnotafiscal) => {
-  if (!sNegocio.padrao.impressora) {
-    Notify.create({
-      type: 'negative',
-      message: 'Nenhuma impressora termica selecionada!',
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
+  if (!nota) {
     return
   }
-  try {
-    await api.post(`/api/v1/pdv/nota-fiscal/${codnotafiscal}/imprimir`, {
-      pdv: sSinc.pdv.uuid,
-      impressora: sNegocio.padrao.impressora,
-    })
-    Notify.create({
-      type: 'positive',
-      message: `Enviado para impressora ${sNegocio.padrao.impressora}!`,
-      timeout: 1000, // 1 segundo
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-  } catch (error) {
-    console.log(error)
-    Notify.create({
-      type: 'negative',
-      message: error.response.data.message,
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
+  await nextTick()
+  const comp = notaRefs.get(nota.codnotafiscal)
+  if (comp) {
+    await comp.enviarNfe()
   }
 }
 
-const mail = async (nota, destinatario) => {
-  try {
-    Notify.create({
-      type: 'positive',
-      message: 'Envio de e-mail solicitado ao servidor!',
-      timeout: 1000, // 1 segundo
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    var { data } = await api.post(`/api/v1/pdv/nota-fiscal/${nota.codnotafiscal}/mail`, {
-      pdv: sSinc.pdv.uuid,
-      destinatario: destinatario,
-    })
-    Notify.create({
-      type: data.sucesso ? 'positive' : 'negative',
-      message: `${data.mensagem}`,
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-  } catch (error) {
-    console.log(error)
-    Notify.create({
-      type: 'negative',
-      message: error.response.data.message,
-      timeout: 3000, // 3 segundos
-      actions: [{ icon: 'close', color: 'white' }],
-    })
+// Atualiza a listagem offline conforme o retorno das acoes do componente.
+const onAcao = (acao, nota) => {
+  if (acao === 'excluir') {
+    const i = sNegocio.negocio.notas.findIndex((n) => n.codnotafiscal == nota.codnotafiscal)
+    if (i >= 0) {
+      sNegocio.negocio.notas.splice(i, 1)
+    }
+  } else if (nota) {
+    const i = sNegocio.negocio.notas.findIndex((n) => n.codnotafiscal == nota.codnotafiscal)
+    if (i >= 0) {
+      sNegocio.negocio.notas[i] = nota
+    }
   }
-}
-
-const perguntarDestinatarioMail = (nota) => {
-  Dialog.create({
-    title: 'Enviar NFe por e-mail',
-    message:
-      'Informe o endereço para envio, ou deixe em branco para enviar parar os endereços informados no cadastro! Caso deseje enviar para mais de um endereço, separe-os por vírgula!',
-    prompt: {
-      model: '',
-      //isValid: (val) => val.length > 14,
-      outlined: true,
-      type: 'email', // optional
-      placeholder: 'fulano@gmail.com,beltrano@hotmail.com',
-    },
-    cancel: true,
-  }).onOk((destinatario) => {
-    mail(nota, destinatario)
-  })
-}
-
-const offline = (nota) => {
-  if (!nota.nfechave) {
-    return false
-  }
-  return nota.nfechave.substring(34, 35) == '9' && nota.modelo == 65
-}
-
-const abrirDanfe = async (nota) => {
-  const cupom = nota.modelo == 65
-  await abrirPdf(
-    api,
-    `/api/v1/nfe-php/${nota.codnotafiscal}/danfe`,
-    {},
-    {
-      title: cupom ? 'DANFE NFC-e' : 'DANFE NFe',
-      size: cupom ? 'cupom' : 'a4',
-      onImprimir: cupom ? () => imprimir(nota.codnotafiscal) : null,
-    },
-  )
-}
-
-const abrirXml = async (nota) => {
-  try {
-    const url = await blobUrlFromApi(
-      api,
-      `/api/v1/nfe-php/${nota.codnotafiscal}/xml`,
-      'application/xml',
-    )
-    window.open(url, '_blank')
-    setTimeout(() => URL.revokeObjectURL(url), 30000)
-  } catch (error) {
-    console.log(error)
-    Notify.create({
-      type: 'negative',
-      message: 'Erro ao abrir XML',
-      timeout: 3000,
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-  }
+  sNegocio.salvar(false)
 }
 
 defineExpose({
@@ -471,7 +156,7 @@ defineExpose({
       <q-item>
         <q-item-section>
           <q-item-label class="ellipsis">
-            {{ nota.filial }}
+            {{ nota.filial?.filial }}
           </q-item-label>
           <q-item-label caption>
             {{ moment(nota.saida).fromNow() }},
@@ -482,10 +167,10 @@ defineExpose({
       <q-item>
         <q-item-section>
           <q-item-label class="ellipsis">
-            {{ nota.fantasia }}
+            {{ nota.pessoa?.fantasia }}
           </q-item-label>
           <q-item-label caption class="ellipsis">
-            {{ nota.naturezaoperacao }}
+            {{ nota.naturezaOperacao?.naturezaoperacao }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -509,109 +194,17 @@ defineExpose({
       <q-separator inset />
 
       <q-card-actions align="right" v-if="nota.emitida">
-        <!-- Enviar -->
-        <q-btn
-          dense
-          round
-          flat
-          color="secondary"
-          icon="send"
-          @click="enviar(nota)"
-          v-if="podeEnviar(nota)"
-        >
-          <q-tooltip>Criar XML e enviar para SEFAZ</q-tooltip>
-        </q-btn>
-
-        <!-- Consultar -->
-        <q-btn
-          dense
-          round
-          flat
-          color="primary"
-          icon="refresh"
-          @click="consultar(nota)"
-          v-if="podeConsultar(nota)"
-        >
-          <q-tooltip>Consultar situação na SEFAZ</q-tooltip>
-        </q-btn>
-
-        <!-- Abrir DANFE -->
-        <q-btn
-          dense
-          round
-          flat
-          color="secondary"
-          icon="picture_as_pdf"
-          @click="abrirDanfe(nota)"
-          v-if="podeAbrirDanfe(nota)"
-        >
-          <q-tooltip>Abrir DANFE</q-tooltip>
-        </q-btn>
-
-        <!-- Abrir XML -->
-        <q-btn
-          dense
-          round
-          flat
-          color="orange"
-          icon="code"
-          @click="abrirXml(nota)"
-          v-if="podeAbrirXml(nota)"
-        >
-          <q-tooltip>Abrir XML</q-tooltip>
-        </q-btn>
-
-        <!-- Enviar Email -->
-        <q-btn
-          dense
-          round
-          flat
-          color="primary"
-          icon="email"
-          @click="perguntarDestinatarioMail(nota)"
-          v-if="podeEnviarEmail(nota)"
-        >
-          <q-tooltip>Enviar por email</q-tooltip>
-        </q-btn>
-
-        <!-- Cancelar -->
-        <q-btn
-          dense
-          round
-          flat
-          color="negative"
-          icon="cancel"
-          @click="cancelar(nota)"
-          v-if="podeCancelar(nota)"
-        >
-          <q-tooltip>Cancelar NFe</q-tooltip>
-        </q-btn>
-
-        <!-- Inutilizar -->
-        <q-btn
-          dense
-          round
-          flat
-          color="warning"
-          icon="block"
-          @click="inutilizar(nota)"
-          v-if="podeInutilizar(nota)"
-        >
-          <q-tooltip>Inutilizar NFe</q-tooltip>
-        </q-btn>
-
-        <!-- Excluir -->
-        <q-btn
-          dense
-          round
-          flat
-          color="negative"
-          icon="delete"
-          @click="excluir(nota)"
-          v-if="podeExcluir(nota)"
-        >
-          <q-tooltip>Excluir</q-tooltip>
-        </q-btn>
+        <MgNotaFiscalAcoes
+          :ref="(el) => setNotaRef(nota.codnotafiscal, el)"
+          :nota="nota"
+          :api="apiNota"
+          compact
+          show-extras
+          mostrar-excluir
+          :abrir-danfe-apos-enviar="true"
+          :impressora="sNegocio.padrao.impressora"
+          @action-completed="onAcao"
+        />
       </q-card-actions>
     </q-card>
   </div>

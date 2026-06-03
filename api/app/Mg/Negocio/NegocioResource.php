@@ -10,6 +10,8 @@ use Mg\Titulo\TituloResource;
 use Mg\Pdv\PdvAnexoService;
 use Mg\Saurus\SaurusPedidoResource;
 use Mg\Woo\WooPedidoResource;
+use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscal\Resources\NotaFiscalResource;
 
 class NegocioResource extends Resource
 {
@@ -54,7 +56,23 @@ class NegocioResource extends Resource
         foreach ($this->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
             $ret['titulos'] = $ret['titulos']->concat(TituloResource::collection($nfp->TituloS()->orderBy('vencimento')->get()));
         }
-        $ret['notas'] = new NegocioNotaFiscalResource($this);
+        $ret['notas'] = NotaFiscalResource::collection(
+            NotaFiscal::with(['Filial', 'Pessoa.Cidade.Estado', 'NaturezaOperacao', 'Operacao'])
+                ->whereIn('codnotafiscal', function ($query) {
+                    $query->select('nfpb.codnotafiscal')
+                        ->distinct()
+                        ->from('tblnegocioprodutobarra as npb')
+                        ->join(
+                            'tblnotafiscalprodutobarra as nfpb',
+                            'nfpb.codnegocioprodutobarra',
+                            '=',
+                            'npb.codnegocioprodutobarra'
+                        )
+                        ->where('npb.codnegocio', $this->codnegocio);
+                })
+                ->orderBy('codnotafiscal')
+                ->get()
+        );
         $ret['anexos'] = PdvAnexoService::listagem($this->codnegocio);
         $ret['MercosPedidoS'] = [];
         foreach ($this->MercosPedidoS as $mp) {

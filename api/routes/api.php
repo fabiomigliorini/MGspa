@@ -517,7 +517,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('{codnotafiscal}/cancelar', '\Mg\NotaFiscal\NotaFiscalController@cancelar');
         Route::post('{codnotafiscal}/inutilizar', '\Mg\NotaFiscal\NotaFiscalController@inutilizar');
         Route::post('{codnotafiscal}/mail', '\Mg\NotaFiscal\NotaFiscalController@mail');
-        Route::get('{codnotafiscal}/danfe', '\Mg\NotaFiscal\NotaFiscalController@danfe');
+        Route::get('{codnotafiscal}/danfe', '\Mg\NotaFiscal\NotaFiscalController@danfe')
+            ->name('nota-fiscal.danfe')
+            ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
         Route::get('{codnotafiscal}/xml', '\Mg\NotaFiscal\NotaFiscalController@xml');
         Route::post('{codnotafiscal}/imprimir', '\Mg\NotaFiscal\NotaFiscalController@imprimir');
         Route::post('{codnotafiscal}/incorporar-valores', '\Mg\NotaFiscal\NotaFiscalController@incorporarValores');
@@ -586,16 +588,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('nfe-php/{id}/enviar-sincrono', '\Mg\NFePHP\NFePHPController@enviarSincrono');
     Route::get('nfe-php/{id}/consultar-recibo', '\Mg\NFePHP\NFePHPController@consultarRecibo');
     Route::get('nfe-php/{id}/consultar', '\Mg\NFePHP\NFePHPController@consultar');
-    Route::get('nfe-php/{id}/danfe', '\Mg\NFePHP\NFePHPController@danfe')
-        ->name('nfe-php.danfe')
-        ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::get('nfe-php/{id}/imprimir', '\Mg\NFePHP\NFePHPController@imprimir');
     Route::get('nfe-php/{id}/cancelar', '\Mg\NFePHP\NFePHPController@cancelar');
     Route::get('nfe-php/{id}/inutilizar', '\Mg\NFePHP\NFePHPController@inutilizar');
     Route::get('nfe-php/{id}/carta-correcao', '\Mg\NFePHP\NFePHPController@cartaCorrecao');
     Route::get('nfe-php/{id}/mail', '\Mg\NFePHP\NFePHPController@mail');
     Route::get('nfe-php/{id}/mail-cancelamento', '\Mg\NFePHP\NFePHPController@mailCancelamento');
-    Route::get('nfe-php/{id}/xml', '\Mg\NFePHP\NFePHPController@xml');
     Route::get('nfe-php/{id}/resolver', '\Mg\NFePHP\NFePHPController@resolver');
     Route::get('nfe-php/pendentes', '\Mg\NFePHP\NFePHPController@pendentes');
     Route::get('nfe-php/resolver-pendentes', '\Mg\NFePHP\NFePHPController@resolverPendentes');
@@ -675,14 +673,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('pagar-me/pedido/pendentes', '\Mg\Pdv\PdvController@pagarMePedidosPendentes');
         Route::delete('pagar-me/pedido/{codpagarmepedido}', '\Mg\Pdv\PdvController@cancelarPagarMePedido');
         Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
-        Route::post('nota-fiscal/{codnotafiscal}/criar', '\Mg\Pdv\PdvNotaFiscalController@criar');
-        Route::post('nota-fiscal/{codnotafiscal}/enviar', '\Mg\Pdv\PdvNotaFiscalController@enviar');
-        Route::post('nota-fiscal/{codnotafiscal}/consultar', '\Mg\Pdv\PdvNotaFiscalController@consultar');
-        Route::post('nota-fiscal/{codnotafiscal}/cancelar', '\Mg\Pdv\PdvNotaFiscalController@cancelar');
-        Route::post('nota-fiscal/{codnotafiscal}/inutilizar', '\Mg\Pdv\PdvNotaFiscalController@inutilizar');
-        Route::post('nota-fiscal/{codnotafiscal}/imprimir', '\Mg\Pdv\PdvNotaFiscalController@imprimir');
-        Route::post('nota-fiscal/{codnotafiscal}/mail', '\Mg\Pdv\PdvNotaFiscalController@mail');
-        Route::delete('nota-fiscal/{codnotafiscal}', '\Mg\Pdv\PdvNotaFiscalController@excluir');
         Route::get('dispositivo', '\Mg\Pdv\PdvController@getDispositivo');
         Route::post('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@autorizar');
         Route::delete('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@desautorizar');
