@@ -29,7 +29,7 @@ export const confissaoStore = defineStore('confissao', {
     async sugerirCodnegocio() {
       try {
         this.inicializarSugestao()
-        const ret = await api.post('/api/v1/pdv/negocio/anexo/sugerir', {
+        const ret = await api.post('/v1/pdv/negocio/anexo/sugerir', {
           pdv: sSinc.pdv.uuid,
           anexoBase64: this.imagem,
         })
@@ -90,7 +90,7 @@ export const confissaoStore = defineStore('confissao', {
 
     async procurar() {
       try {
-        const ret = await api.post('/api/v1/pdv/negocio/anexo/procurar', {
+        const ret = await api.post('/v1/pdv/negocio/anexo/procurar', {
           pdv: sSinc.pdv.uuid,
           codnegocio: this.codnegocio,
           valor: this.valor,

@@ -17,7 +17,7 @@ export const pagarMeStore = defineStore('pagarMe', {
   actions: {
     async consultarPedidosPendentes() {
       try {
-        const { data } = await api.get('/api/v1/pdv/pagar-me/pedido/pendentes')
+        const { data } = await api.get('/v1/pdv/pagar-me/pedido/pendentes')
         this.pedidosPendentes = data.data
       } catch (error) {
         console.log(error)
@@ -37,7 +37,7 @@ export const pagarMeStore = defineStore('pagarMe', {
 
     async importarPedidosPendentes() {
       try {
-        const { data } = await api.patch('/api/v1/pdv/pagar-me/pedido/pendentes')
+        const { data } = await api.patch('/v1/pdv/pagar-me/pedido/pendentes')
         this.pedidosPendentes = data.data
       } catch (error) {
         console.log(error)
@@ -58,7 +58,7 @@ export const pagarMeStore = defineStore('pagarMe', {
     async consultarPedido() {
       try {
         const { data } = await api.post(
-          '/api/v1/pdv/pagar-me/pedido/' + this.pedido.codpagarmepedido + '/consultar',
+          '/v1/pdv/pagar-me/pedido/' + this.pedido.codpagarmepedido + '/consultar',
         )
         this.pedido = data.data
         await this.atualizarPagarMePedido()
@@ -87,7 +87,7 @@ export const pagarMeStore = defineStore('pagarMe', {
     async cancelarPedido() {
       try {
         const { data } = await api.delete(
-          '/api/v1/pdv/pagar-me/pedido/' + this.pedido.codpagarmepedido,
+          '/v1/pdv/pagar-me/pedido/' + this.pedido.codpagarmepedido,
         )
         this.pedido = data.data
         await this.atualizarPagarMePedido()

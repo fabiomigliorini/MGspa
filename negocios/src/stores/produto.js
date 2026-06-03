@@ -176,7 +176,7 @@ export const produtoStore = defineStore('produto', {
 
     async sincroniza(barras) {
       try {
-        var { data } = await api.get('/api/v1/pdv/produto/' + barras, {
+        var { data } = await api.get('/v1/pdv/produto/' + barras, {
           params: {
             pdv: sSinc.pdv.uuid,
           },

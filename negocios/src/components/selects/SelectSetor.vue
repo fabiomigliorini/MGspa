@@ -19,7 +19,7 @@ const alterar = (value) => {
 
 onMounted(async () => {
   try {
-    const ret = await api.get('/api/v1/setor')
+    const ret = await api.get('/v1/setor')
     todos.value = ret.data.data
       .filter((s) => !s.inativo)
       .map((s) => ({

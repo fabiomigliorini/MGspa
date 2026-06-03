@@ -14,7 +14,7 @@ export const pdvStore = defineStore('pdv', {
         const params = Object.fromEntries(
           Object.entries(filtro).filter(([, v]) => v != null && v !== ''),
         )
-        const { data } = await api.get('/api/v1/pdv/dispositivo', { params })
+        const { data } = await api.get('/v1/pdv/dispositivo', { params })
         this.dispositivos = data.data
       } catch (error) {
         console.log(error)
@@ -34,7 +34,7 @@ export const pdvStore = defineStore('pdv', {
 
     async autorizar(pdv) {
       try {
-        const { data } = await api.post(`/api/v1/pdv/dispositivo/${pdv.codpdv}/autorizado`)
+        const { data } = await api.post(`/v1/pdv/dispositivo/${pdv.codpdv}/autorizado`)
         pdv = data.data
         const i = this.dispositivos.findIndex((el) => {
           return el.codpdv == pdv.codpdv
@@ -58,7 +58,7 @@ export const pdvStore = defineStore('pdv', {
 
     async desautorizar(pdv) {
       try {
-        const { data } = await api.delete(`/api/v1/pdv/dispositivo/${pdv.codpdv}/autorizado`)
+        const { data } = await api.delete(`/v1/pdv/dispositivo/${pdv.codpdv}/autorizado`)
         pdv = data.data
         const i = this.dispositivos.findIndex((el) => {
           return el.codpdv == pdv.codpdv
@@ -82,7 +82,7 @@ export const pdvStore = defineStore('pdv', {
 
     async inativar(pdv) {
       try {
-        const { data } = await api.post(`/api/v1/pdv/dispositivo/${pdv.codpdv}/inativo`)
+        const { data } = await api.post(`/v1/pdv/dispositivo/${pdv.codpdv}/inativo`)
         pdv = data.data
         const i = this.dispositivos.findIndex((el) => {
           return el.codpdv == pdv.codpdv
@@ -106,7 +106,7 @@ export const pdvStore = defineStore('pdv', {
 
     async reativar(pdv) {
       try {
-        const { data } = await api.delete(`/api/v1/pdv/dispositivo/${pdv.codpdv}/inativo`)
+        const { data } = await api.delete(`/v1/pdv/dispositivo/${pdv.codpdv}/inativo`)
         pdv = data.data
         const i = this.dispositivos.findIndex((el) => {
           return el.codpdv == pdv.codpdv
@@ -138,7 +138,7 @@ export const pdvStore = defineStore('pdv', {
     },
 
     async selectFilail() {
-      const ret = await api.get('/api/v1/select/filial')
+      const ret = await api.get('/v1/select/filial')
       return ret
     },
 
@@ -146,7 +146,7 @@ export const pdvStore = defineStore('pdv', {
       const sSinc = sincronizacaoStore()
       model.pdv = sSinc.pdv.uuid
 
-      const ret = await api.put('/api/v1/pdv/dispositivo/' + model.codpdv + '/editar', model)
+      const ret = await api.put('/v1/pdv/dispositivo/' + model.codpdv + '/editar', model)
       const i = this.dispositivos.findIndex((el) => {
         return el.codpdv == model.codpdv
       })

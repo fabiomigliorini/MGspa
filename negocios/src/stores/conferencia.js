@@ -38,7 +38,7 @@ export const conferenciaStore = defineStore('conferencia', {
         const filtro = { ...this.filtro }
         filtro.pdv = sSinc.pdv.uuid
 
-        const ret = await api.get('/api/v1/pdv/negocio/conferencia', {
+        const ret = await api.get('/v1/pdv/negocio/conferencia', {
           params: filtro,
         })
         this.conferencias = ret.data

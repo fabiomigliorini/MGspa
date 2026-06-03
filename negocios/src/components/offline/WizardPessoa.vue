@@ -230,7 +230,7 @@ const consultarDocumento = async () => {
   LoadingBar.start()
   consultando.value = true
   try {
-    let url = 'api/v1/pessoa/verifica-ie-sefaz'
+    let url = '/v1/pessoa/verifica-ie-sefaz'
     let params = {
       codfilial: 101,
       cpf: null,
@@ -318,7 +318,7 @@ const parseReceitaWs = async () => {
 
 const procurarCidade = async (cidade, uf) => {
   try {
-    const ret = await api.get('api/v1/select/cidade?cidade=' + cidade + ' ' + uf)
+    const ret = await api.get('/v1/select/cidade?cidade=' + cidade + ' ' + uf)
     if (ret.data.length == 1) {
       return ret.data[0].value
     } else {

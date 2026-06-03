@@ -19,7 +19,7 @@ const model = ref({
 const imprimir = async () => {
   try {
     await api.post(
-      '/api/v1/pessoa/' + model.value.codpessoavendedor + '/comanda-vendedor/imprimir',
+      '/v1/pessoa/' + model.value.codpessoavendedor + '/comanda-vendedor/imprimir',
       {
         impressora: model.value.impressora,
         copias: model.value.copias,

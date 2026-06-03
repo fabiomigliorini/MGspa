@@ -122,7 +122,7 @@ export const listagemStore = defineStore('listagem', {
         const filtro = { ...this.filtro }
         filtro.pdv = sSinc.pdv.uuid
         filtro.page = this.paginacao.current_page + 1
-        const { data } = await api.get('/api/v1/pdv/negocio', {
+        const { data } = await api.get('/v1/pdv/negocio', {
           params: filtro,
         })
         if (filtro.page == 1) {
@@ -148,7 +148,7 @@ export const listagemStore = defineStore('listagem', {
 
     async getOrcamentos(uuid) {
       try {
-        const { data } = await api.get('/api/v1/pdv/orcamento', {
+        const { data } = await api.get('/v1/pdv/orcamento', {
           params: {
             pdv: sSinc.pdv.uuid,
             uuid: uuid,

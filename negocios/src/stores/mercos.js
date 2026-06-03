@@ -23,7 +23,7 @@ export const mercosStore = defineStore('mercos', {
   actions: {
     async importarPedido() {
       try {
-        const { data } = await api.post('/api/v1/pdv/mercos/pedido/importar', {
+        const { data } = await api.post('/v1/pdv/mercos/pedido/importar', {
           pdv: sSinc.pdv.uuid,
         })
         let message = 'Importadas ' + data.importados + ' vendas!'
@@ -62,7 +62,7 @@ export const mercosStore = defineStore('mercos', {
 
     async atualizarListagem() {
       try {
-        const { data } = await api.get('/api/v1/pdv/mercos/pedido', {
+        const { data } = await api.get('/v1/pdv/mercos/pedido', {
           params: { pdv: sSinc.pdv.uuid },
         })
         this.pedidos = data

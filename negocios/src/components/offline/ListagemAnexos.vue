@@ -19,7 +19,7 @@ const dialogPdf = ref(false)
 const abrirAnexoPdf = async (anexo) => {
   await abrirPdf(
     api,
-    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/anexo/pdf/${anexo}`,
+    `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/anexo/pdf/${anexo}`,
     {},
     { title: 'PDF', size: 'a4' },
   )

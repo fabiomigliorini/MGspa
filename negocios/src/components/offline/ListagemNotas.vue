@@ -7,7 +7,7 @@ import {
   formataNumeroNota,
 } from '@components/formatters'
 import { Notify } from 'quasar'
-import { api, apiNota } from 'boot/axios'
+import { api } from 'boot/axios'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
@@ -65,7 +65,7 @@ const nova = async (modelo) => {
   try {
     // busca registros na ApI
     const { data } = await api.post(
-      `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/nota-fiscal`,
+      `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/nota-fiscal`,
       { pdv: sSinc.pdv.uuid, modelo },
     )
     Notify.create({
@@ -197,7 +197,7 @@ defineExpose({
         <MgNotaFiscalAcoes
           :ref="(el) => setNotaRef(nota.codnotafiscal, el)"
           :nota="nota"
-          :api="apiNota"
+          :api="api"
           compact
           show-extras
           mostrar-excluir
