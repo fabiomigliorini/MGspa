@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-import { api } from 'boot/axios'
 import { Notify } from 'quasar'
 import axios from 'axios'
 
@@ -128,9 +127,11 @@ export const useAuthStore = defineStore('auth', {
 
       if (this.token.access_token) {
         try {
-          // OIDC Core 1.0 §5.3 — /userinfo retorna claims OIDC + custom MGspa
-          // num único objeto plano (sem wrapper `data`)
-          let { data } = await api.get('/userinfo')
+          // OIDC Core 1.0 §5.3 — /userinfo (raiz do API_AUTH_URL, fora do /api)
+          // retorna claims OIDC + custom MGspa num único objeto plano
+          let { data } = await axios.get(`${process.env.API_AUTH_URL}/userinfo`, {
+            headers: { Authorization: 'Bearer ' + this.token.access_token },
+          })
           this.usuario = data
           if (data.meta?.expires_at) {
             this.token.expires_at = data.meta.expires_at
@@ -147,7 +148,7 @@ export const useAuthStore = defineStore('auth', {
     // antes de substituir o estado, evitando "pisca" do expires_at no UI.
     async aplicarToken(novoToken) {
       try {
-        const { data } = await api.get('/userinfo', {
+        const { data } = await axios.get(`${process.env.API_AUTH_URL}/userinfo`, {
           headers: { Authorization: 'Bearer ' + novoToken.access_token },
         })
         if (data.meta?.expires_at) {
