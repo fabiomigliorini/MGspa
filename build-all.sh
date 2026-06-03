@@ -10,7 +10,7 @@ PROJECTS=(
   "estoque:estoque"
   "negocios:negocios"
   "notas:notas"
-  "pessoas:quasar-pessoas"
+  "pessoas:pessoas"
   "quasar:quasar-mgspa"
 )
 
