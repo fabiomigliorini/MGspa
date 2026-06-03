@@ -349,12 +349,13 @@ onUnmounted(() => {
     v-model="barras"
     label="Barras"
     for="inputBarras"
-    input-class="text-right"
+    input-class="text-right "
     @change="buscarBarras()"
     :prefix="labelQuantidade"
     inputmode="tel"
     autocomplete="off"
     autofocus
+    bg-color="white"
   >
     <template v-slot:append>
       <q-btn

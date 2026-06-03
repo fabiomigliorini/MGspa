@@ -39,8 +39,8 @@ const abrirNovaAba = () => {
 </script>
 
 <template>
-  <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2">
-    <q-card>
+  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3">
+    <q-card flat bordered>
       <q-item clickable v-ripple @click="abrirNovaAba">
         <q-item-section avatar>
           <q-avatar :icon="icon" color="secondary" text-color="white" />
@@ -51,13 +51,7 @@ const abrirNovaAba = () => {
         </q-item-section>
       </q-item>
       <q-separator inset />
-      <q-item
-        clickable
-        v-ripple
-        @click="abrirNovaAba"
-        style="height: 250px"
-        class="q-pa-none"
-      >
+      <q-item clickable v-ripple @click="abrirNovaAba" style="height: 250px" class="q-pa-none">
         <q-img v-if="blobUrl" :src="blobUrl" fit="cover" spinner-color="primary" />
         <div v-else class="full-width row items-center justify-center">
           <q-spinner color="primary" size="2em" />
@@ -65,14 +59,7 @@ const abrirNovaAba = () => {
       </q-item>
       <q-card-actions>
         <q-btn-group flat>
-          <q-btn
-            dense
-            flat
-            round
-            icon="delete"
-            color="negative"
-            @click="emit('excluir')"
-          >
+          <q-btn dense flat round icon="delete" color="negative" @click="emit('excluir')">
             <q-tooltip class="bg-accent">Excluir</q-tooltip>
           </q-btn>
         </q-btn-group>

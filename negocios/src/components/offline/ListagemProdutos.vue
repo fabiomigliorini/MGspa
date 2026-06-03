@@ -339,7 +339,7 @@ const linkProduto = (codproduto) => {
         v-for="item in itens"
         :key="item.uuid"
       >
-        <q-card>
+        <q-card flat bordered>
           <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
           <q-separator />
 
@@ -471,6 +471,8 @@ const linkProduto = (codproduto) => {
 
     <div class="q-pa-md q-mb-xl" v-if="inativos.length > 0">
       <q-table
+        flat
+        bordered
         :rows="inativos"
         virtual-scroll
         title="Itens Excluídos"

@@ -1,5 +1,10 @@
 <script setup>
-import { formataNumero, formataCodigo, formataTimestampCompleto, formataNumeroNota } from '@components/formatters'
+import {
+  formataNumero,
+  formataCodigo,
+  formataTimestampCompleto,
+  formataNumeroNota,
+} from '@components/formatters'
 import { Dialog, Notify } from 'quasar'
 import { api } from 'boot/axios'
 import { abrirPdf } from '@components/abrirPdf'
@@ -408,7 +413,11 @@ const abrirDanfe = async (nota) => {
 
 const abrirXml = async (nota) => {
   try {
-    const url = await blobUrlFromApi(api, `/api/v1/nfe-php/${nota.codnotafiscal}/xml`, 'application/xml')
+    const url = await blobUrlFromApi(
+      api,
+      `/api/v1/nfe-php/${nota.codnotafiscal}/xml`,
+      'application/xml',
+    )
     window.open(url, '_blank')
     setTimeout(() => URL.revokeObjectURL(url), 30000)
   } catch (error) {
@@ -433,7 +442,7 @@ defineExpose({
     v-for="nota in sNegocio.negocio.notas"
     :key="nota.codnotafiscal"
   >
-    <q-card>
+    <q-card flat bordered>
       <q-item clickable v-ripple :href="urlNotaFiscal(nota.codnotafiscal)" target="_blank">
         <q-item-section avatar>
           <q-avatar
