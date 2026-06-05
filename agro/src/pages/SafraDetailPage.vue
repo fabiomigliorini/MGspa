@@ -34,15 +34,50 @@ const linhas = computed(() =>
     return { ...p, kg, sacas, produtividade: area > 0 ? sacas / area : 0 }
   }),
 )
-const totalArea = computed(() => linhas.value.reduce((s, l) => s + (Number(l.areaplantada) || 0), 0))
+const totalArea = computed(() =>
+  linhas.value.reduce((s, l) => s + (Number(l.areaplantada) || 0), 0),
+)
 const totalKg = computed(() => linhas.value.reduce((s, l) => s + l.kg, 0))
 const totalSacas = computed(() => totalKg.value / pesosaca.value)
 const prodMedia = computed(() => (totalArea.value > 0 ? totalSacas.value / totalArea.value : 0))
-const maxProd = computed(() => Math.max(1, ...linhas.value.map((l) => l.produtividade)))
+
+// Quebra da produtividade: por talhão (plantio, com CRUD) ou agregada por variedade.
+const agrupamento = ref('TALHAO')
+const agrupamentos = [
+  { label: 'Por talhão', value: 'TALHAO' },
+  { label: 'Por variedade', value: 'VARIEDADE' },
+]
+const linhasPorVariedade = computed(() => {
+  const mapa = {}
+  for (const l of linhas.value) {
+    const chave = l.codvariedade || 0
+    if (!mapa[chave]) {
+      mapa[chave] = {
+        codvariedade: chave,
+        variedade: nomeVariedade(l) || 'Sem variedade',
+        area: 0,
+        kg: 0,
+      }
+    }
+    mapa[chave].area += Number(l.areaplantada) || 0
+    mapa[chave].kg += l.kg
+  }
+  return Object.values(mapa).map((g) => {
+    const sacas = g.kg / pesosaca.value
+    return { ...g, sacas, produtividade: g.area > 0 ? sacas / g.area : 0 }
+  })
+})
+const maxProd = computed(() => {
+  const base = agrupamento.value === 'VARIEDADE' ? linhasPorVariedade.value : linhas.value
+  return Math.max(1, ...base.map((l) => l.produtividade))
+})
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  return Number(v).toLocaleString('pt-BR', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  })
 }
 function fmtData(d) {
   if (!d) return ''
@@ -101,13 +136,7 @@ onMounted(async () => {
               {{ safra?.Cultura?.cultura }}<span v-if="periodo"> · {{ periodo }}</span>
             </div>
           </div>
-          <q-btn
-            flat
-            color="green-7"
-            icon="local_shipping"
-            label="Pátio"
-            :to="{ name: 'patio' }"
-          />
+          <q-btn flat color="green-7" icon="local_shipping" label="Pátio" :to="{ name: 'patio' }" />
         </q-card-section>
       </q-card>
 
@@ -162,14 +191,29 @@ onMounted(async () => {
         </q-item>
         <q-separator />
 
-        <q-list separator>
+        <q-card-section>
+          <q-btn-toggle
+            v-model="agrupamento"
+            :options="agrupamentos"
+            no-caps
+            unelevated
+            toggle-color="primary"
+            color="grey-3"
+            text-color="grey-9"
+          />
+        </q-card-section>
+        <q-separator />
+
+        <q-list v-if="agrupamento === 'TALHAO'" separator>
           <q-item v-for="l in linhas" :key="l.codplantio" :class="{ 'bg-grey-2': l.inativo }">
             <q-item-section avatar>
               <q-avatar color="brown-5" text-color="white" icon="grass" />
             </q-item-section>
             <q-item-section>
               <q-item-label class="text-weight-medium">{{ nomeTalhao(l) }}</q-item-label>
-              <q-item-label caption>{{ nomeVariedade(l) }} · {{ fmt(l.areaplantada, 1) }} ha</q-item-label>
+              <q-item-label caption
+                >{{ nomeVariedade(l) }} · {{ fmt(l.areaplantada, 1) }} ha</q-item-label
+              >
               <q-linear-progress
                 :value="l.produtividade / maxProd"
                 color="green-6"
@@ -215,6 +259,38 @@ onMounted(async () => {
             </q-item-section>
           </q-item>
         </q-list>
+
+        <q-list v-else separator>
+          <q-item v-for="v in linhasPorVariedade" :key="v.codvariedade">
+            <q-item-section avatar>
+              <q-avatar color="teal-1" text-color="teal-8" icon="spa" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-weight-medium">{{ v.variedade }}</q-item-label>
+              <q-item-label caption>{{ fmt(v.area, 1) }} ha</q-item-label>
+              <q-linear-progress
+                :value="v.produtividade / maxProd"
+                color="teal-6"
+                track-color="grey-3"
+                size="6px"
+                rounded
+                class="q-mt-xs"
+              />
+            </q-item-section>
+            <q-item-section side class="text-right">
+              <q-item-label class="text-weight-bold text-teal-8">
+                {{ fmt(v.produtividade, 1) }} sc/ha
+              </q-item-label>
+              <q-item-label caption>{{ fmt(v.sacas) }} sc colhidas</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-item v-if="!linhasPorVariedade.length">
+            <q-item-section class="text-grey-6 text-center">
+              Nenhum talhão plantado nesta safra ainda.
+            </q-item-section>
+          </q-item>
+        </q-list>
       </q-card>
 
       <!-- Dialog Plantio -->
@@ -222,7 +298,9 @@ onMounted(async () => {
         <q-card bordered flat style="width: 440px; max-width: 90vw">
           <q-form @submit="salvarPlantio">
             <q-card-section>
-              <div class="text-h6">{{ plantioCad.isNovo ? 'Plantar talhão' : 'Editar plantio' }}</div>
+              <div class="text-h6">
+                {{ plantioCad.isNovo ? 'Plantar talhão' : 'Editar plantio' }}
+              </div>
             </q-card-section>
             <q-card-section class="q-gutter-md">
               <q-select
@@ -254,7 +332,13 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" unelevated label="Salvar" color="primary" :loading="plantioCad.salvando" />
+              <q-btn
+                type="submit"
+                unelevated
+                label="Salvar"
+                color="primary"
+                :loading="plantioCad.salvando"
+              />
             </q-card-actions>
           </q-form>
         </q-card>

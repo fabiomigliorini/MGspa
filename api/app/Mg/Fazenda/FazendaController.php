@@ -32,6 +32,11 @@ class FazendaController extends MgController
         return response()->json(Fazenda::with('Pessoa')->findOrFail($id), 200);
     }
 
+    public function resumo(Request $request, $id)
+    {
+        return response()->json(FazendaService::resumo($id), 200);
+    }
+
     public function update(Request $request, $id)
     {
         $model = Fazenda::findOrFail($id);

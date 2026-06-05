@@ -49,10 +49,8 @@ const atalhos = [
   { label: 'Expedição', sub: 'Carregamento e NF', icon: 'outbound', cor: 'green-8', to: { name: 'embarque' } },
   { label: 'Contratos', sub: 'Venda e reconciliação', icon: 'description', cor: 'indigo-7', to: { name: 'contratos' } },
   { label: 'Safras', sub: 'Plantio e produtividade', icon: 'eco', cor: 'light-green-8', to: { name: 'safras' } },
-  { label: 'Talhões', sub: 'Áreas da fazenda', icon: 'crop_landscape', cor: 'brown-6', to: { name: 'talhoes' } },
-  { label: 'Variedades', sub: 'Sementes por cultura', icon: 'spa', cor: 'teal-7', to: { name: 'variedades' } },
-  { label: 'Tabela de desconto', sub: 'Umidade, impureza, avariados', icon: 'percent', cor: 'deep-orange-6', to: { name: 'tabela-desconto' } },
-  { label: 'Culturas', sub: 'Milho, soja…', icon: 'category', cor: 'blue-grey-7', to: { name: 'culturas' } },
+  { label: 'Fazendas', sub: 'Talhões, mapa e produtividade', icon: 'agriculture', cor: 'green-7', to: { name: 'fazendas' } },
+  { label: 'Culturas', sub: 'Variedades, descontos e safras', icon: 'category', cor: 'blue-grey-7', to: { name: 'culturas' } },
 ]
 
 onMounted(async () => {

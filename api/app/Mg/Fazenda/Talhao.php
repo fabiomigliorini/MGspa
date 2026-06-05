@@ -19,7 +19,11 @@ class Talhao extends MgModel
     protected $fillable = [
         'area',
         'codfazenda',
+        'cor',
+        'geometria',
         'inativo',
+        'latitude',
+        'longitude',
         'talhao'
     ];
 
@@ -31,7 +35,10 @@ class Talhao extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
-        'inativo' => 'datetime'
+        'geometria' => 'array',
+        'inativo' => 'datetime',
+        'latitude' => 'float',
+        'longitude' => 'float'
     ];
 
 

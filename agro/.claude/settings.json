@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//opt/www/MGspa/**)",
+      "Bash(php -l app/Mg/Cultura/CulturaService.php)",
+      "Bash(docker exec *)",
+      "Read(//opt/www/MGspa/api/app/Mg/Fazenda/**)",
+      "Bash(npm run *)"
+    ],
+    "additionalDirectories": [
+      "/opt/www/MGspa"
+    ]
+  }
+}

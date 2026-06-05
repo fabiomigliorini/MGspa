@@ -30,15 +30,13 @@ const menuGroups = [
     label: 'Safra',
     items: [
       { label: 'Safras', icon: 'eco', color: 'light-green-8', to: { name: 'safras' } },
-      { label: 'Talhões', icon: 'crop_landscape', color: 'brown-6', to: { name: 'talhoes' } },
+      { label: 'Fazendas', icon: 'agriculture', color: 'green-7', to: { name: 'fazendas' } },
     ],
   },
   {
     label: 'Cadastros',
     items: [
       { label: 'Culturas', icon: 'category', color: 'blue-grey-7', to: { name: 'culturas' } },
-      { label: 'Variedades', icon: 'spa', color: 'teal-7', to: { name: 'variedades' } },
-      { label: 'Tabela de Desconto', icon: 'percent', color: 'deep-orange-6', to: { name: 'tabela-desconto' } },
     ],
   },
 ]

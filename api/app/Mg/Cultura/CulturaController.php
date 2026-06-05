@@ -53,6 +53,11 @@ class CulturaController extends MgController
         return response()->noContent();
     }
 
+    public function resumo(Request $request, $id)
+    {
+        return response()->json(CulturaService::resumo($id), 200);
+    }
+
     public function inativar(Request $request, $id)
     {
         return response()->json(CulturaService::inativar(Cultura::findOrFail($id)), 200);

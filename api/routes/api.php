@@ -305,6 +305,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('marca', \Mg\Marca\MarcaController::class)->parameters(['marca' => 'id']);
 
     // Cultura / Variedade / TabelaDesconto (dominio Mg\Cultura) — criado 03/06/2026
+    Route::get('cultura/{codcultura}/resumo', [\Mg\Cultura\CulturaController::class, 'resumo'])->whereNumber('codcultura');
     Route::post('cultura/{codcultura}/inativo', [\Mg\Cultura\CulturaController::class, 'inativar']);
     Route::delete('cultura/{codcultura}/inativo', [\Mg\Cultura\CulturaController::class, 'ativar']);
     Route::apiResource('cultura', \Mg\Cultura\CulturaController::class)->parameters(['cultura' => 'codcultura']);
@@ -318,6 +319,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('tabela-desconto', \Mg\Cultura\TabelaDescontoController::class)->parameters(['tabela-desconto' => 'codtabeladesconto']);
 
     // Fazenda / Talhao (dominio Mg\Fazenda) — criado 03/06/2026
+    Route::get('fazenda/{codfazenda}/resumo', [\Mg\Fazenda\FazendaController::class, 'resumo']);
     Route::post('fazenda/{codfazenda}/inativo', [\Mg\Fazenda\FazendaController::class, 'inativar']);
     Route::delete('fazenda/{codfazenda}/inativo', [\Mg\Fazenda\FazendaController::class, 'ativar']);
     Route::apiResource('fazenda', \Mg\Fazenda\FazendaController::class)->parameters(['fazenda' => 'codfazenda']);
