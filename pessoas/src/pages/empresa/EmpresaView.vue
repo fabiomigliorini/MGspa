@@ -203,7 +203,7 @@ export default {
                       <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">Codigo</div>
                         <div class="text-body2">
-                          {{ formataCodigo(sEmpresa.item.codempresa) }}
+                          {{ formatarCodigo(sEmpresa.item.codempresa) }}
                         </div>
                       </div>
 
