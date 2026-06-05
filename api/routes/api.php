@@ -304,6 +304,70 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'ativar']);
     Route::apiResource('marca', \Mg\Marca\MarcaController::class)->parameters(['marca' => 'id']);
 
+    // Cultura / Variedade / TabelaDesconto (dominio Mg\Cultura) — criado 03/06/2026
+    Route::post('cultura/{codcultura}/inativo', [\Mg\Cultura\CulturaController::class, 'inativar']);
+    Route::delete('cultura/{codcultura}/inativo', [\Mg\Cultura\CulturaController::class, 'ativar']);
+    Route::apiResource('cultura', \Mg\Cultura\CulturaController::class)->parameters(['cultura' => 'codcultura']);
+
+    Route::post('variedade/{codvariedade}/inativo', [\Mg\Cultura\VariedadeController::class, 'inativar']);
+    Route::delete('variedade/{codvariedade}/inativo', [\Mg\Cultura\VariedadeController::class, 'ativar']);
+    Route::apiResource('variedade', \Mg\Cultura\VariedadeController::class)->parameters(['variedade' => 'codvariedade']);
+
+    Route::post('tabela-desconto/{codtabeladesconto}/inativo', [\Mg\Cultura\TabelaDescontoController::class, 'inativar']);
+    Route::delete('tabela-desconto/{codtabeladesconto}/inativo', [\Mg\Cultura\TabelaDescontoController::class, 'ativar']);
+    Route::apiResource('tabela-desconto', \Mg\Cultura\TabelaDescontoController::class)->parameters(['tabela-desconto' => 'codtabeladesconto']);
+
+    // Fazenda / Talhao (dominio Mg\Fazenda) — criado 03/06/2026
+    Route::post('fazenda/{codfazenda}/inativo', [\Mg\Fazenda\FazendaController::class, 'inativar']);
+    Route::delete('fazenda/{codfazenda}/inativo', [\Mg\Fazenda\FazendaController::class, 'ativar']);
+    Route::apiResource('fazenda', \Mg\Fazenda\FazendaController::class)->parameters(['fazenda' => 'codfazenda']);
+
+    Route::post('talhao/{codtalhao}/inativo', [\Mg\Fazenda\TalhaoController::class, 'inativar']);
+    Route::delete('talhao/{codtalhao}/inativo', [\Mg\Fazenda\TalhaoController::class, 'ativar']);
+    Route::apiResource('talhao', \Mg\Fazenda\TalhaoController::class)->parameters(['talhao' => 'codtalhao']);
+
+    // Safra (dominio Mg\Safra) — criado 03/06/2026
+    Route::post('safra/{codsafra}/inativo', [\Mg\Safra\SafraController::class, 'inativar']);
+    Route::delete('safra/{codsafra}/inativo', [\Mg\Safra\SafraController::class, 'ativar']);
+    Route::apiResource('safra', \Mg\Safra\SafraController::class)->parameters(['safra' => 'codsafra']);
+
+    // Plantio aninhado na safra: safra/{codsafra}/plantio
+    Route::post('safra/{codsafra}/plantio/{codplantio}/inativo', [\Mg\Fazenda\PlantioController::class, 'inativar']);
+    Route::delete('safra/{codsafra}/plantio/{codplantio}/inativo', [\Mg\Fazenda\PlantioController::class, 'ativar']);
+    Route::apiResource('safra.plantio', \Mg\Fazenda\PlantioController::class)->parameters(['safra' => 'codsafra', 'plantio' => 'codplantio']);
+
+    // Carga de colheita (offline-first: upsert por uuid)
+    Route::get('carga-colheita', [\Mg\Safra\CargaColheitaController::class, 'index']);
+    Route::post('carga-colheita/sincronizar', [\Mg\Safra\CargaColheitaController::class, 'sincronizar']);
+    Route::post('carga-colheita/{codcargacolheita}/inativo', [\Mg\Safra\CargaColheitaController::class, 'inativar']);
+    Route::delete('carga-colheita/{codcargacolheita}/inativo', [\Mg\Safra\CargaColheitaController::class, 'ativar']);
+    Route::get('carga-colheita/{codcargacolheita}', [\Mg\Safra\CargaColheitaController::class, 'show'])->whereNumber('codcargacolheita');
+
+    // Contrato de venda — Mg\Contrato (criado 03/06/2026)
+    Route::post('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'ativar']);
+    Route::apiResource('contrato', \Mg\Contrato\ContratoController::class)->parameters(['contrato' => 'codcontrato']);
+
+    // Fixacoes e pagamentos aninhados no contrato
+    Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/inativo', [\Mg\Contrato\ContratoFixacaoController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/inativo', [\Mg\Contrato\ContratoFixacaoController::class, 'ativar']);
+    Route::apiResource('contrato.fixacao', \Mg\Contrato\ContratoFixacaoController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao']);
+
+    Route::post('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'ativar']);
+    Route::apiResource('contrato.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['contrato' => 'codcontrato', 'pagamento' => 'codpagamento']);
+
+    // Embarque (expedicao) — Mg\Embarque, offline sync por uuid
+    Route::get('embarque', [\Mg\Embarque\EmbarqueController::class, 'index']);
+    Route::post('embarque/sincronizar', [\Mg\Embarque\EmbarqueController::class, 'sincronizar']);
+    Route::post('embarque/{codembarque}/inativo', [\Mg\Embarque\EmbarqueController::class, 'inativar']);
+    Route::delete('embarque/{codembarque}/inativo', [\Mg\Embarque\EmbarqueController::class, 'ativar']);
+    Route::get('embarque/{codembarque}', [\Mg\Embarque\EmbarqueController::class, 'show'])->whereNumber('codembarque');
+
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);
     Route::post('unidade-medida/{id}/inativo', [\Mg\Produto\UnidadeMedidaController::class, 'inativar']);

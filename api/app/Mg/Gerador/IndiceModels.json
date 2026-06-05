@@ -8425,5 +8425,347 @@
     "arquivo": "/opt/www/MGspa/api/app/Mg/Tributacao/Bit.php",
     "belongsTo": [],
     "hasMany": []
+  },
+  "tblcultura": {
+    "tabela": "tblcultura",
+    "campocodigo": "codcultura",
+    "namespace": "Mg\\Cultura",
+    "classe": "Cultura",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cultura/Cultura.php",
+    "belongsTo": [],
+    "hasMany": {
+      "tblsafra.codcultura": {
+        "tabela": "tblsafra",
+        "coluna": "codcultura",
+        "metodo": "SafraS"
+      },
+      "tbltabeladesconto.codcultura": {
+        "tabela": "tbltabeladesconto",
+        "coluna": "codcultura",
+        "metodo": "TabelaDescontoS"
+      },
+      "tblvariedade.codcultura": {
+        "tabela": "tblvariedade",
+        "coluna": "codcultura",
+        "metodo": "VariedadeS"
+      }
+    }
+  },
+  "tblsafra": {
+    "tabela": "tblsafra",
+    "campocodigo": "codsafra",
+    "namespace": "Mg\\Safra",
+    "classe": "Safra",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Safra/Safra.php",
+    "belongsTo": {
+      "codcultura": {
+        "tabela": "tblcultura",
+        "coluna": "codcultura",
+        "metodo": "Cultura"
+      }
+    },
+    "hasMany": {
+      "tblplantio.codsafra": {
+        "tabela": "tblplantio",
+        "coluna": "codsafra",
+        "metodo": "PlantioS"
+      }
+    }
+  },
+  "tblfazenda": {
+    "tabela": "tblfazenda",
+    "campocodigo": "codfazenda",
+    "namespace": "Mg\\Fazenda",
+    "classe": "Fazenda",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Fazenda/Fazenda.php",
+    "belongsTo": {
+      "codpessoa": {
+        "tabela": "tblpessoa",
+        "coluna": "codpessoa",
+        "metodo": "Pessoa"
+      }
+    },
+    "hasMany": {
+      "tbltalhao.codfazenda": {
+        "tabela": "tbltalhao",
+        "coluna": "codfazenda",
+        "metodo": "TalhaoS"
+      }
+    }
+  },
+  "tblvariedade": {
+    "tabela": "tblvariedade",
+    "campocodigo": "codvariedade",
+    "namespace": "Mg\\Cultura",
+    "classe": "Variedade",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cultura/Variedade.php",
+    "belongsTo": {
+      "codcultura": {
+        "tabela": "tblcultura",
+        "coluna": "codcultura",
+        "metodo": "Cultura"
+      }
+    },
+    "hasMany": {
+      "tblplantio.codvariedade": {
+        "tabela": "tblplantio",
+        "coluna": "codvariedade",
+        "metodo": "PlantioS"
+      }
+    }
+  },
+  "tbltalhao": {
+    "tabela": "tbltalhao",
+    "campocodigo": "codtalhao",
+    "namespace": "Mg\\Fazenda",
+    "classe": "Talhao",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Fazenda/Talhao.php",
+    "belongsTo": {
+      "codfazenda": {
+        "tabela": "tblfazenda",
+        "coluna": "codfazenda",
+        "metodo": "Fazenda"
+      }
+    },
+    "hasMany": {
+      "tblplantio.codtalhao": {
+        "tabela": "tblplantio",
+        "coluna": "codtalhao",
+        "metodo": "PlantioS"
+      }
+    }
+  },
+  "tblplantio": {
+    "tabela": "tblplantio",
+    "campocodigo": "codplantio",
+    "namespace": "Mg\\Fazenda",
+    "classe": "Plantio",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Fazenda/Plantio.php",
+    "belongsTo": {
+      "codsafra": {
+        "tabela": "tblsafra",
+        "coluna": "codsafra",
+        "metodo": "Safra"
+      },
+      "codtalhao": {
+        "tabela": "tbltalhao",
+        "coluna": "codtalhao",
+        "metodo": "Talhao"
+      },
+      "codvariedade": {
+        "tabela": "tblvariedade",
+        "coluna": "codvariedade",
+        "metodo": "Variedade"
+      }
+    },
+    "hasMany": {
+      "tblcargacolheita.codplantio": {
+        "tabela": "tblcargacolheita",
+        "coluna": "codplantio",
+        "metodo": "CargaColheitaS"
+      }
+    }
+  },
+  "tbltabeladesconto": {
+    "tabela": "tbltabeladesconto",
+    "campocodigo": "codtabeladesconto",
+    "namespace": "Mg\\Cultura",
+    "classe": "TabelaDesconto",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Cultura/TabelaDesconto.php",
+    "belongsTo": {
+      "codcultura": {
+        "tabela": "tblcultura",
+        "coluna": "codcultura",
+        "metodo": "Cultura"
+      }
+    },
+    "hasMany": []
+  },
+  "tblcargacolheita": {
+    "tabela": "tblcargacolheita",
+    "campocodigo": "codcargacolheita",
+    "namespace": "Mg\\Safra",
+    "classe": "CargaColheita",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Safra/CargaColheita.php",
+    "belongsTo": {
+      "codsafra": {
+        "tabela": "tblsafra",
+        "coluna": "codsafra",
+        "metodo": "Safra"
+      }
+    },
+    "hasMany": {
+      "tblcargacolheitaplantio.codcargacolheita": {
+        "tabela": "tblcargacolheitaplantio",
+        "coluna": "codcargacolheita",
+        "metodo": "CargaColheitaPlantioS"
+      }
+    }
+  },
+  "tblcargacolheitaplantio": {
+    "tabela": "tblcargacolheitaplantio",
+    "campocodigo": "codcargacolheitaplantio",
+    "namespace": "Mg\\Safra",
+    "classe": "CargaColheitaPlantio",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Safra/CargaColheitaPlantio.php",
+    "belongsTo": {
+      "codcargacolheita": {
+        "tabela": "tblcargacolheita",
+        "coluna": "codcargacolheita",
+        "metodo": "CargaColheita"
+      },
+      "codplantio": {
+        "tabela": "tblplantio",
+        "coluna": "codplantio",
+        "metodo": "Plantio"
+      }
+    },
+    "hasMany": []
+  },
+  "tblcontrato": {
+    "tabela": "tblcontrato",
+    "campocodigo": "codcontrato",
+    "namespace": "Mg\\Contrato",
+    "classe": "Contrato",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Contrato/Contrato.php",
+    "belongsTo": {
+      "codcultura": {
+        "tabela": "tblcultura",
+        "coluna": "codcultura",
+        "metodo": "Cultura"
+      },
+      "codnaturezaoperacao": {
+        "tabela": "tblnaturezaoperacao",
+        "coluna": "codnaturezaoperacao",
+        "metodo": "NaturezaOperacao"
+      },
+      "codpessoa": {
+        "tabela": "tblpessoa",
+        "coluna": "codpessoa",
+        "metodo": "Pessoa"
+      },
+      "codpessoanf": {
+        "tabela": "tblpessoa",
+        "coluna": "codpessoanf",
+        "metodo": "PessoaNf"
+      },
+      "codsafra": {
+        "tabela": "tblsafra",
+        "coluna": "codsafra",
+        "metodo": "Safra"
+      }
+    },
+    "hasMany": {
+      "tblcontratofixacao.codcontrato": {
+        "tabela": "tblcontratofixacao",
+        "coluna": "codcontrato",
+        "metodo": "ContratoFixacaoS"
+      },
+      "tblcontratopagamento.codcontrato": {
+        "tabela": "tblcontratopagamento",
+        "coluna": "codcontrato",
+        "metodo": "ContratoPagamentoS"
+      },
+      "tblembarquecontrato.codcontrato": {
+        "tabela": "tblembarquecontrato",
+        "coluna": "codcontrato",
+        "metodo": "EmbarqueContratoS"
+      }
+    }
+  },
+  "tblcontratofixacao": {
+    "tabela": "tblcontratofixacao",
+    "campocodigo": "codcontratofixacao",
+    "namespace": "Mg\\Contrato",
+    "classe": "ContratoFixacao",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Contrato/ContratoFixacao.php",
+    "belongsTo": {
+      "codcontrato": {
+        "tabela": "tblcontrato",
+        "coluna": "codcontrato",
+        "metodo": "Contrato"
+      }
+    },
+    "hasMany": []
+  },
+  "tblcontratopagamento": {
+    "tabela": "tblcontratopagamento",
+    "campocodigo": "codcontratopagamento",
+    "namespace": "Mg\\Contrato",
+    "classe": "ContratoPagamento",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Contrato/ContratoPagamento.php",
+    "belongsTo": {
+      "codcontrato": {
+        "tabela": "tblcontrato",
+        "coluna": "codcontrato",
+        "metodo": "Contrato"
+      }
+    },
+    "hasMany": []
+  },
+  "tblembarque": {
+    "tabela": "tblembarque",
+    "campocodigo": "codembarque",
+    "namespace": "Mg\\Embarque",
+    "classe": "Embarque",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Embarque/Embarque.php",
+    "belongsTo": [],
+    "hasMany": {
+      "tblembarquecontrato.codembarque": {
+        "tabela": "tblembarquecontrato",
+        "coluna": "codembarque",
+        "metodo": "EmbarqueContratoS"
+      },
+      "tblembarqueorigem.codembarque": {
+        "tabela": "tblembarqueorigem",
+        "coluna": "codembarque",
+        "metodo": "EmbarqueOrigemS"
+      }
+    }
+  },
+  "tblembarquecontrato": {
+    "tabela": "tblembarquecontrato",
+    "campocodigo": "codembarquecontrato",
+    "namespace": "Mg\\Embarque",
+    "classe": "EmbarqueContrato",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Embarque/EmbarqueContrato.php",
+    "belongsTo": {
+      "codcontrato": {
+        "tabela": "tblcontrato",
+        "coluna": "codcontrato",
+        "metodo": "Contrato"
+      },
+      "codembarque": {
+        "tabela": "tblembarque",
+        "coluna": "codembarque",
+        "metodo": "Embarque"
+      },
+      "codnotafiscal": {
+        "tabela": "tblnotafiscal",
+        "coluna": "codnotafiscal",
+        "metodo": "NotaFiscal"
+      }
+    },
+    "hasMany": []
+  },
+  "tblembarqueorigem": {
+    "tabela": "tblembarqueorigem",
+    "campocodigo": "codembarqueorigem",
+    "namespace": "Mg\\Embarque",
+    "classe": "EmbarqueOrigem",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Embarque/EmbarqueOrigem.php",
+    "belongsTo": {
+      "codembarque": {
+        "tabela": "tblembarque",
+        "coluna": "codembarque",
+        "metodo": "Embarque"
+      },
+      "codplantio": {
+        "tabela": "tblplantio",
+        "coluna": "codplantio",
+        "metodo": "Plantio"
+      }
+    },
+    "hasMany": []
   }
 }

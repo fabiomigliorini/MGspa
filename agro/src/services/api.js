@@ -1,6 +1,8 @@
 import axios from 'axios'
 
-// Cria instância da API
+// baseURL = process.env.API_URL (= .../api/), padrão do monorepo. Os endpoints
+// de domínio ficam sob v1/ — cada chamada inclui o prefixo (ex.: 'v1/cultura'),
+// como nos outros apps, pra reaproveitar os componentes de @components.
 const api = axios.create({
   baseURL: process.env.API_URL,
 })

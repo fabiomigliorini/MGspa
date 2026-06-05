@@ -12,8 +12,36 @@ const rightDrawerOpen = ref(false)
 const auth = useAuth()
 
 // Menu de telas internas do app (padrão do contas/estoque).
-// Esqueleto: ainda sem telas internas — só o menu de apps externos.
-const menuGroups = []
+const menuGroups = [
+  {
+    label: 'Operação',
+    items: [
+      { label: 'Pátio de Recebimento', icon: 'local_shipping', color: 'green-7', to: { name: 'patio' } },
+      { label: 'Pátio de Expedição', icon: 'outbound', color: 'green-8', to: { name: 'embarque' } },
+    ],
+  },
+  {
+    label: 'Comercial',
+    items: [
+      { label: 'Contratos', icon: 'description', color: 'indigo-7', to: { name: 'contratos' } },
+    ],
+  },
+  {
+    label: 'Safra',
+    items: [
+      { label: 'Safras', icon: 'eco', color: 'light-green-8', to: { name: 'safras' } },
+      { label: 'Talhões', icon: 'crop_landscape', color: 'brown-6', to: { name: 'talhoes' } },
+    ],
+  },
+  {
+    label: 'Cadastros',
+    items: [
+      { label: 'Culturas', icon: 'category', color: 'blue-grey-7', to: { name: 'culturas' } },
+      { label: 'Variedades', icon: 'spa', color: 'teal-7', to: { name: 'variedades' } },
+      { label: 'Tabela de Desconto', icon: 'percent', color: 'deep-orange-6', to: { name: 'tabela-desconto' } },
+    ],
+  },
+]
 </script>
 
 <template>
