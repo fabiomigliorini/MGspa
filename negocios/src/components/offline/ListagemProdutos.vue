@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodigo } from '@components/formatters'
+import { formataNumero, formataNumeroInteligente, formataCodigo } from '@components/formatters'
 import { ref, computed } from 'vue'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
@@ -384,7 +384,7 @@ const linkProduto = (codproduto) => {
                 flat
                 @click="sNegocio.itemAdicionarQuantidade(item.uuid, -1)"
               />
-              {{ formataNumero(item.quantidade, 0) }}
+              {{ formataNumeroInteligente(item.quantidade) }}
               <q-btn
                 v-if="sNegocio.podeEditar"
                 size="xs"

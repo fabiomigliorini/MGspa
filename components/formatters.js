@@ -4,20 +4,36 @@
 // =====================================================================
 
 // ---------- Números / Moeda ----------
+
+// Converte qualquer entrada (number ou string "1.234,56") em number; NaN se inválido.
+function paraNumero(valor) {
+  if (valor === null || valor === undefined || valor === "") return NaN;
+  return typeof valor === "number"
+    ? valor
+    : Number(
+        String(valor)
+          .replace(/[^0-9,\-.]/g, "")
+          .replace(",", "."),
+      );
+}
+
 export function formataNumero(valor, casas = 2) {
-  if (valor === null || valor === undefined || valor === "") return "";
-  const n =
-    typeof valor === "number"
-      ? valor
-      : Number(
-          String(valor)
-            .replace(/[^0-9,\-.]/g, "")
-            .replace(",", "."),
-        );
+  const n = paraNumero(valor);
   if (Number.isNaN(n)) return "";
   return new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: casas,
     maximumFractionDigits: casas,
+  }).format(n);
+}
+
+// Número "enxuto": mostra só os decimais necessários, até `maxCasas`.
+// 2,000 -> "2" | 1,500 -> "1,5" | 1,570 -> "1,57" | 1,576 -> "1,576"
+export function formataNumeroInteligente(valor, maxCasas = 3) {
+  const n = paraNumero(valor);
+  if (Number.isNaN(n)) return "";
+  return new Intl.NumberFormat("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: maxCasas,
   }).format(n);
 }
 
