@@ -157,8 +157,9 @@ class NotaFiscalRelatorioService
 
         return $q->orderBy('nf.codfilial')
             ->orderBy('nf.codnaturezaoperacao')
-            ->orderBy('nf.status')
+            ->orderBy('nf.emissao')
             ->orderBy('nf.numero')
+            ->orderBy('nf.codnotafiscal')
             ->get();
     }
 
