@@ -9,11 +9,15 @@ use Mg\Usuario\Autorizador;
 
 class GrupoClienteController extends Controller
 {
-    private const GRUPOS = ['Administrador', 'Financeiro'];
+    // Leitura: usada como fonte de <select> nos filtros de Títulos/Liquidações,
+    // então libera os mesmos grupos que acessam essas telas (inclui Caixa e Publico).
+    private const GRUPOS_LEITURA = ['Administrador', 'Financeiro', 'Cobranca', 'Gerente', 'Caixa', 'Publico'];
+    // Mutação: cadastro de grupo de cliente permanece restrito.
+    private const GRUPOS_MUTACAO = ['Administrador', 'Financeiro'];
 
     public function index(Request $request)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_LEITURA);
 
         $result = GrupoClienteService::listar($request->only([
             'codgrupocliente', 'grupocliente', 'status', 'todos_sem_paginacao',
@@ -24,13 +28,13 @@ class GrupoClienteController extends Controller
 
     public function show(int $codgrupocliente)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_LEITURA);
         return new GrupoClienteResource(GrupoCliente::findOrFail($codgrupocliente));
     }
 
     public function store(GrupoClienteStoreRequest $request)
     {
-        Autorizador::autoriza(self::GRUPOS);
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
 
         DB::beginTransaction();
         try {
