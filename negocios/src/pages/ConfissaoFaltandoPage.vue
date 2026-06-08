@@ -1,5 +1,10 @@
 <script setup>
-import { formataNumero, formataDataIso, formataHora, formataDataCompleta } from '@components/formatters'
+import {
+  formataNumero,
+  formataDataIso,
+  formataHora,
+  formataDataCompleta,
+} from '@components/formatters'
 import { onMounted, ref, watch } from 'vue'
 import { exportFile, Notify, Dialog } from 'quasar'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
@@ -108,7 +113,7 @@ const decideDia = () => {
 
 const buscaFaltando = async () => {
   try {
-    const ret = await api.get('/api/v1/pdv/negocio/anexo/faltando/' + ano.value + '/' + mes.value, {
+    const ret = await api.get('/v1/pdv/negocio/anexo/faltando/' + ano.value + '/' + mes.value, {
       params: {
         pdv: sSinc.pdv.uuid,
       },
@@ -212,7 +217,7 @@ const ignorar = (codnegocio) => {
     cancel: true,
   }).onOk(async () => {
     try {
-      const ret = await api.post('/api/v1/pdv/negocio/' + codnegocio + '/ignorar-confissao/', {
+      const ret = await api.post('/v1/pdv/negocio/' + codnegocio + '/ignorar-confissao/', {
         pdv: sSinc.pdv.uuid,
       })
       datasFaltando.value = []
@@ -255,7 +260,7 @@ watch(data, () => {
 })
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <!-- ANOS -->
     <q-tabs v-model="ano" inline-label class="bg-primary text-white">
       <template v-for="a in anos" :key="a">
@@ -274,6 +279,8 @@ watch(data, () => {
       <!-- CALENDARIO -->
       <div class="col-xs-12 col-sm-6 col-md-3 col-lg-2" style="min-width: 310px">
         <q-date
+          flat
+          bordered
           minimal
           v-model="data"
           :options="datasDisponiveis"

@@ -333,7 +333,7 @@ const checarImpressora = () => {
 const imprimirRomaneio = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/api/v1/pdv/negocio/' +
+    '/v1/pdv/negocio/' +
       sNegocio.negocio.codnegocio +
       '/romaneio/' +
       sNegocio.padrao.impressora,
@@ -349,7 +349,7 @@ const imprimirRomaneio = async () => {
 const imprimirVale = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale/' + sNegocio.padrao.impressora,
+    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale/' + sNegocio.padrao.impressora,
   )
   Notify.create({
     type: 'positive',
@@ -362,7 +362,7 @@ const imprimirVale = async () => {
 const imprimirComanda = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/api/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.impressora,
+    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.impressora,
   )
   Notify.create({
     type: 'positive',
@@ -376,7 +376,7 @@ const romaneio = async () => {
   fecharDialogs()
   await abrirPdf(
     api,
-    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/romaneio`,
+    `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/romaneio`,
     {},
     { title: 'Romaneio', size: 'cupom', onImprimir: imprimirRomaneio },
   )
@@ -386,7 +386,7 @@ const vale = async () => {
   fecharDialogs()
   await abrirPdf(
     api,
-    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/vale`,
+    `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/vale`,
     {},
     { title: 'Vale', size: 'cupom', onImprimir: imprimirVale },
   )
@@ -424,7 +424,7 @@ const comanda = async () => {
   imprimirComanda()
   await abrirPdf(
     api,
-    `/api/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/comanda`,
+    `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/comanda`,
     {},
     { title: 'Comanda', size: 'cupom', onImprimir: imprimirComanda },
   )
@@ -556,7 +556,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <q-page v-if="sNegocio.negocio">
+  <q-page v-if="sNegocio.negocio" class="bg-grey-2">
     <div class="q-pa-md q-col-gutter-md">
       <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
         Notas, Títulos e Documentos anexos

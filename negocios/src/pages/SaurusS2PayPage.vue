@@ -40,7 +40,7 @@ const gerarQrCode = async () => {
   loading.value = true
   isValid.value = true
   await api
-    .post('api/v1/pdv/saurus/registrar-pos', {
+    .post('/v1/pdv/saurus/registrar-pos', {
       apelido: apelido.value,
       codfilial: filial.value,
       pdv_uuid: pdv_uuid.value || null,
@@ -77,7 +77,7 @@ const gerarQrCode = async () => {
 const checkLeitura = async () => {
   loading.value = true
   await api
-    .post('api/v1/pdv/saurus/verificar-leitura', {
+    .post('/v1/pdv/saurus/verificar-leitura', {
       pdv_uuid: pdv_uuid.value,
     })
     .then(async ({ data }) => {
@@ -118,7 +118,7 @@ const checkValidate = computed(() => {
 })
 
 const getPinpads = async () => {
-  await api.get('api/v1/pdv/saurus/pdvs').then(({ data }) => {
+  await api.get('/v1/pdv/saurus/pdvs').then(({ data }) => {
     listaPos.value = data
   })
 }
@@ -134,7 +134,7 @@ const editarMaquineta = (pdv) => {
 const salvarMaquineta = async () => {
   loading.value = true
   await api
-    .post('api/v1/pdv/saurus/pdv/' + codsauruspdv.value, {
+    .post('/v1/pdv/saurus/pdv/' + codsauruspdv.value, {
       apelido: apelido.value,
       codfilial: filial.value,
     })
@@ -173,7 +173,7 @@ const inativarMaquineta = async (pdv) => {
         color: 'white',
         handler: async () => {
           await api
-            .get('api/v1/pdv/saurus/pdv/' + pdv.codsauruspdv + '/inativar')
+            .get('/v1/pdv/saurus/pdv/' + pdv.codsauruspdv + '/inativar')
             .then(async () => {
               Notify.create({
                 type: 'positive',
@@ -217,7 +217,7 @@ const ativarMaquineta = async (pdv) => {
         color: 'white',
         handler: async () => {
           await api
-            .get('api/v1/pdv/saurus/pdv/' + pdv.codsauruspdv + '/ativar')
+            .get('/v1/pdv/saurus/pdv/' + pdv.codsauruspdv + '/ativar')
             .then(async () => {
               Notify.create({
                 type: 'positive',
@@ -283,7 +283,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <div class="row justify-center q-mt-md">
       <q-btn color="primary" label="Cadastrar Maquineta" @click="cadastrarMaquineta()" />
 

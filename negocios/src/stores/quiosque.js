@@ -68,7 +68,7 @@ export const quiosqueStore = defineStore('quiosque', {
     async enriquecer(barras) {
       this.atualizando = true
       try {
-        const { data } = await api.get('/api/v1/pdv/produto/' + barras + '/detalhe', {
+        const { data } = await api.get('/v1/pdv/produto/' + barras + '/detalhe', {
           params: { pdv: sSinc.pdv.uuid },
         })
 

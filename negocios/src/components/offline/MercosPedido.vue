@@ -12,7 +12,7 @@ const sSinc = sincronizacaoStore()
 const informarFaturamento = async (mp) => {
   try {
     const { data } = await api.post(
-      '/api/v1/pdv/negocio/' +
+      '/v1/pdv/negocio/' +
         sNegocio.negocio.codnegocio +
         '/mercos/' +
         mp.codmercospedido +
@@ -55,7 +55,7 @@ const confirmarReimportar = (mp) => {
 const reimportar = async (mp) => {
   try {
     const { data } = await api.post(
-      '/api/v1/pdv/negocio/' +
+      '/v1/pdv/negocio/' +
         sNegocio.negocio.codnegocio +
         '/mercos/' +
         mp.codmercospedido +

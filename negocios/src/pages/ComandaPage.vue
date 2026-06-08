@@ -19,7 +19,7 @@ const model = ref({
 const imprimir = async () => {
   try {
     await api.post(
-      '/api/v1/pessoa/' + model.value.codpessoavendedor + '/comanda-vendedor/imprimir',
+      '/v1/pessoa/' + model.value.codpessoavendedor + '/comanda-vendedor/imprimir',
       {
         impressora: model.value.impressora,
         copias: model.value.copias,
@@ -48,9 +48,9 @@ onMounted(() => {
 })
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <div class="row justify-center">
-      <q-card class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2">
+      <q-card class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2" flat bordered>
         <q-form ref="formItem" @submit="imprimir()">
           <q-card-section>
             <div class="q-gutter-md">

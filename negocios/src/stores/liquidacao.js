@@ -79,7 +79,7 @@ export const liquidacaoStore = defineStore('liquidacao', {
         const filtro = { ...this.filtro }
         filtro.pdv = sSinc.pdv.uuid
         filtro.page = this.paginacao.current_page + 1
-        const { data } = await api.get('/api/v1/pdv/liquidacao', {
+        const { data } = await api.get('/v1/pdv/liquidacao', {
           params: filtro,
         })
         if (filtro.page == 1) {

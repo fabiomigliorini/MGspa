@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # project:service-name (docker compose service)
 PROJECTS=(
+  "agro:agro"
   "contas:contas"
   "estoque:estoque"
   "negocios:negocios"

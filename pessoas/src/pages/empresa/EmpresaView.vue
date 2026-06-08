@@ -1,135 +1,112 @@
-<script>
+<script setup>
 import { formataCodigo, formataTimestamp } from '@components/formatters'
 import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 
-export default {
-  components: {
-    MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-  },
+const MGLayout = defineAsyncComponent(() => import('layouts/MGLayout.vue'))
 
-  setup() {
-    const sEmpresa = empresaStore()
-    const $q = useQuasar()
-    const route = useRoute()
-    const router = useRouter()
-    const loading = ref(false)
-    const filtroFilial = ref('')
+const sEmpresa = empresaStore()
+const $q = useQuasar()
+const route = useRoute()
+const router = useRouter()
+const loading = ref(false)
+const filtroFilial = ref('')
 
-    const buscarFiliais = async () => {
-      sEmpresa.filtroFilial.filial = filtroFilial.value
-      await sEmpresa.buscarFiliais(route.params.codempresa)
-    }
+const buscarFiliais = async () => {
+  sEmpresa.filtroFilial.filial = filtroFilial.value
+  await sEmpresa.buscarFiliais(route.params.codempresa)
+}
 
-    const formatarCodigo = (cod) => {
-      return formataCodigo(cod)
-    }
+const modoEmissaoLabel = computed(() => {
+  const modos = {
+    1: 'Normal',
+    9: 'Offline',
+  }
+  return modos[sEmpresa.item.modoemissaonfce] || '-'
+})
 
-    const modoEmissaoLabel = computed(() => {
-      const modos = {
-        1: 'Normal',
-        9: 'Offline',
-      }
-      return modos[sEmpresa.item.modoemissaonfce] || '-'
+const contingenciaFormatada = computed(() => {
+  if (!sEmpresa.item.contingenciadata) return '-'
+  return formataTimestamp(sEmpresa.item.contingenciadata)
+})
+
+const criacaoFormatada = computed(() => {
+  if (!sEmpresa.item.criacao) return '-'
+  return formataTimestamp(sEmpresa.item.criacao)
+})
+
+const alteracaoFormatada = computed(() => {
+  if (!sEmpresa.item.alteracao) return '-'
+  return formataTimestamp(sEmpresa.item.alteracao)
+})
+
+const carregarEmpresa = async () => {
+  loading.value = true
+  try {
+    await sEmpresa.get(route.params.codempresa)
+  } catch (error) {
+    console.log(error)
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: 'Erro ao carregar empresa',
     })
+    router.push('/empresa')
+  } finally {
+    loading.value = false
+  }
+}
 
-    const contingenciaFormatada = computed(() => {
-      if (!sEmpresa.item.contingenciadata) return '-'
-      return formataTimestamp(sEmpresa.item.contingenciadata)
+const confirmarExclusao = () => {
+  if (sEmpresa.filiais.length > 0) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message:
+        'Não é possível excluir uma empresa que possui filiais. Exclua as filiais primeiro.',
     })
+    return
+  }
 
-    const criacaoFormatada = computed(() => {
-      if (!sEmpresa.item.criacao) return '-'
-      return formataTimestamp(sEmpresa.item.criacao)
-    })
-
-    const alteracaoFormatada = computed(() => {
-      if (!sEmpresa.item.alteracao) return '-'
-      return formataTimestamp(sEmpresa.item.alteracao)
-    })
-
-    const carregarEmpresa = async () => {
-      loading.value = true
-      try {
-        await sEmpresa.get(route.params.codempresa)
-      } catch (error) {
-        console.log(error)
-        $q.notify({
-          color: 'red-5',
-          textColor: 'white',
-          icon: 'error',
-          message: 'Erro ao carregar empresa',
-        })
-        router.push('/empresa')
-      } finally {
-        loading.value = false
-      }
-    }
-
-    const confirmarExclusao = () => {
-      if (sEmpresa.filiais.length > 0) {
-        $q.notify({
-          color: 'red-5',
-          textColor: 'white',
-          icon: 'error',
-          message:
-            'Não é possível excluir uma empresa que possui filiais. Exclua as filiais primeiro.',
-        })
-        return
-      }
-
-      $q.dialog({
-        title: 'Confirmar Exclusão',
-        message: `Para excluir a empresa "${sEmpresa.item.empresa}", digite EXCLUIR abaixo:`,
-        prompt: {
-          model: '',
-          type: 'text',
-          isValid: (val) => val === 'EXCLUIR',
-        },
-        cancel: true,
-        persistent: true,
-      }).onOk(async () => {
-        try {
-          await sEmpresa.removerEmpresa(sEmpresa.item.codempresa)
-          $q.notify({
-            color: 'green-5',
-            textColor: 'white',
-            icon: 'check',
-            message: 'Empresa excluída com sucesso!',
-          })
-          router.push('/empresa')
-        } catch (error) {
-          $q.notify({
-            color: 'red-5',
-            textColor: 'white',
-            icon: 'error',
-            message: error.response?.data?.message || 'Erro ao excluir empresa',
-          })
-        }
+  $q.dialog({
+    title: 'Confirmar Exclusão',
+    message: `Para excluir a empresa "${sEmpresa.item.empresa}", digite EXCLUIR abaixo:`,
+    prompt: {
+      model: '',
+      type: 'text',
+      isValid: (val) => val === 'EXCLUIR',
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await sEmpresa.removerEmpresa(sEmpresa.item.codempresa)
+      $q.notify({
+        color: 'green-5',
+        textColor: 'white',
+        icon: 'check',
+        message: 'Empresa excluída com sucesso!',
+      })
+      router.push('/empresa')
+    } catch (error) {
+      $q.notify({
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: error.response?.data?.message || 'Erro ao excluir empresa',
       })
     }
-
-    onMounted(() => {
-      carregarEmpresa()
-      buscarFiliais()
-    })
-
-    return {
-      sEmpresa,
-      loading,
-      filtroFilial,
-      modoEmissaoLabel,
-      contingenciaFormatada,
-      criacaoFormatada,
-      alteracaoFormatada,
-      confirmarExclusao,
-      buscarFiliais,
-      formatarCodigo,
-    }
-  },
+  })
 }
+
+onMounted(() => {
+  carregarEmpresa()
+  buscarFiliais()
+})
 </script>
 
 <template>
@@ -314,7 +291,7 @@ export default {
                               {{ filial.filial }}
                             </q-item-label>
                             <q-item-label caption>
-                              {{ formatarCodigo(filial.codfilial) }}
+                              {{ formataCodigo(filial.codfilial) }}
                             </q-item-label>
                             <q-item-label caption class="ellipsis">
                               {{ filial.Pessoa?.fantasia || '-' }}

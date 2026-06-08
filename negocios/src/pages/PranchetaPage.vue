@@ -62,7 +62,7 @@ const salvar = async () => {
         prancheta: JSON.parse(JSON.stringify(prancheta.value)),
         pdv: sSinc.pdv.uuid,
       }
-      await api.put('/api/v1/pdv/prancheta/', data)
+      await api.put('/v1/pdv/prancheta/', data)
       await sSinc.sincronizarPrancheta(true)
       prancheta.value = await db.prancheta.orderBy('ordem').toArray()
       Notify.create({
@@ -591,9 +591,9 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
 }
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <div>
-      <q-card class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2">
+      <q-card flat bordered class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2">
         <q-card-section>
           <q-splitter v-model="splitterModel" style="height: 79vh">
             <template v-slot:before>

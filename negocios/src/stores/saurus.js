@@ -17,7 +17,7 @@ export const saurusStore = defineStore('saurus', {
   actions: {
     async consultarPedidosPendentes() {
       try {
-        const { data } = await api.get('/api/v1/pdv/saurus/pedido/pendentes')
+        const { data } = await api.get('/v1/pdv/saurus/pedido/pendentes')
         this.pedidosPendentes = data.data
       } catch (error) {
         console.log(error)
@@ -37,7 +37,7 @@ export const saurusStore = defineStore('saurus', {
 
     async importarPedidosPendentes() {
       try {
-        const { data } = await api.patch('/api/v1/pdv/saurus/pedido/pendentes')
+        const { data } = await api.patch('/v1/pdv/saurus/pedido/pendentes')
         this.pedidosPendentes = data.data
       } catch (error) {
         console.log(error)
@@ -58,7 +58,7 @@ export const saurusStore = defineStore('saurus', {
     async consultarPedido() {
       try {
         const { data } = await api.post(
-          '/api/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido + '/consultar',
+          '/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido + '/consultar',
         )
         this.pedido = data.data
         await this.atualizarSaurusPedido()
@@ -86,7 +86,7 @@ export const saurusStore = defineStore('saurus', {
 
     async reenviarPedido() {
       try {
-        await api.get('/api/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido + '/reenviar')
+        await api.get('/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido + '/reenviar')
         Notify.create({
           type: 'positive',
           message: 'Reenvio Efetuado!',
@@ -112,7 +112,7 @@ export const saurusStore = defineStore('saurus', {
     async cancelarPedido() {
       try {
         const { data } = await api.delete(
-          '/api/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido,
+          '/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido,
         )
         this.pedido = data.data
         await this.atualizarSaurusPedido()

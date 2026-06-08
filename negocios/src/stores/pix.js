@@ -20,7 +20,7 @@ export const pixStore = defineStore('pix', {
         return this.portadoresPorFilial[codfilial]
       }
       try {
-        const { data } = await api.get('/api/v1/select/portador', {
+        const { data } = await api.get('/v1/select/portador', {
           params: {
             somentePix: true,
             codfilial: codfilial,
@@ -37,7 +37,7 @@ export const pixStore = defineStore('pix', {
 
     async transmitirPixCob() {
       try {
-        const { data } = await api.post('/api/v1/pix/cob/' + this.pixCob.codpixcob + '/transmitir')
+        const { data } = await api.post('/v1/pix/cob/' + this.pixCob.codpixcob + '/transmitir')
         this.pixCob = data.data
         await this.atualizarPixCobNegocio()
         Notify.create({
@@ -64,7 +64,7 @@ export const pixStore = defineStore('pix', {
 
     async consultarPixCob() {
       try {
-        const { data } = await api.post('/api/v1/pix/cob/' + this.pixCob.codpixcob + '/consultar')
+        const { data } = await api.post('/v1/pix/cob/' + this.pixCob.codpixcob + '/consultar')
         this.pixCob = data.data
         await this.atualizarPixCobNegocio()
         Notify.create({
@@ -100,7 +100,7 @@ export const pixStore = defineStore('pix', {
         return false
       }
       try {
-        await api.post('/api/v1/pix/cob/' + this.pixCob.codpixcob + '/imprimir-qr-code', {
+        await api.post('/v1/pix/cob/' + this.pixCob.codpixcob + '/imprimir-qr-code', {
           impressora: sNegocio.padrao.impressora,
         })
         Notify.create({

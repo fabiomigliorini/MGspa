@@ -181,6 +181,10 @@ const onPaste = (e) => {
   }
 }
 
+const linkProduto = (codproduto) => {
+  return process.env.MGLARA_URL + 'produto/' + codproduto
+}
+
 onMounted(() => {
   // dispositivo nao autorizado: nao liga o leitor de codigo de barras
   if (!autorizado.value) return
@@ -330,10 +334,24 @@ onUnmounted(() => {
                 <q-card-section class="q-pb-sm">
                   <div class="text-h4 text-weight-bold text-grey-9">
                     <template v-if="detalhe?.titulosite">
-                      {{ detalhe.titulosite }}
+                      <a
+                        :href="linkProduto(produto.codproduto)"
+                        style="text-decoration: none"
+                        class="text-primary"
+                        target="_blank"
+                      >
+                        {{ detalhe.titulosite }}
+                      </a>
                     </template>
                     <template v-else>
-                      {{ produto.produto }}
+                      <a
+                        :href="linkProduto(produto.codproduto)"
+                        style="text-decoration: none"
+                        class="text-primary"
+                        target="_blank"
+                      >
+                        {{ produto.produto }}
+                      </a>
                     </template>
                   </div>
                   <div class="text-h6 text-weight-bold text-grey-6" v-if="detalhe?.titulosite">

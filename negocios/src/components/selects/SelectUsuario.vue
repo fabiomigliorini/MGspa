@@ -29,7 +29,7 @@ const buscarPeloCod = async () => {
   if (!props.modelValue) {
     return
   }
-  const ret = await api.get('/api/v1/select/usuario', {
+  const ret = await api.get('/v1/select/usuario', {
     params: { codusuario: props.modelValue },
   })
   opcoes.value = ret.data
@@ -42,7 +42,7 @@ const buscar = async (val, update, abort) => {
   }
 
   update(async () => {
-    const ret = await api.get('/api/v1/select/usuario', {
+    const ret = await api.get('/v1/select/usuario', {
       params: {
         busca: val,
         somenteAtivos: props.somenteAtivos,

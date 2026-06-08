@@ -153,7 +153,7 @@ export const wooStore = defineStore('woo', {
       }
       try {
         const filtro = { ...this.filtro }
-        const { data } = await api.get('/api/v1/woo/pedido', {
+        const { data } = await api.get('/v1/woo/pedido', {
           params: filtro,
         })
         if (this.paginacao.current_page == 0) {
@@ -184,7 +184,7 @@ export const wooStore = defineStore('woo', {
 
     async getPedidosPainel() {
       try {
-        const { data } = await api.get('/api/v1/woo/pedido/painel')
+        const { data } = await api.get('/v1/woo/pedido/painel')
         this.pedidos = unionBy(data.data, this.pedidos, 'codwoopedido')
         this.refreshPedido()
         return data.data.length
@@ -205,7 +205,7 @@ export const wooStore = defineStore('woo', {
 
     async reprocessarPedido(id) {
       try {
-        const { data } = await api.post('/api/v1/woo/pedido/' + id + '/reprocessar')
+        const { data } = await api.post('/v1/woo/pedido/' + id + '/reprocessar')
         this.pedidos = unionBy([data.data], this.pedidos, 'codwoopedido')
         this.refreshPedido()
         return true
@@ -227,7 +227,7 @@ export const wooStore = defineStore('woo', {
 
     async buscarNovos() {
       try {
-        const { data } = await api.post('/api/v1/woo/pedido/buscar-novos')
+        const { data } = await api.post('/v1/woo/pedido/buscar-novos')
         this.pedidos = unionBy(data.data, this.pedidos, 'codwoopedido')
         this.refreshPedido()
         return data.data.length
@@ -249,7 +249,7 @@ export const wooStore = defineStore('woo', {
 
     async buscarPorAlteracao() {
       try {
-        const { data } = await api.post('/api/v1/woo/pedido/buscar-por-alteracao')
+        const { data } = await api.post('/v1/woo/pedido/buscar-por-alteracao')
         this.pedidos = unionBy(data.data, this.pedidos, 'codwoopedido')
         this.refreshPedido()
         return data.data.length
@@ -271,7 +271,7 @@ export const wooStore = defineStore('woo', {
 
     async alterarStatus(id, status) {
       try {
-        const { data } = await api.put('/api/v1/woo/pedido/' + id + '/status', {
+        const { data } = await api.put('/v1/woo/pedido/' + id + '/status', {
           status,
         })
         this.pedidos = unionBy([data.data], this.pedidos, 'codwoopedido')

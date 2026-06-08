@@ -62,7 +62,7 @@ const corIconeLiquidacao = (liq) => {
 }
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <!-- <pre>
       {{ sLiquidacao.listagem[0] }}
     </pre> -->

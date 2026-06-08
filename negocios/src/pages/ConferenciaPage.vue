@@ -22,7 +22,7 @@ watch(
 )
 </script>
 <template>
-  <q-page>
+  <q-page class="bg-grey-2">
     <div v-if="sConferencia.conferencias.length == 0" class="absolute-center text-grey text-center">
       <q-icon name="do_not_disturb" color="" size="300px" />
       <h3>Nenhum registro localizado!</h3>

@@ -12,11 +12,11 @@ const urlTitulo = (codtitulo) => {
 </script>
 <template>
   <div
-    class="col-xs-12 col-sm-6 col-md-4 col-lg-3 col-xl-2"
+    class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3"
     v-for="titulo in sNegocio.negocio.titulos"
     :key="titulo.codtitulo"
   >
-    <q-card>
+    <q-card flat bordered>
       <q-item clickable v-ripple :href="urlTitulo(titulo.codtitulo)" target="_blank">
         <q-item-section avatar>
           <q-avatar icon="receipt" color="primary" text-color="white"> </q-avatar>
