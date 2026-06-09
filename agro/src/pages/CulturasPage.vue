@@ -51,7 +51,7 @@ onMounted(() => cad.carregar())
                 <q-item-label caption>{{ Number(c.pesosaca) }} kg por saca</q-item-label>
               </q-item-section>
               <q-item-section side>
-                <div class="row items-center no-wrap q-gutter-xs" @click.prevent.stop>
+                <div class="row items-center no-wrap" @click.prevent.stop>
                   <MgInfoCriacao
                     :usuariocriacao="c.usuariocriacao"
                     :criacao="c.criacao"
@@ -60,6 +60,7 @@ onMounted(() => cad.carregar())
                   />
                   <q-btn
                     flat
+                    dense
                     round
                     size="sm"
                     color="grey-7"
@@ -68,7 +69,15 @@ onMounted(() => cad.carregar())
                   >
                     <q-tooltip>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
                   </q-btn>
-                  <q-btn flat round size="sm" color="grey-7" icon="delete" @click="cad.excluir(c)">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    color="grey-7"
+                    icon="delete"
+                    @click="cad.excluir(c)"
+                  >
                     <q-tooltip>Excluir</q-tooltip>
                   </q-btn>
                 </div>

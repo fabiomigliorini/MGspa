@@ -118,7 +118,7 @@ onMounted(async () => {
             :usuarioalteracao="cultura?.usuarioalteracao"
             :alteracao="cultura?.alteracao"
           />
-          <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarCultura">
+          <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarCultura">
             <q-tooltip>Editar cultura</q-tooltip>
           </q-btn>
         </q-card-section>

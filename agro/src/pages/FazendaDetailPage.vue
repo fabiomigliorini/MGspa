@@ -191,18 +191,19 @@ onMounted(async () => {
               {{ fmt(resumo.areatalhoes, 1) }} ha de área total
             </div>
           </div>
-          <div class="row items-center no-wrap q-gutter-xs">
+          <div class="row items-center no-wrap">
             <MgInfoCriacao
               :usuariocriacao="fazenda?.usuariocriacao"
               :criacao="fazenda?.criacao"
               :usuarioalteracao="fazenda?.usuarioalteracao"
               :alteracao="fazenda?.alteracao"
             />
-            <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarFazenda">
+            <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarFazenda">
               <q-tooltip>Editar fazenda</q-tooltip>
             </q-btn>
             <q-btn
               flat
+              dense
               round
               size="sm"
               color="grey-7"
@@ -211,7 +212,7 @@ onMounted(async () => {
             >
               <q-tooltip>{{ fazenda?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
             </q-btn>
-            <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirFazenda">
+            <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirFazenda">
               <q-tooltip>Excluir</q-tooltip>
             </q-btn>
           </div>
@@ -284,7 +285,7 @@ onMounted(async () => {
               <q-item-label caption>{{ fmt(t.area, 2) }} ha</q-item-label>
             </q-item-section>
             <q-item-section side>
-              <div class="row items-center no-wrap q-gutter-xs">
+              <div class="row items-center no-wrap">
                 <q-badge v-if="!t.geometria" color="grey-5" label="sem mapa" />
                 <MgInfoCriacao
                   :usuariocriacao="t.usuariocriacao"
@@ -294,10 +295,11 @@ onMounted(async () => {
                 />
                 <q-btn
                   flat
+                  dense
                   round
                   size="sm"
                   color="grey-7"
-                  icon="edit_location_alt"
+                  icon="edit"
                   @click="editarTalhao(t)"
                 >
                   <q-tooltip>Editar / desenhar polígono</q-tooltip>
@@ -305,6 +307,7 @@ onMounted(async () => {
                 <q-btn
                   v-if="t.latitude && t.longitude"
                   flat
+                  dense
                   round
                   size="sm"
                   color="grey-7"
@@ -317,6 +320,7 @@ onMounted(async () => {
                 </q-btn>
                 <q-btn
                   flat
+                  dense
                   round
                   size="sm"
                   color="grey-7"
@@ -327,6 +331,7 @@ onMounted(async () => {
                 </q-btn>
                 <q-btn
                   flat
+                  dense
                   round
                   size="sm"
                   color="grey-7"
@@ -407,7 +412,13 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" flat label="Salvar" color="primary" :loading="fazendaCad.salvando" />
+              <q-btn
+                type="submit"
+                flat
+                label="Salvar"
+                color="primary"
+                :loading="fazendaCad.salvando"
+              />
             </q-card-actions>
           </q-form>
         </q-card>

@@ -156,6 +156,7 @@ onMounted(async () => {
               />
               <q-btn
                 flat
+                dense
                 round
                 size="sm"
                 color="grey-7"
@@ -164,6 +165,7 @@ onMounted(async () => {
               />
               <q-btn
                 flat
+                dense
                 round
                 size="sm"
                 color="grey-7"

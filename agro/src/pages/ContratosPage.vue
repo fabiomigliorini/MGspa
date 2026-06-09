@@ -106,18 +106,27 @@ onMounted(async () => {
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <div class="row items-center no-wrap q-gutter-xs" @click.prevent.stop>
+                <div class="row items-center no-wrap" @click.prevent.stop>
                   <MgInfoCriacao
                     :usuariocriacao="c.usuariocriacao"
                     :criacao="c.criacao"
                     :usuarioalteracao="c.usuarioalteracao"
                     :alteracao="c.alteracao"
                   />
-                  <q-btn flat round size="sm" color="grey-7" icon="edit" @click="cad.editar(c)">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    color="grey-7"
+                    icon="edit"
+                    @click="cad.editar(c)"
+                  >
                     <q-tooltip>Editar</q-tooltip>
                   </q-btn>
                   <q-btn
                     flat
+                    dense
                     round
                     size="sm"
                     color="grey-7"
@@ -126,7 +135,15 @@ onMounted(async () => {
                   >
                     <q-tooltip>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
                   </q-btn>
-                  <q-btn flat round size="sm" color="grey-7" icon="delete" @click="cad.excluir(c)">
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    size="sm"
+                    color="grey-7"
+                    icon="delete"
+                    @click="cad.excluir(c)"
+                  >
                     <q-tooltip>Excluir</q-tooltip>
                   </q-btn>
                 </div>

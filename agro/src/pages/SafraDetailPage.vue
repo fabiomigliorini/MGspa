@@ -335,7 +335,7 @@ onMounted(async () => {
               <q-item-label caption>{{ fmt(l.sacas) }} sc colhidas</q-item-label>
             </q-item-section>
             <q-item-section side>
-              <div class="row items-center no-wrap q-gutter-xs">
+              <div class="row items-center no-wrap">
                 <MgInfoCriacao
                   :usuariocriacao="l.usuariocriacao"
                   :criacao="l.criacao"
@@ -344,6 +344,7 @@ onMounted(async () => {
                 />
                 <q-btn
                   flat
+                  dense
                   round
                   size="sm"
                   color="grey-7"
@@ -354,6 +355,7 @@ onMounted(async () => {
                 </q-btn>
                 <q-btn
                   flat
+                  dense
                   round
                   size="sm"
                   color="grey-7"
@@ -364,6 +366,7 @@ onMounted(async () => {
                 </q-btn>
                 <q-btn
                   flat
+                  dense
                   round
                   size="sm"
                   color="grey-7"

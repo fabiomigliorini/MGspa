@@ -249,8 +249,24 @@ onMounted(recarregar)
                 :usuarioalteracao="f.usuarioalteracao"
                 :alteracao="f.alteracao"
               />
-              <q-btn flat round size="sm" color="grey-7" icon="edit" @click="fixCad.editar(f)" />
-              <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirFixacao(f)" />
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                @click="fixCad.editar(f)"
+              />
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluirFixacao(f)"
+              />
             </q-item-section>
           </q-item>
           <q-item v-if="!fixacoes.length">
@@ -286,8 +302,24 @@ onMounted(recarregar)
                 :usuarioalteracao="p.usuarioalteracao"
                 :alteracao="p.alteracao"
               />
-              <q-btn flat round size="sm" color="grey-7" icon="edit" @click="pagCad.editar(p)" />
-              <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirPagamento(p)" />
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                @click="pagCad.editar(p)"
+              />
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluirPagamento(p)"
+              />
             </q-item-section>
           </q-item>
           <q-item v-if="!pagamentos.length">
