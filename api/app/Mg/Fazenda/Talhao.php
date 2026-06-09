@@ -15,6 +15,8 @@ class Talhao extends MgModel
     protected $table = 'tbltalhao';
     protected $primaryKey = 'codtalhao';
 
+    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
+
 
     protected $fillable = [
         'area',
@@ -40,6 +42,15 @@ class Talhao extends MgModel
         'latitude' => 'float',
         'longitude' => 'float'
     ];
+
+
+    // Mantém tblfazenda.areatotal em dia: qualquer gravação/exclusão de talhão
+    // recalcula a soma da fazenda (área não é digitada, deriva dos talhões).
+    protected static function booted()
+    {
+        static::saved(fn (Talhao $t) => FazendaService::recalcularAreaTotal($t->codfazenda));
+        static::deleted(fn (Talhao $t) => FazendaService::recalcularAreaTotal($t->codfazenda));
+    }
 
 
     // Chaves Estrangeiras

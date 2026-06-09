@@ -131,7 +131,7 @@ onMounted(async () => {
       <!-- Atalhos -->
       <div class="row q-col-gutter-md">
         <div v-for="a in atalhos" :key="a.label" class="col-12 col-sm-6 col-md-4">
-          <q-card flat bordered>
+          <q-card flat bordered class="overflow-hidden">
             <q-item clickable v-ripple :to="a.to" class="q-py-md">
               <q-item-section avatar>
                 <q-avatar :color="a.cor" text-color="white" :icon="a.icon" />

@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useCadastro } from 'src/composables/useCadastro'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const cad = useCadastro('cultura', 'codcultura', 'Cultura')
 
@@ -36,7 +37,7 @@ onMounted(() => cad.carregar())
 
       <div v-if="cad.items.length" class="row q-col-gutter-md">
         <div v-for="c in cad.items" :key="c.codcultura" class="col-12 col-sm-6 col-md-4">
-          <q-card flat bordered :class="{ 'bg-grey-2': c.inativo }">
+          <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': c.inativo }">
             <q-item
               clickable
               v-ripple
@@ -49,23 +50,28 @@ onMounted(() => cad.carregar())
                 <q-item-label class="text-subtitle1">{{ c.cultura }}</q-item-label>
                 <q-item-label caption>{{ Number(c.pesosaca) }} kg por saca</q-item-label>
               </q-item-section>
-              <q-item-section side @click.prevent>
-                <q-btn flat round size="sm" color="grey-7" icon="more_vert">
-                  <q-menu>
-                    <q-list style="min-width: 150px">
-                      <q-item clickable v-close-popup @click="cad.alternarInativo(c)">
-                        <q-item-section avatar>
-                          <q-icon :name="c.inativo ? 'play_arrow' : 'pause'" />
-                        </q-item-section>
-                        <q-item-section>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="cad.excluir(c)">
-                        <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                        <q-item-section>Excluir</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
+              <q-item-section side>
+                <div class="row items-center no-wrap q-gutter-xs" @click.prevent.stop>
+                  <MgInfoCriacao
+                    :usuariocriacao="c.usuariocriacao"
+                    :criacao="c.criacao"
+                    :usuarioalteracao="c.usuarioalteracao"
+                    :alteracao="c.alteracao"
+                  />
+                  <q-btn
+                    flat
+                    round
+                    size="sm"
+                    color="grey-7"
+                    :icon="c.inativo ? 'play_arrow' : 'pause'"
+                    @click="cad.alternarInativo(c)"
+                  >
+                    <q-tooltip>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+                  </q-btn>
+                  <q-btn flat round size="sm" color="grey-7" icon="delete" @click="cad.excluir(c)">
+                    <q-tooltip>Excluir</q-tooltip>
+                  </q-btn>
+                </div>
               </q-item-section>
             </q-item>
             <q-badge v-if="c.inativo" color="grey-6" label="Inativo" class="q-ma-sm" />
@@ -92,13 +98,7 @@ onMounted(() => cad.carregar())
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                unelevated
-                label="Salvar"
-                color="primary"
-                :loading="cad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>

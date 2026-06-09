@@ -5,6 +5,7 @@ namespace Mg;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Mg\Usuario\Usuario;
 
 /**
  * Base model do domínio MG.
@@ -102,6 +103,30 @@ abstract class MgModel extends Model
                 $query->where($campo, 'ilike', "%$palavra%");
             }
         }
+    }
+
+    // Audit trail — usuário que criou/alterou o registro. Presente em todos os
+    // models (a coluna codusuario* existe em todas as tabelas tbl*). Os models
+    // que precisam expor o nome no JSON declaram `$appends` com
+    // 'usuariocriacao'/'usuarioalteracao'.
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
+
+    public function getUsuariocriacaoAttribute()
+    {
+        return @$this->UsuarioCriacao->usuario;
+    }
+
+    public function getUsuarioalteracaoAttribute()
+    {
+        return @$this->UsuarioAlteracao->usuario;
     }
 
     protected function serializeDate(DateTimeInterface $date)

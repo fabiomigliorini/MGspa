@@ -40,28 +40,24 @@ class FazendaService extends MgService
         ];
     }
 
-    // Quebra por safra das safras que têm plantio em talhão desta fazenda.
+    // Quebra por safra das safras que têm plantio nesta fazenda (plantio.codfazenda).
     // Colhido = pesoliquidoseco das cargas FINALIZADO rateado pelo percentual de
     // cada plantio na carga (tblcargacolheitaplantio). Saca = peso da cultura da
     // safra (fallback 60), pois a fazenda pode misturar culturas.
     private static function resumoSafras($codfazenda)
     {
-        $areaPorSafra = Plantio::join('tbltalhao', 'tbltalhao.codtalhao', '=', 'tblplantio.codtalhao')
-            ->where('tbltalhao.codfazenda', $codfazenda)
-            ->whereNull('tblplantio.inativo')
-            ->whereNull('tbltalhao.inativo')
-            ->groupBy('tblplantio.codsafra')
-            ->selectRaw('tblplantio.codsafra, SUM(tblplantio.areaplantada) as area')
+        $areaPorSafra = Plantio::where('codfazenda', $codfazenda)
+            ->whereNull('inativo')
+            ->groupBy('codsafra')
+            ->selectRaw('codsafra, SUM(areaplantada) as area')
             ->pluck('area', 'codsafra');
 
         $colhidoPorSafra = CargaColheitaPlantio::join('tblcargacolheita as cc', 'cc.codcargacolheita', '=', 'tblcargacolheitaplantio.codcargacolheita')
             ->join('tblplantio as p', 'p.codplantio', '=', 'tblcargacolheitaplantio.codplantio')
-            ->join('tbltalhao as t', 't.codtalhao', '=', 'p.codtalhao')
-            ->where('t.codfazenda', $codfazenda)
+            ->where('p.codfazenda', $codfazenda)
             ->where('cc.etapa', 'FINALIZADO')
             ->whereNull('cc.inativo')
             ->whereNull('p.inativo')
-            ->whereNull('t.inativo')
             ->groupBy('p.codsafra')
             ->selectRaw('p.codsafra, SUM(cc.pesoliquidoseco * tblcargacolheitaplantio.percentual / 100) as colhido')
             ->pluck('colhido', 'codsafra');
@@ -91,6 +87,21 @@ class FazendaService extends MgService
                 ];
             })
             ->all();
+    }
+
+    // Área total da fazenda = soma da área dos talhões ativos (layout base). Não
+    // é digitada: recalculada e persistida em tblfazenda.areatotal sempre que um
+    // talhão é criado/editado/inativado/excluído (ver Talhao::booted). Mantida
+    // como coluna pra listagem (FazendasPage) não precisar somar no front.
+    public static function recalcularAreaTotal($codfazenda)
+    {
+        if (!$codfazenda) {
+            return;
+        }
+        $area = (float) Talhao::where('codfazenda', $codfazenda)
+            ->whereNull('inativo')
+            ->sum('area');
+        Fazenda::where('codfazenda', $codfazenda)->update(['areatotal' => $area]);
     }
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)

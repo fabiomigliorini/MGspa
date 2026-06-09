@@ -12,7 +12,7 @@ use Mg\MgController;
  */
 class PlantioController extends MgController
 {
-    const WITH = ['Safra.Cultura', 'Talhao.Fazenda', 'Variedade'];
+    const WITH = ['Safra.Cultura', 'Fazenda', 'Variedade'];
 
     public function index(Request $request, $codsafra)
     {
@@ -77,9 +77,13 @@ class PlantioController extends MgController
 
     protected function regras(Request $request, $codplantio = null): array
     {
-        // Um plantio ativo por talhao/safra
-        $unico = Rule::unique('tblplantio')->where(
-            fn ($q) => $q->where('codsafra', $request->codsafra)->whereNull('inativo')
+        // Talhao+variedade unico por safra+fazenda (entre ativos): permite o
+        // mesmo talhao com 2 variedades (2 plantios), barra duplicata real.
+        $unico = Rule::unique('tblplantio', 'talhao')->where(
+            fn ($q) => $q->where('codsafra', $request->codsafra)
+                ->where('codfazenda', $request->codfazenda)
+                ->where('codvariedade', $request->codvariedade)
+                ->whereNull('inativo')
         );
         if ($codplantio) {
             $unico->ignore($codplantio, 'codplantio');
@@ -87,9 +91,16 @@ class PlantioController extends MgController
 
         return [
             'codsafra' => ['required', 'exists:tblsafra,codsafra'],
-            'codtalhao' => ['required', 'exists:tbltalhao,codtalhao', $unico],
+            'codfazenda' => ['required', 'exists:tblfazenda,codfazenda'],
+            'talhao' => ['required', 'string', 'max:60', $unico],
             'codvariedade' => ['required', 'exists:tblvariedade,codvariedade'],
             'areaplantada' => ['required', 'numeric', 'gt:0'],
+            'area' => ['nullable', 'numeric'],
+            'geometria' => ['nullable', 'array'],
+            'cor' => ['nullable', 'string', 'max:9'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'codtalhao' => ['nullable', 'exists:tbltalhao,codtalhao'],
         ];
     }
 }

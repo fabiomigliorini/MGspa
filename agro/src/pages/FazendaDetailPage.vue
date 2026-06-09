@@ -1,14 +1,18 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
 import { PALETA_TALHAO, corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 
 const route = useRoute()
+const router = useRouter()
+const $q = useQuasar()
 const codfazenda = Number(route.params.codfazenda)
 
 const fazendaCad = useCadastro('fazenda', 'codfazenda', 'Fazenda')
@@ -93,6 +97,26 @@ async function salvarFazenda() {
   await fazendaCad.salvar()
   if (!fazendaCad.dialog) await carregarFazenda()
 }
+async function alternarInativoFazenda() {
+  await fazendaCad.alternarInativo(fazenda.value)
+  await carregarFazenda()
+}
+function excluirFazenda() {
+  $q.dialog({
+    title: 'Excluir',
+    message: `Excluir a fazenda ${fazenda.value?.fazenda}?`,
+    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/fazenda/${codfazenda}`)
+      notifySuccess('Excluído!')
+      router.push({ name: 'fazendas' })
+    } catch (e) {
+      notifyError(e)
+    }
+  })
+}
 
 // Talhão — janela única (mapa). Novo começa perto dos vizinhos; editar abre o
 // polígono existente. A área é calculada do desenho, mas continua editável.
@@ -164,12 +188,33 @@ onMounted(async () => {
           <div class="col q-ml-md">
             <div class="text-h6">{{ fazenda?.fazenda || 'Fazenda' }}</div>
             <div class="text-caption text-grey-7">
-              {{ fmt(fazenda?.areatotal, 1) }} ha de área total
+              {{ fmt(resumo.areatalhoes, 1) }} ha de área total
             </div>
           </div>
-          <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarFazenda">
-            <q-tooltip>Editar fazenda</q-tooltip>
-          </q-btn>
+          <div class="row items-center no-wrap q-gutter-xs">
+            <MgInfoCriacao
+              :usuariocriacao="fazenda?.usuariocriacao"
+              :criacao="fazenda?.criacao"
+              :usuarioalteracao="fazenda?.usuarioalteracao"
+              :alteracao="fazenda?.alteracao"
+            />
+            <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarFazenda">
+              <q-tooltip>Editar fazenda</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              round
+              size="sm"
+              color="grey-7"
+              :icon="fazenda?.inativo ? 'play_arrow' : 'pause'"
+              @click="alternarInativoFazenda"
+            >
+              <q-tooltip>{{ fazenda?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+            </q-btn>
+            <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirFazenda">
+              <q-tooltip>Excluir</q-tooltip>
+            </q-btn>
+          </div>
         </q-card-section>
       </q-card>
 
@@ -196,7 +241,7 @@ onMounted(async () => {
           </q-item-section>
           <q-item-section>
             <q-item-label class="text-subtitle1">Mapa</q-item-label>
-            <q-item-label caption>Talhões sobre imagem de satélite</q-item-label>
+            <q-item-label caption>Layout base sobre imagem de satélite</q-item-label>
           </q-item-section>
         </q-item>
         <q-separator />
@@ -213,8 +258,10 @@ onMounted(async () => {
             <q-avatar color="brown-1" text-color="brown-8" icon="grass" />
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-subtitle1">Talhões</q-item-label>
-            <q-item-label caption>Áreas e polígonos desta fazenda</q-item-label>
+            <q-item-label class="text-subtitle1">Layout base</q-item-label>
+            <q-item-label caption
+              >Modelo de talhões da fazenda — cada safra clona e ajusta</q-item-label
+            >
           </q-item-section>
           <q-item-section side>
             <q-btn flat round size="sm" color="primary" icon="add" @click="novoTalhao">
@@ -239,6 +286,12 @@ onMounted(async () => {
             <q-item-section side>
               <div class="row items-center no-wrap q-gutter-xs">
                 <q-badge v-if="!t.geometria" color="grey-5" label="sem mapa" />
+                <MgInfoCriacao
+                  :usuariocriacao="t.usuariocriacao"
+                  :criacao="t.criacao"
+                  :usuarioalteracao="t.usuarioalteracao"
+                  :alteracao="t.alteracao"
+                />
                 <q-btn
                   flat
                   round
@@ -294,7 +347,7 @@ onMounted(async () => {
       </q-card>
 
       <!-- Por safra -->
-      <q-card bordered flat>
+      <q-card bordered flat class="overflow-hidden">
         <q-item>
           <q-item-section avatar>
             <q-avatar color="light-green-1" text-color="light-green-9" icon="eco" />
@@ -341,29 +394,20 @@ onMounted(async () => {
             <q-card-section>
               <div class="text-h6">Editar Fazenda</div>
             </q-card-section>
-            <q-card-section class="q-gutter-md">
+            <q-card-section>
               <q-input
                 v-model="fazendaCad.form.fazenda"
                 label="Nome da fazenda"
                 outlined
                 autofocus
               />
-              <MgInputValor
-                v-model="fazendaCad.form.areatotal"
-                :decimals="2"
-                suffix="ha"
-                label="Área total"
-              />
+              <div class="text-caption text-grey-6 q-mt-sm">
+                A área total é calculada automaticamente a partir dos talhões.
+              </div>
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                unelevated
-                label="Salvar"
-                color="primary"
-                :loading="fazendaCad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="fazendaCad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>
@@ -393,12 +437,7 @@ onMounted(async () => {
           style="top: 12px; left: 12px; z-index: 1000; width: 250px"
         >
           <div class="row items-center no-wrap q-gutter-sm">
-            <q-btn
-              round
-              :style="{ backgroundColor: form.cor }"
-              text-color="white"
-              icon="palette"
-            >
+            <q-btn round :style="{ backgroundColor: form.cor }" text-color="white" icon="palette">
               <q-tooltip>Cor do talhão</q-tooltip>
               <q-popup-proxy>
                 <q-color

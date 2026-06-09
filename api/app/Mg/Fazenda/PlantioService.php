@@ -8,7 +8,7 @@ class PlantioService extends MgService
 {
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)
     {
-        $qry = Plantio::query()->with(['Safra.Cultura', 'Talhao.Fazenda', 'Variedade']);
+        $qry = Plantio::query()->with(['Safra.Cultura', 'Fazenda', 'Variedade']);
 
         if (!empty($filter['codplantio'])) {
             $qry->where('codplantio', $filter['codplantio']);
@@ -18,8 +18,8 @@ class PlantioService extends MgService
             $qry->where('codsafra', $filter['codsafra']);
         }
 
-        if (!empty($filter['codtalhao'])) {
-            $qry->where('codtalhao', $filter['codtalhao']);
+        if (!empty($filter['codfazenda'])) {
+            $qry->where('codfazenda', $filter['codfazenda']);
         }
 
         if (!empty($filter['codvariedade'])) {
@@ -30,7 +30,7 @@ class PlantioService extends MgService
             $qry->AtivoInativo($filter['inativo']);
         }
 
-        $qry = self::qryOrdem($qry, $sort ?: ['codsafra', 'codtalhao']);
+        $qry = self::qryOrdem($qry, $sort ?: ['codfazenda', 'talhao']);
         $qry = self::qryColunas($qry, $fields);
         return $qry;
     }

@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
 const cod = Number(route.params.codcontrato)
@@ -148,6 +149,12 @@ onMounted(recarregar)
               <span v-if="contrato?.Safra"> · {{ contrato.Safra.safra }}</span>
             </div>
           </div>
+          <MgInfoCriacao
+            :usuariocriacao="contrato?.usuariocriacao"
+            :criacao="contrato?.criacao"
+            :usuarioalteracao="contrato?.usuarioalteracao"
+            :alteracao="contrato?.alteracao"
+          />
           <q-btn flat color="green-7" icon="local_shipping" label="Embarque" :to="{ name: 'embarque' }" />
         </q-card-section>
       </q-card>
@@ -235,7 +242,13 @@ onMounted(recarregar)
                 <span v-if="f.moeda === 'USD'">· US$ {{ fmt(f.preco, 2) }} × {{ fmt(f.dolar, 4) }}</span>
               </q-item-label>
             </q-item-section>
-            <q-item-section side class="row no-wrap">
+            <q-item-section side class="row no-wrap items-center">
+              <MgInfoCriacao
+                :usuariocriacao="f.usuariocriacao"
+                :criacao="f.criacao"
+                :usuarioalteracao="f.usuarioalteracao"
+                :alteracao="f.alteracao"
+              />
               <q-btn flat round size="sm" color="grey-7" icon="edit" @click="fixCad.editar(f)" />
               <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirFixacao(f)" />
             </q-item-section>
@@ -266,7 +279,13 @@ onMounted(recarregar)
               <q-item-label>{{ rs(p.valor) }}</q-item-label>
               <q-item-label caption>{{ fmtData(p.data) }}<span v-if="p.observacao"> · {{ p.observacao }}</span></q-item-label>
             </q-item-section>
-            <q-item-section side class="row no-wrap">
+            <q-item-section side class="row no-wrap items-center">
+              <MgInfoCriacao
+                :usuariocriacao="p.usuariocriacao"
+                :criacao="p.criacao"
+                :usuarioalteracao="p.usuarioalteracao"
+                :alteracao="p.alteracao"
+              />
               <q-btn flat round size="sm" color="grey-7" icon="edit" @click="pagCad.editar(p)" />
               <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirPagamento(p)" />
             </q-item-section>
@@ -342,7 +361,7 @@ onMounted(recarregar)
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" unelevated label="Salvar" color="primary" :loading="fixCad.salvando" />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="fixCad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>
@@ -360,7 +379,7 @@ onMounted(recarregar)
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" unelevated label="Salvar" color="primary" :loading="pagCad.salvando" />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="pagCad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>

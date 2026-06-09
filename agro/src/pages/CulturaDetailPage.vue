@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
 const codcultura = Number(route.params.codcultura)
@@ -111,6 +112,12 @@ onMounted(async () => {
               {{ Number(cultura?.pesosaca) || 60 }} kg por saca
             </div>
           </div>
+          <MgInfoCriacao
+            :usuariocriacao="cultura?.usuariocriacao"
+            :criacao="cultura?.criacao"
+            :usuarioalteracao="cultura?.usuarioalteracao"
+            :alteracao="cultura?.alteracao"
+          />
           <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarCultura">
             <q-tooltip>Editar cultura</q-tooltip>
           </q-btn>
@@ -189,7 +196,7 @@ onMounted(async () => {
       </q-card>
 
       <!-- Safras desta cultura -->
-      <q-card bordered flat class="q-mb-md">
+      <q-card bordered flat class="q-mb-md overflow-hidden">
         <q-item>
           <q-item-section avatar>
             <q-avatar color="light-green-1" text-color="light-green-9" icon="eco" />
@@ -227,7 +234,7 @@ onMounted(async () => {
       </q-card>
 
       <!-- Tabela de desconto (referência) -->
-      <q-card bordered flat>
+      <q-card bordered flat class="overflow-hidden">
         <q-item clickable v-ripple :to="{ name: 'cultura-desconto', params: { codcultura } }">
           <q-item-section avatar>
             <q-avatar color="deep-orange-1" text-color="deep-orange-8" icon="percent" />
@@ -260,13 +267,7 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                unelevated
-                label="Salvar"
-                color="primary"
-                :loading="culturaCad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="culturaCad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>

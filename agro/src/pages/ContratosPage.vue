@@ -5,6 +5,7 @@ import { useCadastro } from 'src/composables/useCadastro'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const cad = useCadastro('contrato', 'codcontrato', 'Contrato')
 const culturas = ref([])
@@ -67,7 +68,7 @@ onMounted(async () => {
 
       <div v-if="cad.items.length" class="row q-col-gutter-md">
         <div v-for="c in cad.items" :key="c.codcontrato" class="col-12 col-sm-6">
-          <q-card flat bordered :class="{ 'bg-grey-2': c.inativo }">
+          <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': c.inativo }">
             <q-item
               clickable
               v-ripple
@@ -105,26 +106,30 @@ onMounted(async () => {
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <q-btn flat round size="sm" color="grey-7" icon="more_vert" @click.prevent.stop>
-                  <q-menu>
-                    <q-list style="min-width: 150px">
-                      <q-item clickable v-close-popup @click="cad.editar(c)">
-                        <q-item-section avatar><q-icon name="edit" /></q-item-section>
-                        <q-item-section>Editar</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="cad.alternarInativo(c)">
-                        <q-item-section avatar>
-                          <q-icon :name="c.inativo ? 'play_arrow' : 'pause'" />
-                        </q-item-section>
-                        <q-item-section>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="cad.excluir(c)">
-                        <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                        <q-item-section>Excluir</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
+                <div class="row items-center no-wrap q-gutter-xs" @click.prevent.stop>
+                  <MgInfoCriacao
+                    :usuariocriacao="c.usuariocriacao"
+                    :criacao="c.criacao"
+                    :usuarioalteracao="c.usuarioalteracao"
+                    :alteracao="c.alteracao"
+                  />
+                  <q-btn flat round size="sm" color="grey-7" icon="edit" @click="cad.editar(c)">
+                    <q-tooltip>Editar</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    flat
+                    round
+                    size="sm"
+                    color="grey-7"
+                    :icon="c.inativo ? 'play_arrow' : 'pause'"
+                    @click="cad.alternarInativo(c)"
+                  >
+                    <q-tooltip>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+                  </q-btn>
+                  <q-btn flat round size="sm" color="grey-7" icon="delete" @click="cad.excluir(c)">
+                    <q-tooltip>Excluir</q-tooltip>
+                  </q-btn>
+                </div>
               </q-item-section>
             </q-item>
           </q-card>
@@ -227,7 +232,7 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" unelevated label="Salvar" color="primary" :loading="cad.salvando" />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>
