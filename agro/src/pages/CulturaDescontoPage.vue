@@ -18,6 +18,8 @@ const tipos = [
   { label: 'Umidade', value: 'UMIDADE' },
   { label: 'Impureza', value: 'IMPUREZA' },
   { label: 'Avariados', value: 'AVARIADOS' },
+  { label: 'Esverdeados', value: 'ESVERDEADOS' },
+  { label: 'Quebrados', value: 'QUEBRADOS' },
 ]
 
 const colunas = [

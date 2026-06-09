@@ -22,7 +22,8 @@ class Cultura extends MgModel
     protected $fillable = [
         'cultura',
         'inativo',
-        'pesosaca'
+        'pesosaca',
+        'icone'
     ];
 
     protected $casts = [
