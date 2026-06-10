@@ -5,7 +5,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 
 const cad = useCadastro('cultura', 'codcultura', 'Cultura')
 
-const emojis = ['🌽', '🫘', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
+const emojis = ['🌽', '🫛', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
 
 onMounted(() => cad.carregar())
 </script>
@@ -45,8 +45,8 @@ onMounted(() => cad.carregar())
               :to="{ name: 'cultura-detalhe', params: { codcultura: c.codcultura } }"
             >
               <q-item-section avatar>
-                <q-avatar v-if="c.icone" color="light-green-1" style="font-size: 24px">
-                  {{ c.icone }}
+                <q-avatar v-if="c.icone" color="light-green-1">
+                  <span style="font-size: 26px">{{ c.icone }}</span>
                 </q-avatar>
                 <q-avatar v-else color="light-green-7" text-color="white" icon="grain" />
               </q-item-section>
