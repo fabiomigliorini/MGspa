@@ -236,6 +236,102 @@ const excluirEmb = (e) => {
   )
 }
 
+// ───────────── Unificações e conversão de embalagem ─────────────
+// Backend: origem é absorvida pela destino (origem deixa de existir).
+const dlgUnifVar = ref(false)
+const dlgUnifBarra = ref(false)
+const savingUnif = ref(false)
+const unifVarOrigem = ref(null)
+const unifVarDestino = ref(null)
+const unifBarraOrigem = ref(null)
+const unifBarraDestino = ref(null)
+
+const variacaoDestinoOptions = computed(() =>
+  (produto.value?.ProdutoVariacaoS || [])
+    .filter((v) => v.codprodutovariacao !== unifVarOrigem.value?.codprodutovariacao)
+    .map((v) => ({ label: v.variacao || '{Sem variação}', value: v.codprodutovariacao })),
+)
+
+// unificaBarras exige mesma variação E mesma embalagem da origem.
+const barraDestinoOptions = computed(() => {
+  const o = unifBarraOrigem.value
+  if (!o) return []
+  const opts = []
+  for (const v of produto.value?.ProdutoVariacaoS || []) {
+    for (const b of v.ProdutoBarraS || []) {
+      const compativel =
+        b.codprodutobarra !== o.codprodutobarra &&
+        b.codprodutovariacao === o.codprodutovariacao &&
+        (b.codprodutoembalagem ?? null) === (o.codprodutoembalagem ?? null)
+      if (compativel) opts.push({ label: b.barras, value: b.codprodutobarra })
+    }
+  }
+  return opts
+})
+
+const abrirUnifVar = (v) => {
+  unifVarOrigem.value = v
+  unifVarDestino.value = null
+  dlgUnifVar.value = true
+}
+const confirmarUnifVar = async () => {
+  savingUnif.value = true
+  try {
+    await api.post('v1/produto/unifica-variacoes', {
+      codprodutovariacaoorigem: unifVarOrigem.value.codprodutovariacao,
+      codprodutovariacaodestino: unifVarDestino.value,
+    })
+    notifySuccess('Variações unificadas')
+    dlgUnifVar.value = false
+    await carregar()
+  } catch (e) {
+    notifyError(e, 'Erro ao unificar variações')
+  } finally {
+    savingUnif.value = false
+  }
+}
+
+const abrirUnifBarra = (b) => {
+  unifBarraOrigem.value = b
+  unifBarraDestino.value = null
+  dlgUnifBarra.value = true
+}
+const confirmarUnifBarra = async () => {
+  savingUnif.value = true
+  try {
+    await api.post('v1/produto/unifica-barras', {
+      codprodutobarraorigem: unifBarraOrigem.value.codprodutobarra,
+      codprodutobarradestino: unifBarraDestino.value,
+    })
+    notifySuccess('Códigos de barras unificados')
+    dlgUnifBarra.value = false
+    await carregar()
+  } catch (e) {
+    notifyError(e, 'Erro ao unificar códigos')
+  } finally {
+    savingUnif.value = false
+  }
+}
+
+const converterEmbalagem = (e) => {
+  $q.dialog({
+    title: 'Converter para unidade',
+    message: `Converter a embalagem C/${formataNum(e.quantidade)} para a unidade do produto? Saldos e preços serão recalculados.`,
+    cancel: true,
+    ok: { label: 'Converter', color: 'primary', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.post('v1/produto/embalagem-para-unidade', {
+        codprodutoembalagem: e.codprodutoembalagem,
+      })
+      notifySuccess('Embalagem convertida para unidade')
+      await carregar()
+    } catch (err) {
+      notifyError(err, 'Erro ao converter embalagem')
+    }
+  })
+}
+
 // ────────────────────────────── Imagens ───────────────────────────────
 const fileInput = ref(null)
 const uploadingImg = ref(false)
@@ -470,6 +566,18 @@ onMounted(async () => {
                             <q-tooltip>Editar variação</q-tooltip>
                           </q-btn>
                           <q-btn
+                            v-if="produto.ProdutoVariacaoS.length > 1"
+                            flat
+                            dense
+                            round
+                            size="sm"
+                            color="grey-7"
+                            icon="call_merge"
+                            @click.stop="abrirUnifVar(v)"
+                          >
+                            <q-tooltip>Unificar com outra variação</q-tooltip>
+                          </q-btn>
+                          <q-btn
                             flat
                             dense
                             round
@@ -498,6 +606,18 @@ onMounted(async () => {
                         </q-item-section>
                         <q-item-section side>
                           <div class="row no-wrap">
+                            <q-btn
+                              v-if="v.ProdutoBarraS.length > 1"
+                              flat
+                              dense
+                              round
+                              size="sm"
+                              color="grey-7"
+                              icon="call_merge"
+                              @click="abrirUnifBarra(b)"
+                            >
+                              <q-tooltip>Unificar com outro código</q-tooltip>
+                            </q-btn>
                             <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirBarraEditar(v, b)" />
                             <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirBarra(b)" />
                           </div>
@@ -582,6 +702,17 @@ onMounted(async () => {
                     </q-item-section>
                     <q-item-section side>
                       <div class="row no-wrap">
+                        <q-btn
+                          flat
+                          dense
+                          round
+                          size="sm"
+                          color="grey-7"
+                          icon="swap_horiz"
+                          @click="converterEmbalagem(e)"
+                        >
+                          <q-tooltip>Converter para unidade</q-tooltip>
+                        </q-btn>
                         <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEmbEditar(e)" />
                         <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirEmb(e)" />
                       </div>
@@ -924,6 +1055,81 @@ onMounted(async () => {
             <q-btn flat label="Salvar" type="submit" :loading="savingEmb" />
           </q-card-actions>
         </q-form>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog Unificar Variação -->
+    <q-dialog v-model="dlgUnifVar">
+      <q-card bordered flat style="width: 460px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline">UNIFICAR VARIAÇÃO</q-card-section>
+        <q-separator inset />
+        <q-card-section class="q-gutter-md">
+          <div class="text-body2">
+            A variação
+            <span class="text-weight-medium">"{{ unifVarOrigem?.variacao || 'Sem variação' }}"</span>
+            e seus códigos de barras serão movidos para a variação de destino. Esta ação não pode
+            ser desfeita.
+          </div>
+          <q-select
+            v-model="unifVarDestino"
+            :options="variacaoDestinoOptions"
+            emit-value
+            map-options
+            outlined
+            label="Variação de destino"
+          />
+        </q-card-section>
+        <q-separator inset />
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn
+            flat
+            label="Unificar"
+            color="primary"
+            :disable="!unifVarDestino"
+            :loading="savingUnif"
+            @click="confirmarUnifVar"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Dialog Unificar Código de Barras -->
+    <q-dialog v-model="dlgUnifBarra">
+      <q-card bordered flat style="width: 460px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline">UNIFICAR CÓDIGO DE BARRAS</q-card-section>
+        <q-separator inset />
+        <q-card-section class="q-gutter-md">
+          <div class="text-body2">
+            O código
+            <span class="text-weight-medium">"{{ unifBarraOrigem?.barras }}"</span>
+            será unificado no código de destino. Esta ação não pode ser desfeita.
+          </div>
+          <q-select
+            v-model="unifBarraDestino"
+            :options="barraDestinoOptions"
+            emit-value
+            map-options
+            outlined
+            label="Código de destino"
+            hint="Apenas códigos da mesma variação e embalagem"
+          />
+          <q-banner v-if="!barraDestinoOptions.length" dense class="bg-orange-1 text-orange-9 rounded-borders">
+            Nenhum código compatível (mesma variação e embalagem) para unificar.
+          </q-banner>
+        </q-card-section>
+        <q-separator inset />
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn
+            flat
+            label="Unificar"
+            color="primary"
+            :disable="!unifBarraDestino"
+            :loading="savingUnif"
+            @click="confirmarUnifBarra"
+          />
+        </q-card-actions>
       </q-card>
     </q-dialog>
   </q-page>
