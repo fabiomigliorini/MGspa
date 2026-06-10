@@ -14,6 +14,23 @@ class TalhaoController extends MgController
         return response()->json($res, 200);
     }
 
+    // Polígonos de todas as fazendas (contexto do mapa). Passe codfazenda p/
+    // excluir a fazenda atual e receber só "as outras".
+    public function mapa(Request $request)
+    {
+        $qry = Talhao::query()
+            ->with('Fazenda:codfazenda,fazenda')
+            ->whereNotNull('geometria')
+            ->whereNull('inativo');
+
+        if ($request->filled('codfazenda')) {
+            $qry->where('codfazenda', '!=', $request->codfazenda);
+        }
+
+        $res = $qry->get(['codtalhao', 'codfazenda', 'talhao', 'geometria', 'latitude', 'longitude']);
+        return response()->json($res, 200);
+    }
+
     public function store(Request $request)
     {
         $request->validate([

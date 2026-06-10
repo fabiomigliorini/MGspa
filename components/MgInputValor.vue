@@ -17,7 +17,7 @@ const props = defineProps({
   bgColor: { type: String, default: "" },
   rules: { type: Array, default: () => [] },
   stackLabel: { type: Boolean, default: false },
-  bottomSlots: { type: Boolean, default: true },
+  bottomSlots: { type: Boolean, default: false },
   inputClass: { type: String, default: "" },
   inputStyle: { type: [String, Object, Array], default: "" },
 });

@@ -28,6 +28,8 @@ const resumo = ref({
   safras: [],
 })
 const talhoes = ref([])
+// Polígonos das demais fazendas — contexto cinza no editor de talhão.
+const outrasFazendas = ref([])
 
 // Talhão: novo/editar acontece numa única janela (mapa + nome + área).
 const talhaoDialog = ref(false)
@@ -87,6 +89,14 @@ async function carregarResumo() {
 async function carregarTalhoes() {
   const { data } = await api.get('v1/talhao', { params: { codfazenda } })
   talhoes.value = data.data ?? data
+}
+async function carregarOutrasFazendas() {
+  const { data } = await api.get('v1/talhao/mapa', { params: { codfazenda } })
+  outrasFazendas.value = (data.data ?? data).map((t) => ({
+    codfazenda: t.codfazenda,
+    fazenda: t.fazenda?.fazenda,
+    geometria: t.geometria,
+  }))
 }
 
 // Fazenda — edição reaproveita o cadastro genérico e recarrega o cabeçalho.
@@ -170,7 +180,12 @@ function onCentro(c) {
 
 onMounted(async () => {
   try {
-    await Promise.all([carregarFazenda(), carregarResumo(), carregarTalhoes()])
+    await Promise.all([
+      carregarFazenda(),
+      carregarResumo(),
+      carregarTalhoes(),
+      carregarOutrasFazendas(),
+    ])
   } catch (e) {
     notifyError(e)
   }
@@ -425,7 +440,7 @@ onMounted(async () => {
       </q-dialog>
     </div>
 
-    <!-- Dialog Talhão = mapa tela cheia + campos flutuando + FABs -->
+    <!-- Dialog Talhão = mapa tela cheia + bottom sheet de campos + fechar -->
     <q-dialog v-model="talhaoDialog" maximized>
       <q-card class="relative-position" style="width: 100vw; height: 100vh">
         <!-- Mapa de fundo, ocupa a tela toda -->
@@ -436,46 +451,58 @@ onMounted(async () => {
           :geometria="form.geometria"
           :cor="form.cor"
           :referencia="referenciaMapa"
+          :outras="outrasFazendas"
           height="100%"
+          :offset-inferior="120"
           @update:geometria="form.geometria = $event"
           @update:centro="onCentro"
           @update:area="form.area = $event"
         />
 
-        <!-- Campos flutuando no topo-esquerda (fundo transparente) -->
-        <div
-          class="absolute column q-gutter-sm q-pa-sm"
-          style="top: 12px; left: 12px; z-index: 1000; width: 250px"
-        >
-          <div class="row items-center no-wrap q-gutter-sm">
-            <q-btn round :style="{ backgroundColor: form.cor }" text-color="white" icon="palette">
-              <q-tooltip>Cor do talhão</q-tooltip>
-              <q-popup-proxy>
-                <q-color
-                  v-model="form.cor"
-                  :palette="PALETA_TALHAO"
-                  default-view="palette"
-                  no-header
-                  no-footer
-                />
-              </q-popup-proxy>
-            </q-btn>
-            <q-input
-              v-model="form.talhao"
-              label="Nome / número"
-              outlined
-              autofocus
-              bg-color="white"
-              class="col"
-            />
-          </div>
-          <MgInputValor
-            v-model="form.area"
-            :decimals="2"
-            suffix="ha"
-            label="Área (do desenho)"
-            bg-color="white"
-          />
+        <!-- Bottom sheet: cor + nome + área + salvar, numa barra única na base -->
+        <div class="absolute-bottom q-pa-md q-mb-sm" style="z-index: 1000">
+          <q-card flat bordered class="q-pa-sm" style="margin: 0 auto; max-width: 560px">
+            <q-form class="row items-center no-wrap q-gutter-sm" @submit.prevent="salvarTalhao">
+              <q-btn round :style="{ backgroundColor: form.cor }" text-color="white" icon="palette">
+                <q-tooltip>Cor do talhão</q-tooltip>
+                <q-popup-proxy>
+                  <q-color
+                    v-model="form.cor"
+                    :palette="PALETA_TALHAO"
+                    default-view="palette"
+                    no-header
+                    no-footer
+                  />
+                </q-popup-proxy>
+              </q-btn>
+              <q-input
+                v-model="form.talhao"
+                label="Nome"
+                outlined
+                autofocus
+                bg-color="white"
+                class="col"
+              />
+              <MgInputValor
+                v-model="form.area"
+                :decimals="2"
+                suffix="ha"
+                label="Área"
+                bg-color="white"
+                style="width: 120px"
+              />
+              <q-btn
+                type="submit"
+                round
+                color="primary"
+                icon="save"
+                :disable="!podeSalvar"
+                :loading="salvandoTalhao"
+              >
+                <q-tooltip>Salvar talhão</q-tooltip>
+              </q-btn>
+            </q-form>
+          </q-card>
         </div>
 
         <!-- FAB fechar (topo-direita) -->
@@ -488,23 +515,9 @@ onMounted(async () => {
           v-close-popup
           tabindex="-1"
           class="absolute"
-          style="right: 24px; top: 24px; z-index: 1000"
+          style="right: 16px; top: 16px; z-index: 1000"
         >
           <q-tooltip>Fechar</q-tooltip>
-        </q-btn>
-
-        <!-- FAB salvar (baixo-direita) -->
-        <q-btn
-          fab
-          icon="save"
-          color="primary"
-          :disable="!podeSalvar"
-          :loading="salvandoTalhao"
-          class="absolute"
-          style="right: 24px; bottom: 24px; z-index: 1000"
-          @click="salvarTalhao"
-        >
-          <q-tooltip>Salvar talhão</q-tooltip>
         </q-btn>
       </q-card>
     </q-dialog>
