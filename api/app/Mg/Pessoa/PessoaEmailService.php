@@ -106,31 +106,8 @@ class PessoaEmailService
 
     public static function descobreEmailNfeCobranca(Pessoa $pessoa, ?PessoaEmail $email = null): void
     {
-        $codpessoaemailnfe = null;
-        $codpessoaemailcobranca = null;
-        if ($email) {
-            if ($email->nfe && empty($email->inativo)) {
-                $codpessoaemailnfe = $email->codpessoaemail;
-            }
-            if ($email->cobranca && empty($email->inativo)) {
-                $codpessoaemailcobranca = $email->codpessoaemail;
-            }
-        }
-        if ($codpessoaemailnfe) {
-            $pessoa->PessoaEmailS()
-                ->where('nfe', true)
-                ->where('codpessoaemail', '!=', $codpessoaemailnfe)
-                ->whereNull('inativo')
-                ->update(['nfe' => false]);
-        }
-        if ($codpessoaemailcobranca) {
-            $pessoa->PessoaEmailS()
-                ->where('cobranca', true)
-                ->where('codpessoaemail', '!=', $codpessoaemailcobranca)
-                ->whereNull('inativo')
-                ->update(['cobranca' => false]);
-        }
-
+        // Vários emails podem receber NF-e e/ou Cobrança simultaneamente.
+        // Aqui apenas garantimos que pelo menos um email ativo tenha cada flag.
         $nfe = $pessoa->PessoaEmailS()->where('nfe', true)->whereNull('inativo')->count();
         if ($nfe == 0) {
             $first = $pessoa->PessoaEmailS()->whereNull('inativo')->first();
