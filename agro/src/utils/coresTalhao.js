@@ -21,7 +21,7 @@ export const PALETA_TALHAO = [
 // ainda não escolheram cor (assim já aparecem distintos no mapa/lista).
 export function corTalhao(t) {
   if (t?.cor) return t.cor
-  const id = Number(t?.codtalhao) || 0
+  const id = Number(t?.codtalhao ?? t?.codplantio) || 0
   return PALETA_TALHAO[id % PALETA_TALHAO.length]
 }
 

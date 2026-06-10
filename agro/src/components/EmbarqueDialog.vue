@@ -271,7 +271,7 @@ function fmt(v, dec = 0) {
       <q-card-actions align="right">
         <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
         <q-btn flat label="Salvar" color="primary" @click="salvar" />
-        <q-btn unelevated :label="rotuloAvancar[local.etapa]" color="green-7" @click="avancar" />
+        <q-btn flat :label="rotuloAvancar[local.etapa]" color="green-7" @click="avancar" />
       </q-card-actions>
     </q-card>
   </q-dialog>

@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
-import MgInputValor from '@components/MgInputValor.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
 
 const router = useRouter()
@@ -62,7 +62,7 @@ onMounted(async () => {
 
       <div v-if="cad.items.length" class="row q-col-gutter-md">
         <div v-for="f in cad.items" :key="f.codfazenda" class="col-12 col-sm-6 col-md-4">
-          <q-card flat bordered :class="{ 'bg-grey-2': f.inativo }">
+          <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': f.inativo }">
             <q-item
               clickable
               v-ripple
@@ -75,24 +75,16 @@ onMounted(async () => {
                 <q-item-label class="text-subtitle1">{{ f.fazenda }}</q-item-label>
                 <q-item-label caption>{{ fmt(f.areatotal) }} ha</q-item-label>
               </q-item-section>
-              <q-item-section side @click.prevent>
-                <div class="row items-center no-wrap q-gutter-xs">
-                  <q-btn flat round size="sm" color="grey-7" icon="edit" @click="cad.editar(f)">
-                    <q-tooltip>Editar</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    flat
-                    round
-                    size="sm"
-                    color="grey-7"
-                    :icon="f.inativo ? 'play_arrow' : 'pause'"
-                    @click="cad.alternarInativo(f)"
-                  >
-                    <q-tooltip>{{ f.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                  </q-btn>
-                  <q-btn flat round size="sm" color="grey-7" icon="delete" @click="cad.excluir(f)">
-                    <q-tooltip>Excluir</q-tooltip>
-                  </q-btn>
+              <q-item-section side>
+                <div class="row items-center no-wrap">
+                  <MgInfoCriacao
+                    :usuariocriacao="f.usuariocriacao"
+                    :criacao="f.criacao"
+                    :usuarioalteracao="f.usuarioalteracao"
+                    :alteracao="f.alteracao"
+                    @click.prevent.stop
+                  />
+                  <q-icon name="chevron_right" color="grey-5" />
                 </div>
               </q-item-section>
             </q-item>
@@ -122,24 +114,15 @@ onMounted(async () => {
             <q-card-section>
               <div class="text-h6">{{ cad.isNovo ? 'Nova Fazenda' : 'Editar Fazenda' }}</div>
             </q-card-section>
-            <q-card-section class="q-gutter-md">
+            <q-card-section>
               <q-input v-model="cad.form.fazenda" label="Nome da fazenda" outlined autofocus />
-              <MgInputValor
-                v-model="cad.form.areatotal"
-                :decimals="2"
-                suffix="ha"
-                label="Área total"
-              />
+              <div class="text-caption text-grey-6 q-mt-sm">
+                A área total é calculada automaticamente a partir dos talhões.
+              </div>
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                unelevated
-                label="Salvar"
-                color="primary"
-                :loading="cad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>

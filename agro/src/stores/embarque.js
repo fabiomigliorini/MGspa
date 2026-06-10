@@ -30,7 +30,7 @@ export const useEmbarqueStore = defineStore('embarque', () => {
       .filter((p) => !p.inativo)
       .map((p) => ({
         ...p,
-        rotulo: `${p.Talhao?.talhao ?? 'Talhão ' + p.codtalhao}${
+        rotulo: `${p.talhao ?? 'Talhão ' + p.codplantio}${
           p.Safra?.safra ? ' (' + p.Safra.safra + ')' : ''
         }`,
       })),

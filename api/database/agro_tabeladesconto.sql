@@ -12,6 +12,15 @@
 -- Fontes: IN MAPA 60/2011 (milho) e 11/2007 (soja); Aprosoja-MS;
 --   AGAIS (Lacerda Filho); tabela real COOASAVI (validacao da umidade).
 --
+-- Esverdeados / Quebrados (pesquisa 09/06/2026, padrao de mercado/ANEC):
+--   SOJA esverdeados tolerancia 8% ; quebrados+partidos+amassados tol 30%
+--     (IN MAPA 11/2007; limites comerciais ANEC/ABIOVE).
+--   MILHO quebrados/quirera tolerancia 5% (IN MAPA 60/2011, Tipo 3 <= 5%).
+--   MILHO esverdeados NAO e defeito oficial em milho (IN 60/2011 nao
+--     classifica esverdeados) — tabela criada por simetria, tol 8%, AJUSTE
+--     conforme o comprador (pode nem usar). Fator 1,0 nos quatro (desconto
+--     no peso do excedente acima da tolerancia, igual avariados).
+--
 -- Reaplicavel: zera e re-semeia. NAO rode se ja tiver faixas ajustadas
 -- manualmente que queira preservar.
 -- =====================================================================
@@ -37,6 +46,16 @@ INSERT INTO tbltabeladesconto (codcultura, tipo, faixainicio, faixafim, percentu
 SELECT c.codcultura, 'AVARIADOS', f, f + 0.5, greatest(0, round((f + 0.5 - 6) * 1.0, 3)), now(), now()
 FROM tblcultura c, generate_series(0.0::numeric, 14.5::numeric, 0.5) f WHERE c.cultura = 'Milho';
 
+-- esverdeados milho (nao oficial; tol 8% por simetria com a soja)
+INSERT INTO tbltabeladesconto (codcultura, tipo, faixainicio, faixafim, percentualdesconto, criacao, alteracao)
+SELECT c.codcultura, 'ESVERDEADOS', f, f + 0.5, greatest(0, round((f + 0.5 - 8) * 1.0, 3)), now(), now()
+FROM tblcultura c, generate_series(0.0::numeric, 14.5::numeric, 0.5) f WHERE c.cultura = 'Milho';
+
+-- quebrados/quirera milho (tol 5%)
+INSERT INTO tbltabeladesconto (codcultura, tipo, faixainicio, faixafim, percentualdesconto, criacao, alteracao)
+SELECT c.codcultura, 'QUEBRADOS', f, f + 0.5, greatest(0, round((f + 0.5 - 5) * 1.0, 3)), now(), now()
+FROM tblcultura c, generate_series(0.0::numeric, 14.5::numeric, 0.5) f WHERE c.cultura = 'Milho';
+
 -- ---------- SOJA (umidade 1,6 %/ponto, avariados tol 8%) ----------
 INSERT INTO tbltabeladesconto (codcultura, tipo, faixainicio, faixafim, percentualdesconto, criacao, alteracao)
 SELECT c.codcultura, 'UMIDADE', f, f + 0.5, greatest(0, round((f + 0.5 - 14) * 1.6, 3)), now(), now()
@@ -49,3 +68,13 @@ FROM tblcultura c, generate_series(0.0::numeric, 4.5::numeric, 0.5) f WHERE c.cu
 INSERT INTO tbltabeladesconto (codcultura, tipo, faixainicio, faixafim, percentualdesconto, criacao, alteracao)
 SELECT c.codcultura, 'AVARIADOS', f, f + 0.5, greatest(0, round((f + 0.5 - 8) * 1.0, 3)), now(), now()
 FROM tblcultura c, generate_series(0.0::numeric, 14.5::numeric, 0.5) f WHERE c.cultura = 'Soja';
+
+-- esverdeados soja (tol 8%)
+INSERT INTO tbltabeladesconto (codcultura, tipo, faixainicio, faixafim, percentualdesconto, criacao, alteracao)
+SELECT c.codcultura, 'ESVERDEADOS', f, f + 0.5, greatest(0, round((f + 0.5 - 8) * 1.0, 3)), now(), now()
+FROM tblcultura c, generate_series(0.0::numeric, 14.5::numeric, 0.5) f WHERE c.cultura = 'Soja';
+
+-- quebrados/partidos/amassados soja (tol 30%)
+INSERT INTO tbltabeladesconto (codcultura, tipo, faixainicio, faixafim, percentualdesconto, criacao, alteracao)
+SELECT c.codcultura, 'QUEBRADOS', f, f + 0.5, greatest(0, round((f + 0.5 - 30) * 1.0, 3)), now(), now()
+FROM tblcultura c, generate_series(28.0::numeric, 49.5::numeric, 0.5) f WHERE c.cultura = 'Soja';

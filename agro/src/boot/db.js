@@ -26,4 +26,10 @@ db.version(2).stores({
   contrato: 'codcontrato, sincronizado',
 })
 
+// v3: geometria do talhão passou a viver no plantio (por safra). O plantio
+// agora referencia a fazenda direto (codfazenda), não mais um talhão fixo.
+db.version(3).stores({
+  plantio: 'codplantio, codsafra, codfazenda, sincronizado',
+})
+
 export default db

@@ -16,11 +16,14 @@ class Cultura extends MgModel
     protected $table = 'tblcultura';
     protected $primaryKey = 'codcultura';
 
+    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
+
 
     protected $fillable = [
         'cultura',
         'inativo',
-        'pesosaca'
+        'pesosaca',
+        'icone'
     ];
 
     protected $casts = [

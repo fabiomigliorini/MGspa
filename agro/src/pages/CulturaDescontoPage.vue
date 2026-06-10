@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
 const codcultura = Number(route.params.codcultura)
@@ -17,6 +18,8 @@ const tipos = [
   { label: 'Umidade', value: 'UMIDADE' },
   { label: 'Impureza', value: 'IMPUREZA' },
   { label: 'Avariados', value: 'AVARIADOS' },
+  { label: 'Esverdeados', value: 'ESVERDEADOS' },
+  { label: 'Quebrados', value: 'QUEBRADOS' },
 ]
 
 const colunas = [
@@ -147,8 +150,15 @@ onMounted(async () => {
           </template>
           <template #body-cell-acoes="props">
             <q-td :props="props">
+              <MgInfoCriacao
+                :usuariocriacao="props.row.usuariocriacao"
+                :criacao="props.row.criacao"
+                :usuarioalteracao="props.row.usuarioalteracao"
+                :alteracao="props.row.alteracao"
+              />
               <q-btn
                 flat
+                dense
                 round
                 size="sm"
                 color="grey-7"
@@ -157,6 +167,7 @@ onMounted(async () => {
               />
               <q-btn
                 flat
+                dense
                 round
                 size="sm"
                 color="grey-7"
@@ -201,13 +212,7 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                unelevated
-                label="Salvar"
-                color="primary"
-                :loading="cad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>

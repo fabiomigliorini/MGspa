@@ -80,6 +80,7 @@ onMounted(async () => {
         :key="col.etapa"
         flat
         bordered
+        class="overflow-hidden"
         style="min-width: 280px; max-width: 320px"
       >
         <q-item :class="`bg-${col.color} text-white`">

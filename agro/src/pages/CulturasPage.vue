@@ -5,6 +5,8 @@ import MgInputValor from '@components/MgInputValor.vue'
 
 const cad = useCadastro('cultura', 'codcultura', 'Cultura')
 
+const emojis = ['🌽', '🫘', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
+
 onMounted(() => cad.carregar())
 </script>
 
@@ -36,36 +38,24 @@ onMounted(() => cad.carregar())
 
       <div v-if="cad.items.length" class="row q-col-gutter-md">
         <div v-for="c in cad.items" :key="c.codcultura" class="col-12 col-sm-6 col-md-4">
-          <q-card flat bordered :class="{ 'bg-grey-2': c.inativo }">
+          <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': c.inativo }">
             <q-item
               clickable
               v-ripple
               :to="{ name: 'cultura-detalhe', params: { codcultura: c.codcultura } }"
             >
               <q-item-section avatar>
-                <q-avatar color="light-green-7" text-color="white" icon="grain" />
+                <q-avatar v-if="c.icone" color="light-green-1" style="font-size: 24px">
+                  {{ c.icone }}
+                </q-avatar>
+                <q-avatar v-else color="light-green-7" text-color="white" icon="grain" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-subtitle1">{{ c.cultura }}</q-item-label>
                 <q-item-label caption>{{ Number(c.pesosaca) }} kg por saca</q-item-label>
               </q-item-section>
-              <q-item-section side @click.prevent>
-                <q-btn flat round size="sm" color="grey-7" icon="more_vert">
-                  <q-menu>
-                    <q-list style="min-width: 150px">
-                      <q-item clickable v-close-popup @click="cad.alternarInativo(c)">
-                        <q-item-section avatar>
-                          <q-icon :name="c.inativo ? 'play_arrow' : 'pause'" />
-                        </q-item-section>
-                        <q-item-section>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-item-section>
-                      </q-item>
-                      <q-item clickable v-close-popup @click="cad.excluir(c)">
-                        <q-item-section avatar><q-icon name="delete" /></q-item-section>
-                        <q-item-section>Excluir</q-item-section>
-                      </q-item>
-                    </q-list>
-                  </q-menu>
-                </q-btn>
+              <q-item-section side>
+                <q-icon name="chevron_right" color="grey-6" />
               </q-item-section>
             </q-item>
             <q-badge v-if="c.inativo" color="grey-6" label="Inativo" class="q-ma-sm" />
@@ -83,6 +73,20 @@ onMounted(() => cad.carregar())
             </q-card-section>
             <q-card-section class="q-gutter-md">
               <q-input v-model="cad.form.cultura" label="Cultura" outlined autofocus />
+              <q-input v-model="cad.form.icone" label="Emoji" outlined maxlength="4" hint="Opcional">
+                <template #prepend>
+                  <span style="font-size: 20px">{{ cad.form.icone || '🌱' }}</span>
+                </template>
+              </q-input>
+              <div class="row q-gutter-xs">
+                <q-chip
+                  v-for="e in emojis"
+                  :key="e"
+                  clickable
+                  :label="e"
+                  @click="cad.form.icone = e"
+                />
+              </div>
               <MgInputValor
                 v-model="cad.form.pesosaca"
                 :decimals="0"
@@ -92,13 +96,7 @@ onMounted(() => cad.carregar())
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                unelevated
-                label="Salvar"
-                color="primary"
-                :loading="cad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>

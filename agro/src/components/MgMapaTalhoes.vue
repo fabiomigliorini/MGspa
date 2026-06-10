@@ -14,10 +14,11 @@ import { corTalhao } from 'src/utils/coresTalhao'
 //    geometria (GeoJSON), centro ({lat,lng}) e área (ha, via turf).
 const props = defineProps({
   modo: { type: String, default: 'visualizar' }, // 'visualizar' | 'editar'
-  talhoes: { type: Array, default: () => [] }, // [{ codtalhao, talhao, geometria }]
+  talhoes: { type: Array, default: () => [] }, // [{ <idKey>, talhao, geometria }]
   geometria: { type: Object, default: null }, // GeoJSON Polygon (modo editar)
   cor: { type: String, default: '#e53935' }, // cor do polígono em edição
   referencia: { type: Array, default: () => [] }, // outros talhões (contexto no modo editar)
+  idKey: { type: String, default: 'codtalhao' }, // chave de id emitida no 'select'
   height: { type: String, default: '420px' },
 })
 
@@ -102,7 +103,7 @@ function montarVisualizar() {
       style: { color: corTalhao(t), weight: 2, fillColor: corTalhao(t), fillOpacity: 0.35 },
     }).addTo(map)
     camada.bindTooltip(t.talhao, { permanent: true, direction: 'center', className: 'bg-transparent' })
-    camada.on('click', () => emit('select', t.codtalhao))
+    camada.on('click', () => emit('select', t[props.idKey]))
     camadasVisualizar.push(camada)
   }
   if (camadasVisualizar.length) {

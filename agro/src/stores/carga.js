@@ -39,7 +39,7 @@ export const useCargaStore = defineStore('carga', () => {
       .filter((p) => p.codsafra === codsafraAtiva.value && !p.inativo)
       .map((p) => ({
         ...p,
-        rotulo: `${p.Talhao?.talhao ?? 'Talhão ' + p.codtalhao}${
+        rotulo: `${p.talhao ?? 'Talhão ' + p.codplantio}${
           p.Variedade?.variedade ? ' — ' + p.Variedade.variedade : ''
         }`,
       })),

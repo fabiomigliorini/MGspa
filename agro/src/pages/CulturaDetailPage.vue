@@ -1,15 +1,21 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
-import { notifyError } from 'src/utils/notify'
+import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
+const router = useRouter()
+const $q = useQuasar()
 const codcultura = Number(route.params.codcultura)
 
 const culturaCad = useCadastro('cultura', 'codcultura', 'Cultura')
+
+const emojis = ['🌽', '🫘', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
 
 const cultura = ref(null)
 const resumo = ref({
@@ -81,6 +87,26 @@ async function salvarCultura() {
     await carregarResumo()
   }
 }
+async function alternarInativoCultura() {
+  await culturaCad.alternarInativo(cultura.value)
+  await carregarCultura()
+}
+function excluirCultura() {
+  $q.dialog({
+    title: 'Excluir',
+    message: `Excluir a cultura ${cultura.value?.cultura}?`,
+    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/cultura/${codcultura}`)
+      notifySuccess('Excluído!')
+      router.push({ name: 'culturas' })
+    } catch (e) {
+      notifyError(e)
+    }
+  })
+}
 
 onMounted(async () => {
   try {
@@ -104,16 +130,46 @@ onMounted(async () => {
       <q-card bordered flat class="q-mb-md">
         <q-card-section class="row items-center no-wrap">
           <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'culturas' }" />
-          <q-avatar color="light-green-7" text-color="white" icon="grain" class="q-ml-sm" />
+          <q-avatar
+            v-if="cultura?.icone"
+            color="light-green-1"
+            class="q-ml-sm"
+            style="font-size: 24px"
+          >
+            {{ cultura.icone }}
+          </q-avatar>
+          <q-avatar v-else color="light-green-7" text-color="white" icon="grain" class="q-ml-sm" />
           <div class="col q-ml-md">
             <div class="text-h6">{{ cultura?.cultura || 'Cultura' }}</div>
             <div class="text-caption text-grey-7">
               {{ Number(cultura?.pesosaca) || 60 }} kg por saca
             </div>
           </div>
-          <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarCultura">
-            <q-tooltip>Editar cultura</q-tooltip>
-          </q-btn>
+          <div class="row items-center no-wrap">
+            <MgInfoCriacao
+              :usuariocriacao="cultura?.usuariocriacao"
+              :criacao="cultura?.criacao"
+              :usuarioalteracao="cultura?.usuarioalteracao"
+              :alteracao="cultura?.alteracao"
+            />
+            <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarCultura">
+              <q-tooltip>Editar cultura</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              dense
+              round
+              size="sm"
+              color="grey-7"
+              :icon="cultura?.inativo ? 'play_arrow' : 'pause'"
+              @click="alternarInativoCultura"
+            >
+              <q-tooltip>{{ cultura?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+            </q-btn>
+            <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirCultura">
+              <q-tooltip>Excluir</q-tooltip>
+            </q-btn>
+          </div>
         </q-card-section>
       </q-card>
 
@@ -189,7 +245,7 @@ onMounted(async () => {
       </q-card>
 
       <!-- Safras desta cultura -->
-      <q-card bordered flat class="q-mb-md">
+      <q-card bordered flat class="q-mb-md overflow-hidden">
         <q-item>
           <q-item-section avatar>
             <q-avatar color="light-green-1" text-color="light-green-9" icon="eco" />
@@ -227,7 +283,7 @@ onMounted(async () => {
       </q-card>
 
       <!-- Tabela de desconto (referência) -->
-      <q-card bordered flat>
+      <q-card bordered flat class="overflow-hidden">
         <q-item clickable v-ripple :to="{ name: 'cultura-desconto', params: { codcultura } }">
           <q-item-section avatar>
             <q-avatar color="deep-orange-1" text-color="deep-orange-8" icon="percent" />
@@ -251,6 +307,26 @@ onMounted(async () => {
             </q-card-section>
             <q-card-section class="q-gutter-md">
               <q-input v-model="culturaCad.form.cultura" label="Cultura" outlined autofocus />
+              <q-input
+                v-model="culturaCad.form.icone"
+                label="Emoji"
+                outlined
+                maxlength="4"
+                hint="Opcional"
+              >
+                <template #prepend>
+                  <span style="font-size: 20px">{{ culturaCad.form.icone || '🌱' }}</span>
+                </template>
+              </q-input>
+              <div class="row q-gutter-xs">
+                <q-chip
+                  v-for="e in emojis"
+                  :key="e"
+                  clickable
+                  :label="e"
+                  @click="culturaCad.form.icone = e"
+                />
+              </div>
               <MgInputValor
                 v-model="culturaCad.form.pesosaca"
                 :decimals="0"
@@ -260,13 +336,7 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                unelevated
-                label="Salvar"
-                color="primary"
-                :loading="culturaCad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="culturaCad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>

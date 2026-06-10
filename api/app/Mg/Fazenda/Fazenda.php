@@ -15,6 +15,8 @@ class Fazenda extends MgModel
     protected $table = 'tblfazenda';
     protected $primaryKey = 'codfazenda';
 
+    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
+
 
     protected $fillable = [
         'areatotal',
