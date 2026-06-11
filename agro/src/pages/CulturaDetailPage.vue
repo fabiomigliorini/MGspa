@@ -15,7 +15,7 @@ const codcultura = Number(route.params.codcultura)
 
 const culturaCad = useCadastro('cultura', 'codcultura', 'Cultura')
 
-const emojis = ['🌽', '🫘', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
+const emojis = ['🌽', '🫛', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
 
 const cultura = ref(null)
 const resumo = ref({
@@ -130,13 +130,8 @@ onMounted(async () => {
       <q-card bordered flat class="q-mb-md">
         <q-card-section class="row items-center no-wrap">
           <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'culturas' }" />
-          <q-avatar
-            v-if="cultura?.icone"
-            color="light-green-1"
-            class="q-ml-sm"
-            style="font-size: 24px"
-          >
-            {{ cultura.icone }}
+          <q-avatar v-if="cultura?.icone" color="light-green-1" class="q-ml-sm">
+            <span style="font-size: 26px">{{ cultura.icone }}</span>
           </q-avatar>
           <q-avatar v-else color="light-green-7" text-color="white" icon="grain" class="q-ml-sm" />
           <div class="col q-ml-md">

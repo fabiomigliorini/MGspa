@@ -9,6 +9,7 @@ import { PALETA_TALHAO, corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
+import MgIconeCultura from 'components/MgIconeCultura.vue'
 
 const route = useRoute()
 const codsafra = Number(route.params.codsafra)
@@ -23,8 +24,8 @@ const variedades = ref([])
 const talhoesBase = ref([]) // layout base de todas as fazendas (p/ partir o desenho)
 const baseSel = ref(null) // talhão base escolhido no dialog (ação, não persiste)
 
-const pesosaca = computed(() => Number(safra.value?.Cultura?.pesosaca) || 60)
-const codcultura = computed(() => safra.value?.Cultura?.codcultura)
+const pesosaca = computed(() => Number(safra.value?.cultura?.pesosaca) || 60)
+const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.cultura?.codcultura)
 
 const variedadesDaCultura = computed(() =>
   variedades.value.filter((v) => v.codcultura === codcultura.value && !v.inativo),
@@ -202,11 +203,11 @@ onMounted(async () => {
       <q-card bordered flat class="q-mb-md">
         <q-card-section class="row items-center no-wrap">
           <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'safras' }" />
-          <q-avatar color="light-green-1" text-color="light-green-9" icon="eco" class="q-ml-sm" />
+          <MgIconeCultura :codcultura="codcultura" class="q-ml-sm" />
           <div class="col q-ml-md">
             <div class="text-h6">{{ safra?.safra || 'Safra' }}</div>
             <div class="text-caption text-grey-7">
-              {{ safra?.Cultura?.cultura }}<span v-if="periodo"> · {{ periodo }}</span>
+              {{ safra?.cultura?.cultura }}<span v-if="periodo"> · {{ periodo }}</span>
             </div>
           </div>
           <MgInfoCriacao

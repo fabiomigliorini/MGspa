@@ -324,6 +324,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('fazenda/{codfazenda}/inativo', [\Mg\Fazenda\FazendaController::class, 'ativar']);
     Route::apiResource('fazenda', \Mg\Fazenda\FazendaController::class)->parameters(['fazenda' => 'codfazenda']);
 
+    Route::get('talhao/mapa', [\Mg\Fazenda\TalhaoController::class, 'mapa']);
     Route::post('talhao/{codtalhao}/inativo', [\Mg\Fazenda\TalhaoController::class, 'inativar']);
     Route::delete('talhao/{codtalhao}/inativo', [\Mg\Fazenda\TalhaoController::class, 'ativar']);
     Route::apiResource('talhao', \Mg\Fazenda\TalhaoController::class)->parameters(['talhao' => 'codtalhao']);

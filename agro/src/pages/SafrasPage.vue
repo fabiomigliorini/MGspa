@@ -4,6 +4,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgIconeCultura from 'components/MgIconeCultura.vue'
 
 const cad = useCadastro('safra', 'codsafra', 'Safra')
 const culturas = ref([])
@@ -54,12 +55,12 @@ onMounted(async () => {
           <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': s.inativo }">
             <q-item clickable v-ripple :to="{ name: 'safra-detalhe', params: { codsafra: s.codsafra } }">
               <q-item-section avatar>
-                <q-avatar color="light-green-8" text-color="white" icon="eco" />
+                <MgIconeCultura :codcultura="s.codcultura" fallback-color="light-green-8" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-subtitle1">{{ s.safra }}</q-item-label>
                 <q-item-label caption>
-                  {{ s.Cultura?.cultura || '—' }} · {{ periodo(s) }}
+                  {{ s.cultura?.cultura || '—' }} · {{ periodo(s) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>

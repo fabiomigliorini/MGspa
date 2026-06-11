@@ -17,9 +17,11 @@ const props = defineProps({
   talhoes: { type: Array, default: () => [] }, // [{ <idKey>, talhao, geometria }]
   geometria: { type: Object, default: null }, // GeoJSON Polygon (modo editar)
   cor: { type: String, default: '#e53935' }, // cor do polígono em edição
-  referencia: { type: Array, default: () => [] }, // outros talhões (contexto no modo editar)
+  referencia: { type: Array, default: () => [] }, // outros talhões da MESMA fazenda (contexto no modo editar)
+  outras: { type: Array, default: () => [] }, // talhões de OUTRAS fazendas [{ codfazenda, fazenda, geometria }]
   idKey: { type: String, default: 'codtalhao' }, // chave de id emitida no 'select'
   height: { type: String, default: '420px' },
+  offsetInferior: { type: Number, default: 0 }, // sobe os controles do rodapé (zoom/desenho) p/ acima do bottom sheet
 })
 
 const emit = defineEmits(['update:geometria', 'update:centro', 'update:area', 'select'])
@@ -102,7 +104,11 @@ function montarVisualizar() {
     const camada = L.geoJSON(t.geometria, {
       style: { color: corTalhao(t), weight: 2, fillColor: corTalhao(t), fillOpacity: 0.35 },
     }).addTo(map)
-    camada.bindTooltip(t.talhao, { permanent: true, direction: 'center', className: 'bg-transparent' })
+    camada.bindTooltip(t.talhao, {
+      permanent: true,
+      direction: 'center',
+      className: 'bg-transparent',
+    })
     camada.on('click', () => emit('select', t[props.idKey]))
     camadasVisualizar.push(camada)
   }
@@ -141,6 +147,43 @@ function desenharReferencia() {
   ).addTo(map)
 }
 
+// Polígonos das demais fazendas (contexto cinza, não editáveis), agrupados por
+// fazenda para rotular cada uma uma única vez no centro do seu conjunto.
+function desenharOutras() {
+  const porFazenda = new Map()
+  for (const o of props.outras) {
+    if (!o.geometria) continue
+    if (!porFazenda.has(o.codfazenda)) {
+      porFazenda.set(o.codfazenda, { nome: o.fazenda, geometrias: [] })
+    }
+    porFazenda.get(o.codfazenda).geometrias.push(o.geometria)
+  }
+  if (!porFazenda.size) return null
+
+  const grupo = L.featureGroup().addTo(map)
+  for (const { nome, geometrias } of porFazenda.values()) {
+    const camada = L.geoJSON(
+      {
+        type: 'FeatureCollection',
+        features: geometrias.map((g) => ({ type: 'Feature', geometry: g })),
+      },
+      {
+        pmIgnore: true,
+        interactive: false,
+        style: { color: '#9e9e9e', weight: 2, fillColor: '#9e9e9e', fillOpacity: 0.25 },
+      },
+    ).addTo(grupo)
+    if (nome) {
+      camada.bindTooltip(`Fazenda ${nome}`, {
+        permanent: true,
+        direction: 'center',
+        className: 'bg-transparent text-grey-4',
+      })
+    }
+  }
+  return grupo
+}
+
 function montarEditar() {
   map.pm.addControls({
     position: 'bottomleft',
@@ -159,6 +202,7 @@ function montarEditar() {
   })
   map.pm.setLang('pt_br')
 
+  const outras = desenharOutras()
   const ref = desenharReferencia()
 
   if (props.geometria) {
@@ -171,9 +215,14 @@ function montarEditar() {
       registrarCamada(l)
     })
     map.fitBounds(camada.getBounds(), { padding: [30, 30] })
+    // Polígono existente já abre com os vértices editáveis (em vez de estático).
+    if (camadaEdicao && camadaEdicao.pm) camadaEdicao.pm.enable()
   } else if (ref) {
-    // Talhão novo: começa centralizado nos vizinhos da fazenda.
+    // Talhão novo: começa centralizado nos vizinhos da própria fazenda.
     map.fitBounds(ref.getBounds(), { padding: [40, 40] })
+  } else if (outras) {
+    // Fazenda nova (sem vizinhos): centraliza no conjunto das demais fazendas.
+    map.fitBounds(outras.getBounds(), { padding: [60, 60] })
   }
 
   map.on('pm:create', (e) => registrarCamada(e.layer))
@@ -181,26 +230,38 @@ function montarEditar() {
     camadaEdicao = null
     emitirDaCamada()
   })
+
+  // Talhão novo já abre com a ferramenta de desenho de polígono ativa.
+  if (!props.geometria) {
+    map.pm.enableDraw('Polygon')
+  }
 }
 
 onMounted(async () => {
   window.addEventListener('online', setOnline)
   window.addEventListener('offline', setOnline)
 
-  // No modo editar o zoom vai pro canto inferior-esquerdo (topo-esquerda fica
-  // livre pro painel de campos flutuante).
+  // No modo editar o zoom vai pro canto inferior-esquerdo (o topo fica livre
+  // pra busca e a base pro bottom sheet de campos).
   map = L.map(mapaEl.value, { center: BR_CENTRO, zoom: 5, zoomControl: props.modo !== 'editar' })
   L.tileLayer(TILE_SATELITE, { attribution: ATTRIB, maxZoom: 19 }).addTo(map)
 
   if (props.modo === 'editar') {
     L.control.zoom({ position: 'bottomleft' }).addTo(map)
     montarEditar()
+    // Levanta os controles do canto inferior-esquerdo (zoom + desenho) p/ acima
+    // do bottom sheet de campos, que ocupa a base da tela.
+    if (props.offsetInferior) {
+      const canto = map.getContainer().querySelector('.leaflet-bottom.leaflet-left')
+      if (canto) canto.style.marginBottom = `${props.offsetInferior}px`
+    }
   } else {
     montarVisualizar()
   }
 
-  // Talhão novo sem vizinhos pra usar de referência → centraliza no GPS.
-  const temReferencia = props.referencia.some((t) => t.geometria)
+  // Talhão novo sem nenhuma fazenda pra usar de referência → centraliza no GPS.
+  const temReferencia =
+    props.referencia.some((t) => t.geometria) || props.outras.some((o) => o.geometria)
   if (props.modo === 'editar' && !props.geometria && !temReferencia) {
     map.on('locationerror', () => {}) // permissão negada/sem GPS: fica no fallback
     map.locate({ setView: true, maxZoom: 15 })
@@ -247,37 +308,38 @@ onBeforeUnmount(() => {
     <!-- Busca de local + GPS (só no modo editar) -->
     <div
       v-if="modo === 'editar'"
-      class="absolute-top row justify-center items-start q-gutter-sm q-pa-sm"
-      style="z-index: 1000; pointer-events: none"
+      class="absolute-top row justify-start items-start q-gutter-sm q-pa-sm"
+      style="z-index: 1000; pointer-events: none; margin-top: 0px; margin-left: 0px"
     >
       <q-input
         v-model="termoBusca"
         outlined
         bg-color="white"
         placeholder="Buscar cidade, endereço…"
-        style="width: min(360px, 70vw); pointer-events: auto"
+        style="width: min(360px, calc(100% - 160px)); pointer-events: auto"
         @keyup.enter="buscarLocal"
       >
         <template #append>
           <q-btn flat round icon="search" :loading="buscando" @click="buscarLocal" />
+          <q-btn
+            flat
+            round
+            color="white"
+            text-color="grey-8"
+            icon="my_location"
+            style="pointer-events: auto"
+            @click="localizar"
+          >
+            <q-tooltip>Minha localização</q-tooltip>
+          </q-btn>
         </template>
       </q-input>
-      <q-btn
-        round
-        color="white"
-        text-color="grey-8"
-        icon="my_location"
-        style="pointer-events: auto"
-        @click="localizar"
-      >
-        <q-tooltip>Minha localização</q-tooltip>
-      </q-btn>
     </div>
 
     <q-banner
       v-if="!online"
       class="absolute-bottom bg-orange-2 text-orange-9 text-caption"
-      style="z-index: 1000"
+      :style="{ zIndex: 1000, bottom: `${offsetInferior}px` }"
     >
       <template #avatar><q-icon name="cloud_off" color="orange-8" /></template>
       Sem internet — imagem de satélite indisponível.
