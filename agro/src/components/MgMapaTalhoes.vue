@@ -22,6 +22,7 @@ const props = defineProps({
   idKey: { type: String, default: 'codtalhao' }, // chave de id emitida no 'select'
   height: { type: String, default: '420px' },
   offsetInferior: { type: Number, default: 0 }, // sobe os controles do rodapé (zoom/desenho) p/ acima do bottom sheet
+  estatico: { type: Boolean, default: false }, // thumbnail: sem zoom/arraste, clique atravessa pro card
 })
 
 const emit = defineEmits(['update:geometria', 'update:centro', 'update:area', 'select'])
@@ -243,8 +244,24 @@ onMounted(async () => {
 
   // No modo editar o zoom vai pro canto inferior-esquerdo (o topo fica livre
   // pra busca e a base pro bottom sheet de campos).
-  map = L.map(mapaEl.value, { center: BR_CENTRO, zoom: 5, zoomControl: props.modo !== 'editar' })
+  map = L.map(mapaEl.value, {
+    center: BR_CENTRO,
+    zoom: 5,
+    zoomControl: props.modo !== 'editar' && !props.estatico,
+  })
   L.tileLayer(TILE_SATELITE, { attribution: ATTRIB, maxZoom: 19 }).addTo(map)
+
+  // Thumbnail estático: trava interações e deixa o clique atravessar pro card.
+  if (props.estatico) {
+    map.dragging.disable()
+    map.touchZoom.disable()
+    map.doubleClickZoom.disable()
+    map.scrollWheelZoom.disable()
+    map.boxZoom.disable()
+    map.keyboard.disable()
+    if (map.tap) map.tap.disable()
+    map.getContainer().style.pointerEvents = 'none'
+  }
 
   if (props.modo === 'editar') {
     L.control.zoom({ position: 'bottomleft' }).addTo(map)

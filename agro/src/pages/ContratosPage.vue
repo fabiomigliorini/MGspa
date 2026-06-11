@@ -5,7 +5,6 @@ import { useCadastro } from 'src/composables/useCadastro'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
-import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const cad = useCadastro('contrato', 'codcontrato', 'Contrato')
 const culturas = ref([])
@@ -106,47 +105,7 @@ onMounted(async () => {
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <div class="row items-center no-wrap" @click.prevent.stop>
-                  <MgInfoCriacao
-                    :usuariocriacao="c.usuariocriacao"
-                    :criacao="c.criacao"
-                    :usuarioalteracao="c.usuarioalteracao"
-                    :alteracao="c.alteracao"
-                  />
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    color="grey-7"
-                    icon="edit"
-                    @click="cad.editar(c)"
-                  >
-                    <q-tooltip>Editar</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    color="grey-7"
-                    :icon="c.inativo ? 'play_arrow' : 'pause'"
-                    @click="cad.alternarInativo(c)"
-                  >
-                    <q-tooltip>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    color="grey-7"
-                    icon="delete"
-                    @click="cad.excluir(c)"
-                  >
-                    <q-tooltip>Excluir</q-tooltip>
-                  </q-btn>
-                </div>
+                <q-icon name="chevron_right" color="grey-6" />
               </q-item-section>
             </q-item>
           </q-card>

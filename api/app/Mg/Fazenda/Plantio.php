@@ -22,8 +22,8 @@ class Plantio extends MgModel
 
 
     protected $fillable = [
-        'area',
         'areaplantada',
+        'expectativasacas',
         'codfazenda',
         'codsafra',
         'codtalhao',
@@ -39,8 +39,8 @@ class Plantio extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'area' => 'float',
         'areaplantada' => 'float',
+        'expectativasacas' => 'float',
         'codfazenda' => 'integer',
         'codplantio' => 'integer',
         'codsafra' => 'integer',

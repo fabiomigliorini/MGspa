@@ -3,6 +3,7 @@
 namespace Mg\Safra;
 
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Mg\MgController;
 
 class SafraController extends MgController
@@ -19,6 +20,13 @@ class SafraController extends MgController
         $request->validate([
             'safra' => ['required', 'min:2'],
             'codcultura' => ['required', 'exists:tblcultura,codcultura'],
+            'anoplantio' => [
+                'required', 'integer', 'min:2000', 'max:2100',
+                Rule::unique('tblsafra', 'anoplantio')->where('codcultura', $request->codcultura),
+            ],
+            'anocolheita' => ['required', 'integer', 'min:2000', 'max:2100'],
+        ], [
+            'anoplantio.unique' => 'Já existe uma safra dessa cultura para esse ano de plantio.',
         ]);
 
         $model = new Safra();
@@ -40,6 +48,15 @@ class SafraController extends MgController
         $request->validate([
             'safra' => ['required', 'min:2'],
             'codcultura' => ['required', 'exists:tblcultura,codcultura'],
+            'anoplantio' => [
+                'required', 'integer', 'min:2000', 'max:2100',
+                Rule::unique('tblsafra', 'anoplantio')
+                    ->ignore($id, 'codsafra')
+                    ->where('codcultura', $request->codcultura),
+            ],
+            'anocolheita' => ['required', 'integer', 'min:2000', 'max:2100'],
+        ], [
+            'anoplantio.unique' => 'Já existe uma safra dessa cultura para esse ano de plantio.',
         ]);
 
         $model->fill($request->all());

@@ -7,6 +7,13 @@ const cad = useCadastro('cultura', 'codcultura', 'Cultura')
 
 const emojis = ['🌽', '🫛', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
 
+// Ciclo da safra em anos civis: 1 = planta e colhe no mesmo ano (ex.: milho
+// safrinha); 2 = planta num ano e colhe no seguinte (ex.: soja).
+const opcoesCiclo = [
+  { label: 'Mesmo ano (ex.: milho)', value: 1 },
+  { label: 'Vira o ano (ex.: soja)', value: 2 },
+]
+
 onMounted(() => cad.carregar())
 </script>
 
@@ -29,7 +36,7 @@ onMounted(() => cad.carregar())
             size="sm"
             color="primary"
             icon="add"
-            @click="cad.abrirNovo({ pesosaca: 60 })"
+            @click="cad.abrirNovo({ pesosaca: 60, cicloanos: 1 })"
           >
             <q-tooltip>Nova cultura</q-tooltip>
           </q-btn>
@@ -92,6 +99,15 @@ onMounted(() => cad.carregar())
                 :decimals="0"
                 suffix="kg/saca"
                 label="Peso da saca"
+              />
+              <q-select
+                v-model="cad.form.cicloanos"
+                :options="opcoesCiclo"
+                emit-value
+                map-options
+                outlined
+                label="Ciclo da safra"
+                hint="Define o ano de colheita sugerido ao abrir uma safra"
               />
             </q-card-section>
             <q-card-actions align="right">

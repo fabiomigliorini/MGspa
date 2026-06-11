@@ -1,0 +1,12 @@
+-- ============================================================
+-- Agro: expectativa de colheita por plantio.
+--
+-- Cada talhão da safra (tblplantio) ganha a expectativa TOTAL de colheita em
+-- sacas. Na tela o usuário pensa em sc/ha (âncora agronômica) e o total é
+-- sc/ha × área plantada; aqui guardamos o total já calculado. Serve pra somar
+-- a expectativa por fazenda e por safra e pra barra de progresso da colheita
+-- (colhido ÷ expectativa).
+--
+-- Rodar no dev e na PROD. PostgreSQL. Idempotente.
+-- ============================================================
+ALTER TABLE tblplantio ADD COLUMN IF NOT EXISTS expectativasacas numeric(12,2) NULL; -- sacas esperadas (total)

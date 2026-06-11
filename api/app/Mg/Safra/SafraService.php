@@ -26,7 +26,7 @@ class SafraService extends MgService
             $qry->AtivoInativo($filter['inativo']);
         }
 
-        $qry = self::qryOrdem($qry, $sort ?: ['-datainicio', 'safra']);
+        $qry = self::qryOrdem($qry, $sort ?: ['-anoplantio', 'safra']);
         $qry = self::qryColunas($qry, $fields);
         return $qry;
     }

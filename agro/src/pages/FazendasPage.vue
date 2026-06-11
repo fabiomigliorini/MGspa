@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
-import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
 
 const router = useRouter()
@@ -76,16 +75,7 @@ onMounted(async () => {
                 <q-item-label caption>{{ fmt(f.areatotal) }} ha</q-item-label>
               </q-item-section>
               <q-item-section side>
-                <div class="row items-center no-wrap">
-                  <MgInfoCriacao
-                    :usuariocriacao="f.usuariocriacao"
-                    :criacao="f.criacao"
-                    :usuarioalteracao="f.usuarioalteracao"
-                    :alteracao="f.alteracao"
-                    @click.prevent.stop
-                  />
-                  <q-icon name="chevron_right" color="grey-5" />
-                </div>
+                <q-icon name="chevron_right" color="grey-6" />
               </q-item-section>
             </q-item>
             <q-badge v-if="f.inativo" color="grey-6" label="Inativo" class="q-ma-sm" />

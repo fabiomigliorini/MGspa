@@ -56,15 +56,11 @@ function fmt(v, dec = 0) {
     maximumFractionDigits: dec,
   })
 }
-function fmtData(d) {
-  if (!d) return ''
-  const [a, m, dia] = d.slice(0, 10).split('-')
-  return `${dia}/${m}/${a}`
-}
 function periodoSafra(s) {
-  const i = fmtData(s.datainicio)
-  const f = fmtData(s.datafim)
-  return i && f ? `${i} a ${f}` : i || f || ''
+  if (!s.anoplantio) return ''
+  return s.anocolheita && s.anocolheita !== s.anoplantio
+    ? `${s.anoplantio}/${s.anocolheita}`
+    : `${s.anoplantio}`
 }
 
 async function carregarCultura() {
@@ -113,7 +109,7 @@ onMounted(async () => {
     await carregarCultura()
     await Promise.all([
       carregarResumo(),
-      api.get('v1/safra', { params: { codcultura, sort: '-datainicio' } }).then(({ data }) => {
+      api.get('v1/safra', { params: { codcultura, sort: '-anoplantio' } }).then(({ data }) => {
         safras.value = data.data ?? data
       }),
     ])

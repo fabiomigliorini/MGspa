@@ -1,21 +1,35 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
+import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
+const router = useRouter()
+const $q = useQuasar()
 const cod = Number(route.params.codcontrato)
 
+const contratoCad = useCadastro('contrato', 'codcontrato', 'Contrato')
 const fixCad = useCadastro(`contrato/${cod}/fixacao`, 'codfixacao', 'Fixação')
 const pagCad = useCadastro(`contrato/${cod}/pagamento`, 'codpagamento', 'Pagamento')
 
 const contrato = ref(null)
 const carregando = ref(false)
+const culturas = ref([])
+const safras = ref([])
+const naturezas = ref([])
 
+const tipos = [
+  { label: 'Fixo', value: 'FIXO' },
+  { label: 'A fixar', value: 'FIXAR' },
+  { label: 'Barter', value: 'BARTER' },
+]
 const moedas = [
   { label: 'R$', value: 'BRL' },
   { label: 'US$', value: 'USD' },
@@ -115,7 +129,46 @@ async function excluirPagamento(p) {
   setTimeout(recarregar, 400)
 }
 
-onMounted(recarregar)
+// ---- Contrato (edição/ativação/exclusão no cabeçalho do detalhe) ----
+function editarContrato() {
+  contratoCad.editar(contrato.value)
+}
+async function salvarContrato() {
+  await contratoCad.salvar()
+  if (!contratoCad.dialog) await recarregar()
+}
+async function alternarInativoContrato() {
+  await contratoCad.alternarInativo(contrato.value)
+  await recarregar()
+}
+function excluirContrato() {
+  $q.dialog({
+    title: 'Excluir',
+    message: `Excluir o contrato ${contrato.value?.contrato}?`,
+    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/contrato/${cod}`)
+      notifySuccess('Excluído!')
+      router.push({ name: 'contratos' })
+    } catch (e) {
+      notifyError(e)
+    }
+  })
+}
+
+onMounted(async () => {
+  const [{ data: cu }, { data: sa }, { data: nat }] = await Promise.all([
+    api.get('v1/cultura'),
+    api.get('v1/safra'),
+    api.get('v1/natureza-operacao'),
+  ])
+  culturas.value = cu.data ?? cu
+  safras.value = sa.data ?? sa
+  naturezas.value = nat.data ?? nat
+  await recarregar()
+})
 </script>
 
 <template>
@@ -155,6 +208,23 @@ onMounted(recarregar)
             :usuarioalteracao="contrato?.usuarioalteracao"
             :alteracao="contrato?.alteracao"
           />
+          <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarContrato">
+            <q-tooltip>Editar contrato</q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            dense
+            round
+            size="sm"
+            color="grey-7"
+            :icon="contrato?.inativo ? 'play_arrow' : 'pause'"
+            @click="alternarInativoContrato"
+          >
+            <q-tooltip>{{ contrato?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+          </q-btn>
+          <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirContrato">
+            <q-tooltip>Excluir</q-tooltip>
+          </q-btn>
           <q-btn flat color="green-7" icon="local_shipping" label="Embarque" :to="{ name: 'embarque' }" />
         </q-card-section>
       </q-card>
@@ -412,6 +482,146 @@ onMounted(recarregar)
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
               <q-btn type="submit" flat label="Salvar" color="primary" :loading="pagCad.salvando" />
+            </q-card-actions>
+          </q-form>
+        </q-card>
+      </q-dialog>
+
+      <!-- Dialog Contrato (edição) -->
+      <q-dialog v-model="contratoCad.dialog">
+        <q-card bordered flat style="width: 560px; max-width: 95vw">
+          <q-form @submit="salvarContrato">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">Editar Contrato</div>
+            </q-card-section>
+            <q-card-section class="q-gutter-md scroll" style="max-height: 70vh">
+              <div class="row q-col-gutter-md">
+                <q-input
+                  v-model="contratoCad.form.contrato"
+                  label="Nº / identificação"
+                  outlined
+                  autofocus
+                  class="col-12 col-sm-6"
+                />
+                <q-btn-toggle
+                  v-model="contratoCad.form.tipo"
+                  :options="tipos"
+                  no-caps
+                  unelevated
+                  toggle-color="primary"
+                  color="grey-3"
+                  text-color="grey-9"
+                  class="col-12 col-sm-6 self-center"
+                />
+              </div>
+
+              <MgSelectPessoa v-model="contratoCad.form.codpessoa" label="Comprador" />
+
+              <div class="row q-col-gutter-md">
+                <q-select
+                  v-model="contratoCad.form.codcultura"
+                  :options="culturas"
+                  option-value="codcultura"
+                  option-label="cultura"
+                  emit-value
+                  map-options
+                  outlined
+                  label="Cultura"
+                  class="col-6"
+                />
+                <q-select
+                  v-model="contratoCad.form.codsafra"
+                  :options="safras"
+                  option-value="codsafra"
+                  option-label="safra"
+                  emit-value
+                  map-options
+                  outlined
+                  clearable
+                  label="Safra (opcional)"
+                  class="col-6"
+                />
+              </div>
+
+              <div class="row q-col-gutter-md">
+                <MgInputValor
+                  v-model="contratoCad.form.quantidade"
+                  :decimals="0"
+                  suffix="sc"
+                  label="Quantidade"
+                  class="col-4"
+                />
+                <MgInputValor
+                  v-model="contratoCad.form.preco"
+                  :decimals="2"
+                  label="Preço / saca"
+                  class="col-4"
+                />
+                <q-btn-toggle
+                  v-model="contratoCad.form.moeda"
+                  :options="moedas"
+                  no-caps
+                  unelevated
+                  toggle-color="primary"
+                  color="grey-3"
+                  text-color="grey-9"
+                  class="col-4 self-center"
+                />
+              </div>
+
+              <div class="row q-col-gutter-md">
+                <MgInputData
+                  v-model="contratoCad.form.dataembarque"
+                  label="Embarque até"
+                  type="date"
+                  class="col-6"
+                />
+                <q-input
+                  v-model="contratoCad.form.localentrega"
+                  label="Local / FOB-CIF"
+                  outlined
+                  class="col-6"
+                />
+              </div>
+
+              <q-expansion-item icon="receipt_long" label="Dados fiscais (NF)" dense-toggle>
+                <div class="q-gutter-md q-pt-sm">
+                  <q-select
+                    v-model="contratoCad.form.codnaturezaoperacao"
+                    :options="naturezas"
+                    option-value="codnaturezaoperacao"
+                    option-label="naturezaoperacao"
+                    emit-value
+                    map-options
+                    outlined
+                    clearable
+                    label="Natureza da operação"
+                  />
+                  <MgSelectPessoa
+                    v-model="contratoCad.form.codpessoanf"
+                    label="Emitir NF para (destinatário)"
+                  />
+                  <q-input
+                    v-model="contratoCad.form.observacaonf"
+                    label="Observações da NF"
+                    type="textarea"
+                    autogrow
+                    outlined
+                  />
+                </div>
+              </q-expansion-item>
+
+              <q-input
+                v-model="contratoCad.form.observacao"
+                label="Observações"
+                type="textarea"
+                autogrow
+                outlined
+              />
+            </q-card-section>
+            <q-card-actions align="right">
+              <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="contratoCad.salvando" />
             </q-card-actions>
           </q-form>
         </q-card>
