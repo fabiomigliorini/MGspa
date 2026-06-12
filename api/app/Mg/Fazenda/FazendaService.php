@@ -70,7 +70,7 @@ class FazendaService extends MgService
 
         return Safra::with('Cultura')
             ->whereIn('codsafra', $codsafras)
-            ->orderByDesc('datainicio')
+            ->orderByDesc('anoplantio')
             ->get()
             ->map(function ($s) use ($areaPorSafra, $colhidoPorSafra) {
                 $pesosaca = (float) ($s->Cultura->pesosaca ?? 60) ?: 60;

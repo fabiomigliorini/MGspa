@@ -20,21 +20,21 @@ class Safra extends MgModel
 
     protected $fillable = [
         'codcultura',
-        'datafim',
-        'datainicio',
+        'anoplantio',
+        'anocolheita',
         'inativo',
         'safra'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
+        'anocolheita' => 'integer',
+        'anoplantio' => 'integer',
         'codcultura' => 'integer',
         'codsafra' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
-        'datafim' => 'date',
-        'datainicio' => 'date',
         'inativo' => 'datetime'
     ];
 

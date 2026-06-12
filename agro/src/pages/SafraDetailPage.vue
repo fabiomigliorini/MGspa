@@ -1,28 +1,34 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { useCargaStore } from 'src/stores/carga'
-import { PALETA_TALHAO, corTalhao, sugerirCor } from 'src/utils/coresTalhao'
-import MgInputValor from '@components/MgInputValor.vue'
+import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
+import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
 import MgIconeCultura from 'components/MgIconeCultura.vue'
+import PlantioWizardDialog from 'components/PlantioWizardDialog.vue'
 
 const route = useRoute()
+const router = useRouter()
+const $q = useQuasar()
 const codsafra = Number(route.params.codsafra)
 
+const safraCad = useCadastro('safra', 'codsafra', 'Safra')
 const plantioCad = useCadastro(`safra/${codsafra}/plantio`, 'codplantio', 'Plantio')
 const store = useCargaStore()
 const { colhidoPorPlantio } = storeToRefs(store)
 
 const safra = ref(null)
+const culturas = ref([])
 const fazendas = ref([])
 const variedades = ref([])
 const talhoesBase = ref([]) // layout base de todas as fazendas (p/ partir o desenho)
-const baseSel = ref(null) // talhão base escolhido no dialog (ação, não persiste)
 
 const pesosaca = computed(() => Number(safra.value?.cultura?.pesosaca) || 60)
 const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.cultura?.codcultura)
@@ -31,13 +37,23 @@ const variedadesDaCultura = computed(() =>
   variedades.value.filter((v) => v.codcultura === codcultura.value && !v.inativo),
 )
 
-// Plantios da safra (todas as fazendas) + produtividade (colhido vem das cargas).
+// Plantios da safra (todas as fazendas) + produtividade (colhido vem das cargas)
+// e progresso da colheita (colhido ÷ expectativa).
 const linhas = computed(() =>
   plantioCad.items.map((p) => {
     const kg = colhidoPorPlantio.value[p.codplantio] || 0
     const sacas = kg / pesosaca.value
     const area = Number(p.areaplantada) || 0
-    return { ...p, kg, sacas, produtividade: area > 0 ? sacas / area : 0 }
+    const expectativa = Number(p.expectativasacas) || 0
+    return {
+      ...p,
+      kg,
+      sacas,
+      expectativa,
+      expectativaha: area > 0 ? expectativa / area : 0,
+      produtividade: area > 0 ? sacas / area : 0,
+      progresso: expectativa > 0 ? Math.min(1, sacas / expectativa) : 0,
+    }
   }),
 )
 
@@ -48,6 +64,10 @@ const totalArea = computed(() =>
 const totalKg = computed(() => linhas.value.reduce((s, l) => s + l.kg, 0))
 const totalSacas = computed(() => totalKg.value / pesosaca.value)
 const prodMedia = computed(() => (totalArea.value > 0 ? totalSacas.value / totalArea.value : 0))
+const totalExpectativa = computed(() => linhas.value.reduce((s, l) => s + l.expectativa, 0))
+const progressoSafra = computed(() =>
+  totalExpectativa.value > 0 ? Math.min(1, totalSacas.value / totalExpectativa.value) : 0,
+)
 
 // Um card por fazenda que tem plantio nesta safra (mapa + lista + resultado).
 const porFazenda = computed(() => {
@@ -62,11 +82,13 @@ const porFazenda = computed(() => {
         plantios: [],
         area: 0,
         kg: 0,
+        expectativa: 0,
       }
     }
     mapa[cod].plantios.push(l)
     mapa[cod].area += Number(l.areaplantada) || 0
     mapa[cod].kg += l.kg
+    mapa[cod].expectativa += l.expectativa
   }
   return Object.values(mapa).map((g) => {
     const sacas = g.kg / pesosaca.value
@@ -75,31 +97,10 @@ const porFazenda = computed(() => {
       sacas,
       produtividade: g.area > 0 ? sacas / g.area : 0,
       comGeo: g.plantios.filter((p) => p.geometria),
-      maxProd: Math.max(1, ...g.plantios.map((p) => p.produtividade)),
+      progresso: g.expectativa > 0 ? Math.min(1, sacas / g.expectativa) : 0,
     }
   })
 })
-
-// No dialog: talhões base da fazenda escolhida (p/ partir o polígono).
-const talhoesBaseDaFazenda = computed(() =>
-  talhoesBase.value.filter((t) => t.codfazenda === plantioCad.form.codfazenda && !t.inativo),
-)
-// Vizinhos (mesma fazenda/safra) como referência ao desenhar — evita sobrepor.
-const referenciaMapa = computed(() =>
-  linhas.value.filter(
-    (l) =>
-      l.codfazenda === plantioCad.form.codfazenda &&
-      l.geometria &&
-      l.codplantio !== plantioCad.form.codplantio,
-  ),
-)
-const podeSalvar = computed(
-  () =>
-    !!plantioCad.form.codfazenda &&
-    !!plantioCad.form.talhao &&
-    !!plantioCad.form.codvariedade &&
-    Number(plantioCad.form.areaplantada) > 0,
-)
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
@@ -108,31 +109,28 @@ function fmt(v, dec = 0) {
     maximumFractionDigits: dec,
   })
 }
-function fmtData(d) {
-  if (!d) return ''
-  const [a, m, dia] = d.slice(0, 10).split('-')
-  return `${dia}/${m}/${a}`
-}
 const periodo = computed(() => {
-  if (!safra.value) return ''
-  const i = fmtData(safra.value.datainicio)
-  const f = fmtData(safra.value.datafim)
-  return i && f ? `${i} a ${f}` : i || f || ''
+  const s = safra.value
+  if (!s || !s.anoplantio) return ''
+  return s.anocolheita && s.anocolheita !== s.anoplantio
+    ? `${s.anoplantio}/${s.anocolheita}`
+    : `${s.anoplantio}`
 })
 
 function nomeVariedade(p) {
   return p.variedade?.variedade || ''
 }
 
+// Abre o wizard: sem fazenda → começa na escolha de fazenda; com fazenda
+// (botão de adicionar dentro do card de uma fazenda) → pula pra escolha do talhão.
 function novoPlantio(codfazenda = null) {
-  baseSel.value = null
   const usadas = plantioCad.items.map((p) => p.cor).filter(Boolean)
   plantioCad.abrirNovo({
-    codfazenda: codfazenda ?? fazendas.value[0]?.codfazenda ?? null,
+    codfazenda,
+    codtalhao: null,
     talhao: '',
     codvariedade: null,
     areaplantada: 0,
-    area: 0,
     geometria: null,
     latitude: null,
     longitude: null,
@@ -140,7 +138,6 @@ function novoPlantio(codfazenda = null) {
   })
 }
 function editarPlantio(p) {
-  baseSel.value = null
   // Garante uma cor visível mesmo p/ plantios antigos sem cor salva.
   plantioCad.editar({ ...p, cor: corTalhao(p) })
 }
@@ -148,44 +145,51 @@ function selecionarPlantio(codplantio) {
   const p = plantioCad.items.find((x) => x.codplantio === codplantio)
   if (p) editarPlantio(p)
 }
-// Parte do talhão base: traz o polígono como ponto de partida (editável).
-function usarTalhaoBase(t) {
-  if (!t) return
-  plantioCad.form.talhao = t.talhao
-  plantioCad.form.geometria = t.geometria || null
-  plantioCad.form.area = Number(t.area) || 0
-  plantioCad.form.cor = corTalhao(t)
-  if (t.latitude) {
-    plantioCad.form.latitude = t.latitude
-    plantioCad.form.longitude = t.longitude
-  }
+
+async function carregarSafra() {
+  const { data } = await api.get(`v1/safra/${codsafra}`)
+  safra.value = data
 }
-function salvarPlantio() {
-  plantioCad.salvar((f) => ({
-    codfazenda: f.codfazenda,
-    talhao: f.talhao,
-    codvariedade: f.codvariedade,
-    areaplantada: f.areaplantada,
-    area: f.area,
-    geometria: f.geometria,
-    cor: f.cor,
-    latitude: f.latitude,
-    longitude: f.longitude,
-  }))
+
+// Safra — edição/ativação/exclusão no cabeçalho do detalhe (a lista só navega).
+function editarSafra() {
+  safraCad.editar(safra.value)
 }
-function onCentro(c) {
-  plantioCad.form.latitude = c.lat
-  plantioCad.form.longitude = c.lng
+async function salvarSafra() {
+  await safraCad.salvar()
+  if (!safraCad.dialog) await carregarSafra()
+}
+async function alternarInativoSafra() {
+  await safraCad.alternarInativo(safra.value)
+  await carregarSafra()
+}
+function excluirSafra() {
+  $q.dialog({
+    title: 'Excluir',
+    message: `Excluir a safra ${safra.value?.safra}?`,
+    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/safra/${codsafra}`)
+      notifySuccess('Excluído!')
+      router.push({ name: 'safras' })
+    } catch (e) {
+      notifyError(e)
+    }
+  })
 }
 
 onMounted(async () => {
-  const [{ data: s }, { data: f }, { data: v }, { data: t }] = await Promise.all([
+  const [{ data: s }, { data: cu }, { data: f }, { data: v }, { data: t }] = await Promise.all([
     api.get(`v1/safra/${codsafra}`),
+    api.get('v1/cultura'),
     api.get('v1/fazenda'),
     api.get('v1/variedade'),
     api.get('v1/talhao'),
   ])
   safra.value = s
+  culturas.value = cu.data ?? cu
   fazendas.value = f.data ?? f
   variedades.value = v.data ?? v
   talhoesBase.value = t.data ?? t
@@ -216,6 +220,23 @@ onMounted(async () => {
             :usuarioalteracao="safra?.usuarioalteracao"
             :alteracao="safra?.alteracao"
           />
+          <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarSafra">
+            <q-tooltip>Editar safra</q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            dense
+            round
+            size="sm"
+            color="grey-7"
+            :icon="safra?.inativo ? 'play_arrow' : 'pause'"
+            @click="alternarInativoSafra"
+          >
+            <q-tooltip>{{ safra?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+          </q-btn>
+          <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirSafra">
+            <q-tooltip>Excluir</q-tooltip>
+          </q-btn>
           <q-btn flat color="green-7" icon="local_shipping" label="Pátio" :to="{ name: 'patio' }" />
         </q-card-section>
       </q-card>
@@ -249,12 +270,33 @@ onMounted(async () => {
         <div class="col-6 col-md-3">
           <q-card flat bordered>
             <q-card-section>
-              <div class="text-caption text-grey-7">Talhões plantados</div>
-              <div class="text-h6">{{ linhas.length }}</div>
+              <div class="text-caption text-grey-7">Expectativa</div>
+              <div class="text-h6">{{ fmt(totalExpectativa) }} sc</div>
             </q-card-section>
           </q-card>
         </div>
       </div>
+
+      <!-- Progresso da colheita da safra (colhido ÷ expectativa) -->
+      <q-card v-if="totalExpectativa > 0" flat bordered class="q-mb-md">
+        <q-card-section>
+          <div class="row items-center no-wrap q-mb-xs">
+            <div class="col text-subtitle2 text-grey-8">Progresso da colheita</div>
+            <div class="text-subtitle2 text-weight-medium">
+              {{ fmt(totalSacas) }} / {{ fmt(totalExpectativa) }} sc
+              <span class="text-grey-7">· {{ fmt(progressoSafra * 100) }}%</span>
+            </div>
+          </div>
+          <q-linear-progress
+            :value="progressoSafra"
+            size="18px"
+            color="green-6"
+            track-color="grey-3"
+            rounded
+            stripe
+          />
+        </q-card-section>
+      </q-card>
 
       <!-- Título da seção + adicionar (escolhe a fazenda no dialog) -->
       <div class="row items-center q-mb-sm">
@@ -273,11 +315,20 @@ onMounted(async () => {
           <q-item-section>
             <q-item-label class="text-subtitle1">{{ g.fazenda }}</q-item-label>
             <q-item-label caption>
-              {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} sc ·
+              {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} / {{ fmt(g.expectativa) }} sc ·
               <span class="text-green-8 text-weight-medium"
                 >{{ fmt(g.produtividade, 1) }} sc/ha</span
               >
             </q-item-label>
+            <q-linear-progress
+              v-if="g.expectativa > 0"
+              :value="g.progresso"
+              color="green-6"
+              track-color="grey-3"
+              size="6px"
+              rounded
+              class="q-mt-xs"
+            />
           </q-item-section>
           <q-item-section side>
             <q-btn
@@ -318,10 +369,11 @@ onMounted(async () => {
               </q-item-label>
               <q-item-label caption>
                 {{ nomeVariedade(l) || 'sem variedade' }} · {{ fmt(l.areaplantada, 1) }} ha
+                <span v-if="l.expectativa > 0">· exp {{ fmt(l.expectativaha, 1) }} sc/ha</span>
                 <q-badge v-if="!l.geometria" color="grey-5" label="sem mapa" class="q-ml-xs" />
               </q-item-label>
               <q-linear-progress
-                :value="l.produtividade / g.maxProd"
+                :value="l.progresso"
                 color="green-6"
                 track-color="grey-3"
                 size="6px"
@@ -333,7 +385,7 @@ onMounted(async () => {
               <q-item-label class="text-weight-bold text-green-8">
                 {{ fmt(l.produtividade, 1) }} sc/ha
               </q-item-label>
-              <q-item-label caption>{{ fmt(l.sacas) }} sc colhidas</q-item-label>
+              <q-item-label caption>{{ fmt(l.sacas) }} / {{ fmt(l.expectativa) }} sc</q-item-label>
             </q-item-section>
             <q-item-section side>
               <div class="row items-center no-wrap">
@@ -391,129 +443,56 @@ onMounted(async () => {
       </q-card>
     </div>
 
-    <!-- Dialog Plantio = mapa tela cheia + campos flutuando + FABs -->
-    <q-dialog v-model="plantioCad.dialog" maximized>
-      <q-card class="relative-position" style="width: 100vw; height: 100vh">
-        <MgMapaTalhoes
-          v-if="plantioCad.dialog"
-          :key="plantioCad.form.codplantio || 'novo'"
-          modo="editar"
-          :geometria="plantioCad.form.geometria"
-          :cor="plantioCad.form.cor"
-          :referencia="referenciaMapa"
-          height="100%"
-          @update:geometria="plantioCad.form.geometria = $event"
-          @update:centro="onCentro"
-          @update:area="plantioCad.form.area = $event"
-        />
+    <!-- Wizard: escolher fazenda → talhão base → confirmar/ajustar polígono -->
+    <PlantioWizardDialog
+      v-model="plantioCad.dialog"
+      :cad="plantioCad"
+      :fazendas="fazendas"
+      :talhoes-base="talhoesBase"
+      :variedades="variedadesDaCultura"
+      :plantios="linhas"
+    />
 
-        <!-- Campos flutuando no topo-esquerda (fundo transparente) -->
-        <div
-          class="absolute column q-gutter-sm q-pa-sm"
-          style="top: 12px; left: 12px; z-index: 1000; width: 290px"
-        >
-          <q-select
-            v-model="plantioCad.form.codfazenda"
-            :options="fazendas"
-            option-value="codfazenda"
-            option-label="fazenda"
-            emit-value
-            map-options
-            outlined
-            bg-color="white"
-            label="Fazenda"
-          />
-          <q-select
-            v-model="baseSel"
-            :options="talhoesBaseDaFazenda"
-            option-label="talhao"
-            outlined
-            clearable
-            bg-color="white"
-            label="Partir do talhão base (opcional)"
-            @update:model-value="usarTalhaoBase"
-          />
-          <div class="row items-center no-wrap q-gutter-sm">
-            <q-btn
-              round
-              :style="{ backgroundColor: plantioCad.form.cor }"
-              text-color="white"
-              icon="palette"
-            >
-              <q-tooltip>Cor do talhão</q-tooltip>
-              <q-popup-proxy>
-                <q-color
-                  v-model="plantioCad.form.cor"
-                  :palette="PALETA_TALHAO"
-                  default-view="palette"
-                  no-header
-                  no-footer
-                />
-              </q-popup-proxy>
-            </q-btn>
-            <q-input
-              v-model="plantioCad.form.talhao"
-              label="Talhão (nome / número)"
+    <!-- Dialog Safra (edição) -->
+    <q-dialog v-model="safraCad.dialog">
+      <q-card bordered flat style="width: 440px; max-width: 90vw">
+        <q-form @submit="salvarSafra">
+          <q-card-section>
+            <div class="text-h6">Editar Safra</div>
+          </q-card-section>
+          <q-card-section class="q-gutter-md">
+            <q-select
+              v-model="safraCad.form.codcultura"
+              :options="culturas"
+              option-value="codcultura"
+              option-label="cultura"
+              emit-value
+              map-options
               outlined
-              bg-color="white"
-              class="col"
+              label="Cultura"
             />
-          </div>
-          <q-select
-            v-model="plantioCad.form.codvariedade"
-            :options="variedadesDaCultura"
-            option-value="codvariedade"
-            option-label="variedade"
-            emit-value
-            map-options
-            outlined
-            bg-color="white"
-            label="Variedade"
-          />
-          <MgInputValor
-            v-model="plantioCad.form.areaplantada"
-            :decimals="2"
-            suffix="ha"
-            label="Área plantada"
-            bg-color="white"
-          />
-          <MgInputValor
-            v-model="plantioCad.form.area"
-            :decimals="2"
-            suffix="ha"
-            label="Área do desenho"
-            bg-color="white"
-          />
-        </div>
-
-        <!-- FAB fechar (topo-direita) -->
-        <q-btn
-          fab
-          round
-          icon="close"
-          color="white"
-          text-color="grey-9"
-          v-close-popup
-          tabindex="-1"
-          class="absolute"
-          style="right: 24px; top: 24px; z-index: 1000"
-        >
-          <q-tooltip>Fechar</q-tooltip>
-        </q-btn>
-
-        <!-- FAB salvar (baixo-direita) -->
-        <q-btn
-          fab
-          icon="save"
-          color="primary"
-          :disable="!podeSalvar"
-          :loading="plantioCad.salvando"
-          class="absolute"
-          style="right: 24px; bottom: 24px; z-index: 1000"
-          @click="salvarPlantio"
-        >
-          <q-tooltip>Salvar plantio</q-tooltip>
-        </q-btn>
+            <q-input
+              v-model="safraCad.form.safra"
+              label="Safra"
+              hint="Ex.: Milho 2ª Safra 2026"
+              outlined
+              autofocus
+            />
+            <div class="row q-col-gutter-md">
+              <MgInputData
+                v-model="safraCad.form.datainicio"
+                label="Início"
+                type="date"
+                class="col-6"
+              />
+              <MgInputData v-model="safraCad.form.datafim" label="Fim" type="date" class="col-6" />
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn type="submit" flat label="Salvar" color="primary" :loading="safraCad.salvando" />
+          </q-card-actions>
+        </q-form>
       </q-card>
     </q-dialog>
   </q-page>

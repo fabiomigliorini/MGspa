@@ -23,11 +23,13 @@ class Cultura extends MgModel
         'cultura',
         'inativo',
         'pesosaca',
-        'icone'
+        'icone',
+        'cicloanos'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
+        'cicloanos' => 'integer',
         'codcultura' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',

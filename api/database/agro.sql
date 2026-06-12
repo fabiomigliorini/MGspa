@@ -13,6 +13,7 @@ CREATE TABLE tblcultura (
   codcultura          serial PRIMARY KEY,
   cultura             varchar(30) NOT NULL,
   pesosaca            numeric(8,3) NOT NULL DEFAULT 60,   -- kg por saca
+  cicloanos           smallint NOT NULL DEFAULT 1,        -- anos civis: 1=mesmo ano (milho), 2=vira o ano (soja)
   inativo             timestamp,
   criacao             timestamp,
   alteracao           timestamp,
@@ -20,18 +21,19 @@ CREATE TABLE tblcultura (
   codusuarioalteracao integer
 );
 
--- Safra: cultura + periodo ("Milho 2a Safra 2026")
+-- Safra: cultura + ano de plantio/colheita ("Milho 2a Safra 2026")
 CREATE TABLE tblsafra (
   codsafra            serial PRIMARY KEY,
   codcultura          integer NOT NULL REFERENCES tblcultura(codcultura),
   safra               varchar(60) NOT NULL,
-  datainicio          date,
-  datafim             date,
+  anoplantio          smallint,
+  anocolheita         smallint,
   inativo             timestamp,
   criacao             timestamp,
   alteracao           timestamp,
   codusuariocriacao   integer,
-  codusuarioalteracao integer
+  codusuarioalteracao integer,
+  UNIQUE (codcultura, anoplantio)   -- ano de plantio único por cultura
 );
 
 -- Fazenda/propriedade

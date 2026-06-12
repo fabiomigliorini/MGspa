@@ -1,36 +1,41 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { api } from 'src/services/api'
+import { onMounted } from 'vue'
 import { useCadastro } from 'src/composables/useCadastro'
-import MgInputData from '@components/MgInputData.vue'
-import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import MgIconeCultura from 'components/MgIconeCultura.vue'
+import MgRadioCultura from 'components/MgRadioCultura.vue'
 
 const cad = useCadastro('safra', 'codsafra', 'Safra')
-const culturas = ref([])
 
-async function carregarCulturas() {
-  const { data } = await api.get('v1/cultura')
-  culturas.value = data.data ?? data
+// Maior ano de plantio já cadastrado pra cultura (a lista vem ordenada por
+// -anoplantio, então o último está na primeira página).
+function ultimoAnoPlantio(codcultura) {
+  const anos = cad.items
+    .filter((s) => s.codcultura === codcultura && s.anoplantio)
+    .map((s) => s.anoplantio)
+  return anos.length ? Math.max(...anos) : null
 }
 
-function fmtData(d) {
-  if (!d) return ''
-  const [a, m, dia] = d.slice(0, 10).split('-')
-  return `${dia}/${m}/${a}`
+// Ao escolher a cultura numa safra nova, sugere os anos: plantio = último ano
+// cadastrado + 1 (ou ano atual se for a primeira safra da cultura); colheita =
+// plantio + (cicloanos - 1) — milho (ciclo 1) colhe no mesmo ano, soja (ciclo
+// 2) colhe no ano seguinte.
+function onCultura(cultura) {
+  if (!cad.isNovo || !cultura) return
+  const ultimo = ultimoAnoPlantio(cultura.codcultura)
+  const plantio = ultimo ? ultimo + 1 : new Date().getFullYear()
+  cad.form.anoplantio = plantio
+  cad.form.anocolheita = plantio + (Number(cultura.cicloanos || 1) - 1)
 }
 
-function periodo(s) {
-  const i = fmtData(s.datainicio)
-  const f = fmtData(s.datafim)
-  if (i && f) return `${i} a ${f}`
-  return i || f || 'Sem período'
+function safraAnos(s) {
+  if (!s.anoplantio) return 'Sem ano'
+  return s.anocolheita && s.anocolheita !== s.anoplantio
+    ? `${s.anoplantio}/${s.anocolheita}`
+    : `${s.anoplantio}`
 }
 
-onMounted(async () => {
-  await carregarCulturas()
-  await cad.carregar()
-})
+onMounted(() => cad.carregar())
 </script>
 
 <template>
@@ -60,51 +65,11 @@ onMounted(async () => {
               <q-item-section>
                 <q-item-label class="text-subtitle1">{{ s.safra }}</q-item-label>
                 <q-item-label caption>
-                  {{ s.cultura?.cultura || '—' }} · {{ periodo(s) }}
+                  {{ s.cultura?.cultura || '—' }} · {{ safraAnos(s) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>
-                <div class="row items-center no-wrap" @click.prevent.stop>
-                  <MgInfoCriacao
-                    :usuariocriacao="s.usuariocriacao"
-                    :criacao="s.criacao"
-                    :usuarioalteracao="s.usuarioalteracao"
-                    :alteracao="s.alteracao"
-                  />
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    color="grey-7"
-                    icon="edit"
-                    @click="cad.editar(s)"
-                  >
-                    <q-tooltip>Editar</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    color="grey-7"
-                    :icon="s.inativo ? 'play_arrow' : 'pause'"
-                    @click="cad.alternarInativo(s)"
-                  >
-                    <q-tooltip>{{ s.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                  </q-btn>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    color="grey-7"
-                    icon="delete"
-                    @click="cad.excluir(s)"
-                  >
-                    <q-tooltip>Excluir</q-tooltip>
-                  </q-btn>
-                </div>
+                <q-icon name="chevron_right" color="grey-6" />
               </q-item-section>
             </q-item>
           </q-card>
@@ -122,16 +87,7 @@ onMounted(async () => {
               <div class="text-h6">{{ cad.isNovo ? 'Nova Safra' : 'Editar Safra' }}</div>
             </q-card-section>
             <q-card-section class="q-gutter-md">
-              <q-select
-                v-model="cad.form.codcultura"
-                :options="culturas"
-                option-value="codcultura"
-                option-label="cultura"
-                emit-value
-                map-options
-                outlined
-                label="Cultura"
-              />
+              <MgRadioCultura v-model="cad.form.codcultura" @change="onCultura" />
               <q-input
                 v-model="cad.form.safra"
                 label="Safra"
@@ -140,8 +96,22 @@ onMounted(async () => {
                 autofocus
               />
               <div class="row q-col-gutter-md">
-                <MgInputData v-model="cad.form.datainicio" label="Início" type="date" class="col-6" />
-                <MgInputData v-model="cad.form.datafim" label="Fim" type="date" class="col-6" />
+                <MgInputValor
+                  v-model="cad.form.anoplantio"
+                  :decimals="0"
+                  :min="2000"
+                  :max="2100"
+                  label="Ano de plantio"
+                  class="col-6"
+                />
+                <MgInputValor
+                  v-model="cad.form.anocolheita"
+                  :decimals="0"
+                  :min="2000"
+                  :max="2100"
+                  label="Ano de colheita"
+                  class="col-6"
+                />
               </div>
             </q-card-section>
             <q-card-actions align="right">

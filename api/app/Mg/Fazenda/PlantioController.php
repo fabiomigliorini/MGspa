@@ -95,7 +95,7 @@ class PlantioController extends MgController
             'talhao' => ['required', 'string', 'max:60', $unico],
             'codvariedade' => ['required', 'exists:tblvariedade,codvariedade'],
             'areaplantada' => ['required', 'numeric', 'gt:0'],
-            'area' => ['nullable', 'numeric'],
+            'expectativasacas' => ['nullable', 'numeric', 'gte:0'],
             'geometria' => ['nullable', 'array'],
             'cor' => ['nullable', 'string', 'max:9'],
             'latitude' => ['nullable', 'numeric'],
