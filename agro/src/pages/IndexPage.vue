@@ -14,7 +14,6 @@ const { online } = storeToRefs(sinc)
 
 const noPatio = computed(
   () =>
-    cargasPorEtapa.value.PATIO.length +
     cargasPorEtapa.value.BRUTO.length +
     cargasPorEtapa.value.CLASSIFICACAO.length +
     cargasPorEtapa.value.TARA.length,

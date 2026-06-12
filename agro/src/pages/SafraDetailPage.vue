@@ -121,7 +121,7 @@ const periodo = computed(() => {
 })
 
 function nomeVariedade(p) {
-  return p.Variedade?.variedade || ''
+  return p.variedade?.variedade || ''
 }
 
 function novoPlantio(codfazenda = null) {

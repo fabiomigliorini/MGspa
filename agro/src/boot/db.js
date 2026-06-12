@@ -32,4 +32,10 @@ db.version(3).stores({
   plantio: 'codplantio, codsafra, codfazenda, sincronizado',
 })
 
+// v4: cache de veículos (caminhões) p/ autocomplete da placa offline e dados
+// completos no ticket. Motorista = pessoa, buscado online (não cacheado).
+db.version(4).stores({
+  veiculo: 'codveiculo, placa, sincronizado',
+})
+
 export default db

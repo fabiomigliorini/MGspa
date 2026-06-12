@@ -5,7 +5,7 @@ import { db } from 'boot/db'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { calcularCarga } from 'src/utils/desconto'
 
-export const ETAPAS = ['PATIO', 'BRUTO', 'CLASSIFICACAO', 'TARA', 'FINALIZADO']
+export const ETAPAS = ['BRUTO', 'CLASSIFICACAO', 'TARA', 'FINALIZADO']
 
 // Store das cargas de colheita (pátio) — lê/grava no Dexie (offline-first) e
 // dispara a sincronização em background. Os cadastros (safra/plantio/cultura/
@@ -19,7 +19,13 @@ export const useCargaStore = defineStore('carga', () => {
   const culturas = ref([])
   const variedades = ref([])
   const faixas = ref([])
+  const veiculos = ref([])
   const codsafraAtiva = ref(null)
+
+  // Caminhões ativos (cache p/ autocomplete da placa, funciona offline).
+  const veiculosAtivos = computed(() => veiculos.value.filter((v) => !v.inativo))
+  const veiculoPorId = (codveiculo) =>
+    veiculos.value.find((v) => v.codveiculo === codveiculo) || null
 
   const safraAtiva = computed(
     () => safras.value.find((s) => s.codsafra === codsafraAtiva.value) || null,
@@ -40,13 +46,13 @@ export const useCargaStore = defineStore('carga', () => {
       .map((p) => ({
         ...p,
         rotulo: `${p.talhao ?? 'Talhão ' + p.codplantio}${
-          p.Variedade?.variedade ? ' — ' + p.Variedade.variedade : ''
+          p.variedade?.variedade ? ' — ' + p.variedade.variedade : ''
         }`,
       })),
   )
 
   const cargasPorEtapa = computed(() => {
-    const grupos = { PATIO: [], BRUTO: [], CLASSIFICACAO: [], TARA: [], FINALIZADO: [] }
+    const grupos = { BRUTO: [], CLASSIFICACAO: [], TARA: [], FINALIZADO: [] }
     for (const c of cargas.value) {
       if (!c.inativo && grupos[c.etapa]) grupos[c.etapa].push(c)
     }
@@ -102,6 +108,7 @@ export const useCargaStore = defineStore('carga', () => {
     variedades.value = await db.variedade.toArray()
     faixas.value = await db.tabeladesconto.toArray()
     plantios.value = await db.plantio.toArray()
+    veiculos.value = await db.veiculo.toArray()
 
     if (!codsafraAtiva.value && safras.value.length) {
       const ativa = safras.value.find((s) => !s.inativo) || safras.value[0]
@@ -135,9 +142,11 @@ export const useCargaStore = defineStore('carga', () => {
       uuid: uid(),
       codcargacolheita: null,
       codsafra: codsafraAtiva.value,
-      etapa: 'PATIO',
+      etapa: 'BRUTO',
       data: new Date().toISOString(),
+      codveiculo: null,
       placa: null,
+      codpessoamotorista: null,
       motorista: null,
       pesobruto: null,
       tara: null,
@@ -157,6 +166,12 @@ export const useCargaStore = defineStore('carga', () => {
 
   // Grava a carga (recalcula local p/ exibir offline) e tenta sincronizar.
   async function salvar(carga) {
+    // Descarta linhas de talhao vazias (sem codplantio) — nao persistir lixo
+    // que o backend rejeitaria na sincronizacao.
+    carga.plantios = (carga.plantios || []).filter((p) => p.codplantio)
+    // Rateio dos talhoes: 1 talhao => 100% (campo % fica oculto na UI).
+    // Com mistura (2+), mantem os percentuais informados pelo usuario.
+    if (carga.plantios.length === 1) carga.plantios[0].percentual = 100
     const calc = calcularCarga(carga, faixasDaSafra.value)
     Object.assign(carga, calc, { sincronizado: 0 })
     await db.cargacolheita.put({ ...toPlain(carga) })
@@ -173,6 +188,13 @@ export const useCargaStore = defineStore('carga', () => {
     await salvar(carga)
   }
 
+  // Insere no cache local um veículo recém-cadastrado (cadastro rápido no
+  // pátio), pra ficar disponível no autocomplete sem esperar a próxima sync.
+  async function adicionarVeiculo(veiculo) {
+    await db.veiculo.put({ ...veiculo, sincronizado: Date.now() })
+    veiculos.value = await db.veiculo.toArray()
+  }
+
   return {
     ETAPAS,
     cargas,
@@ -181,6 +203,9 @@ export const useCargaStore = defineStore('carga', () => {
     culturas,
     variedades,
     faixas,
+    veiculos,
+    veiculosAtivos,
+    veiculoPorId,
     codsafraAtiva,
     safraAtiva,
     culturaAtiva,
@@ -197,6 +222,7 @@ export const useCargaStore = defineStore('carga', () => {
     nova,
     salvar,
     inativar,
+    adicionarVeiculo,
   }
 })
 
