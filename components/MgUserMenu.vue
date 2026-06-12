@@ -1,11 +1,44 @@
 <script setup>
-import { computed, unref } from 'vue'
+import { computed, onMounted, ref, unref } from 'vue'
 import { Dialog, Notify } from 'quasar'
 import { tempoRelativo } from './formatters'
 
 const props = defineProps({
   auth: { type: Object, required: true },
 })
+
+// Atualização do PWA. O register-service-worker.js de cada app dispara o evento
+// 'pwa-nova-versao' no callback updated() (SW novo já baixou e ativou os assets).
+const novaVersaoDisponivel = ref(false)
+onMounted(() => {
+  if (window.__pwaNovaVersao) novaVersaoDisponivel.value = true
+  window.addEventListener('pwa-nova-versao', () => {
+    novaVersaoDisponivel.value = true
+  })
+})
+
+// Banner: com skipWaiting + clientsClaim ligados no quasar.config, o SW novo já
+// está ativo quando o banner aparece — basta recarregar pra pegar os assets novos.
+function aplicarAtualizacao() {
+  window.location.reload()
+}
+
+// Botão manual "Forçar atualização": opção garantida — apaga os caches do Workbox,
+// desregistra os service workers e recarrega. O SW se registra de novo no boot.
+async function forcarAtualizacao() {
+  try {
+    if ('caches' in window) {
+      const chaves = await caches.keys()
+      await Promise.all(chaves.map((chave) => caches.delete(chave)))
+    }
+    if ('serviceWorker' in navigator) {
+      const registros = await navigator.serviceWorker.getRegistrations()
+      await Promise.all(registros.map((reg) => reg.unregister()))
+    }
+  } finally {
+    window.location.reload()
+  }
+}
 
 const usuario = computed(() => unref(props.auth.usuario))
 const permissoes = computed(() => unref(props.auth.permissoes) || [])
@@ -56,6 +89,22 @@ const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perf
 </script>
 
 <template>
+  <!-- AVISO DE NOVA VERSÃO (PWA) -->
+  <q-banner
+    v-if="novaVersaoDisponivel"
+    inline-actions
+    class="bg-primary text-white"
+    style="position: fixed; top: 0; left: 0; right: 0; z-index: 9999"
+  >
+    <template #avatar>
+      <q-icon name="system_update" />
+    </template>
+    Nova versão disponível.
+    <template #action>
+      <q-btn flat label="Atualizar" icon="refresh" @click="aplicarAtualizacao" />
+    </template>
+  </q-banner>
+
   <q-btn v-if="usuario" flat round icon="person" aria-label="Usuário">
     <q-menu>
       <q-card flat bordered style="width: 320px; max-width: 65vw">
@@ -107,6 +156,18 @@ const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perf
             </q-item-section>
           </q-item>
         </q-card-section>
+
+        <!-- FORÇAR ATUALIZAÇÃO -->
+        <q-separator />
+        <q-item clickable v-close-popup @click="forcarAtualizacao" class="q-pa-lg">
+          <q-item-section avatar>
+            <q-icon name="system_update" color="primary" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Forçar atualização</q-item-label>
+            <q-item-label caption>Baixar a versão mais recente</q-item-label>
+          </q-item-section>
+        </q-item>
 
         <!-- SAIR -->
         <q-separator />
