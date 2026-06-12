@@ -169,6 +169,17 @@ const loadData = async () => {
   }
 }
 
+// Handler das ações do componente MgNotaFiscalAcoes (enviar, consultar, cancelar, etc).
+// As ações já retornam a nota atualizada no payload, então usamos direto, evitando que
+// o cache do fetchNota devolva a versão antiga (status DIG) da nota já aberta.
+const onActionCompleted = async (_action, notaAtualizada) => {
+  if (notaAtualizada) {
+    notaFiscalStore.setCurrentNota(notaAtualizada)
+  } else {
+    await loadData()
+  }
+}
+
 const handleDelete = () => {
   $q.dialog({
     title: 'Confirmar exclusão',
@@ -1351,7 +1362,7 @@ onUnmounted(() => {
                 :nota="nota"
                 :api="api"
                 show-extras
-                @action-completed="loadData"
+                @action-completed="onActionCompleted"
               />
 
               <!-- Alterar Status -->
