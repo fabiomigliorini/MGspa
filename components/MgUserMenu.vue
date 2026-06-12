@@ -9,7 +9,7 @@ const props = defineProps({
 
 // Atualização do PWA. O register-service-worker.js de cada app dispara o evento
 // 'pwa-nova-versao' no callback updated() (SW novo já baixou e ativou os assets).
-const novaVersaoDisponivel = ref(false)
+const novaVersaoDisponivel = ref(true)
 onMounted(() => {
   if (window.__pwaNovaVersao) novaVersaoDisponivel.value = true
   window.addEventListener('pwa-nova-versao', () => {
@@ -93,13 +93,13 @@ const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perf
   <q-banner
     v-if="novaVersaoDisponivel"
     inline-actions
-    class="bg-primary text-white"
+    class="bg-negative text-white"
     style="position: fixed; top: 0; left: 0; right: 0; z-index: 9999"
   >
     <template #avatar>
       <q-icon name="system_update" />
     </template>
-    Nova versão disponível.
+    <span class="text-subtitle1 text-weight-bold"> Nova versão disponível. </span>
     <template #action>
       <q-btn flat label="Atualizar" icon="refresh" @click="aplicarAtualizacao" />
     </template>
