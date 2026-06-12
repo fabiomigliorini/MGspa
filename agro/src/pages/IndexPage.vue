@@ -23,7 +23,10 @@ const pendentes = computed(() => cargas.value.filter((c) => !c.sincronizado && !
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '0'
-  return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  return Number(v).toLocaleString('pt-BR', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  })
 }
 
 const kpis = computed(() => [
@@ -44,12 +47,41 @@ const kpis = computed(() => [
 ])
 
 const atalhos = [
-  { label: 'Pátio', sub: 'Recebimento de cargas', icon: 'local_shipping', cor: 'green-7', to: { name: 'patio' } },
-  { label: 'Expedição', sub: 'Carregamento e NF', icon: 'outbound', cor: 'green-8', to: { name: 'embarque' } },
-  { label: 'Contratos', sub: 'Venda e reconciliação', icon: 'description', cor: 'indigo-7', to: { name: 'contratos' } },
-  { label: 'Safras', sub: 'Plantio e produtividade', icon: 'eco', cor: 'light-green-8', to: { name: 'safras' } },
-  { label: 'Fazendas', sub: 'Talhões, mapa e produtividade', icon: 'agriculture', cor: 'green-7', to: { name: 'fazendas' } },
-  { label: 'Culturas', sub: 'Variedades, descontos e safras', icon: 'category', cor: 'blue-grey-7', to: { name: 'culturas' } },
+  {
+    label: 'Pátio',
+    sub: 'Recebimento de cargas',
+    icon: 'local_shipping',
+    cor: 'green-7',
+    to: { name: 'patio' },
+  },
+  {
+    label: 'Expedição',
+    sub: 'Carregamento e NF',
+    icon: 'outbound',
+    cor: 'green-8',
+    to: { name: 'embarque' },
+  },
+  {
+    label: 'Safras',
+    sub: 'Plantio, contratos e produtividade',
+    icon: 'eco',
+    cor: 'light-green-8',
+    to: { name: 'safras' },
+  },
+  {
+    label: 'Fazendas',
+    sub: 'Talhões, mapa e produtividade',
+    icon: 'agriculture',
+    cor: 'green-7',
+    to: { name: 'fazendas' },
+  },
+  {
+    label: 'Culturas',
+    sub: 'Variedades, descontos e safras',
+    icon: 'category',
+    cor: 'blue-grey-7',
+    to: { name: 'culturas' },
+  },
 ]
 
 onMounted(async () => {

@@ -21,6 +21,11 @@ class ContratoFixacaoController extends MgController
 
     public function store(Request $request, $codcontrato)
     {
+        // FIXO tem fixação automática (espelho do contrato); não se fixa à mão.
+        if (Contrato::findOrFail($codcontrato)->tipo === 'FIXO') {
+            abort(422, 'Contrato FIXO já tem o preço travado; a fixação é automática.');
+        }
+
         $request->validate($this->regras());
 
         $model = new ContratoFixacao();

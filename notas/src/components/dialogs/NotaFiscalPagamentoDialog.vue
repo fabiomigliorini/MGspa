@@ -5,7 +5,7 @@ import {
   BANDEIRA_CARTAO_OPTIONS,
   tipoPagamentoRequerBandeira,
 } from 'src/constants/notaFiscal'
-import SelectPessoa from 'src/components/selects/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({

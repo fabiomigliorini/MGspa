@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { metaStore } from 'src/stores/meta'
 import { formataNumero, formataPercentual, formataDataAbreviada } from '@components/formatters'
-import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 

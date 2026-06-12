@@ -16,7 +16,7 @@ import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
-import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import {
   getNotaFiscalStatusColor,
   getNotaFiscalStatusLabel,

@@ -10,7 +10,7 @@ import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputData from '@components/MgInputData.vue'
-import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
 import { abrirPdf } from 'src/utils/abrirPdf'
 

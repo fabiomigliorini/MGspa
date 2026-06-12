@@ -22,11 +22,9 @@ class ContratoController extends MgController
 
     public function store(Request $request)
     {
-        $request->validate($this->regras());
+        $request->validate($this->regras($request));
 
-        $model = new Contrato();
-        $model->fill($request->all());
-        $model->save();
+        $model = ContratoService::salvar($request->all());
 
         return response()->json($model->fresh(ContratoService::WITH), 201);
     }
@@ -34,9 +32,10 @@ class ContratoController extends MgController
     public function update(Request $request, $id)
     {
         $model = Contrato::findOrFail($id);
-        $request->validate($this->regras());
-        $model->fill($request->all());
-        $model->update();
+        $request->validate($this->regras($request));
+
+        $model = ContratoService::salvar($request->all(), $model);
+
         return response()->json($model->fresh(ContratoService::WITH), 200);
     }
 
@@ -56,8 +55,15 @@ class ContratoController extends MgController
         return response()->json(ContratoService::ativar(Contrato::findOrFail($id)), 200);
     }
 
-    protected function regras(): array
+    protected function regras(Request $request): array
     {
+        // FIXO trava o preço no próprio contrato (vira fixação-espelho), então
+        // o preço é obrigatório e > 0; FIXAR/BARTER fixam à mão depois (preço
+        // aqui é só referência, pode faltar).
+        $preco = $request->tipo === 'FIXO'
+            ? ['required', 'numeric', 'gt:0']
+            : ['nullable', 'numeric', 'gte:0'];
+
         return [
             'contrato' => ['required', 'min:1'],
             'codpessoa' => ['required', 'exists:tblpessoa,codpessoa'],
@@ -65,7 +71,7 @@ class ContratoController extends MgController
             'codsafra' => ['nullable', 'exists:tblsafra,codsafra'],
             'tipo' => ['required', Rule::in(['FIXO', 'FIXAR', 'BARTER'])],
             'quantidade' => ['required', 'numeric', 'gt:0'],
-            'preco' => ['nullable', 'numeric', 'gte:0'],
+            'preco' => $preco,
             'moeda' => ['nullable', Rule::in(['BRL', 'USD'])],
             'codnaturezaoperacao' => ['nullable', 'exists:tblnaturezaoperacao,codnaturezaoperacao'],
             'codpessoanf' => ['nullable', 'exists:tblpessoa,codpessoa'],

@@ -66,16 +66,29 @@ services:
 
   # Worker de queue (sync por padrão no .env, mas se mudar para
   # database/redis o worker já fica disponível).
+  # 8 réplicas atendendo a fila em paralelo (equivalente aos 8 processos do
+  # supervisor antigo). Sem `container_name:` fixo porque o Compose precisa
+  # nomear cada réplica (mgspa-api-worker-1 … -8). Ajuste replicas conforme CPU.
   worker:
     image: mgspa-api
-    container_name: mgspa-api-worker
     restart: unless-stopped
     working_dir: /opt/www/MGspa/api
     user: "82:82"
     depends_on:
       - api
       - redis
-    command: ["php", "artisan", "queue:work", "--queue=urgent,high,default,low", "--sleep=3", "--tries=3", "--max-time=3600"]
+    deploy:
+      replicas: 16
+    command:
+      [
+        "php",
+        "artisan",
+        "queue:work",
+        "--queue=urgent,high,default,low",
+        "--sleep=3",
+        "--tries=3",
+        "--max-time=3600",
+      ]
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico

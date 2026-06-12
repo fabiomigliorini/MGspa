@@ -6,7 +6,7 @@ import { CHEQUE_STATUS_OPTIONS } from 'src/constants/chequeStatus'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import SelectBanco from 'src/components/select/SelectBanco.vue'
-import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 

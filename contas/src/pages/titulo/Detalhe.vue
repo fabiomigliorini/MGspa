@@ -21,7 +21,7 @@ import SelectFilial from 'src/components/select/SelectFilial.vue'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
 import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
 import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
-import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import {
   getNotaFiscalStatusColor,
   getNotaFiscalStatusLabel,

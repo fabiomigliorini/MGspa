@@ -18,6 +18,7 @@ class ContratoFixacao extends MgModel
 
 
     protected $fillable = [
+        'automatico',
         'codcontrato',
         'data',
         'dolar',
@@ -31,6 +32,7 @@ class ContratoFixacao extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
+        'automatico' => 'boolean',
         'codcontrato' => 'integer',
         'codcontratofixacao' => 'integer',
         'codusuarioalteracao' => 'integer',

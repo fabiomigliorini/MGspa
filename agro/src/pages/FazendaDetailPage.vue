@@ -197,16 +197,28 @@ onMounted(async () => {
     <div style="max-width: 1086px; margin: auto">
       <!-- Cabeçalho -->
       <q-card bordered flat class="q-mb-md">
-        <q-card-section class="row items-center no-wrap">
-          <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'fazendas' }" />
-          <q-avatar color="green-1" text-color="green-8" icon="agriculture" class="q-ml-sm" />
-          <div class="col q-ml-md">
-            <div class="text-h6">{{ fazenda?.fazenda || 'Fazenda' }}</div>
-            <div class="text-caption text-grey-7">
-              {{ fmt(resumo.areatalhoes, 1) }} ha de área total
+        <q-card-section class="row items-center">
+          <div class="col-12 col-sm row items-center no-wrap">
+            <q-btn
+              flat
+              round
+              size="sm"
+              color="grey-7"
+              icon="arrow_back"
+              :to="{ name: 'fazendas' }"
+            />
+            <q-avatar color="green-1" text-color="green-8" icon="agriculture" class="q-ml-sm" />
+            <div class="col q-ml-md">
+              <div class="text-h6">{{ fazenda?.fazenda || 'Fazenda' }}</div>
+              <div class="text-caption text-grey-7">
+                {{ fmt(resumo.areatalhoes, 1) }} ha de área total
+              </div>
             </div>
           </div>
-          <div class="row items-center no-wrap">
+          <div
+            class="col-12 col-sm-auto row items-center justify-end no-wrap"
+            :class="{ 'q-mt-sm': $q.screen.lt.sm }"
+          >
             <MgInfoCriacao
               :usuariocriacao="fazenda?.usuariocriacao"
               :criacao="fazenda?.criacao"

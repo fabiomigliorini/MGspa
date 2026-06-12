@@ -245,99 +245,108 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
           :cor="form.cor"
           :outras="cinza"
           height="100%"
+          :offset-inferior="210"
           @update:geometria="form.geometria = $event"
           @update:centro="onCentro"
           @update:area="onArea"
         />
 
-        <!-- Campos flutuando no topo-esquerda -->
-        <div
-          class="absolute column q-gutter-sm q-pa-sm"
-          style="top: 12px; left: 12px; z-index: 1000; width: 290px"
-        >
-          <q-btn
-            v-if="cad.isNovo"
-            flat
-            no-caps
-            color="grey-9"
-            icon="arrow_back"
-            label="Trocar talhão"
-            class="bg-white"
-            style="align-self: flex-start"
-            @click="passo = 2"
-          />
-          <div class="row items-center no-wrap q-gutter-sm">
-            <q-btn round :style="{ backgroundColor: form.cor }" text-color="white" icon="palette">
-              <q-tooltip>Cor do talhão</q-tooltip>
-              <q-popup-proxy>
-                <q-color
-                  v-model="form.cor"
-                  :palette="PALETA_TALHAO"
-                  default-view="palette"
-                  no-header
-                  no-footer
+        <!-- Bottom sheet: campos do plantio centralizados na base -->
+        <div class="absolute-bottom q-pa-md q-mb-sm" style="z-index: 1000">
+          <q-card flat bordered class="q-pa-sm" style="margin: 0 auto; max-width: 760px">
+            <!-- Voltar pra escolha do talhão + fazenda -->
+            <div v-if="cad.isNovo" class="row items-center q-mb-xs">
+              <q-btn
+                flat
+                dense
+                no-caps
+                size="sm"
+                color="grey-8"
+                icon="arrow_back"
+                label="Trocar talhão"
+                @click="passo = 2"
+              />
+              <q-space />
+              <div class="text-caption text-grey-6">{{ nomeFazenda }}</div>
+            </div>
+            <q-form @submit.prevent="salvar">
+              <div class="row items-center no-wrap q-gutter-sm">
+                <q-btn
+                  round
+                  :style="{ backgroundColor: form.cor }"
+                  text-color="white"
+                  icon="palette"
+                >
+                  <q-tooltip>Cor do talhão</q-tooltip>
+                  <q-popup-proxy>
+                    <q-color
+                      v-model="form.cor"
+                      :palette="PALETA_TALHAO"
+                      default-view="palette"
+                      no-header
+                      no-footer
+                    />
+                  </q-popup-proxy>
+                </q-btn>
+                <q-input
+                  v-model="form.talhao"
+                  label="Talhão (nome / número)"
+                  outlined
+                  bg-color="white"
+                  class="col"
                 />
-              </q-popup-proxy>
-            </q-btn>
-            <q-input
-              v-model="form.talhao"
-              label="Talhão (nome / número)"
-              outlined
-              bg-color="white"
-              class="col"
-            />
-          </div>
-          <q-select
-            v-model="form.codvariedade"
-            :options="variedades"
-            option-value="codvariedade"
-            option-label="variedade"
-            emit-value
-            map-options
-            outlined
-            bg-color="white"
-            label="Variedade"
-          />
-          <MgInputValor
-            v-model="form.areaplantada"
-            :decimals="2"
-            suffix="ha"
-            label="Área plantada"
-            bg-color="white"
-          />
-          <div class="row no-wrap q-gutter-sm">
-            <MgInputValor
-              v-model="expectativaha"
-              :decimals="2"
-              suffix="sc/ha"
-              label="Expectativa"
-              bg-color="white"
-              class="col"
-            />
-            <MgInputValor
-              v-model="expectativaTotal"
-              :decimals="0"
-              suffix="sc"
-              label="Expectativa total"
-              bg-color="white"
-              class="col"
-            />
-          </div>
+                <q-select
+                  v-model="form.codvariedade"
+                  :options="variedades"
+                  option-value="codvariedade"
+                  option-label="variedade"
+                  emit-value
+                  map-options
+                  outlined
+                  bg-color="white"
+                  label="Variedade"
+                  class="col"
+                />
+              </div>
+              <div class="row items-center no-wrap q-gutter-sm q-mt-sm">
+                <MgInputValor
+                  v-model="form.areaplantada"
+                  :decimals="2"
+                  suffix="ha"
+                  label="Área plantada"
+                  bg-color="white"
+                  class="col"
+                />
+                <MgInputValor
+                  v-model="expectativaha"
+                  :decimals="2"
+                  suffix="sc/ha"
+                  label="Expectativa"
+                  bg-color="white"
+                  class="col"
+                />
+                <MgInputValor
+                  v-model="expectativaTotal"
+                  :decimals="0"
+                  suffix="sc"
+                  label="Expectativa total"
+                  bg-color="white"
+                  class="col"
+                />
+                <q-btn
+                  type="submit"
+                  round
+                  color="primary"
+                  icon="save"
+                  :disable="!podeSalvar"
+                  :loading="cad.salvando"
+                >
+                  <q-tooltip>Salvar plantio</q-tooltip>
+                </q-btn>
+              </div>
+            </q-form>
+          </q-card>
         </div>
-
-        <!-- FAB salvar (baixo-direita) -->
-        <q-btn
-          fab
-          icon="save"
-          color="primary"
-          :disable="!podeSalvar"
-          :loading="cad.salvando"
-          class="absolute"
-          style="right: 24px; bottom: 24px; z-index: 1000"
-          @click="salvar"
-        >
-          <q-tooltip>Salvar plantio</q-tooltip>
-        </q-btn>
 
         <!-- FAB fechar (topo-direita) — passo 3 não tem barra de cabeçalho -->
         <q-btn
@@ -349,7 +358,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
           v-close-popup
           tabindex="-1"
           class="absolute"
-          style="right: 24px; top: 24px; z-index: 1000"
+          style="right: 16px; top: 16px; z-index: 1000"
         >
           <q-tooltip>Fechar</q-tooltip>
         </q-btn>

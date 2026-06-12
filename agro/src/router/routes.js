@@ -70,12 +70,6 @@ const routes = [
       },
 
       {
-        path: 'contratos',
-        name: 'contratos',
-        component: () => import('pages/ContratosPage.vue'),
-        meta: { auth: true, title: 'Contratos' },
-      },
-      {
         path: 'contrato/:codcontrato',
         name: 'contrato-detalhe',
         component: () => import('pages/ContratoDetailPage.vue'),

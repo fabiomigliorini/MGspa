@@ -29,6 +29,9 @@ register(process.env.SERVICE_WORKER_FILE, {
 
   updated(/* registration */) {
     console.log('New content is available; please refresh.')
+    // Avisa o MgUserMenu (banner "Nova versão") — desacoplado via evento de window.
+    window.__pwaNovaVersao = true
+    window.dispatchEvent(new Event('pwa-nova-versao'))
   },
 
   offline() {
