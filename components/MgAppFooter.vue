@@ -1,16 +1,16 @@
 <script setup>
-import { formataTimestampCompleto } from "./formatters";
+import { formataTimestampIso } from './formatters'
 
 defineProps({
   appName: {
     type: String,
     required: true,
   },
-});
+})
 
-const version = process.env.APP_VERSION;
-const buildDate = formataTimestampCompleto(process.env.BUILD_DATE);
-const commitNumber = process.env.COMMIT_NUMBER;
+const version = process.env.APP_VERSION
+const buildDate = formataTimestampIso(process.env.BUILD_DATE)
+const commitNumber = process.env.COMMIT_NUMBER
 </script>
 
 <template>
