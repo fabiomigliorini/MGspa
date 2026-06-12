@@ -234,58 +234,79 @@ class NFePHPService extends MgService
 
         // Envia Lote para Sefaz
         //$tools->timeout(5);
-        $resp = static::chamarSefazComRetry(
-            fn() => $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1),
-            "enviaLote sincrono NF#{$nf->codnotafiscal}"
-        );
-        $st = new Standardize();
-        $respStd = $st->toStd($resp);
+        $resp = null;
+        $erroEnvio = null;
+        try {
+            $resp = static::chamarSefazComRetry(
+                fn() => $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1),
+                "enviaLote sincrono NF#{$nf->codnotafiscal}"
+            );
+        } catch (SoapException $e) {
+            // Erro nao transitorio (XML invalido, HTTP 500, etc.): a nota nao foi
+            // processada pela SEFAZ — propaga direto.
+            if (!static::ehErroTransitorioSefaz($e)) {
+                throw $e;
+            }
+            // Erro transitorio (ex: SSL 'unexpected eof') e SEM resposta: a 1a requisicao
+            // PODE ter autorizado a nota na SEFAZ enquanto a resposta se perdia. Guarda o
+            // erro e tenta recuperar por consulta abaixo; se nao recuperar, relanca no fim.
+            $erroEnvio = $e;
+            Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: envio falhou no transporte, tentara recuperar por consulta: " . $e->getMessage());
+        }
 
         // inicializa variaveis para retorno
         $sucesso = false;
         $cStat = null;
         $xMotivo = 'Falha Comunicação SEFAZ!';
 
-        // Se veio cStat do Protocolo (modo sincrono encapsula o resultado em protNFe,
-        // inclusive rejeicoes como a duplicidade 204)
-        if (isset($respStd->protNFe->infProt->cStat)) {
+        if ($resp !== null) {
+            $st = new Standardize();
+            $respStd = $st->toStd($resp);
 
-            // Processa Protocolo para saber se foi autorizada
-            $sucesso = static::processarProtocolo($nf, $respStd->protNFe, $resp);
-            $nf = $nf->fresh();
+            // Se veio cStat do Protocolo (modo sincrono encapsula o resultado em protNFe,
+            // inclusive rejeicoes como a duplicidade 204)
+            if (isset($respStd->protNFe->infProt->cStat)) {
 
-            // joga mensagem recebida da Sefaz para Variaveis de Retorno
-            $cStat = $respStd->protNFe->infProt->cStat;
-            $xMotivo = $respStd->protNFe->infProt->xMotivo;
+                // Processa Protocolo para saber se foi autorizada
+                $sucesso = static::processarProtocolo($nf, $respStd->protNFe, $resp);
+                $nf = $nf->fresh();
 
-            Log::info("enviarSincrono NF#{$nf->codnotafiscal}: protocolo recebido cStat={$cStat} ({$xMotivo}) autorizada=" . ($sucesso ? 'sim' : 'nao'));
+                // joga mensagem recebida da Sefaz para Variaveis de Retorno
+                $cStat = $respStd->protNFe->infProt->cStat;
+                $xMotivo = $respStd->protNFe->infProt->xMotivo;
 
-            // Se veio cStat na Raiz (rejeicao geral, sem protocolo)
-        } elseif (isset($respStd->cStat)) {
-            $cStat = $respStd->cStat;
-            $xMotivo = $respStd->xMotivo;
+                Log::info("enviarSincrono NF#{$nf->codnotafiscal}: protocolo recebido cStat={$cStat} ({$xMotivo}) autorizada=" . ($sucesso ? 'sim' : 'nao'));
 
-            Log::info("enviarSincrono NF#{$nf->codnotafiscal}: rejeicao raiz cStat={$cStat} ({$xMotivo})");
-        } else {
-            Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: resposta da SEFAZ sem cStat reconhecivel");
+                // Se veio cStat na Raiz (rejeicao geral, sem protocolo)
+            } elseif (isset($respStd->cStat)) {
+                $cStat = $respStd->cStat;
+                $xMotivo = $respStd->xMotivo;
+
+                Log::info("enviarSincrono NF#{$nf->codnotafiscal}: rejeicao raiz cStat={$cStat} ({$xMotivo})");
+            } else {
+                Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: resposta da SEFAZ sem cStat reconhecivel");
+            }
         }
 
-        // Duplicidade (204/539) sem autorizacao local: a SEFAZ ja conhece essa NFe.
-        // Acontece quando a 1a requisicao autorizou mas a resposta se perdeu
-        // ('unexpected eof' do OpenSSL) e o retry caiu em duplicidade. A duplicidade
-        // pode vir tanto no protocolo (modo sincrono) quanto na raiz, e o protocolo de
-        // autorizacao NAO vem nessa resposta — recuperamos consultando a chave na SEFAZ.
-        if (!$sucesso && static::ehDuplicidade($cStat)) {
+        // Recuperacao por consulta quando a nota PODE ter sido autorizada mas nao temos o
+        // protocolo. Dois gatilhos, mesma causa raiz (perda de conexao 'unexpected eof'):
+        //  (a) a SEFAZ respondeu duplicidade (204/539) — o retry caiu em duplicidade
+        //      porque a 1a requisicao ja havia autorizado; ou
+        //  (b) o envio falhou no transporte sem resposta nenhuma — a 1a requisicao pode
+        //      ter autorizado enquanto a resposta se perdia.
+        // Em ambos o protocolo de autorizacao nao veio; buscamos consultando a chave.
+        if (!$sucesso && ($erroEnvio !== null || static::ehDuplicidade($cStat))) {
 
             // Espera curta antes de consultar: apos autorizar, a SEFAZ leva um instante
             // para replicar a nota ao servico de consulta. Consulta imediata pode voltar
             // 217 (NFe nao consta) mesmo a nota tendo acabado de ser autorizada.
             usleep(500 * 1000);
-            Log::info("enviarSincrono NF#{$nf->codnotafiscal}: duplicidade -> consultando chave para recuperar autorizacao");
+            $motivo = ($erroEnvio !== null) ? 'falha no envio' : 'duplicidade';
+            Log::info("enviarSincrono NF#{$nf->codnotafiscal}: {$motivo} -> consultando chave para recuperar autorizacao");
 
             // Reusa o nucleo de consultar() (sem lock — ja seguramos o lock aqui).
-            // Best-effort: se a consulta tambem falhar, deixa a nota para o robo
-            // (NFePHPRoboService) resolver depois — nao propaga erro ao usuario.
+            // Best-effort: se a consulta tambem falhar, a nota fica para o robo
+            // (NFePHPRoboService) resolver depois.
             try {
                 $resConsulta = static::consultarSemLock($nf);
                 $nf = $nf->fresh();
@@ -298,6 +319,13 @@ class NFePHPService extends MgService
             } catch (\Exception $e) {
                 Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta: " . $e->getMessage());
             }
+        }
+
+        // Se o envio falhou no transporte e nao conseguimos recuperar a autorizacao,
+        // propaga o erro original — a nota realmente nao foi autorizada (usuario reenvia,
+        // robo resolve depois).
+        if (!$sucesso && $erroEnvio !== null) {
+            throw $erroEnvio;
         }
 
         // atualiza status
