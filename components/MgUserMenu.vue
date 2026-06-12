@@ -9,7 +9,7 @@ const props = defineProps({
 
 // Atualização do PWA. O register-service-worker.js de cada app dispara o evento
 // 'pwa-nova-versao' no callback updated() (SW novo já baixou e ativou os assets).
-const novaVersaoDisponivel = ref(true)
+const novaVersaoDisponivel = ref(false)
 onMounted(() => {
   if (window.__pwaNovaVersao) novaVersaoDisponivel.value = true
   window.addEventListener('pwa-nova-versao', () => {
