@@ -27,6 +27,7 @@ return [
             'database' => env('DB_DATABASE', 'mgsis'),
             'username' => env('DB_USERNAME', 'mgsis'),
             'password' => env('DB_PASSWORD', ''),
+            'timezone' => env('DB_TIMEZONE', 'America/Cuiaba'),
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
