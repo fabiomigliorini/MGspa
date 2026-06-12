@@ -5,7 +5,7 @@ import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataNumero, formataData, formataDataIso } from '@components/formatters'
 import SelectPortador from 'src/components/select/SelectPortador.vue'
-import SelectPessoa from 'src/components/select/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const router = useRouter()

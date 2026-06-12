@@ -41,6 +41,11 @@ class SafraController extends MgController
         return response()->json(Safra::with('Cultura')->findOrFail($id), 200);
     }
 
+    public function comercial(Request $request, $id)
+    {
+        return response()->json(SafraService::resumoComercial((int) $id), 200);
+    }
+
     public function update(Request $request, $id)
     {
         $model = Safra::findOrFail($id);

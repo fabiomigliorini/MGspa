@@ -14,7 +14,7 @@ import MgInputData from '@components/MgInputData.vue'
 import SelectFilial from '../components/selects/SelectFilial.vue'
 import SelectCidade from '../components/selects/SelectCidade.vue'
 import SelectEstado from '../components/selects/SelectEstado.vue'
-import SelectPessoa from '../components/selects/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 
 const router = useRouter()
 const route = useRoute()

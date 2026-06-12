@@ -16,14 +16,13 @@ const menuGroups = [
   {
     label: 'Operação',
     items: [
-      { label: 'Pátio de Recebimento', icon: 'local_shipping', color: 'green-7', to: { name: 'patio' } },
+      {
+        label: 'Pátio de Recebimento',
+        icon: 'local_shipping',
+        color: 'green-7',
+        to: { name: 'patio' },
+      },
       { label: 'Pátio de Expedição', icon: 'outbound', color: 'green-8', to: { name: 'embarque' } },
-    ],
-  },
-  {
-    label: 'Comercial',
-    items: [
-      { label: 'Contratos', icon: 'description', color: 'indigo-7', to: { name: 'contratos' } },
     ],
   },
   {

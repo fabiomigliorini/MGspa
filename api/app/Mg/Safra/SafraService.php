@@ -3,9 +3,73 @@
 namespace Mg\Safra;
 
 use Mg\MgService;
+use Mg\Contrato\Contrato;
+use Mg\Contrato\ContratoFixacao;
 
 class SafraService extends MgService
 {
+    /**
+     * KPIs comerciais da safra: rollup dos contratos ativos. Calculado no banco
+     * (não depende do cache offline). O colhido/expectativa (produção) ficam no
+     * front; aqui só o lado comercial.
+     *
+     * - contratado/entregue: somam todos os tipos (barter conta na quantidade).
+     * - fixo: sacas com preço travado = FIXO + FIXAR (barter fora). Com a
+     *   normalização, o FIXO entra via fixação-espelho.
+     * - afixar: só dos FIXAR (FIXO já 100% fixado; barter fora).
+     * - preço médio: ponderado por quantidade, separado por moeda (barter fora).
+     *   R$ pelo precoreal; USD pelo preço em dólar + dólar médio travado.
+     */
+    public static function resumoComercial($codsafra): array
+    {
+        Safra::findOrFail($codsafra);
+
+        $contratos = Contrato::where('codsafra', $codsafra)
+            ->whereNull('inativo')
+            ->withSum('EmbarqueContratoS as carregado', 'quantidade')
+            ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
+            ->get();
+
+        $contratado = (float) $contratos->sum('quantidade');
+        $entregue = (float) $contratos->sum('carregado');
+        $fixo = (float) $contratos->whereIn('tipo', ['FIXO', 'FIXAR'])->sum('fixado');
+        $afixar = (float) $contratos->where('tipo', 'FIXAR')
+            ->sum(fn ($c) => max(0, (float) $c->quantidade - (float) $c->fixado));
+
+        // Preço médio ponderado por moeda (fixações ativas de contratos ativos,
+        // exceto barter).
+        $buckets = ContratoFixacao::query()
+            ->join('tblcontrato as c', 'c.codcontrato', '=', 'tblcontratofixacao.codcontrato')
+            ->where('c.codsafra', $codsafra)
+            ->whereNull('c.inativo')
+            ->where('c.tipo', '!=', 'BARTER')
+            ->whereNull('tblcontratofixacao.inativo')
+            ->groupBy('tblcontratofixacao.moeda')
+            ->selectRaw('tblcontratofixacao.moeda as moeda')
+            ->selectRaw('SUM(tblcontratofixacao.quantidade) as q')
+            ->selectRaw('SUM(tblcontratofixacao.precoreal * tblcontratofixacao.quantidade) as vreal')
+            ->selectRaw('SUM(tblcontratofixacao.preco * tblcontratofixacao.quantidade) as vmoeda')
+            ->selectRaw('SUM(tblcontratofixacao.dolar * tblcontratofixacao.quantidade) as vdolar')
+            ->selectRaw('SUM(CASE WHEN tblcontratofixacao.dolar IS NOT NULL THEN tblcontratofixacao.quantidade ELSE 0 END) as qdolar')
+            ->get()
+            ->keyBy('moeda');
+
+        $brl = $buckets->get('BRL');
+        $usd = $buckets->get('USD');
+
+        return [
+            'ncontratos' => $contratos->count(),
+            'contratado' => $contratado,
+            'entregue' => $entregue,
+            'saldoaembarcar' => $contratado - $entregue,
+            'fixo' => $fixo,
+            'afixar' => $afixar,
+            'precomediobrl' => ($brl && $brl->q > 0) ? (float) $brl->vreal / (float) $brl->q : null,
+            'precomediousd' => ($usd && $usd->q > 0) ? (float) $usd->vmoeda / (float) $usd->q : null,
+            'dolarmedio' => ($usd && $usd->qdolar > 0) ? (float) $usd->vdolar / (float) $usd->qdolar : null,
+        ];
+    }
+
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)
     {
         $qry = Safra::query()->with('Cultura');

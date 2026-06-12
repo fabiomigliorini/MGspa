@@ -5,10 +5,10 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgContratoForm from 'components/MgContratoForm.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -21,27 +21,31 @@ const pagCad = useCadastro(`contrato/${cod}/pagamento`, 'codpagamento', 'Pagamen
 
 const contrato = ref(null)
 const carregando = ref(false)
-const culturas = ref([])
-const safras = ref([])
 const naturezas = ref([])
 
-const tipos = [
-  { label: 'Fixo', value: 'FIXO' },
-  { label: 'A fixar', value: 'FIXAR' },
-  { label: 'Barter', value: 'BARTER' },
-]
 const moedas = [
   { label: 'R$', value: 'BRL' },
   { label: 'US$', value: 'USD' },
 ]
 const corTipo = { FIXO: 'green-7', FIXAR: 'orange-8', BARTER: 'deep-purple-6' }
 
+// Destino do voltar: a safra do contrato (centro de comando); fallback início.
+const voltarTo = computed(() =>
+  contrato.value?.codsafra
+    ? { name: 'safra-detalhe', params: { codsafra: contrato.value.codsafra } }
+    : { name: 'home' },
+)
+const ehFixo = computed(() => contrato.value?.tipo === 'FIXO')
+
 function n(v) {
   return Number(v) || 0
 }
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  return Number(v).toLocaleString('pt-BR', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  })
 }
 function rs(v) {
   return 'R$ ' + fmt(v, 2)
@@ -61,10 +65,10 @@ const afixar = computed(() => contratado.value - fixado.value)
 const valornf = computed(() => n(contrato.value?.valornf))
 const pago = computed(() => n(contrato.value?.pago))
 
+// Preço médio ponderado das fixações ativas. Com a normalização, o FIXO também
+// tem fixação (espelho), então não há mais caso especial por tipo.
 const precoMedio = computed(() => {
-  if (!contrato.value) return 0
-  if (contrato.value.tipo === 'FIXO') return n(contrato.value.preco)
-  const fx = (contrato.value.ContratoFixacaoS || []).filter((f) => !f.inativo)
+  const fx = fixacoes.value
   const q = fx.reduce((s, f) => s + n(f.quantidade), 0)
   const v = fx.reduce((s, f) => s + n(f.quantidade) * n(f.precoreal), 0)
   return q > 0 ? v / q : 0
@@ -79,7 +83,9 @@ const bate = computed(
 )
 
 const fixacoes = computed(() => (contrato.value?.ContratoFixacaoS || []).filter((f) => !f.inativo))
-const pagamentos = computed(() => (contrato.value?.ContratoPagamentoS || []).filter((p) => !p.inativo))
+const pagamentos = computed(() =>
+  (contrato.value?.ContratoPagamentoS || []).filter((p) => !p.inativo),
+)
 const embarques = computed(() => contrato.value?.EmbarqueContratoS || [])
 
 async function recarregar() {
@@ -133,10 +139,6 @@ async function excluirPagamento(p) {
 function editarContrato() {
   contratoCad.editar(contrato.value)
 }
-async function salvarContrato() {
-  await contratoCad.salvar()
-  if (!contratoCad.dialog) await recarregar()
-}
 async function alternarInativoContrato() {
   await contratoCad.alternarInativo(contrato.value)
   await recarregar()
@@ -149,9 +151,10 @@ function excluirContrato() {
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
+      const destino = voltarTo.value
       await api.delete(`v1/contrato/${cod}`)
       notifySuccess('Excluído!')
-      router.push({ name: 'contratos' })
+      router.push(destino)
     } catch (e) {
       notifyError(e)
     }
@@ -159,14 +162,12 @@ function excluirContrato() {
 }
 
 onMounted(async () => {
-  const [{ data: cu }, { data: sa }, { data: nat }] = await Promise.all([
-    api.get('v1/cultura'),
-    api.get('v1/safra'),
-    api.get('v1/natureza-operacao'),
-  ])
-  culturas.value = cu.data ?? cu
-  safras.value = sa.data ?? sa
-  naturezas.value = nat.data ?? nat
+  try {
+    const { data } = await api.get('v1/natureza-operacao')
+    naturezas.value = data.data ?? data
+  } catch {
+    // naturezas é opcional (só pro form fiscal)
+  }
   await recarregar()
 })
 </script>
@@ -176,56 +177,69 @@ onMounted(async () => {
     <div style="max-width: 1086px; margin: auto">
       <!-- Cabeçalho -->
       <q-card bordered flat class="q-mb-md">
-        <q-card-section class="row items-center no-wrap">
-          <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'contratos' }" />
-          <q-avatar
-            :color="corTipo[contrato?.tipo] || 'indigo-7'"
-            text-color="white"
-            icon="description"
-            class="q-ml-sm"
-          />
-          <div class="col q-ml-md">
-            <div class="text-h6">
-              {{ contrato?.contrato || 'Contrato' }}
-              <q-chip
-                v-if="contrato"
-                dense
-                square
-                :color="corTipo[contrato.tipo]"
-                text-color="white"
-                :label="contrato.tipo"
-              />
-            </div>
-            <div class="text-caption text-grey-7">
-              {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa }} ·
-              {{ contrato?.Cultura?.cultura }}
-              <span v-if="contrato?.Safra"> · {{ contrato.Safra.safra }}</span>
+        <q-card-section class="row items-center">
+          <div class="col-12 col-sm row items-center no-wrap">
+            <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="voltarTo" />
+            <q-avatar
+              :color="corTipo[contrato?.tipo] || 'indigo-7'"
+              text-color="white"
+              icon="description"
+              class="q-ml-sm"
+            />
+            <div class="col q-ml-md">
+              <div class="text-h6">
+                {{ contrato?.contrato || 'Contrato' }}
+                <q-chip
+                  v-if="contrato"
+                  dense
+                  square
+                  :color="corTipo[contrato.tipo]"
+                  text-color="white"
+                  :label="contrato.tipo"
+                />
+              </div>
+              <div class="text-caption text-grey-7">
+                {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa }} ·
+                {{ contrato?.Cultura?.cultura }}
+                <span v-if="contrato?.Safra"> · {{ contrato.Safra.safra }}</span>
+              </div>
             </div>
           </div>
-          <MgInfoCriacao
-            :usuariocriacao="contrato?.usuariocriacao"
-            :criacao="contrato?.criacao"
-            :usuarioalteracao="contrato?.usuarioalteracao"
-            :alteracao="contrato?.alteracao"
-          />
-          <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarContrato">
-            <q-tooltip>Editar contrato</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            dense
-            round
-            size="sm"
-            color="grey-7"
-            :icon="contrato?.inativo ? 'play_arrow' : 'pause'"
-            @click="alternarInativoContrato"
+          <div
+            class="col-12 col-sm-auto row items-center justify-end no-wrap"
+            :class="{ 'q-mt-sm': $q.screen.lt.sm }"
           >
-            <q-tooltip>{{ contrato?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-          </q-btn>
-          <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirContrato">
-            <q-tooltip>Excluir</q-tooltip>
-          </q-btn>
-          <q-btn flat color="green-7" icon="local_shipping" label="Embarque" :to="{ name: 'embarque' }" />
+            <MgInfoCriacao
+              :usuariocriacao="contrato?.usuariocriacao"
+              :criacao="contrato?.criacao"
+              :usuarioalteracao="contrato?.usuarioalteracao"
+              :alteracao="contrato?.alteracao"
+            />
+            <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarContrato">
+              <q-tooltip>Editar contrato</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              dense
+              round
+              size="sm"
+              color="grey-7"
+              :icon="contrato?.inativo ? 'play_arrow' : 'pause'"
+              @click="alternarInativoContrato"
+            >
+              <q-tooltip>{{ contrato?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+            </q-btn>
+            <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirContrato">
+              <q-tooltip>Excluir</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              color="green-7"
+              icon="local_shipping"
+              label="Embarque"
+              :to="{ name: 'embarque' }"
+            />
+          </div>
         </q-card-section>
       </q-card>
 
@@ -235,9 +249,13 @@ onMounted(async () => {
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-blue-grey-8">
-                <q-icon name="local_shipping" class="q-mr-sm" /><span class="text-subtitle2">Físico</span>
+                <q-icon name="local_shipping" class="q-mr-sm" /><span class="text-subtitle2"
+                  >Físico</span
+                >
               </div>
-              <div class="text-h5 q-mt-sm">{{ fmt(carregado) }} <span class="text-caption">/ {{ fmt(contratado) }} sc</span></div>
+              <div class="text-h5 q-mt-sm">
+                {{ fmt(carregado) }} <span class="text-caption">/ {{ fmt(contratado) }} sc</span>
+              </div>
               <q-linear-progress
                 :value="contratado ? Math.min(1, carregado / contratado) : 0"
                 color="green-6"
@@ -246,7 +264,9 @@ onMounted(async () => {
                 rounded
                 class="q-my-sm"
               />
-              <div class="text-caption text-grey-7">Saldo a embarcar: <b>{{ fmt(saldo) }} sc</b></div>
+              <div class="text-caption text-grey-7">
+                Saldo a embarcar: <b>{{ fmt(saldo) }} sc</b>
+              </div>
             </q-card-section>
           </q-card>
         </div>
@@ -254,7 +274,9 @@ onMounted(async () => {
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-deep-orange-8">
-                <q-icon name="receipt_long" class="q-mr-sm" /><span class="text-subtitle2">Fiscal (NFs)</span>
+                <q-icon name="receipt_long" class="q-mr-sm" /><span class="text-subtitle2"
+                  >Fiscal (NFs)</span
+                >
               </div>
               <div class="text-h5 q-mt-sm">{{ rs(valornf) }}</div>
               <div class="text-caption text-grey-7 q-mt-sm">
@@ -267,7 +289,9 @@ onMounted(async () => {
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-teal-8">
-                <q-icon name="payments" class="q-mr-sm" /><span class="text-subtitle2">Financeiro</span>
+                <q-icon name="payments" class="q-mr-sm" /><span class="text-subtitle2"
+                  >Financeiro</span
+                >
               </div>
               <div class="text-h5 q-mt-sm">{{ rs(pago) }}</div>
               <div class="text-caption text-grey-7 q-mt-sm">Pago pelo comprador</div>
@@ -296,7 +320,7 @@ onMounted(async () => {
               {{ rs(precoMedio) }}/sc
             </q-item-label>
           </q-item-section>
-          <q-item-section side>
+          <q-item-section v-if="!ehFixo" side>
             <q-btn flat round size="sm" color="primary" icon="add" @click="novaFixacao">
               <q-tooltip>Nova fixação</q-tooltip>
             </q-btn>
@@ -306,13 +330,23 @@ onMounted(async () => {
         <q-list separator>
           <q-item v-for="f in fixacoes" :key="f.codcontratofixacao">
             <q-item-section>
-              <q-item-label>{{ fmt(f.quantidade) }} sc · {{ rs(f.precoreal) }}/sc</q-item-label>
+              <q-item-label>
+                {{ fmt(f.quantidade) }} sc · {{ rs(f.precoreal) }}/sc
+                <q-badge
+                  v-if="f.automatico"
+                  color="blue-grey-5"
+                  label="automática"
+                  class="q-ml-xs"
+                />
+              </q-item-label>
               <q-item-label caption>
                 {{ fmtData(f.data) }}
-                <span v-if="f.moeda === 'USD'">· US$ {{ fmt(f.preco, 2) }} × {{ fmt(f.dolar, 4) }}</span>
+                <span v-if="f.moeda === 'USD'"
+                  >· US$ {{ fmt(f.preco, 2) }} × {{ fmt(f.dolar, 4) }}</span
+                >
               </q-item-label>
             </q-item-section>
-            <q-item-section side class="row no-wrap items-center">
+            <q-item-section v-if="!ehFixo" side class="row no-wrap items-center">
               <MgInfoCriacao
                 :usuariocriacao="f.usuariocriacao"
                 :criacao="f.criacao"
@@ -339,8 +373,13 @@ onMounted(async () => {
               />
             </q-item-section>
           </q-item>
-          <q-item v-if="!fixacoes.length">
-            <q-item-section class="text-grey-6">Nenhuma fixação. Para FIXO, informe o preço no contrato.</q-item-section>
+          <q-item v-if="ehFixo">
+            <q-item-section class="text-grey-6">
+              Contrato FIXO: preço travado no contrato (fixação automática).
+            </q-item-section>
+          </q-item>
+          <q-item v-else-if="!fixacoes.length">
+            <q-item-section class="text-grey-6">Nenhuma fixação lançada.</q-item-section>
           </q-item>
         </q-list>
       </q-card>
@@ -363,7 +402,10 @@ onMounted(async () => {
           <q-item v-for="p in pagamentos" :key="p.codcontratopagamento">
             <q-item-section>
               <q-item-label>{{ rs(p.valor) }}</q-item-label>
-              <q-item-label caption>{{ fmtData(p.data) }}<span v-if="p.observacao"> · {{ p.observacao }}</span></q-item-label>
+              <q-item-label caption
+                >{{ fmtData(p.data)
+                }}<span v-if="p.observacao"> · {{ p.observacao }}</span></q-item-label
+              >
             </q-item-section>
             <q-item-section side class="row no-wrap items-center">
               <MgInfoCriacao
@@ -403,13 +445,17 @@ onMounted(async () => {
         <q-item>
           <q-item-section>
             <q-item-label class="text-subtitle1">Embarques e notas fiscais</q-item-label>
-            <q-item-label caption>{{ fmt(carregado) }} sc carregadas · {{ rs(valornf) }} em NFs</q-item-label>
+            <q-item-label caption
+              >{{ fmt(carregado) }} sc carregadas · {{ rs(valornf) }} em NFs</q-item-label
+            >
           </q-item-section>
         </q-item>
         <q-separator />
         <q-list separator>
           <q-item v-for="e in embarques" :key="e.codembarquecontrato">
-            <q-item-section avatar><q-avatar color="green-6" text-color="white" icon="local_shipping" /></q-item-section>
+            <q-item-section avatar
+              ><q-avatar color="green-6" text-color="white" icon="local_shipping"
+            /></q-item-section>
             <q-item-section>
               <q-item-label>{{ fmt(e.quantidade) }} sc</q-item-label>
               <q-item-label caption>
@@ -418,11 +464,15 @@ onMounted(async () => {
               </q-item-label>
             </q-item-section>
             <q-item-section side>
-              <q-item-label class="text-deep-orange-9">{{ e.valornf ? rs(e.valornf) : '—' }}</q-item-label>
+              <q-item-label class="text-deep-orange-9">{{
+                e.valornf ? rs(e.valornf) : '—'
+              }}</q-item-label>
             </q-item-section>
           </q-item>
           <q-item v-if="!embarques.length">
-            <q-item-section class="text-grey-6">Nenhum embarque ainda. Carregue no pátio de expedição.</q-item-section>
+            <q-item-section class="text-grey-6"
+              >Nenhum embarque ainda. Carregue no pátio de expedição.</q-item-section
+            >
           </q-item>
         </q-list>
       </q-card>
@@ -431,14 +481,29 @@ onMounted(async () => {
       <q-dialog v-model="fixCad.dialog">
         <q-card bordered flat style="width: 420px; max-width: 90vw">
           <q-form @submit="salvarFixacao">
-            <q-card-section><div class="text-h6">{{ fixCad.isNovo ? 'Nova fixação' : 'Editar fixação' }}</div></q-card-section>
+            <q-card-section
+              ><div class="text-h6">
+                {{ fixCad.isNovo ? 'Nova fixação' : 'Editar fixação' }}
+              </div></q-card-section
+            >
             <q-card-section class="q-gutter-md">
               <div class="row q-col-gutter-md">
                 <MgInputData v-model="fixCad.form.data" label="Data" type="date" class="col-6" />
-                <MgInputValor v-model="fixCad.form.quantidade" :decimals="0" suffix="sc" label="Quantidade" class="col-6" />
+                <MgInputValor
+                  v-model="fixCad.form.quantidade"
+                  :decimals="0"
+                  suffix="sc"
+                  label="Quantidade"
+                  class="col-6"
+                />
               </div>
               <div class="row q-col-gutter-md items-center">
-                <MgInputValor v-model="fixCad.form.preco" :decimals="2" label="Preço / saca" class="col" />
+                <MgInputValor
+                  v-model="fixCad.form.preco"
+                  :decimals="2"
+                  label="Preço / saca"
+                  class="col"
+                />
                 <q-btn-toggle
                   v-model="fixCad.form.moeda"
                   :options="moedas"
@@ -473,7 +538,11 @@ onMounted(async () => {
       <q-dialog v-model="pagCad.dialog">
         <q-card bordered flat style="width: 380px; max-width: 90vw">
           <q-form @submit="salvarPagamento">
-            <q-card-section><div class="text-h6">{{ pagCad.isNovo ? 'Novo pagamento' : 'Editar pagamento' }}</div></q-card-section>
+            <q-card-section
+              ><div class="text-h6">
+                {{ pagCad.isNovo ? 'Novo pagamento' : 'Editar pagamento' }}
+              </div></q-card-section
+            >
             <q-card-section class="q-gutter-md">
               <MgInputData v-model="pagCad.form.data" label="Data" type="date" />
               <MgInputValor v-model="pagCad.form.valor" :decimals="2" prefix="R$" label="Valor" />
@@ -487,145 +556,8 @@ onMounted(async () => {
         </q-card>
       </q-dialog>
 
-      <!-- Dialog Contrato (edição) -->
-      <q-dialog v-model="contratoCad.dialog">
-        <q-card bordered flat style="width: 560px; max-width: 95vw">
-          <q-form @submit="salvarContrato">
-            <q-card-section class="bg-primary text-white">
-              <div class="text-h6">Editar Contrato</div>
-            </q-card-section>
-            <q-card-section class="q-gutter-md scroll" style="max-height: 70vh">
-              <div class="row q-col-gutter-md">
-                <q-input
-                  v-model="contratoCad.form.contrato"
-                  label="Nº / identificação"
-                  outlined
-                  autofocus
-                  class="col-12 col-sm-6"
-                />
-                <q-btn-toggle
-                  v-model="contratoCad.form.tipo"
-                  :options="tipos"
-                  no-caps
-                  unelevated
-                  toggle-color="primary"
-                  color="grey-3"
-                  text-color="grey-9"
-                  class="col-12 col-sm-6 self-center"
-                />
-              </div>
-
-              <MgSelectPessoa v-model="contratoCad.form.codpessoa" label="Comprador" />
-
-              <div class="row q-col-gutter-md">
-                <q-select
-                  v-model="contratoCad.form.codcultura"
-                  :options="culturas"
-                  option-value="codcultura"
-                  option-label="cultura"
-                  emit-value
-                  map-options
-                  outlined
-                  label="Cultura"
-                  class="col-6"
-                />
-                <q-select
-                  v-model="contratoCad.form.codsafra"
-                  :options="safras"
-                  option-value="codsafra"
-                  option-label="safra"
-                  emit-value
-                  map-options
-                  outlined
-                  clearable
-                  label="Safra (opcional)"
-                  class="col-6"
-                />
-              </div>
-
-              <div class="row q-col-gutter-md">
-                <MgInputValor
-                  v-model="contratoCad.form.quantidade"
-                  :decimals="0"
-                  suffix="sc"
-                  label="Quantidade"
-                  class="col-4"
-                />
-                <MgInputValor
-                  v-model="contratoCad.form.preco"
-                  :decimals="2"
-                  label="Preço / saca"
-                  class="col-4"
-                />
-                <q-btn-toggle
-                  v-model="contratoCad.form.moeda"
-                  :options="moedas"
-                  no-caps
-                  unelevated
-                  toggle-color="primary"
-                  color="grey-3"
-                  text-color="grey-9"
-                  class="col-4 self-center"
-                />
-              </div>
-
-              <div class="row q-col-gutter-md">
-                <MgInputData
-                  v-model="contratoCad.form.dataembarque"
-                  label="Embarque até"
-                  type="date"
-                  class="col-6"
-                />
-                <q-input
-                  v-model="contratoCad.form.localentrega"
-                  label="Local / FOB-CIF"
-                  outlined
-                  class="col-6"
-                />
-              </div>
-
-              <q-expansion-item icon="receipt_long" label="Dados fiscais (NF)" dense-toggle>
-                <div class="q-gutter-md q-pt-sm">
-                  <q-select
-                    v-model="contratoCad.form.codnaturezaoperacao"
-                    :options="naturezas"
-                    option-value="codnaturezaoperacao"
-                    option-label="naturezaoperacao"
-                    emit-value
-                    map-options
-                    outlined
-                    clearable
-                    label="Natureza da operação"
-                  />
-                  <MgSelectPessoa
-                    v-model="contratoCad.form.codpessoanf"
-                    label="Emitir NF para (destinatário)"
-                  />
-                  <q-input
-                    v-model="contratoCad.form.observacaonf"
-                    label="Observações da NF"
-                    type="textarea"
-                    autogrow
-                    outlined
-                  />
-                </div>
-              </q-expansion-item>
-
-              <q-input
-                v-model="contratoCad.form.observacao"
-                label="Observações"
-                type="textarea"
-                autogrow
-                outlined
-              />
-            </q-card-section>
-            <q-card-actions align="right">
-              <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" flat label="Salvar" color="primary" :loading="contratoCad.salvando" />
-            </q-card-actions>
-          </q-form>
-        </q-card>
-      </q-dialog>
+      <!-- Dialog Contrato (edição) — mesmo form do cadastro -->
+      <MgContratoForm :cad="contratoCad" :naturezas="naturezas" @saved="recarregar" />
     </div>
   </q-page>
 </template>

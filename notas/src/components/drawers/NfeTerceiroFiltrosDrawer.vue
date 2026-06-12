@@ -5,7 +5,7 @@ import { useDebounceFn } from '@vueuse/core'
 import SelectFilial from '../selects/SelectFilial.vue'
 import SelectNaturezaOperacao from '../selects/SelectNaturezaOperacao.vue'
 import SelectGrupoEconomico from '../selects/SelectGrupoEconomico.vue'
-import SelectPessoa from '../selects/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 
 const nfeTerceiroStore = useNfeTerceiroStore()
 const updatingFromPessoa = ref(false)

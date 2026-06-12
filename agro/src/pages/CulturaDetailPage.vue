@@ -124,19 +124,37 @@ onMounted(async () => {
     <div style="max-width: 1086px; margin: auto">
       <!-- Cabeçalho -->
       <q-card bordered flat class="q-mb-md">
-        <q-card-section class="row items-center no-wrap">
-          <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'culturas' }" />
-          <q-avatar v-if="cultura?.icone" color="light-green-1" class="q-ml-sm">
-            <span style="font-size: 26px">{{ cultura.icone }}</span>
-          </q-avatar>
-          <q-avatar v-else color="light-green-7" text-color="white" icon="grain" class="q-ml-sm" />
-          <div class="col q-ml-md">
-            <div class="text-h6">{{ cultura?.cultura || 'Cultura' }}</div>
-            <div class="text-caption text-grey-7">
-              {{ Number(cultura?.pesosaca) || 60 }} kg por saca
+        <q-card-section class="row items-center">
+          <div class="col-12 col-sm row items-center no-wrap">
+            <q-btn
+              flat
+              round
+              size="sm"
+              color="grey-7"
+              icon="arrow_back"
+              :to="{ name: 'culturas' }"
+            />
+            <q-avatar v-if="cultura?.icone" color="light-green-1" class="q-ml-sm">
+              <span style="font-size: 26px">{{ cultura.icone }}</span>
+            </q-avatar>
+            <q-avatar
+              v-else
+              color="light-green-7"
+              text-color="white"
+              icon="grain"
+              class="q-ml-sm"
+            />
+            <div class="col q-ml-md">
+              <div class="text-h6">{{ cultura?.cultura || 'Cultura' }}</div>
+              <div class="text-caption text-grey-7">
+                {{ Number(cultura?.pesosaca) || 60 }} kg por saca
+              </div>
             </div>
           </div>
-          <div class="row items-center no-wrap">
+          <div
+            class="col-12 col-sm-auto row items-center justify-end no-wrap"
+            :class="{ 'q-mt-sm': $q.screen.lt.sm }"
+          >
             <MgInfoCriacao
               :usuariocriacao="cultura?.usuariocriacao"
               :criacao="cultura?.criacao"
@@ -327,7 +345,13 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" flat label="Salvar" color="primary" :loading="culturaCad.salvando" />
+              <q-btn
+                type="submit"
+                flat
+                label="Salvar"
+                color="primary"
+                :loading="culturaCad.salvando"
+              />
             </q-card-actions>
           </q-form>
         </q-card>

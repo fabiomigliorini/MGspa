@@ -3,7 +3,7 @@ import { ref, computed, watch } from 'vue'
 import veiculoService from '../../services/veiculoService'
 import { useVeiculoStore, TIPO_PROPRIETARIO_OPTIONS } from '../../stores/veiculoStore'
 import { notificarSucesso, notificarErro } from '../../utils/notify'
-import SelectPessoa from '../selects/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import SelectEstado from '../selects/SelectEstado.vue'
 
 const props = defineProps({

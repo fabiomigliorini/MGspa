@@ -6,6 +6,10 @@ const props = defineProps({
   decimals: { type: Number, default: 2 },
   min: { type: Number, default: null },
   max: { type: Number, default: null },
+  // separador de milhar (desligar p/ ano, código, etc.)
+  grouping: { type: Boolean, default: true },
+  // alinhamento do texto: right (valores) | left (ano/código) | center
+  align: { type: String, default: "right" },
   label: { type: String, default: "" },
   prefix: { type: String, default: null },
   suffix: { type: String, default: null },
@@ -16,6 +20,7 @@ const props = defineProps({
   readonly: { type: Boolean, default: false },
   bgColor: { type: String, default: "" },
   rules: { type: Array, default: () => [] },
+  lazyRules: { type: [Boolean, String], default: false },
   stackLabel: { type: Boolean, default: false },
   bottomSlots: { type: Boolean, default: false },
   inputClass: { type: String, default: "" },
@@ -27,6 +32,10 @@ const emit = defineEmits(["update:modelValue"]);
 const inputRef = ref(null);
 const displayRef = ref("");
 const focused = ref(false);
+// true depois que o usuário digita/edita no campo — enquanto false (campo só
+// focado, ex.: autofocus), mudanças externas no modelValue ainda atualizam o
+// display (senão um valor preenchido via código não aparece no campo focado).
+const dirtied = ref(false);
 const lastValid = ref(null);
 
 const formatter = computed(
@@ -34,6 +43,7 @@ const formatter = computed(
     new Intl.NumberFormat("pt-BR", {
       minimumFractionDigits: props.decimals,
       maximumFractionDigits: props.decimals,
+      useGrouping: props.grouping,
     }),
 );
 
@@ -129,7 +139,7 @@ watch(
     const n =
       val === null || val === undefined || val === "" ? null : Number(val);
     lastValid.value = n === null || isNaN(n) ? null : n;
-    if (!focused.value) {
+    if (!focused.value || !dirtied.value) {
       displayRef.value = formatNumber(lastValid.value);
     }
   },
@@ -152,6 +162,7 @@ function selectAllInput() {
 
 function onFocus() {
   focused.value = true;
+  dirtied.value = false;
   if (props.readonly) return;
   selectAllInput();
 }
@@ -175,6 +186,7 @@ function onBlur() {
 }
 
 function onTyped(val) {
+  dirtied.value = true;
   displayRef.value = val ?? "";
   if (val === null || val === "") {
     if (lastValid.value !== null) {
@@ -202,6 +214,7 @@ function onPaste(e) {
 }
 
 function applyArrow(e) {
+  dirtied.value = true;
   let step = 1;
   if (e.ctrlKey || e.metaKey) step = 100;
   else if (e.shiftKey) step = 10;
@@ -234,9 +247,10 @@ function onKeydown(e) {
     :readonly="readonly"
     :bg-color="bgColor"
     :rules="wrappedRules"
+    :lazy-rules="lazyRules"
     :stack-label="stackLabel"
     :bottom-slots="bottomSlots"
-    :input-class="['text-right', inputClass]"
+    :input-class="[`text-${align}`, inputClass]"
     :input-style="inputStyle"
     inputmode="decimal"
     @focus="onFocus"

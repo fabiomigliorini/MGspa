@@ -6,12 +6,14 @@ import { storeToRefs } from 'pinia'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { useCargaStore } from 'src/stores/carga'
+import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
 import MgIconeCultura from 'components/MgIconeCultura.vue'
+import MgSafraForm from 'components/MgSafraForm.vue'
+import MgContratosSafra from 'components/MgContratosSafra.vue'
 import PlantioWizardDialog from 'components/PlantioWizardDialog.vue'
 
 const route = useRoute()
@@ -23,12 +25,14 @@ const safraCad = useCadastro('safra', 'codsafra', 'Safra')
 const plantioCad = useCadastro(`safra/${codsafra}/plantio`, 'codplantio', 'Plantio')
 const store = useCargaStore()
 const { colhidoPorPlantio } = storeToRefs(store)
+const sinc = useSincronizacaoStore()
+const { online } = storeToRefs(sinc)
 
 const safra = ref(null)
-const culturas = ref([])
 const fazendas = ref([])
 const variedades = ref([])
 const talhoesBase = ref([]) // layout base de todas as fazendas (p/ partir o desenho)
+const comercial = ref(null) // KPIs comerciais (contratos da safra), via backend
 
 const pesosaca = computed(() => Number(safra.value?.cultura?.pesosaca) || 60)
 const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.cultura?.codcultura)
@@ -69,6 +73,17 @@ const progressoSafra = computed(() =>
   totalExpectativa.value > 0 ? Math.min(1, totalSacas.value / totalExpectativa.value) : 0,
 )
 
+// KPIs comerciais (rollup dos contratos da safra, do backend). Os saldos cruzam
+// o lado comercial (online) com a produção (offline): disponível p/ vender =
+// expectativa − contratado; saldo no silo = colhido − entregue.
+const contratado = computed(() => Number(comercial.value?.contratado) || 0)
+const entregue = computed(() => Number(comercial.value?.entregue) || 0)
+const fixo = computed(() => Number(comercial.value?.fixo) || 0)
+const afixar = computed(() => Number(comercial.value?.afixar) || 0)
+const disponivel = computed(() => totalExpectativa.value - contratado.value)
+const saldoSilo = computed(() => totalSacas.value - entregue.value)
+const saldoEmbarcar = computed(() => Number(comercial.value?.saldoaembarcar) || 0)
+
 // Um card por fazenda que tem plantio nesta safra (mapa + lista + resultado).
 const porFazenda = computed(() => {
   const mapa = {}
@@ -108,6 +123,20 @@ function fmt(v, dec = 0) {
     minimumFractionDigits: dec,
     maximumFractionDigits: dec,
   })
+}
+function rs(v) {
+  return v === null || v === undefined ? '—' : 'R$ ' + fmt(v, 2)
+}
+
+// Recarrega o rollup comercial (chamado no mount e quando a grid emite changed).
+async function recarregarComercial() {
+  if (!online.value) return
+  try {
+    const { data } = await api.get(`v1/safra/${codsafra}/comercial`)
+    comercial.value = data
+  } catch {
+    // KPI comercial degrada em silêncio (offline / sem dado); produção segue.
+  }
 }
 const periodo = computed(() => {
   const s = safra.value
@@ -181,15 +210,13 @@ function excluirSafra() {
 }
 
 onMounted(async () => {
-  const [{ data: s }, { data: cu }, { data: f }, { data: v }, { data: t }] = await Promise.all([
+  const [{ data: s }, { data: f }, { data: v }, { data: t }] = await Promise.all([
     api.get(`v1/safra/${codsafra}`),
-    api.get('v1/cultura'),
     api.get('v1/fazenda'),
     api.get('v1/variedade'),
     api.get('v1/talhao'),
   ])
   safra.value = s
-  culturas.value = cu.data ?? cu
   fazendas.value = f.data ?? f
   variedades.value = v.data ?? v
   talhoesBase.value = t.data ?? t
@@ -197,6 +224,7 @@ onMounted(async () => {
   await store.definirSafra(codsafra)
   await store.carregarReferencias()
   await store.carregarCargas()
+  await recarregarComercial()
 })
 </script>
 
@@ -205,39 +233,52 @@ onMounted(async () => {
     <div style="max-width: 1086px; margin: auto">
       <!-- Cabeçalho -->
       <q-card bordered flat class="q-mb-md">
-        <q-card-section class="row items-center no-wrap">
-          <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'safras' }" />
-          <MgIconeCultura :codcultura="codcultura" class="q-ml-sm" />
-          <div class="col q-ml-md">
-            <div class="text-h6">{{ safra?.safra || 'Safra' }}</div>
-            <div class="text-caption text-grey-7">
-              {{ safra?.cultura?.cultura }}<span v-if="periodo"> · {{ periodo }}</span>
+        <q-card-section class="row items-center">
+          <div class="col-12 col-sm row items-center no-wrap">
+            <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'safras' }" />
+            <MgIconeCultura :codcultura="codcultura" class="q-ml-sm" />
+            <div class="col q-ml-md">
+              <div class="text-h6">{{ safra?.safra || 'Safra' }}</div>
+              <div class="text-caption text-grey-7">
+                {{ safra?.cultura?.cultura }}<span v-if="periodo"> · {{ periodo }}</span>
+              </div>
             </div>
           </div>
-          <MgInfoCriacao
-            :usuariocriacao="safra?.usuariocriacao"
-            :criacao="safra?.criacao"
-            :usuarioalteracao="safra?.usuarioalteracao"
-            :alteracao="safra?.alteracao"
-          />
-          <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarSafra">
-            <q-tooltip>Editar safra</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            dense
-            round
-            size="sm"
-            color="grey-7"
-            :icon="safra?.inativo ? 'play_arrow' : 'pause'"
-            @click="alternarInativoSafra"
+          <div
+            class="col-12 col-sm-auto row items-center justify-end no-wrap"
+            :class="{ 'q-mt-sm': $q.screen.lt.sm }"
           >
-            <q-tooltip>{{ safra?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-          </q-btn>
-          <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirSafra">
-            <q-tooltip>Excluir</q-tooltip>
-          </q-btn>
-          <q-btn flat color="green-7" icon="local_shipping" label="Pátio" :to="{ name: 'patio' }" />
+            <MgInfoCriacao
+              :usuariocriacao="safra?.usuariocriacao"
+              :criacao="safra?.criacao"
+              :usuarioalteracao="safra?.usuarioalteracao"
+              :alteracao="safra?.alteracao"
+            />
+            <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarSafra">
+              <q-tooltip>Editar safra</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              dense
+              round
+              size="sm"
+              color="grey-7"
+              :icon="safra?.inativo ? 'play_arrow' : 'pause'"
+              @click="alternarInativoSafra"
+            >
+              <q-tooltip>{{ safra?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+            </q-btn>
+            <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirSafra">
+              <q-tooltip>Excluir</q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              color="green-7"
+              icon="local_shipping"
+              label="Pátio"
+              :to="{ name: 'patio' }"
+            />
+          </div>
         </q-card-section>
       </q-card>
 
@@ -297,6 +338,75 @@ onMounted(async () => {
           />
         </q-card-section>
       </q-card>
+
+      <!-- KPIs comerciais (contratos da safra) -->
+      <template v-if="online && comercial">
+        <div class="text-subtitle1 text-weight-medium q-mb-sm">Comercial</div>
+        <div class="row q-col-gutter-md q-mb-md">
+          <div class="col-6 col-md-3">
+            <q-card flat bordered>
+              <q-card-section>
+                <div class="text-caption text-grey-7">Contratado</div>
+                <div class="text-h6">{{ fmt(contratado) }} sc</div>
+                <div class="text-caption text-grey-6">
+                  Disponível p/ vender {{ fmt(disponivel) }} sc
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="col-6 col-md-3">
+            <q-card flat bordered>
+              <q-card-section>
+                <div class="text-caption text-grey-7">Fixado</div>
+                <div class="text-h6">{{ fmt(fixo) }} sc</div>
+                <div class="text-caption text-grey-6">A fixar {{ fmt(afixar) }} sc</div>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="col-6 col-md-3">
+            <q-card flat bordered>
+              <q-card-section>
+                <div class="text-caption text-grey-7">Entregue</div>
+                <div class="text-h6">{{ fmt(entregue) }} sc</div>
+                <div class="text-caption text-grey-6">
+                  Saldo a embarcar {{ fmt(saldoEmbarcar) }} sc
+                </div>
+              </q-card-section>
+            </q-card>
+          </div>
+          <div class="col-6 col-md-3">
+            <q-card flat bordered>
+              <q-card-section>
+                <div class="text-caption text-grey-7">Saldo no silo</div>
+                <div class="text-h6 text-amber-9">{{ fmt(saldoSilo) }} sc</div>
+                <div class="text-caption text-grey-6">colhido − entregue</div>
+              </q-card-section>
+            </q-card>
+          </div>
+        </div>
+
+        <!-- Preço médio ponderado por moeda (barter fora) -->
+        <q-card
+          v-if="comercial.precomediobrl || comercial.precomediousd"
+          flat
+          bordered
+          class="q-mb-md"
+        >
+          <q-card-section class="row q-col-gutter-xl items-center">
+            <div v-if="comercial.precomediobrl" class="col-auto">
+              <div class="text-caption text-grey-7">Preço médio R$</div>
+              <div class="text-h6">{{ rs(comercial.precomediobrl) }} <small>/sc</small></div>
+            </div>
+            <div v-if="comercial.precomediousd" class="col-auto">
+              <div class="text-caption text-grey-7">Preço médio US$</div>
+              <div class="text-h6">
+                US$ {{ fmt(comercial.precomediousd, 2) }} <small>/sc</small>
+              </div>
+              <div class="text-caption text-grey-6">dólar médio {{ rs(comercial.dolarmedio) }}</div>
+            </div>
+          </q-card-section>
+        </q-card>
+      </template>
 
       <!-- Título da seção + adicionar (escolhe a fazenda no dialog) -->
       <div class="row items-center q-mb-sm">
@@ -441,6 +551,15 @@ onMounted(async () => {
           primeiro.
         </q-card-section>
       </q-card>
+
+      <!-- Contratos de venda desta safra -->
+      <q-separator class="q-my-lg" />
+      <MgContratosSafra
+        :codsafra="codsafra"
+        :codcultura="codcultura"
+        :online="online"
+        @changed="recarregarComercial"
+      />
     </div>
 
     <!-- Wizard: escolher fazenda → talhão base → confirmar/ajustar polígono -->
@@ -453,40 +572,15 @@ onMounted(async () => {
       :plantios="linhas"
     />
 
-    <!-- Dialog Safra (edição) -->
+    <!-- Dialog Safra (edição) — mesmo form do cadastro -->
     <q-dialog v-model="safraCad.dialog">
-      <q-card bordered flat style="width: 440px; max-width: 90vw">
+      <q-card bordered flat style="width: 420px; max-width: 90vw">
         <q-form @submit="salvarSafra">
-          <q-card-section>
+          <q-card-section class="q-pb-none">
             <div class="text-h6">Editar Safra</div>
           </q-card-section>
-          <q-card-section class="q-gutter-md">
-            <q-select
-              v-model="safraCad.form.codcultura"
-              :options="culturas"
-              option-value="codcultura"
-              option-label="cultura"
-              emit-value
-              map-options
-              outlined
-              label="Cultura"
-            />
-            <q-input
-              v-model="safraCad.form.safra"
-              label="Safra"
-              hint="Ex.: Milho 2ª Safra 2026"
-              outlined
-              autofocus
-            />
-            <div class="row q-col-gutter-md">
-              <MgInputData
-                v-model="safraCad.form.datainicio"
-                label="Início"
-                type="date"
-                class="col-6"
-              />
-              <MgInputData v-model="safraCad.form.datafim" label="Fim" type="date" class="col-6" />
-            </div>
+          <q-card-section>
+            <MgSafraForm :cad="safraCad" />
           </q-card-section>
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />

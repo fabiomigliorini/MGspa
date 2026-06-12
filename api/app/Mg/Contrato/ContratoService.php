@@ -64,6 +64,49 @@ class ContratoService extends MgService
     }
 
     /**
+     * Cria/atualiza o contrato e mantém a fixação-espelho sincronizada.
+     */
+    public static function salvar(array $dados, ?Contrato $contrato = null): Contrato
+    {
+        $contrato = $contrato ?: new Contrato();
+        $contrato->fill($dados);
+        $contrato->save();
+        static::sincronizarFixacaoAutomatica($contrato);
+        return $contrato;
+    }
+
+    /**
+     * Normaliza a fixação do FIXO: o preço já é travado no próprio contrato,
+     * então mantemos UMA fixação "automática" (quantidade cheia, preço/moeda do
+     * contrato) pra que fixado e preço médio rodem uniformemente sobre
+     * tblcontratofixacao, sem caso especial. FIXAR/BARTER fixam à mão — não
+     * mexemos nessas (automatico = false). Apaga a espelho anterior e recria,
+     * cobrindo também troca de tipo (FIXAR↔FIXO) sem desincronizar.
+     */
+    public static function sincronizarFixacaoAutomatica(Contrato $contrato): void
+    {
+        ContratoFixacao::where('codcontrato', $contrato->codcontrato)
+            ->where('automatico', true)
+            ->delete();
+
+        if ($contrato->tipo !== 'FIXO') {
+            return;
+        }
+
+        $dados = [
+            'codcontrato' => $contrato->codcontrato,
+            'data' => $contrato->dataembarque ?: now()->toDateString(),
+            'quantidade' => $contrato->quantidade,
+            'preco' => $contrato->preco,
+            'moeda' => $contrato->moeda ?: 'BRL',
+            'dolar' => null,
+            'automatico' => true,
+        ];
+        $dados['precoreal'] = static::precoReal($dados);
+        ContratoFixacao::create($dados);
+    }
+
+    /**
      * Preco em R$/saca de uma fixacao: USD travado => preco x dolar; senao preco.
      */
     public static function precoReal(array $dados): ?float

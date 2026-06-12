@@ -332,6 +332,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Safra (dominio Mg\Safra) — criado 03/06/2026
     Route::post('safra/{codsafra}/inativo', [\Mg\Safra\SafraController::class, 'inativar']);
     Route::delete('safra/{codsafra}/inativo', [\Mg\Safra\SafraController::class, 'ativar']);
+    Route::get('safra/{codsafra}/comercial', [\Mg\Safra\SafraController::class, 'comercial']); // KPIs comerciais (contratos)
     Route::apiResource('safra', \Mg\Safra\SafraController::class)->parameters(['safra' => 'codsafra']);
 
     // Plantio aninhado na safra: safra/{codsafra}/plantio

@@ -7,7 +7,7 @@ import { dependenteStore } from 'stores/dependente'
 import { useAuthStore } from 'src/stores'
 import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import SelectPessoa from 'components/select/SelectPessoa.vue'
+import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
