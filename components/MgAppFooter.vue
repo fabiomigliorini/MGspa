@@ -18,6 +18,6 @@ const commitNumber = process.env.COMMIT_NUMBER
     <span class="gt-xs"> App {{ appName }} | MG Papelaria &copy; | </span>
     <span class="gt-xs"> v{{ version }} | </span>
     <span v-if="commitNumber"> #{{ commitNumber }} | </span>
-    <span v-if="buildDate"> {{ buildDate }}</span>
+    <span v-if="buildDate"> Build {{ buildDate }}</span>
   </div>
 </template>
