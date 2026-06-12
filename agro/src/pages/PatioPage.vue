@@ -13,7 +13,6 @@ const { online, sincronizando } = storeToRefs(sinc)
 
 // Etapas em ordem do fluxo da carga (chegada → finalização).
 const etapas = [
-  { etapa: 'PATIO', label: 'Pátio', curto: 'Pátio', icon: 'local_shipping', color: 'blue-grey-7' },
   { etapa: 'BRUTO', label: 'Peso Bruto', curto: 'Bruto', icon: 'scale', color: 'orange-8' },
   { etapa: 'CLASSIFICACAO', label: 'Classificação', curto: 'Classif.', icon: 'science', color: 'deep-purple-6' },
   { etapa: 'TARA', label: 'Tara', curto: 'Tara', icon: 'monitor_weight', color: 'teal-7' },
@@ -21,7 +20,6 @@ const etapas = [
 ]
 
 const proximoLabel = {
-  PATIO: 'Pesar bruto',
   BRUTO: 'Classificar',
   CLASSIFICACAO: 'Pesar tara',
   TARA: 'Finalizar',
@@ -30,20 +28,29 @@ const proximoLabel = {
 
 const dialog = ref(false)
 const cargaSel = ref(null)
+const novo = ref(false)
 
 function abrir(carga) {
   cargaSel.value = JSON.parse(JSON.stringify(carga))
+  novo.value = false
   dialog.value = true
 }
 
 function novoCaminhao() {
   cargaSel.value = store.nova()
+  novo.value = true
   dialog.value = true
 }
 
+// Salvar fecha o modal (deixa a carga na etapa atual).
 async function onSalvar(carga) {
   await store.salvar(carga)
   dialog.value = false
+}
+
+// Avançar persiste mas mantém o modal aberto pra continuar o fluxo.
+async function onAvancar(carga) {
+  await store.salvar(carga)
 }
 
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
@@ -224,6 +231,12 @@ onMounted(async () => {
       <q-btn fab icon="add" color="primary" label="Caminhão" @click="novoCaminhao" />
     </q-page-sticky>
 
-    <CargaDialog v-model="dialog" :carga="cargaSel" @salvar="onSalvar" />
+    <CargaDialog
+      v-model="dialog"
+      :carga="cargaSel"
+      :novo="novo"
+      @salvar="onSalvar"
+      @avancar="onAvancar"
+    />
   </q-page>
 </template>

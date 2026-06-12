@@ -32,10 +32,14 @@ class CargaColheitaController extends MgController
             'etapa' => ['required', Rule::in(CargaColheitaService::ETAPAS)],
             'data' => ['required', 'date'],
             'plantios' => ['array'],
-            'plantios.*.codplantio' => ['required', 'exists:tblplantio,codplantio'],
+            // nullable: o service (sincronizarPlantios) ignora entradas sem
+            // codplantio; nao rejeitar a carga inteira por uma linha vazia.
+            'plantios.*.codplantio' => ['nullable', 'exists:tblplantio,codplantio'],
             'plantios.*.percentual' => ['nullable', 'numeric', 'gte:0'],
             'pesobruto' => ['nullable', 'numeric', 'gte:0'],
             'tara' => ['nullable', 'numeric', 'gte:0'],
+            'codveiculo' => ['nullable', 'exists:tblveiculo,codveiculo'],
+            'codpessoamotorista' => ['nullable', 'exists:tblpessoa,codpessoa'],
         ]);
 
         $carga = CargaColheitaService::sincronizar($request->all());

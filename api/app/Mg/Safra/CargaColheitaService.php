@@ -4,6 +4,8 @@ namespace Mg\Safra;
 
 use Mg\MgService;
 use Mg\Cultura\TabelaDesconto;
+use Mg\Veiculo\Veiculo;
+use Mg\Pessoa\Pessoa;
 
 class CargaColheitaService extends MgService
 {
@@ -12,6 +14,8 @@ class CargaColheitaService extends MgService
         'Safra.Cultura',
         'CargaColheitaPlantioS.Plantio.Talhao',
         'CargaColheitaPlantioS.Plantio.Variedade',
+        'Veiculo',
+        'PessoaMotorista',
     ];
 
     const ETAPAS = ['PATIO', 'BRUTO', 'CLASSIFICACAO', 'TARA', 'FINALIZADO'];
@@ -54,10 +58,29 @@ class CargaColheitaService extends MgService
     {
         $carga = CargaColheita::firstOrNew(['uuid' => $data['uuid']]);
         $carga->fill($data);
+        static::snapshotCaminhaoMotorista($carga);
         static::calcular($carga);
         $carga->save();
         static::sincronizarPlantios($carga, $data['plantios'] ?? []);
         return $carga->fresh(static::WITH);
+    }
+
+    /**
+     * Mantem o snapshot textual (placa/motorista) coerente com o cadastro:
+     * quando a carga vem vinculada a um veiculo/pessoa mas sem o texto, copia
+     * da fonte. Preserva o texto livre quando nao ha FK (placa ainda nao
+     * cadastrada, motorista digitado no patio).
+     */
+    protected static function snapshotCaminhaoMotorista(CargaColheita $carga): void
+    {
+        if (!empty($carga->codveiculo) && empty($carga->placa)) {
+            $carga->placa = optional(Veiculo::find($carga->codveiculo))->placa;
+        }
+        if (!empty($carga->codpessoamotorista) && empty($carga->motorista)) {
+            $pessoa = Pessoa::find($carga->codpessoamotorista);
+            $nome = $pessoa ? ($pessoa->fantasia ?: $pessoa->pessoa) : null;
+            $carga->motorista = $nome ? mb_substr($nome, 0, 60) : null;
+        }
     }
 
     /** Substitui os talhoes da carga pelo conjunto informado (rateio %). */

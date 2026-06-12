@@ -37,6 +37,8 @@ export function imprimirTicket(t) {
       </div>
       <table>
         ${linha('Placa', t.placa || '—')}
+        ${t.veiculo ? linha('Caminhão', t.veiculo) : ''}
+        ${t.renavam ? linha('Renavam', t.renavam) : ''}
         ${linha('Motorista', t.motorista || '—')}
         ${t.cultura ? linha('Cultura / Safra', `${t.cultura} — ${t.safra || '—'}`) : ''}
         ${linha(t.rotuloItens || 'Talhões', itens || '—')}

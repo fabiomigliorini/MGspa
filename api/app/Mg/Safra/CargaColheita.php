@@ -9,6 +9,8 @@ namespace Mg\Safra;
 use Mg\MgModel;
 use Mg\Safra\CargaColheitaPlantio;
 use Mg\Safra\Safra;
+use Mg\Veiculo\Veiculo;
+use Mg\Pessoa\Pessoa;
 
 class CargaColheita extends MgModel
 {
@@ -18,7 +20,9 @@ class CargaColheita extends MgModel
 
     protected $fillable = [
         'avariados',
+        'codpessoamotorista',
         'codsafra',
+        'codveiculo',
         'data',
         'descontoavariados',
         'descontoimpureza',
@@ -41,9 +45,11 @@ class CargaColheita extends MgModel
         'alteracao' => 'datetime',
         'avariados' => 'float',
         'codcargacolheita' => 'integer',
+        'codpessoamotorista' => 'integer',
         'codsafra' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'codveiculo' => 'integer',
         'criacao' => 'datetime',
         'data' => 'datetime',
         'descontoavariados' => 'float',
@@ -63,6 +69,16 @@ class CargaColheita extends MgModel
     public function Safra()
     {
         return $this->belongsTo(Safra::class, 'codsafra', 'codsafra');
+    }
+
+    public function Veiculo()
+    {
+        return $this->belongsTo(Veiculo::class, 'codveiculo', 'codveiculo');
+    }
+
+    public function PessoaMotorista()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoamotorista', 'codpessoa');
     }
 
 
