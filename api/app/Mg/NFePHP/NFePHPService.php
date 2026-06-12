@@ -246,7 +246,8 @@ class NFePHPService extends MgService
         $cStat = null;
         $xMotivo = 'Falha Comunicação SEFAZ!';
 
-        // Se veio cStat do Protocolo
+        // Se veio cStat do Protocolo (modo sincrono encapsula o resultado em protNFe,
+        // inclusive rejeicoes como a duplicidade 204)
         if (isset($respStd->protNFe->infProt->cStat)) {
 
             // Processa Protocolo para saber se foi autorizada
@@ -265,38 +266,38 @@ class NFePHPService extends MgService
             $xMotivo = $respStd->xMotivo;
 
             Log::info("enviarSincrono NF#{$nf->codnotafiscal}: rejeicao raiz cStat={$cStat} ({$xMotivo})");
-
-            // Duplicidade (204/539): a SEFAZ ja conhece essa NFe. Acontece quando a 1a
-            // requisicao autorizou mas a resposta se perdeu ('unexpected eof' do OpenSSL)
-            // e o retry caiu em duplicidade. O protocolo de autorizacao NAO vem nessa
-            // resposta — recuperamos consultando a chave na SEFAZ.
-            if (static::ehDuplicidade($cStat)) {
-
-                // Espera curta antes de consultar: apos autorizar, a SEFAZ leva um
-                // instante para replicar a nota ao servico de consulta. Consulta
-                // imediata pode voltar 217 (NFe nao consta) mesmo a nota tendo
-                // acabado de ser autorizada.
-                usleep(500 * 1000);
-                Log::info("enviarSincrono NF#{$nf->codnotafiscal}: duplicidade -> consultando chave para recuperar autorizacao");
-
-                // Reusa o nucleo de consultar() (sem lock — ja seguramos o lock aqui).
-                // Best-effort: se a consulta tambem falhar, deixa a nota para o robo
-                // (NFePHPRoboService) resolver depois — nao propaga erro ao usuario.
-                try {
-                    $resConsulta = static::consultarSemLock($nf);
-                    $nf = $nf->fresh();
-                    if (!empty($nf->nfeautorizacao)) {
-                        $sucesso = true;
-                        $cStat = $resConsulta->cStat;
-                        $xMotivo = $resConsulta->xMotivo;
-                    }
-                    Log::info("enviarSincrono NF#{$nf->codnotafiscal}: consulta de recuperacao cStat={$resConsulta->cStat} ({$resConsulta->xMotivo}) recuperada=" . (!empty($nf->nfeautorizacao) ? 'sim' : 'nao'));
-                } catch (\Exception $e) {
-                    Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta: " . $e->getMessage());
-                }
-            }
         } else {
             Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: resposta da SEFAZ sem cStat reconhecivel");
+        }
+
+        // Duplicidade (204/539) sem autorizacao local: a SEFAZ ja conhece essa NFe.
+        // Acontece quando a 1a requisicao autorizou mas a resposta se perdeu
+        // ('unexpected eof' do OpenSSL) e o retry caiu em duplicidade. A duplicidade
+        // pode vir tanto no protocolo (modo sincrono) quanto na raiz, e o protocolo de
+        // autorizacao NAO vem nessa resposta — recuperamos consultando a chave na SEFAZ.
+        if (!$sucesso && static::ehDuplicidade($cStat)) {
+
+            // Espera curta antes de consultar: apos autorizar, a SEFAZ leva um instante
+            // para replicar a nota ao servico de consulta. Consulta imediata pode voltar
+            // 217 (NFe nao consta) mesmo a nota tendo acabado de ser autorizada.
+            usleep(500 * 1000);
+            Log::info("enviarSincrono NF#{$nf->codnotafiscal}: duplicidade -> consultando chave para recuperar autorizacao");
+
+            // Reusa o nucleo de consultar() (sem lock — ja seguramos o lock aqui).
+            // Best-effort: se a consulta tambem falhar, deixa a nota para o robo
+            // (NFePHPRoboService) resolver depois — nao propaga erro ao usuario.
+            try {
+                $resConsulta = static::consultarSemLock($nf);
+                $nf = $nf->fresh();
+                if (!empty($nf->nfeautorizacao)) {
+                    $sucesso = true;
+                    $cStat = $resConsulta->cStat;
+                    $xMotivo = $resConsulta->xMotivo;
+                }
+                Log::info("enviarSincrono NF#{$nf->codnotafiscal}: consulta de recuperacao cStat={$resConsulta->cStat} ({$resConsulta->xMotivo}) recuperada=" . (!empty($nf->nfeautorizacao) ? 'sim' : 'nao'));
+            } catch (\Exception $e) {
+                Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta: " . $e->getMessage());
+            }
         }
 
         // atualiza status
