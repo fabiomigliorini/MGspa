@@ -229,7 +229,6 @@ watch(
               </q-item-label>
 
               <q-item-label caption>
-                {{ historico.usuariocriacao }}
                 {{ formataFromNow(historico.criacao) }}
               </q-item-label>
             </q-item-section>

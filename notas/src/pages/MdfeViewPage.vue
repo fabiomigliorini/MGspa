@@ -13,6 +13,7 @@ import {
 } from '../stores/mdfeStore'
 import mdfeService from '../services/mdfeService'
 import { formataChave, formataCodigo, formataNumero, tempoRelativo } from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { notificarSucesso, notificarErro } from '../utils/notify'
 
 const route = useRoute()
@@ -473,13 +474,7 @@ const damdfe = async () => {
         </div>
 
         <!-- Autoria -->
-        <div class="text-caption text-grey q-mt-md">
-          Criado por {{ mdfe.usuariocriacao }}
-          <span v-if="mdfe.criacao">{{ tempoRelativo(mdfe.criacao) }}</span>
-          <span v-if="mdfe.usuarioalteracao && mdfe.alteracao !== mdfe.criacao">
-            · Alterado por {{ mdfe.usuarioalteracao }} {{ tempoRelativo(mdfe.alteracao) }}
-          </span>
-        </div>
+        <MgInfoCriacao :registro="mdfe" />
       </template>
     </div>
 

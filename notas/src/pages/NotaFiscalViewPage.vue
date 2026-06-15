@@ -21,6 +21,7 @@ import NotaFiscalReferenciadaDialog from '../components/dialogs/NotaFiscalRefere
 import NotaFiscalCartaCorrecaoDialog from '../components/dialogs/NotaFiscalCartaCorrecaoDialog.vue'
 import NotaFiscalItemDialog from 'src/components/dialogs/NotaFiscalItemDialog.vue'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import api from '../services/api'
 
 const router = useRouter()
@@ -1001,6 +1002,8 @@ onUnmounted(() => {
           {{ nota.serie }}
         </div>
 
+        <MgInfoCriacao :registro="nota" class="q-mr-sm" />
+
         <q-btn
           flat
           dense
@@ -1694,58 +1697,6 @@ onUnmounted(() => {
             </q-card-section>
             <q-card-section>
               <div class="text-body2" style="white-space: pre-wrap">{{ nota.observacoes }}</div>
-            </q-card-section>
-          </q-card>
-        </div>
-
-        <!-- Registro (Criação / Alteração) -->
-        <div class="col-12">
-          <q-card flat bordered>
-            <q-card-section class="bg-primary text-white">
-              <div class="text-body2">
-                <q-icon name="history" size="1.5em" class="q-mr-sm" />
-                Registro
-              </div>
-            </q-card-section>
-            <q-card-section>
-              <div class="row q-col-gutter-md">
-                <div class="col-12 col-sm-6" v-if="nota.criacao">
-                  <div class="text-caption text-grey-7">Criado por</div>
-                  <div class="text-body2 text-weight-medium">
-                    <a
-                      v-if="nota.usuarioCriacao?.codpessoa"
-                      :href="`${pessoasUrl}/pessoa/${nota.usuarioCriacao.codpessoa}`"
-                      target="_blank"
-                      class="text-primary"
-                      style="text-decoration: none"
-                    >
-                      {{ nota.usuarioCriacao.usuario }}
-                    </a>
-                    <span v-else>{{ nota.usuarioCriacao?.usuario || '-' }}</span>
-                  </div>
-                  <div class="text-caption text-grey-7">
-                    {{ formataTimestamp(nota.criacao, 4, true) }}
-                  </div>
-                </div>
-                <div class="col-12 col-sm-6" v-if="nota.alteracao">
-                  <div class="text-caption text-grey-7">Última alteração por</div>
-                  <div class="text-body2 text-weight-medium">
-                    <a
-                      v-if="nota.usuarioAlteracao?.codpessoa"
-                      :href="`${pessoasUrl}/pessoa/${nota.usuarioAlteracao.codpessoa}`"
-                      target="_blank"
-                      class="text-primary"
-                      style="text-decoration: none"
-                    >
-                      {{ nota.usuarioAlteracao.usuario }}
-                    </a>
-                    <span v-else>{{ nota.usuarioAlteracao?.usuario || '-' }}</span>
-                  </div>
-                  <div class="text-caption text-grey-7">
-                    {{ formataTimestamp(nota.alteracao, 4, true) }}
-                  </div>
-                </div>
-              </div>
             </q-card-section>
           </q-card>
         </div>

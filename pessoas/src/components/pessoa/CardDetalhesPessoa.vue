@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { formataData, formataPisPasep, formataIe, formataCpf, formataTitulo, formataCnpj, formataCodigo, verificaIdade, formataTimestamp } from '@components/formatters'
+import { formataData, formataPisPasep, formataIe, formataCpf, formataTitulo, formataCnpj, formataCodigo, verificaIdade } from '@components/formatters'
 import { useAuthStore } from 'stores/index'
 import SelectGrupoEconomico from 'components/pessoa/SelectGrupoEconomico.vue'
 import SelectCidade from 'components/pessoa/SelectCidade.vue'
@@ -12,6 +12,7 @@ import InputIe from 'components/pessoa/InputIe.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import SelectEstadoCivil from 'components/pessoa/SelectEstadoCivil.vue'
 import SelectEtnia from 'components/pessoa/SelectEtnia.vue'
 import SelectGrauInstrucao from 'components/pessoa/SelectGrauInstrucao.vue'
@@ -530,18 +531,7 @@ const salvarDetalhes = async () => {
         >
           <q-tooltip>Ativar</q-tooltip>
         </q-btn>
-        <q-btn flat round dense icon="info" size="sm" color="grey-7">
-          <q-tooltip>
-            <div>
-              Criado por {{ sPessoa.item.usuariocriacao }} em
-              {{ formataTimestamp(sPessoa.item.criacao) }}
-            </div>
-            <div>
-              Alterado por {{ sPessoa.item.usuarioalteracao }} em
-              {{ formataTimestamp(sPessoa.item.alteracao) }}
-            </div>
-          </q-tooltip>
-        </q-btn>
+        <MgInfoCriacao :registro="sPessoa.item" />
       </template>
     </q-card-section>
 
