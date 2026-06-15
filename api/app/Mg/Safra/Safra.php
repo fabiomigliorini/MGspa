@@ -15,7 +15,6 @@ class Safra extends MgModel
     protected $table = 'tblsafra';
     protected $primaryKey = 'codsafra';
 
-    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
 
     protected $fillable = [

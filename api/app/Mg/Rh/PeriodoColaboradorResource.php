@@ -9,8 +9,6 @@ class PeriodoColaboradorResource extends JsonResource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['usuariocriacao'] = $this->usuariocriacao;
-        $ret['usuarioalteracao'] = $this->usuarioalteracao;
 
         $pessoais = $this->indicadores_pessoais ?? collect();
         $todosSetores = $this->PeriodoColaboradorSetorS->pluck('codsetor');
