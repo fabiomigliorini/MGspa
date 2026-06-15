@@ -19,7 +19,7 @@ class LiquidacaoTituloResource extends Resource
         $ret = parent::toArray($request);
         $ret['portador'] = $this->Portador->portador??null;
         $ret['fantasia'] = $this->Pessoa->fantasia;
-        $ret['usuario'] = $this->UsuarioCriacao->usuario ?? null;
+        $ret['usuario'] = $this->usuariocriacao;
         $ret['pdv'] = $this->Pdv->apelido ?? null;
         $ret['parceiro'] = $this->PessoaCartao->fantasia??null;
         $ret['nomebandeira'] = NegocioFormaPagamentoService::BANDEIRAS[$ret['bandeira']]?? null;

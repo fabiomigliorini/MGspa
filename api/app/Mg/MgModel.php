@@ -11,9 +11,11 @@ use Mg\Usuario\Usuario;
  * Base model do domínio MG.
  *
  * Audit trail (criacao/alteracao + codusuariocriacao/alteracao) e helpers
- * comuns (scopes ativo/inativo, palavras). Porta literal do MgModel
- * legado em /opt/www/MGspa/laravel/app/Mg/MgModel.php — comportamento
- * idêntico para preservar o contrato dos models já migrados.
+ * comuns (scopes ativo/inativo, palavras). Porta do MgModel legado em
+ * /opt/www/MGspa/laravel/app/Mg/MgModel.php — comportamento idêntico,
+ * exceto o stamp de auditoria, que resolve o usuário pelo guard autenticado
+ * (api/Passport) em vez de só `Auth::user()` (guard padrão web). Ver
+ * usuarioAutenticado().
  */
 abstract class MgModel extends Model
 {
@@ -49,15 +51,15 @@ abstract class MgModel extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (Auth::user() !== null) {
-                $model->attributes['codusuariocriacao'] = Auth::user()->codusuario;
-                $model->attributes['codusuarioalteracao'] = Auth::user()->codusuario;
+            if (($usuario = static::usuarioAutenticado()) !== null) {
+                $model->attributes['codusuariocriacao'] = $usuario->codusuario;
+                $model->attributes['codusuarioalteracao'] = $usuario->codusuario;
             }
         });
 
         static::updating(function ($model) {
-            if (Auth::user() !== null) {
-                $model->attributes['codusuarioalteracao'] = Auth::user()->codusuario;
+            if (($usuario = static::usuarioAutenticado()) !== null) {
+                $model->attributes['codusuarioalteracao'] = $usuario->codusuario;
             }
         });
 
@@ -69,6 +71,23 @@ abstract class MgModel extends Model
             }
             return true;
         });
+    }
+
+    /**
+     * Usuário autenticado para o stamp de auditoria.
+     *
+     * Auth::user() usa o guard padrão ('web'/sessão), que nunca está autenticado
+     * em requisições de token Bearer (que usam o guard 'api'/Passport). Por isso
+     * resolvemos o usuário a partir do guard que estiver de fato autenticado.
+     */
+    protected static function usuarioAutenticado()
+    {
+        foreach (['api', 'web'] as $guard) {
+            if (Auth::guard($guard)->check()) {
+                return Auth::guard($guard)->user();
+            }
+        }
+        return Auth::user();
     }
 
     public function scopeAtivo($query)
@@ -121,12 +140,12 @@ abstract class MgModel extends Model
 
     public function getUsuariocriacaoAttribute()
     {
-        return @$this->UsuarioCriacao->usuario;
+        return optional($this->getRelationValue('UsuarioCriacao'))->usuario;
     }
 
     public function getUsuarioalteracaoAttribute()
     {
-        return @$this->UsuarioAlteracao->usuario;
+        return optional($this->getRelationValue('UsuarioAlteracao'))->usuario;
     }
 
     protected function serializeDate(DateTimeInterface $date)

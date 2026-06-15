@@ -21,7 +21,7 @@ class TituloAgrupamentoListaResource extends Resource
             'criacao'              => $this->criacao,
             'cancelamento'         => $this->cancelamento,
             'codusuariocriacao'    => $this->codusuariocriacao,
-            'usuariocriacao'       => optional($this->UsuarioCriacao)->usuario,
+            'usuariocriacao'       => $this->usuariocriacao,
             'debito'               => $debito,
             'credito'              => $credito,
             'valor'                => abs($valor),

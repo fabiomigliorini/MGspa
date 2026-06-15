@@ -102,8 +102,8 @@ class NotaFiscalDetailResource extends JsonResource
             'alteracao' => $this->alteracao,
 
             // Usuários
-            'usuarioCriacao' => $this->UsuarioCriacao?->only(['codusuario', 'usuario', 'codpessoa']),
-            'usuarioAlteracao' => $this->UsuarioAlteracao?->only(['codusuario', 'usuario', 'codpessoa']),
+            'usuarioCriacao' => $this->getRelationValue('UsuarioCriacao')?->only(['codusuario', 'usuario', 'codpessoa']),
+            'usuarioAlteracao' => $this->getRelationValue('UsuarioAlteracao')?->only(['codusuario', 'usuario', 'codpessoa']),
         ];
     }
 

@@ -24,7 +24,7 @@ class LiquidacaoTituloListaResource extends Resource
             'estornado'           => $this->estornado,
             'codperiodo'          => $this->codperiodo,
             'codusuariocriacao'   => $this->codusuariocriacao,
-            'usuariocriacao'      => optional($this->UsuarioCriacao)->usuario,
+            'usuariocriacao'      => $this->usuariocriacao,
             'debito'              => $debito,
             'credito'             => $credito,
             'valor'               => abs($valor),
