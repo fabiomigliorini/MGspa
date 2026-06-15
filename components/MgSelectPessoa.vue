@@ -15,7 +15,6 @@ const props = defineProps({
   customClass: { type: String, default: '' },
   disable: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },
-  dense: { type: Boolean, default: false },
   maxChars: { type: Number, default: 25 },
   somenteAtivos: { type: Boolean, default: true },
   somenteVendedores: { type: Boolean, default: false },
@@ -170,7 +169,6 @@ const handleUpdate = (value) => {
     :disable="disable"
     :readonly="readonly"
     :loading="loading"
-    :dense="dense"
   >
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
@@ -202,7 +200,6 @@ const handleUpdate = (value) => {
     <template v-slot:selected-item="scope">
       <q-chip
         removable
-        dense
         @remove="handleUpdate(null)"
         :color="scope.opt.fisica ? 'blue' : 'purple'"
         text-color="white"
