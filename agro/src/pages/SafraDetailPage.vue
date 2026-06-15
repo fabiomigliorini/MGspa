@@ -248,12 +248,7 @@ onMounted(async () => {
             class="col-12 col-sm-auto row items-center justify-end no-wrap"
             :class="{ 'q-mt-sm': $q.screen.lt.sm }"
           >
-            <MgInfoCriacao
-              :usuariocriacao="safra?.usuariocriacao"
-              :criacao="safra?.criacao"
-              :usuarioalteracao="safra?.usuarioalteracao"
-              :alteracao="safra?.alteracao"
-            />
+            <MgInfoCriacao :registro="safra" />
             <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarSafra">
               <q-tooltip>Editar safra</q-tooltip>
             </q-btn>
@@ -499,12 +494,7 @@ onMounted(async () => {
             </q-item-section>
             <q-item-section side>
               <div class="row items-center no-wrap">
-                <MgInfoCriacao
-                  :usuariocriacao="l.usuariocriacao"
-                  :criacao="l.criacao"
-                  :usuarioalteracao="l.usuarioalteracao"
-                  :alteracao="l.alteracao"
-                />
+                <MgInfoCriacao :registro="l" />
                 <q-btn
                   flat
                   dense
