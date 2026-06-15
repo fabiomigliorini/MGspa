@@ -20,8 +20,8 @@ class MdfeResource extends Resource
         $ret['estadofim'] = $this->EstadoFim->estado;
         $ret['mdfestatussigla'] = $this->MdfeStatus->sigla;
         $ret['mdfestatus'] = $this->MdfeStatus->mdfestatus;
-        $ret['usuariocriacao'] = $this->codusuariocriacao?$this->UsuarioCriacao->usuario:null;
-        $ret['usuarioalteracao'] = $this->codusuarioalteracao?$this->UsuarioAlteracao->usuario:null;
+        $ret['usuariocriacao'] = $this->usuariocriacao;
+        $ret['usuarioalteracao'] = $this->usuarioalteracao;
 
         $ret['MdfeEstadoS'] = [];
         foreach ($this->MdfeEstadoS as $mdfeEstado) {

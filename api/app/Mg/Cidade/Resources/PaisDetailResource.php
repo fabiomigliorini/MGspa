@@ -16,8 +16,8 @@ class PaisDetailResource extends JsonResource
             'inativo' => $this->inativo,
 
             // Auditoria
-            'usuarioCriacao' => $this->relationLoaded('UsuarioCriacao') ? $this->UsuarioCriacao?->only(['codusuario', 'usuario']) : null,
-            'usuarioAlteracao' => $this->relationLoaded('UsuarioAlteracao') ? $this->UsuarioAlteracao?->only(['codusuario', 'usuario']) : null,
+            'usuarioCriacao' => $this->relationLoaded('UsuarioCriacao') ? $this->getRelationValue('UsuarioCriacao')?->only(['codusuario', 'usuario']) : null,
+            'usuarioAlteracao' => $this->relationLoaded('UsuarioAlteracao') ? $this->getRelationValue('UsuarioAlteracao')?->only(['codusuario', 'usuario']) : null,
 
             // Timestamps
             'criacao' => $this->criacao,

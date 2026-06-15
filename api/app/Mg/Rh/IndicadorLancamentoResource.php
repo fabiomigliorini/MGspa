@@ -9,8 +9,8 @@ class IndicadorLancamentoResource extends JsonResource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
-        $ret['usuarioalteracao'] = @$this->UsuarioAlteracao->usuario;
+        $ret['usuariocriacao'] = $this->usuariocriacao;
+        $ret['usuarioalteracao'] = $this->usuarioalteracao;
         return $ret;
     }
 }

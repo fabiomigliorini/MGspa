@@ -24,7 +24,7 @@ class TributacaoDetailResource extends JsonResource
         if (!$this->relationLoaded('UsuarioCriacao')) {
             return null;
         }
-        return $this->UsuarioCriacao?->only(['codusuario', 'usuario']);
+        return $this->getRelationValue('UsuarioCriacao')?->only(['codusuario', 'usuario']);
     }
 
     private function formatUsuarioAlteracao(): ?array
@@ -32,6 +32,6 @@ class TributacaoDetailResource extends JsonResource
         if (!$this->relationLoaded('UsuarioAlteracao')) {
             return null;
         }
-        return $this->UsuarioAlteracao?->only(['codusuario', 'usuario']);
+        return $this->getRelationValue('UsuarioAlteracao')?->only(['codusuario', 'usuario']);
     }
 }

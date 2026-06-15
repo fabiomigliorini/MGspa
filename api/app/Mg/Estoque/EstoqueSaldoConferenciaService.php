@@ -366,7 +366,7 @@ class EstoqueSaldoConferenciaService extends MgService
                     $conferencias[] = [
                         'codestoquesaldoconferencia' => $esc->codestoquesaldoconferencia,
                         'data' => $esc->data->toW3cString(),
-                        'usuario' => $esc->UsuarioCriacao?->usuario,
+                        'usuario' => $esc->usuariocriacao,
                         'quantidadesistema' => $esc->quantidadesistema,
                         'quantidadeinformada' => $esc->quantidadeinformada,
                         'customediosistema' => $esc->customediosistema,

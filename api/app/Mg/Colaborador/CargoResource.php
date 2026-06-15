@@ -10,8 +10,8 @@ class CargoResource extends JsonResource
     {
         $ret = parent::toArray($request);
         if ($this->resource instanceof Cargo) {
-            $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
-            $ret['usuarioalteracao'] = @$this->UsuarioAlteracao->usuario;
+            $ret['usuariocriacao'] = $this->usuariocriacao;
+            $ret['usuarioalteracao'] = $this->usuarioalteracao;
         }
         return $ret;
     }

@@ -9,7 +9,7 @@ class CobrancaResource extends JsonResource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
+        $ret['usuariocriacao'] = $this->usuariocriacao;
         return $ret;
     }
 }

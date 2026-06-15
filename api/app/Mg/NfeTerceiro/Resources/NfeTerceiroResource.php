@@ -86,7 +86,7 @@ class NfeTerceiroResource extends JsonResource
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
             'codusuarioalteracao' => $this->codusuarioalteracao,
-            'usuarioAlteracao' => $this->UsuarioAlteracao?->only(['codusuario', 'usuario']),
+            'usuarioAlteracao' => $this->getRelationValue('UsuarioAlteracao')?->only(['codusuario', 'usuario']),
 
             // Relações filhas (carregadas apenas no show)
             'itens' => $this->when(

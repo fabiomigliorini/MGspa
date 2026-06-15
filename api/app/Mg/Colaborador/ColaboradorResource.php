@@ -16,8 +16,8 @@ class ColaboradorResource extends JsonResource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['usuariocriacao'] = @$this->UsuarioCriacao->usuario;
-        $ret['usuarioalteracao'] = @$this->UsuarioAlteracao->usuario;
+        $ret['usuariocriacao'] = $this->usuariocriacao;
+        $ret['usuarioalteracao'] = $this->usuarioalteracao;
         $ret['Ferias'] = $this->FeriasS()->orderBy('aquisitivofim', 'desc')->get();
         $ret['Filial'] = @$this->Filial->filial;
         $ret['ColaboradorCargo'] = ColaboradorCargoResource::collection($this->ColaboradorCargoS()->orderBy('inicio', 'desc')->get());

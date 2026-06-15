@@ -996,7 +996,7 @@ class NFePHPService extends MgService
 
         // Valida se informado nome da Impressora
         if (empty($impressora) && !empty($nf->codusuariocriacao)) {
-            $impressora = $nf->UsuarioCriacao->impressoratermica;
+            $impressora = $nf->getRelationValue('UsuarioCriacao')?->impressoratermica;
         }
         if (empty($impressora)) {
             throw new \Exception("Impressora não informada!", 1);
