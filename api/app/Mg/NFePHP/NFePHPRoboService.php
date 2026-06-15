@@ -148,7 +148,7 @@ class NFePHPRoboService
         }
 
         // se ainda nao tinha criado o arquivo XML novo, tenta enviar criando
-        if (empty($$resCriar)) {
+        if (empty($resCriar)) {
 
             // tenta recriar o arquivo xml e enviar novamente
             try {

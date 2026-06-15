@@ -523,6 +523,16 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     },
 
     /**
+     * Define currentNota a partir de um objeto já carregado (ex: payload de uma ação)
+     * e sincroniza com a lista, evitando uma nova requisição.
+     */
+    setCurrentNota(nota) {
+      if (!nota) return
+      this.currentNota = nota
+      this.syncCurrentNotaToList()
+    },
+
+    /**
      * Sincroniza currentNota com a lista notas
      * Deve ser chamado sempre que currentNota for atualizado
      */

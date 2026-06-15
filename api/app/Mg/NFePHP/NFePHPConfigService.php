@@ -4,6 +4,8 @@ namespace Mg\NFePHP;
 
 use NFePHP\NFe\Tools;
 use NFePHP\Common\Certificate;
+use NFePHP\Common\Soap\SoapCurl;
+use NFePHP\Common\Soap\SoapInterface;
 
 use Mg\Filial\Filial;
 use Mg\Filial\CertificadoService;
@@ -71,7 +73,21 @@ class NFePHPConfigService
         $pfx = CertificadoService::pfxConteudo($filial);
         $senha = CertificadoService::pfxSenha($filial);
 
-        // retorna Instancia Tools para a configuracao e certificado
-        return new Tools($config, Certificate::readPfx($pfx, $senha));
+        // Instancia Tools para a configuracao e certificado
+        $tools = new Tools($config, Certificate::readPfx($pfx, $senha));
+
+        // Forca TLS 1.2 + HTTP/1.1 na comunicacao com a SEFAZ.
+        //
+        // Tentativa de reduzir a frequencia do erro "unexpected eof while reading"
+        // (OpenSSL 3.x) com a SEFAZ-MT: por padrao o cURL negocia TLS 1.3, e os
+        // webservices da SEFAZ-MT costumam derrubar a conexao nesse cenario. Fixar
+        // TLS 1.2 + HTTP/1.1 e mais conservador e compativel com todos os ambientes.
+        // Nao elimina o problema (a causa e a infra da SEFAZ), apenas mitiga.
+        $soap = new SoapCurl();
+        $soap->protocol(SoapInterface::SSL_TLSV1_2);
+        $soap->httpVersion('1.1');
+        $tools->loadSoapClass($soap);
+
+        return $tools;
     }
 }

@@ -1,5 +1,5 @@
 <script setup>
-import { formataNumero, formataCodigo } from '@components/formatters'
+import { formataNumero, formataNumeroInteligente, formataCodigo } from '@components/formatters'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { produtoStore } from 'stores/produto'
@@ -26,7 +26,7 @@ var leitorLigado = ref(false)
 
 const labelQuantidade = computed({
   get() {
-    let lbl = formataNumero(quantidade.value, 0)
+    let lbl = formataNumeroInteligente(quantidade.value)
     lbl += ' x'
     return lbl
   },
