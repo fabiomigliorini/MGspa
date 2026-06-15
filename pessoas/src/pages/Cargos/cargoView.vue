@@ -172,12 +172,7 @@ onMounted(async () => {
                 {{ formataNumero(cargo.salario) }}
                 <span v-if="cargo.adicional"> — {{ cargo.adicional }}% adicional </span>
               </span>
-              <MgInfoCriacao
-                :usuariocriacao="cargo.usuariocriacao"
-                :criacao="cargo.criacao"
-                :usuarioalteracao="cargo.usuarioalteracao"
-                :alteracao="cargo.alteracao"
-              />
+              <MgInfoCriacao :registro="cargo" />
               <q-btn
                 flat
                 dense

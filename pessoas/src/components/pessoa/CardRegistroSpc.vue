@@ -245,12 +245,7 @@ const submit = () => {
               }}
 
               <!-- INFO -->
-              <MgInfoCriacao
-                :usuariocriacao="registro.usuariocriacao"
-                :criacao="registro.criacao"
-                :usuarioalteracao="registro.usuarioalteracao"
-                :alteracao="registro.alteracao"
-              />
+              <MgInfoCriacao :registro="registro" />
             </q-item-label>
 
             <q-item-label caption v-if="registro.observacoes">

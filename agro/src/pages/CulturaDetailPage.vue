@@ -155,12 +155,7 @@ onMounted(async () => {
             class="col-12 col-sm-auto row items-center justify-end no-wrap"
             :class="{ 'q-mt-sm': $q.screen.lt.sm }"
           >
-            <MgInfoCriacao
-              :usuariocriacao="cultura?.usuariocriacao"
-              :criacao="cultura?.criacao"
-              :usuarioalteracao="cultura?.usuarioalteracao"
-              :alteracao="cultura?.alteracao"
-            />
+            <MgInfoCriacao :registro="cultura" />
             <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarCultura">
               <q-tooltip>Editar cultura</q-tooltip>
             </q-btn>

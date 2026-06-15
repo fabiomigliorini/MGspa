@@ -288,12 +288,7 @@ const submit = () => {
             >
               Validade: {{ formataData(certidao.validade) }}
               <!-- INFO -->
-              <MgInfoCriacao
-                :usuariocriacao="certidao.usuariocriacao"
-                :criacao="certidao.criacao"
-                :usuarioalteracao="certidao.usuarioalteracao"
-                :alteracao="certidao.alteracao"
-              />
+              <MgInfoCriacao :registro="certidao" />
             </q-item-label>
             <q-item-label caption>
               {{ certidao.certidaotipo }} {{ certidao.certidaoemissor }}

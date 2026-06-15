@@ -225,12 +225,7 @@ watch(
                 {{ historico.historico }}
 
                 <!-- INFO -->
-                <MgInfoCriacao
-                  :usuariocriacao="historico.usuariocriacao"
-                  :criacao="historico.criacao"
-                  :usuarioalteracao="historico.usuarioalteracao"
-                  :alteracao="historico.alteracao"
-                />
+                <MgInfoCriacao :registro="historico" />
               </q-item-label>
 
               <q-item-label caption>

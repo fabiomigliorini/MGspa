@@ -65,12 +65,7 @@ onMounted(async () => {
             </q-item-section>
             <q-item-section side>
               <div class="row items-center no-wrap">
-                <MgInfoCriacao
-                  :usuariocriacao="v.usuariocriacao"
-                  :criacao="v.criacao"
-                  :usuarioalteracao="v.usuarioalteracao"
-                  :alteracao="v.alteracao"
-                />
+                <MgInfoCriacao :registro="v" />
                 <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="cad.editar(v)">
                   <q-tooltip>Editar</q-tooltip>
                 </q-btn>

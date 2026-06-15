@@ -497,12 +497,7 @@ const ativar = async (coddependente) => {
               <q-badge v-if="dep.inativo" color="red" class="q-ml-sm"> Inativo </q-badge>
 
               <!-- INFO -->
-              <MgInfoCriacao
-                :usuariocriacao="dep.usuariocriacao"
-                :criacao="dep.criacao"
-                :usuarioalteracao="dep.usuarioalteracao"
-                :alteracao="dep.alteracao"
-              />
+              <MgInfoCriacao :registro="dep" />
             </q-item-label>
 
             <q-item-label caption>
