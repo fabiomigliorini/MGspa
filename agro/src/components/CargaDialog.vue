@@ -148,14 +148,21 @@ const somaPercentual = computed(() =>
   (local.value?.plantios || []).reduce((s, p) => s + (Number(p.percentual) || 0), 0),
 )
 
-function addPlantio() {
-  local.value.plantios.push({ codplantio: null, percentual: null, rotulo: null })
-}
-function setRotulo(p) {
-  p.rotulo = plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.rotulo || null
-}
-function removePlantio(i) {
-  local.value.plantios.splice(i, 1)
+// Talhões selecionados (multi-select) — só os códigos que estão na carga.
+const talhoesSelecionados = computed(() => (local.value?.plantios || []).map((p) => p.codplantio))
+
+// Sincroniza a seleção do multi-select com local.plantios, preservando o %
+// (rateio) dos que continuam e criando os novos. Talhão único => 100%.
+function onTalhoesChange(cods) {
+  const atuais = local.value.plantios || []
+  const novos = (cods || []).map((cod) => {
+    const existente = atuais.find((p) => p.codplantio === cod)
+    if (existente) return existente
+    const opt = plantiosDaSafra.value.find((o) => o.codplantio === cod)
+    return { codplantio: cod, percentual: null, rotulo: opt?.rotulo || null }
+  })
+  if (novos.length === 1) novos[0].percentual = 100
+  local.value.plantios = novos
 }
 
 // Toda entrada exige placa, ao menos um talhão e o peso bruto (a etapa inicial
@@ -248,9 +255,9 @@ function fmt(v, dec = 0) {
         <q-btn flat round icon="close" v-close-popup tabindex="-1" />
       </q-card-section>
 
-      <q-card-section class="q-gutter-md scroll" style="max-height: 70vh">
+      <q-card-section class="q-gutter-y-md scroll" style="max-height: 70vh">
         <!-- Identificação: placa (cadastro de veículo) e motorista (pessoa) -->
-        <div class="row q-col-gutter-md">
+        <div class="row q-col-gutter-x-md">
           <q-select
             :model-value="local.placa"
             :options="placaOptions"
@@ -310,39 +317,40 @@ function fmt(v, dec = 0) {
           </q-select>
         </div>
 
-        <!-- Talhões (rateio %) -->
+        <!-- Talhões da carga: multi-select (mínimo 1); % rateio só com 2+ -->
         <div>
-          <div class="text-subtitle2 text-grey-8 q-mb-xs">Talhões da carga</div>
-          <div
-            v-for="(p, i) in local.plantios"
-            :key="i"
-            class="row q-col-gutter-sm items-center q-mb-xs"
+          <q-select
+            :model-value="talhoesSelecionados"
+            :options="plantiosDaSafra"
+            option-value="codplantio"
+            option-label="rotulo"
+            multiple
+            use-chips
+            emit-value
+            map-options
+            outlined
+            label="Talhão / variedade"
+            @update:model-value="onTalhoesChange"
           >
-            <q-select
-              v-model="p.codplantio"
-              :options="plantiosDaSafra"
-              option-value="codplantio"
-              option-label="rotulo"
-              emit-value
-              map-options
-              outlined
-              label="Talhão / variedade"
-              class="col"
-              @update:model-value="setRotulo(p)"
-            />
-            <MgInputValor
-              v-if="mostrarPercentual"
-              v-model="p.percentual"
-              :decimals="0"
-              suffix="%"
-              label="%"
-              class="col-3"
-            />
-            <q-btn flat round color="grey-7" icon="close" class="col-auto" @click="removePlantio(i)" />
-          </div>
-          <div class="row items-center justify-between">
-            <q-btn flat color="primary" icon="add" label="Talhão" @click="addPlantio" />
-            <div v-if="mostrarPercentual" class="text-caption" :class="somaPercentual === 100 ? 'text-grey-7' : 'text-orange-8'">
+            <template #no-option>
+              <q-item>
+                <q-item-section class="text-grey-6">Nenhum talhão plantado nesta safra</q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+
+          <!-- Rateio entre talhões (mistura de 2+) -->
+          <div v-if="mostrarPercentual" class="q-mt-sm">
+            <div class="text-caption text-grey-7 q-mb-xs">Rateio entre talhões</div>
+            <div
+              v-for="p in local.plantios"
+              :key="p.codplantio"
+              class="row items-center q-col-gutter-sm q-mb-xs"
+            >
+              <div class="col text-body2">{{ p.rotulo }}</div>
+              <MgInputValor v-model="p.percentual" :decimals="0" suffix="%" label="%" class="col-3" />
+            </div>
+            <div class="text-caption" :class="somaPercentual === 100 ? 'text-grey-7' : 'text-orange-8'">
               Soma: {{ somaPercentual }}%
             </div>
           </div>
@@ -363,7 +371,7 @@ function fmt(v, dec = 0) {
         />
 
         <!-- Classificação (a partir da etapa de classificação) -->
-        <div v-if="mostrarClassificacao" class="row q-col-gutter-md">
+        <div v-if="mostrarClassificacao" class="row q-col-gutter-x-md">
           <MgInputValor v-model="local.umidade" :decimals="1" suffix="%" label="Umidade" class="col-4" />
           <MgInputValor v-model="local.impureza" :decimals="1" suffix="%" label="Impureza" class="col-4" />
           <MgInputValor v-model="local.avariados" :decimals="1" suffix="%" label="Avariados" class="col-4" />
