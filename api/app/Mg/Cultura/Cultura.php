@@ -10,6 +10,7 @@ use Mg\MgModel;
 use Mg\Safra\Safra;
 use Mg\Cultura\TabelaDesconto;
 use Mg\Cultura\Variedade;
+use Mg\Cultura\CulturaTributo;
 
 class Cultura extends MgModel
 {
@@ -52,6 +53,11 @@ class Cultura extends MgModel
     public function VariedadeS()
     {
         return $this->hasMany(Variedade::class, 'codcultura', 'codcultura');
+    }
+
+    public function CulturaTributoS()
+    {
+        return $this->hasMany(CulturaTributo::class, 'codcultura', 'codcultura');
     }
 
 }

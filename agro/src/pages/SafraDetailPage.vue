@@ -583,12 +583,12 @@ onMounted(async () => {
 
     <!-- Dialog Safra (edição) — mesmo form do cadastro -->
     <q-dialog v-model="safraCad.dialog">
-      <q-card bordered flat style="width: 420px; max-width: 90vw">
+      <q-card flat style="width: 440px; max-width: 95vw">
         <q-form @submit="salvarSafra">
-          <q-card-section class="q-pb-none">
+          <q-card-section class="bg-primary text-white">
             <div class="text-h6">Editar Safra</div>
           </q-card-section>
-          <q-card-section>
+          <q-card-section class="q-pt-md">
             <MgSafraForm :cad="safraCad" />
           </q-card-section>
           <q-card-actions align="right">

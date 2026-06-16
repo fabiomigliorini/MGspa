@@ -14,6 +14,8 @@ use Mg\Cultura\Cultura;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Safra\Safra;
+use Mg\Filial\Filial;
+use Mg\Portador\Portador;
 
 class Contrato extends MgModel
 {
@@ -31,13 +33,28 @@ class Contrato extends MgModel
         'contrato',
         'dataembarque',
         'inativo',
+        'isentofethab',
         'localentrega',
         'moeda',
         'observacao',
         'observacaonf',
         'preco',
         'quantidade',
-        'tipo'
+        'tipo',
+        'codfilial',
+        'datacontrato',
+        'embarqueinicio',
+        'embarquefim',
+        'codportador',
+        'codpessoacorretora',
+        'comissaotipo',
+        'comissaovalor',
+        'comissaototal',
+        'viacooperativa',
+        'codpessoacooperativa',
+        'numerocomprador',
+        'numerocorretora',
+        'numerocooperativa'
     ];
 
     protected $casts = [
@@ -53,8 +70,19 @@ class Contrato extends MgModel
         'criacao' => 'datetime',
         'dataembarque' => 'date',
         'inativo' => 'datetime',
+        'isentofethab' => 'boolean',
         'preco' => 'float',
-        'quantidade' => 'float'
+        'quantidade' => 'float',
+        'codfilial' => 'integer',
+        'datacontrato' => 'date',
+        'embarqueinicio' => 'date',
+        'embarquefim' => 'date',
+        'codportador' => 'integer',
+        'codpessoacorretora' => 'integer',
+        'comissaovalor' => 'float',
+        'comissaototal' => 'float',
+        'viacooperativa' => 'boolean',
+        'codpessoacooperativa' => 'integer'
     ];
 
 
@@ -82,6 +110,26 @@ class Contrato extends MgModel
     public function Safra()
     {
         return $this->belongsTo(Safra::class, 'codsafra', 'codsafra');
+    }
+
+    public function Filial()
+    {
+        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function Portador()
+    {
+        return $this->belongsTo(Portador::class, 'codportador', 'codportador');
+    }
+
+    public function Corretora()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoacorretora', 'codpessoa');
+    }
+
+    public function Cooperativa()
+    {
+        return $this->belongsTo(Pessoa::class, 'codpessoacooperativa', 'codpessoa');
     }
 
 

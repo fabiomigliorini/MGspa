@@ -8,20 +8,26 @@ namespace Mg\Contrato;
 
 use Mg\MgModel;
 use Mg\Contrato\Contrato;
+use Mg\Portador\Portador;
 
 class ContratoPagamento extends MgModel
 {
     protected $table = 'tblcontratopagamento';
     protected $primaryKey = 'codcontratopagamento';
 
-
+    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
     protected $fillable = [
         'codcontrato',
         'data',
         'inativo',
         'observacao',
-        'valor'
+        'valor',
+        'modo',
+        'sacas',
+        'datarecebido',
+        'valorrecebido',
+        'codportador'
     ];
 
     protected $casts = [
@@ -33,7 +39,11 @@ class ContratoPagamento extends MgModel
         'criacao' => 'datetime',
         'data' => 'date',
         'inativo' => 'datetime',
-        'valor' => 'float'
+        'valor' => 'float',
+        'sacas' => 'float',
+        'datarecebido' => 'date',
+        'valorrecebido' => 'float',
+        'codportador' => 'integer'
     ];
 
 
@@ -41,6 +51,11 @@ class ContratoPagamento extends MgModel
     public function Contrato()
     {
         return $this->belongsTo(Contrato::class, 'codcontrato', 'codcontrato');
+    }
+
+    public function Portador()
+    {
+        return $this->belongsTo(Portador::class, 'codportador', 'codportador');
     }
 
 }

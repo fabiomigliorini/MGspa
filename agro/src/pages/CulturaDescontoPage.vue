@@ -175,35 +175,34 @@ onMounted(async () => {
       </q-card>
 
       <q-dialog v-model="cad.dialog">
-        <q-card bordered flat style="width: 380px; max-width: 90vw">
+        <q-card flat style="width: 440px; max-width: 95vw">
           <q-form @submit="salvar">
-            <q-card-section>
+            <q-card-section class="bg-primary text-white">
               <div class="text-h6">{{ cad.isNovo ? 'Nova Faixa' : 'Editar Faixa' }}</div>
-              <div class="text-caption text-grey-7">{{ cad.form.tipo }}</div>
+              <div class="text-caption">{{ cad.form.tipo }}</div>
             </q-card-section>
-            <q-card-section class="q-gutter-md">
+            <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
-                <MgInputValor
-                  v-model="cad.form.faixainicio"
-                  :decimals="1"
-                  suffix="%"
-                  label="De"
-                  class="col-6"
-                />
-                <MgInputValor
-                  v-model="cad.form.faixafim"
-                  :decimals="1"
-                  suffix="%"
-                  label="Até"
-                  class="col-6"
-                />
+                <div class="col-6">
+                  <MgInputValor
+                    v-model="cad.form.faixainicio"
+                    :decimals="1"
+                    suffix="%"
+                    label="De"
+                  />
+                </div>
+                <div class="col-6">
+                  <MgInputValor v-model="cad.form.faixafim" :decimals="1" suffix="%" label="Até" />
+                </div>
+                <div class="col-12">
+                  <MgInputValor
+                    v-model="cad.form.percentualdesconto"
+                    :decimals="3"
+                    suffix="%"
+                    label="Desconto aplicado"
+                  />
+                </div>
               </div>
-              <MgInputValor
-                v-model="cad.form.percentualdesconto"
-                :decimals="3"
-                suffix="%"
-                label="Desconto aplicado"
-              />
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />

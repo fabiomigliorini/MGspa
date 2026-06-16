@@ -16,6 +16,9 @@ Artisan::command('inspire', function () {
 | comentando enquanto o command correspondente não estiver estável.
 */
 
+// UPF-MT: a SEFAZ publica o valor no início do mês — tenta importar dias 1, 2 e 3.
+Schedule::command('upf-mt:importar')->cron('0 6 1-3 * *')->withoutOverlapping();
+
 Schedule::command('nota-fiscal:transferencia-entrada')->hourly();
 Schedule::command('nfe-php:resolver-pendentes')->everyTenMinutes();
 Schedule::command('nfe-php:dist-dfe')->everyThirtyMinutes();

@@ -82,82 +82,92 @@ async function salvar() {
 
 <template>
   <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
-    <q-card style="width: 460px; max-width: 95vw">
-      <q-card-section class="row items-center bg-primary text-white">
-        <div class="text-h6">Cadastrar caminhão</div>
-        <q-space />
-        <q-btn flat round icon="close" @click="fechar" tabindex="-1" />
-      </q-card-section>
-
+    <q-card flat style="width: 600px; max-width: 95vw">
       <q-form @submit.prevent="salvar">
-        <q-card-section class="q-gutter-md">
+        <q-card-section class="bg-primary text-white">
+          <div class="text-h6">Cadastrar caminhão</div>
+        </q-card-section>
+        <q-card-section class="q-pt-md">
           <div class="row q-col-gutter-md">
-            <q-input
-              v-model="form.placa"
-              label="Placa"
-              outlined
-              mask="AAA#X##"
-              hint="Ex: ABC1D23"
-              class="col-12 col-sm-6"
-              :rules="[(v) => !!v || 'Informe a placa', (v) => (v && v.length === 7) || '7 caracteres']"
-              @update:model-value="(v) => (form.placa = (v || '').toUpperCase())"
-            />
-            <q-select
-              v-model="form.codestado"
-              label="UF"
-              outlined
-              :options="estadoOptions"
-              option-value="value"
-              option-label="sigla"
-              emit-value
-              map-options
-              class="col-12 col-sm-6"
-              :rules="[(v) => !!v || 'Informe a UF']"
-            />
-          </div>
-
-          <q-input
-            v-model="form.veiculo"
-            label="Apelido"
-            outlined
-            maxlength="50"
-            :rules="[(v) => (v && v.length >= 5) || 'Mínimo 5 caracteres']"
-          />
-
-          <q-select
-            v-model="form.codveiculotipo"
-            label="Tipo de veículo"
-            outlined
-            :options="tipoOptions"
-            option-value="value"
-            option-label="label"
-            emit-value
-            map-options
-            :rules="[(v) => !!v || 'Informe o tipo']"
-          />
-
-          <q-select
-            v-model="form.tipoproprietario"
-            label="Tipo de proprietário"
-            outlined
-            :options="TIPO_PROPRIETARIO_OPTIONS"
-            option-value="value"
-            option-label="label"
-            emit-value
-            map-options
-          />
-
-          <div class="row q-col-gutter-md">
-            <q-input v-model="form.renavam" label="Renavam" outlined mask="###########" class="col-12 col-sm-6" />
-            <q-input v-model.number="form.tara" label="Tara (kg)" outlined type="number" min="0" class="col-12 col-sm-6" />
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model="form.placa"
+                label="Placa"
+                outlined
+                autofocus
+                mask="AAA#X##"
+                hint="Ex: ABC1D23"
+                :rules="[
+                  (v) => !!v || 'Informe a placa',
+                  (v) => (v && v.length === 7) || '7 caracteres',
+                ]"
+                @update:model-value="(v) => (form.placa = (v || '').toUpperCase())"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-select
+                v-model="form.codestado"
+                label="UF"
+                outlined
+                :options="estadoOptions"
+                option-value="value"
+                option-label="sigla"
+                emit-value
+                map-options
+                :rules="[(v) => !!v || 'Informe a UF']"
+              />
+            </div>
+            <div class="col-12">
+              <q-input
+                v-model="form.veiculo"
+                label="Apelido"
+                outlined
+                maxlength="50"
+                :rules="[(v) => (v && v.length >= 5) || 'Mínimo 5 caracteres']"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-select
+                v-model="form.codveiculotipo"
+                label="Tipo de veículo"
+                outlined
+                :options="tipoOptions"
+                option-value="value"
+                option-label="label"
+                emit-value
+                map-options
+                :rules="[(v) => !!v || 'Informe o tipo']"
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-select
+                v-model="form.tipoproprietario"
+                label="Tipo de proprietário"
+                outlined
+                :options="TIPO_PROPRIETARIO_OPTIONS"
+                option-value="value"
+                option-label="label"
+                emit-value
+                map-options
+              />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input v-model="form.renavam" label="Renavam" outlined mask="###########" />
+            </div>
+            <div class="col-12 col-sm-6">
+              <q-input
+                v-model.number="form.tara"
+                label="Tara (kg)"
+                outlined
+                type="number"
+                min="0"
+              />
+            </div>
           </div>
         </q-card-section>
-
-        <q-separator />
-
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" @click="fechar" tabindex="-1" />
-          <q-btn unelevated label="Cadastrar" color="primary" type="submit" :loading="salvando" />
+          <q-btn type="submit" flat label="Cadastrar" color="primary" :loading="salvando" />
         </q-card-actions>
       </q-form>
     </q-card>
