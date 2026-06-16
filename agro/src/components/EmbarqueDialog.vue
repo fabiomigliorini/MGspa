@@ -41,13 +41,16 @@ const proxima = {
   FISCAL: 'DESPACHADO',
   DESPACHADO: null,
 }
+// Rótulo da ação = etapa ATUAL (o que se faz na coluna do card), não a próxima.
+// Pátio/Tara pesam a tara; Classificação classifica; Peso Bruto pesa o bruto;
+// Nota Fiscal emite as NFs; Despachado fecha/imprime o ticket.
 const rotuloAvancar = {
   PATIO: 'Pesar tara',
-  TARA: 'Classificar',
-  CLASSIFICACAO: 'Pesar bruto',
-  BRUTO: 'Notas fiscais',
-  FISCAL: 'Despachar',
-  DESPACHADO: 'Imprimir ticket',
+  TARA: 'Pesar tara',
+  CLASSIFICACAO: 'Classificar',
+  BRUTO: 'Pesar bruto',
+  FISCAL: 'Notas fiscais',
+  DESPACHADO: 'Despachar',
 }
 const labelEtapa = {
   PATIO: 'Pátio',
@@ -90,6 +93,11 @@ function aprovar() {
 }
 
 function salvar() {
+  // "Registrar" (embarque novo) entra no Pátio: exige placa e ao menos um
+  // contrato — mesma checagem do PATIO no avançar.
+  if (!local.value.placa || !local.value.contratos.length) {
+    return $q.notify({ type: 'warning', message: 'Informe a placa e ao menos um contrato.' })
+  }
   emit('salvar', local.value)
 }
 

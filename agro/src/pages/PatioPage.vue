@@ -21,9 +21,9 @@ const etapas = [
 
 const proximoLabel = {
   BRUTO: 'Classificar',
-  CLASSIFICACAO: 'Pesar tara',
-  TARA: 'Finalizar',
-  FINALIZADO: 'Imprimir ticket',
+  CLASSIFICACAO: 'Classificar',
+  TARA: 'Pesar tara',
+  FINALIZADO: 'Finalizar',
 }
 
 const dialog = ref(false)
