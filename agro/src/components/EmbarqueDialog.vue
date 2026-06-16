@@ -10,6 +10,8 @@ import MgInputValor from '@components/MgInputValor.vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   embarque: { type: Object, default: null },
+  // true = embarque novo (só "Registrar", entra na coluna Pátio sem avançar)
+  novo: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'salvar'])
 
@@ -270,8 +272,14 @@ function fmt(v, dec = 0) {
 
       <q-card-actions align="right">
         <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-        <q-btn flat label="Salvar" color="primary" @click="salvar" />
-        <q-btn flat :label="rotuloAvancar[local.etapa]" color="green-7" @click="avancar" />
+        <!-- Ação única = próxima movimentação do kanban. Embarque novo entra na
+             coluna Pátio (Registrar); os demais avançam de etapa. -->
+        <q-btn
+          unelevated
+          :color="novo ? 'primary' : 'green-7'"
+          :label="novo ? 'Registrar' : rotuloAvancar[local.etapa]"
+          @click="novo ? salvar() : avancar()"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>

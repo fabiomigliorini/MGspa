@@ -21,13 +21,16 @@ const colunas = [
 
 const dialog = ref(false)
 const sel = ref(null)
+const ehNovo = ref(false)
 
 function abrir(e) {
   sel.value = JSON.parse(JSON.stringify(e))
+  ehNovo.value = false
   dialog.value = true
 }
 function novo() {
   sel.value = store.nova()
+  ehNovo.value = true
   dialog.value = true
 }
 async function onSalvar(e) {
@@ -117,6 +120,6 @@ onMounted(async () => {
       </q-card>
     </div>
 
-    <EmbarqueDialog v-model="dialog" :embarque="sel" @salvar="onSalvar" />
+    <EmbarqueDialog v-model="dialog" :embarque="sel" :novo="ehNovo" @salvar="onSalvar" />
   </q-page>
 </template>
