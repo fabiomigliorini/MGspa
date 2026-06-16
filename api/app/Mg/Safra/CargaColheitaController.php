@@ -2,8 +2,8 @@
 
 namespace Mg\Safra;
 
+use App\Http\Requests\Mg\Safra\CargaColheitaSincronizarRequest;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Mg\MgController;
 
 class CargaColheitaController extends MgController
@@ -12,48 +12,38 @@ class CargaColheitaController extends MgController
     {
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = CargaColheitaService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
-        return response()->json($res, 200);
+        return CargaColheitaResource::collection($res);
     }
 
     public function show(Request $request, $id)
     {
-        return response()->json(CargaColheita::with(CargaColheitaService::WITH)->findOrFail($id), 200);
+        return new CargaColheitaResource(CargaColheita::with(CargaColheitaService::WITH)->findOrFail($id));
     }
 
     /**
      * Sincroniza uma carga criada/editada offline (upsert por uuid). Aceita
      * carga parcial — pesos/classificacao chegam ao longo das etapas do patio.
      */
-    public function sincronizar(Request $request)
+    public function sincronizar(CargaColheitaSincronizarRequest $request)
     {
-        $request->validate([
-            'uuid' => ['required', 'string'],
-            'codsafra' => ['required', 'exists:tblsafra,codsafra'],
-            'etapa' => ['required', Rule::in(CargaColheitaService::ETAPAS)],
-            'data' => ['required', 'date'],
-            'plantios' => ['array'],
-            // nullable: o service (sincronizarPlantios) ignora entradas sem
-            // codplantio; nao rejeitar a carga inteira por uma linha vazia.
-            'plantios.*.codplantio' => ['nullable', 'exists:tblplantio,codplantio'],
-            'plantios.*.percentual' => ['nullable', 'numeric', 'gte:0'],
-            'pesobruto' => ['nullable', 'numeric', 'gte:0'],
-            'tara' => ['nullable', 'numeric', 'gte:0'],
-            'codveiculo' => ['nullable', 'exists:tblveiculo,codveiculo'],
-            'codpessoamotorista' => ['nullable', 'exists:tblpessoa,codpessoa'],
-        ]);
-
+        // O service é a autoridade (recalcula pesos/descontos) e aceita carga
+        // parcial ao longo das etapas — passa o payload completo, não só o
+        // subconjunto validado, igual ao Embarque::sincronizar.
+        $request->validated();
         $carga = CargaColheitaService::sincronizar($request->all());
 
-        return response()->json($carga, 200);
+        return new CargaColheitaResource($carga->load(CargaColheitaService::WITH));
     }
 
     public function inativar(Request $request, $id)
     {
-        return response()->json(CargaColheitaService::inativar(CargaColheita::findOrFail($id)), 200);
+        CargaColheitaService::inativar(CargaColheita::findOrFail($id));
+        return new CargaColheitaResource(CargaColheita::with(CargaColheitaService::WITH)->findOrFail($id));
     }
 
     public function ativar(Request $request, $id)
     {
-        return response()->json(CargaColheitaService::ativar(CargaColheita::findOrFail($id)), 200);
+        CargaColheitaService::ativar(CargaColheita::findOrFail($id));
+        return new CargaColheitaResource(CargaColheita::with(CargaColheitaService::WITH)->findOrFail($id));
     }
 }

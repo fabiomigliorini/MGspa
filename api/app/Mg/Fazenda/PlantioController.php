@@ -2,8 +2,9 @@
 
 namespace Mg\Fazenda;
 
+use App\Http\Requests\Mg\Fazenda\PlantioStoreRequest;
+use App\Http\Requests\Mg\Fazenda\PlantioUpdateRequest;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Mg\MgController;
 
 /**
@@ -19,39 +20,33 @@ class PlantioController extends MgController
         [$filter, $sort, $fields] = $this->filtros($request);
         $filter['codsafra'] = $codsafra;
         $res = PlantioService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
-        return response()->json($res, 200);
+        return PlantioResource::collection($res);
     }
 
-    public function store(Request $request, $codsafra)
+    public function store(PlantioStoreRequest $request, $codsafra)
     {
-        $request->merge(['codsafra' => $codsafra]);
-        $request->validate($this->regras($request));
-
         $model = new Plantio();
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->codsafra = $codsafra;
         $model->save();
 
-        return response()->json($model->fresh(static::WITH), 201);
+        return new PlantioResource($model->fresh(static::WITH));
     }
 
     public function show(Request $request, $codsafra, $codplantio)
     {
-        return response()->json($this->buscar($codsafra, $codplantio, static::WITH), 200);
+        return new PlantioResource($this->buscar($codsafra, $codplantio, static::WITH));
     }
 
-    public function update(Request $request, $codsafra, $codplantio)
+    public function update(PlantioUpdateRequest $request, $codsafra, $codplantio)
     {
         $model = $this->buscar($codsafra, $codplantio);
 
-        $request->merge(['codsafra' => $codsafra]);
-        $request->validate($this->regras($request, $model->codplantio));
-
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->codsafra = $codsafra;
         $model->update();
 
-        return response()->json($model->fresh(static::WITH), 200);
+        return new PlantioResource($model->fresh(static::WITH));
     }
 
     public function destroy($codsafra, $codplantio)
@@ -62,45 +57,20 @@ class PlantioController extends MgController
 
     public function inativar(Request $request, $codsafra, $codplantio)
     {
-        return response()->json(PlantioService::inativar($this->buscar($codsafra, $codplantio)), 200);
+        $model = $this->buscar($codsafra, $codplantio);
+        PlantioService::inativar($model);
+        return new PlantioResource($model->fresh(static::WITH));
     }
 
     public function ativar(Request $request, $codsafra, $codplantio)
     {
-        return response()->json(PlantioService::ativar($this->buscar($codsafra, $codplantio)), 200);
+        $model = $this->buscar($codsafra, $codplantio);
+        PlantioService::ativar($model);
+        return new PlantioResource($model->fresh(static::WITH));
     }
 
     protected function buscar($codsafra, $codplantio, array $with = []): Plantio
     {
         return Plantio::with($with)->where('codsafra', $codsafra)->findOrFail($codplantio);
-    }
-
-    protected function regras(Request $request, $codplantio = null): array
-    {
-        // Talhao+variedade unico por safra+fazenda (entre ativos): permite o
-        // mesmo talhao com 2 variedades (2 plantios), barra duplicata real.
-        $unico = Rule::unique('tblplantio', 'talhao')->where(
-            fn ($q) => $q->where('codsafra', $request->codsafra)
-                ->where('codfazenda', $request->codfazenda)
-                ->where('codvariedade', $request->codvariedade)
-                ->whereNull('inativo')
-        );
-        if ($codplantio) {
-            $unico->ignore($codplantio, 'codplantio');
-        }
-
-        return [
-            'codsafra' => ['required', 'exists:tblsafra,codsafra'],
-            'codfazenda' => ['required', 'exists:tblfazenda,codfazenda'],
-            'talhao' => ['required', 'string', 'max:60', $unico],
-            'codvariedade' => ['required', 'exists:tblvariedade,codvariedade'],
-            'areaplantada' => ['required', 'numeric', 'gt:0'],
-            'expectativasacas' => ['nullable', 'numeric', 'gte:0'],
-            'geometria' => ['nullable', 'array'],
-            'cor' => ['nullable', 'string', 'max:9'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
-            'codtalhao' => ['nullable', 'exists:tbltalhao,codtalhao'],
-        ];
     }
 }

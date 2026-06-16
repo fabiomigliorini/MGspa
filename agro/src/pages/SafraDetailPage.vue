@@ -34,8 +34,8 @@ const variedades = ref([])
 const talhoesBase = ref([]) // layout base de todas as fazendas (p/ partir o desenho)
 const comercial = ref(null) // KPIs comerciais (contratos da safra), via backend
 
-const pesosaca = computed(() => Number(safra.value?.cultura?.pesosaca) || 60)
-const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.cultura?.codcultura)
+const pesosaca = computed(() => Number(safra.value?.Cultura?.pesosaca) || 60)
+const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.Cultura?.codcultura)
 
 const variedadesDaCultura = computed(() =>
   variedades.value.filter((v) => v.codcultura === codcultura.value && !v.inativo),
@@ -147,7 +147,7 @@ const periodo = computed(() => {
 })
 
 function nomeVariedade(p) {
-  return p.variedade?.variedade || ''
+  return p.Variedade?.variedade || ''
 }
 
 // Abre o wizard: sem fazenda → começa na escolha de fazenda; com fazenda
@@ -240,7 +240,7 @@ onMounted(async () => {
             <div class="col q-ml-md">
               <div class="text-h6">{{ safra?.safra || 'Safra' }}</div>
               <div class="text-caption text-grey-7">
-                {{ safra?.cultura?.cultura }}<span v-if="periodo"> · {{ periodo }}</span>
+                {{ safra?.Cultura?.cultura }}<span v-if="periodo"> · {{ periodo }}</span>
               </div>
             </div>
           </div>

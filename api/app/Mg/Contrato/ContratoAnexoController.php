@@ -2,11 +2,13 @@
 
 namespace Mg\Contrato;
 
+use App\Http\Requests\Mg\Contrato\ContratoAnexoStoreRequest;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
 /**
  * Anexos (PDFs) do contrato: contrato/{codcontrato}/anexo.
+ * Arquivos em storage (não são model Eloquent), então retornam metadados crus.
  */
 class ContratoAnexoController extends MgController
 {
@@ -15,12 +17,8 @@ class ContratoAnexoController extends MgController
         return response()->json(ContratoAnexoService::listagem((int) $codcontrato), 200);
     }
 
-    public function store(Request $request, $codcontrato)
+    public function store(ContratoAnexoStoreRequest $request, $codcontrato)
     {
-        $request->validate([
-            'arquivo' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:20480'],
-            'label' => ['nullable', 'string', 'max:120'],
-        ]);
         $ret = ContratoAnexoService::upload(
             (int) $codcontrato,
             $request->file('arquivo'),

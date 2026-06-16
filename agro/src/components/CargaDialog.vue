@@ -224,7 +224,7 @@ function avancar() {
 
 function fazendaNome() {
   for (const p of local.value.plantios || []) {
-    const f = plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.fazenda?.fazenda
+    const f = plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.Fazenda?.fazenda
     if (f) return f
   }
   return 'MG Agro'

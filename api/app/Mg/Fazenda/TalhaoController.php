@@ -2,16 +2,20 @@
 
 namespace Mg\Fazenda;
 
+use App\Http\Requests\Mg\Fazenda\TalhaoStoreRequest;
+use App\Http\Requests\Mg\Fazenda\TalhaoUpdateRequest;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
 class TalhaoController extends MgController
 {
+    const WITH = ['Fazenda'];
+
     public function index(Request $request)
     {
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = TalhaoService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
-        return response()->json($res, 200);
+        return TalhaoResource::collection($res);
     }
 
     // Polígonos de todas as fazendas (contexto do mapa). Passe codfazenda p/
@@ -28,51 +32,40 @@ class TalhaoController extends MgController
         }
 
         $res = $qry->get(['codtalhao', 'codfazenda', 'talhao', 'geometria', 'latitude', 'longitude']);
-        return response()->json($res, 200);
+        return response()->json($res->map(function ($t) {
+            return [
+                'codtalhao' => (int) $t->codtalhao,
+                'codfazenda' => (int) $t->codfazenda,
+                'talhao' => $t->talhao,
+                'geometria' => $t->geometria,
+                'latitude' => $t->latitude,
+                'longitude' => $t->longitude,
+                'Fazenda' => $t->Fazenda,
+            ];
+        }), 200);
     }
 
-    public function store(Request $request)
+    public function store(TalhaoStoreRequest $request)
     {
-        $request->validate([
-            'talhao' => ['required', 'min:1'],
-            'codfazenda' => ['required', 'exists:tblfazenda,codfazenda'],
-            'area' => ['required', 'numeric', 'gt:0'],
-            'geometria' => ['nullable', 'array'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
-            'cor' => ['nullable', 'string', 'max:9'],
-        ]);
-
         $model = new Talhao();
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->save();
 
-        return response()->json($model, 201);
+        return new TalhaoResource($model->fresh(static::WITH));
     }
 
     public function show(Request $request, $id)
     {
-        return response()->json(Talhao::with('Fazenda')->findOrFail($id), 200);
+        return new TalhaoResource(Talhao::with(static::WITH)->findOrFail($id));
     }
 
-    public function update(Request $request, $id)
+    public function update(TalhaoUpdateRequest $request, $id)
     {
         $model = Talhao::findOrFail($id);
-
-        $request->validate([
-            'talhao' => ['required', 'min:1'],
-            'codfazenda' => ['required', 'exists:tblfazenda,codfazenda'],
-            'area' => ['required', 'numeric', 'gt:0'],
-            'geometria' => ['nullable', 'array'],
-            'latitude' => ['nullable', 'numeric'],
-            'longitude' => ['nullable', 'numeric'],
-            'cor' => ['nullable', 'string', 'max:9'],
-        ]);
-
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->update();
 
-        return response()->json($model, 200);
+        return new TalhaoResource($model->fresh(static::WITH));
     }
 
     public function destroy($id)
@@ -83,11 +76,15 @@ class TalhaoController extends MgController
 
     public function inativar(Request $request, $id)
     {
-        return response()->json(TalhaoService::inativar(Talhao::findOrFail($id)), 200);
+        $model = Talhao::findOrFail($id);
+        TalhaoService::inativar($model);
+        return new TalhaoResource($model->fresh(static::WITH));
     }
 
     public function ativar(Request $request, $id)
     {
-        return response()->json(TalhaoService::ativar(Talhao::findOrFail($id)), 200);
+        $model = Talhao::findOrFail($id);
+        TalhaoService::ativar($model);
+        return new TalhaoResource($model->fresh(static::WITH));
     }
 }
