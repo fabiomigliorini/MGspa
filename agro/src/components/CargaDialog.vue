@@ -112,11 +112,14 @@ const proxima = {
   TARA: 'FINALIZADO',
   FINALIZADO: null,
 }
+// Rótulo da ação = etapa ATUAL (o que se faz na tela aberta), não a próxima.
+// Peso Bruto/Classificação ainda estão classificando; Tara pesa a tara; o
+// Finalizado fecha/imprime o ticket.
 const rotuloAvancar = {
   BRUTO: 'Classificar',
-  CLASSIFICACAO: 'Pesar tara',
-  TARA: 'Finalizar',
-  FINALIZADO: 'Imprimir ticket',
+  CLASSIFICACAO: 'Classificar',
+  TARA: 'Pesar tara',
+  FINALIZADO: 'Finalizar',
 }
 const labelEtapa = {
   BRUTO: 'Peso Bruto',
