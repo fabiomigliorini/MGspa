@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
@@ -8,6 +8,7 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgContratoForm from 'components/MgContratoForm.vue'
 
 const route = useRoute()
@@ -36,6 +37,8 @@ const voltarTo = computed(() =>
     : { name: 'home' },
 )
 const ehFixo = computed(() => contrato.value?.tipo === 'FIXO')
+// Cálculo do líquido (motor fiscal do agro) — vem do show do contrato.
+const calculo = computed(() => contrato.value?.calculo || null)
 
 function n(v) {
   return Number(v) || 0
@@ -63,7 +66,9 @@ const saldo = computed(() => contratado.value - carregado.value)
 const fixado = computed(() => n(contrato.value?.fixado))
 const afixar = computed(() => contratado.value - fixado.value)
 const valornf = computed(() => n(contrato.value?.valornf))
-const pago = computed(() => n(contrato.value?.pago))
+// Parcelas: previsto = Σ valor; pago = Σ valor REalmente recebido.
+const previsto = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valor), 0))
+const pago = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valorrecebido), 0))
 
 // Preço médio ponderado das fixações ativas. Com a normalização, o FIXO também
 // tem fixação (espelho), então não há mais caso especial por tipo.
@@ -122,10 +127,66 @@ const previewPrecoReal = computed(() => {
   return f.moeda === 'USD' && f.dolar ? n(f.preco) * n(f.dolar) : n(f.preco)
 })
 
-// ---- Pagamento ----
-function novoPagamento() {
-  pagCad.abrirNovo({ data: new Date().toISOString().slice(0, 10) })
+// Líquido da fixação ao vivo (importante na negociação) — calcula o líquido do
+// preço bruto travado, com a cultura/isenção/funrural do contrato.
+const fixCalc = ref(null)
+async function recalcularFix() {
+  const bruto = n(previewPrecoReal.value)
+  if (!contrato.value?.codcultura || bruto <= 0) {
+    fixCalc.value = null
+    return
+  }
+  try {
+    const { data } = await api.get('v1/contrato/calculo', {
+      params: {
+        codcultura: contrato.value.codcultura,
+        bruto,
+        data: fixCad.form.data || undefined,
+        isentofethab: contrato.value.isentofethab ? 1 : 0,
+        funruralvenda: contrato.value.Filial?.funruralvenda ? 1 : 0,
+      },
+    })
+    fixCalc.value = data
+  } catch {
+    fixCalc.value = null
+  }
 }
+watch(
+  () => [fixCad.form.preco, fixCad.form.dolar, fixCad.form.moeda, fixCad.form.data, fixCad.dialog],
+  () => {
+    if (fixCad.dialog) recalcularFix()
+  },
+)
+
+// ---- Parcela / Pagamento ----
+const modosParcela = [
+  { label: 'Valor', value: 'VALOR' },
+  { label: 'Sacas', value: 'SACAS' },
+]
+// Líquido médio/sc do contrato (motor) — base p/ sugerir o valor da parcela.
+const liquidoSc = computed(() => n(calculo.value?.liquido))
+function arred(v) {
+  return Math.round(n(v) * 100) / 100
+}
+function novoPagamento() {
+  // Sugere a parcela cheia: todas as sacas do contrato × líquido/sc.
+  const q = n(contrato.value?.quantidade)
+  pagCad.abrirNovo({
+    data: new Date().toISOString().slice(0, 10),
+    modo: 'SACAS',
+    sacas: q,
+    valor: arred(q * liquidoSc.value),
+  })
+}
+// Em modo SACAS, o valor previsto acompanha as sacas (× líquido/sc).
+watch(
+  () => [pagCad.form.sacas, pagCad.form.modo],
+  () => {
+    if (pagCad.dialog && pagCad.form.modo === 'SACAS') {
+      pagCad.form.valor = arred(n(pagCad.form.sacas) * liquidoSc.value)
+    }
+  },
+)
 async function salvarPagamento() {
   await pagCad.salvar()
   await recarregar()
@@ -133,6 +194,100 @@ async function salvarPagamento() {
 async function excluirPagamento(p) {
   pagCad.excluir(p)
   setTimeout(recarregar, 400)
+}
+
+// Confirmação de recebimento (valor real pode divergir do previsto).
+const confirmDialog = ref(false)
+const confirmSalvando = ref(false)
+const confirmForm = ref({})
+function abrirConfirmar(p) {
+  confirmForm.value = {
+    codcontratopagamento: p.codcontratopagamento,
+    datarecebido: new Date().toISOString().slice(0, 10),
+    valorrecebido: p.valor,
+    codportador: p.codportador || contrato.value?.codportador || null,
+  }
+  confirmDialog.value = true
+}
+async function confirmarRecebimento() {
+  if (confirmSalvando.value) return
+  confirmSalvando.value = true
+  try {
+    const f = confirmForm.value
+    await api.post(`v1/contrato/${cod}/pagamento/${f.codcontratopagamento}/confirmar`, {
+      datarecebido: f.datarecebido,
+      valorrecebido: f.valorrecebido,
+      codportador: f.codportador,
+    })
+    notifySuccess('Recebimento confirmado!')
+    confirmDialog.value = false
+    await recarregar()
+  } catch (e) {
+    notifyError(e)
+  } finally {
+    confirmSalvando.value = false
+  }
+}
+
+// ---- Anexos (PDFs) ----
+const anexos = ref([])
+const novoAnexo = ref(null)
+const enviandoAnexo = ref(false)
+async function carregarAnexos() {
+  try {
+    const { data } = await api.get(`v1/contrato/${cod}/anexo`)
+    anexos.value = data
+  } catch {
+    anexos.value = []
+  }
+}
+async function enviarAnexo() {
+  if (!novoAnexo.value || enviandoAnexo.value) return
+  enviandoAnexo.value = true
+  try {
+    const fd = new FormData()
+    fd.append('arquivo', novoAnexo.value)
+    fd.append('label', novoAnexo.value.name)
+    await api.post(`v1/contrato/${cod}/anexo`, fd)
+    notifySuccess('Anexo enviado!')
+    novoAnexo.value = null
+    await carregarAnexos()
+  } catch (e) {
+    notifyError(e)
+  } finally {
+    enviandoAnexo.value = false
+  }
+}
+async function baixarAnexo(a) {
+  try {
+    const { data } = await api.get(`v1/contrato/${cod}/anexo/${a.nome}/download`, {
+      responseType: 'blob',
+    })
+    const url = URL.createObjectURL(data)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = a.label || a.nome
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch (e) {
+    notifyError(e)
+  }
+}
+function excluirAnexo(a) {
+  $q.dialog({
+    title: 'Excluir anexo',
+    message: `Excluir "${a.label}"?`,
+    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/contrato/${cod}/anexo/${a.nome}`)
+      notifySuccess('Excluído!')
+      await carregarAnexos()
+    } catch (e) {
+      notifyError(e)
+    }
+  })
 }
 
 // ---- Contrato (edição/ativação/exclusão no cabeçalho do detalhe) ----
@@ -169,6 +324,7 @@ onMounted(async () => {
     // naturezas é opcional (só pro form fiscal)
   }
   await recarregar()
+  await carregarAnexos()
 })
 </script>
 
@@ -327,6 +483,9 @@ onMounted(async () => {
             <q-item-section>
               <q-item-label>
                 {{ fmt(f.quantidade) }} sc · {{ rs(f.precoreal) }}/sc
+                <span v-if="f.precoliquido != null" class="text-green-8">
+                  · líq {{ rs(f.precoliquido) }}</span
+                >
                 <q-badge
                   v-if="f.automatico"
                   color="blue-grey-5"
@@ -374,30 +533,59 @@ onMounted(async () => {
         </q-list>
       </q-card>
 
-      <!-- Pagamentos -->
+      <!-- Parcelas de pagamento (previsto x recebido) -->
       <q-card flat bordered class="q-mb-md">
         <q-item>
           <q-item-section>
-            <q-item-label class="text-subtitle1">Pagamentos do comprador</q-item-label>
-            <q-item-label caption>Total {{ rs(pago) }}</q-item-label>
+            <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
+            <q-item-label caption>
+              Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }}
+            </q-item-label>
           </q-item-section>
           <q-item-section side>
             <q-btn flat round size="sm" color="primary" icon="add" @click="novoPagamento">
-              <q-tooltip>Novo pagamento</q-tooltip>
+              <q-tooltip>Nova parcela</q-tooltip>
             </q-btn>
           </q-item-section>
         </q-item>
         <q-separator />
         <q-list separator>
           <q-item v-for="p in pagamentos" :key="p.codcontratopagamento">
+            <q-item-section avatar>
+              <q-avatar
+                :color="p.datarecebido ? 'green-5' : 'grey-4'"
+                :text-color="p.datarecebido ? 'white' : 'grey-8'"
+                :icon="p.datarecebido ? 'check' : 'schedule'"
+              />
+            </q-item-section>
             <q-item-section>
-              <q-item-label>{{ rs(p.valor) }}</q-item-label>
-              <q-item-label caption
-                >{{ fmtData(p.data)
-                }}<span v-if="p.observacao"> · {{ p.observacao }}</span></q-item-label
-              >
+              <q-item-label>
+                {{ rs(p.valor) }}
+                <span v-if="p.modo === 'SACAS' && p.sacas" class="text-caption text-grey-7">
+                  ({{ fmt(p.sacas) }} sc)
+                </span>
+              </q-item-label>
+              <q-item-label caption>
+                Prev. {{ fmtData(p.data) }}
+                <span v-if="p.datarecebido" class="text-green-8">
+                  · Receb. {{ fmtData(p.datarecebido) }} {{ rs(p.valorrecebido) }}
+                </span>
+                <span v-if="p.observacao"> · {{ p.observacao }}</span>
+              </q-item-label>
             </q-item-section>
             <q-item-section side class="row no-wrap items-center">
+              <q-btn
+                v-if="!p.datarecebido"
+                flat
+                dense
+                round
+                size="sm"
+                color="green-7"
+                icon="task_alt"
+                @click="abrirConfirmar(p)"
+              >
+                <q-tooltip>Confirmar recebimento</q-tooltip>
+              </q-btn>
               <MgInfoCriacao :registro="p" />
               <q-btn
                 flat
@@ -420,7 +608,7 @@ onMounted(async () => {
             </q-item-section>
           </q-item>
           <q-item v-if="!pagamentos.length">
-            <q-item-section class="text-grey-6">Nenhum pagamento lançado.</q-item-section>
+            <q-item-section class="text-grey-6">Nenhuma parcela lançada.</q-item-section>
           </q-item>
         </q-list>
       </q-card>
@@ -462,54 +650,156 @@ onMounted(async () => {
         </q-list>
       </q-card>
 
+      <!-- Anexos (PDFs) -->
+      <q-card flat bordered class="q-mt-md">
+        <q-item>
+          <q-item-section avatar>
+            <q-avatar color="blue-grey-1" text-color="blue-grey-8" icon="attach_file" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-subtitle1">Anexos</q-item-label>
+            <q-item-label caption>Contratos, aditivos e documentos (PDF/imagem)</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-separator />
+        <q-card-section class="row q-col-gutter-sm items-center">
+          <div class="col">
+            <q-file
+              v-model="novoAnexo"
+              label="Selecionar arquivo"
+              outlined
+              accept=".pdf,image/*"
+              clearable
+            >
+              <template #prepend><q-icon name="upload_file" /></template>
+            </q-file>
+          </div>
+          <div class="col-auto">
+            <q-btn
+              flat
+              color="primary"
+              icon="cloud_upload"
+              label="Enviar"
+              :disable="!novoAnexo"
+              :loading="enviandoAnexo"
+              @click="enviarAnexo"
+            />
+          </div>
+        </q-card-section>
+        <q-separator />
+        <q-list separator>
+          <q-item v-for="a in anexos" :key="a.nome">
+            <q-item-section avatar>
+              <q-avatar
+                :color="a.tipo === 'pdf' ? 'red-1' : 'blue-1'"
+                :text-color="a.tipo === 'pdf' ? 'red-8' : 'blue-8'"
+                :icon="a.tipo === 'pdf' ? 'picture_as_pdf' : 'image'"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>{{ a.label }}</q-item-label>
+              <q-item-label caption>{{ (a.size / 1024).toFixed(0) }} KB</q-item-label>
+            </q-item-section>
+            <q-item-section side class="row no-wrap items-center">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="download"
+                @click="baixarAnexo(a)"
+              >
+                <q-tooltip>Baixar</q-tooltip>
+              </q-btn>
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluirAnexo(a)"
+              >
+                <q-tooltip>Excluir</q-tooltip>
+              </q-btn>
+            </q-item-section>
+          </q-item>
+          <q-item v-if="!anexos.length">
+            <q-item-section class="text-grey-6">Nenhum anexo.</q-item-section>
+          </q-item>
+        </q-list>
+      </q-card>
+
       <!-- Dialog Fixação -->
       <q-dialog v-model="fixCad.dialog">
-        <q-card bordered flat style="width: 420px; max-width: 90vw">
+        <q-card flat style="width: 440px; max-width: 95vw">
           <q-form @submit="salvarFixacao">
-            <q-card-section
-              ><div class="text-h6">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">
                 {{ fixCad.isNovo ? 'Nova fixação' : 'Editar fixação' }}
-              </div></q-card-section
-            >
-            <q-card-section class="q-gutter-md">
+              </div>
+            </q-card-section>
+            <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
-                <MgInputData v-model="fixCad.form.data" label="Data" type="date" class="col-6" />
-                <MgInputValor
-                  v-model="fixCad.form.quantidade"
-                  :decimals="0"
-                  suffix="sc"
-                  label="Quantidade"
-                  class="col-6"
-                />
+                <div class="col-12 col-sm-6">
+                  <MgInputData v-model="fixCad.form.data" label="Data" type="date" autofocus />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    v-model="fixCad.form.quantidade"
+                    :decimals="0"
+                    suffix="sc"
+                    label="Quantidade"
+                  />
+                </div>
+                <div class="col-12 col-sm-8">
+                  <MgInputValor v-model="fixCad.form.preco" :decimals="2" label="Preço / saca" />
+                </div>
+                <div class="col-12 col-sm-4 self-center">
+                  <q-btn-toggle
+                    v-model="fixCad.form.moeda"
+                    :options="moedas"
+                    spread
+                    no-caps
+                    unelevated
+                    toggle-color="primary"
+                    color="grey-3"
+                    text-color="grey-9"
+                  />
+                </div>
+                <div v-if="fixCad.form.moeda === 'USD'" class="col-12">
+                  <MgInputValor
+                    v-model="fixCad.form.dolar"
+                    :decimals="4"
+                    prefix="R$"
+                    label="Dólar travado"
+                  />
+                </div>
+                <div v-if="fixCalc" class="col-12">
+                  <q-banner rounded class="bg-green-1 text-green-10">
+                    <template #avatar><q-icon name="savings" color="green-7" /></template>
+                    <div class="row items-center justify-between">
+                      <div>
+                        Líquido <b>{{ rs(fixCalc.liquido) }}/sc</b>
+                        <span class="text-caption">
+                          (bruto {{ rs(fixCalc.bruto) }} − {{ rs(fixCalc.totaldeducao) }})
+                        </span>
+                      </div>
+                      <div class="text-caption">
+                        <span v-for="it in fixCalc.itens" :key="it.codtributo" class="q-ml-sm">
+                          {{ it.codigo }} {{ fmt(it.valor, 2) }}
+                        </span>
+                      </div>
+                    </div>
+                  </q-banner>
+                </div>
+                <div v-else-if="previewPrecoReal" class="col-12">
+                  <q-banner rounded class="bg-grey-2 text-grey-8">
+                    Preço em reais: <b>{{ rs(previewPrecoReal) }}/sc</b>
+                  </q-banner>
+                </div>
               </div>
-              <div class="row q-col-gutter-md items-center">
-                <MgInputValor
-                  v-model="fixCad.form.preco"
-                  :decimals="2"
-                  label="Preço / saca"
-                  class="col"
-                />
-                <q-btn-toggle
-                  v-model="fixCad.form.moeda"
-                  :options="moedas"
-                  no-caps
-                  unelevated
-                  toggle-color="primary"
-                  color="grey-3"
-                  text-color="grey-9"
-                  class="col-auto"
-                />
-              </div>
-              <MgInputValor
-                v-if="fixCad.form.moeda === 'USD'"
-                v-model="fixCad.form.dolar"
-                :decimals="4"
-                prefix="R$"
-                label="Dólar travado"
-              />
-              <q-banner v-if="previewPrecoReal" rounded class="bg-grey-2 text-grey-8">
-                Preço em reais: <b>{{ rs(previewPrecoReal) }}/sc</b>
-              </q-banner>
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
@@ -519,23 +809,109 @@ onMounted(async () => {
         </q-card>
       </q-dialog>
 
-      <!-- Dialog Pagamento -->
+      <!-- Dialog Parcela (previsto) -->
       <q-dialog v-model="pagCad.dialog">
-        <q-card bordered flat style="width: 380px; max-width: 90vw">
+        <q-card flat style="width: 440px; max-width: 95vw">
           <q-form @submit="salvarPagamento">
-            <q-card-section
-              ><div class="text-h6">
-                {{ pagCad.isNovo ? 'Novo pagamento' : 'Editar pagamento' }}
-              </div></q-card-section
-            >
-            <q-card-section class="q-gutter-md">
-              <MgInputData v-model="pagCad.form.data" label="Data" type="date" />
-              <MgInputValor v-model="pagCad.form.valor" :decimals="2" prefix="R$" label="Valor" />
-              <q-input v-model="pagCad.form.observacao" label="Observação" outlined />
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">
+                {{ pagCad.isNovo ? 'Nova parcela' : 'Editar parcela' }}
+              </div>
+            </q-card-section>
+            <q-card-section class="q-pt-md">
+              <div class="row q-col-gutter-md">
+                <div class="col-12">
+                  <q-btn-toggle
+                    v-model="pagCad.form.modo"
+                    :options="modosParcela"
+                    spread
+                    no-caps
+                    unelevated
+                    toggle-color="primary"
+                    color="grey-3"
+                    text-color="grey-9"
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputData v-model="pagCad.form.data" label="Data prevista" type="date" />
+                </div>
+                <div v-if="pagCad.form.modo === 'SACAS'" class="col-12 col-sm-6">
+                  <MgInputValor
+                    v-model="pagCad.form.sacas"
+                    :decimals="0"
+                    suffix="sc"
+                    label="Sacas"
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    v-model="pagCad.form.valor"
+                    :decimals="2"
+                    prefix="R$"
+                    label="Valor previsto"
+                  />
+                </div>
+                <div class="col-12">
+                  <MgSelectPortador
+                    v-model="pagCad.form.codportador"
+                    label="Portador (conta que recebe)"
+                  />
+                </div>
+                <div class="col-12">
+                  <q-input v-model="pagCad.form.observacao" label="Observação" outlined />
+                </div>
+              </div>
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
               <q-btn type="submit" flat label="Salvar" color="primary" :loading="pagCad.salvando" />
+            </q-card-actions>
+          </q-form>
+        </q-card>
+      </q-dialog>
+
+      <!-- Dialog Confirmar recebimento -->
+      <q-dialog v-model="confirmDialog">
+        <q-card flat style="width: 440px; max-width: 95vw">
+          <q-form @submit="confirmarRecebimento">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">Confirmar recebimento</div>
+            </q-card-section>
+            <q-card-section class="q-pt-md">
+              <div class="row q-col-gutter-md">
+                <div class="col-12 col-sm-6">
+                  <MgInputData
+                    v-model="confirmForm.datarecebido"
+                    label="Data recebida"
+                    type="date"
+                    autofocus
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    v-model="confirmForm.valorrecebido"
+                    :decimals="2"
+                    prefix="R$"
+                    label="Valor recebido"
+                  />
+                </div>
+                <div class="col-12">
+                  <MgSelectPortador
+                    v-model="confirmForm.codportador"
+                    label="Portador (conta que recebeu)"
+                  />
+                </div>
+              </div>
+            </q-card-section>
+            <q-card-actions align="right">
+              <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+              <q-btn
+                type="submit"
+                flat
+                label="Confirmar"
+                color="green-7"
+                :loading="confirmSalvando"
+              />
             </q-card-actions>
           </q-form>
         </q-card>

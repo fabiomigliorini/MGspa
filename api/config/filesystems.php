@@ -51,6 +51,11 @@ return [
             'driver' => 'local',
             'root' => env('PESSOA_ANEXO_PATH'),
         ],
+
+        'contrato-anexo' => [
+            'driver' => 'local',
+            'root' => env('CONTRATO_ANEXO_PATH', storage_path('app/contrato-anexo')),
+        ],
     ],
 
     'links' => [

@@ -347,7 +347,17 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('carga-colheita/{codcargacolheita}/inativo', [\Mg\Safra\CargaColheitaController::class, 'ativar']);
     Route::get('carga-colheita/{codcargacolheita}', [\Mg\Safra\CargaColheitaController::class, 'show'])->whereNumber('codcargacolheita');
 
+    // Unidade de referência fiscal (UPF-MT, UR municipal) — Mg\UnidadeReferencia
+    Route::post('unidade-referencia/importar-upf-mt', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'importarUpfMt']);
+    Route::post('unidade-referencia/{id}/valor', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'storeValor'])->whereNumber('id');
+    Route::delete('unidade-referencia/{id}/valor/{codvalor}', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'destroyValor']);
+    Route::post('unidade-referencia/{id}/inativo', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'inativar']);
+    Route::delete('unidade-referencia/{id}/inativo', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'ativar']);
+    Route::apiResource('unidade-referencia', \Mg\UnidadeReferencia\UnidadeReferenciaController::class)->parameters(['unidade-referencia' => 'id']);
+
     // Contrato de venda — Mg\Contrato (criado 03/06/2026)
+    // Preview do preço líquido (deduções) — antes do apiResource p/ não colidir.
+    Route::get('contrato/calculo', [\Mg\Contrato\ContratoController::class, 'calculo']);
     Route::post('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'ativar']);
     Route::apiResource('contrato', \Mg\Contrato\ContratoController::class)->parameters(['contrato' => 'codcontrato']);
@@ -359,6 +369,13 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao']);
 
+    // Anexos (PDFs) do contrato
+    Route::get('contrato/{codcontrato}/anexo', [\Mg\Contrato\ContratoAnexoController::class, 'index']);
+    Route::post('contrato/{codcontrato}/anexo', [\Mg\Contrato\ContratoAnexoController::class, 'store']);
+    Route::get('contrato/{codcontrato}/anexo/{nome}/download', [\Mg\Contrato\ContratoAnexoController::class, 'download'])->where('nome', '.*');
+    Route::delete('contrato/{codcontrato}/anexo/{nome}', [\Mg\Contrato\ContratoAnexoController::class, 'destroy'])->where('nome', '.*');
+
+    Route::post('contrato/{codcontrato}/pagamento/{codpagamento}/confirmar', [\Mg\Contrato\ContratoPagamentoController::class, 'confirmar']);
     Route::post('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'ativar']);
     Route::apiResource('contrato.pagamento', \Mg\Contrato\ContratoPagamentoController::class)

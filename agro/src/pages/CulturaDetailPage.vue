@@ -304,39 +304,49 @@ onMounted(async () => {
 
       <!-- Dialog Cultura -->
       <q-dialog v-model="culturaCad.dialog">
-        <q-card bordered flat style="width: 380px; max-width: 90vw">
+        <q-card flat style="width: 440px; max-width: 95vw">
           <q-form @submit="salvarCultura">
-            <q-card-section>
+            <q-card-section class="bg-primary text-white">
               <div class="text-h6">Editar Cultura</div>
             </q-card-section>
-            <q-card-section class="q-gutter-md">
-              <q-input v-model="culturaCad.form.cultura" label="Cultura" outlined autofocus />
-              <q-input
-                v-model="culturaCad.form.icone"
-                label="Emoji"
-                outlined
-                maxlength="4"
-                hint="Opcional"
-              >
-                <template #prepend>
-                  <span style="font-size: 20px">{{ culturaCad.form.icone || '🌱' }}</span>
-                </template>
-              </q-input>
-              <div class="row q-gutter-xs">
-                <q-chip
-                  v-for="e in emojis"
-                  :key="e"
-                  clickable
-                  :label="e"
-                  @click="culturaCad.form.icone = e"
-                />
+            <q-card-section class="q-pt-md">
+              <div class="row q-col-gutter-md">
+                <div class="col-12 col-sm-8">
+                  <q-input v-model="culturaCad.form.cultura" label="Cultura" outlined autofocus />
+                </div>
+                <div class="col-12 col-sm-4">
+                  <q-input
+                    v-model="culturaCad.form.icone"
+                    label="Emoji"
+                    outlined
+                    maxlength="4"
+                    hint="Opcional"
+                  >
+                    <template #prepend>
+                      <span style="font-size: 20px">{{ culturaCad.form.icone || '🌱' }}</span>
+                    </template>
+                  </q-input>
+                </div>
+                <div class="col-12">
+                  <div class="row q-gutter-xs">
+                    <q-chip
+                      v-for="e in emojis"
+                      :key="e"
+                      clickable
+                      :label="e"
+                      @click="culturaCad.form.icone = e"
+                    />
+                  </div>
+                </div>
+                <div class="col-12">
+                  <MgInputValor
+                    v-model="culturaCad.form.pesosaca"
+                    :decimals="0"
+                    suffix="kg/saca"
+                    label="Peso da saca"
+                  />
+                </div>
               </div>
-              <MgInputValor
-                v-model="culturaCad.form.pesosaca"
-                :decimals="0"
-                suffix="kg/saca"
-                label="Peso da saca"
-              />
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />

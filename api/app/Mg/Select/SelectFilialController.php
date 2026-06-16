@@ -11,7 +11,7 @@ class SelectFilialController extends Controller
     public static function index(Request $request)
     {
         $qry = Filial::ativo()
-            ->select(['codfilial', 'filial', 'nfeserie'])
+            ->select(['codfilial', 'filial', 'nfeserie', 'funruralvenda'])
             ->orderBy('codempresa')
             ->orderBy('codfilial');
 
@@ -23,6 +23,7 @@ class SelectFilialController extends Controller
             'value' => $item->codfilial,
             'label' => $item->filial,
             'nfeserie' => $item->nfeserie,
+            'funruralvenda' => (bool) $item->funruralvenda,
         ]);
     }
 }
