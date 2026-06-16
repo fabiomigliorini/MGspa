@@ -135,7 +135,9 @@ const mostrarTara = computed(() => idxEtapa.value >= ORDEM.indexOf('TARA'))
 const mostrarPercentual = computed(() => (local.value?.plantios?.length || 0) > 1)
 
 const calc = computed(() => (local.value ? calcularCarga(local.value, faixasDaSafra.value) : {}))
-const mostrarResultado = computed(() => calc.value.pesoliquido !== null && calc.value.pesoliquido !== undefined)
+const mostrarResultado = computed(
+  () => calc.value.pesoliquido !== null && calc.value.pesoliquido !== undefined,
+)
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 const sacasSeco = computed(() => sacas(calc.value.pesoliquidoseco, pesosaca.value))
 const somaDescontos = computed(
@@ -161,8 +163,28 @@ function onTalhoesChange(cods) {
     const opt = plantiosDaSafra.value.find((o) => o.codplantio === cod)
     return { codplantio: cod, percentual: null, rotulo: opt?.rotulo || null }
   })
-  if (novos.length === 1) novos[0].percentual = 100
+  if (novos.length === 1) {
+    novos[0].percentual = 100
+  } else if (novos.length === 2 && novos.some((p) => p.percentual == null)) {
+    // Virou mistura de dois talhões: começa meio a meio; a partir daí, editar
+    // um campo ajusta o outro pra sempre fechar 100% (ver ajustarPercentual).
+    novos[0].percentual = 50
+    novos[1].percentual = 50
+  }
   local.value.plantios = novos
+}
+
+// Rateio de DOIS talhões sempre fecha 100%: ao editar um campo, o outro vira o
+// complemento automaticamente. Com 3+ talhões o ajuste segue manual (a soma é
+// só indicada, ficando laranja enquanto não bate 100%).
+function ajustarPercentual(plantio, valor) {
+  const v = Math.min(100, Math.max(0, Number(valor) || 0))
+  plantio.percentual = v
+  const ps = local.value.plantios || []
+  if (ps.length === 2) {
+    const outro = ps.find((p) => p.codplantio !== plantio.codplantio)
+    if (outro) outro.percentual = 100 - v
+  }
 }
 
 // Toda entrada exige placa, ao menos um talhão e o peso bruto (a etapa inicial
@@ -334,7 +356,9 @@ function fmt(v, dec = 0) {
           >
             <template #no-option>
               <q-item>
-                <q-item-section class="text-grey-6">Nenhum talhão plantado nesta safra</q-item-section>
+                <q-item-section class="text-grey-6"
+                  >Nenhum talhão plantado nesta safra</q-item-section
+                >
               </q-item>
             </template>
           </q-select>
@@ -348,9 +372,21 @@ function fmt(v, dec = 0) {
               class="row items-center q-col-gutter-sm q-mb-xs"
             >
               <div class="col text-body2">{{ p.rotulo }}</div>
-              <MgInputValor v-model="p.percentual" :decimals="0" suffix="%" label="%" class="col-3" />
+              <MgInputValor
+                :model-value="p.percentual"
+                :decimals="0"
+                :min="0"
+                :max="100"
+                suffix="%"
+                label="%"
+                class="col-3"
+                @update:model-value="(v) => ajustarPercentual(p, v)"
+              />
             </div>
-            <div class="text-caption" :class="somaPercentual === 100 ? 'text-grey-7' : 'text-orange-8'">
+            <div
+              class="text-caption"
+              :class="somaPercentual === 100 ? 'text-grey-7' : 'text-orange-8'"
+            >
               Soma: {{ somaPercentual }}%
             </div>
           </div>
@@ -372,9 +408,27 @@ function fmt(v, dec = 0) {
 
         <!-- Classificação (a partir da etapa de classificação) -->
         <div v-if="mostrarClassificacao" class="row q-col-gutter-x-md">
-          <MgInputValor v-model="local.umidade" :decimals="1" suffix="%" label="Umidade" class="col-4" />
-          <MgInputValor v-model="local.impureza" :decimals="1" suffix="%" label="Impureza" class="col-4" />
-          <MgInputValor v-model="local.avariados" :decimals="1" suffix="%" label="Avariados" class="col-4" />
+          <MgInputValor
+            v-model="local.umidade"
+            :decimals="1"
+            suffix="%"
+            label="Umidade"
+            class="col-4"
+          />
+          <MgInputValor
+            v-model="local.impureza"
+            :decimals="1"
+            suffix="%"
+            label="Impureza"
+            class="col-4"
+          />
+          <MgInputValor
+            v-model="local.avariados"
+            :decimals="1"
+            suffix="%"
+            label="Avariados"
+            class="col-4"
+          />
         </div>
 
         <!-- Resultado (calculado offline, quando já há peso líquido) -->
@@ -391,7 +445,9 @@ function fmt(v, dec = 0) {
               </div>
               <div class="col">
                 <div class="text-caption text-grey-7">Líquido seco</div>
-                <div class="text-weight-medium text-green-9">{{ fmt(calc.pesoliquidoseco) }} kg</div>
+                <div class="text-weight-medium text-green-9">
+                  {{ fmt(calc.pesoliquidoseco) }} kg
+                </div>
               </div>
               <div class="col">
                 <div class="text-caption text-grey-7">Sacas</div>
@@ -408,13 +464,13 @@ function fmt(v, dec = 0) {
 
       <q-card-actions align="right">
         <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-        <q-btn unelevated label="Salvar" color="primary" @click="salvar" />
+        <!-- Ação única = próxima movimentação do kanban. Caminhão novo entra na
+             coluna Peso Bruto (Registrar); os demais avançam de etapa. -->
         <q-btn
-          v-if="!novo"
-          flat
-          :label="rotuloAvancar[local.etapa]"
+          unelevated
           color="primary"
-          @click="avancar"
+          :label="novo ? 'Registrar' : rotuloAvancar[local.etapa]"
+          @click="novo ? salvar() : avancar()"
         />
       </q-card-actions>
     </q-card>
