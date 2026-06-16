@@ -5,6 +5,9 @@ import axios from 'axios'
 // como nos outros apps, pra reaproveitar os componentes de @components.
 const api = axios.create({
   baseURL: process.env.API_URL,
+  // Sem timeout, uma conexão HTTP/2 meia-aberta reaproveitada do pool do
+  // navegador deixa a request pendurada por minutos. 15s aborta o socket morto.
+  timeout: 15000,
 })
 
 // Dedup global de requisicoes mutantes identicas em voo: protege contra

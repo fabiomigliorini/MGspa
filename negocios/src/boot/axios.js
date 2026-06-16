@@ -3,7 +3,8 @@ import axios from 'axios'
 import { useAuthStore } from 'stores/auth'
 const sAuth = useAuthStore()
 
-const api = axios.create({ baseURL: process.env.API_URL })
+// timeout: sem ele, um socket HTTP/2 morto reaproveitado pendura a request por minutos.
+const api = axios.create({ baseURL: process.env.API_URL, timeout: 15000 })
 
 // Dedup global de requisicoes mutantes identicas em voo: protege contra
 // double-submit (clicar varias vezes em Salvar antes da resposta voltar).
