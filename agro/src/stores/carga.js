@@ -138,6 +138,13 @@ export const useCargaStore = defineStore('carga', () => {
   }
 
   function nova() {
+    // Talhão único na safra já vem selecionado (rateio 100%); senão começa vazio
+    // (o operador escolhe ao menos um no multi-select).
+    const ps = plantiosDaSafra.value
+    const plantios =
+      ps.length === 1
+        ? [{ codplantio: ps[0].codplantio, percentual: 100, rotulo: ps[0].rotulo }]
+        : []
     return {
       uuid: uid(),
       codcargacolheita: null,
@@ -159,7 +166,7 @@ export const useCargaStore = defineStore('carga', () => {
       descontoavariados: null,
       pesoliquidoseco: null,
       observacao: null,
-      plantios: [],
+      plantios,
       sincronizado: 0,
     }
   }
