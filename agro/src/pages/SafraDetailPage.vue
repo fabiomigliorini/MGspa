@@ -248,12 +248,7 @@ onMounted(async () => {
             class="col-12 col-sm-auto row items-center justify-end no-wrap"
             :class="{ 'q-mt-sm': $q.screen.lt.sm }"
           >
-            <MgInfoCriacao
-              :usuariocriacao="safra?.usuariocriacao"
-              :criacao="safra?.criacao"
-              :usuarioalteracao="safra?.usuarioalteracao"
-              :alteracao="safra?.alteracao"
-            />
+            <MgInfoCriacao :registro="safra" />
             <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarSafra">
               <q-tooltip>Editar safra</q-tooltip>
             </q-btn>
@@ -417,132 +412,146 @@ onMounted(async () => {
       </div>
 
       <!-- Um card por fazenda: mapa + lista por talhão + resultado -->
-      <q-card v-for="g in porFazenda" :key="g.codfazenda" bordered flat class="q-mb-md">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-subtitle1">{{ g.fazenda }}</q-item-label>
-            <q-item-label caption>
-              {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} / {{ fmt(g.expectativa) }} sc ·
-              <span class="text-green-8 text-weight-medium"
-                >{{ fmt(g.produtividade, 1) }} sc/ha</span
-              >
-            </q-item-label>
-            <q-linear-progress
-              v-if="g.expectativa > 0"
-              :value="g.progresso"
-              color="green-6"
-              track-color="grey-3"
-              size="6px"
-              rounded
-              class="q-mt-xs"
-            />
-          </q-item-section>
-          <q-item-section side>
-            <q-btn
-              flat
-              round
-              size="sm"
-              color="primary"
-              icon="add"
-              @click="novoPlantio(g.codfazenda)"
-            >
-              <q-tooltip>Plantar talhão nesta fazenda</q-tooltip>
-            </q-btn>
-          </q-item-section>
-        </q-item>
-        <q-separator />
+      <div class="row q-col-gutter-md">
+        <template v-for="g in porFazenda" :key="g.codfazenda">
+          <div class="col-md-6">
+            <q-card bordered flat class="q-mb-md">
+              <q-item>
+                <q-item-section avatar>
+                  <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-subtitle1">{{ g.fazenda }}</q-item-label>
+                  <q-item-label caption>
+                    {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} / {{ fmt(g.expectativa) }} sc ·
+                    <span class="text-green-8 text-weight-medium"
+                      >{{ fmt(g.produtividade, 1) }} sc/ha</span
+                    >
+                  </q-item-label>
+                  <q-linear-progress
+                    v-if="g.expectativa > 0"
+                    :value="g.progresso"
+                    color="green-6"
+                    track-color="grey-3"
+                    size="6px"
+                    rounded
+                    class="q-mt-xs"
+                  />
+                </q-item-section>
+                <q-item-section side>
+                  <q-btn
+                    flat
+                    round
+                    size="sm"
+                    color="primary"
+                    icon="add"
+                    @click="novoPlantio(g.codfazenda)"
+                  >
+                    <q-tooltip>Plantar talhão nesta fazenda</q-tooltip>
+                  </q-btn>
+                </q-item-section>
+              </q-item>
+              <q-separator />
 
-        <MgMapaTalhoes
-          v-if="g.comGeo.length"
-          :talhoes="g.comGeo"
-          id-key="codplantio"
-          height="300px"
-          @select="selecionarPlantio"
-        />
-        <q-separator v-if="g.comGeo.length" />
+              <MgMapaTalhoes
+                v-if="g.comGeo.length"
+                :talhoes="g.comGeo"
+                id-key="codplantio"
+                height="300px"
+                @select="selecionarPlantio"
+              />
+              <q-separator v-if="g.comGeo.length" />
 
-        <q-list separator>
-          <q-item v-for="l in g.plantios" :key="l.codplantio" :class="{ 'bg-grey-2': l.inativo }">
-            <q-item-section avatar>
-              <q-avatar
-                text-color="white"
-                icon="grass"
-                :style="{ backgroundColor: corTalhao(l) }"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-weight-medium">
-                {{ l.talhao || `Talhão ${l.codplantio}` }}
-              </q-item-label>
-              <q-item-label caption>
-                {{ nomeVariedade(l) || 'sem variedade' }} · {{ fmt(l.areaplantada, 1) }} ha
-                <span v-if="l.expectativa > 0">· exp {{ fmt(l.expectativaha, 1) }} sc/ha</span>
-                <q-badge v-if="!l.geometria" color="grey-5" label="sem mapa" class="q-ml-xs" />
-              </q-item-label>
-              <q-linear-progress
-                :value="l.progresso"
-                color="green-6"
-                track-color="grey-3"
-                size="6px"
-                rounded
-                class="q-mt-xs"
-              />
-            </q-item-section>
-            <q-item-section side class="text-right">
-              <q-item-label class="text-weight-bold text-green-8">
-                {{ fmt(l.produtividade, 1) }} sc/ha
-              </q-item-label>
-              <q-item-label caption>{{ fmt(l.sacas) }} / {{ fmt(l.expectativa) }} sc</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <div class="row items-center no-wrap">
-                <MgInfoCriacao
-                  :usuariocriacao="l.usuariocriacao"
-                  :criacao="l.criacao"
-                  :usuarioalteracao="l.usuarioalteracao"
-                  :alteracao="l.alteracao"
-                />
-                <q-btn
-                  flat
-                  dense
-                  round
-                  size="sm"
-                  color="grey-7"
-                  icon="edit_location_alt"
-                  @click="editarPlantio(l)"
+              <q-list separator>
+                <q-item
+                  v-for="l in g.plantios"
+                  :key="l.codplantio"
+                  :class="{ 'bg-grey-2': l.inativo }"
                 >
-                  <q-tooltip>Editar / desenhar</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  size="sm"
-                  color="grey-7"
-                  :icon="l.inativo ? 'play_arrow' : 'pause'"
-                  @click="plantioCad.alternarInativo(l)"
-                >
-                  <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  size="sm"
-                  color="grey-7"
-                  icon="delete"
-                  @click="plantioCad.excluir(l)"
-                >
-                  <q-tooltip>Excluir</q-tooltip>
-                </q-btn>
-              </div>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card>
+                  <q-item-section avatar>
+                    <q-avatar
+                      text-color="white"
+                      icon="grass"
+                      :style="{ backgroundColor: corTalhao(l) }"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-weight-medium">
+                      {{ l.talhao || `Talhão ${l.codplantio}` }}
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ nomeVariedade(l) || 'sem variedade' }} · {{ fmt(l.areaplantada, 1) }} ha
+                      <span v-if="l.expectativa > 0"
+                        >· exp {{ fmt(l.expectativaha, 1) }} sc/ha</span
+                      >
+                      <q-badge
+                        v-if="!l.geometria"
+                        color="grey-5"
+                        label="sem mapa"
+                        class="q-ml-xs"
+                      />
+                    </q-item-label>
+                    <q-linear-progress
+                      :value="l.progresso"
+                      color="green-6"
+                      track-color="grey-3"
+                      size="6px"
+                      rounded
+                      class="q-mt-xs"
+                    />
+                  </q-item-section>
+                  <q-item-section side class="text-right">
+                    <q-item-label class="text-weight-bold text-green-8">
+                      {{ fmt(l.produtividade, 1) }} sc/ha
+                    </q-item-label>
+                    <q-item-label caption
+                      >{{ fmt(l.sacas) }} / {{ fmt(l.expectativa) }} sc</q-item-label
+                    >
+                  </q-item-section>
+                  <q-item-section side>
+                    <div class="row items-center no-wrap">
+                      <MgInfoCriacao :registro="l" />
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        size="sm"
+                        color="grey-7"
+                        icon="edit_location_alt"
+                        @click="editarPlantio(l)"
+                      >
+                        <q-tooltip>Editar / desenhar</q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        size="sm"
+                        color="grey-7"
+                        :icon="l.inativo ? 'play_arrow' : 'pause'"
+                        @click="plantioCad.alternarInativo(l)"
+                      >
+                        <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+                      </q-btn>
+                      <q-btn
+                        flat
+                        dense
+                        round
+                        size="sm"
+                        color="grey-7"
+                        icon="delete"
+                        @click="plantioCad.excluir(l)"
+                      >
+                        <q-tooltip>Excluir</q-tooltip>
+                      </q-btn>
+                    </div>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+        </template>
+      </div>
 
       <!-- Vazio -->
       <q-card v-if="!porFazenda.length" bordered flat>

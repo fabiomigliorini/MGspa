@@ -451,12 +451,7 @@ watch(() => route.fullPath, carregar)
             >
               <q-tooltip>Estornar</q-tooltip>
             </q-btn>
-            <MgInfoCriacao
-              :usuariocriacao="titulo.usuariocriacao"
-              :criacao="titulo.criacao"
-              :usuarioalteracao="titulo.usuarioalteracao"
-              :alteracao="titulo.alteracao"
-            />
+            <MgInfoCriacao :registro="titulo" />
           </q-card-section>
 
           <!-- Detalhes -->
@@ -629,7 +624,7 @@ watch(() => route.fullPath, carregar)
                       <span v-else class="text-italic text-grey-7 text-weight-regular">
                         Sem Identificação de Origem
                       </span>
-                      <MgInfoCriacao :usuariocriacao="m.usuariocriacao" :criacao="m.criacao" />
+                      <MgInfoCriacao :registro="m" />
                     </q-item-label>
                     <q-item-label v-if="m.portador" caption>{{ m.portador }}</q-item-label>
                   </q-item-section>

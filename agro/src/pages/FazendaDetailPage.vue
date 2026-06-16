@@ -219,12 +219,7 @@ onMounted(async () => {
             class="col-12 col-sm-auto row items-center justify-end no-wrap"
             :class="{ 'q-mt-sm': $q.screen.lt.sm }"
           >
-            <MgInfoCriacao
-              :usuariocriacao="fazenda?.usuariocriacao"
-              :criacao="fazenda?.criacao"
-              :usuarioalteracao="fazenda?.usuarioalteracao"
-              :alteracao="fazenda?.alteracao"
-            />
+            <MgInfoCriacao :registro="fazenda" />
             <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarFazenda">
               <q-tooltip>Editar fazenda</q-tooltip>
             </q-btn>
@@ -314,12 +309,7 @@ onMounted(async () => {
             <q-item-section side>
               <div class="row items-center no-wrap">
                 <q-badge v-if="!t.geometria" color="grey-5" label="sem mapa" />
-                <MgInfoCriacao
-                  :usuariocriacao="t.usuariocriacao"
-                  :criacao="t.criacao"
-                  :usuarioalteracao="t.usuarioalteracao"
-                  :alteracao="t.alteracao"
-                />
+                <MgInfoCriacao :registro="t" />
                 <q-btn
                   flat
                   dense

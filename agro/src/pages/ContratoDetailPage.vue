@@ -209,12 +209,7 @@ onMounted(async () => {
             class="col-12 col-sm-auto row items-center justify-end no-wrap"
             :class="{ 'q-mt-sm': $q.screen.lt.sm }"
           >
-            <MgInfoCriacao
-              :usuariocriacao="contrato?.usuariocriacao"
-              :criacao="contrato?.criacao"
-              :usuarioalteracao="contrato?.usuarioalteracao"
-              :alteracao="contrato?.alteracao"
-            />
+            <MgInfoCriacao :registro="contrato" />
             <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="editarContrato">
               <q-tooltip>Editar contrato</q-tooltip>
             </q-btn>
@@ -347,12 +342,7 @@ onMounted(async () => {
               </q-item-label>
             </q-item-section>
             <q-item-section v-if="!ehFixo" side class="row no-wrap items-center">
-              <MgInfoCriacao
-                :usuariocriacao="f.usuariocriacao"
-                :criacao="f.criacao"
-                :usuarioalteracao="f.usuarioalteracao"
-                :alteracao="f.alteracao"
-              />
+              <MgInfoCriacao :registro="f" />
               <q-btn
                 flat
                 dense
@@ -408,12 +398,7 @@ onMounted(async () => {
               >
             </q-item-section>
             <q-item-section side class="row no-wrap items-center">
-              <MgInfoCriacao
-                :usuariocriacao="p.usuariocriacao"
-                :criacao="p.criacao"
-                :usuarioalteracao="p.usuarioalteracao"
-                :alteracao="p.alteracao"
-              />
+              <MgInfoCriacao :registro="p" />
               <q-btn
                 flat
                 dense

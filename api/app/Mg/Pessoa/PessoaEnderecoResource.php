@@ -11,8 +11,6 @@ class PessoaEnderecoResource extends JsonResource
         $ret = parent::toArray($request);
         $ret['cidade'] = $this->Cidade->cidade ?? null;
         $ret['uf'] = $this->Cidade->Estado->sigla ?? null;
-        $ret['usuariocriacao'] = $this->usuariocriacao;
-        $ret['usuarioalteracao'] = $this->usuarioalteracao;
         return $ret;
     }
 }

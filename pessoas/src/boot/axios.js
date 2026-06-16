@@ -6,6 +6,9 @@ import { useAuthStore } from 'src/stores/auth'
 const api = axios.create({
   baseURL: process.env.API_URL,
   headers: { 'Content-type': 'application/json' },
+  // Sem timeout, uma conexão HTTP/2 meia-aberta reaproveitada do pool do
+  // navegador deixa a request pendurada por minutos. 15s aborta o socket morto.
+  timeout: 15000,
 })
 
 // Dedup global de requisicoes mutantes identicas em voo: protege contra

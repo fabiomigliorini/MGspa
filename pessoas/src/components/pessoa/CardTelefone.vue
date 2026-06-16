@@ -484,12 +484,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
               </q-icon>
 
               <!-- INFO -->
-              <MgInfoCriacao
-                :usuariocriacao="element.usuariocriacao"
-                :criacao="element.criacao"
-                :usuarioalteracao="element.usuarioalteracao"
-                :alteracao="element.alteracao"
-              />
+              <MgInfoCriacao :registro="element" />
             </q-item-label>
 
             <!-- INATIVO -->

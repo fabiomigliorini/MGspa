@@ -101,9 +101,9 @@ class NotaFiscalDetailResource extends JsonResource
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
 
-            // Usuários
-            'usuarioCriacao' => $this->getRelationValue('UsuarioCriacao')?->only(['codusuario', 'usuario', 'codpessoa']),
-            'usuarioAlteracao' => $this->getRelationValue('UsuarioAlteracao')?->only(['codusuario', 'usuario', 'codpessoa']),
+            // Usuários (nome resolvido no front via MgInfoCriacao/codusuario)
+            'codusuariocriacao' => $this->codusuariocriacao,
+            'codusuarioalteracao' => $this->codusuarioalteracao,
         ];
     }
 

@@ -18,7 +18,6 @@ class Plantio extends MgModel
     protected $table = 'tblplantio';
     protected $primaryKey = 'codplantio';
 
-    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
 
     protected $fillable = [

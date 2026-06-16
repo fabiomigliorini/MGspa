@@ -9,8 +9,6 @@ class IndicadorResource extends JsonResource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['usuariocriacao'] = $this->usuariocriacao;
-        $ret['usuarioalteracao'] = $this->usuarioalteracao;
 
         if (isset($this->indicador_lancamento_s_count)) {
             $ret['lancamentos_count'] = $this->indicador_lancamento_s_count;

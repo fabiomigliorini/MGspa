@@ -17,14 +17,10 @@ class StoneFilialResource extends Resource
         $ret = parent::toArray($request);
         $ret['filial'] = $this->Filial->filial;
         $ret['cnpj'] = $this->Filial->Pessoa->cnpj;
-        $ret['usuariocriacao'] = $this->usuariocriacao;
-        $ret['usuarioalteracao'] = $this->usuarioalteracao;
 
         $ret['StonePosS'] = [];
         foreach ($this->StonePosS as $stonePos) {
             $retStonePos = $stonePos->toArray();
-            $retStonePos['usuariocriacao'] = $this->usuariocriacao;
-            $retStonePos['usuarioalteracao'] = $this->usuarioalteracao;
             $ret['StonePosS'][] = $retStonePos;
         }
 

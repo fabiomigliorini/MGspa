@@ -502,12 +502,7 @@ const submit = () => {
               <span v-if="contas.pixaleatoria">{{ contas.pixaleatoria }}</span>
 
               <!-- INFO -->
-              <MgInfoCriacao
-                :usuariocriacao="contas.usuariocriacao"
-                :criacao="contas.criacao"
-                :usuarioalteracao="contas.usuarioalteracao"
-                :alteracao="contas.alteracao"
-              />
+              <MgInfoCriacao :registro="contas" />
             </q-item-label>
 
             <q-item-label caption v-if="contas.cnpj">

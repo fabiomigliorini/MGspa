@@ -18,8 +18,6 @@ class DependenteResource extends JsonResource
 
         $ret['dependente'] = @$this->Pessoa->pessoa;
         $ret['responsavel'] = @$this->PessoaResponsavel->pessoa;
-        $ret['usuariocriacao'] = $this->usuariocriacao;
-        $ret['usuarioalteracao'] = $this->usuarioalteracao;
         $ret['tipdepdescricao'] = DependenteService::TIPDEP_LABELS[$this->tipdep] ?? null;
 
         return $ret;

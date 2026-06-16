@@ -276,12 +276,7 @@ watch(() => route.fullPath, carregar)
                 >
                   <q-tooltip>Estornar</q-tooltip>
                 </q-btn>
-                <MgInfoCriacao
-                  :usuariocriacao="liq.usuariocriacao"
-                  :criacao="liq.criacao"
-                  :usuarioalteracao="liq.usuarioalteracao"
-                  :alteracao="liq.alteracao"
-                />
+                <MgInfoCriacao :registro="liq" />
               </q-card-section>
               <q-card-section class="q-pt-none">
                 <div

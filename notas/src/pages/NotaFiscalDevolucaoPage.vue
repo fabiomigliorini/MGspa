@@ -199,7 +199,7 @@ const submitDevolucao = async () => {
 
           <!-- Seleção de pessoa (apenas para consumidor genérico) -->
           <q-card-section v-if="isConsumidorGenerico" class="q-pt-none">
-            <SelectPessoa v-model="codpessoa" label="Pessoa" dense />
+            <SelectPessoa v-model="codpessoa" label="Pessoa" />
           </q-card-section>
 
           <q-card-section class="q-pt-none">

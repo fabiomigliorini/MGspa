@@ -15,7 +15,6 @@ class Variedade extends MgModel
     protected $table = 'tblvariedade';
     protected $primaryKey = 'codvariedade';
 
-    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
 
     protected $fillable = [

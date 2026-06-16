@@ -194,12 +194,7 @@ watch(
                 :class="grupoEconomico.inativo ? 'text-strike text-red-14' : ''"
               >
                 {{ grupoEconomico.grupoeconomico }}
-                <MgInfoCriacao
-                  :usuariocriacao="grupoEconomico.usuariocriacao"
-                  :criacao="grupoEconomico.criacao"
-                  :usuarioalteracao="grupoEconomico.usuarioalteracao"
-                  :alteracao="grupoEconomico.alteracao"
-                />
+                <MgInfoCriacao :registro="grupoEconomico" />
               </div>
               <div
                 v-if="grupoEconomico.observacoes"

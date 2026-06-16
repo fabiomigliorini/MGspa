@@ -14,7 +14,6 @@ class TabelaDesconto extends MgModel
     protected $table = 'tbltabeladesconto';
     protected $primaryKey = 'codtabeladesconto';
 
-    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
 
     protected $fillable = [

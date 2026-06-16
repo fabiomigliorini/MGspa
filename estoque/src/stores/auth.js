@@ -45,9 +45,12 @@ export const useAuthStore = defineStore('auth', () => {
     try {
       // OIDC Core 1.0 §5.3 — /userinfo (raiz, sem prefixo /api) retorna claims
       // OIDC + custom MGspa num único objeto plano (sem wrapper `data`).
+      // Timeout curto: sem ele, um socket morto reaproveitado trava o guard do
+      // router (e a tela) por minutos esperando o /userinfo responder.
       const response = await axios.get(`${process.env.API_AUTH_URL}/userinfo`, {
         headers: { Authorization: `Bearer ${token.value}` },
         skipLoading: true,
+        timeout: 2000,
       })
 
       if (response.data?.usuario) {
@@ -58,6 +61,13 @@ export const useAuthStore = defineStore('auth', () => {
       }
       return false
     } catch (error) {
+      // Falha de rede / timeout (sem response): otimista — não desloga, deixa
+      // navegar. Se o token estiver de fato expirado, o interceptor 401 desloga
+      // na primeira chamada real. Só limpa em erro com resposta do servidor.
+      if (!error.response) {
+        console.warn('Validação de token sem resposta (rede/timeout), seguindo otimista:', error)
+        return true
+      }
       console.error('Erro ao validar token:', error)
       gravarToken(null)
       usuario.value = null

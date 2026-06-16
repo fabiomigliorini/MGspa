@@ -150,12 +150,7 @@ onMounted(async () => {
           </template>
           <template #body-cell-acoes="props">
             <q-td :props="props">
-              <MgInfoCriacao
-                :usuariocriacao="props.row.usuariocriacao"
-                :criacao="props.row.criacao"
-                :usuarioalteracao="props.row.usuarioalteracao"
-                :alteracao="props.row.alteracao"
-              />
+              <MgInfoCriacao :registro="props.row" />
               <q-btn
                 flat
                 dense

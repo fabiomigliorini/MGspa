@@ -133,12 +133,7 @@ watch(() => route.fullPath, carregar)
             >
               <q-tooltip>Editar</q-tooltip>
             </q-btn>
-            <MgInfoCriacao
-              :usuariocriacao="cheque.usuario_criacao?.usuario"
-              :criacao="cheque.criacao"
-              :usuarioalteracao="cheque.usuario_alteracao?.usuario"
-              :alteracao="cheque.alteracao"
-            />
+            <MgInfoCriacao :registro="cheque" />
           </q-card-section>
 
           <div class="row q-col-gutter-lg q-pa-md">

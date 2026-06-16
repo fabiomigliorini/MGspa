@@ -14,7 +14,6 @@ class ContratoPagamento extends MgModel
     protected $table = 'tblcontratopagamento';
     protected $primaryKey = 'codcontratopagamento';
 
-    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
 
     protected $fillable = [

@@ -15,7 +15,6 @@ class Talhao extends MgModel
     protected $table = 'tbltalhao';
     protected $primaryKey = 'codtalhao';
 
-    protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
 
     protected $fillable = [

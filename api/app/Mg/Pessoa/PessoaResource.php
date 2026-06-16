@@ -38,8 +38,6 @@ class PessoaResource extends JsonResource
         $ret['ufnascimento'] = $this->CidadeNascimento->Estado->sigla ?? null;
         $ret['ufctpsS'] = $this->EstadoCtps->sigla ?? null;
 
-        $ret['usuariocriacao'] = $this->usuariocriacao;
-        $ret['usuarioalteracao'] = $this->usuarioalteracao;
         $ret['mercosId'] = $this->MercosClienteS()->orderBy('clienteid')->get()->pluck('clienteid');
 
         // Filhos
