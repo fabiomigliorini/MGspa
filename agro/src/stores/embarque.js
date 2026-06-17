@@ -23,7 +23,24 @@ export const useEmbarqueStore = defineStore('embarque', () => {
   const faixas = ref([])
   const plantios = ref([])
 
+  // Filtro de contrato: quando vindo do detalhe de um contrato, o pátio mostra
+  // só os embarques daquele contrato (senão, caminhões de contratos diferentes
+  // se confundem no kanban). null = mostra todos.
+  const filtroCodcontrato = ref(null)
+
   const contratosAtivos = computed(() => contratos.value.filter((c) => !c.inativo))
+
+  // Rótulo padrão de um contrato (nº — comprador), igual ao usado no diálogo.
+  function rotuloContrato(codcontrato) {
+    const c = contratos.value.find((x) => x.codcontrato === codcontrato)
+    if (!c) return `Contrato ${codcontrato}`
+    const pessoa = c.Pessoa?.fantasia || c.Pessoa?.pessoa || ''
+    return pessoa ? `${c.contrato} — ${pessoa}` : `${c.contrato}`
+  }
+
+  const contratoFiltradoRotulo = computed(() =>
+    filtroCodcontrato.value ? rotuloContrato(filtroCodcontrato.value) : null,
+  )
 
   const plantiosTalhao = computed(() =>
     plantios.value
@@ -38,8 +55,11 @@ export const useEmbarqueStore = defineStore('embarque', () => {
 
   const embarquesPorEtapa = computed(() => {
     const grupos = { PATIO: [], TARA: [], CLASSIFICACAO: [], BRUTO: [], FISCAL: [], DESPACHADO: [] }
+    const filtro = filtroCodcontrato.value
     for (const e of embarques.value) {
-      if (!e.inativo && grupos[e.etapa]) grupos[e.etapa].push(e)
+      if (e.inativo || !grupos[e.etapa]) continue
+      if (filtro && !e.contratos?.some((c) => c.codcontrato === filtro)) continue
+      grupos[e.etapa].push(e)
     }
     return grupos
   })
@@ -53,8 +73,12 @@ export const useEmbarqueStore = defineStore('embarque', () => {
   function calcular(embarque) {
     const { pesobruto, pesotara } = embarque
     const temPesos =
-      pesobruto !== null && pesobruto !== undefined && pesobruto !== '' &&
-      pesotara !== null && pesotara !== undefined && pesotara !== ''
+      pesobruto !== null &&
+      pesobruto !== undefined &&
+      pesobruto !== '' &&
+      pesotara !== null &&
+      pesotara !== undefined &&
+      pesotara !== ''
     if (!temPesos) {
       return {
         pesoliquido: null,
@@ -70,7 +94,13 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     const di = descontoKg(fx, 'IMPUREZA', embarque.impureza, liq)
     const da = descontoKg(fx, 'AVARIADOS', embarque.avariados, liq)
     const seco = arredondar(liq - Number(du || 0) - Number(di || 0) - Number(da || 0))
-    return { pesoliquido: liq, descontoumidade: du, descontoimpureza: di, descontoavariados: da, pesoliquidoseco: seco }
+    return {
+      pesoliquido: liq,
+      descontoumidade: du,
+      descontoimpureza: di,
+      descontoavariados: da,
+      pesoliquidoseco: seco,
+    }
   }
 
   async function carregarReferencias() {
@@ -91,7 +121,7 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     await carregarEmbarques()
   }
 
-  function nova() {
+  function nova(codcontrato = null) {
     return {
       uuid: uid(),
       codembarque: null,
@@ -112,7 +142,18 @@ export const useEmbarqueStore = defineStore('embarque', () => {
       pesoliquidoseco: null,
       aprovado: null,
       observacao: null,
-      contratos: [],
+      // Vindo de um contrato, já entra amarrado a ele (mesmo formato do addContrato).
+      contratos: codcontrato
+        ? [
+            {
+              codcontrato,
+              quantidade: null,
+              rotulo: rotuloContrato(codcontrato),
+              numeronf: null,
+              valornf: null,
+            },
+          ]
+        : [],
       origens: [],
       sincronizado: 0,
     }
@@ -139,6 +180,9 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     embarques,
     contratos,
     contratosAtivos,
+    filtroCodcontrato,
+    rotuloContrato,
+    contratoFiltradoRotulo,
     culturas,
     faixas,
     plantios,

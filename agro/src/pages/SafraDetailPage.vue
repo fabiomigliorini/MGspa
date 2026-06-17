@@ -403,6 +403,12 @@ onMounted(async () => {
           </q-card-section>
         </q-card>
       </template>
+      <MgContratosSafra
+        :codsafra="codsafra"
+        :codcultura="codcultura"
+        :online="online"
+        @changed="recarregarComercial"
+      />
 
       <!-- Título da seção + adicionar (escolhe a fazenda no dialog) -->
       <div class="row items-center q-mb-sm">
@@ -415,7 +421,7 @@ onMounted(async () => {
       <!-- Um card por fazenda: mapa + lista por talhão + resultado -->
       <div class="row q-col-gutter-md">
         <template v-for="g in porFazenda" :key="g.codfazenda">
-          <div class="col-md-6">
+          <div class="col-12">
             <q-card bordered flat class="q-mb-md">
               <q-item>
                 <q-item-section avatar>
@@ -463,12 +469,11 @@ onMounted(async () => {
               />
               <q-separator v-if="g.comGeo.length" />
 
-              <q-list separator>
-                <q-item
-                  v-for="l in g.plantios"
-                  :key="l.codplantio"
-                  :class="{ 'bg-grey-2': l.inativo }"
-                >
+              <!-- Talhões em 2 colunas (col-6) -->
+              <div class="row q-col-gutter-sm q-pa-sm">
+                <div v-for="l in g.plantios" :key="l.codplantio" class="col-12 col-sm-6">
+                  <q-card flat bordered class="full-height" :class="{ 'bg-grey-2': l.inativo }">
+                    <q-item>
                   <q-item-section avatar>
                     <q-avatar
                       text-color="white"
@@ -547,8 +552,10 @@ onMounted(async () => {
                       </q-btn>
                     </div>
                   </q-item-section>
-                </q-item>
-              </q-list>
+                    </q-item>
+                  </q-card>
+                </div>
+              </div>
             </q-card>
           </div>
         </template>
@@ -561,15 +568,6 @@ onMounted(async () => {
           primeiro.
         </q-card-section>
       </q-card>
-
-      <!-- Contratos de venda desta safra -->
-      <q-separator class="q-my-lg" />
-      <MgContratosSafra
-        :codsafra="codsafra"
-        :codcultura="codcultura"
-        :online="online"
-        @changed="recarregarComercial"
-      />
     </div>
 
     <!-- Wizard: escolher fazenda → talhão base → confirmar/ajustar polígono -->

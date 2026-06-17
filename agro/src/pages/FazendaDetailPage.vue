@@ -256,24 +256,6 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Mapa -->
-      <q-card bordered flat class="q-mb-md">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar color="green-1" text-color="green-8" icon="map" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-subtitle1">Mapa</q-item-label>
-            <q-item-label caption>Layout base sobre imagem de satélite</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-separator />
-        <MgMapaTalhoes v-if="talhoesComGeo.length" :talhoes="talhoesComGeo" height="400px" />
-        <q-card-section v-else class="text-grey-6 text-center">
-          Nenhum talhão com polígono ainda. Use <q-icon name="add" /> para desenhar o primeiro.
-        </q-card-section>
-      </q-card>
-
       <!-- Talhões -->
       <q-card bordered flat class="q-mb-md">
         <q-item>
@@ -369,7 +351,7 @@ onMounted(async () => {
       </q-card>
 
       <!-- Por safra -->
-      <q-card bordered flat class="overflow-hidden">
+      <q-card bordered flat class="overflow-hidden q-mb-md">
         <q-item>
           <q-item-section avatar>
             <q-avatar color="light-green-1" text-color="light-green-9" icon="eco" />
@@ -407,6 +389,24 @@ onMounted(async () => {
             </q-item-section>
           </q-item>
         </q-list>
+      </q-card>
+
+      <!-- Mapa (abaixo do "Por safra") -->
+      <q-card bordered flat>
+        <q-item>
+          <q-item-section avatar>
+            <q-avatar color="green-1" text-color="green-8" icon="map" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-subtitle1">Mapa</q-item-label>
+            <q-item-label caption>Layout base sobre imagem de satélite</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-separator />
+        <MgMapaTalhoes v-if="talhoesComGeo.length" :talhoes="talhoesComGeo" height="400px" />
+        <q-card-section v-else class="text-grey-6 text-center">
+          Nenhum talhão com polígono ainda. Use <q-icon name="add" /> para desenhar o primeiro.
+        </q-card-section>
       </q-card>
 
       <!-- Dialog Fazenda -->

@@ -1,14 +1,31 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useRoute, useRouter } from 'vue-router'
 import { useEmbarqueStore } from 'src/stores/embarque'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import EmbarqueDialog from 'components/EmbarqueDialog.vue'
 
+const route = useRoute()
+const router = useRouter()
 const store = useEmbarqueStore()
 const sinc = useSincronizacaoStore()
-const { embarquesPorEtapa } = storeToRefs(store)
+const { embarquesPorEtapa, contratoFiltradoRotulo } = storeToRefs(store)
 const { online, sincronizando } = storeToRefs(sinc)
+
+// Filtra o pátio pelo contrato vindo da rota (?codcontrato=). Reage a mudanças
+// na query pra alternar entre contratos sem recarregar a página.
+watch(
+  () => route.query.codcontrato,
+  (cod) => {
+    store.filtroCodcontrato = cod ? Number(cod) : null
+  },
+  { immediate: true },
+)
+
+function limparFiltro() {
+  router.replace({ name: 'embarque' })
+}
 
 const colunas = [
   { etapa: 'PATIO', label: 'Pátio', icon: 'local_shipping', color: 'blue-grey-7' },
@@ -29,7 +46,7 @@ function abrir(e) {
   dialog.value = true
 }
 function novo() {
-  sel.value = store.nova()
+  sel.value = store.nova(store.filtroCodcontrato)
   ehNovo.value = true
   dialog.value = true
 }
@@ -64,12 +81,33 @@ onMounted(async () => {
     <q-toolbar class="bg-white text-grey-9 q-px-md q-gutter-sm">
       <q-icon name="outbound" size="sm" color="green-7" />
       <div class="text-subtitle1">Pátio de Expedição</div>
+      <q-chip
+        v-if="contratoFiltradoRotulo"
+        removable
+        color="green-1"
+        text-color="green-9"
+        icon="filter_alt"
+        :label="contratoFiltradoRotulo"
+        @remove="limparFiltro"
+      >
+        <q-tooltip>Mostrando só este contrato — clique no × para ver todos</q-tooltip>
+      </q-chip>
       <q-space />
-      <q-chip :color="online ? 'green-1' : 'orange-1'" :text-color="online ? 'green-9' : 'orange-9'">
+      <q-chip
+        :color="online ? 'green-1' : 'orange-1'"
+        :text-color="online ? 'green-9' : 'orange-9'"
+      >
         <q-icon :name="online ? 'cloud_done' : 'cloud_off'" class="q-mr-xs" />
         {{ online ? 'Online' : 'Offline' }}
       </q-chip>
-      <q-btn flat round icon="sync" :loading="sincronizando" color="grey-7" @click="store.sincronizar()">
+      <q-btn
+        flat
+        round
+        icon="sync"
+        :loading="sincronizando"
+        color="grey-7"
+        @click="store.sincronizar()"
+      >
         <q-tooltip>Sincronizar</q-tooltip>
       </q-btn>
       <q-btn unelevated color="primary" icon="add" label="Caminhão" @click="novo" />
@@ -88,9 +126,15 @@ onMounted(async () => {
       >
         <q-item :class="`bg-${col.color} text-white`">
           <q-item-section avatar><q-icon :name="col.icon" /></q-item-section>
-          <q-item-section><q-item-label class="text-weight-medium">{{ col.label }}</q-item-label></q-item-section>
+          <q-item-section
+            ><q-item-label class="text-weight-medium">{{ col.label }}</q-item-label></q-item-section
+          >
           <q-item-section side>
-            <q-badge color="white" :text-color="col.color" :label="embarquesPorEtapa[col.etapa].length" />
+            <q-badge
+              color="white"
+              :text-color="col.color"
+              :label="embarquesPorEtapa[col.etapa].length"
+            />
           </q-item-section>
         </q-item>
 
