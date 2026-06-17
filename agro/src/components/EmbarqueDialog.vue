@@ -10,7 +10,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   embarque: { type: Object, default: null },
-  // true = embarque novo (só "Registrar", entra na coluna Pátio sem avançar)
+  // true = embarque novo (só "Registrar", entra na coluna Tara sem avançar)
   novo: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'salvar'])
@@ -34,7 +34,6 @@ const show = computed({
 })
 
 const proxima = {
-  PATIO: 'TARA',
   TARA: 'CLASSIFICACAO',
   CLASSIFICACAO: 'BRUTO',
   BRUTO: 'FISCAL',
@@ -42,10 +41,9 @@ const proxima = {
   DESPACHADO: null,
 }
 // Rótulo da ação = etapa ATUAL (o que se faz na coluna do card), não a próxima.
-// Pátio/Tara pesam a tara; Classificação classifica; Peso Bruto pesa o bruto;
+// Tara pesa a tara; Classificação classifica; Peso Bruto pesa o bruto;
 // Nota Fiscal emite as NFs; Despachado fecha/imprime o ticket.
 const rotuloAvancar = {
-  PATIO: 'Pesar tara',
   TARA: 'Pesar tara',
   CLASSIFICACAO: 'Classificar',
   BRUTO: 'Pesar bruto',
@@ -53,7 +51,6 @@ const rotuloAvancar = {
   DESPACHADO: 'Despachar',
 }
 const labelEtapa = {
-  PATIO: 'Pátio',
   TARA: 'Tara',
   CLASSIFICACAO: 'Classificação',
   BRUTO: 'Peso Bruto',
@@ -79,7 +76,13 @@ const pesosacaCultura = computed(() => {
 const sacasSeco = computed(() => sacas(calc.value.pesoliquidoseco, pesosacaCultura.value))
 
 function addContrato() {
-  local.value.contratos.push({ codcontrato: null, quantidade: null, rotulo: null, numeronf: null, valornf: null })
+  local.value.contratos.push({
+    codcontrato: null,
+    quantidade: null,
+    rotulo: null,
+    numeronf: null,
+    valornf: null,
+  })
 }
 function setRotuloContrato(c) {
   c.rotulo = opcoesContrato.value.find((o) => o.value === c.codcontrato)?.rotulo || null
@@ -93,8 +96,7 @@ function aprovar() {
 }
 
 function salvar() {
-  // "Registrar" (embarque novo) entra no Pátio: exige placa e ao menos um
-  // contrato — mesma checagem do PATIO no avançar.
+  // "Registrar" (embarque novo) entra na Tara: exige placa e ao menos um contrato.
   if (!local.value.placa || !local.value.contratos.length) {
     return $q.notify({ type: 'warning', message: 'Informe a placa e ao menos um contrato.' })
   }
@@ -105,9 +107,6 @@ function avancar() {
   const prox = proxima[local.value.etapa]
   if (!prox) return imprimir()
 
-  if (local.value.etapa === 'PATIO' && (!local.value.placa || !local.value.contratos.length)) {
-    return $q.notify({ type: 'warning', message: 'Informe a placa e ao menos um contrato.' })
-  }
   if (local.value.etapa === 'TARA' && !local.value.pesotara) {
     return $q.notify({ type: 'warning', message: 'Informe a tara.' })
   }
@@ -127,7 +126,11 @@ function imprimir() {
     data: local.value.data,
     placa: local.value.placa,
     motorista: local.value.motorista,
-    talhoes: local.value.contratos.map((ct) => ({ rotulo: ct.rotulo, percentual: null, sc: ct.quantidade })),
+    talhoes: local.value.contratos.map((ct) => ({
+      rotulo: ct.rotulo,
+      percentual: null,
+      sc: ct.quantidade,
+    })),
     pesobruto: local.value.pesobruto,
     tara: local.value.pesotara,
     pesoliquido: c.pesoliquido,
@@ -145,7 +148,10 @@ function imprimir() {
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  return Number(v).toLocaleString('pt-BR', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  })
 }
 </script>
 
@@ -194,12 +200,34 @@ function fmt(v, dec = 0) {
                 class="col"
                 @update:model-value="setRotuloContrato(c)"
               />
-              <MgInputValor v-model="c.quantidade" :decimals="0" suffix="sc" label="Qtd" class="col-3" />
-              <q-btn flat round color="grey-7" icon="close" class="col-auto" @click="local.contratos.splice(i, 1)" />
+              <MgInputValor
+                v-model="c.quantidade"
+                :decimals="0"
+                suffix="sc"
+                label="Qtd"
+                class="col-3"
+              />
+              <q-btn
+                flat
+                round
+                color="grey-7"
+                icon="close"
+                class="col-auto"
+                @click="local.contratos.splice(i, 1)"
+              />
             </div>
-            <div v-if="local.etapa === 'FISCAL' || local.etapa === 'DESPACHADO'" class="row q-col-gutter-sm q-mt-xs">
+            <div
+              v-if="local.etapa === 'FISCAL' || local.etapa === 'DESPACHADO'"
+              class="row q-col-gutter-sm q-mt-xs"
+            >
               <q-input v-model="c.numeronf" label="Nº NF" outlined class="col" />
-              <MgInputValor v-model="c.valornf" :decimals="2" prefix="R$" label="Valor NF" class="col" />
+              <MgInputValor
+                v-model="c.valornf"
+                :decimals="2"
+                prefix="R$"
+                label="Valor NF"
+                class="col"
+              />
             </div>
           </div>
           <q-btn flat color="primary" icon="add" label="Contrato" @click="addContrato" />
@@ -208,8 +236,16 @@ function fmt(v, dec = 0) {
         <!-- Origem -->
         <div>
           <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
-          <div v-for="(o, i) in local.origens" :key="i" class="row q-col-gutter-sm items-center q-mb-xs">
-            <q-chip :color="o.tipo === 'SILO' ? 'amber-7' : 'brown-5'" text-color="white" :label="o.tipo" />
+          <div
+            v-for="(o, i) in local.origens"
+            :key="i"
+            class="row q-col-gutter-sm items-center q-mb-xs"
+          >
+            <q-chip
+              :color="o.tipo === 'SILO' ? 'amber-7' : 'brown-5'"
+              text-color="white"
+              :label="o.tipo"
+            />
             <q-select
               v-if="o.tipo === 'TALHAO'"
               v-model="o.codplantio"
@@ -223,12 +259,37 @@ function fmt(v, dec = 0) {
               class="col"
             />
             <div v-else class="col text-grey-7 q-pl-sm">Silo / armazém</div>
-            <MgInputValor v-model="o.quantidade" :decimals="0" suffix="sc" label="Qtd" class="col-3" />
-            <q-btn flat round color="grey-7" icon="close" class="col-auto" @click="local.origens.splice(i, 1)" />
+            <MgInputValor
+              v-model="o.quantidade"
+              :decimals="0"
+              suffix="sc"
+              label="Qtd"
+              class="col-3"
+            />
+            <q-btn
+              flat
+              round
+              color="grey-7"
+              icon="close"
+              class="col-auto"
+              @click="local.origens.splice(i, 1)"
+            />
           </div>
           <div class="q-gutter-sm">
-            <q-btn flat color="amber-8" icon="warehouse" label="Do silo" @click="addOrigem('SILO')" />
-            <q-btn flat color="brown-6" icon="grass" label="Do talhão" @click="addOrigem('TALHAO')" />
+            <q-btn
+              flat
+              color="amber-8"
+              icon="warehouse"
+              label="Do silo"
+              @click="addOrigem('SILO')"
+            />
+            <q-btn
+              flat
+              color="brown-6"
+              icon="grass"
+              label="Do talhão"
+              @click="addOrigem('TALHAO')"
+            />
           </div>
         </div>
 
@@ -236,15 +297,45 @@ function fmt(v, dec = 0) {
 
         <!-- Pesagem (tara primeiro na expedição) -->
         <div class="row q-col-gutter-md">
-          <MgInputValor v-model="local.pesotara" :decimals="0" suffix="kg" label="Tara (vazio)" class="col-6" />
-          <MgInputValor v-model="local.pesobruto" :decimals="0" suffix="kg" label="Bruto (carregado)" class="col-6" />
+          <MgInputValor
+            v-model="local.pesotara"
+            :decimals="0"
+            suffix="kg"
+            label="Tara (vazio)"
+            class="col-6"
+          />
+          <MgInputValor
+            v-model="local.pesobruto"
+            :decimals="0"
+            suffix="kg"
+            label="Bruto (carregado)"
+            class="col-6"
+          />
         </div>
 
         <!-- Classificação + aprovação -->
         <div class="row q-col-gutter-md items-center">
-          <MgInputValor v-model="local.umidade" :decimals="1" suffix="%" label="Umidade" class="col-4" />
-          <MgInputValor v-model="local.impureza" :decimals="1" suffix="%" label="Impureza" class="col-4" />
-          <MgInputValor v-model="local.avariados" :decimals="1" suffix="%" label="Avariados" class="col-4" />
+          <MgInputValor
+            v-model="local.umidade"
+            :decimals="1"
+            suffix="%"
+            label="Umidade"
+            class="col-4"
+          />
+          <MgInputValor
+            v-model="local.impureza"
+            :decimals="1"
+            suffix="%"
+            label="Impureza"
+            class="col-4"
+          />
+          <MgInputValor
+            v-model="local.avariados"
+            :decimals="1"
+            suffix="%"
+            label="Avariados"
+            class="col-4"
+          />
         </div>
         <q-btn
           :outline="!local.aprovado"

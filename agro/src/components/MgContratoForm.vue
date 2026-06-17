@@ -22,6 +22,9 @@ const emit = defineEmits(['saved'])
 // disparar vue/no-mutating-props.
 const cad = computed(() => props.cad)
 
+// Aba ativa do modal (form reorganizado em abas pra reduzir a rolagem longa).
+const aba = ref('negocio')
+
 const tipos = [
   { label: 'Fixo', value: 'FIXO' },
   { label: 'A fixar', value: 'FIXAR' },
@@ -132,15 +135,32 @@ async function salvar() {
 </script>
 
 <template>
-  <q-dialog v-model="cad.dialog">
+  <q-dialog v-model="cad.dialog" @show="aba = 'negocio'">
     <q-card flat style="width: 760px; max-width: 95vw">
       <q-form @submit="salvar">
-        <q-card-section class="bg-primary text-white">
+        <q-card-section class="bg-primary text-white q-py-sm">
           <div class="text-h6">{{ cad.isNovo ? 'Novo Contrato' : 'Editar Contrato' }}</div>
         </q-card-section>
-        <q-card-section class="scroll" style="max-height: 74vh">
-          <div class="row q-col-gutter-md">
-            <!-- ===== Identificação ===== -->
+
+        <q-tabs
+          v-model="aba"
+          dense
+          no-caps
+          align="justify"
+          class="bg-grey-2 text-grey-8"
+          active-color="primary"
+          indicator-color="primary"
+        >
+          <q-tab name="negocio" label="Negócio" />
+          <q-tab name="entrega" label="Entrega" />
+          <q-tab name="intermediarios" label="Intermediários" />
+          <q-tab name="fiscal" label="Fiscal" />
+        </q-tabs>
+        <q-separator />
+
+        <q-tab-panels v-model="aba" animated class="scroll" style="min-height: 360px; max-height: 70vh">
+          <!-- ===== Aba Negócio (identificação + valores) ===== -->
+          <q-tab-panel name="negocio" class="row q-col-gutter-md">
             <div class="col-12 text-overline text-grey-7">Identificação</div>
             <div class="col-12 col-sm-4">
               <q-input v-model="cad.form.contrato" label="Nº / identificação" outlined autofocus />
@@ -163,7 +183,6 @@ async function salvar() {
               <MgSelectPessoa v-model="cad.form.codpessoa" label="Comprador" />
             </div>
 
-            <!-- ===== Negócio (quantidade / preço) ===== -->
             <div class="col-12 text-overline text-grey-7 q-mt-sm">Negócio</div>
             <div class="col-12">
               <q-btn-toggle
@@ -234,9 +253,11 @@ async function salvar() {
                 Calculando líquido…
               </q-banner>
             </div>
+          </q-tab-panel>
 
-            <!-- ===== Embarque & entrega ===== -->
-            <div class="col-12 text-overline text-grey-7 q-mt-sm">Embarque &amp; entrega</div>
+          <!-- ===== Aba Entrega (embarque) ===== -->
+          <q-tab-panel name="entrega" class="row q-col-gutter-md">
+            <div class="col-12 text-overline text-grey-7">Embarque &amp; entrega</div>
             <div class="col-6 col-sm-3">
               <MgInputData v-model="cad.form.embarqueinicio" label="Embarque de" type="date" />
             </div>
@@ -252,9 +273,11 @@ async function salvar() {
                 label="Portador (conta que recebe)"
               />
             </div>
+          </q-tab-panel>
 
-            <!-- ===== Intermediários (cooperativa / corretora) ===== -->
-            <div class="col-12 text-overline text-grey-7 q-mt-sm">Intermediários</div>
+          <!-- ===== Aba Intermediários (cooperativa / corretora + nºs) ===== -->
+          <q-tab-panel name="intermediarios" class="row q-col-gutter-md">
+            <div class="col-12 text-overline text-grey-7">Intermediários</div>
             <div class="col-12 col-sm-3 self-center">
               <q-checkbox v-model="cad.form.viacooperativa" label="Via cooperativa" />
             </div>
@@ -293,7 +316,6 @@ async function salvar() {
               />
             </div>
 
-            <!-- ===== Números do contrato (em cada ponta) ===== -->
             <div class="col-12 text-overline text-grey-7 q-mt-sm">Números do contrato</div>
             <div class="col-12 col-sm-4">
               <q-input v-model="cad.form.numerocomprador" label="Nº no comprador" outlined />
@@ -304,55 +326,54 @@ async function salvar() {
             <div class="col-12 col-sm-4">
               <q-input v-model="cad.form.numerocooperativa" label="Nº na cooperativa" outlined />
             </div>
+          </q-tab-panel>
 
-            <!-- ===== Dados fiscais (NF) ===== -->
+          <!-- ===== Aba Fiscal (NF + observações) ===== -->
+          <q-tab-panel name="fiscal" class="row q-col-gutter-md">
+            <div class="col-12 text-overline text-grey-7">Dados fiscais (NF)</div>
             <div class="col-12">
-              <q-expansion-item icon="receipt_long" label="Dados fiscais (NF)">
-                <div class="row q-col-gutter-md q-pt-sm">
-                  <div class="col-12">
-                    <q-select
-                      v-model="cad.form.codnaturezaoperacao"
-                      :options="naturezas"
-                      option-value="codnaturezaoperacao"
-                      option-label="naturezaoperacao"
-                      emit-value
-                      map-options
-                      outlined
-                      clearable
-                      label="Natureza da operação"
-                    />
-                  </div>
-                  <div class="col-12">
-                    <MgSelectPessoa
-                      v-model="cad.form.codpessoanf"
-                      label="Emitir NF para (destinatário)"
-                    />
-                  </div>
-                  <div class="col-12">
-                    <q-input
-                      v-model="cad.form.observacaonf"
-                      label="Observações da NF"
-                      type="textarea"
-                      autogrow
-                      outlined
-                    />
-                  </div>
-                </div>
-              </q-expansion-item>
+              <q-select
+                v-model="cad.form.codnaturezaoperacao"
+                :options="naturezas"
+                option-value="codnaturezaoperacao"
+                option-label="naturezaoperacao"
+                emit-value
+                map-options
+                outlined
+                clearable
+                label="Natureza da operação"
+              />
             </div>
-
-            <!-- ===== Observações ===== -->
+            <div class="col-12">
+              <MgSelectPessoa
+                v-model="cad.form.codpessoanf"
+                label="Emitir NF para (destinatário)"
+              />
+            </div>
             <div class="col-12">
               <q-input
-                v-model="cad.form.observacao"
-                label="Observações"
+                v-model="cad.form.observacaonf"
+                label="Observações da NF"
                 type="textarea"
                 autogrow
                 outlined
               />
             </div>
-          </div>
-        </q-card-section>
+
+            <div class="col-12 text-overline text-grey-7 q-mt-sm">Observações</div>
+            <div class="col-12">
+              <q-input
+                v-model="cad.form.observacao"
+                label="Observações gerais"
+                type="textarea"
+                autogrow
+                outlined
+              />
+            </div>
+          </q-tab-panel>
+        </q-tab-panels>
+
+        <q-separator />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />

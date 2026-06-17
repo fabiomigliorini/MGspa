@@ -21,7 +21,7 @@ function nova() {
 onMounted(async () => {
   try {
     const { data } = await api.get(`v1/cultura/${codcultura}`)
-    cultura.value = data
+    cultura.value = data.data ?? data
     await cad.carregar({ codcultura })
   } catch (e) {
     notifyError(e)

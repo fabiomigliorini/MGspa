@@ -20,8 +20,9 @@ export const useCulturaStore = defineStore('cultura', () => {
     const promessa = api
       .get(`v1/cultura/${codcultura}`)
       .then(({ data }) => {
-        cache.value[codcultura] = data
-        return data
+        const obj = data.data ?? data
+        cache.value[codcultura] = obj
+        return obj
       })
       .finally(() => emVoo.delete(codcultura))
 

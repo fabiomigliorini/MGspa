@@ -119,7 +119,7 @@ const rotuloAvancar = {
   BRUTO: 'Classificar',
   CLASSIFICACAO: 'Classificar',
   TARA: 'Pesar tara',
-  FINALIZADO: 'Finalizar',
+  FINALIZADO: 'Imprimir Romaneio',
 }
 const labelEtapa = {
   BRUTO: 'Peso Bruto',

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
+import { abrirPdf } from '@components/abrirPdf'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -10,6 +11,7 @@ import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgContratoForm from 'components/MgContratoForm.vue'
+import MgContratoParcelasDialog from 'components/MgContratoParcelasDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -97,7 +99,7 @@ async function recarregar() {
   carregando.value = true
   try {
     const { data } = await api.get(`v1/contrato/${cod}`)
-    contrato.value = data
+    contrato.value = data.data ?? data
   } finally {
     carregando.value = false
   }
@@ -168,16 +170,10 @@ const liquidoSc = computed(() => n(calculo.value?.liquido))
 function arred(v) {
   return Math.round(n(v) * 100) / 100
 }
-function novoPagamento() {
-  // Sugere a parcela cheia: todas as sacas do contrato × líquido/sc.
-  const q = n(contrato.value?.quantidade)
-  pagCad.abrirNovo({
-    data: new Date().toISOString().slice(0, 10),
-    modo: 'SACAS',
-    sacas: q,
-    valor: arred(q * liquidoSc.value),
-  })
-}
+// O botão "+" das parcelas abre o gerador de várias parcelas de uma vez
+// (MgContratoParcelasDialog). A edição de uma parcela existente segue no
+// pagCad.dialog (form único).
+const parcelasDialog = ref(false)
 // Em modo SACAS, o valor previsto acompanha as sacas (× líquido/sc).
 watch(
   () => [pagCad.form.sacas, pagCad.form.modo],
@@ -258,6 +254,24 @@ async function enviarAnexo() {
     enviandoAnexo.value = false
   }
 }
+// Visualiza inline (mesmo método do negócios: abrirPdf abre num visualizador).
+// PDF -> visualizador; imagem -> nova aba (abrirPdf força application/pdf).
+async function visualizarAnexo(a) {
+  const url = `v1/contrato/${cod}/anexo/${a.nome}/download`
+  if (a.tipo === 'pdf' || /\.pdf$/i.test(a.nome)) {
+    await abrirPdf(api, url, {}, { title: a.label || 'Anexo', size: 'a4' })
+    return
+  }
+  try {
+    const { data } = await api.get(url, { responseType: 'blob', skipLoading: true })
+    const blobUrl = URL.createObjectURL(data)
+    window.open(blobUrl, '_blank')
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000)
+  } catch (e) {
+    notifyError(e)
+  }
+}
+
 async function baixarAnexo(a) {
   try {
     const { data } = await api.get(`v1/contrato/${cod}/anexo/${a.nome}/download`, {
@@ -388,7 +402,7 @@ onMounted(async () => {
               color="green-7"
               icon="local_shipping"
               label="Embarque"
-              :to="{ name: 'embarque' }"
+              :to="{ name: 'embarque', query: { codcontrato: cod } }"
             />
           </div>
         </q-card-section>
@@ -500,26 +514,28 @@ onMounted(async () => {
                 >
               </q-item-label>
             </q-item-section>
-            <q-item-section v-if="!ehFixo" side class="row no-wrap items-center">
-              <MgInfoCriacao :registro="f" />
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="edit"
-                @click="fixCad.editar(f)"
-              />
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="delete"
-                @click="excluirFixacao(f)"
-              />
+            <q-item-section v-if="!ehFixo" side>
+              <div class="row items-center no-wrap">
+                <MgInfoCriacao :registro="f" />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="edit"
+                  @click="fixCad.editar(f)"
+                />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="delete"
+                  @click="excluirFixacao(f)"
+                />
+              </div>
             </q-item-section>
           </q-item>
           <q-item v-if="ehFixo">
@@ -543,8 +559,8 @@ onMounted(async () => {
             </q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-btn flat round size="sm" color="primary" icon="add" @click="novoPagamento">
-              <q-tooltip>Nova parcela</q-tooltip>
+            <q-btn flat round size="sm" color="primary" icon="add" @click="parcelasDialog = true">
+              <q-tooltip>Novas parcelas</q-tooltip>
             </q-btn>
           </q-item-section>
         </q-item>
@@ -573,38 +589,40 @@ onMounted(async () => {
                 <span v-if="p.observacao"> · {{ p.observacao }}</span>
               </q-item-label>
             </q-item-section>
-            <q-item-section side class="row no-wrap items-center">
-              <q-btn
-                v-if="!p.datarecebido"
-                flat
-                dense
-                round
-                size="sm"
-                color="green-7"
-                icon="task_alt"
-                @click="abrirConfirmar(p)"
-              >
-                <q-tooltip>Confirmar recebimento</q-tooltip>
-              </q-btn>
-              <MgInfoCriacao :registro="p" />
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="edit"
-                @click="pagCad.editar(p)"
-              />
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="delete"
-                @click="excluirPagamento(p)"
-              />
+            <q-item-section side>
+              <div class="row items-center no-wrap">
+                <q-btn
+                  v-if="!p.datarecebido"
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="green-7"
+                  icon="task_alt"
+                  @click="abrirConfirmar(p)"
+                >
+                  <q-tooltip>Confirmar recebimento</q-tooltip>
+                </q-btn>
+                <MgInfoCriacao :registro="p" />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="edit"
+                  @click="pagCad.editar(p)"
+                />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="delete"
+                  @click="excluirPagamento(p)"
+                />
+              </div>
             </q-item-section>
           </q-item>
           <q-item v-if="!pagamentos.length">
@@ -700,29 +718,42 @@ onMounted(async () => {
               <q-item-label>{{ a.label }}</q-item-label>
               <q-item-label caption>{{ (a.size / 1024).toFixed(0) }} KB</q-item-label>
             </q-item-section>
-            <q-item-section side class="row no-wrap items-center">
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="download"
-                @click="baixarAnexo(a)"
-              >
-                <q-tooltip>Baixar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="delete"
-                @click="excluirAnexo(a)"
-              >
-                <q-tooltip>Excluir</q-tooltip>
-              </q-btn>
+            <q-item-section side>
+              <div class="row items-center no-wrap">
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="primary"
+                  icon="visibility"
+                  @click="visualizarAnexo(a)"
+                >
+                  <q-tooltip>Visualizar</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="download"
+                  @click="baixarAnexo(a)"
+                >
+                  <q-tooltip>Baixar</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="delete"
+                  @click="excluirAnexo(a)"
+                >
+                  <q-tooltip>Excluir</q-tooltip>
+                </q-btn>
+              </div>
             </q-item-section>
           </q-item>
           <q-item v-if="!anexos.length">
@@ -869,6 +900,15 @@ onMounted(async () => {
           </q-form>
         </q-card>
       </q-dialog>
+
+      <!-- Gerador de várias parcelas -->
+      <MgContratoParcelasDialog
+        v-model="parcelasDialog"
+        :cod="cod"
+        :contrato="contrato"
+        :liquido-sc="liquidoSc"
+        @saved="recarregar"
+      />
 
       <!-- Dialog Confirmar recebimento -->
       <q-dialog v-model="confirmDialog">

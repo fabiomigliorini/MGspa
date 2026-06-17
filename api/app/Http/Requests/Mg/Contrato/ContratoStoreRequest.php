@@ -4,12 +4,26 @@ namespace App\Http\Requests\Mg\Contrato;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Mg\Safra\Safra;
 
 class ContratoStoreRequest extends FormRequest
 {
     public function authorize()
     {
         return true;
+    }
+
+    // O contrato vive dentro de uma safra, e a safra sempre tem a cultura. Se o
+    // cliente mandou a safra mas não a cultura, deriva a cultura da safra — não
+    // existe select de cultura no form (é herdada do contexto da safra).
+    protected function prepareForValidation()
+    {
+        if (!$this->filled('codcultura') && $this->filled('codsafra')) {
+            $codcultura = Safra::whereKey($this->input('codsafra'))->value('codcultura');
+            if ($codcultura) {
+                $this->merge(['codcultura' => $codcultura]);
+            }
+        }
     }
 
     public function rules()

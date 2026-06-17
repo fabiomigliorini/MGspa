@@ -70,7 +70,7 @@ function salvar() {
 onMounted(async () => {
   try {
     const { data } = await api.get(`v1/cultura/${codcultura}`)
-    cultura.value = data
+    cultura.value = data.data ?? data
     await carregarFaixas()
   } catch (e) {
     notifyError(e)
