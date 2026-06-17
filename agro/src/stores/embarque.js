@@ -5,7 +5,7 @@ import { db } from 'boot/db'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { descontoKg } from 'src/utils/desconto'
 
-export const ETAPAS_EMBARQUE = ['PATIO', 'TARA', 'CLASSIFICACAO', 'BRUTO', 'FISCAL', 'DESPACHADO']
+export const ETAPAS_EMBARQUE = ['TARA', 'CLASSIFICACAO', 'BRUTO', 'FISCAL', 'DESPACHADO']
 
 function arredondar(v, casas = 3) {
   const f = 10 ** casas
@@ -54,12 +54,15 @@ export const useEmbarqueStore = defineStore('embarque', () => {
   )
 
   const embarquesPorEtapa = computed(() => {
-    const grupos = { PATIO: [], TARA: [], CLASSIFICACAO: [], BRUTO: [], FISCAL: [], DESPACHADO: [] }
+    const grupos = { TARA: [], CLASSIFICACAO: [], BRUTO: [], FISCAL: [], DESPACHADO: [] }
     const filtro = filtroCodcontrato.value
     for (const e of embarques.value) {
-      if (e.inativo || !grupos[e.etapa]) continue
+      if (e.inativo) continue
+      // PATIO foi removido; caminhões legados naquela etapa entram em Tara.
+      const etapa = e.etapa === 'PATIO' ? 'TARA' : e.etapa
+      if (!grupos[etapa]) continue
       if (filtro && !e.contratos?.some((c) => c.codcontrato === filtro)) continue
-      grupos[e.etapa].push(e)
+      grupos[etapa].push(e)
     }
     return grupos
   })
@@ -125,7 +128,7 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     return {
       uuid: uid(),
       codembarque: null,
-      etapa: 'PATIO',
+      etapa: 'TARA',
       data: new Date().toISOString(),
       placa: null,
       placacarreta: null,

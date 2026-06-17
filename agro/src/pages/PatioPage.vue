@@ -40,6 +40,11 @@ function listaVisivel(etapa) {
   return !(etapa === 'FINALIZADO' && finalizadosOcultos.value)
 }
 
+// Voltar para o detalhe da safra ativa (de onde se chega ao pátio).
+const voltarSafra = computed(() =>
+  codsafraAtiva.value ? { name: 'safra-detalhe', params: { codsafra: codsafraAtiva.value } } : null,
+)
+
 const dialog = ref(false)
 const cargaSel = ref(null)
 const novo = ref(false)
@@ -108,6 +113,13 @@ function resumo(carga) {
   return carga.motorista || 'Aguardando pesagem'
 }
 
+// Header e footer são `reveal` (view "hHh lpR fFf"), então o QPage assumiria
+// 100vh e o board passaria do visível (sobra no fim). Desconta a altura do
+// header+rodapé pra o kanban encaixar exatamente na área visível.
+function pageStyleFn(offset) {
+  return { minHeight: `calc(100vh - ${offset || 80}px)` }
+}
+
 onMounted(async () => {
   await store.carregarReferencias()
   await store.carregarCargas()
@@ -116,10 +128,21 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page class="column">
+  <q-page class="column" :style-fn="pageStyleFn">
     <!-- Barra superior: safra + status -->
     <div class="bg-white q-px-md q-py-sm">
       <div class="row items-center no-wrap q-gutter-sm">
+        <q-btn
+          flat
+          round
+          icon="arrow_back"
+          color="grey-7"
+          :to="voltarSafra"
+          :disable="!voltarSafra"
+        >
+          <q-tooltip>Voltar para a safra</q-tooltip>
+        </q-btn>
+
         <q-select
           :model-value="codsafraAtiva"
           :options="safras"
@@ -196,75 +219,75 @@ onMounted(async () => {
 
         <div class="q-px-sm q-pb-sm col scroll">
           <!-- Total do dia (só na etapa Finalizado) -->
-        <q-banner
-          v-if="e.etapa === 'FINALIZADO' && cargasPorEtapa.FINALIZADO.length"
-          rounded
-          class="bg-green-1 text-green-10 q-mt-sm"
-        >
-          <template #avatar>
-            <q-icon name="agriculture" color="green-8" />
-          </template>
-          <div class="text-weight-medium">Total colhido hoje</div>
-          {{ fmt(totalSecoDia) }} kg · {{ fmt(totalSecoDia / pesosaca) }} sacas
-        </q-banner>
-
-        <!-- Listagem das cargas desta etapa (recolhível em Finalizado) -->
-        <div v-show="listaVisivel(e.etapa)">
-          <!-- Cards das cargas desta etapa -->
-          <q-card
-            v-for="carga in cargasPorEtapa[e.etapa]"
-            :key="carga.uuid"
-            flat
-            bordered
-            class="cursor-pointer q-mt-sm"
-            @click="abrir(carga)"
+          <q-banner
+            v-if="e.etapa === 'FINALIZADO' && cargasPorEtapa.FINALIZADO.length"
+            rounded
+            class="bg-green-1 text-green-10 q-mt-sm"
           >
-            <q-card-section class="q-pb-xs">
-              <div class="row items-start no-wrap">
-                <div class="col">
-                  <div class="text-h6 text-weight-bold">{{ carga.placa || 'Sem placa' }}</div>
-                  <div class="text-caption text-grey-7">{{ talhoes(carga) }}</div>
+            <template #avatar>
+              <q-icon name="agriculture" color="green-8" />
+            </template>
+            <div class="text-weight-medium">Total colhido hoje</div>
+            {{ fmt(totalSecoDia) }} kg · {{ fmt(totalSecoDia / pesosaca) }} sacas
+          </q-banner>
+
+          <!-- Listagem das cargas desta etapa (recolhível em Finalizado) -->
+          <div v-show="listaVisivel(e.etapa)">
+            <!-- Cards das cargas desta etapa -->
+            <q-card
+              v-for="carga in cargasPorEtapa[e.etapa]"
+              :key="carga.uuid"
+              flat
+              bordered
+              class="cursor-pointer q-mt-sm"
+              @click="abrir(carga)"
+            >
+              <q-card-section class="q-pb-xs">
+                <div class="row items-start no-wrap">
+                  <div class="col">
+                    <div class="text-h6 text-weight-bold">{{ carga.placa || 'Sem placa' }}</div>
+                    <div class="text-caption text-grey-7">{{ talhoes(carga) }}</div>
+                  </div>
+                  <q-icon
+                    :name="carga.sincronizado ? 'cloud_done' : 'cloud_off'"
+                    :color="carga.sincronizado ? 'green-5' : 'orange-6'"
+                    size="sm"
+                  >
+                    <q-tooltip>{{ carga.sincronizado ? 'Sincronizado' : 'Pendente' }}</q-tooltip>
+                  </q-icon>
                 </div>
-                <q-icon
-                  :name="carga.sincronizado ? 'cloud_done' : 'cloud_off'"
-                  :color="carga.sincronizado ? 'green-5' : 'orange-6'"
-                  size="sm"
-                >
-                  <q-tooltip>{{ carga.sincronizado ? 'Sincronizado' : 'Pendente' }}</q-tooltip>
-                </q-icon>
-              </div>
-            </q-card-section>
+              </q-card-section>
 
-            <!-- Barra de progresso das etapas -->
-            <q-card-section class="q-py-xs">
-              <div class="row no-wrap q-gutter-xs">
-                <div
-                  v-for="(s, i) in etapas"
-                  :key="s.etapa"
-                  class="col"
-                  :class="`bg-${corSegmento(carga, i)}`"
-                  style="height: 6px; border-radius: 3px"
+              <!-- Barra de progresso das etapas -->
+              <q-card-section class="q-py-xs">
+                <div class="row no-wrap q-gutter-xs">
+                  <div
+                    v-for="(s, i) in etapas"
+                    :key="s.etapa"
+                    class="col"
+                    :class="`bg-${corSegmento(carga, i)}`"
+                    style="height: 6px; border-radius: 3px"
+                  />
+                </div>
+              </q-card-section>
+
+              <q-card-section class="q-pt-xs row items-center justify-between">
+                <div class="text-body2 text-grey-9">{{ resumo(carga) }}</div>
+                <q-btn
+                  flat
+                  color="primary"
+                  :label="proximoLabel[carga.etapa]"
+                  icon-right="chevron_right"
+                  @click.stop="abrir(carga)"
                 />
-              </div>
-            </q-card-section>
+              </q-card-section>
+            </q-card>
 
-            <q-card-section class="q-pt-xs row items-center justify-between">
-              <div class="text-body2 text-grey-9">{{ resumo(carga) }}</div>
-              <q-btn
-                flat
-                color="primary"
-                :label="proximoLabel[carga.etapa]"
-                icon-right="chevron_right"
-                @click.stop="abrir(carga)"
-              />
-            </q-card-section>
-          </q-card>
-
-          <!-- Etapa vazia -->
-          <div v-if="!cargasPorEtapa[e.etapa].length" class="text-grey-5 text-center q-pa-md">
-            Nenhum caminhão nesta etapa
+            <!-- Etapa vazia -->
+            <div v-if="!cargasPorEtapa[e.etapa].length" class="text-grey-5 text-center q-pa-md">
+              Nenhum caminhão nesta etapa
+            </div>
           </div>
-        </div>
         </div>
       </q-card>
     </div>

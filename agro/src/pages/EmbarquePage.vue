@@ -28,13 +28,38 @@ function limparFiltro() {
 }
 
 const colunas = [
-  { etapa: 'PATIO', label: 'Pátio', icon: 'local_shipping', color: 'blue-grey-7' },
   { etapa: 'TARA', label: 'Tara', icon: 'monitor_weight', color: 'teal-7' },
   { etapa: 'CLASSIFICACAO', label: 'Classificação', icon: 'science', color: 'deep-purple-6' },
   { etapa: 'BRUTO', label: 'Peso Bruto', icon: 'scale', color: 'orange-8' },
   { etapa: 'FISCAL', label: 'Nota Fiscal', icon: 'receipt_long', color: 'deep-orange-7' },
   { etapa: 'DESPACHADO', label: 'Despachado', icon: 'check_circle', color: 'green-7' },
 ]
+
+// Rótulo da ação por etapa (mesmo texto do diálogo), exibido no botão do card.
+const proximoLabel = {
+  TARA: 'Pesar tara',
+  CLASSIFICACAO: 'Classificar',
+  BRUTO: 'Pesar bruto',
+  FISCAL: 'Notas fiscais',
+  DESPACHADO: 'Despachar',
+}
+
+// Barra de progresso do card: pinta os segmentos até a etapa atual.
+function indiceEtapa(etapa) {
+  return colunas.findIndex((c) => c.etapa === etapa)
+}
+function corEtapa(etapa) {
+  return colunas.find((c) => c.etapa === etapa)?.color || 'grey-5'
+}
+function corSegmento(e, i) {
+  return i <= indiceEtapa(e.etapa) ? corEtapa(e.etapa) : 'grey-3'
+}
+
+// Header/rodapé são reveal (view "hHh lpR fFf"); desconta a altura deles pra o
+// kanban encaixar na área visível e rolar internamente (igual ao recebimento).
+function pageStyleFn(offset) {
+  return { minHeight: `calc(100vh - ${offset || 80}px)` }
+}
 
 const dialog = ref(false)
 const sel = ref(null)
@@ -77,7 +102,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page>
+  <q-page class="column" :style-fn="pageStyleFn">
     <q-toolbar class="bg-white text-grey-9 q-px-md q-gutter-sm">
       <q-icon name="outbound" size="sm" color="green-7" />
       <div class="text-subtitle1">Pátio de Expedição</div>
@@ -115,20 +140,24 @@ onMounted(async () => {
 
     <q-separator />
 
-    <div class="row no-wrap q-gutter-md q-pa-md" style="overflow-x: auto">
+    <!-- Kanban horizontal: uma coluna por etapa (igual ao pátio de recebimento) -->
+    <div class="row no-wrap q-gutter-md q-pa-md bg-grey-2 col" style="overflow-x: auto">
       <q-card
         v-for="col in colunas"
         :key="col.etapa"
         flat
         bordered
-        class="overflow-hidden"
-        style="min-width: 280px; max-width: 320px"
+        class="overflow-hidden col column"
+        style="min-width: 260px"
       >
-        <q-item :class="`bg-${col.color} text-white`">
-          <q-item-section avatar><q-icon :name="col.icon" /></q-item-section>
-          <q-item-section
-            ><q-item-label class="text-weight-medium">{{ col.label }}</q-item-label></q-item-section
-          >
+        <!-- Cabeçalho da etapa -->
+        <q-item :class="`bg-${col.color} text-white`" class="rounded-borders">
+          <q-item-section avatar>
+            <q-icon :name="col.icon" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="text-weight-medium">{{ col.label }}</q-item-label>
+          </q-item-section>
           <q-item-section side>
             <q-badge
               color="white"
@@ -138,29 +167,62 @@ onMounted(async () => {
           </q-item-section>
         </q-item>
 
-        <q-list separator>
-          <q-item
+        <div class="q-px-sm q-pb-sm col scroll">
+          <!-- Cards dos caminhões desta etapa -->
+          <q-card
             v-for="e in embarquesPorEtapa[col.etapa]"
             :key="e.uuid"
-            clickable
+            flat
+            bordered
+            class="cursor-pointer q-mt-sm"
             @click="abrir(e)"
           >
-            <q-item-section>
-              <q-item-label class="text-weight-medium">{{ e.placa || 'Sem placa' }}</q-item-label>
-              <q-item-label caption>{{ contratos(e) }}</q-item-label>
-              <q-item-label caption class="text-grey-8">{{ resumo(e) }}</q-item-label>
-            </q-item-section>
-            <q-item-section side top>
-              <q-icon
-                :name="e.sincronizado ? 'cloud_done' : 'cloud_off'"
-                :color="e.sincronizado ? 'green-5' : 'orange-6'"
+            <q-card-section class="q-pb-xs">
+              <div class="row items-start no-wrap">
+                <div class="col">
+                  <div class="text-h6 text-weight-bold">{{ e.placa || 'Sem placa' }}</div>
+                  <div class="text-caption text-grey-7">{{ contratos(e) }}</div>
+                </div>
+                <q-icon
+                  :name="e.sincronizado ? 'cloud_done' : 'cloud_off'"
+                  :color="e.sincronizado ? 'green-5' : 'orange-6'"
+                  size="sm"
+                >
+                  <q-tooltip>{{ e.sincronizado ? 'Sincronizado' : 'Pendente' }}</q-tooltip>
+                </q-icon>
+              </div>
+            </q-card-section>
+
+            <!-- Barra de progresso das etapas -->
+            <q-card-section class="q-py-xs">
+              <div class="row no-wrap q-gutter-xs">
+                <div
+                  v-for="(s, i) in colunas"
+                  :key="s.etapa"
+                  class="col"
+                  :class="`bg-${corSegmento(e, i)}`"
+                  style="height: 6px; border-radius: 3px"
+                />
+              </div>
+            </q-card-section>
+
+            <q-card-section class="q-pt-xs row items-center justify-between">
+              <div class="text-body2 text-grey-9">{{ resumo(e) }}</div>
+              <q-btn
+                flat
+                color="primary"
+                :label="proximoLabel[e.etapa]"
+                icon-right="chevron_right"
+                @click.stop="abrir(e)"
               />
-            </q-item-section>
-          </q-item>
-          <q-item v-if="!embarquesPorEtapa[col.etapa].length">
-            <q-item-section class="text-grey-5 text-center">vazio</q-item-section>
-          </q-item>
-        </q-list>
+            </q-card-section>
+          </q-card>
+
+          <!-- Etapa vazia -->
+          <div v-if="!embarquesPorEtapa[col.etapa].length" class="text-grey-5 text-center q-pa-md">
+            Nenhum caminhão nesta etapa
+          </div>
+        </div>
       </q-card>
     </div>
 
