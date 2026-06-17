@@ -4,7 +4,10 @@
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: dec, maximumFractionDigits: dec })
+  return Number(v).toLocaleString('pt-BR', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  })
 }
 
 function dataHora(iso) {
@@ -22,11 +25,19 @@ export function imprimirTicket(t) {
   const itens = (t.talhoes || [])
     .map((p) => {
       const base = p.rotulo || '—'
-      if (p.percentual !== null && p.percentual !== undefined) return `${base} (${fmt(p.percentual)}%)`
+      if (p.percentual !== null && p.percentual !== undefined)
+        return `${base} (${fmt(p.percentual)}%)`
+      if (p.kg !== null && p.kg !== undefined) return `${base} — ${fmt(p.kg)} kg`
       if (p.sc !== null && p.sc !== undefined) return `${base} — ${fmt(p.sc)} sc`
       return base
     })
     .join('<br>')
+
+  // Saída de grãos não tem classificação: o bloco de umidade/impureza some.
+  const temClassificacao = [t.umidade, t.impureza, t.avariados].some(
+    (v) => v !== null && v !== undefined,
+  )
+  const assinaturas = t.assinaturas || ['Classificador', 'Motorista', 'Recebedor']
 
   const corpo = `
     <div class="tk">
@@ -49,7 +60,9 @@ export function imprimirTicket(t) {
         ${linha('Tara', fmt(t.tara) + ' kg')}
         ${linha('Peso líquido', fmt(t.pesoliquido) + ' kg')}
       </table>
-      <div class="sep"></div>
+      ${
+        temClassificacao
+          ? `<div class="sep"></div>
       <table>
         ${linha('Umidade', fmt(t.umidade, 1) + ' %')}
         ${linha('Impureza', fmt(t.impureza, 1) + ' %')}
@@ -57,16 +70,16 @@ export function imprimirTicket(t) {
         ${linha('Desconto umidade', fmt(t.descontoumidade) + ' kg')}
         ${linha('Desconto impureza', fmt(t.descontoimpureza) + ' kg')}
         ${linha('Desconto avariados', fmt(t.descontoavariados) + ' kg')}
-      </table>
+      </table>`
+          : ''
+      }
       <div class="sep"></div>
       <table>
-        ${linha('<b>LÍQUIDO SECO</b>', `<b>${fmt(t.pesoliquidoseco)} kg</b>`)}
+        ${linha(`<b>LÍQUIDO${temClassificacao ? ' SECO' : ''}</b>`, `<b>${fmt(t.pesoliquidoseco)} kg</b>`)}
         ${linha('<b>Sacas (' + fmt(t.pesosaca) + 'kg)</b>', `<b>${fmt(t.sacas, 1)} sc</b>`)}
       </table>
       <div class="ass">
-        <div class="a">Classificador</div>
-        <div class="a">Motorista</div>
-        <div class="a">Recebedor</div>
+        ${assinaturas.map((a) => `<div class="a">${a}</div>`).join('')}
       </div>
     </div>`
 
