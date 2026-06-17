@@ -3,9 +3,8 @@ import { ref, computed } from 'vue'
 import { uid } from 'quasar'
 import { db } from 'boot/db'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
-import { descontoKg } from 'src/utils/desconto'
 
-export const ETAPAS_EMBARQUE = ['TARA', 'CLASSIFICACAO', 'BRUTO', 'FISCAL', 'DESPACHADO']
+export const ETAPAS_EMBARQUE = ['TARA', 'BRUTO', 'FISCAL', 'DESPACHADO']
 
 function arredondar(v, casas = 3) {
   const f = 10 ** casas
@@ -20,8 +19,8 @@ export const useEmbarqueStore = defineStore('embarque', () => {
   const embarques = ref([])
   const contratos = ref([])
   const culturas = ref([])
-  const faixas = ref([])
   const plantios = ref([])
+  const veiculos = ref([])
 
   // Filtro de contrato: quando vindo do detalhe de um contrato, o pátio mostra
   // só os embarques daquele contrato (senão, caminhões de contratos diferentes
@@ -29,6 +28,12 @@ export const useEmbarqueStore = defineStore('embarque', () => {
   const filtroCodcontrato = ref(null)
 
   const contratosAtivos = computed(() => contratos.value.filter((c) => !c.inativo))
+
+  // Caminhões ativos (cache p/ autocomplete da placa, funciona offline) — igual
+  // ao recebimento.
+  const veiculosAtivos = computed(() => veiculos.value.filter((v) => !v.inativo))
+  const veiculoPorId = (codveiculo) =>
+    veiculos.value.find((v) => v.codveiculo === codveiculo) || null
 
   // Rótulo padrão de um contrato (nº — comprador), igual ao usado no diálogo.
   function rotuloContrato(codcontrato) {
@@ -54,12 +59,13 @@ export const useEmbarqueStore = defineStore('embarque', () => {
   )
 
   const embarquesPorEtapa = computed(() => {
-    const grupos = { TARA: [], CLASSIFICACAO: [], BRUTO: [], FISCAL: [], DESPACHADO: [] }
+    const grupos = { TARA: [], BRUTO: [], FISCAL: [], DESPACHADO: [] }
+    // Etapas extintas caem na equivalente: PATIO→Tara, CLASSIFICACAO→Peso Bruto.
+    const legado = { PATIO: 'TARA', CLASSIFICACAO: 'BRUTO' }
     const filtro = filtroCodcontrato.value
     for (const e of embarques.value) {
       if (e.inativo) continue
-      // PATIO foi removido; caminhões legados naquela etapa entram em Tara.
-      const etapa = e.etapa === 'PATIO' ? 'TARA' : e.etapa
+      const etapa = legado[e.etapa] || e.etapa
       if (!grupos[etapa]) continue
       if (filtro && !e.contratos?.some((c) => c.codcontrato === filtro)) continue
       grupos[etapa].push(e)
@@ -67,12 +73,7 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     return grupos
   })
 
-  function faixasDoEmbarque(embarque) {
-    const cod = embarque.contratos?.[0]?.codcontrato
-    const ct = contratos.value.find((c) => c.codcontrato === cod)
-    return faixas.value.filter((f) => f.codcultura === ct?.codcultura)
-  }
-
+  // Saída de grãos não tem classificação/desconto: o líquido é só bruto - tara.
   function calcular(embarque) {
     const { pesobruto, pesotara } = embarque
     const temPesos =
@@ -82,35 +83,16 @@ export const useEmbarqueStore = defineStore('embarque', () => {
       pesotara !== null &&
       pesotara !== undefined &&
       pesotara !== ''
-    if (!temPesos) {
-      return {
-        pesoliquido: null,
-        descontoumidade: null,
-        descontoimpureza: null,
-        descontoavariados: null,
-        pesoliquidoseco: null,
-      }
-    }
-    const fx = faixasDoEmbarque(embarque)
+    if (!temPesos) return { pesoliquido: null, pesoliquidoseco: null }
     const liq = arredondar(Number(pesobruto) - Number(pesotara))
-    const du = descontoKg(fx, 'UMIDADE', embarque.umidade, liq)
-    const di = descontoKg(fx, 'IMPUREZA', embarque.impureza, liq)
-    const da = descontoKg(fx, 'AVARIADOS', embarque.avariados, liq)
-    const seco = arredondar(liq - Number(du || 0) - Number(di || 0) - Number(da || 0))
-    return {
-      pesoliquido: liq,
-      descontoumidade: du,
-      descontoimpureza: di,
-      descontoavariados: da,
-      pesoliquidoseco: seco,
-    }
+    return { pesoliquido: liq, pesoliquidoseco: liq }
   }
 
   async function carregarReferencias() {
     contratos.value = await db.contrato.toArray()
     culturas.value = await db.cultura.toArray()
-    faixas.value = await db.tabeladesconto.toArray()
     plantios.value = await db.plantio.toArray()
+    veiculos.value = await db.veiculo.toArray()
   }
 
   async function carregarEmbarques() {
@@ -130,8 +112,10 @@ export const useEmbarqueStore = defineStore('embarque', () => {
       codembarque: null,
       etapa: 'TARA',
       data: new Date().toISOString(),
+      codveiculo: null,
       placa: null,
       placacarreta: null,
+      codpessoamotorista: null,
       motorista: null,
       pesotara: null,
       pesobruto: null,
@@ -179,6 +163,14 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     await salvar(embarque)
   }
 
+  // Insere no cache local um veículo recém-cadastrado (cadastro rápido no
+  // pátio), pra ficar disponível no autocomplete sem esperar a sync — igual ao
+  // recebimento.
+  async function adicionarVeiculo(veiculo) {
+    await db.veiculo.put({ ...veiculo, sincronizado: Date.now() })
+    veiculos.value = await db.veiculo.toArray()
+  }
+
   return {
     embarques,
     contratos,
@@ -187,12 +179,14 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     rotuloContrato,
     contratoFiltradoRotulo,
     culturas,
-    faixas,
     plantios,
+    veiculos,
+    veiculosAtivos,
+    veiculoPorId,
     plantiosTalhao,
     embarquesPorEtapa,
     calcular,
-    faixasDoEmbarque,
+    adicionarVeiculo,
     carregarReferencias,
     carregarEmbarques,
     sincronizar,

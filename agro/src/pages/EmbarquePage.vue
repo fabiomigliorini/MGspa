@@ -29,7 +29,6 @@ function limparFiltro() {
 
 const colunas = [
   { etapa: 'TARA', label: 'Tara', icon: 'monitor_weight', color: 'teal-7' },
-  { etapa: 'CLASSIFICACAO', label: 'Classificação', icon: 'science', color: 'deep-purple-6' },
   { etapa: 'BRUTO', label: 'Peso Bruto', icon: 'scale', color: 'orange-8' },
   { etapa: 'FISCAL', label: 'Nota Fiscal', icon: 'receipt_long', color: 'deep-orange-7' },
   { etapa: 'DESPACHADO', label: 'Despachado', icon: 'check_circle', color: 'green-7' },
@@ -38,7 +37,6 @@ const colunas = [
 // Rótulo da ação por etapa (mesmo texto do diálogo), exibido no botão do card.
 const proximoLabel = {
   TARA: 'Pesar tara',
-  CLASSIFICACAO: 'Classificar',
   BRUTO: 'Pesar bruto',
   FISCAL: 'Notas fiscais',
   DESPACHADO: 'Despachar',
@@ -89,7 +87,7 @@ function contratos(e) {
   return e.contratos.map((c) => c.rotulo || `Contrato ${c.codcontrato}`).join(' · ')
 }
 function resumo(e) {
-  if (e.etapa === 'DESPACHADO' || e.pesoliquidoseco) return `${fmt(e.pesoliquidoseco)} kg seco`
+  if (e.etapa === 'DESPACHADO' || e.pesoliquido) return `${fmt(e.pesoliquido)} kg líquido`
   if (e.pesotara) return `tara ${fmt(e.pesotara)} kg`
   return e.motorista || '—'
 }
