@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
+import { abrirPdf } from '@components/abrirPdf'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -97,7 +98,7 @@ async function recarregar() {
   carregando.value = true
   try {
     const { data } = await api.get(`v1/contrato/${cod}`)
-    contrato.value = data
+    contrato.value = data.data ?? data
   } finally {
     carregando.value = false
   }
@@ -258,6 +259,24 @@ async function enviarAnexo() {
     enviandoAnexo.value = false
   }
 }
+// Visualiza inline (mesmo método do negócios: abrirPdf abre num visualizador).
+// PDF -> visualizador; imagem -> nova aba (abrirPdf força application/pdf).
+async function visualizarAnexo(a) {
+  const url = `v1/contrato/${cod}/anexo/${a.nome}/download`
+  if (a.tipo === 'pdf' || /\.pdf$/i.test(a.nome)) {
+    await abrirPdf(api, url, {}, { title: a.label || 'Anexo', size: 'a4' })
+    return
+  }
+  try {
+    const { data } = await api.get(url, { responseType: 'blob', skipLoading: true })
+    const blobUrl = URL.createObjectURL(data)
+    window.open(blobUrl, '_blank')
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000)
+  } catch (e) {
+    notifyError(e)
+  }
+}
+
 async function baixarAnexo(a) {
   try {
     const { data } = await api.get(`v1/contrato/${cod}/anexo/${a.nome}/download`, {
@@ -701,6 +720,17 @@ onMounted(async () => {
               <q-item-label caption>{{ (a.size / 1024).toFixed(0) }} KB</q-item-label>
             </q-item-section>
             <q-item-section side class="row no-wrap items-center">
+              <q-btn
+                flat
+                dense
+                round
+                size="sm"
+                color="primary"
+                icon="visibility"
+                @click="visualizarAnexo(a)"
+              >
+                <q-tooltip>Visualizar</q-tooltip>
+              </q-btn>
               <q-btn
                 flat
                 dense

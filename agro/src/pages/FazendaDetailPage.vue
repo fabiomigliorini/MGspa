@@ -80,7 +80,7 @@ function urlGoogleMaps(t) {
 
 async function carregarFazenda() {
   const { data } = await api.get(`v1/fazenda/${codfazenda}`)
-  fazenda.value = data
+  fazenda.value = data.data ?? data
 }
 async function carregarResumo() {
   const { data } = await api.get(`v1/fazenda/${codfazenda}/resumo`)

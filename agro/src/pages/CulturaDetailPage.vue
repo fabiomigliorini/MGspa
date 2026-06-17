@@ -65,7 +65,7 @@ function periodoSafra(s) {
 
 async function carregarCultura() {
   const { data } = await api.get(`v1/cultura/${codcultura}`)
-  cultura.value = data
+  cultura.value = data.data ?? data
 }
 async function carregarResumo() {
   const { data } = await api.get(`v1/cultura/${codcultura}/resumo`)

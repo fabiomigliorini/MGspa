@@ -176,8 +176,9 @@ function selecionarPlantio(codplantio) {
 }
 
 async function carregarSafra() {
+  // A API embrulha objeto único em { data: {...} }; desembrulha (igual ao resto).
   const { data } = await api.get(`v1/safra/${codsafra}`)
-  safra.value = data
+  safra.value = data.data ?? data
 }
 
 // Safra — edição/ativação/exclusão no cabeçalho do detalhe (a lista só navega).
