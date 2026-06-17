@@ -21,17 +21,43 @@ export default route(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.MODE === 'ssr' ? void 0 : process.env.VUE_ROUTER_BASE),
   })
 
-  Router.beforeEach(async (to, from, next) => {
-    if (!to.meta?.auth) return next()
-
+  Router.beforeEach(async (to, _from, next) => {
     const auth = useAuthStore()
-    if (!auth.token) {
-      return next({ name: 'login', query: { redirect: to.fullPath } })
+
+    // Proteção contra loop infinito de redirect pro SSO
+    const loopCheck = sessionStorage.getItem('login_redirect_check')
+    if (loopCheck && parseInt(loopCheck) > 3) {
+      console.error('Loop infinito detectado!')
+      sessionStorage.removeItem('login_redirect_check')
+      return next(false)
     }
 
-    const valido = await auth.validarToken()
-    if (!valido) {
-      return next({ name: 'login', query: { redirect: to.fullPath } })
+    if (to.path === '/login') {
+      sessionStorage.removeItem('login_redirect_check')
+      return next()
+    }
+
+    if (to.meta?.auth) {
+      if (!auth.token) {
+        auth.gravarUrlRetorno(to.fullPath)
+        const count = parseInt(loopCheck || 0) + 1
+        sessionStorage.setItem('login_redirect_check', count)
+        const currentUrl = encodeURIComponent(window.location.origin + '/login')
+        window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
+        return next(false)
+      }
+
+      sessionStorage.removeItem('login_redirect_check')
+
+      if (!auth.usuario) {
+        const valido = await auth.validarToken()
+        if (!valido) {
+          auth.gravarUrlRetorno(to.fullPath)
+          const currentUrl = encodeURIComponent(window.location.origin + '/login')
+          window.location.href = `${process.env.API_AUTH_URL}/login?redirect_uri=${currentUrl}`
+          return next(false)
+        }
+      }
     }
 
     next()
