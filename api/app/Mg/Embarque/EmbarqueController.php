@@ -2,8 +2,8 @@
 
 namespace Mg\Embarque;
 
+use App\Http\Requests\Mg\Embarque\EmbarqueSincronizarRequest;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Mg\MgController;
 
 class EmbarqueController extends MgController
@@ -12,46 +12,34 @@ class EmbarqueController extends MgController
     {
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = EmbarqueService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
-        return response()->json($res, 200);
+        return EmbarqueResource::collection($res);
     }
 
     public function show(Request $request, $id)
     {
-        return response()->json(Embarque::with(EmbarqueService::WITH)->findOrFail($id), 200);
+        return new EmbarqueResource(Embarque::with(EmbarqueService::WITH)->findOrFail($id));
     }
 
     /**
      * Sincroniza um embarque criado/editado offline (upsert por uuid). Aceita
      * parcial — pesos/classificacao/NF chegam ao longo das etapas do patio.
      */
-    public function sincronizar(Request $request)
+    public function sincronizar(EmbarqueSincronizarRequest $request)
     {
-        $request->validate([
-            'uuid' => ['required', 'string'],
-            'etapa' => ['required', Rule::in(EmbarqueService::ETAPAS)],
-            'data' => ['required', 'date'],
-            'contratos' => ['array'],
-            'contratos.*.codcontrato' => ['required', 'exists:tblcontrato,codcontrato'],
-            'contratos.*.quantidade' => ['nullable', 'numeric'],
-            'origens' => ['array'],
-            'origens.*.tipo' => ['required', Rule::in(['SILO', 'TALHAO'])],
-            'origens.*.codplantio' => ['nullable', 'exists:tblplantio,codplantio'],
-            'pesotara' => ['nullable', 'numeric', 'gte:0'],
-            'pesobruto' => ['nullable', 'numeric', 'gte:0'],
-        ]);
-
         $embarque = EmbarqueService::sincronizar($request->all());
 
-        return response()->json($embarque, 200);
+        return new EmbarqueResource($embarque->load(EmbarqueService::WITH));
     }
 
     public function inativar(Request $request, $id)
     {
-        return response()->json(EmbarqueService::inativar(Embarque::findOrFail($id)), 200);
+        $model = EmbarqueService::inativar(Embarque::findOrFail($id));
+        return new EmbarqueResource($model->fresh(EmbarqueService::WITH));
     }
 
     public function ativar(Request $request, $id)
     {
-        return response()->json(EmbarqueService::ativar(Embarque::findOrFail($id)), 200);
+        $model = EmbarqueService::ativar(Embarque::findOrFail($id));
+        return new EmbarqueResource($model->fresh(EmbarqueService::WITH));
     }
 }

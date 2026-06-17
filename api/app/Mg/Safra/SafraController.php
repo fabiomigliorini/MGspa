@@ -2,8 +2,9 @@
 
 namespace Mg\Safra;
 
+use App\Http\Requests\Mg\Safra\SafraStoreRequest;
+use App\Http\Requests\Mg\Safra\SafraUpdateRequest;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Mg\MgController;
 
 class SafraController extends MgController
@@ -12,62 +13,39 @@ class SafraController extends MgController
     {
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = SafraService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
-        return response()->json($res, 200);
+        return SafraResource::collection($res);
     }
 
-    public function store(Request $request)
+    public function store(SafraStoreRequest $request)
     {
-        $request->validate([
-            'safra' => ['required', 'min:2'],
-            'codcultura' => ['required', 'exists:tblcultura,codcultura'],
-            'anoplantio' => [
-                'required', 'integer', 'min:2000', 'max:2100',
-                Rule::unique('tblsafra', 'anoplantio')->where('codcultura', $request->codcultura),
-            ],
-            'anocolheita' => ['required', 'integer', 'min:2000', 'max:2100'],
-        ], [
-            'anoplantio.unique' => 'Já existe uma safra dessa cultura para esse ano de plantio.',
-        ]);
-
         $model = new Safra();
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->save();
 
-        return response()->json($model->fresh('Cultura'), 201);
+        return new SafraResource($model->fresh('Cultura'));
     }
 
     public function show(Request $request, $id)
     {
-        return response()->json(Safra::with('Cultura')->findOrFail($id), 200);
+        return new SafraResource(Safra::with('Cultura')->findOrFail($id));
     }
 
+    /**
+     * KPIs comerciais (rollup dos contratos da safra). Retorna array computado,
+     * não um registro — por isso fica em response()->json, sem Resource.
+     */
     public function comercial(Request $request, $id)
     {
         return response()->json(SafraService::resumoComercial((int) $id), 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(SafraUpdateRequest $request, $id)
     {
         $model = Safra::findOrFail($id);
-
-        $request->validate([
-            'safra' => ['required', 'min:2'],
-            'codcultura' => ['required', 'exists:tblcultura,codcultura'],
-            'anoplantio' => [
-                'required', 'integer', 'min:2000', 'max:2100',
-                Rule::unique('tblsafra', 'anoplantio')
-                    ->ignore($id, 'codsafra')
-                    ->where('codcultura', $request->codcultura),
-            ],
-            'anocolheita' => ['required', 'integer', 'min:2000', 'max:2100'],
-        ], [
-            'anoplantio.unique' => 'Já existe uma safra dessa cultura para esse ano de plantio.',
-        ]);
-
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->update();
 
-        return response()->json($model->fresh('Cultura'), 200);
+        return new SafraResource($model->fresh('Cultura'));
     }
 
     public function destroy($id)
@@ -78,11 +56,13 @@ class SafraController extends MgController
 
     public function inativar(Request $request, $id)
     {
-        return response()->json(SafraService::inativar(Safra::findOrFail($id)), 200);
+        SafraService::inativar(Safra::findOrFail($id));
+        return new SafraResource(Safra::with('Cultura')->findOrFail($id));
     }
 
     public function ativar(Request $request, $id)
     {
-        return response()->json(SafraService::ativar(Safra::findOrFail($id)), 200);
+        SafraService::ativar(Safra::findOrFail($id));
+        return new SafraResource(Safra::with('Cultura')->findOrFail($id));
     }
 }

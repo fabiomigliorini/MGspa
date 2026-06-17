@@ -46,7 +46,7 @@ export const useCargaStore = defineStore('carga', () => {
       .map((p) => ({
         ...p,
         rotulo: `${p.talhao ?? 'Talhão ' + p.codplantio}${
-          p.variedade?.variedade ? ' — ' + p.variedade.variedade : ''
+          p.Variedade?.variedade ? ' — ' + p.Variedade.variedade : ''
         }`,
       })),
   )

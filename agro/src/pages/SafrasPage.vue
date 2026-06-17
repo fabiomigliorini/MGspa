@@ -49,7 +49,7 @@ onMounted(() => cad.carregar())
               <q-item-section>
                 <q-item-label class="text-subtitle1">{{ s.safra }}</q-item-label>
                 <q-item-label caption>
-                  {{ s.cultura?.cultura || '—' }} · {{ safraAnos(s) }}
+                  {{ s.Cultura?.cultura || '—' }} · {{ safraAnos(s) }}
                 </q-item-label>
               </q-item-section>
               <q-item-section side>

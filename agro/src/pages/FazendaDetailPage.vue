@@ -94,7 +94,7 @@ async function carregarOutrasFazendas() {
   const { data } = await api.get('v1/talhao/mapa', { params: { codfazenda } })
   outrasFazendas.value = (data.data ?? data).map((t) => ({
     codfazenda: t.codfazenda,
-    fazenda: t.fazenda?.fazenda,
+    fazenda: t.Fazenda?.fazenda,
     geometria: t.geometria,
   }))
 }

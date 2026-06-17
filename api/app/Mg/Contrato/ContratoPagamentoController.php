@@ -2,6 +2,8 @@
 
 namespace Mg\Contrato;
 
+use App\Http\Requests\Mg\Contrato\ContratoPagamentoConfirmarRequest;
+use App\Http\Requests\Mg\Contrato\ContratoPagamentoRequest;
 use Illuminate\Http\Request;
 use Mg\MgController;
 use Mg\MgService;
@@ -13,30 +15,31 @@ class ContratoPagamentoController extends MgController
 {
     public function index(Request $request, $codcontrato)
     {
-        $res = ContratoPagamento::where('codcontrato', $codcontrato)->orderBy('data')->get();
-        return response()->json($res, 200);
+        $res = ContratoPagamento::with('Portador')
+            ->where('codcontrato', $codcontrato)
+            ->orderBy('data')
+            ->get();
+        return ContratoPagamentoResource::collection($res);
     }
 
-    public function store(Request $request, $codcontrato)
+    public function store(ContratoPagamentoRequest $request, $codcontrato)
     {
-        $request->validate($this->regras());
-
         $model = new ContratoPagamento();
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->codcontrato = $codcontrato;
         $model->save();
 
-        return response()->json($model, 201);
+        return new ContratoPagamentoResource($model->load('Portador'));
     }
 
-    public function update(Request $request, $codcontrato, $codpagamento)
+    public function update(ContratoPagamentoRequest $request, $codcontrato, $codpagamento)
     {
         $model = ContratoPagamento::where('codcontrato', $codcontrato)->findOrFail($codpagamento);
-        $request->validate($this->regras());
-        $model->fill($request->all());
+        $model->fill($request->validated());
         $model->codcontrato = $codcontrato;
         $model->update();
-        return response()->json($model, 200);
+
+        return new ContratoPagamentoResource($model->load('Portador'));
     }
 
     public function destroy($codcontrato, $codpagamento)
@@ -49,13 +52,8 @@ class ContratoPagamentoController extends MgController
      * Confirma o recebimento de uma parcela (valor real pode divergir do
      * previsto). Registra data/valor recebidos e o portador que recebeu.
      */
-    public function confirmar(Request $request, $codcontrato, $codpagamento)
+    public function confirmar(ContratoPagamentoConfirmarRequest $request, $codcontrato, $codpagamento)
     {
-        $request->validate([
-            'datarecebido' => ['required', 'date'],
-            'valorrecebido' => ['required', 'numeric', 'gt:0'],
-            'codportador' => ['nullable', 'exists:tblportador,codportador'],
-        ]);
         $m = ContratoPagamento::where('codcontrato', $codcontrato)->findOrFail($codpagamento);
         $m->datarecebido = $request->datarecebido;
         $m->valorrecebido = $request->valorrecebido;
@@ -63,32 +61,21 @@ class ContratoPagamentoController extends MgController
             $m->codportador = $request->codportador;
         }
         $m->update();
-        return response()->json($m, 200);
+
+        return new ContratoPagamentoResource($m->load('Portador'));
     }
 
     public function inativar(Request $request, $codcontrato, $codpagamento)
     {
         $m = ContratoPagamento::where('codcontrato', $codcontrato)->findOrFail($codpagamento);
-        return response()->json(MgService::inativar($m), 200);
+        MgService::inativar($m);
+        return new ContratoPagamentoResource($m->fresh('Portador'));
     }
 
     public function ativar(Request $request, $codcontrato, $codpagamento)
     {
         $m = ContratoPagamento::where('codcontrato', $codcontrato)->findOrFail($codpagamento);
-        return response()->json(MgService::ativar($m), 200);
-    }
-
-    protected function regras(): array
-    {
-        return [
-            'data' => ['required', 'date'],             // data prevista
-            'valor' => ['required', 'numeric', 'gt:0'],  // valor previsto
-            'modo' => ['nullable', 'in:SACAS,VALOR'],
-            'sacas' => ['nullable', 'numeric', 'gte:0'],
-            'codportador' => ['nullable', 'exists:tblportador,codportador'],
-            'datarecebido' => ['nullable', 'date'],
-            'valorrecebido' => ['nullable', 'numeric', 'gte:0'],
-            'observacao' => ['nullable', 'string'],
-        ];
+        MgService::ativar($m);
+        return new ContratoPagamentoResource($m->fresh('Portador'));
     }
 }
