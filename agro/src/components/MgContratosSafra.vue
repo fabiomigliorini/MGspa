@@ -133,20 +133,12 @@ onMounted(async () => {
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label class="text-subtitle1">
-                {{ c.contrato }}
-                <q-chip
-                  square
-                  :color="corTipo[c.tipo] || 'grey-7'"
-                  text-color="white"
-                  :label="c.tipo"
-                  class="q-ml-xs"
-                />
-              </q-item-label>
-              <q-item-label caption>
+              <!-- Título: com quem o contrato foi feito (comprador) -->
+              <q-item-label class="text-subtitle1 text-weight-medium">
                 {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}
               </q-item-label>
-              <q-item-label class="q-mt-xs">
+              <!-- Barra de entrega + sacas com o modo do contrato ao lado -->
+              <q-item-label class="q-mt-sm">
                 <q-linear-progress
                   :value="progresso(c)"
                   color="green-6"
@@ -154,8 +146,18 @@ onMounted(async () => {
                   size="8px"
                   rounded
                 />
-                <div class="text-caption text-grey-7 q-mt-xs">
-                  {{ fmt(c.carregado) }} / {{ fmt(c.quantidade) }} sc entregues
+                <div class="row items-center q-mt-xs">
+                  <div class="text-caption text-grey-7">
+                    {{ fmt(c.carregado) }} / {{ fmt(c.quantidade) }} sc entregues
+                  </div>
+                  <q-chip
+                    dense
+                    square
+                    :color="corTipo[c.tipo] || 'grey-7'"
+                    text-color="white"
+                    :label="c.tipo"
+                    class="q-ml-sm q-my-none"
+                  />
                 </div>
               </q-item-label>
             </q-item-section>

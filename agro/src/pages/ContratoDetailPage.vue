@@ -357,19 +357,11 @@ onMounted(async () => {
               class="q-ml-sm"
             />
             <div class="col q-ml-md">
+              <!-- Título: com quem o contrato foi feito (comprador) -->
               <div class="text-h6">
-                {{ contrato?.contrato || 'Contrato' }}
-                <q-chip
-                  v-if="contrato"
-                  dense
-                  square
-                  :color="corTipo[contrato.tipo]"
-                  text-color="white"
-                  :label="contrato.tipo"
-                />
+                {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa || 'Contrato' }}
               </div>
               <div class="text-caption text-grey-7">
-                {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa }} ·
                 {{ contrato?.Cultura?.cultura }}
                 <span v-if="contrato?.Safra"> · {{ contrato.Safra.safra }}</span>
               </div>
@@ -418,8 +410,20 @@ onMounted(async () => {
                   >Físico</span
                 >
               </div>
-              <div class="text-h5 q-mt-sm">
-                {{ fmt(carregado) }} <span class="text-caption">/ {{ fmt(contratado) }} sc</span>
+              <div class="text-h5 q-mt-sm row items-center">
+                <div>
+                  {{ fmt(carregado) }} <span class="text-caption">/ {{ fmt(contratado) }} sc</span>
+                </div>
+                <!-- Modo do contrato ao lado da quantidade de sacas -->
+                <q-chip
+                  v-if="contrato"
+                  dense
+                  square
+                  :color="corTipo[contrato.tipo] || 'grey-7'"
+                  text-color="white"
+                  :label="contrato.tipo"
+                  class="q-ml-sm q-my-none"
+                />
               </div>
               <q-linear-progress
                 :value="contratado ? Math.min(1, carregado / contratado) : 0"
