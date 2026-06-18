@@ -24,10 +24,13 @@ class SafraService extends MgService
     {
         Safra::findOrFail($codsafra);
 
+        // Só embarques ATIVOS contam como entregue (inativado não conta).
+        $embarqueAtivo = fn ($q) => $q->whereHas('Embarque', fn ($e) => $e->whereNull('inativo'));
+
         $contratos = Contrato::where('codsafra', $codsafra)
             ->whereNull('inativo')
             ->with('Cultura')
-            ->withSum('EmbarqueContratoS as carregadokg', 'quantidade') // KG fisico embarcado
+            ->withSum(['EmbarqueContratoS as carregadokg' => $embarqueAtivo], 'quantidade') // KG fisico embarcado
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
             ->get();
 

@@ -86,6 +86,20 @@ class EmbarqueService extends MgService
                         . "liquido (" . round($liq) . " kg) para emitir NF / despachar.",
                 ]);
             }
+
+            // Fechamento das origens (silo/talhao): se houver origens lancadas,
+            // a soma delas tambem tem que bater com o liquido. Sem origens, nao
+            // forca (rastreio de origem e opcional no fluxo).
+            $origens = $data['origens'] ?? [];
+            if ($origens) {
+                $somaOrig = array_sum(array_map(fn ($o) => (float) ($o['quantidade'] ?? 0), $origens));
+                if (abs($somaOrig - $liq) > 1) {
+                    throw ValidationException::withMessages([
+                        'origens' => "A soma das origens (" . round($somaOrig) . " kg) deve fechar com o "
+                            . "liquido (" . round($liq) . " kg) para emitir NF / despachar.",
+                    ]);
+                }
+            }
         }
     }
 
@@ -122,8 +136,10 @@ class EmbarqueService extends MgService
             $pesosaca = (float) ($contrato->Cultura->pesosaca ?? 60) ?: 60;
             $contratadokg = (float) $contrato->quantidade * $pesosaca;
 
-            // kg ja embarcado em OUTROS embarques (exclui o proprio ao editar).
+            // kg ja embarcado em OUTROS embarques ATIVOS (exclui o proprio ao
+            // editar; embarque inativado nao conta como carregado).
             $jaOutros = (float) EmbarqueContrato::where('codcontrato', $cod)
+                ->whereHas('Embarque', fn ($e) => $e->whereNull('inativo'))
                 ->when(
                     $embarque->codembarque,
                     fn ($q) => $q->where('codembarque', '!=', $embarque->codembarque)

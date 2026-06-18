@@ -176,6 +176,28 @@ function somaLinhasContrato(codcontrato) {
     .filter((c) => c.codcontrato === codcontrato)
     .reduce((s, c) => s + (Number(c.quantidade) || 0), 0)
 }
+// Teto de kg que ESTA linha pode receber: saldo do contrato menos o que as
+// OUTRAS linhas do mesmo contrato já consomem. null = sem teto (sem limite /
+// sem contrato escolhido). Passado como :max do MgInputValor → trava no saldo.
+function maxKgLinha(c) {
+  const o = opcoesContrato.value.find((x) => x.value === c.codcontrato)
+  if (!o || o.semlimite) return null
+  const outras = somaLinhasContrato(c.codcontrato) - (Number(c.quantidade) || 0)
+  return Math.max(0, o.saldokg - outras)
+}
+// Trava o valor digitado no saldo do contrato — não deixa registrar acima do
+// que falta embarcar (o :max só corrige no blur; aqui corta ao vivo).
+function limitarKgContrato(c, v) {
+  const m = maxKgLinha(c)
+  if (m !== null && Number(v) > m) {
+    c.quantidade = m
+    $q.notify({
+      type: 'warning',
+      message: `Limitado ao saldo do contrato (${fmt(m)} kg).`,
+      timeout: 1500,
+    })
+  }
+}
 // Primeiro contrato cujo carregamento excede o saldo (null = tudo ok).
 const contratoExcedido = computed(() => {
   for (const o of opcoesContrato.value) {
@@ -218,6 +240,8 @@ function addContrato() {
 }
 function setRotuloContrato(c) {
   c.rotulo = opcoesContrato.value.find((o) => o.value === c.codcontrato)?.rotulo || null
+  // Trocar de contrato pode reduzir o saldo: re-limita o que já estava digitado.
+  limitarKgContrato(c, c.quantidade)
 }
 function addOrigem(tipo) {
   local.value.origens.push({ tipo, codplantio: null, quantidade: null })
@@ -267,6 +291,15 @@ function avancar() {
           ? `Sobram ${fmt(dif)} kg no rateio dos contratos.`
           : `Faltam ${fmt(-dif)} kg no rateio dos contratos.`
       return $q.notify({ type: 'negative', message: `${msg} A soma deve fechar com o líquido.` })
+    }
+    // Origens (silo/talhão): se lançadas, também devem fechar com o líquido.
+    if (local.value.origens.length && !bateComLiquido(somaOrigens.value)) {
+      const dif = somaOrigens.value - Number(calc.value.pesoliquido)
+      const msg =
+        dif > 0
+          ? `Sobram ${fmt(dif)} kg nas origens.`
+          : `Faltam ${fmt(-dif)} kg nas origens.`
+      return $q.notify({ type: 'negative', message: `${msg} A soma das origens deve fechar com o líquido.` })
     }
   }
   local.value.etapa = prox
@@ -405,9 +438,11 @@ function fmt(v, dec = 0) {
               <MgInputValor
                 v-model="c.quantidade"
                 :decimals="0"
+                :max="maxKgLinha(c)"
                 suffix="kg"
                 label="Quilos"
                 class="col-4"
+                @update:model-value="(v) => limitarKgContrato(c, v)"
               />
               <q-btn
                 flat
