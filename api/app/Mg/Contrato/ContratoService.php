@@ -28,7 +28,7 @@ class ContratoService extends MgService
         $qry = Contrato::query()
             ->with(static::WITH)
             // Totais p/ a reconciliacao fisico/fiscal/financeiro:
-            ->withSum('EmbarqueContratoS as carregado', 'quantidade') // sc carregadas
+            ->withSum('EmbarqueContratoS as carregadokg', 'quantidade') // KG fisico embarcado (rateio bruto-tara)
             ->withSum('EmbarqueContratoS as valornf', 'valornf')       // R$ das NFs
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
             ->withSum(['ContratoPagamentoS as pago' => fn ($q) => $q->whereNull('inativo')], 'valor');

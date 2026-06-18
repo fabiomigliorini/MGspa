@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { uid } from 'quasar'
 import { db } from 'boot/db'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
+import { notifyError } from 'src/utils/notify'
 
 export const ETAPAS_EMBARQUE = ['TARA', 'BRUTO', 'FISCAL', 'DESPACHADO']
 
@@ -154,7 +155,12 @@ export const useEmbarqueStore = defineStore('embarque', () => {
     sincronizacao
       .enviarEmbarque(JSON.parse(JSON.stringify(embarque)))
       .then(() => carregarEmbarques())
-      .catch(() => {})
+      .catch((e) => {
+        // Offline (ERR_NETWORK): fica pendente e sincroniza depois, em silêncio.
+        // Rejeição do servidor (422: excede contrato, rateio não fecha): avisa o
+        // operador — senão o embarque ficaria "salvo" mas nunca sincronizaria.
+        if (e?.code !== 'ERR_NETWORK') notifyError(e)
+      })
     return embarque
   }
 

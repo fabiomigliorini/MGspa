@@ -42,6 +42,7 @@ class ContratoStoreRequest extends FormRequest
             'codsafra' => ['nullable', 'exists:tblsafra,codsafra'],
             'tipo' => ['required', Rule::in(['FIXO', 'FIXAR', 'BARTER'])],
             'quantidade' => ['required', 'numeric', 'gt:0'],
+            'semlimite' => ['nullable', 'boolean'],
             'preco' => $preco,
             'moeda' => ['nullable', Rule::in(['BRL', 'USD'])],
             'dataembarque' => ['nullable', 'date'],

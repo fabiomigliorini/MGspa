@@ -76,13 +76,16 @@ const progressoSafra = computed(() =>
 // KPIs comerciais (rollup dos contratos da safra, do backend). Os saldos cruzam
 // o lado comercial (online) com a produção (offline): disponível p/ vender =
 // expectativa − contratado; saldo no silo = colhido − entregue.
-const contratado = computed(() => Number(comercial.value?.contratado) || 0)
-const entregue = computed(() => Number(comercial.value?.entregue) || 0)
+// Unidade de trabalho = kg; sacas derivadas (entreguesc) vêm somadas por contrato.
+const contratado = computed(() => Number(comercial.value?.contratado) || 0) // sc
+const contratadokg = computed(() => Number(comercial.value?.contratadokg) || 0)
+const entreguekg = computed(() => Number(comercial.value?.entreguekg) || 0)
+const entreguesc = computed(() => Number(comercial.value?.entreguesc) || 0)
 const fixo = computed(() => Number(comercial.value?.fixo) || 0)
 const afixar = computed(() => Number(comercial.value?.afixar) || 0)
-const disponivel = computed(() => totalExpectativa.value - contratado.value)
-const saldoSilo = computed(() => totalSacas.value - entregue.value)
-const saldoEmbarcar = computed(() => Number(comercial.value?.saldoaembarcar) || 0)
+const disponivel = computed(() => totalExpectativa.value - contratado.value) // sc
+const saldoSiloKg = computed(() => totalKg.value - entreguekg.value)
+const saldoEmbarcarKg = computed(() => Number(comercial.value?.saldoaembarcarkg) || 0)
 
 // Um card por fazenda que tem plantio nesta safra (mapa + lista + resultado).
 const porFazenda = computed(() => {
@@ -343,9 +346,9 @@ onMounted(async () => {
             <q-card flat bordered>
               <q-card-section>
                 <div class="text-caption text-grey-7">Contratado</div>
-                <div class="text-h6">{{ fmt(contratado) }} sc</div>
+                <div class="text-h6">{{ fmt(contratadokg) }} kg</div>
                 <div class="text-caption text-grey-6">
-                  Disponível p/ vender {{ fmt(disponivel) }} sc
+                  ≈ {{ fmt(contratado) }} sc · Disponível {{ fmt(disponivel) }} sc
                 </div>
               </q-card-section>
             </q-card>
@@ -363,9 +366,9 @@ onMounted(async () => {
             <q-card flat bordered>
               <q-card-section>
                 <div class="text-caption text-grey-7">Entregue</div>
-                <div class="text-h6">{{ fmt(entregue) }} sc</div>
+                <div class="text-h6">{{ fmt(entreguekg) }} kg</div>
                 <div class="text-caption text-grey-6">
-                  Saldo a embarcar {{ fmt(saldoEmbarcar) }} sc
+                  ≈ {{ fmt(entreguesc) }} sc · Saldo a embarcar {{ fmt(saldoEmbarcarKg) }} kg
                 </div>
               </q-card-section>
             </q-card>
@@ -374,8 +377,10 @@ onMounted(async () => {
             <q-card flat bordered>
               <q-card-section>
                 <div class="text-caption text-grey-7">Saldo no silo</div>
-                <div class="text-h6 text-amber-9">{{ fmt(saldoSilo) }} sc</div>
-                <div class="text-caption text-grey-6">colhido − entregue</div>
+                <div class="text-h6 text-amber-9">{{ fmt(saldoSiloKg) }} kg</div>
+                <div class="text-caption text-grey-6">
+                  ≈ {{ fmt(saldoSiloKg / pesosaca, 0) }} sc · colhido − entregue
+                </div>
               </q-card-section>
             </q-card>
           </div>

@@ -26,12 +26,22 @@ class SafraService extends MgService
 
         $contratos = Contrato::where('codsafra', $codsafra)
             ->whereNull('inativo')
-            ->withSum('EmbarqueContratoS as carregado', 'quantidade')
+            ->with('Cultura')
+            ->withSum('EmbarqueContratoS as carregadokg', 'quantidade') // KG fisico embarcado
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
             ->get();
 
-        $contratado = (float) $contratos->sum('quantidade');
-        $entregue = (float) $contratos->sum('carregado');
+        // Unidade de trabalho = KG. Contrato negocia em sacas; converte por
+        // contrato (cada um pode ter cultura/pesosaca diferente). Sacas derivadas
+        // tambem somadas por contrato (NAO entreguekg/pesosaca da safra).
+        $pesosaca = fn ($c) => (float) ($c->Cultura->pesosaca ?? 60) ?: 60;
+        $contratado = (float) $contratos->sum('quantidade');                       // sc negociadas
+        $contratadokg = (float) $contratos->sum(fn ($c) => (float) $c->quantidade * $pesosaca($c));
+        $entreguekg = (float) $contratos->sum('carregadokg');
+        $entreguesc = (float) $contratos->sum(fn ($c) => (float) $c->carregadokg / $pesosaca($c));
+        $saldoaembarcarkg = (float) $contratos->sum(
+            fn ($c) => $c->semlimite ? 0 : max(0, (float) $c->quantidade * $pesosaca($c) - (float) $c->carregadokg)
+        );
         $fixo = (float) $contratos->whereIn('tipo', ['FIXO', 'FIXAR'])->sum('fixado');
         $afixar = (float) $contratos->where('tipo', 'FIXAR')
             ->sum(fn ($c) => max(0, (float) $c->quantidade - (float) $c->fixado));
@@ -59,9 +69,11 @@ class SafraService extends MgService
 
         return [
             'ncontratos' => $contratos->count(),
-            'contratado' => $contratado,
-            'entregue' => $entregue,
-            'saldoaembarcar' => $contratado - $entregue,
+            'contratado' => $contratado,                 // sc negociadas
+            'contratadokg' => $contratadokg,             // kg = sc x pesosaca
+            'entreguekg' => $entreguekg,                 // kg fisico embarcado
+            'entreguesc' => round($entreguesc, 2),       // sacas derivadas (por contrato)
+            'saldoaembarcarkg' => $saldoaembarcarkg,     // kg a embarcar (semlimite = 0)
             'fixo' => $fixo,
             'afixar' => $afixar,
             'precomediobrl' => ($brl && $brl->q > 0) ? (float) $brl->vreal / (float) $brl->q : null,

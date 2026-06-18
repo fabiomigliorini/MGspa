@@ -54,7 +54,8 @@ class Contrato extends MgModel
         'codpessoacooperativa',
         'numerocomprador',
         'numerocorretora',
-        'numerocooperativa'
+        'numerocooperativa',
+        'semlimite'
     ];
 
     protected $casts = [
@@ -82,7 +83,8 @@ class Contrato extends MgModel
         'comissaovalor' => 'float',
         'comissaototal' => 'float',
         'viacooperativa' => 'boolean',
-        'codpessoacooperativa' => 'integer'
+        'codpessoacooperativa' => 'integer',
+        'semlimite' => 'boolean'
     ];
 
 

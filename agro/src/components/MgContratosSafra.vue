@@ -32,9 +32,11 @@ function fmt(v, dec = 0) {
     maximumFractionDigits: dec,
   })
 }
+// Progresso físico em kg (carregadokg / contratadokg). Sem limite = sem alvo.
 function progresso(c) {
-  const q = Number(c.quantidade) || 0
-  return q > 0 ? Math.min(1, (Number(c.carregado) || 0) / q) : 0
+  if (c.semlimite) return 0
+  const q = Number(c.contratadokg) || 0
+  return q > 0 ? Math.min(1, (Number(c.carregadokg) || 0) / q) : 0
 }
 
 async function recarregar() {
@@ -137,10 +139,11 @@ onMounted(async () => {
               <q-item-label class="text-subtitle1 text-weight-medium">
                 {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}
               </q-item-label>
-              <!-- Barra de entrega + sacas com o modo do contrato ao lado -->
+              <!-- Barra de entrega em kg (+ sacas) com o modo do contrato ao lado -->
               <q-item-label class="q-mt-sm">
                 <q-linear-progress
                   :value="progresso(c)"
+                  :indeterminate="!!c.semlimite"
                   color="green-6"
                   track-color="grey-3"
                   size="8px"
@@ -148,7 +151,11 @@ onMounted(async () => {
                 />
                 <div class="row items-center q-mt-xs">
                   <div class="text-caption text-grey-7">
-                    {{ fmt(c.carregado) }} / {{ fmt(c.quantidade) }} sc entregues
+                    {{ fmt(c.carregadokg) }} / {{ c.semlimite ? '∞' : fmt(c.contratadokg) }} kg
+                    <span class="text-grey-5"
+                      >(≈ {{ fmt(c.carregadosc, 1) }} /
+                      {{ c.semlimite ? '∞' : fmt(c.quantidade) }} sc)</span
+                    >
                   </div>
                   <q-chip
                     dense
