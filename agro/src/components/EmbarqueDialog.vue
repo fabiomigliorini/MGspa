@@ -22,10 +22,19 @@ const store = useEmbarqueStore()
 const { contratosAtivos, plantiosTalhao, culturas, veiculosAtivos } = storeToRefs(store)
 
 const local = ref(null)
+// Snapshot dos kg por contrato JÁ deste embarque ao abrir — pra excluir o
+// próprio embarque do saldo ao editar (senão reabrir um embarque já salvo
+// falsearia "excede"). Espelha a exclusão que o backend faz por codembarque.
+const kgOriginalPorContrato = ref({})
 watch(
   () => props.embarque,
   (e) => {
     local.value = e ? JSON.parse(JSON.stringify(e)) : null
+    const mapa = {}
+    for (const c of e?.contratos || []) {
+      if (c.codcontrato) mapa[c.codcontrato] = (mapa[c.codcontrato] || 0) + (Number(c.quantidade) || 0)
+    }
+    kgOriginalPorContrato.value = mapa
   },
   { immediate: true },
 )
@@ -136,14 +145,67 @@ const labelEtapa = {
   DESPACHADO: 'Despachado',
 }
 
+// pesosaca da cultura do contrato (cache), default 60.
+function pesosacaDoContrato(c) {
+  return culturas.value.find((cu) => cu.codcultura === c.codcultura)?.pesosaca || 60
+}
 const opcoesContrato = computed(() =>
-  contratosAtivos.value.map((c) => ({
-    value: c.codcontrato,
-    label: `${c.contrato} — ${c.Pessoa?.fantasia || c.Pessoa?.pessoa || ''}`,
-    saldo: (Number(c.quantidade) || 0) - (Number(c.carregado) || 0),
-    rotulo: `${c.contrato} — ${c.Pessoa?.fantasia || c.Pessoa?.pessoa || ''}`,
-  })),
+  contratosAtivos.value.map((c) => {
+    const ps = pesosacaDoContrato(c)
+    const contratadokg = (Number(c.quantidade) || 0) * ps
+    // saldo disponível em kg: exclui o que ESTE embarque já contribuiu (edição).
+    const jaNeste = kgOriginalPorContrato.value[c.codcontrato] || 0
+    const outros = Math.max(0, (Number(c.carregadokg) || 0) - jaNeste)
+    return {
+      value: c.codcontrato,
+      label: `${c.contrato} — ${c.Pessoa?.fantasia || c.Pessoa?.pessoa || ''}`,
+      rotulo: `${c.contrato} — ${c.Pessoa?.fantasia || c.Pessoa?.pessoa || ''}`,
+      semlimite: !!c.semlimite,
+      // sem teto: saldo infinito (leva o saldo do silo).
+      saldokg: c.semlimite ? Infinity : Math.max(0, contratadokg - outros),
+    }
+  }),
 )
+// Saldo em kg de um contrato selecionado (pra exibir e validar).
+function saldoContrato(codcontrato) {
+  return opcoesContrato.value.find((o) => o.value === codcontrato)?.saldokg ?? Infinity
+}
+// Soma das linhas DESTE embarque para um contrato (pode aparecer em 2+ linhas).
+function somaLinhasContrato(codcontrato) {
+  return (local.value?.contratos || [])
+    .filter((c) => c.codcontrato === codcontrato)
+    .reduce((s, c) => s + (Number(c.quantidade) || 0), 0)
+}
+// Teto de kg que ESTA linha pode receber: saldo do contrato menos o que as
+// OUTRAS linhas do mesmo contrato já consomem. null = sem teto (sem limite /
+// sem contrato escolhido). Passado como :max do MgInputValor → trava no saldo.
+function maxKgLinha(c) {
+  const o = opcoesContrato.value.find((x) => x.value === c.codcontrato)
+  if (!o || o.semlimite) return null
+  const outras = somaLinhasContrato(c.codcontrato) - (Number(c.quantidade) || 0)
+  return Math.max(0, o.saldokg - outras)
+}
+// Trava o valor digitado no saldo do contrato — não deixa registrar acima do
+// que falta embarcar (o :max só corrige no blur; aqui corta ao vivo).
+function limitarKgContrato(c, v) {
+  const m = maxKgLinha(c)
+  if (m !== null && Number(v) > m) {
+    c.quantidade = m
+    $q.notify({
+      type: 'warning',
+      message: `Limitado ao saldo do contrato (${fmt(m)} kg).`,
+      timeout: 1500,
+    })
+  }
+}
+// Primeiro contrato cujo carregamento excede o saldo (null = tudo ok).
+const contratoExcedido = computed(() => {
+  for (const o of opcoesContrato.value) {
+    if (o.semlimite) continue
+    if (somaLinhasContrato(o.value) > o.saldokg + 1) return o
+  }
+  return null
+})
 
 const calc = computed(() => (local.value ? store.calcular(local.value) : {}))
 const pesosacaCultura = computed(() => {
@@ -178,9 +240,23 @@ function addContrato() {
 }
 function setRotuloContrato(c) {
   c.rotulo = opcoesContrato.value.find((o) => o.value === c.codcontrato)?.rotulo || null
+  // Trocar de contrato pode reduzir o saldo: re-limita o que já estava digitado.
+  limitarKgContrato(c, c.quantidade)
 }
 function addOrigem(tipo) {
   local.value.origens.push({ tipo, codplantio: null, quantidade: null })
+}
+
+// Bloqueio de excesso (guard best-effort; o backend é o portão real). Vale em
+// qualquer etapa — não deixa lançar mais kg do que o saldo do contrato.
+function excedeBloqueia() {
+  const o = contratoExcedido.value
+  if (!o) return false
+  $q.notify({
+    type: 'negative',
+    message: `${o.label}: excede o saldo do contrato (${fmt(o.saldokg)} kg disponíveis). Ajuste os quilos.`,
+  })
+  return true
 }
 
 function salvar() {
@@ -188,6 +264,7 @@ function salvar() {
   if (!local.value.placa || !local.value.contratos.length) {
     return $q.notify({ type: 'warning', message: 'Informe a placa e ao menos um contrato.' })
   }
+  if (excedeBloqueia()) return
   emit('salvar', local.value)
 }
 
@@ -200,6 +277,30 @@ function avancar() {
   }
   if (local.value.etapa === 'BRUTO' && !local.value.pesobruto) {
     return $q.notify({ type: 'warning', message: 'Informe o peso bruto.' })
+  }
+  if (excedeBloqueia()) return
+  // Antes de emitir NF (BRUTO→FISCAL): líquido válido e rateio fechando.
+  if (local.value.etapa === 'BRUTO') {
+    if (!(Number(calc.value.pesoliquido) > 0)) {
+      return $q.notify({ type: 'negative', message: 'Peso líquido inválido (bruto − tara).' })
+    }
+    if (!bateComLiquido(somaContratos.value)) {
+      const dif = somaContratos.value - Number(calc.value.pesoliquido)
+      const msg =
+        dif > 0
+          ? `Sobram ${fmt(dif)} kg no rateio dos contratos.`
+          : `Faltam ${fmt(-dif)} kg no rateio dos contratos.`
+      return $q.notify({ type: 'negative', message: `${msg} A soma deve fechar com o líquido.` })
+    }
+    // Origens (silo/talhão): se lançadas, também devem fechar com o líquido.
+    if (local.value.origens.length && !bateComLiquido(somaOrigens.value)) {
+      const dif = somaOrigens.value - Number(calc.value.pesoliquido)
+      const msg =
+        dif > 0
+          ? `Sobram ${fmt(dif)} kg nas origens.`
+          : `Faltam ${fmt(-dif)} kg nas origens.`
+      return $q.notify({ type: 'negative', message: `${msg} A soma das origens deve fechar com o líquido.` })
+    }
   }
   local.value.etapa = prox
   emit('salvar', local.value)
@@ -337,9 +438,11 @@ function fmt(v, dec = 0) {
               <MgInputValor
                 v-model="c.quantidade"
                 :decimals="0"
+                :max="maxKgLinha(c)"
                 suffix="kg"
                 label="Quilos"
                 class="col-4"
+                @update:model-value="(v) => limitarKgContrato(c, v)"
               />
               <q-btn
                 flat
@@ -349,6 +452,25 @@ function fmt(v, dec = 0) {
                 class="col-auto"
                 @click="local.contratos.splice(i, 1)"
               />
+            </div>
+            <!-- Saldo disponível do contrato (kg) — bloqueia excesso, exceto sem limite -->
+            <div v-if="c.codcontrato" class="text-caption q-pl-xs">
+              <span
+                v-if="saldoContrato(c.codcontrato) === Infinity"
+                class="text-deep-purple-7"
+              >
+                <q-icon name="all_inclusive" /> Sem limite
+              </span>
+              <span
+                v-else
+                :class="
+                  somaLinhasContrato(c.codcontrato) > saldoContrato(c.codcontrato) + 1
+                    ? 'text-negative text-weight-medium'
+                    : 'text-grey-6'
+                "
+              >
+                Saldo do contrato: {{ fmt(saldoContrato(c.codcontrato)) }} kg
+              </span>
             </div>
             <div
               v-if="local.etapa === 'FISCAL' || local.etapa === 'DESPACHADO'"

@@ -32,9 +32,11 @@ function fmt(v, dec = 0) {
     maximumFractionDigits: dec,
   })
 }
+// Progresso físico em kg (carregadokg / contratadokg). Sem limite = sem alvo.
 function progresso(c) {
-  const q = Number(c.quantidade) || 0
-  return q > 0 ? Math.min(1, (Number(c.carregado) || 0) / q) : 0
+  if (c.semlimite) return 0
+  const q = Number(c.contratadokg) || 0
+  return q > 0 ? Math.min(1, (Number(c.carregadokg) || 0) / q) : 0
 }
 
 async function recarregar() {
@@ -133,29 +135,36 @@ onMounted(async () => {
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label class="text-subtitle1">
-                {{ c.contrato }}
-                <q-chip
-                  square
-                  :color="corTipo[c.tipo] || 'grey-7'"
-                  text-color="white"
-                  :label="c.tipo"
-                  class="q-ml-xs"
-                />
-              </q-item-label>
-              <q-item-label caption>
+              <!-- Título: com quem o contrato foi feito (comprador) -->
+              <q-item-label class="text-subtitle1 text-weight-medium">
                 {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}
               </q-item-label>
-              <q-item-label class="q-mt-xs">
+              <!-- Barra de entrega em kg (+ sacas) com o modo do contrato ao lado -->
+              <q-item-label class="q-mt-sm">
                 <q-linear-progress
                   :value="progresso(c)"
+                  :indeterminate="!!c.semlimite"
                   color="green-6"
                   track-color="grey-3"
                   size="8px"
                   rounded
                 />
-                <div class="text-caption text-grey-7 q-mt-xs">
-                  {{ fmt(c.carregado) }} / {{ fmt(c.quantidade) }} sc entregues
+                <div class="row items-center q-mt-xs">
+                  <div class="text-caption text-grey-7">
+                    {{ fmt(c.carregadokg) }} / {{ c.semlimite ? '∞' : fmt(c.contratadokg) }} kg
+                    <span class="text-grey-5"
+                      >(≈ {{ fmt(c.carregadosc, 1) }} /
+                      {{ c.semlimite ? '∞' : fmt(c.quantidade) }} sc)</span
+                    >
+                  </div>
+                  <q-chip
+                    dense
+                    square
+                    :color="corTipo[c.tipo] || 'grey-7'"
+                    text-color="white"
+                    :label="c.tipo"
+                    class="q-ml-sm q-my-none"
+                  />
                 </div>
               </q-item-label>
             </q-item-section>

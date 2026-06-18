@@ -5,6 +5,7 @@ namespace Mg\Embarque;
 use Mg\MgService;
 use Mg\Contrato\Contrato;
 use Mg\Cultura\TabelaDesconto;
+use Illuminate\Validation\ValidationException;
 
 class EmbarqueService extends MgService
 {
@@ -50,10 +51,109 @@ class EmbarqueService extends MgService
         $embarque = Embarque::firstOrNew(['uuid' => $data['uuid']]);
         $embarque->fill($data);
         static::calcular($embarque, $data);
+        // Valida ANTES de salvar (over-load do contrato + fechamento/sanidade).
+        // codembarque ja existe aqui se for edicao (firstOrNew achou pelo uuid),
+        // permitindo excluir o proprio embarque do total ja carregado.
+        static::validar($embarque, $data);
         $embarque->save();
         static::sincronizarContratos($embarque, $data['contratos'] ?? []);
         static::sincronizarOrigens($embarque, $data['origens'] ?? []);
         return $embarque->fresh(static::WITH);
+    }
+
+    /**
+     * Validacoes de quantidade do embarque (autoridade do servidor — o front
+     * tem guards best-effort, mas o cache offline pode estar defasado).
+     */
+    protected static function validar(Embarque $embarque, array $data): void
+    {
+        $contratos = $data['contratos'] ?? [];
+        static::validarCarregamento($embarque, $contratos);
+
+        // Fechamento do rateio + sanidade fisica: so cobra nas etapas finais
+        // (emitir NF / despachar). Antes disso aceita parcial (kanban em curso).
+        if (in_array($embarque->etapa, ['FISCAL', 'DESPACHADO'], true)) {
+            $liq = (float) $embarque->pesoliquido;
+            if ($liq <= 0) {
+                throw ValidationException::withMessages([
+                    'pesoliquido' => 'Peso liquido invalido (bruto - tara deve ser > 0) para emitir NF / despachar.',
+                ]);
+            }
+            $soma = array_sum(array_map(fn ($c) => (float) ($c['quantidade'] ?? 0), $contratos));
+            if (abs($soma - $liq) > 1) {
+                throw ValidationException::withMessages([
+                    'contratos' => "A soma dos contratos (" . round($soma) . " kg) deve fechar com o "
+                        . "liquido (" . round($liq) . " kg) para emitir NF / despachar.",
+                ]);
+            }
+
+            // Fechamento das origens (silo/talhao): se houver origens lancadas,
+            // a soma delas tambem tem que bater com o liquido. Sem origens, nao
+            // forca (rastreio de origem e opcional no fluxo).
+            $origens = $data['origens'] ?? [];
+            if ($origens) {
+                $somaOrig = array_sum(array_map(fn ($o) => (float) ($o['quantidade'] ?? 0), $origens));
+                if (abs($somaOrig - $liq) > 1) {
+                    throw ValidationException::withMessages([
+                        'origens' => "A soma das origens (" . round($somaOrig) . " kg) deve fechar com o "
+                            . "liquido (" . round($liq) . " kg) para emitir NF / despachar.",
+                    ]);
+                }
+            }
+        }
+    }
+
+    /**
+     * Bloqueio de over-load: um embarque nao pode levar o total carregado de um
+     * contrato com teto acima do contratado. Contrato com semlimite = true
+     * (leva o saldo do silo) pula a checagem.
+     */
+    protected static function validarCarregamento(Embarque $embarque, array $contratos): void
+    {
+        // Agrupa kg por contrato (uma carga pode ratear o mesmo contrato em 2+ linhas).
+        $kgPorContrato = [];
+        foreach ($contratos as $c) {
+            if (empty($c['codcontrato'])) {
+                continue;
+            }
+            $cod = (int) $c['codcontrato'];
+            $kgPorContrato[$cod] = ($kgPorContrato[$cod] ?? 0) + (float) ($c['quantidade'] ?? 0);
+        }
+        if (!$kgPorContrato) {
+            return;
+        }
+
+        $contratosDb = Contrato::with('Cultura')
+            ->whereIn('codcontrato', array_keys($kgPorContrato))
+            ->get()
+            ->keyBy('codcontrato');
+
+        foreach ($kgPorContrato as $cod => $estaCargaKg) {
+            $contrato = $contratosDb->get($cod);
+            if (!$contrato || $contrato->semlimite) {
+                continue; // sem teto: leva o saldo do silo
+            }
+            $pesosaca = (float) ($contrato->Cultura->pesosaca ?? 60) ?: 60;
+            $contratadokg = (float) $contrato->quantidade * $pesosaca;
+
+            // kg ja embarcado em OUTROS embarques ATIVOS (exclui o proprio ao
+            // editar; embarque inativado nao conta como carregado).
+            $jaOutros = (float) EmbarqueContrato::where('codcontrato', $cod)
+                ->whereHas('Embarque', fn ($e) => $e->whereNull('inativo'))
+                ->when(
+                    $embarque->codembarque,
+                    fn ($q) => $q->where('codembarque', '!=', $embarque->codembarque)
+                )
+                ->sum('quantidade');
+
+            if ($jaOutros + $estaCargaKg > $contratadokg + 1) {
+                $saldo = max(0, $contratadokg - $jaOutros);
+                throw ValidationException::withMessages([
+                    'contratos' => "Contrato {$contrato->contrato}: carregamento excede o contratado ("
+                        . round($contratadokg) . " kg). Saldo disponivel: " . round($saldo) . " kg.",
+                ]);
+            }
+        }
     }
 
     protected static function sincronizarContratos(Embarque $embarque, array $contratos): void

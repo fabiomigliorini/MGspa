@@ -25,11 +25,15 @@ class ContratoService extends MgService
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)
     {
+        // Só embarques ATIVOS entram no carregado/NFs (embarque inativado não
+        // conta como entregue — senão inflava o físico e reduzia o saldo).
+        $embarqueAtivo = fn ($q) => $q->whereHas('Embarque', fn ($e) => $e->whereNull('inativo'));
+
         $qry = Contrato::query()
             ->with(static::WITH)
             // Totais p/ a reconciliacao fisico/fiscal/financeiro:
-            ->withSum('EmbarqueContratoS as carregado', 'quantidade') // sc carregadas
-            ->withSum('EmbarqueContratoS as valornf', 'valornf')       // R$ das NFs
+            ->withSum(['EmbarqueContratoS as carregadokg' => $embarqueAtivo], 'quantidade') // KG fisico embarcado
+            ->withSum(['EmbarqueContratoS as valornf' => $embarqueAtivo], 'valornf')         // R$ das NFs
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
             ->withSum(['ContratoPagamentoS as pago' => fn ($q) => $q->whereNull('inativo')], 'valor');
 

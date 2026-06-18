@@ -273,6 +273,17 @@ async function salvar() {
                 label="Portador (conta que recebe)"
               />
             </div>
+            <div class="col-12">
+              <q-checkbox
+                v-model="cad.form.semlimite"
+                label="Sem limite de carregamento (leva o saldo do silo)"
+              >
+                <q-tooltip>
+                  Pula o bloqueio de excesso no embarque. Use em contratos de sobra de safra que
+                  levam o saldo do silo.
+                </q-tooltip>
+              </q-checkbox>
+            </div>
           </q-tab-panel>
 
           <!-- ===== Aba Intermediários (cooperativa / corretora + nºs) ===== -->

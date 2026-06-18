@@ -31,6 +31,21 @@ class ContratoResource extends Resource
         $ret['usuariocriacao'] = $this->usuariocriacao;
         $ret['usuarioalteracao'] = $this->usuarioalteracao;
 
+        // Reconciliacao fisica em KG (unidade de trabalho) com sacas derivadas.
+        // O contrato negocia em sacas (quantidade) + R$/saca; o embarque grava
+        // kg (rateio bruto-tara). Ponte: pesosaca da cultura (default 60).
+        // carregadokg vem do withSum (ContratoService); demais sao derivados.
+        $pesosaca = (float) ($this->Cultura->pesosaca ?? 60) ?: 60;
+        $carregadokg = (float) $this->carregadokg; // soma kg dos embarques
+        $contratadokg = (float) $this->quantidade * $pesosaca;
+        $ret['semlimite'] = (bool) $this->semlimite;
+        $ret['pesosaca'] = $pesosaca;
+        $ret['carregadokg'] = $carregadokg;
+        $ret['contratadokg'] = $contratadokg;
+        $ret['carregadosc'] = $pesosaca > 0 ? round($carregadokg / $pesosaca, 2) : 0.0;
+        // saldo so faz sentido em contrato com teto; sem limite -> null.
+        $ret['saldokg'] = $this->semlimite ? null : max(0, $contratadokg - $carregadokg);
+
         // relações em PascalCase (whenLoaded — chaves ausentes somem do JSON)
         $ret['Pessoa'] = $this->whenLoaded('Pessoa');
         $ret['PessoaNf'] = $this->whenLoaded('PessoaNf');
@@ -54,12 +69,14 @@ class ContratoResource extends Resource
         }
 
         if ($this->relationLoaded('EmbarqueContratoS')) {
-            $ret['EmbarqueContratoS'] = $this->EmbarqueContratoS->map(function ($e) {
+            $ret['EmbarqueContratoS'] = $this->EmbarqueContratoS->map(function ($e) use ($pesosaca) {
+                $kg = (float) $e->quantidade; // tblembarquecontrato.quantidade e KG
                 return [
                     'codembarquecontrato' => (int) $e->codembarquecontrato,
                     'codembarque' => (int) $e->codembarque,
                     'codcontrato' => (int) $e->codcontrato,
-                    'quantidade' => (float) $e->quantidade,
+                    'quantidadekg' => $kg,
+                    'quantidadesc' => $pesosaca > 0 ? round($kg / $pesosaca, 2) : 0.0,
                     'numeronf' => $e->numeronf,
                     'chavenf' => $e->chavenf,
                     'valornf' => $e->valornf !== null ? (float) $e->valornf : null,

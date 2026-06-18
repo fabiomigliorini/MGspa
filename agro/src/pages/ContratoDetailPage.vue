@@ -62,9 +62,19 @@ function fmtData(d) {
 }
 
 // ---- Totais / reconciliação ----
-const contratado = computed(() => n(contrato.value?.quantidade))
-const carregado = computed(() => n(contrato.value?.carregado))
-const saldo = computed(() => contratado.value - carregado.value)
+// Unidade de trabalho = KG. O contrato negocia em sacas (quantidade) + R$/saca;
+// o embarque grava kg. Ponte: pesosaca da cultura (default 60). Dashboards
+// mostram kg primário + sacas derivadas.
+const pesosaca = computed(() => n(contrato.value?.pesosaca) || 60)
+const semlimite = computed(() => !!contrato.value?.semlimite)
+const contratado = computed(() => n(contrato.value?.quantidade)) // sc negociadas
+const contratadokg = computed(() => n(contrato.value?.contratadokg))
+const carregadokg = computed(() => n(contrato.value?.carregadokg))
+const carregadosc = computed(() => n(contrato.value?.carregadosc))
+// saldo em kg; null/sem teto quando contrato semlimite (leva o saldo do silo).
+const saldokg = computed(() =>
+  semlimite.value ? null : Math.max(0, contratadokg.value - carregadokg.value),
+)
 const fixado = computed(() => n(contrato.value?.fixado))
 const afixar = computed(() => contratado.value - fixado.value)
 const valornf = computed(() => n(contrato.value?.valornf))
@@ -80,7 +90,8 @@ const precoMedio = computed(() => {
   const v = fx.reduce((s, f) => s + n(f.quantidade) * n(f.precoreal), 0)
   return q > 0 ? v / q : 0
 })
-const valorCarregado = computed(() => carregado.value * precoMedio.value)
+// precoMedio é R$/saca; o carregado físico está em sacas derivadas (carregadosc).
+const valorCarregado = computed(() => carregadosc.value * precoMedio.value)
 
 // "Bate?" — valor carregado x NFs x pago (tolerância de centavos)
 const difNf = computed(() => valornf.value - valorCarregado.value)
@@ -357,19 +368,11 @@ onMounted(async () => {
               class="q-ml-sm"
             />
             <div class="col q-ml-md">
+              <!-- Título: com quem o contrato foi feito (comprador) -->
               <div class="text-h6">
-                {{ contrato?.contrato || 'Contrato' }}
-                <q-chip
-                  v-if="contrato"
-                  dense
-                  square
-                  :color="corTipo[contrato.tipo]"
-                  text-color="white"
-                  :label="contrato.tipo"
-                />
+                {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa || 'Contrato' }}
               </div>
               <div class="text-caption text-grey-7">
-                {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa }} ·
                 {{ contrato?.Cultura?.cultura }}
                 <span v-if="contrato?.Safra"> · {{ contrato.Safra.safra }}</span>
               </div>
@@ -418,19 +421,41 @@ onMounted(async () => {
                   >Físico</span
                 >
               </div>
-              <div class="text-h5 q-mt-sm">
-                {{ fmt(carregado) }} <span class="text-caption">/ {{ fmt(contratado) }} sc</span>
+              <div class="text-h5 q-mt-sm row items-center">
+                <div>
+                  {{ fmt(carregadokg) }}
+                  <span class="text-caption">/ {{ semlimite ? '∞' : fmt(contratadokg) }} kg</span>
+                </div>
+                <!-- Modo do contrato ao lado da quantidade -->
+                <q-chip
+                  v-if="contrato"
+                  dense
+                  square
+                  :color="corTipo[contrato.tipo] || 'grey-7'"
+                  text-color="white"
+                  :label="contrato.tipo"
+                  class="q-ml-sm q-my-none"
+                />
+              </div>
+              <!-- Sacas derivadas (unidade comercial) -->
+              <div class="text-caption text-grey-6">
+                ≈ {{ fmt(carregadosc, 1) }} / {{ semlimite ? '∞' : fmt(contratado) }} sc
               </div>
               <q-linear-progress
-                :value="contratado ? Math.min(1, carregado / contratado) : 0"
+                :value="!semlimite && contratadokg ? Math.min(1, carregadokg / contratadokg) : 0"
+                :indeterminate="semlimite"
                 color="green-6"
                 track-color="grey-3"
                 size="8px"
                 rounded
                 class="q-my-sm"
               />
-              <div class="text-caption text-grey-7">
-                Saldo a embarcar: <b>{{ fmt(saldo) }} sc</b>
+              <div v-if="semlimite" class="text-caption text-deep-purple-7">
+                <q-icon name="all_inclusive" /> Sem limite — leva o saldo do silo
+              </div>
+              <div v-else class="text-caption text-grey-7">
+                Saldo a embarcar: <b>{{ fmt(saldokg) }} kg</b>
+                <span class="text-grey-6">(≈ {{ fmt(saldokg / pesosaca, 0) }} sc)</span>
               </div>
             </q-card-section>
           </q-card>
@@ -637,7 +662,8 @@ onMounted(async () => {
           <q-item-section>
             <q-item-label class="text-subtitle1">Embarques e notas fiscais</q-item-label>
             <q-item-label caption
-              >{{ fmt(carregado) }} sc carregadas · {{ rs(valornf) }} em NFs</q-item-label
+              >{{ fmt(carregadokg) }} kg (≈ {{ fmt(carregadosc, 1) }} sc) · {{ rs(valornf) }} em
+              NFs</q-item-label
             >
           </q-item-section>
         </q-item>
@@ -648,7 +674,10 @@ onMounted(async () => {
               ><q-avatar color="green-6" text-color="white" icon="local_shipping"
             /></q-item-section>
             <q-item-section>
-              <q-item-label>{{ fmt(e.quantidade) }} sc</q-item-label>
+              <q-item-label
+                >{{ fmt(e.quantidadekg) }} kg
+                <span class="text-caption text-grey-6">(≈ {{ fmt(e.quantidadesc, 1) }} sc)</span>
+              </q-item-label>
               <q-item-label caption>
                 {{ e.Embarque?.placa || '—' }}
                 <span v-if="e.numeronf"> · NF {{ e.numeronf }}</span>

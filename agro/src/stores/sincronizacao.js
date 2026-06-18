@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
+import { notifyError } from 'src/utils/notify'
 
 // Store de sincronizacao offline-first (espelha o negocios):
 //  - PULL: baixa os cadastros de referencia pro Dexie (leitura offline)
@@ -114,7 +115,17 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   async function enviarEmbarquesPendentes() {
     const pendentes = await db.embarque.where('sincronizado').equals(0).toArray()
     for (const embarque of pendentes) {
-      await enviarEmbarque(embarque)
+      // Um embarque rejeitado pelo servidor (422: excede contrato, rateio não
+      // fecha) não pode abortar o ciclo nem se perder em silêncio. Mostra o erro
+      // e segue; o registro fica pendente (sincronizado=0) até o operador ajustar.
+      // Só erro de rede interrompe a sincronização.
+      try {
+        await enviarEmbarque(embarque)
+      } catch (e) {
+        if (e.code === 'ERR_NETWORK') throw e
+        notifyError(e)
+        console.error('Falha ao sincronizar embarque', embarque.uuid, e?.response?.data || e)
+      }
     }
   }
 

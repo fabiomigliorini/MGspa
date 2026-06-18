@@ -21,10 +21,11 @@ class EmbarqueSincronizarRequest extends FormRequest
             'data' => ['required', 'date'],
             'contratos' => ['array'],
             'contratos.*.codcontrato' => ['required', 'exists:tblcontrato,codcontrato'],
-            'contratos.*.quantidade' => ['nullable', 'numeric'],
+            'contratos.*.quantidade' => ['nullable', 'numeric', 'gte:0'],
             'origens' => ['array'],
             'origens.*.tipo' => ['required', Rule::in(['SILO', 'TALHAO'])],
             'origens.*.codplantio' => ['nullable', 'exists:tblplantio,codplantio'],
+            'origens.*.quantidade' => ['nullable', 'numeric', 'gte:0'],
             'pesotara' => ['nullable', 'numeric', 'gte:0'],
             'pesobruto' => ['nullable', 'numeric', 'gte:0'],
         ];
