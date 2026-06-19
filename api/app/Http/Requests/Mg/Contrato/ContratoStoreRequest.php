@@ -41,10 +41,11 @@ class ContratoStoreRequest extends FormRequest
             'codcultura' => ['required', 'exists:tblcultura,codcultura'],
             'codsafra' => ['nullable', 'exists:tblsafra,codsafra'],
             'tipo' => ['required', Rule::in(['FIXO', 'FIXAR', 'BARTER'])],
+            'operacao' => ['nullable', Rule::in(['COMPRA', 'VENDA'])],
             // O contrato pode nascer como rascunho (só identificação: nº, produtor,
             // data, comprador) e ter a quantidade definida depois na tela do contrato.
             'quantidade' => ['nullable', 'numeric', 'gte:0'],
-            'semlimite' => ['nullable', 'boolean'],
+            'volumeemaberto' => ['nullable', 'boolean'],
             'preco' => $preco,
             'moeda' => ['nullable', Rule::in(['BRL', 'USD'])],
             'dataembarque' => ['nullable', 'date'],

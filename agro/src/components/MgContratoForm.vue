@@ -30,6 +30,10 @@ const tipos = [
   { label: 'A fixar', value: 'FIXAR' },
   { label: 'Barter', value: 'BARTER' },
 ]
+const operacoes = [
+  { label: 'Venda', value: 'VENDA' },
+  { label: 'Compra', value: 'COMPRA' },
+]
 const moedas = [
   { label: 'R$', value: 'BRL' },
   { label: 'US$', value: 'USD' },
@@ -190,7 +194,13 @@ async function salvar() {
         </q-tabs>
         <q-separator v-if="!cad.isNovo" />
 
-        <q-tab-panels v-if="!cad.isNovo" v-model="aba" animated class="scroll" style="min-height: 360px; max-height: 70vh">
+        <q-tab-panels
+          v-if="!cad.isNovo"
+          v-model="aba"
+          animated
+          class="scroll"
+          style="min-height: 360px; max-height: 70vh"
+        >
           <!-- ===== Aba Negócio (identificação + valores) ===== -->
           <q-tab-panel name="negocio" class="row q-col-gutter-md">
             <div class="col-12 text-overline text-grey-7">Identificação</div>
@@ -211,8 +221,23 @@ async function salvar() {
             <div class="col-12 col-sm-4">
               <MgInputData v-model="cad.form.datacontrato" label="Data do contrato" type="date" />
             </div>
+            <div class="col-12 col-sm-6">
+              <q-btn-toggle
+                v-model="cad.form.operacao"
+                :options="operacoes"
+                spread
+                no-caps
+                unelevated
+                toggle-color="primary"
+                color="grey-3"
+                text-color="grey-9"
+              />
+            </div>
             <div class="col-12">
-              <MgSelectPessoa v-model="cad.form.codpessoa" label="Comprador" />
+              <MgSelectPessoa
+                v-model="cad.form.codpessoa"
+                :label="cad.form.operacao === 'COMPRA' ? 'Fornecedor' : 'Comprador'"
+              />
             </div>
 
             <div class="col-12 text-overline text-grey-7 q-mt-sm">Negócio</div>
@@ -307,7 +332,7 @@ async function salvar() {
             </div>
             <div class="col-12">
               <q-checkbox
-                v-model="cad.form.semlimite"
+                v-model="cad.form.volumeemaberto"
                 label="Sem limite de carregamento (leva o saldo do silo)"
               >
                 <q-tooltip>

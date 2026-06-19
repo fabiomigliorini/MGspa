@@ -5,6 +5,8 @@ namespace Mg\Safra;
 use Mg\MgService;
 use Mg\Contrato\Contrato;
 use Mg\Contrato\ContratoFixacao;
+use Mg\Fazenda\Plantio;
+use Mg\Grao\MovimentoGrao;
 
 class SafraService extends MgService
 {
@@ -22,15 +24,18 @@ class SafraService extends MgService
      */
     public static function resumoComercial($codsafra): array
     {
-        Safra::findOrFail($codsafra);
+        $safra = Safra::with('Cultura')->findOrFail($codsafra);
+        $pesosacaSafra = (float) ($safra->Cultura->pesosaca ?? 60) ?: 60;
 
-        // Só embarques ATIVOS contam como entregue (inativado não conta).
-        $embarqueAtivo = fn ($q) => $q->whereHas('Embarque', fn ($e) => $e->whereNull('inativo'));
+        // Entregue = SUM(liquido) no extrato (carga inativada some, entao basta
+        // somar os movimentos ativos). So contratos de VENDA entram no comercial.
+        $movAtivo = fn ($q) => $q->whereNull('inativo');
 
         $contratos = Contrato::where('codsafra', $codsafra)
+            ->where('operacao', 'VENDA')
             ->whereNull('inativo')
             ->with('Cultura')
-            ->withSum(['EmbarqueContratoS as carregadokg' => $embarqueAtivo], 'quantidade') // KG fisico embarcado
+            ->withSum(['MovimentoGraoS as carregadokg' => $movAtivo], 'liquido') // KG entregue (extrato)
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
             ->get();
 
@@ -42,9 +47,39 @@ class SafraService extends MgService
         $contratadokg = (float) $contratos->sum(fn ($c) => (float) $c->quantidade * $pesosaca($c));
         $entreguekg = (float) $contratos->sum('carregadokg');
         $entreguesc = (float) $contratos->sum(fn ($c) => (float) $c->carregadokg / $pesosaca($c));
+        // Volume em aberto (rapa-silo) nao reserva saldo (sem total definido).
         $saldoaembarcarkg = (float) $contratos->sum(
-            fn ($c) => $c->semlimite ? 0 : max(0, (float) $c->quantidade * $pesosaca($c) - (float) $c->carregadokg)
+            fn ($c) => $c->volumeemaberto ? 0 : max(0, (float) $c->quantidade * $pesosaca($c) - (float) $c->carregadokg)
         );
+
+        // Estoque depositado (silo proprio + terceiro + silo bag) = SUM(liquido)
+        // das contas UNIDADE no extrato, desta safra.
+        $estoquekg = (float) MovimentoGrao::where('contatipo', 'UNIDADE')
+            ->where('codsafra', $codsafra)
+            ->whereNull('inativo')
+            ->sum('liquido');
+
+        // A colher = expectativa em pe ainda nao colhida. Colhido por plantio =
+        // SUM(liquido) das contas PLANTIO; floor 0 por plantio (excedente ja foi
+        // pro estoque). expectativasacas -> kg pela pesosaca da cultura da safra.
+        $colhidoPorPlantio = MovimentoGrao::where('contatipo', 'PLANTIO')
+            ->where('codsafra', $codsafra)
+            ->whereNull('inativo')
+            ->groupBy('codplantio')
+            ->selectRaw('codplantio, SUM(liquido) as kg')
+            ->pluck('kg', 'codplantio');
+        $aColherKg = (float) Plantio::where('codsafra', $codsafra)
+            ->whereNull('inativo')
+            ->get()
+            ->sum(function ($p) use ($colhidoPorPlantio, $pesosacaSafra) {
+                $expectativakg = (float) $p->expectativasacas * $pesosacaSafra;
+                $colhido = (float) ($colhidoPorPlantio[$p->codplantio] ?? 0);
+                return max(0, $expectativakg - $colhido);
+            });
+
+        // Disponivel para negociar = a colher + estoque - (contratado venda nao entregue).
+        $disponivelkg = $aColherKg + $estoquekg - $saldoaembarcarkg;
+
         $fixo = (float) $contratos->whereIn('tipo', ['FIXO', 'FIXAR'])->sum('fixado');
         $afixar = (float) $contratos->where('tipo', 'FIXAR')
             ->sum(fn ($c) => max(0, (float) $c->quantidade - (float) $c->fixado));
@@ -54,6 +89,7 @@ class SafraService extends MgService
         $buckets = ContratoFixacao::query()
             ->join('tblcontrato as c', 'c.codcontrato', '=', 'tblcontratofixacao.codcontrato')
             ->where('c.codsafra', $codsafra)
+            ->where('c.operacao', 'VENDA')
             ->whereNull('c.inativo')
             ->where('c.tipo', '!=', 'BARTER')
             ->whereNull('tblcontratofixacao.inativo')
@@ -74,9 +110,14 @@ class SafraService extends MgService
             'ncontratos' => $contratos->count(),
             'contratado' => $contratado,                 // sc negociadas
             'contratadokg' => $contratadokg,             // kg = sc x pesosaca
-            'entreguekg' => $entreguekg,                 // kg fisico embarcado
+            'entreguekg' => $entreguekg,                 // kg entregue (extrato)
             'entreguesc' => round($entreguesc, 2),       // sacas derivadas (por contrato)
-            'saldoaembarcarkg' => $saldoaembarcarkg,     // kg a embarcar (semlimite = 0)
+            'saldoaembarcarkg' => $saldoaembarcarkg,     // kg a embarcar (volume em aberto = 0)
+            'estoquekg' => round($estoquekg, 3),         // estoque depositado (silo proprio + terceiro)
+            'estoquesc' => round($estoquekg / $pesosacaSafra, 2),
+            'acolherkg' => round($aColherKg, 3),         // expectativa em pe nao colhida
+            'disponivelkg' => round($disponivelkg, 3),   // a colher + estoque - saldo a entregar
+            'disponivelsc' => round($disponivelkg / $pesosacaSafra, 2),
             'fixo' => $fixo,
             'afixar' => $afixar,
             'precomediobrl' => ($brl && $brl->q > 0) ? (float) $brl->vreal / (float) $brl->q : null,

@@ -7,7 +7,7 @@
 namespace Mg\Fazenda;
 
 use Mg\MgModel;
-use Mg\Safra\CargaColheita;
+use Mg\Grao\MovimentoGrao;
 use Mg\Safra\Safra;
 use Mg\Fazenda\Talhao;
 use Mg\Fazenda\Fazenda;
@@ -81,9 +81,10 @@ class Plantio extends MgModel
 
 
     // Tabelas Filhas
-    public function CargaColheitaS()
+    // Colheita do talhao = movimentos PLANTIO no extrato (colhido = SUM liquido).
+    public function MovimentoGraoS()
     {
-        return $this->hasMany(CargaColheita::class, 'codplantio', 'codplantio');
+        return $this->hasMany(MovimentoGrao::class, 'codplantio', 'codplantio');
     }
 
 }

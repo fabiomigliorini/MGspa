@@ -24,7 +24,7 @@ class ContratoResource extends Resource
             $ret['natureza_operacao'],
             $ret['contrato_fixacao_s'],
             $ret['contrato_pagamento_s'],
-            $ret['embarque_contrato_s'],
+            $ret['movimento_grao_s'],
         );
 
         // auditoria (quem criou/alterou)
@@ -36,15 +36,17 @@ class ContratoResource extends Resource
         // kg (rateio bruto-tara). Ponte: pesosaca da cultura (default 60).
         // carregadokg vem do withSum (ContratoService); demais sao derivados.
         $pesosaca = (float) ($this->Cultura->pesosaca ?? 60) ?: 60;
-        $carregadokg = (float) $this->carregadokg; // soma kg dos embarques
+        $carregadokg = (float) $this->carregadokg; // entregue (SUM liquido no extrato)
         $contratadokg = (float) $this->quantidade * $pesosaca;
-        $ret['semlimite'] = (bool) $this->semlimite;
+        $ret['operacao'] = $this->operacao;
+        $ret['volumeemaberto'] = (bool) $this->volumeemaberto;
         $ret['pesosaca'] = $pesosaca;
         $ret['carregadokg'] = $carregadokg;
+        $ret['valornf'] = (float) $this->valornf; // R$ das NFs por contrato (0 ate emitir NFe)
         $ret['contratadokg'] = $contratadokg;
         $ret['carregadosc'] = $pesosaca > 0 ? round($carregadokg / $pesosaca, 2) : 0.0;
-        // saldo so faz sentido em contrato com teto; sem limite -> null.
-        $ret['saldokg'] = $this->semlimite ? null : max(0, $contratadokg - $carregadokg);
+        // saldo so faz sentido em contrato com teto; volume em aberto -> null.
+        $ret['saldokg'] = $this->volumeemaberto ? null : max(0, $contratadokg - $carregadokg);
 
         // relações em PascalCase (whenLoaded — chaves ausentes somem do JSON)
         $ret['Pessoa'] = $this->whenLoaded('Pessoa');
@@ -68,21 +70,25 @@ class ContratoResource extends Resource
             $ret['ContratoPagamentoS'] = ContratoPagamentoResource::collection($this->ContratoPagamentoS);
         }
 
-        if ($this->relationLoaded('EmbarqueContratoS')) {
-            $ret['EmbarqueContratoS'] = $this->EmbarqueContratoS->map(function ($e) use ($pesosaca) {
-                $kg = (float) $e->quantidade; // tblembarquecontrato.quantidade e KG
-                return [
-                    'codembarquecontrato' => (int) $e->codembarquecontrato,
-                    'codembarque' => (int) $e->codembarque,
-                    'codcontrato' => (int) $e->codcontrato,
-                    'quantidadekg' => $kg,
-                    'quantidadesc' => $pesosaca > 0 ? round($kg / $pesosaca, 2) : 0.0,
-                    'numeronf' => $e->numeronf,
-                    'chavenf' => $e->chavenf,
-                    'valornf' => $e->valornf !== null ? (float) $e->valornf : null,
-                    'Embarque' => $e->relationLoaded('Embarque') ? $e->Embarque : null,
-                ];
-            });
+        // Entregas no extrato (cada carga que moveu este contrato).
+        if ($this->relationLoaded('MovimentoGraoS')) {
+            $ret['MovimentoGraoS'] = $this->MovimentoGraoS
+                ->filter(fn ($m) => $m->inativo === null)
+                ->map(function ($m) use ($pesosaca) {
+                    $kg = (float) $m->liquido;
+                    return [
+                        'codmovimentograo' => (int) $m->codmovimentograo,
+                        'codcarga' => $m->codcarga !== null ? (int) $m->codcarga : null,
+                        'codcontrato' => (int) $m->codcontrato,
+                        'manual' => (bool) $m->manual,
+                        'data' => $m->data,
+                        'quantidadekg' => $kg,
+                        'quantidadesc' => $pesosaca > 0 ? round($kg / $pesosaca, 2) : 0.0,
+                        'observacao' => $m->observacao,
+                        'Carga' => $m->relationLoaded('Carga') ? $m->Carga : null,
+                    ];
+                })
+                ->values();
         }
 
         // Cálculo do líquido (motor fiscal) — só no detalhe (fixações carregadas),

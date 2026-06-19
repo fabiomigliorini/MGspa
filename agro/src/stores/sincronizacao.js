@@ -5,13 +5,14 @@ import { db } from 'boot/db'
 import { notifyError } from 'src/utils/notify'
 
 // Store de sincronizacao offline-first (espelha o negocios):
-//  - PULL: baixa os cadastros de referencia pro Dexie (leitura offline)
+//  - PULL: baixa os cadastros de referencia + saldos pro Dexie (leitura offline)
 //  - PUSH: envia as cargas pendentes (sincronizado = 0) pro backend
 // Deteccao de offline e por erro (ERR_NETWORK), best-effort.
 export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   const sincronizando = ref(false)
   const online = ref(true)
   const ultimaSincronizacao = ref(null)
+  const saldosUnidades = ref([]) // snapshot do estoque por unidade armazenadora
 
   // Baixa todas as paginas de um endpoint e regrava a tabela Dexie.
   async function puxarTabela(endpoint, tabelaDexie) {
@@ -30,9 +31,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     await tabelaDexie.bulkPut(todos.map((i) => ({ ...i, sincronizado })))
   }
 
-  // Plantios sao aninhados na safra (safra/{codsafra}/plantio). O endpoint
-  // pagina (15/pagina), entao percorre todas as paginas — senao safras com
-  // muitos talhoes ficam incompletas no cache.
+  // Plantios sao aninhados na safra (safra/{codsafra}/plantio). Pagina (15/pag).
   async function puxarPlantios() {
     const safras = await db.safra.toArray()
     const sincronizado = Date.now()
@@ -61,70 +60,44 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     await puxarTabela('v1/safra', db.safra)
     await puxarTabela('v1/contrato', db.contrato)
     await puxarTabela('v1/veiculo', db.veiculo)
+    await puxarTabela('v1/unidade-armazenadora', db.unidadearmazenadora)
     await puxarPlantios()
+    // Snapshot dos saldos por unidade (estoque depositado) p/ exibir offline.
+    const { data } = await api.get('v1/movimento-grao/saldos-unidades', { skipLoading: true })
+    saldosUnidades.value = Array.isArray(data) ? data : []
   }
 
-  // Envia uma carga pro backend; o servidor recalcula pesos/descontos
-  // (autoridade) e devolve o codcargacolheita + valores oficiais.
+  // Envia uma carga pro backend; o servidor recalcula pesos/descontos e GERA o
+  // extrato (autoridade), devolvendo o codcarga + valores oficiais.
   async function enviarCarga(carga) {
-    // Descarta linhas de talhão vazias (codplantio null) — o backend exige
-    // codplantio e rejeitaria a carga inteira (422), travando a sincronização.
-    const payload = { ...carga, plantios: (carga.plantios || []).filter((p) => p.codplantio) }
-    const { data } = await api.post('v1/carga-colheita/sincronizar', payload, { skipLoading: true })
-    await db.cargacolheita.update(carga.uuid, {
-      codcargacolheita: data.codcargacolheita,
+    const { data: resp } = await api.post('v1/carga/sincronizar', carga, { skipLoading: true })
+    // O Resource embrulha o registro em { data: {...} } (Laravel default).
+    const oficial = resp.data ?? resp
+    await db.carga.update(carga.uuid, {
+      codcarga: oficial.codcarga,
       sincronizado: 1,
-      pesoliquido: data.pesoliquido,
-      descontoumidade: data.descontoumidade,
-      descontoimpureza: data.descontoimpureza,
-      descontoavariados: data.descontoavariados,
-      pesoliquidoseco: data.pesoliquidoseco,
+      bruto: oficial.bruto,
+      desconto: oficial.desconto,
+      liquido: oficial.liquido,
+      descontoumidade: oficial.descontoumidade,
+      descontoimpureza: oficial.descontoimpureza,
+      descontoavariados: oficial.descontoavariados,
     })
-    return data
+    return oficial
   }
 
   async function enviarCargasPendentes() {
-    const pendentes = await db.cargacolheita.where('sincronizado').equals(0).toArray()
+    const pendentes = await db.carga.where('sincronizado').equals(0).toArray()
     for (const carga of pendentes) {
-      // Uma carga inválida não pode abortar o ciclo nem impedir o pull das
-      // referências (talhões). Só erro de rede interrompe a sincronização.
+      // Uma carga rejeitada (422: excede contrato, rateio nao fecha) nao pode
+      // abortar o ciclo nem se perder em silencio. Mostra o erro e segue; o
+      // registro fica pendente ate o operador ajustar. So rede interrompe.
       try {
         await enviarCarga(carga)
       } catch (e) {
         if (e.code === 'ERR_NETWORK') throw e
-        console.error('Falha ao sincronizar carga', carga.uuid, e?.response?.data || e)
-      }
-    }
-  }
-
-  // ---- Embarque (expedição) ----
-  async function enviarEmbarque(embarque) {
-    const { data } = await api.post('v1/embarque/sincronizar', embarque, { skipLoading: true })
-    await db.embarque.update(embarque.uuid, {
-      codembarque: data.codembarque,
-      sincronizado: 1,
-      pesoliquido: data.pesoliquido,
-      descontoumidade: data.descontoumidade,
-      descontoimpureza: data.descontoimpureza,
-      descontoavariados: data.descontoavariados,
-      pesoliquidoseco: data.pesoliquidoseco,
-    })
-    return data
-  }
-
-  async function enviarEmbarquesPendentes() {
-    const pendentes = await db.embarque.where('sincronizado').equals(0).toArray()
-    for (const embarque of pendentes) {
-      // Um embarque rejeitado pelo servidor (422: excede contrato, rateio não
-      // fecha) não pode abortar o ciclo nem se perder em silêncio. Mostra o erro
-      // e segue; o registro fica pendente (sincronizado=0) até o operador ajustar.
-      // Só erro de rede interrompe a sincronização.
-      try {
-        await enviarEmbarque(embarque)
-      } catch (e) {
-        if (e.code === 'ERR_NETWORK') throw e
         notifyError(e)
-        console.error('Falha ao sincronizar embarque', embarque.uuid, e?.response?.data || e)
+        console.error('Falha ao sincronizar carga', carga.uuid, e?.response?.data || e)
       }
     }
   }
@@ -135,7 +108,6 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     sincronizando.value = true
     try {
       await enviarCargasPendentes()
-      await enviarEmbarquesPendentes()
       await puxarReferencias()
       online.value = true
       ultimaSincronizacao.value = Date.now()
@@ -151,11 +123,10 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     sincronizando,
     online,
     ultimaSincronizacao,
+    saldosUnidades,
     sincronizar,
     puxarReferencias,
     enviarCarga,
     enviarCargasPendentes,
-    enviarEmbarque,
-    enviarEmbarquesPendentes,
   }
 })

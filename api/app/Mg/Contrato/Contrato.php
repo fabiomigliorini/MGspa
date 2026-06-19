@@ -9,7 +9,8 @@ namespace Mg\Contrato;
 use Mg\MgModel;
 use Mg\Contrato\ContratoFixacao;
 use Mg\Contrato\ContratoPagamento;
-use Mg\Embarque\EmbarqueContrato;
+use Mg\Grao\MovimentoGrao;
+use Mg\Grao\CargaPonto;
 use Mg\Cultura\Cultura;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Pessoa\Pessoa;
@@ -55,7 +56,8 @@ class Contrato extends MgModel
         'numerocomprador',
         'numerocorretora',
         'numerocooperativa',
-        'semlimite'
+        'operacao',
+        'volumeemaberto'
     ];
 
     protected $casts = [
@@ -84,7 +86,7 @@ class Contrato extends MgModel
         'comissaototal' => 'float',
         'viacooperativa' => 'boolean',
         'codpessoacooperativa' => 'integer',
-        'semlimite' => 'boolean'
+        'volumeemaberto' => 'boolean'
     ];
 
 
@@ -146,9 +148,17 @@ class Contrato extends MgModel
         return $this->hasMany(ContratoPagamento::class, 'codcontrato', 'codcontrato');
     }
 
-    public function EmbarqueContratoS()
+    // Entregas/recebimentos deste contrato no extrato de grao (entregue = SUM liquido).
+    public function MovimentoGraoS()
     {
-        return $this->hasMany(EmbarqueContrato::class, 'codcontrato', 'codcontrato');
+        return $this->hasMany(MovimentoGrao::class, 'codcontrato', 'codcontrato');
+    }
+
+    // Pontos de carga que apontam p/ este contrato (origem/destino) — fonte das
+    // NFs por contrato (valornf) ate a emissao real de NFe existir.
+    public function CargaPontoS()
+    {
+        return $this->hasMany(CargaPonto::class, 'codcontrato', 'codcontrato');
     }
 
 }

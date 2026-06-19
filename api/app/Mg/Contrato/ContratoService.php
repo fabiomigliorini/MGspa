@@ -20,20 +20,24 @@ class ContratoService extends MgService
         'Cooperativa',
         'ContratoFixacaoS',
         'ContratoPagamentoS',
-        'EmbarqueContratoS.Embarque',
+        'MovimentoGraoS.Carga',
     ];
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)
     {
-        // Só embarques ATIVOS entram no carregado/NFs (embarque inativado não
-        // conta como entregue — senão inflava o físico e reduzia o saldo).
-        $embarqueAtivo = fn ($q) => $q->whereHas('Embarque', fn ($e) => $e->whereNull('inativo'));
+        // Entregue/recebido = SUM(liquido) no extrato (tblmovimentograo) das
+        // linhas ativas deste contrato. Carga inativada some do extrato (estorno),
+        // entao nao precisa filtrar carga aqui.
+        $movAtivo = fn ($q) => $q->whereNull('inativo');
 
         $qry = Contrato::query()
             ->with(static::WITH)
             // Totais p/ a reconciliacao fisico/fiscal/financeiro:
-            ->withSum(['EmbarqueContratoS as carregadokg' => $embarqueAtivo], 'quantidade') // KG fisico embarcado
-            ->withSum(['EmbarqueContratoS as valornf' => $embarqueAtivo], 'valornf')         // R$ das NFs
+            ->withSum(['MovimentoGraoS as carregadokg' => $movAtivo], 'liquido') // KG fisico entregue
+            ->withSum(
+                ['CargaPontoS as valornf' => fn ($q) => $q->whereHas('Carga', fn ($c) => $c->whereNull('inativo'))],
+                'valornf',
+            ) // R$ das NFs por contrato (tblcargaponto; 0 ate emitir NFe)
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
             ->withSum(['ContratoPagamentoS as pago' => fn ($q) => $q->whereNull('inativo')], 'valor');
 
@@ -78,6 +82,9 @@ class ContratoService extends MgService
     {
         $contrato = $contrato ?: new Contrato();
         $contrato->fill($dados);
+        if (empty($contrato->operacao)) {
+            $contrato->operacao = 'VENDA';
+        }
         $contrato->save();
         static::sincronizarFixacaoAutomatica($contrato);
         return $contrato;

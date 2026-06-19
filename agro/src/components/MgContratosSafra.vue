@@ -34,7 +34,7 @@ function fmt(v, dec = 0) {
 }
 // Progresso físico em kg (carregadokg / contratadokg). Sem limite = sem alvo.
 function progresso(c) {
-  if (c.semlimite) return 0
+  if (c.volumeemaberto) return 0
   const q = Number(c.contratadokg) || 0
   return q > 0 ? Math.min(1, (Number(c.carregadokg) || 0) / q) : 0
 }
@@ -55,7 +55,7 @@ async function recarregar() {
 function novo() {
   // Rascunho: tipo neutro (a fixar). O tipo real e o resto da configuração ficam
   // pra tela do contrato — o form de criação só pede a identificação.
-  cad.abrirNovo({ tipo: 'FIXAR', moeda: 'BRL' })
+  cad.abrirNovo({ tipo: 'FIXAR', moeda: 'BRL', operacao: 'VENDA' })
 }
 async function aposSalvar(saved) {
   // Contrato recém-criado → abre a tela dele pra terminar a configuração.
@@ -124,7 +124,7 @@ onMounted(async () => {
               <q-item-label class="q-mt-sm">
                 <q-linear-progress
                   :value="progresso(c)"
-                  :indeterminate="!!c.semlimite"
+                  :indeterminate="!!c.volumeemaberto"
                   color="green-6"
                   track-color="grey-3"
                   size="8px"
@@ -132,10 +132,10 @@ onMounted(async () => {
                 />
                 <div class="row items-center q-mt-xs">
                   <div class="text-caption text-grey-7">
-                    {{ fmt(c.carregadokg) }} / {{ c.semlimite ? '∞' : fmt(c.contratadokg) }} kg
+                    {{ fmt(c.carregadokg) }} / {{ c.volumeemaberto ? '∞' : fmt(c.contratadokg) }} kg
                     <span class="text-grey-5"
                       >(≈ {{ fmt(c.carregadosc, 1) }} /
-                      {{ c.semlimite ? '∞' : fmt(c.quantidade) }} sc)</span
+                      {{ c.volumeemaberto ? '∞' : fmt(c.quantidade) }} sc)</span
                     >
                   </div>
                   <q-chip

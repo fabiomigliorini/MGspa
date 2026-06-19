@@ -4,7 +4,7 @@ namespace Mg\Fazenda;
 
 use Mg\MgService;
 use Mg\Safra\Safra;
-use Mg\Safra\CargaColheitaPlantio;
+use Mg\Grao\MovimentoGrao;
 
 class FazendaService extends MgService
 {
@@ -52,14 +52,13 @@ class FazendaService extends MgService
             ->selectRaw('codsafra, SUM(areaplantada) as area')
             ->pluck('area', 'codsafra');
 
-        $colhidoPorSafra = CargaColheitaPlantio::join('tblcargacolheita as cc', 'cc.codcargacolheita', '=', 'tblcargacolheitaplantio.codcargacolheita')
-            ->join('tblplantio as p', 'p.codplantio', '=', 'tblcargacolheitaplantio.codplantio')
+        $colhidoPorSafra = MovimentoGrao::join('tblplantio as p', 'p.codplantio', '=', 'tblmovimentograo.codplantio')
+            ->where('tblmovimentograo.contatipo', 'PLANTIO')
             ->where('p.codfazenda', $codfazenda)
-            ->where('cc.etapa', 'FINALIZADO')
-            ->whereNull('cc.inativo')
+            ->whereNull('tblmovimentograo.inativo')
             ->whereNull('p.inativo')
             ->groupBy('p.codsafra')
-            ->selectRaw('p.codsafra, SUM(cc.pesoliquidoseco * tblcargacolheitaplantio.percentual / 100) as colhido')
+            ->selectRaw('p.codsafra, SUM(tblmovimentograo.liquido) as colhido')
             ->pluck('colhido', 'codsafra');
 
         $codsafras = $areaPorSafra->keys()->merge($colhidoPorSafra->keys())->unique();

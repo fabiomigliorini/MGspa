@@ -1,6 +1,9 @@
-// Ticket de balança (romaneio de recebimento) — impressão client-side, funciona
-// OFFLINE: monta um HTML autocontido e abre numa janela que imprime sozinha.
-// O número oficial é o codcargacolheita (após sync); offline sai "provisório".
+// Ticket de balança (romaneio) — impressão client-side, funciona OFFLINE: monta
+// um HTML autocontido e abre numa janela que imprime sozinha. O número oficial é
+// o codcarga (após sync); offline sai "provisório".
+//
+// Nomenclatura: pbt = caminhão+carga; tara = caminhão vazio; bruto = pbt - tara
+// (grão); desconto = classificação; liquido = bruto - desconto.
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
@@ -22,18 +25,14 @@ function linha(rotulo, valor) {
 
 export function imprimirTicket(t) {
   const numero = t.numero ? `Nº ${t.numero}` : 'Nº provisório'
-  const itens = (t.talhoes || [])
+  const itens = (t.itens || [])
     .map((p) => {
       const base = p.rotulo || '—'
-      if (p.percentual !== null && p.percentual !== undefined)
-        return `${base} (${fmt(p.percentual)}%)`
       if (p.kg !== null && p.kg !== undefined) return `${base} — ${fmt(p.kg)} kg`
-      if (p.sc !== null && p.sc !== undefined) return `${base} — ${fmt(p.sc)} sc`
       return base
     })
     .join('<br>')
 
-  // Saída de grãos não tem classificação: o bloco de umidade/impureza some.
   const temClassificacao = [t.umidade, t.impureza, t.avariados].some(
     (v) => v !== null && v !== undefined,
   )
@@ -43,22 +42,22 @@ export function imprimirTicket(t) {
     <div class="tk">
       <div class="cab">
         <div class="faz">${t.fazenda || 'MG Agro'}</div>
-        <div class="tit">${t.titulo || 'TICKET DE RECEBIMENTO'}</div>
+        <div class="tit">${t.titulo || 'ROMANEIO'}</div>
         <div class="num">${numero} &middot; ${dataHora(t.data)}</div>
       </div>
       <table>
         ${linha('Placa', t.placa || '—')}
+        ${t.placacarreta ? linha('Carreta', t.placacarreta) : ''}
         ${t.veiculo ? linha('Caminhão', t.veiculo) : ''}
-        ${t.renavam ? linha('Renavam', t.renavam) : ''}
         ${linha('Motorista', t.motorista || '—')}
         ${t.cultura ? linha('Cultura / Safra', `${t.cultura} — ${t.safra || '—'}`) : ''}
-        ${linha(t.rotuloItens || 'Talhões', itens || '—')}
+        ${linha(t.rotuloItens || 'Itens', itens || '—')}
       </table>
       <div class="sep"></div>
       <table>
-        ${linha('Peso bruto', fmt(t.pesobruto) + ' kg')}
+        ${linha('Peso bruto total', fmt(t.pbt) + ' kg')}
         ${linha('Tara', fmt(t.tara) + ' kg')}
-        ${linha('Peso líquido', fmt(t.pesoliquido) + ' kg')}
+        ${linha('Bruto (carga)', fmt(t.bruto) + ' kg')}
       </table>
       ${
         temClassificacao
@@ -67,15 +66,13 @@ export function imprimirTicket(t) {
         ${linha('Umidade', fmt(t.umidade, 1) + ' %')}
         ${linha('Impureza', fmt(t.impureza, 1) + ' %')}
         ${linha('Avariados', fmt(t.avariados, 1) + ' %')}
-        ${linha('Desconto umidade', fmt(t.descontoumidade) + ' kg')}
-        ${linha('Desconto impureza', fmt(t.descontoimpureza) + ' kg')}
-        ${linha('Desconto avariados', fmt(t.descontoavariados) + ' kg')}
+        ${linha('Desconto', fmt(t.desconto) + ' kg')}
       </table>`
           : ''
       }
       <div class="sep"></div>
       <table>
-        ${linha(`<b>LÍQUIDO${temClassificacao ? ' SECO' : ''}</b>`, `<b>${fmt(t.pesoliquidoseco)} kg</b>`)}
+        ${linha('<b>LÍQUIDO</b>', `<b>${fmt(t.liquido)} kg</b>`)}
         ${linha('<b>Sacas (' + fmt(t.pesosaca) + 'kg)</b>', `<b>${fmt(t.sacas, 1)} sc</b>`)}
       </table>
       <div class="ass">

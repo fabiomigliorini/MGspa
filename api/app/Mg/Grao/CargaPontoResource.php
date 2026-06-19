@@ -1,28 +1,28 @@
 <?php
 
-namespace Mg\Embarque;
+namespace Mg\Grao;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
 
-class EmbarqueOrigemResource extends Resource
+class CargaPontoResource extends Resource
 {
     public function toArray($request)
     {
         $ret = parent::toArray($request);
 
-        // remove relações em snake_case que o parent injeta — reexpostas em PascalCase abaixo.
         unset(
-            $ret['embarque'],
+            $ret['carga'],
             $ret['plantio'],
+            $ret['unidade_armazenadora'],
+            $ret['contrato'],
         );
 
-        // auditoria (quem criou/alterou)
         $ret['usuariocriacao'] = $this->usuariocriacao;
         $ret['usuarioalteracao'] = $this->usuarioalteracao;
 
-        // relações em PascalCase (whenLoaded — chaves ausentes somem do JSON)
-        $ret['Embarque'] = $this->whenLoaded('Embarque');
         $ret['Plantio'] = $this->whenLoaded('Plantio');
+        $ret['UnidadeArmazenadora'] = $this->whenLoaded('UnidadeArmazenadora');
+        $ret['Contrato'] = $this->whenLoaded('Contrato');
 
         return $ret;
     }
