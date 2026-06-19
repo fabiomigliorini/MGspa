@@ -3,23 +3,23 @@ import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { api } from 'src/services/api'
-import { useCargaStore } from 'src/stores/carga'
+import { useCargaStore, ETAPAS_POR_SENTIDO } from 'src/stores/carga'
 import { calcularCarga, sacas } from 'src/utils/desconto'
-import { imprimirTicket as imprimir } from 'src/utils/ticket'
+import { imprimirTicket } from 'src/utils/ticket'
 import MgInputValor from '@components/MgInputValor.vue'
 import CaminhaoDialog from 'components/CaminhaoDialog.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   carga: { type: Object, default: null },
-  // true = registro de caminhão novo (só "Salvar", sem avançar — fica no Peso Bruto)
+  // true = carga nova (só "Registrar", entra na 1ª etapa sem avançar)
   novo: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'salvar', 'avancar'])
 
 const $q = useQuasar()
 const store = useCargaStore()
-const { plantiosDaSafra, faixasDaSafra, culturaAtiva, safraAtiva, veiculosAtivos } =
+const { plantiosDaSafra, faixasDaSafra, culturaAtiva, safraAtiva, veiculosAtivos, unidadesAtivas } =
   storeToRefs(store)
 
 const local = ref(null)
@@ -35,6 +35,33 @@ const show = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
 })
+
+const ordem = computed(() => ETAPAS_POR_SENTIDO[local.value?.sentido] || [])
+const idxEtapa = computed(() => ordem.value.indexOf(local.value?.etapa))
+const mostrarPbt = computed(() => idxEtapa.value >= ordem.value.indexOf('PBT'))
+const mostrarTara = computed(() => idxEtapa.value >= ordem.value.indexOf('TARA'))
+const mostrarClassificacao = computed(
+  () =>
+    local.value?.sentido === 'ENTRADA' && idxEtapa.value >= ordem.value.indexOf('CLASSIFICACAO'),
+)
+const mostrarFiscal = computed(
+  () => local.value?.sentido === 'SAIDA' && idxEtapa.value >= ordem.value.indexOf('FISCAL'),
+)
+
+const labelEtapa = {
+  PBT: 'Peso bruto total',
+  TARA: 'Tara',
+  CLASSIFICACAO: 'Classificação',
+  FISCAL: 'Nota Fiscal',
+  FINALIZADO: 'Finalizado',
+}
+const rotuloAcao = {
+  PBT: 'Pesar bruto',
+  TARA: 'Pesar tara',
+  CLASSIFICACAO: 'Classificar',
+  FISCAL: 'Notas fiscais',
+  FINALIZADO: 'Imprimir romaneio',
+}
 
 // ---- Placa (autocomplete do cache de veículos, funciona offline) ----
 const placaOptions = ref([])
@@ -91,7 +118,7 @@ function filtrarMotorista(val, update, abort) {
         }))
       }),
     )
-    .catch(() => abort()) // offline: segue como texto livre
+    .catch(() => abort())
 }
 function resolverMotorista(nome) {
   const n = nome || null
@@ -106,159 +133,57 @@ function onMotoristaBlur() {
   }
 }
 
-const proxima = {
-  BRUTO: 'CLASSIFICACAO',
-  CLASSIFICACAO: 'TARA',
-  TARA: 'FINALIZADO',
-  FINALIZADO: null,
-}
-// Rótulo da ação = etapa ATUAL (o que se faz na tela aberta), não a próxima.
-// Peso Bruto/Classificação ainda estão classificando; Tara pesa a tara; o
-// Finalizado fecha/imprime o ticket.
-const rotuloAvancar = {
-  BRUTO: 'Classificar',
-  CLASSIFICACAO: 'Classificar',
-  TARA: 'Pesar tara',
-  FINALIZADO: 'Imprimir Romaneio',
-}
-const labelEtapa = {
-  BRUTO: 'Peso Bruto',
-  CLASSIFICACAO: 'Classificação',
-  TARA: 'Tara',
-  FINALIZADO: 'Finalizado',
-}
+// ---- Pontos (origens / destinos) ----
+const origens = computed(() => (local.value?.pontos || []).filter((p) => p.papel === 'ORIGEM'))
+const destinos = computed(() => (local.value?.pontos || []).filter((p) => p.papel === 'DESTINO'))
 
-// Ordem das etapas — controla a divulgação progressiva dos campos: a chegada
-// (Peso Bruto) mostra só o essencial; classificação/tara/resultado surgem na vez.
-const ORDEM = ['BRUTO', 'CLASSIFICACAO', 'TARA', 'FINALIZADO']
-const idxEtapa = computed(() => ORDEM.indexOf(local.value?.etapa))
-const mostrarClassificacao = computed(() => idxEtapa.value >= ORDEM.indexOf('CLASSIFICACAO'))
-const mostrarTara = computed(() => idxEtapa.value >= ORDEM.indexOf('TARA'))
-// % de rateio só faz sentido quando a carga mistura 2+ talhões.
-const mostrarPercentual = computed(() => (local.value?.plantios?.length || 0) > 1)
+function addPonto(papel, contatipo) {
+  local.value.pontos.push({
+    papel,
+    contatipo,
+    codplantio: null,
+    codunidadearmazenadora: null,
+    codcontrato: null,
+    liquido: null,
+    rotulo: null,
+    numeronf: null,
+    valornf: null,
+  })
+}
+function removerPonto(p) {
+  const i = local.value.pontos.indexOf(p)
+  if (i >= 0) local.value.pontos.splice(i, 1)
+}
+function rotuloPlantio(cod) {
+  return plantiosDaSafra.value.find((o) => o.codplantio === cod)?.rotulo || null
+}
+function rotuloUnidade(cod) {
+  return (
+    unidadesAtivas.value.find((o) => o.codunidadearmazenadora === cod)?.unidadearmazenadora || null
+  )
+}
+function setRotuloPonto(p) {
+  if (p.contatipo === 'PLANTIO') p.rotulo = rotuloPlantio(p.codplantio)
+  else if (p.contatipo === 'UNIDADE') p.rotulo = rotuloUnidade(p.codunidadearmazenadora)
+  else if (p.contatipo === 'CONTRATO') p.rotulo = store.rotuloContrato(p.codcontrato)
+}
+function saldoContrato(cod) {
+  return store.saldoContratoOffline(cod)
+}
 
 const calc = computed(() => (local.value ? calcularCarga(local.value, faixasDaSafra.value) : {}))
-const mostrarResultado = computed(
-  () => calc.value.pesoliquido !== null && calc.value.pesoliquido !== undefined,
-)
+const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.bruto !== undefined)
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
-const sacasSeco = computed(() => sacas(calc.value.pesoliquidoseco, pesosaca.value))
-const somaDescontos = computed(
-  () =>
-    (Number(calc.value.descontoumidade) || 0) +
-    (Number(calc.value.descontoimpureza) || 0) +
-    (Number(calc.value.descontoavariados) || 0),
+const sacasLiquido = computed(() => sacas(calc.value.liquido, pesosaca.value))
+
+const somaOrigens = computed(() => origens.value.reduce((s, p) => s + (Number(p.liquido) || 0), 0))
+const somaDestinos = computed(() =>
+  destinos.value.reduce((s, p) => s + (Number(p.liquido) || 0), 0),
 )
-const somaPercentual = computed(() =>
-  (local.value?.plantios || []).reduce((s, p) => s + (Number(p.percentual) || 0), 0),
-)
-
-// Talhões selecionados (multi-select) — só os códigos que estão na carga.
-const talhoesSelecionados = computed(() => (local.value?.plantios || []).map((p) => p.codplantio))
-
-// Sincroniza a seleção do multi-select com local.plantios, preservando o %
-// (rateio) dos que continuam e criando os novos. Talhão único => 100%.
-function onTalhoesChange(cods) {
-  const atuais = local.value.plantios || []
-  const novos = (cods || []).map((cod) => {
-    const existente = atuais.find((p) => p.codplantio === cod)
-    if (existente) return existente
-    const opt = plantiosDaSafra.value.find((o) => o.codplantio === cod)
-    return { codplantio: cod, percentual: null, rotulo: opt?.rotulo || null }
-  })
-  if (novos.length === 1) {
-    novos[0].percentual = 100
-  } else if (novos.length === 2 && novos.some((p) => p.percentual == null)) {
-    // Virou mistura de dois talhões: começa meio a meio; a partir daí, editar
-    // um campo ajusta o outro pra sempre fechar 100% (ver ajustarPercentual).
-    novos[0].percentual = 50
-    novos[1].percentual = 50
-  }
-  local.value.plantios = novos
-}
-
-// Rateio de DOIS talhões sempre fecha 100%: ao editar um campo, o outro vira o
-// complemento automaticamente. Com 3+ talhões o ajuste segue manual (a soma é
-// só indicada, ficando laranja enquanto não bate 100%).
-function ajustarPercentual(plantio, valor) {
-  const v = Math.min(100, Math.max(0, Number(valor) || 0))
-  plantio.percentual = v
-  const ps = local.value.plantios || []
-  if (ps.length === 2) {
-    const outro = ps.find((p) => p.codplantio !== plantio.codplantio)
-    if (outro) outro.percentual = 100 - v
-  }
-}
-
-// Toda entrada exige placa, ao menos um talhão e o peso bruto (a etapa inicial
-// é "Peso Bruto"). Vale pra salvar e pra avançar.
-function entradaValida() {
-  if (!local.value.placa || !local.value.plantios.length || !local.value.pesobruto) {
-    $q.notify({
-      type: 'warning',
-      message: 'Informe a placa, ao menos um talhão e o peso bruto.',
-    })
-    return false
-  }
-  return true
-}
-
-// Salva na etapa atual e fecha (registra/atualiza sem mover de coluna).
-function salvar() {
-  if (!entradaValida()) return
-  emit('salvar', local.value)
-}
-
-// Avança pra próxima etapa SEM fechar — revela os campos da etapa seguinte pra
-// continuar na mesma sessão. Sem próxima etapa => imprime o ticket.
-function avancar() {
-  if (!entradaValida()) return
-  if (local.value.etapa === 'TARA' && !local.value.tara) {
-    return $q.notify({ type: 'warning', message: 'Informe a tara.' })
-  }
-  const prox = proxima[local.value.etapa]
-  if (!prox) return imprimirTicket()
-  local.value.etapa = prox
-  emit('avancar', local.value)
-}
-
-function fazendaNome() {
-  for (const p of local.value.plantios || []) {
-    const f = plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.Fazenda?.fazenda
-    if (f) return f
-  }
-  return 'MG Agro'
-}
-
-function imprimirTicket() {
-  const c = calc.value
-  // Dados completos do caminhão (cadastro) — só aparecem no ticket.
-  const veic = store.veiculoPorId(local.value.codveiculo)
-  const ok = imprimir({
-    numero: local.value.codcargacolheita,
-    data: local.value.data,
-    fazenda: fazendaNome(),
-    cultura: culturaAtiva.value?.cultura,
-    safra: safraAtiva.value?.safra,
-    placa: local.value.placa,
-    veiculo: veic?.veiculo || null,
-    renavam: veic?.renavam || null,
-    motorista: local.value.motorista,
-    talhoes: local.value.plantios,
-    pesobruto: local.value.pesobruto,
-    tara: local.value.tara,
-    pesoliquido: c.pesoliquido,
-    umidade: local.value.umidade,
-    impureza: local.value.impureza,
-    avariados: local.value.avariados,
-    descontoumidade: c.descontoumidade,
-    descontoimpureza: c.descontoimpureza,
-    descontoavariados: c.descontoavariados,
-    pesoliquidoseco: c.pesoliquidoseco,
-    sacas: sacasSeco.value,
-    pesosaca: pesosaca.value,
-  })
-  if (!ok) $q.notify({ type: 'warning', message: 'Permita pop-ups para imprimir o ticket.' })
+function bate(soma) {
+  const liq = Number(calc.value.liquido)
+  if (!liq) return true
+  return Math.abs(soma - liq) < 1
 }
 
 function fmt(v, dec = 0) {
@@ -268,20 +193,130 @@ function fmt(v, dec = 0) {
     maximumFractionDigits: dec,
   })
 }
+
+function entradaValida() {
+  if (!local.value.placa) {
+    $q.notify({ type: 'warning', message: 'Informe a placa.' })
+    return false
+  }
+  if (!origens.value.length && !destinos.value.length) {
+    $q.notify({ type: 'warning', message: 'Informe ao menos uma origem ou destino.' })
+    return false
+  }
+  return true
+}
+
+function salvar() {
+  if (!entradaValida()) return
+  emit('salvar', local.value)
+}
+
+const proxima = computed(() => {
+  const i = idxEtapa.value
+  return i >= 0 && i < ordem.value.length - 1 ? ordem.value[i + 1] : null
+})
+
+function avancar() {
+  if (!entradaValida()) return
+  if (local.value.etapa === 'PBT' && !local.value.pbt) {
+    return $q.notify({ type: 'warning', message: 'Informe o peso bruto total (PBT).' })
+  }
+  if (local.value.etapa === 'TARA' && !local.value.tara) {
+    return $q.notify({ type: 'warning', message: 'Informe a tara.' })
+  }
+  const prox = proxima.value
+  if (!prox) return imprimir()
+  // Antes de finalizar: rateio precisa fechar com o líquido (origens e destinos).
+  if (prox === 'FINALIZADO') {
+    if (!(Number(calc.value.liquido) > 0)) {
+      return $q.notify({
+        type: 'negative',
+        message: 'Peso líquido inválido (pbt − tara − desconto).',
+      })
+    }
+    if (!origens.value.length || !destinos.value.length) {
+      return $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
+    }
+    if (!bate(somaOrigens.value)) {
+      return $q.notify({
+        type: 'negative',
+        message: 'A soma das origens deve fechar com o líquido.',
+      })
+    }
+    if (!bate(somaDestinos.value)) {
+      return $q.notify({
+        type: 'negative',
+        message: 'A soma dos destinos deve fechar com o líquido.',
+      })
+    }
+  }
+  local.value.etapa = prox
+  emit('avancar', local.value)
+}
+
+function fazendaNome() {
+  for (const p of origens.value) {
+    if (p.contatipo === 'PLANTIO') {
+      const f = plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.Fazenda?.fazenda
+      if (f) return f
+    }
+  }
+  return 'MG Agro'
+}
+
+function imprimir() {
+  const c = calc.value
+  const veic = store.veiculoPorId(local.value.codveiculo)
+  const itensFonte = local.value.sentido === 'SAIDA' ? destinos.value : origens.value
+  const ok = imprimirTicket({
+    titulo:
+      local.value.sentido === 'SAIDA'
+        ? 'ROMANEIO DE EXPEDIÇÃO'
+        : local.value.sentido === 'TRANSFERENCIA'
+          ? 'ROMANEIO DE TRANSFERÊNCIA'
+          : 'ROMANEIO DE RECEBIMENTO',
+    rotuloItens: local.value.sentido === 'SAIDA' ? 'Destinos' : 'Origens',
+    assinaturas:
+      local.value.sentido === 'SAIDA'
+        ? ['Conferente', 'Motorista', 'Expedidor']
+        : ['Classificador', 'Motorista', 'Recebedor'],
+    numero: local.value.codcarga,
+    data: local.value.data,
+    fazenda: fazendaNome(),
+    cultura: culturaAtiva.value?.cultura,
+    safra: safraAtiva.value?.safra,
+    placa: local.value.placa,
+    placacarreta: local.value.placacarreta,
+    veiculo: veic?.veiculo || null,
+    motorista: local.value.motorista,
+    itens: itensFonte.map((p) => ({ rotulo: p.rotulo, kg: p.liquido })),
+    pbt: local.value.pbt,
+    tara: local.value.tara,
+    bruto: c.bruto,
+    umidade: local.value.umidade,
+    impureza: local.value.impureza,
+    avariados: local.value.avariados,
+    desconto: c.desconto,
+    liquido: c.liquido,
+    sacas: sacasLiquido.value,
+    pesosaca: pesosaca.value,
+  })
+  if (!ok) $q.notify({ type: 'warning', message: 'Permita pop-ups para imprimir o romaneio.' })
+}
 </script>
 
 <template>
   <q-dialog v-model="show" :maximized="$q.screen.lt.sm">
-    <q-card v-if="local" style="width: 560px; max-width: 95vw">
+    <q-card v-if="local" style="width: 620px; max-width: 95vw">
       <q-card-section class="row items-center bg-primary text-white">
-        <div class="text-h6">{{ local.placa || 'Novo caminhão' }}</div>
+        <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
         <q-space />
         <q-chip color="white" text-color="primary" :label="labelEtapa[local.etapa]" />
         <q-btn flat round icon="close" v-close-popup tabindex="-1" />
       </q-card-section>
 
-      <q-card-section class="q-gutter-y-md scroll" style="max-height: 70vh">
-        <!-- Identificação: placa (cadastro de veículo) e motorista (pessoa) -->
+      <q-card-section class="q-gutter-y-md scroll" style="max-height: 72vh">
+        <!-- Identificação -->
         <div class="row q-col-gutter-x-md">
           <q-select
             :model-value="local.placa"
@@ -298,7 +333,8 @@ function fmt(v, dec = 0) {
             option-value="value"
             emit-value
             map-options
-            class="col-12 col-sm-6"
+            class="col-6 col-sm-4"
+            autofocus
             @filter="filtrarPlaca"
             @update:model-value="resolverPlaca"
             @blur="onPlacaBlur"
@@ -313,6 +349,14 @@ function fmt(v, dec = 0) {
               </q-item>
             </template>
           </q-select>
+
+          <q-input
+            v-model="local.placacarreta"
+            label="Carreta"
+            outlined
+            class="col-6 col-sm-4"
+            @update:model-value="local.placacarreta = ($event || '').toUpperCase()"
+          />
 
           <q-select
             :model-value="local.motorista"
@@ -329,7 +373,7 @@ function fmt(v, dec = 0) {
             option-value="value"
             emit-value
             map-options
-            class="col-12 col-sm-6"
+            class="col-12 col-sm-4"
             @filter="filtrarMotorista"
             @update:model-value="resolverMotorista"
             @blur="onMotoristaBlur"
@@ -342,74 +386,246 @@ function fmt(v, dec = 0) {
           </q-select>
         </div>
 
-        <!-- Talhões da carga: multi-select (mínimo 1); % rateio só com 2+ -->
+        <!-- Origens -->
         <div>
-          <q-select
-            :model-value="talhoesSelecionados"
-            :options="plantiosDaSafra"
-            option-value="codplantio"
-            option-label="rotulo"
-            multiple
-            use-chips
-            emit-value
-            map-options
-            outlined
-            label="Talhão / variedade"
-            @update:model-value="onTalhoesChange"
+          <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
+          <div
+            v-for="(p, i) in origens"
+            :key="'o' + i"
+            class="row q-col-gutter-sm items-center q-mb-xs"
           >
-            <template #no-option>
-              <q-item>
-                <q-item-section class="text-grey-6"
-                  >Nenhum talhão plantado nesta safra</q-item-section
-                >
-              </q-item>
-            </template>
-          </q-select>
-
-          <!-- Rateio entre talhões (mistura de 2+) -->
-          <div v-if="mostrarPercentual" class="q-mt-sm">
-            <div class="text-caption text-grey-7 q-mb-xs">Rateio entre talhões</div>
-            <div
-              v-for="p in local.plantios"
-              :key="p.codplantio"
-              class="row items-center q-col-gutter-sm q-mb-xs"
-            >
-              <div class="col text-body2">{{ p.rotulo }}</div>
-              <MgInputValor
-                :model-value="p.percentual"
-                :decimals="0"
-                :min="0"
-                :max="100"
-                suffix="%"
-                label="%"
-                class="col-3"
-                @update:model-value="(v) => ajustarPercentual(p, v)"
-              />
-            </div>
-            <div
-              class="text-caption"
-              :class="somaPercentual === 100 ? 'text-grey-7' : 'text-orange-8'"
-            >
-              Soma: {{ somaPercentual }}%
-            </div>
+            <q-chip
+              :color="
+                p.contatipo === 'PLANTIO'
+                  ? 'brown-5'
+                  : p.contatipo === 'UNIDADE'
+                    ? 'amber-7'
+                    : 'teal-7'
+              "
+              text-color="white"
+              :label="p.contatipo"
+            />
+            <q-select
+              v-if="p.contatipo === 'PLANTIO'"
+              v-model="p.codplantio"
+              :options="plantiosDaSafra"
+              option-value="codplantio"
+              option-label="rotulo"
+              emit-value
+              map-options
+              outlined
+              label="Talhão"
+              class="col"
+              @update:model-value="setRotuloPonto(p)"
+            />
+            <q-select
+              v-else-if="p.contatipo === 'UNIDADE'"
+              v-model="p.codunidadearmazenadora"
+              :options="unidadesAtivas"
+              option-value="codunidadearmazenadora"
+              option-label="unidadearmazenadora"
+              emit-value
+              map-options
+              outlined
+              label="Unidade"
+              class="col"
+              @update:model-value="setRotuloPonto(p)"
+            />
+            <q-select
+              v-else
+              v-model="p.codcontrato"
+              :options="store.contratosAtivos"
+              option-value="codcontrato"
+              :option-label="(c) => store.rotuloContrato(c.codcontrato)"
+              emit-value
+              map-options
+              outlined
+              label="Contrato (compra)"
+              class="col"
+              @update:model-value="setRotuloPonto(p)"
+            />
+            <MgInputValor
+              v-model="p.liquido"
+              :decimals="0"
+              suffix="kg"
+              label="Líquido"
+              class="col-3"
+            />
+            <q-btn
+              flat
+              round
+              color="grey-7"
+              icon="close"
+              class="col-auto"
+              @click="removerPonto(p)"
+            />
+          </div>
+          <div
+            v-if="origens.length"
+            class="text-caption q-mb-xs"
+            :class="bate(somaOrigens) ? 'text-grey-7' : 'text-orange-8'"
+          >
+            Soma das origens: {{ fmt(somaOrigens) }} kg
+            <span v-if="calc.liquido"> · líquido {{ fmt(calc.liquido) }} kg</span>
+          </div>
+          <div class="q-gutter-sm">
+            <q-btn
+              flat
+              color="brown-6"
+              icon="grass"
+              label="Talhão"
+              @click="addPonto('ORIGEM', 'PLANTIO')"
+            />
+            <q-btn
+              flat
+              color="amber-8"
+              icon="warehouse"
+              label="Unidade"
+              @click="addPonto('ORIGEM', 'UNIDADE')"
+            />
+            <q-btn
+              flat
+              color="teal-7"
+              icon="description"
+              label="Contrato"
+              @click="addPonto('ORIGEM', 'CONTRATO')"
+            />
           </div>
         </div>
 
         <q-separator />
 
-        <!-- Peso bruto (sempre visível desde a chegada) -->
-        <MgInputValor v-model="local.pesobruto" :decimals="0" suffix="kg" label="Peso bruto" />
+        <!-- Destinos -->
+        <div>
+          <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
+          <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-sm">
+            <div class="row q-col-gutter-sm items-center">
+              <q-chip
+                :color="
+                  p.contatipo === 'UNIDADE'
+                    ? 'amber-7'
+                    : p.contatipo === 'CONTRATO'
+                      ? 'teal-7'
+                      : 'brown-5'
+                "
+                text-color="white"
+                :label="p.contatipo"
+              />
+              <q-select
+                v-if="p.contatipo === 'UNIDADE'"
+                v-model="p.codunidadearmazenadora"
+                :options="unidadesAtivas"
+                option-value="codunidadearmazenadora"
+                option-label="unidadearmazenadora"
+                emit-value
+                map-options
+                outlined
+                label="Unidade"
+                class="col"
+                @update:model-value="setRotuloPonto(p)"
+              />
+              <q-select
+                v-else
+                v-model="p.codcontrato"
+                :options="store.contratosAtivos"
+                option-value="codcontrato"
+                :option-label="(c) => store.rotuloContrato(c.codcontrato)"
+                emit-value
+                map-options
+                outlined
+                label="Contrato (venda)"
+                class="col"
+                @update:model-value="setRotuloPonto(p)"
+              />
+              <MgInputValor
+                v-model="p.liquido"
+                :decimals="0"
+                suffix="kg"
+                label="Líquido"
+                class="col-3"
+              />
+              <q-btn
+                flat
+                round
+                color="grey-7"
+                icon="close"
+                class="col-auto"
+                @click="removerPonto(p)"
+              />
+            </div>
+            <div v-if="p.contatipo === 'CONTRATO' && p.codcontrato" class="text-caption q-pl-sm">
+              <span v-if="saldoContrato(p.codcontrato) === Infinity" class="text-deep-purple-7">
+                <q-icon name="all_inclusive" /> Volume em aberto
+              </span>
+              <span
+                v-else
+                :class="
+                  (Number(p.liquido) || 0) > saldoContrato(p.codcontrato) + 1
+                    ? 'text-negative text-weight-medium'
+                    : 'text-grey-6'
+                "
+              >
+                Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
+              </span>
+            </div>
+            <div
+              v-if="mostrarFiscal && p.contatipo === 'CONTRATO'"
+              class="row q-col-gutter-sm q-mt-xs"
+            >
+              <q-input v-model="p.numeronf" label="Nº NF" outlined class="col" />
+              <MgInputValor
+                v-model="p.valornf"
+                :decimals="2"
+                prefix="R$"
+                label="Valor NF"
+                class="col"
+              />
+            </div>
+          </div>
+          <div
+            v-if="destinos.length"
+            class="text-caption q-mb-xs"
+            :class="bate(somaDestinos) ? 'text-grey-7' : 'text-orange-8'"
+          >
+            Soma dos destinos: {{ fmt(somaDestinos) }} kg
+          </div>
+          <div class="q-gutter-sm">
+            <q-btn
+              flat
+              color="amber-8"
+              icon="warehouse"
+              label="Unidade"
+              @click="addPonto('DESTINO', 'UNIDADE')"
+            />
+            <q-btn
+              flat
+              color="teal-7"
+              icon="description"
+              label="Contrato"
+              @click="addPonto('DESTINO', 'CONTRATO')"
+            />
+          </div>
+        </div>
 
-        <!-- Tara (a partir da etapa de tara) -->
+        <q-separator />
+
+        <!-- Pesos (ordem por sentido) -->
+        <MgInputValor
+          v-if="mostrarPbt"
+          v-model="local.pbt"
+          :decimals="0"
+          suffix="kg"
+          label="Peso bruto total (caminhão + carga)"
+        />
         <MgInputValor
           v-if="mostrarTara"
           v-model="local.tara"
           :decimals="0"
           suffix="kg"
-          label="Tara"
+          label="Tara (caminhão vazio)"
         />
 
-        <!-- Classificação (a partir da etapa de classificação) -->
+        <!-- Classificação (só recebimento, a partir da etapa) -->
         <div v-if="mostrarClassificacao" class="row q-col-gutter-x-md">
           <MgInputValor
             v-model="local.umidade"
@@ -434,28 +650,24 @@ function fmt(v, dec = 0) {
           />
         </div>
 
-        <!-- Resultado (calculado offline, quando já há peso líquido) -->
+        <!-- Resultado -->
         <q-card v-if="mostrarResultado" flat bordered class="bg-grey-1">
-          <q-card-section class="q-pa-sm">
-            <div class="row text-center">
-              <div class="col">
-                <div class="text-caption text-grey-7">Líquido</div>
-                <div class="text-weight-medium">{{ fmt(calc.pesoliquido) }} kg</div>
-              </div>
-              <div class="col">
-                <div class="text-caption text-grey-7">Desconto</div>
-                <div class="text-weight-medium text-orange-9">{{ fmt(somaDescontos) }} kg</div>
-              </div>
-              <div class="col">
-                <div class="text-caption text-grey-7">Líquido seco</div>
-                <div class="text-weight-medium text-green-9">
-                  {{ fmt(calc.pesoliquidoseco) }} kg
-                </div>
-              </div>
-              <div class="col">
-                <div class="text-caption text-grey-7">Sacas</div>
-                <div class="text-weight-medium">{{ fmt(sacasSeco, 1) }}</div>
-              </div>
+          <q-card-section class="q-pa-sm row text-center">
+            <div class="col">
+              <div class="text-caption text-grey-7">Bruto</div>
+              <div class="text-weight-medium">{{ fmt(calc.bruto) }} kg</div>
+            </div>
+            <div class="col">
+              <div class="text-caption text-grey-7">Desconto</div>
+              <div class="text-weight-medium text-orange-9">{{ fmt(calc.desconto) }} kg</div>
+            </div>
+            <div class="col">
+              <div class="text-caption text-grey-7">Líquido</div>
+              <div class="text-weight-medium text-green-9">{{ fmt(calc.liquido) }} kg</div>
+            </div>
+            <div class="col">
+              <div class="text-caption text-grey-7">Sacas</div>
+              <div class="text-weight-medium">{{ fmt(sacasLiquido, 1) }}</div>
             </div>
           </q-card-section>
         </q-card>
@@ -467,12 +679,10 @@ function fmt(v, dec = 0) {
 
       <q-card-actions align="right">
         <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-        <!-- Ação única = próxima movimentação do kanban. Caminhão novo entra na
-             coluna Peso Bruto (Registrar); os demais avançam de etapa. -->
         <q-btn
           unelevated
           color="primary"
-          :label="novo ? 'Registrar' : rotuloAvancar[local.etapa]"
+          :label="novo ? 'Registrar' : rotuloAcao[local.etapa]"
           @click="novo ? salvar() : avancar()"
         />
       </q-card-actions>

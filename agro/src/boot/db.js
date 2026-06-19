@@ -38,4 +38,16 @@ db.version(4).stores({
   veiculo: 'codveiculo, placa, sincronizado',
 })
 
+// v5: Carga UNIFICADA (recebimento + expedição + transferência) substitui
+// cargacolheita + embarque. As origens/destinos (pontos) ficam embutidos no
+// registro da carga (array), como os talhões/contratos ficavam antes. O extrato
+// (tblmovimentograo) é gerado no servidor; aqui só cacheamos os saldos por
+// unidade armazenadora p/ exibir/avisar offline. Cadastro de unidade cacheado.
+db.version(5).stores({
+  cargacolheita: null, // substituído por 'carga'
+  embarque: null, // substituído por 'carga'
+  carga: 'uuid, codcarga, sincronizado, codsafra, sentido, etapa, data',
+  unidadearmazenadora: 'codunidadearmazenadora, sincronizado',
+})
+
 export default db

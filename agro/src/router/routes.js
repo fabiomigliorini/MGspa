@@ -14,10 +14,22 @@ const routes = [
       },
 
       {
-        path: 'patio',
-        name: 'patio',
-        component: () => import('pages/PatioPage.vue'),
-        meta: { auth: true, title: 'Pátio de Recebimento' },
+        path: 'carga',
+        name: 'carga',
+        component: () => import('pages/CargaPage.vue'),
+        meta: { auth: true, title: 'Pátio de Cargas' },
+      },
+      {
+        path: 'extrato',
+        name: 'extrato',
+        component: () => import('pages/ExtratoPage.vue'),
+        meta: { auth: true, title: 'Estoque & Extrato' },
+      },
+      {
+        path: 'unidades-armazenadoras',
+        name: 'unidades-armazenadoras',
+        component: () => import('pages/UnidadesArmazenadorasPage.vue'),
+        meta: { auth: true, title: 'Unidades Armazenadoras' },
       },
 
       {
@@ -75,13 +87,6 @@ const routes = [
         component: () => import('pages/ContratoDetailPage.vue'),
         meta: { auth: true, title: 'Contrato' },
       },
-      {
-        path: 'embarque',
-        name: 'embarque',
-        component: () => import('pages/EmbarquePage.vue'),
-        meta: { auth: true, title: 'Pátio de Expedição' },
-      },
-
       {
         path: 'sem-permissao',
         name: 'sem-permissao',

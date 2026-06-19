@@ -340,12 +340,27 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('safra/{codsafra}/plantio/{codplantio}/inativo', [\Mg\Fazenda\PlantioController::class, 'ativar']);
     Route::apiResource('safra.plantio', \Mg\Fazenda\PlantioController::class)->parameters(['safra' => 'codsafra', 'plantio' => 'codplantio']);
 
-    // Carga de colheita (offline-first: upsert por uuid)
-    Route::get('carga-colheita', [\Mg\Safra\CargaColheitaController::class, 'index']);
-    Route::post('carga-colheita/sincronizar', [\Mg\Safra\CargaColheitaController::class, 'sincronizar']);
-    Route::post('carga-colheita/{codcargacolheita}/inativo', [\Mg\Safra\CargaColheitaController::class, 'inativar']);
-    Route::delete('carga-colheita/{codcargacolheita}/inativo', [\Mg\Safra\CargaColheitaController::class, 'ativar']);
-    Route::get('carga-colheita/{codcargacolheita}', [\Mg\Safra\CargaColheitaController::class, 'show'])->whereNumber('codcargacolheita');
+    // Carga unificada (recebimento/expedicao/transferencia) — Mg\Grao, offline (uuid).
+    // O extrato (tblmovimentograo) e gerado pelo servidor a partir dos pontos.
+    Route::get('carga', [\Mg\Grao\CargaController::class, 'index']);
+    Route::post('carga/sincronizar', [\Mg\Grao\CargaController::class, 'sincronizar']);
+    Route::post('carga/recalcular', [\Mg\Grao\CargaController::class, 'recalcular']);
+    Route::post('carga/{codcarga}/inativo', [\Mg\Grao\CargaController::class, 'inativar']);
+    Route::delete('carga/{codcarga}/inativo', [\Mg\Grao\CargaController::class, 'ativar']);
+    Route::get('carga/{codcarga}', [\Mg\Grao\CargaController::class, 'show'])->whereNumber('codcarga');
+
+    // Unidade armazenadora (silo proprio / armazem de terceiro / silo bag) — Mg\Grao
+    Route::post('unidade-armazenadora/{codunidadearmazenadora}/inativo', [\Mg\Grao\UnidadeArmazenadoraController::class, 'inativar']);
+    Route::delete('unidade-armazenadora/{codunidadearmazenadora}/inativo', [\Mg\Grao\UnidadeArmazenadoraController::class, 'ativar']);
+    Route::apiResource('unidade-armazenadora', \Mg\Grao\UnidadeArmazenadoraController::class)
+        ->parameters(['unidade-armazenadora' => 'codunidadearmazenadora']);
+
+    // Extrato/razao de grao (movimento) + ajustes manuais comerciais — Mg\Grao
+    Route::get('movimento-grao/saldos-unidades', [\Mg\Grao\MovimentoGraoController::class, 'saldosUnidades']);
+    Route::get('movimento-grao', [\Mg\Grao\MovimentoGraoController::class, 'index']);
+    Route::post('movimento-grao', [\Mg\Grao\MovimentoGraoController::class, 'store']);
+    Route::post('movimento-grao/{codmovimentograo}/inativo', [\Mg\Grao\MovimentoGraoController::class, 'inativar']);
+    Route::delete('movimento-grao/{codmovimentograo}/inativo', [\Mg\Grao\MovimentoGraoController::class, 'ativar']);
 
     // Unidade de referência fiscal (UPF-MT, UR municipal) — Mg\UnidadeReferencia
     Route::post('unidade-referencia/importar-upf-mt', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'importarUpfMt']);
@@ -381,13 +396,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('contrato.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['contrato' => 'codcontrato', 'pagamento' => 'codpagamento']);
-
-    // Embarque (expedicao) — Mg\Embarque, offline sync por uuid
-    Route::get('embarque', [\Mg\Embarque\EmbarqueController::class, 'index']);
-    Route::post('embarque/sincronizar', [\Mg\Embarque\EmbarqueController::class, 'sincronizar']);
-    Route::post('embarque/{codembarque}/inativo', [\Mg\Embarque\EmbarqueController::class, 'inativar']);
-    Route::delete('embarque/{codembarque}/inativo', [\Mg\Embarque\EmbarqueController::class, 'ativar']);
-    Route::get('embarque/{codembarque}', [\Mg\Embarque\EmbarqueController::class, 'show'])->whereNumber('codembarque');
 
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);

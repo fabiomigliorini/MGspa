@@ -66,14 +66,14 @@ function fmtData(d) {
 // o embarque grava kg. Ponte: pesosaca da cultura (default 60). Dashboards
 // mostram kg primário + sacas derivadas.
 const pesosaca = computed(() => n(contrato.value?.pesosaca) || 60)
-const semlimite = computed(() => !!contrato.value?.semlimite)
+const volumeemaberto = computed(() => !!contrato.value?.volumeemaberto)
 const contratado = computed(() => n(contrato.value?.quantidade)) // sc negociadas
 const contratadokg = computed(() => n(contrato.value?.contratadokg))
 const carregadokg = computed(() => n(contrato.value?.carregadokg))
 const carregadosc = computed(() => n(contrato.value?.carregadosc))
-// saldo em kg; null/sem teto quando contrato semlimite (leva o saldo do silo).
+// saldo em kg; null/sem teto quando contrato volumeemaberto (leva o saldo do silo).
 const saldokg = computed(() =>
-  semlimite.value ? null : Math.max(0, contratadokg.value - carregadokg.value),
+  volumeemaberto.value ? null : Math.max(0, contratadokg.value - carregadokg.value),
 )
 const fixado = computed(() => n(contrato.value?.fixado))
 const afixar = computed(() => contratado.value - fixado.value)
@@ -104,7 +104,8 @@ const fixacoes = computed(() => (contrato.value?.ContratoFixacaoS || []).filter(
 const pagamentos = computed(() =>
   (contrato.value?.ContratoPagamentoS || []).filter((p) => !p.inativo),
 )
-const embarques = computed(() => contrato.value?.EmbarqueContratoS || [])
+// Entregas = movimentos deste contrato no extrato (cada carga que o moveu).
+const entregas = computed(() => contrato.value?.MovimentoGraoS || [])
 
 async function recarregar() {
   carregando.value = true
@@ -404,8 +405,8 @@ onMounted(async () => {
               flat
               color="green-7"
               icon="local_shipping"
-              label="Embarque"
-              :to="{ name: 'embarque', query: { codcontrato: cod } }"
+              label="Pátio"
+              :to="{ name: 'carga' }"
             />
           </div>
         </q-card-section>
@@ -424,7 +425,9 @@ onMounted(async () => {
               <div class="text-h5 q-mt-sm row items-center">
                 <div>
                   {{ fmt(carregadokg) }}
-                  <span class="text-caption">/ {{ semlimite ? '∞' : fmt(contratadokg) }} kg</span>
+                  <span class="text-caption"
+                    >/ {{ volumeemaberto ? '∞' : fmt(contratadokg) }} kg</span
+                  >
                 </div>
                 <!-- Modo do contrato ao lado da quantidade -->
                 <q-chip
@@ -439,18 +442,20 @@ onMounted(async () => {
               </div>
               <!-- Sacas derivadas (unidade comercial) -->
               <div class="text-caption text-grey-6">
-                ≈ {{ fmt(carregadosc, 1) }} / {{ semlimite ? '∞' : fmt(contratado) }} sc
+                ≈ {{ fmt(carregadosc, 1) }} / {{ volumeemaberto ? '∞' : fmt(contratado) }} sc
               </div>
               <q-linear-progress
-                :value="!semlimite && contratadokg ? Math.min(1, carregadokg / contratadokg) : 0"
-                :indeterminate="semlimite"
+                :value="
+                  !volumeemaberto && contratadokg ? Math.min(1, carregadokg / contratadokg) : 0
+                "
+                :indeterminate="volumeemaberto"
                 color="green-6"
                 track-color="grey-3"
                 size="8px"
                 rounded
                 class="q-my-sm"
               />
-              <div v-if="semlimite" class="text-caption text-deep-purple-7">
+              <div v-if="volumeemaberto" class="text-caption text-deep-purple-7">
                 <q-icon name="all_inclusive" /> Sem limite — leva o saldo do silo
               </div>
               <div v-else class="text-caption text-grey-7">
@@ -656,42 +661,40 @@ onMounted(async () => {
         </q-list>
       </q-card>
 
-      <!-- Embarques / NFs -->
+      <!-- Entregas (extrato) -->
       <q-card flat bordered>
         <q-item>
           <q-item-section>
-            <q-item-label class="text-subtitle1">Embarques e notas fiscais</q-item-label>
+            <q-item-label class="text-subtitle1">Entregas</q-item-label>
             <q-item-label caption
-              >{{ fmt(carregadokg) }} kg (≈ {{ fmt(carregadosc, 1) }} sc) · {{ rs(valornf) }} em
-              NFs</q-item-label
+              >{{ fmt(carregadokg) }} kg (≈ {{ fmt(carregadosc, 1) }} sc) entregue</q-item-label
             >
           </q-item-section>
         </q-item>
         <q-separator />
         <q-list separator>
-          <q-item v-for="e in embarques" :key="e.codembarquecontrato">
-            <q-item-section avatar
-              ><q-avatar color="green-6" text-color="white" icon="local_shipping"
-            /></q-item-section>
+          <q-item v-for="e in entregas" :key="e.codmovimentograo">
+            <q-item-section avatar>
+              <q-avatar
+                :color="e.manual ? 'deep-purple-5' : 'green-6'"
+                text-color="white"
+                :icon="e.manual ? 'edit_note' : 'local_shipping'"
+              />
+            </q-item-section>
             <q-item-section>
               <q-item-label
                 >{{ fmt(e.quantidadekg) }} kg
                 <span class="text-caption text-grey-6">(≈ {{ fmt(e.quantidadesc, 1) }} sc)</span>
               </q-item-label>
               <q-item-label caption>
-                {{ e.Embarque?.placa || '—' }}
-                <span v-if="e.numeronf"> · NF {{ e.numeronf }}</span>
+                {{ e.Carga?.placa || (e.manual ? 'Ajuste manual' : '—') }}
+                <span v-if="e.data"> · {{ new Date(e.data).toLocaleDateString('pt-BR') }}</span>
               </q-item-label>
             </q-item-section>
-            <q-item-section side>
-              <q-item-label class="text-deep-orange-9">{{
-                e.valornf ? rs(e.valornf) : '—'
-              }}</q-item-label>
-            </q-item-section>
           </q-item>
-          <q-item v-if="!embarques.length">
+          <q-item v-if="!entregas.length">
             <q-item-section class="text-grey-6"
-              >Nenhum embarque ainda. Carregue no pátio de expedição.</q-item-section
+              >Nenhuma entrega ainda. Carregue no pátio.</q-item-section
             >
           </q-item>
         </q-list>

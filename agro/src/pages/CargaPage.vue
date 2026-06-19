@@ -8,39 +8,26 @@ import CargaDialog from 'components/CargaDialog.vue'
 const store = useCargaStore()
 const sinc = useSincronizacaoStore()
 
-const { safras, codsafraAtiva, cargasPorEtapa, culturaAtiva } = storeToRefs(store)
+const { safras, codsafraAtiva, sentidoAtivo, etapasDoSentido, cargasPorEtapa, culturaAtiva } =
+  storeToRefs(store)
 const { online, sincronizando } = storeToRefs(sinc)
 
-// Etapas em ordem do fluxo da carga (chegada → finalização).
-const etapas = [
-  { etapa: 'BRUTO', label: 'Peso Bruto', curto: 'Bruto', icon: 'scale', color: 'orange-8' },
-  {
-    etapa: 'CLASSIFICACAO',
-    label: 'Classificação',
-    curto: 'Classif.',
-    icon: 'science',
-    color: 'deep-purple-6',
-  },
-  { etapa: 'TARA', label: 'Tara', curto: 'Tara', icon: 'monitor_weight', color: 'teal-7' },
-  { etapa: 'FINALIZADO', label: 'Finalizado', curto: 'Final', icon: 'task_alt', color: 'green-7' },
-]
-
-const proximoLabel = {
-  BRUTO: 'Classificar',
-  CLASSIFICACAO: 'Classificar',
-  TARA: 'Pesar tara',
-  FINALIZADO: 'Imprimir Romaneio',
+// Metadados de cada etapa (todas as etapas possíveis; o board mostra as do sentido).
+const ETAPA_META = {
+  PBT: { label: 'Peso Bruto', icon: 'scale', color: 'orange-8' },
+  TARA: { label: 'Tara', icon: 'monitor_weight', color: 'teal-7' },
+  CLASSIFICACAO: { label: 'Classificação', icon: 'science', color: 'deep-purple-6' },
+  FISCAL: { label: 'Nota Fiscal', icon: 'receipt_long', color: 'deep-orange-7' },
+  FINALIZADO: { label: 'Finalizado', icon: 'task_alt', color: 'green-7' },
 }
 
-// Cargas finalizadas se acumulam ao longo do dia; começam recolhidas pra não
-// poluir o pátio. O total do dia continua visível mesmo recolhido.
-const finalizadosOcultos = ref(true)
+const colunas = computed(() => etapasDoSentido.value.map((e) => ({ etapa: e, ...ETAPA_META[e] })))
 
+const finalizadosOcultos = ref(true)
 function listaVisivel(etapa) {
   return !(etapa === 'FINALIZADO' && finalizadosOcultos.value)
 }
 
-// Voltar para o detalhe da safra ativa (de onde se chega ao pátio).
 const voltarSafra = computed(() =>
   codsafraAtiva.value ? { name: 'safra-detalhe', params: { codsafra: codsafraAtiva.value } } : null,
 )
@@ -54,41 +41,29 @@ function abrir(carga) {
   novo.value = false
   dialog.value = true
 }
-
-function novoCaminhao() {
+function novaCarga() {
   cargaSel.value = store.nova()
   novo.value = true
   dialog.value = true
 }
-
-// Salvar fecha o modal (deixa a carga na etapa atual).
 async function onSalvar(carga) {
   await store.salvar(carga)
   dialog.value = false
 }
-
-// Avançar persiste mas mantém o modal aberto pra continuar o fluxo.
 async function onAvancar(carga) {
   await store.salvar(carga)
 }
 
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
-
-const totalSecoDia = computed(() =>
-  cargasPorEtapa.value.FINALIZADO.reduce((s, c) => s + (Number(c.pesoliquidoseco) || 0), 0),
+const totalLiquidoDia = computed(() =>
+  (cargasPorEtapa.value.FINALIZADO || []).reduce((s, c) => s + (Number(c.liquido) || 0), 0),
 )
 
 function indiceEtapa(etapa) {
-  return etapas.findIndex((e) => e.etapa === etapa)
+  return etapasDoSentido.value.indexOf(etapa)
 }
-
-function corEtapa(etapa) {
-  return etapas.find((e) => e.etapa === etapa)?.color || 'grey-5'
-}
-
-// Cor de cada segmento da barra de progresso do card.
 function corSegmento(carga, i) {
-  return i <= indiceEtapa(carga.etapa) ? corEtapa(carga.etapa) : 'grey-3'
+  return i <= indiceEtapa(carga.etapa) ? ETAPA_META[carga.etapa]?.color || 'grey-5' : 'grey-3'
 }
 
 function fmt(v, dec = 0) {
@@ -99,23 +74,22 @@ function fmt(v, dec = 0) {
   })
 }
 
-function talhoes(carga) {
-  if (!carga.plantios?.length) return 'Sem talhão'
-  return carga.plantios.map((p) => p.rotulo || `Talhão ${p.codplantio}`).join(' · ')
+function pontosResumo(carga) {
+  const origem = (carga.pontos || []).filter((p) => p.papel === 'ORIGEM')
+  const destino = (carga.pontos || []).filter((p) => p.papel === 'DESTINO')
+  const lista = (carga.sentido === 'SAIDA' ? destino : origem).map((p) => p.rotulo).filter(Boolean)
+  return lista.length ? lista.join(' · ') : 'Sem origem/destino'
 }
 
 function resumo(carga) {
   if (carga.etapa === 'FINALIZADO') {
-    return `${fmt(carga.pesoliquidoseco)} kg · ${fmt((carga.pesoliquidoseco || 0) / pesosaca.value)} sc`
+    return `${fmt(carga.liquido)} kg · ${fmt((carga.liquido || 0) / pesosaca.value)} sc`
   }
-  if (carga.tara) return `Líquido ${fmt(carga.pesoliquido)} kg`
-  if (carga.pesobruto) return `Bruto ${fmt(carga.pesobruto)} kg`
+  if (carga.bruto) return `Bruto ${fmt(carga.bruto)} kg`
+  if (carga.pbt) return `PBT ${fmt(carga.pbt)} kg`
   return carga.motorista || 'Aguardando pesagem'
 }
 
-// Header e footer são `reveal` (view "hHh lpR fFf"), então o QPage assumiria
-// 100vh e o board passaria do visível (sobra no fim). Desconta a altura do
-// header+rodapé pra o kanban encaixar exatamente na área visível.
 function pageStyleFn(offset) {
   return { minHeight: `calc(100vh - ${offset || 80}px)` }
 }
@@ -129,7 +103,7 @@ onMounted(async () => {
 
 <template>
   <q-page class="column" :style-fn="pageStyleFn">
-    <!-- Barra superior: safra + status -->
+    <!-- Barra superior: safra + sentido + status -->
     <div class="bg-white q-px-md q-py-sm">
       <div class="row items-center no-wrap q-gutter-sm">
         <q-btn
@@ -175,28 +149,41 @@ onMounted(async () => {
           <q-tooltip>Sincronizar</q-tooltip>
         </q-btn>
       </div>
+
+      <!-- Seletor de operação (sentido) -->
+      <div class="row q-mt-sm">
+        <q-btn-toggle
+          :model-value="sentidoAtivo"
+          :options="store.SENTIDOS.map((s) => ({ value: s.value, label: s.label, icon: s.icon }))"
+          unelevated
+          no-caps
+          toggle-color="primary"
+          color="white"
+          text-color="grey-8"
+          class="col"
+          spread
+          @update:model-value="store.definirSentido"
+        />
+      </div>
     </div>
 
-    <!-- Kanban horizontal: uma coluna por etapa (igual à Expedição) -->
+    <!-- Kanban horizontal: uma coluna por etapa do sentido -->
     <div class="row no-wrap q-gutter-md q-pa-md bg-grey-2 col" style="overflow-x: auto">
       <q-card
-        v-for="e in etapas"
+        v-for="e in colunas"
         :key="e.etapa"
         flat
         bordered
         class="overflow-hidden col column"
         style="min-width: 260px"
       >
-        <!-- Cabeçalho da etapa (Finalizado é recolhível) -->
         <q-item
           :class="`bg-${e.color} text-white`"
           class="rounded-borders"
           :clickable="e.etapa === 'FINALIZADO'"
           @click="e.etapa === 'FINALIZADO' && (finalizadosOcultos = !finalizadosOcultos)"
         >
-          <q-item-section avatar>
-            <q-icon :name="e.icon" />
-          </q-item-section>
+          <q-item-section avatar><q-icon :name="e.icon" /></q-item-section>
           <q-item-section>
             <q-item-label class="text-weight-medium">{{ e.label }}</q-item-label>
           </q-item-section>
@@ -205,7 +192,7 @@ onMounted(async () => {
               <q-badge
                 color="white"
                 :text-color="e.color"
-                :label="cargasPorEtapa[e.etapa].length"
+                :label="(cargasPorEtapa[e.etapa] || []).length"
               />
               <q-icon
                 v-if="e.etapa === 'FINALIZADO'"
@@ -218,24 +205,19 @@ onMounted(async () => {
         </q-item>
 
         <div class="q-px-sm q-pb-sm col scroll">
-          <!-- Total do dia (só na etapa Finalizado) -->
           <q-banner
-            v-if="e.etapa === 'FINALIZADO' && cargasPorEtapa.FINALIZADO.length"
+            v-if="e.etapa === 'FINALIZADO' && (cargasPorEtapa.FINALIZADO || []).length"
             rounded
             class="bg-green-1 text-green-10 q-mt-sm"
           >
-            <template #avatar>
-              <q-icon name="agriculture" color="green-8" />
-            </template>
-            <div class="text-weight-medium">Total colhido hoje</div>
-            {{ fmt(totalSecoDia) }} kg · {{ fmt(totalSecoDia / pesosaca) }} sacas
+            <template #avatar><q-icon name="agriculture" color="green-8" /></template>
+            <div class="text-weight-medium">Total líquido</div>
+            {{ fmt(totalLiquidoDia) }} kg · {{ fmt(totalLiquidoDia / pesosaca) }} sacas
           </q-banner>
 
-          <!-- Listagem das cargas desta etapa (recolhível em Finalizado) -->
           <div v-show="listaVisivel(e.etapa)">
-            <!-- Cards das cargas desta etapa -->
             <q-card
-              v-for="carga in cargasPorEtapa[e.etapa]"
+              v-for="carga in cargasPorEtapa[e.etapa] || []"
               :key="carga.uuid"
               flat
               bordered
@@ -246,7 +228,7 @@ onMounted(async () => {
                 <div class="row items-start no-wrap">
                   <div class="col">
                     <div class="text-h6 text-weight-bold">{{ carga.placa || 'Sem placa' }}</div>
-                    <div class="text-caption text-grey-7">{{ talhoes(carga) }}</div>
+                    <div class="text-caption text-grey-7">{{ pontosResumo(carga) }}</div>
                   </div>
                   <q-icon
                     :name="carga.sincronizado ? 'cloud_done' : 'cloud_off'"
@@ -258,11 +240,10 @@ onMounted(async () => {
                 </div>
               </q-card-section>
 
-              <!-- Barra de progresso das etapas -->
               <q-card-section class="q-py-xs">
                 <div class="row no-wrap q-gutter-xs">
                   <div
-                    v-for="(s, i) in etapas"
+                    v-for="(s, i) in colunas"
                     :key="s.etapa"
                     class="col"
                     :class="`bg-${corSegmento(carga, i)}`"
@@ -276,15 +257,17 @@ onMounted(async () => {
                 <q-btn
                   flat
                   color="primary"
-                  :label="proximoLabel[carga.etapa]"
+                  label="Abrir"
                   icon-right="chevron_right"
                   @click.stop="abrir(carga)"
                 />
               </q-card-section>
             </q-card>
 
-            <!-- Etapa vazia -->
-            <div v-if="!cargasPorEtapa[e.etapa].length" class="text-grey-5 text-center q-pa-md">
+            <div
+              v-if="!(cargasPorEtapa[e.etapa] || []).length"
+              class="text-grey-5 text-center q-pa-md"
+            >
               Nenhum caminhão nesta etapa
             </div>
           </div>
@@ -292,9 +275,8 @@ onMounted(async () => {
       </q-card>
     </div>
 
-    <!-- Adicionar caminhão -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" label="Caminhão" @click="novoCaminhao" />
+      <q-btn fab icon="add" color="primary" label="Carga" @click="novaCarga" />
     </q-page-sticky>
 
     <CargaDialog
