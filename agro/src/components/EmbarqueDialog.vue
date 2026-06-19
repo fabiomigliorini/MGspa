@@ -185,17 +185,20 @@ function maxKgLinha(c) {
   const outras = somaLinhasContrato(c.codcontrato) - (Number(c.quantidade) || 0)
   return Math.max(0, o.saldokg - outras)
 }
-// Trava o valor digitado no saldo do contrato — não deixa registrar acima do
-// que falta embarcar (o :max só corrige no blur; aqui corta ao vivo).
-function limitarKgContrato(c, v) {
+// Atribui os kg da linha já travados no saldo do contrato — não deixa registrar
+// acima do que falta embarcar. É o setter do v-model (single handler, sem corrida
+// de ordem com o v-model); o :max ainda cobre colar/setas no blur.
+function setKgContrato(c, v) {
   const m = maxKgLinha(c)
-  if (m !== null && Number(v) > m) {
+  if (m !== null && v != null && Number(v) > m) {
     c.quantidade = m
     $q.notify({
       type: 'warning',
       message: `Limitado ao saldo do contrato (${fmt(m)} kg).`,
       timeout: 1500,
     })
+  } else {
+    c.quantidade = v
   }
 }
 // Primeiro contrato cujo carregamento excede o saldo (null = tudo ok).
@@ -241,7 +244,7 @@ function addContrato() {
 function setRotuloContrato(c) {
   c.rotulo = opcoesContrato.value.find((o) => o.value === c.codcontrato)?.rotulo || null
   // Trocar de contrato pode reduzir o saldo: re-limita o que já estava digitado.
-  limitarKgContrato(c, c.quantidade)
+  setKgContrato(c, c.quantidade)
 }
 function addOrigem(tipo) {
   local.value.origens.push({ tipo, codplantio: null, quantidade: null })
@@ -436,13 +439,13 @@ function fmt(v, dec = 0) {
                 @update:model-value="setRotuloContrato(c)"
               />
               <MgInputValor
-                v-model="c.quantidade"
+                :model-value="c.quantidade"
                 :decimals="0"
                 :max="maxKgLinha(c)"
                 suffix="kg"
                 label="Quilos"
                 class="col-4"
-                @update:model-value="(v) => limitarKgContrato(c, v)"
+                @update:model-value="(v) => setKgContrato(c, v)"
               />
               <q-btn
                 flat
