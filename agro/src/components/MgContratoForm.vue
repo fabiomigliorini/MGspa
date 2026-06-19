@@ -125,12 +125,13 @@ onMounted(async () => {
 })
 
 async function salvar() {
-  await props.cad.salvar((f) => ({
+  const saved = await props.cad.salvar((f) => ({
     ...f,
     comissaototal: comissaoTotal.value,
     ...(props.fixar || {}),
   }))
-  if (!props.cad.dialog) emit('saved')
+  // saved (com codcontrato) sobe pro pai — na criação, ele navega pra tela do contrato.
+  if (!props.cad.dialog) emit('saved', saved)
 }
 </script>
 
@@ -142,7 +143,38 @@ async function salvar() {
           <div class="text-h6">{{ cad.isNovo ? 'Novo Contrato' : 'Editar Contrato' }}</div>
         </q-card-section>
 
+        <!-- NOVO: rascunho mínimo (só identificação). Quantidade, preço, fixação,
+             entrega e fiscal configuram-se depois na tela do contrato. -->
+        <q-card-section v-if="cad.isNovo" class="row q-col-gutter-md q-pt-md">
+          <div class="col-12 text-overline text-grey-7">Identificação</div>
+          <div class="col-12 col-sm-4">
+            <q-input v-model="cad.form.contrato" label="Nº / identificação" outlined autofocus />
+          </div>
+          <div class="col-12 col-sm-4">
+            <q-select
+              v-model="cad.form.codfilial"
+              :options="filiais"
+              emit-value
+              map-options
+              outlined
+              clearable
+              label="Produtor (filial)"
+            />
+          </div>
+          <div class="col-12 col-sm-4">
+            <MgInputData v-model="cad.form.datacontrato" label="Data do contrato" type="date" />
+          </div>
+          <div class="col-12">
+            <MgSelectPessoa v-model="cad.form.codpessoa" label="Comprador" />
+          </div>
+          <div class="col-12 text-caption text-grey-6">
+            Quantidade, preço, fixação e dados fiscais você configura na tela do contrato.
+          </div>
+        </q-card-section>
+
+        <!-- EDIÇÃO: formulário completo em abas. -->
         <q-tabs
+          v-if="!cad.isNovo"
           v-model="aba"
           dense
           no-caps
@@ -156,9 +188,9 @@ async function salvar() {
           <q-tab name="intermediarios" label="Intermediários" />
           <q-tab name="fiscal" label="Fiscal" />
         </q-tabs>
-        <q-separator />
+        <q-separator v-if="!cad.isNovo" />
 
-        <q-tab-panels v-model="aba" animated class="scroll" style="min-height: 360px; max-height: 70vh">
+        <q-tab-panels v-if="!cad.isNovo" v-model="aba" animated class="scroll" style="min-height: 360px; max-height: 70vh">
           <!-- ===== Aba Negócio (identificação + valores) ===== -->
           <q-tab-panel name="negocio" class="row q-col-gutter-md">
             <div class="col-12 text-overline text-grey-7">Identificação</div>
@@ -387,7 +419,13 @@ async function salvar() {
         <q-separator />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
+          <q-btn
+            type="submit"
+            flat
+            :label="cad.isNovo ? 'Criar e configurar' : 'Salvar'"
+            color="primary"
+            :loading="cad.salvando"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { useQuasar } from 'quasar'
+import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
-import { notifySuccess, notifyError } from 'src/utils/notify'
+import { notifyError } from 'src/utils/notify'
 import MgContratoForm from 'components/MgContratoForm.vue'
 
 // Grid de contratos de UMA safra (encapsula tudo: lista + dialog novo/editar +
@@ -17,7 +17,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['changed'])
 
-const $q = useQuasar()
+const router = useRouter()
 const cad = useCadastro('contrato', 'codcontrato', 'Contrato')
 const contratos = ref([])
 const naturezas = ref([])
@@ -53,37 +53,18 @@ async function recarregar() {
 }
 
 function novo() {
-  cad.abrirNovo({ tipo: 'FIXO', moeda: 'BRL' })
+  // Rascunho: tipo neutro (a fixar). O tipo real e o resto da configuração ficam
+  // pra tela do contrato — o form de criação só pede a identificação.
+  cad.abrirNovo({ tipo: 'FIXAR', moeda: 'BRL' })
 }
-async function aposSalvar() {
+async function aposSalvar(saved) {
+  // Contrato recém-criado → abre a tela dele pra terminar a configuração.
+  if (saved?.codcontrato) {
+    router.push({ name: 'contrato-detalhe', params: { codcontrato: saved.codcontrato } })
+    return
+  }
   await recarregar()
   emit('changed')
-}
-
-async function alternarInativo(c) {
-  try {
-    if (c.inativo) await api.delete(`v1/contrato/${c.codcontrato}/inativo`)
-    else await api.post(`v1/contrato/${c.codcontrato}/inativo`)
-    await aposSalvar()
-  } catch (e) {
-    notifyError(e)
-  }
-}
-function excluir(c) {
-  $q.dialog({
-    title: 'Excluir',
-    message: `Excluir o contrato ${c.contrato}?`,
-    cancel: true,
-    ok: { label: 'Excluir', color: 'red-5', flat: true },
-  }).onOk(async () => {
-    try {
-      await api.delete(`v1/contrato/${c.codcontrato}`)
-      notifySuccess('Excluído!')
-      await aposSalvar()
-    } catch (e) {
-      notifyError(e)
-    }
-  })
 }
 
 watch(
@@ -168,39 +149,9 @@ onMounted(async () => {
                 </div>
               </q-item-label>
             </q-item-section>
+            <!-- Ações (editar/inativar/excluir) ficam só na tela do contrato. -->
             <q-item-section side>
-              <div class="row items-center no-wrap">
-                <q-btn
-                  flat
-                  round
-                  size="sm"
-                  color="grey-7"
-                  icon="edit"
-                  @click.stop.prevent="cad.editar(c)"
-                >
-                  <q-tooltip>Editar</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  round
-                  size="sm"
-                  color="grey-7"
-                  :icon="c.inativo ? 'play_arrow' : 'pause'"
-                  @click.stop.prevent="alternarInativo(c)"
-                >
-                  <q-tooltip>{{ c.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  round
-                  size="sm"
-                  color="grey-7"
-                  icon="delete"
-                  @click.stop.prevent="excluir(c)"
-                >
-                  <q-tooltip>Excluir</q-tooltip>
-                </q-btn>
-              </div>
+              <q-icon name="chevron_right" color="grey-5" />
             </q-item-section>
           </q-item>
         </q-card>

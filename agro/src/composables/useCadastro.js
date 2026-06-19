@@ -48,14 +48,18 @@ export function useCadastro(endpoint, pk, label = 'Registro') {
     salvando.value = true
     try {
       const payload = transform ? transform({ ...form.value }) : form.value
+      let resp
       if (isNovo.value) {
-        await api.post(endpoint, payload)
+        resp = await api.post(endpoint, payload)
       } else {
-        await api.put(`${endpoint}/${form.value[pk]}`, payload)
+        resp = await api.put(`${endpoint}/${form.value[pk]}`, payload)
       }
       notifySuccess(`${label} salvo!`)
       dialog.value = false
       await carregar()
+      // devolve o registro salvo (desembrulhado) p/ quem precisa do id — ex.:
+      // criar contrato e navegar pra tela dele. Em erro retorna undefined.
+      return resp?.data?.data ?? resp?.data
     } catch (e) {
       notifyError(e)
     } finally {

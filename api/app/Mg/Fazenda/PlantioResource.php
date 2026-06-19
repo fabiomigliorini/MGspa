@@ -12,10 +12,13 @@ class PlantioResource extends Resource
 
         // remove relações em snake_case que o parent injeta (Laravel serializa
         // relação carregada em snake por padrão) — reexpostas em PascalCase abaixo.
+        // ATENÇÃO: NÃO remover 'talhao' — o Plantio tem a COLUNA `talhao` (nome do
+        // talhão) cuja chave colide com a relação Talhao(). O WITH do index não
+        // carrega a relação, então `talhao` aqui é sempre a coluna (o nome). Tirá-la
+        // deixava a lista cair no fallback "Talhão {codplantio}" (só o número).
         unset(
             $ret['safra'],
             $ret['fazenda'],
-            $ret['talhao'],
             $ret['variedade'],
             $ret['carga_colheita_s'],
         );

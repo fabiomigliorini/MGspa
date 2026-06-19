@@ -220,7 +220,8 @@ onMounted(async () => {
     api.get('v1/variedade'),
     api.get('v1/talhao'),
   ])
-  safra.value = s
+  // A API embrulha objeto único em { data: {...} }; desembrulha (igual carregarSafra).
+  safra.value = s.data ?? s
   fazendas.value = f.data ?? f
   variedades.value = v.data ?? v
   talhoesBase.value = t.data ?? t
