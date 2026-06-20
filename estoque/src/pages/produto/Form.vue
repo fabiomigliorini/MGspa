@@ -4,6 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgAutocomplete from 'src/components/MgAutocomplete.vue'
+import MgSelectTipoProduto from '@components/MgSelectTipoProduto.vue'
+import MgSelectTributacao from '@components/MgSelectTributacao.vue'
+import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,11 +16,6 @@ const codproduto = computed(() => route.params.id)
 
 const saving = ref(false)
 const loading = ref(false)
-
-// Selects pequenos carregados uma vez
-const tipos = ref([])
-const tributacoes = ref([])
-const depositos = ref([])
 
 // Opções iniciais (pra exibir o valor atual nos autocompletes ao editar/duplicar)
 const opt = ref({
@@ -71,17 +69,6 @@ function formataNcm(ncm) {
   return String(ncm || '')
 }
 
-async function carregarSelects() {
-  const [t, tr, d] = await Promise.all([
-    api.get('v1/select/tipo-produto', { params: { busca: '' } }),
-    api.get('v1/select/tributacao'),
-    api.get('v1/select/estoque-local'),
-  ])
-  tipos.value = t.data.map((x) => ({ label: x.tipoproduto, value: x.codtipoproduto }))
-  tributacoes.value = tr.data.map((x) => ({ label: x.tributacao, value: x.codtributacao }))
-  depositos.value = d.data
-}
-
 function preencher(p) {
   model.value = {
     produto: p.produto || '',
@@ -110,10 +97,14 @@ function preencher(p) {
   }
   opt.value = {
     marca: p.codmarca ? { label: p.marca, value: p.codmarca } : null,
-    ncm: p.codncm ? { label: `${formataNcm(p.ncm)} — ${p.Ncm?.descricao || ''}`, value: p.codncm } : null,
+    ncm: p.codncm
+      ? { label: `${formataNcm(p.ncm)} — ${p.Ncm?.descricao || ''}`, value: p.codncm }
+      : null,
     cest: p.codcest ? { label: p.cest, value: p.codcest } : null,
     unidade: p.codunidademedida ? { label: p.unidademedida, value: p.codunidademedida } : null,
-    subgrupo: p.codsubgrupoproduto ? { label: p.subgrupoproduto, value: p.codsubgrupoproduto } : null,
+    subgrupo: p.codsubgrupoproduto
+      ? { label: p.subgrupoproduto, value: p.codsubgrupoproduto }
+      : null,
   }
 }
 
@@ -154,7 +145,6 @@ const submit = async () => {
 }
 
 onMounted(async () => {
-  await carregarSelects()
   if (isEdit.value) {
     await carregarProduto(codproduto.value)
   } else if (route.query.duplicar) {
@@ -200,7 +190,7 @@ onMounted(async () => {
                 step="0.01"
                 label="Preço"
                 prefix="R$"
-                :rules="[(v) => (v > 0) || 'Maior que zero']"
+                :rules="[(v) => v > 0 || 'Maior que zero']"
               />
             </div>
             <div class="col-12 col-sm-4">
@@ -218,12 +208,8 @@ onMounted(async () => {
             </div>
 
             <div class="col-12 col-sm-4">
-              <q-select
+              <MgSelectTipoProduto
                 v-model="model.codtipoproduto"
-                :options="tipos"
-                emit-value
-                map-options
-                outlined
                 label="Tipo"
                 :rules="[(v) => !!v || 'Obrigatório']"
               />
@@ -271,12 +257,8 @@ onMounted(async () => {
               />
             </div>
             <div class="col-12 col-sm-4">
-              <q-select
+              <MgSelectTributacao
                 v-model="model.codtributacao"
-                :options="tributacoes"
-                emit-value
-                map-options
-                outlined
                 label="Tributação"
                 :rules="[(v) => !!v || 'Obrigatório']"
               />
@@ -293,14 +275,10 @@ onMounted(async () => {
             </div>
 
             <div class="col-12 col-sm-6">
-              <q-select
+              <MgSelectEstoqueLocal
                 v-model="model.codestoquelocal"
-                :options="depositos"
-                emit-value
-                map-options
-                outlined
-                clearable
                 label="Depósito padrão"
+                clearable
               />
             </div>
             <div class="col-12 col-sm-6 row items-center q-gutter-md">
@@ -365,7 +343,7 @@ onMounted(async () => {
           <q-separator />
           <q-card-actions align="right" class="q-pa-md">
             <q-btn flat label="Cancelar" color="grey-8" :to="{ name: 'produto' }" />
-            <q-btn unelevated label="Salvar" color="primary" type="submit" :loading="saving" />
+            <q-btn flat label="Salvar" color="primary" type="submit" :loading="saving" />
           </q-card-actions>
         </q-form>
       </q-card>

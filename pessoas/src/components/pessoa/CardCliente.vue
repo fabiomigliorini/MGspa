@@ -7,8 +7,8 @@ import { useAuthStore } from 'src/stores'
 import { formataFromNow, verificaPassadoFuturo } from '@components/formatters'
 import { api } from 'src/boot/axios'
 
-import SelectGrupoCliente from 'components/pessoa/SelectGrupoCliente.vue'
-import SelectFormaPagamento from 'components/pessoa/SelectFormaPagamento.vue'
+import SelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
+import SelectFormaPagamento from '@components/MgSelectFormaPagamento.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const $q = useQuasar()
@@ -266,11 +266,15 @@ const fecharRelatorio = () => {
             autofocus
           />
 
-          <select-grupo-cliente v-model="modelEditar.codgrupocliente" class="q-mb-md" />
+          <select-grupo-cliente v-model="modelEditar.codgrupocliente" class="q-mb-md" clearable />
 
           <div class="row">
             <div class="col-9">
-              <select-forma-pagamento v-model="modelEditar.codformapagamento" class="q-pr-md" />
+              <select-forma-pagamento
+                v-model="modelEditar.codformapagamento"
+                class="q-pr-md"
+                clearable
+              />
             </div>
             <div class="col-3">
               <MgInputValor

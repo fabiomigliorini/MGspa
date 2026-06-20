@@ -29,7 +29,8 @@ const excluirAnexo = (pasta, anexo) => {
   Dialog.create({
     title: 'Excluir',
     message: 'Tem certeza que você deseja excluir esse anexo?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(() => {
     sNegocio.deleteAnexo(pasta, anexo)
   })
@@ -92,7 +93,7 @@ const confissaoRatio = ref('1:2')
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="negative" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -108,7 +109,7 @@ const confissaoRatio = ref('1:2')
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="negative" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -136,7 +137,7 @@ const confissaoRatio = ref('1:2')
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="negative" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>

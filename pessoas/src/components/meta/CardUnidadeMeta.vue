@@ -175,7 +175,8 @@ const removerUnidade = () => {
   $q.dialog({
     title: 'Remover Unidade',
     message: `Deseja remover ${props.unidade.descricao}? Todas as pessoas e fixos desta unidade serao removidos.`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Remover', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.removerUnidade(props.codmeta, props.unidade.codunidadenegocio)
@@ -263,7 +264,8 @@ const removerPessoa = (pessoa) => {
     message: `Deseja remover ${
       pessoa.pessoa || 'este colaborador'
     }? Os fixos associados tambem serao removidos.`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Remover', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.removerPessoa(props.codmeta, pessoa.codmetaunidadenegociopessoa)
@@ -348,7 +350,8 @@ const removerFixo = (fixo) => {
   $q.dialog({
     title: 'Remover Fixo',
     message: `Deseja remover este fixo (${fixo.tipo})?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Remover', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.removerFixo(props.codmeta, fixo.codmetaunidadenegociopessoafixo)

@@ -136,7 +136,8 @@ const fecharPeriodo = () => {
   $q.dialog({
     title: 'Fechar Período',
     message: 'Tem certeza que deseja fechar este período?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Fechar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sRh.fecharPeriodo(route.params.codperiodo)
@@ -163,7 +164,8 @@ const reabrirPeriodo = () => {
   $q.dialog({
     title: 'Reabrir Período',
     message: 'Tem certeza que deseja reabrir este período?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Reabrir', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sRh.reabrirPeriodo(route.params.codperiodo)
@@ -191,7 +193,8 @@ const duplicarPeriodo = () => {
     title: 'Duplicar Período',
     message:
       'Será criado um novo período com a mesma configuração (colaboradores, setores e rubricas recorrentes).',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Duplicar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sRh.duplicarPeriodo(route.params.codperiodo)
@@ -222,8 +225,8 @@ const importarEstrutura = () => {
     title: 'Importar Estrutura do Período Anterior',
     message:
       'Isto vai copiar colaboradores, setores e rubricas recorrentes do período anterior. A operação é segura e pode ser repetida — registros já existentes são preservados.',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Importar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sRh.importarEstruturaPeriodo(route.params.codperiodo)
@@ -251,7 +254,8 @@ const excluirPeriodo = () => {
     title: 'Excluir Período',
     message:
       'Tem certeza que deseja excluir este período? Todos os colaboradores, setores, rubricas e indicadores serão removidos.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.excluirPeriodo(route.params.codperiodo)
@@ -350,8 +354,8 @@ const reprocessarPeriodo = () => {
       model: [],
       items: [{ label: 'Limpar lançamentos automáticos antes de reprocessar', value: 'limpar' }],
     },
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Reprocessar', color: 'primary', flat: true },
   }).onOk(async (opcoes) => {
     try {
       await sRh.reprocessarPeriodo(route.params.codperiodo, opcoes.includes('limpar'))
@@ -371,7 +375,8 @@ const cancelarReprocessamento = () => {
   $q.dialog({
     title: 'Cancelar Reprocessamento',
     message: 'Tem certeza que deseja cancelar o reprocessamento em andamento?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sRh.cancelarReprocessamento(route.params.codperiodo)

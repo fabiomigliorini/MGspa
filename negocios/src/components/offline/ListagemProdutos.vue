@@ -115,7 +115,8 @@ const inativar = async (uuid) => {
   Dialog.create({
     title: 'Excluir',
     message: 'Tem certeza que você deseja excluir esse item do negócio?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(() => {
     sNegocio.itemInativar(uuid)
   })
@@ -125,7 +126,8 @@ const salvar = async () => {
   Dialog.create({
     title: 'Salvar',
     message: 'Tem certeza que você deseja salvar?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(() => {
     sNegocio.itemSalvar(
       edicao.value.uuid,
@@ -310,7 +312,7 @@ const linkProduto = (codproduto) => {
               <q-btn
                 flat
                 label="Cancelar"
-                color="primary"
+                color="grey-8"
                 @click="dialogItem = false"
                 tabindex="-1"
               />

@@ -4,8 +4,8 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import SelectBanco from 'src/components/select/SelectBanco.vue'
-import SelectFilial from 'src/components/select/SelectFilial.vue'
+import MgSelectBanco from '@components/MgSelectBanco.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
 
 const $q = useQuasar()
 const store = usePortadorStore()
@@ -143,7 +143,8 @@ const excluir = (row) => {
   $q.dialog({
     title: 'Excluir',
     message: `Confirma excluir o portador "${row.portador}"?`,
-    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       await api.delete(`v1/portador/${row.codportador}`)
@@ -306,11 +307,11 @@ onMounted(() => {
               </div>
 
               <div class="col-12 col-sm-6">
-                <SelectBanco v-model="model.codbanco" outlined clearable label="Banco" />
+                <MgSelectBanco v-model="model.codbanco" outlined clearable label="Banco" />
               </div>
 
               <div class="col-12 col-sm-6">
-                <SelectFilial v-model="model.codfilial" outlined clearable label="Filial" />
+                <MgSelectFilial v-model="model.codfilial" outlined clearable label="Filial" />
               </div>
 
               <div class="col-4">

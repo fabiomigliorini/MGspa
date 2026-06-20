@@ -48,7 +48,8 @@ const excluir = (codusuario) => {
   $q.dialog({
     title: 'Excluir usuário',
     message: 'Tem certeza que deseja excluir esse usuário?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sUsuario.excluirUsuario(codusuario)

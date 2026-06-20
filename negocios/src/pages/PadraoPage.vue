@@ -62,7 +62,8 @@ const salvar = async () => {
   Dialog.create({
     title: 'Salvar',
     message: 'Tem certeza que você deseja salvar?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(() => {
     sNegocio.salvarPadrao(edicao.value)
     Notify.create({
@@ -174,7 +175,7 @@ const salvar = async () => {
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="primary" tabindex="-1" @click="inicializaModel()" />
+            <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" @click="inicializaModel()" />
             <q-btn type="submit" flat label="Salvar" color="primary" />
           </q-card-actions>
         </q-form>

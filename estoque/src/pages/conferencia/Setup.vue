@@ -167,7 +167,13 @@ onMounted(carregarLocais)
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
-            <q-btn unelevated color="primary" icon="play_arrow" label="Iniciar conferência" type="submit" />
+            <q-btn
+              flat
+              color="primary"
+              icon="play_arrow"
+              label="Iniciar conferência"
+              type="submit"
+            />
           </q-card-actions>
         </q-form>
       </q-card>

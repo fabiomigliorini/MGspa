@@ -17,10 +17,10 @@ import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { abrirPdf } from '@components/abrirPdf'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
-import SelectFilial from 'src/components/select/SelectFilial.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
-import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
-import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
+import MgSelectTipoTitulo from '@components/MgSelectTipoTitulo.vue'
+import MgSelectContaContabil from '@components/MgSelectContaContabil.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import {
   getNotaFiscalStatusColor,
@@ -185,7 +185,8 @@ function bbCriar() {
   $q.dialog({
     title: 'Novo Boleto',
     message: 'Deseja criar um novo boleto para este título?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       await api.post(`v1/titulo/${codtitulo.value}/boleto-bb`)
@@ -211,7 +212,8 @@ function bbBaixar(b) {
   $q.dialog({
     title: 'Baixar Boleto',
     message: 'Confirma baixar (cancelar) este boleto no banco?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       await api.post(`v1/titulo/${codtitulo.value}/boleto-bb/${b.codtituloboleto}/baixar`)
@@ -244,7 +246,8 @@ function estornar() {
   $q.dialog({
     title: 'Estornar',
     message: 'Confirma estornar este título?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       const { data } = await api.post(`v1/titulo/${codtitulo.value}/estornar`)
@@ -854,7 +857,7 @@ watch(() => route.fullPath, carregar)
             <div class="row q-col-gutter-md">
               <!-- FILIAL -->
               <div class="col-7 col-sm-4">
-                <SelectFilial
+                <MgSelectFilial
                   v-model="model.codfilial"
                   outlined
                   label="Filial"
@@ -880,7 +883,7 @@ watch(() => route.fullPath, carregar)
 
               <!-- TIPO -->
               <div class="col-12 col-sm-5">
-                <SelectTipoTitulo
+                <MgSelectTipoTitulo
                   v-model="model.codtipotitulo"
                   outlined
                   label="Tipo de Título"
@@ -980,7 +983,7 @@ watch(() => route.fullPath, carregar)
 
               <!-- CONTA -->
               <div class="col-12 col-sm-6">
-                <SelectContaContabil
+                <MgSelectContaContabil
                   v-model="model.codcontacontabil"
                   outlined
                   label="Conta Contábil"
@@ -990,7 +993,7 @@ watch(() => route.fullPath, carregar)
 
               <!-- PORTADOR -->
               <div class="col-12 col-sm-6">
-                <SelectPortador v-model="model.codportador" outlined clearable label="Portador" />
+                <MgSelectPortador v-model="model.codportador" outlined clearable label="Portador" />
               </div>
 
               <!-- OBSERVACOES -->

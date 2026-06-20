@@ -1,10 +1,12 @@
 <script setup>
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { api } from 'src/services/api'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // Form único de novo/editar contrato (recebe :cad). Cultura e safra não
 // aparecem: o contrato vive dentro da safra, então o pai força esse vínculo
@@ -44,12 +46,13 @@ const comissaoTipos = [
   { label: 'R$ total', value: 'TOTAL' },
 ]
 
-// Selects de apoio (online).
-const filiais = ref([])
+// Cache compartilhado dos selects (MgSelectFilial popula a entidade 'filial');
+// usamos pra resolver o funruralvenda da filial escolhida no cálculo fiscal.
+const selectCache = useSelectCacheStore()
 
 // A cultura vem do vínculo da safra (criação) ou do próprio contrato (edição).
 const codcultura = computed(() => props.fixar?.codcultura ?? cad.value.form.codcultura)
-const filialSel = computed(() => filiais.value.find((f) => f.value === cad.value.form.codfilial))
+const filialSel = computed(() => selectCache.getById('filial', cad.value.form.codfilial))
 
 function fmt(v, dec = 2) {
   if (v === null || v === undefined || v === '') return '—'
@@ -119,15 +122,6 @@ watch(
   },
 )
 
-onMounted(async () => {
-  try {
-    const { data } = await api.get('v1/select/filial')
-    filiais.value = data
-  } catch {
-    // selects são auxiliares; não bloqueiam o form
-  }
-})
-
 async function salvar() {
   const saved = await props.cad.salvar((f) => ({
     ...f,
@@ -155,15 +149,7 @@ async function salvar() {
             <q-input v-model="cad.form.contrato" label="Nº / identificação" outlined autofocus />
           </div>
           <div class="col-12 col-sm-4">
-            <q-select
-              v-model="cad.form.codfilial"
-              :options="filiais"
-              emit-value
-              map-options
-              outlined
-              clearable
-              label="Produtor (filial)"
-            />
+            <MgSelectFilial v-model="cad.form.codfilial" label="Produtor (filial)" clearable />
           </div>
           <div class="col-12 col-sm-4">
             <MgInputData v-model="cad.form.datacontrato" label="Data do contrato" type="date" />
@@ -208,15 +194,7 @@ async function salvar() {
               <q-input v-model="cad.form.contrato" label="Nº / identificação" outlined autofocus />
             </div>
             <div class="col-12 col-sm-4">
-              <q-select
-                v-model="cad.form.codfilial"
-                :options="filiais"
-                emit-value
-                map-options
-                outlined
-                clearable
-                label="Produtor (filial)"
-              />
+              <MgSelectFilial v-model="cad.form.codfilial" label="Produtor (filial)" clearable />
             </div>
             <div class="col-12 col-sm-4">
               <MgInputData v-model="cad.form.datacontrato" label="Data do contrato" type="date" />

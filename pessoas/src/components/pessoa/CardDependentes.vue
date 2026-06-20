@@ -236,8 +236,8 @@ const excluir = (coddependente) => {
   $q.dialog({
     title: 'Excluir Dependente',
     message: 'Tem certeza que deseja excluir este registro?',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sDependente.excluir(coddependente)
@@ -302,7 +302,7 @@ const ativar = async (coddependente) => {
 
 <template>
   <!-- DIALOG NOVO/EDITAR DEPENDENTE -->
-  <q-dialog v-model="dialogDependente" persistent>
+  <q-dialog v-model="dialogDependente">
     <q-card bordered flat style="width: 600px; max-width: 90vw">
       <q-card-section class="text-grey-9 text-overline row items-center">
         <template v-if="isNovo">NOVO DEPENDENTE</template>

@@ -5,11 +5,11 @@ import { useAgrupamentoPendenteStore } from 'src/stores/agrupamentoPendenteStore
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
+import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
 import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
-import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
-import SelectFormaPagamento from 'src/components/select/SelectFormaPagamento.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
+import MgSelectTipoTitulo from '@components/MgSelectTipoTitulo.vue'
+import MgSelectFormaPagamento from '@components/MgSelectFormaPagamento.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -34,7 +34,7 @@ function clear() {
         label="Grupos de Cliente"
         class="q-mb-md"
       />
-      <SelectPortador
+      <MgSelectPortador
         v-model="store.filters.codportador"
         multiple
         outlined
@@ -45,7 +45,7 @@ function clear() {
     </FilterGroup>
 
     <FilterGroup title="Pessoa">
-      <SelectGrupoEconomico
+      <MgSelectGrupoEconomico
         v-model="store.filters.codgrupoeconomico"
         outlined
         clearable
@@ -63,7 +63,7 @@ function clear() {
     </FilterGroup>
 
     <FilterGroup title="Tipo / Forma">
-      <SelectTipoTitulo
+      <MgSelectTipoTitulo
         v-model="store.filters.codtipotitulo"
         outlined
         clearable
@@ -71,7 +71,7 @@ function clear() {
         label="Tipo de Título"
         class="q-mb-md"
       />
-      <SelectFormaPagamento
+      <MgSelectFormaPagamento
         v-model="store.filters.codformapagamento"
         outlined
         clearable

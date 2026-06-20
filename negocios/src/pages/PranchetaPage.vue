@@ -42,7 +42,8 @@ const cancelar = () => {
   Dialog.create({
     title: 'Tem certeza?',
     message: 'Você vai perder todas as alterações feitas na prancheta!',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     rodando.value = true
     carregarPrancheta()
@@ -54,7 +55,8 @@ const salvar = async () => {
   Dialog.create({
     title: 'Salvar',
     message: 'Salvar as modificações feitas na prancheta?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     rodando.value = true
     try {
@@ -292,7 +294,8 @@ const adicionarProduto = () => {
       placeholder: 'Código de barras...',
       inputmode: 'tel',
     },
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async (barras) => {
     // procura produto
     let ret = await sProduto.buscarBarras(barras)
@@ -351,7 +354,8 @@ const removerCategoria = () => {
   Dialog.create({
     title: 'Excluir',
     message: 'Deseja mesmo excluir a categoria?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     if (categoria.value.codpranchetacategoriapai == null) {
       prancheta.value = prancheta.value.filter((cat) => {
@@ -426,7 +430,8 @@ const removerProduto = () => {
   Dialog.create({
     title: 'Excluir',
     message: 'Deseja mesmo excluir o produto da prancheta?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     let pai = localizaCategoria(produto.value.codpranchetacategoria, prancheta.value)
     pai.produtos = pai.produtos.filter((prd) => {
@@ -778,7 +783,7 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
           <q-btn
             flat
             label="Cancelar"
-            color="negative"
+            color="grey-8"
             tabindex="-1"
             @click="cancelar()"
             :disable="rodando"

@@ -4,7 +4,12 @@ import { Notify, debounce } from 'quasar'
 import { negocioStore } from 'stores/negocio'
 import { pixStore } from 'stores/pix'
 import { db } from 'src/boot/db'
-import { formataCpf, formataCnpj, formataNumero, formataTimestampCompleto } from '@components/formatters'
+import {
+  formataCpf,
+  formataCnpj,
+  formataNumero,
+  formataTimestampCompleto,
+} from '@components/formatters'
 import emitter from '../../utils/emitter.js'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
@@ -205,7 +210,7 @@ const whatsapp = () => {
           <q-btn
             flat
             label="Cancelar"
-            color="primary"
+            color="grey-8"
             @click="sNegocio.dialog.pagamentoPix = false"
             tabindex="-1"
           />

@@ -286,7 +286,7 @@ const toStone = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="fechar()" tabindex="-1" />
+          <q-btn flat label="Cancelar" color="grey-8" @click="fechar()" tabindex="-1" />
           <q-btn flat label="Usar Stone" color="primary" @click="toStone()" tabindex="-1" />
           <q-btn
             type="button"
@@ -467,7 +467,7 @@ const toStone = async () => {
         <q-btn
           flat
           label="cancelar"
-          color="negative"
+          color="grey-8"
           @click="cancelar()"
           tabindex="-1"
           v-if="sSaurus.pedido.status != 3"

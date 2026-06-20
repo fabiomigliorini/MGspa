@@ -109,7 +109,8 @@ const excluirRegistro = async (codregistrospc) => {
   $q.dialog({
     title: 'Excluir Registro Spc',
     message: 'Tem certeza que deseja excluir esse registro?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sPessoa.excluirRegistroSpc(route.params.id, codregistrospc)
@@ -223,7 +224,9 @@ const submit = () => {
         size="sm"
         color="primary"
         v-if="user.temPermissao('Publico')"
-        @click=";(dialogNovoRegistroSpc = true), (editarRegistro = false), (modelRegistroSpc = {})"
+        @click="
+          ;((dialogNovoRegistroSpc = true), (editarRegistro = false), (modelRegistroSpc = {}))
+        "
       />
     </q-card-section>
 

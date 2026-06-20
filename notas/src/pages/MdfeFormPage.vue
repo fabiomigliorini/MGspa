@@ -11,9 +11,9 @@ import veiculoService from '../services/veiculoService'
 import { notificarSucesso, notificarErro } from '../utils/notify'
 import { formataCodigo } from '@components/formatters'
 import MgInputData from '@components/MgInputData.vue'
-import SelectFilial from '../components/selects/SelectFilial.vue'
-import SelectCidade from '../components/selects/SelectCidade.vue'
-import SelectEstado from '../components/selects/SelectEstado.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
+import MgSelectCidade from '@components/MgSelectCidade.vue'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 
 const router = useRouter()
@@ -109,7 +109,12 @@ const submit = async () => {
             Emitente e Tipo
           </q-card-section>
           <q-card-section class="q-gutter-md">
-            <SelectFilial v-model="form.codfilial" label="Filial *" :bottom-slots="false" />
+            <MgSelectFilial
+              v-model="form.codfilial"
+              label="Filial *"
+              clearable
+              :bottom-slots="false"
+            />
             <q-select
               v-model="form.tipoemitente"
               label="Tipo de Emitente *"
@@ -150,14 +155,16 @@ const submit = async () => {
                 />
               </div>
             </div>
-            <SelectCidade
+            <MgSelectCidade
               v-model="form.codcidadecarregamento"
               label="Cidade de Carregamento *"
+              clearable
               :bottom-slots="false"
             />
-            <SelectEstado
+            <MgSelectEstado
               v-model="form.codestadofim"
               label="Estado Fim da Viagem *"
+              clearable
               :bottom-slots="false"
             />
           </q-card-section>

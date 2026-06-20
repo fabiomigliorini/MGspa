@@ -5,7 +5,7 @@ import { useTituloAgrupamentoStore } from 'src/stores/tituloAgrupamentoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
+import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
 import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
 import MgInputData from '@components/MgInputData.vue'
 
@@ -51,7 +51,7 @@ const estornadoOptions = [
     </FilterGroup>
 
     <FilterGroup title="Pessoa">
-      <SelectGrupoEconomico
+      <MgSelectGrupoEconomico
         v-model="store.filters.codgrupoeconomico"
         outlined
         clearable

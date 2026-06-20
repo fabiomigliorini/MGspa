@@ -4,7 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { useTipoTituloStore } from 'src/stores/tipoTituloStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import SelectTipoMovimentoTitulo from 'src/components/select/SelectTipoMovimentoTitulo.vue'
+import MgSelectTipoMovimentoTitulo from '@components/MgSelectTipoMovimentoTitulo.vue'
 
 const store = useTipoTituloStore()
 
@@ -55,15 +55,13 @@ const statusOptions = [
         <template #prepend><q-icon name="description" /></template>
       </q-input>
 
-      <SelectTipoMovimentoTitulo
+      <MgSelectTipoMovimentoTitulo
         v-model="store.filters.codtipomovimentotitulo"
         outlined
         clearable
         :bottom-slots="false"
         label="Tipo Movimento"
-      >
-        <template #prepend><q-icon name="sync_alt" /></template>
-      </SelectTipoMovimentoTitulo>
+      />
     </FilterGroup>
 
     <FilterGroup title="Movimentação">

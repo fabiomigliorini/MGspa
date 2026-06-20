@@ -2,12 +2,12 @@
 import { ref, computed, watch } from 'vue'
 import { api } from 'src/services/api'
 import { formataNumero, formataData } from '@components/formatters'
-import SelectFilial from 'src/components/select/SelectFilial.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
-import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
-import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
+import MgSelectTipoTitulo from '@components/MgSelectTipoTitulo.vue'
+import MgSelectContaContabil from '@components/MgSelectContaContabil.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -365,7 +365,7 @@ function classeVencimento(t) {
         </div>
         <div class="row q-col-gutter-md">
           <div class="col-xs-12 col-sm-3">
-            <SelectGrupoEconomico
+            <MgSelectGrupoEconomico
               v-model="filtros.codgrupoeconomico"
               class="text-caption"
               outlined
@@ -399,7 +399,7 @@ function classeVencimento(t) {
             />
           </div>
           <div class="col-xs-8 col-sm-3">
-            <SelectFilial
+            <MgSelectFilial
               class="text-caption"
               v-model="filtros.codfilial"
               outlined
@@ -434,7 +434,7 @@ function classeVencimento(t) {
             </div>
           </div>
           <div class="col-xs-12 col-sm-3">
-            <SelectTipoTitulo
+            <MgSelectTipoTitulo
               class="text-caption"
               v-model="filtros.codtipotitulo"
               outlined
@@ -444,7 +444,7 @@ function classeVencimento(t) {
             />
           </div>
           <div class="col-xs-12 col-sm-3">
-            <SelectContaContabil
+            <MgSelectContaContabil
               class="text-caption"
               v-model="filtros.codcontacontabil"
               outlined
@@ -454,7 +454,7 @@ function classeVencimento(t) {
             />
           </div>
           <div class="col-xs-12 col-sm-3">
-            <SelectPortador
+            <MgSelectPortador
               class="text-caption"
               v-model="filtros.codportador"
               outlined

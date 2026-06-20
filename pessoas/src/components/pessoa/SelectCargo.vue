@@ -57,7 +57,8 @@ const adicionarRegistro = async (nome, done) => {
   }
   $q.dialog({
     title: 'Deseja criar um novo cargo?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Criar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sPessoa.novoCargo({ cargo: nome })

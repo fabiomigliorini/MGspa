@@ -182,7 +182,8 @@ const excluirColaborador = (pc) => {
       'Tem certeza que deseja remover ' +
       nomeColaborador(pc) +
       ' deste período? Setores e rubricas serão removidos.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Remover', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.excluirColaborador(route.params.codperiodo, pc.codperiodocolaborador)
@@ -228,7 +229,8 @@ const encerrar = (pc) => {
   $q.dialog({
     title: 'Encerrar Colaborador',
     message: 'Tem certeza que deseja encerrar ' + nomeColaborador(pc) + '? Um título será gerado.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Encerrar', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.encerrar(route.params.codperiodo, pc.codperiodocolaborador)
@@ -257,7 +259,8 @@ const estornar = (pc) => {
       'Tem certeza que deseja estornar o encerramento de ' +
       nomeColaborador(pc) +
       '? O título será cancelado.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Estornar', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.estornar(route.params.codperiodo, pc.codperiodocolaborador)
@@ -502,10 +505,10 @@ const estornar = (pc) => {
                         ind.tipo === 'V'
                           ? 'blue'
                           : ind.tipo === 'C'
-                          ? 'purple'
-                          : ind.tipo === 'U'
-                          ? 'orange'
-                          : 'teal'
+                            ? 'purple'
+                            : ind.tipo === 'U'
+                              ? 'orange'
+                              : 'teal'
                       "
                       :label="tipoIndicadorLabel(ind.tipo)"
                       style="cursor: pointer"

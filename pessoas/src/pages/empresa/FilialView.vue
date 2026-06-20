@@ -82,8 +82,8 @@ export default {
           type: 'text',
           isValid: (val) => val === 'EXCLUIR',
         },
-        cancel: true,
-        persistent: true,
+        cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+        ok: { label: 'Excluir', color: 'red-5', flat: true },
       }).onOk(async () => {
         try {
           await sEmpresa.removerFilial(sEmpresa.filial.codfilial)

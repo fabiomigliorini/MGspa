@@ -7,7 +7,7 @@ import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
 import { linkMaps, formataCep, removerAcentos, formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import SelectCidade from 'components/pessoa/SelectCidade.vue'
+import SelectCidade from '@components/MgSelectCidade.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 
 const $q = useQuasar()
@@ -37,7 +37,6 @@ const modelEndereco = ref({
   entrega: true,
   cobranca: true,
 })
-const options = ref([])
 
 const modalNovoEndereco = async () => {
   dialogEndereco.value = true
@@ -89,8 +88,8 @@ const excluirEndereco = async (codpessoaendereco) => {
   $q.dialog({
     title: 'Excluir Endereço',
     message: 'Tem certeza que deseja excluir esse endereço?',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sPessoa.enderecoExcluir(route.params.id, codpessoaendereco)
@@ -112,7 +111,7 @@ const excluirEndereco = async (codpessoaendereco) => {
   })
 }
 
-const editarEndereco = async (
+const editarEndereco = (
   codpessoaendereco,
   endereco,
   numero,
@@ -140,8 +139,6 @@ const editarEndereco = async (
     entrega: entrega,
     apelido: apelido,
   }
-  const ret = await sPessoa.consultaCidade(codcidade)
-  options.value = [ret.data[0]]
 }
 
 const submit = () => {
@@ -393,12 +390,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               />
             </div>
             <div class="col-xs-12 col-sm-6">
-              <select-cidade
-                v-model="modelEndereco.codcidade"
-                :model-select-cidade="modelEndereco.codcidade"
-                :cidadeEditar="options"
-                :disable="buscandoCep"
-              />
+              <select-cidade v-model="modelEndereco.codcidade" :disable="buscandoCep" clearable />
             </div>
             <div class="col-xs-12 col-sm-6">
               <MgInputFormatado outlined v-model="modelEndereco.apelido" label="Apelido" />
@@ -542,7 +534,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
                 size="sm"
                 color="grey-7"
                 @click="
-                  editarEndereco(
+                  (editarEndereco(
                     element.codpessoaendereco,
                     element.endereco,
                     element.numero,
@@ -556,7 +548,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
                     element.apelido,
                     element.cidade,
                   ),
-                    (enderecoNovo = false)
+                  (enderecoNovo = false))
                 "
               >
                 <q-tooltip>Editar</q-tooltip>

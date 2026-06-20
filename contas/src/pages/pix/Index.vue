@@ -189,7 +189,7 @@ onMounted(() => {
     </q-page-sticky>
 
     <!-- Dialog Consultar PIX -->
-    <q-dialog v-model="dialogConsulta" persistent>
+    <q-dialog v-model="dialogConsulta">
       <q-card bordered flat style="width: 500px; max-width: 90vw">
         <q-card-section>
           <div class="text-h6">Consultar PIX</div>

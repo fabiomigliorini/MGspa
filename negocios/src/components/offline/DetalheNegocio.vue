@@ -3,7 +3,12 @@ import { ref } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { Dialog, Notify } from 'quasar'
-import { formataCpf, formataCnpjCpf, formataCodigo, formataTimestampCompleto } from '@components/formatters'
+import {
+  formataCpf,
+  formataCnpjCpf,
+  formataCodigo,
+  formataTimestampCompleto,
+} from '@components/formatters'
 import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
 import SelectEstoqueLocal from 'components/selects/SelectEstoqueLocal.vue'
 import WizardPessoa from './WizardPessoa.vue'
@@ -84,7 +89,8 @@ const salvarNatureza = async () => {
   Dialog.create({
     title: 'Salvar',
     message: 'Tem certeza que você deseja salvar?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(() => {
     sNegocio.informarNatureza(
       edicaoNatureza.value.codestoquelocal,
@@ -104,7 +110,8 @@ const informarVendedor = async (codpessoavendedor) => {
   Dialog.create({
     title: 'Salvar',
     message: 'Tem certeza que você deseja alterar o vendedor?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(() => {
     sNegocio.informarVendedor(codpessoavendedor)
     dialogVendedor.value = false
@@ -127,7 +134,8 @@ const recarregarDaApi = () => {
     title: 'Recarregar',
     message:
       'Tem certeza que você deseja recarregar os dados do servidor? Você poderá perder as informações alteradas deste negócio!',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
     options: {
       type: 'toggle',
       model: [],
@@ -158,7 +166,8 @@ const apropriar = () => {
     title: 'Apropriar',
     message:
       'Tem certeza que você deseja se apropriar desse negócio? Será impossível continuar editando este negócio no computador onde ele está vinculado atualmente!',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     if (await sNegocio.apropriar(sNegocio.negocio.codnegocio)) {
       sNegocio.atualizarListagem()
@@ -208,13 +217,7 @@ const apropriar = () => {
           </div>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="primary"
-            @click="dialogPessoa = false"
-            tabindex="-1"
-          />
+          <q-btn flat label="Cancelar" color="grey-8" @click="dialogPessoa = false" tabindex="-1" />
           <q-btn type="submit" flat label="Salvar" color="primary" />
         </q-card-actions>
       </q-form>

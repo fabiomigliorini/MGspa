@@ -3,10 +3,10 @@ import { watch } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
 import { useDebounceFn } from '@vueuse/core'
-import SelectEstado from 'components/selects/SelectEstado.vue'
-import SelectCidade from 'components/selects/SelectCidade.vue'
-import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
-import SelectTipoProduto from 'components/selects/SelectTipoProduto.vue'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
+import MgSelectCidade from '@components/MgSelectCidade.vue'
+import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
+import MgSelectTipoProduto from '@components/MgSelectTipoProduto.vue'
 import SelectTipoCliente from 'components/selects/SelectTipoCliente.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -90,36 +90,40 @@ const limparFiltros = async () => {
 
       <!-- 1. Natureza de Operação -->
       <div class="q-mb-md">
-        <SelectNaturezaOperacao
+        <MgSelectNaturezaOperacao
           v-model="store.filters.codnaturezaoperacao"
           label="1. Natureza de Operação"
+          clearable
           :bottom-slots="false"
         />
       </div>
 
       <!-- 2. Estado Destino -->
       <div class="q-mb-md">
-        <SelectEstado
+        <MgSelectEstado
           v-model="store.filters.codestadodestino"
           label="2. Estado Destino"
+          clearable
           :bottom-slots="false"
         />
       </div>
 
       <!-- 3. Cidade Destino -->
       <div class="q-mb-md">
-        <SelectCidade
+        <MgSelectCidade
           v-model="store.filters.codcidadedestino"
           label="3. Cidade Destino"
+          clearable
           :bottom-slots="false"
         />
       </div>
 
       <!-- 4. Tipo de Produto -->
       <div class="q-mb-md">
-        <SelectTipoProduto
+        <MgSelectTipoProduto
           v-model="store.filters.codtipoproduto"
           label="4. Tipo de Produto"
+          clearable
           :bottom-slots="false"
         />
       </div>

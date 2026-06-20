@@ -156,8 +156,8 @@ const excluir = (item) => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: `Deseja realmente excluir a certidão emissor "${item.certidaoemissor}"?`,
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     loading.value = true
     try {
@@ -273,7 +273,7 @@ onMounted(() => {
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="red" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
             <q-btn flat label="Salvar" color="primary" @click="salvar" :loading="loading" />
           </q-card-actions>
         </q-card>

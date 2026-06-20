@@ -4,7 +4,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useTipoTituloStore } from 'src/stores/tipoTituloStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import SelectTipoMovimentoTitulo from 'src/components/select/SelectTipoMovimentoTitulo.vue'
+import MgSelectTipoMovimentoTitulo from '@components/MgSelectTipoMovimentoTitulo.vue'
 
 const $q = useQuasar()
 const store = useTipoTituloStore()
@@ -124,7 +124,8 @@ const excluir = (row) => {
   $q.dialog({
     title: 'Excluir',
     message: `Confirma excluir "${row.tipotitulo}"?`,
-    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       await api.delete(`v1/tipo-titulo/${row.codtipotitulo}`)
@@ -284,7 +285,7 @@ onMounted(() => {
               </div>
 
               <div class="col-12">
-                <SelectTipoMovimentoTitulo
+                <MgSelectTipoMovimentoTitulo
                   v-model="model.codtipomovimentotitulo"
                   outlined
                   clearable

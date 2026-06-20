@@ -73,10 +73,7 @@ const submit = async () => {
 </script>
 
 <template>
-  <q-dialog
-    :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
-  >
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card style="width: 500px; max-width: 95vw">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">{{ isNovo ? 'Novo' : 'Editar' }} Conjunto</div>
@@ -92,7 +89,10 @@ const submit = async () => {
             outlined
             autofocus
             maxlength="50"
-            :rules="[(v) => !!v || 'Nome é obrigatório', (v) => (v && v.length >= 5) || 'Mínimo 5 caracteres']"
+            :rules="[
+              (v) => !!v || 'Nome é obrigatório',
+              (v) => (v && v.length >= 5) || 'Mínimo 5 caracteres',
+            ]"
           />
 
           <div class="text-caption text-grey-7">Veículos (mínimo 2)</div>
@@ -114,14 +114,7 @@ const submit = async () => {
               />
             </div>
             <div class="col-auto">
-              <q-btn
-                flat
-                round
-                size="sm"
-                color="grey-7"
-                icon="delete"
-                @click="delVeiculo(index)"
-              />
+              <q-btn flat round size="sm" color="grey-7" icon="delete" @click="delVeiculo(index)" />
             </div>
           </div>
 
@@ -132,7 +125,7 @@ const submit = async () => {
 
         <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Cancelar" color="grey-8" @click="close" tabindex="-1" />
-          <q-btn unelevated label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
+          <q-btn flat label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
         </q-card-actions>
       </q-form>
     </q-card>

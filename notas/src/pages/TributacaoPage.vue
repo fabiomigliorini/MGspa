@@ -4,10 +4,10 @@ import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
 import { formataPercentual, formataData } from '@components/formatters'
 import { getEnteIcon } from 'src/composables/useTributoIcons'
-import SelectEstado from 'src/components/selects/SelectEstado.vue'
-import SelectCidade from 'src/components/selects/SelectCidade.vue'
-import SelectNaturezaOperacao from 'src/components/selects/SelectNaturezaOperacao.vue'
-import SelectTipoProduto from 'src/components/selects/SelectTipoProduto.vue'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
+import MgSelectCidade from '@components/MgSelectCidade.vue'
+import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
+import MgSelectTipoProduto from '@components/MgSelectTipoProduto.vue'
 import SelectTipoCliente from 'src/components/selects/SelectTipoCliente.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -287,11 +287,12 @@ const confirmarExclusao = (regra) => {
     cancel: {
       flat: true,
       label: 'Cancelar',
+      color: 'grey-8',
     },
     ok: {
-      unelevated: true,
+      flat: true,
       label: 'Excluir',
-      color: 'negative',
+      color: 'red-5',
     },
   }).onOk(async () => {
     try {
@@ -401,11 +402,12 @@ const confirmarExclusaoTributo = () => {
     cancel: {
       flat: true,
       label: 'Cancelar',
+      color: 'grey-8',
     },
     ok: {
-      unelevated: true,
+      flat: true,
       label: 'Excluir',
-      color: 'negative',
+      color: 'red-5',
     },
   }).onOk(async () => {
     try {
@@ -803,15 +805,15 @@ const confirmarExclusaoTributo = () => {
             v-if="tributoDialogMode === 'edit'"
             flat
             label="Excluir"
-            color="negative"
+            color="red-5"
             @click="confirmarExclusaoTributo"
           />
           <q-space />
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
           <q-btn
-            unelevated
+            flat
             icon="save"
-            class="text-white bg-primary"
+            color="primary"
             label="Salvar"
             @click="salvarTributo"
             :loading="store.isLoading"
@@ -841,32 +843,36 @@ const confirmarExclusaoTributo = () => {
           </div>
           <div class="row q-col-gutter-md q-mb-sm">
             <!-- 1. NATUREZA DE OPERAÇÃO (maior prioridade) -->
-            <SelectNaturezaOperacao
+            <MgSelectNaturezaOperacao
               v-model="regraForm.codnaturezaoperacao"
               label="1. Natureza de Operação"
-              custom-class="col-5"
+              clearable
+              class="col-5"
             />
 
             <!-- 2. ESTADO DESTINO -->
-            <SelectEstado
+            <MgSelectEstado
               v-model="regraForm.codestadodestino"
               label="2. Estado Destino"
-              custom-class="col-3"
-              @clear="regraForm.codcidadedestino = null"
+              clearable
+              class="col-3"
+              @update:model-value="(v) => !v && (regraForm.codcidadedestino = null)"
             />
 
             <!-- 3. CIDADE DESTINO -->
-            <SelectCidade
+            <MgSelectCidade
               v-model="regraForm.codcidadedestino"
               label="3. Cidade Destino"
-              custom-class="col-4"
+              clearable
+              class="col-4"
             />
 
             <!-- 4. TIPO DE PRODUTO -->
-            <SelectTipoProduto
+            <MgSelectTipoProduto
               v-model="regraForm.codtipoproduto"
               label="4. Tipo de Produto"
-              custom-class="col-5"
+              clearable
+              class="col-5"
             />
 
             <!-- 5. TIPO DE CLIENTE -->
@@ -1006,9 +1012,9 @@ const confirmarExclusaoTributo = () => {
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
           <q-btn
-            unelevated
+            flat
             label="Salvar"
             color="primary"
             icon="save"

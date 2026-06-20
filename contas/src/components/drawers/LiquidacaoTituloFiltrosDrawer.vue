@@ -4,11 +4,11 @@ import { useDebounceFn } from '@vueuse/core'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
+import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
 import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
-import SelectUsuario from 'src/components/select/SelectUsuario.vue'
+import MgSelectUsuario from '@components/MgSelectUsuario.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const store = useLiquidacaoTituloStore()
@@ -61,7 +61,7 @@ const estornadoOptions = [
         label="Pessoa"
         class="q-mb-md"
       />
-      <SelectGrupoEconomico
+      <MgSelectGrupoEconomico
         v-model="store.filters.codgrupoeconomico"
         outlined
         clearable
@@ -78,19 +78,17 @@ const estornadoOptions = [
     </FilterGroup>
 
     <FilterGroup title="Portador">
-      <SelectPortador
+      <MgSelectPortador
         v-model="store.filters.codportador"
         outlined
         clearable
         :bottom-slots="false"
         label="Portador"
-      >
-        <template #prepend><q-icon name="credit_card" /></template>
-      </SelectPortador>
+      />
     </FilterGroup>
 
     <FilterGroup title="Usuário">
-      <SelectUsuario
+      <MgSelectUsuario
         v-model="store.filters.codusuariocriacao"
         outlined
         clearable

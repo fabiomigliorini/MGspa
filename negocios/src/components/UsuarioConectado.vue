@@ -66,7 +66,7 @@ onMounted(() => {
           <q-btn
             flat
             label="Cancelar"
-            color="primary"
+            color="grey-8"
             class="q-ml-sm"
             @click="store.dialog.login = false"
             tabindex="-1"

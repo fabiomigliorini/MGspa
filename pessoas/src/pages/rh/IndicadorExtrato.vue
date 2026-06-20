@@ -10,7 +10,12 @@ import {
   tipoIndicadorColor,
   extrairErro,
 } from 'src/utils/rhFormatters'
-import { formataNumero, formataPercentual, formataTimestamp, formataCodigo } from '@components/formatters'
+import {
+  formataNumero,
+  formataPercentual,
+  formataTimestamp,
+  formataCodigo,
+} from '@components/formatters'
 import DialogEditarMeta from './DialogEditarMeta.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -165,8 +170,8 @@ const excluirLancamento = (lancamento) => {
   $q.dialog({
     title: 'Excluir Lançamento',
     message: `Excluir lançamento manual de ${formataNumero(lancamento.valor)}?`,
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.excluirLancamento(lancamento.codindicadorlancamento)
@@ -209,10 +214,10 @@ onMounted(() => {
               indicador.tipo === 'V'
                 ? 'person'
                 : indicador.tipo === 'C'
-                ? 'point_of_sale'
-                : indicador.tipo === 'S'
-                ? 'store'
-                : 'business'
+                  ? 'point_of_sale'
+                  : indicador.tipo === 'S'
+                    ? 'store'
+                    : 'business'
             "
           />
         </q-item-section>

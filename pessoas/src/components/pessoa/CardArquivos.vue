@@ -58,10 +58,10 @@ const updateFiles = (newFiles) => {
       file.type.indexOf('video/') === 0
         ? 'movie'
         : file.type.indexOf('image/') === 0
-        ? 'mdi-file-image'
-        : file.type.indexOf('application/pdf') === 0
-        ? 'mdi-file-pdf'
-        : 'mdi-file',
+          ? 'mdi-file-image'
+          : file.type.indexOf('application/pdf') === 0
+            ? 'mdi-file-pdf'
+            : 'mdi-file',
   }))
 }
 
@@ -158,7 +158,8 @@ const salvar = async (evt) => {
   $q.dialog({
     title: 'Salvar',
     message: 'Tem certeza que deseja salvar as alterações?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Salvar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const payload = {
@@ -185,7 +186,8 @@ const inativar = (arquivo) => {
   $q.dialog({
     title: 'Excluir',
     message: 'Tem certeza que deseja mover o arquivo para lixeira?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       const url = `v1/pessoa/${sPessoa.item.codpessoa}/anexo/ativo/${arquivo.nome}`
@@ -207,7 +209,8 @@ const restaurar = (arquivo) => {
   $q.dialog({
     title: 'Restaurar',
     message: 'Deseja restaurar o arquivo?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Restaurar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const url = `v1/pessoa/${sPessoa.item.codpessoa}/anexo/inativo/${arquivo.nome}`
@@ -230,7 +233,8 @@ const excluir = (arquivo) => {
     title: 'Excluir',
     message:
       'Tem certeza que deseja excluir permantentemente o arquivo? Essa operação não poderá ser desfeita!',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       const url = `v1/pessoa/${sPessoa.item.codpessoa}/anexo/inativo/${arquivo.nome}`

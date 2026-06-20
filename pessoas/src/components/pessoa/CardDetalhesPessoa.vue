@@ -3,19 +3,28 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { formataData, formataPisPasep, formataIe, formataCpf, formataTitulo, formataCnpj, formataCodigo, verificaIdade } from '@components/formatters'
+import {
+  formataData,
+  formataPisPasep,
+  formataIe,
+  formataCpf,
+  formataTitulo,
+  formataCnpj,
+  formataCodigo,
+  verificaIdade,
+} from '@components/formatters'
 import { useAuthStore } from 'stores/index'
 import SelectGrupoEconomico from 'components/pessoa/SelectGrupoEconomico.vue'
-import SelectCidade from 'components/pessoa/SelectCidade.vue'
-import SelectEstado from 'components/pessoa/SelectEstado.vue'
+import SelectCidade from '@components/MgSelectCidade.vue'
+import SelectEstado from '@components/MgSelectEstado.vue'
 import InputIe from 'components/pessoa/InputIe.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import SelectEstadoCivil from 'components/pessoa/SelectEstadoCivil.vue'
-import SelectEtnia from 'components/pessoa/SelectEtnia.vue'
-import SelectGrauInstrucao from 'components/pessoa/SelectGrauInstrucao.vue'
+import SelectEstadoCivil from '@components/MgSelectEstadoCivil.vue'
+import SelectEtnia from '@components/MgSelectEtnia.vue'
+import SelectGrauInstrucao from '@components/MgSelectGrauInstrucao.vue'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -31,7 +40,6 @@ const ufNfe = computed(() => {
 const DialogDetalhes = ref(false)
 const DialogMercos = ref(false)
 const modelPessoa = ref({})
-const options = ref([])
 const mercosTransferir = ref({ mercosid: null, codpessoanova: null })
 
 const inativar = async (codpessoa) => {
@@ -84,7 +92,8 @@ const removerPessoa = (codpessoa, pessoa) => {
   $q.dialog({
     title: 'Excluir pessoa',
     message: 'Tem certeza que deseja excluir ' + pessoa + '?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sPessoa.removePessoa(codpessoa)
@@ -147,8 +156,6 @@ const editarDetalhes = async () => {
     codetnia: sPessoa.item.codetnia,
     codgrauinstrucao: sPessoa.item.codgrauinstrucao,
   }
-  const ret = await sPessoa.consultaCidade(sPessoa.item.codcidadenascimento)
-  options.value = [ret.data[0]]
 }
 
 const abrirDialogMercos = () => {
@@ -163,7 +170,8 @@ const salvarMercos = (evt) => {
   $q.dialog({
     title: 'Confirma',
     message: 'Tem certeza que deseja confirmar a transferência do Mercos ID?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sPessoa.transferirMercosId(
@@ -306,8 +314,8 @@ const salvarDetalhes = async () => {
             <select-cidade
               class="col-md-4 col-sm-6 col-xs-12"
               v-model="modelPessoa.codcidadenascimento"
-              :cidadeEditar="options"
               label="Nascido em"
+              clearable
             />
             <MgInputFormatado
               class="col-md-4 col-sm-6 col-xs-12"
@@ -376,6 +384,7 @@ const salvarDetalhes = async () => {
                 class="col-md-2 col-sm-3 col-xs-6"
                 v-model="modelPessoa.codestadoctps"
                 label="UF"
+                clearable
               />
               <MgInputData
                 type="date"
@@ -387,13 +396,19 @@ const salvarDetalhes = async () => {
             <select-estado-civil
               class="col-md-4 col-sm-6 col-xs-12"
               v-model="modelPessoa.codestadocivil"
+              clearable
             />
             <template v-if="sPessoa.item?.permissaoRH">
-              <select-etnia class="col-md-4 col-sm-6 col-xs-12" v-model="modelPessoa.codetnia" />
+              <select-etnia
+                class="col-md-4 col-sm-6 col-xs-12"
+                v-model="modelPessoa.codetnia"
+                clearable
+              />
             </template>
             <select-grau-instrucao
               class="col-md-4 col-sm-6 col-xs-12"
               v-model="modelPessoa.codgrauinstrucao"
+              clearable
             />
           </template>
 
