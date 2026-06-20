@@ -150,21 +150,27 @@ const filterPessoa = (val, update) => {
     })
     return
   }
-  update(async () => {
-    try {
-      loading.value = true
-      buscaAtual = val
-      pagina = 1
-      const rows = await buscar(val, 1)
+  // Busca no backend FORA do update; só chama update() (síncrono) com o
+  // resultado pronto — senão o Quasar fecha o ciclo de filtro com a lista vazia.
+  buscaAtual = val
+  pagina = 1
+  loading.value = true
+  buscar(val, 1)
+    .then((rows) => {
       temMais = rows.length === PER_PAGE
-      options.value = rows
-    } catch (error) {
+      update(() => {
+        options.value = rows
+      })
+    })
+    .catch((error) => {
       console.error('Erro ao buscar pessoa:', error)
-      options.value = []
-    } finally {
+      update(() => {
+        options.value = []
+      })
+    })
+    .finally(() => {
       loading.value = false
-    }
-  })
+    })
 }
 
 // Scroll infinito: ao chegar perto do fim, pede a próxima página e dá append.

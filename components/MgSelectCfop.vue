@@ -3,42 +3,23 @@ import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
-// Carrega TUDO uma vez de v1/select/grupo-cliente, cacheia, filtra no FRONT e
-// tem REFRESH no append. clearable opcional (default false).
-// Suporta `multiple`: nesse modo o v-model é Array|null, onde null = TODOS os
-// grupos (canônico) e [] = nenhum — espelha o filtro do contas.
+// Carrega TUDO de v1/select/cfop, cacheia, filtra no front, refresh no append.
 const props = defineProps({
-  modelValue: { type: [Number, String, Array], default: null },
-  label: { type: String, default: 'Grupo de Cliente' },
+  modelValue: { type: [Number, String], default: null },
+  label: { type: String, default: 'CFOP' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
-  multiple: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 
 const cache = useSelectCacheStore()
-const ENTITY = 'grupoCliente'
-const ENDPOINT = 'v1/select/grupo-cliente'
+const ENTITY = 'cfop'
+const ENDPOINT = 'v1/select/cfop'
 
 const opcoes = ref([])
 const carregando = ref(false)
 
 const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
-const todosIds = computed(() => permitidos.value.map((v) => v.value))
-
-// No modo multiple, null = todos -> manda a lista inteira pro q-select marcar tudo.
-const valorQSelect = computed(() => {
-  if (!props.multiple) return props.modelValue
-  return props.modelValue === null ? todosIds.value : props.modelValue || []
-})
-
-const rotulo = computed(() => {
-  if (!props.multiple) return undefined
-  const m = props.modelValue
-  if (Array.isArray(m) && m.length === 0) return 'Nenhum grupo'
-  if (m === null) return 'Todos os grupos'
-  return `${m.length} de ${todosIds.value.length} grupos`
-})
 
 async function carregar(force = false) {
   carregando.value = true
@@ -67,14 +48,8 @@ function filtrar(val, update) {
 }
 
 function onUpdate(v) {
-  if (!props.multiple) {
-    emit('update:modelValue', v)
-    emit('select', permitidos.value.find((o) => o.value === v) || null)
-    return
-  }
-  const arr = Array.isArray(v) ? v : []
-  // seleção completa volta a ser representada como null (canônico)
-  emit('update:modelValue', arr.length > 0 && arr.length === todosIds.value.length ? null : arr)
+  emit('update:modelValue', v)
+  emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
 }
 
 onMounted(() => carregar())
@@ -82,13 +57,11 @@ onMounted(() => carregar())
 
 <template>
   <q-select
-    :model-value="valorQSelect"
+    :model-value="modelValue"
     :options="opcoes"
     :label="label"
-    :multiple="multiple"
-    :display-value="rotulo"
     use-input
-    :fill-input="!multiple"
+    fill-input
     hide-selected
     input-debounce="100"
     outlined
@@ -109,7 +82,7 @@ onMounted(() => carregar())
       <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
     </template>
     <template #option="scope">
-      <q-item v-bind="scope.itemProps" :class="multiple && scope.selected ? 'bg-blue-1' : ''">
+      <q-item v-bind="scope.itemProps">
         <q-item-section>
           <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
             {{ scope.opt.label }}

@@ -11,9 +11,15 @@ const props = defineProps({
   label: { type: String, default: 'Grupo Econômico' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // Permite criar um grupo novo digitando: emite `adicionar(nome, done)`.
+  permiteAdicionar: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:modelValue', 'select', 'clear'])
+const emit = defineEmits(['update:modelValue', 'select', 'clear', 'adicionar'])
+
+function onNew(val, done) {
+  if (props.permiteAdicionar) emit('adicionar', val, done)
+}
 
 const cache = useSelectCacheStore()
 const ENTITY = 'grupoEconomico'
@@ -132,8 +138,10 @@ const handleUpdate = (value) => {
     fill-input
     hide-selected
     input-debounce="500"
+    :new-value-mode="permiteAdicionar ? 'add-unique' : undefined"
     @filter="filtrar"
     @virtual-scroll="onScroll"
+    @new-value="onNew"
     :loading="loading"
   >
     <template v-slot:option="scope">

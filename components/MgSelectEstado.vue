@@ -11,6 +11,8 @@ const props = defineProps({
   label: { type: String, default: 'Estado' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // Campo emitido no v-model: 'value' (codestado, padrão) ou 'sigla' (UF).
+  optionValue: { type: String, default: 'value' },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 
@@ -51,7 +53,7 @@ function filtrar(val, update) {
 
 function onUpdate(v) {
   emit('update:modelValue', v)
-  emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
+  emit('select', (opcoes.value || []).find((o) => o[props.optionValue] === v) || null)
 }
 
 onMounted(() => carregar())
@@ -71,6 +73,7 @@ onMounted(() => carregar())
     :loading="carregando"
     emit-value
     map-options
+    :option-value="optionValue"
     @filter="filtrar"
     @update:model-value="onUpdate"
     v-bind="$attrs"

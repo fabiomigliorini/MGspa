@@ -11,8 +11,15 @@ const props = defineProps({
   label: { type: String, default: 'Cargo' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // Permite criar um cargo novo digitando: emite `adicionar(nome, done)` para o
+  // consumidor criar via API e chamar done(); recarregue depois via refresh.
+  permiteAdicionar: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue', 'select'])
+const emit = defineEmits(['update:modelValue', 'select', 'adicionar'])
+
+function onNew(val, done) {
+  if (props.permiteAdicionar) emit('adicionar', val, done)
+}
 
 const cache = useSelectCacheStore()
 const ENTITY = 'cargo'
@@ -71,8 +78,10 @@ onMounted(() => carregar())
     :loading="carregando"
     emit-value
     map-options
+    :new-value-mode="permiteAdicionar ? 'add-unique' : undefined"
     @filter="filtrar"
     @update:model-value="onUpdate"
+    @new-value="onNew"
     v-bind="$attrs"
   >
     <template #append>
