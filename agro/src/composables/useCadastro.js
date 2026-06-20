@@ -84,8 +84,8 @@ export function useCadastro(endpoint, pk, label = 'Registro') {
     $q.dialog({
       title: 'Excluir',
       message: `Excluir este ${label.toLowerCase()}?`,
-      cancel: true,
-      ok: { label: 'Excluir', color: 'red-5', unelevated: true },
+      cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+      ok: { label: 'Excluir', color: 'red-5', flat: true },
     }).onOk(async () => {
       try {
         await api.delete(`${endpoint}/${item[pk]}`)

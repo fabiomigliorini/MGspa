@@ -200,7 +200,7 @@ function excluirSafra() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir a safra ${safra.value?.safra}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {

@@ -91,7 +91,7 @@ function excluirCultura() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir a cultura ${cultura.value?.cultura}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {

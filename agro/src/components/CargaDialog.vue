@@ -680,7 +680,7 @@ function imprimir() {
       <q-card-actions align="right">
         <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
         <q-btn
-          unelevated
+          flat
           color="primary"
           :label="novo ? 'Registrar' : rotuloAcao[local.etapa]"
           @click="novo ? salvar() : avancar()"

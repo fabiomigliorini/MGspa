@@ -303,7 +303,7 @@ function excluirAnexo(a) {
   $q.dialog({
     title: 'Excluir anexo',
     message: `Excluir "${a.label}"?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
@@ -328,7 +328,7 @@ function excluirContrato() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir o contrato ${contrato.value?.contrato}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
@@ -981,7 +981,7 @@ onMounted(async () => {
                 type="submit"
                 flat
                 label="Confirmar"
-                color="green-7"
+                color="primary"
                 :loading="confirmSalvando"
               />
             </q-card-actions>
