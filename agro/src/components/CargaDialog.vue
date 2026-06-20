@@ -307,7 +307,7 @@ function imprimir() {
 
 <template>
   <q-dialog v-model="show" :maximized="$q.screen.lt.sm">
-    <q-card v-if="local" style="width: 620px; max-width: 95vw">
+    <q-card v-if="local" flat style="width: 620px; max-width: 95vw">
       <q-card-section class="row items-center bg-primary text-white">
         <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
         <q-space />

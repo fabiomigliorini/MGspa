@@ -285,7 +285,7 @@ onMounted(async () => {
 
     <!-- Ajuste manual -->
     <q-dialog v-model="dialog">
-      <q-card flat bordered style="width: 520px; max-width: 90vw">
+      <q-card flat style="width: 520px; max-width: 90vw">
         <q-form @submit.prevent="salvarAjuste">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Ajuste manual</div>

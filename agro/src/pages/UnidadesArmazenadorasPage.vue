@@ -5,6 +5,7 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
 const TIPOS = [
   { value: 'PROPRIO', label: 'Próprio', icon: 'home', color: 'green-7' },
@@ -133,17 +134,15 @@ onMounted(carregar)
             </q-item-section>
           </q-item>
 
-          <q-item v-if="!itens.length && !carregando">
-            <q-item-section class="text-grey-6 text-center q-pa-md">
-              Nenhuma unidade armazenadora cadastrada
-            </q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!itens.length && !carregando" plain icon="warehouse">
+            Nenhuma unidade armazenadora cadastrada
+          </MgEmptyState>
         </q-list>
       </q-card>
     </div>
 
     <q-dialog v-model="dialog">
-      <q-card flat bordered style="width: 500px; max-width: 90vw">
+      <q-card flat style="width: 500px; max-width: 90vw">
         <q-form @submit.prevent="submit">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">{{ isNovo ? 'Nova unidade' : 'Editar unidade' }}</div>
