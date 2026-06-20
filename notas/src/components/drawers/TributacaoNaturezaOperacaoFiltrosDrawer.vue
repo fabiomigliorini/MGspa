@@ -7,7 +7,7 @@ import {
 import { useDebounceFn } from '@vueuse/core'
 import MgSelectEstado from '@components/MgSelectEstado.vue'
 import MgSelectTributacao from '@components/MgSelectTributacao.vue'
-import SelectCfop from '../selects/SelectCfop.vue'
+import SelectCfop from '@components/MgSelectCfop.vue'
 
 const tributacaoStore = useTributacaoNaturezaOperacaoStore()
 const isInitializing = ref(true)
@@ -190,7 +190,7 @@ onMounted(async () => {
       <!-- CFOP -->
       <div class="text-grey-7 text-body2">CFOP:</div>
       <div class="q-mb-md">
-        <SelectCfop v-model="filters.codcfop" label="CFOP" />
+        <SelectCfop v-model="filters.codcfop" label="CFOP" clearable />
       </div>
     </div>
   </div>

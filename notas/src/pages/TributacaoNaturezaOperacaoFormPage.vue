@@ -9,7 +9,7 @@ import {
 } from '../stores/tributacaoNaturezaOperacaoStore'
 import MgSelectEstado from '@components/MgSelectEstado.vue'
 import MgSelectTributacao from '@components/MgSelectTributacao.vue'
-import SelectCfop from '../components/selects/SelectCfop.vue'
+import SelectCfop from '@components/MgSelectCfop.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const router = useRouter()
@@ -224,6 +224,7 @@ onMounted(async () => {
                 <SelectCfop
                   v-model="form.codcfop"
                   label="CFOP *"
+                  clearable
                   :disable="loading"
                   :rules="[(val) => val !== null || 'CFOP é obrigatório']"
                 />

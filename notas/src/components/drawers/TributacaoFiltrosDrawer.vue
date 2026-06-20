@@ -7,7 +7,7 @@ import MgSelectEstado from '@components/MgSelectEstado.vue'
 import MgSelectCidade from '@components/MgSelectCidade.vue'
 import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
 import MgSelectTipoProduto from '@components/MgSelectTipoProduto.vue'
-import SelectTipoCliente from 'components/selects/SelectTipoCliente.vue'
+import SelectTipoCliente from '@components/MgSelectTipoCliente.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const $q = useQuasar()
@@ -133,6 +133,7 @@ const limparFiltros = async () => {
         <SelectTipoCliente
           v-model="store.filters.tipocliente"
           label="5. Tipo de Cliente"
+          clearable
           :bottom-slots="false"
         />
       </div>

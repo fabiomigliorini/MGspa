@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
+import { GrupoEconomicoStore } from 'stores/GrupoEconomico'
 import {
   formataData,
   formataPisPasep,
@@ -14,7 +15,7 @@ import {
   verificaIdade,
 } from '@components/formatters'
 import { useAuthStore } from 'stores/index'
-import SelectGrupoEconomico from 'components/pessoa/SelectGrupoEconomico.vue'
+import SelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
 import SelectCidade from '@components/MgSelectCidade.vue'
 import SelectEstado from '@components/MgSelectEstado.vue'
 import InputIe from 'components/pessoa/InputIe.vue'
@@ -29,7 +30,29 @@ import SelectGrauInstrucao from '@components/MgSelectGrauInstrucao.vue'
 const $q = useQuasar()
 const router = useRouter()
 const sPessoa = pessoaStore()
+const sGrupoEconomico = GrupoEconomicoStore()
 const user = useAuthStore()
+
+async function criarGrupoEconomico(nome, done) {
+  $q.dialog({
+    title: 'Deseja criar um novo Grupo Econômico?',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Criar', color: 'primary', flat: true },
+  }).onOk(async () => {
+    try {
+      const ret = await sGrupoEconomico.novoGrupoEconomico(nome)
+      modelPessoa.value.codgrupoeconomico = ret.data.data.codgrupoeconomico
+      done()
+    } catch (error) {
+      $q.notify({
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: error.message,
+      })
+    }
+  })
+}
 
 const ufNfe = computed(() => {
   const enderecos = sPessoa.item?.PessoaEnderecoS || []
@@ -307,7 +330,9 @@ const salvarDetalhes = async () => {
             class="col-md-4 col-sm-6 col-xs-12"
             v-model="modelPessoa.codgrupoeconomico"
             label="Grupo Econômico"
-            :permite-adicionar="true"
+            permite-adicionar
+            clearable
+            @adicionar="criarGrupoEconomico"
           />
 
           <template v-if="modelPessoa.fisica">

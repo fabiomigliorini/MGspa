@@ -6,7 +6,7 @@ import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
-import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
+import MgSelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgSelectTipoTitulo from '@components/MgSelectTipoTitulo.vue'
 import MgSelectFormaPagamento from '@components/MgSelectFormaPagamento.vue'
@@ -27,8 +27,9 @@ function clear() {
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Cliente / Portador" first>
-      <SelectGrupoCliente
+      <MgSelectGrupoCliente
         v-model="store.filters.codgrupocliente"
+        multiple
         outlined
         :bottom-slots="false"
         label="Grupos de Cliente"

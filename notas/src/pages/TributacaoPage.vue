@@ -8,7 +8,7 @@ import MgSelectEstado from '@components/MgSelectEstado.vue'
 import MgSelectCidade from '@components/MgSelectCidade.vue'
 import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
 import MgSelectTipoProduto from '@components/MgSelectTipoProduto.vue'
-import SelectTipoCliente from 'src/components/selects/SelectTipoCliente.vue'
+import SelectTipoCliente from '@components/MgSelectTipoCliente.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -879,7 +879,8 @@ const confirmarExclusaoTributo = () => {
             <SelectTipoCliente
               v-model="regraForm.tipocliente"
               label="5. Tipo de Cliente"
-              custom-class="col-3"
+              clearable
+              class="col-3"
             />
 
             <!-- 6. NCM (menor prioridade, considera tamanho) -->

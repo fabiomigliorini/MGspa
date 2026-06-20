@@ -1,20 +1,42 @@
 <script setup>
-import { defineAsyncComponent, ref, computed } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { colaboradorStore } from 'stores/colaborador'
+import { pessoaStore } from 'stores/pessoa'
 import { tempoRelativo, formataDataIso, formataDataAbreviada } from '@components/formatters'
 import moment from 'moment'
 import 'moment/min/locales'
 moment.locale('pt-br')
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
-
-const SelectCargo = defineAsyncComponent(() => import('components/pessoa/SelectCargo.vue'))
+import MgSelectCargo from '@components/MgSelectCargo.vue'
 
 const props = defineProps(['colaboradorCargos'])
 
 const $q = useQuasar()
 const sColaborador = colaboradorStore()
+const sPessoa = pessoaStore()
+
+async function criarCargo(nome, done) {
+  $q.dialog({
+    title: 'Deseja criar um novo cargo?',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Criar', color: 'primary', flat: true },
+  }).onOk(async () => {
+    try {
+      const ret = await sPessoa.novoCargo({ cargo: nome })
+      modelColaboradorCargo.value.codcargo = ret.data.data.codcargo
+      done()
+    } catch (error) {
+      $q.notify({
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: error.message,
+      })
+    }
+  })
+}
 
 const cargosOrdenados = computed(() =>
   [...(props.colaboradorCargos.ColaboradorCargo || [])].sort(
@@ -286,13 +308,15 @@ defineExpose({ novoColaboradorCargo })
         </q-card-section>
         <q-separator inset />
         <q-card-section>
-          <select-cargo
+          <MgSelectCargo
             v-model="modelColaboradorCargo.codcargo"
-            :permite-adicionar="true"
+            permite-adicionar
+            clearable
             reactive-rules
             :rules="[
               (val) => (val !== null && val !== '' && val !== undefined) || 'Cargo Obrigatório',
             ]"
+            @adicionar="criarCargo"
           />
 
           <div class="row q-col-gutter-md">

@@ -10,7 +10,7 @@ import MgSelectTipoTitulo from '@components/MgSelectTipoTitulo.vue'
 import MgSelectContaContabil from '@components/MgSelectContaContabil.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
-import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
+import MgSelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -127,8 +127,9 @@ const pagarReceberOptions = [
         class="q-mb-md"
       />
 
-      <SelectGrupoCliente
+      <MgSelectGrupoCliente
         v-model="store.filters.codgrupocliente"
+        multiple
         outlined
         :bottom-slots="false"
         label="Grupo de Cliente"

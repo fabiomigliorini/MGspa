@@ -6,7 +6,7 @@ import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
-import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
+import MgSelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const store = useTituloAgrupamentoStore()
@@ -67,8 +67,9 @@ const estornadoOptions = [
         label="Pessoa"
         class="q-mb-md"
       />
-      <SelectGrupoCliente
+      <MgSelectGrupoCliente
         v-model="store.filters.codgrupocliente"
+        multiple
         outlined
         :bottom-slots="false"
         label="Grupo de Cliente"

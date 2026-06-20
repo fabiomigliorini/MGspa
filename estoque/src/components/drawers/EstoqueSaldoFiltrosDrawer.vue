@@ -1,15 +1,12 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { api } from 'src/services/api'
 import { useEstoqueSaldoStore } from 'src/stores/estoqueSaldoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import MgAutocomplete from 'src/components/MgAutocomplete.vue'
+import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
 
 const store = useEstoqueSaldoStore()
 const f = store.filters
-
-const depositos = ref([])
 
 const aplicar = () => store.fetchItems()
 const clear = () => store.clearFilters()
@@ -29,22 +26,13 @@ const maximoOptions = [
   { label: 'Abaixo do máximo', value: -1 },
   { label: 'Acima do máximo', value: 1 },
 ]
-
-onMounted(async () => {
-  const { data } = await api.get('v1/select/estoque-local')
-  depositos.value = data
-})
 </script>
 
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Local e Marca" first>
-      <q-select
+      <MgSelectEstoqueLocal
         v-model="f.codestoquelocal"
-        :options="depositos"
-        emit-value
-        map-options
-        outlined
         clearable
         :bottom-slots="false"
         label="Depósito"
@@ -52,7 +40,7 @@ onMounted(async () => {
         @update:model-value="aplicar"
       >
         <template #prepend><q-icon name="warehouse" /></template>
-      </q-select>
+      </MgSelectEstoqueLocal>
       <MgAutocomplete
         v-model="f.codmarca"
         endpoint="v1/marca/autocompletar"
