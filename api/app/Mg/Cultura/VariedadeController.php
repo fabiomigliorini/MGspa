@@ -4,6 +4,7 @@ namespace Mg\Cultura;
 
 use App\Http\Requests\Mg\Cultura\VariedadeStoreRequest;
 use App\Http\Requests\Mg\Cultura\VariedadeUpdateRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
@@ -41,7 +42,15 @@ class VariedadeController extends MgController
 
     public function destroy($id)
     {
-        Variedade::findOrFail($id)->delete();
+        $variedade = Variedade::findOrFail($id);
+        try {
+            $variedade->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) === '23503') {
+                abort(409, 'Existem plantios vinculados a esta Variedade! Impossível excluir!');
+            }
+            throw $e;
+        }
         return response()->noContent();
     }
 
