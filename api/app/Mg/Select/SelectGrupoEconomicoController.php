@@ -12,14 +12,17 @@ class SelectGrupoEconomicoController extends Controller
     {
         $page = (int) $request->page > 0 ? (int) $request->page : 1;
         $offset = ($page - 1) * 20;
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
 
         $sql = '
-            select codgrupoeconomico, grupoeconomico, codgrupoeconomico as value, grupoeconomico as label
+            select codgrupoeconomico, grupoeconomico, inativo, codgrupoeconomico as value, grupoeconomico as label
             from tblgrupoeconomico
-            where inativo is null
-              and grupoeconomico ilike :busca
-            ORDER BY grupoeconomico LIMIT 20 OFFSET ' . $offset . '
+            where (grupoeconomico ilike :busca)
         ';
+        if (!$inativos) {
+            $sql .= ' and inativo is null';
+        }
+        $sql .= ' ORDER BY grupoeconomico LIMIT 20 OFFSET ' . $offset;
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
     }
@@ -27,7 +30,7 @@ class SelectGrupoEconomicoController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codgrupoeconomico, grupoeconomico, codgrupoeconomico as value, grupoeconomico as label
+            select codgrupoeconomico, grupoeconomico, inativo, codgrupoeconomico as value, grupoeconomico as label
             from tblgrupoeconomico
             where codgrupoeconomico = :id
             limit 1

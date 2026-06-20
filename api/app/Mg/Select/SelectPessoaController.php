@@ -26,10 +26,15 @@ class SelectPessoaController extends Controller
             left join tblestado e on (e.codestado = c.codestado)
         ';
 
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
+        if ($request->has('somenteAtivos')) {
+            $inativos = !filter_var($request->somenteAtivos, FILTER_VALIDATE_BOOLEAN);
+        }
+
         $params = [];
         $where = 'where';
 
-        if ($request->somenteAtivos) {
+        if (!$inativos) {
             $sql .= " {$where} p.inativo is null";
             $where = 'and';
         }

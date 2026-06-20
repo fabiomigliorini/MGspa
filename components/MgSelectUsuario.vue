@@ -10,7 +10,7 @@ const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Usuário' },
   clearable: { type: Boolean, default: false },
-  somenteAtivos: { type: Boolean, default: true },
+  inativos: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'clear'])
@@ -29,7 +29,7 @@ let temMais = false
 
 async function buscar(busca, page) {
   const { data } = await api.get(ENDPOINT, {
-    params: { busca, page, somenteAtivos: props.somenteAtivos ? 1 : 0 },
+    params: { busca, page, inativos: props.inativos ? 1 : 0 },
   })
   const rows = Array.isArray(data) ? data : data?.data || []
   cache.mergeById(ENTITY, rows)
@@ -136,9 +136,15 @@ const handleUpdate = (value) => {
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section>
-          <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
+            {{ scope.opt.label }}
+          </q-item-label>
         </q-item-section>
       </q-item>
+    </template>
+
+    <template v-slot:selected-item="scope">
+      <span :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">{{ scope.opt.label }}</span>
     </template>
 
     <template v-slot:no-option>

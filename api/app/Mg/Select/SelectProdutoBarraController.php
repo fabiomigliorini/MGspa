@@ -31,7 +31,11 @@ class SelectProdutoBarraController extends Controller
                   FROM vwProdutoBarra
                  WHERE codProdutoBarra is not null ";
 
-        if (!filter_var($request->inativo, FILTER_VALIDATE_BOOLEAN) || is_null($request->inativo)) {
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
+        if ($request->has('inativo')) {
+            $inativos = filter_var($request->inativo, FILTER_VALIDATE_BOOLEAN);
+        }
+        if (!$inativos) {
             $sql .= 'AND Inativo is null ';
         }
 

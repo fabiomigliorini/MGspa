@@ -24,7 +24,12 @@ class SelectUsuarioController extends Controller
             where (u.usuario ilike :busca or p.fantasia ilike :busca or p.pessoa ilike :busca)
         ';
 
-        if (filter_var($request->somenteAtivos, FILTER_VALIDATE_BOOL)) {
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
+        if ($request->has('somenteAtivos')) {
+            $inativos = !filter_var($request->somenteAtivos, FILTER_VALIDATE_BOOLEAN);
+        }
+
+        if (!$inativos) {
             $sql .= ' and u.inativo is null ';
         }
 

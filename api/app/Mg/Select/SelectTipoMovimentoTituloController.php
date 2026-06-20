@@ -10,13 +10,16 @@ class SelectTipoMovimentoTituloController extends Controller
 {
     public static function index(Request $request)
     {
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
         $sql = '
-            select codtipomovimentotitulo, tipomovimentotitulo, codtipomovimentotitulo as value, tipomovimentotitulo as label
+            select codtipomovimentotitulo, tipomovimentotitulo, inativo, codtipomovimentotitulo as value, tipomovimentotitulo as label
             from tbltipomovimentotitulo
-            where inativo is null
-              and (tipomovimentotitulo ilike :busca)
-            ORDER BY tipomovimentotitulo
+            where (tipomovimentotitulo ilike :busca)
         ';
+        if (!$inativos) {
+            $sql .= ' and inativo is null';
+        }
+        $sql .= ' ORDER BY tipomovimentotitulo';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
     }
@@ -24,7 +27,7 @@ class SelectTipoMovimentoTituloController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codtipomovimentotitulo, tipomovimentotitulo, codtipomovimentotitulo as value, tipomovimentotitulo as label
+            select codtipomovimentotitulo, tipomovimentotitulo, inativo, codtipomovimentotitulo as value, tipomovimentotitulo as label
             from tbltipomovimentotitulo
             where codtipomovimentotitulo = :id
             limit 1

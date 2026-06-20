@@ -10,14 +10,21 @@ class SelectEstoqueLocalController extends Controller
 {
     public static function index(Request $request)
     {
-        $qry = EstoqueLocal::ativo()
-            ->select(['codestoquelocal', 'estoquelocal', 'codfilial'])
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
+
+        $qry = EstoqueLocal::query()
+            ->select(['codestoquelocal', 'estoquelocal', 'codfilial', 'inativo'])
             ->orderBy('estoquelocal');
+
+        if (!$inativos) {
+            $qry->ativo();
+        }
 
         return $qry->get()->map(fn ($item) => [
             'value' => $item->codestoquelocal,
             'label' => $item->estoquelocal,
             'codfilial' => $item->codfilial,
+            'inativo' => $item->inativo,
         ]);
     }
 
@@ -31,6 +38,7 @@ class SelectEstoqueLocalController extends Controller
             'value' => $item->codestoquelocal,
             'label' => $item->estoquelocal,
             'codfilial' => $item->codfilial,
+            'inativo' => $item->inativo,
         ];
     }
 }

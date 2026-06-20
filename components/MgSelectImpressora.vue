@@ -10,6 +10,7 @@ const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Impressora' },
   clearable: { type: Boolean, default: false },
+  inativos: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -25,7 +26,7 @@ const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
 async function carregar(force = false) {
   carregando.value = true
   try {
-    await cache.loadList(ENTITY, ENDPOINT, { force })
+    await cache.loadList(ENTITY, ENDPOINT, { force, inativos: props.inativos })
     opcoes.value = permitidos.value
   } catch {
     opcoes.value = []
@@ -82,6 +83,18 @@ onMounted(() => carregar())
     </template>
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
+    </template>
+    <template #option="scope">
+      <q-item v-bind="scope.itemProps">
+        <q-item-section>
+          <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
+            {{ scope.opt.label }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+    <template #selected-item="scope">
+      <span :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">{{ scope.opt.label }}</span>
     </template>
   </q-select>
 </template>

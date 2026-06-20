@@ -10,13 +10,16 @@ class SelectGrauInstrucaoController extends Controller
 {
     public static function index(Request $request)
     {
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
         $sql = '
-            select codgrauinstrucao, grauinstrucao, codgrauinstrucao as value, grauinstrucao as label
+            select codgrauinstrucao, grauinstrucao, inativo, codgrauinstrucao as value, grauinstrucao as label
             from tblgrauinstrucao
-            where inativo is null
-              and (grauinstrucao ilike :busca)
-            ORDER BY grauinstrucao
+            where (grauinstrucao ilike :busca)
         ';
+        if (!$inativos) {
+            $sql .= ' and inativo is null';
+        }
+        $sql .= ' ORDER BY grauinstrucao';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
     }
@@ -24,7 +27,7 @@ class SelectGrauInstrucaoController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codgrauinstrucao, grauinstrucao, codgrauinstrucao as value, grauinstrucao as label
+            select codgrauinstrucao, grauinstrucao, inativo, codgrauinstrucao as value, grauinstrucao as label
             from tblgrauinstrucao
             where codgrauinstrucao = :id
             limit 1

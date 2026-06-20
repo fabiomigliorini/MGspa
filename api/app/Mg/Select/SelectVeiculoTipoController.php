@@ -10,8 +10,14 @@ class SelectVeiculoTipoController extends Controller
 {
     public static function index(Request $request)
     {
-        $qry = VeiculoTipo::select(['codveiculotipo', 'veiculotipo'])
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
+
+        $qry = VeiculoTipo::select(['codveiculotipo', 'veiculotipo', 'inativo'])
             ->orderBy('veiculotipo');
+
+        if (!$inativos) {
+            $qry->ativo();
+        }
 
         if (filter_var($request->dfe, FILTER_VALIDATE_BOOLEAN)) {
             $qry->where('dfe', true);
@@ -20,6 +26,7 @@ class SelectVeiculoTipoController extends Controller
         return $qry->get()->map(fn ($item) => [
             'value' => $item->codveiculotipo,
             'label' => $item->veiculotipo,
+            'inativo' => $item->inativo,
         ]);
     }
 
@@ -32,6 +39,7 @@ class SelectVeiculoTipoController extends Controller
         return [
             'value' => $item->codveiculotipo,
             'label' => $item->veiculotipo,
+            'inativo' => $item->inativo,
         ];
     }
 }

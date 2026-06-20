@@ -37,8 +37,13 @@ class SelectPortadorController extends Controller
             return response()->json(DB::select($sql, $bindings), 200);
         }
 
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
+        if ($request->has('somenteAtivos')) {
+            $inativos = !filter_var($request->somenteAtivos, FILTER_VALIDATE_BOOLEAN);
+        }
+
         $sql .= ' where (p.portador ilike :busca)';
-        if (filter_var($request->somenteAtivos, FILTER_VALIDATE_BOOL)) {
+        if (!$inativos) {
             $sql .= ' and p.inativo is null ';
         }
         $sql .= ' ORDER BY p.portador, p.codportador LIMIT 250';

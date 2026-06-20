@@ -10,6 +10,7 @@ const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Produto' },
   clearable: { type: Boolean, default: false },
+  inativos: { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'clear', 'select'])
@@ -27,7 +28,9 @@ let pagina = 1
 let temMais = false
 
 async function buscar(busca, page) {
-  const { data } = await api.get(ENDPOINT, { params: { busca, page } })
+  const { data } = await api.get(ENDPOINT, {
+    params: { busca, page, inativos: props.inativos ? 1 : 0 },
+  })
   const rows = Array.isArray(data) ? data : data?.data || []
   cache.mergeById(ENTITY, rows)
   return rows
@@ -138,7 +141,9 @@ const handleUpdate = (value) => {
     <template v-slot:option="scope">
       <q-item v-bind="scope.itemProps">
         <q-item-section>
-          <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
+            {{ scope.opt.label }}
+          </q-item-label>
           <q-item-label v-if="scope.opt.barras || scope.opt.referencia" caption class="text-grey-7">
             <span v-if="scope.opt.barras">{{ scope.opt.barras }}</span>
             <span v-if="scope.opt.referencia">
@@ -147,6 +152,10 @@ const handleUpdate = (value) => {
           </q-item-label>
         </q-item-section>
       </q-item>
+    </template>
+
+    <template v-slot:selected-item="scope">
+      <span :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">{{ scope.opt.label }}</span>
     </template>
 
     <template v-slot:no-option>

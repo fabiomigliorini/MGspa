@@ -17,7 +17,7 @@ const props = defineProps({
   disable: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },
   maxChars: { type: Number, default: 25 },
-  somenteAtivos: { type: Boolean, default: true },
+  inativos: { type: Boolean, default: false },
   somenteVendedores: { type: Boolean, default: false },
   clearable: { type: Boolean, default: false },
   // Quando setado (>= 11 dígitos), busca automática e abre o popup.
@@ -62,7 +62,7 @@ async function buscar(busca, page) {
     params: {
       busca,
       page,
-      somenteAtivos: props.somenteAtivos ? 1 : 0,
+      inativos: props.inativos ? 1 : 0,
       somenteVendedores: props.somenteVendedores ? 1 : 0,
     },
   })
@@ -229,7 +229,9 @@ const handleUpdate = (value) => {
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
+            {{ scope.opt.label }}
+          </q-item-label>
           <q-item-label caption class="text-grey-7">
             {{ formataCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
             <span v-if="scope.opt.ie"> | IE: {{ scope.opt.ie }} </span>
@@ -240,9 +242,6 @@ const handleUpdate = (value) => {
           <q-item-label v-if="scope.opt.sublabel" caption class="text-grey-6">
             {{ scope.opt.sublabel }}
           </q-item-label>
-        </q-item-section>
-        <q-item-section v-if="scope.opt.inativo" side>
-          <q-badge color="negative" label="Inativo" />
         </q-item-section>
       </q-item>
     </template>
@@ -255,7 +254,9 @@ const handleUpdate = (value) => {
         text-color="white"
         :icon="scope.opt.fisica ? 'person' : 'business'"
       >
-        {{ truncateLabel(scope.opt.label) }}
+        <span :class="scope.opt.inativo ? 'text-strike' : ''">
+          {{ truncateLabel(scope.opt.label) }}
+        </span>
       </q-chip>
     </template>
 

@@ -10,13 +10,16 @@ class SelectGrupoClienteController extends Controller
 {
     public static function index(Request $request)
     {
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
         $sql = '
-            select codgrupocliente, grupocliente, codgrupocliente as value, grupocliente as label
+            select codgrupocliente, grupocliente, inativo, codgrupocliente as value, grupocliente as label
             from tblgrupocliente
-            where inativo is null
-              and (grupocliente ilike :busca)
-            ORDER BY grupocliente
+            where (grupocliente ilike :busca)
         ';
+        if (!$inativos) {
+            $sql .= ' and inativo is null';
+        }
+        $sql .= ' ORDER BY grupocliente';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
     }
@@ -24,7 +27,7 @@ class SelectGrupoClienteController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codgrupocliente, grupocliente, codgrupocliente as value, grupocliente as label
+            select codgrupocliente, grupocliente, inativo, codgrupocliente as value, grupocliente as label
             from tblgrupocliente
             where codgrupocliente = :id
             limit 1

@@ -10,10 +10,16 @@ class SelectVeiculoController extends Controller
 {
     public static function index(Request $request)
     {
-        $qry = Veiculo::ativo()
-            ->select(['codveiculo', 'placa'])
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
+
+        $qry = Veiculo::query()
+            ->select(['codveiculo', 'placa', 'inativo'])
             ->orderBy('placa')
             ->orderBy('codveiculo');
+
+        if (!$inativos) {
+            $qry->ativo();
+        }
 
         if (filter_var($request->dfe, FILTER_VALIDATE_BOOLEAN)) {
             $qry->where('dfe', true);
@@ -22,6 +28,7 @@ class SelectVeiculoController extends Controller
         return $qry->get()->map(fn ($item) => [
             'value' => $item->codveiculo,
             'label' => $item->placa,
+            'inativo' => $item->inativo,
         ]);
     }
 
@@ -34,6 +41,7 @@ class SelectVeiculoController extends Controller
         return [
             'value' => $item->codveiculo,
             'label' => $item->placa,
+            'inativo' => $item->inativo,
         ];
     }
 }

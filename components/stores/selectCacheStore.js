@@ -18,8 +18,11 @@ export const useSelectCacheStore = defineStore('selectCache', () => {
   }
 
   // LOCAL: carrega tudo uma vez; cacheia lista + byId. force=true refaz do backend.
-  async function loadList(name, endpoint, { force = false } = {}) {
-    const s = ent(name)
+  // inativos=true traz tambem os inativos (cache em bucket separado + ?inativos=1).
+  async function loadList(name, endpoint, { force = false, inativos = false } = {}) {
+    const key = inativos ? `${name}__inativos` : name
+    const url = inativos ? `${endpoint}${endpoint.includes('?') ? '&' : '?'}inativos=1` : endpoint
+    const s = ent(key)
     if (force) {
       s.loaded = false
       s.loading = null
@@ -27,7 +30,7 @@ export const useSelectCacheStore = defineStore('selectCache', () => {
     if (s.loaded) return s.items
     if (s.loading) return s.loading
     s.loading = api
-      .get(endpoint)
+      .get(url)
       .then((ret) => {
         const rows = Array.isArray(ret.data) ? ret.data : ret.data?.data || []
         s.items = rows
@@ -69,11 +72,14 @@ export const useSelectCacheStore = defineStore('selectCache', () => {
   }
 
   function invalidate(name) {
-    const s = ent(name)
-    s.items = []
-    s.loaded = false
-    s.loading = null
-    s.byId = {}
+    ;[name, `${name}__inativos`].forEach((k) => {
+      const s = entities[k]
+      if (!s) return
+      s.items = []
+      s.loaded = false
+      s.loading = null
+      s.byId = {}
+    })
   }
 
   return { entities, loadList, loadById, mergeById, getById, invalidate }

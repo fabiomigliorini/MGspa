@@ -10,13 +10,16 @@ class SelectEtniaController extends Controller
 {
     public static function index(Request $request)
     {
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
         $sql = '
-            select codetnia, etnia, codetnia as value, etnia as label
+            select codetnia, etnia, inativo, codetnia as value, etnia as label
             from tbletnia
-            where inativo is null
-              and (etnia ilike :busca)
-            ORDER BY etnia
+            where (etnia ilike :busca)
         ';
+        if (!$inativos) {
+            $sql .= ' and inativo is null';
+        }
+        $sql .= ' ORDER BY etnia';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
     }
@@ -24,7 +27,7 @@ class SelectEtniaController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codetnia, etnia, codetnia as value, etnia as label
+            select codetnia, etnia, inativo, codetnia as value, etnia as label
             from tbletnia
             where codetnia = :id
             limit 1

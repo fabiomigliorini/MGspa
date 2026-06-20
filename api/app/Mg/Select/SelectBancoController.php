@@ -12,14 +12,17 @@ class SelectBancoController extends Controller
     {
         $page = (int) $request->page > 0 ? (int) $request->page : 1;
         $offset = ($page - 1) * 20;
+        $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
 
         $sql = '
-            select codbanco, banco, sigla, numerobanco, codbanco as value, banco as label
+            select codbanco, banco, sigla, numerobanco, inativo, codbanco as value, banco as label
             from tblbanco
-            where inativo is null
-              and (banco ilike :busca or sigla ilike :busca or numerobanco::text ilike :busca)
-            ORDER BY banco LIMIT 20 OFFSET ' . $offset . '
+            where (banco ilike :busca or sigla ilike :busca or numerobanco::text ilike :busca)
         ';
+        if (!$inativos) {
+            $sql .= ' and inativo is null';
+        }
+        $sql .= ' ORDER BY banco LIMIT 20 OFFSET ' . $offset;
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
     }
@@ -27,7 +30,7 @@ class SelectBancoController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codbanco, banco, sigla, numerobanco, codbanco as value, banco as label
+            select codbanco, banco, sigla, numerobanco, inativo, codbanco as value, banco as label
             from tblbanco
             where codbanco = :id
             limit 1
