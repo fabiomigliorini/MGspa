@@ -82,21 +82,25 @@ const filtrar = (val, update) => {
     })
     return
   }
-  update(async () => {
-    try {
-      loading.value = true
-      buscaAtual = val
-      pagina = 1
-      const rows = await buscar(val, 1)
+  buscaAtual = val
+  pagina = 1
+  loading.value = true
+  buscar(val, 1)
+    .then((rows) => {
       temMais = rows.length === PER_PAGE
-      options.value = rows
-    } catch (error) {
+      update(() => {
+        options.value = rows
+      })
+    })
+    .catch((error) => {
       console.error('Erro ao buscar grupo econômico:', error)
-      options.value = []
-    } finally {
+      update(() => {
+        options.value = []
+      })
+    })
+    .finally(() => {
       loading.value = false
-    }
-  })
+    })
 }
 
 const onScroll = async ({ to }) => {

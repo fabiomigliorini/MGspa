@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
@@ -62,6 +62,17 @@ function onUpdate(v) {
 }
 
 onMounted(() => carregar())
+
+// Valor setado externamente (ex: cargo recém-criado via permiteAdicionar) que
+// ainda não está na lista: recarrega do backend pra resolver o label.
+watch(
+  () => props.modelValue,
+  async (v) => {
+    if (v && !(opcoes.value || []).find((o) => o.value === v) && !carregando.value) {
+      await carregar(true)
+    }
+  },
+)
 </script>
 
 <template>
