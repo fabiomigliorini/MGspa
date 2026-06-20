@@ -13,7 +13,7 @@ const props = defineProps({
   inativos: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['update:modelValue', 'clear'])
+const emit = defineEmits(['update:modelValue', 'select', 'clear'])
 
 const cache = useSelectCacheStore()
 const ENTITY = 'tributo'
@@ -111,6 +111,7 @@ const onScroll = async ({ to }) => {
 
 const handleUpdate = (value) => {
   emit('update:modelValue', value)
+  emit('select', (options.value || []).find((o) => o.value === value) || null)
   if (value === null) emit('clear')
 }
 </script>
@@ -128,6 +129,8 @@ const handleUpdate = (value) => {
     emit-value
     map-options
     use-input
+    fill-input
+    hide-selected
     input-debounce="500"
     @filter="filtrar"
     @virtual-scroll="onScroll"
@@ -143,10 +146,6 @@ const handleUpdate = (value) => {
       </q-item>
     </template>
 
-    <template v-slot:selected-item="scope">
-      <span :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">{{ scope.opt.label }}</span>
-    </template>
-
     <template v-slot:no-option>
       <q-item>
         <q-item-section class="text-grey">
@@ -154,5 +153,9 @@ const handleUpdate = (value) => {
         </q-item-section>
       </q-item>
     </template>
+    <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
+    <template v-if="$slots.before" #before><slot name="before" /></template>
+    <template v-if="$slots.after" #after><slot name="after" /></template>
+    <template v-if="$slots.hint" #hint><slot name="hint" /></template>
   </q-select>
 </template>

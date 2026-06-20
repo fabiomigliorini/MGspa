@@ -12,7 +12,7 @@ const props = defineProps({
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'select'])
 
 const cache = useSelectCacheStore()
 const ENTITY = 'impressora'
@@ -49,6 +49,11 @@ function filtrar(val, update) {
   })
 }
 
+function onUpdate(v) {
+  emit('update:modelValue', v)
+  emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
+}
+
 onMounted(() => carregar())
 </script>
 
@@ -58,6 +63,8 @@ onMounted(() => carregar())
     :options="opcoes"
     :label="label"
     use-input
+    fill-input
+    hide-selected
     input-debounce="100"
     outlined
     :clearable="clearable"
@@ -65,21 +72,13 @@ onMounted(() => carregar())
     emit-value
     map-options
     @filter="filtrar"
-    @update:model-value="(v) => emit('update:modelValue', v)"
+    @update:model-value="onUpdate"
     v-bind="$attrs"
   >
     <template #append>
-      <q-btn
-        flat
-        round
-        size="sm"
-        color="grey-7"
-        icon="refresh"
-        tabindex="-1"
-        @click.stop="atualizar"
+      <q-icon name="refresh" size="xs" class="cursor-pointer text-grey-7" @click.stop="atualizar"
+        ><q-tooltip>Atualizar lista</q-tooltip></q-icon
       >
-        <q-tooltip>Atualizar lista</q-tooltip>
-      </q-btn>
     </template>
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
@@ -93,8 +92,9 @@ onMounted(() => carregar())
         </q-item-section>
       </q-item>
     </template>
-    <template #selected-item="scope">
-      <span :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">{{ scope.opt.label }}</span>
-    </template>
+    <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
+    <template v-if="$slots.before" #before><slot name="before" /></template>
+    <template v-if="$slots.after" #after><slot name="after" /></template>
+    <template v-if="$slots.hint" #hint><slot name="hint" /></template>
   </q-select>
 </template>

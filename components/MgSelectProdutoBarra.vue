@@ -133,6 +133,8 @@ const handleUpdate = (value) => {
     emit-value
     map-options
     use-input
+    fill-input
+    hide-selected
     input-debounce="500"
     @filter="filtrar"
     @virtual-scroll="onScroll"
@@ -152,10 +154,6 @@ const handleUpdate = (value) => {
           </q-item-label>
         </q-item-section>
       </q-item>
-    </template>
-
-    <template v-slot:selected-item="scope">
-      <span :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">{{ scope.opt.label }}</span>
     </template>
 
     <template v-slot:no-option>

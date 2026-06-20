@@ -210,6 +210,8 @@ const handleUpdate = (value) => {
     emit-value
     map-options
     use-input
+    fill-input
+    hide-selected
     input-debounce="500"
     @filter="filterPessoa"
     @virtual-scroll="onScroll"

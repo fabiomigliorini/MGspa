@@ -224,6 +224,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/etnia/{id}', [\Mg\Select\SelectEtniaController::class, 'show'])->whereNumber('id');
     Route::get('select/grau-instrucao', [\Mg\Select\SelectGrauInstrucaoController::class, 'index']);
     Route::get('select/grau-instrucao/{id}', [\Mg\Select\SelectGrauInstrucaoController::class, 'show'])->whereNumber('id');
+    Route::get('select/cfop', [\Mg\Select\SelectCfopController::class, 'index']);
+    Route::get('select/cfop/{id}', [\Mg\Select\SelectCfopController::class, 'show'])->whereNumber('id');
+    Route::get('select/certidao-emissor', [\Mg\Select\SelectCertidaoEmissorController::class, 'index']);
+    Route::get('select/certidao-emissor/{id}', [\Mg\Select\SelectCertidaoEmissorController::class, 'show'])->whereNumber('id');
+    Route::get('select/certidao-tipo', [\Mg\Select\SelectCertidaoTipoController::class, 'index']);
+    Route::get('select/certidao-tipo/{id}', [\Mg\Select\SelectCertidaoTipoController::class, 'show'])->whereNumber('id');
 
     // Banco (migrado em 23/05/2026)
     Route::get('banco', [\Mg\Banco\BancoController::class, 'index']);
