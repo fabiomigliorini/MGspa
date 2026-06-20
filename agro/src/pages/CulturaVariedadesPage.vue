@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
 const route = useRoute()
 const codcultura = Number(route.params.codcultura)
@@ -95,11 +96,9 @@ onMounted(async () => {
             </q-item-section>
           </q-item>
 
-          <q-item v-if="!variedades.length">
-            <q-item-section class="text-grey-6 text-center">
-              Nenhuma variedade. Use <q-icon name="add" /> para adicionar.
-            </q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!variedades.length" plain icon="spa">
+            Nenhuma variedade. Use <q-icon name="add" /> para adicionar.
+          </MgEmptyState>
         </q-list>
       </q-card>
 

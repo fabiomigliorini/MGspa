@@ -6,6 +6,7 @@ import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
@@ -573,9 +574,9 @@ onMounted(async () => {
               Contrato FIXO: preço travado no contrato (fixação automática).
             </q-item-section>
           </q-item>
-          <q-item v-else-if="!fixacoes.length">
-            <q-item-section class="text-grey-6">Nenhuma fixação lançada.</q-item-section>
-          </q-item>
+          <MgEmptyState v-else-if="!fixacoes.length" plain icon="sell">
+            Nenhuma fixação lançada.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
@@ -655,14 +656,14 @@ onMounted(async () => {
               </div>
             </q-item-section>
           </q-item>
-          <q-item v-if="!pagamentos.length">
-            <q-item-section class="text-grey-6">Nenhuma parcela lançada.</q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!pagamentos.length" plain icon="payments">
+            Nenhuma parcela lançada.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
       <!-- Entregas (extrato) -->
-      <q-card flat bordered>
+      <q-card flat bordered class="q-mb-md">
         <q-item>
           <q-item-section>
             <q-item-label class="text-subtitle1">Entregas</q-item-label>
@@ -692,16 +693,14 @@ onMounted(async () => {
               </q-item-label>
             </q-item-section>
           </q-item>
-          <q-item v-if="!entregas.length">
-            <q-item-section class="text-grey-6"
-              >Nenhuma entrega ainda. Carregue no pátio.</q-item-section
-            >
-          </q-item>
+          <MgEmptyState v-if="!entregas.length" plain icon="local_shipping">
+            Nenhuma entrega ainda. Carregue no pátio.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
       <!-- Anexos (PDFs) -->
-      <q-card flat bordered class="q-mt-md">
+      <q-card flat bordered>
         <q-item>
           <q-item-section avatar>
             <q-avatar color="blue-grey-1" text-color="blue-grey-8" icon="attach_file" />
@@ -788,9 +787,9 @@ onMounted(async () => {
               </div>
             </q-item-section>
           </q-item>
-          <q-item v-if="!anexos.length">
-            <q-item-section class="text-grey-6">Nenhum anexo.</q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!anexos.length" plain icon="attach_file">
+            Nenhum anexo.
+          </MgEmptyState>
         </q-list>
       </q-card>
 

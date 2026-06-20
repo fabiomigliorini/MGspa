@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
 import MgContratoForm from 'components/MgContratoForm.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
 // Grid de contratos de UMA safra (encapsula tudo: lista + dialog novo/editar +
 // inativar/excluir). O contrato sempre pertence à safra, então o vínculo
@@ -158,9 +159,9 @@ onMounted(async () => {
       </div>
     </div>
 
-    <q-banner v-else rounded class="bg-grey-2 text-grey-7">
+    <MgEmptyState v-else icon="description">
       Nenhum contrato nesta safra. Crie o primeiro com o botão <q-icon name="add" />.
-    </q-banner>
+    </MgEmptyState>
 
     <MgContratoForm
       :cad="cad"

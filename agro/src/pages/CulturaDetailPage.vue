@@ -6,6 +6,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
@@ -240,11 +241,9 @@ onMounted(async () => {
             </q-item-section>
           </q-item>
 
-          <q-item v-if="!resumo.variedades.length">
-            <q-item-section class="text-grey-6 text-center">
-              Nenhuma variedade cadastrada.
-            </q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!resumo.variedades.length" plain icon="spa">
+            Nenhuma variedade cadastrada.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
@@ -278,11 +277,9 @@ onMounted(async () => {
             </q-item-section>
             <q-item-section side><q-icon name="chevron_right" /></q-item-section>
           </q-item>
-          <q-item v-if="!safras.length">
-            <q-item-section class="text-grey-6 text-center">
-              Nenhuma safra desta cultura ainda.
-            </q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!safras.length" plain icon="eco">
+            Nenhuma safra desta cultura ainda.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
