@@ -10,6 +10,9 @@ class SelectPessoaController extends Controller
 {
     public static function index(Request $request)
     {
+        $page = (int) $request->page > 0 ? (int) $request->page : 1;
+        $offset = ($page - 1) * 20;
+
         $sql = '
             select
                 p.codpessoa, p.fisica, p.fantasia, p.pessoa, p.cnpj, p.ie,
@@ -26,12 +29,6 @@ class SelectPessoaController extends Controller
         $params = [];
         $where = 'where';
 
-        if (!empty($request->codpessoa)) {
-            $sql .= " {$where} p.codpessoa = :codpessoa";
-            $where = 'and';
-            $params['codpessoa'] = $request->codpessoa;
-        }
-
         if ($request->somenteAtivos) {
             $sql .= " {$where} p.inativo is null";
             $where = 'and';
@@ -42,8 +39,8 @@ class SelectPessoaController extends Controller
             $where = 'and';
         }
 
-        if (!empty($request->pessoa)) {
-            $busca = trim(removeAcentos($request->pessoa));
+        if (!empty($request->busca)) {
+            $busca = trim(removeAcentos($request->busca));
             $letras = preg_replace('/[^A-Za-z]/', '', $busca);
             $numeros = preg_replace('/[^\d]/', '', $busca);
 
@@ -61,7 +58,30 @@ class SelectPessoaController extends Controller
             }
         }
 
-        $sql .= ' order by p.fantasia, p.pessoa, p.codpessoa limit 100';
+        $sql .= ' order by p.fantasia, p.pessoa, p.codpessoa limit 20 offset ' . $offset;
         return DB::select($sql, $params);
+    }
+
+    public static function show($id)
+    {
+        $sql = '
+            select
+                p.codpessoa, p.fisica, p.fantasia, p.pessoa, p.cnpj, p.ie,
+                p.endereco, p.numero, p.complemento, p.bairro,
+                p.codgrupoeconomico, ge.grupoeconomico,
+                c.cidade, e.sigla as uf,
+                p.vendedor, p.inativo
+            from tblpessoa p
+            left join tblgrupoeconomico ge on (ge.codgrupoeconomico = p.codgrupoeconomico)
+            left join tblcidade c on (c.codcidade = p.codcidade)
+            left join tblestado e on (e.codestado = c.codestado)
+            where p.codpessoa = :id
+            limit 1
+        ';
+        $rows = DB::select($sql, ['id' => $id]);
+        if (empty($rows)) {
+            abort(404);
+        }
+        return $rows[0];
     }
 }

@@ -22,4 +22,16 @@ class SelectVeiculoTipoController extends Controller
             'label' => $item->veiculotipo,
         ]);
     }
+
+    public static function show($id)
+    {
+        $item = VeiculoTipo::find($id);
+        if (empty($item)) {
+            abort(404);
+        }
+        return [
+            'value' => $item->codveiculotipo,
+            'label' => $item->veiculotipo,
+        ];
+    }
 }

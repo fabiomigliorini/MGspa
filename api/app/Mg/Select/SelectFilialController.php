@@ -26,4 +26,18 @@ class SelectFilialController extends Controller
             'funruralvenda' => (bool) $item->funruralvenda,
         ]);
     }
+
+    public static function show($id)
+    {
+        $item = Filial::find($id);
+        if (empty($item)) {
+            abort(404);
+        }
+        return [
+            'value' => $item->codfilial,
+            'label' => $item->filial,
+            'nfeserie' => $item->nfeserie,
+            'funruralvenda' => (bool) $item->funruralvenda,
+        ];
+    }
 }

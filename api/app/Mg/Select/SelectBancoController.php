@@ -10,22 +10,32 @@ class SelectBancoController extends Controller
 {
     public static function index(Request $request)
     {
+        $page = (int) $request->page > 0 ? (int) $request->page : 1;
+        $offset = ($page - 1) * 20;
+
         $sql = '
-            select codbanco, banco, sigla, numerobanco
+            select codbanco, banco, sigla, numerobanco, codbanco as value, banco as label
             from tblbanco
-        ';
-
-        if (!empty($request->codbanco)) {
-            $sql .= ' where codbanco = :codbanco';
-            return response()->json(DB::select($sql, ['codbanco' => $request->codbanco]), 200);
-        }
-
-        $sql .= '
             where inativo is null
               and (banco ilike :busca or sigla ilike :busca or numerobanco::text ilike :busca)
-            ORDER BY banco LIMIT 50
+            ORDER BY banco LIMIT 20 OFFSET ' . $offset . '
         ';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
+    }
+
+    public static function show($id)
+    {
+        $sql = '
+            select codbanco, banco, sigla, numerobanco, codbanco as value, banco as label
+            from tblbanco
+            where codbanco = :id
+            limit 1
+        ';
+        $rows = DB::select($sql, ['id' => $id]);
+        if (empty($rows)) {
+            abort(404);
+        }
+        return $rows[0];
     }
 }

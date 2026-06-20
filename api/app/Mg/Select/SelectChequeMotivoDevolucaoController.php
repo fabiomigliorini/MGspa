@@ -6,15 +6,15 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class SelectTipoProdutoController extends Controller
+class SelectChequeMotivoDevolucaoController extends Controller
 {
     public static function index(Request $request)
     {
         $sql = '
-            select codtipoproduto, tipoproduto, codtipoproduto as value, tipoproduto as label
-            from tbltipoproduto
-            where tipoproduto ilike :busca
-            ORDER BY tipoproduto
+            select codchequemotivodevolucao, chequemotivodevolucao, codchequemotivodevolucao as value, chequemotivodevolucao as label
+            from tblchequemotivodevolucao
+            where (chequemotivodevolucao ilike :busca)
+            ORDER BY chequemotivodevolucao
         ';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
@@ -23,9 +23,9 @@ class SelectTipoProdutoController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codtipoproduto, tipoproduto, codtipoproduto as value, tipoproduto as label
-            from tbltipoproduto
-            where codtipoproduto = :id
+            select codchequemotivodevolucao, chequemotivodevolucao, codchequemotivodevolucao as value, chequemotivodevolucao as label
+            from tblchequemotivodevolucao
+            where codchequemotivodevolucao = :id
             limit 1
         ';
         $rows = DB::select($sql, ['id' => $id]);

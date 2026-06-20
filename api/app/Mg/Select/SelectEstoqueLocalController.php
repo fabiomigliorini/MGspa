@@ -20,4 +20,17 @@ class SelectEstoqueLocalController extends Controller
             'codfilial' => $item->codfilial,
         ]);
     }
+
+    public static function show($id)
+    {
+        $item = EstoqueLocal::find($id);
+        if (empty($item)) {
+            abort(404);
+        }
+        return [
+            'value' => $item->codestoquelocal,
+            'label' => $item->estoquelocal,
+            'codfilial' => $item->codfilial,
+        ];
+    }
 }

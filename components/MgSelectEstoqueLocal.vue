@@ -2,31 +2,31 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
-// ===== REFERÊNCIA do padrão LOCAL (entidade < 100 registros) =====
-// Carrega TUDO uma vez de v1/select/portador, cacheia (lista + byId no store
-// compartilhado), filtra no FRONT ao digitar e tem botão de REFRESH (append)
-// pra invalidar o cache e recarregar. clearable é opcional (default false).
+// ===== Padrão LOCAL (entidade < 100 registros) =====
+// Carrega TUDO uma vez de v1/select/estoque-local, cacheia (lista + byId no
+// store compartilhado), filtra no FRONT ao digitar e tem botão de REFRESH
+// (append) pra invalidar o cache e recarregar. clearable é opcional (default
+// false). Se codfilial vier setado, restringe aos locais dessa filial.
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
-  label: { type: String, default: 'Portador' },
-  // Se array de codfilial, restringe aos portadores dessas filiais.
-  filiais: { type: Array, default: null },
+  label: { type: String, default: 'Local de Estoque' },
+  // Se setado, restringe aos locais de estoque dessa filial.
+  codfilial: { type: [Number, String], default: null },
   clearable: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 
 const cache = useSelectCacheStore()
-const ENTITY = 'portador'
-const ENDPOINT = 'v1/select/portador'
+const ENTITY = 'estoqueLocal'
+const ENDPOINT = 'v1/select/estoque-local'
 
 const opcoes = ref([])
 const carregando = ref(false)
 
 const permitidos = computed(() => {
   const todos = cache.entities[ENTITY]?.items || []
-  if (!props.filiais) return todos
-  const set = new Set(props.filiais.map((f) => Number(f)))
-  return todos.filter((v) => set.has(Number(v.codfilial)))
+  if (props.codfilial == null) return todos
+  return todos.filter((v) => Number(v.codfilial) === Number(props.codfilial))
 })
 
 async function carregar(force = false) {
@@ -88,7 +88,7 @@ onMounted(() => carregar())
       </q-btn>
     </template>
     <template #no-option>
-      <q-item><q-item-section class="text-grey-6">Nenhum portador</q-item-section></q-item>
+      <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
     </template>
   </q-select>
 </template>
