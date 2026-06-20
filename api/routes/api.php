@@ -425,6 +425,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Contrato de venda — Mg\Contrato (criado 03/06/2026)
     // Preview do preço líquido (deduções) — antes do apiResource p/ não colidir.
     Route::get('contrato/calculo', [\Mg\Contrato\ContratoController::class, 'calculo']);
+    Route::get('contrato/{codcontrato}/carga/{codcarga}/emissao', [\Mg\Contrato\ContratoController::class, 'emissao']); // plano de NF triangular (preview)
     Route::post('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'ativar']);
     Route::apiResource('contrato', \Mg\Contrato\ContratoController::class)->parameters(['contrato' => 'codcontrato']);
@@ -448,6 +449,18 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('contrato.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['contrato' => 'codcontrato', 'pagamento' => 'codpagamento']);
+
+    // Plano de emissao de NF (operacao triangular) aninhado no contrato
+    Route::post('contrato/{codcontrato}/nota/{codnota}/inativo', [\Mg\Contrato\ContratoNotaController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/nota/{codnota}/inativo', [\Mg\Contrato\ContratoNotaController::class, 'ativar']);
+    Route::apiResource('contrato.nota', \Mg\Contrato\ContratoNotaController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['contrato' => 'codcontrato', 'nota' => 'codnota']);
+
+    // Moeda (cadastro compartilhado; CRUD no app contas)
+    Route::post('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'inativar']);
+    Route::delete('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'ativar']);
+    Route::apiResource('moeda', \Mg\Moeda\MoedaController::class)->parameters(['moeda' => 'moeda']);
 
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);

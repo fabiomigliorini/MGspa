@@ -56,7 +56,17 @@ async function recarregar() {
 function novo() {
   // Rascunho: tipo neutro (a fixar). O tipo real e o resto da configuração ficam
   // pra tela do contrato — o form de criação só pede a identificação.
-  cad.abrirNovo({ tipo: 'FIXAR', moeda: 'BRL', operacao: 'VENDA' })
+  const hoje = new Date()
+  const datacontrato = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(
+    hoje.getDate(),
+  ).padStart(2, '0')}`
+  cad.abrirNovo({
+    tipo: 'FIXAR',
+    moeda: 'BRL',
+    operacao: 'VENDA',
+    comissaotipo: 'SACA',
+    datacontrato,
+  })
 }
 async function aposSalvar(saved) {
   // Contrato recém-criado → abre a tela dele pra terminar a configuração.

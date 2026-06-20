@@ -20,6 +20,7 @@ class ContratoFixacaoRequest extends FormRequest
             'preco' => ['required', 'numeric', 'gte:0'],
             'moeda' => ['nullable', Rule::in(['BRL', 'USD'])],
             'dolar' => ['nullable', 'numeric', 'gt:0'],
+            'isentofethab' => ['nullable', 'boolean'],
         ];
     }
 }

@@ -17,11 +17,11 @@ class ContratoFixacao extends MgModel
 
 
     protected $fillable = [
-        'automatico',
         'codcontrato',
         'data',
         'dolar',
         'inativo',
+        'isentofethab',
         'moeda',
         'observacao',
         'preco',
@@ -31,7 +31,6 @@ class ContratoFixacao extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'automatico' => 'boolean',
         'codcontrato' => 'integer',
         'codcontratofixacao' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -40,6 +39,7 @@ class ContratoFixacao extends MgModel
         'data' => 'date',
         'dolar' => 'float',
         'inativo' => 'datetime',
+        'isentofethab' => 'boolean',
         'preco' => 'float',
         'precoreal' => 'float',
         'quantidade' => 'float'

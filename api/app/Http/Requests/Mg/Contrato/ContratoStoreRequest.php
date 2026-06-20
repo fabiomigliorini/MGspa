@@ -28,33 +28,20 @@ class ContratoStoreRequest extends FormRequest
 
     public function rules()
     {
-        // FIXO trava o preço no próprio contrato (vira fixação-espelho), então
-        // o preço é obrigatório e > 0; FIXAR/BARTER fixam à mão depois (preço
-        // aqui é só referência, pode faltar).
-        $preco = $this->input('tipo') === 'FIXO'
-            ? ['required', 'numeric', 'gt:0']
-            : ['nullable', 'numeric', 'gte:0'];
-
         return [
             'contrato' => ['required', 'min:1'],
             'codpessoa' => ['required', 'exists:tblpessoa,codpessoa'],
             'codcultura' => ['required', 'exists:tblcultura,codcultura'],
             'codsafra' => ['nullable', 'exists:tblsafra,codsafra'],
-            'tipo' => ['required', Rule::in(['FIXO', 'FIXAR', 'BARTER'])],
             'operacao' => ['nullable', Rule::in(['COMPRA', 'VENDA'])],
-            // O contrato pode nascer como rascunho (só identificação: nº, produtor,
-            // data, comprador) e ter a quantidade definida depois na tela do contrato.
+            // quantidade NULL = volume em aberto (leva o saldo do silo). O contrato
+            // tambem pode nascer rascunho (só identificação) e ter a quantidade
+            // definida depois. Precificação (preço/moeda/isenção) vive na fixação;
+            // NF (natureza/pessoa/observação) no plano de notas (tblcontratonota).
             'quantidade' => ['nullable', 'numeric', 'gte:0'],
-            'volumeemaberto' => ['nullable', 'boolean'],
-            'preco' => $preco,
-            'moeda' => ['nullable', Rule::in(['BRL', 'USD'])],
             'dataembarque' => ['nullable', 'date'],
             'localentrega' => ['nullable', 'string'],
             'observacao' => ['nullable', 'string'],
-            'observacaonf' => ['nullable', 'string'],
-            'codnaturezaoperacao' => ['nullable', 'exists:tblnaturezaoperacao,codnaturezaoperacao'],
-            'codpessoanf' => ['nullable', 'exists:tblpessoa,codpessoa'],
-            'isentofethab' => ['nullable', 'boolean'],
             'codfilial' => ['nullable', 'exists:tblfilial,codfilial'],
             'datacontrato' => ['nullable', 'date'],
             'embarqueinicio' => ['nullable', 'date'],
@@ -64,9 +51,8 @@ class ContratoStoreRequest extends FormRequest
             'comissaotipo' => ['nullable', Rule::in(['PERCENTUAL', 'SACA', 'TOTAL'])],
             'comissaovalor' => ['nullable', 'numeric', 'gte:0'],
             'comissaototal' => ['nullable', 'numeric', 'gte:0'],
-            'viacooperativa' => ['nullable', 'boolean'],
             'codpessoacooperativa' => ['nullable', 'exists:tblpessoa,codpessoa'],
-            'numerocomprador' => ['nullable', 'max:30'],
+            'numerocontraparte' => ['nullable', 'max:30'],
             'numerocorretora' => ['nullable', 'max:30'],
             'numerocooperativa' => ['nullable', 'max:30'],
         ];

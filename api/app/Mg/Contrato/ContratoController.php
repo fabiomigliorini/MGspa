@@ -38,6 +38,19 @@ class ContratoController extends MgController
         ]), 200);
     }
 
+    /**
+     * Plano de emissão de NF do contrato para uma carga (operação triangular):
+     * sequência de notas, partes, kg/sacas rateados e valor bruto/líquido com
+     * tributação. Preview — não persiste nem transmite. Ver NotaFiscalContratoService.
+     */
+    public function emissao(Request $request, $codcontrato, $codcarga)
+    {
+        return response()->json(
+            \Mg\NotaFiscal\NotaFiscalContratoService::planoEmissao((int) $codcontrato, (int) $codcarga),
+            200,
+        );
+    }
+
     public function store(ContratoStoreRequest $request)
     {
         $model = ContratoService::salvar($request->validated());

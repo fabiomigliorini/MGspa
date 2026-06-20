@@ -2,7 +2,7 @@
 -- Fase 2 — Campos comerciais do contrato de venda (agro).
 -- Produtor vendedor (filial), datas, embarque (janela inicio/fim), portador
 -- que recebe, corretora + comissao (info gerencial), cooperativa (Cooasin) e
--- numero do contrato em cada ponta (comprador/corretora/cooperativa).
+-- numero do contrato em cada ponta (contraparte/corretora/cooperativa).
 -- Reaplicavel (ADD COLUMN IF NOT EXISTS).
 -- =====================================================================
 
@@ -18,9 +18,8 @@ ALTER TABLE tblcontrato
   ADD COLUMN IF NOT EXISTS comissaotipo         varchar(10),   -- PERCENTUAL | SACA | TOTAL
   ADD COLUMN IF NOT EXISTS comissaovalor        numeric(14,4),
   ADD COLUMN IF NOT EXISTS comissaototal        numeric(14,2), -- valor R$ total resolvido
-  ADD COLUMN IF NOT EXISTS viacooperativa       boolean NOT NULL DEFAULT false,
   ADD COLUMN IF NOT EXISTS codpessoacooperativa integer REFERENCES tblpessoa(codpessoa),
-  ADD COLUMN IF NOT EXISTS numerocomprador      varchar(30),
+  ADD COLUMN IF NOT EXISTS numerocontraparte    varchar(30),
   ADD COLUMN IF NOT EXISTS numerocorretora      varchar(30),
   ADD COLUMN IF NOT EXISTS numerocooperativa    varchar(30);
 

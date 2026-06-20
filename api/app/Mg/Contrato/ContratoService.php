@@ -12,14 +12,14 @@ class ContratoService extends MgService
         'Pessoa',
         'Cultura',
         'Safra',
-        'NaturezaOperacao',
-        'PessoaNf',
         'Filial',
         'Portador',
         'Corretora',
         'Cooperativa',
         'ContratoFixacaoS',
         'ContratoPagamentoS',
+        'ContratoNotaS.NaturezaOperacao',
+        'ContratoNotaS.PessoaNf',
         'MovimentoGraoS.Carga',
     ];
 
@@ -39,7 +39,9 @@ class ContratoService extends MgService
                 'valornf',
             ) // R$ das NFs por contrato (tblcargaponto; 0 ate emitir NFe)
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
-            ->withSum(['ContratoPagamentoS as pago' => fn ($q) => $q->whereNull('inativo')], 'valor');
+            ->withSum(['ContratoPagamentoS as pago' => fn ($q) => $q->whereNull('inativo')], 'valor')
+            // barter (settlement em insumos) vive no pagamento; usado p/ derivar o tipo.
+            ->withCount(['ContratoPagamentoS as bartercount' => fn ($q) => $q->where('forma', 'BARTER')->whereNull('inativo')]);
 
         if (!empty($filter['codcontrato'])) {
             $qry->where('codcontrato', $filter['codcontrato']);
@@ -55,9 +57,6 @@ class ContratoService extends MgService
         }
         if (!empty($filter['codsafra'])) {
             $qry->where('codsafra', $filter['codsafra']);
-        }
-        if (!empty($filter['tipo'])) {
-            $qry->where('tipo', $filter['tipo']);
         }
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);
@@ -76,7 +75,9 @@ class ContratoService extends MgService
     }
 
     /**
-     * Cria/atualiza o contrato e mantém a fixação-espelho sincronizada.
+     * Cria/atualiza o contrato. Precificação vive nas fixações (tblcontratofixacao):
+     * um contrato "FIXO" é só um contrato que recebe a fixação cheia na assinatura;
+     * não há mais fixação-espelho automática.
      */
     public static function salvar(array $dados, ?Contrato $contrato = null): Contrato
     {
@@ -86,39 +87,7 @@ class ContratoService extends MgService
             $contrato->operacao = 'VENDA';
         }
         $contrato->save();
-        static::sincronizarFixacaoAutomatica($contrato);
         return $contrato;
-    }
-
-    /**
-     * Normaliza a fixação do FIXO: o preço já é travado no próprio contrato,
-     * então mantemos UMA fixação "automática" (quantidade cheia, preço/moeda do
-     * contrato) pra que fixado e preço médio rodem uniformemente sobre
-     * tblcontratofixacao, sem caso especial. FIXAR/BARTER fixam à mão — não
-     * mexemos nessas (automatico = false). Apaga a espelho anterior e recria,
-     * cobrindo também troca de tipo (FIXAR↔FIXO) sem desincronizar.
-     */
-    public static function sincronizarFixacaoAutomatica(Contrato $contrato): void
-    {
-        ContratoFixacao::where('codcontrato', $contrato->codcontrato)
-            ->where('automatico', true)
-            ->delete();
-
-        if ($contrato->tipo !== 'FIXO') {
-            return;
-        }
-
-        $dados = [
-            'codcontrato' => $contrato->codcontrato,
-            'data' => $contrato->dataembarque ?: now()->toDateString(),
-            'quantidade' => $contrato->quantidade,
-            'preco' => $contrato->preco,
-            'moeda' => $contrato->moeda ?: 'BRL',
-            'dolar' => null,
-            'automatico' => true,
-        ];
-        $dados['precoreal'] = static::precoReal($dados);
-        ContratoFixacao::create($dados);
     }
 
     /**

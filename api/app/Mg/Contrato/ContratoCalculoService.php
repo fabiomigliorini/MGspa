@@ -108,10 +108,10 @@ class ContratoCalculoService extends MgService
     }
 
     /**
-     * Conveniencia: calcula o liquido de um contrato ja persistido, resolvendo
-     * o bruto (media ponderada das fixacoes ativas, senao o preco do contrato),
-     * a data (fim do embarque, senao hoje), a isencao de FETHAB e o regime de
-     * Funrural (folha/venda) da filial produtora.
+     * Conveniencia: calcula o liquido de um contrato ja persistido a partir das
+     * fixacoes ativas — bruto = media ponderada do precoreal; isencao de FETHAB =
+     * so quando TODAS as fixacoes sao isentas (mix -> deduz). Sem fixacao, bruto 0.
+     * Data = fim do embarque, senao hoje; Funrural pelo regime da filial produtora.
      */
     public static function calcularDoContrato(Contrato $contrato): array
     {
@@ -121,7 +121,9 @@ class ContratoCalculoService extends MgService
         $qtd = (float) $fixacoes->sum('quantidade');
         $bruto = $qtd > 0
             ? (float) $fixacoes->sum(fn ($f) => (float) $f->quantidade * (float) $f->precoreal) / $qtd
-            : (float) $contrato->preco;
+            : 0.0;
+        $isentofethab = $fixacoes->isNotEmpty()
+            && $fixacoes->every(fn ($f) => (bool) $f->isentofethab);
 
         $filial = $contrato->codfilial ? $contrato->Filial : null;
 
@@ -129,7 +131,7 @@ class ContratoCalculoService extends MgService
             'codcultura' => (int) $contrato->codcultura,
             'bruto' => $bruto,
             'data' => $contrato->embarquefim ?: ($contrato->dataembarque ?: null),
-            'isentofethab' => (bool) $contrato->isentofethab,
+            'isentofethab' => $isentofethab,
             'funruralvenda' => $filial ? (bool) $filial->funruralvenda : false,
         ]);
     }

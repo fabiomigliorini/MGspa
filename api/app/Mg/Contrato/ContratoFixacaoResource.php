@@ -43,7 +43,7 @@ class ContratoFixacaoResource extends Resource
             'codcultura' => (int) $contrato->codcultura,
             'bruto' => (float) $this->precoreal,
             'data' => $this->data,
-            'isentofethab' => (bool) $contrato->isentofethab,
+            'isentofethab' => (bool) $this->isentofethab,
             'funruralvenda' => $funruralvenda,
         ]);
 
