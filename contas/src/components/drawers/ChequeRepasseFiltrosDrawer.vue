@@ -4,7 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { useChequeRepasseStore } from 'src/stores/chequeRepasseStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const store = useChequeRepasseStore()
@@ -39,7 +39,7 @@ const statusOptions = [
         <template #prepend><q-icon name="numbers" /></template>
       </q-input>
 
-      <SelectPortador
+      <MgSelectPortador
         v-model="store.filters.codportador"
         outlined
         clearable

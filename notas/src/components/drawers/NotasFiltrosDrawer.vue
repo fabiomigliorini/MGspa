@@ -2,9 +2,9 @@
 import { watch, ref, computed } from 'vue'
 import { useNotaFiscalStore } from '../../stores/notaFiscalStore'
 import { useDebounceFn } from '@vueuse/core'
-import SelectFilial from '../selects/SelectFilial.vue'
-import SelectNaturezaOperacao from '../selects/SelectNaturezaOperacao.vue'
-import SelectGrupoEconomico from '../selects/SelectGrupoEconomico.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
+import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
+import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -210,18 +210,20 @@ watch(
 
       <!-- Filial -->
       <div class="q-mb-md">
-        <SelectFilial
+        <MgSelectFilial
           v-model="notaFiscalStore.filters.codfilial"
           label="Filial"
+          clearable
           :bottom-slots="false"
         />
       </div>
 
       <!-- Natureza de Operação -->
       <div class="q-mb-md">
-        <SelectNaturezaOperacao
+        <MgSelectNaturezaOperacao
           v-model="notaFiscalStore.filters.codnaturezaoperacao"
           label="Natureza de Operação"
+          clearable
           :bottom-slots="false"
         />
       </div>
@@ -238,9 +240,10 @@ watch(
 
       <!-- Grupo Econômico -->
       <div class="q-mb-md">
-        <SelectGrupoEconomico
+        <MgSelectGrupoEconomico
           v-model="notaFiscalStore.filters.codgrupoeconomico"
           label="Grupo Econômico"
+          clearable
           :bottom-slots="false"
         />
       </div>

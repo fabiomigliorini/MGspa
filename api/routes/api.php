@@ -179,6 +179,58 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estoque-movimento-tipo', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'index']);
     Route::get('select/tributacao', [\Mg\Select\SelectTributacaoController::class, 'index']);
 
+    // Selects: resolução por id (objeto único ou 404) — padrão GET select/{ent}/{id}
+    Route::get('select/pessoa/{id}', [\Mg\Select\SelectPessoaController::class, 'show'])->whereNumber('id');
+    Route::get('select/cidade/{id}', [\Mg\Select\SelectCidadeController::class, 'show'])->whereNumber('id');
+    Route::get('select/impressora/{id}', [\Mg\Select\SelectImpressoraController::class, 'show']);
+    Route::get('select/filial/{id}', [\Mg\Select\SelectFilialController::class, 'show'])->whereNumber('id');
+    Route::get('select/estoque-local/{id}', [\Mg\Select\SelectEstoqueLocalController::class, 'show'])->whereNumber('id');
+    Route::get('select/estado/{id}', [\Mg\Select\SelectEstadoController::class, 'show'])->whereNumber('id');
+    Route::get('select/veiculo-tipo/{id}', [\Mg\Select\SelectVeiculoTipoController::class, 'show'])->whereNumber('id');
+    Route::get('select/veiculo/{id}', [\Mg\Select\SelectVeiculoController::class, 'show'])->whereNumber('id');
+    Route::get('select/produto-barra/{id}', [\Mg\Select\SelectProdutoBarraController::class, 'show'])->whereNumber('id');
+    Route::get('select/usuario/{id}', [\Mg\Select\SelectUsuarioController::class, 'show'])->whereNumber('id');
+    Route::get('select/portador/{id}', [\Mg\Select\SelectPortadorController::class, 'show'])->whereNumber('id');
+    Route::get('select/natureza-operacao/{id}', [\Mg\Select\SelectNaturezaOperacaoController::class, 'show'])->whereNumber('id');
+    Route::get('select/grupo-economico/{id}', [\Mg\Select\SelectGrupoEconomicoController::class, 'show'])->whereNumber('id');
+    Route::get('select/tipo-produto/{id}', [\Mg\Select\SelectTipoProdutoController::class, 'show'])->whereNumber('id');
+    Route::get('select/tributo/{id}', [\Mg\Select\SelectTributoController::class, 'show'])->whereNumber('id');
+    Route::get('select/tipo-titulo/{id}', [\Mg\Select\SelectTipoTituloController::class, 'show'])->whereNumber('id');
+    Route::get('select/conta-contabil/{id}', [\Mg\Select\SelectContaContabilController::class, 'show'])->whereNumber('id');
+    Route::get('select/banco/{id}', [\Mg\Select\SelectBancoController::class, 'show'])->whereNumber('id');
+    Route::get('select/estoque-movimento-tipo/{id}', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'show'])->whereNumber('id');
+    Route::get('select/tributacao/{id}', [\Mg\Select\SelectTributacaoController::class, 'show'])->whereNumber('id');
+
+    // Selects novos (entidades LOCAL pequenas, padrão index + show)
+    Route::get('select/forma-pagamento', [\Mg\Select\SelectFormaPagamentoController::class, 'index']);
+    Route::get('select/forma-pagamento/{id}', [\Mg\Select\SelectFormaPagamentoController::class, 'show'])->whereNumber('id');
+    Route::get('select/grupo-cliente', [\Mg\Select\SelectGrupoClienteController::class, 'index']);
+    Route::get('select/grupo-cliente/{id}', [\Mg\Select\SelectGrupoClienteController::class, 'show'])->whereNumber('id');
+    Route::get('select/tipo-movimento-titulo', [\Mg\Select\SelectTipoMovimentoTituloController::class, 'index']);
+    Route::get('select/tipo-movimento-titulo/{id}', [\Mg\Select\SelectTipoMovimentoTituloController::class, 'show'])->whereNumber('id');
+    Route::get('select/setor', [\Mg\Select\SelectSetorController::class, 'index']);
+    Route::get('select/setor/{id}', [\Mg\Select\SelectSetorController::class, 'show'])->whereNumber('id');
+    Route::get('select/tipo-setor', [\Mg\Select\SelectTipoSetorController::class, 'index']);
+    Route::get('select/tipo-setor/{id}', [\Mg\Select\SelectTipoSetorController::class, 'show'])->whereNumber('id');
+    Route::get('select/unidade-negocio', [\Mg\Select\SelectUnidadeNegocioController::class, 'index']);
+    Route::get('select/unidade-negocio/{id}', [\Mg\Select\SelectUnidadeNegocioController::class, 'show'])->whereNumber('id');
+    Route::get('select/cheque-motivo-devolucao', [\Mg\Select\SelectChequeMotivoDevolucaoController::class, 'index']);
+    Route::get('select/cheque-motivo-devolucao/{id}', [\Mg\Select\SelectChequeMotivoDevolucaoController::class, 'show'])->whereNumber('id');
+    Route::get('select/cargo', [\Mg\Select\SelectCargoController::class, 'index']);
+    Route::get('select/cargo/{id}', [\Mg\Select\SelectCargoController::class, 'show'])->whereNumber('id');
+    Route::get('select/estado-civil', [\Mg\Select\SelectEstadoCivilController::class, 'index']);
+    Route::get('select/estado-civil/{id}', [\Mg\Select\SelectEstadoCivilController::class, 'show'])->whereNumber('id');
+    Route::get('select/etnia', [\Mg\Select\SelectEtniaController::class, 'index']);
+    Route::get('select/etnia/{id}', [\Mg\Select\SelectEtniaController::class, 'show'])->whereNumber('id');
+    Route::get('select/grau-instrucao', [\Mg\Select\SelectGrauInstrucaoController::class, 'index']);
+    Route::get('select/grau-instrucao/{id}', [\Mg\Select\SelectGrauInstrucaoController::class, 'show'])->whereNumber('id');
+    Route::get('select/cfop', [\Mg\Select\SelectCfopController::class, 'index']);
+    Route::get('select/cfop/{id}', [\Mg\Select\SelectCfopController::class, 'show'])->whereNumber('id');
+    Route::get('select/certidao-emissor', [\Mg\Select\SelectCertidaoEmissorController::class, 'index']);
+    Route::get('select/certidao-emissor/{id}', [\Mg\Select\SelectCertidaoEmissorController::class, 'show'])->whereNumber('id');
+    Route::get('select/certidao-tipo', [\Mg\Select\SelectCertidaoTipoController::class, 'index']);
+    Route::get('select/certidao-tipo/{id}', [\Mg\Select\SelectCertidaoTipoController::class, 'show'])->whereNumber('id');
+
     // Banco (migrado em 23/05/2026)
     Route::get('banco', [\Mg\Banco\BancoController::class, 'index']);
     Route::get('banco/{codbanco}', [\Mg\Banco\BancoController::class, 'show']);
@@ -373,6 +425,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Contrato de venda — Mg\Contrato (criado 03/06/2026)
     // Preview do preço líquido (deduções) — antes do apiResource p/ não colidir.
     Route::get('contrato/calculo', [\Mg\Contrato\ContratoController::class, 'calculo']);
+    Route::get('contrato/{codcontrato}/carga/{codcarga}/emissao', [\Mg\Contrato\ContratoController::class, 'emissao']); // plano de NF triangular (preview)
     Route::post('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'ativar']);
     Route::apiResource('contrato', \Mg\Contrato\ContratoController::class)->parameters(['contrato' => 'codcontrato']);
@@ -396,6 +449,18 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('contrato.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['contrato' => 'codcontrato', 'pagamento' => 'codpagamento']);
+
+    // Plano de emissao de NF (operacao triangular) aninhado no contrato
+    Route::post('contrato/{codcontrato}/nota/{codnota}/inativo', [\Mg\Contrato\ContratoNotaController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/nota/{codnota}/inativo', [\Mg\Contrato\ContratoNotaController::class, 'ativar']);
+    Route::apiResource('contrato.nota', \Mg\Contrato\ContratoNotaController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['contrato' => 'codcontrato', 'nota' => 'codnota']);
+
+    // Moeda (cadastro compartilhado; CRUD no app contas)
+    Route::post('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'inativar']);
+    Route::delete('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'ativar']);
+    Route::apiResource('moeda', \Mg\Moeda\MoedaController::class)->parameters(['moeda' => 'moeda']);
 
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);

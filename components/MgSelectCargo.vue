@@ -1,0 +1,120 @@
+<script setup>
+import { ref, computed, onMounted, watch } from 'vue'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
+
+// ===== Padrão LOCAL (entidade < 100 registros) =====
+// Carrega TUDO uma vez de v1/select/cargo, cacheia (lista + byId no store
+// compartilhado), filtra no FRONT ao digitar e tem botão de REFRESH (append)
+// pra invalidar o cache e recarregar. clearable é opcional (default false).
+const props = defineProps({
+  modelValue: { type: [Number, String], default: null },
+  label: { type: String, default: 'Cargo' },
+  clearable: { type: Boolean, default: false },
+  inativos: { type: Boolean, default: false },
+  // Permite criar um cargo novo digitando: emite `adicionar(nome, done)` para o
+  // consumidor criar via API e chamar done(); recarregue depois via refresh.
+  permiteAdicionar: { type: Boolean, default: false },
+})
+const emit = defineEmits(['update:modelValue', 'select', 'adicionar'])
+
+function onNew(val, done) {
+  if (props.permiteAdicionar) emit('adicionar', val, done)
+}
+
+const cache = useSelectCacheStore()
+const ENTITY = 'cargo'
+const ENDPOINT = 'v1/select/cargo'
+
+const opcoes = ref([])
+const carregando = ref(false)
+
+const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
+
+async function carregar(force = false) {
+  carregando.value = true
+  try {
+    await cache.loadList(ENTITY, ENDPOINT, { force, inativos: props.inativos })
+    opcoes.value = permitidos.value
+  } catch {
+    opcoes.value = []
+  } finally {
+    carregando.value = false
+  }
+}
+
+function atualizar() {
+  cache.invalidate(ENTITY)
+  carregar(true)
+}
+
+function filtrar(val, update) {
+  update(() => {
+    const needle = (val || '').toLowerCase()
+    opcoes.value = needle
+      ? permitidos.value.filter((v) => (v.label || '').toLowerCase().includes(needle))
+      : permitidos.value
+  })
+}
+
+function onUpdate(v) {
+  emit('update:modelValue', v)
+  emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
+}
+
+onMounted(() => carregar())
+
+// Valor setado externamente (ex: cargo recém-criado via permiteAdicionar) que
+// ainda não está na lista: recarrega do backend pra resolver o label.
+watch(
+  () => props.modelValue,
+  async (v) => {
+    if (v && !(opcoes.value || []).find((o) => o.value === v) && !carregando.value) {
+      await carregar(true)
+    }
+  },
+)
+</script>
+
+<template>
+  <q-select
+    :model-value="modelValue"
+    :options="opcoes"
+    :label="label"
+    use-input
+    fill-input
+    hide-selected
+    input-debounce="100"
+    outlined
+    :clearable="clearable"
+    :loading="carregando"
+    emit-value
+    map-options
+    :new-value-mode="permiteAdicionar ? 'add-unique' : undefined"
+    @filter="filtrar"
+    @update:model-value="onUpdate"
+    @new-value="onNew"
+    v-bind="$attrs"
+  >
+    <template #append>
+      <q-icon name="refresh" size="xs" class="cursor-pointer text-grey-7" @click.stop="atualizar"
+        ><q-tooltip>Atualizar lista</q-tooltip></q-icon
+      >
+    </template>
+    <template #no-option>
+      <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
+    </template>
+    <template #option="scope">
+      <q-item v-bind="scope.itemProps">
+        <q-item-section>
+          <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
+            {{ scope.opt.label }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+    <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
+    <template v-if="$slots.before" #before><slot name="before" /></template>
+    <template v-if="$slots.after" #after><slot name="after" /></template>
+    <template v-if="$slots.hint" #hint><slot name="hint" /></template>
+  </q-select>
+</template>

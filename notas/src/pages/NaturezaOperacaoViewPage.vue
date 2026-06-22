@@ -56,8 +56,8 @@ const handleDelete = () => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: `Deseja realmente excluir a natureza de operação "${naturezaOperacao.value?.naturezaoperacao}"?`,
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await naturezaOperacaoStore.deleteNaturezaOperacao(codnaturezaoperacao.value)
@@ -77,8 +77,8 @@ const handleDeleteTributacao = (trib) => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: `Deseja realmente excluir a tributação #${trib.codtributacaonaturezaoperacao}?`,
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await tributacaoStore.deleteTributacao(trib.codtributacaonaturezaoperacao)

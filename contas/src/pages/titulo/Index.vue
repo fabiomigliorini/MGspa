@@ -15,9 +15,8 @@ function abrirRelatorio() {
     title: 'Relatório de Títulos',
     message:
       'Deseja o relatório com as informações de Tipo do Título, Conta Contábil e Observações?',
-    ok: { label: 'Sim, detalhado', color: 'primary', unelevated: true, flat: true },
-    cancel: { label: 'Não, simplificado', color: 'primary', unelevated: true, flat: true },
-    persistent: false,
+    ok: { label: 'Sim, detalhado', color: 'primary', flat: true },
+    cancel: { label: 'Não, simplificado', color: 'grey-8', flat: true },
   })
     .onOk(() => gerarPdf(true))
     .onCancel(() => gerarPdf(false))

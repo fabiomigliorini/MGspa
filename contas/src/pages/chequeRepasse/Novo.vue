@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataNumero, formataData, formataDataIso } from '@components/formatters'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 
@@ -106,7 +106,12 @@ async function salvar() {
         <q-card-section>
           <div class="row q-col-gutter-md items-start">
             <div class="col-12 col-sm-4">
-              <SelectPortador v-model="cabecalho.codportador" outlined label="Portador" autofocus />
+              <MgSelectPortador
+                v-model="cabecalho.codportador"
+                outlined
+                label="Portador"
+                autofocus
+              />
             </div>
             <div class="col-6 col-sm-3">
               <MgInputData v-model="cabecalho.data" label="Data do Repasse" />
@@ -219,6 +224,7 @@ async function salvar() {
           <q-space />
           <q-btn flat label="Cancelar" color="grey-8" :to="{ name: 'cheque-repasse' }" />
           <q-btn
+            flat
             color="primary"
             label="Salvar Repasse"
             icon="save"

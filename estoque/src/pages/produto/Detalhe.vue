@@ -85,22 +85,27 @@ const salvarVar = async () => {
   }
 }
 const excluirVar = (v) => {
-  $q.dialog({ title: 'Excluir variação', message: `Excluir "${v.variacao || 'Sem variação'}"?`, cancel: true }).onOk(
-    async () => {
-      try {
-        await api.delete(`v1/produto/${codproduto.value}/variacao/${v.codprodutovariacao}`)
-        notifySuccess('Variação excluída')
-        await carregar()
-      } catch (e) {
-        notifyError(e, 'Erro ao excluir')
-      }
-    },
-  )
+  $q.dialog({
+    title: 'Excluir variação',
+    message: `Excluir "${v.variacao || 'Sem variação'}"?`,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/produto/${codproduto.value}/variacao/${v.codprodutovariacao}`)
+      notifySuccess('Variação excluída')
+      await carregar()
+    } catch (e) {
+      notifyError(e, 'Erro ao excluir')
+    }
+  })
 }
 const toggleDescontinuar = async (v) => {
   try {
     if (v.descontinuado) {
-      await api.delete(`v1/produto/${codproduto.value}/variacao/${v.codprodutovariacao}/descontinuar`)
+      await api.delete(
+        `v1/produto/${codproduto.value}/variacao/${v.codprodutovariacao}/descontinuar`,
+      )
       notifySuccess('Variação reativada')
     } else {
       await api.post(`v1/produto/${codproduto.value}/variacao/${v.codprodutovariacao}/descontinuar`)
@@ -120,7 +125,12 @@ const barraNovo = ref(true)
 
 const abrirBarraNovo = (v) => {
   barraNovo.value = true
-  barraModel.value = { codprodutovariacao: v.codprodutovariacao, codprodutoembalagem: null, barras: '', referencia: '' }
+  barraModel.value = {
+    codprodutovariacao: v.codprodutovariacao,
+    codprodutoembalagem: null,
+    barras: '',
+    referencia: '',
+  }
   dlgBarra.value = true
 }
 const abrirBarraEditar = (v, b) => {
@@ -153,7 +163,10 @@ const salvarBarra = async () => {
       await api.post(`v1/produto/${codproduto.value}/barra`, payload)
       notifySuccess('Código de barras criado')
     } else {
-      await api.put(`v1/produto/${codproduto.value}/barra/${barraModel.value.codprodutobarra}`, payload)
+      await api.put(
+        `v1/produto/${codproduto.value}/barra/${barraModel.value.codprodutobarra}`,
+        payload,
+      )
       notifySuccess('Código de barras atualizado')
     }
     dlgBarra.value = false
@@ -165,7 +178,12 @@ const salvarBarra = async () => {
   }
 }
 const excluirBarra = (b) => {
-  $q.dialog({ title: 'Excluir', message: `Excluir o código ${b.barras}?`, cancel: true }).onOk(async () => {
+  $q.dialog({
+    title: 'Excluir',
+    message: `Excluir o código ${b.barras}?`,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
     try {
       await api.delete(`v1/produto/${codproduto.value}/barra/${b.codprodutobarra}`)
       notifySuccess('Código excluído')
@@ -185,7 +203,14 @@ const unidades = ref([])
 
 const abrirEmbNovo = () => {
   embNovo.value = true
-  embModel.value = { codunidademedida: produto.value.codunidademedida, quantidade: null, preco: null, optUnid: produto.value.codunidademedida ? { label: produto.value.unidademedida, value: produto.value.codunidademedida } : null }
+  embModel.value = {
+    codunidademedida: produto.value.codunidademedida,
+    quantidade: null,
+    preco: null,
+    optUnid: produto.value.codunidademedida
+      ? { label: produto.value.unidademedida, value: produto.value.codunidademedida }
+      : null,
+  }
   dlgEmb.value = true
 }
 const abrirEmbEditar = (e) => {
@@ -211,7 +236,10 @@ const salvarEmb = async () => {
       await api.post(`v1/produto/${codproduto.value}/embalagem`, payload)
       notifySuccess('Embalagem criada')
     } else {
-      await api.put(`v1/produto/${codproduto.value}/embalagem/${embModel.value.codprodutoembalagem}`, payload)
+      await api.put(
+        `v1/produto/${codproduto.value}/embalagem/${embModel.value.codprodutoembalagem}`,
+        payload,
+      )
       notifySuccess('Embalagem atualizada')
     }
     dlgEmb.value = false
@@ -223,17 +251,20 @@ const salvarEmb = async () => {
   }
 }
 const excluirEmb = (e) => {
-  $q.dialog({ title: 'Excluir embalagem', message: `Excluir embalagem C/${formataNum(e.quantidade)}?`, cancel: true }).onOk(
-    async () => {
-      try {
-        await api.delete(`v1/produto/${codproduto.value}/embalagem/${e.codprodutoembalagem}`)
-        notifySuccess('Embalagem excluída')
-        await carregar()
-      } catch (err) {
-        notifyError(err, 'Erro ao excluir')
-      }
-    },
-  )
+  $q.dialog({
+    title: 'Excluir embalagem',
+    message: `Excluir embalagem C/${formataNum(e.quantidade)}?`,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/produto/${codproduto.value}/embalagem/${e.codprodutoembalagem}`)
+      notifySuccess('Embalagem excluída')
+      await carregar()
+    } catch (err) {
+      notifyError(err, 'Erro ao excluir')
+    }
+  })
 }
 
 // ───────────── Unificações e conversão de embalagem ─────────────
@@ -317,7 +348,7 @@ const converterEmbalagem = (e) => {
   $q.dialog({
     title: 'Converter para unidade',
     message: `Converter a embalagem C/${formataNum(e.quantidade)} para a unidade do produto? Saldos e preços serão recalculados.`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Converter', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
@@ -360,17 +391,20 @@ const uploadImagem = (file) => {
 }
 
 const removerImagem = (pi) => {
-  $q.dialog({ title: 'Remover imagem', message: 'Remover esta imagem do produto?', cancel: true }).onOk(
-    async () => {
-      try {
-        await api.delete(`v1/produto/${codproduto.value}/imagem/${pi.codprodutoimagem}`)
-        notifySuccess('Imagem removida')
-        await carregar()
-      } catch (e) {
-        notifyError(e, 'Erro ao remover imagem')
-      }
-    },
-  )
+  $q.dialog({
+    title: 'Remover imagem',
+    message: 'Remover esta imagem do produto?',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await api.delete(`v1/produto/${codproduto.value}/imagem/${pi.codprodutoimagem}`)
+      notifySuccess('Imagem removida')
+      await carregar()
+    } catch (e) {
+      notifyError(e, 'Erro ao remover imagem')
+    }
+  })
 }
 
 const moverImagem = async (index, dir) => {
@@ -441,7 +475,9 @@ const exportarWoo = async () => {
 
 onMounted(async () => {
   await carregar()
-  const { data } = await api.get('v1/unidade-medida/autocompletar', { params: { unidademedida: '' } })
+  const { data } = await api.get('v1/unidade-medida/autocompletar', {
+    params: { unidademedida: '' },
+  })
   unidades.value = data
 })
 </script>
@@ -468,7 +504,9 @@ onMounted(async () => {
           <q-item-section>
             <q-item-label class="row items-center q-gutter-xs">
               <q-badge :color="abcColor(produto.abc)" :label="produto.abc" />
-              <span class="text-caption text-grey-6">#{{ String(produto.codproduto).padStart(6, '0') }}</span>
+              <span class="text-caption text-grey-6"
+                >#{{ String(produto.codproduto).padStart(6, '0') }}</span
+              >
               <q-badge v-if="produto.inativo" color="orange-7" label="Inativo" />
             </q-item-label>
             <q-item-label class="text-h6">{{ produto.produto }}</q-item-label>
@@ -534,7 +572,15 @@ onMounted(async () => {
                 <div class="text-overline text-grey-8 row items-center">
                   VARIAÇÕES E CÓDIGOS DE BARRAS
                   <q-space />
-                  <q-btn flat round dense size="sm" color="primary" icon="add" @click="abrirVarNovo">
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    size="sm"
+                    color="primary"
+                    icon="add"
+                    @click="abrirVarNovo"
+                  >
                     <q-tooltip>Nova variação</q-tooltip>
                   </q-btn>
                 </div>
@@ -550,19 +596,35 @@ onMounted(async () => {
                     <template #header>
                       <q-item-section avatar><q-icon name="style" /></q-item-section>
                       <q-item-section>
-                        <q-item-label
-                          :class="v.descontinuado ? 'text-strike text-grey-5' : ''"
-                        >
+                        <q-item-label :class="v.descontinuado ? 'text-strike text-grey-5' : ''">
                           {{ v.variacao || '{Sem variação}' }}
                         </q-item-label>
-                        <q-item-label caption v-if="v.referencia">ref {{ v.referencia }}</q-item-label>
+                        <q-item-label caption v-if="v.referencia"
+                          >ref {{ v.referencia }}</q-item-label
+                        >
                       </q-item-section>
                       <q-item-section side>
                         <div class="row no-wrap">
-                          <q-btn flat dense round size="sm" color="grey-7" icon="add" @click.stop="abrirBarraNovo(v)">
+                          <q-btn
+                            flat
+                            dense
+                            round
+                            size="sm"
+                            color="grey-7"
+                            icon="add"
+                            @click.stop="abrirBarraNovo(v)"
+                          >
                             <q-tooltip>Nova barra</q-tooltip>
                           </q-btn>
-                          <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click.stop="abrirVarEditar(v)">
+                          <q-btn
+                            flat
+                            dense
+                            round
+                            size="sm"
+                            color="grey-7"
+                            icon="edit"
+                            @click.stop="abrirVarEditar(v)"
+                          >
                             <q-tooltip>Editar variação</q-tooltip>
                           </q-btn>
                           <q-btn
@@ -586,9 +648,19 @@ onMounted(async () => {
                             :icon="v.descontinuado ? 'play_arrow' : 'block'"
                             @click.stop="toggleDescontinuar(v)"
                           >
-                            <q-tooltip>{{ v.descontinuado ? 'Reativar' : 'Descontinuar' }}</q-tooltip>
+                            <q-tooltip>{{
+                              v.descontinuado ? 'Reativar' : 'Descontinuar'
+                            }}</q-tooltip>
                           </q-btn>
-                          <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click.stop="excluirVar(v)">
+                          <q-btn
+                            flat
+                            dense
+                            round
+                            size="sm"
+                            color="grey-7"
+                            icon="delete"
+                            @click.stop="excluirVar(v)"
+                          >
                             <q-tooltip>Excluir variação</q-tooltip>
                           </q-btn>
                         </div>
@@ -597,7 +669,9 @@ onMounted(async () => {
 
                     <q-list>
                       <q-item v-for="b in v.ProdutoBarraS" :key="b.codprodutobarra" class="q-pl-xl">
-                        <q-item-section avatar><q-icon name="qr_code_2" color="grey-6" /></q-item-section>
+                        <q-item-section avatar
+                          ><q-icon name="qr_code_2" color="grey-6"
+                        /></q-item-section>
                         <q-item-section>
                           <q-item-label>{{ b.barras }}</q-item-label>
                           <q-item-label caption v-if="b.codprodutoembalagem">
@@ -618,8 +692,24 @@ onMounted(async () => {
                             >
                               <q-tooltip>Unificar com outro código</q-tooltip>
                             </q-btn>
-                            <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirBarraEditar(v, b)" />
-                            <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirBarra(b)" />
+                            <q-btn
+                              flat
+                              dense
+                              round
+                              size="sm"
+                              color="grey-7"
+                              icon="edit"
+                              @click="abrirBarraEditar(v, b)"
+                            />
+                            <q-btn
+                              flat
+                              dense
+                              round
+                              size="sm"
+                              color="grey-7"
+                              icon="delete"
+                              @click="excluirBarra(b)"
+                            />
                           </div>
                         </q-item-section>
                       </q-item>
@@ -674,8 +764,24 @@ onMounted(async () => {
                         />
                       </div>
                       <div class="absolute-bottom row justify-between q-pa-none bg-transparent">
-                        <q-btn dense flat round size="sm" color="white" icon="chevron_left" @click="moverImagem(idx, -1)" />
-                        <q-btn dense flat round size="sm" color="white" icon="chevron_right" @click="moverImagem(idx, 1)" />
+                        <q-btn
+                          dense
+                          flat
+                          round
+                          size="sm"
+                          color="white"
+                          icon="chevron_left"
+                          @click="moverImagem(idx, -1)"
+                        />
+                        <q-btn
+                          dense
+                          flat
+                          round
+                          size="sm"
+                          color="white"
+                          icon="chevron_right"
+                          @click="moverImagem(idx, 1)"
+                        />
                       </div>
                     </q-img>
                   </div>
@@ -685,7 +791,15 @@ onMounted(async () => {
                 <div class="text-overline text-grey-8 row items-center">
                   EMBALAGENS
                   <q-space />
-                  <q-btn flat round dense size="sm" color="primary" icon="add" @click="abrirEmbNovo">
+                  <q-btn
+                    flat
+                    round
+                    dense
+                    size="sm"
+                    color="primary"
+                    icon="add"
+                    @click="abrirEmbNovo"
+                  >
                     <q-tooltip>Nova embalagem</q-tooltip>
                   </q-btn>
                 </div>
@@ -697,7 +811,11 @@ onMounted(async () => {
                     <q-item-section>
                       <q-item-label>C/{{ formataNum(e.quantidade) }}</q-item-label>
                       <q-item-label caption>
-                        {{ e.preco ? formataMoeda(e.preco) : formataMoeda(produto.preco * e.quantidade) + ' (calc)' }}
+                        {{
+                          e.preco
+                            ? formataMoeda(e.preco)
+                            : formataMoeda(produto.preco * e.quantidade) + ' (calc)'
+                        }}
                       </q-item-label>
                     </q-item-section>
                     <q-item-section side>
@@ -713,8 +831,24 @@ onMounted(async () => {
                         >
                           <q-tooltip>Converter para unidade</q-tooltip>
                         </q-btn>
-                        <q-btn flat dense round size="sm" color="grey-7" icon="edit" @click="abrirEmbEditar(e)" />
-                        <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirEmb(e)" />
+                        <q-btn
+                          flat
+                          dense
+                          round
+                          size="sm"
+                          color="grey-7"
+                          icon="edit"
+                          @click="abrirEmbEditar(e)"
+                        />
+                        <q-btn
+                          flat
+                          dense
+                          round
+                          size="sm"
+                          color="grey-7"
+                          icon="delete"
+                          @click="excluirEmb(e)"
+                        />
                       </div>
                     </q-item-section>
                   </q-item>
@@ -734,7 +868,10 @@ onMounted(async () => {
                   <q-item>
                     <q-item-section>Controla estoque</q-item-section>
                     <q-item-section side>
-                      <q-icon :name="produto.estoque ? 'check' : 'close'" :color="produto.estoque ? 'green' : 'grey'" />
+                      <q-icon
+                        :name="produto.estoque ? 'check' : 'close'"
+                        :color="produto.estoque ? 'green' : 'grey'"
+                      />
                     </q-item-section>
                   </q-item>
                 </q-list>
@@ -749,15 +886,23 @@ onMounted(async () => {
 
           <!-- ───────────── Estoque ───────────── -->
           <q-tab-panel name="estoque">
-            <q-inner-loading :showing="loadingTab"><q-spinner-dots color="primary" /></q-inner-loading>
+            <q-inner-loading :showing="loadingTab"
+              ><q-spinner-dots color="primary"
+            /></q-inner-loading>
             <div v-if="estoque && estoque.length">
-              <q-card v-for="loc in estoque" :key="loc.codestoquelocal" bordered flat class="q-mb-md">
+              <q-card
+                v-for="loc in estoque"
+                :key="loc.codestoquelocal"
+                bordered
+                flat
+                class="q-mb-md"
+              >
                 <q-card-section class="row items-center bg-grey-1">
                   <div class="text-subtitle2">{{ loc.estoquelocal }}</div>
                   <q-space />
                   <div class="text-caption">
-                    Físico: <b>{{ formataNum(loc.fisico.saldoquantidade) }}</b> ·
-                    Fiscal: <b>{{ formataNum(loc.fiscal.saldoquantidade) }}</b>
+                    Físico: <b>{{ formataNum(loc.fisico.saldoquantidade) }}</b> · Fiscal:
+                    <b>{{ formataNum(loc.fiscal.saldoquantidade) }}</b>
                   </div>
                 </q-card-section>
                 <q-markup-table flat dense>
@@ -775,14 +920,24 @@ onMounted(async () => {
                       <td>{{ vr.variacao || '{Sem variação}' }}</td>
                       <td class="text-right">{{ formataNum(vr.fisico.saldoquantidade) }}</td>
                       <td class="text-right">{{ formataNum(vr.fiscal.saldoquantidade) }}</td>
-                      <td class="text-right">{{ vr.estoqueminimo || 0 }}/{{ vr.estoquemaximo || 0 }}</td>
-                      <td>{{ [vr.corredor, vr.prateleira, vr.coluna, vr.bloco].filter(Boolean).join('-') || '—' }}</td>
+                      <td class="text-right">
+                        {{ vr.estoqueminimo || 0 }}/{{ vr.estoquemaximo || 0 }}
+                      </td>
+                      <td>
+                        {{
+                          [vr.corredor, vr.prateleira, vr.coluna, vr.bloco]
+                            .filter(Boolean)
+                            .join('-') || '—'
+                        }}
+                      </td>
                     </tr>
                   </tbody>
                 </q-markup-table>
               </q-card>
             </div>
-            <div v-else-if="!loadingTab" class="text-grey-6 q-pa-md text-center">Sem saldo de estoque</div>
+            <div v-else-if="!loadingTab" class="text-grey-6 q-pa-md text-center">
+              Sem saldo de estoque
+            </div>
           </q-tab-panel>
 
           <!-- ───────────── NCM ───────────── -->
@@ -790,7 +945,9 @@ onMounted(async () => {
             <q-list bordered separator class="rounded-borders">
               <q-item>
                 <q-item-section>NCM</q-item-section>
-                <q-item-section side>{{ produto.Ncm?.ncm }} — {{ produto.Ncm?.descricao }}</q-item-section>
+                <q-item-section side
+                  >{{ produto.Ncm?.ncm }} — {{ produto.Ncm?.descricao }}</q-item-section
+                >
               </q-item>
               <q-item>
                 <q-item-section>CEST</q-item-section>
@@ -805,7 +962,9 @@ onMounted(async () => {
 
           <!-- ───────────── Negócios / Notas / Compras ───────────── -->
           <q-tab-panel name="negocios">
-            <q-inner-loading :showing="loadingTab"><q-spinner-dots color="primary" /></q-inner-loading>
+            <q-inner-loading :showing="loadingTab"
+              ><q-spinner-dots color="primary"
+            /></q-inner-loading>
             <q-markup-table v-if="negocios" flat dense>
               <thead>
                 <tr>
@@ -828,13 +987,17 @@ onMounted(async () => {
                   <td class="text-right">{{ formataMoeda(n.valorunitario) }}</td>
                   <td class="text-right">{{ formataMoeda(n.valortotal) }}</td>
                 </tr>
-                <tr v-if="!negocios.length"><td colspan="7" class="text-center text-grey-6">Nenhum negócio</td></tr>
+                <tr v-if="!negocios.length">
+                  <td colspan="7" class="text-center text-grey-6">Nenhum negócio</td>
+                </tr>
               </tbody>
             </q-markup-table>
           </q-tab-panel>
 
           <q-tab-panel name="notas">
-            <q-inner-loading :showing="loadingTab"><q-spinner-dots color="primary" /></q-inner-loading>
+            <q-inner-loading :showing="loadingTab"
+              ><q-spinner-dots color="primary"
+            /></q-inner-loading>
             <q-markup-table v-if="notas" flat dense>
               <thead>
                 <tr>
@@ -855,13 +1018,17 @@ onMounted(async () => {
                   <td class="text-right">{{ formataNum(n.quantidade) }}</td>
                   <td class="text-right">{{ formataMoeda(n.valortotal) }}</td>
                 </tr>
-                <tr v-if="!notas.length"><td colspan="6" class="text-center text-grey-6">Nenhuma nota</td></tr>
+                <tr v-if="!notas.length">
+                  <td colspan="6" class="text-center text-grey-6">Nenhuma nota</td>
+                </tr>
               </tbody>
             </q-markup-table>
           </q-tab-panel>
 
           <q-tab-panel name="compras">
-            <q-inner-loading :showing="loadingTab"><q-spinner-dots color="primary" /></q-inner-loading>
+            <q-inner-loading :showing="loadingTab"
+              ><q-spinner-dots color="primary"
+            /></q-inner-loading>
             <q-markup-table v-if="compras" flat dense>
               <thead>
                 <tr>
@@ -880,9 +1047,13 @@ onMounted(async () => {
                   <td class="text-right">{{ formataNum(c.quantidadetotal) }}</td>
                   <td class="text-right">{{ formataMoeda(c.vuncom) }}</td>
                   <td class="text-right">{{ formataMoeda(c.valortotal) }}</td>
-                  <td class="text-right">{{ c.margem ? Number(c.margem).toFixed(1) + '%' : '—' }}</td>
+                  <td class="text-right">
+                    {{ c.margem ? Number(c.margem).toFixed(1) + '%' : '—' }}
+                  </td>
                 </tr>
-                <tr v-if="!compras.length"><td colspan="6" class="text-center text-grey-6">Nenhuma compra</td></tr>
+                <tr v-if="!compras.length">
+                  <td colspan="6" class="text-center text-grey-6">Nenhuma compra</td>
+                </tr>
               </tbody>
             </q-markup-table>
           </q-tab-panel>
@@ -892,9 +1063,17 @@ onMounted(async () => {
             <div class="row items-center q-mb-sm">
               <div class="text-overline text-grey-8">INTEGRAÇÃO MERCOS</div>
               <q-space />
-              <q-btn unelevated color="primary" icon="cloud_upload" label="Exportar ao Mercos" @click="exportarMercos" />
+              <q-btn
+                unelevated
+                color="primary"
+                icon="cloud_upload"
+                label="Exportar ao Mercos"
+                @click="exportarMercos"
+              />
             </div>
-            <q-inner-loading :showing="loadingTab"><q-spinner-dots color="primary" /></q-inner-loading>
+            <q-inner-loading :showing="loadingTab"
+              ><q-spinner-dots color="primary"
+            /></q-inner-loading>
             <q-markup-table v-if="mercos" flat dense>
               <thead>
                 <tr>
@@ -914,10 +1093,15 @@ onMounted(async () => {
                   <td class="text-right">{{ formataMoeda(m.preco) }}</td>
                   <td class="text-right">{{ formataNum(m.saldoquantidade) }}</td>
                   <td>
-                    <q-badge :color="m.inativo ? 'grey-5' : 'green-6'" :label="m.inativo ? 'Inativo' : 'Ativo'" />
+                    <q-badge
+                      :color="m.inativo ? 'grey-5' : 'green-6'"
+                      :label="m.inativo ? 'Inativo' : 'Ativo'"
+                    />
                   </td>
                 </tr>
-                <tr v-if="!mercos.length"><td colspan="6" class="text-center text-grey-6">Não exportado ao Mercos</td></tr>
+                <tr v-if="!mercos.length">
+                  <td colspan="6" class="text-center text-grey-6">Não exportado ao Mercos</td>
+                </tr>
               </tbody>
             </q-markup-table>
           </q-tab-panel>
@@ -927,9 +1111,17 @@ onMounted(async () => {
             <div class="row items-center q-mb-sm">
               <div class="text-overline text-grey-8">INTEGRAÇÃO WOOCOMMERCE</div>
               <q-space />
-              <q-btn unelevated color="primary" icon="cloud_upload" label="Exportar ao Woo" @click="exportarWoo" />
+              <q-btn
+                unelevated
+                color="primary"
+                icon="cloud_upload"
+                label="Exportar ao Woo"
+                @click="exportarWoo"
+              />
             </div>
-            <q-inner-loading :showing="loadingTab"><q-spinner-dots color="primary" /></q-inner-loading>
+            <q-inner-loading :showing="loadingTab"
+              ><q-spinner-dots color="primary"
+            /></q-inner-loading>
             <q-markup-table v-if="woo" flat dense>
               <thead>
                 <tr>
@@ -947,10 +1139,15 @@ onMounted(async () => {
                   <td>{{ w.integracao === 'P' ? 'Parcial' : 'Completa' }}</td>
                   <td>{{ formataData(w.exportacao) }}</td>
                   <td>
-                    <q-badge :color="w.inativo ? 'grey-5' : 'green-6'" :label="w.inativo ? 'Inativo' : 'Ativo'" />
+                    <q-badge
+                      :color="w.inativo ? 'grey-5' : 'green-6'"
+                      :label="w.inativo ? 'Inativo' : 'Ativo'"
+                    />
                   </td>
                 </tr>
-                <tr v-if="!woo.length"><td colspan="5" class="text-center text-grey-6">Não exportado ao Woo</td></tr>
+                <tr v-if="!woo.length">
+                  <td colspan="5" class="text-center text-grey-6">Não exportado ao Woo</td>
+                </tr>
               </tbody>
             </q-markup-table>
           </q-tab-panel>
@@ -961,11 +1158,18 @@ onMounted(async () => {
     <!-- Dialog Variação -->
     <q-dialog v-model="dlgVar">
       <q-card bordered flat style="width: 460px; max-width: 90vw">
-        <q-card-section class="text-grey-9 text-overline">{{ varNovo ? 'NOVA VARIAÇÃO' : 'EDITAR VARIAÇÃO' }}</q-card-section>
+        <q-card-section class="text-grey-9 text-overline">{{
+          varNovo ? 'NOVA VARIAÇÃO' : 'EDITAR VARIAÇÃO'
+        }}</q-card-section>
         <q-form @submit.prevent="salvarVar">
           <q-separator inset />
           <q-card-section class="q-gutter-md">
-            <q-input v-model="varModel.variacao" outlined label="Variação (vazio = sem variação)" autofocus />
+            <q-input
+              v-model="varModel.variacao"
+              outlined
+              label="Variação (vazio = sem variação)"
+              autofocus
+            />
             <MgAutocomplete
               v-model="varModel.codmarca"
               endpoint="v1/marca/autocompletar"
@@ -977,7 +1181,7 @@ onMounted(async () => {
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn flat label="Salvar" type="submit" :loading="savingVar" />
           </q-card-actions>
         </q-form>
@@ -987,7 +1191,9 @@ onMounted(async () => {
     <!-- Dialog Barra -->
     <q-dialog v-model="dlgBarra">
       <q-card bordered flat style="width: 460px; max-width: 90vw">
-        <q-card-section class="text-grey-9 text-overline">{{ barraNovo ? 'NOVO CÓDIGO' : 'EDITAR CÓDIGO' }}</q-card-section>
+        <q-card-section class="text-grey-9 text-overline">{{
+          barraNovo ? 'NOVO CÓDIGO' : 'EDITAR CÓDIGO'
+        }}</q-card-section>
         <q-form @submit.prevent="salvarBarra">
           <q-separator inset />
           <q-card-section class="q-gutter-md">
@@ -1010,7 +1216,7 @@ onMounted(async () => {
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn flat label="Salvar" type="submit" :loading="savingBarra" />
           </q-card-actions>
         </q-form>
@@ -1020,7 +1226,9 @@ onMounted(async () => {
     <!-- Dialog Embalagem -->
     <q-dialog v-model="dlgEmb">
       <q-card bordered flat style="width: 460px; max-width: 90vw">
-        <q-card-section class="text-grey-9 text-overline">{{ embNovo ? 'NOVA EMBALAGEM' : 'EDITAR EMBALAGEM' }}</q-card-section>
+        <q-card-section class="text-grey-9 text-overline">{{
+          embNovo ? 'NOVA EMBALAGEM' : 'EDITAR EMBALAGEM'
+        }}</q-card-section>
         <q-form @submit.prevent="salvarEmb">
           <q-separator inset />
           <q-card-section class="q-gutter-md">
@@ -1051,7 +1259,7 @@ onMounted(async () => {
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn flat label="Salvar" type="submit" :loading="savingEmb" />
           </q-card-actions>
         </q-form>
@@ -1066,7 +1274,9 @@ onMounted(async () => {
         <q-card-section class="q-gutter-md">
           <div class="text-body2">
             A variação
-            <span class="text-weight-medium">"{{ unifVarOrigem?.variacao || 'Sem variação' }}"</span>
+            <span class="text-weight-medium"
+              >"{{ unifVarOrigem?.variacao || 'Sem variação' }}"</span
+            >
             e seus códigos de barras serão movidos para a variação de destino. Esta ação não pode
             ser desfeita.
           </div>
@@ -1081,7 +1291,7 @@ onMounted(async () => {
         </q-card-section>
         <q-separator inset />
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
             flat
             label="Unificar"
@@ -1114,13 +1324,17 @@ onMounted(async () => {
             label="Código de destino"
             hint="Apenas códigos da mesma variação e embalagem"
           />
-          <q-banner v-if="!barraDestinoOptions.length" dense class="bg-orange-1 text-orange-9 rounded-borders">
+          <q-banner
+            v-if="!barraDestinoOptions.length"
+            dense
+            class="bg-orange-1 text-orange-9 rounded-borders"
+          >
             Nenhum código compatível (mesma variação e embalagem) para unificar.
           </q-banner>
         </q-card-section>
         <q-separator inset />
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
             flat
             label="Unificar"

@@ -10,6 +10,9 @@ class SelectCidadeController extends Controller
 {
     public static function index(Request $request)
     {
+        $page = (int) $request->page > 0 ? (int) $request->page : 1;
+        $offset = ($page - 1) * 20;
+
         $sql = "
             select c.codcidade as value, c.cidade || ' / ' || e.sigla as label
             from tblcidade c
@@ -17,13 +20,8 @@ class SelectCidadeController extends Controller
         ";
 
         $params = [];
-        if (!empty($request->codcidade)) {
-            $sql .= ' where c.codcidade = :codcidade';
-            $params['codcidade'] = $request->codcidade;
-        }
-
-        if (!empty($request->cidade)) {
-            $busca = trim(removeAcentos($request->cidade));
+        if (!empty($request->busca)) {
+            $busca = trim(removeAcentos($request->busca));
             $palavras = explode(' ', preg_replace('/\s+/', ' ', $busca));
             $where = 'where';
             $ipalavra = 0;
@@ -35,7 +33,23 @@ class SelectCidadeController extends Controller
             }
         }
 
-        $sql .= ' order by c.cidade, e.estado, c.codcidade limit 100';
+        $sql .= ' order by c.cidade, e.estado, c.codcidade limit 20 offset ' . $offset;
         return DB::select($sql, $params);
+    }
+
+    public static function show($id)
+    {
+        $sql = "
+            select c.codcidade as value, c.cidade || ' / ' || e.sigla as label
+            from tblcidade c
+            inner join tblestado e on (e.codestado = c.codestado)
+            where c.codcidade = :id
+            limit 1
+        ";
+        $rows = DB::select($sql, ['id' => $id]);
+        if (empty($rows)) {
+            abort(404);
+        }
+        return $rows[0];
     }
 }

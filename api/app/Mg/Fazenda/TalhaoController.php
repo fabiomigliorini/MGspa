@@ -4,6 +4,7 @@ namespace Mg\Fazenda;
 
 use App\Http\Requests\Mg\Fazenda\TalhaoStoreRequest;
 use App\Http\Requests\Mg\Fazenda\TalhaoUpdateRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
@@ -70,7 +71,15 @@ class TalhaoController extends MgController
 
     public function destroy($id)
     {
-        Talhao::findOrFail($id)->delete();
+        $talhao = Talhao::findOrFail($id);
+        try {
+            $talhao->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) === '23503') {
+                abort(409, 'Existem plantios vinculados a este Talhão! Impossível excluir!');
+            }
+            throw $e;
+        }
         return response()->noContent();
     }
 

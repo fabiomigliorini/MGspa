@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useCadastro } from 'src/composables/useCadastro'
 import MgIconeCultura from 'components/MgIconeCultura.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgSafraForm from 'components/MgSafraForm.vue'
 
 const cad = useCadastro('safra', 'codsafra', 'Safra')
@@ -60,9 +61,9 @@ onMounted(() => cad.carregar())
         </div>
       </div>
 
-      <q-banner v-else rounded class="bg-grey-2 text-grey-7">
+      <MgEmptyState v-else icon="eco">
         Nenhuma safra. Crie a primeira com o botão <q-icon name="add" />.
-      </q-banner>
+      </MgEmptyState>
 
       <q-dialog v-model="cad.dialog">
         <q-card flat style="width: 440px; max-width: 95vw">

@@ -66,8 +66,7 @@ const confirmarExclusao = () => {
       color: 'red-5',
       textColor: 'white',
       icon: 'error',
-      message:
-        'Não é possível excluir uma empresa que possui filiais. Exclua as filiais primeiro.',
+      message: 'Não é possível excluir uma empresa que possui filiais. Exclua as filiais primeiro.',
     })
     return
   }
@@ -80,8 +79,8 @@ const confirmarExclusao = () => {
       type: 'text',
       isValid: (val) => val === 'EXCLUIR',
     },
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sEmpresa.removerEmpresa(sEmpresa.item.codempresa)

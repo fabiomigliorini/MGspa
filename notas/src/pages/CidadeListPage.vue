@@ -131,11 +131,13 @@ const handleDeleteCidade = (cidade) => {
     message: `Deseja realmente excluir a cidade "${cidade.cidade}"?`,
     cancel: {
       label: 'Cancelar',
+      color: 'grey-8',
       flat: true,
     },
     ok: {
       label: 'Excluir',
-      color: 'negative',
+      color: 'red-5',
+      flat: true,
     },
   }).onOk(async () => {
     try {
@@ -279,11 +281,13 @@ const handleDeleteEstado = () => {
     message: `Deseja realmente excluir o estado "${currentEstado.value.estado}" (${currentEstado.value.sigla})?`,
     cancel: {
       label: 'Cancelar',
+      color: 'grey-8',
       flat: true,
     },
     ok: {
       label: 'Excluir',
-      color: 'negative',
+      color: 'red-5',
+      flat: true,
     },
   }).onOk(async () => {
     try {
@@ -552,10 +556,10 @@ const handleSaveCidade = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
           <q-btn
             flat
-            class="bg-primary text-white"
+            color="primary"
             icon="save"
             label="Salvar"
             @click="handleSaveEstado"
@@ -592,10 +596,11 @@ const handleSaveCidade = async () => {
           />
         </q-card-section>
 
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
           <q-btn
             flat
+            color="primary"
             label="Salvar"
             @click="handleSavePais"
             :disable="!novoPais.pais || !novoPais.sigla"
@@ -631,11 +636,11 @@ const handleSaveCidade = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
           <q-btn
             flat
             icon="save"
-            class="bg-primary text-white"
+            color="primary"
             label="Salvar"
             @click="handleSaveCidade"
             :disable="!cidadeForm.cidade || !cidadeForm.codigooficial"

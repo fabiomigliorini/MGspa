@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
 import MgContratoForm from 'components/MgContratoForm.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
 // Grid de contratos de UMA safra (encapsula tudo: lista + dialog novo/editar +
 // inativar/excluir). O contrato sempre pertence à safra, então o vínculo
@@ -55,7 +56,17 @@ async function recarregar() {
 function novo() {
   // Rascunho: tipo neutro (a fixar). O tipo real e o resto da configuração ficam
   // pra tela do contrato — o form de criação só pede a identificação.
-  cad.abrirNovo({ tipo: 'FIXAR', moeda: 'BRL', operacao: 'VENDA' })
+  const hoje = new Date()
+  const datacontrato = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(
+    hoje.getDate(),
+  ).padStart(2, '0')}`
+  cad.abrirNovo({
+    tipo: 'FIXAR',
+    moeda: 'BRL',
+    operacao: 'VENDA',
+    comissaotipo: 'SACA',
+    datacontrato,
+  })
 }
 async function aposSalvar(saved) {
   // Contrato recém-criado → abre a tela dele pra terminar a configuração.
@@ -158,9 +169,9 @@ onMounted(async () => {
       </div>
     </div>
 
-    <q-banner v-else rounded class="bg-grey-2 text-grey-7">
+    <MgEmptyState v-else icon="description">
       Nenhum contrato nesta safra. Crie o primeiro com o botão <q-icon name="add" />.
-    </q-banner>
+    </MgEmptyState>
 
     <MgContratoForm
       :cad="cad"

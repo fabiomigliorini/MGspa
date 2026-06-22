@@ -170,8 +170,8 @@ export default {
         .dialog({
           title: 'Salvar Férias',
           message: 'Tem certeza que deseja salvar todas as férias ?',
-          cancel: true,
-          persistent: true,
+          cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+          ok: { label: 'Salvar', color: 'primary', flat: true },
         })
         .onOk(async () => {
           try {

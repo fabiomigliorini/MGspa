@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
@@ -78,7 +78,8 @@ async function salvar() {
   $q.dialog({
     title: 'Confirmar',
     message: 'Tem certeza que deseja salvar a liquidação?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     saving.value = true
     try {
@@ -175,7 +176,7 @@ async function salvar() {
                 />
               </div>
               <div class="col-xs-12 col-sm-8">
-                <SelectPortador
+                <MgSelectPortador
                   v-model="finalizar.codportador"
                   outlined
                   label="Portador"

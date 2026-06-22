@@ -110,7 +110,7 @@ const salvar = () => {
           <q-btn
             flat
             label="Cancelar"
-            color="primary"
+            color="grey-8"
             @click="sNegocio.dialog.pagamentoDinheiro = false"
             tabindex="-1"
           />

@@ -1,11 +1,9 @@
 <script setup>
-import { ref, onMounted } from 'vue'
-import { api } from 'src/services/api'
+import { ref } from 'vue'
 import { abrirPdf } from 'src/utils/abrirPdf'
 import { notifyError } from 'src/utils/notify'
 import MgAutocomplete from 'src/components/MgAutocomplete.vue'
-
-const locais = ref([])
+import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
 
 // Comparativo de vendas
 const cmp = ref({
@@ -91,11 +89,6 @@ const gerarTransferencias = () => {
     title: 'Transferências',
   })
 }
-
-onMounted(async () => {
-  const { data } = await api.get('v1/select/estoque-local')
-  locais.value = data
-})
 </script>
 
 <template>
@@ -108,25 +101,10 @@ onMounted(async () => {
         <q-expansion-item icon="compare_arrows" label="Comparativo de Vendas (Depósito × Filial)" default-opened>
           <q-card-section class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <q-select
-                v-model="cmp.codestoquelocaldeposito"
-                :options="locais"
-                emit-value
-                map-options
-                outlined
-                clearable
-                label="Depósito"
-              />
+              <MgSelectEstoqueLocal v-model="cmp.codestoquelocaldeposito" label="Depósito" clearable />
             </div>
             <div class="col-12 col-sm-6">
-              <q-select
-                v-model="cmp.codestoquelocalfilial"
-                :options="locais"
-                emit-value
-                map-options
-                outlined
-                label="Filial"
-              />
+              <MgSelectEstoqueLocal v-model="cmp.codestoquelocalfilial" label="Filial" />
             </div>
             <div class="col-6 col-sm-4">
               <q-input v-model="cmp.datainicial" outlined type="date" label="Data inicial" stack-label />
@@ -167,7 +145,7 @@ onMounted(async () => {
               <q-input v-model.number="ff.ano" outlined type="number" label="Ano" />
             </div>
             <div class="col-6 col-sm-3">
-              <q-select v-model="ff.codestoquelocal" :options="locais" emit-value map-options outlined clearable label="Depósito" />
+              <MgSelectEstoqueLocal v-model="ff.codestoquelocal" label="Depósito" clearable />
             </div>
             <div class="col-12 col-sm-4">
               <MgAutocomplete v-model="ff.codmarca" endpoint="v1/marca/autocompletar" search-param="marca" label="Marca (opcional)" />
@@ -193,10 +171,10 @@ onMounted(async () => {
         <q-expansion-item icon="swap_horiz" label="Sugestão de Transferências">
           <q-card-section class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <q-select v-model="tr.codestoquelocalorigem" :options="locais" emit-value map-options outlined label="Local de origem" />
+              <MgSelectEstoqueLocal v-model="tr.codestoquelocalorigem" label="Local de origem" />
             </div>
             <div class="col-12 col-sm-6">
-              <q-select v-model="tr.codestoquelocaldestino" :options="locais" emit-value map-options outlined label="Local de destino" />
+              <MgSelectEstoqueLocal v-model="tr.codestoquelocaldestino" label="Local de destino" />
             </div>
             <div class="col-12 col-sm-6">
               <MgAutocomplete v-model="tr.codmarca" endpoint="v1/marca/autocompletar" search-param="marca" label="Marca (opcional)" />

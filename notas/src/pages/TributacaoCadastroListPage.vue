@@ -23,11 +23,13 @@ const handleDeleteTributacao = (tributacao) => {
     message: `Deseja realmente excluir a tributacao "${tributacao.tributacao}"?`,
     cancel: {
       label: 'Cancelar',
+      color: 'grey-8',
       flat: true,
     },
     ok: {
       label: 'Excluir',
-      color: 'negative',
+      color: 'red-5',
+      flat: true,
     },
   }).onOk(async () => {
     try {

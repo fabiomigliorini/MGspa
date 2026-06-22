@@ -2,7 +2,7 @@
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import MgSelectImpressora from 'src/components/MgSelectImpressora.vue'
+import MgSelectImpressora from '@components/MgSelectImpressora.vue'
 
 const etiquetas = ref([])
 

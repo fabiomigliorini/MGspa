@@ -285,7 +285,7 @@ onMounted(async () => {
 
     <!-- Ajuste manual -->
     <q-dialog v-model="dialog">
-      <q-card flat bordered style="width: 520px; max-width: 90vw">
+      <q-card flat style="width: 520px; max-width: 90vw">
         <q-form @submit.prevent="salvarAjuste">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Ajuste manual</div>
@@ -371,7 +371,7 @@ onMounted(async () => {
           </q-card-section>
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-            <q-btn type="submit" unelevated label="Lançar" color="primary" :loading="salvando" />
+            <q-btn type="submit" flat label="Lançar" color="primary" :loading="salvando" />
           </q-card-actions>
         </q-form>
       </q-card>

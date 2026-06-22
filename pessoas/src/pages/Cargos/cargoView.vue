@@ -66,7 +66,8 @@ const excluir = () => {
   $q.dialog({
     title: 'Excluir Cargo',
     message: 'Tem certeza que deseja excluir "' + cargo.value.cargo + '"?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sCargo.excluir(cargo.value.codcargo)

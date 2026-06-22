@@ -195,7 +195,8 @@ const excluir = (node) => {
   $q.dialog({
     title: 'Excluir',
     message: `Confirma excluir "${node.label}"? Itens filhos podem impedir a exclusão.`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await api.delete(`v1/${cfg.base}/${node.codigo}`)
@@ -264,10 +265,7 @@ onMounted(carregarRaiz)
                   size="20px"
                   class="q-mr-sm"
                 />
-                <div
-                  class="col"
-                  :class="prop.node.inativo ? 'text-strike text-grey-5' : ''"
-                >
+                <div class="col" :class="prop.node.inativo ? 'text-strike text-grey-5' : ''">
                   {{ prop.node.label }}
                   <q-badge
                     v-if="prop.node.inativo"
@@ -344,10 +342,7 @@ onMounted(carregarRaiz)
         <q-form @submit.prevent="submit">
           <q-separator inset />
           <q-card-section>
-            <div
-              v-if="parentNode && isNovo"
-              class="text-caption text-grey-6 q-mb-sm"
-            >
+            <div v-if="parentNode && isNovo" class="text-caption text-grey-6 q-mb-sm">
               Em: {{ parentNode.label }}
             </div>
             <q-input
@@ -356,7 +351,10 @@ onMounted(carregarRaiz)
               :label="dialogCfg().label"
               maxlength="50"
               autofocus
-              :rules="[(v) => (!!v && v.length >= dialogCfg().min) || `Mínimo ${dialogCfg().min} caracteres`]"
+              :rules="[
+                (v) =>
+                  (!!v && v.length >= dialogCfg().min) || `Mínimo ${dialogCfg().min} caracteres`,
+              ]"
             />
           </q-card-section>
           <q-separator inset />

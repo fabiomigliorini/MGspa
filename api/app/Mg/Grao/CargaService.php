@@ -239,7 +239,8 @@ class CargaService extends MgService
 
     /**
      * Bloqueio de over-load: destino CONTRATO (venda) nao pode levar o total
-     * entregue acima do contratado. Contrato volumeemaberto (rapa-silo) pula.
+     * entregue acima do contratado. Contrato em volume aberto (quantidade NULL,
+     * rapa-silo) pula.
      */
     protected static function validarOverloadContrato(Carga $carga): void
     {
@@ -259,7 +260,7 @@ class CargaService extends MgService
 
         foreach ($kgPorContrato as $cod => $estaCargaKg) {
             $contrato = $contratos->get($cod);
-            if (!$contrato || $contrato->volumeemaberto) {
+            if (!$contrato || $contrato->quantidade === null) {
                 continue;
             }
             $pesosaca = (float) ($contrato->Cultura->pesosaca ?? 60) ?: 60;

@@ -14,6 +14,7 @@ import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
 import MgIconeCultura from 'components/MgIconeCultura.vue'
 import MgSafraForm from 'components/MgSafraForm.vue'
 import MgContratosSafra from 'components/MgContratosSafra.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import PlantioWizardDialog from 'components/PlantioWizardDialog.vue'
 
 const route = useRoute()
@@ -200,7 +201,7 @@ function excluirSafra() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir a safra ${safra.value?.safra}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
@@ -413,6 +414,7 @@ onMounted(async () => {
         :codsafra="codsafra"
         :codcultura="codcultura"
         :online="online"
+        class="q-mb-md"
         @changed="recarregarComercial"
       />
 
@@ -425,10 +427,10 @@ onMounted(async () => {
       </div>
 
       <!-- Um card por fazenda: mapa + lista por talhão + resultado -->
-      <div class="row q-col-gutter-md">
+      <div v-if="porFazenda.length" class="row q-col-gutter-md">
         <template v-for="g in porFazenda" :key="g.codfazenda">
           <div class="col-12">
-            <q-card bordered flat class="q-mb-md">
+            <q-card bordered flat>
               <q-item>
                 <q-item-section avatar>
                   <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
@@ -569,12 +571,9 @@ onMounted(async () => {
       </div>
 
       <!-- Vazio -->
-      <q-card v-if="!porFazenda.length" bordered flat>
-        <q-card-section class="text-grey-6 text-center">
-          Nenhum talhão plantado nesta safra ainda. Use <q-icon name="add" /> para plantar o
-          primeiro.
-        </q-card-section>
-      </q-card>
+      <MgEmptyState v-else icon="agriculture">
+        Nenhum talhão plantado nesta safra ainda. Use <q-icon name="add" /> para plantar o primeiro.
+      </MgEmptyState>
     </div>
 
     <!-- Wizard: escolher fazenda → talhão base → confirmar/ajustar polígono -->

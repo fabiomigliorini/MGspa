@@ -5,7 +5,7 @@ import { useChequeStore } from 'src/stores/chequeStore'
 import { CHEQUE_STATUS_OPTIONS } from 'src/constants/chequeStatus'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import SelectBanco from 'src/components/select/SelectBanco.vue'
+import MgSelectBanco from '@components/MgSelectBanco.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -36,7 +36,7 @@ const clear = () => {
         <template #prepend><q-icon name="numbers" /></template>
       </q-input>
 
-      <SelectBanco
+      <MgSelectBanco
         v-model="store.filters.codbanco"
         outlined
         clearable

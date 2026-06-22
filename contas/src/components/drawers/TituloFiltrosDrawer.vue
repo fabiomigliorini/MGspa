@@ -4,13 +4,13 @@ import { useDebounceFn } from '@vueuse/core'
 import { useTituloStore } from 'src/stores/tituloStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import SelectFilial from 'src/components/select/SelectFilial.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
-import SelectTipoTitulo from 'src/components/select/SelectTipoTitulo.vue'
-import SelectContaContabil from 'src/components/select/SelectContaContabil.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
+import MgSelectTipoTitulo from '@components/MgSelectTipoTitulo.vue'
+import MgSelectContaContabil from '@components/MgSelectContaContabil.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectGrupoEconomico from 'src/components/select/SelectGrupoEconomico.vue'
-import SelectGrupoCliente from 'src/components/select/SelectGrupoCliente.vue'
+import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
+import MgSelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -118,7 +118,7 @@ const pagarReceberOptions = [
         class="q-mb-md"
       />
 
-      <SelectGrupoEconomico
+      <MgSelectGrupoEconomico
         v-model="store.filters.codgrupoeconomico"
         outlined
         clearable
@@ -127,8 +127,9 @@ const pagarReceberOptions = [
         class="q-mb-md"
       />
 
-      <SelectGrupoCliente
+      <MgSelectGrupoCliente
         v-model="store.filters.codgrupocliente"
+        multiple
         outlined
         :bottom-slots="false"
         label="Grupo de Cliente"
@@ -136,18 +137,16 @@ const pagarReceberOptions = [
     </FilterGroup>
 
     <FilterGroup title="Filial / Tipo / Conta">
-      <SelectFilial
+      <MgSelectFilial
         v-model="store.filters.codfilial"
         outlined
         clearable
         :bottom-slots="false"
         label="Filial"
         class="q-mb-md"
-      >
-        <template #prepend><q-icon name="store" /></template>
-      </SelectFilial>
+      />
 
-      <SelectTipoTitulo
+      <MgSelectTipoTitulo
         v-model="store.filters.codtipotitulo"
         outlined
         clearable
@@ -156,7 +155,7 @@ const pagarReceberOptions = [
         class="q-mb-md"
       />
 
-      <SelectContaContabil
+      <MgSelectContaContabil
         v-model="store.filters.codcontacontabil"
         outlined
         clearable
@@ -165,15 +164,13 @@ const pagarReceberOptions = [
         class="q-mb-md"
       />
 
-      <SelectPortador
+      <MgSelectPortador
         v-model="store.filters.codportador"
         outlined
         clearable
         :bottom-slots="false"
         label="Portador"
-      >
-        <template #prepend><q-icon name="credit_card" /></template>
-      </SelectPortador>
+      />
     </FilterGroup>
 
     <FilterGroup title="Datas">

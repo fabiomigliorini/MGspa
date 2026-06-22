@@ -37,7 +37,10 @@ class SafraService extends MgService
             ->with('Cultura')
             ->withSum(['MovimentoGraoS as carregadokg' => $movAtivo], 'liquido') // KG entregue (extrato)
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
+            // barter (settlement em insumos) vive no pagamento; exclui do fixo/afixar/preço médio.
+            ->withCount(['ContratoPagamentoS as bartercount' => fn ($q) => $q->where('forma', 'BARTER')->whereNull('inativo')])
             ->get();
+        $semBarter = fn ($c) => (int) $c->bartercount === 0;
 
         // Unidade de trabalho = KG. Contrato negocia em sacas; converte por
         // contrato (cada um pode ter cultura/pesosaca diferente). Sacas derivadas
@@ -47,9 +50,9 @@ class SafraService extends MgService
         $contratadokg = (float) $contratos->sum(fn ($c) => (float) $c->quantidade * $pesosaca($c));
         $entreguekg = (float) $contratos->sum('carregadokg');
         $entreguesc = (float) $contratos->sum(fn ($c) => (float) $c->carregadokg / $pesosaca($c));
-        // Volume em aberto (rapa-silo) nao reserva saldo (sem total definido).
+        // Volume em aberto (quantidade NULL, rapa-silo) nao reserva saldo.
         $saldoaembarcarkg = (float) $contratos->sum(
-            fn ($c) => $c->volumeemaberto ? 0 : max(0, (float) $c->quantidade * $pesosaca($c) - (float) $c->carregadokg)
+            fn ($c) => $c->quantidade === null ? 0 : max(0, (float) $c->quantidade * $pesosaca($c) - (float) $c->carregadokg)
         );
 
         // Estoque depositado (silo proprio + terceiro + silo bag) = SUM(liquido)
@@ -80,9 +83,11 @@ class SafraService extends MgService
         // Disponivel para negociar = a colher + estoque - (contratado venda nao entregue).
         $disponivelkg = $aColherKg + $estoquekg - $saldoaembarcarkg;
 
-        $fixo = (float) $contratos->whereIn('tipo', ['FIXO', 'FIXAR'])->sum('fixado');
-        $afixar = (float) $contratos->where('tipo', 'FIXAR')
-            ->sum(fn ($c) => max(0, (float) $c->quantidade - (float) $c->fixado));
+        // fixo = sacas já travadas (não-barter); afixar = saldo a fixar dos com teto
+        // (FIXO fica 0 naturalmente, pois fixado cobre a quantidade).
+        $fixo = (float) $contratos->filter($semBarter)->sum('fixado');
+        $afixar = (float) $contratos->filter($semBarter)
+            ->sum(fn ($c) => $c->quantidade === null ? 0 : max(0, (float) $c->quantidade - (float) $c->fixado));
 
         // Preço médio ponderado por moeda (fixações ativas de contratos ativos,
         // exceto barter).
@@ -91,7 +96,11 @@ class SafraService extends MgService
             ->where('c.codsafra', $codsafra)
             ->where('c.operacao', 'VENDA')
             ->whereNull('c.inativo')
-            ->where('c.tipo', '!=', 'BARTER')
+            // exclui contratos barter (têm pagamento forma=BARTER)
+            ->whereNotExists(fn ($q) => $q->from('tblcontratopagamento as p')
+                ->whereColumn('p.codcontrato', 'c.codcontrato')
+                ->where('p.forma', 'BARTER')
+                ->whereNull('p.inativo'))
             ->whereNull('tblcontratofixacao.inativo')
             ->groupBy('tblcontratofixacao.moeda')
             ->selectRaw('tblcontratofixacao.moeda as moeda')

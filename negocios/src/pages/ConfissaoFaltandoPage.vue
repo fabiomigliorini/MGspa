@@ -214,7 +214,8 @@ const ignorar = (codnegocio) => {
       'Tem certeza que você deseja ignorar a confissão de dívida para o negocio ' +
       codnegocio +
       '?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const ret = await api.post('/v1/pdv/negocio/' + codnegocio + '/ignorar-confissao/', {

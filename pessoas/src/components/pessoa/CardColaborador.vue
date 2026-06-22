@@ -12,7 +12,7 @@ const DIAS_EXPERIENCIA = 30
 
 import CardColaboradorCargo from 'components/pessoa/CardColaboradorCargo.vue'
 import CardFerias from 'components/pessoa/CardFerias.vue'
-import SelectFilial from 'components/pessoa/SelectFilial.vue'
+import SelectFilial from '@components/MgSelectFilial.vue'
 import MgInputData from '@components/MgInputData.vue'
 
 const $q = useQuasar()
@@ -251,7 +251,8 @@ const excluirColaborador = async (colaborador) => {
   $q.dialog({
     title: 'Excluir Colaborador',
     message: 'Tem certeza que deseja excluir esse colaborador?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sColaborador.excluirColaborador(colaborador)
@@ -686,6 +687,7 @@ watch(
                     (val !== null && val !== '' && val !== undefined) || 'Filial Obrigatório',
                 ]"
                 autofocus
+                clearable
               />
             </div>
 

@@ -182,7 +182,8 @@ async function excluir(ferias) {
   $q.dialog({
     title: 'Excluir Férias',
     message: 'Tem certeza que deseja excluir essas Férias?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sColaborador.deleteFerias(ferias)
@@ -506,7 +507,7 @@ defineExpose({ nova })
         </q-card-section>
 
         <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
           <q-btn flat label="Salvar" type="submit" />
         </q-card-actions>
       </q-form>

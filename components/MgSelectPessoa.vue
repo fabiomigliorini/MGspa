@@ -1,12 +1,13 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'src/services/api'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { formataCnpjCpf } from '@components/formatters'
 
-// Seletor de pessoa padrão de todos os apps (busca remota em v1/select/pessoa).
-// Self-contained: cada app importa seu próprio `api` (baseURL = .../api/), então
-// o prefixo v1 vai aqui na chamada. Portado do notas; é a referência única —
-// não criar SelectPessoa local por app. (negócios é offline/Dexie, exceção.)
+// ===== REFERÊNCIA do padrão REMOTE (entidade grande) =====
+// Busca no backend (?busca=, debounce) com PAGINAÇÃO 20/20 via scroll infinito
+// no dropdown; cacheia resultados por id; resolve o valor atual por v1/select/pessoa/{id}.
+// Self-contained: cada app importa seu próprio `api` (baseURL = .../api/).
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Pessoa' },
@@ -16,20 +17,30 @@ const props = defineProps({
   disable: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },
   maxChars: { type: Number, default: 25 },
-  somenteAtivos: { type: Boolean, default: true },
+  inativos: { type: Boolean, default: false },
   somenteVendedores: { type: Boolean, default: false },
+  clearable: { type: Boolean, default: false },
   // Quando setado (>= 11 dígitos), busca automática e abre o popup.
   searchCnpj: { type: String, default: null },
 })
 
 const emit = defineEmits(['update:modelValue', 'clear', 'select'])
 
+const cache = useSelectCacheStore()
+const ENTITY = 'pessoa'
+const ENDPOINT = 'v1/select/pessoa'
+const PER_PAGE = 20
+
 const options = ref([])
 const loading = ref(false)
 const selectRef = ref(null)
-const optionsFromCnpj = ref([]) // opções carregadas via CNPJ
+const optionsFromCnpj = ref([])
 
-// Formata cada pessoa da API no shape do select.
+// estado da paginação da busca corrente
+let buscaAtual = ''
+let pagina = 1
+let temMais = false
+
 function mapPessoa(item) {
   return {
     label: item.fantasia || item.pessoa,
@@ -39,30 +50,46 @@ function mapPessoa(item) {
     ie: item.ie,
     fisica: item.fisica,
     cidade: item.cidade,
-    uf: item.sigla,
+    uf: item.sigla || item.uf,
     inativo: item.inativo,
     codgrupoeconomico: item.codgrupoeconomico,
     grupoeconomico: item.grupoeconomico,
   }
 }
 
-async function buscar(busca) {
-  if (!busca || busca.length < 2) return []
-  const { data } = await api.get('v1/select/pessoa', {
+async function buscar(busca, page) {
+  const { data } = await api.get(ENDPOINT, {
     params: {
-      pessoa: busca,
-      somenteAtivos: props.somenteAtivos ? 1 : 0,
+      busca,
+      page,
+      inativos: props.inativos ? 1 : 0,
       somenteVendedores: props.somenteVendedores ? 1 : 0,
     },
   })
-  return (data || []).map(mapPessoa)
+  const rows = (Array.isArray(data) ? data : data?.data || []).map(mapPessoa)
+  cache.mergeById(ENTITY, rows)
+  return rows
 }
 
 async function carregarPorId(codpessoa) {
   if (!codpessoa) return
   if (options.value.find((o) => o.value === codpessoa)) return
-  const { data } = await api.get('v1/select/pessoa', { params: { codpessoa } })
-  if (data && data.length) options.value = [mapPessoa(data[0])]
+  const cached = cache.getById(ENTITY, codpessoa)
+  if (cached) {
+    options.value = [cached]
+    return
+  }
+  try {
+    const { data } = await api.get(`${ENDPOINT}/${codpessoa}`)
+    const row = Array.isArray(data) ? data[0] : data?.data || data
+    if (row && (row.codpessoa != null || row.value != null)) {
+      const mapped = row.value != null ? row : mapPessoa(row)
+      cache.mergeById(ENTITY, [mapped])
+      options.value = [mapped]
+    }
+  } catch {
+    // sem registro: deixa o select sem opção resolvida
+  }
 }
 
 const truncateLabel = (label) => {
@@ -83,14 +110,16 @@ watch(
   },
 )
 
-// Busca automática por CNPJ (ex.: vindo de um campo de NF) + abre o popup.
 watch(
   () => props.searchCnpj,
   async (cnpj) => {
     if (!cnpj || cnpj.length < 11) return
     try {
       loading.value = true
-      const results = await buscar(cnpj)
+      buscaAtual = cnpj
+      pagina = 1
+      const results = await buscar(cnpj, 1)
+      temMais = results.length === PER_PAGE
       optionsFromCnpj.value = results
       options.value = results
       if (results.length > 0 && selectRef.value) {
@@ -109,7 +138,6 @@ watch(
 )
 
 const filterPessoa = (val, update) => {
-  // Com opções vindas de CNPJ e campo vazio, mantém essas opções.
   if (optionsFromCnpj.value.length > 0 && (!val || val.trim().length < 2)) {
     update(() => {
       options.value = optionsFromCnpj.value
@@ -122,17 +150,44 @@ const filterPessoa = (val, update) => {
     })
     return
   }
-  update(async () => {
-    try {
-      loading.value = true
-      options.value = await buscar(val)
-    } catch (error) {
+  // Busca no backend FORA do update; só chama update() (síncrono) com o
+  // resultado pronto — senão o Quasar fecha o ciclo de filtro com a lista vazia.
+  buscaAtual = val
+  pagina = 1
+  loading.value = true
+  buscar(val, 1)
+    .then((rows) => {
+      temMais = rows.length === PER_PAGE
+      update(() => {
+        options.value = rows
+      })
+    })
+    .catch((error) => {
       console.error('Erro ao buscar pessoa:', error)
-      options.value = []
-    } finally {
+      update(() => {
+        options.value = []
+      })
+    })
+    .finally(() => {
       loading.value = false
-    }
-  })
+    })
+}
+
+// Scroll infinito: ao chegar perto do fim, pede a próxima página e dá append.
+const onScroll = async ({ to }) => {
+  if (!temMais || loading.value || !buscaAtual) return
+  if (to < options.value.length - 2) return
+  try {
+    loading.value = true
+    pagina += 1
+    const rows = await buscar(buscaAtual, pagina)
+    temMais = rows.length === PER_PAGE
+    options.value = [...options.value, ...rows]
+  } catch {
+    temMais = false
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleUpdate = (value) => {
@@ -154,15 +209,18 @@ const handleUpdate = (value) => {
     @update:model-value="handleUpdate"
     :label="label"
     outlined
-    clearable
+    :clearable="clearable"
     :options="options"
     option-value="value"
     option-label="label"
     emit-value
     map-options
     use-input
+    fill-input
+    hide-selected
     input-debounce="500"
     @filter="filterPessoa"
+    @virtual-scroll="onScroll"
     :placeholder="placeholder"
     :bottom-slots="bottomSlots"
     :class="customClass"
@@ -179,7 +237,9 @@ const handleUpdate = (value) => {
           />
         </q-item-section>
         <q-item-section>
-          <q-item-label>{{ scope.opt.label }}</q-item-label>
+          <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
+            {{ scope.opt.label }}
+          </q-item-label>
           <q-item-label caption class="text-grey-7">
             {{ formataCnpjCpf(scope.opt.cnpj, scope.opt.fisica) }}
             <span v-if="scope.opt.ie"> | IE: {{ scope.opt.ie }} </span>
@@ -190,9 +250,6 @@ const handleUpdate = (value) => {
           <q-item-label v-if="scope.opt.sublabel" caption class="text-grey-6">
             {{ scope.opt.sublabel }}
           </q-item-label>
-        </q-item-section>
-        <q-item-section v-if="scope.opt.inativo" side>
-          <q-badge color="negative" label="Inativo" />
         </q-item-section>
       </q-item>
     </template>
@@ -205,7 +262,9 @@ const handleUpdate = (value) => {
         text-color="white"
         :icon="scope.opt.fisica ? 'person' : 'business'"
       >
-        {{ truncateLabel(scope.opt.label) }}
+        <span :class="scope.opt.inativo ? 'text-strike' : ''">
+          {{ truncateLabel(scope.opt.label) }}
+        </span>
       </q-chip>
     </template>
 

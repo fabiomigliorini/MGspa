@@ -16,6 +16,7 @@ class ContratoPagamentoRequest extends FormRequest
         return [
             'data' => ['required', 'date'],             // data prevista
             'valor' => ['required', 'numeric', 'gt:0'],  // valor previsto
+            'forma' => ['nullable', 'in:CONTA,BARTER'],  // liquidação: em conta vs barter (insumos)
             'modo' => ['nullable', 'in:SACAS,VALOR'],
             'sacas' => ['nullable', 'numeric', 'gte:0'],
             'codportador' => ['nullable', 'exists:tblportador,codportador'],

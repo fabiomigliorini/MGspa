@@ -70,9 +70,9 @@ const salvar = () => {
           />
         </q-card-section>
 
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="Cancelar" v-close-popup />
-          <q-btn flat label="Salvar" type="submit" />
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat label="Salvar" type="submit" color="primary" />
         </q-card-actions>
       </q-form>
     </q-card>

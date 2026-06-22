@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
-import SelectProdutoBarra from 'src/components/selects/SelectProdutoBarra.vue'
+import MgSelectProdutoBarra from '@components/MgSelectProdutoBarra.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { formataNumero, formataData, formataTimestamp } from '@components/formatters'
 import { conformidades, corConformidade } from 'src/utils/nfeTerceiroItemConformidade'
@@ -200,8 +200,8 @@ const handleConferencia = () => {
   $q.dialog({
     title: 'Confirmar',
     message: item.value?.conferencia ? 'Desmarcar conferência?' : 'Marcar como conferido?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await nfeTerceiroStore.toggleConferenciaItem(codnfeterceiro.value, codnfeterceiroitem.value)
@@ -871,11 +871,11 @@ watch(codnfeterceiroitem, () => carregarAnalise())
             </q-card-section>
 
             <q-card-section class="q-pb-none">
-              <SelectProdutoBarra
+              <MgSelectProdutoBarra
                 v-model="formDetalhes.codprodutobarra"
                 label="Produto"
+                clearable
                 :bottom-slots="false"
-                dense
               />
               <div class="text-caption text-grey-7 q-mt-xs" v-if="item.xprod">
                 Descrição na NFe: {{ item.xprod }}

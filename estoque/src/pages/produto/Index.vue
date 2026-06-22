@@ -12,8 +12,7 @@ const codFormatado = (v) => String(v).padStart(6, '0')
 const formataMoeda = (v) =>
   (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-const abcColor = (abc) =>
-  ({ A: 'green-6', B: 'amber-7', C: 'blue-6', D: 'red-6' })[abc] || 'grey-6'
+const abcColor = (abc) => ({ A: 'green-6', B: 'amber-7', C: 'blue-6', D: 'red-6' })[abc] || 'grey-6'
 
 const breadcrumb = (p) =>
   [p.secaoproduto, p.familiaproduto, p.grupoproduto, p.subgrupoproduto, p.marca]
@@ -39,7 +38,8 @@ const excluir = (row) => {
   $q.dialog({
     title: 'Excluir',
     message: `Confirma excluir o produto "${row.produto}"?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await api.delete(`v1/produto/${row.codproduto}`)
@@ -71,16 +71,9 @@ onMounted(() => store.fetchItems(true))
         </div>
 
         <div class="row q-col-gutter-md">
-          <div
-            v-for="p in store.items"
-            :key="p.codproduto"
-            class="col-xs-12 col-md-6"
-          >
+          <div v-for="p in store.items" :key="p.codproduto" class="col-xs-12 col-md-6">
             <q-card bordered flat class="full-height">
-              <q-item
-                clickable
-                :to="{ name: 'produto-detalhe', params: { id: p.codproduto } }"
-              >
+              <q-item clickable :to="{ name: 'produto-detalhe', params: { id: p.codproduto } }">
                 <q-item-section avatar>
                   <q-avatar rounded size="64px" color="grey-3" text-color="grey-7">
                     <img v-if="p.url" :src="p.url" />
@@ -182,15 +175,7 @@ onMounted(() => store.fetchItems(true))
                 >
                   <q-tooltip>{{ p.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
                 </q-btn>
-                <q-btn
-                  flat
-                  dense
-                  round
-                  size="sm"
-                  color="grey-7"
-                  icon="delete"
-                  @click="excluir(p)"
-                >
+                <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluir(p)">
                   <q-tooltip>Excluir</q-tooltip>
                 </q-btn>
               </q-card-actions>

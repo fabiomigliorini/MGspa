@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useCadastro } from 'src/composables/useCadastro'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
 const cad = useCadastro('cultura', 'codcultura', 'Cultura')
 
@@ -70,7 +71,7 @@ onMounted(() => cad.carregar())
         </div>
       </div>
 
-      <q-banner v-else rounded class="bg-grey-2 text-grey-7">Nenhuma cultura cadastrada.</q-banner>
+      <MgEmptyState v-else icon="grass">Nenhuma cultura cadastrada.</MgEmptyState>
 
       <q-dialog v-model="cad.dialog">
         <q-card flat style="width: 440px; max-width: 95vw">

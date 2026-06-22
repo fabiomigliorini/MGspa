@@ -7,9 +7,9 @@ import {
   useTributacaoNaturezaOperacaoStore,
   TIPO_PRODUTO_OPTIONS,
 } from '../stores/tributacaoNaturezaOperacaoStore'
-import SelectEstado from '../components/selects/SelectEstado.vue'
-import SelectTributacao from '../components/selects/SelectTributacao.vue'
-import SelectCfop from '../components/selects/SelectCfop.vue'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
+import MgSelectTributacao from '@components/MgSelectTributacao.vue'
+import SelectCfop from '@components/MgSelectCfop.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const router = useRouter()
@@ -143,8 +143,8 @@ const handleSubmit = async () => {
   $q.dialog({
     title: 'Confirmação',
     message: 'Tem certeza que deseja salvar?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Salvar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Salvar', color: 'primary', flat: true },
   }).onOk(async () => {
     loading.value = true
     try {
@@ -210,9 +210,10 @@ onMounted(async () => {
             <div class="row q-col-gutter-md">
               <!-- Tributação -->
               <div class="col-12 col-sm-6">
-                <SelectTributacao
+                <MgSelectTributacao
                   v-model="form.codtributacao"
                   label="Tributação *"
+                  clearable
                   :disable="loading"
                   :rules="[(val) => val !== null || 'Tributação é obrigatória']"
                 />
@@ -223,6 +224,7 @@ onMounted(async () => {
                 <SelectCfop
                   v-model="form.codcfop"
                   label="CFOP *"
+                  clearable
                   :disable="loading"
                   :rules="[(val) => val !== null || 'CFOP é obrigatório']"
                 />
@@ -250,7 +252,12 @@ onMounted(async () => {
 
               <!-- Estado -->
               <div class="col-12 col-sm-6">
-                <SelectEstado v-model="form.codestado" label="Estado" :disable="loading" />
+                <MgSelectEstado
+                  v-model="form.codestado"
+                  label="Estado"
+                  clearable
+                  :disable="loading"
+                />
               </div>
 
               <!-- NCM -->

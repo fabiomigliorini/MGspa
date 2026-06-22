@@ -20,4 +20,16 @@ class SelectImpressoraController extends Controller
         }
         return $ret;
     }
+
+    public static function show($id)
+    {
+        $printers = json_decode(file_get_contents(base_path('printers.json')), true);
+        if (!array_key_exists($id, $printers)) {
+            abort(404);
+        }
+        return [
+            'label' => $printers[$id],
+            'value' => $id,
+        ];
+    }
 }

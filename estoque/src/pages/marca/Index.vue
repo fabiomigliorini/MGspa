@@ -104,7 +104,8 @@ const excluir = (row) => {
   $q.dialog({
     title: 'Excluir',
     message: `Confirma excluir a marca "${row.marca}"?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await api.delete(`v1/marca/${row.codmarca}`)

@@ -349,7 +349,7 @@ const salvar = async () => {
           <q-btn
             flat
             label="Cancelar"
-            color="primary"
+            color="grey-8"
             @click="sNegocio.dialog.pagamentoPrazo = false"
             tabindex="-1"
           />

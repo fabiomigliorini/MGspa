@@ -14,16 +14,15 @@ class ContratoResource extends Resource
         // relação carregada em snake por padrão) — reexpostas em PascalCase abaixo.
         unset(
             $ret['pessoa'],
-            $ret['pessoa_nf'],
             $ret['cultura'],
             $ret['safra'],
             $ret['filial'],
             $ret['portador'],
             $ret['corretora'],
             $ret['cooperativa'],
-            $ret['natureza_operacao'],
             $ret['contrato_fixacao_s'],
             $ret['contrato_pagamento_s'],
+            $ret['contrato_nota_s'],
             $ret['movimento_grao_s'],
         );
 
@@ -37,27 +36,33 @@ class ContratoResource extends Resource
         // carregadokg vem do withSum (ContratoService); demais sao derivados.
         $pesosaca = (float) ($this->Cultura->pesosaca ?? 60) ?: 60;
         $carregadokg = (float) $this->carregadokg; // entregue (SUM liquido no extrato)
+        // quantidade NULL = volume em aberto (leva o saldo do silo; sem teto).
+        $emaberto = $this->quantidade === null;
         $contratadokg = (float) $this->quantidade * $pesosaca;
         $ret['operacao'] = $this->operacao;
-        $ret['volumeemaberto'] = (bool) $this->volumeemaberto;
+        $ret['volumeemaberto'] = $emaberto;
+        $ret['tipo'] = $this->tipoDerivado($emaberto);
         $ret['pesosaca'] = $pesosaca;
         $ret['carregadokg'] = $carregadokg;
         $ret['valornf'] = (float) $this->valornf; // R$ das NFs por contrato (0 ate emitir NFe)
         $ret['contratadokg'] = $contratadokg;
         $ret['carregadosc'] = $pesosaca > 0 ? round($carregadokg / $pesosaca, 2) : 0.0;
         // saldo so faz sentido em contrato com teto; volume em aberto -> null.
-        $ret['saldokg'] = $this->volumeemaberto ? null : max(0, $contratadokg - $carregadokg);
+        $ret['saldokg'] = $emaberto ? null : max(0, $contratadokg - $carregadokg);
 
         // relações em PascalCase (whenLoaded — chaves ausentes somem do JSON)
         $ret['Pessoa'] = $this->whenLoaded('Pessoa');
-        $ret['PessoaNf'] = $this->whenLoaded('PessoaNf');
         $ret['Cultura'] = $this->whenLoaded('Cultura');
         $ret['Safra'] = $this->whenLoaded('Safra');
         $ret['Filial'] = $this->whenLoaded('Filial');
         $ret['Portador'] = $this->whenLoaded('Portador');
         $ret['Corretora'] = $this->whenLoaded('Corretora');
         $ret['Cooperativa'] = $this->whenLoaded('Cooperativa');
-        $ret['NaturezaOperacao'] = $this->whenLoaded('NaturezaOperacao');
+
+        // Plano de emissão de NF (operação triangular).
+        if ($this->relationLoaded('ContratoNotaS')) {
+            $ret['ContratoNotaS'] = ContratoNotaResource::collection($this->ContratoNotaS);
+        }
 
         // Fixações: injeta o contrato em cada filha p/ o resource calcular o
         // preço líquido (deduções) com a cultura/isenção/funrural do contrato.
@@ -98,5 +103,24 @@ class ContratoResource extends Resource
         }
 
         return $ret;
+    }
+
+    /**
+     * Tipo derivado (a coluna `tipo` deixou de existir):
+     *   - BARTER: contrato tem pagamento com forma=BARTER (settlement em insumos)
+     *   - FIXO:   quantidade definida e já fixada por completo
+     *   - FIXAR:  o resto (fixa aos poucos, ou volume em aberto)
+     * Depende de `bartercount` (withCount) e `fixado` (withSum) — ambos
+     * resolvidos em ContratoService::pesquisar.
+     */
+    protected function tipoDerivado(bool $emaberto): string
+    {
+        if ((int) $this->bartercount > 0) {
+            return 'BARTER';
+        }
+        if (!$emaberto && (float) $this->fixado >= (float) $this->quantidade) {
+            return 'FIXO';
+        }
+        return 'FIXAR';
     }
 }

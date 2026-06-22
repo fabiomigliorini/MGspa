@@ -72,7 +72,7 @@ const changeStatus = async (statusValue) => {
       </q-card-section>
 
       <q-card-actions align="right" class="bg-grey-1 q-pa-sm">
-        <q-btn flat label="Cancelar" color="negative" v-close-popup />
+        <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
       </q-card-actions>
     </q-card>
   </q-dialog>

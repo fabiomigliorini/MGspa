@@ -5,6 +5,7 @@ namespace Mg\Contrato;
 use App\Http\Requests\Mg\Contrato\ContratoCalculoRequest;
 use App\Http\Requests\Mg\Contrato\ContratoStoreRequest;
 use App\Http\Requests\Mg\Contrato\ContratoUpdateRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
@@ -37,6 +38,19 @@ class ContratoController extends MgController
         ]), 200);
     }
 
+    /**
+     * Plano de emissão de NF do contrato para uma carga (operação triangular):
+     * sequência de notas, partes, kg/sacas rateados e valor bruto/líquido com
+     * tributação. Preview — não persiste nem transmite. Ver NotaFiscalContratoService.
+     */
+    public function emissao(Request $request, $codcontrato, $codcarga)
+    {
+        return response()->json(
+            \Mg\NotaFiscal\NotaFiscalContratoService::planoEmissao((int) $codcontrato, (int) $codcarga),
+            200,
+        );
+    }
+
     public function store(ContratoStoreRequest $request)
     {
         $model = ContratoService::salvar($request->validated());
@@ -51,7 +65,20 @@ class ContratoController extends MgController
 
     public function destroy($id)
     {
-        Contrato::findOrFail($id)->delete();
+        $contrato = Contrato::findOrFail($id);
+        try {
+            $contrato->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) !== '23503') {
+                throw $e;
+            }
+            $msg = $e->getMessage();
+            abort(409, match (true) {
+                str_contains($msg, 'tblcargaponto') => 'Existem entregas vinculadas a este Contrato! Impossível excluir!',
+                str_contains($msg, 'tblmovimentograo') => 'Existe movimentação de grão vinculada a este Contrato! Impossível excluir!',
+                default => 'Existem registros vinculados a este Contrato! Impossível excluir!',
+            });
+        }
         return response()->noContent();
     }
 

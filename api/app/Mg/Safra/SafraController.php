@@ -4,6 +4,7 @@ namespace Mg\Safra;
 
 use App\Http\Requests\Mg\Safra\SafraStoreRequest;
 use App\Http\Requests\Mg\Safra\SafraUpdateRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
@@ -50,7 +51,22 @@ class SafraController extends MgController
 
     public function destroy($id)
     {
-        Safra::findOrFail($id)->delete();
+        $safra = Safra::findOrFail($id);
+        try {
+            $safra->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) !== '23503') {
+                throw $e;
+            }
+            $msg = $e->getMessage();
+            abort(409, match (true) {
+                str_contains($msg, 'tblplantio') => 'Existem plantios vinculados a esta Safra! Impossível excluir!',
+                str_contains($msg, 'tblcontrato') => 'Existem contratos vinculados a esta Safra! Impossível excluir!',
+                str_contains($msg, 'tblcarga') => 'Existem cargas vinculadas a esta Safra! Impossível excluir!',
+                str_contains($msg, 'tblmovimentograo') => 'Existe movimentação de grão vinculada a esta Safra! Impossível excluir!',
+                default => 'Existem registros vinculados a esta Safra! Impossível excluir!',
+            });
+        }
         return response()->noContent();
     }
 

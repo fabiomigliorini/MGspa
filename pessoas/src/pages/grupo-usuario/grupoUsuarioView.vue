@@ -53,7 +53,8 @@ const excluir = (codgrupousuario) => {
   $q.dialog({
     title: 'Excluir Grupo',
     message: 'Tem certeza que deseja excluir esse grupo de usuário?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sGrupoUsuario.excluir(codgrupousuario)

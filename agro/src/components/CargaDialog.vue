@@ -307,7 +307,7 @@ function imprimir() {
 
 <template>
   <q-dialog v-model="show" :maximized="$q.screen.lt.sm">
-    <q-card v-if="local" style="width: 620px; max-width: 95vw">
+    <q-card v-if="local" flat style="width: 620px; max-width: 95vw">
       <q-card-section class="row items-center bg-primary text-white">
         <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
         <q-space />
@@ -680,7 +680,7 @@ function imprimir() {
       <q-card-actions align="right">
         <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
         <q-btn
-          unelevated
+          flat
           color="primary"
           :label="novo ? 'Registrar' : rotuloAcao[local.etapa]"
           @click="novo ? salvar() : avancar()"

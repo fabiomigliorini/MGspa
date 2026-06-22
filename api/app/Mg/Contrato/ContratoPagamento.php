@@ -23,6 +23,7 @@ class ContratoPagamento extends MgModel
         'inativo',
         'observacao',
         'valor',
+        'forma',
         'modo',
         'sacas',
         'datarecebido',

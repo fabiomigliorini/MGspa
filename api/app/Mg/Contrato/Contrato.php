@@ -9,10 +9,10 @@ namespace Mg\Contrato;
 use Mg\MgModel;
 use Mg\Contrato\ContratoFixacao;
 use Mg\Contrato\ContratoPagamento;
+use Mg\Contrato\ContratoNota;
 use Mg\Grao\MovimentoGrao;
 use Mg\Grao\CargaPonto;
 use Mg\Cultura\Cultura;
-use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Safra\Safra;
 use Mg\Filial\Filial;
@@ -25,23 +25,19 @@ class Contrato extends MgModel
 
 
 
+    // Precificacao (preco/moeda/isentofethab) vive na fixacao; NF (natureza/
+    // pessoa/observacao) vive em tblcontratonota; tipo e volumeemaberto sao
+    // derivados (ver ContratoResource). quantidade NULL = volume em aberto.
     protected $fillable = [
         'codcultura',
-        'codnaturezaoperacao',
         'codpessoa',
-        'codpessoanf',
         'codsafra',
         'contrato',
         'dataembarque',
         'inativo',
-        'isentofethab',
         'localentrega',
-        'moeda',
         'observacao',
-        'observacaonf',
-        'preco',
         'quantidade',
-        'tipo',
         'codfilial',
         'datacontrato',
         'embarqueinicio',
@@ -51,30 +47,24 @@ class Contrato extends MgModel
         'comissaotipo',
         'comissaovalor',
         'comissaototal',
-        'viacooperativa',
         'codpessoacooperativa',
-        'numerocomprador',
+        'numerocontraparte',
         'numerocorretora',
         'numerocooperativa',
-        'operacao',
-        'volumeemaberto'
+        'operacao'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
         'codcontrato' => 'integer',
         'codcultura' => 'integer',
-        'codnaturezaoperacao' => 'integer',
         'codpessoa' => 'integer',
-        'codpessoanf' => 'integer',
         'codsafra' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
         'dataembarque' => 'date',
         'inativo' => 'datetime',
-        'isentofethab' => 'boolean',
-        'preco' => 'float',
         'quantidade' => 'float',
         'codfilial' => 'integer',
         'datacontrato' => 'date',
@@ -84,9 +74,7 @@ class Contrato extends MgModel
         'codpessoacorretora' => 'integer',
         'comissaovalor' => 'float',
         'comissaototal' => 'float',
-        'viacooperativa' => 'boolean',
-        'codpessoacooperativa' => 'integer',
-        'volumeemaberto' => 'boolean'
+        'codpessoacooperativa' => 'integer'
     ];
 
 
@@ -96,19 +84,9 @@ class Contrato extends MgModel
         return $this->belongsTo(Cultura::class, 'codcultura', 'codcultura');
     }
 
-    public function NaturezaOperacao()
-    {
-        return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
-    }
-
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function PessoaNf()
-    {
-        return $this->belongsTo(Pessoa::class, 'codpessoanf', 'codpessoa');
     }
 
     public function Safra()
@@ -141,6 +119,12 @@ class Contrato extends MgModel
     public function ContratoFixacaoS()
     {
         return $this->hasMany(ContratoFixacao::class, 'codcontrato', 'codcontrato');
+    }
+
+    // Plano de emissao de NF (operacao triangular = N notas, ver ContratoNota).
+    public function ContratoNotaS()
+    {
+        return $this->hasMany(ContratoNota::class, 'codcontrato', 'codcontrato');
     }
 
     public function ContratoPagamentoS()

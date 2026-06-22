@@ -6,10 +6,12 @@ import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
+import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgContratoForm from 'components/MgContratoForm.vue'
 import MgContratoParcelasDialog from 'components/MgContratoParcelasDialog.vue'
 import MgFixacaoImpostosDialog from 'components/MgFixacaoImpostosDialog.vue'
@@ -22,6 +24,7 @@ const cod = Number(route.params.codcontrato)
 const contratoCad = useCadastro('contrato', 'codcontrato', 'Contrato')
 const fixCad = useCadastro(`contrato/${cod}/fixacao`, 'codfixacao', 'Fixação')
 const pagCad = useCadastro(`contrato/${cod}/pagamento`, 'codpagamento', 'Pagamento')
+const notaCad = useCadastro(`contrato/${cod}/nota`, 'codcontratonota', 'Nota')
 
 const contrato = ref(null)
 const carregando = ref(false)
@@ -35,7 +38,6 @@ const voltarTo = computed(() =>
     ? { name: 'safra-detalhe', params: { codsafra: contrato.value.codsafra } }
     : { name: 'home' },
 )
-const ehFixo = computed(() => contrato.value?.tipo === 'FIXO')
 // Cálculo do líquido (motor fiscal do agro) — vem do show do contrato.
 const calculo = computed(() => contrato.value?.calculo || null)
 
@@ -104,6 +106,35 @@ const pagamentos = computed(() =>
 // Entregas = movimentos deste contrato no extrato (cada carga que o moveu).
 const entregas = computed(() => contrato.value?.MovimentoGraoS || [])
 
+// ---- Plano de NF (operação triangular) ----
+const notasPlano = computed(() => (contrato.value?.ContratoNotaS || []).filter((n) => !n.inativo))
+const naturezaOptions = computed(() =>
+  naturezas.value.map((nat) => ({
+    label: nat.naturezaoperacao,
+    value: nat.codnaturezaoperacao,
+  })),
+)
+// Opções de nota-pai (a que a atual referencia via refNFe) — exclui a própria.
+const notaPaiOptions = computed(() =>
+  notasPlano.value
+    .filter((n) => n.codcontratonota !== notaCad.form.codcontratonota)
+    .map((n) => ({
+      label: `#${n.ordem} ${n.NaturezaOperacao?.naturezaoperacao || ''}`.trim(),
+      value: n.codcontratonota,
+    })),
+)
+function novaNota() {
+  notaCad.abrirNovo({ ordem: notasPlano.value.length + 1 })
+}
+async function salvarNota() {
+  await notaCad.salvar()
+  await recarregar()
+}
+async function excluirNota(nt) {
+  notaCad.excluir(nt)
+  setTimeout(recarregar, 400)
+}
+
 async function recarregar() {
   carregando.value = true
   try {
@@ -121,22 +152,75 @@ async function recarregar() {
 const impostosDialog = ref(false)
 const impostosFixacao = ref(null)
 function novaFixacao() {
-  impostosFixacao.value = null
-  impostosDialog.value = true
+  fixCad.abrirNovo({
+    data: new Date().toISOString().slice(0, 10),
+    moeda: 'BRL',
+    isentofethab: false,
+  })
 }
-function editarFixacao(f) {
-  impostosFixacao.value = f
-  impostosDialog.value = true
+async function salvarFixacao() {
+  await fixCad.salvar((f) => ({
+    data: f.data,
+    quantidade: f.quantidade,
+    preco: f.preco,
+    moeda: f.moeda,
+    dolar: f.moeda === 'USD' ? f.dolar : null,
+    // isenção de FETHAB vive na fixação (cada evento de preço com seu regime).
+    isentofethab: !!f.isentofethab,
+  }))
+  await recarregar()
 }
 async function excluirFixacao(f) {
   fixCad.excluir(f)
   setTimeout(recarregar, 400)
 }
+const previewPrecoReal = computed(() => {
+  const f = fixCad.form
+  if (!f.preco) return null
+  return f.moeda === 'USD' && f.dolar ? n(f.preco) * n(f.dolar) : n(f.preco)
+})
+
+// Líquido da fixação ao vivo (importante na negociação) — calcula o líquido do
+// preço bruto travado, com a cultura/isenção/funrural do contrato.
+const fixCalc = ref(null)
+async function recalcularFix() {
+  const bruto = n(previewPrecoReal.value)
+  if (!contrato.value?.codcultura || bruto <= 0) {
+    fixCalc.value = null
+    return
+  }
+  try {
+    const { data } = await api.get('v1/contrato/calculo', {
+      params: {
+        codcultura: contrato.value.codcultura,
+        bruto,
+        data: fixCad.form.data || undefined,
+        isentofethab: fixCad.form.isentofethab ? 1 : 0,
+        funruralvenda: contrato.value.Filial?.funruralvenda ? 1 : 0,
+      },
+    })
+    fixCalc.value = data
+  } catch {
+    fixCalc.value = null
+  }
+}
+watch(
+  () => [fixCad.form.preco, fixCad.form.dolar, fixCad.form.moeda, fixCad.form.data, fixCad.dialog],
+  () => {
+    if (fixCad.dialog) recalcularFix()
+  },
+)
 
 // ---- Parcela / Pagamento ----
 const modosParcela = [
   { label: 'Valor', value: 'VALOR' },
   { label: 'Sacas', value: 'SACAS' },
+]
+// Forma de liquidação da parcela: em conta (recebe em portador) vs barter
+// (paga em insumos). É daqui que o contrato deriva o tipo BARTER.
+const formasPagamento = [
+  { label: 'Em conta', value: 'CONTA' },
+  { label: 'Barter', value: 'BARTER' },
 ]
 // Líquido médio/sc do contrato (motor) — base p/ sugerir o valor da parcela.
 const liquidoSc = computed(() => n(calculo.value?.liquido))
@@ -264,7 +348,7 @@ function excluirAnexo(a) {
   $q.dialog({
     title: 'Excluir anexo',
     message: `Excluir "${a.label}"?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
@@ -289,7 +373,7 @@ function excluirContrato() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir o contrato ${contrato.value?.contrato}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
@@ -476,7 +560,7 @@ onMounted(async () => {
               {{ rs(precoMedio) }}/sc
             </q-item-label>
           </q-item-section>
-          <q-item-section v-if="!ehFixo" side>
+          <q-item-section side>
             <q-btn flat round size="sm" color="primary" icon="add" @click="novaFixacao">
               <q-tooltip>Nova fixação</q-tooltip>
             </q-btn>
@@ -492,9 +576,9 @@ onMounted(async () => {
                   · líq {{ rs(f.precoliquido) }}</span
                 >
                 <q-badge
-                  v-if="f.automatico"
-                  color="blue-grey-5"
-                  label="automática"
+                  v-if="f.isentofethab"
+                  color="teal-5"
+                  label="isento FETHAB"
                   class="q-ml-xs"
                 />
               </q-item-label>
@@ -505,7 +589,7 @@ onMounted(async () => {
                 >
               </q-item-label>
             </q-item-section>
-            <q-item-section v-if="!ehFixo" side>
+            <q-item-section side>
               <div class="row items-center no-wrap">
                 <MgInfoCriacao :registro="f" />
                 <q-btn
@@ -529,14 +613,9 @@ onMounted(async () => {
               </div>
             </q-item-section>
           </q-item>
-          <q-item v-if="ehFixo">
-            <q-item-section class="text-grey-6">
-              Contrato FIXO: preço travado no contrato (fixação automática).
-            </q-item-section>
-          </q-item>
-          <q-item v-else-if="!fixacoes.length">
-            <q-item-section class="text-grey-6">Nenhuma fixação lançada.</q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!fixacoes.length" plain icon="sell">
+            Nenhuma fixação lançada.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
@@ -616,14 +695,80 @@ onMounted(async () => {
               </div>
             </q-item-section>
           </q-item>
-          <q-item v-if="!pagamentos.length">
-            <q-item-section class="text-grey-6">Nenhuma parcela lançada.</q-item-section>
+          <MgEmptyState v-if="!pagamentos.length" plain icon="payments">
+            Nenhuma parcela lançada.
+          </MgEmptyState>
+        </q-list>
+      </q-card>
+
+      <!-- Plano de NF (operação triangular: N notas em sequência, refNFe) -->
+      <q-card flat bordered class="q-mb-md">
+        <q-item>
+          <q-item-section>
+            <q-item-label class="text-subtitle1">Plano de NF</q-item-label>
+            <q-item-label caption>
+              Notas a emitir por carga (operação triangular = sequência com referência de chave)
+            </q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-btn flat round size="sm" color="primary" icon="add" @click="novaNota">
+              <q-tooltip>Nova nota no plano</q-tooltip>
+            </q-btn>
+          </q-item-section>
+        </q-item>
+        <q-separator />
+        <q-list separator>
+          <q-item v-for="nt in notasPlano" :key="nt.codcontratonota">
+            <q-item-section avatar>
+              <q-avatar color="blue-grey-1" text-color="blue-grey-8" :label="String(nt.ordem)" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>
+                {{ nt.NaturezaOperacao?.naturezaoperacao || '—' }}
+                <q-badge
+                  v-if="nt.codcontratonotapai"
+                  color="indigo-4"
+                  :label="`ref #${notasPlano.find((x) => x.codcontratonota === nt.codcontratonotapai)?.ordem || '?'}`"
+                  class="q-ml-xs"
+                />
+              </q-item-label>
+              <q-item-label caption>
+                {{ nt.PessoaNf?.fantasia || nt.PessoaNf?.pessoa || 'Destinatário do contrato' }}
+                <span v-if="nt.observacaonf"> · {{ nt.observacaonf }}</span>
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <div class="row items-center no-wrap">
+                <MgInfoCriacao :registro="nt" />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="edit"
+                  @click="notaCad.editar(nt)"
+                />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="delete"
+                  @click="excluirNota(nt)"
+                />
+              </div>
+            </q-item-section>
           </q-item>
+          <MgEmptyState v-if="!notasPlano.length" plain icon="receipt_long">
+            Sem plano de NF. Venda direta emite uma nota só (não precisa de plano).
+          </MgEmptyState>
         </q-list>
       </q-card>
 
       <!-- Entregas (extrato) -->
-      <q-card flat bordered>
+      <q-card flat bordered class="q-mb-md">
         <q-item>
           <q-item-section>
             <q-item-label class="text-subtitle1">Entregas</q-item-label>
@@ -653,16 +798,14 @@ onMounted(async () => {
               </q-item-label>
             </q-item-section>
           </q-item>
-          <q-item v-if="!entregas.length">
-            <q-item-section class="text-grey-6"
-              >Nenhuma entrega ainda. Carregue no pátio.</q-item-section
-            >
-          </q-item>
+          <MgEmptyState v-if="!entregas.length" plain icon="local_shipping">
+            Nenhuma entrega ainda. Carregue no pátio.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
       <!-- Anexos (PDFs) -->
-      <q-card flat bordered class="q-mt-md">
+      <q-card flat bordered>
         <q-item>
           <q-item-section avatar>
             <q-avatar color="blue-grey-1" text-color="blue-grey-8" icon="attach_file" />
@@ -749,12 +892,92 @@ onMounted(async () => {
               </div>
             </q-item-section>
           </q-item>
-          <q-item v-if="!anexos.length">
-            <q-item-section class="text-grey-6">Nenhum anexo.</q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!anexos.length" plain icon="attach_file">
+            Nenhum anexo.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
+      <!-- Dialog Fixação -->
+      <q-dialog v-model="fixCad.dialog">
+        <q-card flat style="width: 440px; max-width: 95vw">
+          <q-form @submit="salvarFixacao">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">
+                {{ fixCad.isNovo ? 'Nova fixação' : 'Editar fixação' }}
+              </div>
+            </q-card-section>
+            <q-card-section class="q-pt-md">
+              <div class="row q-col-gutter-md">
+                <div class="col-12 col-sm-6">
+                  <MgInputData v-model="fixCad.form.data" label="Data" type="date" autofocus />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    v-model="fixCad.form.quantidade"
+                    :decimals="0"
+                    suffix="sc"
+                    label="Quantidade"
+                  />
+                </div>
+                <div class="col-12 col-sm-8">
+                  <MgInputValor v-model="fixCad.form.preco" :decimals="2" label="Preço / saca" />
+                </div>
+                <div class="col-12 col-sm-4 self-center">
+                  <q-btn-toggle
+                    v-model="fixCad.form.moeda"
+                    :options="moedas"
+                    spread
+                    no-caps
+                    unelevated
+                    toggle-color="primary"
+                    color="grey-3"
+                    text-color="grey-9"
+                  />
+                </div>
+                <div v-if="fixCad.form.moeda === 'USD'" class="col-12">
+                  <MgInputValor
+                    v-model="fixCad.form.dolar"
+                    :decimals="4"
+                    prefix="R$"
+                    label="Dólar travado"
+                  />
+                </div>
+                <div class="col-12">
+                  <q-checkbox v-model="fixCad.form.isentofethab" label="Isento de FETHAB" />
+                </div>
+                <div v-if="fixCalc" class="col-12">
+                  <q-banner rounded class="bg-green-1 text-green-10">
+                    <template #avatar><q-icon name="savings" color="green-7" /></template>
+                    <div class="row items-center justify-between">
+                      <div>
+                        Líquido <b>{{ rs(fixCalc.liquido) }}/sc</b>
+                        <span class="text-caption">
+                          (bruto {{ rs(fixCalc.bruto) }} − {{ rs(fixCalc.totaldeducao) }})
+                        </span>
+                      </div>
+                      <div class="text-caption">
+                        <span v-for="it in fixCalc.itens" :key="it.codtributo" class="q-ml-sm">
+                          {{ it.codigo }} {{ fmt(it.valor, 2) }}
+                        </span>
+                      </div>
+                    </div>
+                  </q-banner>
+                </div>
+                <div v-else-if="previewPrecoReal" class="col-12">
+                  <q-banner rounded class="bg-grey-2 text-grey-8">
+                    Preço em reais: <b>{{ rs(previewPrecoReal) }}/sc</b>
+                  </q-banner>
+                </div>
+              </div>
+            </q-card-section>
+            <q-card-actions align="right">
+              <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="fixCad.salvando" />
+            </q-card-actions>
+          </q-form>
+        </q-card>
+      </q-dialog>
       <!-- Modal Fixação (valores + impostos) -->
       <MgFixacaoImpostosDialog
         v-model="impostosDialog"
@@ -775,7 +998,7 @@ onMounted(async () => {
             </q-card-section>
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
-                <div class="col-12">
+                <div class="col-12 col-sm-6">
                   <q-btn-toggle
                     v-model="pagCad.form.modo"
                     :options="modosParcela"
@@ -783,6 +1006,18 @@ onMounted(async () => {
                     no-caps
                     unelevated
                     toggle-color="primary"
+                    color="grey-3"
+                    text-color="grey-9"
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <q-btn-toggle
+                    v-model="pagCad.form.forma"
+                    :options="formasPagamento"
+                    spread
+                    no-caps
+                    unelevated
+                    toggle-color="deep-purple-6"
                     color="grey-3"
                     text-color="grey-9"
                   />
@@ -806,7 +1041,7 @@ onMounted(async () => {
                     label="Valor previsto"
                   />
                 </div>
-                <div class="col-12">
+                <div v-if="pagCad.form.forma !== 'BARTER'" class="col-12">
                   <MgSelectPortador
                     v-model="pagCad.form.codportador"
                     label="Portador (conta que recebe)"
@@ -833,6 +1068,76 @@ onMounted(async () => {
         :liquido-sc="liquidoSc"
         @saved="recarregar"
       />
+
+      <!-- Dialog Nota do plano (operação triangular) -->
+      <q-dialog v-model="notaCad.dialog">
+        <q-card flat style="width: 480px; max-width: 95vw">
+          <q-form @submit="salvarNota">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-h6">{{ notaCad.isNovo ? 'Nova nota' : 'Editar nota' }}</div>
+            </q-card-section>
+            <q-card-section class="q-pt-md">
+              <div class="row q-col-gutter-md">
+                <div class="col-12 col-sm-4">
+                  <MgInputValor
+                    v-model="notaCad.form.ordem"
+                    :decimals="0"
+                    label="Ordem"
+                    autofocus
+                  />
+                </div>
+                <div class="col-12 col-sm-8">
+                  <q-select
+                    v-model="notaCad.form.codnaturezaoperacao"
+                    :options="naturezaOptions"
+                    emit-value
+                    map-options
+                    outlined
+                    label="Natureza da operação"
+                  />
+                </div>
+                <div class="col-12">
+                  <MgSelectPessoa
+                    v-model="notaCad.form.codpessoanf"
+                    label="Pessoa da NF (destinatário)"
+                    clearable
+                  />
+                </div>
+                <div class="col-12">
+                  <q-select
+                    v-model="notaCad.form.codcontratonotapai"
+                    :options="notaPaiOptions"
+                    emit-value
+                    map-options
+                    outlined
+                    clearable
+                    label="Referencia a chave de (refNFe)"
+                  />
+                </div>
+                <div class="col-12">
+                  <q-input
+                    v-model="notaCad.form.observacaonf"
+                    label="Observação da NF"
+                    type="textarea"
+                    autogrow
+                    outlined
+                  />
+                </div>
+              </div>
+            </q-card-section>
+            <q-card-actions align="right">
+              <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+              <q-btn
+                type="submit"
+                flat
+                label="Salvar"
+                color="primary"
+                :loading="notaCad.salvando"
+              />
+            </q-card-actions>
+          </q-form>
+        </q-card>
+      </q-dialog>
 
       <!-- Dialog Confirmar recebimento -->
       <q-dialog v-model="confirmDialog">
@@ -873,7 +1178,7 @@ onMounted(async () => {
                 type="submit"
                 flat
                 label="Confirmar"
-                color="green-7"
+                color="primary"
                 :loading="confirmSalvando"
               />
             </q-card-actions>
@@ -882,7 +1187,7 @@ onMounted(async () => {
       </q-dialog>
 
       <!-- Dialog Contrato (edição) — mesmo form do cadastro -->
-      <MgContratoForm :cad="contratoCad" :naturezas="naturezas" @saved="recarregar" />
+      <MgContratoForm :cad="contratoCad" @saved="recarregar" />
     </div>
   </q-page>
 </template>

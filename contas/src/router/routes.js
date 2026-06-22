@@ -37,6 +37,19 @@ const routes = [
         },
       },
       {
+        path: 'moeda',
+        name: 'moeda',
+        component: () => import('pages/moeda/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Moedas',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/MoedaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'conta-contabil',
         name: 'conta-contabil',
         component: () => import('pages/contaContabil/Index.vue'),

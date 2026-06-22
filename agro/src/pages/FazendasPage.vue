@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
 const router = useRouter()
 const cad = useCadastro('fazenda', 'codfazenda', 'Fazenda')
@@ -94,9 +95,9 @@ onMounted(async () => {
         </div>
       </div>
 
-      <q-banner v-else rounded class="bg-grey-2 text-grey-7">
+      <MgEmptyState v-else icon="agriculture">
         Nenhuma fazenda cadastrada. Use o botão <q-icon name="add" /> para adicionar.
-      </q-banner>
+      </MgEmptyState>
 
       <q-dialog v-model="cad.dialog">
         <q-card flat style="width: 440px; max-width: 95vw">

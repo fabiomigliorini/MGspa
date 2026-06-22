@@ -6,6 +6,7 @@ import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
 import { PALETA_TALHAO, corTalhao, sugerirCor } from 'src/utils/coresTalhao'
@@ -115,7 +116,7 @@ function excluirFazenda() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir a fazenda ${fazenda.value?.fazenda}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
@@ -342,11 +343,9 @@ onMounted(async () => {
               </div>
             </q-item-section>
           </q-item>
-          <q-item v-if="!talhoes.length">
-            <q-item-section class="text-grey-6 text-center"
-              >Nenhum talhão cadastrado.</q-item-section
-            >
-          </q-item>
+          <MgEmptyState v-if="!talhoes.length" plain icon="crop_square">
+            Nenhum talhão cadastrado.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
@@ -383,11 +382,9 @@ onMounted(async () => {
               </q-item-label>
             </q-item-section>
           </q-item>
-          <q-item v-if="!resumo.safras.length">
-            <q-item-section class="text-grey-6 text-center">
-              Nenhum plantio nesta fazenda ainda.
-            </q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!resumo.safras.length" plain icon="eco">
+            Nenhum plantio nesta fazenda ainda.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
@@ -404,9 +401,9 @@ onMounted(async () => {
         </q-item>
         <q-separator />
         <MgMapaTalhoes v-if="talhoesComGeo.length" :talhoes="talhoesComGeo" height="400px" />
-        <q-card-section v-else class="text-grey-6 text-center">
+        <MgEmptyState v-else plain icon="map">
           Nenhum talhão com polígono ainda. Use <q-icon name="add" /> para desenhar o primeiro.
-        </q-card-section>
+        </MgEmptyState>
       </q-card>
 
       <!-- Dialog Fazenda -->

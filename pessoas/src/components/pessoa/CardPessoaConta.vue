@@ -4,9 +4,15 @@ import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
-import { formataFromNow, formataCpf, formataCnpj, formataTelefone, formataCnpjCpf } from '@components/formatters'
+import {
+  formataFromNow,
+  formataCpf,
+  formataCnpj,
+  formataTelefone,
+  formataCnpjCpf,
+} from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import SelectBanco from 'components/pessoa/SelectBanco.vue'
+import SelectBanco from '@components/MgSelectBanco.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 
 const $q = useQuasar()
@@ -24,7 +30,6 @@ const dialogNovaConta = ref(false)
 const modelContaBancaria = ref({})
 const editarConta = ref(false)
 const codpessoaconta = ref([])
-const optionsContaEditar = ref([])
 
 const novaContaBancaria = async () => {
   modelContaBancaria.value.codpessoa = route.params.id
@@ -49,7 +54,7 @@ const novaContaBancaria = async () => {
   }
 }
 
-const editarContaBancaria = async (
+const editarContaBancaria = (
   cod,
   codbanco,
   cnpj,
@@ -89,9 +94,6 @@ const editarContaBancaria = async (
   if (modelContaBancaria.value.pixtelefone) modelContaBancaria.value.radio = 'pixtelefone'
   if (modelContaBancaria.value.pixemail) modelContaBancaria.value.radio = 'pixemail'
   if (modelContaBancaria.value.pixaleatoria) modelContaBancaria.value.radio = 'pixaleatoria'
-
-  const ret = await sPessoa.selectBanco({ codbanco: codbanco })
-  optionsContaEditar.value = [ret.data[0]]
 }
 
 const salvarConta = async () => {
@@ -129,7 +131,8 @@ const excluirConta = async (cod) => {
   $q.dialog({
     title: 'Excluir Conta Bancária',
     message: 'Tem certeza que deseja excluir essa conta?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sPessoa.excluirContaBancaria(route.params.id, cod)
@@ -258,8 +261,7 @@ const submit = () => {
             <select-banco
               v-model="modelContaBancaria.banco"
               v-if="modelContaBancaria.radio === 'bancaria'"
-              :model-select-banco="modelContaBancaria.codbanco"
-              :banco-editar="optionsContaEditar"
+              clearable
               :rules="[
                 (val) =>
                   (modelContaBancaria.radio === 'bancaria' && val !== null && val !== undefined) ||
@@ -466,7 +468,7 @@ const submit = () => {
         size="sm"
         color="primary"
         v-if="user.temPermissao('Publico')"
-        @click=";(dialogNovaConta = true), (editarConta = false), (modelContaBancaria = {})"
+        @click=";((dialogNovaConta = true), (editarConta = false), (modelContaBancaria = {}))"
       />
     </q-card-section>
 

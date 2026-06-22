@@ -531,7 +531,7 @@ onMounted(async () => {
     </q-dialog>
 
     <!-- Dialog: Gerar NFC-e Faltantes -->
-    <q-dialog v-model="showDialogNfce" persistent>
+    <q-dialog v-model="showDialogNfce">
       <q-card flat style="width: 600px; max-width: 90vw">
         <q-card-section class="bg-orange-7 text-white">
           <div class="text-h6">Gerar NFC-e Faltantes</div>
@@ -632,7 +632,7 @@ onMounted(async () => {
     </q-dialog>
 
     <!-- Dialog: Gerar Transferências -->
-    <q-dialog v-model="showDialogTransferencias" persistent>
+    <q-dialog v-model="showDialogTransferencias">
       <q-card flat style="width: 600px; max-width: 90vw">
         <q-card-section class="bg-teal text-white">
           <div class="text-h6">Gerar Transferências</div>
@@ -763,7 +763,7 @@ onMounted(async () => {
     </q-dialog>
 
     <!-- Dialog: Inutilizar Lacunas -->
-    <q-dialog v-model="showDialogLacunas" persistent>
+    <q-dialog v-model="showDialogLacunas">
       <q-card
         flat
         style="

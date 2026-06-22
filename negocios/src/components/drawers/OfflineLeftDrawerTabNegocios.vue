@@ -39,7 +39,8 @@ const abrirNegocio = async () => {
       placeholder: 'Número do Negócio...',
       // inputClass: "text-center",
     },
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async (codnegocio) => {
     const neg = await sNegocio.carregarPeloCodnegocio(codnegocio)
     if (neg.codnegocio == codnegocio) {

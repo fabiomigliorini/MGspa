@@ -99,7 +99,11 @@ const buscarPorBarras = async () => {
   if (!cod) return
   try {
     const { data } = await api.get('v1/estoque-saldo-conferencia/busca-produto', {
-      params: { barras: cod, codestoquelocal: store.setup.codestoquelocal, fiscal: store.setup.fiscal },
+      params: {
+        barras: cod,
+        codestoquelocal: store.setup.codestoquelocal,
+        fiscal: store.setup.fiscal,
+      },
     })
     if (data.erro) {
       notifyError(null, data.mensagem || 'Código de barras não encontrado')
@@ -165,7 +169,8 @@ const zerar = () => {
   $q.dialog({
     title: 'Zerar saldo',
     message: 'Confirma zerar o saldo deste produto neste local?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const { data } = await api.post('v1/estoque-saldo-conferencia/zerar-produto', {
@@ -187,7 +192,8 @@ const excluirConferencia = (id) => {
   $q.dialog({
     title: 'Excluir conferência',
     message: 'Confirma excluir este lançamento de conferência?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       const { data } = await api.post(`v1/estoque-saldo-conferencia/${id}/inativo`)
@@ -264,12 +270,7 @@ onMounted(() => {
               </q-item-label>
               <q-item-label caption>
                 {{ codFormatado(item.codproduto) }}
-                <q-badge
-                  v-if="item.inativo"
-                  color="orange-7"
-                  class="q-ml-xs"
-                  label="Inativo"
-                />
+                <q-badge v-if="item.inativo" color="orange-7" class="q-ml-xs" label="Inativo" />
               </q-item-label>
               <q-item-label caption>
                 Última conferência: {{ formataData(item.ultimaconferencia) }}
@@ -301,7 +302,9 @@ onMounted(() => {
     <!-- Dialog busca por barras -->
     <q-dialog v-model="dialogBarras">
       <q-card bordered flat style="width: 400px; max-width: 90vw">
-        <q-card-section class="text-grey-9 text-overline">BUSCAR POR CÓDIGO DE BARRAS</q-card-section>
+        <q-card-section class="text-grey-9 text-overline"
+          >BUSCAR POR CÓDIGO DE BARRAS</q-card-section
+        >
         <q-separator inset />
         <q-card-section>
           <q-input
@@ -362,14 +365,16 @@ onMounted(() => {
               </div>
             </div>
             <div class="col-12 col-sm-6">
-              <div class="text-caption text-grey-6">Localização — {{ produto.localizacao.estoquelocal }}</div>
-              <div class="text-body2">
-                Corredor {{ produto.localizacao.corredor ?? '—' }} ·
-                Prateleira {{ produto.localizacao.prateleira ?? '—' }}
+              <div class="text-caption text-grey-6">
+                Localização — {{ produto.localizacao.estoquelocal }}
               </div>
               <div class="text-body2">
-                Coluna {{ produto.localizacao.coluna ?? '—' }} ·
-                Bloco {{ produto.localizacao.bloco ?? '—' }}
+                Corredor {{ produto.localizacao.corredor ?? '—' }} · Prateleira
+                {{ produto.localizacao.prateleira ?? '—' }}
+              </div>
+              <div class="text-body2">
+                Coluna {{ produto.localizacao.coluna ?? '—' }} · Bloco
+                {{ produto.localizacao.bloco ?? '—' }}
               </div>
               <div v-if="produto.localizacao.vencimento" class="text-body2">
                 Vencimento: {{ formataData(produto.localizacao.vencimento) }}
@@ -428,7 +433,13 @@ onMounted(() => {
         <q-separator />
         <q-card-actions align="right">
           <q-btn flat color="grey-7" icon="exposure_zero" label="Zerar" @click="zerar" />
-          <q-btn unelevated color="primary" icon="fact_check" label="Conferir" @click="abrirConferencia" />
+          <q-btn
+            flat
+            color="primary"
+            icon="fact_check"
+            label="Conferir"
+            @click="abrirConferencia"
+          />
         </q-card-actions>
       </q-card>
     </q-dialog>

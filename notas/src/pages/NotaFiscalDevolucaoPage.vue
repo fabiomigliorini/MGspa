@@ -113,7 +113,7 @@ const confirmarDevolucao = () => {
   $q.dialog({
     title: 'Confirmar Devolução',
     message: `Deseja criar uma nota fiscal de devolução no valor de ${formataNumero(valorTotalDevolucao.value)}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(() => {
     submitDevolucao()
   })

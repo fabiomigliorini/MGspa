@@ -3,6 +3,7 @@
 namespace Mg\Grao;
 
 use App\Http\Requests\Mg\Grao\UnidadeArmazenadoraRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
@@ -40,7 +41,20 @@ class UnidadeArmazenadoraController extends MgController
 
     public function destroy($id)
     {
-        UnidadeArmazenadora::findOrFail($id)->delete();
+        $unidade = UnidadeArmazenadora::findOrFail($id);
+        try {
+            $unidade->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) !== '23503') {
+                throw $e;
+            }
+            $msg = $e->getMessage();
+            abort(409, match (true) {
+                str_contains($msg, 'tblcargaponto') => 'Existem cargas vinculadas a esta Unidade Armazenadora! Impossível excluir!',
+                str_contains($msg, 'tblmovimentograo') => 'Existe movimentação de grão vinculada a esta Unidade Armazenadora! Impossível excluir!',
+                default => 'Existem registros vinculados a esta Unidade Armazenadora! Impossível excluir!',
+            });
+        }
         return response()->noContent();
     }
 
