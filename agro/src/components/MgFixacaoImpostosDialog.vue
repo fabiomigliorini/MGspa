@@ -27,7 +27,14 @@ const aberto = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
-const form = ref({ data: '', quantidade: null, preco: null, moeda: 'BRL', dolar: null })
+const form = ref({
+  data: '',
+  quantidade: null,
+  preco: null,
+  moeda: 'BRL',
+  dolar: null,
+  isentofethab: false,
+})
 const linhas = ref([])
 const salvando = ref(false)
 const carregando = ref(false)
@@ -84,7 +91,9 @@ async function carregarPadrao() {
         codcultura: props.contrato.codcultura,
         bruto: precoreal.value || 0,
         data: form.value.data || undefined,
-        isentofethab: props.contrato.isentofethab ? 1 : 0,
+        // isenção de FETHAB vive na fixação: isento => o padrão já vem sem as
+        // linhas do grupo FETHAB.
+        isentofethab: form.value.isentofethab ? 1 : 0,
         funruralvenda: props.contrato.Filial?.funruralvenda ? 1 : 0,
       },
     })
@@ -112,6 +121,7 @@ function abrir() {
       preco: n(f.preco),
       moeda: f.moeda || 'BRL',
       dolar: f.dolar || null,
+      isentofethab: !!f.isentofethab,
     }
     if (Array.isArray(f.tributos) && f.tributos.length) {
       linhas.value = f.tributos.map((it) => ({
@@ -133,6 +143,7 @@ function abrir() {
     preco: null,
     moeda: 'BRL',
     dolar: null,
+    isentofethab: false,
   }
   linhas.value = []
   carregarPadrao()
@@ -163,6 +174,7 @@ async function salvar() {
       preco: form.value.preco,
       moeda: form.value.moeda,
       dolar: form.value.moeda === 'USD' ? form.value.dolar : null,
+      isentofethab: !!form.value.isentofethab,
       tributos: linhas.value.map((l) => ({
         codtributo: l.codtributo,
         codigo: l.codigo,
@@ -226,6 +238,13 @@ async function salvar() {
             </div>
             <div v-if="form.moeda === 'USD'" class="col-12 col-sm-6">
               <MgInputValor v-model="form.dolar" :decimals="4" prefix="R$" label="Dólar travado" />
+            </div>
+            <div class="col-12">
+              <q-checkbox
+                v-model="form.isentofethab"
+                label="Isento de FETHAB"
+                @update:model-value="carregarPadrao"
+              />
             </div>
           </div>
         </q-card-section>
