@@ -281,6 +281,7 @@ async function salvar() {
                 label="Líquido"
                 readonly
                 bg-color="green-1"
+                input-class="text-green-10"
               />
               <MgInputValor
                 v-else-if="l.base === 'UNIDADE'"

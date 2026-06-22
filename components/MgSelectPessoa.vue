@@ -207,6 +207,13 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
+  <!--
+    popup-content-style: trava o dropdown (50vh + overscroll contido). Sem isso,
+    quando o select é o último campo de um q-dialog o menu abre PRA CIMA e o
+    Quasar o dimensiona até o topo da viewport (cobre a tela toda); cada página
+    do scroll infinito re-renderiza e o reposicionamento desse menu gigante o faz
+    "sumir". Limitar a altura e conter o overscroll mantém o popup estável.
+  -->
   <q-select
     ref="selectRef"
     :model-value="modelValue"
@@ -225,6 +232,7 @@ const handleUpdate = (value) => {
     input-debounce="500"
     @filter="filterPessoa"
     @virtual-scroll="onScroll"
+    popup-content-style="max-height: 50vh; overscroll-behavior: contain"
     :placeholder="placeholder"
     :bottom-slots="bottomSlots"
     :class="customClass"

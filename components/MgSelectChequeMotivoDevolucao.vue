@@ -4,8 +4,7 @@ import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
 // Carrega TUDO uma vez de v1/select/cheque-motivo-devolucao, cacheia (lista + byId no store
-// compartilhado), filtra no FRONT ao digitar e tem botão de REFRESH (append)
-// pra invalidar o cache e recarregar. clearable é opcional (default false).
+// compartilhado) e filtra no FRONT ao digitar. clearable é opcional (default false).
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Motivo da Devolução' },
@@ -23,21 +22,16 @@ const carregando = ref(false)
 
 const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
 
-async function carregar(force = false) {
+async function carregar() {
   carregando.value = true
   try {
-    await cache.loadList(ENTITY, ENDPOINT, { force, inativos: props.inativos })
+    await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
     opcoes.value = permitidos.value
   } catch {
     opcoes.value = []
   } finally {
     carregando.value = false
   }
-}
-
-function atualizar() {
-  cache.invalidate(ENTITY)
-  carregar(true)
 }
 
 function filtrar(val, update) {
@@ -75,11 +69,6 @@ onMounted(() => carregar())
     @update:model-value="onUpdate"
     v-bind="$attrs"
   >
-    <template #append>
-      <q-icon name="refresh" size="xs" class="cursor-pointer text-grey-7" @click.stop="atualizar"
-        ><q-tooltip>Atualizar lista</q-tooltip></q-icon
-      >
-    </template>
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
     </template>

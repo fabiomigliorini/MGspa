@@ -4,8 +4,7 @@ import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== REFERÊNCIA do padrão LOCAL (entidade < 100 registros) =====
 // Carrega TUDO uma vez de v1/select/portador, cacheia (lista + byId no store
-// compartilhado), filtra no FRONT ao digitar e tem botão de REFRESH (append)
-// pra invalidar o cache e recarregar. clearable é opcional (default false).
+// compartilhado) e filtra no FRONT ao digitar. clearable é opcional (default false).
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Portador' },
@@ -30,21 +29,16 @@ const permitidos = computed(() => {
   return todos.filter((v) => set.has(Number(v.codfilial)))
 })
 
-async function carregar(force = false) {
+async function carregar() {
   carregando.value = true
   try {
-    await cache.loadList(ENTITY, ENDPOINT, { force, inativos: props.inativos })
+    await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
     opcoes.value = permitidos.value
   } catch {
     opcoes.value = []
   } finally {
     carregando.value = false
   }
-}
-
-function atualizar() {
-  cache.invalidate(ENTITY)
-  carregar(true)
 }
 
 function filtrar(val, update) {
@@ -82,11 +76,6 @@ onMounted(() => carregar())
     @update:model-value="onUpdate"
     v-bind="$attrs"
   >
-    <template #append>
-      <q-icon name="refresh" size="xs" class="cursor-pointer text-grey-7" @click.stop="atualizar"
-        ><q-tooltip>Atualizar lista</q-tooltip></q-icon
-      >
-    </template>
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum portador</q-item-section></q-item>
     </template>

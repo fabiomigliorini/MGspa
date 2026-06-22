@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia'
 import { useCadastro } from 'src/composables/useCadastro'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgContratoForm from 'components/MgContratoForm.vue'
 import MgContratoDados from 'components/MgContratoDados.vue'
@@ -63,6 +64,30 @@ function fmt(v, dec = 0) {
 function rs(v) {
   return 'R$ ' + fmt(v, 2)
 }
+
+// ---- Embarque · janela (início → fim) + prazo relativo a hoje ----
+const embarqueInicioFmt = computed(() =>
+  contrato.value?.embarqueinicio ? formataData(contrato.value.embarqueinicio) : '—',
+)
+const embarqueFimFmt = computed(() =>
+  contrato.value?.embarquefim ? formataData(contrato.value.embarquefim) : '—',
+)
+function diasAteHoje(iso) {
+  if (!iso) return null
+  const alvo = new Date(`${String(iso).slice(0, 10)}T00:00:00`)
+  if (isNaN(alvo.getTime())) return null
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  return Math.round((alvo - hoje) / 86400000)
+}
+const embarquePrazoLabel = computed(() => {
+  if (!contrato.value?.embarquefim) return 'Sem janela definida'
+  const d = diasAteHoje(contrato.value.embarquefim)
+  if (d === null) return 'Sem janela definida'
+  if (d > 0) return `Faltam ${d} dia${d === 1 ? '' : 's'} p/ encerrar`
+  if (d === 0) return 'Encerra hoje'
+  return `Encerrado há ${-d} dia${d === -1 ? '' : 's'}`
+})
 
 // ---- Contrato (edição/ativação/exclusão no cabeçalho) ----
 function editarContrato() {
@@ -157,7 +182,7 @@ onMounted(() => store.carregar(cod))
 
       <!-- Reconciliação físico / fiscal / financeiro -->
       <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-blue-grey-8">
@@ -208,7 +233,7 @@ onMounted(() => store.carregar(cod))
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-4">
+        <div class="col-6 col-md-3">
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-deep-orange-8">
@@ -223,7 +248,7 @@ onMounted(() => store.carregar(cod))
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-4">
+        <div class="col-6 col-md-3">
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-teal-8">
@@ -233,6 +258,22 @@ onMounted(() => store.carregar(cod))
               </div>
               <div class="text-h5 q-mt-sm">{{ rs(pago) }}</div>
               <div class="text-caption text-grey-7 q-mt-sm">Pago pelo comprador</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="row items-center text-indigo-8">
+                <q-icon name="date_range" class="q-mr-sm" /><span class="text-subtitle2"
+                  >Embarque - Período</span
+                >
+              </div>
+              <div class="text-h5 q-mt-sm">
+                {{ embarqueInicioFmt }}
+                <span class="text-subtitle2">a {{ embarqueFimFmt }}</span>
+              </div>
+              <div class="text-caption text-grey-7 q-mt-sm">{{ embarquePrazoLabel }}</div>
             </q-card-section>
           </q-card>
         </div>
