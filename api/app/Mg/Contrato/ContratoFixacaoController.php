@@ -24,14 +24,16 @@ class ContratoFixacaoController extends MgController
 
     public function store(ContratoFixacaoRequest $request, $codcontrato)
     {
+        $contrato = Contrato::findOrFail($codcontrato);
         // Precificação vive na fixação: um contrato "FIXO" é só um que recebe a
         // fixação cheia na assinatura. Qualquer contrato pode receber fixações.
-        Contrato::findOrFail($codcontrato);
+        $contrato;
 
         $model = new ContratoFixacao();
         $model->fill($request->validated());
         $model->codcontrato = $codcontrato;
         $model->precoreal = ContratoService::precoReal($request->validated());
+        static::aplicarSnapshotImpostos($model, $contrato, $request->validated());
         $model->save();
 
         return new ContratoFixacaoResource($model->load('Contrato.Filial'));
@@ -44,9 +46,40 @@ class ContratoFixacaoController extends MgController
         $model->fill($request->validated());
         $model->codcontrato = $codcontrato;
         $model->precoreal = ContratoService::precoReal($request->validated());
+        static::aplicarSnapshotImpostos($model, $model->Contrato, $request->validated());
         $model->update();
 
         return new ContratoFixacaoResource($model->load('Contrato.Filial'));
+    }
+
+    /**
+     * Trava o snapshot dos impostos na fixação. Quando o modal manda as linhas
+     * (`tributos`), o líquido é RECALCULADO server-side a partir delas — não
+     * confia no total do cliente — e gravado (precoliquido/totaldeducao/tributos).
+     * Sem linhas, zera o snapshot e o líquido volta a ser calculado na leitura.
+     */
+    protected static function aplicarSnapshotImpostos(
+        ContratoFixacao $model,
+        Contrato $contrato,
+        array $dados
+    ): void {
+        $tributos = $dados['tributos'] ?? null;
+        if (empty($tributos) || !is_array($tributos)) {
+            $model->tributos = null;
+            $model->totaldeducao = null;
+            $model->precoliquido = null;
+            return;
+        }
+        $pesosaca = (float) ($contrato->Cultura->pesosaca ?? 60) ?: 60;
+        $calc = ContratoCalculoService::calcular([
+            'codcultura' => (int) $contrato->codcultura,
+            'bruto' => (float) $model->precoreal,
+            'pesosaca' => $pesosaca,
+            'tributos' => $tributos,
+        ]);
+        $model->tributos = $calc['itens'];
+        $model->totaldeducao = $calc['totaldeducao'];
+        $model->precoliquido = $calc['liquido'];
     }
 
     public function destroy($codcontrato, $codfixacao)

@@ -26,7 +26,11 @@ class ContratoFixacao extends MgModel
         'observacao',
         'preco',
         'precoreal',
-        'quantidade'
+        'quantidade',
+        // Snapshot dos impostos travado na fixação (modal de impostos)
+        'precoliquido',
+        'totaldeducao',
+        'tributos'
     ];
 
     protected $casts = [
@@ -42,7 +46,10 @@ class ContratoFixacao extends MgModel
         'isentofethab' => 'boolean',
         'preco' => 'float',
         'precoreal' => 'float',
-        'quantidade' => 'float'
+        'quantidade' => 'float',
+        'precoliquido' => 'float',
+        'totaldeducao' => 'float',
+        'tributos' => 'array'
     ];
 
 

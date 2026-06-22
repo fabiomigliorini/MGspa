@@ -41,9 +41,9 @@ class FazendaService extends MgService
     }
 
     // Quebra por safra das safras que têm plantio nesta fazenda (plantio.codfazenda).
-    // Colhido = pesoliquidoseco das cargas FINALIZADO rateado pelo percentual de
-    // cada plantio na carga (tblcargacolheitaplantio). Saca = peso da cultura da
-    // safra (fallback 60), pois a fazenda pode misturar culturas.
+    // Colhido = soma do líquido do extrato de grão por plantio (tblmovimentograo,
+    // contatipo PLANTIO). Saca = peso da cultura da safra (fallback 60), pois a
+    // fazenda pode misturar culturas.
     private static function resumoSafras($codfazenda)
     {
         $areaPorSafra = Plantio::where('codfazenda', $codfazenda)

@@ -14,6 +14,7 @@ import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgContratoForm from 'components/MgContratoForm.vue'
 import MgContratoParcelasDialog from 'components/MgContratoParcelasDialog.vue'
+import MgFixacaoImpostosDialog from 'components/MgFixacaoImpostosDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -29,10 +30,6 @@ const contrato = ref(null)
 const carregando = ref(false)
 const naturezas = ref([])
 
-const moedas = [
-  { label: 'R$', value: 'BRL' },
-  { label: 'US$', value: 'USD' },
-]
 const corTipo = { FIXO: 'green-7', FIXAR: 'orange-8', BARTER: 'deep-purple-6' }
 
 // Destino do voltar: a safra do contrato (centro de comando); fallback início.
@@ -148,7 +145,12 @@ async function recarregar() {
   }
 }
 
-// ---- Fixação ----
+// ---- Fixação (modal de valores + impostos) ----
+// Criar/editar fixação agora abre o MgFixacaoImpostosDialog, onde o operador
+// informa o preço e ajusta as alíquotas/UPF; o líquido (snapshot) é gravado lá.
+// fixCad fica só para excluir.
+const impostosDialog = ref(false)
+const impostosFixacao = ref(null)
 function novaFixacao() {
   fixCad.abrirNovo({
     data: new Date().toISOString().slice(0, 10),
@@ -597,7 +599,7 @@ onMounted(async () => {
                   size="sm"
                   color="grey-7"
                   icon="edit"
-                  @click="fixCad.editar(f)"
+                  @click="editarFixacao(f)"
                 />
                 <q-btn
                   flat
@@ -976,6 +978,14 @@ onMounted(async () => {
           </q-form>
         </q-card>
       </q-dialog>
+      <!-- Modal Fixação (valores + impostos) -->
+      <MgFixacaoImpostosDialog
+        v-model="impostosDialog"
+        :cod="cod"
+        :contrato="contrato"
+        :fixacao="impostosFixacao"
+        @saved="recarregar"
+      />
 
       <!-- Dialog Parcela (previsto) -->
       <q-dialog v-model="pagCad.dialog">

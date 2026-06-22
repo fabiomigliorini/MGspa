@@ -28,20 +28,20 @@ class ContratoService extends MgService
         // Entregue/recebido = SUM(liquido) no extrato (tblmovimentograo) das
         // linhas ativas deste contrato. Carga inativada some do extrato (estorno),
         // entao nao precisa filtrar carga aqui.
-        $movAtivo = fn ($q) => $q->whereNull('inativo');
+        $movAtivo = fn($q) => $q->whereNull('inativo');
 
         $qry = Contrato::query()
             ->with(static::WITH)
             // Totais p/ a reconciliacao fisico/fiscal/financeiro:
             ->withSum(['MovimentoGraoS as carregadokg' => $movAtivo], 'liquido') // KG fisico entregue
             ->withSum(
-                ['CargaPontoS as valornf' => fn ($q) => $q->whereHas('Carga', fn ($c) => $c->whereNull('inativo'))],
+                ['CargaPontoS as valornf' => fn($q) => $q->whereHas('Carga', fn($c) => $c->whereNull('inativo'))],
                 'valornf',
             ) // R$ das NFs por contrato (tblcargaponto; 0 ate emitir NFe)
-            ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
-            ->withSum(['ContratoPagamentoS as pago' => fn ($q) => $q->whereNull('inativo')], 'valor')
+            ->withSum(['ContratoFixacaoS as fixado' => fn($q) => $q->whereNull('inativo')], 'quantidade')
+            ->withSum(['ContratoPagamentoS as pago' => fn($q) => $q->whereNull('inativo')], 'valor')
             // barter (settlement em insumos) vive no pagamento; usado p/ derivar o tipo.
-            ->withCount(['ContratoPagamentoS as bartercount' => fn ($q) => $q->where('forma', 'BARTER')->whereNull('inativo')]);
+            ->withCount(['ContratoPagamentoS as bartercount' => fn($q) => $q->where('forma', 'BARTER')->whereNull('inativo')]);
 
         if (!empty($filter['codcontrato'])) {
             $qry->where('codcontrato', $filter['codcontrato']);
@@ -85,6 +85,12 @@ class ContratoService extends MgService
         $contrato->fill($dados);
         if (empty($contrato->operacao)) {
             $contrato->operacao = 'VENDA';
+        }
+        // Contrato nasce como rascunho (só identificação): a quantidade é
+        // definida depois na tela do contrato. A coluna é NOT NULL, então
+        // ancora em 0 ("ainda não contratado") — o FormRequest aceita null.
+        if ($contrato->quantidade === null) {
+            $contrato->quantidade = 0;
         }
         $contrato->save();
         return $contrato;
