@@ -174,9 +174,13 @@ const filterPessoa = (val, update) => {
 }
 
 // Scroll infinito: ao chegar perto do fim, pede a próxima página e dá append.
-const onScroll = async ({ to }) => {
+// Usa `index` (posição REAL do scroll), não `to` (fim do slice renderizado pelo
+// virtual-scroll): com `to` a 1ª página já vinha "no fim" e disparava todas as
+// páginas sozinha — em buscas curtas/genéricas (ex. "co") isso virava milhares
+// de requisições em loop.
+const onScroll = async ({ index }) => {
   if (!temMais || loading.value || !buscaAtual) return
-  if (to < options.value.length - 2) return
+  if (index < options.value.length - 4) return
   try {
     loading.value = true
     pagina += 1
