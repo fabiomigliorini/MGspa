@@ -88,8 +88,8 @@ function excluirFixacao(f) {
           </q-item-label>
           <q-item-label caption>
             {{ fmtData(f.data) }}
-            <span v-if="f.moeda === 'USD'"
-              >· US$ {{ fmt(f.preco, 2) }} × {{ fmt(f.dolar, 4) }}</span
+            <span v-if="f.moeda && f.moeda !== 'BRL'"
+              >· {{ f.moeda }} {{ fmt(f.preco, 2) }} × {{ fmt(f.dolar, 4) }}</span
             >
           </q-item-label>
         </q-item-section>

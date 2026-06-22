@@ -79,6 +79,13 @@ class ContratoFixacaoController extends MgController
         $model->tributos = $calc['itens'];
         $model->totaldeducao = $calc['totaldeducao'];
         $model->precoliquido = $calc['liquido'];
+
+        // Isenção de FETHAB virou IMPLÍCITA (sem checkbox): é isento quando a
+        // cultura tem linha(s) do grupo FETHAB mas o operador deixou todas sem
+        // valor (UPF zerada). Deriva o flag p/ o badge da listagem e o agregado.
+        $fethab = array_filter($calc['itens'], fn($i) => !empty($i['grupofethab']));
+        $model->isentofethab = count($fethab) > 0
+            && count(array_filter($fethab, fn($i) => (float) ($i['valor'] ?? 0) > 0)) === 0;
     }
 
     public function destroy($codcontrato, $codfixacao)

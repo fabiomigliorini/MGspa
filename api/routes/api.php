@@ -178,6 +178,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/banco', [\Mg\Select\SelectBancoController::class, 'index']);
     Route::get('select/estoque-movimento-tipo', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'index']);
     Route::get('select/tributacao', [\Mg\Select\SelectTributacaoController::class, 'index']);
+    Route::get('select/moeda', [\Mg\Select\SelectMoedaController::class, 'index']);
 
     // Selects: resolução por id (objeto único ou 404) — padrão GET select/{ent}/{id}
     Route::get('select/pessoa/{id}', [\Mg\Select\SelectPessoaController::class, 'show'])->whereNumber('id');
@@ -200,6 +201,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/banco/{id}', [\Mg\Select\SelectBancoController::class, 'show'])->whereNumber('id');
     Route::get('select/estoque-movimento-tipo/{id}', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'show'])->whereNumber('id');
     Route::get('select/tributacao/{id}', [\Mg\Select\SelectTributacaoController::class, 'show'])->whereNumber('id');
+    Route::get('select/moeda/{id}', [\Mg\Select\SelectMoedaController::class, 'show']);
 
     // Selects novos (entidades LOCAL pequenas, padrão index + show)
     Route::get('select/forma-pagamento', [\Mg\Select\SelectFormaPagamentoController::class, 'index']);
