@@ -137,6 +137,38 @@ watch(
   },
 )
 
+// ===== Dropdown estável dentro de q-dialog =====
+// Sendo o último campo de um dialog, o menu abre PRA CIMA. Ao rolar até o limite,
+// o wheel "vaza" pro dialog atrás → o dialog rola → a âncora sobe → o position-engine
+// do Quasar encolhe o menu (maxHeight→0) e ele "some". Conter o overscroll (preventDefault
+// no limite, e sempre que a lista não rola) impede o dialog de se mexer e o menu fica firme.
+// O menu é teleportado pra fora do componente, então acho o elemento pela classe no popup-show.
+let popupEl = null
+function onPopupWheel(e) {
+  const el = e.currentTarget
+  const rola = el.scrollHeight > el.clientHeight
+  const noTopo = el.scrollTop <= 0
+  const noFim = Math.ceil(el.scrollTop + el.clientHeight) >= el.scrollHeight
+  if (!rola || (e.deltaY < 0 && noTopo) || (e.deltaY > 0 && noFim)) {
+    e.preventDefault()
+  }
+}
+const onPopupShow = () => {
+  let tentativas = 0
+  const procurar = () => {
+    popupEl = document.querySelector('.mg-select-pessoa-popup')
+    if (popupEl) popupEl.addEventListener('wheel', onPopupWheel, { passive: false })
+    else if (tentativas++ < 5) requestAnimationFrame(procurar)
+  }
+  requestAnimationFrame(procurar)
+}
+const onPopupHide = () => {
+  if (popupEl) {
+    popupEl.removeEventListener('wheel', onPopupWheel)
+    popupEl = null
+  }
+}
+
 const filterPessoa = (val, update) => {
   if (optionsFromCnpj.value.length > 0 && (!val || val.trim().length < 2)) {
     update(() => {
@@ -207,13 +239,6 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <!--
-    popup-content-style: trava o dropdown (50vh + overscroll contido). Sem isso,
-    quando o select é o último campo de um q-dialog o menu abre PRA CIMA e o
-    Quasar o dimensiona até o topo da viewport (cobre a tela toda); cada página
-    do scroll infinito re-renderiza e o reposicionamento desse menu gigante o faz
-    "sumir". Limitar a altura e conter o overscroll mantém o popup estável.
-  -->
   <q-select
     ref="selectRef"
     :model-value="modelValue"
@@ -232,7 +257,9 @@ const handleUpdate = (value) => {
     input-debounce="500"
     @filter="filterPessoa"
     @virtual-scroll="onScroll"
-    popup-content-style="max-height: 50vh; overscroll-behavior: contain"
+    @popup-show="onPopupShow"
+    @popup-hide="onPopupHide"
+    popup-content-class="mg-select-pessoa-popup"
     :placeholder="placeholder"
     :bottom-slots="bottomSlots"
     :class="customClass"
@@ -297,3 +324,13 @@ const handleUpdate = (value) => {
     </template>
   </q-select>
 </template>
+
+<!-- não-scoped: o menu é teleportado pra fora do componente -->
+<style>
+.mg-select-pessoa-popup {
+  /* !important vence o max-height inline que o position-engine escreve a cada reposição */
+  max-height: 50vh !important;
+  /* belt p/ touch: contém o scroll do dropdown sem vazar pro dialog atrás */
+  overscroll-behavior: contain;
+}
+</style>
