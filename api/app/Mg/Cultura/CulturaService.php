@@ -49,8 +49,8 @@ class CulturaService extends MgService
     }
 
     // Quebra do resumo por variedade (todas as variedades ativas da cultura,
-    // inclusive as sem colheita). Colhido rateado pelo percentual de cada
-    // plantio na carga (tblcargacolheitaplantio).
+    // inclusive as sem colheita). Colhido = soma do líquido do extrato de grão
+    // por plantio (tblmovimentograo, contatipo PLANTIO).
     private static function resumoVariedades($codcultura, $pesosaca)
     {
         $areaPorVar = Plantio::join('tblsafra', 'tblsafra.codsafra', '=', 'tblplantio.codsafra')

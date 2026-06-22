@@ -85,6 +85,12 @@ class ContratoService extends MgService
         if (empty($contrato->operacao)) {
             $contrato->operacao = 'VENDA';
         }
+        // Contrato nasce como rascunho (só identificação): a quantidade é
+        // definida depois na tela do contrato. A coluna é NOT NULL, então
+        // ancora em 0 ("ainda não contratado") — o FormRequest aceita null.
+        if ($contrato->quantidade === null) {
+            $contrato->quantidade = 0;
+        }
         $contrato->save();
         static::sincronizarFixacaoAutomatica($contrato);
         return $contrato;
@@ -110,7 +116,7 @@ class ContratoService extends MgService
 
         $dados = [
             'codcontrato' => $contrato->codcontrato,
-            'data' => $contrato->dataembarque ?: now()->toDateString(),
+            'data' => $contrato->embarquefim ?: ($contrato->dataembarque ?: now()->toDateString()),
             'quantidade' => $contrato->quantidade,
             'preco' => $contrato->preco,
             'moeda' => $contrato->moeda ?: 'BRL',

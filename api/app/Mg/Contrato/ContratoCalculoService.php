@@ -44,51 +44,92 @@ class ContratoCalculoService extends MgService
         $isentofethab = !empty($p['isentofethab']);
         $funruralvenda = !empty($p['funruralvenda']);
 
-        $tributos = CulturaTributo::with('Tributo')
-            ->where('codcultura', $cultura->codcultura)
-            ->whereNull('inativo')
-            ->orderBy('ordem')
-            ->get();
-
         $itens = [];
         $totalDeducao = 0.0;
         $unidadeAplicada = null;
 
-        foreach ($tributos as $ct) {
-            if ($ct->grupofethab && $isentofethab) {
-                continue;
-            }
-            if ($ct->funrural && !$funruralvenda) {
-                continue;
-            }
+        // Modo OVERRIDE: o operador digitou/ajustou as linhas no modal de
+        // impostos. Usa exatamente o que veio (alíquota/UPF por linha) — não
+        // reconsulta a config nem aplica isenção/funrural (o modal já decidiu
+        // quais linhas entram). Mantém o líquido travado igual ao que ele viu.
+        $override = !empty($p['tributos']) && is_array($p['tributos']);
 
-            if ($ct->base === 'UNIDADE') {
-                $competencia = static::competenciaUnidade($ct, $data);
-                $valorUnidade = static::valorUnidade($ct->codunidadereferencia, $competencia);
-                $valor = round($ct->percentual / 100 * $valorUnidade * $pesosaca / 1000, 6);
-                // guarda a UPF efetivamente usada (FETHAB) p/ transparencia na UI
-                if ($unidadeAplicada === null && $valorUnidade > 0) {
+        if ($override) {
+            foreach ($p['tributos'] as $row) {
+                $base = (($row['base'] ?? 'VALOR') === 'UNIDADE') ? 'UNIDADE' : 'VALOR';
+                $percentual = (float) ($row['percentual'] ?? 0);
+                $upf = $base === 'UNIDADE' ? (float) ($row['upf'] ?? 0) : null;
+                $valor = $base === 'UNIDADE'
+                    ? round($percentual / 100 * $upf * $pesosaca / 1000, 6)
+                    : round($percentual / 100 * $bruto, 6);
+
+                if ($unidadeAplicada === null && $base === 'UNIDADE' && $upf > 0) {
                     $unidadeAplicada = [
-                        'codunidadereferencia' => (int) $ct->codunidadereferencia,
-                        'codigo' => $ct->Tributo->codigo ?? null,
-                        'competencia' => $competencia->toDateString(),
-                        'valor' => $valorUnidade,
+                        'codunidadereferencia' => isset($row['codunidadereferencia'])
+                            ? (int) $row['codunidadereferencia'] : null,
+                        'codigo' => $row['codigo'] ?? null,
+                        'competencia' => $row['competencia'] ?? null,
+                        'valor' => $upf,
                     ];
                 }
-            } else {
-                $valor = round($ct->percentual / 100 * $bruto, 6);
+                $totalDeducao += $valor;
+                $itens[] = [
+                    'codculturatributo' => isset($row['codculturatributo'])
+                        ? (int) $row['codculturatributo'] : null,
+                    'codtributo' => isset($row['codtributo']) ? (int) $row['codtributo'] : null,
+                    'codigo' => $row['codigo'] ?? null,
+                    'descricao' => $row['descricao'] ?? null,
+                    'base' => $base,
+                    'percentual' => $percentual,
+                    'upf' => $upf !== null ? round($upf, 4) : null,
+                    'valor' => round($valor, 4),
+                ];
             }
+        } else {
+            $tributos = CulturaTributo::with('Tributo')
+                ->where('codcultura', $cultura->codcultura)
+                ->whereNull('inativo')
+                ->orderBy('ordem')
+                ->get();
 
-            $totalDeducao += $valor;
-            $itens[] = [
-                'codculturatributo' => (int) $ct->codculturatributo,
-                'codtributo' => (int) $ct->codtributo,
-                'codigo' => $ct->Tributo->codigo ?? null,
-                'descricao' => $ct->Tributo->descricao ?? null,
-                'base' => $ct->base,
-                'percentual' => (float) $ct->percentual,
-                'valor' => round($valor, 4),
-            ];
+            foreach ($tributos as $ct) {
+                if ($ct->grupofethab && $isentofethab) {
+                    continue;
+                }
+                if ($ct->funrural && !$funruralvenda) {
+                    continue;
+                }
+
+                $upf = null;
+                if ($ct->base === 'UNIDADE') {
+                    $competencia = static::competenciaUnidade($ct, $data);
+                    $upf = static::valorUnidade($ct->codunidadereferencia, $competencia);
+                    $valor = round($ct->percentual / 100 * $upf * $pesosaca / 1000, 6);
+                    // guarda a UPF efetivamente usada (FETHAB) p/ transparencia na UI
+                    if ($unidadeAplicada === null && $upf > 0) {
+                        $unidadeAplicada = [
+                            'codunidadereferencia' => (int) $ct->codunidadereferencia,
+                            'codigo' => $ct->Tributo->codigo ?? null,
+                            'competencia' => $competencia->toDateString(),
+                            'valor' => $upf,
+                        ];
+                    }
+                } else {
+                    $valor = round($ct->percentual / 100 * $bruto, 6);
+                }
+
+                $totalDeducao += $valor;
+                $itens[] = [
+                    'codculturatributo' => (int) $ct->codculturatributo,
+                    'codtributo' => (int) $ct->codtributo,
+                    'codigo' => $ct->Tributo->codigo ?? null,
+                    'descricao' => $ct->Tributo->descricao ?? null,
+                    'base' => $ct->base,
+                    'percentual' => (float) $ct->percentual,
+                    'upf' => $upf !== null ? round($upf, 4) : null,
+                    'valor' => round($valor, 4),
+                ];
+            }
         }
 
         $liquido = round($bruto - $totalDeducao, 4);
@@ -124,14 +165,55 @@ class ContratoCalculoService extends MgService
             : (float) $contrato->preco;
 
         $filial = $contrato->codfilial ? $contrato->Filial : null;
+        $funruralvenda = $filial ? (bool) $filial->funruralvenda : false;
 
-        return static::calcular([
+        $calc = static::calcular([
             'codcultura' => (int) $contrato->codcultura,
             'bruto' => $bruto,
             'data' => $contrato->embarquefim ?: ($contrato->dataembarque ?: null),
             'isentofethab' => (bool) $contrato->isentofethab,
-            'funruralvenda' => $filial ? (bool) $filial->funruralvenda : false,
+            'funruralvenda' => $funruralvenda,
         ]);
+
+        // Se as fixações têm o snapshot de impostos travado, o líquido do
+        // contrato é a média ponderada do líquido EFETIVO de cada fixação (o que
+        // o operador travou no modal), não o recalculado pela config. Mantém o
+        // KPI (liquidoSc) coerente com o que aparece em cada linha de fixação.
+        if ($qtd > 0 && $fixacoes->contains(fn ($f) => $f->precoliquido !== null)) {
+            $liqPond = (float) $fixacoes->sum(function ($f) use ($contrato, $funruralvenda) {
+                $liq = $f->precoliquido !== null
+                    ? (float) $f->precoliquido
+                    : static::liquidoFixacao($f, $contrato, $funruralvenda);
+                return (float) $f->quantidade * $liq;
+            }) / $qtd;
+            $calc['liquido'] = round($liqPond, 4);
+            $calc['totaldeducao'] = round($calc['bruto'] - $liqPond, 4);
+            $calc['percentualdeducao'] = $calc['bruto'] > 0
+                ? round($calc['totaldeducao'] / $calc['bruto'] * 100, 4)
+                : 0;
+        }
+
+        return $calc;
+    }
+
+    /**
+     * Líquido on-the-fly de uma fixação sem snapshot (config + competência da
+     * UPF na data da fixação). Usado no agregado do contrato pra ponderar com as
+     * fixações que já têm o snapshot travado.
+     */
+    protected static function liquidoFixacao(
+        ContratoFixacao $f,
+        Contrato $contrato,
+        bool $funruralvenda
+    ): float {
+        $calc = static::calcular([
+            'codcultura' => (int) $contrato->codcultura,
+            'bruto' => (float) $f->precoreal,
+            'data' => $f->data,
+            'isentofethab' => (bool) $contrato->isentofethab,
+            'funruralvenda' => $funruralvenda,
+        ]);
+        return (float) $calc['liquido'];
     }
 
     /**

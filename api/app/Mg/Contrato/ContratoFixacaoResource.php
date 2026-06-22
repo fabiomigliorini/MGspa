@@ -17,18 +17,26 @@ class ContratoFixacaoResource extends Resource
         $ret['usuariocriacao'] = $this->usuariocriacao;
         $ret['usuarioalteracao'] = $this->usuarioalteracao;
 
-        // preço líquido (deduções sobre o precoreal, na data da fixação) — o agro
-        // é dono do cálculo. Só calcula quando há contexto de cultura/contrato.
-        $ret['precoliquido'] = $this->precoLiquido();
+        // Impostos: o SNAPSHOT travado na fixação (precoliquido/totaldeducao/
+        // tributos digitados no modal) tem prioridade. Sem snapshot (fixação
+        // antiga / espelho automático do FIXO), calcula on-the-fly com a config
+        // atual e a competência da UPF na data — o agro é dono do cálculo.
+        if ($this->precoliquido === null) {
+            $calc = $this->calculoFallback();
+            $ret['precoliquido'] = $calc['liquido'] ?? null;
+            $ret['totaldeducao'] = $calc['totaldeducao'] ?? null;
+            $ret['tributos'] = $calc['itens'] ?? null;
+        }
 
         return $ret;
     }
 
     /**
-     * Líquido por saca da fixação, usando a cultura/isenção/funrural do contrato.
-     * Retorna null quando não dá pra resolver o contexto (sem contrato carregado).
+     * Cálculo on-the-fly do líquido (deduções sobre o precoreal, na data da
+     * fixação) usando a cultura/isenção/funrural do contrato. Fallback usado só
+     * quando a fixação não tem snapshot gravado. Null sem contexto de contrato.
      */
-    protected function precoLiquido(): ?float
+    protected function calculoFallback(): ?array
     {
         $contrato = $this->whenLoaded('Contrato');
         if (!$contrato instanceof Contrato || empty($contrato->codcultura) || $this->precoreal === null) {
@@ -39,14 +47,12 @@ class ContratoFixacaoResource extends Resource
             ? (bool) $contrato->Filial->funruralvenda
             : false;
 
-        $calc = ContratoCalculoService::calcular([
+        return ContratoCalculoService::calcular([
             'codcultura' => (int) $contrato->codcultura,
             'bruto' => (float) $this->precoreal,
             'data' => $this->data,
             'isentofethab' => (bool) $contrato->isentofethab,
             'funruralvenda' => $funruralvenda,
         ]);
-
-        return $calc['liquido'];
     }
 }
