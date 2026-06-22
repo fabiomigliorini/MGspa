@@ -156,4 +156,44 @@ class ContratoService extends MgService
         }
         return round((float) $preco, 4);
     }
+
+    // ===== Saldos p/ as travas de negócio (fonte única, usada nos FormRequests) =====
+    // Mesma semântica dos withSum `fixado`/`pago` de pesquisar(): só linhas ativas
+    // (inativo IS NULL). `$exceto*` ignora o próprio registro na edição (update).
+
+    /** Σ sacas fixadas (fixações ativas) — teto = não fixar além do contratado. */
+    public static function sacasFixadas(int $codcontrato, ?int $excetoFixacao = null): float
+    {
+        return (float) ContratoFixacao::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoFixacao, fn ($q) => $q->where('codcontratofixacao', '!=', $excetoFixacao))
+            ->sum('quantidade');
+    }
+
+    /** Valor BRUTO fixado (Σ quantidade × precoreal, ativas) — teto dos pagamentos. */
+    public static function valorFixadoBruto(int $codcontrato, ?int $excetoFixacao = null): float
+    {
+        return (float) ContratoFixacao::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoFixacao, fn ($q) => $q->where('codcontratofixacao', '!=', $excetoFixacao))
+            ->sum(DB::raw('coalesce(quantidade, 0) * coalesce(precoreal, 0)'));
+    }
+
+    /** Σ valor pago (pagamentos ativos). */
+    public static function valorPago(int $codcontrato, ?int $excetoPagamento = null): float
+    {
+        return (float) ContratoPagamento::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
+            ->sum('valor');
+    }
+
+    /** Σ sacas pagas (pagamentos ativos, modo SACAS). */
+    public static function sacasPagas(int $codcontrato, ?int $excetoPagamento = null): float
+    {
+        return (float) ContratoPagamento::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
+            ->sum('sacas');
+    }
 }

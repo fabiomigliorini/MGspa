@@ -13,6 +13,9 @@ class ContratoPagamentoConfirmarRequest extends FormRequest
 
     public function rules()
     {
+        // valorrecebido gt:0 já garante recebimento não-nulo. Não se exige
+        // datarecebido >= data prevista: antecipação (receber antes do vencimento)
+        // é legítima, então não há ordem obrigatória entre previsto e recebido.
         return [
             'datarecebido' => ['required', 'date'],
             'valorrecebido' => ['required', 'numeric', 'gt:0'],

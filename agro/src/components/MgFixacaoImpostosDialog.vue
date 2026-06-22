@@ -18,6 +18,9 @@ const props = defineProps({
   cod: { type: [Number, String], required: true },
   contrato: { type: Object, default: () => ({}) },
   fixacao: { type: Object, default: null },
+  // Saldo a fixar (sc) do contrato. Espelho da trava do backend: null = sem info
+  // (não bloqueia); contrato volume em aberto também não tem teto.
+  afixar: { type: Number, default: null },
 })
 const emit = defineEmits(['update:modelValue', 'saved'])
 
@@ -39,6 +42,18 @@ const carregando = ref(false)
 
 const editando = computed(() => !!props.fixacao?.codcontratofixacao)
 const pesosaca = computed(() => Number(props.contrato?.pesosaca) || 60)
+
+// Teto de quantidade: contrato sem volume em aberto. Disponível p/ esta fixação =
+// saldo a fixar + a própria quantidade (na edição, ela volta pro saldo).
+const semTeto = computed(() => !!props.contrato?.volumeemaberto)
+const disponivelFixar = computed(() =>
+  props.afixar == null ? null : Number(props.afixar) + (editando.value ? n(props.fixacao?.quantidade) : 0),
+)
+const hintFixar = computed(() =>
+  semTeto.value || disponivelFixar.value == null
+    ? undefined
+    : `Saldo a fixar: ${fmt(disponivelFixar.value, 0)} sc`,
+)
 // Qualquer moeda != BRL é estrangeira e exige cotação em R$ pra travar o preço.
 const estrangeira = computed(() => form.value.moeda && form.value.moeda !== 'BRL')
 
@@ -160,6 +175,15 @@ async function salvar() {
     notifyError(null, 'Informe a quantidade fixada (sacas).')
     return
   }
+  // Espelho da trava do backend: não fixar além do saldo (contratos com teto).
+  if (
+    !semTeto.value &&
+    disponivelFixar.value != null &&
+    n(form.value.quantidade) > disponivelFixar.value + 1e-6
+  ) {
+    notifyError(null, `Excede o saldo a fixar do contrato (${fmt(disponivelFixar.value, 0)} sc).`)
+    return
+  }
   salvando.value = true
   try {
     const payload = {
@@ -213,6 +237,7 @@ async function salvar() {
                 :decimals="0"
                 suffix="sc"
                 label="Quantidade"
+                :hint="hintFixar"
                 autofocus
               />
             </div>

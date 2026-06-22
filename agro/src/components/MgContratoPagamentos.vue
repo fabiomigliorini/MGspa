@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
@@ -17,11 +17,20 @@ import MgContratoParcelasDialog from 'components/MgContratoParcelasDialog.vue'
 // da tela e persiste pelas actions (salvarPagamento/excluirPagamento/confirmar).
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { contrato, cod, pagamentos, previsto, pago, liquidoSc } = storeToRefs(store)
+const { contrato, cod, pagamentos, previsto, pago, liquidoSc, fixado, saldoPagar } =
+  storeToRefs(store)
 
 function n(v) {
   return Number(v) || 0
 }
+
+// Saldo a parcelar em sacas = fixado − sacas já parceladas (modo SACAS). O saldo
+// em valor vem do store (saldoPagar). Ambos alimentam o gerador de parcelas e
+// espelham a trava do backend; o servidor é quem garante.
+const sacasParceladas = computed(() =>
+  pagamentos.value.reduce((s, p) => s + (p.modo === 'SACAS' ? n(p.sacas) : 0), 0),
+)
+const saldoSacas = computed(() => Math.max(0, n(fixado.value) - sacasParceladas.value))
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
   return Number(v).toLocaleString('pt-BR', {
@@ -134,7 +143,9 @@ async function confirmarRecebimento() {
     <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
-        <q-item-label caption> Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} </q-item-label>
+        <q-item-label caption>
+          Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
+        </q-item-label>
       </q-item-section>
       <q-item-section side>
         <q-btn flat round size="sm" color="primary" icon="add" @click="parcelasDialog = true">
@@ -274,12 +285,14 @@ async function confirmarRecebimento() {
       </q-card>
     </q-dialog>
 
-    <!-- Gerador de várias parcelas -->
+    <!-- Gerador de várias parcelas (parte do saldo FIXADO, não do contratado) -->
     <MgContratoParcelasDialog
       v-model="parcelasDialog"
       :cod="cod"
       :contrato="contrato"
       :liquido-sc="liquidoSc"
+      :saldo-valor="saldoPagar"
+      :saldo-sacas="saldoSacas"
       @saved="store.carregar()"
     />
 

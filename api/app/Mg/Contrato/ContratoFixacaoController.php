@@ -80,6 +80,12 @@ class ContratoFixacaoController extends MgController
         $model->totaldeducao = $calc['totaldeducao'];
         $model->precoliquido = $calc['liquido'];
 
+        // Deduções não podem superar o bruto: líquido negativo é incoerente
+        // (alíquotas somando > 100% ou UPF irreal). Aborta antes de gravar.
+        if ((float) $model->precoliquido < 0) {
+            abort(422, 'As deduções de impostos superam o preço bruto (líquido ficaria negativo).');
+        }
+
         // Isenção de FETHAB virou IMPLÍCITA (sem checkbox): é isento quando a
         // cultura tem linha(s) do grupo FETHAB mas o operador deixou todas sem
         // valor (UPF zerada). Deriva o flag p/ o badge da listagem e o agregado.

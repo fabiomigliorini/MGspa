@@ -1,5 +1,6 @@
 <script setup>
 import { computed, watch } from 'vue'
+import { notifyError } from 'src/utils/notify'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -67,7 +68,19 @@ watch(
   },
 )
 
+// Espelho da trava do backend (embarquefim after_or_equal:embarqueinicio). Lê o
+// ISO do v-model direto (não passa pelos :rules em display BR do MgInputData).
+const embarqueInvertido = computed(() => {
+  const i = cad.value.form.embarqueinicio
+  const f = cad.value.form.embarquefim
+  return !!i && !!f && String(f).slice(0, 10) < String(i).slice(0, 10)
+})
+
 async function salvar() {
+  if (embarqueInvertido.value) {
+    notifyError(null, 'O fim do embarque não pode ser anterior ao início.')
+    return
+  }
   const saved = await props.cad.salvar((f) => ({
     ...f,
     comissaototal: comissaoTotal.value,

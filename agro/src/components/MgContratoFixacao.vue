@@ -122,12 +122,14 @@ function excluirFixacao(f) {
       </MgEmptyState>
     </q-list>
 
-    <!-- Modal Fixação (valores + impostos) -->
+    <!-- Modal Fixação (valores + impostos). afixar = saldo a fixar (sc) p/ o
+         dialog avisar antes; o backend é quem garante (ContratoFixacaoRequest). -->
     <MgFixacaoImpostosDialog
       v-model="impostosDialog"
       :cod="cod"
       :contrato="contrato"
       :fixacao="impostosFixacao"
+      :afixar="afixar"
       @saved="store.carregar()"
     />
   </q-card>

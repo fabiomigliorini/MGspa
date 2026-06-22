@@ -15,6 +15,10 @@ const props = defineProps({
   cod: { type: [Number, String], required: true }, // codcontrato
   contrato: { type: Object, default: null },
   liquidoSc: { type: Number, default: 0 }, // R$ líquido/sc (converte SACAS -> valor)
+  // Teto a parcelar = saldo do que foi FIXADO (não do contratado): espelha a trava
+  // do backend (pagamento <= valor bruto fixado). saldoValor em R$, saldoSacas em sc.
+  saldoValor: { type: Number, default: 0 },
+  saldoSacas: { type: Number, default: 0 },
 })
 const emit = defineEmits(['update:modelValue', 'saved'])
 
@@ -53,10 +57,11 @@ function novoForm() {
   }
 }
 
-// Total cheio do contrato na unidade do modo (sacas ou R$ via líquido/sc).
+// Total a parcelar = saldo do que foi FIXADO (não o contratado), na unidade do
+// modo. Antes usava contrato.quantidade × líquido (todo o contrato), o que
+// permitia parcelar além do fixado; agora parte do teto real (backend confirma).
 function totalContrato(modo) {
-  const q = n(props.contrato?.quantidade)
-  return modo === 'SACAS' ? q : round(q * props.liquidoSc, 2)
+  return modo === 'SACAS' ? round(n(props.saldoSacas), 0) : round(n(props.saldoValor), 2)
 }
 
 function isoMaisDias(dias) {
