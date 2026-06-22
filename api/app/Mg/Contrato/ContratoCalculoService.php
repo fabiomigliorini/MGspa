@@ -83,6 +83,7 @@ class ContratoCalculoService extends MgService
                     'percentual' => $percentual,
                     'upf' => $upf !== null ? round($upf, 4) : null,
                     'valor' => round($valor, 4),
+                    'grupofethab' => !empty($row['grupofethab']),
                 ];
             }
         } else {
@@ -128,6 +129,7 @@ class ContratoCalculoService extends MgService
                     'percentual' => (float) $ct->percentual,
                     'upf' => $upf !== null ? round($upf, 4) : null,
                     'valor' => round($valor, 4),
+                    'grupofethab' => (bool) $ct->grupofethab,
                 ];
             }
         }

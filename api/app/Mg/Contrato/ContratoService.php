@@ -142,7 +142,8 @@ class ContratoService extends MgService
     }
 
     /**
-     * Preco em R$/saca de uma fixacao: USD travado => preco x dolar; senao preco.
+     * Preco em R$/saca de uma fixacao: moeda estrangeira (qualquer != BRL) com
+     * cotacao travada => preco x cotacao; BRL (ou sem cotacao) => o proprio preco.
      */
     public static function precoReal(array $dados): ?float
     {
@@ -150,7 +151,7 @@ class ContratoService extends MgService
         if ($preco === null || $preco === '') {
             return null;
         }
-        if (($dados['moeda'] ?? 'BRL') === 'USD' && !empty($dados['dolar'])) {
+        if (($dados['moeda'] ?? 'BRL') !== 'BRL' && !empty($dados['dolar'])) {
             return round((float) $preco * (float) $dados['dolar'], 4);
         }
         return round((float) $preco, 4);
