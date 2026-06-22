@@ -86,12 +86,9 @@ class ContratoService extends MgService
         if (empty($contrato->operacao)) {
             $contrato->operacao = 'VENDA';
         }
-        // Contrato nasce como rascunho (só identificação): a quantidade é
-        // definida depois na tela do contrato. A coluna é NOT NULL, então
-        // ancora em 0 ("ainda não contratado") — o FormRequest aceita null.
-        if ($contrato->quantidade === null) {
-            $contrato->quantidade = 0;
-        }
+        // quantidade NULL = volume em aberto (leva o saldo do silo; sem teto). A
+        // coluna é nullable (agro_contrato_refatoracao.sql); não ancorar em 0,
+        // senão deixa de ser "em aberto" e o tipo/saldo derivam errado.
         $contrato->save();
         return $contrato;
     }

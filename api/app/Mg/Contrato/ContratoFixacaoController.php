@@ -24,10 +24,9 @@ class ContratoFixacaoController extends MgController
 
     public function store(ContratoFixacaoRequest $request, $codcontrato)
     {
-        $contrato = Contrato::findOrFail($codcontrato);
         // Precificação vive na fixação: um contrato "FIXO" é só um que recebe a
         // fixação cheia na assinatura. Qualquer contrato pode receber fixações.
-        $contrato;
+        $contrato = Contrato::findOrFail($codcontrato);
 
         $model = new ContratoFixacao();
         $model->fill($request->validated());
