@@ -425,6 +425,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Contrato de venda — Mg\Contrato (criado 03/06/2026)
     // Preview do preço líquido (deduções) — antes do apiResource p/ não colidir.
     Route::get('contrato/calculo', [\Mg\Contrato\ContratoController::class, 'calculo']);
+    Route::get('safra/{codsafra}/proximo-numero-contrato', [\Mg\Contrato\ContratoController::class, 'proximoNumero']); // sugestão de Nº Nosso
     Route::get('contrato/{codcontrato}/carga/{codcarga}/emissao', [\Mg\Contrato\ContratoController::class, 'emissao']); // plano de NF triangular (preview)
     Route::post('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'ativar']);

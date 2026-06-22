@@ -53,19 +53,29 @@ async function recarregar() {
   }
 }
 
-function novo() {
+async function novo() {
   // Rascunho: tipo neutro (a fixar). O tipo real e o resto da configuração ficam
   // pra tela do contrato — o form de criação só pede a identificação.
   const hoje = new Date()
   const datacontrato = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(
     hoje.getDate(),
   ).padStart(2, '0')}`
+  // Nº Nosso sugerido (CULTURA-AA/AA-NNNN) — editável. Best-effort: se falhar, o
+  // backend numera no salvar quando o campo vier vazio.
+  let contrato
+  try {
+    const { data } = await api.get(`v1/safra/${props.codsafra}/proximo-numero-contrato`)
+    contrato = data.numero
+  } catch {
+    // sugestão é opcional; não bloqueia a criação
+  }
   cad.abrirNovo({
     tipo: 'FIXAR',
     moeda: 'BRL',
     operacao: 'VENDA',
     comissaotipo: 'SACA',
     datacontrato,
+    contrato,
   })
 }
 async function aposSalvar(saved) {
@@ -127,6 +137,10 @@ onMounted(async () => {
               />
             </q-item-section>
             <q-item-section>
+              <!-- Nº Nosso (CULTURA-AA/AA-NNNN) -->
+              <q-item-label v-if="c.contrato" caption class="text-overline">
+                {{ c.contrato }}
+              </q-item-label>
               <!-- Título: com quem o contrato foi feito (comprador) -->
               <q-item-label class="text-subtitle1 text-weight-medium">
                 {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Mg\Moeda;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class MoedaUpdateRequest extends FormRequest
 {
@@ -11,12 +12,26 @@ class MoedaUpdateRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation()
+    {
+        if ($this->filled('iso')) {
+            $this->merge(['iso' => strtoupper($this->input('iso'))]);
+        }
+    }
+
     public function rules()
     {
-        // O código (PK) não muda na edição — só descrição e símbolo.
+        $codmoeda = $this->route('moeda');
+
         return [
-            'descricao' => ['required', 'max:60'],
-            'simbolo' => ['required', 'max:5'],
+            'moeda' => ['required', 'max:60'],
+            'sigla' => ['required', 'max:5'],
+            'iso' => [
+                'required',
+                'size:3',
+                'alpha',
+                Rule::unique('tblmoeda', 'iso')->ignore($codmoeda, 'codmoeda'),
+            ],
         ];
     }
 }

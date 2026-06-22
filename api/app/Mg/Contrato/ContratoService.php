@@ -2,6 +2,8 @@
 
 namespace Mg\Contrato;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Mg\MgService;
 
 class ContratoService extends MgService
@@ -75,6 +77,46 @@ class ContratoService extends MgService
     }
 
     /**
+     * Sugere o próximo Nº Nosso da safra na convenção CULTURA-AA/AA-NNNN.
+     * Ex: SOJA-26/27-0001. O bloco do ano deriva do ciclo da cultura (cicloanos>=2
+     * vira o ano → AA/AA; caso contrário só o ano de plantio → AA). O sequencial é
+     * o maior sufixo numérico já gravado nessa safra + 1 (tolera nº manual/excluído).
+     */
+    public static function proximoNumero(int $codsafra): string
+    {
+        $safra = DB::selectOne(
+            '
+            select s.anoplantio, s.anocolheita, c.cultura, c.cicloanos
+            from tblsafra s
+            join tblcultura c on c.codcultura = s.codcultura
+            where s.codsafra = ?
+            ',
+            [$codsafra],
+        );
+        if (!$safra) {
+            abort(404, 'Safra não encontrada.');
+        }
+
+        $sigla = Str::upper(Str::ascii($safra->cultura));
+        $plantio = substr((string) $safra->anoplantio, -2);
+        $ano = $safra->cicloanos >= 2
+            ? $plantio . '/' . substr((string) $safra->anocolheita, -2)
+            : $plantio;
+        $prefixo = "{$sigla}-{$ano}-";
+
+        $row = DB::selectOne(
+            "
+            select coalesce(max(cast(substring(contrato from '([0-9]+)\$') as integer)), 0) + 1 as proximo
+            from tblcontrato
+            where codsafra = ? and contrato like ?
+            ",
+            [$codsafra, $prefixo . '%'],
+        );
+
+        return sprintf('%s%04d', $prefixo, $row->proximo);
+    }
+
+    /**
      * Cria/atualiza o contrato. Precificação vive nas fixações (tblcontratofixacao):
      * um contrato "FIXO" é só um contrato que recebe a fixação cheia na assinatura;
      * não há mais fixação-espelho automática.
@@ -86,12 +128,15 @@ class ContratoService extends MgService
         if (empty($contrato->operacao)) {
             $contrato->operacao = 'VENDA';
         }
-        // Contrato nasce como rascunho (só identificação): a quantidade é
-        // definida depois na tela do contrato. A coluna é NOT NULL, então
-        // ancora em 0 ("ainda não contratado") — o FormRequest aceita null.
-        if ($contrato->quantidade === null) {
-            $contrato->quantidade = 0;
+        // Nº Nosso: convenção CULTURA-AA/AA-NNNN (ex: SOJA-26/27-0001), sequencial
+        // por safra. Sugerido no form (editável); aqui é a rede de segurança que
+        // garante numeração na criação quando o usuário não digitou nada.
+        if (!$contrato->exists && empty($contrato->contrato) && !empty($contrato->codsafra)) {
+            $contrato->contrato = static::proximoNumero((int) $contrato->codsafra);
         }
+        // quantidade NULL = volume em aberto (leva o saldo do silo; sem teto). A
+        // coluna é nullable (agro_contrato_refatoracao.sql); não ancorar em 0,
+        // senão deixa de ser "em aberto" e o tipo/saldo derivam errado.
         $contrato->save();
         return $contrato;
     }

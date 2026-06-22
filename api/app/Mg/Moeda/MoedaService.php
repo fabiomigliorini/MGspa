@@ -13,8 +13,8 @@ class MoedaService extends MgService
         if (!empty($filter['moeda'])) {
             $qry->palavras('moeda', $filter['moeda']);
         }
-        if (!empty($filter['descricao'])) {
-            $qry->palavras('descricao', $filter['descricao']);
+        if (!empty($filter['iso'])) {
+            $qry->palavras('iso', $filter['iso']);
         }
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);

@@ -1,16 +1,26 @@
 -- =====================================================================
 -- Tabela de moedas (cadastro compartilhado; CRUD no app contas).
--- PK = codigo ISO 4217 (varchar 3), p/ FK natural e legivel — as colunas
--- moeda já existentes (tblcontratofixacao) guardam 'BRL'/'USD' e seguem válidas.
+-- PK = codmoeda bigint com sequence (padrao do projeto; nunca chave texto).
+--   moeda = nome      ("Real", "Dolar", "Euro")
+--   sigla = simbolo   ("R$", "US$")
+--   iso   = ISO 4217  ("BRL", "USD", "EUR") -- unico, usado como FK natural
+-- tblcontratofixacao.moeda guarda o ISO e referencia tblmoeda(iso).
 -- Reaplicavel.
 -- =====================================================================
 
 BEGIN;
 
-CREATE TABLE IF NOT EXISTS tblmoeda (
-  moeda               varchar(3) PRIMARY KEY,         -- ISO 4217 (BRL, USD, ...)
-  descricao           varchar(60) NOT NULL,
-  simbolo             varchar(5)  NOT NULL,
+-- Remove FK antiga (apontava p/ tblmoeda.moeda quando a PK era texto).
+ALTER TABLE tblcontratofixacao
+  DROP CONSTRAINT IF EXISTS tblcontratofixacao_moeda_fkey;
+
+DROP TABLE IF EXISTS tblmoeda;
+
+CREATE TABLE tblmoeda (
+  codmoeda            bigserial PRIMARY KEY,
+  moeda               varchar(60) NOT NULL,         -- nome: Real, Dolar, Euro
+  sigla               varchar(5)  NOT NULL,         -- R$, US$
+  iso                 varchar(3)  NOT NULL UNIQUE,  -- ISO 4217: BRL, USD, EUR
   inativo             timestamp without time zone,
   criacao             timestamp without time zone,
   alteracao           timestamp without time zone,
@@ -18,16 +28,13 @@ CREATE TABLE IF NOT EXISTS tblmoeda (
   codusuarioalteracao integer
 );
 
-INSERT INTO tblmoeda (moeda, descricao, simbolo) VALUES
-  ('BRL', 'Real',  'R$'),
-  ('USD', 'Dólar', 'US$')
-ON CONFLICT (moeda) DO NOTHING;
+INSERT INTO tblmoeda (moeda, sigla, iso) VALUES
+  ('Real',  'R$',  'BRL'),
+  ('Dólar', 'US$', 'USD');
 
--- FK da fixação -> moeda (settlement de preço da fixação).
-ALTER TABLE tblcontratofixacao
-  DROP CONSTRAINT IF EXISTS tblcontratofixacao_moeda_fkey;
+-- FK da fixacao (guarda o ISO 'BRL'/'USD') -> tblmoeda.iso.
 ALTER TABLE tblcontratofixacao
   ADD CONSTRAINT tblcontratofixacao_moeda_fkey
-  FOREIGN KEY (moeda) REFERENCES tblmoeda(moeda);
+  FOREIGN KEY (moeda) REFERENCES tblmoeda(iso);
 
 COMMIT;

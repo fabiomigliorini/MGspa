@@ -11,38 +11,40 @@ const store = useMoedaStore()
 const dialog = ref(false)
 const isNovo = ref(true)
 const saving = ref(false)
-const model = ref({ moeda: '', descricao: '', simbolo: '' })
+const model = ref({ codmoeda: null, moeda: '', sigla: '', iso: '' })
 
 const columns = [
-  { name: 'moeda', label: 'Código', field: 'moeda', align: 'left' },
-  { name: 'descricao', label: 'Descrição', field: 'descricao', align: 'left' },
-  { name: 'simbolo', label: 'Símbolo', field: 'simbolo', align: 'left' },
+  { name: 'moeda', label: 'Nome', field: 'moeda', align: 'left' },
+  { name: 'sigla', label: 'Símbolo', field: 'sigla', align: 'left' },
+  { name: 'iso', label: 'ISO', field: 'iso', align: 'left' },
   { name: 'inativo', label: 'Status', field: 'inativo', align: 'center' },
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
 ]
 
 const abrirNovo = () => {
   isNovo.value = true
-  model.value = { moeda: '', descricao: '', simbolo: '' }
+  model.value = { codmoeda: null, moeda: '', sigla: '', iso: '' }
   dialog.value = true
 }
 
 const abrirEditar = (row) => {
   isNovo.value = false
-  model.value = { moeda: row.moeda, descricao: row.descricao, simbolo: row.simbolo }
+  model.value = { codmoeda: row.codmoeda, moeda: row.moeda, sigla: row.sigla, iso: row.iso }
   dialog.value = true
 }
 
 const submit = () => (isNovo.value ? criar() : atualizar())
 
+const payload = () => ({
+  moeda: model.value.moeda,
+  sigla: model.value.sigla,
+  iso: model.value.iso,
+})
+
 const criar = async () => {
   saving.value = true
   try {
-    const { data } = await api.post('v1/moeda', {
-      moeda: model.value.moeda,
-      descricao: model.value.descricao,
-      simbolo: model.value.simbolo,
-    })
+    const { data } = await api.post('v1/moeda', payload())
     store.upsertLocal(data.data)
     notifySuccess('Moeda criada')
     dialog.value = false
@@ -56,11 +58,7 @@ const criar = async () => {
 const atualizar = async () => {
   saving.value = true
   try {
-    // O código (PK) não muda na edição — só descrição e símbolo.
-    const { data } = await api.put(`v1/moeda/${model.value.moeda}`, {
-      descricao: model.value.descricao,
-      simbolo: model.value.simbolo,
-    })
+    const { data } = await api.put(`v1/moeda/${model.value.codmoeda}`, payload())
     store.upsertLocal(data.data)
     notifySuccess('Moeda atualizada')
     dialog.value = false
@@ -74,8 +72,8 @@ const atualizar = async () => {
 const toggleInativo = async (row) => {
   try {
     const { data } = row.inativo
-      ? await api.delete(`v1/moeda/${row.moeda}/inativo`)
-      : await api.post(`v1/moeda/${row.moeda}/inativo`)
+      ? await api.delete(`v1/moeda/${row.codmoeda}/inativo`)
+      : await api.post(`v1/moeda/${row.codmoeda}/inativo`)
     store.upsertLocal(data.data)
     notifySuccess(data.data.inativo ? 'Moeda inativada' : 'Moeda reativada')
   } catch (e) {
@@ -86,13 +84,13 @@ const toggleInativo = async (row) => {
 const excluir = (row) => {
   $q.dialog({
     title: 'Excluir',
-    message: `Confirma excluir a moeda "${row.descricao}"?`,
+    message: `Confirma excluir a moeda "${row.moeda}"?`,
     ok: { label: 'Excluir', color: 'red-5', flat: true },
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
-      await api.delete(`v1/moeda/${row.moeda}`)
-      store.removeLocal(row.moeda)
+      await api.delete(`v1/moeda/${row.codmoeda}`)
+      store.removeLocal(row.codmoeda)
       notifySuccess('Moeda excluída')
     } catch (e) {
       notifyError(e, 'Erro ao excluir')
@@ -115,7 +113,7 @@ onMounted(() => store.fetchItems(true))
         <q-table
           :rows="store.items"
           :columns="columns"
-          row-key="moeda"
+          row-key="codmoeda"
           flat
           bordered
           :loading="store.loading"
@@ -203,34 +201,33 @@ onMounted(() => store.fetchItems(true))
           <q-separator inset />
           <q-card-section>
             <div class="row q-col-gutter-md">
-              <div class="col-4">
+              <div class="col-12">
                 <q-input
                   v-model="model.moeda"
                   outlined
-                  label="Código"
-                  maxlength="3"
-                  :disable="!isNovo"
-                  autofocus
-                  :rules="[(v) => !!v || 'Obrigatório', (v) => (v && v.length === 3) || '3 letras']"
-                  @update:model-value="(v) => (model.moeda = (v || '').toUpperCase())"
-                />
-              </div>
-              <div class="col-8">
-                <q-input
-                  v-model="model.descricao"
-                  outlined
-                  label="Descrição"
+                  label="Nome"
                   maxlength="60"
+                  autofocus
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
-              <div class="col-12">
+              <div class="col-6">
                 <q-input
-                  v-model="model.simbolo"
+                  v-model="model.sigla"
                   outlined
                   label="Símbolo"
                   maxlength="5"
                   :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+              <div class="col-6">
+                <q-input
+                  v-model="model.iso"
+                  outlined
+                  label="ISO"
+                  maxlength="3"
+                  :rules="[(v) => !!v || 'Obrigatório', (v) => (v && v.length === 3) || '3 letras']"
+                  @update:model-value="(v) => (model.iso = (v || '').toUpperCase())"
                 />
               </div>
             </div>

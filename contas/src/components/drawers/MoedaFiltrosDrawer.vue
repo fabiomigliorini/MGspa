@@ -30,20 +30,20 @@ const statusOptions = [
         outlined
         clearable
         :bottom-slots="false"
-        label="Código"
+        label="Nome"
         class="q-mb-sm"
       >
-        <template #prepend><q-icon name="vpn_key" /></template>
+        <template #prepend><q-icon name="tag" /></template>
       </q-input>
 
       <q-input
-        v-model="store.filters.descricao"
+        v-model="store.filters.iso"
         outlined
         clearable
         :bottom-slots="false"
-        label="Descrição"
+        label="ISO"
       >
-        <template #prepend><q-icon name="tag" /></template>
+        <template #prepend><q-icon name="vpn_key" /></template>
       </q-input>
     </FilterGroup>
 
