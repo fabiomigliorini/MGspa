@@ -228,10 +228,7 @@ async function salvar() {
               />
             </div>
             <div class="col-12 col-sm-7">
-              <MgSelectPortador
-                v-model="form.codportador"
-                label="Portador (conta que recebe)"
-              />
+              <MgSelectPortador v-model="form.codportador" label="Portador (conta que recebe)" />
             </div>
           </div>
 
@@ -241,7 +238,12 @@ async function salvar() {
                 <q-avatar size="26px" color="grey-5" text-color="white">{{ i + 1 }}</q-avatar>
               </q-item-section>
               <q-item-section>
-                <MgInputData v-model="p.data" label="Vencimento" type="date" :bottom-slots="false" />
+                <MgInputData
+                  v-model="p.data"
+                  label="Vencimento"
+                  type="date"
+                  :bottom-slots="false"
+                />
               </q-item-section>
               <q-item-section>
                 <MgInputValor
