@@ -12,6 +12,7 @@ import MgInputData from '@components/MgInputData.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
+import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
 import MgContratoForm from 'components/MgContratoForm.vue'
 import MgContratoParcelasDialog from 'components/MgContratoParcelasDialog.vue'
 import MgFixacaoImpostosDialog from 'components/MgFixacaoImpostosDialog.vue'
@@ -28,7 +29,6 @@ const notaCad = useCadastro(`contrato/${cod}/nota`, 'codcontratonota', 'Nota')
 
 const contrato = ref(null)
 const carregando = ref(false)
-const naturezas = ref([])
 
 const corTipo = { FIXO: 'green-7', FIXAR: 'orange-8', BARTER: 'deep-purple-6' }
 
@@ -106,14 +106,56 @@ const pagamentos = computed(() =>
 // Entregas = movimentos deste contrato no extrato (cada carga que o moveu).
 const entregas = computed(() => contrato.value?.MovimentoGraoS || [])
 
+// ---- Dados cadastrais do contrato (espelha o form; só o que está preenchido) ----
+const comissaoTipoLabel = { PERCENTUAL: '%', SACA: 'R$/sc', TOTAL: 'R$ total' }
+function nomePessoa(p) {
+  return p?.fantasia || p?.pessoa || null
+}
+const dadosContrato = computed(() => {
+  const c = contrato.value
+  if (!c) return []
+  const janela =
+    c.embarqueinicio || c.embarquefim
+      ? `${fmtData(c.embarqueinicio) || '—'} a ${fmtData(c.embarquefim) || '—'}`
+      : null
+  const itens = [
+    { label: 'Operação', valor: c.operacao === 'COMPRA' ? 'Compra' : 'Venda' },
+    { label: 'Data do contrato', valor: fmtData(c.datacontrato) },
+    { label: 'Filial', valor: c.Filial?.filial },
+    {
+      label: 'Quantidade',
+      valor: c.volumeemaberto ? 'Volume em aberto' : `${fmt(c.quantidade)} sc`,
+    },
+    { label: 'Janela de embarque', valor: janela },
+    { label: 'Local / FOB-CIF', valor: c.localentrega },
+    {
+      label: 'Contraparte',
+      valor: nomePessoa(c.Pessoa),
+      extra: c.numerocontraparte && `Nº ${c.numerocontraparte}`,
+    },
+    {
+      label: 'Corretora',
+      valor: nomePessoa(c.Corretora),
+      extra: c.numerocorretora && `Nº ${c.numerocorretora}`,
+    },
+    {
+      label: 'Cooperativa',
+      valor: nomePessoa(c.Cooperativa),
+      extra: c.numerocooperativa && `Nº ${c.numerocooperativa}`,
+    },
+  ]
+  if (c.codpessoacorretora && n(c.comissaovalor)) {
+    itens.push({
+      label: 'Comissão',
+      valor: `${comissaoTipoLabel[c.comissaotipo] || ''} ${fmt(c.comissaovalor, 2)}`,
+      extra: c.comissaototal ? `Total ${rs(c.comissaototal)}` : null,
+    })
+  }
+  return itens.filter((i) => i.valor)
+})
+
 // ---- Plano de NF (operação triangular) ----
 const notasPlano = computed(() => (contrato.value?.ContratoNotaS || []).filter((n) => !n.inativo))
-const naturezaOptions = computed(() =>
-  naturezas.value.map((nat) => ({
-    label: nat.naturezaoperacao,
-    value: nat.codnaturezaoperacao,
-  })),
-)
 // Opções de nota-pai (a que a atual referencia via refNFe) — exclui a própria.
 const notaPaiOptions = computed(() =>
   notasPlano.value
@@ -341,12 +383,6 @@ function excluirContrato() {
 }
 
 onMounted(async () => {
-  try {
-    const { data } = await api.get('v1/natureza-operacao')
-    naturezas.value = data.data ?? data
-  } catch {
-    // naturezas é opcional (só pro form fiscal)
-  }
   await recarregar()
   await carregarAnexos()
 })
@@ -367,6 +403,10 @@ onMounted(async () => {
               class="q-ml-sm"
             />
             <div class="col q-ml-md">
+              <!-- Nº Nosso (CULTURA-AA/AA-NNNN) -->
+              <div v-if="contrato?.contrato" class="text-overline text-grey-7 q-mb-none">
+                {{ contrato.contrato }}
+              </div>
               <!-- Título: com quem o contrato foi feito (comprador) -->
               <div class="text-h6">
                 {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa || 'Contrato' }}
@@ -502,6 +542,35 @@ onMounted(async () => {
         <template #avatar><q-icon name="balance" color="amber-8" /></template>
         NFs − carregado: <b>{{ rs(difNf) }}</b> · Pago − NFs: <b>{{ rs(difPago) }}</b>
       </q-banner>
+
+      <!-- Dados cadastrais do contrato (todos os campos do form) -->
+      <q-card flat bordered class="q-mb-md">
+        <q-item>
+          <q-item-section>
+            <q-item-label class="text-subtitle1">Dados do contrato</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarContrato">
+              <q-tooltip>Editar contrato</q-tooltip>
+            </q-btn>
+          </q-item-section>
+        </q-item>
+        <q-separator />
+        <q-card-section class="row q-col-gutter-md">
+          <div v-for="d in dadosContrato" :key="d.label" class="col-12 col-sm-6 col-md-4">
+            <div class="text-overline text-grey-6">{{ d.label }}</div>
+            <div>{{ d.valor }}</div>
+            <div v-if="d.extra" class="text-caption text-grey-7">{{ d.extra }}</div>
+          </div>
+        </q-card-section>
+        <template v-if="contrato?.observacao">
+          <q-separator />
+          <q-card-section>
+            <div class="text-overline text-grey-6">Observações</div>
+            <div style="white-space: pre-line">{{ contrato.observacao }}</div>
+          </q-card-section>
+        </template>
+      </q-card>
 
       <!-- Fixação de preço -->
       <q-card flat bordered class="q-mb-md">
@@ -960,12 +1029,8 @@ onMounted(async () => {
                   />
                 </div>
                 <div class="col-12 col-sm-8">
-                  <q-select
+                  <MgSelectNaturezaOperacao
                     v-model="notaCad.form.codnaturezaoperacao"
-                    :options="naturezaOptions"
-                    emit-value
-                    map-options
-                    outlined
                     label="Natureza da operação"
                   />
                 </div>

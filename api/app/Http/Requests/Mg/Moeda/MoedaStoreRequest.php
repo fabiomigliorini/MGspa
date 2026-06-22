@@ -13,17 +13,17 @@ class MoedaStoreRequest extends FormRequest
 
     protected function prepareForValidation()
     {
-        if ($this->filled('moeda')) {
-            $this->merge(['moeda' => strtoupper($this->input('moeda'))]);
+        if ($this->filled('iso')) {
+            $this->merge(['iso' => strtoupper($this->input('iso'))]);
         }
     }
 
     public function rules()
     {
         return [
-            'moeda' => ['required', 'size:3', 'alpha', 'unique:tblmoeda,moeda'],
-            'descricao' => ['required', 'max:60'],
-            'simbolo' => ['required', 'max:5'],
+            'moeda' => ['required', 'max:60'],
+            'sigla' => ['required', 'max:5'],
+            'iso' => ['required', 'size:3', 'alpha', 'unique:tblmoeda,iso'],
         ];
     }
 }

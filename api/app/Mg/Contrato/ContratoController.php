@@ -51,6 +51,15 @@ class ContratoController extends MgController
         );
     }
 
+    /**
+     * Próximo Nº Nosso sugerido para a safra (convenção CULTURA-AA/AA-NNNN).
+     * Editável no form; a numeração definitiva é garantida no salvar.
+     */
+    public function proximoNumero($codsafra)
+    {
+        return response()->json(['numero' => ContratoService::proximoNumero((int) $codsafra)]);
+    }
+
     public function store(ContratoStoreRequest $request)
     {
         $model = ContratoService::salvar($request->validated());

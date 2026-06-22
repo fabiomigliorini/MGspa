@@ -5,27 +5,27 @@ namespace Mg\Moeda;
 use Mg\MgModel;
 
 /**
- * Moeda (ISO 4217). PK = codigo de 3 letras (BRL, USD, ...). Cadastro
- * compartilhado; CRUD no app contas. Referenciada por tblcontratofixacao.moeda.
+ * Moeda. PK = codmoeda (bigint/sequence). Cadastro compartilhado; CRUD no app
+ * contas. Campos: moeda (nome), sigla (simbolo), iso (ISO 4217, unico).
+ * tblcontratofixacao.moeda guarda o iso e referencia tblmoeda(iso).
  */
 class Moeda extends MgModel
 {
     protected $table = 'tblmoeda';
-    protected $primaryKey = 'moeda';
-    public $incrementing = false;
-    protected $keyType = 'string';
+    protected $primaryKey = 'codmoeda';
 
     protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
     protected $fillable = [
         'moeda',
-        'descricao',
-        'simbolo',
+        'sigla',
+        'iso',
         'inativo',
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
+        'codmoeda' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',

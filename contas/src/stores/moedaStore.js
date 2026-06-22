@@ -4,7 +4,7 @@ import { api } from 'src/services/api'
 
 const defaultFilters = () => ({
   moeda: null,
-  descricao: null,
+  iso: null,
   inativo: false,
 })
 
@@ -22,7 +22,7 @@ export const useMoedaStore = defineStore(
       const f = filters.value
       let count = 0
       if (f.moeda) count++
-      if (f.descricao) count++
+      if (f.iso) count++
       if (f.inativo !== false) count++
       return count
     })
@@ -57,15 +57,15 @@ export const useMoedaStore = defineStore(
       Object.assign(filters.value, novos)
     }
 
-    // PK = código da moeda (string ISO).
+    // PK = codmoeda (bigint).
     function upsertLocal(item) {
-      const idx = items.value.findIndex((i) => i.moeda === item.moeda)
+      const idx = items.value.findIndex((i) => i.codmoeda === item.codmoeda)
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
     }
 
-    function removeLocal(moeda) {
-      items.value = items.value.filter((i) => i.moeda !== moeda)
+    function removeLocal(codmoeda) {
+      items.value = items.value.filter((i) => i.codmoeda !== codmoeda)
     }
 
     return {
