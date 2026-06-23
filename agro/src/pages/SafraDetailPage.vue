@@ -433,15 +433,13 @@ onMounted(async () => {
             <q-card bordered flat>
               <q-item>
                 <q-item-section avatar>
-                  <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
+                  <q-avatar icon="agriculture" />
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-subtitle1">{{ g.fazenda }}</q-item-label>
-                  <q-item-label caption>
+                  <q-item-label class="text-caption">
                     {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} / {{ fmt(g.expectativa) }} sc ·
-                    <span class="text-green-8 text-weight-medium"
-                      >{{ fmt(g.produtividade, 1) }} sc/ha</span
-                    >
+                    <span class="text-weight-medium">{{ fmt(g.produtividade, 1) }} sc/ha</span>
                   </q-item-label>
                   <q-linear-progress
                     v-if="g.expectativa > 0"

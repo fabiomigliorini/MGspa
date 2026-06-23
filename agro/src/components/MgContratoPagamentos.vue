@@ -140,15 +140,15 @@ async function confirmarRecebimento() {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item>
+    <q-item class="bg-primary text-white">
       <q-item-section>
         <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
-        <q-item-label caption>
+        <q-item-label class="text-caption">
           Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
         </q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="primary" icon="add" @click="parcelasDialog = true">
+        <q-btn flat round size="sm" color="white" icon="add" @click="parcelasDialog = true">
           <q-tooltip>Novas parcelas</q-tooltip>
         </q-btn>
       </q-item-section>

@@ -237,10 +237,10 @@ async function salvar() {
             </div>
           </div>
 
-          <q-list separator class="q-mt-sm">
-            <q-item v-for="(p, i) in form.itens" :key="i" class="q-px-none">
+          <q-list class="q-mt-sm">
+            <q-item v-for="(p, i) in form.itens" :key="i" class="q-px-none row q-col-gutter-md">
               <q-item-section avatar style="min-width: 36px">
-                <q-avatar size="26px" color="grey-5" text-color="white">{{ i + 1 }}</q-avatar>
+                <q-avatar color="primary" text-color="white">{{ i + 1 }}</q-avatar>
               </q-item-section>
               <q-item-section>
                 <MgInputData
@@ -276,7 +276,7 @@ async function salvar() {
           </q-list>
 
           <div class="row items-center q-mt-xs">
-            <q-btn flat color="primary" icon="add" label="Adicionar parcela" @click="adicionar" />
+            <q-btn flat color="primary" icon="add" label="Parcela" @click="adicionar" />
             <q-space />
             <div class="text-caption" :class="bate ? 'text-grey-7' : 'text-orange-8'">
               Soma: {{ fmt(soma) }} / {{ fmt(form.total) }}
@@ -292,7 +292,7 @@ async function salvar() {
           <q-btn
             type="submit"
             flat
-            :label="form.itens.length > 1 ? 'Salvar parcelas' : 'Salvar'"
+            label="Salvar"
             color="primary"
             :loading="salvando"
             :disable="!form.itens.length"
