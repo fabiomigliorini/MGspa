@@ -3,8 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
-// Carrega TUDO uma vez de v1/select/grupo-cliente, cacheia, filtra no FRONT e
-// tem REFRESH no append. clearable opcional (default false).
+// Carrega TUDO uma vez de v1/select/grupo-cliente, cacheia e filtra no FRONT.
+// clearable opcional (default false).
 // Suporta `multiple`: nesse modo o v-model é Array|null, onde null = TODOS os
 // grupos (canônico) e [] = nenhum — espelha o filtro do contas.
 const props = defineProps({
@@ -40,21 +40,16 @@ const rotulo = computed(() => {
   return `${m.length} de ${todosIds.value.length} grupos`
 })
 
-async function carregar(force = false) {
+async function carregar() {
   carregando.value = true
   try {
-    await cache.loadList(ENTITY, ENDPOINT, { force, inativos: props.inativos })
+    await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
     opcoes.value = permitidos.value
   } catch {
     opcoes.value = []
   } finally {
     carregando.value = false
   }
-}
-
-function atualizar() {
-  cache.invalidate(ENTITY)
-  carregar(true)
 }
 
 function filtrar(val, update) {
@@ -100,11 +95,6 @@ onMounted(() => carregar())
     @update:model-value="onUpdate"
     v-bind="$attrs"
   >
-    <template #append>
-      <q-icon name="refresh" size="xs" class="cursor-pointer text-grey-7" @click.stop="atualizar"
-        ><q-tooltip>Atualizar lista</q-tooltip></q-icon
-      >
-    </template>
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
     </template>

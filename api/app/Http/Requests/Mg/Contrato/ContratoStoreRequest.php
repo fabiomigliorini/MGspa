@@ -36,20 +36,25 @@ class ContratoStoreRequest extends FormRequest
             'operacao' => ['nullable', Rule::in(['COMPRA', 'VENDA'])],
             // quantidade NULL = volume em aberto (leva o saldo do silo). O contrato
             // tambem pode nascer rascunho (só identificação) e ter a quantidade
-            // definida depois. Precificação (preço/moeda/isenção) vive na fixação;
+            // definida depois. Quando informada, deve ser > 0 (0 não distingue de
+            // "em aberto"). Precificação (preço/moeda/isenção) vive na fixação;
             // NF (natureza/pessoa/observação) no plano de notas (tblcontratonota).
-            'quantidade' => ['nullable', 'numeric', 'gte:0'],
+            'quantidade' => ['nullable', 'numeric', 'gt:0'],
             'dataembarque' => ['nullable', 'date'],
             'localentrega' => ['nullable', 'string'],
             'observacao' => ['nullable', 'string'],
             'codfilial' => ['nullable', 'exists:tblfilial,codfilial'],
+            // Janela de embarque coerente: fim >= início (só valida quando ambas
+            // preenchidas). datacontrato fica livre — lançamento retroativo de
+            // contrato histórico pode ter assinatura fora da janela.
             'datacontrato' => ['nullable', 'date'],
             'embarqueinicio' => ['nullable', 'date'],
-            'embarquefim' => ['nullable', 'date'],
+            'embarquefim' => ['nullable', 'date', 'after_or_equal:embarqueinicio'],
             'codportador' => ['nullable', 'exists:tblportador,codportador'],
             'codpessoacorretora' => ['nullable', 'exists:tblpessoa,codpessoa'],
-            'comissaotipo' => ['nullable', Rule::in(['PERCENTUAL', 'SACA', 'TOTAL'])],
-            'comissaovalor' => ['nullable', 'numeric', 'gte:0'],
+            // Comissão só faz sentido com corretora: tipo/valor exigidos quando há corretora.
+            'comissaotipo' => ['nullable', 'required_with:codpessoacorretora', Rule::in(['PERCENTUAL', 'SACA', 'TOTAL'])],
+            'comissaovalor' => ['nullable', 'required_with:codpessoacorretora', 'numeric', 'gte:0'],
             'comissaototal' => ['nullable', 'numeric', 'gte:0'],
             'codpessoacooperativa' => ['nullable', 'exists:tblpessoa,codpessoa'],
             'numerocontraparte' => ['nullable', 'max:30'],

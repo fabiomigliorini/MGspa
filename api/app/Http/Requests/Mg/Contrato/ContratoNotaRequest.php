@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Mg\Contrato;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ContratoNotaRequest extends FormRequest
 {
@@ -14,7 +15,16 @@ class ContratoNotaRequest extends FormRequest
     public function rules()
     {
         return [
-            'ordem' => ['nullable', 'integer', 'gte:1'],
+            // Ordem única dentro do contrato (ignora inativas e a própria na edição).
+            'ordem' => [
+                'nullable',
+                'integer',
+                'gte:1',
+                Rule::unique('tblcontratonota', 'ordem')
+                    ->where('codcontrato', $this->route('codcontrato'))
+                    ->whereNull('inativo')
+                    ->ignore($this->route('codnota'), 'codcontratonota'),
+            ],
             'codnaturezaoperacao' => ['required', 'exists:tblnaturezaoperacao,codnaturezaoperacao'],
             'codpessoanf' => ['nullable', 'exists:tblpessoa,codpessoa'],
             // nota desta cadeia que esta referencia (refNFe). Validada como filha

@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia'
 import { useCadastro } from 'src/composables/useCadastro'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgContratoForm from 'components/MgContratoForm.vue'
 import MgContratoDados from 'components/MgContratoDados.vue'
@@ -30,15 +31,12 @@ const {
   contratadokg,
   carregadokg,
   carregadosc,
-  saldokg,
-  pesosaca,
   valornf,
   valorCarregado,
   pago,
   bate,
-  difNf,
-  difPago,
 } = storeToRefs(store)
+//essa const tinha   saldokg, pesosaca, difNf, difPago, removi para teste
 
 // Form de edição = form compartilhado (também usado p/ criar na safra), então
 // continua via useCadastro; ao salvar, recarrega o store da tela.
@@ -63,6 +61,30 @@ function fmt(v, dec = 0) {
 function rs(v) {
   return 'R$ ' + fmt(v, 2)
 }
+
+// ---- Embarque · janela (início → fim) + prazo relativo a hoje ----
+const embarqueInicioFmt = computed(() =>
+  contrato.value?.embarqueinicio ? formataData(contrato.value.embarqueinicio) : '—',
+)
+const embarqueFimFmt = computed(() =>
+  contrato.value?.embarquefim ? formataData(contrato.value.embarquefim) : '—',
+)
+function diasAteHoje(iso) {
+  if (!iso) return null
+  const alvo = new Date(`${String(iso).slice(0, 10)}T00:00:00`)
+  if (isNaN(alvo.getTime())) return null
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  return Math.round((alvo - hoje) / 86400000)
+}
+const embarquePrazoLabel = computed(() => {
+  if (!contrato.value?.embarquefim) return 'Sem janela definida'
+  const d = diasAteHoje(contrato.value.embarquefim)
+  if (d === null) return 'Sem janela definida'
+  if (d > 0) return `Faltam ${d} dia${d === 1 ? '' : 's'} p/ encerrar`
+  if (d === 0) return 'Encerra hoje'
+  return `Encerrado há ${-d} dia${d === -1 ? '' : 's'}`
+})
 
 // ---- Contrato (edição/ativação/exclusão no cabeçalho) ----
 function editarContrato() {
@@ -99,89 +121,69 @@ onMounted(() => store.carregar(cod))
 <template>
   <q-page class="q-pa-md">
     <div style="max-width: 1086px; margin: auto">
-      <!-- Cabeçalho -->
-      <q-card bordered flat class="q-mb-md">
-        <q-card-section class="row items-center">
-          <div class="col-12 col-sm row items-center no-wrap">
-            <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="voltarTo" />
-            <q-avatar
-              :color="corTipo[contrato?.tipo] || 'indigo-7'"
-              text-color="white"
-              icon="description"
-              class="q-ml-sm"
-            />
-            <div class="col q-ml-md">
-              <!-- Nº Nosso (CULTURA-AA/AA-NNNN) -->
-              <div v-if="contrato?.contrato" class="text-overline text-grey-7 q-mb-none">
-                {{ contrato.contrato }}
-              </div>
-              <!-- Título: com quem o contrato foi feito (comprador) -->
-              <div class="text-h6">
-                {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa || 'Contrato' }}
-              </div>
-              <div class="text-caption text-grey-7">
-                {{ contrato?.Cultura?.cultura }}
-                <span v-if="contrato?.Safra"> · {{ contrato.Safra.safra }}</span>
-              </div>
+      <!-- Cabeçalho (fora de card, padrão NotaFiscalViewPage) -->
+      <div class="row items-center q-mb-md">
+        <div class="col-12 col-sm row items-center no-wrap">
+          <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="voltarTo" />
+          <div class="col q-ml-sm">
+            <!-- Título: com quem o contrato foi feito (comprador) -->
+            <div class="text-h5">
+              {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa || 'Contrato' }}
+            </div>
+            <div class="text-subtitle2 text-grey-7">
+              {{ contrato?.Cultura?.cultura }}
+              <span v-if="contrato?.Safra"> · {{ contrato.Safra.safra }}</span>
+
+              <!-- Modo do contrato ao lado da quantidade -->
+              <q-chip
+                v-if="contrato"
+                dense
+                square
+                :color="corTipo[contrato.tipo] || 'grey-7'"
+                text-color="white"
+                :label="contrato.tipo"
+                class="q-ml-sm q-my-none"
+              />
             </div>
           </div>
-          <div
-            class="col-12 col-sm-auto row items-center justify-end no-wrap"
-            :class="{ 'q-mt-sm': $q.screen.lt.sm }"
+        </div>
+        <div
+          class="col-12 col-sm-auto row items-center justify-end no-wrap"
+          :class="{ 'q-mt-sm': $q.screen.lt.sm }"
+        >
+          <MgInfoCriacao :registro="contrato" />
+          <q-btn
+            flat
+            dense
+            round
+            size="sm"
+            color="grey-7"
+            :icon="contrato?.inativo ? 'play_arrow' : 'pause'"
+            @click="alternarInativoContrato"
           >
-            <MgInfoCriacao :registro="contrato" />
-            <q-btn
-              flat
-              dense
-              round
-              size="sm"
-              color="grey-7"
-              :icon="contrato?.inativo ? 'play_arrow' : 'pause'"
-              @click="alternarInativoContrato"
-            >
-              <q-tooltip>{{ contrato?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-            </q-btn>
-            <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirContrato">
-              <q-tooltip>Excluir</q-tooltip>
-            </q-btn>
-            <q-btn
-              flat
-              color="green-7"
-              icon="local_shipping"
-              label="Pátio"
-              :to="{ name: 'carga' }"
-            />
-          </div>
-        </q-card-section>
-      </q-card>
+            <q-tooltip>{{ contrato?.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+          </q-btn>
+          <q-btn flat dense round size="sm" color="grey-7" icon="delete" @click="excluirContrato">
+            <q-tooltip>Excluir</q-tooltip>
+          </q-btn>
+          <q-btn flat color="green-7" icon="local_shipping" label="Pátio" :to="{ name: 'carga' }" />
+        </div>
+      </div>
 
       <!-- Reconciliação físico / fiscal / financeiro -->
       <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-12 col-md-4">
+        <div class="col-12 col-md-3">
           <q-card flat bordered class="full-height">
-            <q-card-section>
-              <div class="row items-center text-blue-grey-8">
-                <q-icon name="local_shipping" class="q-mr-sm" /><span class="text-subtitle2"
-                  >Físico</span
-                >
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="row items-center">
+                <q-icon name="local_shipping" class="q-mr-sm" />
+                <span class="text-subtitle2">Físico</span>
               </div>
-              <div class="text-h5 q-mt-sm row items-center">
-                <div>
-                  {{ fmt(carregadokg) }}
-                  <span class="text-caption"
-                    >/ {{ volumeemaberto ? '∞' : fmt(contratadokg) }} kg</span
-                  >
-                </div>
-                <!-- Modo do contrato ao lado da quantidade -->
-                <q-chip
-                  v-if="contrato"
-                  dense
-                  square
-                  :color="corTipo[contrato.tipo] || 'grey-7'"
-                  text-color="white"
-                  :label="contrato.tipo"
-                  class="q-ml-sm q-my-none"
-                />
+            </q-card-section>
+            <q-separator />
+            <q-card-section>
+              <div class="text-h5 row items-center">
+                <div>{{ fmt(carregadokg) }}/ {{ volumeemaberto ? '∞' : fmt(contratadokg) }} kg</div>
               </div>
               <!-- Sacas derivadas (unidade comercial) -->
               <div class="text-caption text-grey-6">
@@ -201,38 +203,61 @@ onMounted(() => store.carregar(cod))
               <div v-if="volumeemaberto" class="text-caption text-deep-purple-7">
                 <q-icon name="all_inclusive" /> Sem limite — leva o saldo do silo
               </div>
-              <div v-else class="text-caption text-grey-7">
+              <!--<div v-else class="text-caption text-grey-7">
                 Saldo a embarcar: <b>{{ fmt(saldokg) }} kg</b>
                 <span class="text-grey-6">(≈ {{ fmt(saldokg / pesosaca, 0) }} sc)</span>
-              </div>
+              </div>!-->
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-4">
+        <div class="col-6 col-md-3">
           <q-card flat bordered class="full-height">
-            <q-card-section>
-              <div class="row items-center text-deep-orange-8">
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="row items-center">
                 <q-icon name="receipt_long" class="q-mr-sm" /><span class="text-subtitle2"
                   >Fiscal (NFs)</span
                 >
               </div>
-              <div class="text-h5 q-mt-sm">{{ rs(valornf) }}</div>
+            </q-card-section>
+            <q-separator />
+            <q-card-section>
+              <div class="text-h5">{{ rs(valornf) }}</div>
               <div class="text-caption text-grey-7 q-mt-sm">
                 Valor carregado: {{ rs(valorCarregado) }}
               </div>
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-4">
+        <div class="col-6 col-md-3">
           <q-card flat bordered class="full-height">
-            <q-card-section>
-              <div class="row items-center text-teal-8">
-                <q-icon name="payments" class="q-mr-sm" /><span class="text-subtitle2"
-                  >Financeiro</span
-                >
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="row items-center">
+                <q-icon name="payments" class="q-mr-sm" />
+                <span class="text-subtitle2">Financeiro</span>
               </div>
-              <div class="text-h5 q-mt-sm">{{ rs(pago) }}</div>
+            </q-card-section>
+            <q-separator />
+            <q-card-section>
+              <div class="text-h5">{{ rs(pago) }}</div>
               <div class="text-caption text-grey-7 q-mt-sm">Pago pelo comprador</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="row items-center">
+                <q-icon name="date_range" class="q-mr-sm" />
+                <span class="text-subtitle2">Embarque - Período</span>
+              </div>
+            </q-card-section>
+            <q-separator />
+            <q-card-section>
+              <div class="text-h5">
+                {{ embarqueInicioFmt }}
+                <span class="text-subtitle2">a {{ embarqueFimFmt }}</span>
+              </div>
+              <div class="text-caption text-grey-7 q-mt-sm">{{ embarquePrazoLabel }}</div>
             </q-card-section>
           </q-card>
         </div>
@@ -243,10 +268,10 @@ onMounted(() => store.carregar(cod))
         <template #avatar><q-icon name="verified" color="green-7" /></template>
         Tudo confere: valor carregado, NFs emitidas e pagamentos batem.
       </q-banner>
-      <q-banner v-else rounded class="bg-amber-1 text-amber-9 q-mb-md">
+      <!-- <q-banner v-else rounded class="bg-amber-1 text-amber-9 q-mb-md">
         <template #avatar><q-icon name="balance" color="amber-8" /></template>
         NFs − carregado: <b>{{ rs(difNf) }}</b> · Pago − NFs: <b>{{ rs(difPago) }}</b>
-      </q-banner>
+      </q-banner> -->
 
       <!-- Cards especialistas (cada um lê do store da tela) -->
       <template v-if="contrato">

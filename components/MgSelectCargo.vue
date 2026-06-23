@@ -4,15 +4,14 @@ import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
 // Carrega TUDO uma vez de v1/select/cargo, cacheia (lista + byId no store
-// compartilhado), filtra no FRONT ao digitar e tem botão de REFRESH (append)
-// pra invalidar o cache e recarregar. clearable é opcional (default false).
+// compartilhado) e filtra no FRONT ao digitar. clearable é opcional (default false).
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Cargo' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
   // Permite criar um cargo novo digitando: emite `adicionar(nome, done)` para o
-  // consumidor criar via API e chamar done(); recarregue depois via refresh.
+  // consumidor criar via API e chamar done(); o watch abaixo recarrega a lista.
   permiteAdicionar: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select', 'adicionar'])
@@ -40,11 +39,6 @@ async function carregar(force = false) {
   } finally {
     carregando.value = false
   }
-}
-
-function atualizar() {
-  cache.invalidate(ENTITY)
-  carregar(true)
 }
 
 function filtrar(val, update) {
@@ -95,11 +89,6 @@ watch(
     @new-value="onNew"
     v-bind="$attrs"
   >
-    <template #append>
-      <q-icon name="refresh" size="xs" class="cursor-pointer text-grey-7" @click.stop="atualizar"
-        ><q-tooltip>Atualizar lista</q-tooltip></q-icon
-      >
-    </template>
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
     </template>

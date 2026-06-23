@@ -61,6 +61,14 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   const previsto = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valor), 0))
   const pago = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valorrecebido), 0))
 
+  // Valor BRUTO fixado (Σ quantidade × precoreal) = teto financeiro do contrato;
+  // saldo a pagar = teto − previsto (espelha a trava do backend ContratoPagamentoRequest;
+  // a garantia é do servidor, isto é só UX).
+  const valorFixadoBruto = computed(() =>
+    fixacoes.value.reduce((s, f) => s + n(f.quantidade) * n(f.precoreal), 0),
+  )
+  const saldoPagar = computed(() => Math.max(0, valorFixadoBruto.value - previsto.value))
+
   // "Bate?" — valor carregado x NFs x pago (tolerância de centavos)
   const difNf = computed(() => valornf.value - valorCarregado.value)
   const difPago = computed(() => pago.value - valornf.value)
@@ -195,6 +203,8 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     liquidoSc,
     previsto,
     pago,
+    valorFixadoBruto,
+    saldoPagar,
     difNf,
     difPago,
     bate,

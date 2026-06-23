@@ -15,6 +15,10 @@ const props = defineProps({
   cod: { type: [Number, String], required: true }, // codcontrato
   contrato: { type: Object, default: null },
   liquidoSc: { type: Number, default: 0 }, // R$ líquido/sc (converte SACAS -> valor)
+  // Teto a parcelar = saldo do que foi FIXADO (não do contratado): espelha a trava
+  // do backend (pagamento <= valor bruto fixado). saldoValor em R$, saldoSacas em sc.
+  saldoValor: { type: Number, default: 0 },
+  saldoSacas: { type: Number, default: 0 },
 })
 const emit = defineEmits(['update:modelValue', 'saved'])
 
@@ -53,10 +57,11 @@ function novoForm() {
   }
 }
 
-// Total cheio do contrato na unidade do modo (sacas ou R$ via líquido/sc).
+// Total a parcelar = saldo do que foi FIXADO (não o contratado), na unidade do
+// modo. Antes usava contrato.quantidade × líquido (todo o contrato), o que
+// permitia parcelar além do fixado; agora parte do teto real (backend confirma).
 function totalContrato(modo) {
-  const q = n(props.contrato?.quantidade)
-  return modo === 'SACAS' ? q : round(q * props.liquidoSc, 2)
+  return modo === 'SACAS' ? round(n(props.saldoSacas), 0) : round(n(props.saldoValor), 2)
 }
 
 function isoMaisDias(dias) {
@@ -232,10 +237,10 @@ async function salvar() {
             </div>
           </div>
 
-          <q-list separator class="q-mt-sm">
-            <q-item v-for="(p, i) in form.itens" :key="i" class="q-px-none">
+          <q-list class="q-mt-sm">
+            <q-item v-for="(p, i) in form.itens" :key="i" class="q-px-none row q-col-gutter-md">
               <q-item-section avatar style="min-width: 36px">
-                <q-avatar size="26px" color="grey-5" text-color="white">{{ i + 1 }}</q-avatar>
+                <q-avatar color="primary" text-color="white">{{ i + 1 }}</q-avatar>
               </q-item-section>
               <q-item-section>
                 <MgInputData
@@ -271,7 +276,7 @@ async function salvar() {
           </q-list>
 
           <div class="row items-center q-mt-xs">
-            <q-btn flat color="primary" icon="add" label="Adicionar parcela" @click="adicionar" />
+            <q-btn flat color="primary" icon="add" label="Parcela" @click="adicionar" />
             <q-space />
             <div class="text-caption" :class="bate ? 'text-grey-7' : 'text-orange-8'">
               Soma: {{ fmt(soma) }} / {{ fmt(form.total) }}
@@ -287,7 +292,7 @@ async function salvar() {
           <q-btn
             type="submit"
             flat
-            :label="form.itens.length > 1 ? 'Salvar parcelas' : 'Salvar'"
+            label="Salvar"
             color="primary"
             :loading="salvando"
             :disable="!form.itens.length"

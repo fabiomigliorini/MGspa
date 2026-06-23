@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
-// Carrega TUDO de v1/select/certidao-emissor, cacheia, filtra no front, refresh no append.
+// Carrega TUDO de v1/select/certidao-emissor, cacheia, filtra no front.
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Emissor' },
@@ -21,21 +21,16 @@ const carregando = ref(false)
 
 const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
 
-async function carregar(force = false) {
+async function carregar() {
   carregando.value = true
   try {
-    await cache.loadList(ENTITY, ENDPOINT, { force, inativos: props.inativos })
+    await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
     opcoes.value = permitidos.value
   } catch {
     opcoes.value = []
   } finally {
     carregando.value = false
   }
-}
-
-function atualizar() {
-  cache.invalidate(ENTITY)
-  carregar(true)
 }
 
 function filtrar(val, update) {
@@ -73,11 +68,6 @@ onMounted(() => carregar())
     @update:model-value="onUpdate"
     v-bind="$attrs"
   >
-    <template #append>
-      <q-icon name="refresh" size="xs" class="cursor-pointer text-grey-7" @click.stop="atualizar"
-        ><q-tooltip>Atualizar lista</q-tooltip></q-icon
-      >
-    </template>
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum registro</q-item-section></q-item>
     </template>

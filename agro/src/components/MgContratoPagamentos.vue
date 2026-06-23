@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
@@ -17,11 +17,20 @@ import MgContratoParcelasDialog from 'components/MgContratoParcelasDialog.vue'
 // da tela e persiste pelas actions (salvarPagamento/excluirPagamento/confirmar).
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { contrato, cod, pagamentos, previsto, pago, liquidoSc } = storeToRefs(store)
+const { contrato, cod, pagamentos, previsto, pago, liquidoSc, fixado, saldoPagar } =
+  storeToRefs(store)
 
 function n(v) {
   return Number(v) || 0
 }
+
+// Saldo a parcelar em sacas = fixado − sacas já parceladas (modo SACAS). O saldo
+// em valor vem do store (saldoPagar). Ambos alimentam o gerador de parcelas e
+// espelham a trava do backend; o servidor é quem garante.
+const sacasParceladas = computed(() =>
+  pagamentos.value.reduce((s, p) => s + (p.modo === 'SACAS' ? n(p.sacas) : 0), 0),
+)
+const saldoSacas = computed(() => Math.max(0, n(fixado.value) - sacasParceladas.value))
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
   return Number(v).toLocaleString('pt-BR', {
@@ -40,6 +49,9 @@ function fmtData(d) {
 function arred(v) {
   return Math.round(n(v) * 100) / 100
 }
+// Não se marca uma parcela como recebida "em conta" sem dizer onde a transação
+// caiu (barter liquida em insumos e fica isento). Regra do backend; aqui é só UX.
+const reqPortador = (v) => !!v || 'Informe o portador onde o recebimento foi realizado.'
 
 const modosParcela = [
   { label: 'Valor', value: 'VALOR' },
@@ -108,6 +120,7 @@ const confirmForm = ref({})
 function abrirConfirmar(p) {
   confirmForm.value = {
     codcontratopagamento: p.codcontratopagamento,
+    forma: p.forma, // barter não exige portador (liquida em insumos)
     datarecebido: new Date().toISOString().slice(0, 10),
     valorrecebido: p.valor,
     codportador: p.codportador || contrato.value?.codportador || null,
@@ -131,13 +144,15 @@ async function confirmarRecebimento() {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item>
+    <q-item class="bg-primary text-white">
       <q-item-section>
         <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
-        <q-item-label caption> Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} </q-item-label>
+        <q-item-label class="text-caption">
+          Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
+        </q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="primary" icon="add" @click="parcelasDialog = true">
+        <q-btn flat round size="sm" color="white" icon="add" @click="parcelasDialog = true">
           <q-tooltip>Novas parcelas</q-tooltip>
         </q-btn>
       </q-item-section>
@@ -259,6 +274,7 @@ async function confirmarRecebimento() {
                 <MgSelectPortador
                   v-model="formParcela.codportador"
                   label="Portador (conta que recebe)"
+                  :rules="formParcela.datarecebido ? [reqPortador] : []"
                 />
               </div>
               <div class="col-12">
@@ -274,12 +290,14 @@ async function confirmarRecebimento() {
       </q-card>
     </q-dialog>
 
-    <!-- Gerador de várias parcelas -->
+    <!-- Gerador de várias parcelas (parte do saldo FIXADO, não do contratado) -->
     <MgContratoParcelasDialog
       v-model="parcelasDialog"
       :cod="cod"
       :contrato="contrato"
       :liquido-sc="liquidoSc"
+      :saldo-valor="saldoPagar"
+      :saldo-sacas="saldoSacas"
       @saved="store.carregar()"
     />
 
@@ -308,10 +326,11 @@ async function confirmarRecebimento() {
                   label="Valor recebido"
                 />
               </div>
-              <div class="col-12">
+              <div v-if="confirmForm.forma !== 'BARTER'" class="col-12">
                 <MgSelectPortador
                   v-model="confirmForm.codportador"
                   label="Portador (conta que recebeu)"
+                  :rules="[reqPortador]"
                 />
               </div>
             </div>

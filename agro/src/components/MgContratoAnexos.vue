@@ -86,13 +86,13 @@ onMounted(store.carregarAnexos)
 
 <template>
   <q-card flat bordered>
-    <q-item>
+    <q-item class="bg-primary text-white">
       <q-item-section avatar>
-        <q-avatar color="blue-grey-1" text-color="blue-grey-8" icon="attach_file" />
+        <q-avatar color="white" text-color="primary" icon="attach_file" />
       </q-item-section>
       <q-item-section>
         <q-item-label class="text-subtitle1">Anexos</q-item-label>
-        <q-item-label caption>Contratos, aditivos e documentos (PDF/imagem)</q-item-label>
+        <q-item-label class="text-caption">Contratos, aditivos e documentos (PDF/imagem)</q-item-label>
       </q-item-section>
     </q-item>
     <q-separator />

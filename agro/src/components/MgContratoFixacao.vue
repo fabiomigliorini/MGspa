@@ -61,16 +61,16 @@ function excluirFixacao(f) {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item>
+    <q-item class="bg-primary text-white">
       <q-item-section>
         <q-item-label class="text-subtitle1">Fixação de preço</q-item-label>
-        <q-item-label caption>
+        <q-item-label class="text-caption">
           Fixado {{ fmt(fixado) }} sc · A fixar {{ fmt(afixar) }} sc · Preço médio
           {{ rs(precoMedio) }}/sc
         </q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="primary" icon="add" @click="novaFixacao">
+        <q-btn flat round size="sm" color="white" icon="add" @click="novaFixacao">
           <q-tooltip>Nova fixação</q-tooltip>
         </q-btn>
       </q-item-section>
@@ -122,12 +122,14 @@ function excluirFixacao(f) {
       </MgEmptyState>
     </q-list>
 
-    <!-- Modal Fixação (valores + impostos) -->
+    <!-- Modal Fixação (valores + impostos). afixar = saldo a fixar (sc) p/ o
+         dialog avisar antes; o backend é quem garante (ContratoFixacaoRequest). -->
     <MgFixacaoImpostosDialog
       v-model="impostosDialog"
       :cod="cod"
       :contrato="contrato"
       :fixacao="impostosFixacao"
+      :afixar="afixar"
       @saved="store.carregar()"
     />
   </q-card>

@@ -59,9 +59,11 @@ class ContratoCalculoService extends MgService
                 $base = (($row['base'] ?? 'VALOR') === 'UNIDADE') ? 'UNIDADE' : 'VALOR';
                 $percentual = (float) ($row['percentual'] ?? 0);
                 $upf = $base === 'UNIDADE' ? (float) ($row['upf'] ?? 0) : null;
+                // 4 casas (mesma precisão do item exibido e do front `arred4`), pra
+                // que SUM(itens) == totaldeducao == bruto - liquido.
                 $valor = $base === 'UNIDADE'
-                    ? round($percentual / 100 * $upf * $pesosaca / 1000, 6)
-                    : round($percentual / 100 * $bruto, 6);
+                    ? round($percentual / 100 * $upf * $pesosaca / 1000, 4)
+                    : round($percentual / 100 * $bruto, 4);
 
                 if ($unidadeAplicada === null && $base === 'UNIDADE' && $upf > 0) {
                     $unidadeAplicada = [
@@ -105,7 +107,7 @@ class ContratoCalculoService extends MgService
                 if ($ct->base === 'UNIDADE') {
                     $competencia = static::competenciaUnidade($ct, $data);
                     $upf = static::valorUnidade($ct->codunidadereferencia, $competencia);
-                    $valor = round($ct->percentual / 100 * $upf * $pesosaca / 1000, 6);
+                    $valor = round($ct->percentual / 100 * $upf * $pesosaca / 1000, 4);
                     // guarda a UPF efetivamente usada (FETHAB) p/ transparencia na UI
                     if ($unidadeAplicada === null && $upf > 0) {
                         $unidadeAplicada = [
@@ -116,7 +118,7 @@ class ContratoCalculoService extends MgService
                         ];
                     }
                 } else {
-                    $valor = round($ct->percentual / 100 * $bruto, 6);
+                    $valor = round($ct->percentual / 100 * $bruto, 4);
                 }
 
                 $totalDeducao += $valor;

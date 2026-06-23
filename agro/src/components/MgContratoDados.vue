@@ -44,12 +44,12 @@ const comissao = computed(() => {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item>
+    <q-item class="bg-primary text-white">
       <q-item-section>
         <q-item-label class="text-subtitle1">Dados do contrato</q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="grey-7" icon="edit" @click="$emit('editar')">
+        <q-btn flat round size="sm" color="white" icon="edit" @click="$emit('editar')">
           <q-tooltip>Editar contrato</q-tooltip>
         </q-btn>
       </q-item-section>
@@ -58,27 +58,27 @@ const comissao = computed(() => {
 
     <!-- Identificação + embarque -->
     <q-card-section class="row q-col-gutter-sm q-py-sm">
-      <div class="col-6 col-md-3">
+      <div class="col-6 col-md-4">
         <div class="text-caption text-uppercase text-grey-6">Data do contrato</div>
         <div class="text-body2">{{ formataData(c.datacontrato) }}</div>
       </div>
-      <div class="col-6 col-md-3">
+      <div class="col-6 col-md-4">
         <div class="text-caption text-uppercase text-grey-6">Operação</div>
         <div class="text-body2">{{ operacao }}</div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="text-caption text-uppercase text-grey-6">Filial</div>
-        <div class="text-body2">{{ c.Filial?.filial || '—' }}</div>
-      </div>
-      <div class="col-6 col-md-3">
+      <div class="col-6 col-md-4">
         <div class="text-caption text-uppercase text-grey-6">Quantidade</div>
         <div class="text-body2">{{ quantidade }}</div>
       </div>
-      <div v-if="janela" class="col-12 col-md-6">
+      <div v-if="janela" class="col-12 col-md-4">
         <div class="text-caption text-uppercase text-grey-6">Janela de embarque</div>
         <div class="text-body2">{{ janela }}</div>
       </div>
-      <div v-if="c.localentrega" class="col-6 col-md-3">
+      <div class="col-6 col-md-4">
+        <div class="text-caption text-uppercase text-grey-6">Filial</div>
+        <div class="text-body2">{{ c.Filial?.filial || '—' }}</div>
+      </div>
+      <div v-if="c.localentrega" class="col-6 col-md-4">
         <div class="text-caption text-uppercase text-grey-6">Local / FOB-CIF</div>
         <div class="text-body2">{{ c.localentrega }}</div>
       </div>
