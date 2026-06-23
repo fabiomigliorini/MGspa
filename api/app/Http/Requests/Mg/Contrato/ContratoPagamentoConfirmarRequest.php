@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Mg\Contrato;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Validator;
+use Mg\Contrato\ContratoPagamento;
 
 class ContratoPagamentoConfirmarRequest extends FormRequest
 {
@@ -21,5 +23,24 @@ class ContratoPagamentoConfirmarRequest extends FormRequest
             'valorrecebido' => ['required', 'numeric', 'gt:0'],
             'codportador' => ['nullable', 'exists:tblportador,codportador'],
         ];
+    }
+
+    /**
+     * Não se confirma um recebimento sem dizer em qual portador a transação caiu:
+     * uma parcela paga sem conta de destino é dinheiro sem rastro. Barter (liquida
+     * em insumos, sem conta) é a única isenção — daí o lookup pela forma da parcela.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $parcela = ContratoPagamento::find($this->route('codpagamento'));
+            $barter = $parcela && $parcela->forma === 'BARTER';
+            if (!$barter && !$this->filled('codportador')) {
+                $validator->errors()->add(
+                    'codportador',
+                    'Informe o portador onde o recebimento foi realizado.',
+                );
+            }
+        });
     }
 }

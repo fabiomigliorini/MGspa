@@ -57,6 +57,20 @@ class ContratoPagamentoRequest extends FormRequest
                 }
             }
 
+            // Recebimento "em conta" exige portador: uma parcela marcada como paga
+            // (datarecebido) sem dizer em qual conta caiu é dinheiro sem rastro.
+            // Barter liquida em insumos (sem conta) e fica isento.
+            if (
+                $this->filled('datarecebido')
+                && $this->input('forma') !== 'BARTER'
+                && !$this->filled('codportador')
+            ) {
+                $validator->errors()->add(
+                    'codportador',
+                    'Informe o portador onde o recebimento foi realizado.',
+                );
+            }
+
             if ($this->input('modo') === 'SACAS') {
                 $tetoSc = ContratoService::sacasFixadas($codcontrato);
                 if ($tetoSc > 0) {

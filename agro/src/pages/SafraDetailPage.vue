@@ -128,9 +128,9 @@ function fmt(v, dec = 0) {
     maximumFractionDigits: dec,
   })
 }
-function rs(v) {
-  return v === null || v === undefined ? '—' : 'R$ ' + fmt(v, 2)
-}
+// function rs(v) {
+//   return v === null || v === undefined ? '—' : 'R$ ' + fmt(v, 2)
+// }
 
 // Recarrega o rollup comercial (chamado no mount e quando a grid emite changed).
 async function recarregarComercial() {
@@ -287,32 +287,44 @@ onMounted(async () => {
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6 col-md-3">
           <q-card flat bordered>
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="text-subtitle2">Área plantada</div>
+            </q-card-section>
+            <q-separator />
             <q-card-section>
-              <div class="text-caption text-grey-7">Área plantada</div>
               <div class="text-h6">{{ fmt(totalArea, 1) }} ha</div>
             </q-card-section>
           </q-card>
         </div>
         <div class="col-6 col-md-3">
           <q-card flat bordered>
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="text-subtitle2">Colhido</div>
+            </q-card-section>
+            <q-separator />
             <q-card-section>
-              <div class="text-caption text-grey-7">Colhido</div>
               <div class="text-h6">{{ fmt(totalSacas) }} sc</div>
             </q-card-section>
           </q-card>
         </div>
         <div class="col-6 col-md-3">
           <q-card flat bordered>
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="text-subtitle2">Produtividade média</div>
+            </q-card-section>
+            <q-separator />
             <q-card-section>
-              <div class="text-caption text-grey-7">Produtividade média</div>
               <div class="text-h6 text-green-8">{{ fmt(prodMedia, 1) }} sc/ha</div>
             </q-card-section>
           </q-card>
         </div>
         <div class="col-6 col-md-3">
           <q-card flat bordered>
+            <q-card-section class="bg-primary text-white q-py-sm">
+              <div class="text-subtitle2">Expectativa</div>
+            </q-card-section>
+            <q-separator />
             <q-card-section>
-              <div class="text-caption text-grey-7">Expectativa</div>
               <div class="text-h6">{{ fmt(totalExpectativa) }} sc</div>
             </q-card-section>
           </q-card>
@@ -321,13 +333,16 @@ onMounted(async () => {
 
       <!-- Progresso da colheita da safra (colhido ÷ expectativa) -->
       <q-card v-if="totalExpectativa > 0" flat bordered class="q-mb-md">
+        <q-card-section class="bg-primary text-white q-py-sm">
+          <div class="text-subtitle2">Progresso da colheita</div>
+        </q-card-section>
+        <q-separator />
         <q-card-section>
           <div class="row items-center no-wrap q-mb-xs">
-            <div class="col text-subtitle2 text-grey-8">Progresso da colheita</div>
-            <div class="text-subtitle2 text-weight-medium">
+            <div class="col text-subtitle2 text-grey-8">
               {{ fmt(totalSacas) }} / {{ fmt(totalExpectativa) }} sc
-              <span class="text-grey-7">· {{ fmt(progressoSafra * 100) }}%</span>
             </div>
+            <div class="text-subtitle2 text-weight-medium">{{ fmt(progressoSafra * 100) }}%</div>
           </div>
           <q-linear-progress
             :value="progressoSafra"
@@ -346,8 +361,11 @@ onMounted(async () => {
         <div class="row q-col-gutter-md q-mb-md">
           <div class="col-6 col-md-3">
             <q-card flat bordered>
+              <q-card-section class="bg-primary text-white q-py-sm">
+                <div class="text-subtitle2">Contratado</div>
+              </q-card-section>
+              <q-separator />
               <q-card-section>
-                <div class="text-caption text-grey-7">Contratado</div>
                 <div class="text-h6">{{ fmt(contratadokg) }} kg</div>
                 <div class="text-caption text-grey-6">
                   ≈ {{ fmt(contratado) }} sc · Disponível {{ fmt(disponivel) }} sc
@@ -357,8 +375,11 @@ onMounted(async () => {
           </div>
           <div class="col-6 col-md-3">
             <q-card flat bordered>
+              <q-card-section class="bg-primary text-white q-py-sm">
+                <div class="text-subtitle2">Fixado</div>
+              </q-card-section>
+              <q-separator />
               <q-card-section>
-                <div class="text-caption text-grey-7">Fixado</div>
                 <div class="text-h6">{{ fmt(fixo) }} sc</div>
                 <div class="text-caption text-grey-6">A fixar {{ fmt(afixar) }} sc</div>
               </q-card-section>
@@ -366,8 +387,11 @@ onMounted(async () => {
           </div>
           <div class="col-6 col-md-3">
             <q-card flat bordered>
+              <q-card-section class="bg-primary text-white q-py-sm">
+                <div class="text-subtitle2">Entregue</div>
+              </q-card-section>
+              <q-separator />
               <q-card-section>
-                <div class="text-caption text-grey-7">Entregue</div>
                 <div class="text-h6">{{ fmt(entreguekg) }} kg</div>
                 <div class="text-caption text-grey-6">
                   ≈ {{ fmt(entreguesc) }} sc · Saldo a embarcar {{ fmt(saldoEmbarcarKg) }} kg
@@ -377,8 +401,11 @@ onMounted(async () => {
           </div>
           <div class="col-6 col-md-3">
             <q-card flat bordered>
+              <q-card-section class="bg-primary text-white q-py-sm">
+                <div class="text-subtitle2">Saldo no silo</div>
+              </q-card-section>
+              <q-separator />
               <q-card-section>
-                <div class="text-caption text-grey-7">Saldo no silo</div>
                 <div class="text-h6 text-amber-9">{{ fmt(saldoSiloKg) }} kg</div>
                 <div class="text-caption text-grey-6">
                   ≈ {{ fmt(saldoSiloKg / pesosaca, 0) }} sc · colhido − entregue
@@ -389,26 +416,30 @@ onMounted(async () => {
         </div>
 
         <!-- Preço médio ponderado por moeda (barter fora) -->
-        <q-card
+        <!-- <q-card
           v-if="comercial.precomediobrl || comercial.precomediousd"
           flat
           bordered
           class="q-mb-md"
         >
+          <q-card-section class="bg-primary text-white q-py-sm">
+            <div class="text-subtitle2">Preço médio</div>
+          </q-card-section>
+          <q-separator />
           <q-card-section class="row q-col-gutter-xl items-center">
             <div v-if="comercial.precomediobrl" class="col-auto">
-              <div class="text-caption text-grey-7">Preço médio R$</div>
+              <div class="text-caption text-grey-7">R$</div>
               <div class="text-h6">{{ rs(comercial.precomediobrl) }} <small>/sc</small></div>
             </div>
             <div v-if="comercial.precomediousd" class="col-auto">
-              <div class="text-caption text-grey-7">Preço médio US$</div>
+              <div class="text-caption text-grey-7">US$</div>
               <div class="text-h6">
                 US$ {{ fmt(comercial.precomediousd, 2) }} <small>/sc</small>
               </div>
               <div class="text-caption text-grey-6">dólar médio {{ rs(comercial.dolarmedio) }}</div>
             </div>
           </q-card-section>
-        </q-card>
+        </q-card> -->
       </template>
       <MgContratosSafra
         :codsafra="codsafra"
@@ -418,45 +449,21 @@ onMounted(async () => {
         @changed="recarregarComercial"
       />
 
-      <!-- Título da seção + adicionar (escolhe a fazenda no dialog) -->
-      <div class="row items-center q-mb-sm">
-        <div class="col text-subtitle1 text-weight-medium">Plantios por fazenda</div>
-        <q-btn flat round size="sm" color="primary" icon="add" @click="novoPlantio()">
-          <q-tooltip>Plantar talhão</q-tooltip>
-        </q-btn>
-      </div>
-
       <!-- Um card por fazenda: mapa + lista por talhão + resultado -->
       <div v-if="porFazenda.length" class="row q-col-gutter-md">
         <template v-for="g in porFazenda" :key="g.codfazenda">
           <div class="col-12">
             <q-card bordered flat>
-              <q-item>
-                <q-item-section avatar>
-                  <q-avatar icon="agriculture" />
-                </q-item-section>
+              <q-item class="bg-primary text-white">
                 <q-item-section>
                   <q-item-label class="text-subtitle1">{{ g.fazenda }}</q-item-label>
-                  <q-item-label class="text-caption">
-                    {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} / {{ fmt(g.expectativa) }} sc ·
-                    <span class="text-weight-medium">{{ fmt(g.produtividade, 1) }} sc/ha</span>
-                  </q-item-label>
-                  <q-linear-progress
-                    v-if="g.expectativa > 0"
-                    :value="g.progresso"
-                    color="green-6"
-                    track-color="grey-3"
-                    size="6px"
-                    rounded
-                    class="q-mt-xs"
-                  />
                 </q-item-section>
                 <q-item-section side>
                   <q-btn
                     flat
                     round
                     size="sm"
-                    color="primary"
+                    color="white"
                     icon="add"
                     @click="novoPlantio(g.codfazenda)"
                   >
@@ -464,6 +471,22 @@ onMounted(async () => {
                   </q-btn>
                 </q-item-section>
               </q-item>
+              <q-separator />
+              <q-card-section class="q-py-sm">
+                <div class="text-caption text-grey-7">
+                  {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} / {{ fmt(g.expectativa) }} sc ·
+                  <span class="text-weight-medium">{{ fmt(g.produtividade, 1) }} sc/ha</span>
+                </div>
+                <q-linear-progress
+                  v-if="g.expectativa > 0"
+                  :value="g.progresso"
+                  color="green-6"
+                  track-color="grey-3"
+                  size="6px"
+                  rounded
+                  class="q-mt-xs"
+                />
+              </q-card-section>
               <q-separator />
 
               <MgMapaTalhoes
