@@ -265,6 +265,7 @@ const handleUpdate = (value) => {
     :class="customClass"
     :disable="disable"
     :readonly="readonly"
+    :tabindex="readonly ? -1 : undefined"
     :loading="loading"
   >
     <template v-slot:option="scope">
