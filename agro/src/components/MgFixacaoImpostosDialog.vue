@@ -9,9 +9,9 @@ import MgSelectMoeda from '@components/MgSelectMoeda.vue'
 // Modal de valores + impostos da fixação. O operador informa o preço bruto e
 // AJUSTA as alíquotas/UPF de cada tributo (default vindo da config da cultura).
 // O líquido é recalculado ao vivo e GRAVADO junto da fixação (snapshot) — o
-// backend revalida as linhas e trava o líquido (precoliquido/totaldeducao).
-// FETHAB não tem mais checkbox: a isenção é IMPLÍCITA — basta zerar a UPF da
-// linha do grupo FETHAB que aquela transação fica isenta (o backend deriva o
+// backend revalida os tributos e trava o líquido (precoliquido/totaldeducao).
+// FETHAB não tem mais checkbox: a isenção é IMPLÍCITA — basta zerar a UPF do
+// tributo do grupo FETHAB que aquela transação fica isenta (o backend deriva o
 // flag isentofethab a partir disso).
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -36,7 +36,7 @@ const form = ref({
   moeda: 'BRL',
   dolar: null,
 })
-const linhas = ref([])
+const tributos = ref([])
 const salvando = ref(false)
 const carregando = ref(false)
 
@@ -47,12 +47,13 @@ const pesosaca = computed(() => Number(props.contrato?.pesosaca) || 60)
 // saldo a fixar + a própria quantidade (na edição, ela volta pro saldo).
 const semTeto = computed(() => !!props.contrato?.volumeemaberto)
 const disponivelFixar = computed(() =>
-  props.afixar == null ? null : Number(props.afixar) + (editando.value ? n(props.fixacao?.quantidade) : 0),
+  props.afixar == null
+    ? null
+    : Number(props.afixar) + (editando.value ? n(props.fixacao?.quantidade) : 0),
 )
-const hintFixar = computed(() =>
-  semTeto.value || disponivelFixar.value == null
-    ? undefined
-    : `Saldo a fixar: ${fmt(disponivelFixar.value, 0)} sc`,
+// Teto p/ o campo quantidade (clamp do MgInputValor): null = sem limite.
+const maxQuantidade = computed(() =>
+  semTeto.value || disponivelFixar.value == null ? null : disponivelFixar.value,
 )
 // Qualquer moeda != BRL é estrangeira e exige cotação em R$ pra travar o preço.
 const estrangeira = computed(() => form.value.moeda && form.value.moeda !== 'BRL')
@@ -80,19 +81,21 @@ const precoreal = computed(() =>
 
 // Mesma fórmula do motor fiscal (ContratoCalculoService): UNIDADE = %/100 × UPF
 // × pesosaca/1000; VALOR = %/100 × bruto.
-function valorLinha(l) {
-  if (l.base === 'UNIDADE') {
-    return arred4((n(l.percentual) / 100) * n(l.upf) * (pesosaca.value / 1000))
+function valorTributo(tributo) {
+  if (tributo.base === 'UNIDADE') {
+    return arred4((n(tributo.percentual) / 100) * n(tributo.upf) * (pesosaca.value / 1000))
   }
-  return arred4((n(l.percentual) / 100) * precoreal.value)
+  return arred4((n(tributo.percentual) / 100) * precoreal.value)
 }
-const totalDeducao = computed(() => arred4(linhas.value.reduce((s, l) => s + valorLinha(l), 0)))
+const totalDeducao = computed(() =>
+  arred4(tributos.value.reduce((s, tributo) => s + valorTributo(tributo), 0)),
+)
 const liquido = computed(() => arred4(precoreal.value - totalDeducao.value))
 const percentualDeducao = computed(() =>
   precoreal.value > 0 ? (totalDeducao.value / precoreal.value) * 100 : 0,
 )
 
-function mapLinha(it) {
+function mapTributo(it) {
   return {
     codtributo: it.codtributo ?? null,
     codigo: it.codigo,
@@ -105,8 +108,8 @@ function mapLinha(it) {
 }
 
 // Busca a config de tributos da cultura (alíquotas + UPF da competência) pra
-// pré-preencher as linhas editáveis. SEMPRE traz o FETHAB; isenção = operador
-// zera a UPF dessa linha.
+// pré-preencher os tributos editáveis. SEMPRE traz o FETHAB; isenção = operador
+// zera a UPF desse tributo.
 async function carregarPadrao() {
   if (!props.contrato?.codcultura) return
   carregando.value = true
@@ -119,12 +122,12 @@ async function carregarPadrao() {
         funruralvenda: props.contrato.Filial?.funruralvenda ? 1 : 0,
       },
     })
-    linhas.value = (data.itens || []).map((it) => ({
-      ...mapLinha(it),
+    tributos.value = (data.itens || []).map((it) => ({
+      ...mapTributo(it),
       upf: it.base === 'UNIDADE' ? n(it.upf ?? data.unidade?.valor) : null,
     }))
   } catch (e) {
-    notifyError(e, 'Não foi possível carregar os impostos da cultura.')
+    notifyError(e, 'Não foi possível carregar os tributos da cultura.')
   } finally {
     carregando.value = false
   }
@@ -141,7 +144,7 @@ function abrir() {
       dolar: f.dolar || null,
     }
     if (Array.isArray(f.tributos) && f.tributos.length) {
-      linhas.value = f.tributos.map(mapLinha)
+      tributos.value = f.tributos.map(mapTributo)
     } else {
       carregarPadrao()
     }
@@ -149,12 +152,13 @@ function abrir() {
   }
   form.value = {
     data: new Date().toISOString().slice(0, 10),
-    quantidade: null,
+    // Pré-preenche com o saldo a fixar (default = fixar tudo); operador ajusta.
+    quantidade: maxQuantidade.value,
     preco: null,
     moeda: 'BRL',
     dolar: null,
   }
-  linhas.value = []
+  tributos.value = []
   carregarPadrao()
 }
 
@@ -165,25 +169,10 @@ watch(
   },
 )
 
+// Validação fica nos :rules dos campos (q-form valida no submit antes de chamar
+// salvar); o teto de quantidade é o :max do MgInputValor (clamp).
 async function salvar() {
   if (salvando.value) return
-  if (precoreal.value <= 0) {
-    notifyError(null, 'Informe o preço bruto da fixação.')
-    return
-  }
-  if (n(form.value.quantidade) <= 0) {
-    notifyError(null, 'Informe a quantidade fixada (sacas).')
-    return
-  }
-  // Espelho da trava do backend: não fixar além do saldo (contratos com teto).
-  if (
-    !semTeto.value &&
-    disponivelFixar.value != null &&
-    n(form.value.quantidade) > disponivelFixar.value + 1e-6
-  ) {
-    notifyError(null, `Excede o saldo a fixar do contrato (${fmt(disponivelFixar.value, 0)} sc).`)
-    return
-  }
   salvando.value = true
   try {
     const payload = {
@@ -192,14 +181,14 @@ async function salvar() {
       preco: form.value.preco,
       moeda: form.value.moeda,
       dolar: estrangeira.value ? form.value.dolar : null,
-      tributos: linhas.value.map((l) => ({
-        codtributo: l.codtributo,
-        codigo: l.codigo,
-        descricao: l.descricao,
-        base: l.base,
-        percentual: n(l.percentual),
-        upf: l.base === 'UNIDADE' ? n(l.upf) : null,
-        grupofethab: !!l.grupofethab,
+      tributos: tributos.value.map((tributo) => ({
+        codtributo: tributo.codtributo,
+        codigo: tributo.codigo,
+        descricao: tributo.descricao,
+        base: tributo.base,
+        percentual: n(tributo.percentual),
+        upf: tributo.base === 'UNIDADE' ? n(tributo.upf) : null,
+        grupofethab: !!tributo.grupofethab,
       })),
     }
     if (editando.value) {
@@ -226,80 +215,88 @@ async function salvar() {
           <div class="text-caption">Valores e impostos · {{ contrato.Cultura?.cultura || '' }}</div>
         </q-card-section>
 
-        <q-card-section class="q-pt-md">
+        <q-card-section>
           <div class="row q-col-gutter-md">
-            <div class="col-12 col-sm-6">
+            <div class="col-4">
               <MgInputData v-model="form.data" label="Data" type="date" />
             </div>
-            <div class="col-12 col-sm-6">
-              <MgInputValor
-                v-model="form.quantidade"
-                :decimals="0"
-                suffix="sc"
-                label="Quantidade"
-                :hint="hintFixar"
-                autofocus
-              />
-            </div>
-            <div class="col-12 col-sm-6" :class="estrangeira ? 'col-sm-6' : ''">
-              <MgInputValor v-model="form.preco" :decimals="2" label="Preço bruto / saca" />
-            </div>
-            <div v-if="estrangeira" class="col-12 col-sm-6">
-              <MgInputValor v-model="form.dolar" :decimals="4" prefix="R$" label="Cotação R$" />
-            </div>
-            <div class="col-12 col-sm-6">
+            <div class="col-4">
               <MgSelectMoeda v-model="form.moeda" />
             </div>
-          </div>
-        </q-card-section>
-
-        <q-separator />
-
-        <q-card-section>
-          <div class="row items-center justify-between q-mb-sm">
-            <div class="text-subtitle2">Impostos / deduções</div>
-            <q-btn
-              flat
-              no-caps
-              size="sm"
-              color="primary"
-              icon="refresh"
-              label="Recarregar padrão"
-              :loading="carregando"
-              @click="carregarPadrao"
-            />
-          </div>
-
-          <div v-for="(l, i) in linhas" :key="i" class="row q-col-gutter-sm items-center q-py-xs">
             <div class="col-4">
-              <MgInputValor v-model="l.percentual" :decimals="2" suffix="%" :label="l.codigo" />
-            </div>
-            <div class="col-4">
-              <!-- Col 2: tributo indexado mostra a UPF (editável); tributo de
-                   valor mostra o próprio custo por saca (readonly). -->
               <MgInputValor
-                v-if="l.base === 'UNIDADE'"
-                v-model="l.upf"
+                v-model="form.preco"
                 :decimals="2"
-                prefix="R$"
-                label="UPF"
+                label="Preço bruto / saca"
+                lazy-rules
+                :rules="[() => precoreal > 0]"
               />
+            </div>
+
+            <!-- Uma linha por tributo: rótulo · alíquota · UPF (só indexado) · custo. -->
+            <template v-for="(tributo, i) in tributos" :key="i">
+              <div class="col-4">
+                <MgInputValor
+                  v-model="tributo.percentual"
+                  :decimals="2"
+                  suffix="%"
+                  :label="'Alíquota ' + tributo.codigo"
+                />
+              </div>
+              <div class="col-4">
+                <!-- Tributo indexado: UPF editável; de valor não tem UPF. -->
+                <MgInputValor
+                  v-if="tributo.base === 'UNIDADE'"
+                  v-model="tributo.upf"
+                  :decimals="2"
+                  prefix="R$"
+                  label="UPF"
+                />
+              </div>
+              <div class="col-4">
+                <MgInputValor
+                  :model-value="valorTributo(tributo)"
+                  :decimals="2"
+                  prefix="R$"
+                  :label="tributo.codigo"
+                  readonly
+                  bg-color="grey-2"
+                  input-class="text-red"
+                />
+              </div>
+            </template>
+            <!-- <div class="col-9 text-weight-medium text-grey-8">
+              Deduções
+            </div>
+            <div class="col-3">
               <MgInputValor
-                v-else
-                :model-value="valorLinha(l)"
+                :model-value="totalDeducao"
                 :decimals="2"
                 prefix="R$"
-                label="Custo"
+                label="Total deduções"
                 readonly
                 bg-color="grey-2"
                 input-class="text-red"
               />
+            </div> -->
+
+            <div class="col-8 text-weight-medium text-grey-8">
+              Líquido ({{ fmt(100 - percentualDeducao, 2) }}%)
+              <q-btn
+                flat
+                dense
+                round
+                no-caps
+                color="primary"
+                icon="refresh"
+                :loading="carregando"
+                @click="carregarPadrao"
+              >
+                <q-tooltip>Recalcular Tributos</q-tooltip>
+              </q-btn>
             </div>
             <div class="col-4">
-              <!-- Col 3: última linha mostra o líquido geral da saca; nas demais,
-                   só os indexados mostram o custo aqui (o de valor já está na col2). -->
               <MgInputValor
-                v-if="i === linhas.length - 1"
                 :model-value="liquido"
                 :decimals="2"
                 prefix="R$"
@@ -308,21 +305,34 @@ async function salvar() {
                 bg-color="green-1"
                 input-class="text-green-10"
               />
+            </div>
+            <div class="col-4 text-weight-medium text-grey-8">Total</div>
+            <div class="col-4">
               <MgInputValor
-                v-else-if="l.base === 'UNIDADE'"
-                :model-value="valorLinha(l)"
-                :decimals="2"
+                v-model="form.quantidade"
+                :decimals="0"
+                :max="maxQuantidade"
+                suffix="sc"
+                label="Quantidade"
+                lazy-rules
+                :rules="[(v) => v > 0]"
+              />
+            </div>
+            <div class="col-4">
+              <MgInputValor
+                :model-value="form.quantidade * liquido"
+                :decimals="0"
+                :max="maxQuantidade"
                 prefix="R$"
-                label="Custo"
+                label="Quantidade"
+                bg-color="green-1"
+                input-class="text-green-10"
                 readonly
-                bg-color="grey-2"
-                input-class="text-red"
               />
             </div>
           </div>
-          <div class="text-caption">Deduções ({{ fmt(percentualDeducao, 2) }}%)</div>
 
-          <div v-if="!linhas.length && !carregando" class="text-grey-6 q-py-sm">
+          <div v-if="!tributos.length && !carregando" class="text-grey-6 q-py-sm">
             Nenhum tributo configurado para esta cultura.
           </div>
         </q-card-section>
