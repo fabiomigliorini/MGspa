@@ -37,10 +37,8 @@ const {
   valorCarregado,
   pago,
   bate,
-  difNf,
-  difPago,
 } = storeToRefs(store)
-
+//essa const tinha os campos   difNf, difPago, que removi
 // Form de edição = form compartilhado (também usado p/ criar na safra), então
 // continua via useCadastro; ao salvar, recarrega o store da tela.
 const contratoCad = useCadastro('contrato', 'codcontrato', 'Contrato')
@@ -284,10 +282,10 @@ onMounted(() => store.carregar(cod))
         <template #avatar><q-icon name="verified" color="green-7" /></template>
         Tudo confere: valor carregado, NFs emitidas e pagamentos batem.
       </q-banner>
-      <q-banner v-else rounded class="bg-amber-1 text-amber-9 q-mb-md">
+      <!-- <q-banner v-else rounded class="bg-amber-1 text-amber-9 q-mb-md">
         <template #avatar><q-icon name="balance" color="amber-8" /></template>
         NFs − carregado: <b>{{ rs(difNf) }}</b> · Pago − NFs: <b>{{ rs(difPago) }}</b>
-      </q-banner>
+      </q-banner> -->
 
       <!-- Cards especialistas (cada um lê do store da tela) -->
       <template v-if="contrato">
