@@ -245,6 +245,7 @@ function onKeydown(e) {
     :dense="dense"
     :borderless="borderless"
     :readonly="readonly"
+    :tabindex="readonly ? -1 : undefined"
     :bg-color="bgColor"
     :rules="wrappedRules"
     :lazy-rules="lazyRules"
