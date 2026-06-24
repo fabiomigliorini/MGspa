@@ -20,10 +20,10 @@ function fmt(v, dec = 0) {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item class="bg-primary text-white">
+    <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Entregas</q-item-label>
-        <q-item-label class="text-caption"
+        <q-item-label caption
           >{{ fmt(carregadokg) }} kg (≈ {{ fmt(carregadosc, 1) }} sc) entregue</q-item-label
         >
       </q-item-section>

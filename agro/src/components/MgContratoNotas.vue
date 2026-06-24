@@ -73,15 +73,15 @@ function excluirNota(nt) {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item class="bg-primary text-white">
+    <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Plano de NF</q-item-label>
-        <q-item-label class="text-caption">
+        <q-item-label caption>
           Notas a emitir por carga (operação triangular = sequência com referência de chave)
         </q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="white" icon="add" @click="novaNota">
+        <q-btn flat round size="sm" color="primary" icon="add" @click="novaNota">
           <q-tooltip>Nova nota no plano</q-tooltip>
         </q-btn>
       </q-item-section>

@@ -24,7 +24,7 @@ const contratos = ref([])
 const naturezas = ref([])
 const carregando = ref(false)
 
-// const corTipo = { FIXO: 'green-7', FIXAR: 'orange-8', BARTER: 'deep-purple-6' }
+const corTipo = { FIXO: 'green-7', FIXAR: 'orange-8', BARTER: 'deep-purple-6' }
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '0'
@@ -108,82 +108,84 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-card flat bordered>
-    <q-item class="bg-primary text-white">
-      <q-item-section>
-        <q-item-label class="text-subtitle1">Contratos de venda</q-item-label>
-      </q-item-section>
-      <q-item-section side>
-        <q-btn v-if="online" flat round size="sm" color="white" icon="add" @click="novo">
-          <q-tooltip>Novo contrato</q-tooltip>
-        </q-btn>
-      </q-item-section>
-    </q-item>
-    <q-card-section>
-      <q-banner v-if="!online" rounded class="bg-grey-2 text-grey-7">
-        <template #avatar><q-icon name="cloud_off" color="grey-6" /></template>
-        Contratos indisponíveis offline.
-      </q-banner>
+  <div>
+    <div class="row items-center q-mb-sm">
+      <div class="col text-subtitle1 text-weight-medium">Contratos de venda</div>
+      <q-btn v-if="online" flat round size="sm" color="primary" icon="add" @click="novo">
+        <q-tooltip>Novo contrato</q-tooltip>
+      </q-btn>
+    </div>
 
-      <div v-else-if="contratos.length" class="row q-col-gutter-md">
-        <div v-for="c in contratos" :key="c.codcontrato" class="col-12 col-sm-6">
-          <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': c.inativo }">
-            <q-item
-              clickable
-              v-ripple
-              :to="{ name: 'contrato-detalhe', params: { codcontrato: c.codcontrato } }"
-            >
-              <q-item-section>
-                <q-item-label v-if="c.contrato" class="text-caption text-grey-7">
-                  {{ c.contrato }}
-                </q-item-label>
-                <!-- Título: com quem o contrato foi feito (comprador) -->
-                <q-item-label class="text-subtitle1 text-weight-medium">
-                  {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}
-                </q-item-label>
-                <!-- Barra de entrega em kg (+ sacas) com o modo do contrato ao lado -->
-                <q-item-label class="q-mt-sm">
-                  <q-linear-progress
-                    :value="progresso(c)"
-                    :indeterminate="!!c.volumeemaberto"
-                    color="green-6"
-                    track-color="grey-3"
-                    size="8px"
-                    rounded
-                  />
-                  <div class="row items-center q-mt-xs">
-                    <div class="text-caption text-grey-7">
-                      {{ fmt(c.carregadokg) }} /
-                      {{ c.volumeemaberto ? '∞' : fmt(c.contratadokg) }} kg
-                      <span class="text-grey-5"
-                        >(≈ {{ fmt(c.carregadosc, 1) }} /
-                        {{ c.volumeemaberto ? '∞' : fmt(c.quantidade) }} sc)</span
-                      >
-                    </div>
-                    <!-- <q-chip
-                      dense
-                      square
-                      :color="corTipo[c.tipo] || 'grey-7'"
-                      text-color="white"
-                      :label="c.tipo"
-                      class="q-ml-sm q-my-none"
-                    /> -->
+    <q-banner v-if="!online" rounded class="bg-grey-2 text-grey-7">
+      <template #avatar><q-icon name="cloud_off" color="grey-6" /></template>
+      Contratos indisponíveis offline.
+    </q-banner>
+
+    <div v-else-if="contratos.length" class="row q-col-gutter-md">
+      <div v-for="c in contratos" :key="c.codcontrato" class="col-12 col-sm-6">
+        <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': c.inativo }">
+          <q-item
+            clickable
+            v-ripple
+            :to="{ name: 'contrato-detalhe', params: { codcontrato: c.codcontrato } }"
+          >
+            <q-item-section avatar>
+              <q-avatar
+                :color="corTipo[c.tipo] || 'grey-7'"
+                text-color="white"
+                icon="description"
+              />
+            </q-item-section>
+            <q-item-section>
+              <!-- Nº Nosso (CULTURA-AA/AA-NNNN) -->
+              <q-item-label v-if="c.contrato" caption class="text-overline">
+                {{ c.contrato }}
+              </q-item-label>
+              <!-- Título: com quem o contrato foi feito (comprador) -->
+              <q-item-label class="text-subtitle1 text-weight-medium">
+                {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}
+              </q-item-label>
+              <!-- Barra de entrega em kg (+ sacas) com o modo do contrato ao lado -->
+              <q-item-label class="q-mt-sm">
+                <q-linear-progress
+                  :value="progresso(c)"
+                  :indeterminate="!!c.volumeemaberto"
+                  color="green-6"
+                  track-color="grey-3"
+                  size="8px"
+                  rounded
+                />
+                <div class="row items-center q-mt-xs">
+                  <div class="text-caption text-grey-7">
+                    {{ fmt(c.carregadokg) }} / {{ c.volumeemaberto ? '∞' : fmt(c.contratadokg) }} kg
+                    <span class="text-grey-5"
+                      >(≈ {{ fmt(c.carregadosc, 1) }} /
+                      {{ c.volumeemaberto ? '∞' : fmt(c.quantidade) }} sc)</span
+                    >
                   </div>
-                </q-item-label>
-              </q-item-section>
-              <!-- Ações (editar/inativar/excluir) ficam só na tela do contrato. -->
-              <q-item-section side>
-                <q-icon name="chevron_right" color="grey-5" />
-              </q-item-section>
-            </q-item>
-          </q-card>
-        </div>
+                  <q-chip
+                    dense
+                    square
+                    :color="corTipo[c.tipo] || 'grey-7'"
+                    text-color="white"
+                    :label="c.tipo"
+                    class="q-ml-sm q-my-none"
+                  />
+                </div>
+              </q-item-label>
+            </q-item-section>
+            <!-- Ações (editar/inativar/excluir) ficam só na tela do contrato. -->
+            <q-item-section side>
+              <q-icon name="chevron_right" color="grey-5" />
+            </q-item-section>
+          </q-item>
+        </q-card>
       </div>
+    </div>
 
-      <MgEmptyState v-else icon="description">
-        Nenhum contrato nesta safra. Crie o primeiro com o botão <q-icon name="add" />.
-      </MgEmptyState>
-    </q-card-section>
+    <MgEmptyState v-else icon="description">
+      Nenhum contrato nesta safra. Crie o primeiro com o botão <q-icon name="add" />.
+    </MgEmptyState>
 
     <MgContratoForm
       :cad="cad"
@@ -191,5 +193,5 @@ onMounted(async () => {
       :fixar="{ codsafra: props.codsafra, codcultura: props.codcultura }"
       @saved="aposSalvar"
     />
-  </q-card>
+  </div>
 </template>
