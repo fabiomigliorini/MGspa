@@ -15,7 +15,7 @@ class SelectProdutoBarraController extends Controller
         $offset = ($page - 1) * 20;
 
         $sql = "SELECT
-                    similarity(unaccent(descricao || ' ' || barras), unaccent(:frase)) AS score,
+                    strict_word_similarity(unaccent(:frase), unaccent(descricao || ' ' || barras)) AS score,
                     codprodutobarra,
                     codproduto,
                     barras,
@@ -70,7 +70,7 @@ class SelectProdutoBarraController extends Controller
 
         $filtro['frase'] = trim($frase);
         if (!empty($filtro['frase'])) {
-            $sql .= " AND similarity(unaccent(descricao || ' ' || barras), unaccent(:frase)) > 0.2 ";
+            $sql .= " AND strict_word_similarity(unaccent(:frase), unaccent(descricao || ' ' || barras)) > 0.4 ";
         }
 
         if (is_null($ordem)) {
