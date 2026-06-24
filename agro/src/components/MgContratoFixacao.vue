@@ -61,16 +61,16 @@ function excluirFixacao(f) {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item class="bg-primary text-white">
+    <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Fixação de preço</q-item-label>
-        <q-item-label class="text-caption">
+        <q-item-label caption>
           Fixado {{ fmt(fixado) }} sc · A fixar {{ fmt(afixar) }} sc · Preço médio
           {{ rs(precoMedio) }}/sc
         </q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="white" icon="add" @click="novaFixacao">
+        <q-btn flat round size="sm" color="primary" icon="add" @click="novaFixacao">
           <q-tooltip>Nova fixação</q-tooltip>
         </q-btn>
       </q-item-section>

@@ -49,9 +49,6 @@ function fmtData(d) {
 function arred(v) {
   return Math.round(n(v) * 100) / 100
 }
-// Não se marca uma parcela como recebida "em conta" sem dizer onde a transação
-// caiu (barter liquida em insumos e fica isento). Regra do backend; aqui é só UX.
-const reqPortador = (v) => !!v || 'Informe o portador onde o recebimento foi realizado.'
 
 const modosParcela = [
   { label: 'Valor', value: 'VALOR' },
@@ -120,7 +117,6 @@ const confirmForm = ref({})
 function abrirConfirmar(p) {
   confirmForm.value = {
     codcontratopagamento: p.codcontratopagamento,
-    forma: p.forma, // barter não exige portador (liquida em insumos)
     datarecebido: new Date().toISOString().slice(0, 10),
     valorrecebido: p.valor,
     codportador: p.codportador || contrato.value?.codportador || null,
@@ -144,15 +140,15 @@ async function confirmarRecebimento() {
 
 <template>
   <q-card flat bordered class="q-mb-md">
-    <q-item class="bg-primary text-white">
+    <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
-        <q-item-label class="text-caption">
+        <q-item-label caption>
           Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
         </q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="white" icon="add" @click="parcelasDialog = true">
+        <q-btn flat round size="sm" color="primary" icon="add" @click="parcelasDialog = true">
           <q-tooltip>Novas parcelas</q-tooltip>
         </q-btn>
       </q-item-section>
@@ -274,7 +270,6 @@ async function confirmarRecebimento() {
                 <MgSelectPortador
                   v-model="formParcela.codportador"
                   label="Portador (conta que recebe)"
-                  :rules="formParcela.datarecebido ? [reqPortador] : []"
                 />
               </div>
               <div class="col-12">
@@ -326,11 +321,10 @@ async function confirmarRecebimento() {
                   label="Valor recebido"
                 />
               </div>
-              <div v-if="confirmForm.forma !== 'BARTER'" class="col-12">
+              <div class="col-12">
                 <MgSelectPortador
                   v-model="confirmForm.codportador"
                   label="Portador (conta que recebeu)"
-                  :rules="[reqPortador]"
                 />
               </div>
             </div>
