@@ -543,10 +543,15 @@ class MdfeNfePhpService
         /* fim grupo Informações Adicionais */
 
         // Monta XML
-        $ret = $make->monta();
-        if (count($make->errors) > 0) {
+        try {
+            $ret = $make->monta();
+        } catch (\Exception $e) {
             throw new \Exception($make->errors[0]);
+            //dd($make->getErrors());
         }
+        //if (count($make->errors) > 0) {
+            //throw new \Exception($make->errors[0]);
+        //}
         $xml = $make->getXML(); // O conteúdo do XML fica armazenado na variável $xml
 
         // Salva Chave do MDFE no Banco de Dados
@@ -583,7 +588,7 @@ class MdfeNfePhpService
         $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
 
         // Envia Lote para Sefaz
-        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote);
+        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1);
         $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
         file_put_contents($path, $resp);
 
