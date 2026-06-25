@@ -4,7 +4,7 @@ import { formataNumero, formataData } from '@components/formatters'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 
 // Card "Dados do contrato" da tela de detalhe. Layout manual (não array) na
-// MESMA ordem do MgContratoForm: identificação → embarque → partes →
+// MESMA ordem do ContratoForm: identificação → embarque → partes →
 // observações. Cada campo tem a largura que o conteúdo pede (Janela larga,
 // Local estreito; partes ganham um terço cada). Lê o contrato do store da tela
 // e emite `editar` (a página abre o form compartilhado).

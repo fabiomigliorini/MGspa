@@ -8,13 +8,13 @@ import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import MgContratoForm from 'components/MgContratoForm.vue'
-import MgContratoDados from 'components/MgContratoDados.vue'
-import MgContratoFixacao from 'components/MgContratoFixacao.vue'
-import MgContratoPagamentos from 'components/MgContratoPagamentos.vue'
-import MgContratoNotas from 'components/MgContratoNotas.vue'
-import MgContratoEntregas from 'components/MgContratoEntregas.vue'
-import MgContratoAnexos from 'components/MgContratoAnexos.vue'
+import ContratoForm from 'components/ContratoForm.vue'
+import ContratoDados from 'components/ContratoDados.vue'
+import ContratoFixacao from 'components/ContratoFixacao.vue'
+import ContratoPagamentos from 'components/ContratoPagamentos.vue'
+import ContratoNotas from 'components/ContratoNotas.vue'
+import ContratoEntregas from 'components/ContratoEntregas.vue'
+import ContratoAnexos from 'components/ContratoAnexos.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -289,16 +289,16 @@ onMounted(() => store.carregar(cod))
 
       <!-- Cards especialistas (cada um lê do store da tela) -->
       <template v-if="contrato">
-        <MgContratoDados @editar="editarContrato" />
-        <MgContratoFixacao />
-        <MgContratoPagamentos />
-        <MgContratoNotas />
-        <MgContratoEntregas />
-        <MgContratoAnexos />
+        <ContratoDados @editar="editarContrato" />
+        <ContratoFixacao />
+        <ContratoPagamentos />
+        <ContratoNotas />
+        <ContratoEntregas />
+        <ContratoAnexos />
       </template>
 
       <!-- Dialog Contrato (edição) — mesmo form do cadastro -->
-      <MgContratoForm :cad="contratoCad" @saved="store.carregar()" />
+      <ContratoForm :cad="contratoCad" @saved="store.carregar()" />
     </div>
   </q-page>
 </template>

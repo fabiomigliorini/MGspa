@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import MgRadioCultura from 'components/MgRadioCultura.vue'
+import RadioCultura from 'components/RadioCultura.vue'
 
 // Formulário único de safra — serve tanto pra criar quanto pra editar. Recebe a
 // instância de useCadastro (lê/escreve em cad.form, usa cad.isNovo) e a lista de
@@ -100,7 +100,7 @@ onMounted(() => {
 <template>
   <div class="row q-col-gutter-md">
     <div class="col-12">
-      <MgRadioCultura v-model="form.codcultura" autofocus @change="onCultura" />
+      <RadioCultura v-model="form.codcultura" autofocus @change="onCultura" />
     </div>
 
     <div class="col-6">

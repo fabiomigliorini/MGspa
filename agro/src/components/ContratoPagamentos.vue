@@ -9,10 +9,10 @@ import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
-import MgContratoParcelasDialog from 'components/MgContratoParcelasDialog.vue'
+import ContratoParcelasDialog from 'components/ContratoParcelasDialog.vue'
 
 // Card "Parcelas de pagamento". Especialista no previsto x recebido do contrato:
-// gera várias parcelas de uma vez (MgContratoParcelasDialog), edita uma parcela
+// gera várias parcelas de uma vez (ContratoParcelasDialog), edita uma parcela
 // e confirma o recebimento (valor real pode divergir do previsto). Lê do store
 // da tela e persiste pelas actions (salvarPagamento/excluirPagamento/confirmar).
 const $q = useQuasar()
@@ -286,7 +286,7 @@ async function confirmarRecebimento() {
     </q-dialog>
 
     <!-- Gerador de várias parcelas (parte do saldo FIXADO, não do contratado) -->
-    <MgContratoParcelasDialog
+    <ContratoParcelasDialog
       v-model="parcelasDialog"
       :cod="cod"
       :contrato="contrato"

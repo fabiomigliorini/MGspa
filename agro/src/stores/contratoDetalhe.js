@@ -110,7 +110,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     await api.delete(`v1/contrato/${cod.value}`)
   }
 
-  // ---- Fixação (exclui aqui; criar/editar passa pelo MgFixacaoImpostosDialog) ----
+  // ---- Fixação (exclui aqui; criar/editar passa pelo FixacaoImpostosDialog) ----
   async function excluirFixacao(f) {
     await api.delete(`v1/contrato/${cod.value}/fixacao/${f.codcontratofixacao}`)
     await carregar()

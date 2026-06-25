@@ -1,9 +1,9 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useCadastro } from 'src/composables/useCadastro'
-import MgIconeCultura from 'components/MgIconeCultura.vue'
+import IconeCultura from 'components/IconeCultura.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import MgSafraForm from 'components/MgSafraForm.vue'
+import SafraForm from 'components/SafraForm.vue'
 
 const cad = useCadastro('safra', 'codsafra', 'Safra')
 
@@ -45,7 +45,7 @@ onMounted(() => cad.carregar())
               :to="{ name: 'safra-detalhe', params: { codsafra: s.codsafra } }"
             >
               <q-item-section avatar>
-                <MgIconeCultura :codcultura="s.codcultura" fallback-color="light-green-8" />
+                <IconeCultura :codcultura="s.codcultura" fallback-color="light-green-8" />
               </q-item-section>
               <q-item-section>
                 <q-item-label class="text-subtitle1">{{ s.safra }}</q-item-label>
@@ -72,7 +72,7 @@ onMounted(() => cad.carregar())
               <div class="text-h6">{{ cad.isNovo ? 'Nova Safra' : 'Editar Safra' }}</div>
             </q-card-section>
             <q-card-section class="q-pt-md">
-              <MgSafraForm :cad="cad" :safras="cad.items" />
+              <SafraForm :cad="cad" :safras="cad.items" />
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />

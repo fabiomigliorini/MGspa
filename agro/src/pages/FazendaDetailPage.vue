@@ -8,7 +8,7 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
+import MapaTalhoes from 'components/MapaTalhoes.vue'
 import { PALETA_TALHAO, corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 
 const route = useRoute()
@@ -400,7 +400,7 @@ onMounted(async () => {
           </q-item-section>
         </q-item>
         <q-separator />
-        <MgMapaTalhoes v-if="talhoesComGeo.length" :talhoes="talhoesComGeo" height="400px" />
+        <MapaTalhoes v-if="talhoesComGeo.length" :talhoes="talhoesComGeo" height="400px" />
         <MgEmptyState v-else plain icon="map">
           Nenhum talhão com polígono ainda. Use <q-icon name="add" /> para desenhar o primeiro.
         </MgEmptyState>
@@ -447,7 +447,7 @@ onMounted(async () => {
     <q-dialog v-model="talhaoDialog" maximized>
       <q-card class="relative-position" style="width: 100vw; height: 100vh">
         <!-- Mapa de fundo, ocupa a tela toda -->
-        <MgMapaTalhoes
+        <MapaTalhoes
           v-if="talhaoDialog"
           :key="form.codtalhao || 'novo'"
           modo="editar"

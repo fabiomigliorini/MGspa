@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { PALETA_TALHAO, corTalhao } from 'src/utils/coresTalhao'
 import MgInputValor from '@components/MgInputValor.vue'
-import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
+import MapaTalhoes from 'components/MapaTalhoes.vue'
 
 // Wizard de plantar talhão numa safra. Três passos:
 //  1) escolher a fazenda (grid de cards com mini-mapa dos talhões base)
@@ -170,7 +170,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
               class="col-12 col-sm-6 col-md-4"
             >
               <q-card bordered flat class="cursor-pointer" @click="escolherFazenda(f)">
-                <MgMapaTalhoes
+                <MapaTalhoes
                   :talhoes="talhoesDaFazenda(f.codfazenda)"
                   id-key="codtalhao"
                   height="200px"
@@ -206,7 +206,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
         </q-card-section>
         <q-separator />
         <div class="col">
-          <MgMapaTalhoes
+          <MapaTalhoes
             :key="`mapa2-${form.codfazenda}`"
             :talhoes="talhoesDaFazendaSel"
             id-key="codtalhao"
@@ -238,7 +238,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
 
       <!-- PASSO 3 — confirmar/ajustar o polígono -->
       <template v-else>
-        <MgMapaTalhoes
+        <MapaTalhoes
           :key="mapaKey"
           modo="editar"
           :geometria="form.geometria"

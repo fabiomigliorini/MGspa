@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
-import MgContratoForm from 'components/MgContratoForm.vue'
+import ContratoForm from 'components/ContratoForm.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 
 // Grid de contratos de UMA safra (encapsula tudo: lista + dialog novo/editar +
@@ -187,7 +187,7 @@ onMounted(async () => {
       Nenhum contrato nesta safra. Crie o primeiro com o botão <q-icon name="add" />.
     </MgEmptyState>
 
-    <MgContratoForm
+    <ContratoForm
       :cad="cad"
       :naturezas="naturezas"
       :fixar="{ codsafra: props.codsafra, codcultura: props.codcultura }"
