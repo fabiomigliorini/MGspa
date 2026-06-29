@@ -176,7 +176,7 @@ onMounted(async () => {
 
       <q-dialog v-model="cad.dialog">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit="salvar">
+          <q-form @submit.prevent="salvar">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">{{ cad.isNovo ? 'Nova Faixa' : 'Editar Faixa' }}</div>
               <div class="text-caption">{{ cad.form.tipo }}</div>
@@ -189,10 +189,25 @@ onMounted(async () => {
                     :decimals="1"
                     suffix="%"
                     label="De"
+                    lazy-rules
+                    :rules="[(v) => v != null]"
                   />
                 </div>
                 <div class="col-6">
-                  <MgInputValor v-model="cad.form.faixafim" :decimals="1" suffix="%" label="Até" />
+                  <MgInputValor
+                    v-model="cad.form.faixafim"
+                    :decimals="1"
+                    suffix="%"
+                    label="Até"
+                    lazy-rules
+                    :rules="[
+                      (v) => v != null,
+                      (v) =>
+                        cad.form.faixainicio == null ||
+                        Number(v) >= Number(cad.form.faixainicio) ||
+                        'Fim menor que o início',
+                    ]"
+                  />
                 </div>
                 <div class="col-12">
                   <MgInputValor
@@ -200,6 +215,8 @@ onMounted(async () => {
                     :decimals="3"
                     suffix="%"
                     label="Desconto aplicado"
+                    lazy-rules
+                    :rules="[(v) => v != null]"
                   />
                 </div>
               </div>

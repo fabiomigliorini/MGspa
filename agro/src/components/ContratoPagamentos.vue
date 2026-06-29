@@ -222,7 +222,7 @@ async function confirmarRecebimento() {
     <!-- Dialog Parcela (editar previsto) -->
     <q-dialog v-model="dialogParcela">
       <q-card flat style="width: 440px; max-width: 95vw">
-        <q-form @submit="salvarParcela">
+        <q-form @submit.prevent="salvarParcela">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Editar parcela</div>
           </q-card-section>
@@ -253,10 +253,23 @@ async function confirmarRecebimento() {
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <MgInputData v-model="formParcela.data" label="Data prevista" type="date" />
+                <MgInputData
+                  v-model="formParcela.data"
+                  label="Data prevista"
+                  type="date"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
+                />
               </div>
               <div v-if="formParcela.modo === 'SACAS'" class="col-12 col-sm-6">
-                <MgInputValor v-model="formParcela.sacas" :decimals="0" suffix="sc" label="Sacas" />
+                <MgInputValor
+                  v-model="formParcela.sacas"
+                  :decimals="0"
+                  suffix="sc"
+                  label="Sacas"
+                  lazy-rules
+                  :rules="[(v) => v > 0]"
+                />
               </div>
               <div class="col-12 col-sm-6">
                 <MgInputValor
@@ -264,6 +277,8 @@ async function confirmarRecebimento() {
                   :decimals="2"
                   prefix="R$"
                   label="Valor previsto"
+                  lazy-rules
+                  :rules="[(v) => v > 0]"
                 />
               </div>
               <div v-if="formParcela.forma !== 'BARTER'" class="col-12">
@@ -299,7 +314,7 @@ async function confirmarRecebimento() {
     <!-- Dialog Confirmar recebimento -->
     <q-dialog v-model="confirmDialog">
       <q-card flat style="width: 440px; max-width: 95vw">
-        <q-form @submit="confirmarRecebimento">
+        <q-form @submit.prevent="confirmarRecebimento">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Confirmar recebimento</div>
           </q-card-section>
@@ -311,6 +326,8 @@ async function confirmarRecebimento() {
                   label="Data recebida"
                   type="date"
                   autofocus
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="col-12 col-sm-6">
@@ -319,6 +336,8 @@ async function confirmarRecebimento() {
                   :decimals="2"
                   prefix="R$"
                   label="Valor recebido"
+                  lazy-rules
+                  :rules="[(v) => v > 0]"
                 />
               </div>
               <div class="col-12">

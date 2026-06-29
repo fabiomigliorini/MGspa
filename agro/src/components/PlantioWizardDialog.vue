@@ -77,14 +77,6 @@ const cinza = computed(() =>
     .map((p) => ({ codfazenda: p.codfazenda, geometria: p.geometria })),
 )
 
-const podeSalvar = computed(
-  () =>
-    !!form.value.codfazenda &&
-    !!form.value.talhao &&
-    !!form.value.codvariedade &&
-    Number(form.value.areaplantada) > 0,
-)
-
 // Ao abrir: novo plantio começa no passo 1 (ou 2 se já veio com fazenda),
 // editar plantio existente vai direto pro mapa.
 function onShow() {
@@ -294,6 +286,8 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   outlined
                   bg-color="white"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
                 <q-select
                   v-model="form.codvariedade"
@@ -306,6 +300,8 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   bg-color="white"
                   label="Variedade"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="row items-center no-wrap q-gutter-sm q-mt-sm">
@@ -316,6 +312,8 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   label="Área plantada"
                   bg-color="white"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => v > 0]"
                 />
                 <MgInputValor
                   v-model="expectativaha"
@@ -333,14 +331,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   bg-color="white"
                   class="col"
                 />
-                <q-btn
-                  type="submit"
-                  round
-                  color="primary"
-                  icon="save"
-                  :disable="!podeSalvar"
-                  :loading="cad.salvando"
-                >
+                <q-btn type="submit" round color="primary" icon="save" :loading="cad.salvando">
                   <q-tooltip>Salvar plantio</q-tooltip>
                 </q-btn>
               </div>

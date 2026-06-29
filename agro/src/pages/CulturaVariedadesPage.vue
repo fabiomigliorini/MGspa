@@ -104,7 +104,7 @@ onMounted(async () => {
 
       <q-dialog v-model="cad.dialog">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit="cad.salvar()">
+          <q-form @submit.prevent="cad.salvar()">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">{{ cad.isNovo ? 'Nova Variedade' : 'Editar Variedade' }}</div>
               <div class="text-caption">{{ cultura?.cultura }}</div>
@@ -112,7 +112,14 @@ onMounted(async () => {
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-12">
-                  <q-input v-model="cad.form.variedade" label="Variedade" outlined autofocus />
+                  <q-input
+                    v-model="cad.form.variedade"
+                    label="Variedade"
+                    outlined
+                    autofocus
+                    lazy-rules
+                    :rules="[(v) => !!v && v.length >= 2]"
+                  />
                 </div>
               </div>
             </q-card-section>

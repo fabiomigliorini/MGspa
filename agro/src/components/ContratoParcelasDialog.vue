@@ -230,6 +230,8 @@ async function salvar() {
                 :prefix="form.modo === 'VALOR' ? 'R$' : null"
                 :suffix="form.modo === 'SACAS' ? 'sc' : null"
                 label="Total a parcelar"
+                lazy-rules
+                :rules="[(v) => v > 0]"
               />
             </div>
             <div class="col-12 col-sm-7">
@@ -248,6 +250,8 @@ async function salvar() {
                   label="Vencimento"
                   type="date"
                   :bottom-slots="false"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </q-item-section>
               <q-item-section>
@@ -258,6 +262,8 @@ async function salvar() {
                   :suffix="form.modo === 'SACAS' ? 'sc' : null"
                   label="Valor"
                   :bottom-slots="false"
+                  lazy-rules
+                  :rules="[(v) => v > 0]"
                 />
               </q-item-section>
               <q-item-section side style="flex: 0 0 36px">

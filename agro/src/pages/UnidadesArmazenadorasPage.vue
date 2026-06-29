@@ -156,7 +156,8 @@ onMounted(carregar)
                   outlined
                   autofocus
                   maxlength="60"
-                  :rules="[(v) => !!v || 'Informe o nome']"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="col-12 col-sm-6">
@@ -169,6 +170,8 @@ onMounted(carregar)
                   option-label="label"
                   emit-value
                   map-options
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="col-12 col-sm-6">

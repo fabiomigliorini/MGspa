@@ -194,11 +194,9 @@ function fmt(v, dec = 0) {
   })
 }
 
+// Trava de coleção (sem campo pra destacar): exige ao menos uma origem/destino.
+// Placa, pbt, tara e o "soma fecha" são :rules nos campos do q-form.
 function entradaValida() {
-  if (!local.value.placa) {
-    $q.notify({ type: 'warning', message: 'Informe a placa.' })
-    return false
-  }
   if (!origens.value.length && !destinos.value.length) {
     $q.notify({ type: 'warning', message: 'Informe ao menos uma origem ou destino.' })
     return false
@@ -215,38 +213,23 @@ const proxima = computed(() => {
   const i = idxEtapa.value
   return i >= 0 && i < ordem.value.length - 1 ? ordem.value[i + 1] : null
 })
+// Transição p/ FINALIZADO: ativa as :rules de "soma fecha" dos campos de líquido.
+const finalizando = computed(() => proxima.value === 'FINALIZADO')
 
 function avancar() {
   if (!entradaValida()) return
-  if (local.value.etapa === 'PBT' && !local.value.pbt) {
-    return $q.notify({ type: 'warning', message: 'Informe o peso bruto total (PBT).' })
-  }
-  if (local.value.etapa === 'TARA' && !local.value.tara) {
-    return $q.notify({ type: 'warning', message: 'Informe a tara.' })
-  }
   const prox = proxima.value
   if (!prox) return imprimir()
-  // Antes de finalizar: rateio precisa fechar com o líquido (origens e destinos).
+  // Antes de finalizar: precisa de origem e destino e líquido > 0 (checagens de
+  // coleção/derivado, sem campo único; o rateio em si é validado pelos :rules).
   if (prox === 'FINALIZADO') {
+    if (!origens.value.length || !destinos.value.length) {
+      return $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
+    }
     if (!(Number(calc.value.liquido) > 0)) {
       return $q.notify({
         type: 'negative',
         message: 'Peso líquido inválido (pbt − tara − desconto).',
-      })
-    }
-    if (!origens.value.length || !destinos.value.length) {
-      return $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
-    }
-    if (!bate(somaOrigens.value)) {
-      return $q.notify({
-        type: 'negative',
-        message: 'A soma das origens deve fechar com o líquido.',
-      })
-    }
-    if (!bate(somaDestinos.value)) {
-      return $q.notify({
-        type: 'negative',
-        message: 'A soma dos destinos deve fechar com o líquido.',
       })
     }
   }
@@ -308,211 +291,121 @@ function imprimir() {
 <template>
   <q-dialog v-model="show" :maximized="$q.screen.lt.sm">
     <q-card v-if="local" flat style="width: 620px; max-width: 95vw">
-      <q-card-section class="row items-center bg-primary text-white">
-        <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
-        <q-space />
-        <q-chip color="white" text-color="primary" :label="labelEtapa[local.etapa]" />
-        <q-btn flat round icon="close" v-close-popup tabindex="-1" />
-      </q-card-section>
+      <q-form @submit.prevent="novo ? salvar() : avancar()">
+        <q-card-section class="row items-center bg-primary text-white">
+          <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
+          <q-space />
+          <q-chip color="white" text-color="primary" :label="labelEtapa[local.etapa]" />
+          <q-btn flat round icon="close" v-close-popup tabindex="-1" />
+        </q-card-section>
 
-      <q-card-section class="q-gutter-y-md scroll" style="max-height: 72vh">
-        <!-- Identificação -->
-        <div class="row q-col-gutter-x-md">
-          <q-select
-            :model-value="local.placa"
-            :options="placaOptions"
-            label="Placa"
-            outlined
-            use-input
-            fill-input
-            hide-selected
-            clearable
-            input-debounce="200"
-            new-value-mode="add-unique"
-            option-label="label"
-            option-value="value"
-            emit-value
-            map-options
-            class="col-6 col-sm-4"
-            autofocus
-            @filter="filtrarPlaca"
-            @update:model-value="resolverPlaca"
-            @blur="onPlacaBlur"
-          >
-            <template #no-option>
-              <q-item v-if="placaBusca" clickable @click="cadastroCaminhao = true">
-                <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
-                <q-item-section class="text-primary">Cadastrar “{{ placaBusca }}”</q-item-section>
-              </q-item>
-              <q-item v-else>
-                <q-item-section class="text-grey-6">Digite a placa…</q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-
-          <q-input
-            v-model="local.placacarreta"
-            label="Carreta"
-            outlined
-            class="col-6 col-sm-4"
-            @update:model-value="local.placacarreta = ($event || '').toUpperCase()"
-          />
-
-          <q-select
-            :model-value="local.motorista"
-            :options="motoristaOptions"
-            label="Motorista"
-            outlined
-            use-input
-            fill-input
-            hide-selected
-            clearable
-            input-debounce="350"
-            new-value-mode="add-unique"
-            option-label="label"
-            option-value="value"
-            emit-value
-            map-options
-            class="col-12 col-sm-4"
-            @filter="filtrarMotorista"
-            @update:model-value="resolverMotorista"
-            @blur="onMotoristaBlur"
-          >
-            <template #no-option>
-              <q-item>
-                <q-item-section class="text-grey-6">Digite o nome do motorista…</q-item-section>
-              </q-item>
-            </template>
-          </q-select>
-        </div>
-
-        <!-- Origens -->
-        <div>
-          <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
-          <div
-            v-for="(p, i) in origens"
-            :key="'o' + i"
-            class="row q-col-gutter-sm items-center q-mb-xs"
-          >
-            <q-chip
-              :color="
-                p.contatipo === 'PLANTIO'
-                  ? 'brown-5'
-                  : p.contatipo === 'UNIDADE'
-                    ? 'amber-7'
-                    : 'teal-7'
-              "
-              text-color="white"
-              :label="p.contatipo"
-            />
+        <q-card-section class="q-gutter-y-md scroll" style="max-height: 72vh">
+          <!-- Identificação -->
+          <div class="row q-col-gutter-x-md">
             <q-select
-              v-if="p.contatipo === 'PLANTIO'"
-              v-model="p.codplantio"
-              :options="plantiosDaSafra"
-              option-value="codplantio"
-              option-label="rotulo"
+              :model-value="local.placa"
+              :options="placaOptions"
+              label="Placa"
+              outlined
+              use-input
+              fill-input
+              hide-selected
+              clearable
+              input-debounce="200"
+              new-value-mode="add-unique"
+              option-label="label"
+              option-value="value"
               emit-value
               map-options
+              class="col-6 col-sm-4"
+              autofocus
+              lazy-rules
+              :rules="[() => !!local.placa]"
+              @filter="filtrarPlaca"
+              @update:model-value="resolverPlaca"
+              @blur="onPlacaBlur"
+            >
+              <template #no-option>
+                <q-item v-if="placaBusca" clickable @click="cadastroCaminhao = true">
+                  <q-item-section avatar><q-icon name="add" color="primary" /></q-item-section>
+                  <q-item-section class="text-primary">Cadastrar “{{ placaBusca }}”</q-item-section>
+                </q-item>
+                <q-item v-else>
+                  <q-item-section class="text-grey-6">Digite a placa…</q-item-section>
+                </q-item>
+              </template>
+            </q-select>
+
+            <q-input
+              v-model="local.placacarreta"
+              label="Carreta"
               outlined
-              label="Talhão"
-              class="col"
-              @update:model-value="setRotuloPonto(p)"
+              class="col-6 col-sm-4"
+              @update:model-value="local.placacarreta = ($event || '').toUpperCase()"
             />
+
             <q-select
-              v-else-if="p.contatipo === 'UNIDADE'"
-              v-model="p.codunidadearmazenadora"
-              :options="unidadesAtivas"
-              option-value="codunidadearmazenadora"
-              option-label="unidadearmazenadora"
+              :model-value="local.motorista"
+              :options="motoristaOptions"
+              label="Motorista"
+              outlined
+              use-input
+              fill-input
+              hide-selected
+              clearable
+              input-debounce="350"
+              new-value-mode="add-unique"
+              option-label="label"
+              option-value="value"
               emit-value
               map-options
-              outlined
-              label="Unidade"
-              class="col"
-              @update:model-value="setRotuloPonto(p)"
-            />
-            <q-select
-              v-else
-              v-model="p.codcontrato"
-              :options="store.contratosAtivos"
-              option-value="codcontrato"
-              :option-label="(c) => store.rotuloContrato(c.codcontrato)"
-              emit-value
-              map-options
-              outlined
-              label="Contrato (compra)"
-              class="col"
-              @update:model-value="setRotuloPonto(p)"
-            />
-            <MgInputValor
-              v-model="p.liquido"
-              :decimals="0"
-              suffix="kg"
-              label="Líquido"
-              class="col-3"
-            />
-            <q-btn
-              flat
-              round
-              color="grey-7"
-              icon="close"
-              class="col-auto"
-              @click="removerPonto(p)"
-            />
+              class="col-12 col-sm-4"
+              @filter="filtrarMotorista"
+              @update:model-value="resolverMotorista"
+              @blur="onMotoristaBlur"
+            >
+              <template #no-option>
+                <q-item>
+                  <q-item-section class="text-grey-6">Digite o nome do motorista…</q-item-section>
+                </q-item>
+              </template>
+            </q-select>
           </div>
-          <div
-            v-if="origens.length"
-            class="text-caption q-mb-xs"
-            :class="bate(somaOrigens) ? 'text-grey-7' : 'text-orange-8'"
-          >
-            Soma das origens: {{ fmt(somaOrigens) }} kg
-            <span v-if="calc.liquido"> · líquido {{ fmt(calc.liquido) }} kg</span>
-          </div>
-          <div class="q-gutter-sm">
-            <q-btn
-              flat
-              color="brown-6"
-              icon="grass"
-              label="Talhão"
-              @click="addPonto('ORIGEM', 'PLANTIO')"
-            />
-            <q-btn
-              flat
-              color="amber-8"
-              icon="warehouse"
-              label="Unidade"
-              @click="addPonto('ORIGEM', 'UNIDADE')"
-            />
-            <q-btn
-              flat
-              color="teal-7"
-              icon="description"
-              label="Contrato"
-              @click="addPonto('ORIGEM', 'CONTRATO')"
-            />
-          </div>
-        </div>
 
-        <q-separator />
-
-        <!-- Destinos -->
-        <div>
-          <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
-          <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-sm">
-            <div class="row q-col-gutter-sm items-center">
+          <!-- Origens -->
+          <div>
+            <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
+            <div
+              v-for="(p, i) in origens"
+              :key="'o' + i"
+              class="row q-col-gutter-sm items-center q-mb-xs"
+            >
               <q-chip
                 :color="
-                  p.contatipo === 'UNIDADE'
-                    ? 'amber-7'
-                    : p.contatipo === 'CONTRATO'
-                      ? 'teal-7'
-                      : 'brown-5'
+                  p.contatipo === 'PLANTIO'
+                    ? 'brown-5'
+                    : p.contatipo === 'UNIDADE'
+                      ? 'amber-7'
+                      : 'teal-7'
                 "
                 text-color="white"
                 :label="p.contatipo"
               />
               <q-select
-                v-if="p.contatipo === 'UNIDADE'"
+                v-if="p.contatipo === 'PLANTIO'"
+                v-model="p.codplantio"
+                :options="plantiosDaSafra"
+                option-value="codplantio"
+                option-label="rotulo"
+                emit-value
+                map-options
+                outlined
+                label="Talhão"
+                class="col"
+                @update:model-value="setRotuloPonto(p)"
+              />
+              <q-select
+                v-else-if="p.contatipo === 'UNIDADE'"
                 v-model="p.codunidadearmazenadora"
                 :options="unidadesAtivas"
                 option-value="codunidadearmazenadora"
@@ -533,7 +426,7 @@ function imprimir() {
                 emit-value
                 map-options
                 outlined
-                label="Contrato (venda)"
+                label="Contrato (compra)"
                 class="col"
                 @update:model-value="setRotuloPonto(p)"
               />
@@ -543,6 +436,8 @@ function imprimir() {
                 suffix="kg"
                 label="Líquido"
                 class="col-3"
+                lazy-rules
+                :rules="[() => !finalizando || bate(somaOrigens) || 'Soma das origens não fecha']"
               />
               <q-btn
                 flat
@@ -553,139 +448,247 @@ function imprimir() {
                 @click="removerPonto(p)"
               />
             </div>
-            <div v-if="p.contatipo === 'CONTRATO' && p.codcontrato" class="text-caption q-pl-sm">
-              <span v-if="saldoContrato(p.codcontrato) === Infinity" class="text-deep-purple-7">
-                <q-icon name="all_inclusive" /> Volume em aberto
-              </span>
-              <span
-                v-else
-                :class="
-                  (Number(p.liquido) || 0) > saldoContrato(p.codcontrato) + 1
-                    ? 'text-negative text-weight-medium'
-                    : 'text-grey-6'
-                "
-              >
-                Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
-              </span>
-            </div>
             <div
-              v-if="mostrarFiscal && p.contatipo === 'CONTRATO'"
-              class="row q-col-gutter-sm q-mt-xs"
+              v-if="origens.length"
+              class="text-caption q-mb-xs"
+              :class="bate(somaOrigens) ? 'text-grey-7' : 'text-orange-8'"
             >
-              <q-input v-model="p.numeronf" label="Nº NF" outlined class="col" />
-              <MgInputValor
-                v-model="p.valornf"
-                :decimals="2"
-                prefix="R$"
-                label="Valor NF"
-                class="col"
+              Soma das origens: {{ fmt(somaOrigens) }} kg
+              <span v-if="calc.liquido"> · líquido {{ fmt(calc.liquido) }} kg</span>
+            </div>
+            <div class="q-gutter-sm">
+              <q-btn
+                flat
+                color="brown-6"
+                icon="grass"
+                label="Talhão"
+                @click="addPonto('ORIGEM', 'PLANTIO')"
+              />
+              <q-btn
+                flat
+                color="amber-8"
+                icon="warehouse"
+                label="Unidade"
+                @click="addPonto('ORIGEM', 'UNIDADE')"
+              />
+              <q-btn
+                flat
+                color="teal-7"
+                icon="description"
+                label="Contrato"
+                @click="addPonto('ORIGEM', 'CONTRATO')"
               />
             </div>
           </div>
-          <div
-            v-if="destinos.length"
-            class="text-caption q-mb-xs"
-            :class="bate(somaDestinos) ? 'text-grey-7' : 'text-orange-8'"
-          >
-            Soma dos destinos: {{ fmt(somaDestinos) }} kg
+
+          <q-separator />
+
+          <!-- Destinos -->
+          <div>
+            <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
+            <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-sm">
+              <div class="row q-col-gutter-sm items-center">
+                <q-chip
+                  :color="
+                    p.contatipo === 'UNIDADE'
+                      ? 'amber-7'
+                      : p.contatipo === 'CONTRATO'
+                        ? 'teal-7'
+                        : 'brown-5'
+                  "
+                  text-color="white"
+                  :label="p.contatipo"
+                />
+                <q-select
+                  v-if="p.contatipo === 'UNIDADE'"
+                  v-model="p.codunidadearmazenadora"
+                  :options="unidadesAtivas"
+                  option-value="codunidadearmazenadora"
+                  option-label="unidadearmazenadora"
+                  emit-value
+                  map-options
+                  outlined
+                  label="Unidade"
+                  class="col"
+                  @update:model-value="setRotuloPonto(p)"
+                />
+                <q-select
+                  v-else
+                  v-model="p.codcontrato"
+                  :options="store.contratosAtivos"
+                  option-value="codcontrato"
+                  :option-label="(c) => store.rotuloContrato(c.codcontrato)"
+                  emit-value
+                  map-options
+                  outlined
+                  label="Contrato (venda)"
+                  class="col"
+                  @update:model-value="setRotuloPonto(p)"
+                />
+                <MgInputValor
+                  v-model="p.liquido"
+                  :decimals="0"
+                  suffix="kg"
+                  label="Líquido"
+                  class="col-3"
+                  lazy-rules
+                  :rules="[
+                    () => !finalizando || bate(somaDestinos) || 'Soma dos destinos não fecha',
+                  ]"
+                />
+                <q-btn
+                  flat
+                  round
+                  color="grey-7"
+                  icon="close"
+                  class="col-auto"
+                  @click="removerPonto(p)"
+                />
+              </div>
+              <div v-if="p.contatipo === 'CONTRATO' && p.codcontrato" class="text-caption q-pl-sm">
+                <span v-if="saldoContrato(p.codcontrato) === Infinity" class="text-deep-purple-7">
+                  <q-icon name="all_inclusive" /> Volume em aberto
+                </span>
+                <span
+                  v-else
+                  :class="
+                    (Number(p.liquido) || 0) > saldoContrato(p.codcontrato) + 1
+                      ? 'text-negative text-weight-medium'
+                      : 'text-grey-6'
+                  "
+                >
+                  Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
+                </span>
+              </div>
+              <div
+                v-if="mostrarFiscal && p.contatipo === 'CONTRATO'"
+                class="row q-col-gutter-sm q-mt-xs"
+              >
+                <q-input v-model="p.numeronf" label="Nº NF" outlined class="col" />
+                <MgInputValor
+                  v-model="p.valornf"
+                  :decimals="2"
+                  prefix="R$"
+                  label="Valor NF"
+                  class="col"
+                />
+              </div>
+            </div>
+            <div
+              v-if="destinos.length"
+              class="text-caption q-mb-xs"
+              :class="bate(somaDestinos) ? 'text-grey-7' : 'text-orange-8'"
+            >
+              Soma dos destinos: {{ fmt(somaDestinos) }} kg
+            </div>
+            <div class="q-gutter-sm">
+              <q-btn
+                flat
+                color="amber-8"
+                icon="warehouse"
+                label="Unidade"
+                @click="addPonto('DESTINO', 'UNIDADE')"
+              />
+              <q-btn
+                flat
+                color="teal-7"
+                icon="description"
+                label="Contrato"
+                @click="addPonto('DESTINO', 'CONTRATO')"
+              />
+            </div>
           </div>
-          <div class="q-gutter-sm">
-            <q-btn
-              flat
-              color="amber-8"
-              icon="warehouse"
-              label="Unidade"
-              @click="addPonto('DESTINO', 'UNIDADE')"
+
+          <q-separator />
+
+          <!-- Pesos (ordem por sentido) -->
+          <MgInputValor
+            v-if="mostrarPbt"
+            v-model="local.pbt"
+            :decimals="0"
+            suffix="kg"
+            label="Peso bruto total (caminhão + carga)"
+            lazy-rules
+            :rules="[() => novo || local.etapa !== 'PBT' || !!local.pbt]"
+          />
+          <MgInputValor
+            v-if="mostrarTara"
+            v-model="local.tara"
+            :decimals="0"
+            suffix="kg"
+            label="Tara (caminhão vazio)"
+            lazy-rules
+            :rules="[() => novo || local.etapa !== 'TARA' || !!local.tara]"
+          />
+
+          <!-- Classificação (só recebimento, a partir da etapa) -->
+          <div v-if="mostrarClassificacao" class="row q-col-gutter-x-md">
+            <MgInputValor
+              v-model="local.umidade"
+              :decimals="1"
+              suffix="%"
+              label="Umidade"
+              class="col-4"
             />
-            <q-btn
-              flat
-              color="teal-7"
-              icon="description"
-              label="Contrato"
-              @click="addPonto('DESTINO', 'CONTRATO')"
+            <MgInputValor
+              v-model="local.impureza"
+              :decimals="1"
+              suffix="%"
+              label="Impureza"
+              class="col-4"
+            />
+            <MgInputValor
+              v-model="local.avariados"
+              :decimals="1"
+              suffix="%"
+              label="Avariados"
+              class="col-4"
             />
           </div>
-        </div>
+
+          <!-- Resultado -->
+          <q-card v-if="mostrarResultado" flat bordered class="bg-grey-1">
+            <q-card-section class="q-pa-sm row text-center">
+              <div class="col">
+                <div class="text-caption text-grey-7">Bruto</div>
+                <div class="text-weight-medium">{{ fmt(calc.bruto) }} kg</div>
+              </div>
+              <div class="col">
+                <div class="text-caption text-grey-7">Desconto</div>
+                <div class="text-weight-medium text-orange-9">{{ fmt(calc.desconto) }} kg</div>
+              </div>
+              <div class="col">
+                <div class="text-caption text-grey-7">Líquido</div>
+                <div class="text-weight-medium text-green-9">{{ fmt(calc.liquido) }} kg</div>
+              </div>
+              <div class="col">
+                <div class="text-caption text-grey-7">Sacas</div>
+                <div class="text-weight-medium">{{ fmt(sacasLiquido, 1) }}</div>
+              </div>
+            </q-card-section>
+          </q-card>
+
+          <q-input
+            v-model="local.observacao"
+            label="Observação"
+            type="textarea"
+            autogrow
+            outlined
+          />
+        </q-card-section>
 
         <q-separator />
 
-        <!-- Pesos (ordem por sentido) -->
-        <MgInputValor
-          v-if="mostrarPbt"
-          v-model="local.pbt"
-          :decimals="0"
-          suffix="kg"
-          label="Peso bruto total (caminhão + carga)"
-        />
-        <MgInputValor
-          v-if="mostrarTara"
-          v-model="local.tara"
-          :decimals="0"
-          suffix="kg"
-          label="Tara (caminhão vazio)"
-        />
-
-        <!-- Classificação (só recebimento, a partir da etapa) -->
-        <div v-if="mostrarClassificacao" class="row q-col-gutter-x-md">
-          <MgInputValor
-            v-model="local.umidade"
-            :decimals="1"
-            suffix="%"
-            label="Umidade"
-            class="col-4"
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn
+            type="submit"
+            flat
+            color="primary"
+            :label="novo ? 'Registrar' : rotuloAcao[local.etapa]"
           />
-          <MgInputValor
-            v-model="local.impureza"
-            :decimals="1"
-            suffix="%"
-            label="Impureza"
-            class="col-4"
-          />
-          <MgInputValor
-            v-model="local.avariados"
-            :decimals="1"
-            suffix="%"
-            label="Avariados"
-            class="col-4"
-          />
-        </div>
-
-        <!-- Resultado -->
-        <q-card v-if="mostrarResultado" flat bordered class="bg-grey-1">
-          <q-card-section class="q-pa-sm row text-center">
-            <div class="col">
-              <div class="text-caption text-grey-7">Bruto</div>
-              <div class="text-weight-medium">{{ fmt(calc.bruto) }} kg</div>
-            </div>
-            <div class="col">
-              <div class="text-caption text-grey-7">Desconto</div>
-              <div class="text-weight-medium text-orange-9">{{ fmt(calc.desconto) }} kg</div>
-            </div>
-            <div class="col">
-              <div class="text-caption text-grey-7">Líquido</div>
-              <div class="text-weight-medium text-green-9">{{ fmt(calc.liquido) }} kg</div>
-            </div>
-            <div class="col">
-              <div class="text-caption text-grey-7">Sacas</div>
-              <div class="text-weight-medium">{{ fmt(sacasLiquido, 1) }}</div>
-            </div>
-          </q-card-section>
-        </q-card>
-
-        <q-input v-model="local.observacao" label="Observação" type="textarea" autogrow outlined />
-      </q-card-section>
-
-      <q-separator />
-
-      <q-card-actions align="right">
-        <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-        <q-btn
-          flat
-          color="primary"
-          :label="novo ? 'Registrar' : rotuloAcao[local.etapa]"
-          @click="novo ? salvar() : avancar()"
-        />
-      </q-card-actions>
+        </q-card-actions>
+      </q-form>
     </q-card>
   </q-dialog>
 

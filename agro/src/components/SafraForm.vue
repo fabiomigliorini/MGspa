@@ -64,7 +64,9 @@ watch(
 
 // Regras de validação (bloqueiam o submit). A colheita nunca pode ser antes do
 // plantio nem mais de 1 ano depois — trava de verdade, no salvar.
-const regraObrigatorio = (v) => (v !== null && v !== undefined && v !== '') || 'Informe o ano'
+// Obrigatório → boolean puro (campo vermelho + foco basta). Colheita min/max são
+// cross-field (dependem do ano de plantio) → mantêm mensagem curta.
+const regraObrigatorio = (v) => v !== null && v !== undefined && v !== ''
 const regraColheitaMin = (v) => {
   const p = Number(form.value.anoplantio)
   return !p || Number(v) >= p || 'Colheita não pode ser antes do plantio'

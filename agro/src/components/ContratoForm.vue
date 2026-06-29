@@ -1,6 +1,5 @@
 <script setup>
 import { computed, watch } from 'vue'
-import { notifyError } from 'src/utils/notify'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -48,22 +47,36 @@ const comissaoTotal = computed(() => {
   }
 })
 
-// Último dia do mês de uma data ISO (YYYY-MM-DD).
+// Datas ISO (YYYY-MM-DD): primeiro e último dia do mês.
+function inicioDoMes(iso) {
+  return `${String(iso).slice(0, 7)}-01`
+}
 function fimDoMes(iso) {
-  const [a, m] = iso.slice(0, 10).split('-').map(Number)
+  const [a, m] = String(iso).slice(0, 10).split('-').map(Number)
   const ultimo = new Date(a, m, 0).getDate()
   return `${a}-${String(m).padStart(2, '0')}-${String(ultimo).padStart(2, '0')}`
 }
 
-// Ao mudar o embarque inicial, o final acompanha = fim do mês do inicial.
-// Não sobrescreve o final já gravado na carga inicial de um contrato existente
-// (old indefinido + final já preenchido = população do form na edição).
+// Embarque de/até só completam um ao outro quando o outro está vazio ou
+// invertido (até < de). Um intervalo válido — digitado pelo usuário ou já
+// gravado na edição — é preservado: editar um campo não mexe no outro.
 watch(
   () => cad.value.form.embarqueinicio,
-  (val, old) => {
-    if (!val) return
-    if (old || !cad.value.form.embarquefim) {
-      cad.value.form.embarquefim = fimDoMes(val)
+  (de) => {
+    if (!de) return
+    const ate = cad.value.form.embarquefim
+    if (!ate || String(ate).slice(0, 10) < String(de).slice(0, 10)) {
+      cad.value.form.embarquefim = fimDoMes(de)
+    }
+  },
+)
+watch(
+  () => cad.value.form.embarquefim,
+  (ate) => {
+    if (!ate) return
+    const de = cad.value.form.embarqueinicio
+    if (!de || String(ate).slice(0, 10) < String(de).slice(0, 10)) {
+      cad.value.form.embarqueinicio = inicioDoMes(ate)
     }
   },
 )
@@ -77,10 +90,6 @@ const embarqueInvertido = computed(() => {
 })
 
 async function salvar() {
-  if (embarqueInvertido.value) {
-    notifyError(null, 'O fim do embarque não pode ser anterior ao início.')
-    return
-  }
   const saved = await props.cad.salvar((f) => ({
     ...f,
     comissaototal: comissaoTotal.value,
@@ -94,7 +103,7 @@ async function salvar() {
 <template>
   <q-dialog v-model="cad.dialog">
     <q-card flat style="width: 600px; max-width: 95vw">
-      <q-form @submit="salvar">
+      <q-form @submit.prevent="salvar">
         <q-card-section class="bg-primary text-white q-py-sm">
           <div class="text-h6">{{ cad.isNovo ? 'Novo Contrato' : 'Editar Contrato' }}</div>
         </q-card-section>
@@ -123,12 +132,24 @@ async function salvar() {
 
           <!-- FILIAL -->
           <div class="col-12 col-sm-3">
-            <MgSelectFilial v-model="cad.form.codfilial" label="Filial" autofocus />
+            <MgSelectFilial
+              v-model="cad.form.codfilial"
+              label="Filial"
+              autofocus
+              lazy-rules
+              :rules="[(v) => !!v]"
+            />
           </div>
 
           <!-- NUMERO -->
           <div class="col-12 col-sm-3">
-            <q-input v-model="cad.form.contrato" label="Nº Nosso" outlined autofocus />
+            <q-input
+              v-model="cad.form.contrato"
+              label="Nº Nosso"
+              outlined
+              lazy-rules
+              :rules="[(v) => !!v]"
+            />
           </div>
 
           <!-- QTD (vazio = volume em aberto / leva o saldo do silo) -->
@@ -139,17 +160,31 @@ async function salvar() {
               suffix="sc"
               label="Quantidade"
               hint="Vazio = volume em aberto"
+              lazy-rules
+              :rules="[(v) => v == null || v > 0]"
             />
           </div>
 
           <!-- INICIO -->
           <div class="col-6 col-sm-3">
-            <MgInputData v-model="cad.form.embarqueinicio" label="Embarque de" type="date" />
+            <MgInputData
+              v-model="cad.form.embarqueinicio"
+              label="Embarque de"
+              type="date"
+              lazy-rules
+              :rules="[(v) => !!v]"
+            />
           </div>
 
-          <!-- FIM -->
+          <!-- FIM (cross-field: fim >= início, espelho do after_or_equal do backend) -->
           <div class="col-6 col-sm-3">
-            <MgInputData v-model="cad.form.embarquefim" label="Embarque até" type="date" />
+            <MgInputData
+              v-model="cad.form.embarquefim"
+              label="Embarque até"
+              type="date"
+              lazy-rules
+              :rules="[() => !embarqueInvertido || 'Fim do embarque antes do início', (v) => !!v]"
+            />
           </div>
 
           <!-- LOCAL -->
@@ -159,7 +194,12 @@ async function salvar() {
 
           <!-- CONTRAPARTE -->
           <div class="col-12 col-sm-9">
-            <MgSelectPessoa v-model="cad.form.codpessoa" label="Contraparte" />
+            <MgSelectPessoa
+              v-model="cad.form.codpessoa"
+              label="Contraparte"
+              lazy-rules
+              :rules="[(v) => !!v]"
+            />
           </div>
 
           <!-- NUMERO DA CONTRAPARTE -->
@@ -178,7 +218,7 @@ async function salvar() {
           </div>
 
           <template v-if="cad.form.codpessoacorretora">
-            <!-- TIPO COMISSÃO -->
+            <!-- TIPO COMISSÃO (required_with corretora) -->
             <div class="col-6 col-sm-4">
               <q-select
                 v-model="cad.form.comissaotipo"
@@ -187,12 +227,20 @@ async function salvar() {
                 map-options
                 outlined
                 label="Tipo de comissão"
+                lazy-rules
+                :rules="[(v) => !!v]"
               />
             </div>
 
-            <!-- VALOR COMISSAOs -->
+            <!-- VALOR COMISSAO (required_with corretora) -->
             <div class="col-6 col-sm-3">
-              <MgInputValor v-model="cad.form.comissaovalor" :decimals="2" label="Comissão" />
+              <MgInputValor
+                v-model="cad.form.comissaovalor"
+                :decimals="2"
+                label="Comissão"
+                lazy-rules
+                :rules="[(v) => v != null]"
+              />
             </div>
 
             <!-- TOTAL COMISSAO -->
