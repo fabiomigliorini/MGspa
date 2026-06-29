@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
-import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
+import MapaTalhoes from 'components/MapaTalhoes.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 
 const router = useRouter()
@@ -81,7 +81,7 @@ onMounted(async () => {
             </q-item>
             <q-badge v-if="f.inativo" color="grey-6" label="Inativo" class="q-ma-sm" />
             <!-- Mini-mapa dos talhões desta fazenda -->
-            <MgMapaTalhoes
+            <MapaTalhoes
               v-if="talhoesDaFazenda(f.codfazenda).length"
               :talhoes="talhoesDaFazenda(f.codfazenda)"
               height="180px"

@@ -8,7 +8,7 @@ import MgInputData from '@components/MgInputData.vue'
 
 // Form único de novo/editar contrato (recebe :cad). Cultura e safra não
 // aparecem: o contrato vive dentro da safra, então o pai força esse vínculo
-// via :fixar. Usado na grid da safra (MgContratosSafra) e na edição do
+// via :fixar. Usado na grid da safra (ContratosSafra) e na edição do
 // detalhe (ContratoDetailPage). Precificação (preço/moeda/isenção) vive nas
 // fixações; NF (natureza/pessoa) no plano de notas — ambos na tela do contrato.
 const props = defineProps({
@@ -18,7 +18,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['saved'])
 
-// Indireção (padrão MgSafraForm): v-model escreve no objeto reativo do cad sem
+// Indireção (padrão SafraForm): v-model escreve no objeto reativo do cad sem
 // disparar vue/no-mutating-props.
 const cad = computed(() => props.cad)
 

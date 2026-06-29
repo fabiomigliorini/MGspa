@@ -6,10 +6,10 @@ import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import MgFixacaoImpostosDialog from 'components/MgFixacaoImpostosDialog.vue'
+import FixacaoImpostosDialog from 'components/FixacaoImpostosDialog.vue'
 
 // Card "Fixação de preço". Especialista em fixar o preço das sacas do contrato:
-// lista as fixações ativas, abre o MgFixacaoImpostosDialog (preço + impostos →
+// lista as fixações ativas, abre o FixacaoImpostosDialog (preço + impostos →
 // líquido snapshot) e exclui. Lê tudo do store da tela (fixado/a fixar/preço
 // médio são getters do store) e usa as actions p/ persistir.
 const $q = useQuasar()
@@ -124,7 +124,7 @@ function excluirFixacao(f) {
 
     <!-- Modal Fixação (valores + impostos). afixar = saldo a fixar (sc) p/ o
          dialog avisar antes; o backend é quem garante (ContratoFixacaoRequest). -->
-    <MgFixacaoImpostosDialog
+    <FixacaoImpostosDialog
       v-model="impostosDialog"
       :cod="cod"
       :contrato="contrato"

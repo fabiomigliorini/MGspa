@@ -10,10 +10,10 @@ import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
-import MgIconeCultura from 'components/MgIconeCultura.vue'
-import MgSafraForm from 'components/MgSafraForm.vue'
-import MgContratosSafra from 'components/MgContratosSafra.vue'
+import MapaTalhoes from 'components/MapaTalhoes.vue'
+import IconeCultura from 'components/IconeCultura.vue'
+import SafraForm from 'components/SafraForm.vue'
+import ContratosSafra from 'components/ContratosSafra.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import PlantioWizardDialog from 'components/PlantioWizardDialog.vue'
 
@@ -242,7 +242,7 @@ onMounted(async () => {
         <q-card-section class="row items-center">
           <div class="col-12 col-sm row items-center no-wrap">
             <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'safras' }" />
-            <MgIconeCultura :codcultura="codcultura" class="q-ml-sm" />
+            <IconeCultura :codcultura="codcultura" class="q-ml-sm" />
             <div class="col q-ml-md">
               <div class="text-h6">{{ safra?.safra || 'Safra' }}</div>
               <div class="text-caption text-grey-7">
@@ -410,7 +410,7 @@ onMounted(async () => {
           </q-card-section>
         </q-card>
       </template>
-      <MgContratosSafra
+      <ContratosSafra
         :codsafra="codsafra"
         :codcultura="codcultura"
         :online="online"
@@ -468,7 +468,7 @@ onMounted(async () => {
               </q-item>
               <q-separator />
 
-              <MgMapaTalhoes
+              <MapaTalhoes
                 v-if="g.comGeo.length"
                 :talhoes="g.comGeo"
                 id-key="codplantio"
@@ -594,7 +594,7 @@ onMounted(async () => {
             <div class="text-h6">Editar Safra</div>
           </q-card-section>
           <q-card-section class="q-pt-md">
-            <MgSafraForm :cad="safraCad" />
+            <SafraForm :cad="safraCad" />
           </q-card-section>
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
