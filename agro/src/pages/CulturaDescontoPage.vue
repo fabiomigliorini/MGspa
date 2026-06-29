@@ -1,16 +1,19 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { api } from 'src/services/api'
-import { useCadastro } from 'src/composables/useCadastro'
-import { notifyError } from 'src/utils/notify'
+import { storeToRefs } from 'pinia'
+import { useCulturaStore } from 'src/stores/cultura'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
 const codcultura = Number(route.params.codcultura)
 
-const cad = useCadastro('tabela-desconto', 'codtabeladesconto', 'Faixa')
+// Tabela de desconto vive na store do domínio cultura. A store carrega já
+// filtrada por cultura + tipo e ordenada pela faixa; o cabeçalho usa o nome
+// da cultura (cache da store).
+const store = useCulturaStore()
+const { faixas, dialogFaixa, formFaixa, salvandoFaixa } = storeToRefs(store)
 const cultura = ref(null)
 const tipo = ref('UMIDADE')
 
@@ -34,47 +37,18 @@ const colunas = [
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
 ]
 
-// useCadastro recarrega sem filtro após salvar/excluir; o computed garante que
-// a tabela sempre mostre só a cultura + tipo selecionados, ordenado pela faixa.
-const faixas = computed(() =>
-  cad.items
-    .filter((f) => f.codcultura === codcultura && f.tipo === tipo.value)
-    .sort((a, b) => Number(a.faixainicio) - Number(b.faixainicio)),
-)
-
 function fmt(v) {
   return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 3 })
 }
 
-async function carregarFaixas() {
-  await cad.carregar({ codcultura, tipo: tipo.value, sort: 'faixainicio' })
-}
 function trocarTipo(t) {
   tipo.value = t
-  carregarFaixas()
-}
-
-function nova() {
-  cad.abrirNovo({ codcultura, tipo: tipo.value })
-}
-function salvar() {
-  cad.salvar((f) => ({
-    codcultura: f.codcultura,
-    tipo: f.tipo,
-    faixainicio: f.faixainicio,
-    faixafim: f.faixafim,
-    percentualdesconto: f.percentualdesconto,
-  }))
+  store.carregarFaixas(codcultura, t)
 }
 
 onMounted(async () => {
-  try {
-    const { data } = await api.get(`v1/cultura/${codcultura}`)
-    cultura.value = data.data ?? data
-    await carregarFaixas()
-  } catch (e) {
-    notifyError(e)
-  }
+  cultura.value = await store.buscar(codcultura)
+  store.carregarFaixas(codcultura, tipo.value)
 })
 </script>
 
@@ -101,7 +75,14 @@ onMounted(async () => {
             <div class="text-h6">Tabela de Desconto</div>
             <div class="text-caption text-grey-7">{{ cultura?.cultura }}</div>
           </div>
-          <q-btn flat round size="sm" color="primary" icon="add" @click="nova">
+          <q-btn
+            flat
+            round
+            size="sm"
+            color="primary"
+            icon="add"
+            @click="store.novaFaixa(codcultura, tipo)"
+          >
             <q-tooltip>Nova faixa</q-tooltip>
           </q-btn>
         </q-card-section>
@@ -131,7 +112,6 @@ onMounted(async () => {
           :rows="faixas"
           :columns="colunas"
           row-key="codtabeladesconto"
-          :loading="cad.carregando"
           flat
           hide-pagination
           :rows-per-page-options="[0]"
@@ -158,7 +138,7 @@ onMounted(async () => {
                 size="sm"
                 color="grey-7"
                 icon="edit"
-                @click="cad.editar(props.row)"
+                @click="store.editarFaixa(props.row)"
               />
               <q-btn
                 flat
@@ -167,25 +147,27 @@ onMounted(async () => {
                 size="sm"
                 color="grey-7"
                 icon="delete"
-                @click="cad.excluir(props.row)"
+                @click="store.excluirFaixa(props.row)"
               />
             </q-td>
           </template>
         </q-table>
       </q-card>
 
-      <q-dialog v-model="cad.dialog">
+      <q-dialog v-model="dialogFaixa">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit.prevent="salvar">
+          <q-form @submit.prevent="store.salvarFaixa()">
             <q-card-section class="bg-primary text-white">
-              <div class="text-h6">{{ cad.isNovo ? 'Nova Faixa' : 'Editar Faixa' }}</div>
-              <div class="text-caption">{{ cad.form.tipo }}</div>
+              <div class="text-h6">
+                {{ formFaixa.codtabeladesconto ? 'Editar Faixa' : 'Nova Faixa' }}
+              </div>
+              <div class="text-caption">{{ formFaixa.tipo }}</div>
             </q-card-section>
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-6">
                   <MgInputValor
-                    v-model="cad.form.faixainicio"
+                    v-model="formFaixa.faixainicio"
                     :decimals="1"
                     suffix="%"
                     label="De"
@@ -195,7 +177,7 @@ onMounted(async () => {
                 </div>
                 <div class="col-6">
                   <MgInputValor
-                    v-model="cad.form.faixafim"
+                    v-model="formFaixa.faixafim"
                     :decimals="1"
                     suffix="%"
                     label="Até"
@@ -203,15 +185,15 @@ onMounted(async () => {
                     :rules="[
                       (v) => v != null,
                       (v) =>
-                        cad.form.faixainicio == null ||
-                        Number(v) >= Number(cad.form.faixainicio) ||
+                        formFaixa.faixainicio == null ||
+                        Number(v) >= Number(formFaixa.faixainicio) ||
                         'Fim menor que o início',
                     ]"
                   />
                 </div>
                 <div class="col-12">
                   <MgInputValor
-                    v-model="cad.form.percentualdesconto"
+                    v-model="formFaixa.percentualdesconto"
                     :decimals="3"
                     suffix="%"
                     label="Desconto aplicado"
@@ -223,7 +205,7 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvandoFaixa" />
             </q-card-actions>
           </q-form>
         </q-card>
