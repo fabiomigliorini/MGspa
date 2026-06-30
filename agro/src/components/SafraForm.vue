@@ -3,15 +3,17 @@ import { ref, computed, watch, onMounted } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import RadioCultura from 'components/RadioCultura.vue'
 
-// Formulário único de safra — serve tanto pra criar quanto pra editar. Recebe a
-// instância de useCadastro (lê/escreve em cad.form, usa cad.isNovo) e a lista de
-// safras já cadastradas (pra sugerir o próximo ano de plantio na criação).
+// Formulário único de safra — serve tanto pra criar quanto pra editar. Recebe o
+// objeto reativo do form (da store do domínio) e a lista de safras já
+// cadastradas (pra sugerir o próximo ano de plantio na criação). isNovo é
+// derivado da ausência da PK.
 const props = defineProps({
-  cad: { type: Object, required: true },
+  form: { type: Object, required: true },
   safras: { type: Array, default: () => [] },
 })
 
-const form = computed(() => props.cad.form)
+const form = computed(() => props.form)
+const isNovo = computed(() => !form.value.codsafra)
 
 // Cultura escolhida no radio: guardada pra saber o ciclo na hora de derivar o
 // ano de colheita e montar a descrição.
@@ -43,7 +45,7 @@ function gapColheita(anoAnterior) {
 // ano atual na primeira safra da cultura). Colheita e descrição saem dos watches.
 function onCultura(cultura) {
   culturaSel.value = cultura
-  if (!props.cad.isNovo || !cultura) return
+  if (!isNovo.value || !cultura) return
   const ultimo = ultimoAnoPlantio(cultura.codcultura)
   const plantio = ultimo ? ultimo + 1 : new Date().getFullYear()
   // Seta plantio E colheita explicitamente — não dá pra deixar a colheita só no
@@ -95,7 +97,7 @@ function onSafraInput(v) {
 
 onMounted(() => {
   // na edição a descrição já existe — não sobrescrever
-  safraEditada.value = !props.cad.isNovo
+  safraEditada.value = !isNovo.value
 })
 </script>
 

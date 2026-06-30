@@ -1,48 +1,37 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { api } from 'src/services/api'
-import { useCadastro } from 'src/composables/useCadastro'
+import { storeToRefs } from 'pinia'
+import { useFazendaStore } from 'src/stores/fazenda'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
-import { PALETA_TALHAO, corTalhao, sugerirCor } from 'src/utils/coresTalhao'
+import { PALETA_TALHAO, corTalhao } from 'src/utils/coresTalhao'
 
 const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const codfazenda = Number(route.params.codfazenda)
 
-const fazendaCad = useCadastro('fazenda', 'codfazenda', 'Fazenda')
-const talCad = useCadastro('talhao', 'codtalhao', 'Talhão') // inativar/ativar/excluir
-
-const fazenda = ref(null)
-const resumo = ref({
-  ntalhoes: 0,
-  areatalhoes: 0,
-  areaplantada: 0,
-  sacas: 0,
-  produtividade: 0,
-  safras: [],
-})
-const talhoes = ref([])
-// Polígonos das demais fazendas — contexto cinza no editor de talhão.
-const outrasFazendas = ref([])
-
-// Talhão: novo/editar acontece numa única janela (mapa + nome + área).
-const talhaoDialog = ref(false)
-const isNovo = ref(true)
-const form = ref({})
-const salvandoTalhao = ref(false)
-
-const talhoesComGeo = computed(() => talhoes.value.filter((t) => t.geometria))
-// Vizinhos mostrados como referência no editor (todos menos o que está aberto).
-const referenciaMapa = computed(() =>
-  talhoesComGeo.value.filter((t) => t.codtalhao !== form.value.codtalhao),
-)
+// Detalhe do domínio fazenda — UMA store p/ todas as telas de fazenda.
+const store = useFazendaStore()
+const {
+  fazenda,
+  resumo,
+  talhoes,
+  outrasFazendas,
+  talhoesComGeo,
+  referenciaMapa,
+  dialogFazenda,
+  formFazenda,
+  salvandoFazenda,
+  dialogTalhao,
+  formTalhao,
+  salvandoTalhao,
+} = storeToRefs(store)
 
 const kpis = computed(() => [
   { label: 'Talhões', valor: fmt(resumo.value.ntalhoes), icon: 'grass', cor: 'brown' },
@@ -78,38 +67,13 @@ function urlGoogleMaps(t) {
   return `https://www.google.com/maps/@${t.latitude},${t.longitude},800m/data=!3m1!1e3`
 }
 
-async function carregarFazenda() {
-  const { data } = await api.get(`v1/fazenda/${codfazenda}`)
-  fazenda.value = data.data ?? data
-}
-async function carregarResumo() {
-  const { data } = await api.get(`v1/fazenda/${codfazenda}/resumo`)
-  resumo.value = data
-}
-async function carregarTalhoes() {
-  const { data } = await api.get('v1/talhao', { params: { codfazenda } })
-  talhoes.value = data.data ?? data
-}
-async function carregarOutrasFazendas() {
-  const { data } = await api.get('v1/talhao/mapa', { params: { codfazenda } })
-  outrasFazendas.value = (data.data ?? data).map((t) => ({
-    codfazenda: t.codfazenda,
-    fazenda: t.Fazenda?.fazenda,
-    geometria: t.geometria,
-  }))
-}
-
-// Fazenda — edição reaproveita o cadastro genérico e recarrega o cabeçalho.
+// Fazenda — edição/inativação chamam as actions do domínio (que refrescam a
+// fazenda aberta + KPIs). Excluir confirma aqui e navega de volta.
 function editarFazenda() {
-  fazendaCad.editar(fazenda.value)
+  store.editarFazenda(fazenda.value)
 }
-async function salvarFazenda() {
-  await fazendaCad.salvar()
-  if (!fazendaCad.dialog) await carregarFazenda()
-}
-async function alternarInativoFazenda() {
-  await fazendaCad.alternarInativo(fazenda.value)
-  await carregarFazenda()
+function alternarInativoFazenda() {
+  store.inativarFazenda(fazenda.value)
 }
 function excluirFazenda() {
   $q.dialog({
@@ -119,7 +83,7 @@ function excluirFazenda() {
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
-      await api.delete(`v1/fazenda/${codfazenda}`)
+      await store.excluirFazenda(codfazenda)
       notifySuccess('Excluído!')
       router.push({ name: 'fazendas' })
     } catch (e) {
@@ -128,67 +92,16 @@ function excluirFazenda() {
   })
 }
 
-// Talhão — janela única (mapa). Novo começa perto dos vizinhos; editar abre o
-// polígono existente. A área é calculada do desenho, mas continua editável.
-function novoTalhao() {
-  isNovo.value = true
-  const usadas = talhoes.value.map((t) => t.cor).filter(Boolean)
-  form.value = {
-    codfazenda,
-    talhao: '',
-    area: 0,
-    geometria: null,
-    latitude: null,
-    longitude: null,
-    cor: sugerirCor(usadas),
-  }
-  talhaoDialog.value = true
-}
-function editarTalhao(t) {
-  isNovo.value = false
-  // Garante uma cor visível mesmo p/ talhões antigos sem cor salva.
-  form.value = { ...t, cor: corTalhao(t) }
-  talhaoDialog.value = true
-}
-async function salvarTalhao() {
-  if (salvandoTalhao.value) return
-  salvandoTalhao.value = true
-  try {
-    if (isNovo.value) {
-      await api.post('v1/talhao', form.value)
-    } else {
-      await api.put(`v1/talhao/${form.value.codtalhao}`, form.value)
-    }
-    notifySuccess('Talhão salvo!')
-    talhaoDialog.value = false
-    await Promise.all([carregarTalhoes(), carregarResumo()])
-  } catch (e) {
-    notifyError(e)
-  } finally {
-    salvandoTalhao.value = false
-  }
-}
-async function acaoTalhao(fn, t) {
-  await fn(t)
-  await Promise.all([carregarTalhoes(), carregarResumo()])
-}
-
+// Talhão — janela única (mapa) que escreve no form do domínio.
 function onCentro(c) {
-  form.value.latitude = c.lat
-  form.value.longitude = c.lng
+  formTalhao.value.latitude = c.lat
+  formTalhao.value.longitude = c.lng
 }
 
-onMounted(async () => {
-  try {
-    await Promise.all([
-      carregarFazenda(),
-      carregarResumo(),
-      carregarTalhoes(),
-      carregarOutrasFazendas(),
-    ])
-  } catch (e) {
-    notifyError(e)
-  }
+onMounted(() => {
+  store.carregarFazenda(codfazenda)
+  store.carregarTalhoes(codfazenda)
+  store.carregarOutrasFazendas(codfazenda)
 })
 </script>
 
@@ -269,7 +182,14 @@ onMounted(async () => {
             >
           </q-item-section>
           <q-item-section side>
-            <q-btn flat round size="sm" color="primary" icon="add" @click="novoTalhao">
+            <q-btn
+              flat
+              round
+              size="sm"
+              color="primary"
+              icon="add"
+              @click="store.novoTalhao(codfazenda)"
+            >
               <q-tooltip>Novo talhão</q-tooltip>
             </q-btn>
           </q-item-section>
@@ -299,7 +219,7 @@ onMounted(async () => {
                   size="sm"
                   color="grey-7"
                   icon="edit"
-                  @click="editarTalhao(t)"
+                  @click="store.editarTalhao(t)"
                 >
                   <q-tooltip>Editar / desenhar polígono</q-tooltip>
                 </q-btn>
@@ -324,7 +244,7 @@ onMounted(async () => {
                   size="sm"
                   color="grey-7"
                   :icon="t.inativo ? 'play_arrow' : 'pause'"
-                  @click="acaoTalhao(talCad.alternarInativo, t)"
+                  @click="store.inativarTalhao(t)"
                 >
                   <q-tooltip>{{ t.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
                 </q-btn>
@@ -335,7 +255,7 @@ onMounted(async () => {
                   size="sm"
                   color="grey-7"
                   icon="delete"
-                  @click="acaoTalhao(talCad.excluir, t)"
+                  @click="store.excluirTalhao(t)"
                 >
                   <q-tooltip>Excluir</q-tooltip>
                 </q-btn>
@@ -406,9 +326,9 @@ onMounted(async () => {
       </q-card>
 
       <!-- Dialog Fazenda -->
-      <q-dialog v-model="fazendaCad.dialog">
+      <q-dialog v-model="dialogFazenda">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit.prevent="salvarFazenda">
+          <q-form @submit.prevent="store.salvarFazenda()">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">Editar Fazenda</div>
             </q-card-section>
@@ -416,7 +336,7 @@ onMounted(async () => {
               <div class="row q-col-gutter-md">
                 <div class="col-12">
                   <q-input
-                    v-model="fazendaCad.form.fazenda"
+                    v-model="formFazenda.fazenda"
                     label="Nome da fazenda"
                     outlined
                     autofocus
@@ -431,13 +351,7 @@ onMounted(async () => {
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                flat
-                label="Salvar"
-                color="primary"
-                :loading="fazendaCad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvandoFazenda" />
             </q-card-actions>
           </q-form>
         </q-card>
@@ -445,33 +359,41 @@ onMounted(async () => {
     </div>
 
     <!-- Dialog Talhão = mapa tela cheia + bottom sheet de campos + fechar -->
-    <q-dialog v-model="talhaoDialog" maximized>
+    <q-dialog v-model="dialogTalhao" maximized>
       <q-card class="relative-position" style="width: 100vw; height: 100vh">
         <!-- Mapa de fundo, ocupa a tela toda -->
         <MapaTalhoes
-          v-if="talhaoDialog"
-          :key="form.codtalhao || 'novo'"
+          v-if="dialogTalhao"
+          :key="formTalhao.codtalhao || 'novo'"
           modo="editar"
-          :geometria="form.geometria"
-          :cor="form.cor"
+          :geometria="formTalhao.geometria"
+          :cor="formTalhao.cor"
           :referencia="referenciaMapa"
           :outras="outrasFazendas"
           height="100%"
           :offset-inferior="120"
-          @update:geometria="form.geometria = $event"
+          @update:geometria="formTalhao.geometria = $event"
           @update:centro="onCentro"
-          @update:area="form.area = $event"
+          @update:area="formTalhao.area = $event"
         />
 
         <!-- Bottom sheet: cor + nome + área + salvar, numa barra única na base -->
         <div class="absolute-bottom q-pa-md q-mb-sm" style="z-index: 1000">
           <q-card flat bordered class="q-pa-sm" style="margin: 0 auto; max-width: 560px">
-            <q-form class="row items-center no-wrap q-gutter-sm" @submit.prevent="salvarTalhao">
-              <q-btn round :style="{ backgroundColor: form.cor }" text-color="white" icon="palette">
+            <q-form
+              class="row items-center no-wrap q-gutter-sm"
+              @submit.prevent="store.salvarTalhao()"
+            >
+              <q-btn
+                round
+                :style="{ backgroundColor: formTalhao.cor }"
+                text-color="white"
+                icon="palette"
+              >
                 <q-tooltip>Cor do talhão</q-tooltip>
                 <q-popup-proxy>
                   <q-color
-                    v-model="form.cor"
+                    v-model="formTalhao.cor"
                     :palette="PALETA_TALHAO"
                     default-view="palette"
                     no-header
@@ -480,7 +402,7 @@ onMounted(async () => {
                 </q-popup-proxy>
               </q-btn>
               <q-input
-                v-model="form.talhao"
+                v-model="formTalhao.talhao"
                 label="Nome"
                 outlined
                 autofocus
@@ -490,7 +412,7 @@ onMounted(async () => {
                 :rules="[(v) => !!v]"
               />
               <MgInputValor
-                v-model="form.area"
+                v-model="formTalhao.area"
                 :decimals="2"
                 suffix="ha"
                 label="Área"

@@ -1,10 +1,10 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { api } from 'src/services/api'
-import { useCadastro } from 'src/composables/useCadastro'
+import { useSafraStore } from 'src/stores/safra'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
@@ -22,18 +22,21 @@ const router = useRouter()
 const $q = useQuasar()
 const codsafra = Number(route.params.codsafra)
 
-const safraCad = useCadastro('safra', 'codsafra', 'Safra')
-const plantioCad = useCadastro(`safra/${codsafra}/plantio`, 'codplantio', 'Plantio')
-const store = useCargaStore()
-const { colhidoPorPlantio } = storeToRefs(store)
+// Detalhe do domínio safra — a store é dona da safra aberta, dos KPIs comerciais
+// e do CRUD de plantio. Carga (offline-first) e sincronização continuam em suas
+// próprias stores; ContratosSafra é outro domínio.
+const store = useSafraStore()
+const { safra, comercial, plantios } = storeToRefs(store)
+const carga = useCargaStore()
+const { colhidoPorPlantio } = storeToRefs(carga)
 const sinc = useSincronizacaoStore()
 const { online } = storeToRefs(sinc)
 
-const safra = ref(null)
+// Listas de referência da tela (não são entidades safra): fazendas/variedades e
+// o layout base de talhões — usados pelo wizard e pela agregação por fazenda.
 const fazendas = ref([])
 const variedades = ref([])
-const talhoesBase = ref([]) // layout base de todas as fazendas (p/ partir o desenho)
-const comercial = ref(null) // KPIs comerciais (contratos da safra), via backend
+const talhoesBase = ref([]) // layout base de todas as fazendas
 
 const pesosaca = computed(() => Number(safra.value?.Cultura?.pesosaca) || 60)
 const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.Cultura?.codcultura)
@@ -42,10 +45,34 @@ const variedadesDaCultura = computed(() =>
   variedades.value.filter((v) => v.codcultura === codcultura.value && !v.inativo),
 )
 
+// Adapter no formato useCadastro para o PlantioWizardDialog (que lê
+// cad.form/cad.isNovo/cad.salvando e chama cad.salvar(transform)). O estado e o
+// CRUD vivem na store; isto é só a ponte do contrato do wizard.
+const plantioCad = reactive({
+  get form() {
+    return store.formPlantio
+  },
+  get isNovo() {
+    return !store.formPlantio.codplantio
+  },
+  get salvando() {
+    return store.salvandoPlantio
+  },
+  salvar(transform) {
+    // Aplica o whitelist do wizard, mas preserva a PK — a store decide
+    // POST/PUT por formPlantio.codplantio.
+    if (transform) {
+      const pk = store.formPlantio.codplantio
+      store.formPlantio = { ...transform({ ...store.formPlantio }), codplantio: pk }
+    }
+    return store.salvarPlantio(codsafra)
+  },
+})
+
 // Plantios da safra (todas as fazendas) + produtividade (colhido vem das cargas)
 // e progresso da colheita (colhido ÷ expectativa).
 const linhas = computed(() =>
-  plantioCad.items.map((p) => {
+  plantios.value.map((p) => {
     const kg = colhidoPorPlantio.value[p.codplantio] || 0
     const sacas = kg / pesosaca.value
     const area = Number(p.areaplantada) || 0
@@ -133,14 +160,10 @@ function rs(v) {
 }
 
 // Recarrega o rollup comercial (chamado no mount e quando a grid emite changed).
+// Só online — offline a store mantém o último valor.
 async function recarregarComercial() {
   if (!online.value) return
-  try {
-    const { data } = await api.get(`v1/safra/${codsafra}/comercial`)
-    comercial.value = data
-  } catch {
-    // KPI comercial degrada em silêncio (offline / sem dado); produção segue.
-  }
+  await store.carregarComercial(codsafra)
 }
 const periodo = computed(() => {
   const s = safra.value
@@ -157,8 +180,8 @@ function nomeVariedade(p) {
 // Abre o wizard: sem fazenda → começa na escolha de fazenda; com fazenda
 // (botão de adicionar dentro do card de uma fazenda) → pula pra escolha do talhão.
 function novoPlantio(codfazenda = null) {
-  const usadas = plantioCad.items.map((p) => p.cor).filter(Boolean)
-  plantioCad.abrirNovo({
+  const usadas = plantios.value.map((p) => p.cor).filter(Boolean)
+  store.novoPlantio({
     codfazenda,
     codtalhao: null,
     talhao: '',
@@ -172,30 +195,20 @@ function novoPlantio(codfazenda = null) {
 }
 function editarPlantio(p) {
   // Garante uma cor visível mesmo p/ plantios antigos sem cor salva.
-  plantioCad.editar({ ...p, cor: corTalhao(p) })
+  store.editarPlantio({ ...p, cor: corTalhao(p) })
 }
 function selecionarPlantio(codplantio) {
-  const p = plantioCad.items.find((x) => x.codplantio === codplantio)
+  const p = plantios.value.find((x) => x.codplantio === codplantio)
   if (p) editarPlantio(p)
 }
 
-async function carregarSafra() {
-  // A API embrulha objeto único em { data: {...} }; desembrulha (igual ao resto).
-  const { data } = await api.get(`v1/safra/${codsafra}`)
-  safra.value = data.data ?? data
-}
-
 // Safra — edição/ativação/exclusão no cabeçalho do detalhe (a lista só navega).
+// As actions da store refrescam a safra aberta.
 function editarSafra() {
-  safraCad.editar(safra.value)
+  store.editarSafra(safra.value)
 }
-async function salvarSafra() {
-  await safraCad.salvar()
-  if (!safraCad.dialog) await carregarSafra()
-}
-async function alternarInativoSafra() {
-  await safraCad.alternarInativo(safra.value)
-  await carregarSafra()
+function alternarInativoSafra() {
+  store.inativarSafra(safra.value)
 }
 function excluirSafra() {
   $q.dialog({
@@ -205,7 +218,7 @@ function excluirSafra() {
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
-      await api.delete(`v1/safra/${codsafra}`)
+      await store.excluirSafra(codsafra)
       notifySuccess('Excluído!')
       router.push({ name: 'safras' })
     } catch (e) {
@@ -215,21 +228,19 @@ function excluirSafra() {
 }
 
 onMounted(async () => {
-  const [{ data: s }, { data: f }, { data: v }, { data: t }] = await Promise.all([
-    api.get(`v1/safra/${codsafra}`),
+  const [, { data: f }, { data: v }, { data: t }] = await Promise.all([
+    store.carregarSafra(codsafra),
     api.get('v1/fazenda'),
     api.get('v1/variedade'),
     api.get('v1/talhao'),
   ])
-  // A API embrulha objeto único em { data: {...} }; desembrulha (igual carregarSafra).
-  safra.value = s.data ?? s
   fazendas.value = f.data ?? f
   variedades.value = v.data ?? v
   talhoesBase.value = t.data ?? t
-  await plantioCad.carregar()
-  await store.definirSafra(codsafra)
-  await store.carregarReferencias()
-  await store.carregarCargas()
+  await store.carregarPlantios(codsafra)
+  await carga.definirSafra(codsafra)
+  await carga.carregarReferencias()
+  await carga.carregarCargas()
   await recarregarComercial()
 })
 </script>
@@ -544,7 +555,7 @@ onMounted(async () => {
                             size="sm"
                             color="grey-7"
                             :icon="l.inativo ? 'play_arrow' : 'pause'"
-                            @click="plantioCad.alternarInativo(l)"
+                            @click="store.inativarPlantio(codsafra, l)"
                           >
                             <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
                           </q-btn>
@@ -555,7 +566,7 @@ onMounted(async () => {
                             size="sm"
                             color="grey-7"
                             icon="delete"
-                            @click="plantioCad.excluir(l)"
+                            @click="store.excluirPlantio(codsafra, l)"
                           >
                             <q-tooltip>Excluir</q-tooltip>
                           </q-btn>
@@ -578,7 +589,7 @@ onMounted(async () => {
 
     <!-- Wizard: escolher fazenda → talhão base → confirmar/ajustar polígono -->
     <PlantioWizardDialog
-      v-model="plantioCad.dialog"
+      v-model="store.dialogPlantio"
       :cad="plantioCad"
       :fazendas="fazendas"
       :talhoes-base="talhoesBase"
@@ -587,18 +598,24 @@ onMounted(async () => {
     />
 
     <!-- Dialog Safra (edição) — mesmo form do cadastro -->
-    <q-dialog v-model="safraCad.dialog">
+    <q-dialog v-model="store.dialogSafra">
       <q-card flat style="width: 440px; max-width: 95vw">
-        <q-form @submit.prevent="salvarSafra">
+        <q-form @submit.prevent="store.salvarSafra()">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Editar Safra</div>
           </q-card-section>
           <q-card-section class="q-pt-md">
-            <SafraForm :cad="safraCad" />
+            <SafraForm :form="store.formSafra" />
           </q-card-section>
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-            <q-btn type="submit" flat label="Salvar" color="primary" :loading="safraCad.salvando" />
+            <q-btn
+              type="submit"
+              flat
+              label="Salvar"
+              color="primary"
+              :loading="store.salvandoSafra"
+            />
           </q-card-actions>
         </q-form>
       </q-card>

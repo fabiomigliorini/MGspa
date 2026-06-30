@@ -1,21 +1,28 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { api } from 'src/services/api'
-import { notifySuccess, notifyError } from 'src/utils/notify'
+import { onMounted, watch } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useExtratoStore } from 'src/stores/extrato'
 import MgInputValor from '@components/MgInputValor.vue'
 
-const safras = ref([])
-const codsafra = ref(null)
-const kpis = ref(null)
-const saldos = ref([])
-const extrato = ref([])
-const unidades = ref([])
-const contratos = ref([])
-const plantios = ref([])
-const carregando = ref(false)
-
-const safraSel = computed(() => safras.value.find((s) => s.codsafra === codsafra.value) || null)
-const pesosaca = computed(() => safraSel.value?.Cultura?.pesosaca || 60)
+// Store da tela Estoque & Extrato: única fonte dos dados. A página só lê via
+// storeToRefs e chama as actions.
+const store = useExtratoStore()
+const {
+  safras,
+  codsafra,
+  kpis,
+  saldos,
+  extrato,
+  unidades,
+  contratos,
+  plantios,
+  carregando,
+  dialog,
+  salvando,
+  form,
+  pesosaca,
+  liquidoForm,
+} = storeToRefs(store)
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
@@ -28,53 +35,6 @@ function sc(kg) {
   return fmt((Number(kg) || 0) / pesosaca.value, 0)
 }
 
-async function carregarSafras() {
-  const { data } = await api.get('v1/safra')
-  safras.value = data.data ?? data
-  if (!codsafra.value && safras.value.length) {
-    codsafra.value = (safras.value.find((s) => !s.inativo) || safras.value[0]).codsafra
-  }
-}
-
-async function carregarDados() {
-  if (!codsafra.value) return
-  carregando.value = true
-  try {
-    const [k, s, e] = await Promise.all([
-      api.get(`v1/safra/${codsafra.value}/comercial`),
-      api.get('v1/movimento-grao/saldos-unidades', { params: { codsafra: codsafra.value } }),
-      api.get('v1/movimento-grao', {
-        params: { codsafra: codsafra.value, sort: '-data,-codmovimentograo' },
-      }),
-    ])
-    kpis.value = k.data
-    saldos.value = s.data
-    extrato.value = e.data.data ?? e.data
-  } catch (err) {
-    notifyError(err)
-  } finally {
-    carregando.value = false
-  }
-}
-
-async function carregarCadastros() {
-  const [u, c] = await Promise.all([api.get('v1/unidade-armazenadora'), api.get('v1/contrato')])
-  unidades.value = u.data.data ?? u.data
-  contratos.value = c.data.data ?? c.data
-}
-
-watch(codsafra, async (cod) => {
-  if (!cod) return
-  const { data } = await api.get(`v1/safra/${cod}/plantio`)
-  plantios.value = data.data ?? data
-  carregarDados()
-})
-
-// ---- Ajuste manual ----
-const dialog = ref(false)
-const salvando = ref(false)
-const form = ref({})
-
 function rotuloConta(m) {
   if (m.contatipo === 'UNIDADE')
     return m.UnidadeArmazenadora?.unidadearmazenadora || `Unidade ${m.codunidadearmazenadora}`
@@ -86,51 +46,12 @@ function rotuloConta(m) {
   return m.contatipo
 }
 
-function novoAjuste() {
-  form.value = {
-    codsafra: codsafra.value,
-    papel: 'DESTINO',
-    contatipo: 'UNIDADE',
-    codplantio: null,
-    codunidadearmazenadora: null,
-    codcontrato: null,
-    bruto: 0,
-    desconto: 0,
-    observacao: null,
-  }
-  dialog.value = true
-}
-
-const liquidoForm = computed(() => Number(form.value.bruto || 0) - Number(form.value.desconto || 0))
-
-async function salvarAjuste() {
-  salvando.value = true
-  try {
-    await api.post('v1/movimento-grao', { ...form.value, liquido: liquidoForm.value })
-    notifySuccess('Ajuste lançado')
-    dialog.value = false
-    await carregarDados()
-  } catch (e) {
-    notifyError(e)
-  } finally {
-    salvando.value = false
-  }
-}
-
-async function estornar(m) {
-  try {
-    await api.post(`v1/movimento-grao/${m.codmovimentograo}/inativo`)
-    notifySuccess('Lançamento estornado')
-    await carregarDados()
-  } catch (e) {
-    notifyError(e)
-  }
-}
+watch(codsafra, (cod) => store.selecionarSafra(cod))
 
 onMounted(async () => {
-  await carregarSafras()
-  await carregarCadastros()
-  await carregarDados()
+  await store.carregarSafras()
+  await store.carregarCadastros()
+  await store.carregarDados()
 })
 </script>
 
@@ -150,7 +71,7 @@ onMounted(async () => {
           label="Safra"
           class="col"
         />
-        <q-btn flat round size="sm" color="primary" icon="add" @click="novoAjuste">
+        <q-btn flat round size="sm" color="primary" icon="add" @click="store.novoAjuste">
           <q-tooltip>Ajuste manual</q-tooltip>
         </q-btn>
         <q-btn
@@ -160,7 +81,7 @@ onMounted(async () => {
           color="grey-7"
           icon="refresh"
           :loading="carregando"
-          @click="carregarDados"
+          @click="store.carregarDados"
         >
           <q-tooltip>Atualizar</q-tooltip>
         </q-btn>
@@ -270,7 +191,7 @@ onMounted(async () => {
                 size="sm"
                 color="grey-7"
                 icon="undo"
-                @click="estornar(m)"
+                @click="store.estornar(m)"
               >
                 <q-tooltip>Estornar lançamento manual</q-tooltip>
               </q-btn>
@@ -286,7 +207,7 @@ onMounted(async () => {
     <!-- Ajuste manual -->
     <q-dialog v-model="dialog">
       <q-card flat style="width: 520px; max-width: 90vw">
-        <q-form @submit.prevent="salvarAjuste">
+        <q-form @submit.prevent="store.salvarAjuste">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Ajuste manual</div>
             <div class="text-caption">Lançamento complementar (não altera os automáticos)</div>
