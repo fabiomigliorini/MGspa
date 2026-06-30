@@ -1,11 +1,17 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { api } from 'src/services/api'
-import { notifySuccess, notifyError } from 'src/utils/notify'
+import { computed, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useUnidadeArmazenadoraStore } from 'src/stores/unidadeArmazenadora'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
+
+// Tela do domínio unidade armazenadora — tudo vem da store. TIPOS/meta é
+// apresentação (ícone/cor) e fica na tela.
+const store = useUnidadeArmazenadoraStore()
+const { unidades, carregando, dialog, form, salvando } = storeToRefs(store)
+const isNovo = computed(() => !form.value.codunidadearmazenadora)
 
 const TIPOS = [
   { value: 'PROPRIO', label: 'Próprio', icon: 'home', color: 'green-7' },
@@ -16,74 +22,7 @@ function meta(tipo) {
   return TIPOS.find((t) => t.value === tipo) || { label: tipo, icon: 'warehouse', color: 'grey-7' }
 }
 
-const itens = ref([])
-const carregando = ref(false)
-
-async function carregar() {
-  carregando.value = true
-  try {
-    const { data } = await api.get('v1/unidade-armazenadora', { params: { inativo: 9 } })
-    itens.value = data.data ?? data
-  } catch (e) {
-    notifyError(e)
-  } finally {
-    carregando.value = false
-  }
-}
-
-const dialog = ref(false)
-const form = ref({})
-const isNovo = computed(() => !form.value.codunidadearmazenadora)
-const salvando = ref(false)
-
-function novo() {
-  form.value = {
-    codunidadearmazenadora: null,
-    unidadearmazenadora: '',
-    tipo: 'PROPRIO',
-    codpessoa: null,
-    capacidadesacas: null,
-    observacao: null,
-  }
-  dialog.value = true
-}
-function editar(u) {
-  form.value = JSON.parse(JSON.stringify(u))
-  dialog.value = true
-}
-
-async function submit() {
-  salvando.value = true
-  try {
-    if (isNovo.value) {
-      await api.post('v1/unidade-armazenadora', form.value)
-    } else {
-      await api.put(`v1/unidade-armazenadora/${form.value.codunidadearmazenadora}`, form.value)
-    }
-    notifySuccess('Unidade salva')
-    dialog.value = false
-    await carregar()
-  } catch (e) {
-    notifyError(e)
-  } finally {
-    salvando.value = false
-  }
-}
-
-async function alternarInativo(u) {
-  try {
-    if (u.inativo) {
-      await api.delete(`v1/unidade-armazenadora/${u.codunidadearmazenadora}/inativo`)
-    } else {
-      await api.post(`v1/unidade-armazenadora/${u.codunidadearmazenadora}/inativo`)
-    }
-    await carregar()
-  } catch (e) {
-    notifyError(e)
-  }
-}
-
-onMounted(carregar)
+onMounted(store.carregar)
 </script>
 
 <template>
@@ -91,14 +30,14 @@ onMounted(carregar)
     <div style="max-width: 1086px; margin: auto">
       <div class="row items-center q-mb-md">
         <div class="text-h5 col">Unidades Armazenadoras</div>
-        <q-btn flat round size="sm" color="primary" icon="add" @click="novo">
+        <q-btn flat round size="sm" color="primary" icon="add" @click="store.novo">
           <q-tooltip>Nova unidade</q-tooltip>
         </q-btn>
       </div>
 
       <q-card bordered flat>
         <q-list separator>
-          <q-item v-for="u in itens" :key="u.codunidadearmazenadora">
+          <q-item v-for="u in unidades" :key="u.codunidadearmazenadora">
             <q-item-section avatar>
               <q-icon :name="meta(u.tipo).icon" :color="meta(u.tipo).color" size="sm" />
             </q-item-section>
@@ -123,18 +62,18 @@ onMounted(carregar)
                   size="sm"
                   color="grey-7"
                   :icon="u.inativo ? 'play_arrow' : 'pause'"
-                  @click="alternarInativo(u)"
+                  @click="store.alternarInativo(u)"
                 >
                   <q-tooltip>{{ u.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
                 </q-btn>
-                <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editar(u)">
+                <q-btn flat round size="sm" color="grey-7" icon="edit" @click="store.editar(u)">
                   <q-tooltip>Editar</q-tooltip>
                 </q-btn>
               </div>
             </q-item-section>
           </q-item>
 
-          <MgEmptyState v-if="!itens.length && !carregando" plain icon="warehouse">
+          <MgEmptyState v-if="!unidades.length && !carregando" plain icon="warehouse">
             Nenhuma unidade armazenadora cadastrada
           </MgEmptyState>
         </q-list>
@@ -143,7 +82,7 @@ onMounted(carregar)
 
     <q-dialog v-model="dialog">
       <q-card flat style="width: 500px; max-width: 90vw">
-        <q-form @submit.prevent="submit">
+        <q-form @submit.prevent="store.salvar()">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">{{ isNovo ? 'Nova unidade' : 'Editar unidade' }}</div>
           </q-card-section>
