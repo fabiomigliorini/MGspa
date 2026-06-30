@@ -131,7 +131,7 @@ function excluirNota(nt) {
     <!-- Dialog Nota do plano (operação triangular) -->
     <q-dialog v-model="dialogNota">
       <q-card flat style="width: 480px; max-width: 95vw">
-        <q-form @submit="salvarNota">
+        <q-form @submit.prevent="salvarNota">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">{{ isNovoNota ? 'Nova nota' : 'Editar nota' }}</div>
           </q-card-section>
@@ -144,6 +144,8 @@ function excluirNota(nt) {
                 <MgSelectNaturezaOperacao
                   v-model="formNota.codnaturezaoperacao"
                   label="Natureza da operação"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="col-12">

@@ -67,7 +67,7 @@ onMounted(() => cad.carregar())
 
       <q-dialog v-model="cad.dialog">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit="cad.salvar()">
+          <q-form @submit.prevent="cad.salvar()">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">{{ cad.isNovo ? 'Nova Safra' : 'Editar Safra' }}</div>
             </q-card-section>

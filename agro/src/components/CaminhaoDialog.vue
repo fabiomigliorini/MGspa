@@ -83,10 +83,8 @@ async function salvar() {
                 autofocus
                 mask="AAA#X##"
                 hint="Ex: ABC1D23"
-                :rules="[
-                  (v) => !!v || 'Informe a placa',
-                  (v) => (v && v.length === 7) || '7 caracteres',
-                ]"
+                lazy-rules
+                :rules="[(v) => !!v, (v) => v?.length === 7]"
                 @update:model-value="(v) => (form.placa = (v || '').toUpperCase())"
               />
             </div>
@@ -94,7 +92,8 @@ async function salvar() {
               <MgSelectEstado
                 v-model="form.codestado"
                 label="UF"
-                :rules="[(v) => !!v || 'Informe a UF']"
+                lazy-rules
+                :rules="[(v) => !!v]"
               />
             </div>
             <div class="col-12">
@@ -103,14 +102,16 @@ async function salvar() {
                 label="Apelido"
                 outlined
                 maxlength="50"
-                :rules="[(v) => (v && v.length >= 5) || 'Mínimo 5 caracteres']"
+                lazy-rules
+                :rules="[(v) => !!v && v.length >= 5]"
               />
             </div>
             <div class="col-12 col-sm-6">
               <MgSelectVeiculoTipo
                 v-model="form.codveiculotipo"
                 label="Tipo de veículo"
-                :rules="[(v) => !!v || 'Informe o tipo']"
+                lazy-rules
+                :rules="[(v) => !!v]"
               />
             </div>
             <div class="col-12 col-sm-6">

@@ -43,7 +43,6 @@ const talhoesComGeo = computed(() => talhoes.value.filter((t) => t.geometria))
 const referenciaMapa = computed(() =>
   talhoesComGeo.value.filter((t) => t.codtalhao !== form.value.codtalhao),
 )
-const podeSalvar = computed(() => !!form.value.talhao && Number(form.value.area) > 0)
 
 const kpis = computed(() => [
   { label: 'Talhões', valor: fmt(resumo.value.ntalhoes), icon: 'grass', cor: 'brown' },
@@ -152,7 +151,7 @@ function editarTalhao(t) {
   talhaoDialog.value = true
 }
 async function salvarTalhao() {
-  if (salvandoTalhao.value || !podeSalvar.value) return
+  if (salvandoTalhao.value) return
   salvandoTalhao.value = true
   try {
     if (isNovo.value) {
@@ -409,7 +408,7 @@ onMounted(async () => {
       <!-- Dialog Fazenda -->
       <q-dialog v-model="fazendaCad.dialog">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit="salvarFazenda">
+          <q-form @submit.prevent="salvarFazenda">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">Editar Fazenda</div>
             </q-card-section>
@@ -421,6 +420,8 @@ onMounted(async () => {
                     label="Nome da fazenda"
                     outlined
                     autofocus
+                    lazy-rules
+                    :rules="[(v) => !!v && v.length >= 2]"
                   />
                 </div>
                 <div class="col-12 text-caption text-grey-6">
@@ -485,6 +486,8 @@ onMounted(async () => {
                 autofocus
                 bg-color="white"
                 class="col"
+                lazy-rules
+                :rules="[(v) => !!v]"
               />
               <MgInputValor
                 v-model="form.area"
@@ -493,15 +496,10 @@ onMounted(async () => {
                 label="Área"
                 bg-color="white"
                 style="width: 120px"
+                lazy-rules
+                :rules="[(v) => v > 0]"
               />
-              <q-btn
-                type="submit"
-                round
-                color="primary"
-                icon="save"
-                :disable="!podeSalvar"
-                :loading="salvandoTalhao"
-              >
+              <q-btn type="submit" round color="primary" icon="save" :loading="salvandoTalhao">
                 <q-tooltip>Salvar talhão</q-tooltip>
               </q-btn>
             </q-form>

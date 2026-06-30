@@ -589,7 +589,7 @@ onMounted(async () => {
     <!-- Dialog Safra (edição) — mesmo form do cadastro -->
     <q-dialog v-model="safraCad.dialog">
       <q-card flat style="width: 440px; max-width: 95vw">
-        <q-form @submit="salvarSafra">
+        <q-form @submit.prevent="salvarSafra">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Editar Safra</div>
           </q-card-section>

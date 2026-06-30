@@ -299,6 +299,8 @@ onMounted(async () => {
                   label="Conta"
                   outlined
                   :options="['UNIDADE', 'CONTRATO', 'PLANTIO']"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="col-6">
@@ -307,6 +309,8 @@ onMounted(async () => {
                   label="Papel"
                   outlined
                   :options="['ORIGEM', 'DESTINO']"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div v-if="form.contatipo === 'UNIDADE'" class="col-12">
@@ -319,6 +323,8 @@ onMounted(async () => {
                   option-label="unidadearmazenadora"
                   emit-value
                   map-options
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div v-else-if="form.contatipo === 'CONTRATO'" class="col-12">
@@ -333,6 +339,8 @@ onMounted(async () => {
                   "
                   emit-value
                   map-options
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div v-else class="col-12">
@@ -345,6 +353,8 @@ onMounted(async () => {
                   option-label="talhao"
                   emit-value
                   map-options
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="col-6">
