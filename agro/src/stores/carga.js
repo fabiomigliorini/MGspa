@@ -252,9 +252,8 @@ export const useCargaStore = defineStore('carga', () => {
     saldosUnidades.value = sincronizacao.saldosUnidades
   }
 
-  // Nova carga do sentido informado (ou do board atual). Começa na 1ª etapa e
-  // já semeia 1 origem + 1 destino com o tipo padrão do sentido (a unidade única
-  // é pré-selecionada pelo SelectUnidade ao montar).
+  // Nova carga do sentido informado (ou do board atual). Começa na 1ª etapa.
+  // A semeadura de origem/destino padrão é feita no CargaDialog (camada de UI).
   function nova(sentido = null) {
     const s = sentido || sentidoAtivo.value
     return {
@@ -281,10 +280,7 @@ export const useCargaStore = defineStore('carga', () => {
       desconto: null,
       liquido: null,
       observacao: null,
-      pontos: [
-        novoPonto('ORIGEM', CONTATIPO_PADRAO[s]?.ORIGEM || 'UNIDADE'),
-        novoPonto('DESTINO', CONTATIPO_PADRAO[s]?.DESTINO || 'UNIDADE'),
-      ],
+      pontos: [],
       sincronizado: 0,
     }
   }

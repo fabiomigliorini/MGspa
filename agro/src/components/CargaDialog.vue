@@ -32,10 +32,29 @@ const local = ref(null)
 watch(
   () => props.carga,
   (c) => {
-    local.value = c ? normalizarPontos(JSON.parse(JSON.stringify(c))) : null
+    if (!c) {
+      local.value = null
+      return
+    }
+    const carga = normalizarPontos(JSON.parse(JSON.stringify(c)))
+    if (props.novo) semearPontos(carga)
+    local.value = carga
   },
   { immediate: true },
 )
+
+// Carga nova já abre com 1 origem + 1 destino no tipo padrão do sentido (a
+// unidade única é pré-selecionada pelo SelectUnidade; o talhão/contrato o
+// operador escolhe). Só semeia o que faltar.
+function semearPontos(carga) {
+  const s = carga.sentido
+  if (!carga.pontos.some((p) => p.papel === 'ORIGEM')) {
+    carga.pontos.push(novoPonto('ORIGEM', CONTATIPO_PADRAO[s]?.ORIGEM || 'UNIDADE'))
+  }
+  if (!carga.pontos.some((p) => p.papel === 'DESTINO')) {
+    carga.pontos.push(novoPonto('DESTINO', CONTATIPO_PADRAO[s]?.DESTINO || 'UNIDADE'))
+  }
+}
 
 // Compat: cargas antigas gravaram kg por ponto e não têm `percentual`. Reconstrói
 // o % a partir do kg (proporção sobre o líquido) ou divide igualmente. Linha
