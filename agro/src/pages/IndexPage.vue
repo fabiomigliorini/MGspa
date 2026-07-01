@@ -49,7 +49,7 @@ const kpis = computed(() => [
 const atalhos = [
   {
     label: 'Pátio de Cargas',
-    sub: 'Recebimento, expedição e transferência',
+    sub: 'Movimentação, carga e descarga.',
     icon: 'local_shipping',
     cor: 'green-7',
     to: { name: 'carga' },

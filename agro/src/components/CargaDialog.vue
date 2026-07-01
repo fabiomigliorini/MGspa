@@ -2,11 +2,12 @@
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { api } from 'src/services/api'
 import { useCargaStore, ETAPAS_POR_SENTIDO } from 'src/stores/carga'
+import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { calcularCarga, sacas } from 'src/utils/desconto'
 import { imprimirTicket } from 'src/utils/ticket'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import CaminhaoDialog from 'components/CaminhaoDialog.vue'
 
 const props = defineProps({
@@ -21,6 +22,7 @@ const $q = useQuasar()
 const store = useCargaStore()
 const { plantiosDaSafra, faixasDaSafra, culturaAtiva, safraAtiva, veiculosAtivos, unidadesAtivas } =
   storeToRefs(store)
+const { online } = storeToRefs(useSincronizacaoStore())
 
 const local = ref(null)
 watch(
@@ -94,43 +96,18 @@ async function onCaminhaoCriado(veiculo) {
   local.value.placa = veiculo.placa
 }
 
-// ---- Motorista (busca online em pessoas; texto livre como fallback offline) ----
-const motoristaOptions = ref([])
-const motoristaBusca = ref('')
-
-function filtrarMotorista(val, update, abort) {
-  motoristaBusca.value = (val || '').trim()
-  const termo = motoristaBusca.value
-  if (termo.length < 2) {
-    update(() => {
-      motoristaOptions.value = []
-    })
-    return
-  }
-  api
-    .get('v1/select/pessoa', { params: { pessoa: termo, somenteAtivos: true }, skipLoading: true })
-    .then(({ data }) =>
-      update(() => {
-        motoristaOptions.value = data.map((p) => ({
-          label: p.fantasia || p.pessoa,
-          value: p.fantasia || p.pessoa,
-          codpessoa: p.codpessoa,
-        }))
-      }),
-    )
-    .catch(() => abort())
+// ---- Motorista (busca online via MgSelectPessoa; texto livre offline) ----
+// Online usa o select padrão de pessoa (busca/filtra/pagina/cacheia). Offline —
+// ou ao reabrir uma carga digitada offline (nome sem id) — cai num texto livre,
+// pra não esconder o nome num select vazio. Limpar o texto reabilita a busca.
+const motoristaTextoLivre = computed(
+  () => !online.value || (!!local.value?.motorista && !local.value?.codpessoamotorista),
+)
+function onMotoristaSelect(opt) {
+  local.value.motorista = opt?.label || null
 }
-function resolverMotorista(nome) {
-  const n = nome || null
-  local.value.motorista = n
-  local.value.codpessoamotorista = n
-    ? motoristaOptions.value.find((o) => o.value === n)?.codpessoa || null
-    : null
-}
-function onMotoristaBlur() {
-  if (motoristaBusca.value && motoristaBusca.value !== local.value.motorista) {
-    resolverMotorista(motoristaBusca.value)
-  }
+function onMotoristaClear() {
+  local.value.motorista = null
 }
 
 // ---- Pontos (origens / destinos) ----
@@ -344,32 +321,26 @@ function imprimir() {
               @update:model-value="local.placacarreta = ($event || '').toUpperCase()"
             />
 
-            <q-select
-              :model-value="local.motorista"
-              :options="motoristaOptions"
+            <MgSelectPessoa
+              v-if="!motoristaTextoLivre"
+              v-model="local.codpessoamotorista"
               label="Motorista"
-              outlined
-              use-input
-              fill-input
-              hide-selected
               clearable
-              input-debounce="350"
-              new-value-mode="add-unique"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
+              :bottom-slots="false"
               class="col-12 col-sm-4"
-              @filter="filtrarMotorista"
-              @update:model-value="resolverMotorista"
-              @blur="onMotoristaBlur"
-            >
-              <template #no-option>
-                <q-item>
-                  <q-item-section class="text-grey-6">Digite o nome do motorista…</q-item-section>
-                </q-item>
-              </template>
-            </q-select>
+              @select="onMotoristaSelect"
+              @clear="onMotoristaClear"
+            />
+            <q-input
+              v-else
+              v-model="local.motorista"
+              label="Motorista"
+              hint="Offline — texto livre"
+              outlined
+              clearable
+              class="col-12 col-sm-4"
+              @update:model-value="local.codpessoamotorista = null"
+            />
           </div>
 
           <!-- Origens -->
