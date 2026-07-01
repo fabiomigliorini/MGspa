@@ -70,7 +70,16 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   // Envia uma carga pro backend; o servidor recalcula pesos/descontos e GERA o
   // extrato (autoridade), devolvendo o codcarga + valores oficiais.
   async function enviarCarga(carga) {
-    const { data: resp } = await api.post('v1/carga/sincronizar', carga, { skipLoading: true })
+    // `percentual` é rateio só-do-front; o backend usa o `liquido` (kg) já rateado.
+    const payload = {
+      ...carga,
+      pontos: (carga.pontos || []).map((p) => {
+        const ponto = { ...p }
+        delete ponto.percentual
+        return ponto
+      }),
+    }
+    const { data: resp } = await api.post('v1/carga/sincronizar', payload, { skipLoading: true })
     // O Resource embrulha o registro em { data: {...} } (Laravel default).
     const oficial = resp.data ?? resp
     await db.carga.update(carga.uuid, {

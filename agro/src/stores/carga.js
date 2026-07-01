@@ -20,6 +20,59 @@ export const SENTIDOS = [
   { value: 'TRANSFERENCIA', label: 'Transferência', icon: 'swap_horiz', color: 'blue-grey-7' },
 ]
 
+// Tipo (contatipo) padrão da origem/destino por sentido — usado ao semear a
+// carga nova e ao clicar "Origem +"/"Destino +". Recebimento entra do talhão
+// pra unidade; expedição sai da unidade pro contrato; transferência unidade↔unidade.
+export const CONTATIPO_PADRAO = {
+  ENTRADA: { ORIGEM: 'PLANTIO', DESTINO: 'UNIDADE' },
+  SAIDA: { ORIGEM: 'UNIDADE', DESTINO: 'CONTRATO' },
+  TRANSFERENCIA: { ORIGEM: 'UNIDADE', DESTINO: 'UNIDADE' },
+}
+
+// Ponto (origem/destino) novo. `percentual` (rateio da carga) é campo só-do-front:
+// o kg (`liquido`) é derivado do líquido calculado da carga na hora de salvar.
+export function novoPonto(papel, contatipo) {
+  return {
+    papel,
+    contatipo,
+    codplantio: null,
+    codunidadearmazenadora: null,
+    codcontrato: null,
+    percentual: 100,
+    liquido: null,
+    rotulo: null,
+    numeronf: null,
+    valornf: null,
+  }
+}
+
+// Rateia o líquido da carga entre os pontos de cada papel a partir do %. O resto
+// vai na última linha pra soma bater exata (evita o 422 "rateio não fecha").
+// Antes de pesar (liquido null) não há kg pra ratear.
+export function ratearPontos(carga) {
+  const liq = Number(carga.liquido)
+  for (const papel of ['ORIGEM', 'DESTINO']) {
+    const grupo = (carga.pontos || []).filter((p) => p.papel === papel)
+    if (!grupo.length) continue
+    if (!(liq > 0)) {
+      grupo.forEach((p) => {
+        p.liquido = null
+      })
+      continue
+    }
+    let acumulado = 0
+    grupo.forEach((p, idx) => {
+      if (idx === grupo.length - 1) {
+        p.liquido = Math.round(liq - acumulado)
+      } else {
+        const kg = Math.round((liq * (Number(p.percentual) || 0)) / 100)
+        p.liquido = kg
+        acumulado += kg
+      }
+    })
+  }
+}
+
 // Store da Carga unificada (pátio) — lê/grava no Dexie (offline-first) e dispara
 // a sincronização em background. O extrato (saldos) é gerado no servidor; aqui
 // cacheamos os saldos por unidade p/ exibir/avisar offline.
@@ -199,7 +252,9 @@ export const useCargaStore = defineStore('carga', () => {
     saldosUnidades.value = sincronizacao.saldosUnidades
   }
 
-  // Nova carga do sentido informado (ou do board atual). Começa na 1ª etapa.
+  // Nova carga do sentido informado (ou do board atual). Começa na 1ª etapa e
+  // já semeia 1 origem + 1 destino com o tipo padrão do sentido (a unidade única
+  // é pré-selecionada pelo SelectUnidade ao montar).
   function nova(sentido = null) {
     const s = sentido || sentidoAtivo.value
     return {
@@ -226,7 +281,10 @@ export const useCargaStore = defineStore('carga', () => {
       desconto: null,
       liquido: null,
       observacao: null,
-      pontos: [],
+      pontos: [
+        novoPonto('ORIGEM', CONTATIPO_PADRAO[s]?.ORIGEM || 'UNIDADE'),
+        novoPonto('DESTINO', CONTATIPO_PADRAO[s]?.DESTINO || 'UNIDADE'),
+      ],
       sincronizado: 0,
     }
   }
@@ -240,6 +298,7 @@ export const useCargaStore = defineStore('carga', () => {
       return false
     })
     Object.assign(carga, calcularCarga(carga, faixasDaSafra.value), { sincronizado: 0 })
+    ratearPontos(carga)
     const plain = JSON.parse(JSON.stringify(carga))
     await db.carga.put(plain)
     await carregarCargas()
