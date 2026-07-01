@@ -472,6 +472,7 @@ function imprimir() {
                 :rules="[() => !finalizando || somaPercBate(origens) || 'Soma dos % deve ser 100']"
               />
               <q-btn
+                v-if="origens.length > 1"
                 flat
                 round
                 color="grey-7"
@@ -489,7 +490,7 @@ function imprimir() {
               <span v-if="calc.liquido"> · líquido {{ fmt(calc.liquido) }} kg</span>
             </div>
             <div>
-              <q-btn flat color="primary" icon="add" label="Origem +" @click="addPonto('ORIGEM')" />
+              <q-btn flat dense color="primary" icon="add" @click="addPonto('ORIGEM')" />
             </div>
           </div>
 
@@ -530,9 +531,12 @@ function imprimir() {
                   :readonly="destinos.length === 1"
                   class="col-3"
                   lazy-rules
-                  :rules="[() => !finalizando || somaPercBate(destinos) || 'Soma dos % deve ser 100']"
+                  :rules="[
+                    () => !finalizando || somaPercBate(destinos) || 'Soma dos % deve ser 100',
+                  ]"
                 />
                 <q-btn
+                  v-if="destinos.length > 1"
                   flat
                   round
                   color="grey-7"
@@ -579,13 +583,7 @@ function imprimir() {
               Soma: {{ fmt(somaPercDestinos, 1) }}%
             </div>
             <div>
-              <q-btn
-                flat
-                color="primary"
-                icon="add"
-                label="Destino +"
-                @click="addPonto('DESTINO')"
-              />
+              <q-btn flat color="primary" icon="add" dense @click="addPonto('DESTINO')" />
             </div>
           </div>
 
