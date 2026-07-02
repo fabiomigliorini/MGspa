@@ -162,7 +162,7 @@ onMounted(async () => {
         <template #avatar><q-icon name="cloud_off" color="orange-8" /></template>
         {{ pendentes }} carga(s) aguardando sincronização.
         <template #action>
-          <q-btn flat color="orange-9" label="Sincronizar" @click="store.sincronizar()" />
+          <q-btn flat color="orange-9" label="Sincronizar" @click="store.sincronizar({ force: true })" />
         </template>
       </q-banner>
 

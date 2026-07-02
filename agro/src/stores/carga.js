@@ -265,8 +265,10 @@ export const useCargaStore = defineStore('carga', () => {
     sentidoAtivo.value = sentido
   }
 
-  async function sincronizar() {
-    await sincronizacao.sincronizar()
+  // `opts` (ex.: { force: true } vindo do botao "Sincronizar") repassa pro throttle
+  // da store de sincronizacao. As re-leituras do Dexie sao baratas.
+  async function sincronizar(opts) {
+    await sincronizacao.sincronizar(opts)
     await carregarReferencias()
     await carregarCargas()
     saldosUnidades.value = sincronizacao.saldosUnidades
