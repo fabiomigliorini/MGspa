@@ -82,6 +82,13 @@ const atalhos = [
     cor: 'blue-grey-7',
     to: { name: 'culturas' },
   },
+  {
+    label: 'Unidades Armazenadoras',
+    sub: 'Silos, armazéns e capacidade',
+    icon: 'warehouse',
+    cor: 'amber-8',
+    to: { name: 'unidades-armazenadoras' },
+  },
 ]
 
 onMounted(async () => {

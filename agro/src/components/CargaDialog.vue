@@ -269,10 +269,48 @@ function entradaValida() {
   return true
 }
 
+// Travas de finalização (origem+destino completos, % fecha 100, líquido > 0).
+// Usadas ao avançar p/ FINALIZADO e ao salvar uma carga já finalizada (edição).
+function validarFinalizacao() {
+  if (!origens.value.length || !destinos.value.length) {
+    $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
+    return false
+  }
+  if (!origens.value.every(pontoCompleto) || !destinos.value.every(pontoCompleto)) {
+    $q.notify({
+      type: 'negative',
+      message: 'Selecione o talhão/unidade/contrato de cada origem e destino.',
+    })
+    return false
+  }
+  if (!somaPercBate(origens.value) || !somaPercBate(destinos.value)) {
+    $q.notify({ type: 'negative', message: 'A soma dos % de origem e de destino deve ser 100.' })
+    return false
+  }
+  if (!(Number(calc.value.liquido) > 0)) {
+    $q.notify({ type: 'negative', message: 'Peso líquido inválido (pbt − tara − desconto).' })
+    return false
+  }
+  return true
+}
+
+// Salvar (carga nova OU já finalizada). Numa carga finalizada mantém as travas de
+// finalização pra não regravar incompleta; nas demais, exige ao menos origem/destino.
 function salvar() {
-  if (!entradaValida()) return
+  if (local.value.etapa === 'FINALIZADO' ? !validarFinalizacao() : !entradaValida()) return
   emit('salvar', local.value)
 }
+
+// Botão principal do rodapé: registrar (nova), salvar (finalizada) ou avançar etapa.
+function onSubmit() {
+  if (props.novo || local.value.etapa === 'FINALIZADO') salvar()
+  else avancar()
+}
+const rotuloPrincipal = computed(() => {
+  if (props.novo) return 'Registrar'
+  if (local.value?.etapa === 'FINALIZADO') return 'Salvar'
+  return rotuloAcao[local.value?.etapa]
+})
 
 const proxima = computed(() => {
   const i = idxEtapa.value
@@ -284,35 +322,9 @@ const finalizando = computed(() => proxima.value === 'FINALIZADO')
 function avancar() {
   if (!entradaValida()) return
   const prox = proxima.value
-  if (!prox) return imprimir()
-  // Antes de finalizar: precisa de origem e destino e líquido > 0 (checagens de
-  // coleção/derivado, sem campo único; o rateio em si é validado pelos :rules).
-  if (prox === 'FINALIZADO') {
-    if (!origens.value.length || !destinos.value.length) {
-      return $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
-    }
-    // Cada linha precisa ter o talhão/unidade/contrato escolhido — senão o ponto
-    // seria descartado ao salvar e a carga finalizaria incompleta (e o backend
-    // rejeita o rateio).
-    if (!origens.value.every(pontoCompleto) || !destinos.value.every(pontoCompleto)) {
-      return $q.notify({
-        type: 'negative',
-        message: 'Selecione o talhão/unidade/contrato de cada origem e destino.',
-      })
-    }
-    if (!somaPercBate(origens.value) || !somaPercBate(destinos.value)) {
-      return $q.notify({
-        type: 'negative',
-        message: 'A soma dos % de origem e de destino deve ser 100.',
-      })
-    }
-    if (!(Number(calc.value.liquido) > 0)) {
-      return $q.notify({
-        type: 'negative',
-        message: 'Peso líquido inválido (pbt − tara − desconto).',
-      })
-    }
-  }
+  if (!prox) return
+  // Antes de finalizar: origem+destino completos, % fecha 100 e líquido > 0.
+  if (prox === 'FINALIZADO' && !validarFinalizacao()) return
   local.value.etapa = prox
   emit('avancar', local.value)
 }
@@ -371,7 +383,7 @@ function imprimir() {
 <template>
   <q-dialog v-model="show" :maximized="$q.screen.lt.sm">
     <q-card v-if="local" flat style="width: 620px; max-width: 95vw">
-      <q-form @submit.prevent="novo ? salvar() : avancar()">
+      <q-form @submit.prevent="onSubmit">
         <q-card-section class="row items-center bg-primary text-white">
           <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
           <q-space />
@@ -689,13 +701,18 @@ function imprimir() {
         <q-separator />
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
-            type="submit"
+            v-if="local.etapa === 'FINALIZADO'"
             flat
             color="primary"
-            :label="novo ? 'Registrar' : rotuloAcao[local.etapa]"
+            icon="print"
+            label="Imprimir romaneio"
+            class="q-mr-auto"
+            tabindex="-1"
+            @click="imprimir()"
           />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn type="submit" flat color="primary" :label="rotuloPrincipal" />
         </q-card-actions>
       </q-form>
     </q-card>
