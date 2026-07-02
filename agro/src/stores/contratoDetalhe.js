@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 
@@ -225,3 +225,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     urlAnexoDownload,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useContratoDetalheStore, import.meta.hot))
+}

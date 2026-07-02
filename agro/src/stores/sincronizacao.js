@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
@@ -139,3 +139,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     enviarCargasPendentes,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useSincronizacaoStore, import.meta.hot))
+}

@@ -2,7 +2,13 @@
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { useCargaStore, ETAPAS_POR_SENTIDO, CONTATIPO_PADRAO, novoPonto } from 'src/stores/carga'
+import {
+  useCargaStore,
+  ETAPAS_POR_SENTIDO,
+  CONTATIPO_PADRAO,
+  novoPonto,
+  pontoCompleto,
+} from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { calcularCarga, sacas } from 'src/utils/desconto'
 import { imprimirTicket } from 'src/utils/ticket'
@@ -285,6 +291,21 @@ function avancar() {
     if (!origens.value.length || !destinos.value.length) {
       return $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
     }
+    // Cada linha precisa ter o talhão/unidade/contrato escolhido — senão o ponto
+    // seria descartado ao salvar e a carga finalizaria incompleta (e o backend
+    // rejeita o rateio).
+    if (!origens.value.every(pontoCompleto) || !destinos.value.every(pontoCompleto)) {
+      return $q.notify({
+        type: 'negative',
+        message: 'Selecione o talhão/unidade/contrato de cada origem e destino.',
+      })
+    }
+    if (!somaPercBate(origens.value) || !somaPercBate(destinos.value)) {
+      return $q.notify({
+        type: 'negative',
+        message: 'A soma dos % de origem e de destino deve ser 100.',
+      })
+    }
     if (!(Number(calc.value.liquido) > 0)) {
       return $q.notify({
         type: 'negative',
@@ -331,7 +352,7 @@ function imprimir() {
     placacarreta: local.value.placacarreta,
     veiculo: veic?.veiculo || null,
     motorista: local.value.motorista,
-    itens: itensFonte.map((p) => ({ rotulo: p.rotulo, kg: p.liquido })),
+    itens: itensFonte.map((p) => ({ rotulo: p.rotulo, kg: kgDoPonto(p) })),
     pbt: local.value.pbt,
     tara: local.value.tara,
     bruto: c.bruto,

@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
@@ -84,3 +84,7 @@ export const useUnidadeArmazenadoraStore = defineStore('unidadeArmazenadora', ()
     alternarInativo,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useUnidadeArmazenadoraStore, import.meta.hot))
+}

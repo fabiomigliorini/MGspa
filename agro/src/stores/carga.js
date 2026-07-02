@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { uid } from 'quasar'
 import { db } from 'boot/db'
@@ -44,6 +44,15 @@ export function novoPonto(papel, contatipo) {
     numeronf: null,
     valornf: null,
   }
+}
+
+// Ponto "completo" = tem a entidade escolhida. Sem ela o ponto não pode ser
+// gravado (o backend rejeita) e não conta no colhido/saldo.
+export function pontoCompleto(p) {
+  if (p.contatipo === 'PLANTIO') return !!p.codplantio
+  if (p.contatipo === 'UNIDADE') return !!p.codunidadearmazenadora
+  if (p.contatipo === 'CONTRATO') return !!p.codcontrato
+  return false
 }
 
 // Rateia o líquido da carga entre os pontos de cada papel a partir do %. O resto
@@ -133,6 +142,17 @@ export const useCargaStore = defineStore('carga', () => {
     return grupos
   })
 
+  // kg de um ponto = sua fatia do líquido da carga pelo % (fonte da verdade).
+  // O `p.liquido` gravado é derivado e pode envelhecer (ex.: carga finalizada
+  // antes do rateio existir); por isso derivamos na leitura. Fallback pro liquido
+  // gravado só em cargas legadas sem percentual (modelo antigo em kg por ponto).
+  function kgRateado(carga, p) {
+    if (p.percentual != null && carga.liquido != null) {
+      return Math.round((Number(carga.liquido) * (Number(p.percentual) || 0)) / 100)
+    }
+    return Number(p.liquido) || 0
+  }
+
   // Colhido (kg líquido) por plantio — soma os pontos PLANTIO (origem) das
   // cargas finalizadas/ativas. Base do cálculo de produtividade offline.
   const colhidoPorPlantio = computed(() => {
@@ -141,7 +161,7 @@ export const useCargaStore = defineStore('carga', () => {
       if (c.inativo || c.etapa !== 'FINALIZADO') continue
       for (const p of c.pontos || []) {
         if (p.contatipo === 'PLANTIO' && p.codplantio) {
-          mapa[p.codplantio] = (mapa[p.codplantio] || 0) + (Number(p.liquido) || 0)
+          mapa[p.codplantio] = (mapa[p.codplantio] || 0) + kgRateado(c, p)
         }
       }
     }
@@ -179,7 +199,7 @@ export const useCargaStore = defineStore('carga', () => {
       for (const p of c.pontos || []) {
         if (p.contatipo !== contatipo || p[campoCod] !== cod) continue
         const sinal = contatipo === 'UNIDADE' && p.papel === 'ORIGEM' ? -1 : 1
-        delta += sinal * (Number(p.liquido) || 0)
+        delta += sinal * kgRateado(c, p)
       }
     }
     return delta
@@ -286,27 +306,25 @@ export const useCargaStore = defineStore('carga', () => {
   }
 
   // Grava a carga (recalcula local p/ exibir offline) e tenta sincronizar.
+  // Trabalha numa CÓPIA — não muta o objeto do dialog (senão linhas ainda
+  // incompletas sumiriam no meio do fluxo). Só pontos completos são gravados,
+  // e o líquido por ponto é rateado a partir do % antes de persistir/enviar.
   async function salvar(carga) {
-    carga.pontos = (carga.pontos || []).filter((p) => {
-      if (p.contatipo === 'PLANTIO') return !!p.codplantio
-      if (p.contatipo === 'UNIDADE') return !!p.codunidadearmazenadora
-      if (p.contatipo === 'CONTRATO') return !!p.codcontrato
-      return false
-    })
-    Object.assign(carga, calcularCarga(carga, faixasDaSafra.value), { sincronizado: 0 })
-    ratearPontos(carga)
-    const plain = JSON.parse(JSON.stringify(carga))
+    const limpa = { ...carga, pontos: (carga.pontos || []).filter(pontoCompleto).map((p) => ({ ...p })) }
+    Object.assign(limpa, calcularCarga(limpa, faixasDaSafra.value), { sincronizado: 0 })
+    ratearPontos(limpa)
+    const plain = JSON.parse(JSON.stringify(limpa))
     await db.carga.put(plain)
     await carregarCargas()
     sincronizacao
-      .enviarCarga(JSON.parse(JSON.stringify(carga)))
+      .enviarCarga(JSON.parse(JSON.stringify(limpa)))
       .then(() => carregarCargas())
       .catch((e) => {
         // Offline (ERR_NETWORK): fica pendente e sincroniza depois, em silêncio.
         // Rejeição do servidor (422: excede contrato, rateio não fecha): avisa.
         if (e?.code !== 'ERR_NETWORK') notifyError(e)
       })
-    return carga
+    return limpa
   }
 
   async function inativar(carga) {
@@ -361,3 +379,9 @@ export const useCargaStore = defineStore('carga', () => {
     adicionarVeiculo,
   }
 })
+
+// HMR: sem isto o Pinia mantém a versão ANTIGA das actions no dev (mudanças em
+// salvar/ratearPontos etc. só valeriam após hard refresh).
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useCargaStore, import.meta.hot))
+}

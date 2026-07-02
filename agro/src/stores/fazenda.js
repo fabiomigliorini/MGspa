@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { Dialog } from 'quasar'
 import { api } from 'src/services/api'
@@ -244,3 +244,7 @@ export const useFazendaStore = defineStore('fazenda', () => {
     excluirTalhao,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useFazendaStore, import.meta.hot))
+}

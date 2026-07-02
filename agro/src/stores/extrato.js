@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
@@ -148,3 +148,7 @@ export const useExtratoStore = defineStore('extrato', () => {
     estornar,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useExtratoStore, import.meta.hot))
+}
