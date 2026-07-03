@@ -94,17 +94,23 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     }
     const { data: resp } = await api.post('v1/carga/sincronizar', payload, { skipLoading: true })
     // O Resource embrulha o registro em { data: {...} } (Laravel default).
-    const oficial = resp.data ?? resp
-    await db.carga.update(carga.uuid, {
-      codcarga: oficial.codcarga,
-      sincronizado: 1,
-      bruto: oficial.bruto,
-      desconto: oficial.desconto,
-      liquido: oficial.liquido,
-      descontoumidade: oficial.descontoumidade,
-      descontoimpureza: oficial.descontoimpureza,
-      descontoavariados: oficial.descontoavariados,
-    })
+    const oficial = resp?.data ?? resp ?? {}
+    // Só sobrescreve o que o backend REALMENTE devolveu. Uma resposta parcial/vazia
+    // (ex.: dedup de POSTs concorrentes no api.js) NÃO pode zerar o liquido/codcarga
+    // já calculados localmente — senão a carga finalizada fica "— kg / 0 sc".
+    const patch = { sincronizado: 1 }
+    if (oficial.codcarga != null) patch.codcarga = oficial.codcarga
+    for (const campo of [
+      'bruto',
+      'desconto',
+      'liquido',
+      'descontoumidade',
+      'descontoimpureza',
+      'descontoavariados',
+    ]) {
+      if (oficial[campo] != null) patch[campo] = oficial[campo]
+    }
+    await db.carga.update(carga.uuid, patch)
     return oficial
   }
 

@@ -253,6 +253,23 @@ export const useCargaStore = defineStore('carga', () => {
       return
     }
     const arr = await db.carga.where('codsafra').equals(codsafraAtiva.value).toArray()
+    // Auto-reparo: cargas cujo bruto/liquido foram zerados por uma resposta parcial
+    // de sync (mas os pesos pbt/tara continuam lá) — recalcula localmente e regrava.
+    // Roda 1x por carga afetada (depois liquido != null). Carga sem pesar tem
+    // pbt/tara null, então não entra aqui.
+    for (const c of arr) {
+      if (c.liquido == null && c.pbt != null && c.tara != null) {
+        Object.assign(c, calcularCarga(c, faixasDaSafra.value))
+        await db.carga.update(c.uuid, {
+          bruto: c.bruto,
+          desconto: c.desconto,
+          liquido: c.liquido,
+          descontoumidade: c.descontoumidade,
+          descontoimpureza: c.descontoimpureza,
+          descontoavariados: c.descontoavariados,
+        })
+      }
+    }
     cargas.value = arr.sort((a, b) => (a.data < b.data ? 1 : -1))
   }
 
