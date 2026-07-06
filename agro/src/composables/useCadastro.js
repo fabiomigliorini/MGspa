@@ -7,9 +7,13 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 // fazenda, talhao, safra, tabela-desconto). Padrao do contas/estoque:
 // lista + dialog novo/editar + inativar/ativar (POST/DELETE .../inativo) +
 // excluir com confirmacao.
-export function useCadastro(endpoint, pk, label = 'Registro') {
+export function useCadastro(endpoint, pk, label = 'Registro', options = {}) {
   // endpoints de domínio vivem sob v1/ (padrão do monorepo)
   endpoint = `v1/${endpoint}`
+  // refetchOnSave: recarrega a LISTA após salvar. Telas que não consomem a lista
+  // (ex.: detalhe do contrato, que recarrega o próprio registro via store) passam
+  // false pra evitar um GET desperdiçado.
+  const { refetchOnSave = true } = options
   const $q = useQuasar()
 
   const items = ref([])
@@ -56,7 +60,7 @@ export function useCadastro(endpoint, pk, label = 'Registro') {
       }
       notifySuccess(`${label} salvo!`)
       dialog.value = false
-      await carregar()
+      if (refetchOnSave) await carregar()
       // devolve o registro salvo (desembrulhado) p/ quem precisa do id — ex.:
       // criar contrato e navegar pra tela dele. Em erro retorna undefined.
       return resp?.data?.data ?? resp?.data
@@ -74,6 +78,7 @@ export function useCadastro(endpoint, pk, label = 'Registro') {
       } else {
         await api.post(`${endpoint}/${item[pk]}/inativo`)
       }
+      notifySuccess(item.inativo ? `${label} ativado!` : `${label} inativado!`)
       await carregar()
     } catch (e) {
       notifyError(e)

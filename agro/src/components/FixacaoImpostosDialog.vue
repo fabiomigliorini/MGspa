@@ -57,6 +57,10 @@ const maxQuantidade = computed(() =>
 )
 // Qualquer moeda != BRL é estrangeira e exige cotação em R$ pra travar o preço.
 const estrangeira = computed(() => form.value.moeda && form.value.moeda !== 'BRL')
+// Símbolo exibido nos campos por saca. Só existem BRL/USD hoje (moeda.sql);
+// fallback = o próprio ISO. Não depende do @select, então cobre também a edição.
+const SIMBOLOS_MOEDA = { BRL: 'R$', USD: 'US$' }
+const simboloMoeda = computed(() => SIMBOLOS_MOEDA[form.value.moeda] ?? form.value.moeda)
 
 function n(v) {
   return Number(v) || 0
@@ -93,6 +97,17 @@ const totalDeducao = computed(() =>
 const liquido = computed(() => arred4(precoreal.value - totalDeducao.value))
 const percentualDeducao = computed(() =>
   precoreal.value > 0 ? (totalDeducao.value / precoreal.value) * 100 : 0,
+)
+
+// Exibição (Modelo B): os campos POR SACA aparecem na moeda escolhida. Como
+// valorTributo/liquido já são R$ (base do payload e do Total), dividimos pela
+// cotação pra mostrar em US$ quando estrangeira. UPF e Total permanecem R$.
+function valorTributoDisplay(tributo) {
+  const v = valorTributo(tributo)
+  return estrangeira.value && form.value.dolar ? v / n(form.value.dolar) : v
+}
+const liquidoDisplay = computed(() =>
+  estrangeira.value && form.value.dolar ? liquido.value / n(form.value.dolar) : liquido.value,
 )
 
 function mapTributo(it) {
@@ -210,9 +225,8 @@ async function salvar() {
   <q-dialog v-model="aberto">
     <q-card flat style="width: 560px; max-width: 96vw">
       <q-form @submit.prevent="salvar">
-        <q-card-section class="bg-primary text-white">
+        <q-card-section class="bg-primary text-white q-py-sm">
           <div class="text-h6">{{ editando ? 'Editar fixação' : 'Nova fixação' }}</div>
-          <div class="text-caption">Valores e impostos · {{ contrato.Cultura?.cultura || '' }}</div>
         </q-card-section>
 
         <q-card-section>
@@ -227,9 +241,10 @@ async function salvar() {
               <MgInputValor
                 v-model="form.preco"
                 :decimals="2"
+                :prefix="simboloMoeda"
                 label="Preço bruto / saca"
                 lazy-rules
-                :rules="[() => precoreal > 0]"
+                :rules="[(v) => v > 0 || 'Informe o preço bruto']"
               />
             </div>
 
@@ -255,9 +270,9 @@ async function salvar() {
               </div>
               <div class="col-4">
                 <MgInputValor
-                  :model-value="valorTributo(tributo)"
+                  :model-value="valorTributoDisplay(tributo)"
                   :decimals="2"
-                  prefix="R$"
+                  :prefix="simboloMoeda"
                   :label="tributo.codigo"
                   readonly
                   bg-color="grey-2"
@@ -297,16 +312,29 @@ async function salvar() {
             </div>
             <div class="col-4">
               <MgInputValor
-                :model-value="liquido"
+                :model-value="liquidoDisplay"
                 :decimals="2"
-                prefix="R$"
+                :prefix="simboloMoeda"
                 label="Líquido"
                 readonly
                 bg-color="green-1"
                 input-class="text-green-10"
               />
             </div>
-            <div class="col-4 text-weight-medium text-grey-8">Total</div>
+            <!-- Slot à esquerda da Quantidade: em moeda estrangeira vira a Cotação
+                 (R$ por unidade da moeda); em BRL mantém o rótulo "Total". -->
+            <div class="col-4 self-center">
+              <MgInputValor
+                v-if="estrangeira"
+                v-model="form.dolar"
+                :decimals="4"
+                prefix="R$"
+                label="Cotação"
+                lazy-rules
+                :rules="[(v) => v > 0 || 'Informe a cotação']"
+              />
+              <span v-else class="text-weight-medium text-grey-8">Total</span>
+            </div>
             <div class="col-4">
               <MgInputValor
                 v-model="form.quantidade"
@@ -315,16 +343,15 @@ async function salvar() {
                 suffix="sc"
                 label="Quantidade"
                 lazy-rules
-                :rules="[(v) => v > 0]"
+                :rules="[(v) => v > 0 || 'Informe a quantidade']"
               />
             </div>
             <div class="col-4">
               <MgInputValor
                 :model-value="form.quantidade * liquido"
                 :decimals="0"
-                :max="maxQuantidade"
                 prefix="R$"
-                label="Quantidade"
+                label="Total"
                 bg-color="green-1"
                 input-class="text-green-10"
                 readonly

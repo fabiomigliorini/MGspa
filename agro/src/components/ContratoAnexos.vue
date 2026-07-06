@@ -14,7 +14,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 // de download). `abrirPdf` é helper de apresentação e recebe a instância axios.
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { anexos } = storeToRefs(store)
+const { anexos, anexosErro } = storeToRefs(store)
 
 const novoAnexo = ref(null)
 const enviando = ref(false)
@@ -32,9 +32,20 @@ async function enviar() {
     enviando.value = false
   }
 }
+// Rejeição do q-file (tamanho/tipo) — feedback imediato antes de tentar subir.
+function onRejeitado(rejeitados) {
+  const motivo = rejeitados?.[0]?.failedPropValidation
+  $q.notify({
+    type: 'negative',
+    message: motivo === 'max-file-size' ? 'Arquivo acima de 20 MB.' : 'Tipo de arquivo inválido.',
+  })
+}
+function ehPdf(a) {
+  return a.tipo === 'pdf' || /\.pdf$/i.test(a.nome)
+}
 // PDF -> visualizador; imagem -> nova aba (busca o blob pelo store).
 async function visualizar(a) {
-  if (a.tipo === 'pdf' || /\.pdf$/i.test(a.nome)) {
+  if (ehPdf(a)) {
     await abrirPdf(
       api,
       store.urlAnexoDownload(a.nome),
@@ -43,12 +54,17 @@ async function visualizar(a) {
     )
     return
   }
+  // Abre a aba SÍNCRONA (dentro do gesto do clique) e só então preenche o blob —
+  // senão o await quebra o gesto e o bloqueador de popup mata a aba.
+  const aba = window.open('', '_blank')
   try {
     const blob = await store.baixarAnexo(a.nome, { skipLoading: true })
     const blobUrl = URL.createObjectURL(blob)
-    window.open(blobUrl, '_blank')
+    if (aba) aba.location = blobUrl
+    else window.open(blobUrl, '_blank')
     setTimeout(() => URL.revokeObjectURL(blobUrl), 30000)
   } catch (e) {
+    if (aba) aba.close()
     notifyError(e)
   }
 }
@@ -60,7 +76,8 @@ async function baixar(a) {
     link.href = url
     link.download = a.label || a.nome
     link.click()
-    URL.revokeObjectURL(url)
+    // Revoga com folga: revogar em seguida ao click pode abortar o download.
+    setTimeout(() => URL.revokeObjectURL(url), 30000)
   } catch (e) {
     notifyError(e)
   }
@@ -103,7 +120,9 @@ onMounted(store.carregarAnexos)
           label="Selecionar arquivo"
           outlined
           accept=".pdf,image/*"
+          :max-file-size="20 * 1024 * 1024"
           clearable
+          @rejected="onRejeitado"
         >
           <template #prepend><q-icon name="upload_file" /></template>
         </q-file>
@@ -125,14 +144,16 @@ onMounted(store.carregarAnexos)
       <q-item v-for="a in anexos" :key="a.nome">
         <q-item-section avatar>
           <q-avatar
-            :color="a.tipo === 'pdf' ? 'red-1' : 'blue-1'"
-            :text-color="a.tipo === 'pdf' ? 'red-8' : 'blue-8'"
-            :icon="a.tipo === 'pdf' ? 'picture_as_pdf' : 'image'"
+            :color="ehPdf(a) ? 'red-1' : 'blue-1'"
+            :text-color="ehPdf(a) ? 'red-8' : 'blue-8'"
+            :icon="ehPdf(a) ? 'picture_as_pdf' : 'image'"
           />
         </q-item-section>
         <q-item-section>
           <q-item-label>{{ a.label }}</q-item-label>
-          <q-item-label caption>{{ (a.size / 1024).toFixed(0) }} KB</q-item-label>
+          <q-item-label caption>{{
+            a.size != null ? (a.size / 1024).toFixed(0) + ' KB' : '—'
+          }}</q-item-label>
         </q-item-section>
         <q-item-section side>
           <div class="row items-center no-wrap">
@@ -156,7 +177,10 @@ onMounted(store.carregarAnexos)
           </div>
         </q-item-section>
       </q-item>
-      <MgEmptyState v-if="!anexos.length" plain icon="attach_file"> Nenhum anexo. </MgEmptyState>
+      <MgEmptyState v-if="anexosErro" plain icon="error_outline">
+        Não foi possível carregar os anexos.
+      </MgEmptyState>
+      <MgEmptyState v-else-if="!anexos.length" plain icon="attach_file"> Nenhum anexo. </MgEmptyState>
     </q-list>
   </q-card>
 </template>

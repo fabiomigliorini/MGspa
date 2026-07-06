@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { formataNumero, formataReal, formataData } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import FixacaoImpostosDialog from 'components/FixacaoImpostosDialog.vue'
@@ -17,20 +18,10 @@ const store = useContratoDetalheStore()
 const { contrato, cod, fixacoes, fixado, afixar, precoMedio } = storeToRefs(store)
 
 function fmt(v, dec = 0) {
-  if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', {
-    minimumFractionDigits: dec,
-    maximumFractionDigits: dec,
-  })
+  return formataNumero(v, dec)
 }
-function rs(v) {
-  return 'R$ ' + fmt(v, 2)
-}
-function fmtData(d) {
-  if (!d) return ''
-  const [a, m, dia] = d.slice(0, 10).split('-')
-  return `${dia}/${m}/${a}`
-}
+const rs = formataReal
+const fmtData = formataData
 
 const impostosDialog = ref(false)
 const impostosFixacao = ref(null)

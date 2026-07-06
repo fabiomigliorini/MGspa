@@ -1,9 +1,10 @@
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { formataNumero, formataReal, formataData, formataDataIso, arredonda } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -31,23 +32,11 @@ const sacasParceladas = computed(() =>
   pagamentos.value.reduce((s, p) => s + (p.modo === 'SACAS' ? n(p.sacas) : 0), 0),
 )
 const saldoSacas = computed(() => Math.max(0, n(fixado.value) - sacasParceladas.value))
+// Formatação vem dos helpers compartilhados (@components/formatters).
+const rs = formataReal
+const fmtData = formataData
 function fmt(v, dec = 0) {
-  if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', {
-    minimumFractionDigits: dec,
-    maximumFractionDigits: dec,
-  })
-}
-function rs(v) {
-  return 'R$ ' + fmt(v, 2)
-}
-function fmtData(d) {
-  if (!d) return ''
-  const [a, m, dia] = d.slice(0, 10).split('-')
-  return `${dia}/${m}/${a}`
-}
-function arred(v) {
-  return Math.round(n(v) * 100) / 100
+  return formataNumero(v, dec)
 }
 
 const modosParcela = [
@@ -68,19 +57,22 @@ const parcelasDialog = ref(false)
 const dialogParcela = ref(false)
 const salvandoParcela = ref(false)
 const formParcela = ref({})
+// Guarda os valores originais da parcela em edição: ao reescrevê-la, o que ela já
+// ocupava volta pro saldo (teto = saldo + original), espelhando a trava do backend.
+const parcelaOriginal = ref({})
 function editarParcela(p) {
+  parcelaOriginal.value = { ...p }
   formParcela.value = { ...p }
   dialogParcela.value = true
 }
-// Em modo SACAS, o valor previsto acompanha as sacas (× líquido/sc).
-watch(
-  () => [formParcela.value.sacas, formParcela.value.modo],
-  () => {
-    if (dialogParcela.value && formParcela.value.modo === 'SACAS') {
-      formParcela.value.valor = arred(n(formParcela.value.sacas) * liquidoSc.value)
-    }
-  },
-)
+const maxValorParcela = computed(() => saldoPagar.value + n(parcelaOriginal.value.valor))
+const maxSacasParcela = computed(() => saldoSacas.value + n(parcelaOriginal.value.sacas))
+// Em modo SACAS o valor previsto acompanha as sacas (× líquido/sc) — mas SÓ quando
+// o usuário edita as sacas, nunca ao abrir (senão sobrescreveria o valor gravado).
+function editarSacas(val) {
+  formParcela.value.sacas = val
+  formParcela.value.valor = arredonda(n(val) * liquidoSc.value, 2)
+}
 async function salvarParcela() {
   if (salvandoParcela.value) return
   salvandoParcela.value = true
@@ -117,7 +109,8 @@ const confirmForm = ref({})
 function abrirConfirmar(p) {
   confirmForm.value = {
     codcontratopagamento: p.codcontratopagamento,
-    datarecebido: new Date().toISOString().slice(0, 10),
+    forma: p.forma,
+    datarecebido: formataDataIso(new Date()),
     valorrecebido: p.valor,
     codportador: p.codportador || contrato.value?.codportador || null,
   }
@@ -263,22 +256,25 @@ async function confirmarRecebimento() {
               </div>
               <div v-if="formParcela.modo === 'SACAS'" class="col-12 col-sm-6">
                 <MgInputValor
-                  v-model="formParcela.sacas"
+                  :model-value="formParcela.sacas"
                   :decimals="0"
+                  :max="maxSacasParcela"
                   suffix="sc"
                   label="Sacas"
                   lazy-rules
-                  :rules="[(v) => v > 0]"
+                  :rules="[(v) => v > 0 || 'Informe as sacas']"
+                  @update:model-value="editarSacas"
                 />
               </div>
               <div class="col-12 col-sm-6">
                 <MgInputValor
                   v-model="formParcela.valor"
                   :decimals="2"
+                  :max="maxValorParcela"
                   prefix="R$"
                   label="Valor previsto"
                   lazy-rules
-                  :rules="[(v) => v > 0]"
+                  :rules="[(v) => v > 0 || 'Informe o valor']"
                 />
               </div>
               <div v-if="formParcela.forma !== 'BARTER'" class="col-12">
@@ -340,10 +336,12 @@ async function confirmarRecebimento() {
                   :rules="[(v) => v > 0]"
                 />
               </div>
-              <div class="col-12">
+              <div v-if="confirmForm.forma !== 'BARTER'" class="col-12">
                 <MgSelectPortador
                   v-model="confirmForm.codportador"
                   label="Portador (conta que recebeu)"
+                  lazy-rules
+                  :rules="[(v) => !!v || 'Informe o portador']"
                 />
               </div>
             </div>
