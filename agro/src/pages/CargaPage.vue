@@ -144,7 +144,7 @@ onMounted(async () => {
           icon="sync"
           :loading="sincronizando"
           color="grey-7"
-          @click="store.sincronizar()"
+          @click="store.sincronizar({ force: true })"
         >
           <q-tooltip>Sincronizar</q-tooltip>
         </q-btn>

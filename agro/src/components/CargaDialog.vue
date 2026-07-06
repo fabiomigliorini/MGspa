@@ -2,12 +2,23 @@
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { api } from 'src/services/api'
-import { useCargaStore, ETAPAS_POR_SENTIDO } from 'src/stores/carga'
+import {
+  useCargaStore,
+  ETAPAS_POR_SENTIDO,
+  CONTATIPO_PADRAO,
+  novoPonto,
+  pontoCompleto,
+} from 'src/stores/carga'
+import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { calcularCarga, sacas } from 'src/utils/desconto'
 import { imprimirTicket } from 'src/utils/ticket'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import CaminhaoDialog from 'components/CaminhaoDialog.vue'
+import SelectContaTipo from 'components/SelectContaTipo.vue'
+import SelectTalhao from 'components/SelectTalhao.vue'
+import SelectUnidade from 'components/SelectUnidade.vue'
+import SelectContrato from 'components/SelectContrato.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -21,15 +32,72 @@ const $q = useQuasar()
 const store = useCargaStore()
 const { plantiosDaSafra, faixasDaSafra, culturaAtiva, safraAtiva, veiculosAtivos, unidadesAtivas } =
   storeToRefs(store)
+const { online } = storeToRefs(useSincronizacaoStore())
 
 const local = ref(null)
 watch(
   () => props.carga,
   (c) => {
-    local.value = c ? JSON.parse(JSON.stringify(c)) : null
+    if (!c) {
+      local.value = null
+      return
+    }
+    const carga = normalizarPontos(JSON.parse(JSON.stringify(c)))
+    if (props.novo) semearPontos(carga)
+    local.value = carga
   },
   { immediate: true },
 )
+
+// Carga nova já abre com 1 origem + 1 destino no tipo padrão do sentido (a
+// unidade única é pré-selecionada pelo SelectUnidade; o talhão/contrato o
+// operador escolhe). Só semeia o que faltar.
+function semearPontos(carga) {
+  const s = carga.sentido
+  if (!carga.pontos.some((p) => p.papel === 'ORIGEM')) {
+    carga.pontos.push(novoPonto('ORIGEM', CONTATIPO_PADRAO[s]?.ORIGEM || 'UNIDADE'))
+  }
+  if (!carga.pontos.some((p) => p.papel === 'DESTINO')) {
+    carga.pontos.push(novoPonto('DESTINO', CONTATIPO_PADRAO[s]?.DESTINO || 'UNIDADE'))
+  }
+}
+
+// Compat: cargas antigas gravaram kg por ponto e não têm `percentual`. Reconstrói
+// o % a partir do kg (proporção sobre o líquido) ou divide igualmente. Linha
+// única → 100%. Cargas novas já vêm com percentual (não mexe).
+function normalizarPontos(carga) {
+  for (const papel of ['ORIGEM', 'DESTINO']) {
+    const grupo = (carga.pontos || []).filter((p) => p.papel === papel)
+    if (!grupo.length) continue
+    if (!grupo.some((p) => p.percentual == null)) continue
+    const liq = Number(carga.liquido)
+    const temKg = liq > 0 && grupo.every((p) => Number(p.liquido) > 0)
+    if (temKg) {
+      grupo.forEach((p) => {
+        p.percentual = Math.round((Number(p.liquido) / liq) * 1000) / 10
+      })
+    } else {
+      distribuirPercentual(grupo)
+    }
+  }
+  return carga
+}
+
+// Divide 100% igualmente entre as linhas do grupo (resto na última) — soma = 100.
+function distribuirPercentual(grupo) {
+  const n = grupo.length
+  if (!n) return
+  const base = Math.floor((100 / n) * 10) / 10
+  let acumulado = 0
+  grupo.forEach((p, idx) => {
+    if (idx === n - 1) {
+      p.percentual = Math.round((100 - acumulado) * 10) / 10
+    } else {
+      p.percentual = base
+      acumulado += base
+    }
+  })
+}
 
 const show = computed({
   get: () => props.modelValue,
@@ -94,65 +162,54 @@ async function onCaminhaoCriado(veiculo) {
   local.value.placa = veiculo.placa
 }
 
-// ---- Motorista (busca online em pessoas; texto livre como fallback offline) ----
-const motoristaOptions = ref([])
-const motoristaBusca = ref('')
-
-function filtrarMotorista(val, update, abort) {
-  motoristaBusca.value = (val || '').trim()
-  const termo = motoristaBusca.value
-  if (termo.length < 2) {
-    update(() => {
-      motoristaOptions.value = []
-    })
-    return
-  }
-  api
-    .get('v1/select/pessoa', { params: { pessoa: termo, somenteAtivos: true }, skipLoading: true })
-    .then(({ data }) =>
-      update(() => {
-        motoristaOptions.value = data.map((p) => ({
-          label: p.fantasia || p.pessoa,
-          value: p.fantasia || p.pessoa,
-          codpessoa: p.codpessoa,
-        }))
-      }),
-    )
-    .catch(() => abort())
+// ---- Motorista (busca online via MgSelectPessoa; texto livre offline) ----
+// Online usa o select padrão de pessoa (busca/filtra/pagina/cacheia). Offline —
+// ou ao reabrir uma carga digitada offline (nome sem id) — cai num texto livre,
+// pra não esconder o nome num select vazio. Limpar o texto reabilita a busca.
+const motoristaTextoLivre = computed(
+  () => !online.value || (!!local.value?.motorista && !local.value?.codpessoamotorista),
+)
+function onMotoristaSelect(opt) {
+  local.value.motorista = opt?.label || null
 }
-function resolverMotorista(nome) {
-  const n = nome || null
-  local.value.motorista = n
-  local.value.codpessoamotorista = n
-    ? motoristaOptions.value.find((o) => o.value === n)?.codpessoa || null
-    : null
-}
-function onMotoristaBlur() {
-  if (motoristaBusca.value && motoristaBusca.value !== local.value.motorista) {
-    resolverMotorista(motoristaBusca.value)
-  }
+function onMotoristaClear() {
+  local.value.motorista = null
 }
 
 // ---- Pontos (origens / destinos) ----
 const origens = computed(() => (local.value?.pontos || []).filter((p) => p.papel === 'ORIGEM'))
 const destinos = computed(() => (local.value?.pontos || []).filter((p) => p.papel === 'DESTINO'))
 
-function addPonto(papel, contatipo) {
-  local.value.pontos.push({
-    papel,
-    contatipo,
-    codplantio: null,
-    codunidadearmazenadora: null,
-    codcontrato: null,
-    liquido: null,
-    rotulo: null,
-    numeronf: null,
-    valornf: null,
-  })
+// Grupo (origens/destinos) do ponto — pra travar o % em 100 quando é linha única.
+function grupoDoPonto(p) {
+  return p.papel === 'ORIGEM' ? origens.value : destinos.value
+}
+
+function addPonto(papel) {
+  const contatipo = CONTATIPO_PADRAO[local.value.sentido]?.[papel] || 'UNIDADE'
+  local.value.pontos.push(novoPonto(papel, contatipo))
+  distribuirPercentual(papel === 'ORIGEM' ? origens.value : destinos.value)
 }
 function removerPonto(p) {
   const i = local.value.pontos.indexOf(p)
   if (i >= 0) local.value.pontos.splice(i, 1)
+  distribuirPercentual(grupoDoPonto(p))
+}
+
+// Trocou o tipo (talhão/unidade/contrato): zera a seleção anterior. O select certo
+// remonta; se virar UNIDADE única, o SelectUnidade preenche sozinho.
+function onTipoChange(p) {
+  p.codplantio = null
+  p.codunidadearmazenadora = null
+  p.codcontrato = null
+  p.rotulo = null
+}
+// Escolheu a entidade (talhão/unidade/contrato): grava no campo certo + rótulo.
+function onEntidade(p, val) {
+  if (p.contatipo === 'PLANTIO') p.codplantio = val
+  else if (p.contatipo === 'UNIDADE') p.codunidadearmazenadora = val
+  else if (p.contatipo === 'CONTRATO') p.codcontrato = val
+  setRotuloPonto(p)
 }
 function rotuloPlantio(cod) {
   return plantiosDaSafra.value.find((o) => o.codplantio === cod)?.rotulo || null
@@ -176,14 +233,22 @@ const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 const sacasLiquido = computed(() => sacas(calc.value.liquido, pesosaca.value))
 
-const somaOrigens = computed(() => origens.value.reduce((s, p) => s + (Number(p.liquido) || 0), 0))
-const somaDestinos = computed(() =>
-  destinos.value.reduce((s, p) => s + (Number(p.liquido) || 0), 0),
+const somaPercOrigens = computed(() =>
+  origens.value.reduce((s, p) => s + (Number(p.percentual) || 0), 0),
 )
-function bate(soma) {
+const somaPercDestinos = computed(() =>
+  destinos.value.reduce((s, p) => s + (Number(p.percentual) || 0), 0),
+)
+// Soma dos % de um grupo fecha em 100 (tolerância de arredondamento).
+function somaPercBate(grupo) {
+  const soma = grupo.reduce((s, p) => s + (Number(p.percentual) || 0), 0)
+  return Math.abs(soma - 100) < 0.5
+}
+// kg estimado de um ponto — só depois de pesar (líquido da carga × %).
+function kgDoPonto(p) {
   const liq = Number(calc.value.liquido)
-  if (!liq) return true
-  return Math.abs(soma - liq) < 1
+  if (!(liq > 0)) return null
+  return Math.round((liq * (Number(p.percentual) || 0)) / 100)
 }
 
 function fmt(v, dec = 0) {
@@ -204,10 +269,48 @@ function entradaValida() {
   return true
 }
 
+// Travas de finalização (origem+destino completos, % fecha 100, líquido > 0).
+// Usadas ao avançar p/ FINALIZADO e ao salvar uma carga já finalizada (edição).
+function validarFinalizacao() {
+  if (!origens.value.length || !destinos.value.length) {
+    $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
+    return false
+  }
+  if (!origens.value.every(pontoCompleto) || !destinos.value.every(pontoCompleto)) {
+    $q.notify({
+      type: 'negative',
+      message: 'Selecione o talhão/unidade/contrato de cada origem e destino.',
+    })
+    return false
+  }
+  if (!somaPercBate(origens.value) || !somaPercBate(destinos.value)) {
+    $q.notify({ type: 'negative', message: 'A soma dos % de origem e de destino deve ser 100.' })
+    return false
+  }
+  if (!(Number(calc.value.liquido) > 0)) {
+    $q.notify({ type: 'negative', message: 'Peso líquido inválido (pbt − tara − desconto).' })
+    return false
+  }
+  return true
+}
+
+// Salvar (carga nova OU já finalizada). Numa carga finalizada mantém as travas de
+// finalização pra não regravar incompleta; nas demais, exige ao menos origem/destino.
 function salvar() {
-  if (!entradaValida()) return
+  if (local.value.etapa === 'FINALIZADO' ? !validarFinalizacao() : !entradaValida()) return
   emit('salvar', local.value)
 }
+
+// Botão principal do rodapé: registrar (nova), salvar (finalizada) ou avançar etapa.
+function onSubmit() {
+  if (props.novo || local.value.etapa === 'FINALIZADO') salvar()
+  else avancar()
+}
+const rotuloPrincipal = computed(() => {
+  if (props.novo) return 'Registrar'
+  if (local.value?.etapa === 'FINALIZADO') return 'Salvar'
+  return rotuloAcao[local.value?.etapa]
+})
 
 const proxima = computed(() => {
   const i = idxEtapa.value
@@ -219,20 +322,9 @@ const finalizando = computed(() => proxima.value === 'FINALIZADO')
 function avancar() {
   if (!entradaValida()) return
   const prox = proxima.value
-  if (!prox) return imprimir()
-  // Antes de finalizar: precisa de origem e destino e líquido > 0 (checagens de
-  // coleção/derivado, sem campo único; o rateio em si é validado pelos :rules).
-  if (prox === 'FINALIZADO') {
-    if (!origens.value.length || !destinos.value.length) {
-      return $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
-    }
-    if (!(Number(calc.value.liquido) > 0)) {
-      return $q.notify({
-        type: 'negative',
-        message: 'Peso líquido inválido (pbt − tara − desconto).',
-      })
-    }
-  }
+  if (!prox) return
+  // Antes de finalizar: origem+destino completos, % fecha 100 e líquido > 0.
+  if (prox === 'FINALIZADO' && !validarFinalizacao()) return
   local.value.etapa = prox
   emit('avancar', local.value)
 }
@@ -272,7 +364,7 @@ function imprimir() {
     placacarreta: local.value.placacarreta,
     veiculo: veic?.veiculo || null,
     motorista: local.value.motorista,
-    itens: itensFonte.map((p) => ({ rotulo: p.rotulo, kg: p.liquido })),
+    itens: itensFonte.map((p) => ({ rotulo: p.rotulo, kg: kgDoPonto(p) })),
     pbt: local.value.pbt,
     tara: local.value.tara,
     bruto: c.bruto,
@@ -291,7 +383,7 @@ function imprimir() {
 <template>
   <q-dialog v-model="show" :maximized="$q.screen.lt.sm">
     <q-card v-if="local" flat style="width: 620px; max-width: 95vw">
-      <q-form @submit.prevent="novo ? salvar() : avancar()">
+      <q-form @submit.prevent="onSubmit">
         <q-card-section class="row items-center bg-primary text-white">
           <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
           <q-space />
@@ -344,32 +436,26 @@ function imprimir() {
               @update:model-value="local.placacarreta = ($event || '').toUpperCase()"
             />
 
-            <q-select
-              :model-value="local.motorista"
-              :options="motoristaOptions"
+            <MgSelectPessoa
+              v-if="!motoristaTextoLivre"
+              v-model="local.codpessoamotorista"
               label="Motorista"
-              outlined
-              use-input
-              fill-input
-              hide-selected
               clearable
-              input-debounce="350"
-              new-value-mode="add-unique"
-              option-label="label"
-              option-value="value"
-              emit-value
-              map-options
+              :bottom-slots="false"
               class="col-12 col-sm-4"
-              @filter="filtrarMotorista"
-              @update:model-value="resolverMotorista"
-              @blur="onMotoristaBlur"
-            >
-              <template #no-option>
-                <q-item>
-                  <q-item-section class="text-grey-6">Digite o nome do motorista…</q-item-section>
-                </q-item>
-              </template>
-            </q-select>
+              @select="onMotoristaSelect"
+              @clear="onMotoristaClear"
+            />
+            <q-input
+              v-else
+              v-model="local.motorista"
+              label="Motorista"
+              hint="Offline — texto livre"
+              outlined
+              clearable
+              class="col-12 col-sm-4"
+              @update:model-value="local.codpessoamotorista = null"
+            />
           </div>
 
           <!-- Origens -->
@@ -380,66 +466,46 @@ function imprimir() {
               :key="'o' + i"
               class="row q-col-gutter-sm items-center q-mb-xs"
             >
-              <q-chip
-                :color="
-                  p.contatipo === 'PLANTIO'
-                    ? 'brown-5'
-                    : p.contatipo === 'UNIDADE'
-                      ? 'amber-7'
-                      : 'teal-7'
-                "
-                text-color="white"
-                :label="p.contatipo"
+              <SelectContaTipo
+                v-model="p.contatipo"
+                papel="ORIGEM"
+                label="Origem"
+                class="col-3"
+                @update:model-value="onTipoChange(p)"
               />
-              <q-select
+              <SelectTalhao
                 v-if="p.contatipo === 'PLANTIO'"
-                v-model="p.codplantio"
-                :options="plantiosDaSafra"
-                option-value="codplantio"
-                option-label="rotulo"
-                emit-value
-                map-options
-                outlined
-                label="Talhão"
+                :model-value="p.codplantio"
                 class="col"
-                @update:model-value="setRotuloPonto(p)"
+                @update:model-value="(v) => onEntidade(p, v)"
               />
-              <q-select
+              <SelectUnidade
                 v-else-if="p.contatipo === 'UNIDADE'"
-                v-model="p.codunidadearmazenadora"
-                :options="unidadesAtivas"
-                option-value="codunidadearmazenadora"
-                option-label="unidadearmazenadora"
-                emit-value
-                map-options
-                outlined
-                label="Unidade"
+                :model-value="p.codunidadearmazenadora"
                 class="col"
-                @update:model-value="setRotuloPonto(p)"
+                @update:model-value="(v) => onEntidade(p, v)"
               />
-              <q-select
+              <SelectContrato
                 v-else
-                v-model="p.codcontrato"
-                :options="store.contratosAtivos"
-                option-value="codcontrato"
-                :option-label="(c) => store.rotuloContrato(c.codcontrato)"
-                emit-value
-                map-options
-                outlined
-                label="Contrato (compra)"
+                :model-value="p.codcontrato"
+                operacao="compra"
                 class="col"
-                @update:model-value="setRotuloPonto(p)"
+                @update:model-value="(v) => onEntidade(p, v)"
               />
               <MgInputValor
-                v-model="p.liquido"
-                :decimals="0"
-                suffix="kg"
-                label="Líquido"
+                v-model="p.percentual"
+                :decimals="1"
+                suffix="%"
+                :min="0"
+                :max="100"
+                label="%"
+                :readonly="origens.length === 1"
                 class="col-3"
                 lazy-rules
-                :rules="[() => !finalizando || bate(somaOrigens) || 'Soma das origens não fecha']"
+                :rules="[() => !finalizando || somaPercBate(origens) || 'Soma dos % deve ser 100']"
               />
               <q-btn
+                v-if="origens.length > 1"
                 flat
                 round
                 color="grey-7"
@@ -451,33 +517,13 @@ function imprimir() {
             <div
               v-if="origens.length"
               class="text-caption q-mb-xs"
-              :class="bate(somaOrigens) ? 'text-grey-7' : 'text-orange-8'"
+              :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'"
             >
-              Soma das origens: {{ fmt(somaOrigens) }} kg
+              Soma: {{ fmt(somaPercOrigens, 1) }}%
               <span v-if="calc.liquido"> · líquido {{ fmt(calc.liquido) }} kg</span>
             </div>
-            <div class="q-gutter-sm">
-              <q-btn
-                flat
-                color="brown-6"
-                icon="grass"
-                label="Talhão"
-                @click="addPonto('ORIGEM', 'PLANTIO')"
-              />
-              <q-btn
-                flat
-                color="amber-8"
-                icon="warehouse"
-                label="Unidade"
-                @click="addPonto('ORIGEM', 'UNIDADE')"
-              />
-              <q-btn
-                flat
-                color="teal-7"
-                icon="description"
-                label="Contrato"
-                @click="addPonto('ORIGEM', 'CONTRATO')"
-              />
+            <div>
+              <q-btn flat dense color="primary" icon="add" @click="addPonto('ORIGEM')" />
             </div>
           </div>
 
@@ -488,55 +534,42 @@ function imprimir() {
             <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
             <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-sm">
               <div class="row q-col-gutter-sm items-center">
-                <q-chip
-                  :color="
-                    p.contatipo === 'UNIDADE'
-                      ? 'amber-7'
-                      : p.contatipo === 'CONTRATO'
-                        ? 'teal-7'
-                        : 'brown-5'
-                  "
-                  text-color="white"
-                  :label="p.contatipo"
+                <SelectContaTipo
+                  v-model="p.contatipo"
+                  papel="DESTINO"
+                  label="Destino"
+                  class="col-3"
+                  @update:model-value="onTipoChange(p)"
                 />
-                <q-select
+                <SelectUnidade
                   v-if="p.contatipo === 'UNIDADE'"
-                  v-model="p.codunidadearmazenadora"
-                  :options="unidadesAtivas"
-                  option-value="codunidadearmazenadora"
-                  option-label="unidadearmazenadora"
-                  emit-value
-                  map-options
-                  outlined
-                  label="Unidade"
+                  :model-value="p.codunidadearmazenadora"
                   class="col"
-                  @update:model-value="setRotuloPonto(p)"
+                  @update:model-value="(v) => onEntidade(p, v)"
                 />
-                <q-select
+                <SelectContrato
                   v-else
-                  v-model="p.codcontrato"
-                  :options="store.contratosAtivos"
-                  option-value="codcontrato"
-                  :option-label="(c) => store.rotuloContrato(c.codcontrato)"
-                  emit-value
-                  map-options
-                  outlined
-                  label="Contrato (venda)"
+                  :model-value="p.codcontrato"
+                  operacao="venda"
                   class="col"
-                  @update:model-value="setRotuloPonto(p)"
+                  @update:model-value="(v) => onEntidade(p, v)"
                 />
                 <MgInputValor
-                  v-model="p.liquido"
-                  :decimals="0"
-                  suffix="kg"
-                  label="Líquido"
+                  v-model="p.percentual"
+                  :decimals="1"
+                  suffix="%"
+                  :min="0"
+                  :max="100"
+                  label="%"
+                  :readonly="destinos.length === 1"
                   class="col-3"
                   lazy-rules
                   :rules="[
-                    () => !finalizando || bate(somaDestinos) || 'Soma dos destinos não fecha',
+                    () => !finalizando || somaPercBate(destinos) || 'Soma dos % deve ser 100',
                   ]"
                 />
                 <q-btn
+                  v-if="destinos.length > 1"
                   flat
                   round
                   color="grey-7"
@@ -552,12 +585,13 @@ function imprimir() {
                 <span
                   v-else
                   :class="
-                    (Number(p.liquido) || 0) > saldoContrato(p.codcontrato) + 1
+                    (kgDoPonto(p) || 0) > saldoContrato(p.codcontrato) + 1
                       ? 'text-negative text-weight-medium'
                       : 'text-grey-6'
                   "
                 >
                   Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
+                  <span v-if="kgDoPonto(p)"> · esta carga ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
                 </span>
               </div>
               <div
@@ -577,25 +611,12 @@ function imprimir() {
             <div
               v-if="destinos.length"
               class="text-caption q-mb-xs"
-              :class="bate(somaDestinos) ? 'text-grey-7' : 'text-orange-8'"
+              :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'"
             >
-              Soma dos destinos: {{ fmt(somaDestinos) }} kg
+              Soma: {{ fmt(somaPercDestinos, 1) }}%
             </div>
-            <div class="q-gutter-sm">
-              <q-btn
-                flat
-                color="amber-8"
-                icon="warehouse"
-                label="Unidade"
-                @click="addPonto('DESTINO', 'UNIDADE')"
-              />
-              <q-btn
-                flat
-                color="teal-7"
-                icon="description"
-                label="Contrato"
-                @click="addPonto('DESTINO', 'CONTRATO')"
-              />
+            <div>
+              <q-btn flat color="primary" icon="add" dense @click="addPonto('DESTINO')" />
             </div>
           </div>
 
@@ -680,13 +701,18 @@ function imprimir() {
         <q-separator />
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
-            type="submit"
+            v-if="local.etapa === 'FINALIZADO'"
             flat
             color="primary"
-            :label="novo ? 'Registrar' : rotuloAcao[local.etapa]"
+            icon="print"
+            label="Imprimir romaneio"
+            class="q-mr-auto"
+            tabindex="-1"
+            @click="imprimir()"
           />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn type="submit" flat color="primary" :label="rotuloPrincipal" />
         </q-card-actions>
       </q-form>
     </q-card>

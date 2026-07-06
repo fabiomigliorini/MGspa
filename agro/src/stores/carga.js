@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { uid } from 'quasar'
 import { db } from 'boot/db'
@@ -19,6 +19,68 @@ export const SENTIDOS = [
   { value: 'SAIDA', label: 'Expedição', icon: 'outbound', color: 'green-8' },
   { value: 'TRANSFERENCIA', label: 'Transferência', icon: 'swap_horiz', color: 'blue-grey-7' },
 ]
+
+// Tipo (contatipo) padrão da origem/destino por sentido — usado ao semear a
+// carga nova e ao clicar "Origem +"/"Destino +". Recebimento entra do talhão
+// pra unidade; expedição sai da unidade pro contrato; transferência unidade↔unidade.
+export const CONTATIPO_PADRAO = {
+  ENTRADA: { ORIGEM: 'PLANTIO', DESTINO: 'UNIDADE' },
+  SAIDA: { ORIGEM: 'UNIDADE', DESTINO: 'CONTRATO' },
+  TRANSFERENCIA: { ORIGEM: 'UNIDADE', DESTINO: 'UNIDADE' },
+}
+
+// Ponto (origem/destino) novo. `percentual` (rateio da carga) é campo só-do-front:
+// o kg (`liquido`) é derivado do líquido calculado da carga na hora de salvar.
+export function novoPonto(papel, contatipo) {
+  return {
+    papel,
+    contatipo,
+    codplantio: null,
+    codunidadearmazenadora: null,
+    codcontrato: null,
+    percentual: 100,
+    liquido: null,
+    rotulo: null,
+    numeronf: null,
+    valornf: null,
+  }
+}
+
+// Ponto "completo" = tem a entidade escolhida. Sem ela o ponto não pode ser
+// gravado (o backend rejeita) e não conta no colhido/saldo.
+export function pontoCompleto(p) {
+  if (p.contatipo === 'PLANTIO') return !!p.codplantio
+  if (p.contatipo === 'UNIDADE') return !!p.codunidadearmazenadora
+  if (p.contatipo === 'CONTRATO') return !!p.codcontrato
+  return false
+}
+
+// Rateia o líquido da carga entre os pontos de cada papel a partir do %. O resto
+// vai na última linha pra soma bater exata (evita o 422 "rateio não fecha").
+// Antes de pesar (liquido null) não há kg pra ratear.
+export function ratearPontos(carga) {
+  const liq = Number(carga.liquido)
+  for (const papel of ['ORIGEM', 'DESTINO']) {
+    const grupo = (carga.pontos || []).filter((p) => p.papel === papel)
+    if (!grupo.length) continue
+    if (!(liq > 0)) {
+      grupo.forEach((p) => {
+        p.liquido = null
+      })
+      continue
+    }
+    let acumulado = 0
+    grupo.forEach((p, idx) => {
+      if (idx === grupo.length - 1) {
+        p.liquido = Math.round(liq - acumulado)
+      } else {
+        const kg = Math.round((liq * (Number(p.percentual) || 0)) / 100)
+        p.liquido = kg
+        acumulado += kg
+      }
+    })
+  }
+}
 
 // Store da Carga unificada (pátio) — lê/grava no Dexie (offline-first) e dispara
 // a sincronização em background. O extrato (saldos) é gerado no servidor; aqui
@@ -80,6 +142,17 @@ export const useCargaStore = defineStore('carga', () => {
     return grupos
   })
 
+  // kg de um ponto = sua fatia do líquido da carga pelo % (fonte da verdade).
+  // O `p.liquido` gravado é derivado e pode envelhecer (ex.: carga finalizada
+  // antes do rateio existir); por isso derivamos na leitura. Fallback pro liquido
+  // gravado só em cargas legadas sem percentual (modelo antigo em kg por ponto).
+  function kgRateado(carga, p) {
+    if (p.percentual != null && carga.liquido != null) {
+      return Math.round((Number(carga.liquido) * (Number(p.percentual) || 0)) / 100)
+    }
+    return Number(p.liquido) || 0
+  }
+
   // Colhido (kg líquido) por plantio — soma os pontos PLANTIO (origem) das
   // cargas finalizadas/ativas. Base do cálculo de produtividade offline.
   const colhidoPorPlantio = computed(() => {
@@ -88,7 +161,7 @@ export const useCargaStore = defineStore('carga', () => {
       if (c.inativo || c.etapa !== 'FINALIZADO') continue
       for (const p of c.pontos || []) {
         if (p.contatipo === 'PLANTIO' && p.codplantio) {
-          mapa[p.codplantio] = (mapa[p.codplantio] || 0) + (Number(p.liquido) || 0)
+          mapa[p.codplantio] = (mapa[p.codplantio] || 0) + kgRateado(c, p)
         }
       }
     }
@@ -126,7 +199,7 @@ export const useCargaStore = defineStore('carga', () => {
       for (const p of c.pontos || []) {
         if (p.contatipo !== contatipo || p[campoCod] !== cod) continue
         const sinal = contatipo === 'UNIDADE' && p.papel === 'ORIGEM' ? -1 : 1
-        delta += sinal * (Number(p.liquido) || 0)
+        delta += sinal * kgRateado(c, p)
       }
     }
     return delta
@@ -180,6 +253,23 @@ export const useCargaStore = defineStore('carga', () => {
       return
     }
     const arr = await db.carga.where('codsafra').equals(codsafraAtiva.value).toArray()
+    // Auto-reparo: cargas cujo bruto/liquido foram zerados por uma resposta parcial
+    // de sync (mas os pesos pbt/tara continuam lá) — recalcula localmente e regrava.
+    // Roda 1x por carga afetada (depois liquido != null). Carga sem pesar tem
+    // pbt/tara null, então não entra aqui.
+    for (const c of arr) {
+      if (c.liquido == null && c.pbt != null && c.tara != null) {
+        Object.assign(c, calcularCarga(c, faixasDaSafra.value))
+        await db.carga.update(c.uuid, {
+          bruto: c.bruto,
+          desconto: c.desconto,
+          liquido: c.liquido,
+          descontoumidade: c.descontoumidade,
+          descontoimpureza: c.descontoimpureza,
+          descontoavariados: c.descontoavariados,
+        })
+      }
+    }
     cargas.value = arr.sort((a, b) => (a.data < b.data ? 1 : -1))
   }
 
@@ -192,14 +282,17 @@ export const useCargaStore = defineStore('carga', () => {
     sentidoAtivo.value = sentido
   }
 
-  async function sincronizar() {
-    await sincronizacao.sincronizar()
+  // `opts` (ex.: { force: true } vindo do botao "Sincronizar") repassa pro throttle
+  // da store de sincronizacao. As re-leituras do Dexie sao baratas.
+  async function sincronizar(opts) {
+    await sincronizacao.sincronizar(opts)
     await carregarReferencias()
     await carregarCargas()
     saldosUnidades.value = sincronizacao.saldosUnidades
   }
 
   // Nova carga do sentido informado (ou do board atual). Começa na 1ª etapa.
+  // A semeadura de origem/destino padrão é feita no CargaDialog (camada de UI).
   function nova(sentido = null) {
     const s = sentido || sentidoAtivo.value
     return {
@@ -232,26 +325,25 @@ export const useCargaStore = defineStore('carga', () => {
   }
 
   // Grava a carga (recalcula local p/ exibir offline) e tenta sincronizar.
+  // Trabalha numa CÓPIA — não muta o objeto do dialog (senão linhas ainda
+  // incompletas sumiriam no meio do fluxo). Só pontos completos são gravados,
+  // e o líquido por ponto é rateado a partir do % antes de persistir/enviar.
   async function salvar(carga) {
-    carga.pontos = (carga.pontos || []).filter((p) => {
-      if (p.contatipo === 'PLANTIO') return !!p.codplantio
-      if (p.contatipo === 'UNIDADE') return !!p.codunidadearmazenadora
-      if (p.contatipo === 'CONTRATO') return !!p.codcontrato
-      return false
-    })
-    Object.assign(carga, calcularCarga(carga, faixasDaSafra.value), { sincronizado: 0 })
-    const plain = JSON.parse(JSON.stringify(carga))
+    const limpa = { ...carga, pontos: (carga.pontos || []).filter(pontoCompleto).map((p) => ({ ...p })) }
+    Object.assign(limpa, calcularCarga(limpa, faixasDaSafra.value), { sincronizado: 0 })
+    ratearPontos(limpa)
+    const plain = JSON.parse(JSON.stringify(limpa))
     await db.carga.put(plain)
     await carregarCargas()
     sincronizacao
-      .enviarCarga(JSON.parse(JSON.stringify(carga)))
+      .enviarCarga(JSON.parse(JSON.stringify(limpa)))
       .then(() => carregarCargas())
       .catch((e) => {
         // Offline (ERR_NETWORK): fica pendente e sincroniza depois, em silêncio.
         // Rejeição do servidor (422: excede contrato, rateio não fecha): avisa.
         if (e?.code !== 'ERR_NETWORK') notifyError(e)
       })
-    return carga
+    return limpa
   }
 
   async function inativar(carga) {
@@ -306,3 +398,9 @@ export const useCargaStore = defineStore('carga', () => {
     adicionarVeiculo,
   }
 })
+
+// HMR: sem isto o Pinia mantém a versão ANTIGA das actions no dev (mudanças em
+// salvar/ratearPontos etc. só valeriam após hard refresh).
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useCargaStore, import.meta.hot))
+}

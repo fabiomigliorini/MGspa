@@ -49,7 +49,7 @@ const kpis = computed(() => [
 const atalhos = [
   {
     label: 'Pátio de Cargas',
-    sub: 'Recebimento, expedição e transferência',
+    sub: 'Movimentação, carga e descarga.',
     icon: 'local_shipping',
     cor: 'green-7',
     to: { name: 'carga' },
@@ -81,6 +81,13 @@ const atalhos = [
     icon: 'category',
     cor: 'blue-grey-7',
     to: { name: 'culturas' },
+  },
+  {
+    label: 'Unidades Armazenadoras',
+    sub: 'Silos, armazéns e capacidade',
+    icon: 'warehouse',
+    cor: 'amber-8',
+    to: { name: 'unidades-armazenadoras' },
   },
 ]
 
@@ -155,7 +162,7 @@ onMounted(async () => {
         <template #avatar><q-icon name="cloud_off" color="orange-8" /></template>
         {{ pendentes }} carga(s) aguardando sincronização.
         <template #action>
-          <q-btn flat color="orange-9" label="Sincronizar" @click="store.sincronizar()" />
+          <q-btn flat color="orange-9" label="Sincronizar" @click="store.sincronizar({ force: true })" />
         </template>
       </q-banner>
 

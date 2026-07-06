@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
@@ -8,10 +8,16 @@ import { notifyError } from 'src/utils/notify'
 //  - PULL: baixa os cadastros de referencia + saldos pro Dexie (leitura offline)
 //  - PUSH: envia as cargas pendentes (sincronizado = 0) pro backend
 // Deteccao de offline e por erro (ERR_NETWORK), best-effort.
+// O pull pesado (cadastros + plantios) so refaz quando o cache esta "velho"
+// (TTL); o snapshot de saldos e leve e roda sempre.
+const TTL_SINCRONIZACAO = 5 * 60 * 1000 // 5 min
+const CHAVE_ULTIMA_SINC = 'agro:ultimaSincronizacao'
+
 export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   const sincronizando = ref(false)
   const online = ref(true)
-  const ultimaSincronizacao = ref(null)
+  // Persistido no localStorage p/ o TTL sobreviver a reload (F5).
+  const ultimaSincronizacao = ref(Number(localStorage.getItem(CHAVE_ULTIMA_SINC)) || null)
   const saldosUnidades = ref([]) // snapshot do estoque por unidade armazenadora
 
   // Baixa todas as paginas de um endpoint e regrava a tabela Dexie.
@@ -32,8 +38,10 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   }
 
   // Plantios sao aninhados na safra (safra/{codsafra}/plantio). Pagina (15/pag).
+  // So as safras ativas: a UI so usa a safra ativa (plantiosDaSafra), varrer as
+  // inativas so multiplicava requisicoes (o plantio?page=1 repetido).
   async function puxarPlantios() {
-    const safras = await db.safra.toArray()
+    const safras = (await db.safra.toArray()).filter((s) => !s.inativo)
     const sincronizado = Date.now()
     for (const s of safras) {
       let page = 1
@@ -62,7 +70,12 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     await puxarTabela('v1/veiculo', db.veiculo)
     await puxarTabela('v1/unidade-armazenadora', db.unidadearmazenadora)
     await puxarPlantios()
-    // Snapshot dos saldos por unidade (estoque depositado) p/ exibir offline.
+  }
+
+  // Snapshot dos saldos por unidade (estoque depositado) p/ exibir/avisar offline.
+  // Fica FORA do TTL: e 1 requisicao leve e o dado mais volatil (saldo de contrato
+  // no CargaDialog); nao e persistido no Dexie, entao rodamos sempre.
+  async function puxarSaldos() {
     const { data } = await api.get('v1/movimento-grao/saldos-unidades', { skipLoading: true })
     saldosUnidades.value = Array.isArray(data) ? data : []
   }
@@ -70,19 +83,34 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   // Envia uma carga pro backend; o servidor recalcula pesos/descontos e GERA o
   // extrato (autoridade), devolvendo o codcarga + valores oficiais.
   async function enviarCarga(carga) {
-    const { data: resp } = await api.post('v1/carga/sincronizar', carga, { skipLoading: true })
+    // `percentual` é rateio só-do-front; o backend usa o `liquido` (kg) já rateado.
+    const payload = {
+      ...carga,
+      pontos: (carga.pontos || []).map((p) => {
+        const ponto = { ...p }
+        delete ponto.percentual
+        return ponto
+      }),
+    }
+    const { data: resp } = await api.post('v1/carga/sincronizar', payload, { skipLoading: true })
     // O Resource embrulha o registro em { data: {...} } (Laravel default).
-    const oficial = resp.data ?? resp
-    await db.carga.update(carga.uuid, {
-      codcarga: oficial.codcarga,
-      sincronizado: 1,
-      bruto: oficial.bruto,
-      desconto: oficial.desconto,
-      liquido: oficial.liquido,
-      descontoumidade: oficial.descontoumidade,
-      descontoimpureza: oficial.descontoimpureza,
-      descontoavariados: oficial.descontoavariados,
-    })
+    const oficial = resp?.data ?? resp ?? {}
+    // Só sobrescreve o que o backend REALMENTE devolveu. Uma resposta parcial/vazia
+    // (ex.: dedup de POSTs concorrentes no api.js) NÃO pode zerar o liquido/codcarga
+    // já calculados localmente — senão a carga finalizada fica "— kg / 0 sc".
+    const patch = { sincronizado: 1 }
+    if (oficial.codcarga != null) patch.codcarga = oficial.codcarga
+    for (const campo of [
+      'bruto',
+      'desconto',
+      'liquido',
+      'descontoumidade',
+      'descontoimpureza',
+      'descontoavariados',
+    ]) {
+      if (oficial[campo] != null) patch[campo] = oficial[campo]
+    }
+    await db.carga.update(carga.uuid, patch)
     return oficial
   }
 
@@ -102,15 +130,23 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     }
   }
 
-  // Roda o ciclo completo: empurra pendencias e puxa referencias.
-  async function sincronizar() {
+  // Roda o ciclo: empurra pendencias (sempre), refaz o pull pesado so quando o
+  // cache esta "velho" (> TTL) ou quando forcado, e atualiza os saldos sempre.
+  // `force` (botao "Sincronizar") ignora o TTL; onMounted chama sem force.
+  async function sincronizar({ force = false } = {}) {
     if (sincronizando.value) return
     sincronizando.value = true
     try {
       await enviarCargasPendentes()
-      await puxarReferencias()
+      const desatualizado =
+        !ultimaSincronizacao.value || Date.now() - ultimaSincronizacao.value >= TTL_SINCRONIZACAO
+      if (force || desatualizado) {
+        await puxarReferencias()
+        ultimaSincronizacao.value = Date.now()
+        localStorage.setItem(CHAVE_ULTIMA_SINC, String(ultimaSincronizacao.value))
+      }
+      await puxarSaldos()
       online.value = true
-      ultimaSincronizacao.value = Date.now()
     } catch (e) {
       if (e.code === 'ERR_NETWORK') online.value = false
       else throw e
@@ -130,3 +166,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     enviarCargasPendentes,
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useSincronizacaoStore, import.meta.hot))
+}
