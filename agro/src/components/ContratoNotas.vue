@@ -132,7 +132,7 @@ function excluirNota(nt) {
     <q-dialog v-model="dialogNota">
       <q-card flat style="width: 480px; max-width: 95vw">
         <q-form @submit.prevent="salvarNota">
-          <q-card-section class="bg-primary text-white">
+          <q-card-section class="bg-primary text-white q-py-sm">
             <div class="text-h6">{{ isNovoNota ? 'Nova nota' : 'Editar nota' }}</div>
           </q-card-section>
           <q-card-section class="q-pt-md">

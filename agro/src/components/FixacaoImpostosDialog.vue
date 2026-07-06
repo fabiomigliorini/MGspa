@@ -210,9 +210,8 @@ async function salvar() {
   <q-dialog v-model="aberto">
     <q-card flat style="width: 560px; max-width: 96vw">
       <q-form @submit.prevent="salvar">
-        <q-card-section class="bg-primary text-white">
+        <q-card-section class="bg-primary text-white q-py-sm">
           <div class="text-h6">{{ editando ? 'Editar fixação' : 'Nova fixação' }}</div>
-          <div class="text-caption">Valores e impostos · {{ contrato.Cultura?.cultura || '' }}</div>
         </q-card-section>
 
         <q-card-section>
