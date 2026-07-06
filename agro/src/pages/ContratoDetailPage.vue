@@ -6,7 +6,7 @@ import { storeToRefs } from 'pinia'
 import { useCadastro } from 'src/composables/useCadastro'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import { formataData } from '@components/formatters'
+import { formataData, formataNumero, formataReal } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import ContratoForm from 'components/ContratoForm.vue'
 import ContratoDados from 'components/ContratoDados.vue'
@@ -41,7 +41,7 @@ const {
 //essa const tinha os campos   difNf, difPago, que removi
 // Form de edição = form compartilhado (também usado p/ criar na safra), então
 // continua via useCadastro; ao salvar, recarrega o store da tela.
-const contratoCad = useCadastro('contrato', 'codcontrato', 'Contrato')
+const contratoCad = useCadastro('contrato', 'codcontrato', 'Contrato', { refetchOnSave: false })
 
 const corTipo = { FIXO: 'green-7', FIXAR: 'orange-8', BARTER: 'deep-purple-6' }
 
@@ -53,15 +53,9 @@ const voltarTo = computed(() =>
 )
 
 function fmt(v, dec = 0) {
-  if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', {
-    minimumFractionDigits: dec,
-    maximumFractionDigits: dec,
-  })
+  return formataNumero(v, dec)
 }
-function rs(v) {
-  return 'R$ ' + fmt(v, 2)
-}
+const rs = formataReal
 
 // ---- Embarque · janela (início → fim) + prazo relativo a hoje ----
 const embarqueInicioFmt = computed(() =>

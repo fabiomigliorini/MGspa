@@ -1,7 +1,8 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { api } from 'src/services/api'
+import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { formataNumero, formataDataIso, arredonda } from '@components/formatters'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
@@ -22,6 +23,8 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:modelValue', 'saved'])
 
+const store = useContratoDetalheStore()
+
 const show = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
@@ -31,6 +34,12 @@ const modos = [
   { label: 'Valor', value: 'VALOR' },
   { label: 'Sacas', value: 'SACAS' },
 ]
+// Forma de liquidação: em conta (recebe em portador) vs barter (paga em insumos).
+const formasPagamento = [
+  { label: 'Em conta', value: 'CONTA' },
+  { label: 'Barter', value: 'BARTER' },
+]
+const MAX_PARCELAS = 60
 
 const salvando = ref(false)
 const form = ref(novoForm())
@@ -38,15 +47,16 @@ const form = ref(novoForm())
 function n(v) {
   return Number(v) || 0
 }
-function round(v, casas) {
-  const f = 10 ** casas
-  return Math.round(n(v) * f) / f
-}
 const dec = computed(() => (form.value.modo === 'SACAS' ? 0 : 2))
+// Teto do total a parcelar, na unidade do modo (espelha a trava do backend).
+const tetoTotal = computed(() =>
+  form.value.modo === 'SACAS' ? arredonda(n(props.saldoSacas), 0) : arredonda(n(props.saldoValor), 2),
+)
 
 function novoForm() {
   return {
     modo: 'SACAS',
+    forma: 'CONTA',
     qtd: 1,
     primeira: 30,
     demais: 30,
@@ -57,22 +67,16 @@ function novoForm() {
   }
 }
 
-// Total a parcelar = saldo do que foi FIXADO (não o contratado), na unidade do
-// modo. Antes usava contrato.quantidade × líquido (todo o contrato), o que
-// permitia parcelar além do fixado; agora parte do teto real (backend confirma).
-function totalContrato(modo) {
-  return modo === 'SACAS' ? round(n(props.saldoSacas), 0) : round(n(props.saldoValor), 2)
-}
-
+// ISO local (YYYY-MM-DD) a partir de hoje + dias — sem shift de fuso (formataDataIso).
 function isoMaisDias(dias) {
   const d = new Date()
   d.setDate(d.getDate() + (Number(dias) || 0))
-  return d.toISOString().slice(0, 10)
+  return formataDataIso(d)
 }
 
 // Gera a lista do zero a partir da config (distribuição uniforme + datas).
 function gerar() {
-  const qtd = Math.max(1, Math.floor(n(form.value.qtd)) || 1)
+  const qtd = Math.min(MAX_PARCELAS, Math.max(1, Math.floor(n(form.value.qtd)) || 1))
   const total = n(form.value.total)
   const d = dec.value
   const base = Math.floor((total / qtd) * 10 ** d) / 10 ** d
@@ -81,7 +85,7 @@ function gerar() {
   let dias = Number(form.value.primeira) || 0
   for (let i = 0; i < qtd; i++) {
     if (i > 0) dias += Number(form.value.demais) || 0
-    const v = i === qtd - 1 ? round(total - acc, d) : round(base, d)
+    const v = i === qtd - 1 ? arredonda(total - acc, d) : arredonda(base, d)
     if (i < qtd - 1) acc += v
     itens.push({ data: isoMaisDias(dias), v })
   }
@@ -102,9 +106,9 @@ function redistribuir() {
   const base = Math.floor((total / len) * 10 ** d) / 10 ** d
   let acc = 0
   form.value.itens.forEach((p, i) => {
-    if (i === len - 1) p.v = round(total - acc, d)
+    if (i === len - 1) p.v = arredonda(total - acc, d)
     else {
-      p.v = round(base, d)
+      p.v = arredonda(base, d)
       acc += p.v
     }
   })
@@ -113,9 +117,12 @@ function redistribuir() {
 function adicionar() {
   const itens = form.value.itens
   const ult = itens[itens.length - 1]
-  const base = ult ? new Date(ult.data) : new Date(isoMaisDias(form.value.primeira))
+  // Parse ao meio-dia local pra não escorregar de dia no fuso.
+  const base = ult
+    ? new Date(`${String(ult.data).slice(0, 10)}T12:00:00`)
+    : new Date(`${isoMaisDias(form.value.primeira)}T12:00:00`)
   base.setDate(base.getDate() + (Number(form.value.demais) || 0))
-  itens.push({ data: base.toISOString().slice(0, 10), v: 0 })
+  itens.push({ data: formataDataIso(base), v: 0 })
   form.value.qtd = itens.length
   redistribuir()
 }
@@ -127,17 +134,14 @@ function remover(i) {
 }
 
 function fmt(v) {
-  return n(v).toLocaleString('pt-BR', {
-    minimumFractionDigits: dec.value,
-    maximumFractionDigits: dec.value,
-  })
+  return formataNumero(v, dec.value)
 }
 
-// Ao abrir: reseta com o total cheio do contrato e gera a 1ª distribuição.
+// Ao abrir: reseta com o total cheio (saldo) e gera a 1ª distribuição.
 watch(show, (v) => {
   if (!v) return
   form.value = novoForm()
-  form.value.total = totalContrato(form.value.modo)
+  form.value.total = tetoTotal.value
   form.value.codportador = props.contrato?.codportador || null
   gerar()
 })
@@ -145,9 +149,9 @@ watch(show, (v) => {
 // Trocar modo recalcula o total na nova unidade e regenera.
 watch(
   () => form.value.modo,
-  (m) => {
+  () => {
     if (!show.value) return
-    form.value.total = totalContrato(m)
+    form.value.total = tetoTotal.value
     gerar()
   },
 )
@@ -160,34 +164,41 @@ watch(
   },
 )
 
+// Payload de uma parcela na unidade do modo (barter não tem portador).
+function montarPayload(p) {
+  const modo = form.value.modo
+  return {
+    data: p.data,
+    modo,
+    forma: form.value.forma,
+    sacas: modo === 'SACAS' ? n(p.v) : null,
+    valor: modo === 'SACAS' ? arredonda(n(p.v) * props.liquidoSc, 2) : n(p.v),
+    codportador: form.value.forma === 'BARTER' ? null : form.value.codportador || null,
+    observacao: form.value.observacao || null,
+  }
+}
+
+// Salva o lote parcela a parcela pelo store. Cada item só sai de form.itens APÓS
+// gravar — então, se uma falhar no meio (ex.: 422 de teto), um novo Salvar reenvia
+// só o que faltou, sem duplicar as já lançadas.
 async function salvar() {
   if (salvando.value || !form.value.itens.length) return
   salvando.value = true
+  const totalItens = form.value.itens.length
+  let salvos = 0
   try {
-    const modo = form.value.modo
-    for (const p of form.value.itens) {
-      const sacas = modo === 'SACAS' ? n(p.v) : null
-      const valor = modo === 'SACAS' ? round(n(p.v) * props.liquidoSc, 2) : n(p.v)
-      await api.post(`v1/contrato/${props.cod}/pagamento`, {
-        data: p.data,
-        modo,
-        sacas,
-        valor,
-        codportador: form.value.codportador || null,
-        observacao: form.value.observacao || null,
-      })
+    while (form.value.itens.length) {
+      await store.criarPagamento(montarPayload(form.value.itens[0]))
+      form.value.itens.shift()
+      salvos++
     }
-    notifySuccess(
-      form.value.itens.length > 1
-        ? `${form.value.itens.length} parcelas lançadas!`
-        : 'Parcela lançada!',
-    )
+    notifySuccess(totalItens > 1 ? `${totalItens} parcelas lançadas!` : 'Parcela lançada!')
     show.value = false
-    emit('saved')
   } catch (e) {
     notifyError(e)
   } finally {
     salvando.value = false
+    if (salvos > 0) emit('saved') // reflete no pai as parcelas já gravadas
   }
 }
 </script>
@@ -202,7 +213,7 @@ async function salvar() {
 
         <q-card-section class="scroll" style="max-height: 72vh">
           <div class="row q-col-gutter-md">
-            <div class="col-12">
+            <div class="col-12 col-sm-6">
               <q-btn-toggle
                 v-model="form.modo"
                 :options="modos"
@@ -214,8 +225,26 @@ async function salvar() {
                 text-color="grey-9"
               />
             </div>
+            <div class="col-12 col-sm-6">
+              <q-btn-toggle
+                v-model="form.forma"
+                :options="formasPagamento"
+                spread
+                no-caps
+                unelevated
+                toggle-color="deep-purple-6"
+                color="grey-3"
+                text-color="grey-9"
+              />
+            </div>
             <div class="col-4">
-              <MgInputValor v-model="form.qtd" :decimals="0" :min="1" label="Parcelas" />
+              <MgInputValor
+                v-model="form.qtd"
+                :decimals="0"
+                :min="1"
+                :max="MAX_PARCELAS"
+                label="Parcelas"
+              />
             </div>
             <div class="col-4">
               <MgInputValor v-model="form.primeira" :decimals="0" suffix="d" label="1ª em" />
@@ -227,14 +256,15 @@ async function salvar() {
               <MgInputValor
                 v-model="form.total"
                 :decimals="dec"
+                :max="tetoTotal"
                 :prefix="form.modo === 'VALOR' ? 'R$' : null"
                 :suffix="form.modo === 'SACAS' ? 'sc' : null"
                 label="Total a parcelar"
                 lazy-rules
-                :rules="[(v) => v > 0]"
+                :rules="[(v) => v > 0 || 'Informe o total']"
               />
             </div>
-            <div class="col-12 col-sm-7">
+            <div v-if="form.forma !== 'BARTER'" class="col-12 col-sm-7">
               <MgSelectPortador v-model="form.codportador" label="Portador (conta que recebe)" />
             </div>
           </div>
@@ -251,7 +281,7 @@ async function salvar() {
                   type="date"
                   :bottom-slots="false"
                   lazy-rules
-                  :rules="[(v) => !!v]"
+                  :rules="[(v) => !!v || 'Informe a data']"
                 />
               </q-item-section>
               <q-item-section>
@@ -263,7 +293,7 @@ async function salvar() {
                   label="Valor"
                   :bottom-slots="false"
                   lazy-rules
-                  :rules="[(v) => v > 0]"
+                  :rules="[(v) => v > 0 || 'Informe o valor']"
                 />
               </q-item-section>
               <q-item-section side style="flex: 0 0 36px">
@@ -301,7 +331,7 @@ async function salvar() {
             :label="form.itens.length > 1 ? 'Salvar parcelas' : 'Salvar'"
             color="primary"
             :loading="salvando"
-            :disable="!form.itens.length"
+            :disable="!bate || !form.itens.length"
           />
         </q-card-actions>
       </q-form>

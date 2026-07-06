@@ -17,6 +17,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   const cod = ref(null)
   const contrato = ref(null)
   const anexos = ref([])
+  const anexosErro = ref(false)
   const carregando = ref(false)
 
   // ---- Getters (reconciliação físico/fiscal/financeiro) ----
@@ -92,8 +93,11 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     try {
       const { data } = await api.get(`v1/contrato/${cod.value}/anexo`)
       anexos.value = data
+      anexosErro.value = false
     } catch {
+      // Falha de carga NÃO é "sem anexos": sinaliza pra UI diferenciar.
       anexos.value = []
+      anexosErro.value = true
     }
   }
 
@@ -125,6 +129,11 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
       await api.post(`v1/contrato/${cod.value}/pagamento`, form)
     }
     await carregar()
+  }
+  // POST de uma parcela SEM recarregar: usado pelo gerador de lote, que faz um
+  // único carregar() no fim (via @saved). Mantém o lote no padrão store-per-screen.
+  async function criarPagamento(payload) {
+    await api.post(`v1/contrato/${cod.value}/pagamento`, payload)
   }
   async function excluirPagamento(p) {
     await api.delete(`v1/contrato/${cod.value}/pagamento/${p.codcontratopagamento}`)
@@ -182,6 +191,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     cod,
     contrato,
     anexos,
+    anexosErro,
     carregando,
     // getters
     pesosaca,
@@ -215,6 +225,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     excluirContrato,
     excluirFixacao,
     salvarPagamento,
+    criarPagamento,
     excluirPagamento,
     confirmarRecebimento,
     salvarNota,

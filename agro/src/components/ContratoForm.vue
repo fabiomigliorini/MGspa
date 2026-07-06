@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed } from 'vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -57,29 +57,22 @@ function fimDoMes(iso) {
   return `${a}-${String(m).padStart(2, '0')}-${String(ultimo).padStart(2, '0')}`
 }
 
-// Embarque de/até só completam um ao outro quando o outro está vazio ou
-// invertido (até < de). Um intervalo válido — digitado pelo usuário ou já
-// gravado na edição — é preservado: editar um campo não mexe no outro.
-watch(
-  () => cad.value.form.embarqueinicio,
-  (de) => {
-    if (!de) return
-    const ate = cad.value.form.embarquefim
-    if (!ate || String(ate).slice(0, 10) < String(de).slice(0, 10)) {
-      cad.value.form.embarquefim = fimDoMes(de)
-    }
-  },
-)
-watch(
-  () => cad.value.form.embarquefim,
-  (ate) => {
-    if (!ate) return
-    const de = cad.value.form.embarqueinicio
-    if (!de || String(ate).slice(0, 10) < String(de).slice(0, 10)) {
-      cad.value.form.embarqueinicio = inicioDoMes(ate)
-    }
-  },
-)
+// Auto-completa o par de embarque SÓ na digitação do usuário (não na carga da
+// edição, que antes disparava watcher e mexia no dado gravado): ao escolher um
+// lado com o OUTRO vazio, sugere o mês inteiro. Um lado invertido NÃO é corrigido
+// em silêncio — a regra embarqueInvertido é quem sinaliza.
+function onEmbarqueInicio(val) {
+  cad.value.form.embarqueinicio = val
+  if (val && !cad.value.form.embarquefim) {
+    cad.value.form.embarquefim = fimDoMes(val)
+  }
+}
+function onEmbarqueFim(val) {
+  cad.value.form.embarquefim = val
+  if (val && !cad.value.form.embarqueinicio) {
+    cad.value.form.embarqueinicio = inicioDoMes(val)
+  }
+}
 
 // Espelho da trava do backend (embarquefim after_or_equal:embarqueinicio). Lê o
 // ISO do v-model direto (não passa pelos :rules em display BR do MgInputData).
@@ -137,7 +130,7 @@ async function salvar() {
               label="Filial"
               autofocus
               lazy-rules
-              :rules="[(v) => !!v]"
+              :rules="[(v) => !!v || 'Informe a filial']"
             />
           </div>
 
@@ -148,7 +141,7 @@ async function salvar() {
               label="Nº Nosso"
               outlined
               lazy-rules
-              :rules="[(v) => !!v]"
+              :rules="[(v) => !!v || 'Informe o nº do contrato']"
             />
           </div>
 
@@ -161,29 +154,29 @@ async function salvar() {
               label="Quantidade"
               hint="Vazio = volume em aberto"
               lazy-rules
-              :rules="[(v) => v == null || v > 0]"
+              :rules="[(v) => v == null || v > 0 || 'Quantidade inválida']"
             />
           </div>
 
-          <!-- INICIO -->
+          <!-- INICIO (opcional: backend nullable; rascunho mínimo só identifica) -->
           <div class="col-6 col-sm-3">
             <MgInputData
-              v-model="cad.form.embarqueinicio"
+              :model-value="cad.form.embarqueinicio"
               label="Embarque de"
               type="date"
-              lazy-rules
-              :rules="[(v) => !!v]"
+              @update:model-value="onEmbarqueInicio"
             />
           </div>
 
-          <!-- FIM (cross-field: fim >= início, espelho do after_or_equal do backend) -->
+          <!-- FIM (opcional; cross-field: fim >= início quando ambos preenchidos) -->
           <div class="col-6 col-sm-3">
             <MgInputData
-              v-model="cad.form.embarquefim"
+              :model-value="cad.form.embarquefim"
               label="Embarque até"
               type="date"
               lazy-rules
-              :rules="[() => !embarqueInvertido || 'Fim do embarque antes do início', (v) => !!v]"
+              :rules="[() => !embarqueInvertido || 'Fim do embarque antes do início']"
+              @update:model-value="onEmbarqueFim"
             />
           </div>
 
@@ -198,7 +191,7 @@ async function salvar() {
               v-model="cad.form.codpessoa"
               label="Contraparte"
               lazy-rules
-              :rules="[(v) => !!v]"
+              :rules="[(v) => !!v || 'Informe a contraparte']"
             />
           </div>
 
@@ -228,7 +221,7 @@ async function salvar() {
                 outlined
                 label="Tipo de comissão"
                 lazy-rules
-                :rules="[(v) => !!v]"
+                :rules="[(v) => !!v || 'Informe o tipo']"
               />
             </div>
 
@@ -239,17 +232,18 @@ async function salvar() {
                 :decimals="2"
                 label="Comissão"
                 lazy-rules
-                :rules="[(v) => v != null]"
+                :rules="[(v) => v != null || 'Informe a comissão']"
               />
             </div>
 
             <!-- TOTAL COMISSAO -->
             <div class="col-12 col-sm-5">
               <MgInputValor
-                v-model="comissaoTotal"
+                :model-value="comissaoTotal"
                 label="Comissão total"
                 input-class="text-right"
                 prefix="R$"
+                readonly
                 outlined
               />
             </div>

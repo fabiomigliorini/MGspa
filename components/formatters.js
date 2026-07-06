@@ -41,6 +41,12 @@ export function formataPercentual(valor, casas = 2) {
   return formataNumero(valor, casas) + "%";
 }
 
+// Moeda em Real: "R$ 1.234,56". Entrada inválida/vazia vira "R$ —".
+export function formataReal(valor, casas = 2) {
+  const s = formataNumero(valor, casas);
+  return "R$ " + (s === "" ? "—" : s);
+}
+
 export function arredonda(valor, casas = 2) {
   const factor = Math.pow(10, casas);
   return Math.round((valor || 0) * factor) / factor;

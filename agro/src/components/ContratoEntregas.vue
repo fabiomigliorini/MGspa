@@ -1,6 +1,7 @@
 <script setup>
 import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
+import { formataNumero, formataData } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 
 // Card "Entregas". Especialista no físico entregue: lista os movimentos deste
@@ -10,11 +11,7 @@ const store = useContratoDetalheStore()
 const { entregas, carregadokg, carregadosc } = storeToRefs(store)
 
 function fmt(v, dec = 0) {
-  if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', {
-    minimumFractionDigits: dec,
-    maximumFractionDigits: dec,
-  })
+  return formataNumero(v, dec)
 }
 </script>
 
@@ -45,7 +42,7 @@ function fmt(v, dec = 0) {
           </q-item-label>
           <q-item-label caption>
             {{ e.Carga?.placa || (e.manual ? 'Ajuste manual' : '—') }}
-            <span v-if="e.data"> · {{ new Date(e.data).toLocaleDateString('pt-BR') }}</span>
+            <span v-if="e.data"> · {{ formataData(e.data) }}</span>
           </q-item-label>
         </q-item-section>
       </q-item>

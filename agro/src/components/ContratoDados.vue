@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { formataNumero, formataData } from '@components/formatters'
+import { formataNumero, formataData, formataPercentual, formataReal } from '@components/formatters'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 
 // Card "Dados do contrato" da tela de detalhe. Layout manual (não array) na
@@ -11,14 +11,11 @@ import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 defineEmits(['editar'])
 
 const store = useContratoDetalheStore()
-const comissaoTipoLabel = { PERCENTUAL: '%', SACA: 'R$/sc', TOTAL: 'R$ total' }
 
 function nomePessoa(p) {
   return p?.fantasia || p?.pessoa || '—'
 }
-function rs(v) {
-  return 'R$ ' + formataNumero(v, 2)
-}
+const rs = formataReal
 
 const c = computed(() => store.contrato)
 
@@ -26,7 +23,10 @@ const c = computed(() => store.contrato)
 // store). Só faz sentido depois de ao menos uma fixação; antes não há preço.
 const valorTotal = computed(() => (store.fixacoes.length ? store.valorFixadoBruto : null))
 
-const operacao = computed(() => (c.value.operacao === 'COMPRA' ? 'Compra' : 'Venda'))
+const operacao = computed(() => {
+  if (!c.value.operacao) return '—'
+  return c.value.operacao === 'COMPRA' ? 'Compra' : 'Venda'
+})
 const quantidade = computed(() =>
   c.value.volumeemaberto ? 'Volume em aberto' : `${formataNumero(c.value.quantidade, 0)} sc`,
 )
@@ -37,12 +37,22 @@ const janela = computed(() => {
   return `${ini || '—'} a ${fim || '—'}`
 })
 
-// Corretora só aparece se houver comissão lançada (espelha o form).
-const temCorretora = computed(() => c.value.codpessoacorretora && Number(c.value.comissaovalor))
+// Corretora aparece sempre que houver corretora vinculada (espelha o form, que
+// revela os campos por codpessoacorretora — não pela comissão).
+const temCorretora = computed(() => !!c.value.codpessoacorretora)
 const comissao = computed(() => {
-  if (!temCorretora.value) return null
-  const tipo = comissaoTipoLabel[c.value.comissaotipo] || ''
-  return `${tipo} ${formataNumero(c.value.comissaovalor, 2)}`.trim()
+  if (!temCorretora.value || c.value.comissaovalor == null) return null
+  const v = c.value.comissaovalor
+  switch (c.value.comissaotipo) {
+    case 'PERCENTUAL':
+      return formataPercentual(v)
+    case 'SACA':
+      return `${formataReal(v)}/sc`
+    case 'TOTAL':
+      return formataReal(v)
+    default:
+      return formataNumero(v, 2)
+  }
 })
 </script>
 
@@ -110,7 +120,7 @@ const comissao = computed(() => {
         <div v-if="c.numerocorretora" class="text-caption text-grey-7">
           Nº {{ c.numerocorretora }}
         </div>
-        <div class="text-caption text-grey-7">
+        <div v-if="comissao" class="text-caption text-grey-7">
           Comissão {{ comissao }}
           <span v-if="c.comissaototal">· Total {{ rs(c.comissaototal) }}</span>
         </div>

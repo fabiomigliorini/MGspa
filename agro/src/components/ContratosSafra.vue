@@ -21,7 +21,6 @@ const emit = defineEmits(['changed'])
 const router = useRouter()
 const cad = useCadastro('contrato', 'codcontrato', 'Contrato')
 const contratos = ref([])
-const naturezas = ref([])
 const carregando = ref(false)
 
 const corTipo = { FIXO: 'green-7', FIXAR: 'orange-8', BARTER: 'deep-purple-6' }
@@ -95,15 +94,8 @@ watch(
   },
 )
 
-onMounted(async () => {
-  if (!props.online) return
-  try {
-    const { data } = await api.get('v1/natureza-operacao')
-    naturezas.value = data.data ?? data
-  } catch {
-    // naturezas é opcional (só pro form fiscal); não bloqueia a grid
-  }
-  await recarregar()
+onMounted(() => {
+  if (props.online) recarregar()
 })
 </script>
 
@@ -189,7 +181,6 @@ onMounted(async () => {
 
     <ContratoForm
       :cad="cad"
-      :naturezas="naturezas"
       :fixar="{ codsafra: props.codsafra, codcultura: props.codcultura }"
       @saved="aposSalvar"
     />

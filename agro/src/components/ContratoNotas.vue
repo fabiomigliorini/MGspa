@@ -32,7 +32,10 @@ const notaPaiOptions = computed(() =>
     })),
 )
 function novaNota() {
-  formNota.value = { ordem: notasPlano.value.length + 1 }
+  // Próxima ordem = maior ordem existente + 1 (não o length: após excluir uma do
+  // meio, length+1 colidiria com a constraint única do backend).
+  const proxima = notasPlano.value.reduce((m, nt) => Math.max(m, Number(nt.ordem) || 0), 0) + 1
+  formNota.value = { ordem: proxima }
   isNovoNota.value = true
   dialogNota.value = true
 }
@@ -138,14 +141,22 @@ function excluirNota(nt) {
           <q-card-section class="q-pt-md">
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-4">
-                <MgInputValor v-model="formNota.ordem" :decimals="0" label="Ordem" autofocus />
+                <MgInputValor
+                  v-model="formNota.ordem"
+                  :decimals="0"
+                  :min="1"
+                  label="Ordem"
+                  lazy-rules
+                  :rules="[(v) => v == null || v >= 1 || 'Ordem inválida']"
+                />
               </div>
               <div class="col-12 col-sm-8">
                 <MgSelectNaturezaOperacao
                   v-model="formNota.codnaturezaoperacao"
                   label="Natureza da operação"
+                  autofocus
                   lazy-rules
-                  :rules="[(v) => !!v]"
+                  :rules="[(v) => !!v || 'Informe a natureza']"
                 />
               </div>
               <div class="col-12">
