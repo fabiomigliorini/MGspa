@@ -15,7 +15,7 @@ import FixacaoImpostosDialog from 'components/FixacaoImpostosDialog.vue'
 // médio são getters do store) e usa as actions p/ persistir.
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { contrato, cod, fixacoes, fixado, afixar, precoMedio } = storeToRefs(store)
+const { contrato, cod, fixacoes, fixado, afixar, precoMedio, barter } = storeToRefs(store)
 
 function fmt(v, dec = 0) {
   return formataNumero(v, dec)
@@ -54,8 +54,9 @@ function excluirFixacao(f) {
   <q-card flat bordered class="q-mb-md">
     <q-item>
       <q-item-section>
-        <q-item-label class="text-subtitle1">Fixação de preço</q-item-label>
-        <q-item-label caption>
+        <q-item-label class="text-subtitle1"> Fixação de preço </q-item-label>
+        <q-item-label v-if="barter" caption> Contrato barter </q-item-label>
+        <q-item-label v-else caption>
           Fixado {{ fmt(fixado) }} sc · A fixar {{ fmt(afixar) }} sc · Preço médio
           {{ rs(precoMedio) }}/sc
         </q-item-label>

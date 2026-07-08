@@ -135,6 +135,13 @@ onMounted(() => store.carregar(cod))
               <!-- Título: com quem o contrato foi feito (comprador) -->
               <div class="text-h6">
                 {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa || 'Contrato' }}
+                <q-chip
+                  v-if="contrato"
+                  :color="corTipo[contrato.tipo] || 'grey-7'"
+                  text-color="white"
+                  :label="contrato.tipo"
+                  class="q-ml-sm q-my-none"
+                />
               </div>
               <div class="text-caption text-grey-7">
                 {{ contrato?.Cultura?.cultura }}
@@ -190,34 +197,23 @@ onMounted(() => store.carregar(cod))
                   >
                 </div>
                 <!-- Modo do contrato ao lado da quantidade -->
-                <q-chip
-                  v-if="contrato"
-                  dense
-                  square
-                  :color="corTipo[contrato.tipo] || 'grey-7'"
-                  text-color="white"
-                  :label="contrato.tipo"
-                  class="q-ml-sm q-my-none"
-                />
               </div>
               <!-- Sacas derivadas (unidade comercial) -->
               <div class="text-caption text-grey-6">
                 ≈ {{ fmt(carregadosc, 1) }} / {{ volumeemaberto ? '∞' : fmt(contratado) }} sc
               </div>
               <q-linear-progress
+                v-if="!volumeemaberto"
                 :value="
                   !volumeemaberto && contratadokg ? Math.min(1, carregadokg / contratadokg) : 0
                 "
-                :indeterminate="volumeemaberto"
                 color="green-6"
                 track-color="grey-3"
                 size="8px"
                 rounded
                 class="q-my-sm"
               />
-              <div v-if="volumeemaberto" class="text-caption text-deep-purple-7">
-                <q-icon name="all_inclusive" /> Sem limite — leva o saldo do silo
-              </div>
+              <div v-if="volumeemaberto" class="text-caption text-grey-7">Sem limite</div>
               <div v-else class="text-caption text-grey-7">
                 Saldo a embarcar: <b>{{ fmt(saldokg) }} kg</b>
                 <span class="text-grey-6">(≈ {{ fmt(saldokg / pesosaca, 0) }} sc)</span>

@@ -25,6 +25,10 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   // o embarque grava kg. Ponte: pesosaca da cultura (default 60).
   const pesosaca = computed(() => n(contrato.value?.pesosaca) || 60)
   const volumeemaberto = computed(() => !!contrato.value?.volumeemaberto)
+  // Contrato barter = troca de insumos por grão (settlement em insumos): fixação e
+  // parcelas viram opcionais e nenhum saldo é cobrado como pendência. O flag vive
+  // no contrato (tblcontrato.barter); o tipo derivado reflete BARTER.
+  const barter = computed(() => !!contrato.value?.barter)
   const contratado = computed(() => n(contrato.value?.quantidade)) // sc negociadas
   const contratadokg = computed(() => n(contrato.value?.contratadokg))
   const carregadokg = computed(() => n(contrato.value?.carregadokg))
@@ -107,6 +111,16 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
       await api.delete(`v1/contrato/${cod.value}/inativo`)
     } else {
       await api.post(`v1/contrato/${cod.value}/inativo`)
+    }
+    await carregar()
+  }
+  // Liga/desliga barter (settlement em insumos). Espelha alternarInativo: POST
+  // liga / DELETE desliga; muda 1 campo sem reenviar o contrato inteiro.
+  async function definirBarter(valor) {
+    if (valor) {
+      await api.post(`v1/contrato/${cod.value}/barter`)
+    } else {
+      await api.delete(`v1/contrato/${cod.value}/barter`)
     }
     await carregar()
   }
@@ -196,6 +210,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     // getters
     pesosaca,
     volumeemaberto,
+    barter,
     contratado,
     contratadokg,
     carregadokg,
@@ -222,6 +237,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     carregar,
     carregarAnexos,
     alternarInativo,
+    definirBarter,
     excluirContrato,
     excluirFixacao,
     salvarPagamento,

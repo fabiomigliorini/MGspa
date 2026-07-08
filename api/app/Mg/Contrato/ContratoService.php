@@ -142,6 +142,18 @@ class ContratoService extends MgService
     }
 
     /**
+     * Liga/desliga o flag barter (settlement em insumos). Contrato barter não
+     * exige fixação nem parcelas; o tipo derivado vira BARTER (ver
+     * ContratoResource::tipoDerivado). Espelha ativar/inativar: muda 1 campo.
+     */
+    public static function barter(Contrato $contrato, bool $barter): Contrato
+    {
+        $contrato->barter = $barter;
+        $contrato->update();
+        return $contrato;
+    }
+
+    /**
      * Preco em R$/saca de uma fixacao: moeda estrangeira (qualquer != BRL) com
      * cotacao travada => preco x cotacao; BRL (ou sem cotacao) => o proprio preco.
      */

@@ -4,7 +4,13 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import { formataNumero, formataReal, formataData, formataDataIso, arredonda } from '@components/formatters'
+import {
+  formataNumero,
+  formataReal,
+  formataData,
+  formataDataIso,
+  arredonda,
+} from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -18,7 +24,7 @@ import ContratoParcelasDialog from 'components/ContratoParcelasDialog.vue'
 // da tela e persiste pelas actions (salvarPagamento/excluirPagamento/confirmar).
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { contrato, cod, pagamentos, previsto, pago, liquidoSc, fixado, saldoPagar } =
+const { contrato, cod, pagamentos, previsto, pago, liquidoSc, fixado, saldoPagar, barter } =
   storeToRefs(store)
 
 function n(v) {
@@ -135,8 +141,9 @@ async function confirmarRecebimento() {
   <q-card flat bordered class="q-mb-md">
     <q-item>
       <q-item-section>
-        <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
-        <q-item-label caption>
+        <q-item-label class="text-subtitle1"> Parcelas de pagamento</q-item-label>
+        <q-item-label v-if="barter" caption> Contrato barter </q-item-label>
+        <q-item-label v-else caption>
           Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
         </q-item-label>
       </q-item-section>

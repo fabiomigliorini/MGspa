@@ -431,6 +431,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('contrato/{codcontrato}/carga/{codcarga}/emissao', [\Mg\Contrato\ContratoController::class, 'emissao']); // plano de NF triangular (preview)
     Route::post('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'ativar']);
+    Route::post('contrato/{codcontrato}/barter', [\Mg\Contrato\ContratoController::class, 'marcarBarter']); // settlement em insumos
+    Route::delete('contrato/{codcontrato}/barter', [\Mg\Contrato\ContratoController::class, 'desmarcarBarter']);
     Route::apiResource('contrato', \Mg\Contrato\ContratoController::class)->parameters(['contrato' => 'codcontrato']);
 
     // Fixacoes e pagamentos aninhados no contrato

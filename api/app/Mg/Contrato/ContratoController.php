@@ -102,4 +102,20 @@ class ContratoController extends MgController
         ContratoService::ativar(Contrato::findOrFail($id));
         return new ContratoResource(ContratoService::detalhe((int) $id));
     }
+
+    /**
+     * Liga (POST) / desliga (DELETE) o flag barter — settlement em insumos, sem
+     * exigir fixação/parcelas. Espelha o toggle de inativo: muda 1 campo sem PUT.
+     */
+    public function marcarBarter(Request $request, $id)
+    {
+        ContratoService::barter(Contrato::findOrFail($id), true);
+        return new ContratoResource(ContratoService::detalhe((int) $id));
+    }
+
+    public function desmarcarBarter(Request $request, $id)
+    {
+        ContratoService::barter(Contrato::findOrFail($id), false);
+        return new ContratoResource(ContratoService::detalhe((int) $id));
+    }
 }
