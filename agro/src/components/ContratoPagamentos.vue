@@ -24,7 +24,7 @@ import ContratoParcelasDialog from 'components/ContratoParcelasDialog.vue'
 // da tela e persiste pelas actions (salvarPagamento/excluirPagamento/confirmar).
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { contrato, cod, pagamentos, previsto, pago, liquidoSc, fixado, saldoPagar, barter } =
+const { contrato, cod, pagamentos, previsto, pago, liquidoSc, fixado, saldoPagar } =
   storeToRefs(store)
 
 function n(v) {
@@ -141,9 +141,8 @@ async function confirmarRecebimento() {
   <q-card flat bordered class="q-mb-md">
     <q-item>
       <q-item-section>
-        <q-item-label class="text-subtitle1"> Parcelas de pagamento</q-item-label>
-        <q-item-label v-if="barter" caption> Contrato barter </q-item-label>
-        <q-item-label v-else caption>
+        <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
+        <q-item-label caption>
           Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
         </q-item-label>
       </q-item-section>

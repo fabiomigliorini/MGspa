@@ -26,6 +26,7 @@ const cod = Number(route.params.codcontrato)
 const store = useContratoDetalheStore()
 const {
   contrato,
+  barter,
   volumeemaberto,
   contratado,
   contratadokg,
@@ -189,18 +190,18 @@ onMounted(() => store.carregar(cod))
                   >Físico</span
                 >
               </div>
-              <div class="text-h5 q-mt-sm row items-center">
-                <div>
-                  {{ fmt(carregadokg) }}
-                  <span class="text-caption"
-                    >/ {{ volumeemaberto ? '∞' : fmt(contratadokg) }} kg</span
-                  >
-                </div>
-                <!-- Modo do contrato ao lado da quantidade -->
+              <!-- Principal: sacas entregues (unidade comercial); em aberto = só
+                   o entregue, sem alvo. -->
+              <div class="text-h5 q-mt-sm">
+                {{ fmt(carregadosc) }}
+                <span class="text-caption">
+                  <template v-if="!volumeemaberto">/ {{ fmt(contratado) }} </template>sc
+                </span>
               </div>
-              <!-- Sacas derivadas (unidade comercial) -->
+              <!-- Kg em escala menor (mesmo cadastrado em kg, a leitura é em sacas) -->
               <div class="text-caption text-grey-6">
-                ≈ {{ fmt(carregadosc, 1) }} / {{ volumeemaberto ? '∞' : fmt(contratado) }} sc
+                {{ fmt(carregadokg)
+                }}<template v-if="!volumeemaberto"> / {{ fmt(contratadokg) }}</template> kg
               </div>
               <q-linear-progress
                 v-if="!volumeemaberto"
@@ -280,8 +281,11 @@ onMounted(() => store.carregar(cod))
       <!-- Cards especialistas (cada um lê do store da tela) -->
       <template v-if="contrato">
         <ContratoDados @editar="editarContrato" />
-        <ContratoFixacao />
-        <ContratoPagamentos />
+        <!-- Barter (settlement em insumos): fixação e parcelas não se aplicam. -->
+        <template v-if="!barter">
+          <ContratoFixacao />
+          <ContratoPagamentos />
+        </template>
         <ContratoNotas />
         <ContratoEntregas />
         <ContratoAnexos />
