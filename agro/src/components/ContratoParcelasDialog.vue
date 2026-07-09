@@ -30,14 +30,10 @@ const show = computed({
   set: (v) => emit('update:modelValue', v),
 })
 
+// Modo de pagamento da parcela (unidade do total): valor em R$ ou sacas.
 const modos = [
   { label: 'Valor', value: 'VALOR' },
   { label: 'Sacas', value: 'SACAS' },
-]
-// Forma de liquidação: em conta (recebe em portador) vs barter (paga em insumos).
-const formasPagamento = [
-  { label: 'Em conta', value: 'CONTA' },
-  { label: 'Barter', value: 'BARTER' },
 ]
 const MAX_PARCELAS = 60
 
@@ -56,7 +52,6 @@ const tetoTotal = computed(() =>
 function novoForm() {
   return {
     modo: 'SACAS',
-    forma: 'CONTA',
     qtd: 1,
     primeira: 30,
     demais: 30,
@@ -164,16 +159,17 @@ watch(
   },
 )
 
-// Payload de uma parcela na unidade do modo (barter não tem portador).
+// Payload de uma parcela na unidade do modo. Barter agora é do contrato inteiro,
+// então a parcela é sempre em conta (forma=CONTA, recebe em portador).
 function montarPayload(p) {
   const modo = form.value.modo
   return {
     data: p.data,
     modo,
-    forma: form.value.forma,
+    forma: 'CONTA',
     sacas: modo === 'SACAS' ? n(p.v) : null,
     valor: modo === 'SACAS' ? arredonda(n(p.v) * props.liquidoSc, 2) : n(p.v),
-    codportador: form.value.forma === 'BARTER' ? null : form.value.codportador || null,
+    codportador: form.value.codportador || null,
     observacao: form.value.observacao || null,
   }
 }
@@ -213,30 +209,6 @@ async function salvar() {
 
         <q-card-section class="scroll" style="max-height: 72vh">
           <div class="row q-col-gutter-md">
-            <div class="col-12 col-sm-6">
-              <q-btn-toggle
-                v-model="form.modo"
-                :options="modos"
-                spread
-                no-caps
-                unelevated
-                toggle-color="primary"
-                color="grey-3"
-                text-color="grey-9"
-              />
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-btn-toggle
-                v-model="form.forma"
-                :options="formasPagamento"
-                spread
-                no-caps
-                unelevated
-                toggle-color="deep-purple-6"
-                color="grey-3"
-                text-color="grey-9"
-              />
-            </div>
             <div class="col-4">
               <MgInputValor
                 v-model="form.qtd"
@@ -252,7 +224,19 @@ async function salvar() {
             <div class="col-4">
               <MgInputValor v-model="form.demais" :decimals="0" suffix="d" label="Demais +" />
             </div>
-            <div class="col-12 col-sm-5">
+            <!-- Modo de pagamento (valor/sacas) + total + portador. Barter é do
+                 contrato inteiro, então a forma em conta/barter não existe mais. -->
+            <div class="col-12 col-sm-3">
+              <q-select
+                v-model="form.modo"
+                :options="modos"
+                label="Modo de pagamento"
+                outlined
+                emit-value
+                map-options
+              />
+            </div>
+            <div class="col-12 col-sm-4">
               <MgInputValor
                 v-model="form.total"
                 :decimals="dec"
@@ -264,7 +248,7 @@ async function salvar() {
                 :rules="[(v) => v > 0 || 'Informe o total']"
               />
             </div>
-            <div v-if="form.forma !== 'BARTER'" class="col-12 col-sm-7">
+            <div class="col-12 col-sm-5">
               <MgSelectPortador v-model="form.codportador" label="Portador (conta que recebe)" />
             </div>
           </div>

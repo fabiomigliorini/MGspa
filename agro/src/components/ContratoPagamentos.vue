@@ -49,11 +49,6 @@ const modosParcela = [
   { label: 'Valor', value: 'VALOR' },
   { label: 'Sacas', value: 'SACAS' },
 ]
-// Forma de liquidação: em conta (recebe em portador) vs barter (paga em insumos).
-const formasPagamento = [
-  { label: 'Em conta', value: 'CONTA' },
-  { label: 'Barter', value: 'BARTER' },
-]
 
 // O botão "+" abre o gerador de várias parcelas; a edição de uma parcela segue
 // no dialog abaixo (form único).
@@ -228,27 +223,13 @@ async function confirmarRecebimento() {
           <q-card-section class="q-pt-md">
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-btn-toggle
+                <q-select
                   v-model="formParcela.modo"
                   :options="modosParcela"
-                  spread
-                  no-caps
-                  unelevated
-                  toggle-color="primary"
-                  color="grey-3"
-                  text-color="grey-9"
-                />
-              </div>
-              <div class="col-12 col-sm-6">
-                <q-btn-toggle
-                  v-model="formParcela.forma"
-                  :options="formasPagamento"
-                  spread
-                  no-caps
-                  unelevated
-                  toggle-color="deep-purple-6"
-                  color="grey-3"
-                  text-color="grey-9"
+                  label="Modo de pagamento"
+                  outlined
+                  emit-value
+                  map-options
                 />
               </div>
               <div class="col-12 col-sm-6">
@@ -283,7 +264,7 @@ async function confirmarRecebimento() {
                   :rules="[(v) => v > 0 || 'Informe o valor']"
                 />
               </div>
-              <div v-if="formParcela.forma !== 'BARTER'" class="col-12">
+              <div class="col-12">
                 <MgSelectPortador
                   v-model="formParcela.codportador"
                   label="Portador (conta que recebe)"
@@ -342,7 +323,7 @@ async function confirmarRecebimento() {
                   :rules="[(v) => v > 0]"
                 />
               </div>
-              <div v-if="confirmForm.forma !== 'BARTER'" class="col-12">
+              <div class="col-12">
                 <MgSelectPortador
                   v-model="confirmForm.codportador"
                   label="Portador (conta que recebeu)"

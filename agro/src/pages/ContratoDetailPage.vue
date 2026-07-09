@@ -36,6 +36,7 @@ const {
   pesosaca,
   valornf,
   valorCarregado,
+  valorFixadoBruto,
   pago,
   bate,
 } = storeToRefs(store)
@@ -245,8 +246,10 @@ onMounted(() => store.carregar(cod))
                   >Financeiro</span
                 >
               </div>
-              <div class="text-h5 q-mt-sm">{{ rs(pago) }}</div>
-              <div class="text-caption text-grey-7 q-mt-sm">Pago pelo comprador</div>
+              <!-- Valor fixado (Σ sacas × preço): aparece assim que há fixação -->
+              <div class="text-h5 q-mt-sm">{{ rs(valorFixadoBruto) }}</div>
+              <div class="text-caption text-grey-6">Valor fixado</div>
+              <div class="text-caption text-grey-7">Pago pelo comprador: {{ rs(pago) }}</div>
             </q-card-section>
           </q-card>
         </div>
