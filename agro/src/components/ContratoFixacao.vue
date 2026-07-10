@@ -71,16 +71,22 @@ function excluirFixacao(f) {
       <q-item v-for="f in fixacoes" :key="f.codcontratofixacao">
         <q-item-section>
           <q-item-label>
-            {{ fmt(f.quantidade) }} sc · {{ rs(f.precoreal) }}/sc
-            <span v-if="f.precoliquido != null" class="text-green-8">
-              · líq {{ rs(f.precoliquido) }}</span
-            >
+            {{ fmt(f.quantidade) }} sc ·
+            <!-- US$ dolarizado: mostra o preço em dólar (precoreal é R$ e fica null). -->
+            <template v-if="f.moeda && f.moeda !== 'BRL'">US$ {{ fmt(f.preco, 2) }}/sc</template>
+            <template v-else>
+              {{ rs(f.precoreal) }}/sc
+              <span v-if="f.precoliquido != null" class="text-green-8">
+                · líq {{ rs(f.precoliquido) }}</span
+              >
+            </template>
             <q-badge v-if="f.isentofethab" color="teal-5" label="isento FETHAB" class="q-ml-xs" />
           </q-item-label>
           <q-item-label caption>
             {{ fmtData(f.data) }}
-            <span v-if="f.moeda && f.moeda !== 'BRL'"
-              >· {{ f.moeda }} {{ fmt(f.preco, 2) }} × {{ fmt(f.dolar, 4) }}</span
+            <!-- Cotação só aparece em fixação legada que já a travou (dolar != null). -->
+            <span v-if="f.moeda && f.moeda !== 'BRL' && f.dolar"
+              >· cotação {{ fmt(f.dolar, 4) }}</span
             >
           </q-item-label>
         </q-item-section>

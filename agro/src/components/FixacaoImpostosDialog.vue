@@ -110,6 +110,14 @@ const liquidoDisplay = computed(() =>
   estrangeira.value && form.value.dolar ? liquido.value / n(form.value.dolar) : liquido.value,
 )
 
+// Total exibido: fixação em US$ é dolarizada pura (quantidade × preço US$, sem
+// tributos/líquido); em BRL é quantidade × líquido (R$, após deduções).
+const totalDisplay = computed(() =>
+  estrangeira.value
+    ? n(form.value.quantidade) * n(form.value.preco)
+    : n(form.value.quantidade) * liquido.value,
+)
+
 function mapTributo(it) {
   return {
     codtributo: it.codtributo ?? null,
@@ -195,16 +203,20 @@ async function salvar() {
       quantidade: form.value.quantidade,
       preco: form.value.preco,
       moeda: form.value.moeda,
-      dolar: estrangeira.value ? form.value.dolar : null,
-      tributos: tributos.value.map((tributo) => ({
-        codtributo: tributo.codtributo,
-        codigo: tributo.codigo,
-        descricao: tributo.descricao,
-        base: tributo.base,
-        percentual: n(tributo.percentual),
-        upf: tributo.base === 'UNIDADE' ? n(tributo.upf) : null,
-        grupofethab: !!tributo.grupofethab,
-      })),
+      // US$ dolarizado puro: sem cotação (definida no recebimento) e sem snapshot
+      // de tributos — o backend grava precoreal=null.
+      dolar: null,
+      tributos: estrangeira.value
+        ? []
+        : tributos.value.map((tributo) => ({
+            codtributo: tributo.codtributo,
+            codigo: tributo.codigo,
+            descricao: tributo.descricao,
+            base: tributo.base,
+            percentual: n(tributo.percentual),
+            upf: tributo.base === 'UNIDADE' ? n(tributo.upf) : null,
+            grupofethab: !!tributo.grupofethab,
+          })),
     }
     if (editando.value) {
       await api.put(`v1/contrato/${props.cod}/fixacao/${props.fixacao.codcontratofixacao}`, payload)
@@ -248,8 +260,10 @@ async function salvar() {
               />
             </div>
 
-            <!-- Uma linha por tributo: rótulo · alíquota · UPF (só indexado) · custo. -->
-            <template v-for="(tributo, i) in tributos" :key="i">
+            <!-- Tributos só em BRL. Fixação em US$ é dolarizada pura: sem deduções
+                 (o R$ e os impostos são resolvidos no recebimento). -->
+            <template v-if="!estrangeira">
+              <template v-for="(tributo, i) in tributos" :key="i">
               <div class="col-4">
                 <MgInputValor
                   v-model="tributo.percentual"
@@ -279,61 +293,43 @@ async function salvar() {
                   input-class="text-red"
                 />
               </div>
+              </template>
             </template>
-            <!-- <div class="col-9 text-weight-medium text-grey-8">
-              Deduções
-            </div>
-            <div class="col-3">
-              <MgInputValor
-                :model-value="totalDeducao"
-                :decimals="2"
-                prefix="R$"
-                label="Total deduções"
-                readonly
-                bg-color="grey-2"
-                input-class="text-red"
-              />
-            </div> -->
 
-            <div class="col-8 text-weight-medium text-grey-8">
-              Líquido ({{ fmt(100 - percentualDeducao, 2) }}%)
-              <q-btn
-                flat
-                dense
-                round
-                no-caps
-                color="primary"
-                icon="refresh"
-                :loading="carregando"
-                @click="carregarPadrao"
-              >
-                <q-tooltip>Recalcular Tributos</q-tooltip>
-              </q-btn>
-            </div>
-            <div class="col-4">
-              <MgInputValor
-                :model-value="liquidoDisplay"
-                :decimals="2"
-                :prefix="simboloMoeda"
-                label="Líquido"
-                readonly
-                bg-color="green-1"
-                input-class="text-green-10"
-              />
-            </div>
-            <!-- Slot à esquerda da Quantidade: em moeda estrangeira vira a Cotação
-                 (R$ por unidade da moeda); em BRL mantém o rótulo "Total". -->
+            <!-- Líquido/deduções só em BRL (US$ não deduz aqui). -->
+            <template v-if="!estrangeira">
+              <div class="col-8 text-weight-medium text-grey-8">
+                Líquido ({{ fmt(100 - percentualDeducao, 2) }}%)
+                <q-btn
+                  flat
+                  dense
+                  round
+                  no-caps
+                  color="primary"
+                  icon="refresh"
+                  :loading="carregando"
+                  @click="carregarPadrao"
+                >
+                  <q-tooltip>Recalcular Tributos</q-tooltip>
+                </q-btn>
+              </div>
+              <div class="col-4">
+                <MgInputValor
+                  :model-value="liquidoDisplay"
+                  :decimals="2"
+                  :prefix="simboloMoeda"
+                  label="Líquido"
+                  readonly
+                  bg-color="green-1"
+                  input-class="text-green-10"
+                />
+              </div>
+            </template>
+
+            <!-- Rótulo "Total" à esquerda da Quantidade. A cotação NÃO fica mais
+                 aqui: em US$ ela é definida no recebimento (parcela). -->
             <div class="col-4 self-center">
-              <MgInputValor
-                v-if="estrangeira"
-                v-model="form.dolar"
-                :decimals="4"
-                prefix="R$"
-                label="Cotação"
-                lazy-rules
-                :rules="[(v) => v > 0 || 'Informe a cotação']"
-              />
-              <span v-else class="text-weight-medium text-grey-8">Total</span>
+              <span class="text-weight-medium text-grey-8">Total</span>
             </div>
             <div class="col-4">
               <MgInputValor
@@ -348,9 +344,9 @@ async function salvar() {
             </div>
             <div class="col-4">
               <MgInputValor
-                :model-value="form.quantidade * liquido"
+                :model-value="totalDisplay"
                 :decimals="0"
-                prefix="R$"
+                :prefix="simboloMoeda"
                 label="Total"
                 bg-color="green-1"
                 input-class="text-green-10"
@@ -359,7 +355,7 @@ async function salvar() {
             </div>
           </div>
 
-          <div v-if="!tributos.length && !carregando" class="text-grey-6 q-py-sm">
+          <div v-if="!estrangeira && !tributos.length && !carregando" class="text-grey-6 q-py-sm">
             Nenhum tributo configurado para esta cultura.
           </div>
         </q-card-section>

@@ -163,8 +163,15 @@ class ContratoService extends MgService
         if ($preco === null || $preco === '') {
             return null;
         }
-        if (($dados['moeda'] ?? 'BRL') !== 'BRL' && !empty($dados['dolar'])) {
-            return round((float) $preco * (float) $dados['dolar'], 4);
+        $estrangeira = ($dados['moeda'] ?? 'BRL') !== 'BRL';
+        if ($estrangeira) {
+            // Moeda estrangeira COM cotação: trava o R$ (preço x cotação).
+            // SEM cotação: fixação dolarizada pura — não há R$ ainda (a conversão
+            // acontece no recebimento). Retorna null p/ NÃO gravar US$ como se
+            // fosse R$ (contaminaria líquido/NF/trava de pagamento).
+            return !empty($dados['dolar'])
+                ? round((float) $preco * (float) $dados['dolar'], 4)
+                : null;
         }
         return round((float) $preco, 4);
     }
