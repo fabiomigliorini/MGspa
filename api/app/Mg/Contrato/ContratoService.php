@@ -19,6 +19,7 @@ class ContratoService extends MgService
         'Corretora',
         'Cooperativa',
         'ContratoFixacaoS',
+        'ContratoFixacaoS.ContratoPagamentoS', // ledger por fixação (sem N+1)
         'ContratoPagamentoS',
         'ContratoNotaS.NaturezaOperacao',
         'ContratoNotaS.PessoaNf',
@@ -211,6 +212,24 @@ class ContratoService extends MgService
     public static function sacasPagas(int $codcontrato, ?int $excetoPagamento = null): float
     {
         return (float) ContratoPagamento::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
+            ->sum('sacas');
+    }
+
+    // ===== Saldos POR FIXAÇÃO (multi-fixação + US$) =====
+    // Sacas são a grandeza neutra entre moedas. O teto de pagamento passou a ser
+    // "sacas parceladas da fixação <= sacas fixadas da fixação" — funciona igual
+    // p/ BRL e US$ (o valorFixadoBruto em R$ zerava a perna US$).
+
+    /**
+     * Σ sacas já parceladas de UMA fixação (parcelas ativas). Teto de pagamento:
+     * o restante (recebido, valor fixado por moeda, saldo) é derivado no ledger do
+     * ContratoFixacaoResource, sobre a relação já carregada — sem query extra aqui.
+     */
+    public static function sacasParceladasFixacao(int $codcontratofixacao, ?int $excetoPagamento = null): float
+    {
+        return (float) ContratoPagamento::where('codcontratofixacao', $codcontratofixacao)
             ->whereNull('inativo')
             ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
             ->sum('sacas');

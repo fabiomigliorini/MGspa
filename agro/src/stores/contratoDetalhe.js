@@ -74,6 +74,70 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   )
   const saldoPagar = computed(() => Math.max(0, valorFixadoBruto.value - previsto.value))
 
+  // ===== Reconciliação MOEDA-AWARE (contrato dolarizado) =====
+  // Regra única: nunca somar BRL+US$ num número só — cada indicador tem sua versão
+  // por moeda. Os agregados por fixação (recebido, areceber, saldosacas, cotacaomedia,
+  // valorfixadomoeda) já vêm prontos do backend (ContratoFixacaoResource.ledger); aqui
+  // só somamos por moeda. `ehUsd` é a fonte única do predicado (exportada p/ os cards).
+  function ehUsd(f) {
+    return !!f && (f.moeda || 'BRL') !== 'BRL'
+  }
+  const fixacoesBrl = computed(() => fixacoes.value.filter((f) => !ehUsd(f)))
+  const fixacoesUsd = computed(() => fixacoes.value.filter((f) => ehUsd(f)))
+  const temUsd = computed(() => fixacoesUsd.value.length > 0)
+  const temBrl = computed(() => fixacoesBrl.value.length > 0)
+
+  // Mapa codcontratofixacao -> fixação (p/ achar a moeda/preço de cada parcela).
+  const fixacaoPorCod = computed(() => {
+    const m = {}
+    fixacoes.value.forEach((f) => {
+      m[f.codcontratofixacao] = f
+    })
+    return m
+  })
+  function fixacaoDaParcela(p) {
+    return fixacaoPorCod.value[p?.codcontratofixacao] || null
+  }
+
+  // Preço médio ponderado POR MOEDA (US$ usa preco NATIVO, nunca precoreal null).
+  function medioPonderado(lista, campoPreco) {
+    const q = lista.reduce((s, f) => s + n(f.quantidade), 0)
+    const v = lista.reduce((s, f) => s + n(f.quantidade) * n(f[campoPreco]), 0)
+    return q > 0 ? v / q : 0
+  }
+  const precoMedioBrl = computed(() => medioPonderado(fixacoesBrl.value, 'precoreal'))
+  const precoMedioUsd = computed(() => medioPonderado(fixacoesUsd.value, 'preco'))
+
+  // Valor fixado e a receber, separados por moeda (ledger do backend por fixação).
+  const somaLedger = (lista, campo) => lista.reduce((s, f) => s + n(f[campo]), 0)
+  const valorFixadoBrl = computed(() => somaLedger(fixacoesBrl.value, 'valorfixadomoeda'))
+  const valorFixadoUsd = computed(() => somaLedger(fixacoesUsd.value, 'valorfixadomoeda'))
+  // SEM Math.max: saldo negativo = descasamento (sinaliza), não some.
+  const aReceberBrl = computed(() => somaLedger(fixacoesBrl.value, 'areceber'))
+  const aReceberUsd = computed(() => somaLedger(fixacoesUsd.value, 'areceber'))
+
+  // Previsto e recebido das parcelas, por moeda. Recebido em R$ é a única soma
+  // limpa (dinheiro materializado = Σ valorrecebido); o US$ reconhecido acompanha.
+  const previstoBrl = computed(() =>
+    pagamentos.value
+      .filter((p) => !ehUsd(fixacaoDaParcela(p)))
+      .reduce((s, p) => s + n(p.valor), 0),
+  )
+  const previstoUsd = computed(() =>
+    pagamentos.value
+      .filter((p) => ehUsd(fixacaoDaParcela(p)))
+      .reduce((s, p) => s + n(p.sacas) * n(fixacaoDaParcela(p)?.preco), 0),
+  )
+  // Recebido US$ e cotação média = agregados do ledger do backend (não recomputa).
+  const recebidoUsd = computed(() => somaLedger(fixacoesUsd.value, 'recebidousd'))
+  const cotacaoMediaUsd = computed(() =>
+    recebidoUsd.value > 0 ? somaLedger(fixacoesUsd.value, 'recebido') / recebidoUsd.value : 0,
+  )
+  // Saldo de sacas a parcelar de UMA fixação (teto do gerador) — vem pronto do ledger.
+  function saldoSacasFixacao(f) {
+    return n(f?.saldosacas)
+  }
+
   // "Bate?" — valor carregado x NFs x pago (tolerância de centavos)
   const difNf = computed(() => valornf.value - valorCarregado.value)
   const difPago = computed(() => pago.value - valornf.value)
@@ -156,7 +220,9 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   async function confirmarRecebimento(form) {
     await api.post(`v1/contrato/${cod.value}/pagamento/${form.codcontratopagamento}/confirmar`, {
       datarecebido: form.datarecebido,
+      // US$: o servidor computa valorrecebido a partir da cotação; BRL manda o valor.
       valorrecebido: form.valorrecebido,
+      cotacaorecebido: form.cotacaorecebido,
       codportador: form.codportador,
     })
     await carregar()
@@ -233,6 +299,22 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     difNf,
     difPago,
     bate,
+    // getters moeda-aware (contrato dolarizado)
+    temUsd,
+    temBrl,
+    ehUsd,
+    fixacaoDaParcela,
+    precoMedioBrl,
+    precoMedioUsd,
+    valorFixadoBrl,
+    valorFixadoUsd,
+    aReceberBrl,
+    aReceberUsd,
+    previstoBrl,
+    previstoUsd,
+    recebidoUsd,
+    cotacaoMediaUsd,
+    saldoSacasFixacao,
     // actions
     carregar,
     carregarAnexos,

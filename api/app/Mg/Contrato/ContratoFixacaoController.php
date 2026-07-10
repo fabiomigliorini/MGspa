@@ -15,7 +15,7 @@ class ContratoFixacaoController extends MgController
 {
     public function index(Request $request, $codcontrato)
     {
-        $res = ContratoFixacao::with('Contrato.Filial')
+        $res = ContratoFixacao::with('Contrato.Filial', 'ContratoPagamentoS') // ledger sem N+1
             ->where('codcontrato', $codcontrato)
             ->orderBy('data')
             ->get();
