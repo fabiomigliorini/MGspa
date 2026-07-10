@@ -15,19 +15,7 @@ import FixacaoImpostosDialog from 'components/FixacaoImpostosDialog.vue'
 // médio são getters do store) e usa as actions p/ persistir.
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const {
-  contrato,
-  cod,
-  fixacoes,
-  fixado,
-  afixar,
-  temUsd,
-  temBrl,
-  precoMedioBrl,
-  precoMedioUsd,
-  valorFixadoBrl,
-  valorFixadoUsd,
-} = storeToRefs(store)
+const { contrato, cod, fixacoes, afixar } = storeToRefs(store)
 
 const ehUsd = store.ehUsd // predicado "é US$?" — fonte única no store
 
@@ -69,16 +57,6 @@ function excluirFixacao(f) {
     <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Fixação de preço</q-item-label>
-        <!-- Sacas neutras; preço médio e valor fixado POR MOEDA (nunca somados). -->
-        <q-item-label caption>
-          Fixado {{ fmt(fixado) }} sc · A fixar {{ fmt(afixar) }} sc
-          <span v-if="temBrl"> · Médio {{ rs(precoMedioBrl) }}/sc</span>
-          <span v-if="temUsd"> · Médio US$ {{ fmt(precoMedioUsd, 2) }}/sc</span>
-        </q-item-label>
-        <q-item-label caption>
-          Valor fixado<span v-if="temBrl"> R$ {{ fmt(valorFixadoBrl, 2) }}</span>
-          <span v-if="temUsd"> · US$ {{ fmt(valorFixadoUsd, 2) }}</span>
-        </q-item-label>
       </q-item-section>
       <q-item-section side>
         <q-btn flat round size="sm" color="primary" icon="add" @click="novaFixacao">

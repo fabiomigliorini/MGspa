@@ -115,9 +115,12 @@ function gerar() {
 }
 
 const soma = computed(() => form.value.itens.reduce((a, p) => a + n(p.v), 0))
-const bate = computed(
-  () => Math.abs(soma.value - n(form.value.total)) < (dec.value === 0 ? 0.5 : 0.01),
-)
+// Parcelamento PARCIAL é permitido: a soma só não pode passar do saldo da fixação
+// (teto). Não precisa fechar o total — dá pra parcelar só uma parte agora.
+const somaOk = computed(() => {
+  const tol = dec.value === 0 ? 0.5 : 0.01
+  return soma.value > 0 && soma.value <= tetoTotal.value + tol
+})
 
 // Recalcula só os valores (mantém as datas), dividindo o total igualmente.
 function redistribuir() {
@@ -376,8 +379,8 @@ async function salvar() {
           <div class="row items-center q-mt-xs">
             <q-btn flat color="primary" icon="add" label="Adicionar parcela" @click="adicionar" />
             <q-space />
-            <div class="text-caption" :class="bate ? 'text-grey-7' : 'text-orange-8'">
-              Soma: {{ fmt(soma) }} / {{ fmt(form.total) }}
+            <div class="text-caption" :class="somaOk ? 'text-grey-7' : 'text-orange-8'">
+              Soma: {{ fmt(soma) }} / saldo {{ fmt(tetoTotal) }} {{ emSacas ? 'sc' : '' }}
             </div>
           </div>
 
@@ -393,7 +396,7 @@ async function salvar() {
             :label="form.itens.length > 1 ? 'Salvar parcelas' : 'Salvar'"
             color="primary"
             :loading="salvando"
-            :disable="!bate || !form.itens.length || !form.codcontratofixacao || (usd && !form.cotacao)"
+            :disable="!somaOk || !form.itens.length || !form.codcontratofixacao || (usd && !form.cotacao)"
           />
         </q-card-actions>
       </q-form>

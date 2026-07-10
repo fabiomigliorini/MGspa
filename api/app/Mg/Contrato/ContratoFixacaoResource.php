@@ -60,10 +60,6 @@ class ContratoFixacaoResource extends Resource
         $recebidousd = $usd ? round($sacasrecebidas * $preco, 2) : null; // US$ reconhecido
         $cotacaomedia = ($usd && $recebidousd > 0) ? round($recebido / $recebidousd, 4) : null;
 
-        // Valor fixado na moeda da fixação (nunca cruza moeda).
-        $valorfixadomoeda = $usd
-            ? round($qtd * $preco, 2)
-            : ($precoreal !== null ? round($qtd * $precoreal, 2) : null);
         // A receber: US$ é firme (sacas ainda não recebidas × preço); BRL é R$.
         $areceber = $usd
             ? round(($qtd - $sacasrecebidas) * $preco, 2)
@@ -75,7 +71,6 @@ class ContratoFixacaoResource extends Resource
             'recebido' => $recebido,                         // R$ materializado
             'recebidousd' => $recebidousd,                   // US$ reconhecido
             'cotacaomedia' => $cotacaomedia,
-            'valorfixadomoeda' => $valorfixadomoeda,
             'areceber' => $areceber,                         // saldo a receber na moeda
         ];
     }

@@ -24,23 +24,7 @@ import ContratoParcelasDialog from 'components/ContratoParcelasDialog.vue'
 // da tela e persiste pelas actions (salvarPagamento/excluirPagamento/confirmar).
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const {
-  contrato,
-  cod,
-  pagamentos,
-  previsto,
-  pago,
-  liquidoSc,
-  fixado,
-  saldoPagar,
-  temUsd,
-  previstoBrl,
-  previstoUsd,
-  recebidoUsd,
-  cotacaoMediaUsd,
-  aReceberBrl,
-  aReceberUsd,
-} = storeToRefs(store)
+const { contrato, cod, pagamentos, liquidoSc, fixado, saldoPagar } = storeToRefs(store)
 
 function n(v) {
   return Number(v) || 0
@@ -197,17 +181,6 @@ async function confirmarRecebimento() {
     <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
-        <!-- Moeda-aware: com fixação US$ nunca soma BRL+US$ num número só. -->
-        <q-item-label v-if="temUsd" caption>
-          Previsto R$ {{ rs(previstoBrl) }} · US$ {{ fmt(previstoUsd, 2) }}
-          · Recebido R$ {{ rs(pago) }}<span v-if="recebidoUsd">
-            (US$ {{ fmt(recebidoUsd, 2) }} @ {{ fmt(cotacaoMediaUsd, 4) }})</span
-          >
-          · A receber R$ {{ rs(aReceberBrl) }} · US$ {{ fmt(aReceberUsd, 2) }}
-        </q-item-label>
-        <q-item-label v-else caption>
-          Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
-        </q-item-label>
       </q-item-section>
       <q-item-section side>
         <q-btn flat round size="sm" color="primary" icon="add" @click="parcelasDialog = true">
