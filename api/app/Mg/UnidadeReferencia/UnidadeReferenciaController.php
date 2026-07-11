@@ -14,12 +14,12 @@ class UnidadeReferenciaController extends MgController
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = UnidadeReferenciaService::pesquisar($filter, $sort, $fields)
             ->paginate()->appends($request->all());
-        return response()->json($res, 200);
+        return UnidadeReferenciaResource::collection($res);
     }
 
     public function show(Request $request, $id)
     {
-        return response()->json(UnidadeReferenciaService::detalhe((int) $id), 200);
+        return new UnidadeReferenciaResource(UnidadeReferenciaService::detalhe((int) $id));
     }
 
     public function store(Request $request)
@@ -28,7 +28,7 @@ class UnidadeReferenciaController extends MgController
         $model = new UnidadeReferencia();
         $model->fill($request->all());
         $model->save();
-        return response()->json($model, 201);
+        return new UnidadeReferenciaResource($this->recarregar($model));
     }
 
     public function update(Request $request, $id)
@@ -37,7 +37,7 @@ class UnidadeReferenciaController extends MgController
         $request->validate($this->regras());
         $model->fill($request->all());
         $model->update();
-        return response()->json($model, 200);
+        return new UnidadeReferenciaResource($this->recarregar($model));
     }
 
     public function destroy($id)
@@ -48,12 +48,26 @@ class UnidadeReferenciaController extends MgController
 
     public function inativar(Request $request, $id)
     {
-        return response()->json(MgService::inativar(UnidadeReferencia::findOrFail($id)), 200);
+        $model = UnidadeReferencia::findOrFail($id);
+        MgService::inativar($model);
+        return new UnidadeReferenciaResource($this->recarregar($model));
     }
 
     public function ativar(Request $request, $id)
     {
-        return response()->json(MgService::ativar(UnidadeReferencia::findOrFail($id)), 200);
+        $model = UnidadeReferencia::findOrFail($id);
+        MgService::ativar($model);
+        return new UnidadeReferenciaResource($this->recarregar($model));
+    }
+
+    /** Recarrega o registro com as relações que o Resource expõe. */
+    private function recarregar(UnidadeReferencia $model): UnidadeReferencia
+    {
+        return $model->fresh([
+            'Estado',
+            'Cidade',
+            'UnidadeReferenciaValorS' => fn ($q) => $q->orderByDesc('competencia'),
+        ]);
     }
 
     // ---- Valores (histórico por competência) ----
@@ -63,8 +77,24 @@ class UnidadeReferenciaController extends MgController
             'competencia' => ['required', 'date'],
             'valor' => ['required', 'numeric', 'gt:0'],
         ]);
-        $reg = UnidadeReferenciaService::salvarValor((int) $id, $request->competencia, (float) $request->valor);
-        return response()->json($reg, 201);
+        // criarValor (NÃO upsert): 409 se a competência já existe.
+        $reg = UnidadeReferenciaService::criarValor((int) $id, $request->competencia, (float) $request->valor);
+        return new UnidadeReferenciaValorResource($reg);
+    }
+
+    public function updateValor(Request $request, $id, $codvalor)
+    {
+        $request->validate([
+            'competencia' => ['required', 'date'],
+            'valor' => ['required', 'numeric', 'gt:0'],
+        ]);
+        $reg = UnidadeReferenciaService::atualizarValor(
+            (int) $id,
+            (int) $codvalor,
+            $request->competencia,
+            (float) $request->valor
+        );
+        return new UnidadeReferenciaValorResource($reg);
     }
 
     public function destroyValor($id, $codvalor)

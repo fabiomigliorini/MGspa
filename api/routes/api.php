@@ -423,6 +423,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Unidade de referência fiscal (UPF-MT, UR municipal) — Mg\UnidadeReferencia
     Route::post('unidade-referencia/importar-upf-mt', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'importarUpfMt']);
     Route::post('unidade-referencia/{id}/valor', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'storeValor'])->whereNumber('id');
+    Route::put('unidade-referencia/{id}/valor/{codvalor}', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'updateValor'])->whereNumber('id');
     Route::delete('unidade-referencia/{id}/valor/{codvalor}', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'destroyValor']);
     Route::post('unidade-referencia/{id}/inativo', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'inativar']);
     Route::delete('unidade-referencia/{id}/inativo', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'ativar']);

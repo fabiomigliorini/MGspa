@@ -62,6 +62,12 @@ const menuGroups = [
         to: { name: 'conta-contabil' },
       },
       {
+        label: 'Unidades de Referência (UPF)',
+        icon: 'straighten',
+        color: 'blue-8',
+        to: { name: 'unidade-referencia' },
+      },
+      {
         label: 'Tipos de Título',
         icon: 'receipt_long',
         color: 'teal-8',
