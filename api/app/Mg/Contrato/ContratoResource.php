@@ -64,10 +64,8 @@ class ContratoResource extends Resource
             $ret['ContratoNotaS'] = ContratoNotaResource::collection($this->ContratoNotaS);
         }
 
-        // Fixações: injeta o contrato em cada filha p/ o resource calcular o
-        // preço líquido (deduções) com a cultura/isenção/funrural do contrato.
+        // Fixações (com Moeda + travas de câmbio carregadas em WITH_DETALHE).
         if ($this->relationLoaded('ContratoFixacaoS')) {
-            $this->ContratoFixacaoS->each(fn ($f) => $f->setRelation('Contrato', $this->resource));
             $ret['ContratoFixacaoS'] = ContratoFixacaoResource::collection($this->ContratoFixacaoS);
         }
 

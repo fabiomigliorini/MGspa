@@ -447,6 +447,13 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao']);
 
+    // Travas de cambio aninhadas na fixacao
+    Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/cambio/{codcambio}/inativo', [\Mg\Contrato\ContratoFixacaoCambioController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/cambio/{codcambio}/inativo', [\Mg\Contrato\ContratoFixacaoCambioController::class, 'ativar']);
+    Route::apiResource('contrato.fixacao.cambio', \Mg\Contrato\ContratoFixacaoCambioController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao', 'cambio' => 'codcambio']);
+
     // Anexos (PDFs) do contrato
     Route::get('contrato/{codcontrato}/anexo', [\Mg\Contrato\ContratoAnexoController::class, 'index']);
     Route::post('contrato/{codcontrato}/anexo', [\Mg\Contrato\ContratoAnexoController::class, 'store']);

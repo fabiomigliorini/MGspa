@@ -26,7 +26,6 @@ const cod = Number(route.params.codcontrato)
 const store = useContratoDetalheStore()
 const {
   contrato,
-  barter,
   volumeemaberto,
   contratado,
   contratadokg,
@@ -37,7 +36,8 @@ const {
   valornf,
   valorCarregado,
   valorFixadoBruto,
-  pago,
+  fixadoPorMoeda,
+  saldoTravarPorMoeda,
   bate,
 } = storeToRefs(store)
 //essa const tinha os campos   difNf, difPago, que removi
@@ -246,10 +246,24 @@ onMounted(() => store.carregar(cod))
                   >Financeiro</span
                 >
               </div>
-              <!-- Valor fixado (Σ sacas × preço): aparece assim que há fixação -->
-              <div class="text-h5 q-mt-sm">{{ rs(valorFixadoBruto) }}</div>
-              <div class="text-caption text-grey-6">Valor fixado</div>
-              <div class="text-caption text-grey-7">Pago pelo comprador: {{ rs(pago) }}</div>
+              <!-- Fixado por MOEDA (não mistura US$ com R$): US$ 117.000 / R$ 50.000 -->
+              <div class="text-h5 q-mt-sm">
+                <template v-if="fixadoPorMoeda.length">
+                  <template v-for="(m, i) in fixadoPorMoeda" :key="m.iso"
+                    ><span v-if="i > 0" class="text-grey-6"> · </span>{{ m.simbolo }}
+                    {{ fmt(m.totalmoeda, 2) }}</template
+                  >
+                </template>
+                <template v-else>—</template>
+              </div>
+              <div class="text-caption text-grey-6">Fixado</div>
+              <!-- Câmbio: R$ firme + o que falta travar (moeda estrangeira) -->
+              <div class="text-caption text-grey-7">Travado: {{ rs(valorFixadoBruto) }}</div>
+              <div v-if="saldoTravarPorMoeda.length" class="text-caption text-orange-8">
+                Falta travar<template v-for="m in saldoTravarPorMoeda" :key="m.iso">
+                  {{ m.simbolo }} {{ fmt(m.saldomoeda, 2) }}</template
+                >
+              </div>
             </q-card-section>
           </q-card>
         </div>
@@ -284,11 +298,9 @@ onMounted(() => store.carregar(cod))
       <!-- Cards especialistas (cada um lê do store da tela) -->
       <template v-if="contrato">
         <ContratoDados @editar="editarContrato" />
-        <!-- Barter (settlement em insumos): fixação e parcelas não se aplicam. -->
-        <template v-if="!barter">
-          <ContratoFixacao />
-          <ContratoPagamentos />
-        </template>
+        <!-- Barter também pode ter fixação/pagamento (campos livres). -->
+        <ContratoFixacao />
+        <ContratoPagamentos />
         <ContratoNotas />
         <ContratoEntregas />
         <ContratoAnexos />

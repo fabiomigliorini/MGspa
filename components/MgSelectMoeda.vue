@@ -7,7 +7,7 @@ import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 // (lista + byId no store compartilhado) e filtra no FRONT ao digitar. A lista é
 // RECARREGADA a cada abertura do dropdown (@popup-show), então uma moeda nova
 // cadastrada aparece sem precisar de botão de refresh.
-// value = iso (BRL/USD/…), que é o que tblcontratofixacao.moeda guarda.
+// value = codmoeda (FK inteira), que é o que tblcontratofixacao.codmoeda guarda.
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Moeda' },

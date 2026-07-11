@@ -59,10 +59,13 @@ const fixacaoOptions = computed(() =>
     }
   }),
 )
-// Preço por saca na unidade certa: US$ = preço nativo; BRL = líquido (após deduções).
-const precoSc = computed(() =>
-  usd.value ? n(fixacaoSel.value?.preco) : n(fixacaoSel.value?.precoliquido ?? fixacaoSel.value?.precoreal),
-)
+// Preço por saca na unidade certa: US$ = preço nativo; BRL = líquido/saca (liquidobrl/qtd).
+const precoSc = computed(() => {
+  const f = fixacaoSel.value
+  if (!f) return 0
+  if (usd.value) return n(f.preco)
+  return n(f.quantidade) > 0 ? n(f.liquidobrl) / n(f.quantidade) : 0
+})
 // US$ é sempre em SACAS; BRL respeita o modo escolhido.
 const dec = computed(() => (usd.value || form.value.modo === 'SACAS' ? 0 : 2))
 const emSacas = computed(() => usd.value || form.value.modo === 'SACAS')
@@ -71,7 +74,9 @@ const saldoSacasFix = computed(() =>
 )
 // Teto do total a parcelar, na unidade corrente: sacas (US$/SACAS) ou R$ (BRL VALOR).
 const tetoTotal = computed(() =>
-  emSacas.value ? arredonda(saldoSacasFix.value, 0) : arredonda(saldoSacasFix.value * precoSc.value, 2),
+  emSacas.value
+    ? arredonda(saldoSacasFix.value, 0)
+    : arredonda(saldoSacasFix.value * precoSc.value, 2),
 )
 
 function novoForm() {
@@ -396,7 +401,9 @@ async function salvar() {
             :label="form.itens.length > 1 ? 'Salvar parcelas' : 'Salvar'"
             color="primary"
             :loading="salvando"
-            :disable="!somaOk || !form.itens.length || !form.codcontratofixacao || (usd && !form.cotacao)"
+            :disable="
+              !somaOk || !form.itens.length || !form.codcontratofixacao || (usd && !form.cotacao)
+            "
           />
         </q-card-actions>
       </q-form>

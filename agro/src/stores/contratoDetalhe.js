@@ -52,10 +52,10 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
 
   const fixado = computed(() => n(contrato.value?.fixado))
   const afixar = computed(() => contratado.value - fixado.value)
-  // Preço médio ponderado das fixações ativas (FIXO também tem fixação-espelho).
+  // Preço médio R$/saca FIRME (só o câmbio travado; US$ flutuante entra como 0).
   const precoMedio = computed(() => {
     const q = fixacoes.value.reduce((s, f) => s + n(f.quantidade), 0)
-    const v = fixacoes.value.reduce((s, f) => s + n(f.quantidade) * n(f.precoreal), 0)
+    const v = fixacoes.value.reduce((s, f) => s + n(f.totalbrl), 0)
     return q > 0 ? v / q : 0
   })
   // precoMedio é R$/saca; o carregado físico está em sacas derivadas.
@@ -66,20 +66,40 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   const previsto = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valor), 0))
   const pago = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valorrecebido), 0))
 
-  // Valor BRUTO fixado (Σ quantidade × precoreal) = teto financeiro do contrato;
-  // saldo a pagar = teto − previsto (espelha a trava do backend ContratoPagamentoRequest;
-  // a garantia é do servidor, isto é só UX).
-  const valorFixadoBruto = computed(() =>
-    fixacoes.value.reduce((s, f) => s + n(f.quantidade) * n(f.precoreal), 0),
-  )
+  // R$ firme fixado (Σ totalbrl) = câmbio travado + fixações BRL (US$ flutuante = 0).
+  const valorFixadoBruto = computed(() => fixacoes.value.reduce((s, f) => s + n(f.totalbrl), 0))
+  const liquidoBrl = computed(() => fixacoes.value.reduce((s, f) => s + n(f.liquidobrl), 0))
   const saldoPagar = computed(() => Math.max(0, valorFixadoBruto.value - previsto.value))
+
+  // ===== Fixado POR MOEDA (fluxo de caixa: não mistura US$ com R$) =====
+  // Cada linha = uma moeda com o total fixado (na moeda) e o saldo ainda a travar
+  // câmbio. O R$ firme (totalbrl/liquidobrl) soma global; a moeda estrangeira fica
+  // separada por iso. É o "tenho US$ X a receber E R$ Y travado".
+  const SIMBOLOS_MOEDA = { BRL: 'R$', USD: 'US$', EUR: '€' }
+  function simboloMoeda(iso) {
+    return SIMBOLOS_MOEDA[iso] || iso || 'R$'
+  }
+  const fixadoPorMoeda = computed(() => {
+    const m = {}
+    fixacoes.value.forEach((f) => {
+      const iso = f.moeda || 'BRL'
+      if (!m[iso]) m[iso] = { iso, simbolo: simboloMoeda(iso), totalmoeda: 0, saldomoeda: 0 }
+      m[iso].totalmoeda += n(f.totalmoeda)
+      m[iso].saldomoeda += n(f.saldomoeda)
+    })
+    return Object.values(m).filter((x) => x.totalmoeda > 0)
+  })
+  // Só as moedas estrangeiras com saldo de câmbio ainda a travar.
+  const saldoTravarPorMoeda = computed(() =>
+    fixadoPorMoeda.value.filter((x) => x.iso !== 'BRL' && x.saldomoeda > 0.005),
+  )
 
   // ===== Contrato dolarizado (multi-fixação + US$) =====
   // `ehUsd` é a fonte única do predicado "é US$?" (exportada p/ os cards). A parcela
   // acha sua fixação (moeda/preço) por `fixacaoDaParcela`; e o saldo de sacas a
   // parcelar de cada fixação vem pronto do ledger do backend (ContratoFixacaoResource).
   function ehUsd(f) {
-    return !!f && (f.moeda || 'BRL') !== 'BRL'
+    return !!f && (f.estrangeira ?? (f.moeda || 'BRL') !== 'BRL')
   }
 
   // Mapa codcontratofixacao -> fixação (p/ achar a moeda/preço de cada parcela).
@@ -94,8 +114,10 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     return fixacaoPorCod.value[p?.codcontratofixacao] || null
   }
 
+  // Sacas disponíveis da fixação (o ledger de pagamento será refeito; por ora,
+  // a quantidade cheia). TODO: recompor no refactor de pagamentos.
   function saldoSacasFixacao(f) {
-    return n(f?.saldosacas)
+    return n(f?.quantidade)
   }
 
   // "Bate?" — valor carregado x NFs x pago (tolerância de centavos)
@@ -155,6 +177,24 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   // ---- Fixação (exclui aqui; criar/editar passa pelo FixacaoImpostosDialog) ----
   async function excluirFixacao(f) {
     await api.delete(`v1/contrato/${cod.value}/fixacao/${f.codcontratofixacao}`)
+    await carregar()
+  }
+
+  // ---- Travas de câmbio (aninhadas na fixação; recalculam os totais no backend) ----
+  async function salvarCambio(codfixacao, form) {
+    const pk = form.codcontratofixacaocambio
+    const base = `v1/contrato/${cod.value}/fixacao/${codfixacao}/cambio`
+    if (pk) {
+      await api.put(`${base}/${pk}`, form)
+    } else {
+      await api.post(base, form)
+    }
+    await carregar()
+  }
+  async function excluirCambio(codfixacao, c) {
+    await api.delete(
+      `v1/contrato/${cod.value}/fixacao/${codfixacao}/cambio/${c.codcontratofixacaocambio}`,
+    )
     await carregar()
   }
 
@@ -255,6 +295,10 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     previsto,
     pago,
     valorFixadoBruto,
+    liquidoBrl,
+    fixadoPorMoeda,
+    saldoTravarPorMoeda,
+    simboloMoeda,
     saldoPagar,
     difNf,
     difPago,
@@ -270,6 +314,8 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     definirBarter,
     excluirContrato,
     excluirFixacao,
+    salvarCambio,
+    excluirCambio,
     salvarPagamento,
     criarPagamento,
     excluirPagamento,

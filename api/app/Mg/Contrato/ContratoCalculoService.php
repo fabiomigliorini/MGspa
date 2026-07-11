@@ -153,73 +153,36 @@ class ContratoCalculoService extends MgService
     }
 
     /**
-     * Conveniencia: calcula o liquido de um contrato ja persistido a partir das
-     * fixacoes ativas — bruto = media ponderada do precoreal; isencao de FETHAB =
-     * so quando TODAS as fixacoes sao isentas (mix -> deduz). Sem fixacao, bruto 0.
-     * Data = fim do embarque, senao hoje; Funrural pelo regime da filial produtora.
+     * Agregado do contrato a partir dos totais JÁ GRAVADOS nas fixações
+     * (totalbrl/liquidobrl/saldomoeda — recalculados por ContratoFixacaoService).
+     * Não recalcula imposto aqui: só soma. R$/saca médios são sobre TODAS as
+     * sacas (a fatia de US$ ainda flutuante entra como R$ 0 até travar o câmbio).
      */
     public static function calcularDoContrato(Contrato $contrato): array
     {
         $fixacoes = $contrato->relationLoaded('ContratoFixacaoS')
             ? $contrato->ContratoFixacaoS->whereNull('inativo')
             : $contrato->ContratoFixacaoS()->whereNull('inativo')->get();
+
         $qtd = (float) $fixacoes->sum('quantidade');
-        $bruto = $qtd > 0
-            ? (float) $fixacoes->sum(fn($f) => (float) $f->quantidade * (float) $f->precoreal) / $qtd
-            : 0.0;
-        $isentofethab = $fixacoes->isNotEmpty()
-            && $fixacoes->every(fn($f) => (bool) $f->isentofethab);
+        $totalbrl = (float) $fixacoes->sum('totalbrl');
+        $liquidobrl = (float) $fixacoes->sum('liquidobrl');
+        $saldomoeda = (float) $fixacoes->sum('saldomoeda');
 
-        $filial = $contrato->codfilial ? $contrato->Filial : null;
-        $funruralvenda = $filial ? (bool) $filial->funruralvenda : false;
+        $bruto = $qtd > 0 ? $totalbrl / $qtd : 0.0;     // R$/saca firme
+        $liquido = $qtd > 0 ? $liquidobrl / $qtd : 0.0;
 
-        $calc = static::calcular([
+        return [
             'codcultura' => (int) $contrato->codcultura,
-            'bruto' => $bruto,
-            'data' => $contrato->embarquefim ?: ($contrato->dataembarque ?: null),
-            'isentofethab' => $isentofethab,
-            'funruralvenda' => $funruralvenda,
-        ]);
-
-        // Se as fixações têm o snapshot de impostos travado, o líquido do
-        // contrato é a média ponderada do líquido EFETIVO de cada fixação (o que
-        // o operador travou no modal), não o recalculado pela config. Mantém o
-        // KPI (liquidoSc) coerente com o que aparece em cada linha de fixação.
-        if ($qtd > 0 && $fixacoes->contains(fn($f) => $f->precoliquido !== null)) {
-            $liqPond = (float) $fixacoes->sum(function ($f) use ($contrato, $funruralvenda) {
-                $liq = $f->precoliquido !== null
-                    ? (float) $f->precoliquido
-                    : static::liquidoFixacao($f, $contrato, $funruralvenda);
-                return (float) $f->quantidade * $liq;
-            }) / $qtd;
-            $calc['liquido'] = round($liqPond, 4);
-            $calc['totaldeducao'] = round($calc['bruto'] - $liqPond, 4);
-            $calc['percentualdeducao'] = $calc['bruto'] > 0
-                ? round($calc['totaldeducao'] / $calc['bruto'] * 100, 4)
-                : 0;
-        }
-
-        return $calc;
-    }
-
-    /**
-     * Líquido on-the-fly de uma fixação sem snapshot (config + competência da
-     * UPF na data da fixação). Usado no agregado do contrato pra ponderar com as
-     * fixações que já têm o snapshot travado.
-     */
-    protected static function liquidoFixacao(
-        ContratoFixacao $f,
-        Contrato $contrato,
-        bool $funruralvenda
-    ): float {
-        $calc = static::calcular([
-            'codcultura' => (int) $contrato->codcultura,
-            'bruto' => (float) $f->precoreal,
-            'data' => $f->data,
-            'isentofethab' => (bool) $contrato->isentofethab,
-            'funruralvenda' => $funruralvenda,
-        ]);
-        return (float) $calc['liquido'];
+            'bruto' => round($bruto, 4),
+            'liquido' => round($liquido, 4),
+            'totaldeducao' => round($bruto - $liquido, 4),
+            'percentualdeducao' => $bruto > 0 ? round(($bruto - $liquido) / $bruto * 100, 4) : 0,
+            // Agregados em R$ (firme) + saldo em moeda a travar (fluxo de caixa).
+            'totalbrl' => round($totalbrl, 2),
+            'liquidobrl' => round($liquidobrl, 2),
+            'saldomoeda' => round($saldomoeda, 2),
+        ];
     }
 
     /**

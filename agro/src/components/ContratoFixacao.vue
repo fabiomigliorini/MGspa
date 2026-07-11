@@ -8,16 +8,18 @@ import { formataNumero, formataReal, formataData } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import FixacaoImpostosDialog from 'components/FixacaoImpostosDialog.vue'
+import CambioDialog from 'components/CambioDialog.vue'
 
-// Card "Fixação de preço". Especialista em fixar o preço das sacas do contrato:
-// lista as fixações ativas, abre o FixacaoImpostosDialog (preço + impostos →
-// líquido snapshot) e exclui. Lê tudo do store da tela (fixado/a fixar/preço
-// médio são getters do store) e usa as actions p/ persistir.
+// Card "Fixação de preço". Lista as fixações ativas; cada fixação fixa o preço
+// (na sua moeda) e, quando dolarizada, TRAVA o câmbio em fatias (tabela filha).
+// Lê tudo do store da tela; os 4 totais (totalmoeda/saldomoeda/totalbrl/
+// liquidobrl) vêm calculados do backend.
 const $q = useQuasar()
 const store = useContratoDetalheStore()
 const { contrato, cod, fixacoes, afixar } = storeToRefs(store)
 
-const ehUsd = store.ehUsd // predicado "é US$?" — fonte única no store
+const ehUsd = store.ehUsd
+const simbolo = store.simboloMoeda
 
 function fmt(v, dec = 0) {
   return formataNumero(v, dec)
@@ -25,6 +27,16 @@ function fmt(v, dec = 0) {
 const rs = formataReal
 const fmtData = formataData
 
+// R$/saca líquido firme (para o rótulo do BRL).
+function liquidoSc(f) {
+  return f.quantidade > 0 ? f.liquidobrl / f.quantidade : 0
+}
+// Travas de câmbio ativas da fixação.
+function travas(f) {
+  return (f.ContratoFixacaoCambioS || []).filter((c) => !c.inativo)
+}
+
+// ---- Fixação (preço + impostos) ----
 const impostosDialog = ref(false)
 const impostosFixacao = ref(null)
 function novaFixacao() {
@@ -50,6 +62,36 @@ function excluirFixacao(f) {
     }
   })
 }
+
+// ---- Trava de câmbio ----
+const cambioDialog = ref(false)
+const cambioFixacao = ref(null)
+const cambioEdit = ref(null)
+function travarCambio(f) {
+  cambioFixacao.value = f
+  cambioEdit.value = null
+  cambioDialog.value = true
+}
+function editarCambio(f, c) {
+  cambioFixacao.value = f
+  cambioEdit.value = c
+  cambioDialog.value = true
+}
+function excluirCambio(f, c) {
+  $q.dialog({
+    title: 'Excluir',
+    message: 'Excluir esta trava de câmbio?',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await store.excluirCambio(f.codcontratofixacao, c)
+      notifySuccess('Excluído!')
+    } catch (e) {
+      notifyError(e)
+    }
+  })
+}
 </script>
 
 <template>
@@ -69,38 +111,67 @@ function excluirFixacao(f) {
       <q-item v-for="f in fixacoes" :key="f.codcontratofixacao">
         <q-item-section>
           <q-item-label>
-            {{ fmt(f.quantidade) }} sc ·
-            <!-- US$ dolarizado: mostra o preço em dólar (precoreal é R$ e fica null). -->
-            <template v-if="f.moeda && f.moeda !== 'BRL'">US$ {{ fmt(f.preco, 2) }}/sc</template>
-            <template v-else>
-              {{ rs(f.precoreal) }}/sc
-              <span v-if="f.precoliquido != null" class="text-green-8">
-                · líq {{ rs(f.precoliquido) }}</span
-              >
-            </template>
-            <q-badge v-if="f.isentofethab" color="teal-5" label="isento FETHAB" class="q-ml-xs" />
+            {{ fmt(f.quantidade) }} sc · {{ simbolo(f.moeda) }} {{ fmt(f.preco, 2) }}/sc
+            <span v-if="!ehUsd(f)" class="text-green-8">· líq {{ rs(liquidoSc(f)) }}/sc</span>
           </q-item-label>
           <q-item-label caption>
             {{ fmtData(f.data) }}
-            <!-- Cotação só aparece em fixação legada que já a travou (dolar != null). -->
-            <span v-if="f.moeda && f.moeda !== 'BRL' && f.dolar"
-              >· cotação {{ fmt(f.dolar, 4) }}</span
-            >
+            <span v-if="f.datavencimento">· vence {{ fmtData(f.datavencimento) }}</span>
           </q-item-label>
-          <!-- Ledger: quanto DESTA fixação já foi recebido e o saldo, na sua moeda. -->
-          <q-item-label caption class="text-blue-grey-7">
-            <template v-if="ehUsd(f)">
-              Recebido US$ {{ fmt(f.recebidousd, 2) }}<span v-if="f.cotacaomedia">
-                @ {{ fmt(f.cotacaomedia, 4) }} → {{ rs(f.recebido) }}</span
+
+          <!-- Câmbio (só fixação dolarizada): status + travas + botão travar -->
+          <template v-if="ehUsd(f)">
+            <q-item-label caption class="text-blue-grey-8 q-mt-xs">
+              Fixado {{ simbolo(f.moeda) }} {{ fmt(f.totalmoeda, 2) }} · travado
+              {{ rs(f.totalbrl) }}
+              <span v-if="f.saldomoeda > 0.005">
+                · falta travar {{ simbolo(f.moeda) }} {{ fmt(f.saldomoeda, 2) }}</span
               >
-              · A receber US$ {{ fmt(f.areceber, 2) }}
-            </template>
-            <template v-else>
-              Recebido {{ rs(f.recebido) }} · A receber {{ rs(f.areceber) }}
-            </template>
-          </q-item-label>
+              <span v-else class="text-green-8">· câmbio 100% travado</span>
+            </q-item-label>
+
+            <div v-for="c in travas(f)" :key="c.codcontratofixacaocambio" class="row items-center">
+              <q-item-label caption class="col">
+                <q-icon name="lock" size="12px" class="q-mr-xs" />
+                {{ fmtData(c.data) }} · {{ simbolo(f.moeda) }} {{ fmt(c.valor, 2) }} @
+                {{ fmt(c.cotacao, 4) }} → {{ rs(c.valorbrl) }}
+              </q-item-label>
+              <q-btn
+                flat
+                dense
+                round
+                size="xs"
+                color="grey-6"
+                icon="edit"
+                @click="editarCambio(f, c)"
+              />
+              <q-btn
+                flat
+                dense
+                round
+                size="xs"
+                color="grey-6"
+                icon="delete"
+                @click="excluirCambio(f, c)"
+              />
+            </div>
+
+            <div v-if="f.saldomoeda > 0.005" class="q-mt-xs">
+              <q-btn
+                flat
+                dense
+                no-caps
+                size="sm"
+                color="primary"
+                icon="lock"
+                label="Travar câmbio"
+                @click="travarCambio(f)"
+              />
+            </div>
+          </template>
         </q-item-section>
-        <q-item-section side>
+
+        <q-item-section side top>
           <div class="row items-center no-wrap">
             <MgInfoCriacao :registro="f" />
             <q-btn
@@ -129,14 +200,21 @@ function excluirFixacao(f) {
       </MgEmptyState>
     </q-list>
 
-    <!-- Modal Fixação (valores + impostos). afixar = saldo a fixar (sc) p/ o
-         dialog avisar antes; o backend é quem garante (ContratoFixacaoRequest). -->
+    <!-- Modal Fixação (valores + impostos). afixar = saldo a fixar (sc). -->
     <FixacaoImpostosDialog
       v-model="impostosDialog"
       :cod="cod"
       :contrato="contrato"
       :fixacao="impostosFixacao"
       :afixar="afixar"
+      @saved="store.carregar()"
+    />
+
+    <!-- Modal Travar câmbio (fatia do valor em moeda estrangeira @ cotação). -->
+    <CambioDialog
+      v-model="cambioDialog"
+      :fixacao="cambioFixacao || {}"
+      :cambio="cambioEdit"
       @saved="store.carregar()"
     />
   </q-card>
