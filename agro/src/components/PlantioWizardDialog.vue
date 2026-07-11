@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { PALETA_TALHAO, corTalhao } from 'src/utils/coresTalhao'
-import { formataDataIso } from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectCor from '@components/MgSelectCor.vue'
@@ -106,11 +105,8 @@ function onShow() {
   // entre sessões devolve o mesmo sc/ha).
   const a = Number(form.value.areaplantada) || 0
   expectativaha.value = a > 0 ? (Number(form.value.expectativasacas) || 0) / a : 0
-  // Default = hoje só em plantio novo. Ao editar, preserva o que veio do banco
-  // (inclusive nulo) pra não carimbar a data de hoje num registro antigo.
-  if (props.cad.isNovo && !form.value.dataplantio) {
-    form.value.dataplantio = formataDataIso(new Date())
-  }
+  // Data do plantio nunca vem preenchida por padrão — o usuário informa sempre
+  // (campo obrigatório via regra e backend).
   passo.value = props.cad.isNovo ? (form.value.codfazenda ? 2 : 1) : 3
 }
 
