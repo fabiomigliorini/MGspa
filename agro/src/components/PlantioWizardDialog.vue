@@ -156,6 +156,7 @@ function salvar() {
     codvariedade: f.codvariedade,
     areaplantada: f.areaplantada,
     expectativasacas: f.expectativasacas,
+    hacolhido: f.hacolhido,
     geometria: f.geometria,
     cor: f.cor,
     latitude: f.latitude,

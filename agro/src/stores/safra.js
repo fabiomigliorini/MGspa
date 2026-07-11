@@ -161,6 +161,20 @@ export const useSafraStore = defineStore('safra', () => {
     })
   }
 
+  // Grava só o ha colhido (slider do card) — patcha o plantio local sem recarregar tudo.
+  async function salvarHacolhido(codsafra, codplantio, hacolhido) {
+    try {
+      const { data } = await api.post(`v1/safra/${codsafra}/plantio/${codplantio}/hacolhido`, {
+        hacolhido,
+      })
+      const novo = data.data ?? data
+      const i = plantios.value.findIndex((p) => p.codplantio === codplantio)
+      if (i >= 0) plantios.value[i] = novo
+    } catch (e) {
+      notifyError(e)
+    }
+  }
+
   return {
     // safra (raiz)
     safras,
@@ -186,6 +200,7 @@ export const useSafraStore = defineStore('safra', () => {
     novoPlantio,
     editarPlantio,
     salvarPlantio,
+    salvarHacolhido,
     inativarPlantio,
     excluirPlantio,
   }

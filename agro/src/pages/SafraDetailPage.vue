@@ -90,31 +90,19 @@ const linhas = computed(() =>
   }),
 )
 
-// KPIs globais da safra (somando todas as fazendas).
-const totalArea = computed(() =>
-  linhas.value.reduce((s, l) => s + (Number(l.areaplantada) || 0), 0),
-)
-const totalKg = computed(() => linhas.value.reduce((s, l) => s + l.kg, 0))
-const totalSacas = computed(() => totalKg.value / pesosaca.value)
-const prodMedia = computed(() => (totalArea.value > 0 ? totalSacas.value / totalArea.value : 0))
-const totalExpectativa = computed(() => linhas.value.reduce((s, l) => s + l.expectativa, 0))
-const progressoSafra = computed(() =>
-  totalExpectativa.value > 0 ? Math.min(1, totalSacas.value / totalExpectativa.value) : 0,
-)
-
-// KPIs comerciais (rollup dos contratos da safra, do backend). Os saldos cruzam
-// o lado comercial (online) com a produção (offline): disponível p/ vender =
-// expectativa − contratado; saldo no silo = colhido − entregue.
-// Unidade de trabalho = kg; sacas derivadas (entreguesc) vêm somadas por contrato.
-const contratado = computed(() => Number(comercial.value?.contratado) || 0) // sc
-const contratadokg = computed(() => Number(comercial.value?.contratadokg) || 0)
-const entreguekg = computed(() => Number(comercial.value?.entreguekg) || 0)
-const entreguesc = computed(() => Number(comercial.value?.entreguesc) || 0)
-const fixo = computed(() => Number(comercial.value?.fixo) || 0)
+// KPIs da safra — TODOS prontos do backend (SafraService::resumoComercial):
+// comercial (contratos VENDA) + agronômico (plantios, com produção/produtividade).
+const contratado = computed(() => Number(comercial.value?.contratado) || 0)
+const fixado = computed(() => Number(comercial.value?.fixado) || 0)
 const afixar = computed(() => Number(comercial.value?.afixar) || 0)
-const disponivel = computed(() => totalExpectativa.value - contratado.value) // sc
-const saldoSiloKg = computed(() => totalKg.value - entreguekg.value)
-const saldoEmbarcarKg = computed(() => Number(comercial.value?.saldoaembarcarkg) || 0)
+const disponivel = computed(() => Number(comercial.value?.disponivel) || 0)
+const areaplantada = computed(() => Number(comercial.value?.areaplantada) || 0)
+// Expectativa = PRODUÇÃO viva (regra de 3): recalcula conforme o colhido/ha colhido.
+// Sem colheita = expectativa plantada; colhendo = projeção pela produtividade real.
+const producao = computed(() => Number(comercial.value?.producao) || 0)
+const colhido = computed(() => Number(comercial.value?.colhido) || 0)
+const prodColhido = computed(() => Number(comercial.value?.produtividadecolhido) || 0)
+const progresso = computed(() => Number(comercial.value?.progressocolheita) || 0)
 
 // Um card por fazenda que tem plantio nesta safra (mapa + lista + resultado).
 const porFazenda = computed(() => {
@@ -139,11 +127,19 @@ const porFazenda = computed(() => {
   }
   return Object.values(mapa).map((g) => {
     const sacas = g.kg / pesosaca.value
+    // Ordem estável dos cards: variedade (alfabética), depois codplantio.
+    const plantios = [...g.plantios].sort((a, b) => {
+      const va = (a.Variedade?.variedade || '').toLowerCase()
+      const vb = (b.Variedade?.variedade || '').toLowerCase()
+      if (va !== vb) return va < vb ? -1 : 1
+      return (a.codplantio || 0) - (b.codplantio || 0)
+    })
     return {
       ...g,
+      plantios,
       sacas,
       produtividade: g.area > 0 ? sacas / g.area : 0,
-      comGeo: g.plantios.filter((p) => p.geometria),
+      comGeo: plantios.filter((p) => p.geometria),
       progresso: g.expectativa > 0 ? Math.min(1, sacas / g.expectativa) : 0,
     }
   })
@@ -201,6 +197,13 @@ function editarPlantio(p) {
 function selecionarPlantio(codplantio) {
   const p = plantios.value.find((x) => x.codplantio === codplantio)
   if (p) editarPlantio(p)
+}
+
+// Slider "ha colhido" no card do plantio: grava o hacolhido e refresca os KPIs
+// (produtividade / produção / disponível vêm prontos do backend).
+async function salvarHacolhido(l, v) {
+  await store.salvarHacolhido(codsafra, l.codplantio, v)
+  await recarregarComercial()
 }
 
 // Safra — edição/ativação/exclusão no cabeçalho do detalhe (a lista só navega).
@@ -295,133 +298,67 @@ onMounted(async () => {
         </q-card-section>
       </q-card>
 
-      <!-- KPIs globais (todas as fazendas desta safra) -->
-      <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-6 col-md-3">
-          <q-card flat bordered>
-            <q-card-section>
-              <div class="text-caption text-grey-7">Área plantada</div>
-              <div class="text-h6">{{ fmt(totalArea, 1) }} ha</div>
-            </q-card-section>
-          </q-card>
-        </div>
-        <div class="col-6 col-md-3">
-          <q-card flat bordered>
-            <q-card-section>
-              <div class="text-caption text-grey-7">Colhido</div>
-              <div class="text-h6">{{ fmt(totalSacas) }} sc</div>
-            </q-card-section>
-          </q-card>
-        </div>
-        <div class="col-6 col-md-3">
-          <q-card flat bordered>
-            <q-card-section>
-              <div class="text-caption text-grey-7">Produtividade média</div>
-              <div class="text-h6 text-green-8">{{ fmt(prodMedia, 1) }} sc/ha</div>
-            </q-card-section>
-          </q-card>
-        </div>
-        <div class="col-6 col-md-3">
-          <q-card flat bordered>
-            <q-card-section>
-              <div class="text-caption text-grey-7">Expectativa</div>
-              <div class="text-h6">{{ fmt(totalExpectativa) }} sc</div>
-            </q-card-section>
-          </q-card>
-        </div>
-      </div>
-
-      <!-- Progresso da colheita da safra (colhido ÷ expectativa) -->
-      <q-card v-if="totalExpectativa > 0" flat bordered class="q-mb-md">
-        <q-card-section>
-          <div class="row items-center no-wrap q-mb-xs">
-            <div class="col text-subtitle2 text-grey-8">Progresso da colheita</div>
-            <div class="text-subtitle2 text-weight-medium">
-              {{ fmt(totalSacas) }} / {{ fmt(totalExpectativa) }} sc
-              <span class="text-grey-7">· {{ fmt(progressoSafra * 100) }}%</span>
-            </div>
-          </div>
-          <q-linear-progress
-            :value="progressoSafra"
-            size="18px"
-            color="green-6"
-            track-color="grey-3"
-            rounded
-            stripe
-          />
-        </q-card-section>
-      </q-card>
-
-      <!-- KPIs comerciais (contratos da safra) -->
+      <!-- ===== Comercial: KPIs (prontos do backend) + lista de contratos ===== -->
       <template v-if="online && comercial">
-        <div class="text-subtitle1 text-weight-medium q-mb-sm">Comercial</div>
         <div class="row q-col-gutter-md q-mb-md">
           <div class="col-6 col-md-3">
-            <q-card flat bordered>
+            <q-card flat bordered class="full-height">
               <q-card-section>
                 <div class="text-caption text-grey-7">Contratado</div>
-                <div class="text-h6">{{ fmt(contratadokg) }} kg</div>
-                <div class="text-caption text-grey-6">
-                  ≈ {{ fmt(contratado) }} sc · Disponível {{ fmt(disponivel) }} sc
-                </div>
+                <div class="text-h6">{{ fmt(contratado) }} sc</div>
               </q-card-section>
             </q-card>
           </div>
           <div class="col-6 col-md-3">
-            <q-card flat bordered>
+            <q-card flat bordered class="full-height">
               <q-card-section>
                 <div class="text-caption text-grey-7">Fixado</div>
-                <div class="text-h6">{{ fmt(fixo) }} sc</div>
-                <div class="text-caption text-grey-6">A fixar {{ fmt(afixar) }} sc</div>
+                <div class="text-h6">{{ fmt(fixado) }} sc</div>
               </q-card-section>
             </q-card>
           </div>
           <div class="col-6 col-md-3">
-            <q-card flat bordered>
+            <q-card flat bordered class="full-height">
               <q-card-section>
-                <div class="text-caption text-grey-7">Entregue</div>
-                <div class="text-h6">{{ fmt(entreguekg) }} kg</div>
-                <div class="text-caption text-grey-6">
-                  ≈ {{ fmt(entreguesc) }} sc · Saldo a embarcar {{ fmt(saldoEmbarcarKg) }} kg
+                <div class="text-caption text-grey-7">A fixar</div>
+                <div class="text-h6" :class="afixar > 0 ? 'text-orange-8' : 'text-grey-6'">
+                  {{ fmt(afixar) }} sc
                 </div>
               </q-card-section>
             </q-card>
           </div>
           <div class="col-6 col-md-3">
-            <q-card flat bordered>
+            <q-card flat bordered class="full-height">
               <q-card-section>
-                <div class="text-caption text-grey-7">Saldo no silo</div>
-                <div class="text-h6 text-amber-9">{{ fmt(saldoSiloKg) }} kg</div>
-                <div class="text-caption text-grey-6">
-                  ≈ {{ fmt(saldoSiloKg / pesosaca, 0) }} sc · colhido − entregue
-                </div>
+                <div class="text-caption text-grey-7">Disponível p/ vender</div>
+                <div class="text-h6 text-green-8">{{ fmt(disponivel) }} sc</div>
               </q-card-section>
             </q-card>
           </div>
         </div>
 
-        <!-- Preço médio ponderado por moeda (barter fora) -->
+        <!-- Preço médio: R$ pelo LÍQUIDO; moeda estrangeira pelo bruto ainda não travado -->
         <q-card
-          v-if="comercial.precomediobrl || comercial.precomediousd"
+          v-if="comercial.precomediobrl != null || comercial.precomediousd != null"
           flat
           bordered
           class="q-mb-md"
         >
           <q-card-section class="row q-col-gutter-xl items-center">
-            <div v-if="comercial.precomediobrl" class="col-auto">
-              <div class="text-caption text-grey-7">Preço médio R$</div>
+            <div v-if="comercial.precomediobrl != null" class="col-auto">
+              <div class="text-caption text-grey-7">Preço médio R$ (líquido)</div>
               <div class="text-h6">{{ rs(comercial.precomediobrl) }} <small>/sc</small></div>
             </div>
-            <div v-if="comercial.precomediousd" class="col-auto">
-              <div class="text-caption text-grey-7">Preço médio US$</div>
+            <div v-if="comercial.precomediousd != null" class="col-auto">
+              <div class="text-caption text-grey-7">Preço médio US$ (a travar)</div>
               <div class="text-h6">
                 US$ {{ fmt(comercial.precomediousd, 2) }} <small>/sc</small>
               </div>
-              <div class="text-caption text-grey-6">dólar médio {{ rs(comercial.dolarmedio) }}</div>
             </div>
           </q-card-section>
         </q-card>
       </template>
+
       <ContratosSafra
         :codsafra="codsafra"
         :codcultura="codcultura"
@@ -429,6 +366,61 @@ onMounted(async () => {
         class="q-mb-md"
         @changed="recarregarComercial"
       />
+
+      <!-- ===== Agronômico: KPIs (prontos do backend) + plantios ===== -->
+      <div v-if="comercial" class="row q-col-gutter-md q-mb-md">
+        <div class="col-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Área plantada</div>
+              <div class="text-h6">{{ fmt(areaplantada, 1) }} ha</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Expectativa</div>
+              <div class="text-h6">{{ fmt(producao) }} sc</div>
+              <div class="text-caption text-grey-6">
+                {{ fmt(areaplantada > 0 ? producao / areaplantada : 0, 1) }} sc/ha
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Colhido</div>
+              <div class="text-h6">{{ fmt(colhido) }} sc</div>
+              <div v-if="prodColhido > 0" class="text-caption text-green-8">
+                {{ fmt(prodColhido, 1) }} sc/ha
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section class="row items-center no-wrap">
+              <div class="col">
+                <div class="text-caption text-grey-7">Colheita</div>
+                <div class="text-caption text-grey-6">{{ fmt(progresso * 100) }}% da área</div>
+              </div>
+              <q-circular-progress
+                :value="progresso * 100"
+                size="52px"
+                :thickness="0.18"
+                color="green-6"
+                track-color="grey-3"
+                show-value
+                class="text-caption text-grey-8"
+              >
+                {{ fmt(progresso * 100) }}%
+              </q-circular-progress>
+            </q-card-section>
+          </q-card>
+        </div>
+      </div>
 
       <!-- Título da seção + adicionar (escolhe a fazenda no dialog) -->
       <div class="row items-center q-mb-sm">
@@ -485,6 +477,7 @@ onMounted(async () => {
                 :talhoes="g.comGeo"
                 id-key="codplantio"
                 height="300px"
+                estatico
                 @select="selecionarPlantio"
               />
               <q-separator v-if="g.comGeo.length" />
@@ -581,6 +574,39 @@ onMounted(async () => {
                         </div>
                       </q-item-section>
                     </q-item>
+
+                    <!-- Ha colhido (slider): dirige produtividade real / produção / disponível -->
+                    <q-card-section class="q-pt-none q-pb-sm">
+                      <div class="row items-center no-wrap text-caption q-mb-xs">
+                        <span class="col text-grey-7">Colhido</span>
+                        <span
+                          :class="
+                            Number(l.hacolhido) >= Number(l.areaplantada) &&
+                            Number(l.areaplantada) > 0
+                              ? 'text-green-8 text-weight-medium'
+                              : 'text-grey-8'
+                          "
+                        >
+                          {{ fmt(l.hacolhido, 1) }} / {{ fmt(l.areaplantada, 1) }} ha<span
+                            v-if="
+                              Number(l.hacolhido) >= Number(l.areaplantada) &&
+                              Number(l.areaplantada) > 0
+                            "
+                          >
+                            · finalizado</span
+                          >
+                        </span>
+                      </div>
+                      <q-slider
+                        :model-value="Number(l.hacolhido) || 0"
+                        :min="0"
+                        :max="Number(l.areaplantada) || 1"
+                        :step="0.01"
+                        color="green-6"
+                        track-color="grey-3"
+                        @change="(v) => salvarHacolhido(l, v)"
+                      />
+                    </q-card-section>
                   </q-card>
                 </div>
               </div>

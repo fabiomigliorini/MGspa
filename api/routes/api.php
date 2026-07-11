@@ -396,6 +396,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Plantio aninhado na safra: safra/{codsafra}/plantio
     Route::post('safra/{codsafra}/plantio/{codplantio}/inativo', [\Mg\Fazenda\PlantioController::class, 'inativar']);
     Route::delete('safra/{codsafra}/plantio/{codplantio}/inativo', [\Mg\Fazenda\PlantioController::class, 'ativar']);
+    Route::post('safra/{codsafra}/plantio/{codplantio}/hacolhido', [\Mg\Fazenda\PlantioController::class, 'hacolhido']);
     Route::apiResource('safra.plantio', \Mg\Fazenda\PlantioController::class)->parameters(['safra' => 'codsafra', 'plantio' => 'codplantio']);
 
     // Carga unificada (recebimento/expedicao/transferencia) — Mg\Grao, offline (uuid).

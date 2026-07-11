@@ -50,6 +50,19 @@ class PlantioController extends MgController
         return new PlantioResource($model->fresh(static::WITH));
     }
 
+    /**
+     * Grava só o `hacolhido` (ha já colhidos) — usado pelo slider do card, sem
+     * passar pela validação do plantio inteiro. Dirige produtividade e produção.
+     */
+    public function hacolhido(Request $request, $codsafra, $codplantio)
+    {
+        $request->validate(['hacolhido' => ['nullable', 'numeric', 'gte:0']]);
+        $model = $this->buscar($codsafra, $codplantio);
+        $model->hacolhido = $request->input('hacolhido');
+        $model->save();
+        return new PlantioResource($model->fresh(static::WITH));
+    }
+
     public function destroy($codsafra, $codplantio)
     {
         $plantio = $this->buscar($codsafra, $codplantio);

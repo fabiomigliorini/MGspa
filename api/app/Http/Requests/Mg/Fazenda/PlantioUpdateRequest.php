@@ -46,6 +46,7 @@ class PlantioUpdateRequest extends FormRequest
             'dataplantio' => ['required', 'date', "after_or_equal:$dataMin", "before_or_equal:$dataMax"],
             'areaplantada' => ['required', 'numeric', 'gt:0'],
             'expectativasacas' => ['nullable', 'numeric', 'gte:0'],
+            'hacolhido' => ['nullable', 'numeric', 'gte:0'], // ha já colhidos (produtividade/produção)
             'geometria' => ['nullable', 'array'],
             'cor' => ['nullable', 'string', 'max:9'],
             'latitude' => ['nullable', 'numeric'],
