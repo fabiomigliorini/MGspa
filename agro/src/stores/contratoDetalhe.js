@@ -25,6 +25,10 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   // o embarque grava kg. Ponte: pesosaca da cultura (default 60).
   const pesosaca = computed(() => n(contrato.value?.pesosaca) || 60)
   const volumeemaberto = computed(() => !!contrato.value?.volumeemaberto)
+  // Contrato barter = troca de insumos por grão (settlement em insumos): fixação e
+  // parcelas viram opcionais e nenhum saldo é cobrado como pendência. O flag vive
+  // no contrato (tblcontrato.barter); o tipo derivado reflete BARTER.
+  const barter = computed(() => !!contrato.value?.barter)
   const contratado = computed(() => n(contrato.value?.quantidade)) // sc negociadas
   const contratadokg = computed(() => n(contrato.value?.contratadokg))
   const carregadokg = computed(() => n(contrato.value?.carregadokg))
@@ -70,6 +74,30 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   )
   const saldoPagar = computed(() => Math.max(0, valorFixadoBruto.value - previsto.value))
 
+  // ===== Contrato dolarizado (multi-fixação + US$) =====
+  // `ehUsd` é a fonte única do predicado "é US$?" (exportada p/ os cards). A parcela
+  // acha sua fixação (moeda/preço) por `fixacaoDaParcela`; e o saldo de sacas a
+  // parcelar de cada fixação vem pronto do ledger do backend (ContratoFixacaoResource).
+  function ehUsd(f) {
+    return !!f && (f.moeda || 'BRL') !== 'BRL'
+  }
+
+  // Mapa codcontratofixacao -> fixação (p/ achar a moeda/preço de cada parcela).
+  const fixacaoPorCod = computed(() => {
+    const m = {}
+    fixacoes.value.forEach((f) => {
+      m[f.codcontratofixacao] = f
+    })
+    return m
+  })
+  function fixacaoDaParcela(p) {
+    return fixacaoPorCod.value[p?.codcontratofixacao] || null
+  }
+
+  function saldoSacasFixacao(f) {
+    return n(f?.saldosacas)
+  }
+
   // "Bate?" — valor carregado x NFs x pago (tolerância de centavos)
   const difNf = computed(() => valornf.value - valorCarregado.value)
   const difPago = computed(() => pago.value - valornf.value)
@@ -110,6 +138,16 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     }
     await carregar()
   }
+  // Liga/desliga barter (settlement em insumos). Espelha alternarInativo: POST
+  // liga / DELETE desliga; muda 1 campo sem reenviar o contrato inteiro.
+  async function definirBarter(valor) {
+    if (valor) {
+      await api.post(`v1/contrato/${cod.value}/barter`)
+    } else {
+      await api.delete(`v1/contrato/${cod.value}/barter`)
+    }
+    await carregar()
+  }
   async function excluirContrato() {
     await api.delete(`v1/contrato/${cod.value}`)
   }
@@ -142,7 +180,9 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   async function confirmarRecebimento(form) {
     await api.post(`v1/contrato/${cod.value}/pagamento/${form.codcontratopagamento}/confirmar`, {
       datarecebido: form.datarecebido,
+      // US$: o servidor computa valorrecebido a partir da cotação; BRL manda o valor.
       valorrecebido: form.valorrecebido,
+      cotacaorecebido: form.cotacaorecebido,
       codportador: form.codportador,
     })
     await carregar()
@@ -196,6 +236,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     // getters
     pesosaca,
     volumeemaberto,
+    barter,
     contratado,
     contratadokg,
     carregadokg,
@@ -218,10 +259,15 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     difNf,
     difPago,
     bate,
+    // contrato dolarizado (predicado + helpers de fixação por parcela)
+    ehUsd,
+    fixacaoDaParcela,
+    saldoSacasFixacao,
     // actions
     carregar,
     carregarAnexos,
     alternarInativo,
+    definirBarter,
     excluirContrato,
     excluirFixacao,
     salvarPagamento,

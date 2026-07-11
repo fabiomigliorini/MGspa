@@ -107,7 +107,10 @@ class ContratoResource extends Resource
 
     /**
      * Tipo derivado (a coluna `tipo` deixou de existir):
-     *   - BARTER: contrato tem pagamento com forma=BARTER (settlement em insumos)
+     *   - BARTER: contrato marcado como barter (flag) OU com pagamento
+     *             forma=BARTER (settlement em insumos). O flag permite declarar
+     *             barter sem exigir parcela; `bartercount` fica como fallback
+     *             p/ contratos legados que só têm a parcela barter.
      *   - FIXO:   quantidade definida e já fixada por completo
      *   - FIXAR:  o resto (fixa aos poucos, ou volume em aberto)
      * Depende de `bartercount` (withCount) e `fixado` (withSum) — ambos
@@ -115,7 +118,7 @@ class ContratoResource extends Resource
      */
     protected function tipoDerivado(bool $emaberto): string
     {
-        if ((int) $this->bartercount > 0) {
+        if ((bool) $this->barter || (int) $this->bartercount > 0) {
             return 'BARTER';
         }
         if (!$emaberto && (float) $this->fixado >= (float) $this->quantidade) {

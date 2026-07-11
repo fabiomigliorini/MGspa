@@ -133,36 +133,36 @@ onMounted(() => {
               <q-item-label v-if="c.contrato" caption class="text-overline">
                 {{ c.contrato }}
               </q-item-label>
-              <!-- Título: com quem o contrato foi feito (comprador) -->
-              <q-item-label class="text-subtitle1 text-weight-medium">
-                {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}
+              <!-- Título: contraparte + modo do contrato (chip) ao lado -->
+              <q-item-label class="text-subtitle1 text-weight-medium row items-center no-wrap">
+                <span class="ellipsis">
+                  {{ c.Pessoa?.fantasia || c.Pessoa?.pessoa || '—' }}
+                </span>
+                <q-chip
+                  dense
+                  square
+                  :color="corTipo[c.tipo] || 'grey-7'"
+                  text-color="white"
+                  :label="c.tipo"
+                  class="q-ml-sm q-my-none"
+                />
               </q-item-label>
-              <!-- Barra de entrega em kg (+ sacas) com o modo do contrato ao lado -->
+              <!-- Barra de entrega, total só em sacas (mesmo cadastrado em kg):
+                   com teto = carregado / contratado SC; em aberto = só carregado. -->
               <q-item-label class="q-mt-sm">
+                <!-- Sem limite: barra cheia riscada (estática, sem loop); com
+                     teto: progresso real da entrega. -->
                 <q-linear-progress
-                  :value="progresso(c)"
-                  :indeterminate="!!c.volumeemaberto"
+                  :value="c.volumeemaberto ? 1 : progresso(c)"
+                  :stripe="!!c.volumeemaberto"
                   color="green-6"
                   track-color="grey-3"
                   size="8px"
                   rounded
                 />
-                <div class="row items-center q-mt-xs">
-                  <div class="text-caption text-grey-7">
-                    {{ fmt(c.carregadokg) }} / {{ c.volumeemaberto ? '∞' : fmt(c.contratadokg) }} kg
-                    <span class="text-grey-5"
-                      >(≈ {{ fmt(c.carregadosc, 1) }} /
-                      {{ c.volumeemaberto ? '∞' : fmt(c.quantidade) }} sc)</span
-                    >
-                  </div>
-                  <q-chip
-                    dense
-                    square
-                    :color="corTipo[c.tipo] || 'grey-7'"
-                    text-color="white"
-                    :label="c.tipo"
-                    class="q-ml-sm q-my-none"
-                  />
+                <div class="text-caption text-grey-7 q-mt-xs">
+                  {{ fmt(c.carregadosc)
+                  }}<template v-if="!c.volumeemaberto"> / {{ fmt(c.quantidade) }}</template> SC
                 </div>
               </q-item-label>
             </q-item-section>

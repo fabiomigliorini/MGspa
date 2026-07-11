@@ -4,7 +4,13 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import { formataNumero, formataReal, formataData, formataDataIso, arredonda } from '@components/formatters'
+import {
+  formataNumero,
+  formataReal,
+  formataData,
+  formataDataIso,
+  arredonda,
+} from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -18,11 +24,22 @@ import ContratoParcelasDialog from 'components/ContratoParcelasDialog.vue'
 // da tela e persiste pelas actions (salvarPagamento/excluirPagamento/confirmar).
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { contrato, cod, pagamentos, previsto, pago, liquidoSc, fixado, saldoPagar } =
-  storeToRefs(store)
+const { contrato, cod, pagamentos, liquidoSc, fixado, saldoPagar } = storeToRefs(store)
 
 function n(v) {
   return Number(v) || 0
+}
+
+// Fixação de origem de uma parcela (moeda/preço). Base do rótulo por linha e da
+// conversão US$ no recebimento. `ehUsd`/`fixacaoDaParcela` são fonte única no store.
+const fixDaParcela = store.fixacaoDaParcela
+function ehUsdParcela(p) {
+  return store.ehUsd(fixDaParcela(p))
+}
+function rotuloFixacao(p) {
+  const f = fixDaParcela(p)
+  if (!f) return null
+  return `${store.ehUsd(f) ? 'US$' : 'R$'} ${fmt(f.preco, 2)}/sc`
 }
 
 // Saldo a parcelar em sacas = fixado − sacas já parceladas (modo SACAS). O saldo
@@ -42,11 +59,6 @@ function fmt(v, dec = 0) {
 const modosParcela = [
   { label: 'Valor', value: 'VALOR' },
   { label: 'Sacas', value: 'SACAS' },
-]
-// Forma de liquidação: em conta (recebe em portador) vs barter (paga em insumos).
-const formasPagamento = [
-  { label: 'Em conta', value: 'CONTA' },
-  { label: 'Barter', value: 'BARTER' },
 ]
 
 // O botão "+" abre o gerador de várias parcelas; a edição de uma parcela segue
@@ -72,6 +84,25 @@ const maxSacasParcela = computed(() => saldoSacas.value + n(parcelaOriginal.valu
 function editarSacas(val) {
   formParcela.value.sacas = val
   formParcela.value.valor = arredonda(n(val) * liquidoSc.value, 2)
+}
+
+// Fixação da parcela em edição: em US$ o valor previsto = sacas × preço × cotação
+// (o vínculo codcontratofixacao já vem no {...p}). Recalcula ao mexer nas sacas/cotação.
+const editFix = computed(() => store.fixacaoDaParcela(formParcela.value))
+const editUsd = computed(() => store.ehUsd(editFix.value))
+function recalcUsd() {
+  formParcela.value.valor = arredonda(
+    n(formParcela.value.sacas) * n(editFix.value?.preco) * n(formParcela.value.cotacao),
+    2,
+  )
+}
+function editarSacasUsd(val) {
+  formParcela.value.sacas = val
+  recalcUsd()
+}
+function editarCotacaoUsd(val) {
+  formParcela.value.cotacao = val
+  recalcUsd()
 }
 async function salvarParcela() {
   if (salvandoParcela.value) return
@@ -107,15 +138,29 @@ const confirmDialog = ref(false)
 const confirmSalvando = ref(false)
 const confirmForm = ref({})
 function abrirConfirmar(p) {
+  const usd = ehUsdParcela(p)
+  const f = fixDaParcela(p)
   confirmForm.value = {
     codcontratopagamento: p.codcontratopagamento,
     forma: p.forma,
+    usd,
+    sacas: n(p.sacas),
+    preco: n(f?.preco),
     datarecebido: formataDataIso(new Date()),
-    valorrecebido: p.valor,
+    // US$: o R$ recebido é COMPUTADO da cotação (não digitado). BRL: sugere o previsto.
+    valorrecebido: usd ? null : p.valor,
+    cotacaorecebido: null,
     codportador: p.codportador || contrato.value?.codportador || null,
   }
   confirmDialog.value = true
 }
+// R$ recebido de uma parcela US$ = sacas × preço × cotação do dia (preview ao vivo).
+const confirmValorUsd = computed(() =>
+  arredonda(
+    n(confirmForm.value.sacas) * n(confirmForm.value.preco) * n(confirmForm.value.cotacaorecebido),
+    2,
+  ),
+)
 async function confirmarRecebimento() {
   if (confirmSalvando.value) return
   confirmSalvando.value = true
@@ -136,9 +181,6 @@ async function confirmarRecebimento() {
     <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Parcelas de pagamento</q-item-label>
-        <q-item-label caption>
-          Previsto {{ rs(previsto) }} · Recebido {{ rs(pago) }} · A pagar {{ rs(saldoPagar) }}
-        </q-item-label>
       </q-item-section>
       <q-item-section side>
         <q-btn flat round size="sm" color="primary" icon="add" @click="parcelasDialog = true">
@@ -159,14 +201,19 @@ async function confirmarRecebimento() {
         <q-item-section>
           <q-item-label>
             {{ rs(p.valor) }}
-            <span v-if="p.modo === 'SACAS' && p.sacas" class="text-caption text-grey-7">
-              ({{ fmt(p.sacas) }} sc)
-            </span>
+            <span v-if="p.sacas" class="text-caption text-grey-7">({{ fmt(p.sacas) }} sc)</span>
+            <q-badge
+              v-if="rotuloFixacao(p)"
+              :color="ehUsdParcela(p) ? 'deep-purple-6' : 'blue-grey-5'"
+              :label="rotuloFixacao(p)"
+              class="q-ml-xs"
+            />
           </q-item-label>
           <q-item-label caption>
             Prev. {{ fmtData(p.data) }}
             <span v-if="p.datarecebido" class="text-green-8">
               · Receb. {{ fmtData(p.datarecebido) }} {{ rs(p.valorrecebido) }}
+              <span v-if="p.cotacaorecebido">@ {{ fmt(p.cotacaorecebido, 4) }}</span>
             </span>
             <span v-if="p.observacao"> · {{ p.observacao }}</span>
           </q-item-label>
@@ -221,28 +268,21 @@ async function confirmarRecebimento() {
           </q-card-section>
           <q-card-section class="q-pt-md">
             <div class="row q-col-gutter-md">
-              <div class="col-12 col-sm-6">
-                <q-btn-toggle
-                  v-model="formParcela.modo"
-                  :options="modosParcela"
-                  spread
-                  no-caps
-                  unelevated
-                  toggle-color="primary"
-                  color="grey-3"
-                  text-color="grey-9"
+              <div v-if="rotuloFixacao(formParcela)" class="col-12">
+                <q-badge
+                  :color="editUsd ? 'deep-purple-6' : 'blue-grey-5'"
+                  :label="`Fixação ${rotuloFixacao(formParcela)}`"
                 />
               </div>
-              <div class="col-12 col-sm-6">
-                <q-btn-toggle
-                  v-model="formParcela.forma"
-                  :options="formasPagamento"
-                  spread
-                  no-caps
-                  unelevated
-                  toggle-color="deep-purple-6"
-                  color="grey-3"
-                  text-color="grey-9"
+              <!-- BRL escolhe modo; US$ é sempre em sacas (o valor vem da cotação). -->
+              <div v-if="!editUsd" class="col-12 col-sm-6">
+                <q-select
+                  v-model="formParcela.modo"
+                  :options="modosParcela"
+                  label="Modo de pagamento"
+                  outlined
+                  emit-value
+                  map-options
                 />
               </div>
               <div class="col-12 col-sm-6">
@@ -254,30 +294,68 @@ async function confirmarRecebimento() {
                   :rules="[(v) => !!v]"
                 />
               </div>
-              <div v-if="formParcela.modo === 'SACAS'" class="col-12 col-sm-6">
-                <MgInputValor
-                  :model-value="formParcela.sacas"
-                  :decimals="0"
-                  :max="maxSacasParcela"
-                  suffix="sc"
-                  label="Sacas"
-                  lazy-rules
-                  :rules="[(v) => v > 0 || 'Informe as sacas']"
-                  @update:model-value="editarSacas"
-                />
-              </div>
-              <div class="col-12 col-sm-6">
-                <MgInputValor
-                  v-model="formParcela.valor"
-                  :decimals="2"
-                  :max="maxValorParcela"
-                  prefix="R$"
-                  label="Valor previsto"
-                  lazy-rules
-                  :rules="[(v) => v > 0 || 'Informe o valor']"
-                />
-              </div>
-              <div v-if="formParcela.forma !== 'BARTER'" class="col-12">
+              <!-- US$: sacas + cotação computam o valor previsto. -->
+              <template v-if="editUsd">
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    :model-value="formParcela.sacas"
+                    :decimals="0"
+                    :max="maxSacasParcela"
+                    suffix="sc"
+                    label="Sacas"
+                    lazy-rules
+                    :rules="[(v) => v > 0 || 'Informe as sacas']"
+                    @update:model-value="editarSacasUsd"
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    :model-value="formParcela.cotacao"
+                    :decimals="4"
+                    prefix="R$"
+                    label="Cotação do dólar"
+                    lazy-rules
+                    :rules="[(v) => v > 0 || 'Informe a cotação']"
+                    @update:model-value="editarCotacaoUsd"
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    :model-value="formParcela.valor"
+                    :decimals="2"
+                    prefix="R$"
+                    label="Valor previsto"
+                    readonly
+                    bg-color="grey-2"
+                  />
+                </div>
+              </template>
+              <template v-else>
+                <div v-if="formParcela.modo === 'SACAS'" class="col-12 col-sm-6">
+                  <MgInputValor
+                    :model-value="formParcela.sacas"
+                    :decimals="0"
+                    :max="maxSacasParcela"
+                    suffix="sc"
+                    label="Sacas"
+                    lazy-rules
+                    :rules="[(v) => v > 0 || 'Informe as sacas']"
+                    @update:model-value="editarSacas"
+                  />
+                </div>
+                <div class="col-12 col-sm-6">
+                  <MgInputValor
+                    v-model="formParcela.valor"
+                    :decimals="2"
+                    :max="maxValorParcela"
+                    prefix="R$"
+                    label="Valor previsto"
+                    lazy-rules
+                    :rules="[(v) => v > 0 || 'Informe o valor']"
+                  />
+                </div>
+              </template>
+              <div class="col-12">
                 <MgSelectPortador
                   v-model="formParcela.codportador"
                   label="Portador (conta que recebe)"
@@ -301,9 +379,6 @@ async function confirmarRecebimento() {
       v-model="parcelasDialog"
       :cod="cod"
       :contrato="contrato"
-      :liquido-sc="liquidoSc"
-      :saldo-valor="saldoPagar"
-      :saldo-sacas="saldoSacas"
       @saved="store.carregar()"
     />
 
@@ -326,7 +401,19 @@ async function confirmarRecebimento() {
                   :rules="[(v) => !!v]"
                 />
               </div>
-              <div class="col-12 col-sm-6">
+              <!-- US$: informa a cotação do dia; o R$ recebido é computado (sacas ×
+                   preço × cotação). BRL: informa o valor recebido direto. -->
+              <div v-if="confirmForm.usd" class="col-12 col-sm-6">
+                <MgInputValor
+                  v-model="confirmForm.cotacaorecebido"
+                  :decimals="4"
+                  prefix="R$"
+                  label="Cotação do dólar"
+                  lazy-rules
+                  :rules="[(v) => v > 0 || 'Informe a cotação']"
+                />
+              </div>
+              <div v-else class="col-12 col-sm-6">
                 <MgInputValor
                   v-model="confirmForm.valorrecebido"
                   :decimals="2"
@@ -336,7 +423,13 @@ async function confirmarRecebimento() {
                   :rules="[(v) => v > 0]"
                 />
               </div>
-              <div v-if="confirmForm.forma !== 'BARTER'" class="col-12">
+              <div v-if="confirmForm.usd" class="col-12">
+                <div class="text-caption text-grey-7">
+                  {{ fmt(confirmForm.sacas) }} sc × US$ {{ fmt(confirmForm.preco, 2) }} × cotação
+                  = <b class="text-green-9">{{ rs(confirmValorUsd) }}</b>
+                </div>
+              </div>
+              <div class="col-12">
                 <MgSelectPortador
                   v-model="confirmForm.codportador"
                   label="Portador (conta que recebeu)"
@@ -354,6 +447,7 @@ async function confirmarRecebimento() {
               label="Confirmar"
               color="primary"
               :loading="confirmSalvando"
+              :disable="confirmForm.usd && !confirmForm.cotacaorecebido"
             />
           </q-card-actions>
         </q-form>

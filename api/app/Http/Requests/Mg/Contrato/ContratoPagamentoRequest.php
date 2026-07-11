@@ -18,6 +18,12 @@ class ContratoPagamentoRequest extends FormRequest
         return [
             'data' => ['required', 'date'],             // data prevista
             'valor' => ['required', 'numeric', 'gt:0'],  // valor previsto
+            // Fixação de origem da parcela (1 fixação : N parcelas). Dirige moeda/
+            // preço/unidade; a checagem de "pertence ao contrato" fica no withValidator.
+            'codcontratofixacao' => ['nullable', 'integer', 'exists:tblcontratofixacao,codcontratofixacao'],
+            // Cotação USD->BRL prevista (só p/ fixação em moeda estrangeira).
+            'cotacao' => ['nullable', 'numeric', 'gt:0'],
+            'cotacaorecebido' => ['nullable', 'numeric', 'gt:0'],
             'forma' => ['nullable', 'in:CONTA,BARTER'],  // liquidação: em conta vs barter (insumos)
             'modo' => ['nullable', 'in:SACAS,VALOR'],
             // modo=SACAS exige a quantidade em sacas correspondente.
@@ -44,39 +50,47 @@ class ContratoPagamentoRequest extends FormRequest
             $codpagamento = $this->route('codpagamento');
             $exceto = $codpagamento !== null ? (int) $codpagamento : null;
 
-            $teto = ContratoService::valorFixadoBruto($codcontrato);
-            if ($teto > 0) {
-                $novo = (float) $this->input('valor');
+            // Dois regimes EXCLUSIVOS de teto (não empilham):
+            $codfixacao = $this->input('codcontratofixacao');
+            if ($codfixacao !== null && $codfixacao !== '') {
+                // Novo modelo: a parcela pertence a uma fixação. Teto = sacas DESTA
+                // fixação (neutro de moeda; funciona igual p/ BRL e US$).
+                $fixacao = \Mg\Contrato\ContratoFixacao::whereNull('inativo')->find((int) $codfixacao);
+                if (!$fixacao || (int) $fixacao->codcontrato !== $codcontrato) {
+                    $validator->errors()->add('codcontratofixacao', 'Fixação inválida para este contrato.');
+                } else {
+                    $usd = $fixacao->usd;
+                    if ($usd && $this->input('modo') !== 'SACAS') {
+                        $validator->errors()->add('modo', 'Fixação em US$: a parcela deve ser em sacas.');
+                    }
+                    if ($usd && !$this->filled('cotacao')) {
+                        $validator->errors()->add('cotacao', 'Informe a cotação do dólar da parcela.');
+                    }
+                    $novoSc = (float) $this->input('sacas');
+                    $jaSc = ContratoService::sacasParceladasFixacao((int) $codfixacao, $exceto);
+                    if ($novoSc > 0 && $jaSc + $novoSc > (float) $fixacao->quantidade + 1e-6) {
+                        $saldoSc = max(0, (float) $fixacao->quantidade - $jaSc);
+                        $validator->errors()->add(
+                            'sacas',
+                            'Excede as sacas da fixação (saldo ' . number_format($saldoSc, 0, ',', '.') . ' sc).',
+                        );
+                    }
+                }
+            } else {
+                // Legado (parcela sem vínculo): teto em R$ (bruto fixado) + sacas do contrato.
+                $teto = ContratoService::valorFixadoBruto($codcontrato);
                 $jaPago = ContratoService::valorPago($codcontrato, $exceto);
-                if ($jaPago + $novo > $teto + 0.005) {
+                if ($teto > 0 && $jaPago + (float) $this->input('valor') > $teto + 0.005) {
                     $saldo = max(0, $teto - $jaPago);
                     $validator->errors()->add(
                         'valor',
                         'Excede o saldo a pagar do contrato (R$ ' . number_format($saldo, 2, ',', '.') . ').',
                     );
                 }
-            }
-
-            // Recebimento "em conta" exige portador: uma parcela marcada como paga
-            // (datarecebido) sem dizer em qual conta caiu é dinheiro sem rastro.
-            // Barter liquida em insumos (sem conta) e fica isento.
-            if (
-                $this->filled('datarecebido')
-                && $this->input('forma') !== 'BARTER'
-                && !$this->filled('codportador')
-            ) {
-                $validator->errors()->add(
-                    'codportador',
-                    'Informe o portador onde o recebimento foi realizado.',
-                );
-            }
-
-            if ($this->input('modo') === 'SACAS') {
-                $tetoSc = ContratoService::sacasFixadas($codcontrato);
-                if ($tetoSc > 0) {
-                    $novoSc = (float) $this->input('sacas');
+                if ($this->input('modo') === 'SACAS') {
+                    $tetoSc = ContratoService::sacasFixadas($codcontrato);
                     $jaSc = ContratoService::sacasPagas($codcontrato, $exceto);
-                    if ($jaSc + $novoSc > $tetoSc + 1e-6) {
+                    if ($tetoSc > 0 && $jaSc + (float) $this->input('sacas') > $tetoSc + 1e-6) {
                         $saldoSc = max(0, $tetoSc - $jaSc);
                         $validator->errors()->add(
                             'sacas',
@@ -84,6 +98,15 @@ class ContratoPagamentoRequest extends FormRequest
                         );
                     }
                 }
+            }
+
+            // Recebimento "em conta" exige portador (barter liquida em insumos, isento).
+            if (
+                $this->filled('datarecebido')
+                && $this->input('forma') !== 'BARTER'
+                && !$this->filled('codportador')
+            ) {
+                $validator->errors()->add('codportador', 'Informe o portador onde o recebimento foi realizado.');
             }
         });
     }

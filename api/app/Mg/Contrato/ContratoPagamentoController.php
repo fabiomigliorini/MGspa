@@ -54,9 +54,24 @@ class ContratoPagamentoController extends MgController
      */
     public function confirmar(ContratoPagamentoConfirmarRequest $request, $codcontrato, $codpagamento)
     {
-        $m = ContratoPagamento::where('codcontrato', $codcontrato)->findOrFail($codpagamento);
+        $m = ContratoPagamento::with('ContratoFixacao')
+            ->where('codcontrato', $codcontrato)
+            ->findOrFail($codpagamento);
         $m->datarecebido = $request->datarecebido;
-        $m->valorrecebido = $request->valorrecebido;
+
+        $fixacao = $m->ContratoFixacao;
+        $usd = $fixacao && $fixacao->usd;
+        if ($usd) {
+            // R$ recebido nasce aqui: sacas × preço(US$) × cotação do dia. Fonte
+            // única (sem drift entre front e back); a cotação fica auditada.
+            $m->cotacaorecebido = $request->cotacaorecebido;
+            $m->valorrecebido = round((float) $m->sacas * (float) $fixacao->preco * (float) $request->cotacaorecebido, 2);
+        } else {
+            // BRL: valor recebido é o digitado; sem cotação.
+            $m->valorrecebido = $request->valorrecebido;
+            $m->cotacaorecebido = null;
+        }
+
         if ($request->filled('codportador')) {
             $m->codportador = $request->codportador;
         }

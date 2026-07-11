@@ -26,6 +26,7 @@ const cod = Number(route.params.codcontrato)
 const store = useContratoDetalheStore()
 const {
   contrato,
+  barter,
   volumeemaberto,
   contratado,
   contratadokg,
@@ -35,6 +36,7 @@ const {
   pesosaca,
   valornf,
   valorCarregado,
+  valorFixadoBruto,
   pago,
   bate,
 } = storeToRefs(store)
@@ -135,6 +137,13 @@ onMounted(() => store.carregar(cod))
               <!-- Título: com quem o contrato foi feito (comprador) -->
               <div class="text-h6">
                 {{ contrato?.Pessoa?.fantasia || contrato?.Pessoa?.pessoa || 'Contrato' }}
+                <q-chip
+                  v-if="contrato"
+                  :color="corTipo[contrato.tipo] || 'grey-7'"
+                  text-color="white"
+                  :label="contrato.tipo"
+                  class="q-ml-sm q-my-none"
+                />
               </div>
               <div class="text-caption text-grey-7">
                 {{ contrato?.Cultura?.cultura }}
@@ -182,42 +191,31 @@ onMounted(() => store.carregar(cod))
                   >Físico</span
                 >
               </div>
-              <div class="text-h5 q-mt-sm row items-center">
-                <div>
-                  {{ fmt(carregadokg) }}
-                  <span class="text-caption"
-                    >/ {{ volumeemaberto ? '∞' : fmt(contratadokg) }} kg</span
-                  >
-                </div>
-                <!-- Modo do contrato ao lado da quantidade -->
-                <q-chip
-                  v-if="contrato"
-                  dense
-                  square
-                  :color="corTipo[contrato.tipo] || 'grey-7'"
-                  text-color="white"
-                  :label="contrato.tipo"
-                  class="q-ml-sm q-my-none"
-                />
+              <!-- Principal: sacas entregues (unidade comercial); em aberto = só
+                   o entregue, sem alvo. -->
+              <div class="text-h5 q-mt-sm">
+                {{ fmt(carregadosc) }}
+                <span class="text-caption">
+                  <template v-if="!volumeemaberto">/ {{ fmt(contratado) }} </template>sc
+                </span>
               </div>
-              <!-- Sacas derivadas (unidade comercial) -->
+              <!-- Kg em escala menor (mesmo cadastrado em kg, a leitura é em sacas) -->
               <div class="text-caption text-grey-6">
-                ≈ {{ fmt(carregadosc, 1) }} / {{ volumeemaberto ? '∞' : fmt(contratado) }} sc
+                {{ fmt(carregadokg)
+                }}<template v-if="!volumeemaberto"> / {{ fmt(contratadokg) }}</template> kg
               </div>
               <q-linear-progress
+                v-if="!volumeemaberto"
                 :value="
                   !volumeemaberto && contratadokg ? Math.min(1, carregadokg / contratadokg) : 0
                 "
-                :indeterminate="volumeemaberto"
                 color="green-6"
                 track-color="grey-3"
                 size="8px"
                 rounded
                 class="q-my-sm"
               />
-              <div v-if="volumeemaberto" class="text-caption text-deep-purple-7">
-                <q-icon name="all_inclusive" /> Sem limite — leva o saldo do silo
-              </div>
+              <div v-if="volumeemaberto" class="text-caption text-grey-7">Sem limite</div>
               <div v-else class="text-caption text-grey-7">
                 Saldo a embarcar: <b>{{ fmt(saldokg) }} kg</b>
                 <span class="text-grey-6">(≈ {{ fmt(saldokg / pesosaca, 0) }} sc)</span>
@@ -248,8 +246,10 @@ onMounted(() => store.carregar(cod))
                   >Financeiro</span
                 >
               </div>
-              <div class="text-h5 q-mt-sm">{{ rs(pago) }}</div>
-              <div class="text-caption text-grey-7 q-mt-sm">Pago pelo comprador</div>
+              <!-- Valor fixado (Σ sacas × preço): aparece assim que há fixação -->
+              <div class="text-h5 q-mt-sm">{{ rs(valorFixadoBruto) }}</div>
+              <div class="text-caption text-grey-6">Valor fixado</div>
+              <div class="text-caption text-grey-7">Pago pelo comprador: {{ rs(pago) }}</div>
             </q-card-section>
           </q-card>
         </div>
@@ -284,8 +284,11 @@ onMounted(() => store.carregar(cod))
       <!-- Cards especialistas (cada um lê do store da tela) -->
       <template v-if="contrato">
         <ContratoDados @editar="editarContrato" />
-        <ContratoFixacao />
-        <ContratoPagamentos />
+        <!-- Barter (settlement em insumos): fixação e parcelas não se aplicam. -->
+        <template v-if="!barter">
+          <ContratoFixacao />
+          <ContratoPagamentos />
+        </template>
         <ContratoNotas />
         <ContratoEntregas />
         <ContratoAnexos />

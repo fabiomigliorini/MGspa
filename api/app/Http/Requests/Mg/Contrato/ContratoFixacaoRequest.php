@@ -23,14 +23,11 @@ class ContratoFixacaoRequest extends FormRequest
             'preco' => ['required', 'numeric', 'gte:0'],
             // moeda guarda o iso (FK tblmoeda.iso). Aberto ao cadastro de moedas.
             'moeda' => ['nullable', 'string', 'exists:tblmoeda,iso'],
-            // Moeda estrangeira (!= BRL) exige a cotação em R$ p/ converter o preço
-            // (senão precoReal gravaria o valor em USD sem converter).
-            'dolar' => [
-                'nullable',
-                'numeric',
-                'gt:0',
-                Rule::requiredIf(fn () => $this->filled('moeda') && $this->input('moeda') !== 'BRL'),
-            ],
+            // Fixação em US$ é "pura" (preço dolarizado): a cotação NÃO é travada
+            // aqui — a conversão p/ R$ acontece no recebimento (parcela). Por isso
+            // `dolar` deixou de ser obrigatório em moeda estrangeira. Sem cotação,
+            // precoReal grava precoreal=null (não converte US$ como se fosse R$).
+            'dolar' => ['nullable', 'numeric', 'gt:0'],
             // isentofethab é DERIVADO no controller a partir das linhas do grupo
             // FETHAB (sem valor = isento); aceito aqui só por compatibilidade.
             'isentofethab' => ['nullable', 'boolean'],

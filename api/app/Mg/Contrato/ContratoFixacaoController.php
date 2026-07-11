@@ -15,7 +15,7 @@ class ContratoFixacaoController extends MgController
 {
     public function index(Request $request, $codcontrato)
     {
-        $res = ContratoFixacao::with('Contrato.Filial')
+        $res = ContratoFixacao::with('Contrato.Filial', 'ContratoPagamentoS') // ledger sem N+1
             ->where('codcontrato', $codcontrato)
             ->orderBy('data')
             ->get();
@@ -62,8 +62,12 @@ class ContratoFixacaoController extends MgController
         Contrato $contrato,
         array $dados
     ): void {
+        // Fixação dolarizada pura (US$ sem cotação): precoreal null = sem R$ ainda.
+        // Não há bruto p/ calcular tributos; zera o snapshot. Guarda de defesa —
+        // sem ela, tributos UNIDADE (FETHAB/SENAR, que independem do bruto) gerariam
+        // dedução sobre bruto 0 e o líquido negativo dispararia o abort abaixo.
         $tributos = $dados['tributos'] ?? null;
-        if (empty($tributos) || !is_array($tributos)) {
+        if ($model->precoreal === null || empty($tributos) || !is_array($tributos)) {
             $model->tributos = null;
             $model->totaldeducao = null;
             $model->precoliquido = null;

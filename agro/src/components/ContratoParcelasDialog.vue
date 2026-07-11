@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataNumero, formataDataIso, arredonda } from '@components/formatters'
@@ -11,33 +12,26 @@ import MgSelectPortador from '@components/MgSelectPortador.vue'
 // define nº de parcelas + dias da 1ª/demais, distribui o total igualmente (a
 // última fecha o resto) e salva todas de uma vez. A lista é editável e a soma é
 // indicada. Portador pré-preenchido com a conta que recebe do contrato.
+// Moeda, preço e teto (sacas) vêm da fixação escolhida (via store), não por prop.
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   cod: { type: [Number, String], required: true }, // codcontrato
   contrato: { type: Object, default: null },
-  liquidoSc: { type: Number, default: 0 }, // R$ líquido/sc (converte SACAS -> valor)
-  // Teto a parcelar = saldo do que foi FIXADO (não do contratado): espelha a trava
-  // do backend (pagamento <= valor bruto fixado). saldoValor em R$, saldoSacas em sc.
-  saldoValor: { type: Number, default: 0 },
-  saldoSacas: { type: Number, default: 0 },
 })
 const emit = defineEmits(['update:modelValue', 'saved'])
 
 const store = useContratoDetalheStore()
+const { fixacoes } = storeToRefs(store)
 
 const show = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
 })
 
+// Modo de pagamento da parcela (unidade do total): valor em R$ ou sacas.
 const modos = [
   { label: 'Valor', value: 'VALOR' },
   { label: 'Sacas', value: 'SACAS' },
-]
-// Forma de liquidação: em conta (recebe em portador) vs barter (paga em insumos).
-const formasPagamento = [
-  { label: 'Em conta', value: 'CONTA' },
-  { label: 'Barter', value: 'BARTER' },
 ]
 const MAX_PARCELAS = 60
 
@@ -47,16 +41,44 @@ const form = ref(novoForm())
 function n(v) {
   return Number(v) || 0
 }
-const dec = computed(() => (form.value.modo === 'SACAS' ? 0 : 2))
-// Teto do total a parcelar, na unidade do modo (espelha a trava do backend).
+
+// ---- Fixação de origem: dirige moeda, preço e teto (sacas DAQUELA fixação) ----
+const fixacaoSel = computed(
+  () => fixacoes.value.find((f) => f.codcontratofixacao === form.value.codcontratofixacao) || null,
+)
+const usd = computed(() => store.ehUsd(fixacaoSel.value))
+// Opções do select: só fixações com saldo de sacas a parcelar.
+const fixacaoOptions = computed(() =>
+  fixacoes.value.map((f) => {
+    const saldo = store.saldoSacasFixacao(f)
+    const moeda = (f.moeda || 'BRL') !== 'BRL' ? 'US$' : 'R$'
+    return {
+      value: f.codcontratofixacao,
+      label: `${moeda} ${formataNumero(f.preco, 2)}/sc · saldo ${formataNumero(saldo, 0)} sc`,
+      disable: saldo <= 0,
+    }
+  }),
+)
+// Preço por saca na unidade certa: US$ = preço nativo; BRL = líquido (após deduções).
+const precoSc = computed(() =>
+  usd.value ? n(fixacaoSel.value?.preco) : n(fixacaoSel.value?.precoliquido ?? fixacaoSel.value?.precoreal),
+)
+// US$ é sempre em SACAS; BRL respeita o modo escolhido.
+const dec = computed(() => (usd.value || form.value.modo === 'SACAS' ? 0 : 2))
+const emSacas = computed(() => usd.value || form.value.modo === 'SACAS')
+const saldoSacasFix = computed(() =>
+  fixacaoSel.value ? store.saldoSacasFixacao(fixacaoSel.value) : 0,
+)
+// Teto do total a parcelar, na unidade corrente: sacas (US$/SACAS) ou R$ (BRL VALOR).
 const tetoTotal = computed(() =>
-  form.value.modo === 'SACAS' ? arredonda(n(props.saldoSacas), 0) : arredonda(n(props.saldoValor), 2),
+  emSacas.value ? arredonda(saldoSacasFix.value, 0) : arredonda(saldoSacasFix.value * precoSc.value, 2),
 )
 
 function novoForm() {
   return {
+    codcontratofixacao: null,
+    cotacao: null,
     modo: 'SACAS',
-    forma: 'CONTA',
     qtd: 1,
     primeira: 30,
     demais: 30,
@@ -93,9 +115,12 @@ function gerar() {
 }
 
 const soma = computed(() => form.value.itens.reduce((a, p) => a + n(p.v), 0))
-const bate = computed(
-  () => Math.abs(soma.value - n(form.value.total)) < (dec.value === 0 ? 0.5 : 0.01),
-)
+// Parcelamento PARCIAL é permitido: a soma só não pode passar do saldo da fixação
+// (teto). Não precisa fechar o total — dá pra parcelar só uma parte agora.
+const somaOk = computed(() => {
+  const tol = dec.value === 0 ? 0.5 : 0.01
+  return soma.value > 0 && soma.value <= tetoTotal.value + tol
+})
 
 // Recalcula só os valores (mantém as datas), dividindo o total igualmente.
 function redistribuir() {
@@ -137,20 +162,32 @@ function fmt(v) {
   return formataNumero(v, dec.value)
 }
 
-// Ao abrir: reseta com o total cheio (saldo) e gera a 1ª distribuição.
+// Ao abrir: reseta e pré-seleciona a fixação se houver só uma com saldo. A
+// distribuição só é gerada depois que a fixação estiver escolhida (define moeda/teto).
 watch(show, (v) => {
   if (!v) return
   form.value = novoForm()
-  form.value.total = tetoTotal.value
   form.value.codportador = props.contrato?.codportador || null
-  gerar()
+  const comSaldo = fixacoes.value.filter((f) => store.saldoSacasFixacao(f) > 0)
+  if (comSaldo.length === 1) form.value.codcontratofixacao = comSaldo[0].codcontratofixacao
 })
+
+// Escolher a fixação define a moeda/modo e o teto -> reinicia a distribuição.
+watch(
+  () => form.value.codcontratofixacao,
+  () => {
+    if (!show.value || !fixacaoSel.value) return
+    if (usd.value) form.value.modo = 'SACAS' // US$ é sempre em sacas
+    form.value.total = tetoTotal.value
+    gerar()
+  },
+)
 
 // Trocar modo recalcula o total na nova unidade e regenera.
 watch(
   () => form.value.modo,
   () => {
-    if (!show.value) return
+    if (!show.value || !fixacaoSel.value) return
     form.value.total = tetoTotal.value
     gerar()
   },
@@ -164,16 +201,29 @@ watch(
   },
 )
 
-// Payload de uma parcela na unidade do modo (barter não tem portador).
+// Payload de uma parcela. A parcela pertence à fixação escolhida; o valor R$
+// PREVISTO nasce aqui: US$ = sacas × preço × cotação; BRL(SACAS) = sacas × líquido;
+// BRL(VALOR) = o próprio valor. Barter é do contrato, então forma=CONTA.
 function montarPayload(p) {
-  const modo = form.value.modo
+  const modo = emSacas.value ? 'SACAS' : 'VALOR'
+  const sacas = emSacas.value ? n(p.v) : null
+  let valor
+  if (usd.value) {
+    valor = arredonda(n(p.v) * n(fixacaoSel.value?.preco) * n(form.value.cotacao), 2)
+  } else if (modo === 'SACAS') {
+    valor = arredonda(n(p.v) * precoSc.value, 2)
+  } else {
+    valor = n(p.v)
+  }
   return {
     data: p.data,
+    codcontratofixacao: form.value.codcontratofixacao,
+    cotacao: usd.value ? n(form.value.cotacao) : null,
     modo,
-    forma: form.value.forma,
-    sacas: modo === 'SACAS' ? n(p.v) : null,
-    valor: modo === 'SACAS' ? arredonda(n(p.v) * props.liquidoSc, 2) : n(p.v),
-    codportador: form.value.forma === 'BARTER' ? null : form.value.codportador || null,
+    forma: 'CONTA',
+    sacas,
+    valor,
+    codportador: form.value.codportador || null,
     observacao: form.value.observacao || null,
   }
 }
@@ -213,60 +263,75 @@ async function salvar() {
 
         <q-card-section class="scroll" style="max-height: 72vh">
           <div class="row q-col-gutter-md">
-            <div class="col-12 col-sm-6">
-              <q-btn-toggle
-                v-model="form.modo"
-                :options="modos"
-                spread
-                no-caps
-                unelevated
-                toggle-color="primary"
-                color="grey-3"
-                text-color="grey-9"
-              />
-            </div>
-            <div class="col-12 col-sm-6">
-              <q-btn-toggle
-                v-model="form.forma"
-                :options="formasPagamento"
-                spread
-                no-caps
-                unelevated
-                toggle-color="deep-purple-6"
-                color="grey-3"
-                text-color="grey-9"
-              />
-            </div>
-            <div class="col-4">
-              <MgInputValor
-                v-model="form.qtd"
-                :decimals="0"
-                :min="1"
-                :max="MAX_PARCELAS"
-                label="Parcelas"
-              />
-            </div>
-            <div class="col-4">
-              <MgInputValor v-model="form.primeira" :decimals="0" suffix="d" label="1ª em" />
-            </div>
-            <div class="col-4">
-              <MgInputValor v-model="form.demais" :decimals="0" suffix="d" label="Demais +" />
-            </div>
-            <div class="col-12 col-sm-5">
-              <MgInputValor
-                v-model="form.total"
-                :decimals="dec"
-                :max="tetoTotal"
-                :prefix="form.modo === 'VALOR' ? 'R$' : null"
-                :suffix="form.modo === 'SACAS' ? 'sc' : null"
-                label="Total a parcelar"
+            <!-- Fixação de origem (obrigatória): define moeda, preço e o teto de
+                 sacas. Em US$ o preço é dolarizado e a parcela é sempre em sacas. -->
+            <div class="col-12">
+              <q-select
+                v-model="form.codcontratofixacao"
+                :options="fixacaoOptions"
+                label="Fixação"
+                outlined
+                emit-value
+                map-options
                 lazy-rules
-                :rules="[(v) => v > 0 || 'Informe o total']"
+                :rules="[(v) => !!v || 'Escolha a fixação']"
               />
             </div>
-            <div v-if="form.forma !== 'BARTER'" class="col-12 col-sm-7">
-              <MgSelectPortador v-model="form.codportador" label="Portador (conta que recebe)" />
-            </div>
+
+            <template v-if="fixacaoSel">
+              <div class="col-4">
+                <MgInputValor
+                  v-model="form.qtd"
+                  :decimals="0"
+                  :min="1"
+                  :max="MAX_PARCELAS"
+                  label="Parcelas"
+                />
+              </div>
+              <div class="col-4">
+                <MgInputValor v-model="form.primeira" :decimals="0" suffix="d" label="1ª em" />
+              </div>
+              <div class="col-4">
+                <MgInputValor v-model="form.demais" :decimals="0" suffix="d" label="Demais +" />
+              </div>
+
+              <!-- BRL: escolhe modo (valor/sacas). US$: cotação do dólar (sempre sacas). -->
+              <div class="col-12 col-sm-3">
+                <q-select
+                  v-if="!usd"
+                  v-model="form.modo"
+                  :options="modos"
+                  label="Modo de pagamento"
+                  outlined
+                  emit-value
+                  map-options
+                />
+                <MgInputValor
+                  v-else
+                  v-model="form.cotacao"
+                  :decimals="4"
+                  prefix="R$"
+                  label="Cotação do dólar"
+                  lazy-rules
+                  :rules="[(v) => v > 0 || 'Informe a cotação']"
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <MgInputValor
+                  v-model="form.total"
+                  :decimals="dec"
+                  :max="tetoTotal"
+                  :prefix="!emSacas ? 'R$' : null"
+                  :suffix="emSacas ? 'sc' : null"
+                  label="Total a parcelar"
+                  lazy-rules
+                  :rules="[(v) => v > 0 || 'Informe o total']"
+                />
+              </div>
+              <div class="col-12 col-sm-5">
+                <MgSelectPortador v-model="form.codportador" label="Portador (conta que recebe)" />
+              </div>
+            </template>
           </div>
 
           <q-list separator class="q-mt-sm">
@@ -314,8 +379,8 @@ async function salvar() {
           <div class="row items-center q-mt-xs">
             <q-btn flat color="primary" icon="add" label="Adicionar parcela" @click="adicionar" />
             <q-space />
-            <div class="text-caption" :class="bate ? 'text-grey-7' : 'text-orange-8'">
-              Soma: {{ fmt(soma) }} / {{ fmt(form.total) }}
+            <div class="text-caption" :class="somaOk ? 'text-grey-7' : 'text-orange-8'">
+              Soma: {{ fmt(soma) }} / saldo {{ fmt(tetoTotal) }} {{ emSacas ? 'sc' : '' }}
             </div>
           </div>
 
@@ -331,7 +396,7 @@ async function salvar() {
             :label="form.itens.length > 1 ? 'Salvar parcelas' : 'Salvar'"
             color="primary"
             :loading="salvando"
-            :disable="!bate || !form.itens.length"
+            :disable="!somaOk || !form.itens.length || !form.codcontratofixacao || (usd && !form.cotacao)"
           />
         </q-card-actions>
       </q-form>

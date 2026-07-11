@@ -20,7 +20,10 @@ class ContratoPagamentoConfirmarRequest extends FormRequest
         // é legítima, então não há ordem obrigatória entre previsto e recebido.
         return [
             'datarecebido' => ['required', 'date'],
-            'valorrecebido' => ['required', 'numeric', 'gt:0'],
+            // valorrecebido: em US$ o servidor COMPUTA (sacas × preço × cotação);
+            // por isso vira nullable aqui e a exigência real é a cotacaorecebido.
+            'valorrecebido' => ['nullable', 'numeric', 'gt:0'],
+            'cotacaorecebido' => ['nullable', 'numeric', 'gt:0'],
             'codportador' => ['nullable', 'exists:tblportador,codportador'],
         ];
     }
@@ -33,13 +36,27 @@ class ContratoPagamentoConfirmarRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            $parcela = ContratoPagamento::find($this->route('codpagamento'));
+            $parcela = ContratoPagamento::with('ContratoFixacao')->find($this->route('codpagamento'));
             $barter = $parcela && $parcela->forma === 'BARTER';
             if (!$barter && !$this->filled('codportador')) {
                 $validator->errors()->add(
                     'codportador',
                     'Informe o portador onde o recebimento foi realizado.',
                 );
+            }
+
+            // Moeda da fixação de origem decide a conversão:
+            // - US$: exige a cotação do dia; o valorrecebido em R$ é COMPUTADO no
+            //   controller (sacas × preço × cotação), então não é exigido aqui.
+            // - BRL: exige o valorrecebido digitado (não há conversão).
+            $fixacao = $parcela?->ContratoFixacao;
+            $usd = $fixacao && $fixacao->usd;
+            if ($usd) {
+                if (!$this->filled('cotacaorecebido')) {
+                    $validator->errors()->add('cotacaorecebido', 'Informe a cotação do dólar do recebimento.');
+                }
+            } elseif (!$this->filled('valorrecebido')) {
+                $validator->errors()->add('valorrecebido', 'Informe o valor recebido.');
             }
         });
     }

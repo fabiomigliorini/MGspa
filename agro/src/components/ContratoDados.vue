@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { formataNumero, formataData, formataPercentual, formataReal } from '@components/formatters'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
+import { notifyError } from 'src/utils/notify'
 
 // Card "Dados do contrato" da tela de detalhe. Layout manual (não array) na
 // MESMA ordem do ContratoForm: identificação → embarque → partes →
@@ -18,6 +19,17 @@ function nomePessoa(p) {
 const rs = formataReal
 
 const c = computed(() => store.contrato)
+
+// Barter = settlement em insumos: fixação e parcelas ficam opcionais e o tipo
+// vira BARTER. Toggle inline que persiste na hora (POST/DELETE /barter no store).
+const barter = computed(() => store.barter)
+async function alternarBarter(valor) {
+  try {
+    await store.definirBarter(valor)
+  } catch (e) {
+    notifyError(e)
+  }
+}
 
 // Valor total do contrato = Σ(quantidade × preço) das fixações ativas (getter do
 // store). Só faz sentido depois de ao menos uma fixação; antes não há preço.
@@ -63,9 +75,28 @@ const comissao = computed(() => {
         <q-item-label class="text-subtitle1">Dados do contrato</q-item-label>
       </q-item-section>
       <q-item-section side>
-        <q-btn flat round size="sm" color="grey-7" icon="edit" @click="$emit('editar')">
-          <q-tooltip>Editar contrato</q-tooltip>
-        </q-btn>
+        <div class="row items-center no-wrap">
+          <q-toggle
+            :model-value="barter"
+            color="deep-purple-6"
+            label="Barter"
+            left-label
+            dense
+            @update:model-value="alternarBarter"
+          >
+          </q-toggle>
+          <q-btn
+            flat
+            round
+            size="sm"
+            color="grey-7"
+            icon="edit"
+            class="q-ml-sm"
+            @click="$emit('editar')"
+          >
+            <q-tooltip>Editar contrato</q-tooltip>
+          </q-btn>
+        </div>
       </q-item-section>
     </q-item>
     <q-separator />

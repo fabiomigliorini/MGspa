@@ -15,7 +15,9 @@ import FixacaoImpostosDialog from 'components/FixacaoImpostosDialog.vue'
 // médio são getters do store) e usa as actions p/ persistir.
 const $q = useQuasar()
 const store = useContratoDetalheStore()
-const { contrato, cod, fixacoes, fixado, afixar, precoMedio } = storeToRefs(store)
+const { contrato, cod, fixacoes, afixar } = storeToRefs(store)
+
+const ehUsd = store.ehUsd // predicado "é US$?" — fonte única no store
 
 function fmt(v, dec = 0) {
   return formataNumero(v, dec)
@@ -55,10 +57,6 @@ function excluirFixacao(f) {
     <q-item>
       <q-item-section>
         <q-item-label class="text-subtitle1">Fixação de preço</q-item-label>
-        <q-item-label caption>
-          Fixado {{ fmt(fixado) }} sc · A fixar {{ fmt(afixar) }} sc · Preço médio
-          {{ rs(precoMedio) }}/sc
-        </q-item-label>
       </q-item-section>
       <q-item-section side>
         <q-btn flat round size="sm" color="primary" icon="add" @click="novaFixacao">
@@ -71,17 +69,35 @@ function excluirFixacao(f) {
       <q-item v-for="f in fixacoes" :key="f.codcontratofixacao">
         <q-item-section>
           <q-item-label>
-            {{ fmt(f.quantidade) }} sc · {{ rs(f.precoreal) }}/sc
-            <span v-if="f.precoliquido != null" class="text-green-8">
-              · líq {{ rs(f.precoliquido) }}</span
-            >
+            {{ fmt(f.quantidade) }} sc ·
+            <!-- US$ dolarizado: mostra o preço em dólar (precoreal é R$ e fica null). -->
+            <template v-if="f.moeda && f.moeda !== 'BRL'">US$ {{ fmt(f.preco, 2) }}/sc</template>
+            <template v-else>
+              {{ rs(f.precoreal) }}/sc
+              <span v-if="f.precoliquido != null" class="text-green-8">
+                · líq {{ rs(f.precoliquido) }}</span
+              >
+            </template>
             <q-badge v-if="f.isentofethab" color="teal-5" label="isento FETHAB" class="q-ml-xs" />
           </q-item-label>
           <q-item-label caption>
             {{ fmtData(f.data) }}
-            <span v-if="f.moeda && f.moeda !== 'BRL'"
-              >· {{ f.moeda }} {{ fmt(f.preco, 2) }} × {{ fmt(f.dolar, 4) }}</span
+            <!-- Cotação só aparece em fixação legada que já a travou (dolar != null). -->
+            <span v-if="f.moeda && f.moeda !== 'BRL' && f.dolar"
+              >· cotação {{ fmt(f.dolar, 4) }}</span
             >
+          </q-item-label>
+          <!-- Ledger: quanto DESTA fixação já foi recebido e o saldo, na sua moeda. -->
+          <q-item-label caption class="text-blue-grey-7">
+            <template v-if="ehUsd(f)">
+              Recebido US$ {{ fmt(f.recebidousd, 2) }}<span v-if="f.cotacaomedia">
+                @ {{ fmt(f.cotacaomedia, 4) }} → {{ rs(f.recebido) }}</span
+              >
+              · A receber US$ {{ fmt(f.areceber, 2) }}
+            </template>
+            <template v-else>
+              Recebido {{ rs(f.recebido) }} · A receber {{ rs(f.areceber) }}
+            </template>
           </q-item-label>
         </q-item-section>
         <q-item-section side>
