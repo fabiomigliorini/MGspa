@@ -447,6 +447,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao']);
 
+    // Quitar/reabrir a fixacao (marca "recebida" mesmo com diferencinha de imposto)
+    Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/quitar', [\Mg\Contrato\ContratoFixacaoController::class, 'quitar']);
+    Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/quitar', [\Mg\Contrato\ContratoFixacaoController::class, 'reabrir']);
+
     // Travas de cambio aninhadas na fixacao
     Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/cambio/{codcambio}/inativo', [\Mg\Contrato\ContratoFixacaoCambioController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/cambio/{codcambio}/inativo', [\Mg\Contrato\ContratoFixacaoCambioController::class, 'ativar']);
@@ -460,12 +464,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('contrato/{codcontrato}/anexo/{nome}/download', [\Mg\Contrato\ContratoAnexoController::class, 'download'])->where('nome', '.*');
     Route::delete('contrato/{codcontrato}/anexo/{nome}', [\Mg\Contrato\ContratoAnexoController::class, 'destroy'])->where('nome', '.*');
 
-    Route::post('contrato/{codcontrato}/pagamento/{codpagamento}/confirmar', [\Mg\Contrato\ContratoPagamentoController::class, 'confirmar']);
-    Route::post('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'inativar']);
-    Route::delete('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'ativar']);
-    Route::apiResource('contrato.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
+    // Recebimentos aninhados na fixacao (1 fixacao : N recebimentos)
+    Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'ativar']);
+    Route::apiResource('contrato.fixacao.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
         ->only(['index', 'store', 'update', 'destroy'])
-        ->parameters(['contrato' => 'codcontrato', 'pagamento' => 'codpagamento']);
+        ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao', 'pagamento' => 'codpagamento']);
 
     // Plano de emissao de NF (operacao triangular) aninhado no contrato
     Route::post('contrato/{codcontrato}/nota/{codnota}/inativo', [\Mg\Contrato\ContratoNotaController::class, 'inativar']);

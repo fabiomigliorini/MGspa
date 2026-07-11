@@ -37,10 +37,9 @@ class SafraService extends MgService
             ->with('Cultura')
             ->withSum(['MovimentoGraoS as carregadokg' => $movAtivo], 'liquido') // KG entregue (extrato)
             ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
-            // barter (settlement em insumos) vive no pagamento; exclui do fixo/afixar/preço médio.
-            ->withCount(['ContratoPagamentoS as bartercount' => fn ($q) => $q->where('forma', 'BARTER')->whereNull('inativo')])
             ->get();
-        $semBarter = fn ($c) => (int) $c->bartercount === 0;
+        // barter (settlement em insumos) = flag no contrato; exclui do fixo/afixar/preço médio.
+        $semBarter = fn ($c) => !$c->barter;
 
         // Unidade de trabalho = KG. Contrato negocia em sacas; converte por
         // contrato (cada um pode ter cultura/pesosaca diferente). Sacas derivadas

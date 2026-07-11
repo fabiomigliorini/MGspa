@@ -26,6 +26,8 @@ class ContratoFixacao extends MgModel
         'preco',
         'observacao',
         'inativo',
+        // Marca a fixação como RECEBIDA (encerra o saldo) mesmo com diferencinha.
+        'quitado',
         // Config fiscal congelada (base/alíquota/UPF/grupofethab; SEM valor).
         // Os valores em R$ (impostos/líquido) são derivados das travas de câmbio.
         'tributos',
@@ -46,6 +48,7 @@ class ContratoFixacao extends MgModel
         'criacao' => 'datetime',
         'data' => 'date',
         'datavencimento' => 'date',
+        'quitado' => 'datetime',
         'inativo' => 'datetime',
         'preco' => 'float',
         'quantidade' => 'float',

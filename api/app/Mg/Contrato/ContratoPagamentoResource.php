@@ -11,7 +11,7 @@ class ContratoPagamentoResource extends Resource
         $ret = parent::toArray($request);
 
         // remove relações em snake_case que o parent injeta
-        unset($ret['contrato'], $ret['portador']);
+        unset($ret['contrato_fixacao'], $ret['portador']);
 
         // auditoria (quem criou/alterou)
         $ret['usuariocriacao'] = $this->usuariocriacao;

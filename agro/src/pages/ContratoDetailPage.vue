@@ -35,10 +35,11 @@ const {
   pesosaca,
   valornf,
   valorCarregado,
-  fixadoPorMoeda,
+  fixadoResumo,
   afixar,
   bate,
 } = storeToRefs(store)
+const simbolo = store.simboloMoeda
 //essa const tinha os campos   difNf, difPago, que removi
 // Form de edição = form compartilhado (também usado p/ criar na safra), então
 // continua via useCadastro; ao salvar, recarrega o store da tela.
@@ -182,7 +183,59 @@ onMounted(() => store.carregar(cod))
 
       <!-- Reconciliação físico / fiscal / financeiro -->
       <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-12 col-md-3">
+        <!-- 1º Financeiro (o mais importante) -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="row items-center text-teal-8">
+                <q-icon name="payments" class="q-mr-sm" /><span class="text-subtitle2"
+                  >Financeiro</span
+                >
+              </div>
+              <!-- Fixado por MOEDA de liquidação (câmbio travado migra p/ R$) +
+                   preço médio/sc. Vem PRONTO do backend (fixadoResumo). -->
+              <div class="q-mt-sm">
+                <template v-if="fixadoResumo.length">
+                  <div v-for="b in fixadoResumo" :key="`${b.iso}-${b.firme}`" class="q-mb-xs">
+                    <div class="text-h6 text-weight-bold" style="line-height: 1.2">
+                      {{ simbolo(b.iso) }} {{ fmt(b.total, 2) }}
+                    </div>
+                    <div class="text-caption text-grey-6">
+                      {{ fmt(b.sacas) }} sc · {{ simbolo(b.iso) }} {{ fmt(b.precomedio, 2) }}/sc
+                    </div>
+                  </div>
+                </template>
+                <div v-else class="text-h5">—</div>
+              </div>
+              <div class="text-caption text-grey-6">Fixado</div>
+              <div
+                v-if="!volumeemaberto && afixar > 0.5"
+                class="text-caption text-orange-8 q-mt-xs"
+              >
+                A fixar {{ fmt(afixar, 0) }} sc
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <!-- 2º Embarque -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="row items-center text-indigo-8">
+                <q-icon name="date_range" class="q-mr-sm" /><span class="text-subtitle2"
+                  >Embarque - Período</span
+                >
+              </div>
+              <div class="text-h5 q-mt-sm">
+                {{ embarqueInicioFmt }}
+                <span class="text-subtitle2">a {{ embarqueFimFmt }}</span>
+              </div>
+              <div class="text-caption text-grey-7 q-mt-sm">{{ embarquePrazoLabel }}</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <!-- 3º Físico -->
+        <div class="col-12 col-sm-6 col-md-3">
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-blue-grey-8">
@@ -222,7 +275,8 @@ onMounted(() => store.carregar(cod))
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-3">
+        <!-- 4º Fiscal -->
+        <div class="col-12 col-sm-6 col-md-3">
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="row items-center text-deep-orange-8">
@@ -234,54 +288,6 @@ onMounted(() => store.carregar(cod))
               <div class="text-caption text-grey-7 q-mt-sm">
                 Valor carregado: {{ rs(valorCarregado) }}
               </div>
-            </q-card-section>
-          </q-card>
-        </div>
-        <div class="col-6 col-md-3">
-          <q-card flat bordered class="full-height">
-            <q-card-section>
-              <div class="row items-center text-teal-8">
-                <q-icon name="payments" class="q-mr-sm" /><span class="text-subtitle2"
-                  >Financeiro</span
-                >
-              </div>
-              <!-- Uma linha por MOEDA (não mistura US$ com R$); a fixar (sc) se sobrar -->
-              <div class="q-mt-sm">
-                <template v-if="fixadoPorMoeda.length">
-                  <div
-                    v-for="m in fixadoPorMoeda"
-                    :key="m.iso"
-                    class="text-h6 text-weight-bold"
-                    style="line-height: 1.25"
-                  >
-                    {{ m.simbolo }} {{ fmt(m.totalmoeda, 2) }}
-                  </div>
-                </template>
-                <div v-else class="text-h5">—</div>
-              </div>
-              <div class="text-caption text-grey-6">Fixado</div>
-              <div
-                v-if="!volumeemaberto && afixar > 0.5"
-                class="text-caption text-orange-8 q-mt-xs"
-              >
-                A fixar {{ fmt(afixar, 0) }} sc
-              </div>
-            </q-card-section>
-          </q-card>
-        </div>
-        <div class="col-6 col-md-3">
-          <q-card flat bordered class="full-height">
-            <q-card-section>
-              <div class="row items-center text-indigo-8">
-                <q-icon name="date_range" class="q-mr-sm" /><span class="text-subtitle2"
-                  >Embarque - Período</span
-                >
-              </div>
-              <div class="text-h5 q-mt-sm">
-                {{ embarqueInicioFmt }}
-                <span class="text-subtitle2">a {{ embarqueFimFmt }}</span>
-              </div>
-              <div class="text-caption text-grey-7 q-mt-sm">{{ embarquePrazoLabel }}</div>
             </q-card-section>
           </q-card>
         </div>

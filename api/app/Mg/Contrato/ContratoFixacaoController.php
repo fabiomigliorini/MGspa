@@ -74,4 +74,28 @@ class ContratoFixacaoController extends MgController
         MgService::ativar($m);
         return new ContratoFixacaoResource($m->fresh('Moeda', 'ContratoFixacaoCambioS'));
     }
+
+    /**
+     * Quita a fixação: marca RECEBIDA (encerra o saldo) mesmo quando o recebido
+     * não bate no centavo com o líquido (diferencinha de imposto). reabrir() desfaz.
+     */
+    public function quitar(Request $request, $codcontrato, $codfixacao)
+    {
+        $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
+        $m->quitado = now();
+        $m->save();
+        return new ContratoFixacaoResource(
+            $m->fresh('Moeda', 'ContratoFixacaoCambioS', 'ContratoPagamentoS.Portador'),
+        );
+    }
+
+    public function reabrir(Request $request, $codcontrato, $codfixacao)
+    {
+        $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
+        $m->quitado = null;
+        $m->save();
+        return new ContratoFixacaoResource(
+            $m->fresh('Moeda', 'ContratoFixacaoCambioS', 'ContratoPagamentoS.Portador'),
+        );
+    }
 }

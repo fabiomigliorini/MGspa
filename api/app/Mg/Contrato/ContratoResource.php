@@ -69,9 +69,7 @@ class ContratoResource extends Resource
             $ret['ContratoFixacaoS'] = ContratoFixacaoResource::collection($this->ContratoFixacaoS);
         }
 
-        if ($this->relationLoaded('ContratoPagamentoS')) {
-            $ret['ContratoPagamentoS'] = ContratoPagamentoResource::collection($this->ContratoPagamentoS);
-        }
+        // Recebimentos agora vivem POR FIXAÇÃO (dentro de cada ContratoFixacaoResource).
 
         // Entregas no extrato (cada carga que moveu este contrato).
         if ($this->relationLoaded('MovimentoGraoS')) {
@@ -98,25 +96,78 @@ class ContratoResource extends Resource
         // pra não disparar N+1 na listagem.
         if ($this->relationLoaded('ContratoFixacaoS')) {
             $ret['calculo'] = ContratoCalculoService::calcularDoContrato($this->resource);
+            $ret['fixadoresumo'] = $this->fixadoResumo();
         }
 
         return $ret;
     }
 
     /**
+     * Resumo do "fixado" p/ o KPI, POR MOEDA de liquidação (câmbio travado migra
+     * o valor de US$ pra R$). Buckets:
+     *   - R$ firme: fixações BRL (cheias) + parte TRAVADA das US$ (em R$).
+     *   - US$/€ a converter: o saldo ainda sem câmbio de cada moeda estrangeira.
+     * Cada bucket traz total, sacas e PREÇO MÉDIO por saca (na moeda do bucket).
+     */
+    protected function fixadoResumo(): array
+    {
+        $fixacoes = $this->ContratoFixacaoS->whereNull('inativo');
+
+        $firmeTotal = 0.0;
+        $firmeSacas = 0.0;
+        $estrangeiras = []; // iso => ['total' => saldomoeda, 'sacas' => sacas flutuantes]
+
+        foreach ($fixacoes as $f) {
+            $iso = $f->Moeda->iso ?? 'BRL';
+            $preco = (float) $f->preco;
+            $totalbrl = (float) $f->totalbrl;
+
+            if ($iso === 'BRL') {
+                $firmeTotal += $totalbrl;
+                $firmeSacas += (float) $f->quantidade;
+                continue;
+            }
+            // Estrangeira: a parte travada já é R$ firme; o saldo fica a converter.
+            $sacasTravadas = $preco > 0 ? ((float) $f->totalmoeda - (float) $f->saldomoeda) / $preco : 0;
+            $firmeTotal += $totalbrl;
+            $firmeSacas += $sacasTravadas;
+
+            $saldo = (float) $f->saldomoeda;
+            if ($saldo > 0.005) {
+                $estrangeiras[$iso] ??= ['total' => 0.0, 'sacas' => 0.0];
+                $estrangeiras[$iso]['total'] += $saldo;
+                $estrangeiras[$iso]['sacas'] += $preco > 0 ? $saldo / $preco : 0;
+            }
+        }
+
+        $bucket = fn ($iso, $firme, $total, $sacas) => [
+            'iso' => $iso,
+            'firme' => $firme,
+            'total' => round($total, 2),
+            'sacas' => round($sacas, 0),
+            'precomedio' => $sacas > 0 ? round($total / $sacas, 2) : 0,
+        ];
+
+        $buckets = [];
+        if ($firmeTotal > 0.005 || $firmeSacas > 0) {
+            $buckets[] = $bucket('BRL', true, $firmeTotal, $firmeSacas);
+        }
+        foreach ($estrangeiras as $iso => $b) {
+            $buckets[] = $bucket($iso, false, $b['total'], $b['sacas']);
+        }
+        return $buckets;
+    }
+
+    /**
      * Tipo derivado (a coluna `tipo` deixou de existir):
-     *   - BARTER: contrato marcado como barter (flag) OU com pagamento
-     *             forma=BARTER (settlement em insumos). O flag permite declarar
-     *             barter sem exigir parcela; `bartercount` fica como fallback
-     *             p/ contratos legados que só têm a parcela barter.
+     *   - BARTER: contrato marcado como barter (flag tblcontrato.barter).
      *   - FIXO:   quantidade definida e já fixada por completo
      *   - FIXAR:  o resto (fixa aos poucos, ou volume em aberto)
-     * Depende de `bartercount` (withCount) e `fixado` (withSum) — ambos
-     * resolvidos em ContratoService::pesquisar.
+     * Depende de `fixado` (withSum) resolvido em ContratoService::pesquisar.
      */
     protected function tipoDerivado(bool $emaberto): string
     {
-        if ((bool) $this->barter || (int) $this->bartercount > 0) {
+        if ((bool) $this->barter) {
             return 'BARTER';
         }
         if (!$emaberto && (float) $this->fixado >= (float) $this->quantidade) {
