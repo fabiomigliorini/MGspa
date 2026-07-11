@@ -39,8 +39,17 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   )
   const valornf = computed(() => n(contrato.value?.valornf))
 
+  // Ordem estável: data da fixação asc, depois codcontratofixacao asc (não
+  // depende da ordem que o backend devolve — editar não reordena os cards).
   const fixacoes = computed(() =>
-    (contrato.value?.ContratoFixacaoS || []).filter((f) => !f.inativo),
+    (contrato.value?.ContratoFixacaoS || [])
+      .filter((f) => !f.inativo)
+      .sort((a, b) => {
+        const da = (a.data || '').slice(0, 10)
+        const db = (b.data || '').slice(0, 10)
+        if (da !== db) return da < db ? -1 : 1
+        return n(a.codcontratofixacao) - n(b.codcontratofixacao)
+      }),
   )
   const pagamentos = computed(() =>
     (contrato.value?.ContratoPagamentoS || []).filter((p) => !p.inativo),

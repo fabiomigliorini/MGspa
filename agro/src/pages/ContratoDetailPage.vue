@@ -35,9 +35,8 @@ const {
   pesosaca,
   valornf,
   valorCarregado,
-  valorFixadoBruto,
   fixadoPorMoeda,
-  saldoTravarPorMoeda,
+  afixar,
   bate,
 } = storeToRefs(store)
 //essa const tinha os campos   difNf, difPago, que removi
@@ -246,23 +245,26 @@ onMounted(() => store.carregar(cod))
                   >Financeiro</span
                 >
               </div>
-              <!-- Fixado por MOEDA (não mistura US$ com R$): US$ 117.000 / R$ 50.000 -->
-              <div class="text-h5 q-mt-sm">
+              <!-- Uma linha por MOEDA (não mistura US$ com R$); a fixar (sc) se sobrar -->
+              <div class="q-mt-sm">
                 <template v-if="fixadoPorMoeda.length">
-                  <template v-for="(m, i) in fixadoPorMoeda" :key="m.iso"
-                    ><span v-if="i > 0" class="text-grey-6"> · </span>{{ m.simbolo }}
-                    {{ fmt(m.totalmoeda, 2) }}</template
+                  <div
+                    v-for="m in fixadoPorMoeda"
+                    :key="m.iso"
+                    class="text-h6 text-weight-bold"
+                    style="line-height: 1.25"
                   >
+                    {{ m.simbolo }} {{ fmt(m.totalmoeda, 2) }}
+                  </div>
                 </template>
-                <template v-else>—</template>
+                <div v-else class="text-h5">—</div>
               </div>
               <div class="text-caption text-grey-6">Fixado</div>
-              <!-- Câmbio: R$ firme + o que falta travar (moeda estrangeira) -->
-              <div class="text-caption text-grey-7">Travado: {{ rs(valorFixadoBruto) }}</div>
-              <div v-if="saldoTravarPorMoeda.length" class="text-caption text-orange-8">
-                Falta travar<template v-for="m in saldoTravarPorMoeda" :key="m.iso">
-                  {{ m.simbolo }} {{ fmt(m.saldomoeda, 2) }}</template
-                >
+              <div
+                v-if="!volumeemaberto && afixar > 0.5"
+                class="text-caption text-orange-8 q-mt-xs"
+              >
+                A fixar {{ fmt(afixar, 0) }} sc
               </div>
             </q-card-section>
           </q-card>
