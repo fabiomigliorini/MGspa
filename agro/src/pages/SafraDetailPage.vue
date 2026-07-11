@@ -9,6 +9,7 @@ import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import IconeCultura from 'components/IconeCultura.vue'
@@ -496,19 +497,26 @@ onMounted(async () => {
                       <q-item-section avatar>
                         <q-avatar
                           text-color="white"
-                          icon="grass"
+                          icon="place"
                           :style="{ backgroundColor: corTalhao(l) }"
                         />
                       </q-item-section>
                       <q-item-section>
                         <q-item-label class="text-weight-medium">
                           {{ l.talhao || `Talhão ${l.codplantio}` }}
+                          ·
+                          {{ nomeVariedade(l) || 'sem variedade' }}
                         </q-item-label>
                         <q-item-label caption>
-                          {{ nomeVariedade(l) || 'sem variedade' }} ·
-                          {{ fmt(l.areaplantada, 1) }} ha
-                          <span v-if="l.expectativa > 0"
-                            >· exp {{ fmt(l.expectativaha, 1) }} sc/ha</span
+                          Plantado {{ fmt(l.areaplantada, 1) }} ha
+                          <span v-if="l.dataplantio"> em {{ formataData(l.dataplantio) }} </span>
+                        </q-item-label>
+                        <q-item-label caption>
+                          <span v-if="l.expectativa > 0">
+                            Expectativa {{ fmt(l.expectativa) }} sc ({{
+                              fmt(l.expectativaha, 1)
+                            }}
+                            sc/ha)</span
                           >
                           <q-badge
                             v-if="!l.geometria"
@@ -517,23 +525,23 @@ onMounted(async () => {
                             class="q-ml-xs"
                           />
                         </q-item-label>
-                        <q-linear-progress
+                        <!-- <q-linear-progress
                           :value="l.progresso"
                           color="green-6"
                           track-color="grey-3"
                           size="6px"
                           rounded
                           class="q-mt-xs"
-                        />
+                        /> -->
                       </q-item-section>
-                      <q-item-section side class="text-right">
+                      <!-- <q-item-section side class="text-right">
                         <q-item-label class="text-weight-bold text-green-8">
                           {{ fmt(l.produtividade, 1) }} sc/ha
                         </q-item-label>
                         <q-item-label caption
                           >{{ fmt(l.sacas) }} / {{ fmt(l.expectativa) }} sc</q-item-label
                         >
-                      </q-item-section>
+                      </q-item-section> -->
                       <q-item-section side>
                         <div class="row items-center no-wrap">
                           <MgInfoCriacao :registro="l" />
@@ -543,7 +551,7 @@ onMounted(async () => {
                             round
                             size="sm"
                             color="grey-7"
-                            icon="edit_location_alt"
+                            icon="edit"
                             @click="editarPlantio(l)"
                           >
                             <q-tooltip>Editar / desenhar</q-tooltip>
@@ -591,6 +599,7 @@ onMounted(async () => {
     <PlantioWizardDialog
       v-model="store.dialogPlantio"
       :cad="plantioCad"
+      :safra="safra"
       :fazendas="fazendas"
       :talhoes-base="talhoesBase"
       :variedades="variedadesDaCultura"

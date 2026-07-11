@@ -4,6 +4,7 @@ namespace App\Http\Requests\Mg\Fazenda;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Mg\Safra\Safra;
 
 class PlantioStoreRequest extends FormRequest
 {
@@ -29,11 +30,19 @@ class PlantioStoreRequest extends FormRequest
                 ->whereNull('inativo')
         );
 
+        // Data do plantio limitada ao periodo da safra: do inicio do ano de
+        // plantio ao fim do ano de colheita (colheita cai no anoplantio quando
+        // safra de ciclo unico).
+        $safra = Safra::findOrFail($this->route('codsafra'));
+        $dataMin = $safra->anoplantio . '-01-01';
+        $dataMax = ($safra->anocolheita ?: $safra->anoplantio) . '-12-31';
+
         return [
             'codsafra' => ['required', 'exists:tblsafra,codsafra'],
             'codfazenda' => ['required', 'exists:tblfazenda,codfazenda'],
             'talhao' => ['required', 'string', 'max:60', $unico],
             'codvariedade' => ['required', 'exists:tblvariedade,codvariedade'],
+            'dataplantio' => ['required', 'date', "after_or_equal:$dataMin", "before_or_equal:$dataMax"],
             'areaplantada' => ['required', 'numeric', 'gt:0'],
             'expectativasacas' => ['nullable', 'numeric', 'gte:0'],
             'geometria' => ['nullable', 'array'],
@@ -41,6 +50,14 @@ class PlantioStoreRequest extends FormRequest
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
             'codtalhao' => ['nullable', 'exists:tbltalhao,codtalhao'],
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'dataplantio.after_or_equal' => 'A data do plantio nao pode ser anterior ao inicio da safra.',
+            'dataplantio.before_or_equal' => 'A data do plantio nao pode ser posterior ao fim da safra.',
         ];
     }
 }

@@ -296,7 +296,10 @@ const dateOptions = computed(() => {
   const minDate = props.min ? props.min.substring(0, 10) : null;
   const maxDate = props.max ? props.max.substring(0, 10) : null;
   return (dateStr) => {
-    const part = String(dateStr).substring(0, 10);
+    // q-date entrega a data como "YYYY/MM/DD"; min/max chegam em ISO
+    // "YYYY-MM-DD". Sem normalizar a "/" pra "-" a comparação de string quebra
+    // ('/' > '-' em ASCII) e desabilita o calendário inteiro.
+    const part = String(dateStr).substring(0, 10).replace(/\//g, "-");
     if (minDate && part < minDate) return false;
     if (maxDate && part > maxDate) return false;
     return true;
