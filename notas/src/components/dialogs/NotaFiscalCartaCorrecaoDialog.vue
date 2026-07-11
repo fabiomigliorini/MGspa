@@ -91,9 +91,9 @@ defineExpose({
         </q-card-section>
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Cancelar" @click="close" :disable="loading" />
+          <q-btn flat label="Cancelar" color="grey-8" @click="close" :disable="loading" />
           <q-btn
-            unelevated
+            flat
             label="Enviar Carta de Correção"
             color="primary"
             icon="send"

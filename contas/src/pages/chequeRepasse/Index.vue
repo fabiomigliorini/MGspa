@@ -27,7 +27,8 @@ const toggleInativo = (row) => {
     title: 'Inativar repasse',
     message:
       'Inativar este repasse devolve os cheques ainda "Repassados" para "À Repassar". Confirma?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(() => inativar(row))
 }
 

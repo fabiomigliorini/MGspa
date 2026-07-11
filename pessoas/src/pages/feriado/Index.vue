@@ -2,7 +2,12 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { feriadoStore } from 'src/stores/feriado'
-import { formataDataAbreviada, formataData, formataDiaSemana, formataTimestamp } from '@components/formatters'
+import {
+  formataDataAbreviada,
+  formataData,
+  formataDiaSemana,
+  formataTimestamp,
+} from '@components/formatters'
 import MGLayout from 'layouts/MGLayout.vue'
 import MgInputData from '@components/MgInputData.vue'
 
@@ -110,7 +115,8 @@ const excluir = (feriado) => {
   $q.dialog({
     title: 'Excluir Feriado',
     message: 'Tem certeza que deseja excluir "' + feriado.feriado + '"?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sFeriado.excluir(feriado.codferiado)

@@ -5,9 +5,9 @@ import {
   TIPO_PRODUTO_OPTIONS,
 } from '../../stores/tributacaoNaturezaOperacaoStore'
 import { useDebounceFn } from '@vueuse/core'
-import SelectEstado from '../selects/SelectEstado.vue'
-import SelectTributacao from '../selects/SelectTributacao.vue'
-import SelectCfop from '../selects/SelectCfop.vue'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
+import MgSelectTributacao from '@components/MgSelectTributacao.vue'
+import SelectCfop from '@components/MgSelectCfop.vue'
 
 const tributacaoStore = useTributacaoNaturezaOperacaoStore()
 const isInitializing = ref(true)
@@ -111,7 +111,7 @@ onMounted(async () => {
       <!-- Estado -->
       <div class="text-grey-7 text-body2">Estado:</div>
       <div>
-        <SelectEstado v-model="filters.codestado" label="Estado" />
+        <MgSelectEstado v-model="filters.codestado" label="Estado" clearable />
       </div>
 
       <!-- Código -->
@@ -134,7 +134,7 @@ onMounted(async () => {
       <!-- Tributação -->
       <div class="text-grey-7 text-body2">Tributação:</div>
       <div>
-        <SelectTributacao v-model="filters.codtributacao" label="Tributação" />
+        <MgSelectTributacao v-model="filters.codtributacao" label="Tributação" clearable />
       </div>
 
       <!-- Tipo de Produto -->
@@ -190,7 +190,7 @@ onMounted(async () => {
       <!-- CFOP -->
       <div class="text-grey-7 text-body2">CFOP:</div>
       <div class="q-mb-md">
-        <SelectCfop v-model="filters.codcfop" label="CFOP" />
+        <SelectCfop v-model="filters.codcfop" label="CFOP" clearable />
       </div>
     </div>
   </div>

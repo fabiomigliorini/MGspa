@@ -287,7 +287,7 @@ onMounted(() => {
     <div class="row justify-center q-mt-md">
       <q-btn color="primary" label="Cadastrar Maquineta" @click="cadastrarMaquineta()" />
 
-      <q-dialog v-model="openModalCadastro" persistent>
+      <q-dialog v-model="openModalCadastro">
         <q-card>
           <q-card-section class="row items-center justify-center" style="min-width: 400px">
             <select-filial
@@ -329,9 +329,10 @@ onMounted(() => {
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn outline label="Cancelar" color="red" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn
               v-if="!qrCodeBasae64"
+              flat
               label="Gerar QR Code"
               color="primary"
               @click="gerarQrCode()"
@@ -340,6 +341,7 @@ onMounted(() => {
             />
             <q-btn
               v-else
+              flat
               label="Verificar Leitura"
               color="primary"
               @click="checkLeitura()"
@@ -349,7 +351,7 @@ onMounted(() => {
         </q-card>
       </q-dialog>
 
-      <q-dialog v-model="openModalEditCadastro" persistent>
+      <q-dialog v-model="openModalEditCadastro">
         <q-card>
           <q-card-section class="row items-center justify-center" style="min-width: 400px">
             <select-filial
@@ -376,8 +378,9 @@ onMounted(() => {
           </q-card-section>
 
           <q-card-actions align="right">
-            <q-btn outline label="Cancelar" color="red" v-close-popup />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn
+              flat
               label="Salvar"
               color="primary"
               @click="salvarMaquineta()"

@@ -4,7 +4,7 @@ import veiculoService from '../../services/veiculoService'
 import { useVeiculoStore, TIPO_PROPRIETARIO_OPTIONS } from '../../stores/veiculoStore'
 import { notificarSucesso, notificarErro } from '../../utils/notify'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectEstado from '../selects/SelectEstado.vue'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
@@ -81,10 +81,7 @@ const submit = async () => {
 </script>
 
 <template>
-  <q-dialog
-    :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
-  >
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card style="width: 600px; max-width: 95vw">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">{{ isNovo ? 'Novo' : 'Editar' }} Veículo</div>
@@ -100,7 +97,10 @@ const submit = async () => {
             outlined
             autofocus
             maxlength="50"
-            :rules="[(v) => !!v || 'Apelido é obrigatório', (v) => (v && v.length >= 5) || 'Mínimo 5 caracteres']"
+            :rules="[
+              (v) => !!v || 'Apelido é obrigatório',
+              (v) => (v && v.length >= 5) || 'Mínimo 5 caracteres',
+            ]"
           />
 
           <SelectPessoa v-model="form.codpessoaproprietario" label="Proprietário" />
@@ -137,12 +137,20 @@ const submit = async () => {
                 outlined
                 mask="AAA#X##"
                 hint="Ex: ABC1D23"
-                :rules="[(v) => !!v || 'Placa é obrigatória', (v) => (v && v.length === 7) || 'Placa deve ter 7 caracteres']"
+                :rules="[
+                  (v) => !!v || 'Placa é obrigatória',
+                  (v) => (v && v.length === 7) || 'Placa deve ter 7 caracteres',
+                ]"
                 @update:model-value="(v) => (form.placa = (v || '').toUpperCase())"
               />
             </div>
             <div class="col-12 col-sm-6">
-              <SelectEstado v-model="form.codestado" label="Estado *" :bottom-slots="false" />
+              <MgSelectEstado
+                v-model="form.codestado"
+                label="Estado *"
+                clearable
+                :bottom-slots="false"
+              />
             </div>
           </div>
 
@@ -150,7 +158,13 @@ const submit = async () => {
 
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-4">
-              <q-input v-model.number="form.tara" label="Tara (KG)" outlined type="number" min="0" />
+              <q-input
+                v-model.number="form.tara"
+                label="Tara (KG)"
+                outlined
+                type="number"
+                min="0"
+              />
             </div>
             <div class="col-12 col-sm-4">
               <q-input
@@ -177,7 +191,7 @@ const submit = async () => {
 
         <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Cancelar" color="grey-8" @click="close" tabindex="-1" />
-          <q-btn unelevated label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
+          <q-btn flat label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
         </q-card-actions>
       </q-form>
     </q-card>

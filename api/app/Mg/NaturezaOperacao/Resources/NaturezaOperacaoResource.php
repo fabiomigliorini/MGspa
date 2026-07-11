@@ -13,7 +13,7 @@ class NaturezaOperacaoResource extends JsonResource
             'codnaturezaoperacao' => $this->codnaturezaoperacao,
             'naturezaoperacao' => $this->naturezaoperacao,
             'codoperacao' => $this->codoperacao,
-            'operacao' => $this->relationLoaded('Operacao') ? $this->Operacao?->only(['codoperacao', 'operacao']) : null,
+            'operacao' => $this->Operacao?->only(['codoperacao', 'operacao']),
             'emitida' => $this->emitida,
             'finnfe' => $this->finnfe,
             'finnfeDescricao' => NaturezaOperacao::FINNFE_DESCRICOES[$this->finnfe] ?? null,

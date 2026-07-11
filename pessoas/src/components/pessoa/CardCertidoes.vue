@@ -5,8 +5,8 @@ import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import SelectCertidaoEmissor from 'components/pessoa/SelectCertidaoEmissor.vue'
-import SelectCertidaoTipo from 'components/pessoa/SelectCertidaoTipo.vue'
+import SelectCertidaoEmissor from '@components/MgSelectCertidaoEmissor.vue'
+import SelectCertidaoTipo from '@components/MgSelectCertidaoTipo.vue'
 import MgInputData from '@components/MgInputData.vue'
 import { formataData, formataDataIso } from '@components/formatters'
 
@@ -154,9 +154,10 @@ const ativaCertidao = async (codpessoacertidao) => {
 
 const deletarCertidao = async (codpessoacertidao) => {
   $q.dialog({
-    title: 'Excluir Histórico',
+    title: 'Excluir Certidão',
     message: 'Tem certeza que deseja excluir essa certidão?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sPessoa.deletarCertidao(codpessoacertidao)
@@ -268,7 +269,7 @@ const submit = () => {
         size="sm"
         color="primary"
         v-if="user.temPermissao('Publico')"
-        @click=";(dialogCertidao = true), (modelCertidao = {}), (editCertidao = false)"
+        @click=";((dialogCertidao = true), (modelCertidao = {}), (editCertidao = false))"
       />
     </q-card-section>
 

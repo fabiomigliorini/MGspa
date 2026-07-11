@@ -72,7 +72,8 @@ const estornar = (item) => {
   $q.dialog({
     title: 'Estornar Acerto',
     message: `Tem certeza que deseja estornar o acerto de ${item.nome}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Estornar', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.estornarAcerto(route.params.codperiodo, item.codperiodocolaborador)

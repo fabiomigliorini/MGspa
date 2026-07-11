@@ -242,11 +242,13 @@ const handleSubmit = async () => {
     message: 'Tem certeza que deseja salvar?',
     cancel: {
       label: 'Cancelar',
+      color: 'grey-8',
       flat: true,
     },
     ok: {
       label: 'Salvar',
       color: 'primary',
+      flat: true,
     },
   }).onOk(async () => {
     loading.value = true

@@ -2,9 +2,9 @@
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useNfeTerceiroStore } from '../../stores/nfeTerceiroStore'
 import { useDebounceFn } from '@vueuse/core'
-import SelectFilial from '../selects/SelectFilial.vue'
-import SelectNaturezaOperacao from '../selects/SelectNaturezaOperacao.vue'
-import SelectGrupoEconomico from '../selects/SelectGrupoEconomico.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
+import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
+import MgSelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 
 const nfeTerceiroStore = useNfeTerceiroStore()
@@ -212,7 +212,12 @@ onMounted(() => {
 
       <!-- Filial -->
       <div class="q-mb-md">
-        <SelectFilial v-model="filters.codfilial" label="Filial" :bottom-slots="false" />
+        <MgSelectFilial
+          v-model="filters.codfilial"
+          label="Filial"
+          clearable
+          :bottom-slots="false"
+        />
       </div>
 
       <!-- Pessoa (Fornecedor) -->
@@ -227,18 +232,20 @@ onMounted(() => {
 
       <!-- Grupo Economico -->
       <div class="q-mb-md">
-        <SelectGrupoEconomico
+        <MgSelectGrupoEconomico
           v-model="filters.codgrupoeconomico"
           label="Grupo Economico"
+          clearable
           :bottom-slots="false"
         />
       </div>
 
       <!-- Natureza de Operacao -->
       <div class="q-mb-md">
-        <SelectNaturezaOperacao
+        <MgSelectNaturezaOperacao
           v-model="filters.codnaturezaoperacao"
           label="Natureza de Operacao"
+          clearable
           :bottom-slots="false"
         />
       </div>

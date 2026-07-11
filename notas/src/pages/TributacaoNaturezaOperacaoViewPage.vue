@@ -1,5 +1,11 @@
 <script setup>
-import { formataTimestamp, formataCfop, formataPercentual, formataNumero, formataCodigo } from '@components/formatters'
+import {
+  formataTimestamp,
+  formataCfop,
+  formataPercentual,
+  formataNumero,
+  formataCodigo,
+} from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -45,8 +51,8 @@ const handleDelete = () => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: `Deseja excluir esta tributação?`,
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await tributacaoStore.deleteTributacao(codtributacaonaturezaoperacao.value)

@@ -24,4 +24,17 @@ class SelectEstadoController extends Controller
             'sigla' => $item->sigla,
         ]);
     }
+
+    public static function show($id)
+    {
+        $item = Estado::find($id);
+        if (empty($item)) {
+            abort(404);
+        }
+        return [
+            'value' => $item->codestado,
+            'label' => $item->estado,
+            'sigla' => $item->sigla,
+        ];
+    }
 }

@@ -54,6 +54,7 @@ const menuGroups = [
     label: 'Cadastros',
     items: [
       { label: 'Bancos', icon: 'account_balance', color: 'red-8', to: { name: 'banco' } },
+      { label: 'Moedas', icon: 'currency_exchange', color: 'purple-8', to: { name: 'moeda' } },
       {
         label: 'Contas Contábeis',
         icon: 'account_tree',

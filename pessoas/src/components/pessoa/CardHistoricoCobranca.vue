@@ -85,7 +85,8 @@ const deletarHistorico = (codcobrancahistorico) => {
   $q.dialog({
     title: 'Excluir Histórico',
     message: 'Tem certeza que deseja excluir esse histórico de cobrança?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sPessoa.deletaCobrancaHistorico(route.params.id, codcobrancahistorico)
@@ -204,7 +205,7 @@ watch(
           color="primary"
           v-if="user.temPermissao('Publico')"
           @click="
-            ;(dialogEditarHistorico = true), (modelCobrancaHistorico = {}), (cobrancaNova = true)
+            ;((dialogEditarHistorico = true), (modelCobrancaHistorico = {}), (cobrancaNova = true))
           "
         />
       </q-card-section>

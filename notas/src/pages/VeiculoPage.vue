@@ -114,8 +114,8 @@ const excluir = (entidade, registro) => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: `Deseja realmente excluir "${cfg.nome}"?`,
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await cfg.delete(cfg.id)
@@ -146,7 +146,11 @@ const excluir = (entidade, registro) => {
         <q-tab-panel name="veiculo" class="q-pa-none">
           <q-card flat bordered>
             <q-list separator>
-              <q-item v-for="v in store.veiculos" :key="v.codveiculo" :class="{ 'bg-red-1': v.inativo }">
+              <q-item
+                v-for="v in store.veiculos"
+                :key="v.codveiculo"
+                :class="{ 'bg-red-1': v.inativo }"
+              >
                 <q-item-section avatar>
                   <q-avatar icon="local_shipping" color="primary" text-color="white" />
                 </q-item-section>
@@ -158,7 +162,14 @@ const excluir = (entidade, registro) => {
                 </q-item-section>
                 <q-item-section side>
                   <div class="row no-wrap">
-                    <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarVeiculo(v)">
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      icon="edit"
+                      @click="editarVeiculo(v)"
+                    >
                       <q-tooltip>Editar</q-tooltip>
                     </q-btn>
                     <q-btn
@@ -171,7 +182,14 @@ const excluir = (entidade, registro) => {
                     >
                       <q-tooltip>{{ v.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
                     </q-btn>
-                    <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluir('veiculo', v)">
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      icon="delete"
+                      @click="excluir('veiculo', v)"
+                    >
                       <q-tooltip>Excluir</q-tooltip>
                     </q-btn>
                   </div>
@@ -211,7 +229,14 @@ const excluir = (entidade, registro) => {
                 </q-item-section>
                 <q-item-section side>
                   <div class="row no-wrap">
-                    <q-btn flat round size="sm" color="grey-7" icon="edit" @click="editarConjunto(c)">
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      icon="edit"
+                      @click="editarConjunto(c)"
+                    >
                       <q-tooltip>Editar</q-tooltip>
                     </q-btn>
                     <q-btn
@@ -224,7 +249,14 @@ const excluir = (entidade, registro) => {
                     >
                       <q-tooltip>{{ c.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
                     </q-btn>
-                    <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluir('conjunto', c)">
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      icon="delete"
+                      @click="excluir('conjunto', c)"
+                    >
                       <q-tooltip>Excluir</q-tooltip>
                     </q-btn>
                   </div>
@@ -241,9 +273,17 @@ const excluir = (entidade, registro) => {
         <q-tab-panel name="tipo" class="q-pa-none">
           <q-card flat bordered>
             <q-list separator>
-              <q-item v-for="t in store.tipos" :key="t.codveiculotipo" :class="{ 'bg-red-1': t.inativo }">
+              <q-item
+                v-for="t in store.tipos"
+                :key="t.codveiculotipo"
+                :class="{ 'bg-red-1': t.inativo }"
+              >
                 <q-item-section avatar>
-                  <q-avatar :icon="t.tracao ? 'agriculture' : 'rv_hookup'" color="primary" text-color="white" />
+                  <q-avatar
+                    :icon="t.tracao ? 'agriculture' : 'rv_hookup'"
+                    color="primary"
+                    text-color="white"
+                  />
                 </q-item-section>
                 <q-item-section>
                   <q-item-label>{{ t.veiculotipo }}</q-item-label>
@@ -267,7 +307,14 @@ const excluir = (entidade, registro) => {
                     >
                       <q-tooltip>{{ t.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
                     </q-btn>
-                    <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluir('tipo', t)">
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      icon="delete"
+                      @click="excluir('tipo', t)"
+                    >
                       <q-tooltip>Excluir</q-tooltip>
                     </q-btn>
                   </div>
@@ -286,7 +333,13 @@ const excluir = (entidade, registro) => {
       <q-btn v-if="store.tab === 'veiculo'" fab icon="add" color="primary" @click="novoVeiculo">
         <q-tooltip>Novo Veículo</q-tooltip>
       </q-btn>
-      <q-btn v-else-if="store.tab === 'conjunto'" fab icon="add" color="primary" @click="novoConjunto">
+      <q-btn
+        v-else-if="store.tab === 'conjunto'"
+        fab
+        icon="add"
+        color="primary"
+        @click="novoConjunto"
+      >
         <q-tooltip>Novo Conjunto</q-tooltip>
       </q-btn>
       <q-btn v-else fab icon="add" color="primary" @click="novoTipo">

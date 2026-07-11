@@ -6,9 +6,9 @@ import { setorStore } from 'src/stores/setor'
 import { tipoSetorStore } from 'src/stores/tiposetor'
 import { formataTimestamp } from '@components/formatters'
 import MGLayout from 'layouts/MGLayout.vue'
-import SelectFilial from 'components/select/SelectFilial.vue'
-import SelectUnidadeNegocio from 'components/select/SelectUnidadeNegocio.vue'
-import SelectTipoSetor from 'components/select/SelectTipoSetor.vue'
+import SelectFilial from '@components/MgSelectFilial.vue'
+import SelectUnidadeNegocio from '@components/MgSelectUnidadeNegocio.vue'
+import SelectTipoSetor from '@components/MgSelectTipoSetor.vue'
 
 const $q = useQuasar()
 const sUnidade = unidadeNegocioStore()
@@ -108,7 +108,8 @@ const excluirUnidade = (unidade) => {
   $q.dialog({
     title: 'Excluir Unidade',
     message: 'Tem certeza que deseja excluir "' + unidade.descricao + '"?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sUnidade.excluir(unidade.codunidadenegocio)
@@ -235,7 +236,8 @@ const excluirSetor = (setor) => {
   $q.dialog({
     title: 'Excluir Setor',
     message: 'Tem certeza que deseja excluir "' + setor.setor + '"?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sSetor.excluir(setor.codsetor)
@@ -350,7 +352,8 @@ const excluirTipoSetor = (tipo) => {
   $q.dialog({
     title: 'Excluir Tipo de Setor',
     message: 'Tem certeza que deseja excluir "' + tipo.tiposetor + '"?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sTipoSetor.excluir(tipo.codtiposetor)

@@ -80,8 +80,8 @@ const excluirEmail = async (codpessoaemail) => {
   $q.dialog({
     title: 'Excluir Email',
     message: 'Tem certeza que deseja excluir esse email?',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sPessoa.emailExcluir(route.params.id, codpessoaemail)
@@ -235,7 +235,8 @@ const enviarEmail = (email, codpessoaemail) => {
   $q.dialog({
     title: 'Verificação de E-mail',
     message: 'Deseja enviar o código de verificação para o e-mail  ' + email + ' ?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Enviar', color: 'primary', flat: true },
   }).onOk(() => {
     sPessoa.emailVerificar(route.params.id, codpessoaemail).then((resp) => {
       if (resp.data) {
@@ -256,8 +257,8 @@ const confirmaEmail = (email, codpessoaemail) => {
     title: 'Verificação de E-mail',
     message: 'Digite o código enviado para o e-mail ' + email,
     prompt: { model: '', type: 'number', step: '1' },
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Verificar', color: 'primary', flat: true },
   }).onOk((codverificacao) => {
     postEmail(email, codpessoaemail, codverificacao)
   })
@@ -449,7 +450,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
                 size="sm"
                 color="grey-7"
                 @click="
-                  editarEmail(
+                  (editarEmail(
                     element.codpessoaemail,
                     element.email,
                     element.apelido,
@@ -457,7 +458,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
                     element.nfe,
                     element.cobranca,
                   ),
-                    (emailNovo = false)
+                  (emailNovo = false))
                 "
               >
                 <q-tooltip>Editar</q-tooltip>

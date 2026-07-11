@@ -147,9 +147,9 @@ watch(
             @click="handleDelete"
           />
           <q-space />
-          <q-btn flat label="Cancelar" @click="close" />
+          <q-btn flat label="Cancelar" color="grey-8" @click="close" />
           <q-btn
-            unelevated
+            flat
             label="Salvar"
             color="primary"
             icon="save"

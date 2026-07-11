@@ -140,8 +140,8 @@ const duplicar = async () => {
   Dialog.create({
     title: 'Duplicar',
     message: 'Tem certeza que deseja duplicar esse negócio?',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sNegocio.duplicar()
@@ -244,7 +244,8 @@ const cancelar = async () => {
       placeholder: 'Justificativa de Cancelamento...',
       persistent: true,
     },
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async (justificativa) => {
     await sNegocio.cancelar(justificativa)
     emitter.emit('negocioAlterado')
@@ -333,10 +334,7 @@ const checarImpressora = () => {
 const imprimirRomaneio = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/v1/pdv/negocio/' +
-      sNegocio.negocio.codnegocio +
-      '/romaneio/' +
-      sNegocio.padrao.impressora,
+    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio/' + sNegocio.padrao.impressora,
   )
   Notify.create({
     type: 'positive',

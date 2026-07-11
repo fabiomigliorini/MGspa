@@ -5,7 +5,13 @@ import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
 import MgInputData from '@components/MgInputData.vue'
-import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataChave } from '@components/formatters'
+import {
+  formataCnpjCpf,
+  formataTimestamp,
+  formataData,
+  formataNumero,
+  formataChave,
+} from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -89,8 +95,8 @@ const handleManifestacao = (indmanifestacao) => {
         model: '',
         type: 'text',
       },
-      cancel: { label: 'Cancelar', flat: true },
-      ok: { label: 'Enviar', color: 'primary' },
+      cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+      ok: { label: 'Enviar', color: 'primary', flat: true },
     }).onOk((justificativa) => {
       enviarManifestacao(indmanifestacao, justificativa)
     })
@@ -98,8 +104,8 @@ const handleManifestacao = (indmanifestacao) => {
     $q.dialog({
       title: 'Confirmar Manifestacao',
       message: `Enviar "${manifestacaoOptions.find((o) => o.value === indmanifestacao)?.label}" a SEFAZ? Esta acao nao pode ser desfeita.`,
-      cancel: { label: 'Cancelar', flat: true },
-      ok: { label: 'Confirmar', color: 'primary' },
+      cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+      ok: { label: 'Confirmar', color: 'primary', flat: true },
     }).onOk(() => {
       enviarManifestacao(indmanifestacao, null)
     })
@@ -130,8 +136,8 @@ const handleDownload = async () => {
   $q.dialog({
     title: 'Download NFe',
     message: 'Efetuar o download da NFe na SEFAZ?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Download', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Download', color: 'primary', flat: true },
   }).onOk(async () => {
     loadingAction.value = true
     try {
@@ -153,8 +159,8 @@ const handleRevisao = () => {
   $q.dialog({
     title: 'Confirmar',
     message: nfe.value.revisao ? 'Desmarcar revisao?' : 'Marcar como revisada?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await nfeTerceiroStore.toggleRevisao(nfe.value.codnfeterceiro)
@@ -173,8 +179,8 @@ const handleConferencia = () => {
   $q.dialog({
     title: 'Confirmar',
     message: nfe.value.conferencia ? 'Desmarcar conferencia?' : 'Marcar como conferida?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await nfeTerceiroStore.toggleConferencia(nfe.value.codnfeterceiro)
@@ -209,8 +215,8 @@ const handleImportar = async () => {
   $q.dialog({
     title: 'Importar NFe de Terceiro',
     message: 'Importar esta NFe para o sistema? Sera criada Nota Fiscal, Negocio e Titulos.',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Importar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Importar', color: 'primary', flat: true },
   }).onOk(async () => {
     loadingAction.value = true
     try {
@@ -247,14 +253,14 @@ const handleGerarGuiaSt = () => {
     title: 'Gerar Guia ST',
     message: 'Informe o valor e vencimento:',
     prompt: { model: String(defaultValor.toFixed(2)), type: 'number', label: 'Valor' },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Gerar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Gerar', color: 'primary', flat: true },
   }).onOk(async (valor) => {
     $q.dialog({
       title: 'Vencimento',
       prompt: { model: defaultVencimento, type: 'date', label: 'Data de Vencimento' },
-      cancel: { label: 'Cancelar', flat: true },
-      ok: { label: 'Confirmar', color: 'primary' },
+      cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+      ok: { label: 'Confirmar', color: 'primary', flat: true },
     }).onOk(async (vencimento) => {
       loadingAction.value = true
       try {
@@ -339,8 +345,8 @@ const handleDividirItem = (item) => {
         { label: '10 partes', value: 10 },
       ],
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Dividir', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Dividir', color: 'primary', flat: true },
   }).onOk(async (parcelas) => {
     try {
       await nfeTerceiroStore.dividirItem(
@@ -363,8 +369,8 @@ const handleMarcarTipoProduto = async () => {
   $q.dialog({
     title: 'Confirmar',
     message: 'Marcar todos os itens com o tipo selecionado?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await nfeTerceiroStore.marcarTipoProduto(
@@ -418,8 +424,8 @@ const handleConferirTodos = () => {
     message: desmarcando
       ? 'Desmarcar todos os itens como conferidos?'
       : 'Marcar todos os itens como conferidos?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await nfeTerceiroStore.conferirTodos(nfe.value.codnfeterceiro)
@@ -1163,7 +1169,7 @@ onMounted(async () => {
       </q-card>
 
       <!-- Dialog: Informar Entrada -->
-      <q-dialog v-model="showEntradaDialog" persistent>
+      <q-dialog v-model="showEntradaDialog">
         <q-card style="min-width: 360px">
           <q-card-section class="bg-primary text-white">
             <div class="text-body2">
@@ -1195,8 +1201,14 @@ onMounted(async () => {
           <q-separator />
 
           <q-card-actions align="right">
-            <q-btn flat label="Cancelar" v-close-popup />
-            <q-btn color="primary" label="Salvar" :loading="loadingAction" @click="salvarEntrada" />
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+            <q-btn
+              flat
+              color="primary"
+              label="Salvar"
+              :loading="loadingAction"
+              @click="salvarEntrada"
+            />
           </q-card-actions>
         </q-card>
       </q-dialog>

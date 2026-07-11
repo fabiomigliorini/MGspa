@@ -64,10 +64,7 @@ const submit = async () => {
 </script>
 
 <template>
-  <q-dialog
-    :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
-  >
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card style="width: 500px; max-width: 95vw">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">{{ isNovo ? 'Novo' : 'Editar' }} Tipo de Veículo</div>
@@ -97,7 +94,11 @@ const submit = async () => {
 
           <div>
             <div class="text-caption text-grey-7 q-mb-xs">Rodado</div>
-            <q-option-group v-model="form.tiporodado" :options="TIPO_RODADO_OPTIONS" color="primary" />
+            <q-option-group
+              v-model="form.tiporodado"
+              :options="TIPO_RODADO_OPTIONS"
+              color="primary"
+            />
           </div>
 
           <div>
@@ -114,7 +115,7 @@ const submit = async () => {
 
         <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Cancelar" color="grey-8" @click="close" tabindex="-1" />
-          <q-btn unelevated label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
+          <q-btn flat label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
         </q-card-actions>
       </q-form>
     </q-card>

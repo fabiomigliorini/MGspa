@@ -88,10 +88,7 @@ const close = () => emit('update:modelValue', false)
 </script>
 
 <template>
-  <q-dialog
-    :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
-  >
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card style="width: 500px; max-width: 95vw">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">Consultar SEFAZ</div>
@@ -118,7 +115,9 @@ const close = () => emit('update:modelValue', false)
             </q-item-section>
             <q-item-section>
               <q-item-label>{{ filial.filial }}</q-item-label>
-              <q-item-label caption> NSU atual: {{ formataNumero(filial.nsu || 0, 0) }} </q-item-label>
+              <q-item-label caption>
+                NSU atual: {{ formataNumero(filial.nsu || 0, 0) }}
+              </q-item-label>
               <q-linear-progress
                 v-if="filial.buscando || filial.percentual > 0"
                 :value="filial.percentual"
@@ -138,7 +137,7 @@ const close = () => emit('update:modelValue', false)
       <q-card-actions align="right" class="q-pa-md">
         <q-btn flat label="Cancelar" color="grey-8" @click="close" :disable="pesquisando" />
         <q-btn
-          unelevated
+          flat
           label="Pesquisar"
           color="primary"
           icon="cloud_download"

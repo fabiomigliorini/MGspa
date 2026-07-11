@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { api } from 'src/services/api'
-import { useCadastro } from 'src/composables/useCadastro'
+import { storeToRefs } from 'pinia'
+import { useCulturaStore } from 'src/stores/cultura'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const route = useRoute()
@@ -13,20 +14,11 @@ const router = useRouter()
 const $q = useQuasar()
 const codcultura = Number(route.params.codcultura)
 
-const culturaCad = useCadastro('cultura', 'codcultura', 'Cultura')
+// Detalhe do domínio cultura — UMA store p/ todas as telas de cultura.
+const store = useCulturaStore()
+const { cultura, resumo, safras, dialogCultura, formCultura, salvandoCultura } = storeToRefs(store)
 
 const emojis = ['🌽', '🫛', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
-
-const cultura = ref(null)
-const resumo = ref({
-  nsafras: 0,
-  area: 0,
-  colhidokg: 0,
-  sacas: 0,
-  produtividade: 0,
-  variedades: [],
-})
-const safras = ref([])
 
 const kpis = computed(() => [
   { label: 'Safras', valor: fmt(resumo.value.nsafras), icon: 'eco', cor: 'light-green' },
@@ -63,39 +55,26 @@ function periodoSafra(s) {
     : `${s.anoplantio}`
 }
 
-async function carregarCultura() {
-  const { data } = await api.get(`v1/cultura/${codcultura}`)
-  cultura.value = data.data ?? data
-}
-async function carregarResumo() {
-  const { data } = await api.get(`v1/cultura/${codcultura}/resumo`)
-  resumo.value = data
-}
-
-// Cultura — edição reaproveita o cadastro genérico e recarrega cabeçalho/KPIs.
+// Cultura — edição/inativação chamam as actions do domínio (que refrescam a
+// cultura aberta + KPIs). Excluir confirma aqui e navega de volta.
 function editarCultura() {
-  culturaCad.editar(cultura.value)
+  store.editarCultura(cultura.value)
 }
-async function salvarCultura() {
-  await culturaCad.salvar()
-  if (!culturaCad.dialog) {
-    await carregarCultura()
-    await carregarResumo()
-  }
+function salvarCultura() {
+  store.salvarCultura()
 }
-async function alternarInativoCultura() {
-  await culturaCad.alternarInativo(cultura.value)
-  await carregarCultura()
+function alternarInativoCultura() {
+  store.inativarCultura(cultura.value)
 }
 function excluirCultura() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir a cultura ${cultura.value?.cultura}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
-      await api.delete(`v1/cultura/${codcultura}`)
+      await store.excluirCultura(codcultura)
       notifySuccess('Excluído!')
       router.push({ name: 'culturas' })
     } catch (e) {
@@ -104,19 +83,7 @@ function excluirCultura() {
   })
 }
 
-onMounted(async () => {
-  try {
-    await carregarCultura()
-    await Promise.all([
-      carregarResumo(),
-      api.get('v1/safra', { params: { codcultura, sort: '-anoplantio' } }).then(({ data }) => {
-        safras.value = data.data ?? data
-      }),
-    ])
-  } catch (e) {
-    notifyError(e)
-  }
-})
+onMounted(() => store.carregarCultura(codcultura))
 </script>
 
 <template>
@@ -240,11 +207,9 @@ onMounted(async () => {
             </q-item-section>
           </q-item>
 
-          <q-item v-if="!resumo.variedades.length">
-            <q-item-section class="text-grey-6 text-center">
-              Nenhuma variedade cadastrada.
-            </q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!resumo.variedades.length" plain icon="spa">
+            Nenhuma variedade cadastrada.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
@@ -278,11 +243,9 @@ onMounted(async () => {
             </q-item-section>
             <q-item-section side><q-icon name="chevron_right" /></q-item-section>
           </q-item>
-          <q-item v-if="!safras.length">
-            <q-item-section class="text-grey-6 text-center">
-              Nenhuma safra desta cultura ainda.
-            </q-item-section>
-          </q-item>
+          <MgEmptyState v-if="!safras.length" plain icon="eco">
+            Nenhuma safra desta cultura ainda.
+          </MgEmptyState>
         </q-list>
       </q-card>
 
@@ -303,27 +266,34 @@ onMounted(async () => {
       </q-card>
 
       <!-- Dialog Cultura -->
-      <q-dialog v-model="culturaCad.dialog">
+      <q-dialog v-model="dialogCultura">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit="salvarCultura">
+          <q-form @submit.prevent="salvarCultura">
             <q-card-section class="bg-primary text-white">
               <div class="text-h6">Editar Cultura</div>
             </q-card-section>
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-12 col-sm-8">
-                  <q-input v-model="culturaCad.form.cultura" label="Cultura" outlined autofocus />
+                  <q-input
+                    v-model="formCultura.cultura"
+                    label="Cultura"
+                    outlined
+                    autofocus
+                    lazy-rules
+                    :rules="[(v) => !!v && v.length >= 2]"
+                  />
                 </div>
                 <div class="col-12 col-sm-4">
                   <q-input
-                    v-model="culturaCad.form.icone"
+                    v-model="formCultura.icone"
                     label="Emoji"
                     outlined
                     maxlength="4"
                     hint="Opcional"
                   >
                     <template #prepend>
-                      <span style="font-size: 20px">{{ culturaCad.form.icone || '🌱' }}</span>
+                      <span style="font-size: 20px">{{ formCultura.icone || '🌱' }}</span>
                     </template>
                   </q-input>
                 </div>
@@ -334,29 +304,25 @@ onMounted(async () => {
                       :key="e"
                       clickable
                       :label="e"
-                      @click="culturaCad.form.icone = e"
+                      @click="formCultura.icone = e"
                     />
                   </div>
                 </div>
                 <div class="col-12">
                   <MgInputValor
-                    v-model="culturaCad.form.pesosaca"
+                    v-model="formCultura.pesosaca"
                     :decimals="0"
                     suffix="kg/saca"
                     label="Peso da saca"
+                    lazy-rules
+                    :rules="[(v) => v == null || v > 0]"
                   />
                 </div>
               </div>
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn
-                type="submit"
-                flat
-                label="Salvar"
-                color="primary"
-                :loading="culturaCad.salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvandoCultura" />
             </q-card-actions>
           </q-form>
         </q-card>

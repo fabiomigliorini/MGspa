@@ -492,6 +492,7 @@ function onPaste(e) {
     :dense="dense"
     :stack-label="stackLabel"
     :readonly="readonly"
+    :tabindex="readonly ? -1 : undefined"
     :rules="rules"
     :input-class="['text-center', inputClass]"
     @focus="onFocus"

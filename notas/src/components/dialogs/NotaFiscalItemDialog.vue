@@ -237,9 +237,9 @@ const handleKeyNavigation = (event) => {
         <!-- BOTOES -->
         <q-card-actions align="right" class="q-pa-md">
           <q-space />
-          <q-btn flat label="Cancelar" @click="close" />
+          <q-btn flat label="Cancelar" color="grey-8" @click="close" />
           <q-btn
-            unelevated
+            flat
             label="Adicionar"
             color="primary"
             icon="save"

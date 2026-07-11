@@ -95,7 +95,8 @@ const excluir = (row) => {
   $q.dialog({
     title: 'Excluir',
     message: `Confirma excluir a conta contábil "${row.contacontabil}"?`,
-    cancel: true,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       await api.delete(`v1/conta-contabil/${row.codcontacontabil}`)

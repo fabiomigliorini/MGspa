@@ -2,6 +2,8 @@
 import { ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
+import MgSelectVeiculoTipo from '@components/MgSelectVeiculoTipo.vue'
 
 // Cadastro rápido de caminhão no pátio — cria um tblveiculo com o mínimo que o
 // backend exige (apelido, tipo, proprietário, placa, UF). Online apenas; offline
@@ -15,8 +17,6 @@ const emit = defineEmits(['update:modelValue', 'criado'])
 
 const $q = useQuasar()
 const salvando = ref(false)
-const tipoOptions = ref([])
-const estadoOptions = ref([])
 
 const TIPO_PROPRIETARIO_OPTIONS = [
   { value: 0, label: 'TAC Agregado' },
@@ -38,25 +38,11 @@ function resetForm() {
   }
 }
 
-async function carregarSelects() {
-  try {
-    const [tipos, estados] = await Promise.all([
-      api.get('v1/select/veiculo-tipo', { skipLoading: true }),
-      api.get('v1/select/estado', { skipLoading: true }),
-    ])
-    tipoOptions.value = tipos.data
-    estadoOptions.value = estados.data
-  } catch {
-    $q.notify({ type: 'warning', message: 'Sem conexão para cadastrar caminhão agora.' })
-  }
-}
-
 watch(
   () => props.modelValue,
   (aberto) => {
     if (!aberto) return
     resetForm()
-    carregarSelects()
   },
 )
 
@@ -97,24 +83,17 @@ async function salvar() {
                 autofocus
                 mask="AAA#X##"
                 hint="Ex: ABC1D23"
-                :rules="[
-                  (v) => !!v || 'Informe a placa',
-                  (v) => (v && v.length === 7) || '7 caracteres',
-                ]"
+                lazy-rules
+                :rules="[(v) => !!v, (v) => v?.length === 7]"
                 @update:model-value="(v) => (form.placa = (v || '').toUpperCase())"
               />
             </div>
             <div class="col-12 col-sm-6">
-              <q-select
+              <MgSelectEstado
                 v-model="form.codestado"
                 label="UF"
-                outlined
-                :options="estadoOptions"
-                option-value="value"
-                option-label="sigla"
-                emit-value
-                map-options
-                :rules="[(v) => !!v || 'Informe a UF']"
+                lazy-rules
+                :rules="[(v) => !!v]"
               />
             </div>
             <div class="col-12">
@@ -123,20 +102,16 @@ async function salvar() {
                 label="Apelido"
                 outlined
                 maxlength="50"
-                :rules="[(v) => (v && v.length >= 5) || 'Mínimo 5 caracteres']"
+                lazy-rules
+                :rules="[(v) => !!v && v.length >= 5]"
               />
             </div>
             <div class="col-12 col-sm-6">
-              <q-select
+              <MgSelectVeiculoTipo
                 v-model="form.codveiculotipo"
                 label="Tipo de veículo"
-                outlined
-                :options="tipoOptions"
-                option-value="value"
-                option-label="label"
-                emit-value
-                map-options
-                :rules="[(v) => !!v || 'Informe o tipo']"
+                lazy-rules
+                :rules="[(v) => !!v]"
               />
             </div>
             <div class="col-12 col-sm-6">

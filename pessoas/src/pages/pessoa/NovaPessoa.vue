@@ -150,7 +150,11 @@
                           </div>
 
                           <div class="col-5 q-pl-md">
-                            <select-estado label="UF" v-model="model.uf"></select-estado>
+                            <select-estado
+                              label="UF"
+                              option-value="sigla"
+                              v-model="model.uf"
+                            ></select-estado>
                           </div>
                         </div>
                       </q-item-label>
@@ -227,7 +231,7 @@ import { formataIe, primeiraLetraMaiuscula, removerAcentos } from '@components/f
 export default {
   components: {
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-    SelectEstado: defineAsyncComponent(() => import('components/pessoa/SelectEstado.vue')),
+    SelectEstado: defineAsyncComponent(() => import('@components/MgSelectEstado.vue')),
     MgInputFormatado: defineAsyncComponent(() => import('@components/MgInputFormatado.vue')),
 
     CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),

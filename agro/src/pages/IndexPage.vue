@@ -8,17 +8,17 @@ import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 const { usuario } = useAuth()
 const store = useCargaStore()
 const sinc = useSincronizacaoStore()
-const { safras, codsafraAtiva, cargas, cargasPorEtapa, produtividade, safraAtiva } =
-  storeToRefs(store)
+const { safras, codsafraAtiva, cargas, produtividade, safraAtiva } = storeToRefs(store)
 const { online } = storeToRefs(sinc)
 
+// Independente do sentido/agrupamento e dos nomes de etapa: tudo que não está
+// finalizado está "no pátio".
 const noPatio = computed(
-  () =>
-    cargasPorEtapa.value.BRUTO.length +
-    cargasPorEtapa.value.CLASSIFICACAO.length +
-    cargasPorEtapa.value.TARA.length,
+  () => cargas.value.filter((c) => !c.inativo && c.etapa !== 'FINALIZADO').length,
 )
-const finalizados = computed(() => cargasPorEtapa.value.FINALIZADO.length)
+const finalizados = computed(
+  () => cargas.value.filter((c) => !c.inativo && c.etapa === 'FINALIZADO').length,
+)
 const pendentes = computed(() => cargas.value.filter((c) => !c.sincronizado && !c.inativo).length)
 
 function fmt(v, dec = 0) {
@@ -48,18 +48,18 @@ const kpis = computed(() => [
 
 const atalhos = [
   {
-    label: 'Pátio',
-    sub: 'Recebimento de cargas',
+    label: 'Pátio de Cargas',
+    sub: 'Movimentação, carga e descarga.',
     icon: 'local_shipping',
     cor: 'green-7',
-    to: { name: 'patio' },
+    to: { name: 'carga' },
   },
   {
-    label: 'Expedição',
-    sub: 'Carregamento e NF',
-    icon: 'outbound',
-    cor: 'green-8',
-    to: { name: 'embarque' },
+    label: 'Estoque & Extrato',
+    sub: 'Saldos por unidade e movimentos',
+    icon: 'inventory_2',
+    cor: 'amber-8',
+    to: { name: 'extrato' },
   },
   {
     label: 'Safras',
@@ -81,6 +81,13 @@ const atalhos = [
     icon: 'category',
     cor: 'blue-grey-7',
     to: { name: 'culturas' },
+  },
+  {
+    label: 'Unidades Armazenadoras',
+    sub: 'Silos, armazéns e capacidade',
+    icon: 'warehouse',
+    cor: 'amber-8',
+    to: { name: 'unidades-armazenadoras' },
   },
 ]
 
@@ -155,7 +162,7 @@ onMounted(async () => {
         <template #avatar><q-icon name="cloud_off" color="orange-8" /></template>
         {{ pendentes }} carga(s) aguardando sincronização.
         <template #action>
-          <q-btn flat color="orange-9" label="Sincronizar" @click="store.sincronizar()" />
+          <q-btn flat color="orange-9" label="Sincronizar" @click="store.sincronizar({ force: true })" />
         </template>
       </q-banner>
 

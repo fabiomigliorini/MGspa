@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useNotaFiscalStore } from 'src/stores/notaFiscalStore'
 import { getEnteIcon, getEnteColor } from 'src/composables/useTributoIcons'
 import { CBS_CST_OPTIONS, CBS_CCLASSTRIB_OPTIONS } from 'src/constants/notaFiscal'
-import SelectTributo from '../selects/SelectTributo.vue'
+import SelectTributo from '@components/MgSelectTributo.vue'
 import { Notify } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { arredonda } from '@components/formatters'
@@ -391,6 +391,7 @@ const updatedValor = async (ti) => {
             <SelectTributo
               v-model="codtributonovo"
               label="Tributo"
+              clearable
               @select="handleTributoSelect"
             ></SelectTributo>
           </div>

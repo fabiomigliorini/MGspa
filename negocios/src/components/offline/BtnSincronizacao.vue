@@ -40,7 +40,7 @@ const btnSincronizarColor = computed({
 </script>
 <template>
   <!-- Dialog Sincronizacao  -->
-  <q-dialog v-model="sSinc.importacao.dialog" persistent>
+  <q-dialog v-model="sSinc.importacao.dialog">
     <q-card class="q-pa-md">
       <q-card-section>
         <div class="text-h4 text-center">Sincronizar...</div>
@@ -88,18 +88,18 @@ const btnSincronizarColor = computed({
       <q-card-actions align="center">
         <q-btn
           flat
+          label="Cancelar"
+          color="grey-8"
+          @click="sSinc.abortarSincronizacao()"
+          tabindex="-1"
+        />
+        <q-btn
+          flat
           label="Sincronizar"
           color="primary"
           @click="sSinc.sincronizar()"
           autofocus
           :disable="sSinc.importacao.rodando"
-        />
-        <q-btn
-          flat
-          label="Cancelar"
-          color="negative"
-          @click="sSinc.abortarSincronizacao()"
-          tabindex="-1"
         />
       </q-card-actions>
     </q-card>

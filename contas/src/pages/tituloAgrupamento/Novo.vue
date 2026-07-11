@@ -4,9 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import SelectFilial from 'src/components/select/SelectFilial.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
@@ -252,7 +252,8 @@ async function salvar() {
   $q.dialog({
     title: 'Confirmar',
     message: 'Tem certeza que deseja salvar o agrupamento?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     saving.value = true
     try {
@@ -371,7 +372,7 @@ async function salvar() {
                 />
               </div>
               <div class="col-xs-12 col-sm-4">
-                <SelectFilial
+                <MgSelectFilial
                   v-model="vencimentos.codfilial"
                   outlined
                   label="Filial"
@@ -380,7 +381,7 @@ async function salvar() {
               </div>
 
               <div class="col-xs-12 col-sm-5">
-                <SelectPortador
+                <MgSelectPortador
                   v-model="vencimentos.codportador"
                   outlined
                   clearable

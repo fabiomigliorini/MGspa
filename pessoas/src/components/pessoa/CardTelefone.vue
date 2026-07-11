@@ -46,8 +46,8 @@ const confirmaSmsCel = (ddd, telefone, codpessoatelefone) => {
     message:
       'Digite o código enviado para o número ' + '(' + ddd + ') ' + formataTelefone(telefone),
     prompt: { model: '', type: 'number', step: '1' },
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Verificar', color: 'primary', flat: true },
   }).onOk((codverificacao) => {
     postTelefone(ddd, telefone, codpessoatelefone, codverificacao)
   })
@@ -89,7 +89,8 @@ const enviarSms = async (pais, ddd, telefone, codpessoatelefone) => {
       ') ' +
       formataTelefone(telefone) +
       ' ?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Enviar', color: 'primary', flat: true },
   }).onOk(() => {
     sPessoa.telefoneVerificar(route.params.id, codpessoatelefone).then((resp) => {
       if (resp.data['situacao'] == 'OK') {
@@ -227,7 +228,8 @@ const excluirTel = async (codpessoatelefone) => {
   $q.dialog({
     title: 'Excluir Telefone',
     message: 'Tem certeza que deseja excluir esse telefone?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sPessoa.telefoneExcluir(route.params.id, codpessoatelefone)
@@ -455,7 +457,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
         size="sm"
         color="primary"
         v-if="user.temPermissao('Publico')"
-        @click=";(dialogTel = true), (modelTel = { tipo: 2, pais: '+55' }), (telNovo = true)"
+        @click=";((dialogTel = true), (modelTel = { tipo: 2, pais: '+55' }), (telNovo = true))"
       />
     </q-card-section>
 
@@ -553,7 +555,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 size="sm"
                 color="grey-7"
                 @click="
-                  editarTel(
+                  (editarTel(
                     element.codpessoatelefone,
                     element.ddd,
                     element.telefone,
@@ -561,7 +563,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                     element.tipo,
                     element.verificacao,
                   ),
-                    (telNovo = false)
+                  (telNovo = false))
                 "
               >
                 <q-tooltip>Editar</q-tooltip>

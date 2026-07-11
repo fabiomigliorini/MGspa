@@ -43,7 +43,6 @@ class NaturezaOperacaoController extends Controller
             NaturezaOperacao::with([
                 'Operacao', 'NaturezaOperacaoDevolucao', 'TipoTitulo',
                 'ContaContabil', 'EstoqueMovimentoTipo',
-                'UsuarioCriacao', 'UsuarioAlteracao',
             ])->findOrFail($codnaturezaoperacao)
         );
     }

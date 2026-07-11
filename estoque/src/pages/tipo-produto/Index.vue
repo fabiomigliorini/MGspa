@@ -78,7 +78,8 @@ const excluir = (row) => {
   $q.dialog({
     title: 'Excluir',
     message: `Confirma excluir o tipo "${row.tipoproduto}"?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await api.delete(`v1/tipo-produto/${row.codtipoproduto}`)
@@ -114,7 +115,13 @@ onMounted(() => store.fetchItems(true))
               <q-separator inset />
               <q-item>
                 <q-item-section avatar>
-                  <q-avatar rounded size="42px" color="grey-3" text-color="grey-7" icon="category" />
+                  <q-avatar
+                    rounded
+                    size="42px"
+                    color="grey-3"
+                    text-color="grey-7"
+                    icon="category"
+                  />
                 </q-item-section>
                 <q-item-section>
                   <q-item-label class="text-weight-medium">

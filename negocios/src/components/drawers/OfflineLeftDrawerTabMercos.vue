@@ -15,7 +15,8 @@ const importarPedido = async () => {
   Dialog.create({
     title: 'Sincronizar com Mercos',
     message: 'Deseja rodar a integração com o Mercos para buscar novas vendas?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     await sMercos.importarPedido()
   })

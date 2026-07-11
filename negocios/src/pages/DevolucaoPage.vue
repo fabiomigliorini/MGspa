@@ -71,7 +71,8 @@ const salvarDevolucao = async () => {
   Dialog.create({
     title: 'Devolução',
     message: 'Tem certeza que deseja devolver esses produtos?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       const ret = await sNegocio.Devolucao(itensDevolucao.value)

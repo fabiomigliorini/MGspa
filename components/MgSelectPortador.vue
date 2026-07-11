@@ -1,42 +1,45 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import { api } from 'src/services/api'
+import { ref, computed, onMounted } from 'vue'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
-// Seletor de portador padrão de todos os apps (lista de v1/select/portador,
-// que retorna o conjunto todo). Self-contained com busca ao digitar (filtro no
-// cliente, já que a lista é pequena). Espelha o SelectPortador do contas, mas
-// sem depender do cache store — cada app importa seu próprio `api`.
+// ===== REFERÊNCIA do padrão LOCAL (entidade < 100 registros) =====
+// Carrega TUDO uma vez de v1/select/portador, cacheia (lista + byId no store
+// compartilhado) e filtra no FRONT ao digitar. clearable é opcional (default false).
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   label: { type: String, default: 'Portador' },
   // Se array de codfilial, restringe aos portadores dessas filiais.
   filiais: { type: Array, default: null },
+  clearable: { type: Boolean, default: false },
+  inativos: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'select'])
 
-const todos = ref([])
+const cache = useSelectCacheStore()
+const ENTITY = 'portador'
+const ENDPOINT = 'v1/select/portador'
+
 const opcoes = ref([])
+const carregando = ref(false)
 
 const permitidos = computed(() => {
-  if (!props.filiais) return todos.value
+  const todos = cache.entities[ENTITY]?.items || []
+  if (!props.filiais) return todos
   const set = new Set(props.filiais.map((f) => Number(f)))
-  return todos.value.filter((v) => set.has(Number(v.codfilial)))
+  return todos.filter((v) => set.has(Number(v.codfilial)))
 })
 
-onMounted(async () => {
+async function carregar() {
+  carregando.value = true
   try {
-    const { data } = await api.get('v1/select/portador')
-    todos.value = (Array.isArray(data) ? data : data.data || []).map((p) => ({
-      value: p.codportador,
-      label: p.portador,
-      codfilial: p.codfilial,
-    }))
+    await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
     opcoes.value = permitidos.value
   } catch {
-    todos.value = []
     opcoes.value = []
+  } finally {
+    carregando.value = false
   }
-})
+}
 
 function filtrar(val, update) {
   update(() => {
@@ -46,6 +49,13 @@ function filtrar(val, update) {
       : permitidos.value
   })
 }
+
+function onUpdate(v) {
+  emit('update:modelValue', v)
+  emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
+}
+
+onMounted(() => carregar())
 </script>
 
 <template>
@@ -54,17 +64,33 @@ function filtrar(val, update) {
     :options="opcoes"
     :label="label"
     use-input
+    fill-input
+    hide-selected
     input-debounce="100"
     outlined
-    clearable
+    :clearable="clearable"
+    :loading="carregando"
     emit-value
     map-options
     @filter="filtrar"
-    @update:model-value="(v) => emit('update:modelValue', v)"
+    @update:model-value="onUpdate"
     v-bind="$attrs"
   >
     <template #no-option>
       <q-item><q-item-section class="text-grey-6">Nenhum portador</q-item-section></q-item>
     </template>
+    <template #option="scope">
+      <q-item v-bind="scope.itemProps">
+        <q-item-section>
+          <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
+            {{ scope.opt.label }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
+    <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
+    <template v-if="$slots.before" #before><slot name="before" /></template>
+    <template v-if="$slots.after" #after><slot name="after" /></template>
+    <template v-if="$slots.hint" #hint><slot name="hint" /></template>
   </q-select>
 </template>

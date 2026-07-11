@@ -8,6 +8,7 @@ namespace Mg\Contrato;
 
 use Mg\MgModel;
 use Mg\Contrato\Contrato;
+use Mg\Contrato\ContratoFixacao;
 use Mg\Portador\Portador;
 
 class ContratoPagamento extends MgModel
@@ -19,12 +20,16 @@ class ContratoPagamento extends MgModel
 
     protected $fillable = [
         'codcontrato',
+        'codcontratofixacao',
         'data',
         'inativo',
         'observacao',
         'valor',
+        'forma',
         'modo',
         'sacas',
+        'cotacao',
+        'cotacaorecebido',
         'datarecebido',
         'valorrecebido',
         'codportador'
@@ -33,6 +38,7 @@ class ContratoPagamento extends MgModel
     protected $casts = [
         'alteracao' => 'datetime',
         'codcontrato' => 'integer',
+        'codcontratofixacao' => 'integer',
         'codcontratopagamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -41,6 +47,8 @@ class ContratoPagamento extends MgModel
         'inativo' => 'datetime',
         'valor' => 'float',
         'sacas' => 'float',
+        'cotacao' => 'float',
+        'cotacaorecebido' => 'float',
         'datarecebido' => 'date',
         'valorrecebido' => 'float',
         'codportador' => 'integer'
@@ -51,6 +59,13 @@ class ContratoPagamento extends MgModel
     public function Contrato()
     {
         return $this->belongsTo(Contrato::class, 'codcontrato', 'codcontrato');
+    }
+
+    // Fixação de origem da parcela (1 fixação : N parcelas). Dirige moeda/preço:
+    // em US$ o R$ da parcela é derivado (sacas × fixacao.preco × cotacao).
+    public function ContratoFixacao()
+    {
+        return $this->belongsTo(ContratoFixacao::class, 'codcontratofixacao', 'codcontratofixacao');
     }
 
     public function Portador()

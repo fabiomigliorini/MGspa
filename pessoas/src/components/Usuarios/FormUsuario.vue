@@ -45,7 +45,13 @@
                 :rules="[usuarioValido]"
                 label="Usuario"
               />
-              <select-filial class="col-6" outlined label="Filial" v-model="model.codfilial" />
+              <select-filial
+                class="col-6"
+                outlined
+                label="Filial"
+                v-model="model.codfilial"
+                clearable
+              />
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -56,7 +62,7 @@
           </q-item-section>
           <q-item-section top>
             <q-item-label>
-              <select-portador outlined label="Portador" v-model="model.codportador" />
+              <select-portador outlined label="Portador" v-model="model.codportador" clearable />
             </q-item-label>
           </q-item-section>
         </q-item>
@@ -138,10 +144,10 @@ export default defineComponent({
   name: 'FormUsuario',
 
   components: {
-    SelectFilial: defineAsyncComponent(() => import('components/pessoa/SelectFilial.vue')),
-    SelectPortador: defineAsyncComponent(() => import('components/select/SelectPortador.vue')),
-    SelectPessoaUsuario: defineAsyncComponent(() =>
-      import('components/Usuarios/SelectPessoaUsuario.vue'),
+    SelectFilial: defineAsyncComponent(() => import('@components/MgSelectFilial.vue')),
+    SelectPortador: defineAsyncComponent(() => import('@components/MgSelectPortador.vue')),
+    SelectPessoaUsuario: defineAsyncComponent(
+      () => import('components/Usuarios/SelectPessoaUsuario.vue'),
     ),
   },
 
@@ -159,8 +165,8 @@ export default defineComponent({
         .dialog({
           title: 'Criar usuário',
           message: 'Tem certeza que deseja criar esse usuário?',
-          cancel: true,
-          persistent: true,
+          cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+          ok: { label: 'Criar', color: 'primary', flat: true },
         })
         .onOk(async () => {
           try {
@@ -188,8 +194,8 @@ export default defineComponent({
         .dialog({
           title: 'Alterar usuário',
           message: 'Tem certeza que deseja alterar esse usuário?',
-          cancel: true,
-          persistent: true,
+          cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+          ok: { label: 'Alterar', color: 'primary', flat: true },
         })
         .onOk(async () => {
           try {

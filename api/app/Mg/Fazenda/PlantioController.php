@@ -4,6 +4,7 @@ namespace Mg\Fazenda;
 
 use App\Http\Requests\Mg\Fazenda\PlantioStoreRequest;
 use App\Http\Requests\Mg\Fazenda\PlantioUpdateRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
@@ -51,7 +52,20 @@ class PlantioController extends MgController
 
     public function destroy($codsafra, $codplantio)
     {
-        $this->buscar($codsafra, $codplantio)->delete();
+        $plantio = $this->buscar($codsafra, $codplantio);
+        try {
+            $plantio->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) !== '23503') {
+                throw $e;
+            }
+            $msg = $e->getMessage();
+            abort(409, match (true) {
+                str_contains($msg, 'tblcargaponto') => 'Existem cargas vinculadas a este Plantio! Impossível excluir!',
+                str_contains($msg, 'tblmovimentograo') => 'Existe movimentação de grão vinculada a este Plantio! Impossível excluir!',
+                default => 'Existem registros vinculados a este Plantio! Impossível excluir!',
+            });
+        }
         return response()->noContent();
     }
 

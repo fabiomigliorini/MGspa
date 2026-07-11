@@ -4,11 +4,11 @@ import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNotaFiscalStore } from '../stores/notaFiscalStore'
 import { useSelectFilialStore } from '../stores/selects/filial'
-import SelectNaturezaOperacao from '../components/selects/SelectNaturezaOperacao.vue'
-import SelectFilial from '../components/selects/SelectFilial.vue'
-import SelectEstoqueLocal from '../components/selects/SelectEstoqueLocal.vue'
+import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
+import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectEstado from '../components/selects/SelectEstado.vue'
+import MgSelectEstado from '@components/MgSelectEstado.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
@@ -383,9 +383,10 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Filial -->
               <div class="col-12 col-sm-6">
-                <SelectFilial
+                <MgSelectFilial
                   v-model="form.codfilial"
                   label="Filial *"
+                  clearable
                   :disable="notaBloqueada"
                   autofocus
                 />
@@ -393,10 +394,11 @@ onMounted(() => {
 
               <!-- Local de Estoque -->
               <div class="col-12 col-sm-6">
-                <SelectEstoqueLocal
+                <MgSelectEstoqueLocal
                   v-model="form.codestoquelocal"
                   :codfilial="form.codfilial"
                   label="Local de Estoque"
+                  clearable
                   :disable="notaBloqueada"
                 />
               </div>
@@ -552,9 +554,10 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Natureza de Operação -->
               <div class="col-12">
-                <SelectNaturezaOperacao
+                <MgSelectNaturezaOperacao
                   v-model="form.codnaturezaoperacao"
                   label="Natureza de Operação *"
+                  clearable
                   :disable="notaBloqueada"
                 />
               </div>
@@ -691,9 +694,10 @@ onMounted(() => {
 
               <!-- UF Placa -->
               <div class="col-12 col-sm-4">
-                <SelectEstado
+                <MgSelectEstado
                   v-model="form.codestadoplaca"
                   label="UF Placa"
+                  clearable
                   :disable="notaBloqueada"
                 />
               </div>

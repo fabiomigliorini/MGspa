@@ -3,8 +3,8 @@ import { ref, onMounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'
-import SelectFilial from 'components/pessoa/SelectFilial.vue'
-import SelectPortador from 'components/select/SelectPortador.vue'
+import SelectFilial from '@components/MgSelectFilial.vue'
+import SelectPortador from '@components/MgSelectPortador.vue'
 import SelectPessoaUsuario from 'components/Usuarios/SelectPessoaUsuario.vue'
 
 const $q = useQuasar()
@@ -75,8 +75,8 @@ const criar = () => {
   $q.dialog({
     title: 'Criar usuário',
     message: 'Tem certeza que deseja criar esse usuário?',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Criar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sUsuario.postUsuario(model.value)
@@ -102,8 +102,8 @@ const alterar = () => {
   $q.dialog({
     title: 'Alterar usuário',
     message: 'Tem certeza que deseja alterar esse usuário?',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Alterar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sUsuario.putUsuario(model.value)
@@ -193,19 +193,11 @@ onMounted(async () => {
           </div>
 
           <div class="col-md-6 col-12">
-            <select-filial outlined label="Filial" v-model="model.codfilial">
-              <template #prepend>
-                <q-icon name="corporate_fare" />
-              </template>
-            </select-filial>
+            <select-filial outlined label="Filial" v-model="model.codfilial" clearable />
           </div>
 
           <div class="col-md-6 col-12">
-            <select-portador outlined label="Portador" v-model="model.codportador">
-              <template #prepend>
-                <q-icon name="wallet" />
-              </template>
-            </select-portador>
+            <select-portador outlined label="Portador" v-model="model.codportador" clearable />
           </div>
 
           <div class="col-md-6 col-12">

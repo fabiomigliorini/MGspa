@@ -8,7 +8,7 @@ import { api } from 'src/boot/axios'
 import { formataData, formataFromNow } from '@components/formatters'
 import { tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero } from '@components/formatters'
-import SelectSetor from 'src/components/select/SelectSetor.vue'
+import SelectSetor from '@components/MgSelectSetor.vue'
 import DialogEditarMeta from './DialogEditarMeta.vue'
 import CardIndicadores from 'src/components/rh/CardIndicadores.vue'
 import CardRubricas from 'src/components/rh/CardRubricas.vue'
@@ -147,7 +147,8 @@ const excluirSetor = (pcs) => {
   $q.dialog({
     title: 'Remover Setor',
     message: 'Tem certeza? Rubricas vinculadas a este setor também serão removidas.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Remover', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.excluirSetor(pcs.codperiodocolaboradorsetor)
@@ -252,7 +253,8 @@ const excluirRubrica = (r) => {
   $q.dialog({
     title: 'Excluir Rubrica',
     message: 'Tem certeza que deseja excluir esta rubrica?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.excluirRubrica(r.codcolaboradorrubrica)
@@ -328,7 +330,8 @@ const encerrarColaborador = () => {
   $q.dialog({
     title: 'Encerrar Colaborador',
     message: 'Tem certeza? Um título será gerado.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Encerrar', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.encerrar(route.params.codperiodo, colaborador.value.codperiodocolaborador)
@@ -354,7 +357,8 @@ const estornarColaborador = () => {
   $q.dialog({
     title: 'Estornar Encerramento',
     message: 'Tem certeza? O título será cancelado.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Estornar', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.estornar(route.params.codperiodo, colaborador.value.codperiodocolaborador)

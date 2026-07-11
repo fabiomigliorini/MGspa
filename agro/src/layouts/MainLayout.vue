@@ -16,13 +16,13 @@ const menuGroups = [
   {
     label: 'Operação',
     items: [
+      { label: 'Pátio de Cargas', icon: 'local_shipping', color: 'green-7', to: { name: 'carga' } },
       {
-        label: 'Pátio de Recebimento',
-        icon: 'local_shipping',
-        color: 'green-7',
-        to: { name: 'patio' },
+        label: 'Estoque & Extrato',
+        icon: 'inventory_2',
+        color: 'amber-8',
+        to: { name: 'extrato' },
       },
-      { label: 'Pátio de Expedição', icon: 'outbound', color: 'green-8', to: { name: 'embarque' } },
     ],
   },
   {
@@ -36,6 +36,12 @@ const menuGroups = [
     label: 'Cadastros',
     items: [
       { label: 'Culturas', icon: 'category', color: 'blue-grey-7', to: { name: 'culturas' } },
+      {
+        label: 'Unidades Armazenadoras',
+        icon: 'warehouse',
+        color: 'amber-8',
+        to: { name: 'unidades-armazenadoras' },
+      },
     ],
   },
 ]

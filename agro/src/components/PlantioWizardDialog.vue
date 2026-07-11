@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue'
 import { PALETA_TALHAO, corTalhao } from 'src/utils/coresTalhao'
 import MgInputValor from '@components/MgInputValor.vue'
-import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
+import MapaTalhoes from 'components/MapaTalhoes.vue'
 
 // Wizard de plantar talhão numa safra. Três passos:
 //  1) escolher a fazenda (grid de cards com mini-mapa dos talhões base)
@@ -75,14 +75,6 @@ const cinza = computed(() =>
         p.codplantio !== form.value.codplantio,
     )
     .map((p) => ({ codfazenda: p.codfazenda, geometria: p.geometria })),
-)
-
-const podeSalvar = computed(
-  () =>
-    !!form.value.codfazenda &&
-    !!form.value.talhao &&
-    !!form.value.codvariedade &&
-    Number(form.value.areaplantada) > 0,
 )
 
 // Ao abrir: novo plantio começa no passo 1 (ou 2 se já veio com fazenda),
@@ -170,7 +162,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
               class="col-12 col-sm-6 col-md-4"
             >
               <q-card bordered flat class="cursor-pointer" @click="escolherFazenda(f)">
-                <MgMapaTalhoes
+                <MapaTalhoes
                   :talhoes="talhoesDaFazenda(f.codfazenda)"
                   id-key="codtalhao"
                   height="200px"
@@ -206,7 +198,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
         </q-card-section>
         <q-separator />
         <div class="col">
-          <MgMapaTalhoes
+          <MapaTalhoes
             :key="`mapa2-${form.codfazenda}`"
             :talhoes="talhoesDaFazendaSel"
             id-key="codtalhao"
@@ -238,7 +230,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
 
       <!-- PASSO 3 — confirmar/ajustar o polígono -->
       <template v-else>
-        <MgMapaTalhoes
+        <MapaTalhoes
           :key="mapaKey"
           modo="editar"
           :geometria="form.geometria"
@@ -294,6 +286,8 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   outlined
                   bg-color="white"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
                 <q-select
                   v-model="form.codvariedade"
@@ -306,6 +300,8 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   bg-color="white"
                   label="Variedade"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
               <div class="row items-center no-wrap q-gutter-sm q-mt-sm">
@@ -316,6 +312,8 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   label="Área plantada"
                   bg-color="white"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => v > 0]"
                 />
                 <MgInputValor
                   v-model="expectativaha"
@@ -333,14 +331,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                   bg-color="white"
                   class="col"
                 />
-                <q-btn
-                  type="submit"
-                  round
-                  color="primary"
-                  icon="save"
-                  :disable="!podeSalvar"
-                  :loading="cad.salvando"
-                >
+                <q-btn type="submit" round color="primary" icon="save" :loading="cad.salvando">
                   <q-tooltip>Salvar plantio</q-tooltip>
                 </q-btn>
               </div>

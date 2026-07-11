@@ -4,7 +4,7 @@ import { useBoletoStore } from 'src/stores/boletoStore'
 import { TIPO_BAIXA } from 'src/constants/tituloBoleto'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 
 const store = useBoletoStore()
 
@@ -30,7 +30,7 @@ function limpar() {
 <template>
   <FilterDrawerShell title="Filtros" :active-count="activeCount" @clear="limpar">
     <FilterGroup title="Portador" first>
-      <SelectPortador
+      <MgSelectPortador
         v-model="store.baixadosFiltros.codportador"
         label="Portador"
         outlined

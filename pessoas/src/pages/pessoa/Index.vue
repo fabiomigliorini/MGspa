@@ -83,9 +83,11 @@
             <SelectGrupoEconomico
               v-model="sPessoa.filtroPesquisa.codgrupoeconomico"
               label="Grupo Econômico"
+              clearable
             >
             </SelectGrupoEconomico>
-            <SelectCidade v-model="sPessoa.filtroPesquisa.codcidade" label="Cidade"> </SelectCidade>
+            <SelectCidade v-model="sPessoa.filtroPesquisa.codcidade" label="Cidade" clearable>
+            </SelectCidade>
             <q-select
               outlined
               v-model="sPessoa.filtroPesquisa.inativo"
@@ -102,11 +104,13 @@
             <SelectFormaPagamento
               v-model="sPessoa.filtroPesquisa.codformapagamento"
               label="Forma Pagamento"
+              clearable
             >
             </SelectFormaPagamento>
             <SelectGrupoCliente
               v-model="sPessoa.filtroPesquisa.codgrupocliente"
               label="Grupo Cliente"
+              clearable
             >
             </SelectGrupoCliente>
           </div>
@@ -128,15 +132,13 @@ export default {
   components: {
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
     SelectGrupoEconomico: defineAsyncComponent(() =>
-      import('components/pessoa/SelectGrupoEconomico.vue'),
+      import('@components/MgSelectGrupoEconomico.vue'),
     ),
-    SelectCidade: defineAsyncComponent(() => import('components/pessoa/SelectCidade.vue')),
+    SelectCidade: defineAsyncComponent(() => import('@components/MgSelectCidade.vue')),
     SelectFormaPagamento: defineAsyncComponent(() =>
-      import('components/pessoa/SelectFormaPagamento.vue'),
+      import('@components/MgSelectFormaPagamento.vue'),
     ),
-    SelectGrupoCliente: defineAsyncComponent(() =>
-      import('components/pessoa/SelectGrupoCliente.vue'),
-    ),
+    SelectGrupoCliente: defineAsyncComponent(() => import('@components/MgSelectGrupoCliente.vue')),
     CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),
   },
 

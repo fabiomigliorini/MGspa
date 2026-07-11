@@ -1,19 +1,20 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { api } from 'src/services/api'
-import { useCadastro } from 'src/composables/useCadastro'
+import { useSafraStore } from 'src/stores/safra'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import MgMapaTalhoes from 'components/MgMapaTalhoes.vue'
-import MgIconeCultura from 'components/MgIconeCultura.vue'
-import MgSafraForm from 'components/MgSafraForm.vue'
-import MgContratosSafra from 'components/MgContratosSafra.vue'
+import MapaTalhoes from 'components/MapaTalhoes.vue'
+import IconeCultura from 'components/IconeCultura.vue'
+import SafraForm from 'components/SafraForm.vue'
+import ContratosSafra from 'components/ContratosSafra.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import PlantioWizardDialog from 'components/PlantioWizardDialog.vue'
 
 const route = useRoute()
@@ -21,18 +22,21 @@ const router = useRouter()
 const $q = useQuasar()
 const codsafra = Number(route.params.codsafra)
 
-const safraCad = useCadastro('safra', 'codsafra', 'Safra')
-const plantioCad = useCadastro(`safra/${codsafra}/plantio`, 'codplantio', 'Plantio')
-const store = useCargaStore()
-const { colhidoPorPlantio } = storeToRefs(store)
+// Detalhe do domínio safra — a store é dona da safra aberta, dos KPIs comerciais
+// e do CRUD de plantio. Carga (offline-first) e sincronização continuam em suas
+// próprias stores; ContratosSafra é outro domínio.
+const store = useSafraStore()
+const { safra, comercial, plantios } = storeToRefs(store)
+const carga = useCargaStore()
+const { colhidoPorPlantio } = storeToRefs(carga)
 const sinc = useSincronizacaoStore()
 const { online } = storeToRefs(sinc)
 
-const safra = ref(null)
+// Listas de referência da tela (não são entidades safra): fazendas/variedades e
+// o layout base de talhões — usados pelo wizard e pela agregação por fazenda.
 const fazendas = ref([])
 const variedades = ref([])
-const talhoesBase = ref([]) // layout base de todas as fazendas (p/ partir o desenho)
-const comercial = ref(null) // KPIs comerciais (contratos da safra), via backend
+const talhoesBase = ref([]) // layout base de todas as fazendas
 
 const pesosaca = computed(() => Number(safra.value?.Cultura?.pesosaca) || 60)
 const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.Cultura?.codcultura)
@@ -41,10 +45,34 @@ const variedadesDaCultura = computed(() =>
   variedades.value.filter((v) => v.codcultura === codcultura.value && !v.inativo),
 )
 
+// Adapter no formato useCadastro para o PlantioWizardDialog (que lê
+// cad.form/cad.isNovo/cad.salvando e chama cad.salvar(transform)). O estado e o
+// CRUD vivem na store; isto é só a ponte do contrato do wizard.
+const plantioCad = reactive({
+  get form() {
+    return store.formPlantio
+  },
+  get isNovo() {
+    return !store.formPlantio.codplantio
+  },
+  get salvando() {
+    return store.salvandoPlantio
+  },
+  salvar(transform) {
+    // Aplica o whitelist do wizard, mas preserva a PK — a store decide
+    // POST/PUT por formPlantio.codplantio.
+    if (transform) {
+      const pk = store.formPlantio.codplantio
+      store.formPlantio = { ...transform({ ...store.formPlantio }), codplantio: pk }
+    }
+    return store.salvarPlantio(codsafra)
+  },
+})
+
 // Plantios da safra (todas as fazendas) + produtividade (colhido vem das cargas)
 // e progresso da colheita (colhido ÷ expectativa).
 const linhas = computed(() =>
-  plantioCad.items.map((p) => {
+  plantios.value.map((p) => {
     const kg = colhidoPorPlantio.value[p.codplantio] || 0
     const sacas = kg / pesosaca.value
     const area = Number(p.areaplantada) || 0
@@ -76,13 +104,16 @@ const progressoSafra = computed(() =>
 // KPIs comerciais (rollup dos contratos da safra, do backend). Os saldos cruzam
 // o lado comercial (online) com a produção (offline): disponível p/ vender =
 // expectativa − contratado; saldo no silo = colhido − entregue.
-const contratado = computed(() => Number(comercial.value?.contratado) || 0)
-const entregue = computed(() => Number(comercial.value?.entregue) || 0)
+// Unidade de trabalho = kg; sacas derivadas (entreguesc) vêm somadas por contrato.
+const contratado = computed(() => Number(comercial.value?.contratado) || 0) // sc
+const contratadokg = computed(() => Number(comercial.value?.contratadokg) || 0)
+const entreguekg = computed(() => Number(comercial.value?.entreguekg) || 0)
+const entreguesc = computed(() => Number(comercial.value?.entreguesc) || 0)
 const fixo = computed(() => Number(comercial.value?.fixo) || 0)
 const afixar = computed(() => Number(comercial.value?.afixar) || 0)
-const disponivel = computed(() => totalExpectativa.value - contratado.value)
-const saldoSilo = computed(() => totalSacas.value - entregue.value)
-const saldoEmbarcar = computed(() => Number(comercial.value?.saldoaembarcar) || 0)
+const disponivel = computed(() => totalExpectativa.value - contratado.value) // sc
+const saldoSiloKg = computed(() => totalKg.value - entreguekg.value)
+const saldoEmbarcarKg = computed(() => Number(comercial.value?.saldoaembarcarkg) || 0)
 
 // Um card por fazenda que tem plantio nesta safra (mapa + lista + resultado).
 const porFazenda = computed(() => {
@@ -129,14 +160,10 @@ function rs(v) {
 }
 
 // Recarrega o rollup comercial (chamado no mount e quando a grid emite changed).
+// Só online — offline a store mantém o último valor.
 async function recarregarComercial() {
   if (!online.value) return
-  try {
-    const { data } = await api.get(`v1/safra/${codsafra}/comercial`)
-    comercial.value = data
-  } catch {
-    // KPI comercial degrada em silêncio (offline / sem dado); produção segue.
-  }
+  await store.carregarComercial(codsafra)
 }
 const periodo = computed(() => {
   const s = safra.value
@@ -153,8 +180,8 @@ function nomeVariedade(p) {
 // Abre o wizard: sem fazenda → começa na escolha de fazenda; com fazenda
 // (botão de adicionar dentro do card de uma fazenda) → pula pra escolha do talhão.
 function novoPlantio(codfazenda = null) {
-  const usadas = plantioCad.items.map((p) => p.cor).filter(Boolean)
-  plantioCad.abrirNovo({
+  const usadas = plantios.value.map((p) => p.cor).filter(Boolean)
+  store.novoPlantio({
     codfazenda,
     codtalhao: null,
     talhao: '',
@@ -168,40 +195,30 @@ function novoPlantio(codfazenda = null) {
 }
 function editarPlantio(p) {
   // Garante uma cor visível mesmo p/ plantios antigos sem cor salva.
-  plantioCad.editar({ ...p, cor: corTalhao(p) })
+  store.editarPlantio({ ...p, cor: corTalhao(p) })
 }
 function selecionarPlantio(codplantio) {
-  const p = plantioCad.items.find((x) => x.codplantio === codplantio)
+  const p = plantios.value.find((x) => x.codplantio === codplantio)
   if (p) editarPlantio(p)
 }
 
-async function carregarSafra() {
-  // A API embrulha objeto único em { data: {...} }; desembrulha (igual ao resto).
-  const { data } = await api.get(`v1/safra/${codsafra}`)
-  safra.value = data.data ?? data
-}
-
 // Safra — edição/ativação/exclusão no cabeçalho do detalhe (a lista só navega).
+// As actions da store refrescam a safra aberta.
 function editarSafra() {
-  safraCad.editar(safra.value)
+  store.editarSafra(safra.value)
 }
-async function salvarSafra() {
-  await safraCad.salvar()
-  if (!safraCad.dialog) await carregarSafra()
-}
-async function alternarInativoSafra() {
-  await safraCad.alternarInativo(safra.value)
-  await carregarSafra()
+function alternarInativoSafra() {
+  store.inativarSafra(safra.value)
 }
 function excluirSafra() {
   $q.dialog({
     title: 'Excluir',
     message: `Excluir a safra ${safra.value?.safra}?`,
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
-      await api.delete(`v1/safra/${codsafra}`)
+      await store.excluirSafra(codsafra)
       notifySuccess('Excluído!')
       router.push({ name: 'safras' })
     } catch (e) {
@@ -211,20 +228,19 @@ function excluirSafra() {
 }
 
 onMounted(async () => {
-  const [{ data: s }, { data: f }, { data: v }, { data: t }] = await Promise.all([
-    api.get(`v1/safra/${codsafra}`),
+  const [, { data: f }, { data: v }, { data: t }] = await Promise.all([
+    store.carregarSafra(codsafra),
     api.get('v1/fazenda'),
     api.get('v1/variedade'),
     api.get('v1/talhao'),
   ])
-  safra.value = s
   fazendas.value = f.data ?? f
   variedades.value = v.data ?? v
   talhoesBase.value = t.data ?? t
-  await plantioCad.carregar()
-  await store.definirSafra(codsafra)
-  await store.carregarReferencias()
-  await store.carregarCargas()
+  await store.carregarPlantios(codsafra)
+  await carga.definirSafra(codsafra)
+  await carga.carregarReferencias()
+  await carga.carregarCargas()
   await recarregarComercial()
 })
 </script>
@@ -237,7 +253,7 @@ onMounted(async () => {
         <q-card-section class="row items-center">
           <div class="col-12 col-sm row items-center no-wrap">
             <q-btn flat round size="sm" color="grey-7" icon="arrow_back" :to="{ name: 'safras' }" />
-            <MgIconeCultura :codcultura="codcultura" class="q-ml-sm" />
+            <IconeCultura :codcultura="codcultura" class="q-ml-sm" />
             <div class="col q-ml-md">
               <div class="text-h6">{{ safra?.safra || 'Safra' }}</div>
               <div class="text-caption text-grey-7">
@@ -272,7 +288,7 @@ onMounted(async () => {
               color="green-7"
               icon="local_shipping"
               label="Pátio"
-              :to="{ name: 'patio' }"
+              :to="{ name: 'carga' }"
             />
           </div>
         </q-card-section>
@@ -343,9 +359,9 @@ onMounted(async () => {
             <q-card flat bordered>
               <q-card-section>
                 <div class="text-caption text-grey-7">Contratado</div>
-                <div class="text-h6">{{ fmt(contratado) }} sc</div>
+                <div class="text-h6">{{ fmt(contratadokg) }} kg</div>
                 <div class="text-caption text-grey-6">
-                  Disponível p/ vender {{ fmt(disponivel) }} sc
+                  ≈ {{ fmt(contratado) }} sc · Disponível {{ fmt(disponivel) }} sc
                 </div>
               </q-card-section>
             </q-card>
@@ -363,9 +379,9 @@ onMounted(async () => {
             <q-card flat bordered>
               <q-card-section>
                 <div class="text-caption text-grey-7">Entregue</div>
-                <div class="text-h6">{{ fmt(entregue) }} sc</div>
+                <div class="text-h6">{{ fmt(entreguekg) }} kg</div>
                 <div class="text-caption text-grey-6">
-                  Saldo a embarcar {{ fmt(saldoEmbarcar) }} sc
+                  ≈ {{ fmt(entreguesc) }} sc · Saldo a embarcar {{ fmt(saldoEmbarcarKg) }} kg
                 </div>
               </q-card-section>
             </q-card>
@@ -374,8 +390,10 @@ onMounted(async () => {
             <q-card flat bordered>
               <q-card-section>
                 <div class="text-caption text-grey-7">Saldo no silo</div>
-                <div class="text-h6 text-amber-9">{{ fmt(saldoSilo) }} sc</div>
-                <div class="text-caption text-grey-6">colhido − entregue</div>
+                <div class="text-h6 text-amber-9">{{ fmt(saldoSiloKg) }} kg</div>
+                <div class="text-caption text-grey-6">
+                  ≈ {{ fmt(saldoSiloKg / pesosaca, 0) }} sc · colhido − entregue
+                </div>
               </q-card-section>
             </q-card>
           </div>
@@ -403,10 +421,11 @@ onMounted(async () => {
           </q-card-section>
         </q-card>
       </template>
-      <MgContratosSafra
+      <ContratosSafra
         :codsafra="codsafra"
         :codcultura="codcultura"
         :online="online"
+        class="q-mb-md"
         @changed="recarregarComercial"
       />
 
@@ -419,10 +438,10 @@ onMounted(async () => {
       </div>
 
       <!-- Um card por fazenda: mapa + lista por talhão + resultado -->
-      <div class="row q-col-gutter-md">
+      <div v-if="porFazenda.length" class="row q-col-gutter-md">
         <template v-for="g in porFazenda" :key="g.codfazenda">
           <div class="col-12">
-            <q-card bordered flat class="q-mb-md">
+            <q-card bordered flat>
               <q-item>
                 <q-item-section avatar>
                   <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
@@ -460,7 +479,7 @@ onMounted(async () => {
               </q-item>
               <q-separator />
 
-              <MgMapaTalhoes
+              <MapaTalhoes
                 v-if="g.comGeo.length"
                 :talhoes="g.comGeo"
                 id-key="codplantio"
@@ -474,84 +493,85 @@ onMounted(async () => {
                 <div v-for="l in g.plantios" :key="l.codplantio" class="col-12 col-sm-6">
                   <q-card flat bordered class="full-height" :class="{ 'bg-grey-2': l.inativo }">
                     <q-item>
-                  <q-item-section avatar>
-                    <q-avatar
-                      text-color="white"
-                      icon="grass"
-                      :style="{ backgroundColor: corTalhao(l) }"
-                    />
-                  </q-item-section>
-                  <q-item-section>
-                    <q-item-label class="text-weight-medium">
-                      {{ l.talhao || `Talhão ${l.codplantio}` }}
-                    </q-item-label>
-                    <q-item-label caption>
-                      {{ nomeVariedade(l) || 'sem variedade' }} · {{ fmt(l.areaplantada, 1) }} ha
-                      <span v-if="l.expectativa > 0"
-                        >· exp {{ fmt(l.expectativaha, 1) }} sc/ha</span
-                      >
-                      <q-badge
-                        v-if="!l.geometria"
-                        color="grey-5"
-                        label="sem mapa"
-                        class="q-ml-xs"
-                      />
-                    </q-item-label>
-                    <q-linear-progress
-                      :value="l.progresso"
-                      color="green-6"
-                      track-color="grey-3"
-                      size="6px"
-                      rounded
-                      class="q-mt-xs"
-                    />
-                  </q-item-section>
-                  <q-item-section side class="text-right">
-                    <q-item-label class="text-weight-bold text-green-8">
-                      {{ fmt(l.produtividade, 1) }} sc/ha
-                    </q-item-label>
-                    <q-item-label caption
-                      >{{ fmt(l.sacas) }} / {{ fmt(l.expectativa) }} sc</q-item-label
-                    >
-                  </q-item-section>
-                  <q-item-section side>
-                    <div class="row items-center no-wrap">
-                      <MgInfoCriacao :registro="l" />
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        size="sm"
-                        color="grey-7"
-                        icon="edit_location_alt"
-                        @click="editarPlantio(l)"
-                      >
-                        <q-tooltip>Editar / desenhar</q-tooltip>
-                      </q-btn>
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        size="sm"
-                        color="grey-7"
-                        :icon="l.inativo ? 'play_arrow' : 'pause'"
-                        @click="plantioCad.alternarInativo(l)"
-                      >
-                        <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                      </q-btn>
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        size="sm"
-                        color="grey-7"
-                        icon="delete"
-                        @click="plantioCad.excluir(l)"
-                      >
-                        <q-tooltip>Excluir</q-tooltip>
-                      </q-btn>
-                    </div>
-                  </q-item-section>
+                      <q-item-section avatar>
+                        <q-avatar
+                          text-color="white"
+                          icon="grass"
+                          :style="{ backgroundColor: corTalhao(l) }"
+                        />
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label class="text-weight-medium">
+                          {{ l.talhao || `Talhão ${l.codplantio}` }}
+                        </q-item-label>
+                        <q-item-label caption>
+                          {{ nomeVariedade(l) || 'sem variedade' }} ·
+                          {{ fmt(l.areaplantada, 1) }} ha
+                          <span v-if="l.expectativa > 0"
+                            >· exp {{ fmt(l.expectativaha, 1) }} sc/ha</span
+                          >
+                          <q-badge
+                            v-if="!l.geometria"
+                            color="grey-5"
+                            label="sem mapa"
+                            class="q-ml-xs"
+                          />
+                        </q-item-label>
+                        <q-linear-progress
+                          :value="l.progresso"
+                          color="green-6"
+                          track-color="grey-3"
+                          size="6px"
+                          rounded
+                          class="q-mt-xs"
+                        />
+                      </q-item-section>
+                      <q-item-section side class="text-right">
+                        <q-item-label class="text-weight-bold text-green-8">
+                          {{ fmt(l.produtividade, 1) }} sc/ha
+                        </q-item-label>
+                        <q-item-label caption
+                          >{{ fmt(l.sacas) }} / {{ fmt(l.expectativa) }} sc</q-item-label
+                        >
+                      </q-item-section>
+                      <q-item-section side>
+                        <div class="row items-center no-wrap">
+                          <MgInfoCriacao :registro="l" />
+                          <q-btn
+                            flat
+                            dense
+                            round
+                            size="sm"
+                            color="grey-7"
+                            icon="edit_location_alt"
+                            @click="editarPlantio(l)"
+                          >
+                            <q-tooltip>Editar / desenhar</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            flat
+                            dense
+                            round
+                            size="sm"
+                            color="grey-7"
+                            :icon="l.inativo ? 'play_arrow' : 'pause'"
+                            @click="store.inativarPlantio(codsafra, l)"
+                          >
+                            <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+                          </q-btn>
+                          <q-btn
+                            flat
+                            dense
+                            round
+                            size="sm"
+                            color="grey-7"
+                            icon="delete"
+                            @click="store.excluirPlantio(codsafra, l)"
+                          >
+                            <q-tooltip>Excluir</q-tooltip>
+                          </q-btn>
+                        </div>
+                      </q-item-section>
                     </q-item>
                   </q-card>
                 </div>
@@ -562,17 +582,14 @@ onMounted(async () => {
       </div>
 
       <!-- Vazio -->
-      <q-card v-if="!porFazenda.length" bordered flat>
-        <q-card-section class="text-grey-6 text-center">
-          Nenhum talhão plantado nesta safra ainda. Use <q-icon name="add" /> para plantar o
-          primeiro.
-        </q-card-section>
-      </q-card>
+      <MgEmptyState v-else icon="agriculture">
+        Nenhum talhão plantado nesta safra ainda. Use <q-icon name="add" /> para plantar o primeiro.
+      </MgEmptyState>
     </div>
 
     <!-- Wizard: escolher fazenda → talhão base → confirmar/ajustar polígono -->
     <PlantioWizardDialog
-      v-model="plantioCad.dialog"
+      v-model="store.dialogPlantio"
       :cad="plantioCad"
       :fazendas="fazendas"
       :talhoes-base="talhoesBase"
@@ -581,18 +598,24 @@ onMounted(async () => {
     />
 
     <!-- Dialog Safra (edição) — mesmo form do cadastro -->
-    <q-dialog v-model="safraCad.dialog">
+    <q-dialog v-model="store.dialogSafra">
       <q-card flat style="width: 440px; max-width: 95vw">
-        <q-form @submit="salvarSafra">
+        <q-form @submit.prevent="store.salvarSafra()">
           <q-card-section class="bg-primary text-white">
             <div class="text-h6">Editar Safra</div>
           </q-card-section>
           <q-card-section class="q-pt-md">
-            <MgSafraForm :cad="safraCad" />
+            <SafraForm :form="store.formSafra" />
           </q-card-section>
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-            <q-btn type="submit" flat label="Salvar" color="primary" :loading="safraCad.salvando" />
+            <q-btn
+              type="submit"
+              flat
+              label="Salvar"
+              color="primary"
+              :loading="store.salvandoSafra"
+            />
           </q-card-actions>
         </q-form>
       </q-card>

@@ -8,7 +8,7 @@ import { formataNumero, formataData, formataCodigo, formataDataIso } from '@comp
 import { chequeStatusLabel, chequeStatusColor } from 'src/constants/chequeStatus'
 import { abrirPdf } from '@components/abrirPdf'
 import MgInputData from '@components/MgInputData.vue'
-import SelectChequeMotivoDevolucao from 'src/components/select/SelectChequeMotivoDevolucao.vue'
+import MgSelectChequeMotivoDevolucao from '@components/MgSelectChequeMotivoDevolucao.vue'
 
 const route = useRoute()
 const $q = useQuasar()
@@ -105,7 +105,8 @@ const toggleInativo = () => {
     title: 'Inativar repasse',
     message:
       'Inativar este repasse devolve os cheques ainda "Repassados" para "À Repassar". Confirma?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(inativar)
 }
 
@@ -314,7 +315,7 @@ onMounted(carregar)
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <SelectChequeMotivoDevolucao
+                <MgSelectChequeMotivoDevolucao
                   v-model="devModel.codchequemotivodevolucao"
                   outlined
                   label="Motivo da devolução"

@@ -120,8 +120,8 @@ const cancelar = () => {
     title: 'Cancelar MDFe',
     message: 'Informe o motivo do cancelamento (mínimo 15 caracteres):',
     prompt: { model: '', type: 'textarea', isValid: (v) => v && v.length >= 15 },
-    cancel: { label: 'Voltar', flat: true },
-    ok: { label: 'Cancelar MDFe', color: 'negative' },
+    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+    ok: { label: 'Cancelar MDFe', color: 'red-5', flat: true },
   }).onOk((justificativa) =>
     executar('cancelar', () => mdfeService.cancelar(codmdfe.value, justificativa), {
       okStat: 135,
@@ -249,7 +249,9 @@ const damdfe = async () => {
                 <q-item>
                   <q-item-section>
                     <q-item-label caption>Tipo de Emitente</q-item-label>
-                    <q-item-label>{{ labelDe(TIPO_EMITENTE_OPTIONS, mdfe.tipoemitente) }}</q-item-label>
+                    <q-item-label>{{
+                      labelDe(TIPO_EMITENTE_OPTIONS, mdfe.tipoemitente)
+                    }}</q-item-label>
                   </q-item-section>
                 </q-item>
                 <q-item>
@@ -335,8 +337,8 @@ const damdfe = async () => {
                   <q-item-section>
                     <q-item-label caption>Início</q-item-label>
                     <q-item-label>
-                      {{ mdfe.inicioviagem ? tempoRelativo(mdfe.inicioviagem) : '—' }} ·
-                      Modal {{ labelDe(MODAL_OPTIONS, mdfe.modal) }}
+                      {{ mdfe.inicioviagem ? tempoRelativo(mdfe.inicioviagem) : '—' }} · Modal
+                      {{ labelDe(MODAL_OPTIONS, mdfe.modal) }}
                     </q-item-label>
                   </q-item-section>
                 </q-item>
@@ -413,10 +415,7 @@ const damdfe = async () => {
           </div>
 
           <!-- Informações -->
-          <div
-            v-if="mdfe.informacoesadicionais || mdfe.informacoescomplementares"
-            class="col-12"
-          >
+          <div v-if="mdfe.informacoesadicionais || mdfe.informacoescomplementares" class="col-12">
             <q-card flat bordered>
               <q-card-section class="bg-primary text-white text-body2 text-weight-bold">
                 Informações

@@ -1,9 +1,13 @@
 <script setup>
 import { onMounted } from 'vue'
-import { useCadastro } from 'src/composables/useCadastro'
+import { storeToRefs } from 'pinia'
+import { useCulturaStore } from 'src/stores/cultura'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
-const cad = useCadastro('cultura', 'codcultura', 'Cultura')
+// Lista do domínio cultura — tudo vem da store do domínio.
+const store = useCulturaStore()
+const { culturas, dialogCultura, formCultura, salvandoCultura } = storeToRefs(store)
 
 const emojis = ['🌽', '🫛', '🌾', '☕', '🌻', '🥜', '🍅', '🌱']
 
@@ -14,7 +18,7 @@ const opcoesCiclo = [
   { label: 'Vira o ano (ex.: soja)', value: 2 },
 ]
 
-onMounted(() => cad.carregar())
+onMounted(() => store.carregarCulturas())
 </script>
 
 <template>
@@ -36,15 +40,15 @@ onMounted(() => cad.carregar())
             size="sm"
             color="primary"
             icon="add"
-            @click="cad.abrirNovo({ pesosaca: 60, cicloanos: 1 })"
+            @click="store.novaCultura({ pesosaca: 60, cicloanos: 1 })"
           >
             <q-tooltip>Nova cultura</q-tooltip>
           </q-btn>
         </q-card-section>
       </q-card>
 
-      <div v-if="cad.items.length" class="row q-col-gutter-md">
-        <div v-for="c in cad.items" :key="c.codcultura" class="col-12 col-sm-6 col-md-4">
+      <div v-if="culturas.length" class="row q-col-gutter-md">
+        <div v-for="c in culturas" :key="c.codcultura" class="col-12 col-sm-6 col-md-4">
           <q-card flat bordered class="overflow-hidden" :class="{ 'bg-grey-2': c.inativo }">
             <q-item
               clickable
@@ -70,29 +74,38 @@ onMounted(() => cad.carregar())
         </div>
       </div>
 
-      <q-banner v-else rounded class="bg-grey-2 text-grey-7">Nenhuma cultura cadastrada.</q-banner>
+      <MgEmptyState v-else icon="grass">Nenhuma cultura cadastrada.</MgEmptyState>
 
-      <q-dialog v-model="cad.dialog">
+      <q-dialog v-model="dialogCultura">
         <q-card flat style="width: 440px; max-width: 95vw">
-          <q-form @submit="cad.salvar()">
+          <q-form @submit.prevent="store.salvarCultura()">
             <q-card-section class="bg-primary text-white">
-              <div class="text-h6">{{ cad.isNovo ? 'Nova Cultura' : 'Editar Cultura' }}</div>
+              <div class="text-h6">
+                {{ formCultura.codcultura ? 'Editar Cultura' : 'Nova Cultura' }}
+              </div>
             </q-card-section>
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-12 col-sm-8">
-                  <q-input v-model="cad.form.cultura" label="Cultura" outlined autofocus />
+                  <q-input
+                    v-model="formCultura.cultura"
+                    label="Cultura"
+                    outlined
+                    autofocus
+                    lazy-rules
+                    :rules="[(v) => !!v && v.length >= 2]"
+                  />
                 </div>
                 <div class="col-12 col-sm-4">
                   <q-input
-                    v-model="cad.form.icone"
+                    v-model="formCultura.icone"
                     label="Emoji"
                     outlined
                     maxlength="4"
                     hint="Opcional"
                   >
                     <template #prepend>
-                      <span style="font-size: 20px">{{ cad.form.icone || '🌱' }}</span>
+                      <span style="font-size: 20px">{{ formCultura.icone || '🌱' }}</span>
                     </template>
                   </q-input>
                 </div>
@@ -103,21 +116,23 @@ onMounted(() => cad.carregar())
                       :key="e"
                       clickable
                       :label="e"
-                      @click="cad.form.icone = e"
+                      @click="formCultura.icone = e"
                     />
                   </div>
                 </div>
                 <div class="col-12 col-sm-6">
                   <MgInputValor
-                    v-model="cad.form.pesosaca"
+                    v-model="formCultura.pesosaca"
                     :decimals="0"
                     suffix="kg/saca"
                     label="Peso da saca"
+                    lazy-rules
+                    :rules="[(v) => v == null || v > 0]"
                   />
                 </div>
                 <div class="col-12 col-sm-6">
                   <q-select
-                    v-model="cad.form.cicloanos"
+                    v-model="formCultura.cicloanos"
                     :options="opcoesCiclo"
                     emit-value
                     map-options
@@ -130,7 +145,7 @@ onMounted(() => cad.carregar())
             </q-card-section>
             <q-card-actions align="right">
               <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn type="submit" flat label="Salvar" color="primary" :loading="cad.salvando" />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvandoCultura" />
             </q-card-actions>
           </q-form>
         </q-card>

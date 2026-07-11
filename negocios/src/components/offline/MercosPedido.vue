@@ -45,7 +45,8 @@ const confirmarReimportar = (mp) => {
     title: 'Reimportar',
     message:
       'Deseja mesmo reimportar o pedido do Mercos? Todas as alterações feitas poderão ser perdidas.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
     // persistent: true
   }).onOk(() => {
     reimportar(mp)

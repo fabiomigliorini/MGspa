@@ -99,7 +99,8 @@ function estornar() {
   $q.dialog({
     title: 'Estornar',
     message: 'Confirma estornar este agrupamento?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       const { data } = await api.post(`v1/titulo-agrupamento/${id.value}/estornar`)

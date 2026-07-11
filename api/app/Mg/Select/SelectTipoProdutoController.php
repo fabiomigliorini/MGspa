@@ -10,18 +10,28 @@ class SelectTipoProdutoController extends Controller
 {
     public static function index(Request $request)
     {
-        $sql = 'select codtipoproduto, tipoproduto from tbltipoproduto';
-
-        if (!empty($request->codtipoproduto)) {
-            $sql .= ' where codtipoproduto = :codtipoproduto';
-            return response()->json(
-                DB::select($sql, ['codtipoproduto' => $request->codtipoproduto]),
-                200
-            );
-        }
-
-        $sql .= ' where tipoproduto ilike :busca ORDER BY tipoproduto LIMIT 50';
+        $sql = '
+            select codtipoproduto, tipoproduto, codtipoproduto as value, tipoproduto as label
+            from tbltipoproduto
+            where tipoproduto ilike :busca
+            ORDER BY tipoproduto
+        ';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
+    }
+
+    public static function show($id)
+    {
+        $sql = '
+            select codtipoproduto, tipoproduto, codtipoproduto as value, tipoproduto as label
+            from tbltipoproduto
+            where codtipoproduto = :id
+            limit 1
+        ';
+        $rows = DB::select($sql, ['id' => $id]);
+        if (empty($rows)) {
+            abort(404);
+        }
+        return $rows[0];
     }
 }

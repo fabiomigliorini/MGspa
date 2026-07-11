@@ -13,7 +13,16 @@ import {
   getFreteLabel,
   STATUS_OPTIONS,
 } from '../constants/notaFiscal'
-import { formataCnpjCpf, formataTimestamp, formataData, formataNumero, formataNumeroNota, formataChave, formataProtocolo, formataCodigo } from '@components/formatters'
+import {
+  formataCnpjCpf,
+  formataTimestamp,
+  formataData,
+  formataNumero,
+  formataNumeroNota,
+  formataChave,
+  formataProtocolo,
+  formataCodigo,
+} from '@components/formatters'
 import NotaFiscalItemCard from '../components/NotaFiscalItemCard.vue'
 import NotaFiscalPagamentoDialog from '../components/dialogs/NotaFiscalPagamentoDialog.vue'
 import NotaFiscalDuplicataDialog from '../components/dialogs/NotaFiscalDuplicataDialog.vue'
@@ -187,11 +196,13 @@ const handleDelete = () => {
     message: `Deseja realmente excluir a nota fiscal ${getModeloLabel(nota.value.modelo)} nº ${nota.value.numero}?`,
     cancel: {
       label: 'Cancelar',
+      color: 'grey-8',
       flat: true,
     },
     ok: {
       label: 'Excluir',
-      color: 'negative',
+      color: 'red-5',
+      flat: true,
     },
   }).onOk(async () => {
     try {
@@ -259,11 +270,13 @@ const handleDeleteItem = (item) => {
     message: `Deseja realmente excluir o item "${item.produtoBarra?.descricao}"?`,
     cancel: {
       label: 'Cancelar',
+      color: 'grey-8',
       flat: true,
     },
     ok: {
       label: 'Excluir',
-      color: 'negative',
+      color: 'red-5',
+      flat: true,
     },
   }).onOk(async () => {
     try {
@@ -329,8 +342,8 @@ const excluirPagamento = (pagamento) => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: 'Deseja realmente excluir esta forma de pagamento?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.deletePagamento(
@@ -399,8 +412,8 @@ const excluirDuplicata = (duplicata) => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: 'Deseja realmente excluir esta duplicata?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.deleteDuplicata(
@@ -466,8 +479,8 @@ const excluirReferenciada = (referenciada) => {
   $q.dialog({
     title: 'Confirmar exclusão',
     message: 'Deseja realmente excluir esta nota referenciada?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Excluir', color: 'negative' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.deleteReferenciada(
@@ -543,7 +556,7 @@ const enviarCartaCorrecao = async (texto) => {
     $q.dialog({
       title: 'Carta de Correção',
       message: mensagem,
-      ok: { label: 'OK', color: tipo },
+      ok: { label: 'OK', color: tipo, flat: true },
     })
 
     if (response.sucesso) {
@@ -566,8 +579,8 @@ const duplicarNota = () => {
   $q.dialog({
     title: 'Confirma duplicação',
     message: 'Deseja realmente duplicar esta nota fsical?',
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Duplicar', color: 'primary' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Duplicar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.duplicarNota(nota.value.codnotafiscal)
@@ -604,8 +617,8 @@ const incorporarValores = () => {
       outlined: true,
       isValid: (val) => val === 'INCORPORAR',
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'warning' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'warning', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.incorporarValores(nota.value.codnotafiscal)
@@ -636,8 +649,8 @@ const recalcularTributacao = () => {
       outlined: true,
       isValid: (val) => val === 'RECALCULAR',
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'warning' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'warning', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.recalcularTributacao(nota.value.codnotafiscal)
@@ -668,9 +681,8 @@ const unificarItens = () => {
       outlined: true,
       isValid: (val) => val === 'UNIFICAR',
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'warning' },
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'warning', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.unificarItens(nota.value.codnotafiscal)
@@ -808,8 +820,8 @@ const alterarStatus = async (novoStatus) => {
       outlined: true,
       isValid: (val) => val === 'ALTERAR',
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'warning' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'warning', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, novoStatus)
@@ -842,8 +854,8 @@ const limparAutorizacao = async () => {
       outlined: true,
       isValid: (val) => val === 'LIMPAR',
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'warning' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'warning', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
@@ -880,8 +892,8 @@ const limparCancelamento = async () => {
       outlined: true,
       isValid: (val) => val === 'LIMPAR',
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'warning' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'warning', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
@@ -916,8 +928,8 @@ const limparInutilizacao = async () => {
       outlined: true,
       isValid: (val) => val === 'LIMPAR',
     },
-    cancel: { label: 'Cancelar', flat: true },
-    ok: { label: 'Confirmar', color: 'warning' },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Confirmar', color: 'warning', flat: true },
   }).onOk(async () => {
     try {
       await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
@@ -2249,7 +2261,7 @@ onUnmounted(() => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-7" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -2307,9 +2319,9 @@ onUnmounted(() => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-7" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
           <q-btn
-            unelevated
+            flat
             label="Unificar"
             color="primary"
             :loading="loadingUnificar"

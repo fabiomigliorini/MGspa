@@ -68,7 +68,8 @@ const salvar = async () => {
   Dialog.create({
     title: 'Salvar',
     message: 'Tem certeza que você deseja salvar?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(() => {
     sNegocio.aplicarValores(
       parseFloat(edicao.value.valordesconto),
@@ -293,7 +294,7 @@ const creditCardColorPagamento = (pag) => {
           <q-btn
             flat
             label="Cancelar"
-            color="primary"
+            color="grey-8"
             @click="sNegocio.dialog.valores = false"
             tabindex="-1"
           />

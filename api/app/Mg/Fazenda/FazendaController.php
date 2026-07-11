@@ -4,6 +4,7 @@ namespace Mg\Fazenda;
 
 use App\Http\Requests\Mg\Fazenda\FazendaStoreRequest;
 use App\Http\Requests\Mg\Fazenda\FazendaUpdateRequest;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
 
@@ -48,7 +49,20 @@ class FazendaController extends MgController
 
     public function destroy($id)
     {
-        Fazenda::findOrFail($id)->delete();
+        $fazenda = Fazenda::findOrFail($id);
+        try {
+            $fazenda->delete();
+        } catch (QueryException $e) {
+            if (($e->errorInfo[0] ?? null) !== '23503') {
+                throw $e;
+            }
+            $msg = $e->getMessage();
+            abort(409, match (true) {
+                str_contains($msg, 'tbltalhao') => 'Existem talhões vinculados a esta Fazenda! Impossível excluir!',
+                str_contains($msg, 'tblplantio') => 'Existem plantios vinculados a esta Fazenda! Impossível excluir!',
+                default => 'Existem registros vinculados a esta Fazenda! Impossível excluir!',
+            });
+        }
         return response()->noContent();
     }
 

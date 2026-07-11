@@ -172,8 +172,8 @@ const excluirIndicador = (ind) => {
   $q.dialog({
     title: 'Excluir Indicador',
     message: 'Tem certeza que deseja excluir este indicador?',
-    cancel: true,
-    persistent: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.excluirIndicador(ind.codindicador)

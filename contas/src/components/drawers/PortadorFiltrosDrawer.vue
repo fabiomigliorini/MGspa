@@ -4,8 +4,8 @@ import { useDebounceFn } from '@vueuse/core'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import SelectBanco from 'src/components/select/SelectBanco.vue'
-import SelectFilial from 'src/components/select/SelectFilial.vue'
+import MgSelectBanco from '@components/MgSelectBanco.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
 
 const store = usePortadorStore()
 
@@ -57,26 +57,22 @@ const statusOptions = [
     </FilterGroup>
 
     <FilterGroup title="Vínculos">
-      <SelectBanco
+      <MgSelectBanco
         v-model="store.filters.codbanco"
         outlined
         clearable
         :bottom-slots="false"
         label="Banco"
         class="q-mb-sm"
-      >
-        <template #prepend><q-icon name="account_balance" /></template>
-      </SelectBanco>
+      />
 
-      <SelectFilial
+      <MgSelectFilial
         v-model="store.filters.codfilial"
         outlined
         clearable
         :bottom-slots="false"
         label="Filial"
-      >
-        <template #prepend><q-icon name="store" /></template>
-      </SelectFilial>
+      />
     </FilterGroup>
 
     <FilterGroup title="Boleto e Status">

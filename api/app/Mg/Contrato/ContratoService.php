@@ -2,6 +2,8 @@
 
 namespace Mg\Contrato;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Mg\MgService;
 
 class ContratoService extends MgService
@@ -12,26 +14,37 @@ class ContratoService extends MgService
         'Pessoa',
         'Cultura',
         'Safra',
-        'NaturezaOperacao',
-        'PessoaNf',
         'Filial',
         'Portador',
         'Corretora',
         'Cooperativa',
         'ContratoFixacaoS',
+        'ContratoFixacaoS.ContratoPagamentoS', // ledger por fixação (sem N+1)
         'ContratoPagamentoS',
-        'EmbarqueContratoS.Embarque',
+        'ContratoNotaS.NaturezaOperacao',
+        'ContratoNotaS.PessoaNf',
+        'MovimentoGraoS.Carga',
     ];
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)
     {
+        // Entregue/recebido = SUM(liquido) no extrato (tblmovimentograo) das
+        // linhas ativas deste contrato. Carga inativada some do extrato (estorno),
+        // entao nao precisa filtrar carga aqui.
+        $movAtivo = fn($q) => $q->whereNull('inativo');
+
         $qry = Contrato::query()
             ->with(static::WITH)
             // Totais p/ a reconciliacao fisico/fiscal/financeiro:
-            ->withSum('EmbarqueContratoS as carregado', 'quantidade') // sc carregadas
-            ->withSum('EmbarqueContratoS as valornf', 'valornf')       // R$ das NFs
-            ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
-            ->withSum(['ContratoPagamentoS as pago' => fn ($q) => $q->whereNull('inativo')], 'valor');
+            ->withSum(['MovimentoGraoS as carregadokg' => $movAtivo], 'liquido') // KG fisico entregue
+            ->withSum(
+                ['CargaPontoS as valornf' => fn($q) => $q->whereHas('Carga', fn($c) => $c->whereNull('inativo'))],
+                'valornf',
+            ) // R$ das NFs por contrato (tblcargaponto; 0 ate emitir NFe)
+            ->withSum(['ContratoFixacaoS as fixado' => fn($q) => $q->whereNull('inativo')], 'quantidade')
+            ->withSum(['ContratoPagamentoS as pago' => fn($q) => $q->whereNull('inativo')], 'valor')
+            // barter (settlement em insumos) vive no pagamento; usado p/ derivar o tipo.
+            ->withCount(['ContratoPagamentoS as bartercount' => fn($q) => $q->where('forma', 'BARTER')->whereNull('inativo')]);
 
         if (!empty($filter['codcontrato'])) {
             $qry->where('codcontrato', $filter['codcontrato']);
@@ -47,9 +60,6 @@ class ContratoService extends MgService
         }
         if (!empty($filter['codsafra'])) {
             $qry->where('codsafra', $filter['codsafra']);
-        }
-        if (!empty($filter['tipo'])) {
-            $qry->where('tipo', $filter['tipo']);
         }
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);
@@ -68,50 +78,85 @@ class ContratoService extends MgService
     }
 
     /**
-     * Cria/atualiza o contrato e mantém a fixação-espelho sincronizada.
+     * Sugere o próximo Nº Nosso da safra na convenção CULTURA-AA/AA-NNNN.
+     * Ex: SOJA-26/27-0001. O bloco do ano deriva do ciclo da cultura (cicloanos>=2
+     * vira o ano → AA/AA; caso contrário só o ano de plantio → AA). O sequencial é
+     * o maior sufixo numérico já gravado nessa safra + 1 (tolera nº manual/excluído).
+     */
+    public static function proximoNumero(int $codsafra): string
+    {
+        $safra = DB::selectOne(
+            '
+            select s.anoplantio, s.anocolheita, c.cultura, c.cicloanos
+            from tblsafra s
+            join tblcultura c on c.codcultura = s.codcultura
+            where s.codsafra = ?
+            ',
+            [$codsafra],
+        );
+        if (!$safra) {
+            abort(404, 'Safra não encontrada.');
+        }
+
+        $sigla = Str::upper(Str::ascii($safra->cultura));
+        $plantio = substr((string) $safra->anoplantio, -2);
+        $ano = $safra->cicloanos >= 2
+            ? $plantio . '/' . substr((string) $safra->anocolheita, -2)
+            : $plantio;
+        $prefixo = "{$sigla}-{$ano}-";
+
+        $row = DB::selectOne(
+            "
+            select coalesce(max(cast(substring(contrato from '([0-9]+)\$') as integer)), 0) + 1 as proximo
+            from tblcontrato
+            where codsafra = ? and contrato like ?
+            ",
+            [$codsafra, $prefixo . '%'],
+        );
+
+        return sprintf('%s%04d', $prefixo, $row->proximo);
+    }
+
+    /**
+     * Cria/atualiza o contrato. Precificação vive nas fixações (tblcontratofixacao):
+     * um contrato "FIXO" é só um contrato que recebe a fixação cheia na assinatura;
+     * não há mais fixação-espelho automática.
      */
     public static function salvar(array $dados, ?Contrato $contrato = null): Contrato
     {
         $contrato = $contrato ?: new Contrato();
         $contrato->fill($dados);
+        if (empty($contrato->operacao)) {
+            $contrato->operacao = 'VENDA';
+        }
+        // Nº Nosso: convenção CULTURA-AA/AA-NNNN (ex: SOJA-26/27-0001), sequencial
+        // por safra. Sugerido no form (editável); aqui é a rede de segurança que
+        // garante numeração na criação quando o usuário não digitou nada.
+        if (!$contrato->exists && empty($contrato->contrato) && !empty($contrato->codsafra)) {
+            $contrato->contrato = static::proximoNumero((int) $contrato->codsafra);
+        }
+        // quantidade NULL = volume em aberto (leva o saldo do silo; sem teto). A
+        // coluna é nullable (agro_contrato_refatoracao.sql); não ancorar em 0,
+        // senão deixa de ser "em aberto" e o tipo/saldo derivam errado.
         $contrato->save();
-        static::sincronizarFixacaoAutomatica($contrato);
         return $contrato;
     }
 
     /**
-     * Normaliza a fixação do FIXO: o preço já é travado no próprio contrato,
-     * então mantemos UMA fixação "automática" (quantidade cheia, preço/moeda do
-     * contrato) pra que fixado e preço médio rodem uniformemente sobre
-     * tblcontratofixacao, sem caso especial. FIXAR/BARTER fixam à mão — não
-     * mexemos nessas (automatico = false). Apaga a espelho anterior e recria,
-     * cobrindo também troca de tipo (FIXAR↔FIXO) sem desincronizar.
+     * Liga/desliga o flag barter (settlement em insumos). Contrato barter não
+     * exige fixação nem parcelas; o tipo derivado vira BARTER (ver
+     * ContratoResource::tipoDerivado). Espelha ativar/inativar: muda 1 campo.
      */
-    public static function sincronizarFixacaoAutomatica(Contrato $contrato): void
+    public static function barter(Contrato $contrato, bool $barter): Contrato
     {
-        ContratoFixacao::where('codcontrato', $contrato->codcontrato)
-            ->where('automatico', true)
-            ->delete();
-
-        if ($contrato->tipo !== 'FIXO') {
-            return;
-        }
-
-        $dados = [
-            'codcontrato' => $contrato->codcontrato,
-            'data' => $contrato->dataembarque ?: now()->toDateString(),
-            'quantidade' => $contrato->quantidade,
-            'preco' => $contrato->preco,
-            'moeda' => $contrato->moeda ?: 'BRL',
-            'dolar' => null,
-            'automatico' => true,
-        ];
-        $dados['precoreal'] = static::precoReal($dados);
-        ContratoFixacao::create($dados);
+        $contrato->barter = $barter;
+        $contrato->update();
+        return $contrato;
     }
 
     /**
-     * Preco em R$/saca de uma fixacao: USD travado => preco x dolar; senao preco.
+     * Preco em R$/saca de uma fixacao: moeda estrangeira (qualquer != BRL) com
+     * cotacao travada => preco x cotacao; BRL (ou sem cotacao) => o proprio preco.
      */
     public static function precoReal(array $dados): ?float
     {
@@ -119,9 +164,74 @@ class ContratoService extends MgService
         if ($preco === null || $preco === '') {
             return null;
         }
-        if (($dados['moeda'] ?? 'BRL') === 'USD' && !empty($dados['dolar'])) {
-            return round((float) $preco * (float) $dados['dolar'], 4);
+        $estrangeira = ($dados['moeda'] ?? 'BRL') !== 'BRL';
+        if ($estrangeira) {
+            // Moeda estrangeira COM cotação: trava o R$ (preço x cotação).
+            // SEM cotação: fixação dolarizada pura — não há R$ ainda (a conversão
+            // acontece no recebimento). Retorna null p/ NÃO gravar US$ como se
+            // fosse R$ (contaminaria líquido/NF/trava de pagamento).
+            return !empty($dados['dolar'])
+                ? round((float) $preco * (float) $dados['dolar'], 4)
+                : null;
         }
         return round((float) $preco, 4);
+    }
+
+    // ===== Saldos p/ as travas de negócio (fonte única, usada nos FormRequests) =====
+    // Mesma semântica dos withSum `fixado`/`pago` de pesquisar(): só linhas ativas
+    // (inativo IS NULL). `$exceto*` ignora o próprio registro na edição (update).
+
+    /** Σ sacas fixadas (fixações ativas) — teto = não fixar além do contratado. */
+    public static function sacasFixadas(int $codcontrato, ?int $excetoFixacao = null): float
+    {
+        return (float) ContratoFixacao::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoFixacao, fn ($q) => $q->where('codcontratofixacao', '!=', $excetoFixacao))
+            ->sum('quantidade');
+    }
+
+    /** Valor BRUTO fixado (Σ quantidade × precoreal, ativas) — teto dos pagamentos. */
+    public static function valorFixadoBruto(int $codcontrato, ?int $excetoFixacao = null): float
+    {
+        return (float) ContratoFixacao::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoFixacao, fn ($q) => $q->where('codcontratofixacao', '!=', $excetoFixacao))
+            ->sum(DB::raw('coalesce(quantidade, 0) * coalesce(precoreal, 0)'));
+    }
+
+    /** Σ valor pago (pagamentos ativos). */
+    public static function valorPago(int $codcontrato, ?int $excetoPagamento = null): float
+    {
+        return (float) ContratoPagamento::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
+            ->sum('valor');
+    }
+
+    /** Σ sacas pagas (pagamentos ativos, modo SACAS). */
+    public static function sacasPagas(int $codcontrato, ?int $excetoPagamento = null): float
+    {
+        return (float) ContratoPagamento::where('codcontrato', $codcontrato)
+            ->whereNull('inativo')
+            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
+            ->sum('sacas');
+    }
+
+    // ===== Saldos POR FIXAÇÃO (multi-fixação + US$) =====
+    // Sacas são a grandeza neutra entre moedas. O teto de pagamento passou a ser
+    // "sacas parceladas da fixação <= sacas fixadas da fixação" — funciona igual
+    // p/ BRL e US$ (o valorFixadoBruto em R$ zerava a perna US$).
+
+    /**
+     * Σ sacas já parceladas de UMA fixação (parcelas ativas). Teto de pagamento:
+     * o restante (recebido, valor fixado por moeda, saldo) é derivado no ledger do
+     * ContratoFixacaoResource, sobre a relação já carregada — sem query extra aqui.
+     */
+    public static function sacasParceladasFixacao(int $codcontratofixacao, ?int $excetoPagamento = null): float
+    {
+        return (float) ContratoPagamento::where('codcontratofixacao', $codcontratofixacao)
+            ->whereNull('inativo')
+            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
+            ->sum('sacas');
     }
 }

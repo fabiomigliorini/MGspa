@@ -57,7 +57,8 @@ const unificarOrcamento = (orc) => {
     title: 'Abrir como Comanda',
     message:
       'Tem certeza que deseja abrir esse orçamento como uma comanda? Esta operação não poderá ser desfeita.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(() => {
     unificarComanda(parseInt(orc.codnegocio))
     dialogOrcamento.value = false
@@ -118,7 +119,8 @@ const comanda = async () => {
       placeholder: 'Comanda...',
       // inputClass: "text-center",
     },
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async (codnegociocomanda) => {
     unificarComanda(parseInt(codnegociocomanda))
   })
@@ -493,7 +495,7 @@ onUnmounted(() => {
         <q-btn
           flat
           label="Cancelar"
-          color="primary"
+          color="grey-8"
           @click="dialogOrcamento = false"
           tabindex="-1"
         />

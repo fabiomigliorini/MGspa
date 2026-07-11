@@ -13,21 +13,21 @@ class NaturezaOperacaoDetailResource extends JsonResource
             'codnaturezaoperacao' => $this->codnaturezaoperacao,
             'naturezaoperacao' => $this->naturezaoperacao,
             'codoperacao' => $this->codoperacao,
-            'operacao' => $this->rel('Operacao', ['codoperacao', 'operacao']),
+            'operacao' => $this->Operacao?->only(['codoperacao', 'operacao']),
             'emitida' => $this->emitida,
             'observacoesnf' => $this->observacoesnf,
             'mensagemprocom' => $this->mensagemprocom,
             'codnaturezaoperacaodevolucao' => $this->codnaturezaoperacaodevolucao,
-            'naturezaOperacaoDevolucao' => $this->rel('NaturezaOperacaoDevolucao', ['codnaturezaoperacao', 'naturezaoperacao']),
+            'naturezaOperacaoDevolucao' => $this->NaturezaOperacaoDevolucao?->only(['codnaturezaoperacao', 'naturezaoperacao']),
             'codtipotitulo' => $this->codtipotitulo,
-            'tipoTitulo' => $this->rel('TipoTitulo', ['codtipotitulo', 'tipotitulo']),
+            'tipoTitulo' => $this->TipoTitulo?->only(['codtipotitulo', 'tipotitulo']),
             'codcontacontabil' => $this->codcontacontabil,
-            'contaContabil' => $this->rel('ContaContabil', ['codcontacontabil', 'contacontabil']),
+            'contaContabil' => $this->ContaContabil?->only(['codcontacontabil', 'contacontabil']),
             'finnfe' => $this->finnfe,
             'finnfeDescricao' => NaturezaOperacao::FINNFE_DESCRICOES[$this->finnfe] ?? null,
             'ibpt' => $this->ibpt,
             'codestoquemovimentotipo' => $this->codestoquemovimentotipo,
-            'estoqueMovimentoTipo' => $this->rel('EstoqueMovimentoTipo', ['codestoquemovimentotipo', 'estoquemovimentotipo']),
+            'estoqueMovimentoTipo' => $this->EstoqueMovimentoTipo?->only(['codestoquemovimentotipo', 'estoquemovimentotipo']),
             'estoque' => $this->estoque,
             'financeiro' => $this->financeiro,
             'compra' => $this->compra,
@@ -38,10 +38,5 @@ class NaturezaOperacaoDetailResource extends JsonResource
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
         ];
-    }
-
-    private function rel(string $name, array $fields): ?array
-    {
-        return $this->relationLoaded($name) ? $this->$name?->only($fields) : null;
     }
 }

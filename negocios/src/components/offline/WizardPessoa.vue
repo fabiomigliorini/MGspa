@@ -2,7 +2,12 @@
 import { ref, watch } from 'vue'
 import { LoadingBar, Notify, debounce, Dialog } from 'quasar'
 import { db } from 'boot/db'
-import { formataCnpjCpf, formataIe, primeiraLetraMaiuscula, mascaraTelefone } from '@components/formatters'
+import {
+  formataCnpjCpf,
+  formataIe,
+  primeiraLetraMaiuscula,
+  mascaraTelefone,
+} from '@components/formatters'
 import {
   isCpfValido,
   isCnpjValido,
@@ -106,7 +111,8 @@ const confirmar = (codpessoa, cpf) => {
     Dialog.create({
       title: 'Alterar Pessoa',
       message: 'Tem certeza que você deseja alterar a pessoa do negócio?',
-      cancel: true,
+      cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+      ok: { label: 'OK', color: 'primary', flat: true },
     }).onOk(() => {
       selecionar(codpessoa, cpf)
     })
@@ -544,7 +550,8 @@ const salvar = async (e) => {
   Dialog.create({
     title: 'Salvar',
     message: 'Tem certeza que você deseja salvar a nova pessoa?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     const codpessoa = await sSinc.postPessoa(pessoa.value)
     if (codpessoa) {
@@ -590,7 +597,7 @@ watch(
                         flat
                         dense
                         round
-                        @click=";(cnpj = null), inputCnpj.focus()"
+                        @click=";((cnpj = null), inputCnpj.focus())"
                         icon="close"
                         tabindex="-1"
                       />
@@ -598,7 +605,9 @@ watch(
                         flat
                         dense
                         round
-                        @click=";(inputCnpjModeNumeric = !inputCnpjModeNumeric), inputCnpj.focus()"
+                        @click="
+                          ;((inputCnpjModeNumeric = !inputCnpjModeNumeric), inputCnpj.focus())
+                        "
                         :icon="inputCnpjModeNumeric ? 'mdi-alphabetical-variant' : 'mdi-numeric'"
                         tabindex="-1"
                         class="desktop-hide"
@@ -996,7 +1005,7 @@ watch(
             label="VOLTAR"
             class="q-ml-sm"
           />
-          <q-btn flat color="negative" label="CANCELAR" @click="dialog = false" />
+          <q-btn flat color="grey-8" label="CANCELAR" @click="dialog = false" />
         </q-card-actions>
       </q-form>
     </q-card>

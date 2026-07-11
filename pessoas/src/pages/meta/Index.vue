@@ -125,7 +125,8 @@ const reprocessar = (meta) => {
   $q.dialog({
     title: 'Reprocessar Meta',
     message: 'Tem certeza que deseja reprocessar? Eventos automáticos serão recalculados.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Reprocessar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.reprocessar(meta.codmeta)
@@ -151,7 +152,8 @@ const bloquear = (meta) => {
   $q.dialog({
     title: 'Bloquear Meta',
     message: 'Tem certeza que deseja bloquear? Novos lançamentos não serão aceitos.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Bloquear', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.bloquear(meta.codmeta)
@@ -177,7 +179,8 @@ const desbloquear = (meta) => {
   $q.dialog({
     title: 'Desbloquear Meta',
     message: 'Tem certeza que deseja desbloquear? A meta voltará a aceitar lançamentos.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Desbloquear', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.desbloquear(meta.codmeta)
@@ -203,7 +206,8 @@ const finalizar = (meta) => {
   $q.dialog({
     title: 'Finalizar Meta',
     message: 'Tem certeza que deseja finalizar? A meta se tornará imutável.',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Finalizar', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.finalizar(meta.codmeta)
@@ -229,7 +233,8 @@ const excluir = (meta) => {
   $q.dialog({
     title: 'Excluir Meta',
     message: 'Tem certeza que deseja excluir esta meta?',
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sMeta.excluir(meta.codmeta)

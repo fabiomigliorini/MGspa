@@ -441,7 +441,7 @@ const toSafrapay = async () => {
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="primary" @click="fechar()" tabindex="-1" />
+          <q-btn flat label="Cancelar" color="grey-8" @click="fechar()" tabindex="-1" />
           <q-btn flat label="Usar Safrapay" color="primary" @click="toSafrapay()" tabindex="-1" />
           <q-btn
             type="button"
@@ -801,7 +801,7 @@ const toSafrapay = async () => {
         <q-btn
           flat
           label="cancelar"
-          color="negative"
+          color="grey-8"
           @click="cancelar()"
           tabindex="-1"
           v-if="sPagarMe.pedido.status != 3"

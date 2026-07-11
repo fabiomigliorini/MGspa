@@ -50,7 +50,8 @@ const novoGrupo = () => {
   $q.dialog({
     title: 'Novo Grupo Econômico',
     prompt: { model: '', type: 'text' },
-    cancel: true,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Salvar', color: 'primary', flat: true },
   }).onOk(async (grupoeconomico) => {
     const ret = await sPessoa.novoGrupoEconomico(grupoeconomico)
     if (ret.data.data) {
@@ -144,11 +145,7 @@ onMounted(() => {
         </div>
       </q-infinite-scroll>
 
-      <q-page-sticky
-        position="bottom-right"
-        :offset="[18, 18]"
-        v-if="user.temPermissao('Publico')"
-      >
+      <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.temPermissao('Publico')">
         <q-fab icon="add" direction="up" color="accent" @click="novoGrupo()" />
       </q-page-sticky>
     </template>

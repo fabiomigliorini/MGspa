@@ -11,7 +11,7 @@ import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputData from '@components/MgInputData.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
-import SelectPortador from 'src/components/select/SelectPortador.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
 const route = useRoute()
@@ -112,7 +112,8 @@ function estornar() {
   $q.dialog({
     title: 'Estornar',
     message: 'Confirma estornar esta liquidação?',
-    cancel: true,
+    ok: { label: 'Confirmar', color: 'primary', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
     try {
       const { data } = await api.post(`v1/liquidacao-titulo/${id.value}/estornar`)
@@ -405,7 +406,7 @@ watch(() => route.fullPath, carregar)
                 />
               </div>
               <div class="col-8">
-                <SelectPortador
+                <MgSelectPortador
                   v-model="editar.codportador"
                   outlined
                   label="Portador"

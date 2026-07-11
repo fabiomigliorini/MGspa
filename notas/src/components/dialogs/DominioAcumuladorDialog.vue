@@ -52,10 +52,7 @@ const submit = async () => {
 </script>
 
 <template>
-  <q-dialog
-    :model-value="modelValue"
-    @update:model-value="emit('update:modelValue', $event)"
-  >
+  <q-dialog :model-value="modelValue" @update:model-value="emit('update:modelValue', $event)">
     <q-card style="width: 450px; max-width: 95vw">
       <q-card-section class="bg-primary text-white">
         <div class="text-h6">{{ isEdicao ? 'Editar' : 'Novo' }} Acumulador</div>
@@ -129,7 +126,7 @@ const submit = async () => {
 
         <q-card-actions align="right" class="q-pa-md">
           <q-btn flat label="Cancelar" color="grey-8" @click="close" tabindex="-1" />
-          <q-btn unelevated label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
+          <q-btn flat label="Salvar" color="primary" icon="save" type="submit" :loading="loading" />
         </q-card-actions>
       </q-form>
     </q-card>

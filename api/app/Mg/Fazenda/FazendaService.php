@@ -4,7 +4,7 @@ namespace Mg\Fazenda;
 
 use Mg\MgService;
 use Mg\Safra\Safra;
-use Mg\Safra\CargaColheitaPlantio;
+use Mg\Grao\MovimentoGrao;
 
 class FazendaService extends MgService
 {
@@ -41,9 +41,9 @@ class FazendaService extends MgService
     }
 
     // Quebra por safra das safras que têm plantio nesta fazenda (plantio.codfazenda).
-    // Colhido = pesoliquidoseco das cargas FINALIZADO rateado pelo percentual de
-    // cada plantio na carga (tblcargacolheitaplantio). Saca = peso da cultura da
-    // safra (fallback 60), pois a fazenda pode misturar culturas.
+    // Colhido = soma do líquido do extrato de grão por plantio (tblmovimentograo,
+    // contatipo PLANTIO). Saca = peso da cultura da safra (fallback 60), pois a
+    // fazenda pode misturar culturas.
     private static function resumoSafras($codfazenda)
     {
         $areaPorSafra = Plantio::where('codfazenda', $codfazenda)
@@ -52,14 +52,13 @@ class FazendaService extends MgService
             ->selectRaw('codsafra, SUM(areaplantada) as area')
             ->pluck('area', 'codsafra');
 
-        $colhidoPorSafra = CargaColheitaPlantio::join('tblcargacolheita as cc', 'cc.codcargacolheita', '=', 'tblcargacolheitaplantio.codcargacolheita')
-            ->join('tblplantio as p', 'p.codplantio', '=', 'tblcargacolheitaplantio.codplantio')
+        $colhidoPorSafra = MovimentoGrao::join('tblplantio as p', 'p.codplantio', '=', 'tblmovimentograo.codplantio')
+            ->where('tblmovimentograo.contatipo', 'PLANTIO')
             ->where('p.codfazenda', $codfazenda)
-            ->where('cc.etapa', 'FINALIZADO')
-            ->whereNull('cc.inativo')
+            ->whereNull('tblmovimentograo.inativo')
             ->whereNull('p.inativo')
             ->groupBy('p.codsafra')
-            ->selectRaw('p.codsafra, SUM(cc.pesoliquidoseco * tblcargacolheitaplantio.percentual / 100) as colhido')
+            ->selectRaw('p.codsafra, SUM(tblmovimentograo.liquido) as colhido')
             ->pluck('colhido', 'codsafra');
 
         $codsafras = $areaPorSafra->keys()->merge($colhidoPorSafra->keys())->unique();

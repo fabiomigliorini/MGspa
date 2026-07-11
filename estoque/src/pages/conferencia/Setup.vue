@@ -1,15 +1,16 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import { notifyError } from 'src/utils/notify'
+import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
 
 const router = useRouter()
 const store = useConferenciaStore()
 
-const locais = ref([])
 const codestoquelocal = ref(null)
+const estoquelocalLabel = ref(null)
 const fiscal = ref(false)
 const conferenciaperiodica = ref(false)
 const data = ref(new Date().toISOString().slice(0, 16)) // yyyy-mm-ddThh:mm
@@ -17,15 +18,6 @@ const data = ref(new Date().toISOString().slice(0, 16)) // yyyy-mm-ddThh:mm
 // Marca (autocomplete opcional)
 const marcaOptions = ref([])
 const marcaSelecionada = ref(null)
-
-const carregarLocais = async () => {
-  try {
-    const { data: res } = await api.get('v1/select/estoque-local')
-    locais.value = Array.isArray(res) ? res : res.data || []
-  } catch (e) {
-    notifyError(e, 'Erro ao carregar locais de estoque')
-  }
-}
 
 const filtrarMarca = async (val, update, abort) => {
   if (!val || val.length < 2) {
@@ -52,10 +44,9 @@ const iniciar = () => {
     return
   }
 
-  const localSel = locais.value.find((l) => l.value === codestoquelocal.value)
   store.setup = {
     codestoquelocal: codestoquelocal.value,
-    estoquelocal: localSel ? localSel.label : null,
+    estoquelocal: estoquelocalLabel.value,
     fiscal: fiscal.value,
     conferenciaperiodica: conferenciaperiodica.value,
     codmarca: marcaSelecionada.value ? marcaSelecionada.value.id : null,
@@ -74,8 +65,6 @@ const iniciar = () => {
     },
   })
 }
-
-onMounted(carregarLocais)
 </script>
 
 <template>
@@ -90,17 +79,14 @@ onMounted(carregarLocais)
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-select
+                <MgSelectEstoqueLocal
                   v-model="codestoquelocal"
-                  :options="locais"
-                  emit-value
-                  map-options
-                  outlined
                   label="Local de estoque"
                   :rules="[(v) => !!v || 'Obrigatório']"
+                  @select="(opt) => (estoquelocalLabel = opt ? opt.label : null)"
                 >
                   <template #prepend><q-icon name="warehouse" /></template>
-                </q-select>
+                </MgSelectEstoqueLocal>
               </div>
 
               <div class="col-12 col-sm-6">
@@ -167,7 +153,13 @@ onMounted(carregarLocais)
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
-            <q-btn unelevated color="primary" icon="play_arrow" label="Iniciar conferência" type="submit" />
+            <q-btn
+              flat
+              color="primary"
+              icon="play_arrow"
+              label="Iniciar conferência"
+              type="submit"
+            />
           </q-card-actions>
         </q-form>
       </q-card>

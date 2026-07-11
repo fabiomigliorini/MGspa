@@ -1,0 +1,143 @@
+<script setup>
+import { ref } from 'vue'
+import { useQuasar } from 'quasar'
+import { storeToRefs } from 'pinia'
+import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
+import { notifySuccess, notifyError } from 'src/utils/notify'
+import { formataNumero, formataReal, formataData } from '@components/formatters'
+import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import FixacaoImpostosDialog from 'components/FixacaoImpostosDialog.vue'
+
+// Card "Fixação de preço". Especialista em fixar o preço das sacas do contrato:
+// lista as fixações ativas, abre o FixacaoImpostosDialog (preço + impostos →
+// líquido snapshot) e exclui. Lê tudo do store da tela (fixado/a fixar/preço
+// médio são getters do store) e usa as actions p/ persistir.
+const $q = useQuasar()
+const store = useContratoDetalheStore()
+const { contrato, cod, fixacoes, afixar } = storeToRefs(store)
+
+const ehUsd = store.ehUsd // predicado "é US$?" — fonte única no store
+
+function fmt(v, dec = 0) {
+  return formataNumero(v, dec)
+}
+const rs = formataReal
+const fmtData = formataData
+
+const impostosDialog = ref(false)
+const impostosFixacao = ref(null)
+function novaFixacao() {
+  impostosFixacao.value = null
+  impostosDialog.value = true
+}
+function editarFixacao(f) {
+  impostosFixacao.value = f
+  impostosDialog.value = true
+}
+function excluirFixacao(f) {
+  $q.dialog({
+    title: 'Excluir',
+    message: 'Excluir esta fixação?',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(async () => {
+    try {
+      await store.excluirFixacao(f)
+      notifySuccess('Excluído!')
+    } catch (e) {
+      notifyError(e)
+    }
+  })
+}
+</script>
+
+<template>
+  <q-card flat bordered class="q-mb-md">
+    <q-item>
+      <q-item-section>
+        <q-item-label class="text-subtitle1">Fixação de preço</q-item-label>
+      </q-item-section>
+      <q-item-section side>
+        <q-btn flat round size="sm" color="primary" icon="add" @click="novaFixacao">
+          <q-tooltip>Nova fixação</q-tooltip>
+        </q-btn>
+      </q-item-section>
+    </q-item>
+    <q-separator />
+    <q-list separator>
+      <q-item v-for="f in fixacoes" :key="f.codcontratofixacao">
+        <q-item-section>
+          <q-item-label>
+            {{ fmt(f.quantidade) }} sc ·
+            <!-- US$ dolarizado: mostra o preço em dólar (precoreal é R$ e fica null). -->
+            <template v-if="f.moeda && f.moeda !== 'BRL'">US$ {{ fmt(f.preco, 2) }}/sc</template>
+            <template v-else>
+              {{ rs(f.precoreal) }}/sc
+              <span v-if="f.precoliquido != null" class="text-green-8">
+                · líq {{ rs(f.precoliquido) }}</span
+              >
+            </template>
+            <q-badge v-if="f.isentofethab" color="teal-5" label="isento FETHAB" class="q-ml-xs" />
+          </q-item-label>
+          <q-item-label caption>
+            {{ fmtData(f.data) }}
+            <!-- Cotação só aparece em fixação legada que já a travou (dolar != null). -->
+            <span v-if="f.moeda && f.moeda !== 'BRL' && f.dolar"
+              >· cotação {{ fmt(f.dolar, 4) }}</span
+            >
+          </q-item-label>
+          <!-- Ledger: quanto DESTA fixação já foi recebido e o saldo, na sua moeda. -->
+          <q-item-label caption class="text-blue-grey-7">
+            <template v-if="ehUsd(f)">
+              Recebido US$ {{ fmt(f.recebidousd, 2) }}<span v-if="f.cotacaomedia">
+                @ {{ fmt(f.cotacaomedia, 4) }} → {{ rs(f.recebido) }}</span
+              >
+              · A receber US$ {{ fmt(f.areceber, 2) }}
+            </template>
+            <template v-else>
+              Recebido {{ rs(f.recebido) }} · A receber {{ rs(f.areceber) }}
+            </template>
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <div class="row items-center no-wrap">
+            <MgInfoCriacao :registro="f" />
+            <q-btn
+              flat
+              dense
+              round
+              size="sm"
+              color="grey-7"
+              icon="edit"
+              @click="editarFixacao(f)"
+            />
+            <q-btn
+              flat
+              dense
+              round
+              size="sm"
+              color="grey-7"
+              icon="delete"
+              @click="excluirFixacao(f)"
+            />
+          </div>
+        </q-item-section>
+      </q-item>
+      <MgEmptyState v-if="!fixacoes.length" plain icon="sell">
+        Nenhuma fixação lançada.
+      </MgEmptyState>
+    </q-list>
+
+    <!-- Modal Fixação (valores + impostos). afixar = saldo a fixar (sc) p/ o
+         dialog avisar antes; o backend é quem garante (ContratoFixacaoRequest). -->
+    <FixacaoImpostosDialog
+      v-model="impostosDialog"
+      :cod="cod"
+      :contrato="contrato"
+      :fixacao="impostosFixacao"
+      :afixar="afixar"
+      @saved="store.carregar()"
+    />
+  </q-card>
+</template>
