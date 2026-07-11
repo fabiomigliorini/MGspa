@@ -35,8 +35,6 @@ class NaturezaOperacaoDetailResource extends JsonResource
             'vendadevolucao' => $this->vendadevolucao,
             'transferencia' => $this->transferencia,
             'preco' => $this->preco,
-            'usuarioCriacao' => $this->rel('UsuarioCriacao', ['codusuario', 'usuario']),
-            'usuarioAlteracao' => $this->rel('UsuarioAlteracao', ['codusuario', 'usuario']),
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
         ];
