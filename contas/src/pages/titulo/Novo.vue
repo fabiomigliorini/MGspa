@@ -5,7 +5,7 @@ import { date } from 'quasar'
 import { api } from 'src/services/api'
 import { formataNumero, formataData, formataDataIso } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import { useSelectCacheStore } from 'src/stores/selectCacheStore'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import PessoaInfo from 'src/components/PessoaInfo.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -73,13 +73,14 @@ const buscaTipo = ref('')
 
 const filiaisFiltradas = computed(() => {
   const t = buscaFilial.value.trim().toLowerCase()
-  if (!t) return cache.filial.items
-  return cache.filial.items.filter((f) => (f.label || '').toLowerCase().includes(t))
+  const itens = cache.entities.filial?.items || []
+  if (!t) return itens
+  return itens.filter((f) => (f.label || '').toLowerCase().includes(t))
 })
 
 const portadoresFiltrados = computed(() => {
   if (!model.value.codfilial) return []
-  const base = cache.portador.items.filter(
+  const base = (cache.entities.portador?.items || []).filter(
     (p) => !p.inativo && (p.codfilial == null || p.codfilial === model.value.codfilial),
   )
   const t = buscaPortador.value.trim().toLowerCase()
@@ -92,8 +93,9 @@ const portadoresFiltrados = computed(() => {
 
 const tiposTituloFiltrados = computed(() => {
   const t = buscaTipo.value.trim().toLowerCase()
-  if (!t) return cache.tipoTitulo.items
-  return cache.tipoTitulo.items.filter((tt) => (tt.tipotitulo || '').toLowerCase().includes(t))
+  const itens = cache.entities.tipoTitulo?.items || []
+  if (!t) return itens
+  return itens.filter((tt) => (tt.tipotitulo || '').toLowerCase().includes(t))
 })
 
 // === Conta contábil (busca remota) ===
@@ -165,7 +167,9 @@ async function pesquisarPessoa() {
 function selecionarFilial(f) {
   if (model.value.codfilial !== f.value) {
     // troca de filial limpa portador se não for compatível
-    const port = cache.portador.items.find((p) => p.codportador === model.value.codportador)
+    const port = (cache.entities.portador?.items || []).find(
+      (p) => p.codportador === model.value.codportador,
+    )
     if (port && port.codfilial != null && port.codfilial !== f.value) {
       model.value.codportador = null
       labels.value.portador = ''
@@ -381,13 +385,9 @@ onMounted(async () => {
   carregando.value = true
   try {
     await Promise.all([
-      cache.loadList('filial', 'v1/select/filial', (d) => (Array.isArray(d) ? d : d.data || [])),
-      cache.loadList('portador', 'v1/select/portador', (d) =>
-        Array.isArray(d) ? d : d.data || [],
-      ),
-      cache.loadList('tipoTitulo', 'v1/select/tipo-titulo', (d) =>
-        Array.isArray(d) ? d : d.data || [],
-      ),
+      cache.loadList('filial', 'v1/select/filial'),
+      cache.loadList('portador', 'v1/select/portador'),
+      cache.loadList('tipoTitulo', 'v1/select/tipo-titulo'),
     ])
     if (route.query.duplicar) {
       await carregarDuplicar(Number(route.query.duplicar))

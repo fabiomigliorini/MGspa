@@ -11,7 +11,7 @@ import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
 import { formataNumero, formataDataIso } from '@components/formatters'
 import { useAuthStore } from 'src/stores/auth'
 import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
-import { useSelectCacheStore } from 'src/stores/selectCacheStore'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -51,11 +51,9 @@ async function abrirFinalizar() {
   const key = portadorCacheKey()
   const cod = key ? Number(localStorage.getItem(key)) : null
   if (cod) {
-    await selectCache.loadList('portador', 'v1/select/portador', (data) =>
-      Array.isArray(data) ? data : data.data || [],
-    )
+    await selectCache.loadList('portador', 'v1/select/portador')
     const filiais = filiaisPortador.value
-    const disponivel = selectCache.portador.items.some((p) => {
+    const disponivel = (selectCache.entities.portador?.items || []).some((p) => {
       if (Number(p.codportador) !== cod) return false
       if (filiais == null) return true
       return filiais.map(Number).includes(Number(p.codfilial))
