@@ -68,11 +68,10 @@ const maxQuantidade = computed(() =>
 )
 const dataContrato = computed(() => (props.contrato?.datacontrato || '').slice(0, 10))
 const hojeIso = computed(() => new Date().toISOString().slice(0, 10))
-const dataRules = computed(() => [
-  (v) => !!v || 'Informe a data',
-  (v) => !dataContrato.value || v >= dataContrato.value || 'Anterior à data do contrato',
-  (v) => v <= hojeIso.value || 'Não pode ser no futuro',
-])
+// O MgInputData passa às :rules o valor de DISPLAY (BR "dd/mm/aaaa"), não o ISO —
+// então a FAIXA (não antes do contrato / não no futuro) é garantida pelo :min/
+// :max (clamp), e aqui só exigimos o preenchimento.
+const dataRules = [(v) => !!v || 'Informe a data']
 
 // "É moeda estrangeira (≠ Real)?" — deriva do iso do codmoeda escolhido.
 const estrangeira = computed(() => isoDe(form.value.codmoeda) !== 'BRL')
@@ -94,20 +93,27 @@ function arred4(v) {
   return Math.round(n(v) * 10000) / 10000
 }
 
-// Preço bruto R$/sc — só faz sentido em BRL (o preço JÁ é R$). Em moeda
-// estrangeira o R$ vem do câmbio travado, fora deste modal.
-const precoreal = computed(() => (estrangeira.value ? 0 : n(form.value.preco)))
-
+// Valor de cada tributo, na unidade que JÁ dá pra saber sem o câmbio:
+//   UNIDADE (FETHAB/IAGRO) = %/100 × UPF × pesosaca/1000  → sempre R$ (independe do câmbio)
+//   VALOR   (SENAR/FUNRURAL) = %/100 × preço              → na MOEDA (é % do preço)
 function valorTributo(tributo) {
   if (tributo.base === 'UNIDADE') {
     return arred4((n(tributo.percentual) / 100) * n(tributo.upf) * (pesosaca.value / 1000))
   }
-  return arred4((n(tributo.percentual) / 100) * precoreal.value)
+  return arred4((n(tributo.percentual) / 100) * n(form.value.preco))
 }
-const totalDeducao = computed(() => arred4(tributos.value.reduce((s, t) => s + valorTributo(t), 0)))
-const liquido = computed(() => arred4(precoreal.value - totalDeducao.value))
+// Símbolo do valor de um tributo: UNIDADE é R$; VALOR segue a moeda da fixação.
+function prefixoTributo(tributo) {
+  return tributo.base === 'UNIDADE' ? 'R$' : simboloMoeda.value
+}
+// Líquido/saca só fecha em BRL (unidades homogêneas em R$). Em moeda estrangeira
+// as deduções são mistas (R$ do FETHAB + US$ do SENAR) — não somam num líquido só.
+const totalDeducao = computed(() =>
+  estrangeira.value ? 0 : arred4(tributos.value.reduce((s, t) => s + valorTributo(t), 0)),
+)
+const liquido = computed(() => arred4(n(form.value.preco) - totalDeducao.value))
 const percentualDeducao = computed(() =>
-  precoreal.value > 0 ? (totalDeducao.value / precoreal.value) * 100 : 0,
+  n(form.value.preco) > 0 ? (totalDeducao.value / n(form.value.preco)) * 100 : 0,
 )
 
 // Total (BRL): quantidade × líquido/sc. Estrangeira: quantidade × preço (na moeda).
@@ -137,7 +143,7 @@ async function carregarPadrao() {
     const { data } = await api.get('v1/contrato/calculo', {
       params: {
         codcultura: props.contrato.codcultura,
-        bruto: precoreal.value || 0,
+        bruto: n(form.value.preco) || 0,
         data: form.value.data || undefined,
         funruralvenda: props.contrato.Filial?.funruralvenda ? 1 : 0,
       },
@@ -241,7 +247,7 @@ async function salvar() {
             <div class="col-4">
               <MgInputData
                 v-model="form.data"
-                label="Data"
+                label="Data da fixação"
                 type="date"
                 :min="dataContrato || null"
                 :max="hojeIso"
@@ -250,7 +256,15 @@ async function salvar() {
               />
             </div>
             <div class="col-4">
-              <MgInputData v-model="form.datavencimento" label="Vencimento" type="date" />
+              <MgInputValor
+                v-model="form.quantidade"
+                :decimals="0"
+                :max="maxQuantidade"
+                suffix="sc"
+                label="Quantidade"
+                lazy-rules
+                :rules="[(v) => v > 0 || 'Informe a quantidade']"
+              />
             </div>
             <div class="col-4">
               <MgSelectMoeda v-model="form.codmoeda" />
@@ -267,15 +281,7 @@ async function salvar() {
               />
             </div>
             <div class="col-4">
-              <MgInputValor
-                v-model="form.quantidade"
-                :decimals="0"
-                :max="maxQuantidade"
-                suffix="sc"
-                label="Quantidade"
-                lazy-rules
-                :rules="[(v) => v > 0 || 'Informe a quantidade']"
-              />
+              <MgInputData v-model="form.datavencimento" label="Vencimento" type="date" />
             </div>
             <div class="col-4">
               <MgInputValor
@@ -289,15 +295,17 @@ async function salvar() {
               />
             </div>
 
-            <!-- Aviso p/ moeda estrangeira: líquido só ao travar o câmbio. -->
+            <!-- Aviso p/ moeda estrangeira: cada imposto na sua unidade; o líquido
+                 final em R$ só fecha ao travar o câmbio. -->
             <div v-if="estrangeira" class="col-12 text-caption text-blue-grey-7">
               <q-icon name="info" size="14px" class="q-mr-xs" />
-              Em {{ isoDe(form.codmoeda) }}, o líquido em R$ é definido ao travar o câmbio. Aqui
-              você só declara as alíquotas/UPF que vão incidir.
+              Em {{ isoDe(form.codmoeda) }}: FETHAB/IAGRO já em R$ (independem do câmbio) e
+              SENAR/FUNRURAL na moeda (% do preço). O líquido total em R$ fecha ao travar o câmbio.
             </div>
 
-            <!-- Tributos (config): alíquota + UPF em ambas as moedas; valor/líquido
-                 em R$ só em BRL (moeda estrangeira não tem R$ aqui). -->
+            <!-- Tributos (config): alíquota + UPF + valor em qualquer moeda
+                 (FETHAB/IAGRO em R$; SENAR/FUNRURAL na moeda). O líquido combinado
+                 em R$ só fecha em BRL. -->
             <template v-for="(tributo, i) in tributos" :key="i">
               <div class="col-4">
                 <MgInputValor
@@ -318,10 +326,9 @@ async function salvar() {
               </div>
               <div class="col-4">
                 <MgInputValor
-                  v-if="!estrangeira"
                   :model-value="valorTributo(tributo)"
                   :decimals="2"
-                  prefix="R$"
+                  :prefix="prefixoTributo(tributo)"
                   :label="tributo.codigo"
                   readonly
                   bg-color="grey-2"
