@@ -55,6 +55,15 @@ const disponivelFixar = computed(() =>
 const maxQuantidade = computed(() =>
   semTeto.value || disponivelFixar.value == null ? null : disponivelFixar.value,
 )
+// Data do contrato (ISO YYYY-MM-DD) = piso da data da fixação; hoje = teto (sem
+// futuro). Comparação direta de string ISO já ordena cronologicamente.
+const dataContrato = computed(() => (props.contrato?.datacontrato || '').slice(0, 10))
+const hojeIso = computed(() => new Date().toISOString().slice(0, 10))
+const dataRules = computed(() => [
+  (v) => !!v || 'Informe a data',
+  (v) => !dataContrato.value || v >= dataContrato.value || 'Anterior à data do contrato',
+  (v) => v <= hojeIso.value || 'Não pode ser no futuro',
+])
 // Qualquer moeda != BRL é estrangeira e exige cotação em R$ pra travar o preço.
 const estrangeira = computed(() => form.value.moeda && form.value.moeda !== 'BRL')
 // Símbolo exibido nos campos por saca. Só existem BRL/USD hoje (moeda.sql);
@@ -174,7 +183,8 @@ function abrir() {
     return
   }
   form.value = {
-    data: new Date().toISOString().slice(0, 10),
+    // Default = data do contrato (operador ajusta dentro da janela permitida).
+    data: dataContrato.value || hojeIso.value,
     // Pré-preenche com o saldo a fixar (default = fixar tudo); operador ajusta.
     quantidade: maxQuantidade.value,
     preco: null,
@@ -244,7 +254,15 @@ async function salvar() {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-4">
-              <MgInputData v-model="form.data" label="Data" type="date" />
+              <MgInputData
+                v-model="form.data"
+                label="Data"
+                type="date"
+                :min="dataContrato || null"
+                :max="hojeIso"
+                lazy-rules
+                :rules="dataRules"
+              />
             </div>
             <div class="col-4">
               <MgSelectMoeda v-model="form.moeda" />
@@ -264,35 +282,35 @@ async function salvar() {
                  (o R$ e os impostos são resolvidos no recebimento). -->
             <template v-if="!estrangeira">
               <template v-for="(tributo, i) in tributos" :key="i">
-              <div class="col-4">
-                <MgInputValor
-                  v-model="tributo.percentual"
-                  :decimals="2"
-                  suffix="%"
-                  :label="'Alíquota ' + tributo.codigo"
-                />
-              </div>
-              <div class="col-4">
-                <!-- Tributo indexado: UPF editável; de valor não tem UPF. -->
-                <MgInputValor
-                  v-if="tributo.base === 'UNIDADE'"
-                  v-model="tributo.upf"
-                  :decimals="2"
-                  prefix="R$"
-                  label="UPF"
-                />
-              </div>
-              <div class="col-4">
-                <MgInputValor
-                  :model-value="valorTributoDisplay(tributo)"
-                  :decimals="2"
-                  :prefix="simboloMoeda"
-                  :label="tributo.codigo"
-                  readonly
-                  bg-color="grey-2"
-                  input-class="text-red"
-                />
-              </div>
+                <div class="col-4">
+                  <MgInputValor
+                    v-model="tributo.percentual"
+                    :decimals="2"
+                    suffix="%"
+                    :label="'Alíquota ' + tributo.codigo"
+                  />
+                </div>
+                <div class="col-4">
+                  <!-- Tributo indexado: UPF editável; de valor não tem UPF. -->
+                  <MgInputValor
+                    v-if="tributo.base === 'UNIDADE'"
+                    v-model="tributo.upf"
+                    :decimals="2"
+                    prefix="R$"
+                    label="UPF"
+                  />
+                </div>
+                <div class="col-4">
+                  <MgInputValor
+                    :model-value="valorTributoDisplay(tributo)"
+                    :decimals="2"
+                    :prefix="simboloMoeda"
+                    :label="tributo.codigo"
+                    readonly
+                    bg-color="grey-2"
+                    input-class="text-red"
+                  />
+                </div>
               </template>
             </template>
 

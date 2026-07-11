@@ -372,6 +372,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('tabela-desconto/{codtabeladesconto}/inativo', [\Mg\Cultura\TabelaDescontoController::class, 'ativar']);
     Route::apiResource('tabela-desconto', \Mg\Cultura\TabelaDescontoController::class)->parameters(['tabela-desconto' => 'codtabeladesconto']);
 
+    Route::post('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'inativar']);
+    Route::delete('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'ativar']);
+    Route::apiResource('cultura-tributo', \Mg\Cultura\CulturaTributoController::class)->parameters(['cultura-tributo' => 'codculturatributo']);
+
     // Fazenda / Talhao (dominio Mg\Fazenda) — criado 03/06/2026
     Route::get('fazenda/{codfazenda}/resumo', [\Mg\Fazenda\FazendaController::class, 'resumo']);
     Route::post('fazenda/{codfazenda}/inativo', [\Mg\Fazenda\FazendaController::class, 'inativar']);

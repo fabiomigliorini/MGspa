@@ -224,6 +224,100 @@ export const useCulturaStore = defineStore('cultura', () => {
     })
   }
 
+  // ======================= TRIBUTOS DA CULTURA (filha) =======================
+  // Config fiscal por cultura (tblculturatributo): quais tributos incidem
+  // (FETHAB/IAGRO/SENAR/Funrural) e como calculam. É o que o motor
+  // ContratoCalculoService lê pra deduzir o líquido das fixações.
+  const culturatributos = ref([])
+  const formTributo = ref({})
+  const dialogTributo = ref(false)
+  const salvandoTributo = ref(false)
+  const unidadesReferencia = ref([]) // opções p/ o select de UPF (base UNIDADE)
+
+  async function carregarCulturaTributos(codcultura) {
+    try {
+      const { data } = await api.get('v1/cultura-tributo', {
+        params: { codcultura, sort: 'ordem' },
+      })
+      culturatributos.value = data.data ?? data
+    } catch (e) {
+      notifyError(e)
+    }
+  }
+  async function carregarUnidadesReferencia() {
+    if (unidadesReferencia.value.length) return
+    try {
+      const { data } = await api.get('v1/unidade-referencia', { params: { sort: 'codigo' } })
+      unidadesReferencia.value = (data.data ?? data).map((u) => ({
+        value: u.codunidadereferencia,
+        label: `${u.codigo} — ${u.descricao}`,
+      }))
+    } catch (e) {
+      notifyError(e)
+    }
+  }
+  function novoTributo(codcultura) {
+    const prox = culturatributos.value.reduce((m, t) => Math.max(m, Number(t.ordem) || 0), 0) + 1
+    formTributo.value = {
+      codcultura,
+      base: 'VALOR',
+      grupofethab: false,
+      funrural: false,
+      ordem: prox,
+    }
+    dialogTributo.value = true
+  }
+  function editarTributo(t) {
+    formTributo.value = { ...t }
+    dialogTributo.value = true
+  }
+  async function salvarTributo() {
+    if (salvandoTributo.value) return
+    const f = formTributo.value
+    if (!f.codtributo) {
+      notifyError('Selecione o tributo.')
+      return
+    }
+    salvandoTributo.value = true
+    try {
+      const payload = {
+        codcultura: f.codcultura,
+        codtributo: f.codtributo,
+        base: f.base,
+        codunidadereferencia: f.base === 'UNIDADE' ? f.codunidadereferencia : null,
+        percentual: f.percentual,
+        grupofethab: !!f.grupofethab,
+        funrural: !!f.funrural,
+        ordem: f.ordem ?? 0,
+      }
+      if (f.codculturatributo) await api.put(`v1/cultura-tributo/${f.codculturatributo}`, payload)
+      else await api.post('v1/cultura-tributo', payload)
+      notifySuccess('Tributo salvo!')
+      dialogTributo.value = false
+      await carregarCulturaTributos(f.codcultura)
+    } catch (e) {
+      notifyError(e)
+    } finally {
+      salvandoTributo.value = false
+    }
+  }
+  function excluirTributo(t) {
+    Dialog.create({
+      title: 'Excluir',
+      message: `Remover ${t.Tributo?.codigo || 'este tributo'} desta cultura?`,
+      cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+      ok: { label: 'Excluir', color: 'red-5', flat: true },
+    }).onOk(async () => {
+      try {
+        await api.delete(`v1/cultura-tributo/${t.codculturatributo}`)
+        notifySuccess('Excluído!')
+        await carregarCulturaTributos(t.codcultura)
+      } catch (e) {
+        notifyError(e)
+      }
+    })
+  }
+
   // ======================= Cache p/ IconeCultura =======================
   // Busca uma vez (GET v1/cultura/{cod}) e serve do cache; emVoo evita
   // requisições duplicadas quando várias linhas pedem a mesma cultura.
@@ -283,6 +377,18 @@ export const useCulturaStore = defineStore('cultura', () => {
     editarFaixa,
     salvarFaixa,
     excluirFaixa,
+    // tributos da cultura
+    culturatributos,
+    formTributo,
+    dialogTributo,
+    salvandoTributo,
+    unidadesReferencia,
+    carregarCulturaTributos,
+    carregarUnidadesReferencia,
+    novoTributo,
+    editarTributo,
+    salvarTributo,
+    excluirTributo,
     // cache IconeCultura
     cache,
     buscar,

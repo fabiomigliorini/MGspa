@@ -8,6 +8,7 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import CulturaTributosCard from 'src/components/CulturaTributosCard.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -248,6 +249,9 @@ onMounted(() => store.carregarCultura(codcultura))
           </MgEmptyState>
         </q-list>
       </q-card>
+
+      <!-- Tributos / descontos fiscais (FETHAB, SENAR, ...) -->
+      <CulturaTributosCard :codcultura="codcultura" class="q-mb-md" />
 
       <!-- Tabela de desconto (referência) -->
       <q-card bordered flat class="overflow-hidden">
