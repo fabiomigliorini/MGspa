@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia'
 import { useFazendaStore } from 'src/stores/fazenda'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelectCor from '@components/MgSelectCor.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
@@ -371,61 +372,61 @@ onMounted(() => {
           :referencia="referenciaMapa"
           :outras="outrasFazendas"
           height="100%"
-          :offset-inferior="120"
+          :offset-inferior="400"
           @update:geometria="formTalhao.geometria = $event"
           @update:centro="onCentro"
           @update:area="formTalhao.area = $event"
         />
 
-        <!-- Bottom sheet: cor + nome + área + salvar, numa barra única na base -->
+        <!-- Bottom sheet: campos do talhão centralizados na base -->
         <div class="absolute-bottom q-pa-md q-mb-sm" style="z-index: 1000">
-          <q-card flat bordered class="q-pa-sm" style="margin: 0 auto; max-width: 560px">
-            <q-form
-              class="row items-center no-wrap q-gutter-sm"
-              @submit.prevent="store.salvarTalhao()"
-            >
-              <q-btn
-                round
-                :style="{ backgroundColor: formTalhao.cor }"
-                text-color="white"
-                icon="palette"
-              >
-                <q-tooltip>Cor do talhão</q-tooltip>
-                <q-popup-proxy>
-                  <q-color
-                    v-model="formTalhao.cor"
-                    :palette="PALETA_TALHAO"
-                    default-view="palette"
-                    no-header
-                    no-footer
-                  />
-                </q-popup-proxy>
-              </q-btn>
-              <q-input
-                v-model="formTalhao.talhao"
-                label="Nome"
-                outlined
-                autofocus
-                bg-color="white"
-                class="col"
-                lazy-rules
-                :rules="[(v) => !!v]"
-              />
-              <MgInputValor
-                v-model="formTalhao.area"
-                :decimals="2"
-                suffix="ha"
-                label="Área"
-                bg-color="white"
-                style="width: 120px"
-                lazy-rules
-                :rules="[(v) => v > 0]"
-              />
-              <q-btn type="submit" round color="primary" icon="save" :loading="salvandoTalhao">
-                <q-tooltip>Salvar talhão</q-tooltip>
-              </q-btn>
-            </q-form>
-          </q-card>
+          <q-form @submit.prevent="store.salvarTalhao()">
+            <q-card flat style="margin: 0 auto; max-width: 560px; background-color: transparent">
+              <q-card-section class="q-pb-none">
+                <div class="row items-center q-col-gutter-sm">
+                  <div class="col-xs-4 col-sm-3">
+                    <MgSelectCor
+                      v-model="formTalhao.cor"
+                      label="Cor"
+                      bg-color="white"
+                      :palette="PALETA_TALHAO"
+                      bottom-slots
+                    />
+                  </div>
+                  <div class="col-xs-8 col-sm-6">
+                    <q-input
+                      v-model="formTalhao.talhao"
+                      label="Nome"
+                      outlined
+                      autofocus
+                      bg-color="white"
+                      class="col"
+                      lazy-rules
+                      :rules="[(v) => !!v]"
+                    />
+                  </div>
+                  <div class="col-xs-12 col-sm-3">
+                    <MgInputValor
+                      v-model="formTalhao.area"
+                      :decimals="2"
+                      suffix="ha"
+                      label="Área"
+                      bg-color="white"
+                      class="col"
+                      lazy-rules
+                      :rules="[(v) => v > 0]"
+                    />
+                  </div>
+                </div>
+              </q-card-section>
+              <q-card-actions class="q-pt-none" align="right">
+                <q-btn label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+                <q-btn type="submit" color="primary" label="Salvar" :loading="salvandoTalhao">
+                  <q-tooltip>Salvar talhão</q-tooltip>
+                </q-btn>
+              </q-card-actions>
+            </q-card>
+          </q-form>
         </div>
 
         <!-- FAB fechar (topo-direita) -->

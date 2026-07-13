@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
-import { useSelectCacheStore } from 'src/stores/selectCacheStore'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 const FLAGS = ['implantacao', 'ajuste', 'armotizacao', 'juros', 'desconto', 'pagamento', 'estorno']
 

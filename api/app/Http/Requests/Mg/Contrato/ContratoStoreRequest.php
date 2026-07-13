@@ -34,6 +34,8 @@ class ContratoStoreRequest extends FormRequest
             'codcultura' => ['required', 'exists:tblcultura,codcultura'],
             'codsafra' => ['nullable', 'exists:tblsafra,codsafra'],
             'operacao' => ['nullable', Rule::in(['COMPRA', 'VENDA'])],
+            // Barter = settlement em insumos (troca por insumos). Flag no contrato.
+            'barter' => ['nullable', 'boolean'],
             // quantidade NULL = volume em aberto (leva o saldo do silo). O contrato
             // tambem pode nascer rascunho (só identificação) e ter a quantidade
             // definida depois. Quando informada, deve ser > 0 (0 não distingue de

@@ -19,21 +19,15 @@ class ContratoFixacaoRequest extends FormRequest
     {
         return [
             'data' => ['required', 'date'],
+            // Vencimento (quando recebe) = eixo do fluxo de caixa. Opcional.
+            'datavencimento' => ['nullable', 'date'],
             'quantidade' => ['required', 'numeric', 'gt:0'],
             'preco' => ['required', 'numeric', 'gte:0'],
-            // moeda guarda o iso (FK tblmoeda.iso). Aberto ao cadastro de moedas.
-            'moeda' => ['nullable', 'string', 'exists:tblmoeda,iso'],
-            // Fixação em US$ é "pura" (preço dolarizado): a cotação NÃO é travada
-            // aqui — a conversão p/ R$ acontece no recebimento (parcela). Por isso
-            // `dolar` deixou de ser obrigatório em moeda estrangeira. Sem cotação,
-            // precoReal grava precoreal=null (não converte US$ como se fosse R$).
-            'dolar' => ['nullable', 'numeric', 'gt:0'],
-            // isentofethab é DERIVADO no controller a partir das linhas do grupo
-            // FETHAB (sem valor = isento); aceito aqui só por compatibilidade.
-            'isentofethab' => ['nullable', 'boolean'],
-            // Snapshot dos impostos digitado/ajustado no modal. O líquido oficial
-            // é recalculado no controller a partir dessas linhas (não confia no
-            // total que veio do cliente). Ausente = calcula on-the-fly na leitura.
+            // Moeda do preço: FK inteira (codmoeda). O front pré-seleciona Real.
+            'codmoeda' => ['required', 'integer', 'exists:tblmoeda,codmoeda'],
+            // Config fiscal declarada no modal (base/alíquota/UPF/grupofethab). O
+            // líquido oficial é derivado das travas de câmbio (recalcular), não
+            // vem daqui. Isenção FETHAB = linha do grupo com UPF/alíquota zerada.
             'tributos' => ['nullable', 'array'],
             'tributos.*.codtributo' => ['nullable', 'integer'],
             'tributos.*.codigo' => ['nullable', 'string', 'max:20'],
@@ -49,15 +43,14 @@ class ContratoFixacaoRequest extends FormRequest
     /**
      * Trava de teto: a soma das fixações ativas + esta não pode passar da
      * quantidade contratada (sacas). Pula contratos sem teto (quantidade NULL =
-     * volume em aberto). Na edição, ignora a própria fixação. Backend é a
-     * fonte de verdade — o front só espelha.
+     * volume em aberto). Na edição, ignora a própria fixação.
      */
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
             $contrato = Contrato::find($this->route('codcontrato'));
             if (!$contrato || $contrato->quantidade === null) {
-                return; // sem teto (volume em aberto) ou contrato inexistente (404 noutro lugar)
+                return; // sem teto (volume em aberto) ou contrato inexistente
             }
             $nova = (float) $this->input('quantidade');
             $codfixacao = $this->route('codfixacao');

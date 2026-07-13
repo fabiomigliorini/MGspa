@@ -2,6 +2,8 @@
 import { ref, computed, watch } from 'vue'
 import { PALETA_TALHAO, corTalhao } from 'src/utils/coresTalhao'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgSelectCor from '@components/MgSelectCor.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 
 // Wizard de plantar talhão numa safra. Três passos:
@@ -12,6 +14,7 @@ import MapaTalhoes from 'components/MapaTalhoes.vue'
 const props = defineProps({
   modelValue: { type: Boolean, default: false }, // abertura do dialog
   cad: { type: Object, required: true }, // useCadastro do plantio (form/isNovo/salvar)
+  safra: { type: Object, default: () => ({}) }, // safra aberta (anoplantio/anocolheita p/ limitar a data)
   fazendas: { type: Array, default: () => [] }, // todas as fazendas
   talhoesBase: { type: Array, default: () => [] }, // layout base de todas as fazendas
   variedades: { type: Array, default: () => [] }, // variedades da cultura desta safra
@@ -43,6 +46,23 @@ const expectativaTotal = computed({
 watch(expectativaTotal, (v) => {
   form.value.expectativasacas = Math.round((v || 0) * 100) / 100
 })
+
+// Data do plantio: default = hoje; limitada ao período da safra (do início do
+// ano de plantio ao fim do ano de colheita). Mesma regra do backend.
+const dataMin = computed(() => `${props.safra?.anoplantio || new Date().getFullYear()}-01-01`)
+const dataMax = computed(
+  () => `${props.safra?.anocolheita || props.safra?.anoplantio || new Date().getFullYear()}-12-31`,
+)
+// As regras leem o valor ISO do form (form.dataplantio), não o argumento do
+// q-input — que chega já formatado em DD/MM/YYYY e quebraria a comparação de
+// string contra o mín/máx ISO (ex.: "11/07/2026" < "2026-01-01").
+const regrasData = [
+  () => !!form.value.dataplantio || 'Informe a data',
+  () => {
+    const d = form.value.dataplantio
+    return !d || (d >= dataMin.value && d <= dataMax.value) || 'Fora do período da safra'
+  },
+]
 
 // Só fazendas que têm algum talhão base desenhado (sem desenho do zero).
 const fazendasComTalhoes = computed(() =>
@@ -85,6 +105,8 @@ function onShow() {
   // entre sessões devolve o mesmo sc/ha).
   const a = Number(form.value.areaplantada) || 0
   expectativaha.value = a > 0 ? (Number(form.value.expectativasacas) || 0) / a : 0
+  // Data do plantio nunca vem preenchida por padrão — o usuário informa sempre
+  // (campo obrigatório via regra e backend).
   passo.value = props.cad.isNovo ? (form.value.codfazenda ? 2 : 1) : 3
 }
 
@@ -130,9 +152,11 @@ function salvar() {
     codfazenda: f.codfazenda,
     codtalhao: f.codtalhao,
     talhao: f.talhao,
+    dataplantio: f.dataplantio,
     codvariedade: f.codvariedade,
     areaplantada: f.areaplantada,
     expectativasacas: f.expectativasacas,
+    hacolhido: f.hacolhido,
     geometria: f.geometria,
     cor: f.cor,
     latitude: f.latitude,
@@ -237,7 +261,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
           :cor="form.cor"
           :outras="cinza"
           height="100%"
-          :offset-inferior="210"
+          :offset-inferior="400"
           @update:geometria="form.geometria = $event"
           @update:centro="onCentro"
           @update:area="onArea"
@@ -245,98 +269,104 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
 
         <!-- Bottom sheet: campos do plantio centralizados na base -->
         <div class="absolute-bottom q-pa-md q-mb-sm" style="z-index: 1000">
-          <q-card flat bordered class="q-pa-sm" style="margin: 0 auto; max-width: 760px">
-            <!-- Voltar pra escolha do talhão + fazenda -->
-            <div v-if="cad.isNovo" class="row items-center q-mb-xs">
-              <q-btn
-                flat
-                dense
-                no-caps
-                size="sm"
-                color="grey-8"
-                icon="arrow_back"
-                label="Trocar talhão"
-                @click="passo = 2"
-              />
-              <q-space />
-              <div class="text-caption text-grey-6">{{ nomeFazenda }}</div>
-            </div>
-            <q-form @submit.prevent="salvar">
-              <div class="row items-center no-wrap q-gutter-sm">
-                <q-btn
-                  round
-                  :style="{ backgroundColor: form.cor }"
-                  text-color="white"
-                  icon="palette"
-                >
-                  <q-tooltip>Cor do talhão</q-tooltip>
-                  <q-popup-proxy>
-                    <q-color
+          <q-form @submit.prevent="salvar">
+            <q-card flat style="margin: 0 auto; max-width: 760px; background-color: transparent">
+              <q-card-section class="q-pb-none">
+                <!-- Voltar pra escolha do talhão + fazenda -->
+                <div class="row items-center q-col-gutter-sm">
+                  <div class="col-xs-4 col-sm-3">
+                    <MgSelectCor
                       v-model="form.cor"
+                      label="Cor"
+                      bg-color="white"
                       :palette="PALETA_TALHAO"
-                      default-view="palette"
-                      no-header
-                      no-footer
+                      bottom-slots
                     />
-                  </q-popup-proxy>
-                </q-btn>
-                <q-input
-                  v-model="form.talhao"
-                  label="Talhão (nome / número)"
-                  outlined
-                  bg-color="white"
-                  class="col"
-                  lazy-rules
-                  :rules="[(v) => !!v]"
-                />
-                <q-select
-                  v-model="form.codvariedade"
-                  :options="variedades"
-                  option-value="codvariedade"
-                  option-label="variedade"
-                  emit-value
-                  map-options
-                  outlined
-                  bg-color="white"
-                  label="Variedade"
-                  class="col"
-                  lazy-rules
-                  :rules="[(v) => !!v]"
-                />
-              </div>
-              <div class="row items-center no-wrap q-gutter-sm q-mt-sm">
-                <MgInputValor
-                  v-model="form.areaplantada"
-                  :decimals="2"
-                  suffix="ha"
-                  label="Área plantada"
-                  bg-color="white"
-                  class="col"
-                  lazy-rules
-                  :rules="[(v) => v > 0]"
-                />
-                <MgInputValor
-                  v-model="expectativaha"
-                  :decimals="2"
-                  suffix="sc/ha"
-                  label="Expectativa"
-                  bg-color="white"
-                  class="col"
-                />
-                <MgInputValor
-                  v-model="expectativaTotal"
-                  :decimals="0"
-                  suffix="sc"
-                  label="Expectativa total"
-                  bg-color="white"
-                  class="col"
-                />
-                <q-btn type="submit" round color="primary" icon="save" :loading="cad.salvando">
+                  </div>
+                  <div class="col-xs-4 col-sm-3">
+                    <q-input
+                      v-model="form.talhao"
+                      label="Talhão (nome / número)"
+                      outlined
+                      bg-color="white"
+                      class="col"
+                      lazy-rules
+                      :rules="[(v) => !!v]"
+                    />
+                  </div>
+                  <div class="col-xs-4 col-sm-3">
+                    <MgInputData
+                      v-model="form.dataplantio"
+                      label="Data Plantio"
+                      bg-color="white"
+                      :min="dataMin"
+                      :max="dataMax"
+                      :rules="regrasData"
+                    />
+                  </div>
+                  <div class="col-xs-6 col-sm-3">
+                    <MgInputValor
+                      v-model="form.areaplantada"
+                      :decimals="2"
+                      suffix="ha"
+                      label="Área plantada"
+                      bg-color="white"
+                      class="col"
+                      lazy-rules
+                      :rules="[(v) => v > 0]"
+                    />
+                  </div>
+                  <div class="col-xs-6 col-sm-6">
+                    <q-select
+                      v-model="form.codvariedade"
+                      :options="variedades"
+                      option-value="codvariedade"
+                      option-label="variedade"
+                      emit-value
+                      map-options
+                      outlined
+                      bg-color="white"
+                      label="Variedade"
+                      class="col"
+                      lazy-rules
+                      :rules="[(v) => !!v]"
+                    />
+                  </div>
+                  <div class="col-xs-6 col-sm-3">
+                    <MgInputValor
+                      v-model="expectativaha"
+                      :decimals="2"
+                      suffix="sc/ha"
+                      label="Expectativa"
+                      bg-color="white"
+                      class="col"
+                      bottom-slots
+                    />
+                  </div>
+                  <div class="col-xs-6 col-sm-3">
+                    <MgInputValor
+                      v-model="expectativaTotal"
+                      :decimals="0"
+                      suffix="sc"
+                      label="Expectativa total"
+                      bg-color="white"
+                      class="col"
+                      bottom-slots
+                    />
+                  </div>
+                </div>
+              </q-card-section>
+              <q-card-actions class="q-pt-none" align="right">
+                <template v-if="cad.isNovo">
+                  <q-btn color="grey-8" label="Trocar talhão" @click="passo = 2" />
+                </template>
+                <q-btn label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+                <q-btn type="submit" color="primary" label="Salvar" :loading="cad.salvando">
                   <q-tooltip>Salvar plantio</q-tooltip>
                 </q-btn>
-              </div>
-            </q-form>
-          </q-card>
+              </q-card-actions>
+            </q-card>
+          </q-form>
         </div>
 
         <!-- FAB fechar (topo-direita) — passo 3 não tem barra de cabeçalho -->

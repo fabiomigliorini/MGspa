@@ -1,16 +1,17 @@
 <?php
-/**
- * Created by php artisan gerador:model.
- * Date: 03/Jun/2026 23:47:42
- */
 
 namespace Mg\Contrato;
 
 use Mg\MgModel;
-use Mg\Contrato\Contrato;
 use Mg\Contrato\ContratoFixacao;
 use Mg\Portador\Portador;
 
+/**
+ * Recebimento de uma fixação (dinheiro que ENTROU): 1 fixação : N recebimentos.
+ * O "a receber" é o líquido da fixação; cada recebimento dá baixa (total ou
+ * parcial). A quitação (encerrar mesmo com diferencinha) vive na fixação
+ * (tblcontratofixacao.quitado).
+ */
 class ContratoPagamento extends MgModel
 {
     protected $table = 'tblcontratopagamento';
@@ -19,50 +20,28 @@ class ContratoPagamento extends MgModel
     protected $appends = ['usuariocriacao', 'usuarioalteracao'];
 
     protected $fillable = [
-        'codcontrato',
         'codcontratofixacao',
         'data',
-        'inativo',
-        'observacao',
         'valor',
-        'forma',
-        'modo',
-        'sacas',
-        'cotacao',
-        'cotacaorecebido',
-        'datarecebido',
-        'valorrecebido',
-        'codportador'
+        'codportador',
+        'observacao',
+        'inativo',
     ];
 
     protected $casts = [
-        'alteracao' => 'datetime',
-        'codcontrato' => 'integer',
-        'codcontratofixacao' => 'integer',
         'codcontratopagamento' => 'integer',
-        'codusuarioalteracao' => 'integer',
-        'codusuariocriacao' => 'integer',
-        'criacao' => 'datetime',
+        'codcontratofixacao' => 'integer',
         'data' => 'date',
-        'inativo' => 'datetime',
         'valor' => 'float',
-        'sacas' => 'float',
-        'cotacao' => 'float',
-        'cotacaorecebido' => 'float',
-        'datarecebido' => 'date',
-        'valorrecebido' => 'float',
-        'codportador' => 'integer'
+        'codportador' => 'integer',
+        'inativo' => 'datetime',
+        'criacao' => 'datetime',
+        'alteracao' => 'datetime',
+        'codusuariocriacao' => 'integer',
+        'codusuarioalteracao' => 'integer',
     ];
 
-
     // Chaves Estrangeiras
-    public function Contrato()
-    {
-        return $this->belongsTo(Contrato::class, 'codcontrato', 'codcontrato');
-    }
-
-    // Fixação de origem da parcela (1 fixação : N parcelas). Dirige moeda/preço:
-    // em US$ o R$ da parcela é derivado (sacas × fixacao.preco × cotacao).
     public function ContratoFixacao()
     {
         return $this->belongsTo(ContratoFixacao::class, 'codcontratofixacao', 'codcontratofixacao');
@@ -72,5 +51,4 @@ class ContratoPagamento extends MgModel
     {
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');
     }
-
 }

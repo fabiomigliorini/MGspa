@@ -39,11 +39,22 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   )
   const valornf = computed(() => n(contrato.value?.valornf))
 
+  // Ordem estável: data da fixação asc, depois codcontratofixacao asc (não
+  // depende da ordem que o backend devolve — editar não reordena os cards).
   const fixacoes = computed(() =>
-    (contrato.value?.ContratoFixacaoS || []).filter((f) => !f.inativo),
+    (contrato.value?.ContratoFixacaoS || [])
+      .filter((f) => !f.inativo)
+      .sort((a, b) => {
+        const da = (a.data || '').slice(0, 10)
+        const db = (b.data || '').slice(0, 10)
+        if (da !== db) return da < db ? -1 : 1
+        return n(a.codcontratofixacao) - n(b.codcontratofixacao)
+      }),
   )
-  const pagamentos = computed(() =>
-    (contrato.value?.ContratoPagamentoS || []).filter((p) => !p.inativo),
+  // Recebimentos = achatado das fixações (o ledger por fixação vem do backend:
+  // recebido / saldoreceber / diferenca / quitado / statusrecebimento).
+  const recebimentos = computed(() =>
+    fixacoes.value.flatMap((f) => (f.ContratoPagamentoS || []).filter((p) => !p.inativo)),
   )
   const notasPlano = computed(() =>
     (contrato.value?.ContratoNotaS || []).filter((nt) => !nt.inativo),
@@ -52,50 +63,37 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
 
   const fixado = computed(() => n(contrato.value?.fixado))
   const afixar = computed(() => contratado.value - fixado.value)
-  // Preço médio ponderado das fixações ativas (FIXO também tem fixação-espelho).
+  // Preço médio R$/saca FIRME (só o câmbio travado; US$ flutuante entra como 0).
   const precoMedio = computed(() => {
     const q = fixacoes.value.reduce((s, f) => s + n(f.quantidade), 0)
-    const v = fixacoes.value.reduce((s, f) => s + n(f.quantidade) * n(f.precoreal), 0)
+    const v = fixacoes.value.reduce((s, f) => s + n(f.totalbrl), 0)
     return q > 0 ? v / q : 0
   })
   // precoMedio é R$/saca; o carregado físico está em sacas derivadas.
   const valorCarregado = computed(() => carregadosc.value * precoMedio.value)
-  // Líquido médio/sc do contrato (motor fiscal) — base p/ sugerir valor de parcela.
-  const liquidoSc = computed(() => n(contrato.value?.calculo?.liquido))
+  // Total recebido no contrato = Σ recebido de cada fixação (ledger do backend).
+  const pago = computed(() => fixacoes.value.reduce((s, f) => s + n(f.recebido), 0))
 
-  const previsto = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valor), 0))
-  const pago = computed(() => pagamentos.value.reduce((s, p) => s + n(p.valorrecebido), 0))
-
-  // Valor BRUTO fixado (Σ quantidade × precoreal) = teto financeiro do contrato;
-  // saldo a pagar = teto − previsto (espelha a trava do backend ContratoPagamentoRequest;
-  // a garantia é do servidor, isto é só UX).
-  const valorFixadoBruto = computed(() =>
-    fixacoes.value.reduce((s, f) => s + n(f.quantidade) * n(f.precoreal), 0),
+  // R$ firme fixado (Σ totalbrl) = câmbio travado + fixações BRL (US$ flutuante = 0).
+  const valorFixadoBruto = computed(() => fixacoes.value.reduce((s, f) => s + n(f.totalbrl), 0))
+  const liquidoBrl = computed(() => fixacoes.value.reduce((s, f) => s + n(f.liquidobrl), 0))
+  // A receber = Σ saldo a receber das fixações (líquido − recebido, só o que falta).
+  const saldoReceber = computed(() =>
+    fixacoes.value.reduce((s, f) => s + Math.max(0, n(f.saldoreceber)), 0),
   )
-  const saldoPagar = computed(() => Math.max(0, valorFixadoBruto.value - previsto.value))
 
-  // ===== Contrato dolarizado (multi-fixação + US$) =====
-  // `ehUsd` é a fonte única do predicado "é US$?" (exportada p/ os cards). A parcela
-  // acha sua fixação (moeda/preço) por `fixacaoDaParcela`; e o saldo de sacas a
-  // parcelar de cada fixação vem pronto do ledger do backend (ContratoFixacaoResource).
+  // Símbolo por moeda (só apresentação; toda a agregação vem do backend).
+  const SIMBOLOS_MOEDA = { BRL: 'R$', USD: 'US$', EUR: '€' }
+  function simboloMoeda(iso) {
+    return SIMBOLOS_MOEDA[iso] || iso || 'R$'
+  }
+  // Resumo do fixado por MOEDA (câmbio travado migra p/ R$; total, sacas, preço
+  // médio por saca) — PRONTO do backend (ContratoResource::fixadoResumo).
+  const fixadoResumo = computed(() => contrato.value?.fixadoresumo || [])
+
+  // `ehUsd` é a fonte única do predicado "é US$?" (exportada p/ os cards).
   function ehUsd(f) {
-    return !!f && (f.moeda || 'BRL') !== 'BRL'
-  }
-
-  // Mapa codcontratofixacao -> fixação (p/ achar a moeda/preço de cada parcela).
-  const fixacaoPorCod = computed(() => {
-    const m = {}
-    fixacoes.value.forEach((f) => {
-      m[f.codcontratofixacao] = f
-    })
-    return m
-  })
-  function fixacaoDaParcela(p) {
-    return fixacaoPorCod.value[p?.codcontratofixacao] || null
-  }
-
-  function saldoSacasFixacao(f) {
-    return n(f?.saldosacas)
+    return !!f && (f.estrangeira ?? (f.moeda || 'BRL') !== 'BRL')
   }
 
   // "Bate?" — valor carregado x NFs x pago (tolerância de centavos)
@@ -158,33 +156,48 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     await carregar()
   }
 
-  // ---- Pagamento (parcelas) ----
-  async function salvarPagamento(form) {
-    const pk = form.codcontratopagamento
+  // ---- Travas de câmbio (aninhadas na fixação; recalculam os totais no backend) ----
+  async function salvarCambio(codfixacao, form) {
+    const pk = form.codcontratofixacaocambio
+    const base = `v1/contrato/${cod.value}/fixacao/${codfixacao}/cambio`
     if (pk) {
-      await api.put(`v1/contrato/${cod.value}/pagamento/${pk}`, form)
+      await api.put(`${base}/${pk}`, form)
     } else {
-      await api.post(`v1/contrato/${cod.value}/pagamento`, form)
+      await api.post(base, form)
     }
     await carregar()
   }
-  // POST de uma parcela SEM recarregar: usado pelo gerador de lote, que faz um
-  // único carregar() no fim (via @saved). Mantém o lote no padrão store-per-screen.
-  async function criarPagamento(payload) {
-    await api.post(`v1/contrato/${cod.value}/pagamento`, payload)
-  }
-  async function excluirPagamento(p) {
-    await api.delete(`v1/contrato/${cod.value}/pagamento/${p.codcontratopagamento}`)
+  async function excluirCambio(codfixacao, c) {
+    await api.delete(
+      `v1/contrato/${cod.value}/fixacao/${codfixacao}/cambio/${c.codcontratofixacaocambio}`,
+    )
     await carregar()
   }
-  async function confirmarRecebimento(form) {
-    await api.post(`v1/contrato/${cod.value}/pagamento/${form.codcontratopagamento}/confirmar`, {
-      datarecebido: form.datarecebido,
-      // US$: o servidor computa valorrecebido a partir da cotação; BRL manda o valor.
-      valorrecebido: form.valorrecebido,
-      cotacaorecebido: form.cotacaorecebido,
-      codportador: form.codportador,
-    })
+
+  // ---- Recebimentos (aninhados na fixação) + quitação ----
+  async function salvarRecebimento(codfixacao, form) {
+    const pk = form.codcontratopagamento
+    const base = `v1/contrato/${cod.value}/fixacao/${codfixacao}/pagamento`
+    if (pk) {
+      await api.put(`${base}/${pk}`, form)
+    } else {
+      await api.post(base, form)
+    }
+    await carregar()
+  }
+  async function excluirRecebimento(codfixacao, p) {
+    await api.delete(
+      `v1/contrato/${cod.value}/fixacao/${codfixacao}/pagamento/${p.codcontratopagamento}`,
+    )
+    await carregar()
+  }
+  // Quitar/reabrir a fixação (recebida mesmo com diferencinha).
+  async function quitarFixacao(codfixacao, quitar) {
+    if (quitar) {
+      await api.post(`v1/contrato/${cod.value}/fixacao/${codfixacao}/quitar`)
+    } else {
+      await api.delete(`v1/contrato/${cod.value}/fixacao/${codfixacao}/quitar`)
+    }
     await carregar()
   }
 
@@ -244,25 +257,24 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     saldokg,
     valornf,
     fixacoes,
-    pagamentos,
+    recebimentos,
     notasPlano,
     entregas,
     fixado,
     afixar,
     precoMedio,
     valorCarregado,
-    liquidoSc,
-    previsto,
     pago,
     valorFixadoBruto,
-    saldoPagar,
+    liquidoBrl,
+    saldoReceber,
+    fixadoResumo,
+    simboloMoeda,
     difNf,
     difPago,
     bate,
-    // contrato dolarizado (predicado + helpers de fixação por parcela)
+    // contrato dolarizado (predicado)
     ehUsd,
-    fixacaoDaParcela,
-    saldoSacasFixacao,
     // actions
     carregar,
     carregarAnexos,
@@ -270,10 +282,11 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     definirBarter,
     excluirContrato,
     excluirFixacao,
-    salvarPagamento,
-    criarPagamento,
-    excluirPagamento,
-    confirmarRecebimento,
+    salvarCambio,
+    excluirCambio,
+    salvarRecebimento,
+    excluirRecebimento,
+    quitarFixacao,
     salvarNota,
     excluirNota,
     enviarAnexo,

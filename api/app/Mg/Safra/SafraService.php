@@ -11,128 +11,138 @@ use Mg\Grao\MovimentoGrao;
 class SafraService extends MgService
 {
     /**
-     * KPIs comerciais da safra: rollup dos contratos ativos. Calculado no banco
-     * (não depende do cache offline). O colhido/expectativa (produção) ficam no
-     * front; aqui só o lado comercial.
-     *
-     * - contratado/entregue: somam todos os tipos (barter conta na quantidade).
-     * - fixo: sacas com preço travado = FIXO + FIXAR (barter fora). Com a
-     *   normalização, o FIXO entra via fixação-espelho.
-     * - afixar: só dos FIXAR (FIXO já 100% fixado; barter fora).
-     * - preço médio: ponderado por quantidade, separado por moeda (barter fora).
-     *   R$ pelo precoreal; USD pelo preço em dólar + dólar médio travado.
+     * KPIs da safra (todos PRONTOS do backend). Comercial (só contratos VENDA):
+     *   - contratado = Σ quantidade (barter incluso)
+     *   - fixado = Σ sacas fixadas (US$ ou R$, não-barter) + quantidade CHEIA dos
+     *     barters (não estão disponíveis pra fixar)
+     *   - afixar = max(0, contratado − fixado)
+     *   - preço médio R$ = LÍQUIDO/sc do firme (BRL cheio + parte travada das US$)
+     *   - preço médio moeda estrangeira = BRUTO/sc do saldo ainda NÃO travado
+     * Agronômico (plantios): área, expectativa, colhido, produção (com regra de 3),
+     * produtividade (exp/ha e colhido/ha-colhido), progresso (ha colhido/área).
+     *   - disponível = max(0, Σ produção dos plantios − contratado)
      */
     public static function resumoComercial($codsafra): array
     {
         $safra = Safra::with('Cultura')->findOrFail($codsafra);
-        $pesosacaSafra = (float) ($safra->Cultura->pesosaca ?? 60) ?: 60;
+        $pesosaca = (float) ($safra->Cultura->pesosaca ?? 60) ?: 60;
 
-        // Entregue = SUM(liquido) no extrato (carga inativada some, entao basta
-        // somar os movimentos ativos). So contratos de VENDA entram no comercial.
-        $movAtivo = fn ($q) => $q->whereNull('inativo');
-
+        // ===== Comercial (contratos de VENDA da safra) =====
         $contratos = Contrato::where('codsafra', $codsafra)
             ->where('operacao', 'VENDA')
             ->whereNull('inativo')
-            ->with('Cultura')
-            ->withSum(['MovimentoGraoS as carregadokg' => $movAtivo], 'liquido') // KG entregue (extrato)
-            ->withSum(['ContratoFixacaoS as fixado' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
-            // barter (settlement em insumos) vive no pagamento; exclui do fixo/afixar/preço médio.
-            ->withCount(['ContratoPagamentoS as bartercount' => fn ($q) => $q->where('forma', 'BARTER')->whereNull('inativo')])
+            ->withSum(['ContratoFixacaoS as fixadosc' => fn ($q) => $q->whereNull('inativo')], 'quantidade')
             ->get();
-        $semBarter = fn ($c) => (int) $c->bartercount === 0;
 
-        // Unidade de trabalho = KG. Contrato negocia em sacas; converte por
-        // contrato (cada um pode ter cultura/pesosaca diferente). Sacas derivadas
-        // tambem somadas por contrato (NAO entreguekg/pesosaca da safra).
-        $pesosaca = fn ($c) => (float) ($c->Cultura->pesosaca ?? 60) ?: 60;
-        $contratado = (float) $contratos->sum('quantidade');                       // sc negociadas
-        $contratadokg = (float) $contratos->sum(fn ($c) => (float) $c->quantidade * $pesosaca($c));
-        $entreguekg = (float) $contratos->sum('carregadokg');
-        $entreguesc = (float) $contratos->sum(fn ($c) => (float) $c->carregadokg / $pesosaca($c));
-        // Volume em aberto (quantidade NULL, rapa-silo) nao reserva saldo.
-        $saldoaembarcarkg = (float) $contratos->sum(
-            fn ($c) => $c->quantidade === null ? 0 : max(0, (float) $c->quantidade * $pesosaca($c) - (float) $c->carregadokg)
+        $contratado = (float) $contratos->sum('quantidade'); // barter conta na quantidade
+        $fixado = (float) $contratos->sum(
+            fn ($c) => $c->barter ? (float) $c->quantidade : (float) $c->fixadosc,
         );
+        $afixar = max(0, $contratado - $fixado);
 
-        // Estoque depositado (silo proprio + terceiro + silo bag) = SUM(liquido)
-        // das contas UNIDADE no extrato, desta safra.
-        $estoquekg = (float) MovimentoGrao::where('contatipo', 'UNIDADE')
-            ->where('codsafra', $codsafra)
-            ->whereNull('inativo')
-            ->sum('liquido');
+        // Preço médio: itera as fixações ativas (VENDA, não-barter). Firme em R$ =
+        // BRL cheio + parte travada das US$ (líquido); estrangeira = saldo bruto por moeda.
+        $fixacoes = ContratoFixacao::query()
+            ->join('tblcontrato as c', 'c.codcontrato', '=', 'tblcontratofixacao.codcontrato')
+            ->join('tblmoeda as m', 'm.codmoeda', '=', 'tblcontratofixacao.codmoeda')
+            ->where('c.codsafra', $codsafra)
+            ->where('c.operacao', 'VENDA')
+            ->whereNull('c.inativo')
+            ->where('c.barter', false)
+            ->whereNull('tblcontratofixacao.inativo')
+            ->select(
+                'tblcontratofixacao.quantidade',
+                'tblcontratofixacao.preco',
+                'tblcontratofixacao.liquidobrl',
+                'tblcontratofixacao.totalmoeda',
+                'tblcontratofixacao.saldomoeda',
+                'm.iso as moedaiso',
+            )
+            ->get();
 
-        // A colher = expectativa em pe ainda nao colhida. Colhido por plantio =
-        // SUM(liquido) das contas PLANTIO; floor 0 por plantio (excedente ja foi
-        // pro estoque). expectativasacas -> kg pela pesosaca da cultura da safra.
-        $colhidoPorPlantio = MovimentoGrao::where('contatipo', 'PLANTIO')
+        $firmeLiq = 0.0;
+        $firmeSacas = 0.0;
+        $estrangeiras = []; // iso => ['saldo' => saldomoeda, 'sacas' => flutuantes]
+        foreach ($fixacoes as $f) {
+            $preco = (float) $f->preco;
+            $firmeLiq += (float) $f->liquidobrl;
+            if ($f->moedaiso === 'BRL') {
+                $firmeSacas += (float) $f->quantidade;
+                continue;
+            }
+            $firmeSacas += $preco > 0 ? ((float) $f->totalmoeda - (float) $f->saldomoeda) / $preco : 0;
+            $saldo = (float) $f->saldomoeda;
+            if ($saldo > 0.005) {
+                $estrangeiras[$f->moedaiso] ??= ['saldo' => 0.0, 'sacas' => 0.0];
+                $estrangeiras[$f->moedaiso]['saldo'] += $saldo;
+                $estrangeiras[$f->moedaiso]['sacas'] += $preco > 0 ? $saldo / $preco : 0;
+            }
+        }
+        $usd = $estrangeiras['USD'] ?? null;
+
+        // ===== Agronômico (plantios da safra) =====
+        $colhidoKg = MovimentoGrao::where('contatipo', 'PLANTIO')
             ->where('codsafra', $codsafra)
             ->whereNull('inativo')
             ->groupBy('codplantio')
             ->selectRaw('codplantio, SUM(liquido) as kg')
             ->pluck('kg', 'codplantio');
-        $aColherKg = (float) Plantio::where('codsafra', $codsafra)
-            ->whereNull('inativo')
-            ->get()
-            ->sum(function ($p) use ($colhidoPorPlantio, $pesosacaSafra) {
-                $expectativakg = (float) $p->expectativasacas * $pesosacaSafra;
-                $colhido = (float) ($colhidoPorPlantio[$p->codplantio] ?? 0);
-                return max(0, $expectativakg - $colhido);
-            });
 
-        // Disponivel para negociar = a colher + estoque - (contratado venda nao entregue).
-        $disponivelkg = $aColherKg + $estoquekg - $saldoaembarcarkg;
-
-        // fixo = sacas já travadas (não-barter); afixar = saldo a fixar dos com teto
-        // (FIXO fica 0 naturalmente, pois fixado cobre a quantidade).
-        $fixo = (float) $contratos->filter($semBarter)->sum('fixado');
-        $afixar = (float) $contratos->filter($semBarter)
-            ->sum(fn ($c) => $c->quantidade === null ? 0 : max(0, (float) $c->quantidade - (float) $c->fixado));
-
-        // Preço médio ponderado por moeda (fixações ativas de contratos ativos,
-        // exceto barter).
-        $buckets = ContratoFixacao::query()
-            ->join('tblcontrato as c', 'c.codcontrato', '=', 'tblcontratofixacao.codcontrato')
-            ->where('c.codsafra', $codsafra)
-            ->where('c.operacao', 'VENDA')
-            ->whereNull('c.inativo')
-            // exclui contratos barter (têm pagamento forma=BARTER)
-            ->whereNotExists(fn ($q) => $q->from('tblcontratopagamento as p')
-                ->whereColumn('p.codcontrato', 'c.codcontrato')
-                ->where('p.forma', 'BARTER')
-                ->whereNull('p.inativo'))
-            ->whereNull('tblcontratofixacao.inativo')
-            ->groupBy('tblcontratofixacao.moeda')
-            ->selectRaw('tblcontratofixacao.moeda as moeda')
-            ->selectRaw('SUM(tblcontratofixacao.quantidade) as q')
-            ->selectRaw('SUM(tblcontratofixacao.precoreal * tblcontratofixacao.quantidade) as vreal')
-            ->selectRaw('SUM(tblcontratofixacao.preco * tblcontratofixacao.quantidade) as vmoeda')
-            ->selectRaw('SUM(tblcontratofixacao.dolar * tblcontratofixacao.quantidade) as vdolar')
-            ->selectRaw('SUM(CASE WHEN tblcontratofixacao.dolar IS NOT NULL THEN tblcontratofixacao.quantidade ELSE 0 END) as qdolar')
-            ->get()
-            ->keyBy('moeda');
-
-        $brl = $buckets->get('BRL');
-        $usd = $buckets->get('USD');
+        $areaTotal = 0.0;
+        $expTotal = 0.0;
+        $colhidoTotal = 0.0;
+        $hacolhidoTotal = 0.0;
+        $producaoTotal = 0.0;
+        foreach (Plantio::where('codsafra', $codsafra)->whereNull('inativo')->get() as $p) {
+            $area = (float) $p->areaplantada;
+            $exp = (float) $p->expectativasacas;
+            $ha = (float) $p->hacolhido;
+            $colhidoSc = (float) ($colhidoKg[$p->codplantio] ?? 0) / $pesosaca;
+            $areaTotal += $area;
+            $expTotal += $exp;
+            $colhidoTotal += $colhidoSc;
+            $hacolhidoTotal += $ha;
+            $producaoTotal += static::producaoPlantio($area, $exp, $ha, $colhidoSc);
+        }
+        $disponivel = max(0, $producaoTotal - $contratado);
 
         return [
             'ncontratos' => $contratos->count(),
-            'contratado' => $contratado,                 // sc negociadas
-            'contratadokg' => $contratadokg,             // kg = sc x pesosaca
-            'entreguekg' => $entreguekg,                 // kg entregue (extrato)
-            'entreguesc' => round($entreguesc, 2),       // sacas derivadas (por contrato)
-            'saldoaembarcarkg' => $saldoaembarcarkg,     // kg a embarcar (volume em aberto = 0)
-            'estoquekg' => round($estoquekg, 3),         // estoque depositado (silo proprio + terceiro)
-            'estoquesc' => round($estoquekg / $pesosacaSafra, 2),
-            'acolherkg' => round($aColherKg, 3),         // expectativa em pe nao colhida
-            'disponivelkg' => round($disponivelkg, 3),   // a colher + estoque - saldo a entregar
-            'disponivelsc' => round($disponivelkg / $pesosacaSafra, 2),
-            'fixo' => $fixo,
-            'afixar' => $afixar,
-            'precomediobrl' => ($brl && $brl->q > 0) ? (float) $brl->vreal / (float) $brl->q : null,
-            'precomediousd' => ($usd && $usd->q > 0) ? (float) $usd->vmoeda / (float) $usd->q : null,
-            'dolarmedio' => ($usd && $usd->qdolar > 0) ? (float) $usd->vdolar / (float) $usd->qdolar : null,
+            // comercial
+            'contratado' => round($contratado, 0),
+            'fixado' => round($fixado, 0),
+            'afixar' => round($afixar, 0),
+            'disponivel' => round($disponivel, 0),
+            'precomediobrl' => $firmeSacas > 0 ? round($firmeLiq / $firmeSacas, 2) : null, // R$ líquido/sc
+            'precomediousd' => ($usd && $usd['sacas'] > 0) ? round($usd['saldo'] / $usd['sacas'], 2) : null,
+            // agronômico
+            'areaplantada' => round($areaTotal, 2),
+            'expectativa' => round($expTotal, 0),
+            'colhido' => round($colhidoTotal, 0),
+            'producao' => round($producaoTotal, 0),
+            'hacolhido' => round($hacolhidoTotal, 2),
+            'produtividadeexpectativa' => $areaTotal > 0 ? round($expTotal / $areaTotal, 2) : null,
+            'produtividadecolhido' => $hacolhidoTotal > 0 ? round($colhidoTotal / $hacolhidoTotal, 2) : null,
+            'progressocolheita' => $areaTotal > 0 ? min(1, round($hacolhidoTotal / $areaTotal, 4)) : 0,
         ];
+    }
+
+    /**
+     * Produção estimada de um plantio (sacas):
+     *   - nada colhido (ha=0 ou colhido=0) → expectativa
+     *   - finalizado (ha colhido ≥ área)   → colhido
+     *   - colhendo → colhido + (colhido/ha) × (área − ha)  [regra de 3: projeta o
+     *     restante pela produtividade REAL do que já colheu]
+     */
+    protected static function producaoPlantio(float $area, float $exp, float $ha, float $colhido): float
+    {
+        if ($ha <= 0 || $colhido <= 0) {
+            return $exp;
+        }
+        if ($ha >= $area) {
+            return $colhido;
+        }
+        return $colhido + ($colhido / $ha) * ($area - $ha);
     }
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)

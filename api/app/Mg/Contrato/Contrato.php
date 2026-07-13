@@ -129,9 +129,18 @@ class Contrato extends MgModel
         return $this->hasMany(ContratoNota::class, 'codcontrato', 'codcontrato');
     }
 
+    // Recebimentos do contrato = os das suas fixações (tblcontratopagamento perdeu
+    // codcontrato; agora ancora na fixação). hasManyThrough contrato→fixação→pagamento.
     public function ContratoPagamentoS()
     {
-        return $this->hasMany(ContratoPagamento::class, 'codcontrato', 'codcontrato');
+        return $this->hasManyThrough(
+            ContratoPagamento::class,
+            ContratoFixacao::class,
+            'codcontrato',        // FK em tblcontratofixacao
+            'codcontratofixacao', // FK em tblcontratopagamento
+            'codcontrato',        // PK em tblcontrato
+            'codcontratofixacao', // PK em tblcontratofixacao
+        );
     }
 
     // Entregas/recebimentos deste contrato no extrato de grao (entregue = SUM liquido).

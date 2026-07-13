@@ -259,6 +259,15 @@ async function salvar() {
             <q-input v-model="cad.form.numerocooperativa" label="Nº Cooperativa" outlined />
           </div>
 
+          <!-- BARTER (settlement em insumos: troca por insumos) -->
+          <div class="col-12 col-sm-12">
+            <q-toggle
+              v-model="cad.form.barter"
+              color="deep-purple-6"
+              label="Contrato de Barter (troca de grãos por insumos)"
+            />
+          </div>
+
           <!-- OBSERVACOES -->
           <div class="col-12">
             <q-input

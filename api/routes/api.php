@@ -372,6 +372,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('tabela-desconto/{codtabeladesconto}/inativo', [\Mg\Cultura\TabelaDescontoController::class, 'ativar']);
     Route::apiResource('tabela-desconto', \Mg\Cultura\TabelaDescontoController::class)->parameters(['tabela-desconto' => 'codtabeladesconto']);
 
+    Route::post('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'inativar']);
+    Route::delete('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'ativar']);
+    Route::apiResource('cultura-tributo', \Mg\Cultura\CulturaTributoController::class)->parameters(['cultura-tributo' => 'codculturatributo']);
+
     // Fazenda / Talhao (dominio Mg\Fazenda) — criado 03/06/2026
     Route::get('fazenda/{codfazenda}/resumo', [\Mg\Fazenda\FazendaController::class, 'resumo']);
     Route::post('fazenda/{codfazenda}/inativo', [\Mg\Fazenda\FazendaController::class, 'inativar']);
@@ -392,6 +396,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Plantio aninhado na safra: safra/{codsafra}/plantio
     Route::post('safra/{codsafra}/plantio/{codplantio}/inativo', [\Mg\Fazenda\PlantioController::class, 'inativar']);
     Route::delete('safra/{codsafra}/plantio/{codplantio}/inativo', [\Mg\Fazenda\PlantioController::class, 'ativar']);
+    Route::post('safra/{codsafra}/plantio/{codplantio}/hacolhido', [\Mg\Fazenda\PlantioController::class, 'hacolhido']);
     Route::apiResource('safra.plantio', \Mg\Fazenda\PlantioController::class)->parameters(['safra' => 'codsafra', 'plantio' => 'codplantio']);
 
     // Carga unificada (recebimento/expedicao/transferencia) — Mg\Grao, offline (uuid).
@@ -419,6 +424,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Unidade de referência fiscal (UPF-MT, UR municipal) — Mg\UnidadeReferencia
     Route::post('unidade-referencia/importar-upf-mt', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'importarUpfMt']);
     Route::post('unidade-referencia/{id}/valor', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'storeValor'])->whereNumber('id');
+    Route::put('unidade-referencia/{id}/valor/{codvalor}', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'updateValor'])->whereNumber('id');
     Route::delete('unidade-referencia/{id}/valor/{codvalor}', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'destroyValor']);
     Route::post('unidade-referencia/{id}/inativo', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'inativar']);
     Route::delete('unidade-referencia/{id}/inativo', [\Mg\UnidadeReferencia\UnidadeReferenciaController::class, 'ativar']);
@@ -442,18 +448,29 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->only(['index', 'store', 'update', 'destroy'])
         ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao']);
 
+    // Quitar/reabrir a fixacao (marca "recebida" mesmo com diferencinha de imposto)
+    Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/quitar', [\Mg\Contrato\ContratoFixacaoController::class, 'quitar']);
+    Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/quitar', [\Mg\Contrato\ContratoFixacaoController::class, 'reabrir']);
+
+    // Travas de cambio aninhadas na fixacao
+    Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/cambio/{codcambio}/inativo', [\Mg\Contrato\ContratoFixacaoCambioController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/cambio/{codcambio}/inativo', [\Mg\Contrato\ContratoFixacaoCambioController::class, 'ativar']);
+    Route::apiResource('contrato.fixacao.cambio', \Mg\Contrato\ContratoFixacaoCambioController::class)
+        ->only(['index', 'store', 'update', 'destroy'])
+        ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao', 'cambio' => 'codcambio']);
+
     // Anexos (PDFs) do contrato
     Route::get('contrato/{codcontrato}/anexo', [\Mg\Contrato\ContratoAnexoController::class, 'index']);
     Route::post('contrato/{codcontrato}/anexo', [\Mg\Contrato\ContratoAnexoController::class, 'store']);
     Route::get('contrato/{codcontrato}/anexo/{nome}/download', [\Mg\Contrato\ContratoAnexoController::class, 'download'])->where('nome', '.*');
     Route::delete('contrato/{codcontrato}/anexo/{nome}', [\Mg\Contrato\ContratoAnexoController::class, 'destroy'])->where('nome', '.*');
 
-    Route::post('contrato/{codcontrato}/pagamento/{codpagamento}/confirmar', [\Mg\Contrato\ContratoPagamentoController::class, 'confirmar']);
-    Route::post('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'inativar']);
-    Route::delete('contrato/{codcontrato}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'ativar']);
-    Route::apiResource('contrato.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
+    // Recebimentos aninhados na fixacao (1 fixacao : N recebimentos)
+    Route::post('contrato/{codcontrato}/fixacao/{codfixacao}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'inativar']);
+    Route::delete('contrato/{codcontrato}/fixacao/{codfixacao}/pagamento/{codpagamento}/inativo', [\Mg\Contrato\ContratoPagamentoController::class, 'ativar']);
+    Route::apiResource('contrato.fixacao.pagamento', \Mg\Contrato\ContratoPagamentoController::class)
         ->only(['index', 'store', 'update', 'destroy'])
-        ->parameters(['contrato' => 'codcontrato', 'pagamento' => 'codpagamento']);
+        ->parameters(['contrato' => 'codcontrato', 'fixacao' => 'codfixacao', 'pagamento' => 'codpagamento']);
 
     // Plano de emissao de NF (operacao triangular) aninhado no contrato
     Route::post('contrato/{codcontrato}/nota/{codnota}/inativo', [\Mg\Contrato\ContratoNotaController::class, 'inativar']);

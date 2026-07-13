@@ -64,6 +64,9 @@ export default defineConfig((/* ctx */) => {
         '@components': path.resolve(import.meta.dirname, '../components'),
         'quasar/src': path.resolve(import.meta.dirname, 'node_modules/quasar/src'),
         'vue-router': path.resolve(import.meta.dirname, 'node_modules/vue-router'),
+        // Shared stores in ../components importam 'pinia'; como estão fora da raiz do
+        // app, o resolver do build (Rolldown) não acha o pinia. Aliasa pro local.
+        pinia: path.resolve(import.meta.dirname, 'node_modules/pinia'),
       },
 
       vueRouterMode: 'history', // available values: 'hash', 'history'

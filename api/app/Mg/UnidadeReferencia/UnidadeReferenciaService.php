@@ -19,7 +19,11 @@ class UnidadeReferenciaService extends MgService
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)
     {
-        $qry = UnidadeReferencia::query()->with('Estado', 'Cidade');
+        $qry = UnidadeReferencia::query()->with([
+            'Estado',
+            'Cidade',
+            'UnidadeReferenciaValorS' => fn ($q) => $q->orderByDesc('competencia'),
+        ]);
 
         if (!empty($filter['codigo'])) {
             $qry->where('codigo', 'ilike', "%{$filter['codigo']}%");
@@ -45,7 +49,12 @@ class UnidadeReferenciaService extends MgService
         ])->findOrFail($cod);
     }
 
-    /** Upsert de um valor por competência (1º dia do mês). */
+    /**
+     * Upsert de um valor por competência (1º dia do mês). USO EXCLUSIVO do
+     * import da SEFAZ (refresh dos valores oficiais) — pode sobrescrever. O
+     * lançamento MANUAL usa criarValor/atualizarValor (que NÃO sobrescrevem
+     * silenciosamente).
+     */
     public static function salvarValor(int $codunidadereferencia, string $competencia, float $valor): UnidadeReferenciaValor
     {
         $comp = Carbon::parse($competencia)->startOfMonth()->toDateString();
@@ -53,6 +62,48 @@ class UnidadeReferenciaService extends MgService
             'codunidadereferencia' => $codunidadereferencia,
             'competencia' => $comp,
         ]);
+        $reg->valor = $valor;
+        $reg->save();
+        return $reg;
+    }
+
+    /**
+     * Cria um valor NOVO (lançamento manual). Rejeita (409) se já existe valor
+     * para a competência — o usuário deve editar o registro existente, nunca
+     * sobrescrever sem querer.
+     */
+    public static function criarValor(int $codunidadereferencia, string $competencia, float $valor): UnidadeReferenciaValor
+    {
+        $comp = Carbon::parse($competencia)->startOfMonth();
+        $existe = UnidadeReferenciaValor::where('codunidadereferencia', $codunidadereferencia)
+            ->where('competencia', $comp->toDateString())
+            ->exists();
+        if ($existe) {
+            abort(409, 'Já existe um valor lançado para ' . $comp->format('m/Y')
+                . '. Edite o registro existente.');
+        }
+        $reg = new UnidadeReferenciaValor();
+        $reg->codunidadereferencia = $codunidadereferencia;
+        $reg->competencia = $comp->toDateString();
+        $reg->valor = $valor;
+        $reg->save();
+        return $reg;
+    }
+
+    /** Atualiza um valor existente; impede colidir com outra competência. */
+    public static function atualizarValor(int $codunidadereferencia, int $codvalor, string $competencia, float $valor): UnidadeReferenciaValor
+    {
+        $reg = UnidadeReferenciaValor::where('codunidadereferencia', $codunidadereferencia)
+            ->findOrFail($codvalor);
+        $comp = Carbon::parse($competencia)->startOfMonth();
+        $colide = UnidadeReferenciaValor::where('codunidadereferencia', $codunidadereferencia)
+            ->where('competencia', $comp->toDateString())
+            ->where('codunidadereferenciavalor', '!=', $codvalor)
+            ->exists();
+        if ($colide) {
+            abort(409, 'Já existe um valor lançado para ' . $comp->format('m/Y') . '.');
+        }
+        $reg->competencia = $comp->toDateString();
         $reg->valor = $valor;
         $reg->save();
         return $reg;
@@ -78,7 +129,15 @@ class UnidadeReferenciaService extends MgService
         }
 
         try {
-            $resp = Http::timeout(30)->withoutVerifying()->get(self::SEFAZ_UPF_URL);
+            // O portal da SEFAZ-MT tem WAF que derruba a conexão (cURL 56) sem um
+            // User-Agent de navegador — por isso mandamos um explícito.
+            $resp = Http::timeout(30)
+                ->withoutVerifying()
+                ->withHeaders([
+                    'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                        . 'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36',
+                ])
+                ->get(self::SEFAZ_UPF_URL);
             if (!$resp->ok()) {
                 Log::warning('UPF-MT: SEFAZ retornou ' . $resp->status());
                 return [];
@@ -99,8 +158,11 @@ class UnidadeReferenciaService extends MgService
     }
 
     /**
-     * Extrai pares competência(Y-m-01) => valor do HTML. Procura padrões como
-     * "Janeiro/2026 ... 254,36" ou "Janeiro de 2026 R$ 254,36".
+     * Extrai pares competência(Y-m-01) => valor do HTML da SEFAZ-MT.
+     * Layout atual (2026): o ano ativo aparece UMA vez, seguido da lista com o
+     * VALOR ANTES do mês, ex.:
+     *   "2026 r$ 254,36 - janeiro r$ 255,20 - fevereiro r$ 256,04 - março ..."
+     * (o portal carrega só o ano ativo; os demais vêm via JS ao clicar.)
      */
     public static function extrairValores(string $html): array
     {
@@ -109,17 +171,25 @@ class UnidadeReferenciaService extends MgService
         $meses = implode('|', array_keys(self::MESES));
         $out = [];
 
-        // mês <sep> ano <ate 40 chars> valor (12,34 ou 1.234,56)
-        $re = "/($meses)\D{0,8}(\d{4})[^\d]{0,40}?(\d{1,3}(?:\.\d{3})*,\d{2})/u";
+        // Ano ativo = os 4 dígitos imediatamente antes da lista "r$ ...".
+        if (!preg_match('/(\d{4})\s+r\$/u', $texto, $anoMatch)) {
+            return $out;
+        }
+        $ano = (int) $anoMatch[1];
+        if ($ano < 2000 || $ano > 2100) {
+            return $out;
+        }
+
+        // Pares "r$ <valor> - <mês>" (valor 12,34 ou 1.234,56 antes do mês).
+        $re = "/r\\\$\\s*(\\d{1,3}(?:\\.\\d{3})*,\\d{2})\\s*-\\s*($meses)/u";
         if (preg_match_all($re, $texto, $m, PREG_SET_ORDER)) {
             foreach ($m as $g) {
-                $mes = self::MESES[$g[1]] ?? null;
+                $mes = self::MESES[$g[2]] ?? null;
                 if (!$mes) {
                     continue;
                 }
-                $ano = (int) $g[2];
-                $valor = (float) str_replace(['.', ','], ['', '.'], $g[3]);
-                if ($valor <= 0 || $ano < 2000 || $ano > 2100) {
+                $valor = (float) str_replace(['.', ','], ['', '.'], $g[1]);
+                if ($valor <= 0) {
                     continue;
                 }
                 $comp = sprintf('%04d-%02d-01', $ano, $mes);

@@ -9,56 +9,67 @@ namespace Mg\Contrato;
 use Mg\MgModel;
 use Mg\Contrato\Contrato;
 use Mg\Contrato\ContratoPagamento;
+use Mg\Contrato\ContratoFixacaoCambio;
+use Mg\Moeda\Moeda;
 
 class ContratoFixacao extends MgModel
 {
     protected $table = 'tblcontratofixacao';
     protected $primaryKey = 'codcontratofixacao';
 
-
-
     protected $fillable = [
         'codcontrato',
         'data',
-        'dolar',
-        'inativo',
-        'isentofethab',
-        'moeda',
-        'observacao',
-        'preco',
-        'precoreal',
+        'datavencimento',
         'quantidade',
-        // Snapshot dos impostos travado na fixação (modal de impostos)
-        'precoliquido',
-        'totaldeducao',
-        'tributos'
+        'codmoeda',
+        'preco',
+        'observacao',
+        'inativo',
+        // Marca a fixação como RECEBIDA (encerra o saldo) mesmo com diferencinha.
+        'quitado',
+        // Config fiscal congelada (base/alíquota/UPF/grupofethab; SEM valor).
+        // Os valores em R$ (impostos/líquido) são derivados das travas de câmbio.
+        'tributos',
+        // 4 totais GRAVADOS, recalculados por ContratoFixacaoService::recalcular.
+        'totalmoeda',
+        'saldomoeda',
+        'totalbrl',
+        'liquidobrl',
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
         'codcontrato' => 'integer',
         'codcontratofixacao' => 'integer',
+        'codmoeda' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
         'data' => 'date',
-        'dolar' => 'float',
+        'datavencimento' => 'date',
+        'quitado' => 'datetime',
         'inativo' => 'datetime',
-        'isentofethab' => 'boolean',
         'preco' => 'float',
-        'precoreal' => 'float',
         'quantidade' => 'float',
-        'precoliquido' => 'float',
-        'totaldeducao' => 'float',
-        'tributos' => 'array'
+        'totalmoeda' => 'float',
+        'saldomoeda' => 'float',
+        'totalbrl' => 'float',
+        'liquidobrl' => 'float',
+        'tributos' => 'array',
     ];
 
+    // "É moeda estrangeira (≠ Real)?" — fonte única do predicado no backend.
+    // Deriva do iso da moeda (FK codmoeda); lazy-load da relação quando preciso.
+    public function getEstrangeiraAttribute(): bool
+    {
+        return ($this->Moeda->iso ?? 'BRL') !== 'BRL';
+    }
 
-    // "É moeda estrangeira (US$)?" — fonte única do predicado no backend
-    // (Resource/Requests/Controller usam $fixacao->usd em vez de reimplementar).
+    // Alias legado usado pelo fluxo de pagamento (a ser refatorado).
     public function getUsdAttribute(): bool
     {
-        return ($this->moeda ?: 'BRL') !== 'BRL';
+        return $this->estrangeira;
     }
 
     // Chaves Estrangeiras
@@ -67,11 +78,21 @@ class ContratoFixacao extends MgModel
         return $this->belongsTo(Contrato::class, 'codcontrato', 'codcontrato');
     }
 
-    // Parcelas de pagamento desta fixação (1 fixação : N parcelas). Base do
-    // ledger por fixação (sacas parceladas/recebidas, recebido R$, saldo).
+    public function Moeda()
+    {
+        return $this->belongsTo(Moeda::class, 'codmoeda', 'codmoeda');
+    }
+
+    // Travas de câmbio desta fixação (1 fixação : N travas). Base dos totais em
+    // R$ (totalbrl/liquidobrl) e do saldo em moeda ainda a travar.
+    public function ContratoFixacaoCambioS()
+    {
+        return $this->hasMany(ContratoFixacaoCambio::class, 'codcontratofixacao', 'codcontratofixacao');
+    }
+
+    // Parcelas de pagamento desta fixação (1 fixação : N parcelas).
     public function ContratoPagamentoS()
     {
         return $this->hasMany(ContratoPagamento::class, 'codcontratofixacao', 'codcontratofixacao');
     }
-
 }

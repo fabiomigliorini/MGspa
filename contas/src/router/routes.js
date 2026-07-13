@@ -63,6 +63,29 @@ const routes = [
         },
       },
       {
+        path: 'unidade-referencia',
+        name: 'unidade-referencia',
+        component: () => import('pages/unidadeReferencia/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Unidades de Referência (UPF)',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/UnidadeReferenciaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'unidade-referencia/:codunidadereferencia(\\d+)',
+        name: 'unidade-referencia-detalhe',
+        component: () => import('pages/unidadeReferencia/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Unidade de Referência',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
         path: 'tipo-movimento-titulo',
         name: 'tipo-movimento-titulo',
         component: () => import('pages/tipoMovimentoTitulo/Index.vue'),

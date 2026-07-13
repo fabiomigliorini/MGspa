@@ -19,8 +19,9 @@ class ContratoService extends MgService
         'Corretora',
         'Cooperativa',
         'ContratoFixacaoS',
-        'ContratoFixacaoS.ContratoPagamentoS', // ledger por fixação (sem N+1)
-        'ContratoPagamentoS',
+        'ContratoFixacaoS.Moeda',              // moeda da fixação (codmoeda FK)
+        'ContratoFixacaoS.ContratoFixacaoCambioS', // travas de câmbio (totalbrl/liquidobrl)
+        'ContratoFixacaoS.ContratoPagamentoS.Portador', // recebimentos por fixação (sem N+1)
         'ContratoNotaS.NaturezaOperacao',
         'ContratoNotaS.PessoaNf',
         'MovimentoGraoS.Carga',
@@ -41,10 +42,7 @@ class ContratoService extends MgService
                 ['CargaPontoS as valornf' => fn($q) => $q->whereHas('Carga', fn($c) => $c->whereNull('inativo'))],
                 'valornf',
             ) // R$ das NFs por contrato (tblcargaponto; 0 ate emitir NFe)
-            ->withSum(['ContratoFixacaoS as fixado' => fn($q) => $q->whereNull('inativo')], 'quantidade')
-            ->withSum(['ContratoPagamentoS as pago' => fn($q) => $q->whereNull('inativo')], 'valor')
-            // barter (settlement em insumos) vive no pagamento; usado p/ derivar o tipo.
-            ->withCount(['ContratoPagamentoS as bartercount' => fn($q) => $q->where('forma', 'BARTER')->whereNull('inativo')]);
+            ->withSum(['ContratoFixacaoS as fixado' => fn($q) => $q->whereNull('inativo')], 'quantidade');
 
         if (!empty($filter['codcontrato'])) {
             $qry->where('codcontrato', $filter['codcontrato']);
@@ -154,29 +152,6 @@ class ContratoService extends MgService
         return $contrato;
     }
 
-    /**
-     * Preco em R$/saca de uma fixacao: moeda estrangeira (qualquer != BRL) com
-     * cotacao travada => preco x cotacao; BRL (ou sem cotacao) => o proprio preco.
-     */
-    public static function precoReal(array $dados): ?float
-    {
-        $preco = $dados['preco'] ?? null;
-        if ($preco === null || $preco === '') {
-            return null;
-        }
-        $estrangeira = ($dados['moeda'] ?? 'BRL') !== 'BRL';
-        if ($estrangeira) {
-            // Moeda estrangeira COM cotação: trava o R$ (preço x cotação).
-            // SEM cotação: fixação dolarizada pura — não há R$ ainda (a conversão
-            // acontece no recebimento). Retorna null p/ NÃO gravar US$ como se
-            // fosse R$ (contaminaria líquido/NF/trava de pagamento).
-            return !empty($dados['dolar'])
-                ? round((float) $preco * (float) $dados['dolar'], 4)
-                : null;
-        }
-        return round((float) $preco, 4);
-    }
-
     // ===== Saldos p/ as travas de negócio (fonte única, usada nos FormRequests) =====
     // Mesma semântica dos withSum `fixado`/`pago` de pesquisar(): só linhas ativas
     // (inativo IS NULL). `$exceto*` ignora o próprio registro na edição (update).
@@ -190,48 +165,12 @@ class ContratoService extends MgService
             ->sum('quantidade');
     }
 
-    /** Valor BRUTO fixado (Σ quantidade × precoreal, ativas) — teto dos pagamentos. */
+    /** Valor R$ fixado (Σ totalbrl, ativas) — só o câmbio TRAVADO (US$ flutuante = 0). */
     public static function valorFixadoBruto(int $codcontrato, ?int $excetoFixacao = null): float
     {
         return (float) ContratoFixacao::where('codcontrato', $codcontrato)
             ->whereNull('inativo')
             ->when($excetoFixacao, fn ($q) => $q->where('codcontratofixacao', '!=', $excetoFixacao))
-            ->sum(DB::raw('coalesce(quantidade, 0) * coalesce(precoreal, 0)'));
-    }
-
-    /** Σ valor pago (pagamentos ativos). */
-    public static function valorPago(int $codcontrato, ?int $excetoPagamento = null): float
-    {
-        return (float) ContratoPagamento::where('codcontrato', $codcontrato)
-            ->whereNull('inativo')
-            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
-            ->sum('valor');
-    }
-
-    /** Σ sacas pagas (pagamentos ativos, modo SACAS). */
-    public static function sacasPagas(int $codcontrato, ?int $excetoPagamento = null): float
-    {
-        return (float) ContratoPagamento::where('codcontrato', $codcontrato)
-            ->whereNull('inativo')
-            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
-            ->sum('sacas');
-    }
-
-    // ===== Saldos POR FIXAÇÃO (multi-fixação + US$) =====
-    // Sacas são a grandeza neutra entre moedas. O teto de pagamento passou a ser
-    // "sacas parceladas da fixação <= sacas fixadas da fixação" — funciona igual
-    // p/ BRL e US$ (o valorFixadoBruto em R$ zerava a perna US$).
-
-    /**
-     * Σ sacas já parceladas de UMA fixação (parcelas ativas). Teto de pagamento:
-     * o restante (recebido, valor fixado por moeda, saldo) é derivado no ledger do
-     * ContratoFixacaoResource, sobre a relação já carregada — sem query extra aqui.
-     */
-    public static function sacasParceladasFixacao(int $codcontratofixacao, ?int $excetoPagamento = null): float
-    {
-        return (float) ContratoPagamento::where('codcontratofixacao', $codcontratofixacao)
-            ->whereNull('inativo')
-            ->when($excetoPagamento, fn ($q) => $q->where('codcontratopagamento', '!=', $excetoPagamento))
-            ->sum('sacas');
+            ->sum('totalbrl');
     }
 }

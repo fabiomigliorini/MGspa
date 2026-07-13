@@ -12,9 +12,9 @@ class SelectMoedaController extends Controller
     {
         $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
 
-        // value = iso (FK em tblcontratofixacao.moeda). label = sigla (R$, US$...).
+        // value = codmoeda (FK inteira em tblcontratofixacao.codmoeda). label = sigla.
         $sql = '
-            select codmoeda, moeda, sigla, iso, inativo, iso as value, sigla as label
+            select codmoeda, moeda, sigla, iso, inativo, codmoeda as value, sigla as label
             from tblmoeda
             where (moeda ilike :busca or sigla ilike :busca or iso ilike :busca)
         ';
@@ -29,9 +29,9 @@ class SelectMoedaController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codmoeda, moeda, sigla, iso, inativo, iso as value, sigla as label
+            select codmoeda, moeda, sigla, iso, inativo, codmoeda as value, sigla as label
             from tblmoeda
-            where iso = :id
+            where codmoeda = :id
             limit 1
         ';
         $rows = DB::select($sql, ['id' => $id]);
