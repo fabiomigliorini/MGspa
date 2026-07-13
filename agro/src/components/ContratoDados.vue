@@ -111,14 +111,14 @@ const comissao = computed(() => {
         <div class="text-caption text-uppercase text-grey-6">Contraparte</div>
         <div class="text-body2">{{ nomePessoa(c.Pessoa) }}</div>
         <div v-if="c.numerocontraparte" class="text-caption text-grey-7">
-          Nº {{ c.numerocontraparte }}
+          {{ c.numerocontraparte }}
         </div>
       </div>
       <div v-if="temCorretora" class="col-12 col-md-4">
         <div class="text-caption text-uppercase text-grey-6">Corretora</div>
         <div class="text-body2">{{ nomePessoa(c.Corretora) }}</div>
         <div v-if="c.numerocorretora" class="text-caption text-grey-7">
-          Nº {{ c.numerocorretora }}
+          {{ c.numerocorretora }}
         </div>
         <div v-if="comissao" class="text-caption text-grey-7">
           Comissão {{ comissao }}
@@ -129,7 +129,7 @@ const comissao = computed(() => {
         <div class="text-caption text-uppercase text-grey-6">Cooperativa</div>
         <div class="text-body2">{{ nomePessoa(c.Cooperativa) }}</div>
         <div v-if="c.numerocooperativa" class="text-caption text-grey-7">
-          Nº {{ c.numerocooperativa }}
+          {{ c.numerocooperativa }}
         </div>
       </div>
     </q-card-section>
