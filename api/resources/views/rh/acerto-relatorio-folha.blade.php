@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <style>
@@ -23,14 +24,17 @@
             padding-bottom: 8px;
             margin-bottom: 14px;
         }
+
         .report-header h1 {
             font-size: 14pt;
             margin: 0 0 4px 0;
         }
+
         .report-header p {
             margin: 2px 0;
             font-size: 8.5pt;
         }
+
         .report-header-right {
             float: right;
             text-align: right;
@@ -41,6 +45,7 @@
         .empresa-grupo {
             margin-bottom: 18px;
         }
+
         .empresa-titulo {
             font-size: 10pt;
             font-weight: bold;
@@ -55,21 +60,27 @@
             border-collapse: collapse;
             font-size: 8.5pt;
         }
-        th, td {
+
+        th,
+        td {
             border: 0.3mm solid #666;
             padding: 3px 5px;
         }
+
         th {
             background: #e0e0e0;
             text-align: left;
         }
+
         tbody tr:nth-child(even) {
             background: #f5f5f5;
         }
+
         tfoot td {
             background: #d8d8d8;
             font-weight: bold;
         }
+
         .text-right {
             text-align: right;
         }
@@ -90,6 +101,7 @@
         }
     </style>
 </head>
+
 <body>
 
     @if (empty($paginas))
@@ -103,7 +115,6 @@
         </div>
         <p style="color: #666; font-style: italic;">Nenhum acerto efetivado para este período.</p>
     @else
-
         @foreach ($paginas as $idx => $pagina)
             <div @if ($idx > 0) class="page-break" @endif>
 
@@ -120,7 +131,6 @@
                 @if (empty($pagina['porFilial']))
                     <p style="color: #666; font-style: italic;">Nenhum lançamento para este portador.</p>
                 @else
-
                     @php $totalGeral = 0; @endphp
 
                     @foreach ($pagina['porFilial'] as $fil)
@@ -141,7 +151,9 @@
                                 <thead>
                                     <tr>
                                         <th>Nome</th>
+                                        <th>Unidade</th>
                                         <th>CPF</th>
+
                                         <th class="text-right">Valor</th>
                                     </tr>
                                 </thead>
@@ -149,14 +161,16 @@
                                     @foreach ($fil['linhas'] as $linha)
                                         <tr>
                                             <td>{{ $linha['nome_colaborador'] }}</td>
+                                            <td>{{ $linha['unidade'] ?: '—' }}</td>
                                             <td>{{ $linha['fisica'] ? formataCpf($linha['cpf_colaborador']) : '' }}</td>
+
                                             <td class="text-right">R$ {{ formataNumero($linha['valor']) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                                 <tfoot>
                                     <tr>
-                                        <td colspan="2">Total {{ $fil['filial'] }}</td>
+                                        <td colspan="3">Total {{ $fil['filial'] }}</td>
                                         <td class="text-right">R$ {{ formataNumero($totalFilial) }}</td>
                                     </tr>
                                 </tfoot>
@@ -167,7 +181,6 @@
                     <div class="total-geral">
                         TOTAL GERAL: R$ {{ formataNumero($totalGeral) }}
                     </div>
-
                 @endif
 
             </div>
@@ -176,4 +189,5 @@
     @endif
 
 </body>
+
 </html>

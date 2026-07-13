@@ -12,6 +12,22 @@ class AcertoRelatorioFolhaPdf
     {
         $periodo = Periodo::findOrFail($codperiodo);
 
+        // Mapa codpessoa => descrição da Unidade de Negócio (mesma lógica da tela de Acertos)
+        $pcs = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->with(['Colaborador', 'PeriodoColaboradorSetorS.Setor.UnidadeNegocio'])
+            ->get();
+
+        $unidadePorPessoa = [];
+        foreach ($pcs as $pc) {
+            $codpessoa = $pc->Colaborador->codpessoa ?? null;
+            if ($codpessoa === null) {
+                continue;
+            }
+            // Convenção do app (AcertoService/CalculoRubricaService): primeiro setor do rateio
+            $unidadePorPessoa[$codpessoa] =
+                $pc->PeriodoColaboradorSetorS->first()?->Setor?->UnidadeNegocio?->descricao ?? null;
+        }
+
         // Portadores distintos com liquidações ativas no período
         $portadores = DB::select("
             SELECT DISTINCT lt.codportador, po.portador AS nome_portador
@@ -29,6 +45,7 @@ class AcertoRelatorioFolhaPdf
                     p.pessoa   AS nome_colaborador,
                     p.cnpj     AS cpf_colaborador,
                     p.fisica,
+                    lt.codpessoa AS codpessoa,
                     f.codfilial,
                     f.filial,
                     fp.pessoa  AS nome_filial,
@@ -70,6 +87,8 @@ class AcertoRelatorioFolhaPdf
                     'nome_colaborador' => $row->nome_colaborador,
                     'cpf_colaborador'  => $row->cpf_colaborador,
                     'fisica'           => (bool) $row->fisica,
+                    'codpessoa'        => $row->codpessoa,
+                    'unidade'          => $unidadePorPessoa[$row->codpessoa] ?? null,
                     'valor'            => (float) $row->valor,
                 ];
             }
