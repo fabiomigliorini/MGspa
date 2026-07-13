@@ -152,7 +152,7 @@ async function pesquisarPessoa() {
   pessoaLoading.value = true
   try {
     const ret = await api.get('v1/select/pessoa', {
-      params: { pessoa: t || ' ', somenteAtivos: false },
+      params: { busca: t, inativos: 1 },
     })
     pessoas.value = Array.isArray(ret.data) ? ret.data : ret.data.data || []
   } catch (e) {
