@@ -54,6 +54,23 @@
             margin-bottom: 6px;
         }
 
+        /* Sub-grupo: Unidade de Negócio */
+        .unidade-titulo {
+            font-size: 9pt;
+            font-weight: bold;
+            margin: 8px 0 3px 8px;
+            padding-left: 5px;
+            border-left: 3px solid #888;
+        }
+        .filial-total {
+            text-align: right;
+            font-weight: bold;
+            font-size: 9.5pt;
+            border-top: 1px solid #999;
+            margin-top: 6px;
+            padding-top: 3px;
+        }
+
         /* Tabela */
         table {
             width: 100%;
@@ -135,7 +152,9 @@
 
                     @foreach ($pagina['porFilial'] as $fil)
                         @php
-                            $totalFilial = collect($fil['linhas'])->sum('valor');
+                            $totalFilial = collect($fil['porUnidade'])
+                                ->flatMap(fn ($u) => $u['linhas'])
+                                ->sum('valor');
                             $totalGeral += $totalFilial;
                         @endphp
 
@@ -147,34 +166,40 @@
                                 @endif
                             </div>
 
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Nome</th>
-                                        <th>Unidade</th>
-                                        <th>CPF</th>
+                            @foreach ($fil['porUnidade'] as $uni)
+                                @php $totalUnidade = collect($uni['linhas'])->sum('valor'); @endphp
 
-                                        <th class="text-right">Valor</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($fil['linhas'] as $linha)
+                                <div class="unidade-titulo">{{ $uni['unidade'] ?: 'Sem Unidade' }}</div>
+
+                                <table>
+                                    <thead>
                                         <tr>
-                                            <td>{{ $linha['nome_colaborador'] }}</td>
-                                            <td>{{ $linha['unidade'] ?: '—' }}</td>
-                                            <td>{{ $linha['fisica'] ? formataCpf($linha['cpf_colaborador']) : '' }}</td>
-
-                                            <td class="text-right">R$ {{ formataNumero($linha['valor']) }}</td>
+                                            <th>Nome</th>
+                                            <th>CPF</th>
+                                            <th class="text-right">Valor</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                                <tfoot>
-                                    <tr>
-                                        <td colspan="3">Total {{ $fil['filial'] }}</td>
-                                        <td class="text-right">R$ {{ formataNumero($totalFilial) }}</td>
-                                    </tr>
-                                </tfoot>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($uni['linhas'] as $linha)
+                                            <tr>
+                                                <td>{{ $linha['nome_colaborador'] }}</td>
+                                                <td>{{ $linha['fisica'] ? formataCpf($linha['cpf_colaborador']) : '' }}</td>
+                                                <td class="text-right">R$ {{ formataNumero($linha['valor']) }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="2">Subtotal {{ $uni['unidade'] ?: 'Sem Unidade' }}</td>
+                                            <td class="text-right">R$ {{ formataNumero($totalUnidade) }}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            @endforeach
+
+                            <div class="filial-total">
+                                Total {{ $fil['filial'] }}: R$ {{ formataNumero($totalFilial) }}
+                            </div>
                         </div>
                     @endforeach
 
