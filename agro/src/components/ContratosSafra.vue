@@ -75,6 +75,7 @@ async function novo() {
     comissaotipo: 'SACA',
     datacontrato,
     contrato,
+    barter: false,
   })
 }
 async function aposSalvar(saved) {
