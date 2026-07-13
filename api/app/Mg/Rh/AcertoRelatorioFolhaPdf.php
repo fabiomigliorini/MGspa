@@ -24,8 +24,11 @@ class AcertoRelatorioFolhaPdf
                 continue;
             }
             // Convenção do app (AcertoService/CalculoRubricaService): primeiro setor do rateio
-            $unidadePorPessoa[$codpessoa] =
-                $pc->PeriodoColaboradorSetorS->first()?->Setor?->UnidadeNegocio?->descricao ?? null;
+            $unidade = $pc->PeriodoColaboradorSetorS->first()?->Setor?->UnidadeNegocio;
+            $unidadePorPessoa[$codpessoa] = [
+                'cod'  => $unidade?->codunidadenegocio,
+                'nome' => $unidade?->descricao,
+            ];
         }
 
         // Portadores distintos com liquidações ativas no período
@@ -74,24 +77,47 @@ class AcertoRelatorioFolhaPdf
 
             $porFilial = [];
             foreach ($rows as $row) {
-                $key = $row->codfilial;
-                if (!isset($porFilial[$key])) {
-                    $porFilial[$key] = [
+                $filialKey = $row->codfilial;
+                if (!isset($porFilial[$filialKey])) {
+                    $porFilial[$filialKey] = [
                         'filial'      => $row->filial,
                         'nome_filial' => $row->nome_filial,
                         'cnpj_filial' => $row->cnpj_filial,
-                        'linhas'      => [],
+                        'porUnidade'  => [],
                     ];
                 }
-                $porFilial[$key]['linhas'][] = [
+
+                // Sub-agrupa por Unidade de Negócio (mesma da tela de Acertos)
+                $un = $unidadePorPessoa[$row->codpessoa] ?? ['cod' => null, 'nome' => null];
+                $unidadeKey = $un['cod'] ?? '__sem_unidade__';
+                if (!isset($porFilial[$filialKey]['porUnidade'][$unidadeKey])) {
+                    $porFilial[$filialKey]['porUnidade'][$unidadeKey] = [
+                        'unidade' => $un['nome'],
+                        'linhas'  => [],
+                    ];
+                }
+
+                $porFilial[$filialKey]['porUnidade'][$unidadeKey]['linhas'][] = [
                     'nome_colaborador' => $row->nome_colaborador,
                     'cpf_colaborador'  => $row->cpf_colaborador,
                     'fisica'           => (bool) $row->fisica,
-                    'codpessoa'        => $row->codpessoa,
-                    'unidade'          => $unidadePorPessoa[$row->codpessoa] ?? null,
                     'valor'            => (float) $row->valor,
                 ];
             }
+
+            // Ordena as Unidades de Negócio alfabeticamente (sem unidade por último)
+            foreach ($porFilial as &$fil) {
+                uasort($fil['porUnidade'], function ($a, $b) {
+                    if ($a['unidade'] === null) {
+                        return 1;
+                    }
+                    if ($b['unidade'] === null) {
+                        return -1;
+                    }
+                    return strcasecmp($a['unidade'], $b['unidade']);
+                });
+            }
+            unset($fil);
 
             $paginas[] = [
                 'nome_portador' => $port->nome_portador,
