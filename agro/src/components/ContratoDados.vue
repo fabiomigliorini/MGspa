@@ -15,7 +15,14 @@ const store = useContratoDetalheStore()
 function nomePessoa(p) {
   return p?.fantasia || p?.pessoa || '—'
 }
+function n(v) {
+  return Number(v) || 0
+}
 const rs = formataReal
+// Moeda genérica (R$/US$/€) — a comissão % de cada fixação sai na moeda dela.
+function fmtMoeda(moeda, valor) {
+  return `${store.simboloMoeda(moeda)} ${formataNumero(valor, 2)}`
+}
 
 const c = computed(() => store.contrato)
 
@@ -53,6 +60,35 @@ const comissao = computed(() => {
     default:
       return formataNumero(v, 2)
   }
+})
+
+// Comissão PERCENTUAL: o valor não é único no contrato (o preço vive na fixação).
+// Uma linha por fixação, na moeda da liquidação — R$ quando BRL ou câmbio 100%
+// travado (base = totalbrl); US$ enquanto a fixação estrangeira não travou
+// (base = totalmoeda, ainda em dólar).
+const ehPercentual = computed(() => c.value.comissaotipo === 'PERCENTUAL')
+const comissaoLinhas = computed(() => {
+  const pct = n(c.value.comissaovalor) / 100
+  if (!ehPercentual.value || pct <= 0) return []
+  return store.fixacoes.map((f) => {
+    const travado = !store.ehUsd(f) || n(f.saldomoeda) <= 0.005
+    return {
+      cod: f.codcontratofixacao,
+      quantidade: n(f.quantidade),
+      moeda: travado ? 'BRL' : f.moeda,
+      valor: (travado ? n(f.totalbrl) : n(f.totalmoeda)) * pct,
+    }
+  })
+})
+// Total da comissão por moeda ("R$ x + US$ y"). Só quando há mais de uma linha
+// (com uma única fixação o total repetiria a linha).
+const comissaoTotais = computed(() => {
+  if (comissaoLinhas.value.length < 2) return []
+  const map = {}
+  for (const l of comissaoLinhas.value) {
+    map[l.moeda] = (map[l.moeda] || 0) + l.valor
+  }
+  return Object.entries(map).map(([moeda, valor]) => fmtMoeda(moeda, valor))
 })
 </script>
 
@@ -121,8 +157,18 @@ const comissao = computed(() => {
           {{ c.numerocorretora }}
         </div>
         <div v-if="comissao" class="text-caption text-grey-7">
-          Comissão {{ comissao }}
-          <span v-if="c.comissaototal">· Total {{ rs(c.comissaototal) }}</span>
+          <div>
+            Comissão {{ comissao }}
+            <span v-if="!ehPercentual && c.comissaototal">· Total {{ rs(c.comissaototal) }}</span>
+          </div>
+          <template v-if="comissaoLinhas.length">
+            <div v-for="l in comissaoLinhas" :key="l.cod" class="q-pl-sm">
+              {{ formataNumero(l.quantidade, 0) }} sc · {{ fmtMoeda(l.moeda, l.valor) }}
+            </div>
+            <div v-if="comissaoTotais.length" class="q-pl-sm text-grey-8 text-weight-medium">
+              Total {{ comissaoTotais.join(' + ') }}
+            </div>
+          </template>
         </div>
       </div>
       <div v-if="c.codpessoacooperativa" class="col-12 col-md-4">
