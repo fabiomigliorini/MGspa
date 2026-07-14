@@ -585,7 +585,7 @@ onMounted(async () => {
                         :model-value="Number(l.hacolhido) || 0"
                         @save="(val) => salvarHacolhido(l, val)"
                       >
-                        <div style="min-width: 260px">
+                        <div style="width: 300px; max-width: 92vw; overflow: hidden">
                           <div class="text-caption text-grey-7 q-mb-sm">
                             Colhido (ha) — {{ rotuloLinha(l) }}
                           </div>
@@ -605,9 +605,7 @@ onMounted(async () => {
                             :step="0.01"
                             color="green-6"
                             track-color="grey-3"
-                            label
-                            :label-value="`${fmt(scope.value, 1)} ha`"
-                            class="q-mt-md q-px-xs"
+                            class="q-mt-md q-px-md"
                           />
                           <div class="row items-center justify-between q-mt-sm">
                             <q-btn
