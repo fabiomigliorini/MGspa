@@ -11,7 +11,6 @@ import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import MgInputValor from '@components/MgInputValor.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import IconeCultura from 'components/IconeCultura.vue'
 import SafraForm from 'components/SafraForm.vue'
@@ -185,28 +184,9 @@ function novoPlantio(codfazenda = null) {
     cor: sugerirCor(usadas),
   })
 }
-function editarPlantio(p) {
-  // Garante uma cor visível mesmo p/ plantios antigos sem cor salva.
-  store.editarPlantio({ ...p, cor: corTalhao(p) })
-}
+// Clique no mapa navega pro detalhe do plantio (edição/colhido/ações vivem lá).
 function selecionarPlantio(codplantio) {
-  const p = plantios.value.find((x) => x.codplantio === codplantio)
-  if (p) editarPlantio(p)
-}
-
-// Colhido (popup na célula): grava o hacolhido (clampado em [0, área]) e refresca
-// os KPIs/médias (produtividade / produção / disponível vêm prontos do backend).
-async function salvarHacolhido(l, v) {
-  const area = Number(l.areaplantada) || 0
-  let valor = Math.max(0, Number(v) || 0)
-  if (area > 0) valor = Math.min(valor, area)
-  await store.salvarHacolhido(codsafra, l.codplantio, valor)
-  await recarregarComercial()
-}
-// Botão "Finalizar" do popup: colhido = área plantada (talhão 100% colhido).
-function finalizarColhido(scope, l) {
-  scope.value = Number(l.areaplantada) || 0
-  scope.set()
+  router.push({ name: 'plantio-detalhe', params: { codsafra, codplantio } })
 }
 
 // Safra — edição/ativação/exclusão no cabeçalho do detalhe (a lista só navega).
@@ -507,22 +487,21 @@ onMounted(async () => {
                     <th class="text-left"></th>
                     <th class="text-right">Plantado</th>
                     <th class="text-right">Previsão</th>
-                    <th class="text-right">sc/ha (esp. / real.)</th>
+                    <th class="text-right">Média</th>
                     <th class="text-left" style="min-width: 150px">Colhido</th>
-                    <th class="text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody v-for="(grp, gi) in g.grupos" :key="grp.key">
                   <!-- espaço entre grupos (inerte: sem hover, sem borda) -->
                   <tr v-if="gi > 0">
                     <td
-                      colspan="6"
+                      colspan="5"
                       style="height: 18px; padding: 0; border: none; pointer-events: none"
                     ></td>
                   </tr>
                   <!-- faixa: nome do grupo -->
                   <tr class="bg-grey-2">
-                    <td colspan="6" class="text-weight-medium q-py-sm">
+                    <td colspan="5" class="text-weight-medium q-py-sm">
                       {{ rotuloGrupo(grp.nome) }}
                     </td>
                   </tr>
@@ -539,7 +518,16 @@ onMounted(async () => {
                           class="q-mr-sm"
                           :style="{ backgroundColor: corTalhao(l) }"
                         />
-                        {{ rotuloLinha(l) }}
+                        <router-link
+                          :to="{
+                            name: 'plantio-detalhe',
+                            params: { codsafra, codplantio: l.codplantio },
+                          }"
+                          class="text-primary text-weight-medium"
+                          style="text-decoration: none"
+                        >
+                          {{ rotuloLinha(l) }}
+                        </router-link>
                         <q-badge
                           v-if="!l.geometria"
                           color="grey-5"
@@ -565,7 +553,7 @@ onMounted(async () => {
                       </span>
                       <span v-else class="text-grey-5"> / —</span>
                     </td>
-                    <td class="cursor-pointer">
+                    <td>
                       <q-linear-progress
                         :value="
                           Number(l.areaplantada) > 0
@@ -579,82 +567,6 @@ onMounted(async () => {
                       />
                       <div class="text-caption text-grey-7">
                         {{ fmt(l.hacolhido, 1) }} / {{ fmt(l.areaplantada, 1) }} ha
-                      </div>
-                      <q-popup-edit
-                        v-slot="scope"
-                        :model-value="Number(l.hacolhido) || 0"
-                        @save="(val) => salvarHacolhido(l, val)"
-                      >
-                        <div style="width: 300px; max-width: 92vw; overflow: hidden">
-                          <div class="text-caption text-grey-7 q-mb-sm">
-                            Colhido (ha) — {{ rotuloLinha(l) }}
-                          </div>
-                          <MgInputValor
-                            v-model="scope.value"
-                            :decimals="2"
-                            :min="0"
-                            :max="Number(l.areaplantada) || null"
-                            :suffix="`/ ${fmt(l.areaplantada, 1)} ha`"
-                            autofocus
-                            @keyup.enter="scope.set"
-                          />
-                          <q-slider
-                            v-model="scope.value"
-                            :min="0"
-                            :max="Number(l.areaplantada) || 1"
-                            :step="0.01"
-                            color="green-6"
-                            track-color="grey-3"
-                            class="q-mt-md q-px-md"
-                          />
-                          <div class="row items-center justify-between q-mt-sm">
-                            <q-btn
-                              flat
-                              label="Finalizar"
-                              color="green-7"
-                              @click="finalizarColhido(scope, l)"
-                            />
-                            <div>
-                              <q-btn flat label="Cancelar" color="grey-8" @click="scope.cancel" />
-                              <q-btn flat label="Salvar" color="primary" @click="scope.set" />
-                            </div>
-                          </div>
-                        </div>
-                      </q-popup-edit>
-                    </td>
-                    <td class="text-right">
-                      <div class="row items-center no-wrap justify-end">
-                        <MgInfoCriacao :registro="l" />
-                        <q-btn
-                          flat
-                          round
-                          size="sm"
-                          color="grey-7"
-                          icon="edit"
-                          @click="editarPlantio(l)"
-                        >
-                          <q-tooltip>Editar / desenhar</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          flat
-                          round
-                          size="sm"
-                          color="grey-7"
-                          :icon="l.inativo ? 'play_arrow' : 'pause'"
-                          @click="store.inativarPlantio(codsafra, l)"
-                        >
-                          <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          flat
-                          round
-                          size="sm"
-                          color="grey-7"
-                          icon="delete"
-                          @click="store.excluirPlantio(codsafra, l)"
-                        >
-                          <q-tooltip>Excluir</q-tooltip>
-                        </q-btn>
                       </div>
                     </td>
                   </tr>
@@ -673,7 +585,6 @@ onMounted(async () => {
                     <td class="text-left text-caption text-grey-7">
                       {{ fmt(grp.total.colhido) }} sc colh.
                     </td>
-                    <td></td>
                   </tr>
                 </tbody>
               </q-markup-table>

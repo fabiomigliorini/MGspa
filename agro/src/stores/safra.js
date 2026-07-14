@@ -99,6 +99,7 @@ export const useSafraStore = defineStore('safra', () => {
   // `plantios` e chama as actions; a produtividade/colhido vem das cargas
   // (useCargaStore) e é cruzada na própria página.
   const plantios = ref([])
+  const plantio = ref(null) // plantio único aberto na PlantioDetailPage
   const formPlantio = ref({})
   const dialogPlantio = ref(false)
   const salvandoPlantio = ref(false)
@@ -107,6 +108,15 @@ export const useSafraStore = defineStore('safra', () => {
     try {
       const { data } = await api.get(`v1/safra/${codsafra}/plantio`)
       plantios.value = data.data ?? data
+    } catch (e) {
+      notifyError(e)
+    }
+  }
+  // Plantio único (página de detalhe). Traz Safra.Cultura/Fazenda/Variedade + geometria.
+  async function carregarPlantio(codsafra, codplantio) {
+    try {
+      const { data } = await api.get(`v1/safra/${codsafra}/plantio/${codplantio}`)
+      plantio.value = data.data ?? data
     } catch (e) {
       notifyError(e)
     }
@@ -146,6 +156,13 @@ export const useSafraStore = defineStore('safra', () => {
       notifyError(e)
     }
   }
+  // Exclui de fato (sem dialog) + refresca lista/comercial; propaga erro (409 FK)
+  // pro caller — usado pela PlantioDetailPage, que confirma e navega de volta.
+  async function removerPlantio(codsafra, codplantio) {
+    await api.delete(`v1/safra/${codsafra}/plantio/${codplantio}`)
+    await carregarPlantios(codsafra)
+    await carregarComercial(codsafra)
+  }
   function excluirPlantio(codsafra, p) {
     Dialog.create({
       title: 'Excluir',
@@ -154,10 +171,8 @@ export const useSafraStore = defineStore('safra', () => {
       ok: { label: 'Excluir', color: 'red-5', flat: true },
     }).onOk(async () => {
       try {
-        await api.delete(`v1/safra/${codsafra}/plantio/${p.codplantio}`)
+        await removerPlantio(codsafra, p.codplantio)
         notifySuccess('Excluído!')
-        await carregarPlantios(codsafra)
-        await carregarComercial(codsafra)
       } catch (e) {
         notifyError(e)
       }
@@ -196,16 +211,19 @@ export const useSafraStore = defineStore('safra', () => {
     excluirSafra,
     // plantio
     plantios,
+    plantio,
     formPlantio,
     dialogPlantio,
     salvandoPlantio,
     carregarPlantios,
+    carregarPlantio,
     novoPlantio,
     editarPlantio,
     salvarPlantio,
     salvarHacolhido,
     inativarPlantio,
     excluirPlantio,
+    removerPlantio,
   }
 })
 
