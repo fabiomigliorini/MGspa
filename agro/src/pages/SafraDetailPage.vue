@@ -11,6 +11,7 @@ import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import IconeCultura from 'components/IconeCultura.vue'
 import SafraForm from 'components/SafraForm.vue'
@@ -29,7 +30,6 @@ const codsafra = Number(route.params.codsafra)
 const store = useSafraStore()
 const { safra, comercial, plantios } = storeToRefs(store)
 const carga = useCargaStore()
-const { colhidoPorPlantio } = storeToRefs(carga)
 const sinc = useSincronizacaoStore()
 const { online } = storeToRefs(sinc)
 
@@ -39,7 +39,9 @@ const fazendas = ref([])
 const variedades = ref([])
 const talhoesBase = ref([]) // layout base de todas as fazendas
 
-const pesosaca = computed(() => Number(safra.value?.Cultura?.pesosaca) || 60)
+// Como agrupar a tabela de talhões: por variedade (padrão) ou por talhão.
+const agrupamento = ref('variedade')
+
 const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.Cultura?.codcultura)
 
 const variedadesDaCultura = computed(() =>
@@ -70,26 +72,6 @@ const plantioCad = reactive({
   },
 })
 
-// Plantios da safra (todas as fazendas) + produtividade (colhido vem das cargas)
-// e progresso da colheita (colhido ÷ expectativa).
-const linhas = computed(() =>
-  plantios.value.map((p) => {
-    const kg = colhidoPorPlantio.value[p.codplantio] || 0
-    const sacas = kg / pesosaca.value
-    const area = Number(p.areaplantada) || 0
-    const expectativa = Number(p.expectativasacas) || 0
-    return {
-      ...p,
-      kg,
-      sacas,
-      expectativa,
-      expectativaha: area > 0 ? expectativa / area : 0,
-      produtividade: area > 0 ? sacas / area : 0,
-      progresso: expectativa > 0 ? Math.min(1, sacas / expectativa) : 0,
-    }
-  }),
-)
-
 // KPIs da safra — TODOS prontos do backend (SafraService::resumoComercial):
 // comercial (contratos VENDA) + agronômico (plantios, com produção/produtividade).
 const contratado = computed(() => Number(comercial.value?.contratado) || 0)
@@ -104,45 +86,62 @@ const colhido = computed(() => Number(comercial.value?.colhido) || 0)
 const prodColhido = computed(() => Number(comercial.value?.produtividadecolhido) || 0)
 const progresso = computed(() => Number(comercial.value?.progressocolheita) || 0)
 
-// Um card por fazenda que tem plantio nesta safra (mapa + lista + resultado).
-const porFazenda = computed(() => {
-  const mapa = {}
-  for (const l of linhas.value) {
-    const cod = l.codfazenda
-    if (!mapa[cod]) {
-      const f = fazendas.value.find((x) => x.codfazenda === cod)
-      mapa[cod] = {
-        codfazenda: cod,
-        fazenda: f?.fazenda || `Fazenda ${cod}`,
-        plantios: [],
-        area: 0,
-        kg: 0,
-        expectativa: 0,
-      }
+// Rótulo primário da linha = a OUTRA dimensão do agrupamento, com prefixo
+// (agrupado por variedade → linha é o talhão; e vice-versa).
+function rotuloLinha(p) {
+  return agrupamento.value === 'variedade'
+    ? `Talhão ${p.talhao || p.codplantio}`
+    : `Variedade ${p.Variedade?.variedade || 'sem variedade'}`
+}
+// Rótulo do grupo (a dimensão do agrupamento), com prefixo.
+function rotuloGrupo(nome) {
+  return agrupamento.value === 'variedade' ? `Variedade ${nome}` : `Talhão ${nome}`
+}
+// Médias (esperada/realizada) da linha, prontas do backend.
+function mediaLinha(p) {
+  return comercial.value?.plantios?.[p.codplantio] || {}
+}
+
+// Um card por fazenda: agrupa os plantios pela dimensão escolhida só p/ LAYOUT;
+// os totais/médias de cada grupo e da fazenda vêm prontos do backend (comercial).
+const fazendasView = computed(() => {
+  const modo = agrupamento.value
+  const comer = comercial.value
+  const porFaz = {}
+  for (const p of plantios.value) (porFaz[p.codfazenda] ??= []).push(p)
+
+  const cards = Object.entries(porFaz).map(([cod, ps]) => {
+    const codfazenda = Number(cod)
+    const cFaz = comer?.fazendas?.find((f) => f.codfazenda === codfazenda) || null
+    const totais = modo === 'variedade' ? cFaz?.porVariedade : cFaz?.porTalhao
+
+    const grupos = {}
+    for (const p of ps) {
+      const key = modo === 'variedade' ? p.codvariedade : p.talhao || `Talhão ${p.codplantio}`
+      const nome =
+        modo === 'variedade'
+          ? p.Variedade?.variedade || 'sem variedade'
+          : p.talhao || `Talhão ${p.codplantio}`
+      ;(grupos[key] ??= { key, nome, linhas: [] }).linhas.push(p)
     }
-    mapa[cod].plantios.push(l)
-    mapa[cod].area += Number(l.areaplantada) || 0
-    mapa[cod].kg += l.kg
-    mapa[cod].expectativa += l.expectativa
-  }
-  return Object.values(mapa).map((g) => {
-    const sacas = g.kg / pesosaca.value
-    // Ordem estável dos cards: variedade (alfabética), depois codplantio.
-    const plantios = [...g.plantios].sort((a, b) => {
-      const va = (a.Variedade?.variedade || '').toLowerCase()
-      const vb = (b.Variedade?.variedade || '').toLowerCase()
-      if (va !== vb) return va < vb ? -1 : 1
-      return (a.codplantio || 0) - (b.codplantio || 0)
-    })
+
+    const listaGrupos = Object.values(grupos)
+      .map((g) => ({
+        ...g,
+        linhas: [...g.linhas].sort((a, b) => rotuloLinha(a).localeCompare(rotuloLinha(b), 'pt-BR')),
+        total: totais?.[g.key] || null,
+      }))
+      .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'))
+
     return {
-      ...g,
-      plantios,
-      sacas,
-      produtividade: g.area > 0 ? sacas / g.area : 0,
-      comGeo: plantios.filter((p) => p.geometria),
-      progresso: g.expectativa > 0 ? Math.min(1, sacas / g.expectativa) : 0,
+      codfazenda,
+      fazenda: fazendas.value.find((x) => x.codfazenda === codfazenda)?.fazenda || `Fazenda ${cod}`,
+      comGeo: ps.filter((p) => p.geometria),
+      grupos: listaGrupos,
+      total: cFaz,
     }
   })
+  return cards.sort((a, b) => a.fazenda.localeCompare(b.fazenda, 'pt-BR'))
 })
 
 function fmt(v, dec = 0) {
@@ -170,10 +169,6 @@ const periodo = computed(() => {
     : `${s.anoplantio}`
 })
 
-function nomeVariedade(p) {
-  return p.Variedade?.variedade || ''
-}
-
 // Abre o wizard: sem fazenda → começa na escolha de fazenda; com fazenda
 // (botão de adicionar dentro do card de uma fazenda) → pula pra escolha do talhão.
 function novoPlantio(codfazenda = null) {
@@ -199,11 +194,19 @@ function selecionarPlantio(codplantio) {
   if (p) editarPlantio(p)
 }
 
-// Slider "ha colhido" no card do plantio: grava o hacolhido e refresca os KPIs
-// (produtividade / produção / disponível vêm prontos do backend).
+// Colhido (popup na célula): grava o hacolhido (clampado em [0, área]) e refresca
+// os KPIs/médias (produtividade / produção / disponível vêm prontos do backend).
 async function salvarHacolhido(l, v) {
-  await store.salvarHacolhido(codsafra, l.codplantio, v)
+  const area = Number(l.areaplantada) || 0
+  let valor = Math.max(0, Number(v) || 0)
+  if (area > 0) valor = Math.min(valor, area)
+  await store.salvarHacolhido(codsafra, l.codplantio, valor)
   await recarregarComercial()
+}
+// Botão "Finalizar" do popup: colhido = área plantada (talhão 100% colhido).
+function finalizarColhido(scope, l) {
+  scope.value = Number(l.areaplantada) || 0
+  scope.set()
 }
 
 // Safra — edição/ativação/exclusão no cabeçalho do detalhe (a lista só navega).
@@ -422,197 +425,263 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Título da seção + adicionar (escolhe a fazenda no dialog) -->
+      <!-- Título da seção + agrupamento + adicionar (escolhe a fazenda no dialog) -->
       <div class="row items-center q-mb-sm">
         <div class="col text-subtitle1 text-weight-medium">Plantios por fazenda</div>
-        <q-btn flat round size="sm" color="primary" icon="add" @click="novoPlantio()">
+        <q-btn-toggle
+          v-model="agrupamento"
+          flat
+          no-caps
+          toggle-color="primary"
+          color="grey-7"
+          :options="[
+            { label: 'Por variedade', value: 'variedade' },
+            { label: 'Por talhão', value: 'talhao' },
+          ]"
+        />
+        <q-btn
+          flat
+          round
+          size="sm"
+          color="primary"
+          icon="add"
+          class="q-ml-sm"
+          @click="novoPlantio()"
+        >
           <q-tooltip>Plantar talhão</q-tooltip>
         </q-btn>
       </div>
 
-      <!-- Um card por fazenda: mapa + lista por talhão + resultado -->
-      <div v-if="porFazenda.length" class="row q-col-gutter-md">
-        <template v-for="g in porFazenda" :key="g.codfazenda">
-          <div class="col-12">
-            <q-card bordered flat>
-              <q-item>
-                <q-item-section avatar>
-                  <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
-                </q-item-section>
-                <q-item-section>
-                  <q-item-label class="text-subtitle1">{{ g.fazenda }}</q-item-label>
-                  <q-item-label caption>
-                    {{ fmt(g.area, 1) }} ha · {{ fmt(g.sacas) }} / {{ fmt(g.expectativa) }} sc ·
-                    <span class="text-green-8 text-weight-medium"
-                      >{{ fmt(g.produtividade, 1) }} sc/ha</span
-                    >
-                  </q-item-label>
-                  <q-linear-progress
-                    v-if="g.expectativa > 0"
-                    :value="g.progresso"
-                    color="green-6"
-                    track-color="grey-3"
-                    size="6px"
-                    rounded
-                    class="q-mt-xs"
-                  />
-                </q-item-section>
-                <q-item-section side>
-                  <q-btn
-                    flat
-                    round
-                    size="sm"
-                    color="primary"
-                    icon="add"
-                    @click="novoPlantio(g.codfazenda)"
+      <!-- Um card por fazenda: cabeçalho c/ totais + mapa + tabela agrupada -->
+      <div v-if="fazendasView.length" class="row q-col-gutter-md">
+        <div v-for="g in fazendasView" :key="g.codfazenda" class="col-12">
+          <q-card bordered flat>
+            <q-item>
+              <q-item-section avatar>
+                <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-subtitle1">{{ g.fazenda }}</q-item-label>
+                <q-item-label v-if="g.total" caption>
+                  {{ fmt(g.total.area, 1) }} ha · {{ fmt(g.total.expectativa) }} sc prev. ·
+                  {{ fmt(g.total.colhido) }} sc colh. ·
+                  <span class="text-grey-8">{{ fmt(g.total.esperada, 1) }}</span>
+                  <template v-if="g.total.realizada != null">
+                    /
+                    <span class="text-green-8 text-weight-medium">{{
+                      fmt(g.total.realizada, 1)
+                    }}</span> </template
+                  >sc/ha
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  color="primary"
+                  icon="add"
+                  @click="novoPlantio(g.codfazenda)"
+                >
+                  <q-tooltip>Plantar talhão nesta fazenda</q-tooltip>
+                </q-btn>
+              </q-item-section>
+            </q-item>
+            <q-separator />
+
+            <MapaTalhoes
+              v-if="g.comGeo.length"
+              :talhoes="g.comGeo"
+              id-key="codplantio"
+              height="300px"
+              estatico
+              @select="selecionarPlantio"
+            />
+            <q-separator v-if="g.comGeo.length" />
+
+            <!-- Tabela agrupada por variedade OU talhão (faixa + linhas + total) -->
+            <div class="q-pa-md" style="overflow-x: auto">
+              <q-markup-table flat wrap-cells>
+                <thead>
+                  <tr>
+                    <th class="text-left"></th>
+                    <th class="text-right">Plantado</th>
+                    <th class="text-right">Previsão</th>
+                    <th class="text-right">sc/ha (esp. / real.)</th>
+                    <th class="text-left" style="min-width: 150px">Colhido</th>
+                    <th class="text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody v-for="(grp, gi) in g.grupos" :key="grp.key">
+                  <!-- espaço entre grupos (inerte: sem hover, sem borda) -->
+                  <tr v-if="gi > 0">
+                    <td
+                      colspan="6"
+                      style="height: 18px; padding: 0; border: none; pointer-events: none"
+                    ></td>
+                  </tr>
+                  <!-- faixa: nome do grupo -->
+                  <tr class="bg-grey-2">
+                    <td colspan="6" class="text-weight-medium q-py-sm">
+                      {{ rotuloGrupo(grp.nome) }}
+                    </td>
+                  </tr>
+                  <!-- linhas do grupo -->
+                  <tr
+                    v-for="l in grp.linhas"
+                    :key="l.codplantio"
+                    :class="{ 'text-grey': l.inativo }"
                   >
-                    <q-tooltip>Plantar talhão nesta fazenda</q-tooltip>
-                  </q-btn>
-                </q-item-section>
-              </q-item>
-              <q-separator />
-
-              <MapaTalhoes
-                v-if="g.comGeo.length"
-                :talhoes="g.comGeo"
-                id-key="codplantio"
-                height="300px"
-                estatico
-                @select="selecionarPlantio"
-              />
-              <q-separator v-if="g.comGeo.length" />
-
-              <!-- Talhões em 2 colunas (col-6) -->
-              <div class="row q-col-gutter-sm q-pa-sm">
-                <div v-for="l in g.plantios" :key="l.codplantio" class="col-12 col-sm-6">
-                  <q-card flat bordered class="full-height" :class="{ 'bg-grey-2': l.inativo }">
-                    <q-item>
-                      <q-item-section avatar>
+                    <td class="text-left">
+                      <div class="row items-center no-wrap">
                         <q-avatar
-                          text-color="white"
-                          icon="place"
+                          size="14px"
+                          class="q-mr-sm"
                           :style="{ backgroundColor: corTalhao(l) }"
                         />
-                      </q-item-section>
-                      <q-item-section>
-                        <q-item-label class="text-weight-medium">
-                          {{ l.talhao || `Talhão ${l.codplantio}` }}
-                          ·
-                          {{ nomeVariedade(l) || 'sem variedade' }}
-                        </q-item-label>
-                        <q-item-label caption>
-                          Plantado {{ fmt(l.areaplantada, 1) }} ha
-                          <span v-if="l.dataplantio"> em {{ formataData(l.dataplantio) }} </span>
-                        </q-item-label>
-                        <q-item-label caption>
-                          <span v-if="l.expectativa > 0">
-                            Expectativa {{ fmt(l.expectativa) }} sc ({{
-                              fmt(l.expectativaha, 1)
-                            }}
-                            sc/ha)</span
-                          >
-                          <q-badge
-                            v-if="!l.geometria"
-                            color="grey-5"
-                            label="sem mapa"
-                            class="q-ml-xs"
-                          />
-                        </q-item-label>
-                        <!-- <q-linear-progress
-                          :value="l.progresso"
-                          color="green-6"
-                          track-color="grey-3"
-                          size="6px"
-                          rounded
-                          class="q-mt-xs"
-                        /> -->
-                      </q-item-section>
-                      <!-- <q-item-section side class="text-right">
-                        <q-item-label class="text-weight-bold text-green-8">
-                          {{ fmt(l.produtividade, 1) }} sc/ha
-                        </q-item-label>
-                        <q-item-label caption
-                          >{{ fmt(l.sacas) }} / {{ fmt(l.expectativa) }} sc</q-item-label
-                        >
-                      </q-item-section> -->
-                      <q-item-section side>
-                        <div class="row items-center no-wrap">
-                          <MgInfoCriacao :registro="l" />
-                          <q-btn
-                            flat
-                            dense
-                            round
-                            size="sm"
-                            color="grey-7"
-                            icon="edit"
-                            @click="editarPlantio(l)"
-                          >
-                            <q-tooltip>Editar / desenhar</q-tooltip>
-                          </q-btn>
-                          <q-btn
-                            flat
-                            dense
-                            round
-                            size="sm"
-                            color="grey-7"
-                            :icon="l.inativo ? 'play_arrow' : 'pause'"
-                            @click="store.inativarPlantio(codsafra, l)"
-                          >
-                            <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-                          </q-btn>
-                          <q-btn
-                            flat
-                            dense
-                            round
-                            size="sm"
-                            color="grey-7"
-                            icon="delete"
-                            @click="store.excluirPlantio(codsafra, l)"
-                          >
-                            <q-tooltip>Excluir</q-tooltip>
-                          </q-btn>
-                        </div>
-                      </q-item-section>
-                    </q-item>
-
-                    <!-- Ha colhido (slider): dirige produtividade real / produção / disponível -->
-                    <q-card-section class="q-pt-none q-pb-sm">
-                      <div class="row items-center no-wrap text-caption q-mb-xs">
-                        <span class="col text-grey-7">Colhido</span>
-                        <span
-                          :class="
-                            Number(l.hacolhido) >= Number(l.areaplantada) &&
-                            Number(l.areaplantada) > 0
-                              ? 'text-green-8 text-weight-medium'
-                              : 'text-grey-8'
-                          "
-                        >
-                          {{ fmt(l.hacolhido, 1) }} / {{ fmt(l.areaplantada, 1) }} ha<span
-                            v-if="
-                              Number(l.hacolhido) >= Number(l.areaplantada) &&
-                              Number(l.areaplantada) > 0
-                            "
-                          >
-                            · finalizado</span
-                          >
-                        </span>
+                        {{ rotuloLinha(l) }}
+                        <q-badge
+                          v-if="!l.geometria"
+                          color="grey-5"
+                          label="sem mapa"
+                          class="q-ml-xs"
+                        />
                       </div>
-                      <q-slider
-                        :model-value="Number(l.hacolhido) || 0"
-                        :min="0"
-                        :max="Number(l.areaplantada) || 1"
-                        :step="0.01"
+                    </td>
+                    <td class="text-right">
+                      {{ fmt(l.areaplantada, 1) }} ha
+                      <div v-if="l.dataplantio" class="text-caption text-grey-6">
+                        {{ formataData(l.dataplantio) }}
+                      </div>
+                    </td>
+                    <td class="text-right">{{ fmt(l.expectativasacas) }} sc</td>
+                    <td class="text-right">
+                      <span class="text-grey-8">{{ fmt(mediaLinha(l).esperada, 1) }}</span>
+                      <span v-if="mediaLinha(l).realizada != null">
+                        /
+                        <span class="text-green-8 text-weight-medium">{{
+                          fmt(mediaLinha(l).realizada, 1)
+                        }}</span>
+                      </span>
+                      <span v-else class="text-grey-5"> / —</span>
+                    </td>
+                    <td class="cursor-pointer">
+                      <q-linear-progress
+                        :value="
+                          Number(l.areaplantada) > 0
+                            ? Math.min(1, (Number(l.hacolhido) || 0) / Number(l.areaplantada))
+                            : 0
+                        "
                         color="green-6"
                         track-color="grey-3"
-                        @change="(v) => salvarHacolhido(l, v)"
+                        size="8px"
+                        rounded
                       />
-                    </q-card-section>
-                  </q-card>
-                </div>
-              </div>
-            </q-card>
-          </div>
-        </template>
+                      <div class="text-caption text-grey-7">
+                        {{ fmt(l.hacolhido, 1) }} / {{ fmt(l.areaplantada, 1) }} ha
+                      </div>
+                      <q-popup-edit
+                        v-slot="scope"
+                        :model-value="Number(l.hacolhido) || 0"
+                        @save="(val) => salvarHacolhido(l, val)"
+                      >
+                        <div style="min-width: 260px">
+                          <div class="text-caption text-grey-7 q-mb-sm">
+                            Colhido (ha) — {{ rotuloLinha(l) }}
+                          </div>
+                          <MgInputValor
+                            v-model="scope.value"
+                            :decimals="2"
+                            :min="0"
+                            :max="Number(l.areaplantada) || null"
+                            :suffix="`/ ${fmt(l.areaplantada, 1)} ha`"
+                            autofocus
+                            @keyup.enter="scope.set"
+                          />
+                          <q-slider
+                            v-model="scope.value"
+                            :min="0"
+                            :max="Number(l.areaplantada) || 1"
+                            :step="0.01"
+                            color="green-6"
+                            track-color="grey-3"
+                            label
+                            :label-value="`${fmt(scope.value, 1)} ha`"
+                            class="q-mt-md q-px-xs"
+                          />
+                          <div class="row items-center justify-between q-mt-sm">
+                            <q-btn
+                              flat
+                              label="Finalizar"
+                              color="green-7"
+                              @click="finalizarColhido(scope, l)"
+                            />
+                            <div>
+                              <q-btn flat label="Cancelar" color="grey-8" @click="scope.cancel" />
+                              <q-btn flat label="Salvar" color="primary" @click="scope.set" />
+                            </div>
+                          </div>
+                        </div>
+                      </q-popup-edit>
+                    </td>
+                    <td class="text-right">
+                      <div class="row items-center no-wrap justify-end">
+                        <MgInfoCriacao :registro="l" />
+                        <q-btn
+                          flat
+                          round
+                          size="sm"
+                          color="grey-7"
+                          icon="edit"
+                          @click="editarPlantio(l)"
+                        >
+                          <q-tooltip>Editar / desenhar</q-tooltip>
+                        </q-btn>
+                        <q-btn
+                          flat
+                          round
+                          size="sm"
+                          color="grey-7"
+                          :icon="l.inativo ? 'play_arrow' : 'pause'"
+                          @click="store.inativarPlantio(codsafra, l)"
+                        >
+                          <q-tooltip>{{ l.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+                        </q-btn>
+                        <q-btn
+                          flat
+                          round
+                          size="sm"
+                          color="grey-7"
+                          icon="delete"
+                          @click="store.excluirPlantio(codsafra, l)"
+                        >
+                          <q-tooltip>Excluir</q-tooltip>
+                        </q-btn>
+                      </div>
+                    </td>
+                  </tr>
+                  <!-- total do grupo (pronto do backend); dispensável com 1 linha só -->
+                  <tr v-if="grp.total && grp.linhas.length > 1" class="text-weight-medium">
+                    <td class="text-left text-grey-7">Total</td>
+                    <td class="text-right">{{ fmt(grp.total.area, 1) }} ha</td>
+                    <td class="text-right">{{ fmt(grp.total.expectativa) }} sc</td>
+                    <td class="text-right">
+                      <span class="text-grey-8">{{ fmt(grp.total.esperada, 1) }}</span>
+                      <span v-if="grp.total.realizada != null">
+                        / <span class="text-green-8">{{ fmt(grp.total.realizada, 1) }}</span>
+                      </span>
+                      <span v-else class="text-grey-5"> / —</span>
+                    </td>
+                    <td class="text-left text-caption text-grey-7">
+                      {{ fmt(grp.total.colhido) }} sc colh.
+                    </td>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </q-markup-table>
+            </div>
+          </q-card>
+        </div>
       </div>
 
       <!-- Vazio -->
@@ -629,7 +698,7 @@ onMounted(async () => {
       :fazendas="fazendas"
       :talhoes-base="talhoesBase"
       :variedades="variedadesDaCultura"
-      :plantios="linhas"
+      :plantios="plantios"
     />
 
     <!-- Dialog Safra (edição) — mesmo form do cadastro -->

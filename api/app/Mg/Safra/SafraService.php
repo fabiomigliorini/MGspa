@@ -93,7 +93,18 @@ class SafraService extends MgService
         $colhidoTotal = 0.0;
         $hacolhidoTotal = 0.0;
         $producaoTotal = 0.0;
-        foreach (Plantio::where('codsafra', $codsafra)->whereNull('inativo')->get() as $p) {
+        // Além dos totais da safra, acumula num único passe as MÉDIAS prontas p/ a
+        // tabela agrupável da SafraDetailPage: por talhão (linha), e por fazenda com
+        // sub-agregados por variedade e por talhão (esperada = exp/área; realizada =
+        // colhido/ha-colhido). Frontend só renderiza — nada de cálculo lá.
+        $plantiosOut = [];
+        $fazendasMap = [];
+        foreach (
+            Plantio::with(['Fazenda', 'Variedade'])
+                ->where('codsafra', $codsafra)
+                ->whereNull('inativo')
+                ->get() as $p
+        ) {
             $area = (float) $p->areaplantada;
             $exp = (float) $p->expectativasacas;
             $ha = (float) $p->hacolhido;
@@ -103,8 +114,38 @@ class SafraService extends MgService
             $colhidoTotal += $colhidoSc;
             $hacolhidoTotal += $ha;
             $producaoTotal += static::producaoPlantio($area, $exp, $ha, $colhidoSc);
+
+            $plantiosOut[$p->codplantio] = [
+                'esperada' => $area > 0 ? round($exp / $area, 2) : null,
+                'realizada' => $ha > 0 ? round($colhidoSc / $ha, 2) : null,
+                'colhido' => round($colhidoSc, 0),
+            ];
+
+            $cf = $p->codfazenda;
+            $fazendasMap[$cf]['codfazenda'] ??= $cf;
+            $fazendasMap[$cf]['fazenda'] ??= $p->Fazenda->fazenda ?? "Fazenda {$cf}";
+            static::acumular($fazendasMap[$cf], $area, $exp, $colhidoSc, $ha);
+
+            $cv = $p->codvariedade;
+            $fazendasMap[$cf]['porVariedade'][$cv]['codvariedade'] ??= $cv;
+            $fazendasMap[$cf]['porVariedade'][$cv]['variedade'] ??= $p->Variedade->variedade ?? 'sem variedade';
+            static::acumular($fazendasMap[$cf]['porVariedade'][$cv], $area, $exp, $colhidoSc, $ha);
+
+            $tl = $p->talhao ?: "Talhão {$p->codplantio}";
+            $fazendasMap[$cf]['porTalhao'][$tl]['talhao'] ??= $tl;
+            static::acumular($fazendasMap[$cf]['porTalhao'][$tl], $area, $exp, $colhidoSc, $ha);
         }
         $disponivel = max(0, $producaoTotal - $contratado);
+
+        // Fecha os agregados: Σ → médias/arredondamento. Grupos ficam chaveados
+        // (codvariedade / talhão) p/ o front casar cada linha com seu total.
+        $fazendas = [];
+        foreach ($fazendasMap as $fz) {
+            $fz['porVariedade'] = static::fecharGrupos($fz['porVariedade'] ?? []);
+            $fz['porTalhao'] = static::fecharGrupos($fz['porTalhao'] ?? []);
+            $fazendas[] = static::fecharMedias($fz);
+        }
+        usort($fazendas, fn ($a, $b) => strcasecmp((string) $a['fazenda'], (string) $b['fazenda']));
 
         return [
             'ncontratos' => $contratos->count(),
@@ -124,7 +165,44 @@ class SafraService extends MgService
             'produtividadeexpectativa' => $areaTotal > 0 ? round($expTotal / $areaTotal, 2) : null,
             'produtividadecolhido' => $hacolhidoTotal > 0 ? round($colhidoTotal / $hacolhidoTotal, 2) : null,
             'progressocolheita' => $areaTotal > 0 ? min(1, round($hacolhidoTotal / $areaTotal, 4)) : 0,
+            // médias/agregados prontos p/ a tabela agrupável (por talhão e por fazenda)
+            'plantios' => $plantiosOut,
+            'fazendas' => $fazendas,
         ];
+    }
+
+    /** Soma área/expectativa/colhido/ha-colhido num nó de agregado (por referência). */
+    protected static function acumular(array &$node, float $area, float $exp, float $colhido, float $ha): void
+    {
+        $node['_area'] = ($node['_area'] ?? 0) + $area;
+        $node['_exp'] = ($node['_exp'] ?? 0) + $exp;
+        $node['_colhido'] = ($node['_colhido'] ?? 0) + $colhido;
+        $node['_ha'] = ($node['_ha'] ?? 0) + $ha;
+    }
+
+    /** Fecha os _acumuladores de um nó em números arredondados + médias esperada/realizada. */
+    protected static function fecharMedias(array $node): array
+    {
+        $area = $node['_area'] ?? 0;
+        $exp = $node['_exp'] ?? 0;
+        $colhido = $node['_colhido'] ?? 0;
+        $ha = $node['_ha'] ?? 0;
+        unset($node['_area'], $node['_exp'], $node['_colhido'], $node['_ha']);
+
+        return array_merge($node, [
+            'area' => round($area, 2),
+            'expectativa' => round($exp, 0),
+            'colhido' => round($colhido, 0),
+            'hacolhido' => round($ha, 2),
+            'esperada' => $area > 0 ? round($exp / $area, 2) : null,
+            'realizada' => $ha > 0 ? round($colhido / $ha, 2) : null,
+        ]);
+    }
+
+    /** Fecha as médias de cada grupo, preservando a chave (codvariedade / talhão). */
+    protected static function fecharGrupos(array $grupos): array
+    {
+        return array_map(fn ($g) => static::fecharMedias($g), $grupos);
     }
 
     /**

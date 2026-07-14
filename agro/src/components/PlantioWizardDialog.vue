@@ -46,6 +46,19 @@ const expectativaTotal = computed({
 watch(expectativaTotal, (v) => {
   form.value.expectativasacas = Math.round((v || 0) * 100) / 100
 })
+// Ao ABRIR, re-ancora o sc/ha a partir do total salvo do registro carregado.
+// flush:'sync' garante que isto rode ANTES de o watch(expectativaTotal) acima
+// disparar com um sc/ha velho (da edição anterior) — senão a mudança de área do
+// novo registro recalcularia o total pelo sc/ha antigo e corromperia expectativasacas.
+watch(
+  () => props.modelValue,
+  (aberto) => {
+    if (!aberto) return
+    const a = Number(form.value.areaplantada) || 0
+    expectativaha.value = a > 0 ? (Number(form.value.expectativasacas) || 0) / a : 0
+  },
+  { flush: 'sync' },
+)
 
 // Data do plantio: default = hoje; limitada ao período da safra (do início do
 // ano de plantio ao fim do ano de colheita). Mesma regra do backend.
@@ -101,10 +114,7 @@ const cinza = computed(() =>
 // editar plantio existente vai direto pro mapa.
 function onShow() {
   primeiraArea = true
-  // Reconstrói a expectativa por hectare a partir do total salvo (área inalterada
-  // entre sessões devolve o mesmo sc/ha).
-  const a = Number(form.value.areaplantada) || 0
-  expectativaha.value = a > 0 ? (Number(form.value.expectativasacas) || 0) / a : 0
+  // expectativaha já foi re-ancorada no watch(modelValue) flush:'sync' ao abrir.
   // Data do plantio nunca vem preenchida por padrão — o usuário informa sempre
   // (campo obrigatório via regra e backend).
   passo.value = props.cad.isNovo ? (form.value.codfazenda ? 2 : 1) : 3

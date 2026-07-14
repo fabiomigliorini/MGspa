@@ -129,6 +129,7 @@ export const useSafraStore = defineStore('safra', () => {
       notifySuccess('Plantio salvo!')
       dialogPlantio.value = false
       await carregarPlantios(codsafra)
+      await carregarComercial(codsafra)
     } catch (e) {
       notifyError(e)
     } finally {
@@ -140,6 +141,7 @@ export const useSafraStore = defineStore('safra', () => {
       if (p.inativo) await api.delete(`v1/safra/${codsafra}/plantio/${p.codplantio}/inativo`)
       else await api.post(`v1/safra/${codsafra}/plantio/${p.codplantio}/inativo`)
       await carregarPlantios(codsafra)
+      await carregarComercial(codsafra)
     } catch (e) {
       notifyError(e)
     }
@@ -155,6 +157,7 @@ export const useSafraStore = defineStore('safra', () => {
         await api.delete(`v1/safra/${codsafra}/plantio/${p.codplantio}`)
         notifySuccess('Excluído!')
         await carregarPlantios(codsafra)
+        await carregarComercial(codsafra)
       } catch (e) {
         notifyError(e)
       }
