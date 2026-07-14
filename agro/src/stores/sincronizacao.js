@@ -62,7 +62,8 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   async function puxarReferencias() {
     await puxarTabela('v1/cultura', db.cultura)
     await puxarTabela('v1/variedade', db.variedade)
-    await puxarTabela('v1/tabela-desconto', db.tabeladesconto)
+    await puxarTabela('v1/parametro-classificacao', db.parametroclassificacao)
+    await puxarTabela('v1/tabela-classificacao', db.tabelaclassificacao)
     await puxarTabela('v1/fazenda', db.fazenda)
     await puxarTabela('v1/talhao', db.talhao)
     await puxarTabela('v1/safra', db.safra)
@@ -100,14 +101,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     // já calculados localmente — senão a carga finalizada fica "— kg / 0 sc".
     const patch = { sincronizado: 1 }
     if (oficial.codcarga != null) patch.codcarga = oficial.codcarga
-    for (const campo of [
-      'bruto',
-      'desconto',
-      'liquido',
-      'descontoumidade',
-      'descontoimpureza',
-      'descontoavariados',
-    ]) {
+    for (const campo of ['bruto', 'desconto', 'liquido']) {
       if (oficial[campo] != null) patch[campo] = oficial[campo]
     }
     await db.carga.update(carga.uuid, patch)

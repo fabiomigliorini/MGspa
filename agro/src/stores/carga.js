@@ -93,7 +93,8 @@ export const useCargaStore = defineStore('carga', () => {
   const plantios = ref([])
   const culturas = ref([])
   const variedades = ref([])
-  const faixas = ref([])
+  const parametros = ref([])
+  const tabelas = ref([])
   const veiculos = ref([])
   const unidades = ref([])
   const contratos = ref([])
@@ -113,10 +114,62 @@ export const useCargaStore = defineStore('carga', () => {
   const culturaAtiva = computed(
     () => culturas.value.find((c) => c.codcultura === safraAtiva.value?.codcultura) || null,
   )
-  const faixasDaSafra = computed(() =>
-    faixas.value.filter((f) => f.codcultura === safraAtiva.value?.codcultura),
+  const tabelasDaSafra = computed(() =>
+    tabelas.value.filter((t) => t.codcultura === safraAtiva.value?.codcultura),
   )
   const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
+
+  // Itens (valores) resolvidos de uma tabela, já com metodo/reduzbase do catálogo
+  // e ordenados pela cascata — o que o utils/desconto.js consome.
+  function itensResolvidos(codtabela) {
+    const t = tabelas.value.find((x) => x.codtabelaclassificacao === codtabela)
+    if (!t) return []
+    return (t.TabelaClassificacaoItemS || [])
+      .map((i) => {
+        const p =
+          i.ParametroClassificacao ||
+          parametros.value.find(
+            (x) => x.codparametroclassificacao === i.codparametroclassificacao,
+          ) ||
+          {}
+        return {
+          codparametroclassificacao: i.codparametroclassificacao,
+          parametroclassificacao: p.parametroclassificacao,
+          metodo: p.metodo,
+          reduzbase: p.reduzbase,
+          ordem: i.ordem,
+          tolerancia: i.tolerancia,
+          fator: i.fator,
+          desagio: i.desagio,
+        }
+      })
+      .sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0))
+  }
+
+  // Tabela do contrato do ponto (quando o contrato aponta a sua).
+  function codTabelaContrato(carga) {
+    for (const p of carga.pontos || []) {
+      if (p.contatipo === 'CONTRATO' && p.codcontrato) {
+        const c = contratos.value.find((x) => x.codcontrato === p.codcontrato)
+        if (c?.codtabelaclassificacao) return c.codtabelaclassificacao
+      }
+    }
+    return null
+  }
+
+  // Tabela usada pela carga: a escolhida -> a do contrato do ponto -> a padrão da cultura.
+  function resolverCodTabela(carga) {
+    return (
+      carga.codtabelaclassificacao ||
+      codTabelaContrato(carga) ||
+      culturaAtiva.value?.codtabelaclassificacao ||
+      null
+    )
+  }
+
+  function calcularLocal(carga) {
+    return calcularCarga(carga, itensResolvidos(resolverCodTabela(carga)))
+  }
 
   const plantiosDaSafra = computed(() =>
     plantios.value
@@ -235,7 +288,8 @@ export const useCargaStore = defineStore('carga', () => {
     safras.value = await db.safra.toArray()
     culturas.value = await db.cultura.toArray()
     variedades.value = await db.variedade.toArray()
-    faixas.value = await db.tabeladesconto.toArray()
+    parametros.value = await db.parametroclassificacao.toArray()
+    tabelas.value = await db.tabelaclassificacao.toArray()
     plantios.value = await db.plantio.toArray()
     veiculos.value = await db.veiculo.toArray()
     unidades.value = await db.unidadearmazenadora.toArray()
@@ -259,14 +313,12 @@ export const useCargaStore = defineStore('carga', () => {
     // pbt/tara null, então não entra aqui.
     for (const c of arr) {
       if (c.liquido == null && c.pbt != null && c.tara != null) {
-        Object.assign(c, calcularCarga(c, faixasDaSafra.value))
+        Object.assign(c, calcularLocal(c))
         await db.carga.update(c.uuid, {
           bruto: c.bruto,
           desconto: c.desconto,
           liquido: c.liquido,
-          descontoumidade: c.descontoumidade,
-          descontoimpureza: c.descontoimpureza,
-          descontoavariados: c.descontoavariados,
+          classificacao: c.classificacao,
         })
       }
     }
@@ -307,18 +359,14 @@ export const useCargaStore = defineStore('carga', () => {
       placacarreta: null,
       codpessoamotorista: null,
       motorista: null,
+      codtabelaclassificacao: null,
       pbt: null,
       tara: null,
       bruto: null,
-      umidade: null,
-      impureza: null,
-      avariados: null,
-      descontoumidade: null,
-      descontoimpureza: null,
-      descontoavariados: null,
       desconto: null,
       liquido: null,
       observacao: null,
+      classificacao: [],
       pontos: [],
       sincronizado: 0,
     }
@@ -329,8 +377,15 @@ export const useCargaStore = defineStore('carga', () => {
   // incompletas sumiriam no meio do fluxo). Só pontos completos são gravados,
   // e o líquido por ponto é rateado a partir do % antes de persistir/enviar.
   async function salvar(carga) {
-    const limpa = { ...carga, pontos: (carga.pontos || []).filter(pontoCompleto).map((p) => ({ ...p })) }
-    Object.assign(limpa, calcularCarga(limpa, faixasDaSafra.value), { sincronizado: 0 })
+    const limpa = {
+      ...carga,
+      pontos: (carga.pontos || []).filter(pontoCompleto).map((p) => ({ ...p })),
+      classificacao: (carga.classificacao || []).map((c) => ({ ...c })),
+    }
+    limpa.codtabelaclassificacao = resolverCodTabela(limpa)
+    Object.assign(limpa, calcularCarga(limpa, itensResolvidos(limpa.codtabelaclassificacao)), {
+      sincronizado: 0,
+    })
     ratearPontos(limpa)
     const plain = JSON.parse(JSON.stringify(limpa))
     await db.carga.put(plain)
@@ -364,7 +419,8 @@ export const useCargaStore = defineStore('carga', () => {
     plantios,
     culturas,
     variedades,
-    faixas,
+    parametros,
+    tabelas,
     veiculos,
     unidades,
     contratos,
@@ -377,7 +433,10 @@ export const useCargaStore = defineStore('carga', () => {
     contratosAtivos,
     safraAtiva,
     culturaAtiva,
-    faixasDaSafra,
+    tabelasDaSafra,
+    resolverCodTabela,
+    itensResolvidos,
+    codTabelaContrato,
     pesosaca,
     plantiosDaSafra,
     etapasDoSentido,

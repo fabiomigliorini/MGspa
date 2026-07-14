@@ -50,4 +50,14 @@ db.version(5).stores({
   unidadearmazenadora: 'codunidadearmazenadora, sincronizado',
 })
 
+// v6: classificação de grãos por FÓRMULA (catálogo de parâmetros + tabelas
+// nomeadas por cultura). Substitui tabeladesconto (faixas fixas). As tabelas
+// guardam os itens (valores) aninhados; a carga embute `classificacao` (array
+// de leituras), como faz com `pontos`.
+db.version(6).stores({
+  tabeladesconto: null, // substituído por 'tabelaclassificacao'
+  parametroclassificacao: 'codparametroclassificacao, sincronizado',
+  tabelaclassificacao: 'codtabelaclassificacao, codcultura, sincronizado',
+})
+
 export default db

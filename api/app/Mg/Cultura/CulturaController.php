@@ -53,7 +53,7 @@ class CulturaController extends MgController
             abort(409, match (true) {
                 str_contains($msg, 'tblsafra') => 'Existem safras vinculadas a esta Cultura! Impossível excluir!',
                 str_contains($msg, 'tblvariedade') => 'Existem variedades vinculadas a esta Cultura! Impossível excluir!',
-                str_contains($msg, 'tbltabeladesconto') => 'Existem tabelas de desconto vinculadas a esta Cultura! Impossível excluir!',
+                str_contains($msg, 'tbltabelaclassificacao') => 'Existem tabelas de classificação vinculadas a esta Cultura! Impossível excluir!',
                 str_contains($msg, 'tblcontrato') => 'Existem contratos vinculados a esta Cultura! Impossível excluir!',
                 default => 'Existem registros vinculados a esta Cultura! Impossível excluir!',
             });

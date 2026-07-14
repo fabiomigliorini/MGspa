@@ -8,7 +8,7 @@ namespace Mg\Cultura;
 
 use Mg\MgModel;
 use Mg\Safra\Safra;
-use Mg\Cultura\TabelaDesconto;
+use Mg\Classificacao\TabelaClassificacao;
 use Mg\Cultura\Variedade;
 use Mg\Cultura\CulturaTributo;
 
@@ -24,13 +24,15 @@ class Cultura extends MgModel
         'inativo',
         'pesosaca',
         'icone',
-        'cicloanos'
+        'cicloanos',
+        'codtabelaclassificacao'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
         'cicloanos' => 'integer',
         'codcultura' => 'integer',
+        'codtabelaclassificacao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
@@ -45,9 +47,14 @@ class Cultura extends MgModel
         return $this->hasMany(Safra::class, 'codcultura', 'codcultura');
     }
 
-    public function TabelaDescontoS()
+    public function TabelaClassificacao()
     {
-        return $this->hasMany(TabelaDesconto::class, 'codcultura', 'codcultura');
+        return $this->belongsTo(TabelaClassificacao::class, 'codtabelaclassificacao', 'codtabelaclassificacao');
+    }
+
+    public function TabelaClassificacaoS()
+    {
+        return $this->hasMany(TabelaClassificacao::class, 'codcultura', 'codcultura');
     }
 
     public function VariedadeS()

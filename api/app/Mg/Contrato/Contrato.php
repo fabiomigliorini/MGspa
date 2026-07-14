@@ -13,6 +13,7 @@ use Mg\Contrato\ContratoNota;
 use Mg\Grao\MovimentoGrao;
 use Mg\Grao\CargaPonto;
 use Mg\Cultura\Cultura;
+use Mg\Classificacao\TabelaClassificacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Safra\Safra;
 use Mg\Filial\Filial;
@@ -52,7 +53,8 @@ class Contrato extends MgModel
         'numerocorretora',
         'numerocooperativa',
         'operacao',
-        'barter'
+        'barter',
+        'codtabelaclassificacao'
     ];
 
     protected $casts = [
@@ -76,7 +78,8 @@ class Contrato extends MgModel
         'comissaovalor' => 'float',
         'comissaototal' => 'float',
         'codpessoacooperativa' => 'integer',
-        'barter' => 'boolean'
+        'barter' => 'boolean',
+        'codtabelaclassificacao' => 'integer'
     ];
 
 
@@ -84,6 +87,11 @@ class Contrato extends MgModel
     public function Cultura()
     {
         return $this->belongsTo(Cultura::class, 'codcultura', 'codcultura');
+    }
+
+    public function TabelaClassificacao()
+    {
+        return $this->belongsTo(TabelaClassificacao::class, 'codtabelaclassificacao', 'codtabelaclassificacao');
     }
 
     public function Pessoa()

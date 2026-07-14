@@ -4,8 +4,9 @@ namespace Mg\Grao;
 
 use Mg\MgService;
 use Mg\Safra\Safra;
-use Mg\Cultura\TabelaDesconto;
+use Mg\Cultura\Cultura;
 use Mg\Contrato\Contrato;
+use Mg\Classificacao\TabelaClassificacaoItem;
 use Mg\Veiculo\Veiculo;
 use Mg\Pessoa\Pessoa;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,8 @@ class CargaService extends MgService
         'Safra.Cultura',
         'Veiculo',
         'PessoaMotorista',
+        'TabelaClassificacao',
+        'CargaClassificacaoS.ParametroClassificacao',
         'CargaPontoS.Plantio.Talhao',
         'CargaPontoS.Plantio.Variedade',
         'CargaPontoS.UnidadeArmazenadora',
@@ -66,8 +69,9 @@ class CargaService extends MgService
     }
 
     /**
-     * Upsert por uuid (offline). Grava a carga + os pontos (origens/destinos),
-     * recalcula pesos/descontos, valida o fechamento e regera o extrato.
+     * Upsert por uuid (offline). Grava a carga + os pontos + as leituras de
+     * classificacao, recalcula pesos/descontos, valida o fechamento e regera o
+     * extrato.
      */
     public static function sincronizar(array $data): Carga
     {
@@ -75,10 +79,12 @@ class CargaService extends MgService
             $carga = Carga::firstOrNew(['uuid' => $data['uuid']]);
             $carga->fill($data);
             static::snapshotCaminhaoMotorista($carga);
-            static::calcular($carga);
             $carga->save();
             static::sincronizarPontos($carga, $data['pontos'] ?? []);
+            static::sincronizarClassificacao($carga, $data['classificacao'] ?? []);
             $carga->load('CargaPontoS');
+            static::calcular($carga);
+            $carga->save();
             static::validar($carga);
             static::gerarMovimento($carga);
             return $carga->fresh(static::WITH);
@@ -142,10 +148,30 @@ class CargaService extends MgService
         };
     }
 
+    /** Substitui as leituras de classificacao da carga (uma linha por parametro medido). */
+    protected static function sincronizarClassificacao(Carga $carga, array $leituras): void
+    {
+        CargaClassificacao::where('codcarga', $carga->codcarga)->delete();
+        foreach ($leituras as $l) {
+            $codparam = $l['codparametroclassificacao'] ?? null;
+            $leitura = $l['leitura'] ?? null;
+            if (empty($codparam) || $leitura === null || $leitura === '') {
+                continue; // linha sem parametro/leitura e ignorada
+            }
+            $cc = new CargaClassificacao();
+            $cc->codcarga = $carga->codcarga;
+            $cc->codparametroclassificacao = $codparam;
+            $cc->leitura = $leitura;
+            $cc->desconto = null;
+            $cc->save();
+        }
+    }
+
     /**
-     * bruto = pbt - tara; descontos (kg) por faixa da cultura da safra;
-     * desconto = soma; liquido = bruto - desconto. Tudo null enquanto faltam os
-     * pesos (carga em etapa inicial do patio).
+     * bruto = pbt - tara; descontos (kg) pela FORMULA EM CASCATA da tabela
+     * resolvida (impureza -> umidade -> defeitos); desconto = soma; liquido =
+     * bruto - desconto. Grava o desconto (kg) em cada linha de classificacao.
+     * Tudo null enquanto faltam os pesos (carga em etapa inicial do patio).
      */
     public static function calcular(Carga $carga): void
     {
@@ -155,50 +181,114 @@ class CargaService extends MgService
             $carga->bruto = null;
         }
 
+        $carga->loadMissing('CargaClassificacaoS');
+        $leituras = $carga->CargaClassificacaoS;
+
         $bruto = $carga->bruto;
         if ($bruto === null) {
-            $carga->descontoumidade = null;
-            $carga->descontoimpureza = null;
-            $carga->descontoavariados = null;
+            foreach ($leituras as $cc) {
+                $cc->desconto = null;
+                $cc->saveQuietly();
+            }
             $carga->desconto = null;
             $carga->liquido = null;
             return;
         }
 
-        $codcultura = optional(Safra::find($carga->codsafra))->codcultura;
-        $carga->descontoumidade = static::descontoKg($codcultura, 'UMIDADE', $carga->umidade, $bruto);
-        $carga->descontoimpureza = static::descontoKg($codcultura, 'IMPUREZA', $carga->impureza, $bruto);
-        $carga->descontoavariados = static::descontoKg($codcultura, 'AVARIADOS', $carga->avariados, $bruto);
+        // itens da tabela resolvida (com metodo/reduzbase via ParametroClassificacao), em ordem
+        $itens = static::itensDaTabela($carga);
+        $leiturasPorParam = $leituras->keyBy('codparametroclassificacao');
 
-        $carga->desconto = round(
-            ((float) $carga->descontoumidade)
-                + ((float) $carga->descontoimpureza)
-                + ((float) $carga->descontoavariados),
-            3
-        );
-        $carga->liquido = round($bruto - (float) $carga->desconto, 3);
+        // zera descontos (parametros sem item na tabela / sem leitura ficam 0)
+        foreach ($leituras as $cc) {
+            $cc->desconto = 0.0;
+        }
+
+        $base = (float) $bruto;
+        $total = 0.0;
+        foreach ($itens as $item) {
+            $cc = $leiturasPorParam->get($item->codparametroclassificacao);
+            $leitura = $cc?->leitura;
+            if ($leitura === null || $leitura === '') {
+                continue; // sem leitura -> desconto 0, base inalterada
+            }
+            $desc = round($base * static::percentualDesconto($item, (float) $leitura), 3);
+            if ($cc) {
+                $cc->desconto = $desc;
+            }
+            $total += $desc;
+            if (optional($item->ParametroClassificacao)->reduzbase) {
+                $base -= $desc;
+            }
+        }
+
+        foreach ($leituras as $cc) {
+            $cc->saveQuietly();
+        }
+
+        $carga->desconto = round($total, 3);
+        $carga->liquido = round((float) $bruto - $total, 3);
     }
 
     /**
-     * Desconto em kg de um tipo a partir da faixa que contem a leitura, sobre o
-     * BRUTO (grao pos-tara). Sem leitura => null; sem faixa => 0.
+     * Percentual de desconto (fracao) de um parametro conforme o metodo do
+     * catalogo. FATOR: (leitura-tol) x fator/100 (secagem). NORMALIZADO:
+     * (leitura-tol)/(100-tol) x (100-desagio)/100. Abaixo da tolerancia -> 0.
      */
-    public static function descontoKg(?int $codcultura, string $tipo, $leitura, float $bruto): ?float
+    protected static function percentualDesconto(TabelaClassificacaoItem $item, float $leitura): float
     {
-        if (empty($codcultura) || $leitura === null || $leitura === '') {
-            return null;
-        }
-        $faixa = TabelaDesconto::ativo()
-            ->where('codcultura', $codcultura)
-            ->where('tipo', $tipo)
-            ->where('faixainicio', '<=', $leitura)
-            ->where('faixafim', '>=', $leitura)
-            ->orderBy('faixainicio', 'desc')
-            ->first();
-        if (!$faixa) {
+        $tol = (float) $item->tolerancia;
+        $excesso = $leitura - $tol;
+        if ($excesso <= 0) {
             return 0.0;
         }
-        return round($bruto * ((float) $faixa->percentualdesconto / 100), 3);
+        if (optional($item->ParametroClassificacao)->metodo === 'FATOR') {
+            return $excesso * ((float) $item->fator) / 100.0;
+        }
+        $den = 100.0 - $tol;
+        if ($den <= 0) {
+            return 0.0;
+        }
+        return ($excesso / $den) * (100.0 - (float) $item->desagio) / 100.0;
+    }
+
+    /** Itens (valores) da tabela resolvida, com o catalogo carregado, em ordem de cascata. */
+    protected static function itensDaTabela(Carga $carga)
+    {
+        $cod = static::resolverCodTabela($carga);
+        if (empty($cod)) {
+            return collect();
+        }
+        return TabelaClassificacaoItem::with('ParametroClassificacao')
+            ->where('codtabelaclassificacao', $cod)
+            ->whereHas('ParametroClassificacao', fn ($q) => $q->whereNull('inativo'))
+            ->orderBy('ordem')
+            ->get();
+    }
+
+    /** Tabela usada: a da carga -> a do contrato do ponto -> a padrao da cultura. */
+    public static function resolverCodTabela(Carga $carga): ?int
+    {
+        if (!empty($carga->codtabelaclassificacao)) {
+            return (int) $carga->codtabelaclassificacao;
+        }
+        $carga->loadMissing('CargaPontoS');
+        foreach ($carga->CargaPontoS as $p) {
+            if ($p->contatipo === 'CONTRATO' && $p->codcontrato) {
+                $cod = optional(Contrato::find($p->codcontrato))->codtabelaclassificacao;
+                if (!empty($cod)) {
+                    return (int) $cod;
+                }
+            }
+        }
+        $codcultura = optional(Safra::find($carga->codsafra))->codcultura;
+        if (!empty($codcultura)) {
+            $cod = optional(Cultura::find($codcultura))->codtabelaclassificacao;
+            if (!empty($cod)) {
+                return (int) $cod;
+            }
+        }
+        return null;
     }
 
     /**
@@ -373,13 +463,13 @@ class CargaService extends MgService
 
     /**
      * Recalcula o extrato de um conjunto de cargas (idempotente). Util pra
-     * "recalcular" safra/contrato/unidade apos ajuste de cadastro ou faixa.
+     * "recalcular" safra/contrato/unidade apos ajuste de cadastro ou tabela.
      * Retorna a quantidade de cargas reprocessadas.
      */
     public static function recalcular(array $filter = []): int
     {
         return DB::transaction(function () use ($filter) {
-            $qry = Carga::query()->with('CargaPontoS');
+            $qry = Carga::query()->with(['CargaPontoS', 'CargaClassificacaoS']);
             if (!empty($filter['codsafra'])) {
                 $qry->where('codsafra', $filter['codsafra']);
             }

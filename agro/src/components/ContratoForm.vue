@@ -1,5 +1,6 @@
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { api } from 'src/services/api'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -20,6 +21,23 @@ const emit = defineEmits(['saved'])
 // Indireção (padrão SafraForm): v-model escreve no objeto reativo do cad sem
 // disparar vue/no-mutating-props.
 const cad = computed(() => props.cad)
+
+// Tabela de classificação do contrato (opcional): opções = as tabelas da cultura
+// do contrato. A entrega deste contrato usa esta tabela como padrão de desconto.
+const opcoesTabela = ref([])
+onMounted(async () => {
+  const codcultura = props.fixar?.codcultura ?? props.cad.form?.codcultura
+  if (!codcultura) return
+  try {
+    const { data } = await api.get('v1/tabela-classificacao', { params: { codcultura } })
+    opcoesTabela.value = (data.data ?? data).map((t) => ({
+      label: t.tabelaclassificacao,
+      value: t.codtabelaclassificacao,
+    }))
+  } catch {
+    // silencioso — a resolução cai no padrão da cultura se não escolher
+  }
+})
 
 const operacoes = [
   { label: 'Venda', value: 'VENDA' },
@@ -265,6 +283,20 @@ async function salvar() {
               v-model="cad.form.barter"
               color="deep-purple-6"
               label="Contrato de Barter (troca de grãos por insumos)"
+            />
+          </div>
+
+          <!-- TABELA DE CLASSIFICAÇÃO (opcional; senão usa a padrão da cultura) -->
+          <div class="col-12 col-sm-6">
+            <q-select
+              v-model="cad.form.codtabelaclassificacao"
+              :options="opcoesTabela"
+              emit-value
+              map-options
+              outlined
+              clearable
+              label="Tabela de classificação"
+              hint="Padrão de desconto da entrega deste contrato"
             />
           </div>
 
