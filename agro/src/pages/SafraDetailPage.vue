@@ -7,7 +7,7 @@ import { api } from 'src/services/api'
 import { useSafraStore } from 'src/stores/safra'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
-import { corTalhao, sugerirCor } from 'src/utils/coresTalhao'
+import { sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
@@ -477,83 +477,55 @@ onMounted(async () => {
               estatico
               @select="selecionarPlantio"
             />
-            <q-separator v-if="g.comGeo.length" />
+          </q-card>
 
-            <!-- Tabela agrupada por variedade OU talhão (faixa + linhas + total) -->
-            <div class="q-pa-md" style="overflow-x: auto">
-              <q-markup-table flat wrap-cells>
-                <thead>
-                  <tr>
-                    <th class="text-left"></th>
-                    <th class="text-right">Plantado</th>
-                    <th class="text-right">Previsão</th>
-                    <th class="text-right">Média</th>
-                    <th class="text-left" style="min-width: 150px">Colhido</th>
-                  </tr>
-                </thead>
-                <tbody v-for="(grp, gi) in g.grupos" :key="grp.key">
-                  <!-- espaço entre grupos (inerte: sem hover, sem borda) -->
-                  <tr v-if="gi > 0">
-                    <td
-                      colspan="5"
-                      style="height: 18px; padding: 0; border: none; pointer-events: none"
-                    ></td>
-                  </tr>
-                  <!-- faixa: nome do grupo -->
-                  <tr class="bg-grey-2">
-                    <td colspan="5" class="text-weight-medium q-py-sm">
-                      {{ rotuloGrupo(grp.nome) }}
-                    </td>
-                  </tr>
-                  <!-- linhas do grupo -->
-                  <tr
-                    v-for="l in grp.linhas"
-                    :key="l.codplantio"
-                    :class="{ 'text-grey': l.inativo }"
-                  >
-                    <td class="text-left">
-                      <div class="row items-center no-wrap">
-                        <q-avatar
-                          size="14px"
-                          class="q-mr-sm"
-                          :style="{ backgroundColor: corTalhao(l) }"
-                        />
-                        <router-link
-                          :to="{
-                            name: 'plantio-detalhe',
-                            params: { codsafra, codplantio: l.codplantio },
-                          }"
-                          class="text-primary text-weight-medium"
-                          style="text-decoration: none"
-                        >
-                          {{ rotuloLinha(l) }}
-                        </router-link>
-                        <q-badge
-                          v-if="!l.geometria"
-                          color="grey-5"
-                          label="sem mapa"
-                          class="q-ml-xs"
-                        />
-                      </div>
-                    </td>
-                    <td class="text-right">
-                      {{ fmt(l.areaplantada, 1) }} ha
+          <!-- Um card por grupo (variedade/talhão): faixa + talhões + total.
+               Métricas em grade col-6 col-sm-3: 4-em-linha no desktop e 2×2 no mobile
+               (Colhido sob Plantado, Média sob Previsão) — a ordem do DOM é a que faz o
+               reflow cair certo, já que o Quasar não tem `order` responsivo. -->
+          <q-card v-for="grp in g.grupos" :key="grp.key" bordered flat class="q-mt-md">
+            <q-list separator>
+              <!-- faixa: nome do grupo -->
+              <q-item class="bg-grey-2">
+                <q-item-section>
+                  <q-item-label class="text-weight-medium">{{
+                    rotuloGrupo(grp.nome)
+                  }}</q-item-label>
+                </q-item-section>
+              </q-item>
+
+              <!-- um item por talhão: linha inteira navega pro detalhe do plantio -->
+              <q-item
+                v-for="l in grp.linhas"
+                :key="l.codplantio"
+                clickable
+                v-ripple
+                :to="{ name: 'plantio-detalhe', params: { codsafra, codplantio: l.codplantio } }"
+                :class="{ 'text-grey': l.inativo }"
+              >
+                <q-item-section>
+                  <q-item-label>
+                    <span class="text-primary text-weight-medium">{{ rotuloLinha(l) }}</span>
+                    <q-badge v-if="!l.geometria" color="grey-5" label="sem mapa" class="q-ml-xs" />
+                  </q-item-label>
+
+                  <div class="row q-col-gutter-md q-mt-xs">
+                    <!-- Plantado -->
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Plantado</div>
+                      <div>{{ fmt(l.areaplantada, 1) }} ha</div>
                       <div v-if="l.dataplantio" class="text-caption text-grey-6">
                         {{ formataData(l.dataplantio) }}
                       </div>
-                    </td>
-                    <td class="text-right">{{ fmt(l.expectativasacas) }} sc</td>
-                    <td class="text-right">
-                      <span class="text-grey-8">{{ fmt(mediaLinha(l).esperada, 1) }}</span>
-                      <span v-if="mediaLinha(l).realizada != null">
-                        /
-                        <span class="text-green-8 text-weight-medium">{{
-                          fmt(mediaLinha(l).realizada, 1)
-                        }}</span>
-                      </span>
-                      <span v-else class="text-grey-5"> / —</span>
-                    </td>
-                    <td>
+                    </div>
+                    <!-- Previsão -->
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Previsão</div>
+                      <div>{{ fmt(l.expectativasacas) }} sc</div>
+                    </div>
+                    <!-- Colhido -->
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Colhido</div>
                       <q-linear-progress
                         :value="
                           Number(l.areaplantada) > 0
@@ -564,31 +536,61 @@ onMounted(async () => {
                         track-color="grey-3"
                         size="8px"
                         rounded
+                        class="q-my-xs"
                       />
                       <div class="text-caption text-grey-7">
                         {{ fmt(l.hacolhido, 1) }} / {{ fmt(l.areaplantada, 1) }} ha
                       </div>
-                    </td>
-                  </tr>
-                  <!-- total do grupo (pronto do backend); dispensável com 1 linha só -->
-                  <tr v-if="grp.total && grp.linhas.length > 1" class="text-weight-medium">
-                    <td class="text-left text-grey-7">Total</td>
-                    <td class="text-right">{{ fmt(grp.total.area, 1) }} ha</td>
-                    <td class="text-right">{{ fmt(grp.total.expectativa) }} sc</td>
-                    <td class="text-right">
-                      <span class="text-grey-8">{{ fmt(grp.total.esperada, 1) }}</span>
-                      <span v-if="grp.total.realizada != null">
-                        / <span class="text-green-8">{{ fmt(grp.total.realizada, 1) }}</span>
-                      </span>
-                      <span v-else class="text-grey-5"> / —</span>
-                    </td>
-                    <td class="text-left text-caption text-grey-7">
-                      {{ fmt(grp.total.colhido) }} sc colh.
-                    </td>
-                  </tr>
-                </tbody>
-              </q-markup-table>
-            </div>
+                    </div>
+                    <!-- Média -->
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Média</div>
+                      <div>
+                        <span class="text-grey-8">{{ fmt(mediaLinha(l).esperada, 1) }}</span>
+                        <span v-if="mediaLinha(l).realizada != null">
+                          /
+                          <span class="text-green-8 text-weight-medium">{{
+                            fmt(mediaLinha(l).realizada, 1)
+                          }}</span>
+                        </span>
+                        <span v-else class="text-grey-5"> / —</span>
+                      </div>
+                    </div>
+                  </div>
+                </q-item-section>
+              </q-item>
+
+              <!-- total do grupo (pronto do backend); dispensável com 1 linha só -->
+              <q-item v-if="grp.total && grp.linhas.length > 1">
+                <q-item-section>
+                  <q-item-label class="text-weight-medium text-grey-7">Total</q-item-label>
+                  <div class="row q-col-gutter-md q-mt-xs text-weight-medium">
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Plantado</div>
+                      <div>{{ fmt(grp.total.area, 1) }} ha</div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Previsão</div>
+                      <div>{{ fmt(grp.total.expectativa) }} sc</div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Colhido</div>
+                      <div>{{ fmt(grp.total.colhido) }} sc colh.</div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                      <div class="text-caption text-grey-6">Média</div>
+                      <div>
+                        <span class="text-grey-8">{{ fmt(grp.total.esperada, 1) }}</span>
+                        <span v-if="grp.total.realizada != null">
+                          / <span class="text-green-8">{{ fmt(grp.total.realizada, 1) }}</span>
+                        </span>
+                        <span v-else class="text-grey-5"> / —</span>
+                      </div>
+                    </div>
+                  </div>
+                </q-item-section>
+              </q-item>
+            </q-list>
           </q-card>
         </div>
       </div>

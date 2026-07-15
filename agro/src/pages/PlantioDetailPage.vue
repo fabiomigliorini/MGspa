@@ -274,23 +274,29 @@ onMounted(async () => {
           </q-item>
           <q-separator />
           <q-card-section>
-            <MgInputValor
-              v-model="hacolhidoEdit"
-              :decimals="2"
-              :min="0"
-              :max="area || null"
-              :suffix="`/ ${fmt(area, 1)} ha`"
-              label="Colhido (ha)"
-            />
-            <q-slider
-              v-model="hacolhidoEdit"
-              :min="0"
-              :max="area || 1"
-              :step="0.01"
-              color="green-6"
-              track-color="grey-3"
-              class="q-mt-md q-px-md"
-            />
+            <div class="row items-center q-col-gutter-md">
+              <div class="col-12 col-sm-5">
+                <MgInputValor
+                  v-model="hacolhidoEdit"
+                  :decimals="2"
+                  :min="0"
+                  :max="area || null"
+                  :suffix="`/ ${fmt(area, 1)} ha`"
+                  label="Colhido (ha)"
+                />
+              </div>
+              <div class="col-12 col-sm">
+                <q-slider
+                  v-model="hacolhidoEdit"
+                  :min="0"
+                  :max="area || 1"
+                  :step="0.01"
+                  color="green-6"
+                  track-color="grey-3"
+                  class="q-px-md"
+                />
+              </div>
+            </div>
             <div class="row items-center justify-between q-mt-sm">
               <q-btn flat label="Finalizar" color="green-7" @click="finalizarColhido" />
               <q-btn
