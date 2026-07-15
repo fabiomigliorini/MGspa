@@ -4,6 +4,10 @@
 //
 // Nomenclatura: pbt = caminhão+carga; tara = caminhão vazio; bruto = pbt - tara
 // (grão); desconto = classificação; liquido = bruto - desconto (seco).
+//
+// O desconto é uma FÓRMULA EM CASCATA dirigida pela tabela de classificação:
+// para cada parâmetro (em ordem) desconta sobre a base corrente; parâmetros com
+// reduzbase (impureza, umidade) reduzem a base dos próximos.
 
 function arredondar(valor, casas = 3) {
   const f = 10 ** casas
@@ -14,47 +18,59 @@ function temValor(v) {
   return v !== null && v !== undefined && v !== ''
 }
 
-// Desconto em kg de um tipo (UMIDADE/IMPUREZA/AVARIADOS) a partir da faixa que
-// contém a leitura, sobre o BRUTO. Sem leitura => null; sem faixa => 0.
-export function descontoKg(faixas, tipo, leitura, bruto) {
-  if (!temValor(leitura)) return null
-  const candidatas = (faixas || [])
-    .filter(
-      (f) =>
-        f.tipo === tipo &&
-        Number(f.faixainicio) <= Number(leitura) &&
-        Number(f.faixafim) >= Number(leitura),
-    )
-    .sort((a, b) => Number(b.faixainicio) - Number(a.faixainicio))
-
-  if (!candidatas.length) return 0
-  return arredondar(bruto * (Number(candidatas[0].percentualdesconto) / 100))
+// Percentual (fração) de desconto de um item conforme o método do parâmetro.
+// FATOR: (leitura-tol) × fator/100 (secagem, por ponto).
+// NORMALIZADO: (leitura-tol)/(100-tol) × (100-desagio)/100.
+function percentualItem(item, leitura) {
+  const tol = Number(item.tolerancia) || 0
+  const excesso = Number(leitura) - tol
+  if (!(excesso > 0)) return 0
+  if (item.metodo === 'FATOR') {
+    return (excesso * (Number(item.fator) || 0)) / 100
+  }
+  const den = 100 - tol
+  if (den <= 0) return 0
+  return (excesso / den) * ((100 - (Number(item.desagio) || 0)) / 100)
 }
 
-// Recebe a carga + as faixas da cultura e devolve os campos calculados.
+// Recebe a carga + os itens RESOLVIDOS da tabela (já com metodo/reduzbase/ordem
+// e tolerancia/fator/desagio) e devolve os campos calculados + o array
+// `classificacao` com o desconto (kg) de cada parâmetro preenchido.
 // bruto/desconto/liquido ficam null enquanto faltam os pesos (etapa inicial).
-export function calcularCarga(carga, faixas) {
+export function calcularCarga(carga, itens) {
+  const classificacao = (carga.classificacao || []).map((c) => ({ ...c, desconto: null }))
+
   if (!temValor(carga.pbt) || !temValor(carga.tara)) {
-    return {
-      bruto: null,
-      descontoumidade: null,
-      descontoimpureza: null,
-      descontoavariados: null,
-      desconto: null,
-      liquido: null,
-    }
+    return { bruto: null, desconto: null, liquido: null, classificacao }
   }
 
   const bruto = arredondar(Number(carga.pbt) - Number(carga.tara))
-  const descontoumidade = descontoKg(faixas, 'UMIDADE', carga.umidade, bruto)
-  const descontoimpureza = descontoKg(faixas, 'IMPUREZA', carga.impureza, bruto)
-  const descontoavariados = descontoKg(faixas, 'AVARIADOS', carga.avariados, bruto)
-  const desconto = arredondar(
-    Number(descontoumidade || 0) + Number(descontoimpureza || 0) + Number(descontoavariados || 0),
-  )
-  const liquido = arredondar(bruto - desconto)
 
-  return { bruto, descontoumidade, descontoimpureza, descontoavariados, desconto, liquido }
+  // sem itens (tabela não resolvida) => sem desconto
+  const ordenados = [...(itens || [])].sort(
+    (a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0),
+  )
+  const porParam = new Map(classificacao.map((c) => [c.codparametroclassificacao, c]))
+
+  // zera o desconto das leituras presentes (as sem item ou sem leitura ficam 0)
+  classificacao.forEach((c) => {
+    c.desconto = 0
+  })
+
+  let base = bruto
+  let total = 0
+  for (const item of ordenados) {
+    const cc = porParam.get(item.codparametroclassificacao)
+    if (!cc || !temValor(cc.leitura)) continue
+    const desc = arredondar(base * percentualItem(item, cc.leitura))
+    cc.desconto = desc
+    total += desc
+    if (item.reduzbase) base = arredondar(base - desc)
+  }
+
+  const desconto = arredondar(total)
+  const liquido = arredondar(bruto - desconto)
+  return { bruto, desconto, liquido, classificacao }
 }
 
 // Converte kg -> sacas (peso da saca por cultura, default 60).

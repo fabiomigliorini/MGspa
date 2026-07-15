@@ -59,6 +59,7 @@ class ContratoStoreRequest extends FormRequest
             'comissaovalor' => ['nullable', 'required_with:codpessoacorretora', 'numeric', 'gte:0'],
             'comissaototal' => ['nullable', 'numeric', 'gte:0'],
             'codpessoacooperativa' => ['nullable', 'exists:tblpessoa,codpessoa'],
+            'codtabelaclassificacao' => ['nullable', 'exists:tbltabelaclassificacao,codtabelaclassificacao'],
             'numerocontraparte' => ['nullable', 'max:30'],
             'numerocorretora' => ['nullable', 'max:30'],
             'numerocooperativa' => ['nullable', 'max:30'],

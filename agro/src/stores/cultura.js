@@ -160,70 +160,6 @@ export const useCulturaStore = defineStore('cultura', () => {
     })
   }
 
-  // ======================= TABELA DE DESCONTO (filha) =======================
-  const faixas = ref([])
-  const formFaixa = ref({})
-  const dialogFaixa = ref(false)
-  const salvandoFaixa = ref(false)
-
-  async function carregarFaixas(codcultura, tipo) {
-    try {
-      const { data } = await api.get('v1/tabela-desconto', {
-        params: { codcultura, tipo, sort: 'faixainicio' },
-      })
-      faixas.value = data.data ?? data
-    } catch (e) {
-      notifyError(e)
-    }
-  }
-  function novaFaixa(codcultura, tipo) {
-    formFaixa.value = { codcultura, tipo }
-    dialogFaixa.value = true
-  }
-  function editarFaixa(f) {
-    formFaixa.value = { ...f }
-    dialogFaixa.value = true
-  }
-  async function salvarFaixa() {
-    if (salvandoFaixa.value) return
-    salvandoFaixa.value = true
-    try {
-      const f = formFaixa.value
-      const payload = {
-        codcultura: f.codcultura,
-        tipo: f.tipo,
-        faixainicio: f.faixainicio,
-        faixafim: f.faixafim,
-        percentualdesconto: f.percentualdesconto,
-      }
-      if (f.codtabeladesconto) await api.put(`v1/tabela-desconto/${f.codtabeladesconto}`, payload)
-      else await api.post('v1/tabela-desconto', payload)
-      notifySuccess('Faixa salva!')
-      dialogFaixa.value = false
-      await carregarFaixas(f.codcultura, f.tipo)
-    } catch (e) {
-      notifyError(e)
-    } finally {
-      salvandoFaixa.value = false
-    }
-  }
-  function excluirFaixa(f) {
-    Dialog.create({
-      title: 'Excluir',
-      message: 'Excluir esta faixa?',
-      cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-      ok: { label: 'Excluir', color: 'red-5', flat: true },
-    }).onOk(async () => {
-      try {
-        await api.delete(`v1/tabela-desconto/${f.codtabeladesconto}`)
-        notifySuccess('Excluído!')
-        await carregarFaixas(f.codcultura, f.tipo)
-      } catch (e) {
-        notifyError(e)
-      }
-    })
-  }
-
   // ======================= TRIBUTOS DA CULTURA (filha) =======================
   // Config fiscal por cultura (tblculturatributo): quais tributos incidem
   // (FETHAB/IAGRO/SENAR/Funrural) e como calculam. É o que o motor
@@ -367,16 +303,6 @@ export const useCulturaStore = defineStore('cultura', () => {
     salvarVariedade,
     inativarVariedade,
     excluirVariedade,
-    // tabela de desconto
-    faixas,
-    formFaixa,
-    dialogFaixa,
-    salvandoFaixa,
-    carregarFaixas,
-    novaFaixa,
-    editarFaixa,
-    salvarFaixa,
-    excluirFaixa,
     // tributos da cultura
     culturatributos,
     formTributo,

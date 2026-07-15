@@ -324,7 +324,7 @@ const parseReceitaWs = async () => {
 
 const procurarCidade = async (cidade, uf) => {
   try {
-    const ret = await api.get('/v1/select/cidade?cidade=' + cidade + ' ' + uf)
+    const ret = await api.get('/v1/select/cidade?busca=' + cidade + ' ' + uf)
     if (ret.data.length == 1) {
       return ret.data[0].value
     } else {
