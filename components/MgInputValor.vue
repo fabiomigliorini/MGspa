@@ -18,6 +18,7 @@ const props = defineProps({
   borderless: { type: Boolean, default: false },
   clearable: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },
+  autofocus: { type: Boolean, default: false },
   bgColor: { type: String, default: "" },
   rules: { type: Array, default: () => [] },
   lazyRules: { type: [Boolean, String], default: false },
@@ -245,6 +246,7 @@ function onKeydown(e) {
     :dense="dense"
     :borderless="borderless"
     :readonly="readonly"
+    :autofocus="autofocus"
     :tabindex="readonly ? -1 : undefined"
     :bg-color="bgColor"
     :rules="wrappedRules"

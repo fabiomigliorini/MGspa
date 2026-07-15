@@ -45,6 +45,12 @@ const routes = [
         meta: { auth: true, title: 'Safra' },
       },
       {
+        path: 'safra/:codsafra/plantio/:codplantio',
+        name: 'plantio-detalhe',
+        component: () => import('pages/PlantioDetailPage.vue'),
+        meta: { auth: true, title: 'Plantio' },
+      },
+      {
         path: 'fazendas',
         name: 'fazendas',
         component: () => import('pages/FazendasPage.vue'),
