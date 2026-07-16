@@ -30,8 +30,14 @@ const emit = defineEmits(['update:modelValue', 'salvar', 'avancar'])
 
 const $q = useQuasar()
 const store = useCargaStore()
-const { plantiosDaSafra, faixasDaSafra, culturaAtiva, safraAtiva, veiculosAtivos, unidadesAtivas } =
-  storeToRefs(store)
+const {
+  plantiosDaSafra,
+  tabelasDaSafra,
+  culturaAtiva,
+  safraAtiva,
+  veiculosAtivos,
+  unidadesAtivas,
+} = storeToRefs(store)
 const { online } = storeToRefs(useSincronizacaoStore())
 
 const local = ref(null)
@@ -228,7 +234,64 @@ function saldoContrato(cod) {
   return store.saldoContratoOffline(cod)
 }
 
-const calc = computed(() => (local.value ? calcularCarga(local.value, faixasDaSafra.value) : {}))
+// Tabela de classificação usada: a escolhida na carga -> a do contrato do ponto
+// -> a padrão da cultura. O select mostra a efetiva e permite trocar.
+const codTabelaSel = computed({
+  get: () => store.resolverCodTabela(local.value || {}),
+  set: (v) => {
+    if (local.value) local.value.codtabelaclassificacao = v
+  },
+})
+const codTabelaContrato = computed(() => store.codTabelaContrato(local.value || {}))
+const divergeContrato = computed(
+  () => !!codTabelaContrato.value && codTabelaSel.value !== codTabelaContrato.value,
+)
+const opcoesTabela = computed(() =>
+  tabelasDaSafra.value.map((t) => ({
+    label: t.tabelaclassificacao,
+    value: t.codtabelaclassificacao,
+  })),
+)
+function nomeTabela(cod) {
+  return (
+    tabelasDaSafra.value.find((t) => t.codtabelaclassificacao === cod)?.tabelaclassificacao || '—'
+  )
+}
+const itensCarga = computed(() => store.itensResolvidos(codTabelaSel.value))
+
+const calc = computed(() => (local.value ? calcularCarga(local.value, itensCarga.value) : {}))
+
+// Garante uma linha de leitura por parâmetro da tabela (preserva o já digitado).
+watch(
+  itensCarga,
+  (itens) => {
+    if (!local.value) return
+    if (!Array.isArray(local.value.classificacao)) local.value.classificacao = []
+    const existentes = new Set(local.value.classificacao.map((c) => c.codparametroclassificacao))
+    for (const it of itens || []) {
+      if (!existentes.has(it.codparametroclassificacao)) {
+        local.value.classificacao.push({
+          codparametroclassificacao: it.codparametroclassificacao,
+          leitura: null,
+          desconto: null,
+        })
+      }
+    }
+  },
+  { immediate: true },
+)
+function linhaDe(codparam) {
+  return (
+    (local.value?.classificacao || []).find((c) => c.codparametroclassificacao === codparam) || {}
+  )
+}
+function descontoParam(codparam) {
+  return (
+    (calc.value.classificacao || []).find((c) => c.codparametroclassificacao === codparam)
+      ?.desconto || null
+  )
+}
+
 const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.bruto !== undefined)
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 const sacasLiquido = computed(() => sacas(calc.value.liquido, pesosaca.value))
@@ -368,9 +431,13 @@ function imprimir() {
     pbt: local.value.pbt,
     tara: local.value.tara,
     bruto: c.bruto,
-    umidade: local.value.umidade,
-    impureza: local.value.impureza,
-    avariados: local.value.avariados,
+    classificacao: itensCarga.value
+      .map((it) => ({
+        nome: it.parametroclassificacao,
+        leitura: linhaDe(it.codparametroclassificacao)?.leitura,
+        desconto: descontoParam(it.codparametroclassificacao),
+      }))
+      .filter((x) => x.leitura != null && x.leitura !== ''),
     desconto: c.desconto,
     liquido: c.liquido,
     sacas: sacasLiquido.value,
@@ -643,28 +710,48 @@ function imprimir() {
           />
 
           <!-- Classificação (só recebimento, a partir da etapa) -->
-          <div v-if="mostrarClassificacao" class="row q-col-gutter-x-md">
-            <MgInputValor
-              v-model="local.umidade"
-              :decimals="1"
-              suffix="%"
-              label="Umidade"
-              class="col-4"
+          <div v-if="mostrarClassificacao">
+            <q-select
+              v-model="codTabelaSel"
+              :options="opcoesTabela"
+              emit-value
+              map-options
+              outlined
+              label="Tabela de classificação"
+              class="q-mb-sm"
             />
-            <MgInputValor
-              v-model="local.impureza"
-              :decimals="1"
-              suffix="%"
-              label="Impureza"
-              class="col-4"
-            />
-            <MgInputValor
-              v-model="local.avariados"
-              :decimals="1"
-              suffix="%"
-              label="Avariados"
-              class="col-4"
-            />
+            <q-banner
+              v-if="divergeContrato"
+              dense
+              rounded
+              class="bg-orange-1 text-orange-9 q-mb-sm"
+            >
+              <template #avatar><q-icon name="warning" color="orange-8" /></template>
+              Tabela diferente da do contrato ({{ nomeTabela(codTabelaContrato) }}).
+            </q-banner>
+            <div class="row q-col-gutter-md">
+              <div
+                v-for="item in itensCarga"
+                :key="item.codparametroclassificacao"
+                class="col-6 col-sm-4"
+              >
+                <MgInputValor
+                  v-model="linhaDe(item.codparametroclassificacao).leitura"
+                  :decimals="1"
+                  suffix="%"
+                  :label="item.parametroclassificacao"
+                />
+                <div
+                  v-if="descontoParam(item.codparametroclassificacao)"
+                  class="text-caption text-orange-8 q-pl-sm"
+                >
+                  − {{ fmt(descontoParam(item.codparametroclassificacao)) }} kg
+                </div>
+              </div>
+              <div v-if="!itensCarga.length" class="col-12 text-caption text-grey-6">
+                Nenhum parâmetro na tabela selecionada.
+              </div>
+            </div>
           </div>
 
           <!-- Resultado -->

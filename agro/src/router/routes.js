@@ -84,7 +84,13 @@ const routes = [
         path: 'cultura/:codcultura/desconto',
         name: 'cultura-desconto',
         component: () => import('pages/CulturaDescontoPage.vue'),
-        meta: { auth: true, title: 'Tabela de Desconto' },
+        meta: { auth: true, title: 'Tabelas de Classificação' },
+      },
+      {
+        path: 'parametros-classificacao',
+        name: 'parametros-classificacao',
+        component: () => import('pages/ParametroClassificacaoPage.vue'),
+        meta: { auth: true, title: 'Parâmetros de Classificação' },
       },
 
       {

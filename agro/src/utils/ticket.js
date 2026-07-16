@@ -33,9 +33,7 @@ export function imprimirTicket(t) {
     })
     .join('<br>')
 
-  const temClassificacao = [t.umidade, t.impureza, t.avariados].some(
-    (v) => v !== null && v !== undefined,
-  )
+  const temClassificacao = (t.classificacao || []).length > 0
   const assinaturas = t.assinaturas || ['Classificador', 'Motorista', 'Recebedor']
 
   const corpo = `
@@ -63,9 +61,7 @@ export function imprimirTicket(t) {
         temClassificacao
           ? `<div class="sep"></div>
       <table>
-        ${linha('Umidade', fmt(t.umidade, 1) + ' %')}
-        ${linha('Impureza', fmt(t.impureza, 1) + ' %')}
-        ${linha('Avariados', fmt(t.avariados, 1) + ' %')}
+        ${(t.classificacao || []).map((c) => linha(c.nome, fmt(c.leitura, 1) + ' %')).join('')}
         ${linha('Desconto', fmt(t.desconto) + ' kg')}
       </table>`
           : ''

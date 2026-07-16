@@ -42,6 +42,12 @@ const menuGroups = [
         color: 'amber-8',
         to: { name: 'unidades-armazenadoras' },
       },
+      {
+        label: 'Parâmetros de Classificação',
+        icon: 'rule',
+        color: 'deep-orange-7',
+        to: { name: 'parametros-classificacao' },
+      },
     ],
   },
 ]

@@ -358,7 +358,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('marca/{id}/inativo', [\Mg\Marca\MarcaController::class, 'ativar']);
     Route::apiResource('marca', \Mg\Marca\MarcaController::class)->parameters(['marca' => 'id']);
 
-    // Cultura / Variedade / TabelaDesconto (dominio Mg\Cultura) — criado 03/06/2026
+    // Cultura / Variedade (dominio Mg\Cultura) — criado 03/06/2026
     Route::get('cultura/{codcultura}/resumo', [\Mg\Cultura\CulturaController::class, 'resumo'])->whereNumber('codcultura');
     Route::post('cultura/{codcultura}/inativo', [\Mg\Cultura\CulturaController::class, 'inativar']);
     Route::delete('cultura/{codcultura}/inativo', [\Mg\Cultura\CulturaController::class, 'ativar']);
@@ -368,9 +368,15 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('variedade/{codvariedade}/inativo', [\Mg\Cultura\VariedadeController::class, 'ativar']);
     Route::apiResource('variedade', \Mg\Cultura\VariedadeController::class)->parameters(['variedade' => 'codvariedade']);
 
-    Route::post('tabela-desconto/{codtabeladesconto}/inativo', [\Mg\Cultura\TabelaDescontoController::class, 'inativar']);
-    Route::delete('tabela-desconto/{codtabeladesconto}/inativo', [\Mg\Cultura\TabelaDescontoController::class, 'ativar']);
-    Route::apiResource('tabela-desconto', \Mg\Cultura\TabelaDescontoController::class)->parameters(['tabela-desconto' => 'codtabeladesconto']);
+    // Classificacao de graos: catalogo de parametros + tabelas nomeadas (dominio Mg\Classificacao)
+    Route::post('parametro-classificacao/{codparametroclassificacao}/inativo', [\Mg\Classificacao\ParametroClassificacaoController::class, 'inativar']);
+    Route::delete('parametro-classificacao/{codparametroclassificacao}/inativo', [\Mg\Classificacao\ParametroClassificacaoController::class, 'ativar']);
+    Route::apiResource('parametro-classificacao', \Mg\Classificacao\ParametroClassificacaoController::class)->parameters(['parametro-classificacao' => 'codparametroclassificacao']);
+
+    Route::post('tabela-classificacao/{codtabelaclassificacao}/padrao', [\Mg\Classificacao\TabelaClassificacaoController::class, 'padrao']);
+    Route::post('tabela-classificacao/{codtabelaclassificacao}/inativo', [\Mg\Classificacao\TabelaClassificacaoController::class, 'inativar']);
+    Route::delete('tabela-classificacao/{codtabelaclassificacao}/inativo', [\Mg\Classificacao\TabelaClassificacaoController::class, 'ativar']);
+    Route::apiResource('tabela-classificacao', \Mg\Classificacao\TabelaClassificacaoController::class)->parameters(['tabela-classificacao' => 'codtabelaclassificacao']);
 
     Route::post('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'inativar']);
     Route::delete('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'ativar']);

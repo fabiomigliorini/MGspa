@@ -25,10 +25,12 @@ const buscarPeloCod = async () => {
   if (!props.modelValue) {
     return
   }
-  const ret = await api.get('/v1/select/cidade', {
-    params: { codcidade: props.modelValue },
-  })
-  opcoes.value = ret.data
+  try {
+    const ret = await api.get('/v1/select/cidade/' + props.modelValue)
+    opcoes.value = [ret.data]
+  } catch {
+    // sem registro: deixa o select sem opção resolvida
+  }
 }
 
 const buscar = async (val, update, abort) => {
@@ -40,7 +42,7 @@ const buscar = async (val, update, abort) => {
   update(async () => {
     const ret = await api.get('/v1/select/cidade', {
       params: {
-        cidade: val,
+        busca: val,
       },
     })
     opcoes.value = ret.data
