@@ -15,7 +15,7 @@ import {
   isEmailValido,
   isTelefoneValido,
 } from 'src/utils/validador.js'
-import SelectCidade from '../selects/SelectCidade.vue'
+import SelectCidade from '@components/MgSelectCidade.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import { negocioStore } from 'src/stores/negocio'
