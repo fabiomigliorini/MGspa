@@ -179,6 +179,21 @@ const salvarEndereco = async () => {
   }
 }
 
+const normaliza = (s) => removerAcentos((s || '').toLowerCase())
+
+// O param TEM que se chamar `busca`: com qualquer outro nome o backend ignora em silencio e
+// devolve as 20 primeiras cidades em ordem alfabetica -- era assim que todo CEP gravava
+// "Abadia de Goias / GO". Por isso casamos o label ("cidade / sigla") em vez de pegar [0],
+// e sem match exato devolvemos null: campo vazio e melhor que cidade errada no banco.
+const resolveCodcidade = async (localidade, uf) => {
+  if (!localidade || !uf) return null
+  const { data } = await api.get('v1/select/cidade', {
+    params: { busca: `${localidade} ${uf}`, page: 1 },
+  })
+  const alvo = normaliza(`${localidade} / ${uf}`)
+  return (Array.isArray(data) ? data : []).find((c) => normaliza(c.label) === alvo)?.value ?? null
+}
+
 const buscaCep = async () => {
   buscandoCep.value = true
   if (modelEndereco.value.cep.length == 8) {
@@ -186,9 +201,7 @@ const buscaCep = async () => {
     if (data.logradouro) {
       modelEndereco.value.endereco = data.logradouro
       modelEndereco.value.bairro = data.bairro
-      const cidadeapicep = data.localidade.toLowerCase()
-      const buscarcidade = await api.get('v1/select/cidade?cidade=' + removerAcentos(cidadeapicep))
-      modelEndereco.value.codcidade = buscarcidade.data[0].value
+      modelEndereco.value.codcidade = await resolveCodcidade(data.localidade, data.uf)
     }
     buscandoCep.value = false
     setTimeout(() => {

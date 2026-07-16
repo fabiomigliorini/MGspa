@@ -198,13 +198,12 @@ export default {
     )
 
     onMounted(async () => {
+      // Antes de buscar: o filtro vem do localStorage e pode estar corrompido (ver store).
+      sPessoa.sanearFiltroPesquisa()
       if (sPessoa.arrPessoas.length == 0) {
         buscarPessoas()
       }
-      if (sPessoa.filtroPesquisa.codcidade) {
-        const ret = await sPessoa.consultaCidade(sPessoa.filtroPesquisa.codcidade)
-        sPessoa.filtroPesquisa.codcidade = ret.data[0]
-      }
+      // O SelectCidade resolve o label do codcidade sozinho (via v1/select/cidade/{id}).
     })
 
     return {

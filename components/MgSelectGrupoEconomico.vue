@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
@@ -20,6 +20,12 @@ const emit = defineEmits(['update:modelValue', 'select', 'clear', 'adicionar'])
 function onNew(val, done) {
   if (props.permiteAdicionar) emit('adicionar', val, done)
 }
+
+// O QSelect nao olha `permiteAdicionar`: ele olha se EXISTE listener de new-value
+// (QSelect.js:786). Com listener e sem `done()` chamado, ele engole Enter/Tab.
+// O ternario tem que ficar aqui: no template ele viraria inline handler
+// ($event => ...), que e sempre uma funcao -- e o QSelect voltaria a enxergar listener.
+const onNewHandler = computed(() => (props.permiteAdicionar ? onNew : undefined))
 
 const cache = useSelectCacheStore()
 const ENTITY = 'grupoEconomico'
@@ -145,7 +151,7 @@ const handleUpdate = (value) => {
     :new-value-mode="permiteAdicionar ? 'add-unique' : undefined"
     @filter="filtrar"
     @virtual-scroll="onScroll"
-    @new-value="onNew"
+    @new-value="onNewHandler"
     :loading="loading"
   >
     <template v-slot:option="scope">

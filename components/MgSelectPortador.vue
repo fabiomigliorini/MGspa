@@ -6,12 +6,15 @@ import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 // Carrega TUDO uma vez de v1/select/portador, cacheia (lista + byId no store
 // compartilhado) e filtra no FRONT ao digitar. clearable é opcional (default false).
 const props = defineProps({
-  modelValue: { type: [Number, String], default: null },
+  modelValue: { type: [Number, String, Array], default: null },
   label: { type: String, default: 'Portador' },
   // Se array de codfilial, restringe aos portadores dessas filiais.
   filiais: { type: Array, default: null },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // Modo multiplo: v-model e Array, onde [] = sem filtro (todos). Espelha o backend,
+  // que so aplica o IN quando o array vem preenchido.
+  multiple: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 
@@ -51,6 +54,10 @@ function filtrar(val, update) {
 }
 
 function onUpdate(v) {
+  if (props.multiple) {
+    emit('update:modelValue', Array.isArray(v) ? v : [])
+    return
+  }
   emit('update:modelValue', v)
   emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
 }
@@ -63,8 +70,9 @@ onMounted(() => carregar())
     :model-value="modelValue"
     :options="opcoes"
     :label="label"
+    :multiple="multiple"
     use-input
-    fill-input
+    :fill-input="!multiple"
     hide-selected
     input-debounce="100"
     outlined
@@ -80,7 +88,7 @@ onMounted(() => carregar())
       <q-item><q-item-section class="text-grey-6">Nenhum portador</q-item-section></q-item>
     </template>
     <template #option="scope">
-      <q-item v-bind="scope.itemProps">
+      <q-item v-bind="scope.itemProps" :class="multiple && scope.selected ? 'bg-blue-1' : ''">
         <q-item-section>
           <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
             {{ scope.opt.label }}

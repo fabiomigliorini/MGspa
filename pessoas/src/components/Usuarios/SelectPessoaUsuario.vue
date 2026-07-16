@@ -24,7 +24,9 @@ const codigoUsuarioPessoa = computed({
 
 watch(codigoUsuarioPessoa, async (value) => {
   if (value) {
-    sPessoa.filtroPesquisa.codpessoa = value
+    // NAO escrever em sPessoa.filtroPesquisa aqui: e o filtro da tela /pessoas e e persistido.
+    // buscaPessoasSelectUsuario recebe o codpessoa por parametro, entao era escrita morta que
+    // so vazava estado de /usuarios pra /pessoas.
     const ret = await sPessoa.buscaPessoasSelectUsuario({ codpessoa: value })
     opcoes.value = ret.data.data
   }

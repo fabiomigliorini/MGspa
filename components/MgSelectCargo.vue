@@ -20,6 +20,12 @@ function onNew(val, done) {
   if (props.permiteAdicionar) emit('adicionar', val, done)
 }
 
+// O QSelect nao olha `permiteAdicionar`: ele olha se EXISTE listener de new-value
+// (QSelect.js:786). Com listener e sem `done()` chamado, ele engole Enter/Tab.
+// O ternario tem que ficar aqui: no template ele viraria inline handler
+// ($event => ...), que e sempre uma funcao -- e o QSelect voltaria a enxergar listener.
+const onNewHandler = computed(() => (props.permiteAdicionar ? onNew : undefined))
+
 const cache = useSelectCacheStore()
 const ENTITY = 'cargo'
 const ENDPOINT = 'v1/select/cargo'
@@ -86,7 +92,7 @@ watch(
     :new-value-mode="permiteAdicionar ? 'add-unique' : undefined"
     @filter="filtrar"
     @update:model-value="onUpdate"
-    @new-value="onNew"
+    @new-value="permiteAdicionar ? onNew : undefined"
     v-bind="$attrs"
   >
     <template #no-option>

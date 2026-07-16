@@ -52,7 +52,7 @@ class MarcaService extends MgService
         foreach ($qry->get() as $item) {
             $ret[] = [
                 'label' => $item->marca,
-                'value' => $item->marca,
+                'value' => $item->codmarca,
                 'id' => $item->codmarca,
             ];
         }

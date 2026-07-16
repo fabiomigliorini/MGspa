@@ -25,14 +25,19 @@ onMounted(async () => {
   buscarPeloCod(props.modelValue)
 })
 
+// Resolve pela rota dedicada. Mandar ?codportador= pro index NAO filtra nada (o index ignora
+// param desconhecido em silencio): funcionava por acidente porque o LIMIT 250 cabia os 65
+// portadores e o map-options achava o label. Quebraria calado ao passar de 250.
 const buscarPeloCod = async () => {
   if (!props.modelValue) {
     return
   }
-  const ret = await api.get('/v1/select/portador', {
-    params: { codportador: props.modelValue },
-  })
-  opcoes.value = ret.data
+  try {
+    const ret = await api.get('/v1/select/portador/' + props.modelValue)
+    opcoes.value = ret.data ? [ret.data] : []
+  } catch {
+    opcoes.value = []
+  }
 }
 
 const buscar = async (val, update) => {

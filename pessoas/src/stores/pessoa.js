@@ -279,13 +279,13 @@ export const pessoaStore = defineStore('pessoa', {
       return ret
     },
 
-    async consultaCidade(cidade) {
-      if (typeof cidade === 'number') {
-        const ret = await api.get('v1/select/cidade?codcidade=' + cidade)
-        return ret
+    // filtroPesquisa e persistido: versoes antigas gravavam o OBJETO {value,label} em
+    // codcidade (que e Number) e o objeto ia como param da busca, quebrando /pessoa com 500.
+    // Descarta o resto herdado do localStorage. Pode sair depois que os filtros rodarem.
+    sanearFiltroPesquisa() {
+      if (this.filtroPesquisa.codcidade !== null && typeof this.filtroPesquisa.codcidade === 'object') {
+        this.filtroPesquisa.codcidade = null
       }
-      const ret = await api.get('v1/select/cidade?cidade=' + cidade)
-      return ret
     },
 
     async clienteSalvar(codpessoa, modelEditarCliente) {
