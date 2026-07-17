@@ -58,23 +58,6 @@ export const useSelectProdutoBarraStore = defineStore('selectProdutoBarra', {
     },
 
     /**
-     * Carrega um único produto por codprodutobarra (para inicialização de selects).
-     */
-    async fetch(codprodutobarra) {
-      if (!codprodutobarra) return null
-      try {
-        const response = await api.get('v1/select/produto-barra', {
-          params: { codprodutobarra },
-        })
-        if (!response.data || response.data.length === 0) return null
-        return mapProduto(response.data[0])
-      } catch (error) {
-        console.error('Erro ao carregar produto:', error)
-        throw error
-      }
-    },
-
-    /**
      * Limpa o cache de produtos (modo legado)
      */
     clear() {

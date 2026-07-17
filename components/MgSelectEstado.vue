@@ -39,8 +39,12 @@ async function carregar() {
 function filtrar(val, update) {
   update(() => {
     const needle = (val || '').toLowerCase()
+    // Filtra por nome E sigla: o campo se chama "UF", entao digitar "MG" tem que achar.
+    // Mesmo criterio do MgSelectMoeda.vue.
     opcoes.value = needle
-      ? permitidos.value.filter((v) => (v.label || '').toLowerCase().includes(needle))
+      ? permitidos.value.filter((v) =>
+          [v.label, v.sigla].some((c) => (c || '').toLowerCase().includes(needle)),
+        )
       : permitidos.value
   })
 }

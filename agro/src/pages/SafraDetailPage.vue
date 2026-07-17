@@ -38,8 +38,8 @@ const fazendas = ref([])
 const variedades = ref([])
 const talhoesBase = ref([]) // layout base de todas as fazendas
 
-// Como agrupar a tabela de talhões: por talhão (padrão) ou por variedade.
-const agrupamento = ref('talhao')
+// Como agrupar a tabela de talhões: por variedade (padrão) ou por talhão.
+const agrupamento = ref('variedade')
 
 const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.Cultura?.codcultura)
 
