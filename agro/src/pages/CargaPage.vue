@@ -102,73 +102,80 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page class="column" :style-fn="pageStyleFn">
-    <!-- Barra superior: safra + sentido + status -->
-    <div class="bg-white q-px-md q-py-sm">
-      <div class="row items-center no-wrap q-gutter-sm">
-        <q-btn
-          flat
-          round
-          icon="arrow_back"
-          color="grey-7"
-          :to="voltarSafra"
-          :disable="!voltarSafra"
-        >
-          <q-tooltip>Voltar para a safra</q-tooltip>
-        </q-btn>
+  <q-page class="column bg-white" :style-fn="pageStyleFn">
+    <!-- Barra superior: safra + tipo de romaneio + status.
+         Grid (col-6 col-sm) em vez de no-wrap: em xs os dois selects quebram
+         pra segunda linha, senão "Transferência" trunca. -->
+    <div class="q-px-md q-pt-md q-pb-sm">
+      <div class="row items-center q-col-gutter-sm">
+        <div class="col-auto">
+          <q-btn
+            flat
+            round
+            icon="arrow_back"
+            color="grey-7"
+            :to="voltarSafra"
+            :disable="!voltarSafra"
+          >
+            <q-tooltip>Voltar para a safra</q-tooltip>
+          </q-btn>
+        </div>
 
-        <q-select
-          :model-value="codsafraAtiva"
-          :options="safras"
-          option-value="codsafra"
-          option-label="safra"
-          emit-value
-          map-options
-          outlined
-          label="Safra"
-          class="col"
-          @update:model-value="store.definirSafra"
-        />
+        <div class="col-6 col-sm">
+          <q-select
+            :model-value="codsafraAtiva"
+            :options="safras"
+            option-value="codsafra"
+            option-label="safra"
+            emit-value
+            map-options
+            outlined
+            label="Safra"
+            @update:model-value="store.definirSafra"
+          />
+        </div>
 
-        <q-chip
-          :color="online ? 'green-1' : 'orange-1'"
-          :text-color="online ? 'green-9' : 'orange-9'"
-          :icon="online ? 'cloud_done' : 'cloud_off'"
-        >
-          <span class="gt-xs q-ml-xs">{{ online ? 'Online' : 'Offline' }}</span>
-        </q-chip>
+        <div class="col-6 col-sm">
+          <q-select
+            :model-value="sentidoAtivo"
+            :options="store.SENTIDOS"
+            option-value="value"
+            option-label="label"
+            emit-value
+            map-options
+            outlined
+            label="Tipo de Romaneio"
+            @update:model-value="store.definirSentido"
+          />
+        </div>
 
-        <q-btn
-          flat
-          round
-          icon="sync"
-          :loading="sincronizando"
-          color="grey-7"
-          @click="store.sincronizar({ force: true })"
-        >
-          <q-tooltip>Sincronizar</q-tooltip>
-        </q-btn>
-      </div>
+        <div class="col-auto">
+          <q-chip
+            :color="online ? 'green-1' : 'orange-1'"
+            :text-color="online ? 'green-9' : 'orange-9'"
+            :icon="online ? 'cloud_done' : 'cloud_off'"
+          >
+            <span class="gt-xs q-ml-xs">{{ online ? 'Online' : 'Offline' }}</span>
+          </q-chip>
+        </div>
 
-      <!-- Seletor de operação (sentido) -->
-      <div class="row q-mt-sm">
-        <q-btn-toggle
-          :model-value="sentidoAtivo"
-          :options="store.SENTIDOS.map((s) => ({ value: s.value, label: s.label, icon: s.icon }))"
-          unelevated
-          no-caps
-          toggle-color="primary"
-          color="white"
-          text-color="grey-8"
-          class="col"
-          spread
-          @update:model-value="store.definirSentido"
-        />
+        <div class="col-auto">
+          <q-btn
+            flat
+            round
+            icon="sync"
+            :loading="sincronizando"
+            color="grey-7"
+            @click="store.sincronizar({ force: true })"
+          >
+            <q-tooltip>Sincronizar</q-tooltip>
+          </q-btn>
+        </div>
       </div>
     </div>
 
     <!-- Kanban horizontal: uma coluna por etapa do sentido -->
-    <div class="row no-wrap q-gutter-md q-pa-md bg-grey-2 col" style="overflow-x: auto">
+    <div class="row no-wrap q-gutter-md q-pa-md col" style="overflow-x: auto">
       <q-card
         v-for="e in colunas"
         :key="e.etapa"
