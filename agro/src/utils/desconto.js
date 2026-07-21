@@ -65,7 +65,10 @@ export function calcularCarga(carga, itens) {
     const desc = arredondar(base * percentualItem(item, cc.leitura))
     cc.desconto = desc
     total += desc
-    if (item.reduzbase) base = arredondar(base - desc)
+    // Base reduzida SEM re-arredondar — idêntico ao backend (CargaService: $base -= $desc),
+    // que é a autoridade. Com pbt/tara inteiros o round era redundante (base-desc já tem
+    // 3 casas); manter igual evita qualquer divergência se os pesos ganharem decimais.
+    if (item.reduzbase) base = base - desc
   }
 
   const desconto = arredondar(total)

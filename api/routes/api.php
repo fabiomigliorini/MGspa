@@ -409,7 +409,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // O extrato (tblmovimentograo) e gerado pelo servidor a partir dos pontos.
     Route::get('carga', [\Mg\Grao\CargaController::class, 'index']);
     Route::post('carga/sincronizar', [\Mg\Grao\CargaController::class, 'sincronizar']);
-    Route::post('carga/recalcular', [\Mg\Grao\CargaController::class, 'recalcular']);
     Route::post('carga/{codcarga}/inativo', [\Mg\Grao\CargaController::class, 'inativar']);
     Route::delete('carga/{codcarga}/inativo', [\Mg\Grao\CargaController::class, 'ativar']);
     Route::get('carga/{codcarga}', [\Mg\Grao\CargaController::class, 'show'])->whereNumber('codcarga');

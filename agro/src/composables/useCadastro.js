@@ -4,7 +4,7 @@ import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 
 // CRUD simples e reutilizavel pros cadastros online (cultura, variedade,
-// fazenda, talhao, safra, tabela-desconto). Padrao do contas/estoque:
+// fazenda, talhao, safra, tabela-classificacao). Padrao do contas/estoque:
 // lista + dialog novo/editar + inativar/ativar (POST/DELETE .../inativo) +
 // excluir com confirmacao.
 export function useCadastro(endpoint, pk, label = 'Registro', options = {}) {

@@ -1,3 +1,17 @@
+// Instante atual em wall-clock LOCAL 'YYYY-MM-DD HH:mm:ss' — MESMO formato que o
+// MgInputData (dateToIso) emite e que o backend devolve (serializeDate = Y-m-d H:i:s,
+// sem offset). Gravar UTC (new Date().toISOString()) jogava a carga da noite pro dia
+// seguinte no recorte slice(0,10) do board. Assim carga criada, editada e puxada do
+// servidor viram a MESMA string.
+export function agoraLocal() {
+  const d = new Date()
+  const p = (n) => String(n).padStart(2, '0')
+  return (
+    `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ` +
+    `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
+  )
+}
+
 // Mapeia uma carga vinda do servidor (GET /v1/carga) para o shape offline que o
 // Dexie/board usam. O servidor entrega colunas cruas + relações em PascalCase
 // (CargaPontoS, TabelaClassificacao) e as leituras já na chave `classificacao`;

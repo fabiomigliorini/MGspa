@@ -26,8 +26,7 @@ class CargaController extends MgController
      */
     public function sincronizar(CargaSincronizarRequest $request)
     {
-        $request->validated();
-        $carga = CargaService::sincronizar($request->all());
+        $carga = CargaService::sincronizar($request->validated());
         return new CargaResource($carga->load(CargaService::WITH));
     }
 
@@ -41,17 +40,5 @@ class CargaController extends MgController
     {
         $model = CargaService::ativar(Carga::findOrFail($id));
         return new CargaResource($model->fresh(CargaService::WITH));
-    }
-
-    /** Recalcula o extrato (idempotente) de uma safra/contrato/unidade/carga. */
-    public function recalcular(Request $request)
-    {
-        $n = CargaService::recalcular($request->only([
-            'codsafra',
-            'codcarga',
-            'codcontrato',
-            'codunidadearmazenadora',
-        ]));
-        return response()->json(['recalculadas' => $n], 200);
     }
 }

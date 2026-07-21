@@ -100,10 +100,21 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     // Só sobrescreve o que o backend REALMENTE devolveu. Uma resposta parcial/vazia
     // (ex.: dedup de POSTs concorrentes no api.js) NÃO pode zerar o liquido/codcarga
     // já calculados localmente — senão a carga finalizada fica "— kg / 0 sc".
-    const patch = { sincronizado: 1 }
-    if (oficial.codcarga != null) patch.codcarga = oficial.codcarga
-    for (const campo of ['bruto', 'desconto', 'liquido']) {
-      if (oficial[campo] != null) patch[campo] = oficial[campo]
+    // Com codcarga presente (resposta real), o servidor é a autoridade: regrava a
+    // tabela resolvida, o snapshot placa/motorista e o desconto por parâmetro.
+    const patch = { sincronizado: 1, syncerro: null }
+    if (oficial.codcarga != null) {
+      const norm = normalizarCargaDoServidor(oficial)
+      patch.codcarga = norm.codcarga
+      patch.codtabelaclassificacao = norm.codtabelaclassificacao
+      patch.placa = norm.placa
+      patch.motorista = norm.motorista
+      patch.codveiculo = norm.codveiculo
+      patch.codpessoamotorista = norm.codpessoamotorista
+      patch.classificacao = norm.classificacao
+      for (const campo of ['bruto', 'desconto', 'liquido']) {
+        if (oficial[campo] != null) patch[campo] = oficial[campo]
+      }
     }
     await db.carga.update(carga.uuid, patch)
     return oficial
@@ -138,13 +149,18 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   async function enviarCargasPendentes() {
     const pendentes = await db.carga.where('sincronizado').equals(0).toArray()
     for (const carga of pendentes) {
-      // Uma carga rejeitada (422: excede contrato, rateio nao fecha) nao pode
-      // abortar o ciclo nem se perder em silencio. Mostra o erro e segue; o
-      // registro fica pendente ate o operador ajustar. So rede interrompe.
+      // Carga já rejeitada pelo servidor fica marcada (`syncerro`) e NÃO é
+      // re-tentada — senão o mesmo 422/500 re-dispara toast a cada ciclo de sync,
+      // pra sempre. Ela volta ao fluxo quando o operador editar (salvar limpa o erro).
+      if (carga.syncerro) continue
+      // 422 (excede contrato, rateio não fecha) / 500: marca e segue; o registro
+      // fica pendente até o operador ajustar. Só rede (ERR_NETWORK) interrompe o ciclo.
       try {
         await enviarCarga(carga)
       } catch (e) {
         if (e.code === 'ERR_NETWORK') throw e
+        const msg = e?.response?.data?.message || 'Rejeitado pelo servidor'
+        await db.carga.update(carga.uuid, { syncerro: msg })
         notifyError(e)
         console.error('Falha ao sincronizar carga', carga.uuid, e?.response?.data || e)
       }

@@ -1,12 +1,15 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { sacas } from 'src/utils/desconto'
+import { agoraLocal } from 'src/utils/carga'
 import CargaDialog from 'components/CargaDialog.vue'
 import MgInputData from '@components/MgInputData.vue'
 
+const $q = useQuasar()
 const store = useCargaStore()
 const sinc = useSincronizacaoStore()
 
@@ -21,7 +24,7 @@ const {
 } = storeToRefs(store)
 const { online, sincronizando } = storeToRefs(sinc)
 
-const hojeIso = new Date().toISOString().slice(0, 10)
+const hojeIso = agoraLocal().slice(0, 10)
 
 // Metadados de cada etapa (todas as etapas possíveis; o board mostra as do sentido).
 const ETAPA_META = {
@@ -53,6 +56,12 @@ function abrir(carga) {
   dialog.value = true
 }
 function novaCarga() {
+  // Sem safra ativa (ex.: cold start offline sem cache) a carga nasceria com
+  // codsafra:null — invisível no board e rejeitada pra sempre no sync. Barra antes.
+  if (!codsafraAtiva.value) {
+    $q.notify({ type: 'warning', message: 'Sincronize ao menos uma safra antes de registrar cargas.' })
+    return
+  }
   cargaSel.value = store.nova()
   novo.value = true
   dialog.value = true
@@ -63,6 +72,12 @@ async function onSalvar(carga) {
 }
 async function onAvancar(carga) {
   await store.salvar(carga)
+}
+async function onCancelar(carga) {
+  // Já no servidor → inativa (estorna); pendente local → descarta do Dexie.
+  if (carga.codcarga || carga.sincronizado) await store.inativar(carga)
+  else await store.descartarPendente(carga)
+  dialog.value = false
 }
 
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
@@ -141,12 +156,17 @@ function chipsClassificacao(carga) {
   const porCod = new Map(itens.map((i) => [i.codparametroclassificacao, i]))
   return (carga.classificacao || [])
     .filter((c) => c.leitura !== null && c.leitura !== undefined && c.leitura !== '')
-    .map((c) => ({
-      key: c.codparametroclassificacao,
-      label: abreviar(nomeParametro(c, porCod)),
-      leitura: c.leitura,
-      fora: Number(c.leitura) > (Number(porCod.get(c.codparametroclassificacao)?.tolerancia) || 0),
-    }))
+    .map((c) => {
+      const item = porCod.get(c.codparametroclassificacao)
+      return {
+        key: c.codparametroclassificacao,
+        label: abreviar(nomeParametro(c, porCod)),
+        leitura: c.leitura,
+        // Só marca "fora" quando há item resolvido (senão tolerância viraria 0 e
+        // todo parâmetro inativo/sem catálogo apareceria falsamente vermelho).
+        fora: item ? Number(c.leitura) > (Number(item.tolerancia) || 0) : false,
+      }
+    })
 }
 
 // Aviso (só ENTRADA, onde a classificação vale): sem tabela resolvida (desconto
@@ -350,6 +370,9 @@ onMounted(async () => {
                       >
                         <q-tooltip>{{ avisoTabela(carga) }}</q-tooltip>
                       </q-icon>
+                      <q-icon v-if="carga.syncerro" name="sync_problem" color="red-6" size="18px">
+                        <q-tooltip>{{ carga.syncerro }}</q-tooltip>
+                      </q-icon>
                       <q-icon
                         :name="carga.sincronizado ? 'cloud_done' : 'cloud_off'"
                         :color="carga.sincronizado ? 'green-5' : 'orange-6'"
@@ -432,7 +455,16 @@ onMounted(async () => {
     </div>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" label="Carga" @click="novaCarga" />
+      <q-btn
+        fab
+        icon="add"
+        color="primary"
+        label="Carga"
+        :disable="!codsafraAtiva"
+        @click="novaCarga"
+      >
+        <q-tooltip v-if="!codsafraAtiva">Sincronize uma safra antes de registrar cargas</q-tooltip>
+      </q-btn>
     </q-page-sticky>
 
     <CargaDialog
@@ -441,6 +473,7 @@ onMounted(async () => {
       :novo="novo"
       @salvar="onSalvar"
       @avancar="onAvancar"
+      @cancelar="onCancelar"
     />
   </q-page>
 </template>
