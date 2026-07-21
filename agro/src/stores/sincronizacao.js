@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
 import { notifyError } from 'src/utils/notify'
+import { normalizarCargaDoServidor } from 'src/utils/carga'
 
 // Store de sincronizacao offline-first (espelha o negocios):
 //  - PULL: baixa os cadastros de referencia + saldos pro Dexie (leitura offline)
@@ -108,6 +109,32 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     return oficial
   }
 
+  // PULL de cargas (board multi-dispositivo): baixa as cargas da safra+dia e faz
+  // merge no Dexie. NÃO reusa puxarTabela porque, pra carga, `sincronizado` é flag
+  // 0/1 (não timestamp) e um bulkPut cego sobrescreveria edições locais pendentes.
+  // Regras do merge: nunca tocar em linha local `sincronizado === 0`; as puxadas
+  // entram como `sincronizado: 1` (servidor é a autoridade). Casa pela PK `uuid`
+  // (o backend preserva o uuid do cliente no upsert).
+  async function puxarCargas(codsafra, dataIso) {
+    if (!codsafra) return
+    const pendentes = new Set(
+      (await db.carga.where('sincronizado').equals(0).toArray()).map((c) => c.uuid),
+    )
+    const params = { codsafra, page: 1 }
+    if (dataIso) params.data = dataIso
+    let last = 1
+    do {
+      const { data } = await api.get('v1/carga', { params, skipLoading: true })
+      const itens = Array.isArray(data) ? data : (data.data ?? [])
+      const gravar = itens
+        .filter((c) => c.uuid && !pendentes.has(c.uuid))
+        .map((c) => ({ ...normalizarCargaDoServidor(c), sincronizado: 1 }))
+      if (gravar.length) await db.carga.bulkPut(gravar)
+      last = data.last_page ?? 1
+      params.page++
+    } while (params.page <= last)
+  }
+
   async function enviarCargasPendentes() {
     const pendentes = await db.carga.where('sincronizado').equals(0).toArray()
     for (const carga of pendentes) {
@@ -156,6 +183,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     saldosUnidades,
     sincronizar,
     puxarReferencias,
+    puxarCargas,
     enviarCarga,
     enviarCargasPendentes,
   }

@@ -292,6 +292,24 @@ function descontoParam(codparam) {
   )
 }
 
+// Hint da tabela por parâmetro: tolerância + fator (FATOR) ou deságio (NORMALIZADO).
+function hintItem(item) {
+  const partes = [`Tol. ${fmt(item.tolerancia, 1)}%`]
+  if (item.metodo === 'FATOR' && Number(item.fator)) {
+    partes.push(`fator ${fmt(item.fator, 1)}`)
+  } else if (Number(item.desagio)) {
+    partes.push(`deságio ${fmt(item.desagio, 1)}%`)
+  }
+  return partes.join(' · ')
+}
+
+// Leitura acima da tolerância = gera desconto (mesma condição do board e do utils).
+function foraTolerancia(item) {
+  const leitura = linhaDe(item.codparametroclassificacao)?.leitura
+  if (leitura === null || leitura === undefined || leitura === '') return false
+  return Number(leitura) > (Number(item.tolerancia) || 0)
+}
+
 const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.bruto !== undefined)
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 const sacasLiquido = computed(() => sacas(calc.value.liquido, pesosaca.value))
@@ -739,8 +757,12 @@ function imprimir() {
                   v-model="linhaDe(item.codparametroclassificacao).leitura"
                   :decimals="1"
                   suffix="%"
-                  :label="item.parametroclassificacao"
+                  :label="`${item.ordem}. ${item.parametroclassificacao}`"
+                  :hint="hintItem(item)"
                 />
+                <div v-if="foraTolerancia(item)" class="text-caption text-orange-9 q-pl-sm">
+                  acima da tolerância
+                </div>
                 <div
                   v-if="descontoParam(item.codparametroclassificacao)"
                   class="text-caption text-orange-8 q-pl-sm"

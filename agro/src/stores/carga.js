@@ -101,6 +101,7 @@ export const useCargaStore = defineStore('carga', () => {
   const saldosUnidades = ref([]) // snapshot do servidor [{codunidadearmazenadora, saldokg, ...}]
   const codsafraAtiva = ref(null)
   const sentidoAtivo = ref('ENTRADA')
+  const dataFiltro = ref(null) // dia filtrado no board (ISO YYYY-MM-DD); vazio = todos
 
   const veiculosAtivos = computed(() => veiculos.value.filter((v) => !v.inativo))
   const veiculoPorId = (codveiculo) =>
@@ -184,12 +185,16 @@ export const useCargaStore = defineStore('carga', () => {
 
   const etapasDoSentido = computed(() => ETAPAS_POR_SENTIDO[sentidoAtivo.value] || [])
 
-  // Cargas do sentido ativo agrupadas por etapa (board).
+  // Cargas do sentido ativo, do dia filtrado, agrupadas por etapa (board).
+  // O recorte por dia vive AQUI (só o kanban usa) — `cargas` continua full-safra
+  // pras derivadas (produtividade/colhido) e pra IndexPage.
   const cargasPorEtapa = computed(() => {
     const grupos = {}
     for (const e of etapasDoSentido.value) grupos[e] = []
+    const dia = dataFiltro.value
     for (const c of cargas.value) {
       if (c.inativo || c.sentido !== sentidoAtivo.value) continue
+      if (dia && String(c.data).slice(0, 10) !== dia) continue
       if (grupos[c.etapa]) grupos[c.etapa].push(c)
     }
     return grupos
@@ -284,6 +289,24 @@ export const useCargaStore = defineStore('carga', () => {
     return pessoa ? `${c.contrato} — ${pessoa}` : `${c.contrato}`
   }
 
+  // Rótulo de um ponto a partir das caches — mesma fonte do CargaDialog. Usado pra
+  // preencher o `rotulo` das cargas puxadas do servidor (que vêm sem ele).
+  function rotuloPonto(p) {
+    if (p.contatipo === 'PLANTIO') {
+      return plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.rotulo || null
+    }
+    if (p.contatipo === 'UNIDADE') {
+      return (
+        unidades.value.find((o) => o.codunidadearmazenadora === p.codunidadearmazenadora)
+          ?.unidadearmazenadora || null
+      )
+    }
+    if (p.contatipo === 'CONTRATO') {
+      return rotuloContrato(p.codcontrato)
+    }
+    return null
+  }
+
   async function carregarReferencias() {
     safras.value = await db.safra.toArray()
     culturas.value = await db.cultura.toArray()
@@ -321,17 +344,37 @@ export const useCargaStore = defineStore('carga', () => {
           classificacao: c.classificacao,
         })
       }
+      // Cargas puxadas do servidor vêm com rotulo null — resolve das caches.
+      for (const p of c.pontos || []) {
+        if (!p.rotulo) p.rotulo = rotuloPonto(p)
+      }
     }
     cargas.value = arr.sort((a, b) => (a.data < b.data ? 1 : -1))
   }
 
+  // Puxa as cargas da safra+dia do servidor (best-effort: offline segue com o
+  // Dexie local) e recarrega o board.
+  async function puxarCargasDoDia() {
+    if (codsafraAtiva.value) {
+      await sincronizacao.puxarCargas(codsafraAtiva.value, dataFiltro.value).catch(() => {})
+    }
+    await carregarCargas()
+  }
+
   async function definirSafra(codsafra) {
     codsafraAtiva.value = codsafra
-    await carregarCargas()
+    await puxarCargasDoDia()
   }
 
   function definirSentido(sentido) {
     sentidoAtivo.value = sentido
+  }
+
+  // Troca o dia filtrado no board e puxa as cargas (multi-dispositivo). Vazio =
+  // todos os romaneios (puxa a safra inteira, sem filtro de data).
+  async function definirData(iso) {
+    dataFiltro.value = iso || null
+    await puxarCargasDoDia()
   }
 
   // `opts` (ex.: { force: true } vindo do botao "Sincronizar") repassa pro throttle
@@ -339,7 +382,7 @@ export const useCargaStore = defineStore('carga', () => {
   async function sincronizar(opts) {
     await sincronizacao.sincronizar(opts)
     await carregarReferencias()
-    await carregarCargas()
+    await puxarCargasDoDia()
     saldosUnidades.value = sincronizacao.saldosUnidades
   }
 
@@ -427,6 +470,7 @@ export const useCargaStore = defineStore('carga', () => {
     saldosUnidades,
     codsafraAtiva,
     sentidoAtivo,
+    dataFiltro,
     veiculosAtivos,
     veiculoPorId,
     unidadesAtivas,
@@ -450,6 +494,7 @@ export const useCargaStore = defineStore('carga', () => {
     carregarCargas,
     definirSafra,
     definirSentido,
+    definirData,
     sincronizar,
     nova,
     salvar,

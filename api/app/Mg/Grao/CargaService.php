@@ -62,6 +62,11 @@ class CargaService extends MgService
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);
         }
+        if (!empty($filter['data'])) {
+            // Coluna e timestamp (chegada no patio); whereDate trunca a parte de
+            // data pra o dia inteiro entrar, sem cortar o que vem apos a meia-noite.
+            $qry->whereDate('data', $filter['data']);
+        }
 
         $qry = self::qryOrdem($qry, $sort ?: ['-data']);
         $qry = self::qryColunas($qry, $fields);

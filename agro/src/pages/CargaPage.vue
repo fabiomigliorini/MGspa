@@ -3,14 +3,25 @@ import { ref, computed, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
+import { sacas } from 'src/utils/desconto'
 import CargaDialog from 'components/CargaDialog.vue'
+import MgInputData from '@components/MgInputData.vue'
 
 const store = useCargaStore()
 const sinc = useSincronizacaoStore()
 
-const { safras, codsafraAtiva, sentidoAtivo, etapasDoSentido, cargasPorEtapa, culturaAtiva } =
-  storeToRefs(store)
+const {
+  safras,
+  codsafraAtiva,
+  sentidoAtivo,
+  dataFiltro,
+  etapasDoSentido,
+  cargasPorEtapa,
+  culturaAtiva,
+} = storeToRefs(store)
 const { online, sincronizando } = storeToRefs(sinc)
+
+const hojeIso = new Date().toISOString().slice(0, 10)
 
 // Metadados de cada etapa (todas as etapas possíveis; o board mostra as do sentido).
 const ETAPA_META = {
@@ -55,9 +66,25 @@ async function onAvancar(carga) {
 }
 
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
-const totalLiquidoDia = computed(() =>
-  (cargasPorEtapa.value.FINALIZADO || []).reduce((s, c) => s + (Number(c.liquido) || 0), 0),
-)
+
+// Totais do FINALIZADO — já do dia filtrado (cargasPorEtapa recorta a data).
+const totaisFinalizado = computed(() => {
+  let bruto = 0
+  let desconto = 0
+  let liquido = 0
+  for (const c of cargasPorEtapa.value.FINALIZADO || []) {
+    bruto += Number(c.bruto) || 0
+    desconto += Number(c.desconto) || 0
+    liquido += Number(c.liquido) || 0
+  }
+  return {
+    bruto,
+    desconto,
+    liquido,
+    sacas: sacas(liquido, pesosaca.value) || 0,
+    pct: bruto > 0 ? (desconto / bruto) * 100 : 0,
+  }
+})
 
 function indiceEtapa(etapa) {
   return etapasDoSentido.value.indexOf(etapa)
@@ -81,13 +108,60 @@ function pontosResumo(carga) {
   return lista.length ? lista.join(' · ') : 'Sem origem/destino'
 }
 
-function resumo(carga) {
-  if (carga.etapa === 'FINALIZADO') {
-    return `${fmt(carga.liquido)} kg · ${fmt((carga.liquido || 0) / pesosaca.value)} sc`
-  }
-  if (carga.bruto) return `Bruto ${fmt(carga.bruto)} kg`
-  if (carga.pbt) return `PBT ${fmt(carga.pbt)} kg`
-  return carga.motorista || 'Aguardando pesagem'
+// Siglas dos parâmetros conhecidos (o catálogo não tem coluna de sigla); demais
+// caem no fallback dos 4 primeiros caracteres.
+const ABREV = {
+  Impureza: 'Imp',
+  Umidade: 'Umid',
+  Avariados: 'Avar',
+  Esverdeados: 'Esv',
+  Quebrados: 'Queb',
+}
+function abreviar(nome) {
+  return !nome ? '?' : ABREV[nome] || nome.slice(0, 4)
+}
+
+// Nome do parâmetro offline-safe: item da tabela resolvida → nested do server
+// (só cargas puxadas) → catálogo em cache → código. Cargas locais só têm o cod.
+function nomeParametro(row, porCod) {
+  return (
+    porCod.get(row.codparametroclassificacao)?.parametroclassificacao ||
+    row.ParametroClassificacao?.parametroclassificacao ||
+    store.parametros.find((p) => p.codparametroclassificacao === row.codparametroclassificacao)
+      ?.parametroclassificacao ||
+    `#${row.codparametroclassificacao}`
+  )
+}
+
+// Chips de classificação: só leituras preenchidas; `fora` = leitura acima da
+// tolerância (gera desconto). Vale p/ FATOR e NORMALIZADO — mesma condição de
+// percentualItem em utils/desconto.js.
+function chipsClassificacao(carga) {
+  const itens = store.itensResolvidos(store.resolverCodTabela(carga))
+  const porCod = new Map(itens.map((i) => [i.codparametroclassificacao, i]))
+  return (carga.classificacao || [])
+    .filter((c) => c.leitura !== null && c.leitura !== undefined && c.leitura !== '')
+    .map((c) => ({
+      key: c.codparametroclassificacao,
+      label: abreviar(nomeParametro(c, porCod)),
+      leitura: c.leitura,
+      fora: Number(c.leitura) > (Number(porCod.get(c.codparametroclassificacao)?.tolerancia) || 0),
+    }))
+}
+
+// Aviso (só ENTRADA, onde a classificação vale): sem tabela resolvida (desconto
+// ficaria 0 em silêncio) ou tabela divergente da do contrato.
+function avisoTabela(carga) {
+  if (carga.sentido !== 'ENTRADA') return null
+  const resolvida = store.resolverCodTabela(carga)
+  if (!resolvida) return 'Sem tabela de classificação — desconto não aplicado'
+  const doContrato = store.codTabelaContrato(carga)
+  if (doContrato && doContrato !== resolvida) return 'Tabela diferente da do contrato'
+  return null
+}
+
+function hora(iso) {
+  return !iso ? '' : new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
 function pageStyleFn(offset) {
@@ -146,6 +220,16 @@ onMounted(async () => {
             outlined
             label="Tipo de Romaneio"
             @update:model-value="store.definirSentido"
+          />
+        </div>
+
+        <div class="col-6 col-sm">
+          <MgInputData
+            :model-value="dataFiltro"
+            type="date"
+            label="Data"
+            :max="hojeIso"
+            @update:model-value="store.definirData"
           />
         </div>
 
@@ -219,7 +303,10 @@ onMounted(async () => {
           >
             <template #avatar><q-icon name="agriculture" color="green-8" /></template>
             <div class="text-weight-medium">Total líquido</div>
-            {{ fmt(totalLiquidoDia) }} kg · {{ fmt(totalLiquidoDia / pesosaca) }} sacas
+            {{ fmt(totaisFinalizado.liquido) }} kg · {{ fmt(totaisFinalizado.sacas, 1) }} sacas
+            <div class="text-caption">
+              Desconto {{ fmt(totaisFinalizado.desconto) }} kg ({{ fmt(totaisFinalizado.pct, 1) }}%)
+            </div>
           </q-banner>
 
           <div v-show="listaVisivel(e.etapa)">
@@ -231,24 +318,56 @@ onMounted(async () => {
               class="cursor-pointer q-mt-sm"
               @click="abrir(carga)"
             >
-              <q-card-section class="q-pb-xs">
-                <div class="row items-start no-wrap">
+              <q-card-section class="q-pa-sm">
+                <!-- placa (+carreta) / origem→destino | avisos + sync + nº/hora -->
+                <div class="row items-start no-wrap q-gutter-x-xs">
                   <div class="col">
-                    <div class="text-h6 text-weight-bold">{{ carga.placa || 'Sem placa' }}</div>
-                    <div class="text-caption text-grey-7">{{ pontosResumo(carga) }}</div>
+                    <div class="row items-baseline no-wrap q-gutter-x-xs">
+                      <span class="text-subtitle1 text-weight-bold">
+                        {{ carga.placa || 'Sem placa' }}
+                      </span>
+                      <span v-if="carga.placacarreta" class="text-caption text-grey-6">
+                        {{ carga.placacarreta }}
+                      </span>
+                    </div>
+                    <div class="text-caption text-grey-7 ellipsis">
+                      <q-icon
+                        v-if="carga.sentido === 'SAIDA'"
+                        name="east"
+                        size="14px"
+                        class="q-mr-xs"
+                      />
+                      {{ pontosResumo(carga) }}
+                    </div>
                   </div>
-                  <q-icon
-                    :name="carga.sincronizado ? 'cloud_done' : 'cloud_off'"
-                    :color="carga.sincronizado ? 'green-5' : 'orange-6'"
-                    size="sm"
-                  >
-                    <q-tooltip>{{ carga.sincronizado ? 'Sincronizado' : 'Pendente' }}</q-tooltip>
-                  </q-icon>
+                  <div class="column items-end">
+                    <div class="row items-center no-wrap q-gutter-x-xs">
+                      <q-icon
+                        v-if="avisoTabela(carga)"
+                        name="warning"
+                        color="orange-7"
+                        size="18px"
+                      >
+                        <q-tooltip>{{ avisoTabela(carga) }}</q-tooltip>
+                      </q-icon>
+                      <q-icon
+                        :name="carga.sincronizado ? 'cloud_done' : 'cloud_off'"
+                        :color="carga.sincronizado ? 'green-5' : 'orange-6'"
+                        size="18px"
+                      >
+                        <q-tooltip>
+                          {{ carga.sincronizado ? 'Sincronizado' : 'Pendente' }}
+                        </q-tooltip>
+                      </q-icon>
+                    </div>
+                    <div class="text-caption text-grey-6 no-wrap">
+                      <span v-if="carga.codcarga">#{{ carga.codcarga }} · </span>{{ hora(carga.data) }}
+                    </div>
+                  </div>
                 </div>
-              </q-card-section>
 
-              <q-card-section class="q-py-xs">
-                <div class="row no-wrap q-gutter-xs">
+                <!-- barra de progresso (mantém o height inline já existente) -->
+                <div class="row no-wrap q-gutter-xs q-mt-sm">
                   <div
                     v-for="(s, i) in colunas"
                     :key="s.etapa"
@@ -257,17 +376,47 @@ onMounted(async () => {
                     style="height: 6px; border-radius: 3px"
                   />
                 </div>
-              </q-card-section>
 
-              <q-card-section class="q-pt-xs row items-center justify-between">
-                <div class="text-body2 text-grey-9">{{ resumo(carga) }}</div>
-                <q-btn
-                  flat
-                  color="primary"
-                  label="Abrir"
-                  icon-right="chevron_right"
-                  @click.stop="abrir(carga)"
-                />
+                <!-- chips de classificação — só quando há leituras; quebram linha -->
+                <div
+                  v-if="chipsClassificacao(carga).length"
+                  class="row items-center q-gutter-xs q-mt-sm"
+                >
+                  <q-chip
+                    v-for="chip in chipsClassificacao(carga)"
+                    :key="chip.key"
+                    dense
+                    square
+                    size="sm"
+                    :color="chip.fora ? 'orange-2' : 'blue-grey-1'"
+                    :text-color="chip.fora ? 'orange-10' : 'blue-grey-8'"
+                  >
+                    {{ chip.label }} {{ fmt(chip.leitura, 1) }}%
+                  </q-chip>
+                </div>
+
+                <!-- métricas adaptadas à etapa + desconto total -->
+                <div class="row items-center justify-between q-mt-sm no-wrap">
+                  <div class="text-body2 text-grey-9">
+                    <template v-if="carga.liquido != null">
+                      <span class="text-weight-medium text-green-9">
+                        {{ fmt(carga.liquido) }} kg
+                      </span>
+                      <span class="text-grey-7">
+                        · {{ fmt(sacas(carga.liquido, pesosaca), 1) }} sc</span
+                      >
+                    </template>
+                    <template v-else-if="carga.bruto != null">Bruto {{ fmt(carga.bruto) }} kg</template>
+                    <template v-else-if="carga.pbt != null">PBT {{ fmt(carga.pbt) }} kg</template>
+                    <template v-else>{{ carga.motorista || 'Aguardando pesagem' }}</template>
+                  </div>
+                  <q-badge
+                    v-if="carga.desconto"
+                    color="orange-1"
+                    text-color="orange-9"
+                    :label="`− ${fmt(carga.desconto)} kg`"
+                  />
+                </div>
               </q-card-section>
             </q-card>
 

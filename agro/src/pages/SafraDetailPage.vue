@@ -73,6 +73,14 @@ const plantioCad = reactive({
 
 // KPIs da safra — TODOS prontos do backend (SafraService::resumoComercial):
 // comercial (contratos VENDA) + agronômico (plantios, com produção/produtividade).
+// Estoque físico depositado nas Unidades Armazenadoras (saldo UNIDADE da safra) —
+// pronto do backend, mesma conta do extrato. sc é o número principal do card; kg
+// como legenda (grão é físico, kg importa).
+const estoque = computed(() => Number(comercial.value?.estoquesc) || 0)
+const estoquekg = computed(() => Number(comercial.value?.estoquekg) || 0)
+// Entregue = grão já entregue aos contratos (saldo CONTRATO da safra), pronto do backend.
+const entregue = computed(() => Number(comercial.value?.entreguesc) || 0)
+const entreguekg = computed(() => Number(comercial.value?.entreguekg) || 0)
 const contratado = computed(() => Number(comercial.value?.contratado) || 0)
 const fixado = computed(() => Number(comercial.value?.fixado) || 0)
 const afixar = computed(() => Number(comercial.value?.afixar) || 0)
@@ -83,7 +91,8 @@ const areaplantada = computed(() => Number(comercial.value?.areaplantada) || 0)
 const producao = computed(() => Number(comercial.value?.producao) || 0)
 const colhido = computed(() => Number(comercial.value?.colhido) || 0)
 const prodColhido = computed(() => Number(comercial.value?.produtividadecolhido) || 0)
-const progresso = computed(() => Number(comercial.value?.progressocolheita) || 0)
+// Colheita mostra hectares colhidos (não %).
+const hacolhido = computed(() => Number(comercial.value?.hacolhido) || 0)
 
 // Rótulo primário da linha = a OUTRA dimensão do agrupamento, com prefixo
 // (agrupado por variedade → linha é o talhão; e vice-versa).
@@ -282,77 +291,39 @@ onMounted(async () => {
       </q-card>
 
       <!-- ===== Comercial: KPIs (prontos do backend) + lista de contratos ===== -->
-      <template v-if="online && comercial">
-        <div class="row q-col-gutter-md q-mb-md">
-          <div class="col-6 col-md-3">
-            <q-card flat bordered class="full-height">
-              <q-card-section>
-                <div class="text-caption text-grey-7">Contratado</div>
-                <div class="text-h6">{{ fmt(contratado) }} sc</div>
-              </q-card-section>
-            </q-card>
-          </div>
-          <div class="col-6 col-md-3">
-            <q-card flat bordered class="full-height">
-              <q-card-section>
-                <div class="text-caption text-grey-7">Fixado</div>
-                <div class="text-h6">{{ fmt(fixado) }} sc</div>
-              </q-card-section>
-            </q-card>
-          </div>
-          <div class="col-6 col-md-3">
-            <q-card flat bordered class="full-height">
-              <q-card-section>
-                <div class="text-caption text-grey-7">A fixar</div>
-                <div class="text-h6" :class="afixar > 0 ? 'text-orange-8' : 'text-grey-6'">
-                  {{ fmt(afixar) }} sc
-                </div>
-              </q-card-section>
-            </q-card>
-          </div>
-          <div class="col-6 col-md-3">
-            <q-card flat bordered class="full-height">
-              <q-card-section>
-                <div class="text-caption text-grey-7">Disponível p/ vender</div>
-                <div class="text-h6 text-green-8">{{ fmt(disponivel) }} sc</div>
-              </q-card-section>
-            </q-card>
-          </div>
-        </div>
-
-        <!-- Preço médio: R$ pelo LÍQUIDO; moeda estrangeira pelo bruto ainda não travado -->
-        <q-card
-          v-if="comercial.precomediobrl != null || comercial.precomediousd != null"
-          flat
-          bordered
-          class="q-mb-md"
-        >
-          <q-card-section class="row q-col-gutter-xl items-center">
-            <div v-if="comercial.precomediobrl != null" class="col-auto">
-              <div class="text-caption text-grey-7">Preço médio R$ (líquido)</div>
-              <div class="text-h6">{{ rs(comercial.precomediobrl) }} <small>/sc</small></div>
-            </div>
-            <div v-if="comercial.precomediousd != null" class="col-auto">
-              <div class="text-caption text-grey-7">Preço médio US$ (a travar)</div>
-              <div class="text-h6">
-                US$ {{ fmt(comercial.precomediousd, 2) }} <small>/sc</small>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-      </template>
-
-      <ContratosSafra
-        :codsafra="codsafra"
-        :codcultura="codcultura"
-        :online="online"
-        class="q-mb-md"
-        @changed="recarregarComercial"
-      />
-
-      <!-- ===== Agronômico: KPIs (prontos do backend) + plantios ===== -->
+      <!-- ===== Linha 1: realidade física/agronômica da safra ===== -->
       <div v-if="comercial" class="row q-col-gutter-md q-mb-md">
-        <div class="col-6 col-md-3">
+        <!-- Saldo = estoque físico nas Unidades Armazenadoras (saldo UNIDADE). -->
+        <div class="col-6 col-md">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Saldo</div>
+              <div class="text-h6">{{ fmt(estoque) }} sc</div>
+              <div class="text-caption text-grey-6">{{ fmt(estoquekg) }} kg</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Colhido</div>
+              <div class="text-h6">{{ fmt(colhido) }} sc</div>
+              <div v-if="prodColhido > 0" class="text-caption text-grey-6">
+                {{ fmt(prodColhido, 1) }} sc/ha
+              </div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Entregue</div>
+              <div class="text-h6">{{ fmt(entregue) }} sc</div>
+              <div class="text-caption text-grey-6">{{ fmt(entreguekg) }} kg</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md">
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="text-caption text-grey-7">Área plantada</div>
@@ -360,7 +331,7 @@ onMounted(async () => {
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md">
           <q-card flat bordered class="full-height">
             <q-card-section>
               <div class="text-caption text-grey-7">Expectativa</div>
@@ -371,35 +342,78 @@ onMounted(async () => {
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-3">
+        <div class="col-6 col-md">
           <q-card flat bordered class="full-height">
             <q-card-section>
-              <div class="text-caption text-grey-7">Colhido</div>
-              <div class="text-h6">{{ fmt(colhido) }} sc</div>
-              <div v-if="prodColhido > 0" class="text-caption text-green-8">
-                {{ fmt(prodColhido, 1) }} sc/ha
-              </div>
+              <div class="text-caption text-grey-7">Colheita</div>
+              <div class="text-h6">{{ fmt(hacolhido, 1) }} ha</div>
+              <div class="text-caption text-grey-6">de {{ fmt(areaplantada, 1) }} ha</div>
             </q-card-section>
           </q-card>
         </div>
-        <div class="col-6 col-md-3">
-          <q-card flat bordered class="full-height">
-            <q-card-section class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-grey-7">Colheita</div>
-                <div class="text-caption text-grey-6">{{ fmt(progresso * 100) }}% da área</div>
+      </div>
+
+      <ContratosSafra
+        :codsafra="codsafra"
+        :codcultura="codcultura"
+        :online="online"
+        class="q-mb-md"
+        @changed="recarregarComercial"
+      >
+        <!-- Preço médio dentro da seção de contratos, abaixo do label "Contratos de venda".
+             R$ pelo LÍQUIDO; moeda estrangeira pelo bruto ainda não travado. -->
+        <template #resumo>
+          <q-card
+            v-if="comercial && (comercial.precomediobrl != null || comercial.precomediousd != null)"
+            flat
+            bordered
+            class="q-mb-md"
+          >
+            <q-card-section class="row q-col-gutter-xl items-center">
+              <div v-if="comercial.precomediobrl != null" class="col-auto">
+                <div class="text-caption text-grey-7">Preço médio R$ (líquido)</div>
+                <div class="text-h6">{{ rs(comercial.precomediobrl) }} <small>/sc</small></div>
               </div>
-              <q-circular-progress
-                :value="progresso * 100"
-                size="52px"
-                :thickness="0.18"
-                color="green-6"
-                track-color="grey-3"
-                show-value
-                class="text-caption text-grey-8"
-              >
-                {{ fmt(progresso * 100) }}%
-              </q-circular-progress>
+              <div v-if="comercial.precomediousd != null" class="col-auto">
+                <div class="text-caption text-grey-7">Preço médio US$ (a travar)</div>
+                <div class="text-h6">US$ {{ fmt(comercial.precomediousd, 2) }} <small>/sc</small></div>
+              </div>
+            </q-card-section>
+          </q-card>
+        </template>
+      </ContratosSafra>
+
+      <!-- ===== Linha 2: números derivados dos contratos (ficam junto deles) ===== -->
+      <div v-if="online && comercial" class="row q-col-gutter-md q-mb-md">
+        <div class="col-6 col-md">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Contratado</div>
+              <div class="text-h6">{{ fmt(contratado) }} sc</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Fixado</div>
+              <div class="text-h6">{{ fmt(fixado) }} sc</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">A fixar</div>
+              <div class="text-h6">{{ fmt(afixar) }} sc</div>
+            </q-card-section>
+          </q-card>
+        </div>
+        <div class="col-6 col-md">
+          <q-card flat bordered class="full-height">
+            <q-card-section>
+              <div class="text-caption text-grey-7">Disponível p/ vender</div>
+              <div class="text-h6">{{ fmt(disponivel) }} sc</div>
             </q-card-section>
           </q-card>
         </div>
