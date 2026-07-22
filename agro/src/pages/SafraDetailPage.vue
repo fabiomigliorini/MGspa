@@ -38,8 +38,8 @@ const fazendas = ref([])
 const variedades = ref([])
 const talhoesBase = ref([]) // layout base de todas as fazendas
 
-// Como agrupar a tabela de talhões: por variedade (padrão) ou por talhão.
-const agrupamento = ref('variedade')
+// Como agrupar a tabela de talhões: por talhão (padrão) ou por variedade.
+const agrupamento = ref('talhao')
 
 const codcultura = computed(() => safra.value?.codcultura ?? safra.value?.Cultura?.codcultura)
 
@@ -376,7 +376,9 @@ onMounted(async () => {
               </div>
               <div v-if="comercial.precomediousd != null" class="col-auto">
                 <div class="text-caption text-grey-7">Preço médio US$ (a travar)</div>
-                <div class="text-h6">US$ {{ fmt(comercial.precomediousd, 2) }} <small>/sc</small></div>
+                <div class="text-h6">
+                  US$ {{ fmt(comercial.precomediousd, 2) }} <small>/sc</small>
+                </div>
               </div>
             </q-card-section>
           </q-card>
@@ -433,17 +435,6 @@ onMounted(async () => {
             { label: 'Por talhão', value: 'talhao' },
           ]"
         />
-        <q-btn
-          flat
-          round
-          size="sm"
-          color="primary"
-          icon="add"
-          class="q-ml-sm"
-          @click="novoPlantio()"
-        >
-          <q-tooltip>Plantar talhão</q-tooltip>
-        </q-btn>
       </div>
 
       <!-- Um card por fazenda: cabeçalho c/ totais + mapa + tabela agrupada -->
