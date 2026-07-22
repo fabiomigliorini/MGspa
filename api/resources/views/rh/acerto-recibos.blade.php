@@ -131,6 +131,29 @@
             font-weight: bold;
         }
 
+        /* linha nunca quebra em duas: mantem a altura da fatia previsivel */
+        .itens-table td,
+        .itens-table th {
+            white-space: nowrap;
+        }
+
+        .itens-table td.desc {
+            white-space: normal;
+        }
+
+        .linha-total td {
+            border-top: 1.5px solid #000;
+            font-weight: bold;
+            background: #f0f0f0;
+        }
+
+        .continua {
+            text-align: right;
+            font-size: 6pt;
+            font-style: italic;
+            padding: 2px 10px 0 10px;
+        }
+
         .recibo-rodape {
             padding: 3px 10px 4px 10px;
         }
