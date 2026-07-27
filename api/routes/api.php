@@ -1293,6 +1293,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             Route::get('/recibos', '\Mg\Rh\AcertoController@recibos');
             Route::get('/{codperiodocolaborador}/recibos', '\Mg\Rh\AcertoController@recibosColaborador');
             Route::get('/relatorio-folha', '\Mg\Rh\AcertoController@relatorioFolha');
+            Route::get('/planilha-cartao', '\Mg\Rh\AcertoController@planilhaCartao');
             Route::get('/{codperiodocolaborador}/titulos', '\Mg\Rh\AcertoController@titulos');
             Route::post('/{codperiodocolaborador}/efetivar', '\Mg\Rh\AcertoController@efetivar');
             Route::post('/{codperiodocolaborador}/estornar', '\Mg\Rh\AcertoController@estornar');

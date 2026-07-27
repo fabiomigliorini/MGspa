@@ -5,6 +5,7 @@ namespace Mg\Rh;
 use Dompdf\Dompdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mg\Portador\PortadorService;
 
 class AcertoRelatorioFolhaPdf
 {
@@ -142,5 +143,41 @@ class AcertoRelatorioFolhaPdf
         $dompdf->render();
 
         return $dompdf->output();
+    }
+
+    /**
+     * Linhas planas (nome, cpf, fisica, valor) da seção "Caixa Financeiro" de UMA
+     * empresa mãe — mesma fonte/filtros do relatório, usada pela planilha do cartão.
+     * Garante que o .xlsx traga valores idênticos à prévia (Relatório de Caixa Financeiro).
+     */
+    public static function linhasCaixaFinanceiro(int $codperiodo, int $codempresa): array
+    {
+        return DB::select("
+            SELECT
+                p.pessoa AS nome,
+                p.cnpj   AS cpf,
+                p.fisica,
+                ABS(lt.debito - lt.credito) AS valor
+            FROM tblliquidacaotitulo lt
+            JOIN tblpessoa p ON p.codpessoa = lt.codpessoa
+            JOIN LATERAL (
+                SELECT col.codfilial
+                FROM tblcolaborador col
+                WHERE col.codpessoa = lt.codpessoa
+                ORDER BY col.codcolaborador DESC
+                LIMIT 1
+            ) uc ON true
+            JOIN tblfilial f ON f.codfilial = uc.codfilial
+            WHERE lt.codperiodo   = :codperiodo
+              AND lt.codportador  = :portador
+              AND lt.estornado   IS NULL
+              AND ABS(lt.debito - lt.credito) > 0
+              AND f.codempresa    = :codempresa
+            ORDER BY p.pessoa
+        ", [
+            'codperiodo' => $codperiodo,
+            'portador'   => PortadorService::CAIXA,
+            'codempresa' => $codempresa,
+        ]);
     }
 }
