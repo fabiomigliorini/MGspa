@@ -109,6 +109,10 @@ onMounted(() => {
       </q-btn>
     </div>
 
+    <!-- Resumo comercial (ex.: preço médio) injetado pela página — fica dentro da
+         seção, logo abaixo do label. -->
+    <slot name="resumo" />
+
     <q-banner v-if="!online" rounded class="bg-grey-2 text-grey-7">
       <template #avatar><q-icon name="cloud_off" color="grey-6" /></template>
       Contratos indisponíveis offline.

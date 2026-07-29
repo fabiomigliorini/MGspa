@@ -11,8 +11,10 @@ import {
 } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { calcularCarga, sacas } from 'src/utils/desconto'
+import { agoraLocal } from 'src/utils/carga'
 import { imprimirTicket } from 'src/utils/ticket'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import CaminhaoDialog from 'components/CaminhaoDialog.vue'
 import SelectContaTipo from 'components/SelectContaTipo.vue'
@@ -26,7 +28,7 @@ const props = defineProps({
   // true = carga nova (só "Registrar", entra na 1ª etapa sem avançar)
   novo: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue', 'salvar', 'avancar'])
+const emit = defineEmits(['update:modelValue', 'salvar', 'avancar', 'cancelar'])
 
 const $q = useQuasar()
 const store = useCargaStore()
@@ -39,6 +41,10 @@ const {
   unidadesAtivas,
 } = storeToRefs(store)
 const { online } = storeToRefs(useSincronizacaoStore())
+
+// Máximo do campo de chegada = agora (não deixa lançar no futuro). Precisa do
+// timestamp completo: com só a data o clamp do MgInputData zeraria a hora (00:00).
+const dataMax = agoraLocal()
 
 const local = ref(null)
 watch(
@@ -292,6 +298,24 @@ function descontoParam(codparam) {
   )
 }
 
+// Hint da tabela por parâmetro: tolerância + fator (FATOR) ou deságio (NORMALIZADO).
+function hintItem(item) {
+  const partes = [`Tol. ${fmt(item.tolerancia, 1)}%`]
+  if (item.metodo === 'FATOR' && Number(item.fator)) {
+    partes.push(`fator ${fmt(item.fator, 1)}`)
+  } else if (Number(item.desagio)) {
+    partes.push(`deságio ${fmt(item.desagio, 1)}%`)
+  }
+  return partes.join(' · ')
+}
+
+// Leitura acima da tolerância = gera desconto (mesma condição do board e do utils).
+function foraTolerancia(item) {
+  const leitura = linhaDe(item.codparametroclassificacao)?.leitura
+  if (leitura === null || leitura === undefined || leitura === '') return false
+  return Number(leitura) > (Number(item.tolerancia) || 0)
+}
+
 const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.bruto !== undefined)
 const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 const sacasLiquido = computed(() => sacas(calc.value.liquido, pesosaca.value))
@@ -361,6 +385,31 @@ function validarFinalizacao() {
 // finalização pra não regravar incompleta; nas demais, exige ao menos origem/destino.
 function salvar() {
   if (local.value.etapa === 'FINALIZADO' ? !validarFinalizacao() : !entradaValida()) return
+  emit('salvar', local.value)
+}
+
+// Cancela a carga: se já foi ao servidor (codcarga) ou sincronizou, INATIVA
+// (sai do pátio + estorna estoque); se é pendente local, DESCARTA do Dexie.
+function cancelarCarga() {
+  const sincronizada = !!local.value.codcarga || !!local.value.sincronizado
+  $q.dialog({
+    title: 'Cancelar carga',
+    message: sincronizada
+      ? `Cancelar a carga${local.value.codcarga ? ' #' + local.value.codcarga : ''}? Sai do pátio e estorna o estoque.`
+      : 'Descartar esta carga pendente? Ela ainda não foi enviada ao servidor.',
+    cancel: { label: 'Voltar', flat: true, color: 'grey-8' },
+    ok: { label: 'Cancelar carga', flat: true, color: 'negative' },
+    persistent: true,
+  }).onOk(() => {
+    emit('cancelar', local.value)
+    show.value = false
+  })
+}
+
+// Salva na etapa ATUAL, sem avançar — pra corrigir um dado sem empurrar a carga
+// pra próxima etapa (o botão principal, esse sim, avança).
+function salvarSemAvancar() {
+  if (!entradaValida()) return
   emit('salvar', local.value)
 }
 
@@ -522,6 +571,14 @@ function imprimir() {
               clearable
               class="col-12 col-sm-4"
               @update:model-value="local.codpessoamotorista = null"
+            />
+
+            <MgInputData
+              v-model="local.data"
+              type="timestamp"
+              label="Chegada"
+              :max="dataMax"
+              class="col-6 col-sm-4"
             />
           </div>
 
@@ -739,8 +796,12 @@ function imprimir() {
                   v-model="linhaDe(item.codparametroclassificacao).leitura"
                   :decimals="1"
                   suffix="%"
-                  :label="item.parametroclassificacao"
+                  :label="`${item.ordem}. ${item.parametroclassificacao}`"
+                  :hint="hintItem(item)"
                 />
+                <div v-if="foraTolerancia(item)" class="text-caption text-orange-9 q-pl-sm">
+                  acima da tolerância
+                </div>
                 <div
                   v-if="descontoParam(item.codparametroclassificacao)"
                   class="text-caption text-orange-8 q-pl-sm"
@@ -789,16 +850,32 @@ function imprimir() {
 
         <q-card-actions align="right">
           <q-btn
+            v-if="!novo"
+            flat
+            color="negative"
+            icon="cancel"
+            label="Cancelar carga"
+            class="q-mr-auto"
+            tabindex="-1"
+            @click="cancelarCarga"
+          />
+          <q-btn
             v-if="local.etapa === 'FINALIZADO'"
             flat
             color="primary"
             icon="print"
             label="Imprimir romaneio"
-            class="q-mr-auto"
             tabindex="-1"
             @click="imprimir()"
           />
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat label="Fechar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn
+            v-if="!novo && local.etapa !== 'FINALIZADO'"
+            flat
+            color="grey-9"
+            label="Salvar"
+            @click="salvarSemAvancar"
+          />
           <q-btn type="submit" flat color="primary" :label="rotuloPrincipal" />
         </q-card-actions>
       </q-form>

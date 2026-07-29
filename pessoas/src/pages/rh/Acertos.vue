@@ -137,6 +137,35 @@ const imprimirReciboColaborador = (item) => {
   )
 }
 
+// --- PLANILHA CARTÃO ---
+// Empresas mãe com cartão-benefício (separadas por CNPJ). Ver plano/backend.
+const empresasCartao = [
+  { cod: 1, nome: 'Migliorini' },
+  { cod: 2, nome: 'FDF' },
+]
+
+const baixarPlanilhaCartao = async (empresa) => {
+  try {
+    const ret = await api.get(
+      `v1/rh/periodo/${route.params.codperiodo}/acertos/planilha-cartao`,
+      { params: { codempresa: empresa.cod }, responseType: 'blob' },
+    )
+    const url = URL.createObjectURL(new Blob([ret.data]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `cartao-${empresa.nome.toLowerCase()}-${route.params.codperiodo}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+  } catch {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: `Erro ao gerar planilha ${empresa.nome}`,
+    })
+  }
+}
+
 // --- LIFECYCLE ---
 
 let diasTimer = null
@@ -209,6 +238,15 @@ onMounted(carregarAcertos)
       label="Relatório Folha"
       color="grey-7"
       @click="relatorioFolha()"
+    />
+    <q-btn
+      v-for="e in empresasCartao"
+      :key="e.cod"
+      flat
+      icon="credit_card"
+      :label="`Gerar saldo ${e.nome}`"
+      color="grey-7"
+      @click="baixarPlanilhaCartao(e)"
     />
   </div>
 

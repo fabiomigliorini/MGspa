@@ -137,6 +137,21 @@ class SafraService extends MgService
         }
         $disponivel = max(0, $producaoTotal - $contratado);
 
+        // ===== Estoque físico depositado nas Unidades Armazenadoras da safra =====
+        // Saldo = Σ liquido dos movimentos UNIDADE — MESMA conta do extrato e do
+        // saldos-unidades (MovimentoGraoService), pra o número bater entre as telas.
+        $estoquekg = (float) MovimentoGrao::where('contatipo', 'UNIDADE')
+            ->where('codsafra', $codsafra)
+            ->whereNull('inativo')
+            ->sum('liquido');
+
+        // Entregue = Σ liquido dos movimentos CONTRATO (contador +, sempre positivo),
+        // igual ao carregadokg por contrato. codsafra sempre presente nos autos.
+        $entreguekg = (float) MovimentoGrao::where('contatipo', 'CONTRATO')
+            ->where('codsafra', $codsafra)
+            ->whereNull('inativo')
+            ->sum('liquido');
+
         // Fecha os agregados: Σ → médias/arredondamento. Grupos ficam chaveados
         // (codvariedade / talhão) p/ o front casar cada linha com seu total.
         $fazendas = [];
@@ -154,6 +169,10 @@ class SafraService extends MgService
             'fixado' => round($fixado, 0),
             'afixar' => round($afixar, 0),
             'disponivel' => round($disponivel, 0),
+            'estoquekg' => round($estoquekg, 0),
+            'estoquesc' => round($estoquekg / $pesosaca, 0),
+            'entreguekg' => round($entreguekg, 0),
+            'entreguesc' => round($entreguekg / $pesosaca, 0),
             'precomediobrl' => $firmeSacas > 0 ? round($firmeLiq / $firmeSacas, 2) : null, // R$ líquido/sc
             'precomediousd' => ($usd && $usd['sacas'] > 0) ? round($usd['saldo'] / $usd['sacas'], 2) : null,
             // agronômico

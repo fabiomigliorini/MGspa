@@ -4,6 +4,7 @@ import { uid } from 'quasar'
 import { db } from 'boot/db'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { calcularCarga } from 'src/utils/desconto'
+import { agoraLocal } from 'src/utils/carga'
 import { notifyError } from 'src/utils/notify'
 
 // Etapas por sentido — controlam as colunas do board e a ordem de pesagem.
@@ -101,6 +102,7 @@ export const useCargaStore = defineStore('carga', () => {
   const saldosUnidades = ref([]) // snapshot do servidor [{codunidadearmazenadora, saldokg, ...}]
   const codsafraAtiva = ref(null)
   const sentidoAtivo = ref('ENTRADA')
+  const dataFiltro = ref(null) // dia filtrado no board (ISO YYYY-MM-DD); vazio = todos
 
   const veiculosAtivos = computed(() => veiculos.value.filter((v) => !v.inativo))
   const veiculoPorId = (codveiculo) =>
@@ -114,13 +116,32 @@ export const useCargaStore = defineStore('carga', () => {
   const culturaAtiva = computed(
     () => culturas.value.find((c) => c.codcultura === safraAtiva.value?.codcultura) || null,
   )
-  const tabelasDaSafra = computed(() =>
-    tabelas.value.filter((t) => t.codcultura === safraAtiva.value?.codcultura),
-  )
+  // Tabelas da cultura da safra, DEDUPLICADAS por nome. A migração deixou tabelas
+  // "Padrão X" repetidas no banco; sem isso o select mostraria 4 opções idênticas e
+  // o operador poderia gravar um cod não-canônico. Preferimos a tabela padrão da
+  // cultura; senão o menor cod. (Limpeza definitiva do banco é operação manual.)
+  const tabelasDaSafra = computed(() => {
+    const daCultura = tabelas.value
+      .filter((t) => t.codcultura === safraAtiva.value?.codcultura && !t.inativo)
+      .sort((a, b) => a.codtabelaclassificacao - b.codtabelaclassificacao)
+    const padrao = culturaAtiva.value?.codtabelaclassificacao
+    const porNome = new Map()
+    for (const t of daCultura) {
+      if (!porNome.has(t.tabelaclassificacao) || t.codtabelaclassificacao === padrao) {
+        porNome.set(t.tabelaclassificacao, t)
+      }
+    }
+    return [...porNome.values()]
+  })
   const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 
   // Itens (valores) resolvidos de uma tabela, já com metodo/reduzbase do catálogo
   // e ordenados pela cascata — o que o utils/desconto.js consome.
+  // Espelha o backend: parâmetro INATIVO fica de fora do cálculo (senão o preview
+  // local desconta e o servidor não → o líquido "pula" após o sync). O `metodo`
+  // truthy também é exigido — sem o catálogo em cache, percentualItem cairia em
+  // NORMALIZADO silenciosamente (erra a Umidade, que é FATOR); melhor não descontar
+  // até o catálogo chegar (o servidor é a autoridade e corrige no sync).
   function itensResolvidos(codtabela) {
     const t = tabelas.value.find((x) => x.codtabelaclassificacao === codtabela)
     if (!t) return []
@@ -137,12 +158,14 @@ export const useCargaStore = defineStore('carga', () => {
           parametroclassificacao: p.parametroclassificacao,
           metodo: p.metodo,
           reduzbase: p.reduzbase,
+          inativo: p.inativo,
           ordem: i.ordem,
           tolerancia: i.tolerancia,
           fator: i.fator,
           desagio: i.desagio,
         }
       })
+      .filter((it) => !it.inativo && it.metodo)
       .sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0))
   }
 
@@ -184,12 +207,16 @@ export const useCargaStore = defineStore('carga', () => {
 
   const etapasDoSentido = computed(() => ETAPAS_POR_SENTIDO[sentidoAtivo.value] || [])
 
-  // Cargas do sentido ativo agrupadas por etapa (board).
+  // Cargas do sentido ativo, do dia filtrado, agrupadas por etapa (board).
+  // O recorte por dia vive AQUI (só o kanban usa) — `cargas` continua full-safra
+  // pras derivadas (produtividade/colhido) e pra IndexPage.
   const cargasPorEtapa = computed(() => {
     const grupos = {}
     for (const e of etapasDoSentido.value) grupos[e] = []
+    const dia = dataFiltro.value
     for (const c of cargas.value) {
       if (c.inativo || c.sentido !== sentidoAtivo.value) continue
+      if (dia && String(c.data).slice(0, 10) !== dia) continue
       if (grupos[c.etapa]) grupos[c.etapa].push(c)
     }
     return grupos
@@ -284,6 +311,24 @@ export const useCargaStore = defineStore('carga', () => {
     return pessoa ? `${c.contrato} — ${pessoa}` : `${c.contrato}`
   }
 
+  // Rótulo de um ponto a partir das caches — mesma fonte do CargaDialog. Usado pra
+  // preencher o `rotulo` das cargas puxadas do servidor (que vêm sem ele).
+  function rotuloPonto(p) {
+    if (p.contatipo === 'PLANTIO') {
+      return plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.rotulo || null
+    }
+    if (p.contatipo === 'UNIDADE') {
+      return (
+        unidades.value.find((o) => o.codunidadearmazenadora === p.codunidadearmazenadora)
+          ?.unidadearmazenadora || null
+      )
+    }
+    if (p.contatipo === 'CONTRATO') {
+      return rotuloContrato(p.codcontrato)
+    }
+    return null
+  }
+
   async function carregarReferencias() {
     safras.value = await db.safra.toArray()
     culturas.value = await db.cultura.toArray()
@@ -321,17 +366,37 @@ export const useCargaStore = defineStore('carga', () => {
           classificacao: c.classificacao,
         })
       }
+      // Cargas puxadas do servidor vêm com rotulo null — resolve das caches.
+      for (const p of c.pontos || []) {
+        if (!p.rotulo) p.rotulo = rotuloPonto(p)
+      }
     }
     cargas.value = arr.sort((a, b) => (a.data < b.data ? 1 : -1))
   }
 
+  // Puxa as cargas da safra+dia do servidor (best-effort: offline segue com o
+  // Dexie local) e recarrega o board.
+  async function puxarCargasDoDia() {
+    if (codsafraAtiva.value) {
+      await sincronizacao.puxarCargas(codsafraAtiva.value, dataFiltro.value).catch(() => {})
+    }
+    await carregarCargas()
+  }
+
   async function definirSafra(codsafra) {
     codsafraAtiva.value = codsafra
-    await carregarCargas()
+    await puxarCargasDoDia()
   }
 
   function definirSentido(sentido) {
     sentidoAtivo.value = sentido
+  }
+
+  // Troca o dia filtrado no board e puxa as cargas (multi-dispositivo). Vazio =
+  // todos os romaneios (puxa a safra inteira, sem filtro de data).
+  async function definirData(iso) {
+    dataFiltro.value = iso || null
+    await puxarCargasDoDia()
   }
 
   // `opts` (ex.: { force: true } vindo do botao "Sincronizar") repassa pro throttle
@@ -339,13 +404,15 @@ export const useCargaStore = defineStore('carga', () => {
   async function sincronizar(opts) {
     await sincronizacao.sincronizar(opts)
     await carregarReferencias()
-    await carregarCargas()
+    await puxarCargasDoDia()
     saldosUnidades.value = sincronizacao.saldosUnidades
   }
 
   // Nova carga do sentido informado (ou do board atual). Começa na 1ª etapa.
   // A semeadura de origem/destino padrão é feita no CargaDialog (camada de UI).
+  // Sem safra ativa retorna null — uma carga com codsafra:null seria órfã.
   function nova(sentido = null) {
+    if (!codsafraAtiva.value) return null
     const s = sentido || sentidoAtivo.value
     return {
       uuid: uid(),
@@ -353,7 +420,7 @@ export const useCargaStore = defineStore('carga', () => {
       codsafra: codsafraAtiva.value,
       sentido: s,
       etapa: ETAPAS_POR_SENTIDO[s][0],
-      data: new Date().toISOString(),
+      data: agoraLocal(),
       codveiculo: null,
       placa: null,
       placacarreta: null,
@@ -369,6 +436,7 @@ export const useCargaStore = defineStore('carga', () => {
       classificacao: [],
       pontos: [],
       sincronizado: 0,
+      syncerro: null,
     }
   }
 
@@ -383,8 +451,10 @@ export const useCargaStore = defineStore('carga', () => {
       classificacao: (carga.classificacao || []).map((c) => ({ ...c })),
     }
     limpa.codtabelaclassificacao = resolverCodTabela(limpa)
+    // syncerro: null — reeditar/salvar limpa uma rejeição anterior e rearma o envio.
     Object.assign(limpa, calcularCarga(limpa, itensResolvidos(limpa.codtabelaclassificacao)), {
       sincronizado: 0,
+      syncerro: null,
     })
     ratearPontos(limpa)
     const plain = JSON.parse(JSON.stringify(limpa))
@@ -393,17 +463,30 @@ export const useCargaStore = defineStore('carga', () => {
     sincronizacao
       .enviarCarga(JSON.parse(JSON.stringify(limpa)))
       .then(() => carregarCargas())
-      .catch((e) => {
+      .catch(async (e) => {
         // Offline (ERR_NETWORK): fica pendente e sincroniza depois, em silêncio.
-        // Rejeição do servidor (422: excede contrato, rateio não fecha): avisa.
-        if (e?.code !== 'ERR_NETWORK') notifyError(e)
+        // Rejeição do servidor (422/500): marca `syncerro` p/ não re-tentar em loop,
+        // reflete no board e avisa uma vez.
+        if (e?.code !== 'ERR_NETWORK') {
+          const msg = e?.response?.data?.message || 'Rejeitado pelo servidor'
+          await db.carga.update(limpa.uuid, { syncerro: msg })
+          await carregarCargas()
+          notifyError(e)
+        }
       })
     return limpa
   }
 
   async function inativar(carga) {
-    carga.inativo = new Date().toISOString()
+    carga.inativo = agoraLocal()
     await salvar(carga)
+  }
+
+  // Descarta uma carga que nunca sincronizou (ex.: rejeitada, teste). Apaga do
+  // Dexie sem passar pelo servidor — só faz sentido enquanto não há codcarga.
+  async function descartarPendente(carga) {
+    await db.carga.delete(carga.uuid)
+    await carregarCargas()
   }
 
   async function adicionarVeiculo(veiculo) {
@@ -427,6 +510,7 @@ export const useCargaStore = defineStore('carga', () => {
     saldosUnidades,
     codsafraAtiva,
     sentidoAtivo,
+    dataFiltro,
     veiculosAtivos,
     veiculoPorId,
     unidadesAtivas,
@@ -450,10 +534,12 @@ export const useCargaStore = defineStore('carga', () => {
     carregarCargas,
     definirSafra,
     definirSentido,
+    definirData,
     sincronizar,
     nova,
     salvar,
     inativar,
+    descartarPendente,
     adicionarVeiculo,
   }
 })

@@ -105,4 +105,21 @@ class AcertoController extends Controller
             'Content-Disposition' => 'inline; filename="relatorio-folha.pdf"',
         ]);
     }
+
+    public function planilhaCartao(int $codperiodo, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $codempresa = (int) $request->input('codempresa');
+        abort_unless(in_array($codempresa, [1, 2], true), 422, 'Empresa inválida');
+
+        $xlsx = AcertoPlanilhaCartaoXlsx::gerar($codperiodo, $codempresa);
+
+        $nome = $codempresa === 1 ? 'migliorini' : 'fdf';
+
+        return response($xlsx, 200, [
+            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => "attachment; filename=\"cartao-{$nome}-{$codperiodo}.xlsx\"",
+        ]);
+    }
 }

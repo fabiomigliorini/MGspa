@@ -62,6 +62,11 @@ class CargaService extends MgService
         if (!empty($filter['inativo'])) {
             $qry->AtivoInativo($filter['inativo']);
         }
+        if (!empty($filter['data'])) {
+            // Coluna e timestamp (chegada no patio); whereDate trunca a parte de
+            // data pra o dia inteiro entrar, sem cortar o que vem apos a meia-noite.
+            $qry->whereDate('data', $filter['data']);
+        }
 
         $qry = self::qryOrdem($qry, $sort ?: ['-data']);
         $qry = self::qryColunas($qry, $fields);
@@ -459,43 +464,6 @@ class CargaService extends MgService
             }
         }
         return $res;
-    }
-
-    /**
-     * Recalcula o extrato de um conjunto de cargas (idempotente). Util pra
-     * "recalcular" safra/contrato/unidade apos ajuste de cadastro ou tabela.
-     * Retorna a quantidade de cargas reprocessadas.
-     */
-    public static function recalcular(array $filter = []): int
-    {
-        return DB::transaction(function () use ($filter) {
-            $qry = Carga::query()->with(['CargaPontoS', 'CargaClassificacaoS']);
-            if (!empty($filter['codsafra'])) {
-                $qry->where('codsafra', $filter['codsafra']);
-            }
-            if (!empty($filter['codcarga'])) {
-                $qry->where('codcarga', $filter['codcarga']);
-            }
-            if (!empty($filter['codcontrato'])) {
-                $qry->whereHas('CargaPontoS', fn ($q) => $q->where('codcontrato', $filter['codcontrato']));
-            }
-            if (!empty($filter['codunidadearmazenadora'])) {
-                $qry->whereHas(
-                    'CargaPontoS',
-                    fn ($q) => $q->where('codunidadearmazenadora', $filter['codunidadearmazenadora'])
-                );
-            }
-            $n = 0;
-            $qry->chunkById(200, function ($cargas) use (&$n) {
-                foreach ($cargas as $carga) {
-                    static::calcular($carga);
-                    $carga->saveQuietly();
-                    static::gerarMovimento($carga);
-                    $n++;
-                }
-            }, 'codcarga');
-            return $n;
-        });
     }
 
     public static function inativar($model, $date = null)
