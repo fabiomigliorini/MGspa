@@ -10,18 +10,15 @@ class AcertoReciboPdf
     {
         ini_set('memory_limit', '256M');
 
-        $periodo = Periodo::findOrFail($codperiodo);
-
         $eventos = PeriodoColaboradorAcerto::whereNull('inativo')
             ->whereHas('PeriodoColaborador', fn ($q) => $q->where('codperiodo', $codperiodo))
             ->with([
                 'PeriodoColaborador.Colaborador.Pessoa',
-                'PeriodoColaborador.Colaborador.Filial.Pessoa',
+                'PeriodoColaborador.Colaborador.Filial.Pessoa.Cidade.Estado',
+                'PeriodoColaborador.ColaboradorRubricaS',
                 'PeriodoColaborador.Setor',
                 'MovimentoTituloS.Titulo',
             ])
-            ->orderBy('data')
-            ->orderBy('codperiodocolaboradoracerto')
             ->get();
 
         if (!empty($colaboradores)) {
@@ -33,18 +30,22 @@ class AcertoReciboPdf
             );
         }
 
-        $grupos = $eventos->groupBy('codperiodocolaborador');
-        if ($grupos->isEmpty()) {
+        // Um recibo por acerto; mantem os acertos de um mesmo colaborador juntos (nome, depois data).
+        $acertos = $eventos->sortBy(function ($e) {
+            $nome = optional(optional(optional($e->PeriodoColaborador)->Colaborador)->Pessoa)->pessoa ?? '';
+            $data = $e->data ? $e->data->format('Y-m-d') : '';
+            return sprintf('%s|%s|%08d', $nome, $data, $e->codperiodocolaboradoracerto);
+        })->values();
+
+        if ($acertos->isEmpty()) {
             return '';
         }
 
-        $periodoLabel = $periodo->periodoinicial->format('d/m/Y') . ' a ' . $periodo->periodofinal->format('d/m/Y');
-
-        $html = view('rh.acerto-recibos', compact('grupos', 'periodoLabel'))->render();
+        $html = view('rh.acerto-recibos', compact('acertos'))->render();
 
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->setPaper('A5', 'landscape');
         $dompdf->render();
 
         return $dompdf->output();
