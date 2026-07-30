@@ -7,7 +7,6 @@ import { formataData, formataFromNow } from '@components/formatters'
 import { extrairErro } from 'src/utils/rhFormatters'
 import CardIndicadores from 'src/components/rh/CardIndicadores.vue'
 import CardRubricas from 'src/components/rh/CardRubricas.vue'
-import CardSetores from 'src/components/rh/CardSetores.vue'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -22,11 +21,11 @@ const cargo = computed(() => {
   const cargos = colaborador.value?.colaborador?.colaborador_cargo_s || []
   return cargos.length > 0 ? cargos[0].cargo?.cargo : null
 })
-const setores = computed(() => colaborador.value?.periodo_colaborador_setor_s || [])
+const setorNome = computed(() => colaborador.value?.setor?.setor || null)
 const rubricas = computed(() =>
   (colaborador.value?.colaborador_rubrica_s || [])
     .slice()
-    .sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR')),
+    .sort((a, b) => (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR')),
 )
 const indicadores = computed(() => colaborador.value?.indicadores || [])
 
@@ -66,6 +65,7 @@ onMounted(() => carregar())
         <q-item-section>
           <div class="text-h5 text-grey-9">{{ nome }}</div>
           <div class="text-body2 text-grey-7" v-if="cargo">{{ cargo }}</div>
+          <div class="text-caption text-grey" v-if="setorNome">{{ setorNome }}</div>
           <div class="text-caption text-grey" v-if="colaborador.colaborador?.contratacao">
             Contratação: {{ formataData(colaborador.colaborador.contratacao) }} ({{
               formataFromNow(colaborador.colaborador.contratacao)
@@ -73,7 +73,7 @@ onMounted(() => carregar())
           </div>
         </q-item-section>
         <q-item-section side>
-          <q-btn flat dense round icon="arrow_back" color="grey-7" @click="router.back()">
+          <q-btn flat round icon="arrow_back" color="grey-7" @click="router.back()">
             <q-tooltip>Voltar</q-tooltip>
           </q-btn>
         </q-item-section>
@@ -94,13 +94,6 @@ onMounted(() => carregar())
 
           <!-- COLUNA DIREITA -->
           <div class="col-xs-12 col-md-4">
-            <CardSetores
-              :setores="setores"
-              :diasUteisPeriodo="0"
-              :podeEditar="false"
-              :status="colaborador.status"
-            />
-
             <CardIndicadores
               :indicadores="indicadores"
               :rubricas="colaborador.colaborador_rubrica_s || []"

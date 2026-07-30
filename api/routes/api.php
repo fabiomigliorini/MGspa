@@ -1263,15 +1263,23 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/estornar', '\Mg\Rh\PeriodoColaboradorController@estornar');
         Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
         Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/gestor', '\Mg\Rh\PeriodoColaboradorController@toggleGestor');
+        Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorController@atualizarSetor');
+        Route::get('setores', '\Mg\Rh\PeriodoColaboradorController@setores');
 
-        Route::post('periodo-colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorSetorController@store');
-        Route::put('periodo-colaborador-setor/{codperiodocolaboradorsetor}', '\Mg\Rh\PeriodoColaboradorSetorController@update');
-        Route::delete('periodo-colaborador-setor/{codperiodocolaboradorsetor}', '\Mg\Rh\PeriodoColaboradorSetorController@destroy');
+        // Catalogo de rubricas (tblrubrica)
+        Route::get('rubrica', '\Mg\Rh\RubricaController@index');
+        Route::post('rubrica', '\Mg\Rh\RubricaController@store');
+        Route::put('rubrica/{codrubrica}', '\Mg\Rh\RubricaController@update');
+        Route::post('rubrica/{codrubrica}/inativo', '\Mg\Rh\RubricaController@inativar');
+        Route::delete('rubrica/{codrubrica}/inativo', '\Mg\Rh\RubricaController@ativar');
+        Route::delete('rubrica/{codrubrica}', '\Mg\Rh\RubricaController@destroy');
 
-        Route::post('periodo-colaborador/{codperiodocolaborador}/rubrica', '\Mg\Rh\ColaboradorRubricaController@store');
-        Route::put('rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@update');
-        Route::delete('rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@destroy');
-        Route::patch('rubrica/{codcolaboradorrubrica}/concedido', '\Mg\Rh\ColaboradorRubricaController@toggleConcedido');
+        // Rubrica alocada ao colaborador
+        Route::post('periodo-colaborador/{codperiodocolaborador}/colaborador-rubrica', '\Mg\Rh\ColaboradorRubricaController@store');
+        Route::put('colaborador-rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@update');
+        Route::delete('colaborador-rubrica/{codcolaboradorrubrica}', '\Mg\Rh\ColaboradorRubricaController@destroy');
+        Route::patch('colaborador-rubrica/{codcolaboradorrubrica}/concedido', '\Mg\Rh\ColaboradorRubricaController@toggleConcedido');
+        Route::post('periodo/{codperiodo}/rubrica-massa', '\Mg\Rh\ColaboradorRubricaController@aplicarMassa');
 
         Route::get('periodo/{codperiodo}/indicador', '\Mg\Rh\IndicadorController@index');
         Route::post('periodo/{codperiodo}/indicador', '\Mg\Rh\IndicadorController@store');
@@ -1287,6 +1295,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::delete('periodo/{codperiodo}/reprocessar', '\Mg\Rh\IndicadorController@cancelarReprocessamento');
 
         Route::get('dashboard/{codperiodo}', '\Mg\Rh\DashboardController@index');
+        Route::get('periodo/{codperiodo}/resumo', '\Mg\Rh\DashboardController@index');
+        Route::get('periodo/{codperiodo}/unidade/{codunidade}', '\Mg\Rh\DashboardController@unidade');
 
         Route::prefix('periodo/{codperiodo}/acertos')->group(function () {
             Route::get('/', '\Mg\Rh\AcertoController@index');

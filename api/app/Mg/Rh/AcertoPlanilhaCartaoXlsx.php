@@ -6,8 +6,18 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-class AcertoPlanilhaCartaoXlsx
+class AcertoPlanilhaCartaoXlsx implements RecargaCartaoDriver
 {
+    /**
+     * Implementação "planilha" do RecargaCartaoDriver — devolve os bytes do
+     * .xlsx CPF|Valor. Delega para o gerador estático abaixo (mantido para
+     * compatibilidade com AcertoController@planilhaCartao).
+     */
+    public function gerarRecarga(int $codperiodo, int $codempresa): string
+    {
+        return static::gerar($codperiodo, $codempresa);
+    }
+
     /**
      * Gera a planilha (XLSX) de reposição de saldo do cartão-benefício de UMA empresa mãe.
      *

@@ -70,11 +70,14 @@ class AcertoController extends Controller
         }
     }
 
-    public function recibos(int $codperiodo)
+    public function recibos(int $codperiodo, Request $request)
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
-        $pdf = AcertoReciboPdf::gerar($codperiodo);
+        $codunidadenegocio = $request->input('codunidadenegocio');
+        $codunidadenegocio = $codunidadenegocio ? (int) $codunidadenegocio : null;
+
+        $pdf = AcertoReciboPdf::gerar($codperiodo, [], $codunidadenegocio);
 
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
@@ -111,15 +114,13 @@ class AcertoController extends Controller
         Autorizador::autoriza(['Recursos Humanos']);
 
         $codempresa = (int) $request->input('codempresa');
-        abort_unless(in_array($codempresa, [1, 2], true), 422, 'Empresa inválida');
+        abort_unless($codempresa > 0, 422, 'Empresa inválida');
 
         $xlsx = AcertoPlanilhaCartaoXlsx::gerar($codperiodo, $codempresa);
 
-        $nome = $codempresa === 1 ? 'migliorini' : 'fdf';
-
         return response($xlsx, 200, [
             'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => "attachment; filename=\"cartao-{$nome}-{$codperiodo}.xlsx\"",
+            'Content-Disposition' => "attachment; filename=\"cartao-{$codempresa}-{$codperiodo}.xlsx\"",
         ]);
     }
 }

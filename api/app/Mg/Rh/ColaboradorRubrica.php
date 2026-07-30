@@ -9,7 +9,7 @@ namespace Mg\Rh;
 use Mg\MgModel;
 use Mg\Rh\Indicador;
 use Mg\Rh\PeriodoColaborador;
-use Mg\Rh\PeriodoColaboradorSetor;
+use Mg\Rh\Rubrica;
 
 class ColaboradorRubrica extends MgModel
 {
@@ -18,19 +18,21 @@ class ColaboradorRubrica extends MgModel
 
 
     protected $fillable = [
+        'codrubrica',
         'codindicador',
         'codindicadorcondicao',
         'codperiodocolaborador',
-        'codperiodocolaboradorsetor',
         'concedido',
-        'descontaabsenteismo',
         'descricao',
+        'observacao',
         'percentual',
+        'quantidade',
         'recorrente',
         'tipocondicao',
         'tipovalor',
         'valorcalculado',
-        'valorfixo'
+        'valorfixo',
+        'valorunitario',
     ];
 
     protected $casts = [
@@ -39,20 +41,26 @@ class ColaboradorRubrica extends MgModel
         'codindicador' => 'integer',
         'codindicadorcondicao' => 'integer',
         'codperiodocolaborador' => 'integer',
-        'codperiodocolaboradorsetor' => 'integer',
+        'codrubrica' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'concedido' => 'boolean',
         'criacao' => 'datetime',
-        'descontaabsenteismo' => 'boolean',
         'percentual' => 'float',
+        'quantidade' => 'float',
         'recorrente' => 'boolean',
         'valorcalculado' => 'float',
-        'valorfixo' => 'float'
+        'valorfixo' => 'float',
+        'valorunitario' => 'float',
     ];
 
 
     // Chaves Estrangeiras
+    public function Rubrica()
+    {
+        return $this->belongsTo(Rubrica::class, 'codrubrica', 'codrubrica');
+    }
+
     public function Indicador()
     {
         return $this->belongsTo(Indicador::class, 'codindicador', 'codindicador');
@@ -67,10 +75,4 @@ class ColaboradorRubrica extends MgModel
     {
         return $this->belongsTo(PeriodoColaborador::class, 'codperiodocolaborador', 'codperiodocolaborador');
     }
-
-    public function PeriodoColaboradorSetor()
-    {
-        return $this->belongsTo(PeriodoColaboradorSetor::class, 'codperiodocolaboradorsetor', 'codperiodocolaboradorsetor');
-    }
-
 }

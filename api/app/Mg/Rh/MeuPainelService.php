@@ -56,9 +56,7 @@ class MeuPainelService
         ];
 
         if ($pc->gestor) {
-            $meusSetores = PeriodoColaboradorSetor::where('codperiodocolaborador', $pc->codperiodocolaborador)
-                ->pluck('codsetor')
-                ->toArray();
+            $meusSetores = array_filter([$pc->codsetor]);
 
             $minhasUnidades = Setor::whereIn('codsetor', $meusSetores)
                 ->pluck('codunidadenegocio')
@@ -71,11 +69,9 @@ class MeuPainelService
                     ->pluck('codsetor')
                     ->toArray();
 
-                $equipeCods = PeriodoColaboradorSetor::whereIn('codsetor', $setoresUnidade)
-                    ->whereHas('PeriodoColaborador', function ($q) use ($codperiodo, $pc) {
-                        $q->where('codperiodo', $codperiodo)
-                            ->where('codperiodocolaborador', '!=', $pc->codperiodocolaborador);
-                    })
+                $equipeCods = PeriodoColaborador::whereIn('codsetor', $setoresUnidade)
+                    ->where('codperiodo', $codperiodo)
+                    ->where('codperiodocolaborador', '!=', $pc->codperiodocolaborador)
                     ->pluck('codperiodocolaborador')
                     ->unique()
                     ->toArray();
@@ -108,9 +104,7 @@ class MeuPainelService
             ->where('gestor', true)
             ->firstOrFail();
 
-        $meusSetores = PeriodoColaboradorSetor::where('codperiodocolaborador', $pcGestor->codperiodocolaborador)
-            ->pluck('codsetor')
-            ->toArray();
+        $meusSetores = array_filter([$pcGestor->codsetor]);
 
         $minhasUnidades = Setor::whereIn('codsetor', $meusSetores)
             ->pluck('codunidadenegocio')
@@ -119,7 +113,7 @@ class MeuPainelService
         $setoresUnidade = Setor::whereIn('codunidadenegocio', $minhasUnidades)
             ->pluck('codsetor')->toArray();
 
-        $compartilha = PeriodoColaboradorSetor::where('codperiodocolaborador', $codperiodocolaborador)
+        $compartilha = PeriodoColaborador::where('codperiodocolaborador', $codperiodocolaborador)
             ->whereIn('codsetor', $setoresUnidade)
             ->exists();
 
@@ -142,8 +136,9 @@ class MeuPainelService
                 'Colaborador.ColaboradorCargoS' => function ($q) {
                     $q->whereNull('fim')->with('Cargo');
                 },
-                'PeriodoColaboradorSetorS.Setor.UnidadeNegocio',
-                'PeriodoColaboradorSetorS.Setor.TipoSetor',
+                'Setor.UnidadeNegocio',
+                'Setor.TipoSetor',
+                'ColaboradorRubricaS.Rubrica',
                 'ColaboradorRubricaS.Indicador.Setor',
                 'ColaboradorRubricaS.Indicador.UnidadeNegocio',
                 'ColaboradorRubricaS.IndicadorCondicao.Setor',
@@ -158,12 +153,8 @@ class MeuPainelService
             ->get();
 
         // Indicadores coletivos (S/U)
-        $codsetores = $pc->PeriodoColaboradorSetorS->pluck('codsetor')->toArray();
-        $codunidades = $pc->PeriodoColaboradorSetorS
-            ->map(fn($pcs) => $pcs->Setor->codunidadenegocio ?? null)
-            ->filter()
-            ->unique()
-            ->toArray();
+        $codsetores = array_filter([$pc->codsetor]);
+        $codunidades = array_filter([$pc->Setor->codunidadenegocio ?? null]);
 
         $coletivos = Indicador::where('codperiodo', $codperiodo)
             ->whereNull('codcolaborador')
@@ -188,8 +179,9 @@ class MeuPainelService
                 'Colaborador.ColaboradorCargoS' => function ($q) {
                     $q->whereNull('fim')->with('Cargo');
                 },
-                'PeriodoColaboradorSetorS.Setor.UnidadeNegocio',
-                'PeriodoColaboradorSetorS.Setor.TipoSetor',
+                'Setor.UnidadeNegocio',
+                'Setor.TipoSetor',
+                'ColaboradorRubricaS.Rubrica',
                 'ColaboradorRubricaS.Indicador.Setor',
                 'ColaboradorRubricaS.Indicador.UnidadeNegocio',
                 'ColaboradorRubricaS.IndicadorCondicao.Setor',

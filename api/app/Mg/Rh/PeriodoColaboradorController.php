@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Colaborador\Colaborador;
+use Mg\Filial\Setor;
 use Mg\Usuario\Autorizador;
 
 class PeriodoColaboradorController extends Controller
@@ -29,8 +30,9 @@ class PeriodoColaboradorController extends Controller
                 'Colaborador.ColaboradorCargoS' => function ($q) {
                     $q->whereNull('fim')->with('Cargo');
                 },
-                'PeriodoColaboradorSetorS.Setor.UnidadeNegocio',
-                'PeriodoColaboradorSetorS.Setor.TipoSetor',
+                'Setor.UnidadeNegocio',
+                'Setor.TipoSetor',
+                'ColaboradorRubricaS.Rubrica',
                 'ColaboradorRubricaS.Indicador.Setor',
                 'ColaboradorRubricaS.Indicador.UnidadeNegocio',
                 'ColaboradorRubricaS.IndicadorCondicao.Setor',
@@ -106,6 +108,9 @@ class PeriodoColaboradorController extends Controller
             return response()->json(['erro' => 'Nenhum colaborador informado.'], 422);
         }
 
+        // Setor "casa" opcional, aplicado a todos os colaboradores deste lote.
+        $codsetor = $request->input('codsetor') ?: null;
+
         $jaVinculados = PeriodoColaborador::where('codperiodo', $codperiodo)
             ->pluck('codcolaborador')
             ->toArray();
@@ -120,6 +125,7 @@ class PeriodoColaboradorController extends Controller
                 $pc = new PeriodoColaborador([
                     'codperiodo' => $codperiodo,
                     'codcolaborador' => (int) $codcolaborador,
+                    'codsetor' => $codsetor,
                     'status' => 'A',
                     'valortotal' => 0,
                 ]);
@@ -153,7 +159,6 @@ class PeriodoColaboradorController extends Controller
         DB::beginTransaction();
         try {
             ColaboradorRubrica::where('codperiodocolaborador', $codperiodocolaborador)->delete();
-            PeriodoColaboradorSetor::where('codperiodocolaborador', $codperiodocolaborador)->delete();
             $pc->delete();
             DB::commit();
         } catch (\Exception $e) {
@@ -222,5 +227,42 @@ class PeriodoColaboradorController extends Controller
         $pc->save();
 
         return response()->json(['gestor' => $pc->gestor]);
+    }
+
+    // Define/muda o setor "casa" do colaborador no período.
+    public function atualizarSetor(int $codperiodo, int $codperiodocolaborador, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $pc = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->where('codperiodocolaborador', $codperiodocolaborador)
+            ->firstOrFail();
+
+        $pc->codsetor = $request->input('codsetor') ?: null;
+        $pc->save();
+
+        return new PeriodoColaboradorResource($pc->load('Setor.UnidadeNegocio'));
+    }
+
+    // Lista de setores ativos (com unidade) para os selects do RH.
+    public function setores()
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $setores = Setor::whereNull('inativo')
+            ->with('UnidadeNegocio')
+            ->orderBy('codunidadenegocio')
+            ->orderBy('setor')
+            ->get()
+            ->map(fn($s) => [
+                'codsetor' => $s->codsetor,
+                'setor' => $s->setor,
+                'codunidadenegocio' => $s->codunidadenegocio,
+                'unidade_negocio_nome' => $s->UnidadeNegocio?->descricao,
+                'label' => ($s->UnidadeNegocio?->descricao ? $s->UnidadeNegocio->descricao . ' — ' : '') . $s->setor,
+            ])
+            ->values();
+
+        return response()->json(['data' => $setores]);
     }
 }

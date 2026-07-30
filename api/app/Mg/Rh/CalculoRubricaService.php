@@ -6,12 +6,14 @@ class CalculoRubricaService
 {
     const TIPO_PERCENTUAL = 'P';
     const TIPO_FIXO = 'F';
+    const TIPO_QUANTIDADE = 'Q';
     const CONDICAO_META = 'M';
     const CONDICAO_RANKING = 'R';
 
     const TIPO_DESCRICAO = [
         self::TIPO_PERCENTUAL => 'Percentual',
         self::TIPO_FIXO => 'Fixo',
+        self::TIPO_QUANTIDADE => 'Unitário × Quantidade',
     ];
 
     const CONDICAO_DESCRICAO = [
@@ -32,8 +34,7 @@ class CalculoRubricaService
 
     public static function calcularColaborador(int $codperiodocolaborador): void
     {
-        $pc = PeriodoColaborador::with(['PeriodoColaboradorSetorS', 'Periodo'])->findOrFail($codperiodocolaborador);
-        $diasuteis = $pc->Periodo->diasuteis;
+        $pc = PeriodoColaborador::findOrFail($codperiodocolaborador);
 
         // Ordenação: sem condição → meta → ranking
         $rubricas = ColaboradorRubrica::where('codperiodocolaborador', $codperiodocolaborador)
@@ -63,50 +64,17 @@ class CalculoRubricaService
                 }
             }
 
-            // Calcula valor base
+            // Calcula valor
             if ($rubrica->tipovalor === self::TIPO_PERCENTUAL) {
+                // Percentual efetivo direto sobre o indicador (sem rateio)
                 $indicador = $rubrica->codindicador ? Indicador::find($rubrica->codindicador) : null;
-                if (!$indicador) {
-                    $rubrica->valorcalculado = 0;
-                    $rubrica->save();
-                    continue;
-                }
-
-                // Indicador coletivo (setor): rateio ponderado
-                if ($indicador->tipo === ProcessarVendaService::TIPO_SETOR) {
-                    $vinculo = $rubrica->codperiodocolaboradorsetor
-                        ? PeriodoColaboradorSetor::find($rubrica->codperiodocolaboradorsetor)
-                        : $pc->PeriodoColaboradorSetorS->first();
-
-                    if (!$vinculo) {
-                        $rubrica->valorcalculado = 0;
-                        $rubrica->save();
-                        continue;
-                    }
-
-                    $valorRateio = static::calcularRateio($vinculo, $indicador->valoracumulado, $pc->Periodo->codperiodo);
-                    $valor = $valorRateio * ($rubrica->percentual / 100);
-                } else {
-                    $valor = $indicador->valoracumulado * ($rubrica->percentual / 100);
-                }
+                $valor = $indicador ? $indicador->valoracumulado * ($rubrica->percentual / 100) : 0;
+            } elseif ($rubrica->tipovalor === self::TIPO_QUANTIDADE) {
+                // Unitário × Quantidade (ex.: marmita R$15 × 26 dias)
+                $valor = ($rubrica->valorunitario ?? 0) * ($rubrica->quantidade ?? 0);
             } else {
                 // Fixo
                 $valor = $rubrica->valorfixo ?? 0;
-            }
-
-            // Desconto de absenteísmo
-            if ($rubrica->descontaabsenteismo && $diasuteis > 0) {
-                $vinculo = $rubrica->codperiodocolaboradorsetor
-                    ? PeriodoColaboradorSetor::find($rubrica->codperiodocolaboradorsetor)
-                    : $pc->PeriodoColaboradorSetorS->first();
-
-                $diastrabalhados = $vinculo ? $vinculo->diastrabalhados : 0;
-
-                if ($diastrabalhados > 0) {
-                    $valor = $valor * ($diastrabalhados / $diasuteis);
-                } else {
-                    $valor = 0;
-                }
             }
 
             $rubrica->valorcalculado = round($valor, 2);
@@ -156,32 +124,5 @@ class CalculoRubricaService
             ->first();
 
         return $primeiro && $primeiro->codcolaborador === $codcolaborador;
-    }
-
-    protected static function calcularRateio(PeriodoColaboradorSetor $vinculo, float $valorIndicador, int $codperiodo): float
-    {
-        $todosVinculos = PeriodoColaboradorSetor::where('codsetor', $vinculo->codsetor)
-            ->whereHas('PeriodoColaborador', function ($q) use ($codperiodo) {
-                $q->where('codperiodo', $codperiodo);
-            })
-            ->get();
-
-        // Pool = apenas os % contratados do setor (não normaliza para 100%)
-        // Assim: dois colaboradores com 40%+40% distribuem só 80% do indicador
-        $totalPercentual = $todosVinculos->sum('percentualrateio');
-        if ($totalPercentual == 0) {
-            return 0;
-        }
-        $poolAlocado = ($totalPercentual / 100) * $valorIndicador;
-
-        // Distribui o pool proporcional a percentualrateio × diastrabalhados
-        // Quem faltou transfere sua parte pro pool dos presentes
-        $totalPontos = $todosVinculos->sum(fn($v) => $v->percentualrateio * $v->diastrabalhados);
-        if ($totalPontos == 0) {
-            return 0;
-        }
-
-        $pontosColaborador = $vinculo->percentualrateio * $vinculo->diastrabalhados;
-        return ($pontosColaborador / $totalPontos) * $poolAlocado;
     }
 }

@@ -13,7 +13,6 @@ import {
 import { formataNumero, formataPercentual } from '@components/formatters'
 import CardIndicadores from 'src/components/rh/CardIndicadores.vue'
 import CardRubricas from 'src/components/rh/CardRubricas.vue'
-import CardSetores from 'src/components/rh/CardSetores.vue'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -31,11 +30,11 @@ const cargo = computed(() => {
   const cargos = colaborador.value?.colaborador?.colaborador_cargo_s || []
   return cargos.length > 0 ? cargos[0].cargo?.cargo : null
 })
-const setores = computed(() => colaborador.value?.periodo_colaborador_setor_s || [])
+const setorNome = computed(() => colaborador.value?.setor?.setor || null)
 const rubricas = computed(() =>
   (colaborador.value?.colaborador_rubrica_s || [])
     .slice()
-    .sort((a, b) => a.descricao.localeCompare(b.descricao, 'pt-BR')),
+    .sort((a, b) => (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR')),
 )
 const indicadores = computed(() => colaborador.value?.indicadores || [])
 
@@ -45,23 +44,19 @@ const equipeAgrupada = computed(() => {
   const setorMap = new Map()
 
   equipe.value.forEach((pc) => {
-    const pcSetores = pc.periodo_colaborador_setor_s || []
-    pcSetores.forEach((pcs) => {
-      const key = pcs.codsetor
-      if (!setorMap.has(key)) {
-        setorMap.set(key, {
-          codsetor: key,
-          setor: pcs.setor?.setor || '—',
-          unidade: pcs.setor?.unidade_negocio?.descricao || '',
-          colaboradores: [],
-        })
-      }
-      // Evita duplicação
-      const grupo = setorMap.get(key)
-      if (!grupo.colaboradores.find((c) => c.codperiodocolaborador === pc.codperiodocolaborador)) {
-        grupo.colaboradores.push(pc)
-      }
-    })
+    const key = pc.codsetor || 0
+    if (!setorMap.has(key)) {
+      setorMap.set(key, {
+        codsetor: key,
+        setor: pc.setor?.setor || '—',
+        unidade: pc.setor?.unidade_negocio?.descricao || '',
+        colaboradores: [],
+      })
+    }
+    const grupo = setorMap.get(key)
+    if (!grupo.colaboradores.find((c) => c.codperiodocolaborador === pc.codperiodocolaborador)) {
+      grupo.colaboradores.push(pc)
+    }
   })
 
   const grupos = Array.from(setorMap.values())
@@ -136,6 +131,7 @@ watch(
         <q-item-section>
           <div class="text-h5 text-grey-9">{{ nome }}</div>
           <div class="text-body2 text-grey-7" v-if="cargo">{{ cargo }}</div>
+          <div class="text-caption text-grey" v-if="setorNome">{{ setorNome }}</div>
           <div class="text-caption text-grey" v-if="colaborador.colaborador?.contratacao">
             Contratação: {{ formataData(colaborador.colaborador.contratacao) }} ({{
               formataFromNow(colaborador.colaborador.contratacao)
@@ -159,13 +155,6 @@ watch(
 
           <!-- COLUNA DIREITA -->
           <div class="col-xs-12 col-md-4">
-            <CardSetores
-              :setores="setores"
-              :diasUteisPeriodo="0"
-              :podeEditar="false"
-              :status="colaborador.status"
-            />
-
             <CardIndicadores
               :indicadores="indicadores"
               :rubricas="colaborador.colaborador_rubrica_s || []"

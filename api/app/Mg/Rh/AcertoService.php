@@ -25,7 +25,7 @@ class AcertoService
         $pcs = PeriodoColaborador::where('codperiodo', $codperiodo)
             ->with([
                 'Colaborador.Pessoa',
-                'PeriodoColaboradorSetorS.Setor.UnidadeNegocio',
+                'Setor.UnidadeNegocio',
             ])
             ->get();
 
@@ -39,9 +39,8 @@ class AcertoService
         $resultado = $pcs->map(function ($pc) use ($dias, $liquidacoesPorPessoa) {
             $codpessoa = $pc->Colaborador->codpessoa ?? null;
 
-            $primeiroPcs = $pc->PeriodoColaboradorSetorS->first();
-            $codunidadenegocio = $primeiroPcs?->Setor?->UnidadeNegocio?->codunidadenegocio ?? null;
-            $unidade = $primeiroPcs?->Setor?->UnidadeNegocio?->descricao ?? null;
+            $codunidadenegocio = $pc->Setor?->UnidadeNegocio?->codunidadenegocio ?? null;
+            $unidade = $pc->Setor?->UnidadeNegocio?->descricao ?? null;
 
             $liquidacoesColaborador = $liquidacoesPorPessoa->get($codpessoa, collect());
             $efetivado = $liquidacoesColaborador->isNotEmpty();

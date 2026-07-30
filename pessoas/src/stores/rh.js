@@ -7,6 +7,9 @@ export const rhStore = defineStore('rh', {
     dashboard: {},
     colaboradores: [],
     indicadores: [],
+    rubricas: [],
+    resumo: {},
+    setores: [],
   }),
 
   actions: {
@@ -61,6 +64,19 @@ export const rhStore = defineStore('rh', {
       return ret
     },
 
+    // --- COCKPIT (lazy-load) ---
+
+    async getResumo(codperiodo) {
+      const ret = await api.get('v1/rh/periodo/' + codperiodo + '/resumo')
+      this.resumo = ret.data
+      return ret
+    },
+
+    async getUnidade(codperiodo, codunidade) {
+      const ret = await api.get('v1/rh/periodo/' + codperiodo + '/unidade/' + codunidade)
+      return ret.data
+    },
+
     // --- COLABORADORES DO PERÍODO ---
 
     async getColaboradores(codperiodo) {
@@ -95,8 +111,81 @@ export const rhStore = defineStore('rh', {
       return ret.data.data
     },
 
-    async adicionarColaboradores(codperiodo, colaboradores) {
-      const ret = await api.post('v1/rh/periodo/' + codperiodo + '/colaborador', { colaboradores })
+    async adicionarColaboradores(codperiodo, colaboradores, codsetor = null) {
+      const ret = await api.post('v1/rh/periodo/' + codperiodo + '/colaborador', {
+        colaboradores,
+        codsetor,
+      })
+      return ret
+    },
+
+    // --- SETORES (catálogo p/ select) ---
+
+    async getSetores() {
+      const ret = await api.get('v1/rh/setores')
+      this.setores = ret.data.data
+      return ret.data.data
+    },
+
+    async atualizarSetorColaborador(codperiodo, codperiodocolaborador, codsetor) {
+      const ret = await api.patch(
+        'v1/rh/periodo/' + codperiodo + '/colaborador/' + codperiodocolaborador + '/setor',
+        { codsetor },
+      )
+      return ret
+    },
+
+    // --- UNIDADES DE NEGÓCIO (cadastro global) ---
+
+    async criarUnidade(data) {
+      const ret = await api.post('v1/unidade-negocio', data)
+      return ret
+    },
+
+    async atualizarUnidade(codunidadenegocio, data) {
+      const ret = await api.put('v1/unidade-negocio/' + codunidadenegocio, data)
+      return ret
+    },
+
+    async excluirUnidade(codunidadenegocio) {
+      const ret = await api.delete('v1/unidade-negocio/' + codunidadenegocio)
+      return ret
+    },
+
+    async inativarUnidade(codunidadenegocio) {
+      const ret = await api.post('v1/unidade-negocio/' + codunidadenegocio + '/inativo')
+      return ret
+    },
+
+    async ativarUnidade(codunidadenegocio) {
+      const ret = await api.delete('v1/unidade-negocio/' + codunidadenegocio + '/inativo')
+      return ret
+    },
+
+    // --- SETORES (cadastro global) ---
+
+    async criarSetor(data) {
+      const ret = await api.post('v1/setor', data)
+      return ret
+    },
+
+    async atualizarSetor(codsetor, data) {
+      const ret = await api.put('v1/setor/' + codsetor, data)
+      return ret
+    },
+
+    async excluirSetor(codsetor) {
+      const ret = await api.delete('v1/setor/' + codsetor)
+      return ret
+    },
+
+    async inativarSetor(codsetor) {
+      const ret = await api.post('v1/setor/' + codsetor + '/inativo')
+      return ret
+    },
+
+    async ativarSetor(codsetor) {
+      const ret = await api.delete('v1/setor/' + codsetor + '/inativo')
       return ret
     },
 
@@ -107,51 +196,68 @@ export const rhStore = defineStore('rh', {
       return ret
     },
 
-    // --- VÍNCULOS COLABORADOR-SETOR ---
+    // --- CATÁLOGO DE RUBRICAS (tblrubrica) ---
 
-    async criarSetor(codperiodocolaborador, data) {
+    async getRubricas() {
+      const ret = await api.get('v1/rh/rubrica')
+      this.rubricas = ret.data.data
+      return ret
+    },
+
+    async criarRubrica(data) {
+      const ret = await api.post('v1/rh/rubrica', data)
+      return ret
+    },
+
+    async atualizarRubrica(codrubrica, data) {
+      const ret = await api.put('v1/rh/rubrica/' + codrubrica, data)
+      return ret
+    },
+
+    async inativarRubrica(codrubrica) {
+      const ret = await api.post('v1/rh/rubrica/' + codrubrica + '/inativo')
+      return ret
+    },
+
+    async ativarRubrica(codrubrica) {
+      const ret = await api.delete('v1/rh/rubrica/' + codrubrica + '/inativo')
+      return ret
+    },
+
+    async excluirRubrica(codrubrica) {
+      const ret = await api.delete('v1/rh/rubrica/' + codrubrica)
+      return ret
+    },
+
+    async aplicarRubricaMassa(codperiodo, codrubrica) {
+      const ret = await api.post('v1/rh/periodo/' + codperiodo + '/rubrica-massa', { codrubrica })
+      return ret
+    },
+
+    // --- RUBRICAS DO COLABORADOR (tblcolaboradorrubrica) ---
+
+    async criarColaboradorRubrica(codperiodocolaborador, data) {
       const ret = await api.post(
-        'v1/rh/periodo-colaborador/' + codperiodocolaborador + '/setor',
+        'v1/rh/periodo-colaborador/' + codperiodocolaborador + '/colaborador-rubrica',
         data,
       )
       return ret
     },
 
-    async atualizarSetor(codperiodocolaboradorsetor, data) {
-      const ret = await api.put(
-        'v1/rh/periodo-colaborador-setor/' + codperiodocolaboradorsetor,
-        data,
-      )
+    async atualizarColaboradorRubrica(codcolaboradorrubrica, data) {
+      const ret = await api.put('v1/rh/colaborador-rubrica/' + codcolaboradorrubrica, data)
       return ret
     },
 
-    async excluirSetor(codperiodocolaboradorsetor) {
-      const ret = await api.delete('v1/rh/periodo-colaborador-setor/' + codperiodocolaboradorsetor)
-      return ret
-    },
-
-    // --- RUBRICAS ---
-
-    async criarRubrica(codperiodocolaborador, data) {
-      const ret = await api.post(
-        'v1/rh/periodo-colaborador/' + codperiodocolaborador + '/rubrica',
-        data,
-      )
-      return ret
-    },
-
-    async atualizarRubrica(codcolaboradorrubrica, data) {
-      const ret = await api.put('v1/rh/rubrica/' + codcolaboradorrubrica, data)
-      return ret
-    },
-
-    async excluirRubrica(codcolaboradorrubrica) {
-      const ret = await api.delete('v1/rh/rubrica/' + codcolaboradorrubrica)
+    async excluirColaboradorRubrica(codcolaboradorrubrica) {
+      const ret = await api.delete('v1/rh/colaborador-rubrica/' + codcolaboradorrubrica)
       return ret
     },
 
     async toggleConcedido(codcolaboradorrubrica) {
-      const ret = await api.patch('v1/rh/rubrica/' + codcolaboradorrubrica + '/concedido')
+      const ret = await api.patch(
+        'v1/rh/colaborador-rubrica/' + codcolaboradorrubrica + '/concedido',
+      )
       return ret
     },
 

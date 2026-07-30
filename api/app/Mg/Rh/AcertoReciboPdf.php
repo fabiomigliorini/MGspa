@@ -7,7 +7,7 @@ use Mg\Titulo\LiquidacaoTitulo;
 
 class AcertoReciboPdf
 {
-    public static function gerar(int $codperiodo, array $colaboradores = []): string
+    public static function gerar(int $codperiodo, array $colaboradores = [], ?int $codunidadenegocio = null): string
     {
         ini_set('memory_limit', '256M');
 
@@ -22,6 +22,19 @@ class AcertoReciboPdf
 
         if (!empty($colaboradores)) {
             $codpessoas = PeriodoColaborador::whereIn('codperiodocolaborador', $colaboradores)
+                ->with('Colaborador')
+                ->get()
+                ->pluck('Colaborador.codpessoa')
+                ->filter()
+                ->toArray();
+            $query->whereIn('codpessoa', $codpessoas);
+        }
+
+        // Recibos de uma filial (unidade de negócio): filtra pelos colaboradores
+        // cujo setor pertence à unidade.
+        if ($codunidadenegocio) {
+            $codpessoas = PeriodoColaborador::where('codperiodo', $codperiodo)
+                ->whereHas('Setor', fn ($q) => $q->where('codunidadenegocio', $codunidadenegocio))
                 ->with('Colaborador')
                 ->get()
                 ->pluck('Colaborador.codpessoa')

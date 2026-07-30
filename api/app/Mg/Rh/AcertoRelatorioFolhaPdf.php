@@ -15,7 +15,7 @@ class AcertoRelatorioFolhaPdf
 
         // Mapa codpessoa => descrição da Unidade de Negócio (mesma lógica da tela de Acertos)
         $pcs = PeriodoColaborador::where('codperiodo', $codperiodo)
-            ->with(['Colaborador', 'PeriodoColaboradorSetorS.Setor.UnidadeNegocio'])
+            ->with(['Colaborador', 'Setor.UnidadeNegocio'])
             ->get();
 
         $unidadePorPessoa = [];
@@ -24,8 +24,8 @@ class AcertoRelatorioFolhaPdf
             if ($codpessoa === null) {
                 continue;
             }
-            // Convenção do app (AcertoService/CalculoRubricaService): primeiro setor do rateio
-            $unidade = $pc->PeriodoColaboradorSetorS->first()?->Setor?->UnidadeNegocio;
+            // Unidade de negócio do setor do colaborador (vínculo 1:1 em tblperiodocolaborador)
+            $unidade = $pc->Setor?->UnidadeNegocio;
             $unidadePorPessoa[$codpessoa] = [
                 'cod'  => $unidade?->codunidadenegocio,
                 'nome' => $unidade?->descricao,

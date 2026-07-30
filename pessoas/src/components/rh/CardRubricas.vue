@@ -9,21 +9,25 @@ defineProps({
   codtitulo: { type: Number, default: null },
   linkTitulo: { type: String, default: '' },
   podeEditar: { type: Boolean, default: false },
+  codperiodo: { type: [Number, String], default: null },
+  nomeRotaExtrato: { type: String, default: 'rhIndicadorExtrato' },
 })
 
-const emit = defineEmits([
-  'editar',
-  'excluir',
-  'toggle-concedido',
-  'recalcular',
-  'encerrar',
-  'estornar',
-  'nova-rubrica',
-])
+const emit = defineEmits(['editar', 'excluir', 'toggle-concedido', 'nova-rubrica', 'editar-meta'])
 
 const tipoValorLabel = (tipo) => {
-  return tipo === 'P' ? '%' : 'Fixo'
+  if (tipo === 'P') return '%'
+  if (tipo === 'Q') return 'Un×Qt'
+  return 'Fixo'
 }
+
+const tipoValorColor = (tipo) => {
+  if (tipo === 'P') return 'blue'
+  if (tipo === 'Q') return 'teal'
+  return 'purple'
+}
+
+const rubricaDescricao = (r) => r.descricao || r.rubrica?.descricao || '—'
 
 const condicaoLabel = (rubrica) => {
   if (!rubrica.tipocondicao) return '—'
@@ -32,6 +36,13 @@ const condicaoLabel = (rubrica) => {
   const indicadorLabel = ind ? tipoIndicadorLabel(ind.tipo) : ''
   return tipo + ' ' + indicadorLabel
 }
+
+// Indicador da rubrica: o base (percentual) ou, na falta, o da condição.
+const rubricaIndicador = (r) => r.indicador || r.indicador_condicao || null
+
+// Rótulo consolidado da coluna Indicador / Condição.
+const indicadorCondicaoLabel = (r) =>
+  r.indicador ? tipoIndicadorLabel(r.indicador.tipo) : condicaoLabel(r)
 </script>
 
 <template>
@@ -41,44 +52,7 @@ const condicaoLabel = (rubrica) => {
       <q-space />
       <q-btn
         flat
-        dense
         round
-        icon="refresh"
-        size="sm"
-        color="grey-7"
-        @click="emit('recalcular')"
-        v-if="podeEditar && status === 'A'"
-      >
-        <q-tooltip>Recalcular</q-tooltip>
-      </q-btn>
-      <q-btn
-        flat
-        dense
-        round
-        icon="check_circle"
-        size="sm"
-        color="green-7"
-        @click="emit('encerrar')"
-        v-if="podeEditar && status === 'A'"
-      >
-        <q-tooltip>Encerrar</q-tooltip>
-      </q-btn>
-      <q-btn
-        flat
-        dense
-        round
-        icon="undo"
-        size="sm"
-        color="grey-7"
-        @click="emit('estornar')"
-        v-if="podeEditar && status === 'E'"
-      >
-        <q-tooltip>Estornar</q-tooltip>
-      </q-btn>
-      <q-btn
-        flat
-        round
-        dense
         icon="add"
         size="sm"
         color="primary"
@@ -95,8 +69,7 @@ const condicaoLabel = (rubrica) => {
           <th>Descrição</th>
           <th class="text-center">Tipo</th>
           <th class="text-right">%/Valor</th>
-          <th>Indicador</th>
-          <th>Condição</th>
+          <th>Indicador / Condição</th>
           <th class="text-right">Calculado</th>
           <th class="text-center">Conc.</th>
           <th class="text-right" v-if="podeEditar">Ações</th>
@@ -108,44 +81,68 @@ const condicaoLabel = (rubrica) => {
           :key="r.codcolaboradorrubrica"
           :class="!r.concedido ? 'text-grey-5' : ''"
         >
-          <td>{{ r.descricao }}</td>
-          <td class="text-center">
-            <q-badge
-              :color="r.tipovalor === 'P' ? 'blue' : 'purple'"
-              :label="tipoValorLabel(r.tipovalor)"
-            />
-          </td>
-          <td class="text-right">
-            <template v-if="r.tipovalor === 'P'"> {{ r.percentual }}% </template>
-            <template v-else>
-              {{ formataNumero(r.valorfixo) }}
-            </template>
-          </td>
           <td>
-            <template v-if="r.indicador">
-              {{ tipoIndicadorLabel(r.indicador.tipo) }}
-            </template>
-            <template v-else>—</template>
-          </td>
-          <td>{{ condicaoLabel(r) }}</td>
-          <td class="text-right text-weight-bold">
-            {{ formataNumero(r.valorcalculado) }}
+            {{ rubricaDescricao(r) }}
             <q-icon
-              v-if="r.descontaabsenteismo && status === 'A'"
-              name="schedule"
+              v-if="r.observacao"
+              name="sticky_note_2"
               size="xs"
-              color="orange"
+              color="grey-6"
               class="q-ml-xs"
             >
-              <q-tooltip>Valor provisório — sujeito a desconto de absenteísmo</q-tooltip>
+              <q-tooltip>{{ r.observacao }}</q-tooltip>
             </q-icon>
+          </td>
+          <td class="text-center">
+            <q-badge :color="tipoValorColor(r.tipovalor)" :label="tipoValorLabel(r.tipovalor)" />
+          </td>
+          <td class="text-right">
+            <template v-if="r.tipovalor === 'P'">{{ r.percentual }}%</template>
+            <template v-else-if="r.tipovalor === 'Q'">
+              {{ formataNumero(r.valorunitario) }} × {{ r.quantidade }}
+            </template>
+            <template v-else>{{ formataNumero(r.valorfixo) }}</template>
+          </td>
+          <td>
+            <div class="row items-center no-wrap">
+              <span>{{ indicadorCondicaoLabel(r) }}</span>
+              <template v-if="rubricaIndicador(r)">
+                <q-btn
+                  flat
+                  round
+                  icon="receipt_long"
+                  size="sm"
+                  color="grey-7"
+                  v-if="codperiodo"
+                  :to="{
+                    name: nomeRotaExtrato,
+                    params: { codperiodo, codindicador: rubricaIndicador(r).codindicador },
+                  }"
+                >
+                  <q-tooltip>Extrato do indicador</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  round
+                  icon="edit"
+                  size="sm"
+                  color="grey-7"
+                  @click="emit('editar-meta', rubricaIndicador(r))"
+                  v-if="podeEditar && status === 'A'"
+                >
+                  <q-tooltip>Editar meta</q-tooltip>
+                </q-btn>
+              </template>
+            </div>
+          </td>
+          <td class="text-right text-weight-bold">
+            {{ formataNumero(r.valorcalculado) }}
           </td>
           <td class="text-center">
             <q-toggle
               v-if="podeEditar && status === 'A'"
               :model-value="r.concedido"
               @update:model-value="emit('toggle-concedido', r)"
-              dense
             />
             <q-icon
               v-else
@@ -157,7 +154,6 @@ const condicaoLabel = (rubrica) => {
           <td class="text-right" v-if="podeEditar">
             <q-btn
               flat
-              dense
               round
               icon="edit"
               size="sm"
@@ -169,7 +165,6 @@ const condicaoLabel = (rubrica) => {
             </q-btn>
             <q-btn
               flat
-              dense
               round
               icon="delete"
               size="sm"
@@ -183,7 +178,7 @@ const condicaoLabel = (rubrica) => {
         </tr>
         <!-- TOTAL -->
         <tr class="text-weight-bold bg-grey-2">
-          <td colspan="5" class="text-right">TOTAL</td>
+          <td colspan="4" class="text-right">TOTAL</td>
           <td class="text-right">
             {{ formataNumero(valortotal) }}
           </td>

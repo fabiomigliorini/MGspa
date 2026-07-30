@@ -2,12 +2,73 @@
 
 namespace Mg\Rh;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
 class ColaboradorRubricaController extends Controller
 {
+    /**
+     * Aplicação em massa (presenteísmo): cria a rubrica do catálogo informado
+     * para TODOS os colaboradores abertos (status A) do período, copiando os
+     * valores-padrão do catálogo. Pula quem já possui a rubrica.
+     */
+    public function aplicarMassa(int $codperiodo, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $codrubrica = (int) $request->input('codrubrica');
+        $rubrica = Rubrica::findOrFail($codrubrica);
+        $periodo = Periodo::findOrFail($codperiodo);
+
+        DB::beginTransaction();
+        try {
+            $pcs = PeriodoColaborador::where('codperiodo', $codperiodo)
+                ->where('status', PeriodoService::STATUS_COLABORADOR_ABERTO)
+                ->get();
+
+            $aplicados = 0;
+            foreach ($pcs as $pc) {
+                $jaTem = ColaboradorRubrica::where('codperiodocolaborador', $pc->codperiodocolaborador)
+                    ->where('codrubrica', $codrubrica)
+                    ->exists();
+                if ($jaTem) {
+                    continue;
+                }
+
+                $nova = new ColaboradorRubrica([
+                    'codrubrica' => $rubrica->codrubrica,
+                    'descricao' => $rubrica->descricao,
+                    'tipovalor' => $rubrica->tipovalor,
+                    'tipocondicao' => $rubrica->tipocondicao,
+                    'recorrente' => $rubrica->recorrente,
+                    'concedido' => true,
+                ]);
+                $nova->codperiodocolaborador = $pc->codperiodocolaborador;
+                $nova->valorcalculado = 0;
+
+                if ($rubrica->tipovalor === 'F') {
+                    $nova->valorfixo = $rubrica->valorpadrao;
+                } elseif ($rubrica->tipovalor === 'Q') {
+                    $nova->valorunitario = $rubrica->valorunitariopadrao;
+                    $nova->quantidade = $periodo->diasuteis;
+                }
+
+                $nova->save();
+
+                CalculoRubricaService::calcularColaborador($pc->codperiodocolaborador);
+                $aplicados++;
+            }
+
+            DB::commit();
+            return response()->json(['aplicados' => $aplicados]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
     public function store(int $codperiodocolaborador, ColaboradorRubricaStoreRequest $request)
     {
         Autorizador::autoriza(['Recursos Humanos']);
