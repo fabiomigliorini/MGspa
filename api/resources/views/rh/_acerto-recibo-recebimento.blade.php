@@ -3,9 +3,9 @@
     // Fonte: evento de acerto ($ev). Os itens sao os vales/titulos a debito quitados
     // neste acerto (movimentos de credito, tipo 601). Corresponde ao antigo
     // liquidacao-titulo/_recibo-recebimento, agora dirigido pela tabela de eventos.
-    $pc      = $ev->PeriodoColaborador;
-    $col     = $pc?->Colaborador;
-    $pessoa  = $col?->Pessoa; // colaborador (de quem recebemos)
+    $pc = $ev->PeriodoColaborador;
+    $col = $pc?->Colaborador;
+    $pessoa = $col?->Pessoa; // colaborador (de quem recebemos)
     $filialP = $col?->Filial?->Pessoa; // empresa/filial (assina)
 
     $cidadeEstado = '';
@@ -23,11 +23,11 @@
         }
         $resumo[$ct]['valor'] += ($mov->credito ?? 0) - ($mov->debito ?? 0);
     }
-    $linhas = array_values(array_filter($resumo, fn ($r) => round($r['valor'], 2) > 0));
+    $linhas = array_values(array_filter($resumo, fn($r) => round($r['valor'], 2) > 0));
     $qtdeLinhas = count($linhas);
     $totalGeral = round(array_sum(array_column($linhas, 'valor')), 2);
 
-    $dt = $ev->data ?? $ev->criacao ?? now();
+    $dt = $ev->data ?? ($ev->criacao ?? now());
     $dataExtenso = $cidadeEstado . ', ' . formataDataPorExtenso($dt) . '.';
     $valorExtenso = formataValorPorExtenso((float) $totalGeral, true);
 
@@ -38,7 +38,7 @@
     $paginas = [];
     $resto = $itens;
     while (!empty($resto)) {
-        $cabem = empty($paginas) ? 22 : 27;
+        $cabem = empty($paginas) ? 11 : 15;
         $paginas[] = array_slice($resto, 0, $cabem);
         $resto = array_slice($resto, $cabem);
     }
@@ -85,8 +85,12 @@
                 {{-- Faixa e texto do recibo: so na primeira pagina --}}
                 @if ($numPagina == 1)
                     <div class="recibo-faixa">
-                        <div class="titulo-recibo">R E C I B O</div>
-                        <div class="titulo-valor">Valor R$ {{ formataNumero($totalGeral) }}</div>
+                        <table class="faixa-table">
+                            <tr>
+                                <td class="titulo-recibo">RECIBO</td>
+                                <td class="titulo-valor">R$ {{ formataNumero($totalGeral) }}</td>
+                            </tr>
+                        </table>
                     </div>
                 @endif
 
@@ -131,6 +135,10 @@
                             @endforeach
                         </tbody>
                     </table>
+
+                    @if ($ultimaPagina)
+                        <div class="corpo-data">{{ $dataExtenso }}</div>
+                    @endif
                 </div>
 
                 @unless ($ultimaPagina)
@@ -152,7 +160,6 @@
                                     class="assin-cnpj">{{ formataCnpjCpf($filialP->cnpj ?? '', $filialP->fisica ?? false) }}</span>
                             </div>
                         </div>
-                        <div class="rodape-data">{{ $dataExtenso }}</div>
                     </div>
 
                 </td>

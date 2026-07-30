@@ -448,6 +448,34 @@ const imprimirRecibo = () => {
   )
 }
 
+// Todos os recibos de UM acerto (pagamento e/ou recebimento, conforme os valores).
+const imprimirReciboAcerto = (ac) => {
+  abrirPdf(
+    api,
+    'v1/rh/periodo/' +
+      route.params.codperiodo +
+      '/acertos/' +
+      ac.codperiodocolaboradoracerto +
+      '/recibo',
+    {},
+    { title: 'Recibos — ' + nome.value },
+  )
+}
+
+// Recibo de um valor especifico do acerto: rubricas/creditos -> pagamento; debitos -> recebimento.
+const imprimirReciboTipo = (ac, tipo) => {
+  abrirPdf(
+    api,
+    'v1/rh/periodo/' +
+      route.params.codperiodo +
+      '/acertos/' +
+      ac.codperiodocolaboradoracerto +
+      '/recibo',
+    { tipo },
+    { title: 'Recibo — ' + nome.value },
+  )
+}
+
 const realizarAcerto = () => {
   dialogAcerto.value = true
 }
@@ -901,16 +929,16 @@ watch(
                 <q-tooltip>Reabrir (destrava rubricas e acertos)</q-tooltip>
               </q-btn>
             </template>
-            <!-- RECIBO (só quando acerto efetivado) -->
+            <!-- RECIBO: todos os recibos de todos os acertos do colaborador -->
             <q-btn
-              v-if="podeEditar && acertoStatus === 'efetivado'"
+              v-if="podeEditar && acertosAtivos.length"
               flat
               round
               icon="print"
               color="grey-7"
               @click="imprimirRecibo()"
             >
-              <q-tooltip>Imprimir Recibo</q-tooltip>
+              <q-tooltip>Imprimir todos os recibos do colaborador</q-tooltip>
             </q-btn>
             <!-- Acerto é lançado pelo "+" do card de Acertos, abaixo. -->
             <q-btn
@@ -1030,9 +1058,60 @@ watch(
                         </div>
                       </div>
                     </td>
-                    <td class="text-right">{{ ac.rubricas ? formataNumero(ac.rubricas) : '—' }}</td>
-                    <td class="text-right">{{ ac.creditos ? formataNumero(ac.creditos) : '—' }}</td>
-                    <td class="text-right">{{ ac.debitos ? formataNumero(ac.debitos) : '—' }}</td>
+                    <td class="text-right">
+                      <div v-if="ac.rubricas" class="row items-center justify-end no-wrap">
+                        <span>{{ formataNumero(ac.rubricas) }}</span>
+                        <q-btn
+                          v-if="!ac.inativo"
+                          flat
+                          round
+                          size="sm"
+                          color="grey-6"
+                          icon="print"
+                          class="q-ml-xs"
+                          @click="imprimirReciboTipo(ac, 'pagamento')"
+                        >
+                          <q-tooltip>Recibo de pagamento</q-tooltip>
+                        </q-btn>
+                      </div>
+                      <template v-else>—</template>
+                    </td>
+                    <td class="text-right">
+                      <div v-if="ac.creditos" class="row items-center justify-end no-wrap">
+                        <span>{{ formataNumero(ac.creditos) }}</span>
+                        <q-btn
+                          v-if="!ac.inativo"
+                          flat
+                          round
+                          size="sm"
+                          color="grey-6"
+                          icon="print"
+                          class="q-ml-xs"
+                          @click="imprimirReciboTipo(ac, 'pagamento')"
+                        >
+                          <q-tooltip>Recibo de pagamento</q-tooltip>
+                        </q-btn>
+                      </div>
+                      <template v-else>—</template>
+                    </td>
+                    <td class="text-right">
+                      <div v-if="ac.debitos" class="row items-center justify-end no-wrap">
+                        <span>{{ formataNumero(ac.debitos) }}</span>
+                        <q-btn
+                          v-if="!ac.inativo"
+                          flat
+                          round
+                          size="sm"
+                          color="grey-6"
+                          icon="print"
+                          class="q-ml-xs"
+                          @click="imprimirReciboTipo(ac, 'recebimento')"
+                        >
+                          <q-tooltip>Recibo de recebimento</q-tooltip>
+                        </q-btn>
+                      </div>
+                      <template v-else>—</template>
+                    </td>
                     <td
                       class="text-right text-weight-medium"
                       :class="ac.inativo ? '' : ac.saldo < 0 ? 'text-negative' : 'text-positive'"
@@ -1040,17 +1119,30 @@ watch(
                       {{ ac.saldo < 0 ? '−' : '' }}{{ formataNumero(Math.abs(ac.saldo)) }}
                     </td>
                     <td class="text-right">
-                      <q-btn
-                        v-if="podeEditar && colaborador.status === 'A'"
-                        flat
-                        round
-                        size="sm"
-                        color="grey-7"
-                        :icon="ac.inativo ? 'play_arrow' : 'pause'"
-                        @click="toggleInativoAcerto(ac)"
-                      >
-                        <q-tooltip>{{ ac.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
-                      </q-btn>
+                      <div class="row items-center justify-end no-wrap">
+                        <q-btn
+                          v-if="!ac.inativo && (ac.rubricas || ac.creditos || ac.debitos)"
+                          flat
+                          round
+                          size="sm"
+                          color="grey-7"
+                          icon="print"
+                          @click="imprimirReciboAcerto(ac)"
+                        >
+                          <q-tooltip>Imprimir recibos deste acerto</q-tooltip>
+                        </q-btn>
+                        <q-btn
+                          v-if="podeEditar && colaborador.status === 'A'"
+                          flat
+                          round
+                          size="sm"
+                          color="grey-7"
+                          :icon="ac.inativo ? 'play_arrow' : 'pause'"
+                          @click="toggleInativoAcerto(ac)"
+                        >
+                          <q-tooltip>{{ ac.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
+                        </q-btn>
+                      </div>
                     </td>
                   </tr>
                 </tbody>

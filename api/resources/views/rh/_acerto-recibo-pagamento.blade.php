@@ -3,9 +3,9 @@
     // Fonte: evento de acerto ($ev). Os itens sao o beneficio (rubricas) entregue neste
     // acerto e, se houver, titulos a credito pagos. Corresponde ao antigo
     // liquidacao-titulo/_recibo-pagamento, agora dirigido pela tabela de eventos.
-    $pc      = $ev->PeriodoColaborador;
-    $col     = $pc?->Colaborador;
-    $pessoa  = $col?->Pessoa; // colaborador (assina, recebeu da empresa)
+    $pc = $ev->PeriodoColaborador;
+    $col = $pc?->Colaborador;
+    $pessoa = $col?->Pessoa; // colaborador (assina, recebeu da empresa)
     $filialP = $col?->Filial?->Pessoa; // empresa/filial (quem pagou)
 
     $cidadeEstado = '';
@@ -53,7 +53,7 @@
 
     $qtdeLinhas = count($linhas);
 
-    $dt = $ev->data ?? $ev->criacao ?? now();
+    $dt = $ev->data ?? ($ev->criacao ?? now());
     $dataExtenso = $cidadeEstado . ', ' . formataDataPorExtenso($dt) . '.';
     $valorExtenso = formataValorPorExtenso((float) $totalPago, true);
 
@@ -64,7 +64,7 @@
     $paginas = [];
     $resto = $itens;
     while (!empty($resto)) {
-        $cabem = empty($paginas) ? 22 : 27;
+        $cabem = empty($paginas) ? 11 : 15;
         $paginas[] = array_slice($resto, 0, $cabem);
         $resto = array_slice($resto, $cabem);
     }
@@ -111,8 +111,12 @@
                 {{-- Faixa e texto do recibo: so na primeira pagina --}}
                 @if ($numPagina == 1)
                     <div class="recibo-faixa">
-                        <div class="titulo-recibo">R E C I B O</div>
-                        <div class="titulo-valor">Valor R$ {{ formataNumero($totalPago) }}</div>
+                        <table class="faixa-table">
+                            <tr>
+                                <td class="titulo-recibo">RECIBO</td>
+                                <td class="titulo-valor">R$ {{ formataNumero($totalPago) }}</td>
+                            </tr>
+                        </table>
                     </div>
                 @endif
 
@@ -125,7 +129,7 @@
                                 , CNPJ {{ formataCnpjCpf($filialP->cnpj, $filialP->fisica ?? false) }}
                             @endif,
                             a importancia de <strong>{{ $valorExtenso }}</strong>,
-                            referente ao pagamento dos titulos abaixo listados:
+                            referente a' bonificacao abaixo discriminada:
                         </p>
                     @endif
 
@@ -152,6 +156,10 @@
                             @endforeach
                         </tbody>
                     </table>
+
+                    @if ($ultimaPagina)
+                        <div class="corpo-data">{{ $dataExtenso }}</div>
+                    @endif
                 </div>
 
                 @unless ($ultimaPagina)
@@ -173,7 +181,6 @@
                                     {{ formataCnpjCpf($pessoa->cnpj ?? '', $pessoa->fisica ?? false) }}</span>
                             </div>
                         </div>
-                        <div class="rodape-data">{{ $dataExtenso }}</div>
                     </div>
 
                 </td>

@@ -41,7 +41,34 @@ class AcertoReciboPdf
             return '';
         }
 
-        $html = view('rh.acerto-recibos', compact('acertos'))->render();
+        return self::render($acertos);
+    }
+
+    // Recibo(s) de UM unico acerto. $tipo restringe a impressao:
+    // 'pagamento' | 'recebimento' | null (ambos, conforme os valores do evento).
+    public static function gerarPorAcerto(int $codperiodocolaboradoracerto, ?string $tipo = null): string
+    {
+        ini_set('memory_limit', '256M');
+
+        $ev = PeriodoColaboradorAcerto::with([
+            'PeriodoColaborador.Colaborador.Pessoa',
+            'PeriodoColaborador.Colaborador.Filial.Pessoa.Cidade.Estado',
+            'PeriodoColaborador.ColaboradorRubricaS',
+            'PeriodoColaborador.Setor',
+            'MovimentoTituloS.Titulo',
+        ])->whereNull('inativo')->find($codperiodocolaboradoracerto);
+
+        // Acerto inativo (ou inexistente) nao emite recibo.
+        if (!$ev) {
+            return '';
+        }
+
+        return self::render(collect([$ev]), $tipo);
+    }
+
+    private static function render($acertos, ?string $tipo = null): string
+    {
+        $html = view('rh.acerto-recibos', compact('acertos', 'tipo'))->render();
 
         $dompdf = new Dompdf();
         $dompdf->loadHtml($html, 'UTF-8');

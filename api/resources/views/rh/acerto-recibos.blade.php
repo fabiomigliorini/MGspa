@@ -11,7 +11,7 @@
 
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 7pt;
+            font-size: 10pt;
             margin: 0;
             padding: 0;
             color: #000;
@@ -71,28 +71,45 @@
         }
 
         .recibo-faixa {
-            padding: 2px 10px;
-            text-align: center;
+            padding: 15px 15px;
         }
 
-        .titulo-recibo {
-            margin-top: 3px;
-            font-size: 11pt;
+        .faixa-table {
+            width: 100%;
+            border: none;
+        }
+
+        .faixa-table td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .titulo-recibo,
+        .titulo-valor {
+            font-size: 25pt;
             font-weight: bold;
             letter-spacing: 2px;
         }
 
+        .titulo-recibo {
+            text-align: left;
+        }
+
         .titulo-valor {
-            margin-top: 2px;
-            margin-bottom: 2px;
-            font-size: 9pt;
-            font-weight: bold;
+            text-align: right;
         }
 
         .recibo-corpo {
-            padding: 4px 10px 3px 10px;
-            font-size: 6.5pt;
+            padding: 12px 10px 3px 10px;
+            font-size: 10pt;
             line-height: 1.4;
+        }
+
+        .corpo-data {
+            text-align: right;
+            font-size: 9.5pt;
+            margin-top: 5px;
         }
 
         .recibo-corpo p {
@@ -102,14 +119,15 @@
         .itens-table {
             width: 100%;
             border: 1.5px solid #000;
-            margin-top: 3px;
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
 
         .itens-table th {
             background: #e0e0e0;
-            padding: 1px 3px;
+            padding: 3px 5px;
             text-align: left;
-            font-size: 6pt;
+            font-size: 9.5pt;
             font-weight: bold;
             border: 1.5px solid #000;
         }
@@ -119,8 +137,8 @@
         }
 
         .itens-table td {
-            padding: 1px 3px;
-            font-size: 6pt;
+            padding: 3px 5px;
+            font-size: 9.5pt;
             border: 1px solid #888;
         }
 
@@ -150,7 +168,7 @@
 
         .continua {
             text-align: right;
-            font-size: 6pt;
+            font-size: 9pt;
             font-style: italic;
             padding: 2px 10px 0 10px;
         }
@@ -161,7 +179,7 @@
 
         .rodape-data {
             text-align: right;
-            font-size: 6pt;
+            font-size: 8pt;
             margin-bottom: 1px;
         }
 
@@ -174,13 +192,13 @@
             width: 70%;
             border-top: 1px solid #000;
             padding-top: 2px;
-            font-size: 6pt;
+            font-size: 9pt;
             text-align: center;
         }
 
         .assin-cnpj,
         .assin-doc {
-            font-size: 5.5pt;
+            font-size: 8.5pt;
             color: #333;
         }
     </style>
@@ -195,11 +213,12 @@
           (beneficio/rubricas); assina o COLABORADOR.
         Um encontro de contas (beneficio + vale no mesmo acerto) emite os DOIS.
     --}}
+    @php $tipo = $tipo ?? null; @endphp
     @foreach ($acertos as $ev)
-        @if ($ev->debitos > 0)
+        @if (($tipo === null || $tipo === 'recebimento') && $ev->debitos > 0)
             @include('rh._acerto-recibo-recebimento', ['ev' => $ev])
         @endif
-        @if ($ev->rubricas > 0 || $ev->creditos > 0)
+        @if (($tipo === null || $tipo === 'pagamento') && ($ev->rubricas > 0 || $ev->creditos > 0))
             @include('rh._acerto-recibo-pagamento', ['ev' => $ev])
         @endif
     @endforeach

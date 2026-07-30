@@ -1309,6 +1309,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             Route::get('/', '\Mg\Rh\AcertoController@index');
             Route::get('/recibos', '\Mg\Rh\AcertoController@recibos');
             Route::get('/{codperiodocolaborador}/recibos', '\Mg\Rh\AcertoController@recibosColaborador');
+            Route::get('/{codperiodocolaboradoracerto}/recibo', '\Mg\Rh\AcertoController@reciboAcerto');
             Route::get('/relatorio-folha', '\Mg\Rh\AcertoController@relatorioFolha');
             Route::get('/planilha-cartao', '\Mg\Rh\AcertoController@planilhaCartao');
             Route::get('/{codperiodocolaborador}/titulos', '\Mg\Rh\AcertoController@titulos');
