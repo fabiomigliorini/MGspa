@@ -26,6 +26,33 @@ class PeriodoColaboradorResource extends JsonResource
         $pessoais = $this->indicadores_pessoais ?? collect();
         $ret['indicadores'] = $this->todosIndicadores($pessoais);
 
+        // Acertos ativos (eventos) — para o card de acertos na tela de detalhe
+        unset($ret['periodo_colaborador_acerto_s']);
+        $ret['acertos'] = ($this->PeriodoColaboradorAcertoS ?? collect())->map(function ($ac) {
+            return [
+                'codperiodocolaboradoracerto' => (int) $ac->codperiodocolaboradoracerto,
+                'data'            => $ac->data ? $ac->data->format('Y-m-d') : null,
+                'forma'           => $ac->forma,
+                'forma_descricao' => $ac->forma_descricao,
+                'rubricas'        => (float) $ac->rubricas,
+                'creditos'        => (float) $ac->creditos,
+                'debitos'         => (float) $ac->debitos,
+                'saldo'           => (float) $ac->saldo,
+                'observacao'      => $ac->observacao,
+                'inativo'         => $ac->inativo,
+                'criacao'         => $ac->criacao,
+                'usuariocriacao'  => $ac->usuariocriacao,
+                // Só os títulos da baixa original (tipo 601), evita duplicar com ajustes.
+                'titulos'         => $ac->MovimentoTituloS
+                    ->where('codtipomovimentotitulo', 601)
+                    ->map(fn ($m) => [
+                        'codtitulo' => (int) $m->codtitulo,
+                        'numero'    => optional($m->Titulo)->numero,
+                        'valor'     => (float) (($m->credito ?? 0) + ($m->debito ?? 0)),
+                    ])->values(),
+            ];
+        })->values();
+
         // Remover atributos temporários do output
         unset($ret['indicadores_pessoais']);
         unset($ret['indicadores_coletivos']);

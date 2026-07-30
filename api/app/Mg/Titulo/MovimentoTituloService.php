@@ -28,15 +28,16 @@ class MovimentoTituloService
     public static function estornar(MovimentoTitulo $movimento): MovimentoTitulo
     {
         $estorno = new MovimentoTitulo([
-            'codtitulo'              => $movimento->codtitulo,
-            'codtipomovimentotitulo' => static::TIPO_ESTORNO_LIQUIDACAO,
-            'debito'                 => $movimento->credito,
-            'credito'                => $movimento->debito,
-            'codportador'            => $movimento->codportador,
-            'codliquidacaotitulo'    => $movimento->codliquidacaotitulo,
-            'historico'              => null,
-            'transacao'              => date('Y-m-d'),
-            'sistema'                => date('Y-m-d H:i:s'),
+            'codtitulo'                   => $movimento->codtitulo,
+            'codtipomovimentotitulo'      => static::TIPO_ESTORNO_LIQUIDACAO,
+            'debito'                      => $movimento->credito,
+            'credito'                     => $movimento->debito,
+            'codportador'                 => $movimento->codportador,
+            'codliquidacaotitulo'         => $movimento->codliquidacaotitulo,
+            'codperiodocolaboradoracerto' => $movimento->codperiodocolaboradoracerto,
+            'historico'                   => null,
+            'transacao'                   => date('Y-m-d'),
+            'sistema'                     => date('Y-m-d H:i:s'),
         ]);
         $estorno->save();
         return $estorno;

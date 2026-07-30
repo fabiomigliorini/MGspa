@@ -40,30 +40,65 @@ class AcertoController extends Controller
             $resultado = AcertoService::efetivar(
                 $codperiodocolaborador,
                 $request->input('titulos', []),
-                $request->input('observacao')
+                $request->input('forma'),
+                $request->input('observacao'),
+                $request->input('data')
             );
             DB::commit();
-            return new AcertoEfetivadoResource($resultado);
+            return new PeriodoColaboradorAcertoResource($resultado['acerto']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['erro' => $e->getMessage()], 422);
         }
     }
 
+    // Inativa TODOS os eventos ativos do colaborador (botão "Estornar Acerto").
     public function estornar(int $codperiodo, int $codperiodocolaborador)
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
         DB::beginTransaction();
         try {
-            $qtd = AcertoService::estornar($codperiodocolaborador);
+            $qtd = AcertoService::estornarTodos($codperiodocolaborador);
             DB::commit();
             return response()->json([
                 'data' => [
-                    'status'                 => 'pendente',
-                    'liquidacoes_estornadas' => $qtd,
+                    'status'             => 'pendente',
+                    'eventos_inativados' => $qtd,
                 ],
             ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
+    // Inativa UM acerto (desfaz as baixas; registro permanece).
+    public function inativarAcerto(int $codperiodo, int $codperiodocolaboradoracerto)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        DB::beginTransaction();
+        try {
+            AcertoService::inativarAcerto($codperiodocolaboradoracerto);
+            DB::commit();
+            return response()->json(['data' => ['status' => 'inativado']]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
+    // Reativa UM acerto (reaplica as baixas).
+    public function reativarAcerto(int $codperiodo, int $codperiodocolaboradoracerto)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        DB::beginTransaction();
+        try {
+            AcertoService::reativarAcerto($codperiodocolaboradoracerto);
+            DB::commit();
+            return response()->json(['data' => ['status' => 'ativo']]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['erro' => $e->getMessage()], 422);

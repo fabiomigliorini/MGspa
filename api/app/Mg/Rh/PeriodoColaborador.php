@@ -73,4 +73,9 @@ class PeriodoColaborador extends MgModel
     {
         return $this->hasMany(ColaboradorRubrica::class, 'codperiodocolaborador', 'codperiodocolaborador');
     }
+
+    public function PeriodoColaboradorAcertoS()
+    {
+        return $this->hasMany(PeriodoColaboradorAcerto::class, 'codperiodocolaborador', 'codperiodocolaborador');
+    }
 }

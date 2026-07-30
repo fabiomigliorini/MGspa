@@ -12,14 +12,21 @@
       "Bash(npx eslint *)",
       "Bash(echo \"=== eslint exit: $? ===\")",
       "Bash(npx prettier *)",
-      "Bash(docker exec mgspa-api php artisan tinker '--execute= *)"
+      "Bash(docker exec mgspa-api php artisan tinker '--execute= *)",
+      "Bash(grep -rn 'protected $table' app/Mg/Filial/Setor.php app/Mg/Filial/UnidadeNegocio.php)",
+      "Bash(grep -rn 'protected $table' app/Mg/Filial/UnidadeNegocio.php)",
+      "Bash(grep -n 'function \\\\|protected $table\\\\|codfilial\\\\|codpessoa' app/Mg/Colaborador/Colaborador.php)",
+      "Bash(docker exec mgdb-mgdb-1 psql -U mgsis -d mgsis -c ' *)",
+      "Bash(grep -vE \"Psy Shell|Tinker|INFO|Ctrl\\\\+D|^>>>|^\\\\.\\\\.\\\\.|^> $\")"
     ],
     "additionalDirectories": [
       "/opt/www/MGspa/api/app/Mg/Titulo",
       "/opt/www/MGspa/api/app/Mg/Filial",
       "/opt/www/MGspa/api/app/Mg/Rh",
       "/opt/www/MGspa/api/routes",
-      "/opt/www/MGspa/api/database"
+      "/opt/www/MGspa/api/database",
+      "/opt/www/MGspa/api/resources/views/rh",
+      "/opt/www/MGspa/contas/src/pages/titulo"
     ]
   }
 }

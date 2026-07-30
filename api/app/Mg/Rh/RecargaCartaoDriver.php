@@ -10,8 +10,8 @@ namespace Mg\Rh;
  *  - RecargaApiBee: integração direta com a API da Bee (futuro).
  *
  * A fonte de dados (linhas CPF|Valor) é sempre
- * AcertoRelatorioFolhaPdf::linhasCaixaFinanceiro(), garantindo que planilha e
- * API tragam exatamente os mesmos valores da prévia "Caixa Financeiro".
+ * AcertoRelatorioFolhaPdf::linhasRecargaBee(), garantindo que planilha e
+ * API tragam exatamente os mesmos valores da prévia "Recarga Bee".
  */
 interface RecargaCartaoDriver
 {

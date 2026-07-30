@@ -3,13 +3,9 @@
 namespace Mg\Rh;
 
 use Illuminate\Support\Carbon;
-use Mg\Titulo\Titulo;
-use Mg\Titulo\TituloService;
 
 class EncerramentoService
 {
-    const CODCONTACONTABIL = 360;
-
     public static function encerrar(int $codperiodocolaborador): PeriodoColaborador
     {
         $pc = PeriodoColaborador::with(['Colaborador', 'Periodo'])->findOrFail($codperiodocolaborador);
@@ -22,48 +18,13 @@ class EncerramentoService
         CalculoRubricaService::calcularColaborador($codperiodocolaborador);
         $pc->refresh();
 
-        $agora = Carbon::now();
-
-        // Se valortotal = 0, encerra sem título
-        if ($pc->valortotal == 0) {
-            $pc->status = PeriodoService::STATUS_COLABORADOR_ENCERRADO;
-            $pc->encerramento = $agora;
-            $pc->codtitulo = null;
-            $pc->save();
-            return $pc;
-        }
-
-        // Gera título
-        $credito = $pc->valortotal > 0 ? $pc->valortotal : 0;
-        $debito = $pc->valortotal < 0 ? abs($pc->valortotal) : 0;
-
-        $titulo = new Titulo([
-            'codtipotitulo' => TituloService::TIPO_RH,
-            'codfilial' => $pc->Colaborador->codfilial,
-            'codpessoa' => $pc->Colaborador->codpessoa,
-            'codcontacontabil' => self::CODCONTACONTABIL,
-            'numero' => "RH " . $pc->Periodo->periodofinal->format('Y-m'),
-            'emissao' => $agora,
-            'vencimento' => $agora,
-            'vencimentooriginal' => $agora,
-            'transacao' => $agora,
-            'sistema' => $agora,
-            'debito' => $debito,
-            'credito' => $credito,
-            'debitototal' => $debito,
-            'creditototal' => $credito,
-            'saldo' => abs($pc->valortotal),
-            'debitosaldo' => $debito,
-            'creditosaldo' => $credito,
-            'gerencial' => true,
-            'observacao' => "Remuneração variável — Período {$pc->Periodo->periodoinicial->format('d/m/Y')} a {$pc->Periodo->periodofinal->format('d/m/Y')}",
-        ]);
-        $titulo->save();
-
-        // Atualiza PeriodoColaborador
+        // Encerra SEM gerar título no contas a pagar. A remuneração variável fica
+        // apenas no valortotal (valor calculado); a entrega (Bee/dinheiro) e o
+        // desconto em folha são registrados como eventos de acerto
+        // (tblperiodocolaboradoracerto), que baixam os vales via movimento.
         $pc->status = PeriodoService::STATUS_COLABORADOR_ENCERRADO;
-        $pc->codtitulo = $titulo->codtitulo;
-        $pc->encerramento = $agora;
+        $pc->encerramento = Carbon::now();
+        $pc->codtitulo = null;
         $pc->save();
 
         return $pc;
@@ -71,23 +32,14 @@ class EncerramentoService
 
     public static function estornar(int $codperiodocolaborador): PeriodoColaborador
     {
-        $pc = PeriodoColaborador::with('Colaborador')->findOrFail($codperiodocolaborador);
+        $pc = PeriodoColaborador::findOrFail($codperiodocolaborador);
 
         if ($pc->status !== PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
             throw new \Exception('Somente colaboradores com status E (encerrado) podem ser estornados.');
         }
 
-        // Bloquear reabertura se existir acerto financeiro efetivado
-        if (AcertoService::verificarLiquidacaoAtiva($pc->codperiodo, $pc->Colaborador->codpessoa)) {
-            throw new \Exception('Colaborador possui acerto financeiro efetivado. Estorne o acerto financeiro antes de reabrir o colaborador.');
-        }
-
-        // Estorna título se existir
-        if ($pc->codtitulo) {
-            $titulo = Titulo::findOrFail($pc->codtitulo);
-            TituloService::estornar($titulo);
-        }
-
+        // Reabrir apenas destrava (rubricas + acertos voltam a ser editáveis). Os
+        // eventos de acerto já lançados permanecem — nada é estornado aqui.
         // Reabre o colaborador
         $pc->status = PeriodoService::STATUS_COLABORADOR_ABERTO;
         $pc->codtitulo = null;

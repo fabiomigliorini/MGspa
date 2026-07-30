@@ -37,6 +37,12 @@ class PeriodoColaboradorController extends Controller
                 'ColaboradorRubricaS.Indicador.UnidadeNegocio',
                 'ColaboradorRubricaS.IndicadorCondicao.Setor',
                 'ColaboradorRubricaS.IndicadorCondicao.UnidadeNegocio',
+                'PeriodoColaboradorAcertoS' => function ($q) {
+                    // Traz também os inativos (aparecem no card marcados).
+                    $q->orderBy('data')
+                        ->orderBy('codperiodocolaboradoracerto')
+                        ->with(['MovimentoTituloS.Titulo', 'UsuarioCriacao']);
+                },
             ])
             ->get();
 

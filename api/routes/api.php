@@ -1307,6 +1307,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             Route::get('/{codperiodocolaborador}/titulos', '\Mg\Rh\AcertoController@titulos');
             Route::post('/{codperiodocolaborador}/efetivar', '\Mg\Rh\AcertoController@efetivar');
             Route::post('/{codperiodocolaborador}/estornar', '\Mg\Rh\AcertoController@estornar');
+            Route::post('/{codperiodocolaboradoracerto}/inativo', '\Mg\Rh\AcertoController@inativarAcerto');
+            Route::delete('/{codperiodocolaboradoracerto}/inativo', '\Mg\Rh\AcertoController@reativarAcerto');
         });
     });
 

@@ -5,7 +5,6 @@ namespace Mg\Rh;
 use Dompdf\Dompdf;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Mg\Portador\PortadorService;
 
 class AcertoRelatorioFolhaPdf
 {
@@ -13,101 +12,71 @@ class AcertoRelatorioFolhaPdf
     {
         $periodo = Periodo::findOrFail($codperiodo);
 
-        // Mapa codpessoa => descrição da Unidade de Negócio (mesma lógica da tela de Acertos)
-        $pcs = PeriodoColaborador::where('codperiodo', $codperiodo)
-            ->with(['Colaborador', 'Setor.UnidadeNegocio'])
-            ->get();
-
-        $unidadePorPessoa = [];
-        foreach ($pcs as $pc) {
-            $codpessoa = $pc->Colaborador->codpessoa ?? null;
-            if ($codpessoa === null) {
-                continue;
-            }
-            // Unidade de negócio do setor do colaborador (vínculo 1:1 em tblperiodocolaborador)
-            $unidade = $pc->Setor?->UnidadeNegocio;
-            $unidadePorPessoa[$codpessoa] = [
-                'cod'  => $unidade?->codunidadenegocio,
-                'nome' => $unidade?->descricao,
-            ];
-        }
-
-        // Portadores distintos com liquidações ativas no período
-        $portadores = DB::select("
-            SELECT DISTINCT lt.codportador, po.portador AS nome_portador
-            FROM tblliquidacaotitulo lt
-            JOIN tblportador po ON po.codportador = lt.codportador
-            WHERE lt.codperiodo = :codperiodo
-              AND lt.estornado IS NULL
-            ORDER BY po.portador
+        // Uma "página" por FORMA de acerto (Recarga Bee / Dinheiro / Desconto Folha),
+        // cada uma agrupada por filial e unidade de negócio — mesma estrutura que a
+        // view espera ($paginas[].nome_portador / porFilial / porUnidade / linhas).
+        $rows = DB::select("
+            SELECT
+                a.forma,
+                p.pessoa   AS nome_colaborador,
+                p.cnpj     AS cpf_colaborador,
+                p.fisica,
+                f.codfilial,
+                f.filial,
+                fp.cnpj    AS cnpj_filial,
+                un.codunidadenegocio,
+                un.descricao AS unidade,
+                ABS(a.saldo) AS valor
+            FROM tblperiodocolaboradoracerto a
+            JOIN tblperiodocolaborador pc ON pc.codperiodocolaborador = a.codperiodocolaborador
+            JOIN tblcolaborador col       ON col.codcolaborador = pc.codcolaborador
+            JOIN tblpessoa p              ON p.codpessoa = col.codpessoa
+            JOIN tblfilial f              ON f.codfilial = col.codfilial
+            JOIN tblpessoa fp             ON fp.codpessoa = f.codpessoa
+            LEFT JOIN tblsetor s          ON s.codsetor = pc.codsetor
+            LEFT JOIN tblunidadenegocio un ON un.codunidadenegocio = s.codunidadenegocio
+            WHERE pc.codperiodo = :codperiodo
+              AND a.inativo IS NULL
+              AND a.saldo <> 0
+            ORDER BY a.forma, f.filial, p.pessoa
         ", ['codperiodo' => $codperiodo]);
 
-        $paginas = [];
-        foreach ($portadores as $port) {
-            $rows = DB::select("
-                SELECT
-                    p.pessoa   AS nome_colaborador,
-                    p.cnpj     AS cpf_colaborador,
-                    p.fisica,
-                    lt.codpessoa AS codpessoa,
-                    f.codfilial,
-                    f.filial,
-                    fp.pessoa  AS nome_filial,
-                    fp.cnpj    AS cnpj_filial,
-                    ABS(lt.debito - lt.credito) AS valor
-                FROM tblliquidacaotitulo lt
-                JOIN tblpessoa p ON p.codpessoa = lt.codpessoa
-                JOIN LATERAL (
-                    SELECT col.codfilial
-                    FROM tblcolaborador col
-                    WHERE col.codpessoa = lt.codpessoa
-                    ORDER BY col.codcolaborador DESC
-                    LIMIT 1
-                ) uc ON true
-                JOIN tblfilial f   ON f.codfilial = uc.codfilial
-                JOIN tblpessoa fp  ON fp.codpessoa = f.codpessoa
-                WHERE lt.codperiodo = :codperiodo
-                  AND lt.codportador = :portador
-                  AND lt.estornado IS NULL
-                  AND ABS(lt.debito - lt.credito) > 0
-                ORDER BY f.filial, p.pessoa
-            ", [
-                'codperiodo' => $codperiodo,
-                'portador'   => $port->codportador,
-            ]);
+        // Agrupa forma -> filial -> unidade
+        $porForma = [];
+        foreach ($rows as $row) {
+            $forma = $row->forma;
+            if (!isset($porForma[$forma])) {
+                $porForma[$forma] = [];
+            }
 
-            $porFilial = [];
-            foreach ($rows as $row) {
-                $filialKey = $row->codfilial;
-                if (!isset($porFilial[$filialKey])) {
-                    $porFilial[$filialKey] = [
-                        'filial'      => $row->filial,
-                        'nome_filial' => $row->nome_filial,
-                        'cnpj_filial' => $row->cnpj_filial,
-                        'porUnidade'  => [],
-                    ];
-                }
-
-                // Sub-agrupa por Unidade de Negócio (mesma da tela de Acertos)
-                $un = $unidadePorPessoa[$row->codpessoa] ?? ['cod' => null, 'nome' => null];
-                $unidadeKey = $un['cod'] ?? '__sem_unidade__';
-                if (!isset($porFilial[$filialKey]['porUnidade'][$unidadeKey])) {
-                    $porFilial[$filialKey]['porUnidade'][$unidadeKey] = [
-                        'unidade' => $un['nome'],
-                        'linhas'  => [],
-                    ];
-                }
-
-                $porFilial[$filialKey]['porUnidade'][$unidadeKey]['linhas'][] = [
-                    'nome_colaborador' => $row->nome_colaborador,
-                    'cpf_colaborador'  => $row->cpf_colaborador,
-                    'fisica'           => (bool) $row->fisica,
-                    'valor'            => (float) $row->valor,
+            $filialKey = $row->codfilial;
+            if (!isset($porForma[$forma][$filialKey])) {
+                $porForma[$forma][$filialKey] = [
+                    'filial'      => $row->filial,
+                    'cnpj_filial' => $row->cnpj_filial,
+                    'porUnidade'  => [],
                 ];
             }
 
-            // Ordena as Unidades de Negócio alfabeticamente (sem unidade por último)
-            foreach ($porFilial as &$fil) {
+            $unidadeKey = $row->codunidadenegocio ?? '__sem_unidade__';
+            if (!isset($porForma[$forma][$filialKey]['porUnidade'][$unidadeKey])) {
+                $porForma[$forma][$filialKey]['porUnidade'][$unidadeKey] = [
+                    'unidade' => $row->unidade,
+                    'linhas'  => [],
+                ];
+            }
+
+            $porForma[$forma][$filialKey]['porUnidade'][$unidadeKey]['linhas'][] = [
+                'nome_colaborador' => $row->nome_colaborador,
+                'cpf_colaborador'  => $row->cpf_colaborador,
+                'fisica'           => (bool) $row->fisica,
+                'valor'            => (float) $row->valor,
+            ];
+        }
+
+        // Ordena as unidades alfabeticamente (sem unidade por último)
+        foreach ($porForma as &$filiais) {
+            foreach ($filiais as &$fil) {
                 uasort($fil['porUnidade'], function ($a, $b) {
                     if ($a['unidade'] === null) {
                         return 1;
@@ -119,10 +88,23 @@ class AcertoRelatorioFolhaPdf
                 });
             }
             unset($fil);
+        }
+        unset($filiais);
 
+        // Monta as páginas na ordem B, D, F
+        $ordem   = [
+            PeriodoColaboradorAcerto::FORMA_BEE,
+            PeriodoColaboradorAcerto::FORMA_DINHEIRO,
+            PeriodoColaboradorAcerto::FORMA_FOLHA,
+        ];
+        $paginas = [];
+        foreach ($ordem as $forma) {
+            if (empty($porForma[$forma])) {
+                continue;
+            }
             $paginas[] = [
-                'nome_portador' => $port->nome_portador,
-                'porFilial'     => $porFilial,
+                'nome_portador' => PeriodoColaboradorAcerto::FORMA_DESCRICAO[$forma] ?? $forma,
+                'porFilial'     => $porForma[$forma],
             ];
         }
 
@@ -138,7 +120,7 @@ class AcertoRelatorioFolhaPdf
         ])->render();
 
         $dompdf = new Dompdf();
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
@@ -146,37 +128,31 @@ class AcertoRelatorioFolhaPdf
     }
 
     /**
-     * Linhas planas (nome, cpf, fisica, valor) da seção "Caixa Financeiro" de UMA
-     * empresa mãe — mesma fonte/filtros do relatório, usada pela planilha do cartão.
-     * Garante que o .xlsx traga valores idênticos à prévia (Relatório de Caixa Financeiro).
+     * Linhas planas (nome, cpf, fisica, valor) da RECARGA BEE de UMA empresa mãe
+     * — fonte da planilha/API do cartão. São os eventos de acerto com forma 'B'
+     * (Recarga Bee) do período, para as filiais daquela empresa.
      */
-    public static function linhasCaixaFinanceiro(int $codperiodo, int $codempresa): array
+    public static function linhasRecargaBee(int $codperiodo, int $codempresa): array
     {
         return DB::select("
             SELECT
                 p.pessoa AS nome,
                 p.cnpj   AS cpf,
                 p.fisica,
-                ABS(lt.debito - lt.credito) AS valor
-            FROM tblliquidacaotitulo lt
-            JOIN tblpessoa p ON p.codpessoa = lt.codpessoa
-            JOIN LATERAL (
-                SELECT col.codfilial
-                FROM tblcolaborador col
-                WHERE col.codpessoa = lt.codpessoa
-                ORDER BY col.codcolaborador DESC
-                LIMIT 1
-            ) uc ON true
-            JOIN tblfilial f ON f.codfilial = uc.codfilial
-            WHERE lt.codperiodo   = :codperiodo
-              AND lt.codportador  = :portador
-              AND lt.estornado   IS NULL
-              AND ABS(lt.debito - lt.credito) > 0
-              AND f.codempresa    = :codempresa
+                ABS(a.saldo) AS valor
+            FROM tblperiodocolaboradoracerto a
+            JOIN tblperiodocolaborador pc ON pc.codperiodocolaborador = a.codperiodocolaborador
+            JOIN tblcolaborador col       ON col.codcolaborador = pc.codcolaborador
+            JOIN tblpessoa p              ON p.codpessoa = col.codpessoa
+            JOIN tblfilial f              ON f.codfilial = col.codfilial
+            WHERE pc.codperiodo = :codperiodo
+              AND a.inativo IS NULL
+              AND a.forma = 'B'
+              AND a.saldo <> 0
+              AND f.codempresa = :codempresa
             ORDER BY p.pessoa
         ", [
             'codperiodo' => $codperiodo,
-            'portador'   => PortadorService::CAIXA,
             'codempresa' => $codempresa,
         ]);
     }

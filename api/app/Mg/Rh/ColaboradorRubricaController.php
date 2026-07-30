@@ -9,6 +9,15 @@ use Mg\Usuario\Autorizador;
 
 class ColaboradorRubricaController extends Controller
 {
+    // Rubricas só podem ser editadas com o colaborador ABERTO. Encerrar trava tudo.
+    private function assertAberto(int $codperiodocolaborador): void
+    {
+        $status = PeriodoColaborador::where('codperiodocolaborador', $codperiodocolaborador)->value('status');
+        if ($status === PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
+            abort(422, 'Colaborador encerrado — reabra para editar as rubricas.');
+        }
+    }
+
     /**
      * Aplicação em massa (presenteísmo): cria a rubrica do catálogo informado
      * para TODOS os colaboradores abertos (status A) do período, copiando os
@@ -72,6 +81,7 @@ class ColaboradorRubricaController extends Controller
     public function store(int $codperiodocolaborador, ColaboradorRubricaStoreRequest $request)
     {
         Autorizador::autoriza(['Recursos Humanos']);
+        $this->assertAberto($codperiodocolaborador);
 
         DB::beginTransaction();
         try {
@@ -97,6 +107,7 @@ class ColaboradorRubricaController extends Controller
         DB::beginTransaction();
         try {
             $rubrica = ColaboradorRubrica::findOrFail($codcolaboradorrubrica);
+            $this->assertAberto($rubrica->codperiodocolaborador);
             $rubrica->fill($request->validated());
             $rubrica->save();
 
@@ -118,6 +129,7 @@ class ColaboradorRubricaController extends Controller
         try {
             $rubrica = ColaboradorRubrica::findOrFail($codcolaboradorrubrica);
             $codperiodocolaborador = $rubrica->codperiodocolaborador;
+            $this->assertAberto($codperiodocolaborador);
             $rubrica->delete();
 
             CalculoRubricaService::calcularColaborador($codperiodocolaborador);
@@ -137,6 +149,7 @@ class ColaboradorRubricaController extends Controller
         DB::beginTransaction();
         try {
             $rubrica = ColaboradorRubrica::findOrFail($codcolaboradorrubrica);
+            $this->assertAberto($rubrica->codperiodocolaborador);
             $rubrica->concedido = !$rubrica->concedido;
             $rubrica->save();
 

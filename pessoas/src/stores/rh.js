@@ -355,6 +355,20 @@ export const rhStore = defineStore('rh', {
       return ret
     },
 
+    async inativarAcerto(codperiodo, codperiodocolaboradoracerto) {
+      const ret = await api.post(
+        'v1/rh/periodo/' + codperiodo + '/acertos/' + codperiodocolaboradoracerto + '/inativo',
+      )
+      return ret
+    },
+
+    async reativarAcerto(codperiodo, codperiodocolaboradoracerto) {
+      const ret = await api.delete(
+        'v1/rh/periodo/' + codperiodo + '/acertos/' + codperiodocolaboradoracerto + '/inativo',
+      )
+      return ret
+    },
+
     // --- MEU PAINEL ---
 
     async getMeuPainelPeriodos() {

@@ -329,9 +329,14 @@ const recalcularColaborador = async () => {
 }
 
 const encerrarColaborador = () => {
+  const semAcerto =
+    acertoStatus.value !== 'efetivado' && Number(colaborador.value?.valortotal || 0) !== 0
+  const message = semAcerto
+    ? `Nenhum acerto foi lançado e há remuneração variável de ${formataNumero(colaborador.value.valortotal)}. Encerrar trava rubricas e acertos — continuar mesmo assim?`
+    : 'Encerrar trava as rubricas e os acertos deste colaborador. Continuar?'
   $q.dialog({
     title: 'Encerrar Colaborador',
-    message: 'Tem certeza? Um título será gerado.',
+    message,
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Encerrar', color: 'red-5', flat: true },
   }).onOk(async () => {
@@ -352,14 +357,14 @@ const encerrarColaborador = () => {
 
 const estornarColaborador = () => {
   $q.dialog({
-    title: 'Estornar Encerramento',
-    message: 'Tem certeza? O título será cancelado.',
+    title: 'Reabrir Colaborador',
+    message: 'Reabrir destrava as rubricas e os acertos para edição. Continuar?',
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Estornar', color: 'red-5', flat: true },
+    ok: { label: 'Reabrir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.estornar(route.params.codperiodo, colaborador.value.codperiodocolaborador)
-      $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Estornado' })
+      $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Reaberto' })
       await recarregar()
     } catch (error) {
       $q.notify({
@@ -415,10 +420,10 @@ const expandirIndicadores = async (qual) => {
 const acertoStatus = ref(null) // 'pendente' | 'efetivado' | null
 const dialogAcerto = ref(false)
 
-// Status do acerto vem da lista de acertos (só o encerrado tem acerto).
+// Status do acerto vem da lista de acertos (efetivado = já tem evento ativo).
 const fetchAcertoStatus = async () => {
   acertoStatus.value = null
-  if (!colaborador.value || colaborador.value.status !== 'E') return
+  if (!colaborador.value) return
   try {
     const ret = await sRh.getAcertos(route.params.codperiodo)
     const item = (ret.data.data || []).find(
@@ -451,26 +456,49 @@ const onAcertoEfetivado = async () => {
   await recarregar()
 }
 
-const estornarAcerto = () => {
-  $q.dialog({
-    title: 'Estornar Acerto',
-    message: 'Tem certeza que deseja estornar o acerto deste colaborador?',
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Estornar', color: 'red-5', flat: true },
-  }).onOk(async () => {
-    try {
-      await sRh.estornarAcerto(route.params.codperiodo, colaborador.value.codperiodocolaborador)
-      $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Acerto estornado' })
-      await recarregar()
-    } catch (error) {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: extrairErro(error, 'Erro ao estornar acerto'),
-      })
+// Lista de acertos do colaborador, vinda do resource.
+const acertos = computed(() => colaborador.value?.acertos || [])
+const acertosAtivos = computed(() => acertos.value.filter((a) => !a.inativo))
+const somaAtivos = (campo) => acertosAtivos.value.reduce((s, a) => s + (Number(a[campo]) || 0), 0)
+const totRubricas = computed(() => somaAtivos('rubricas'))
+const totCreditos = computed(() => somaAtivos('creditos'))
+const totDebitos = computed(() => somaAtivos('debitos'))
+const totSaldo = computed(() => somaAtivos('saldo'))
+// Saldo a acertar = total das rubricas (benefício) − o que já foi considerado nos acertos.
+const saldoAcertar = computed(
+  () => Math.round(((Number(colaborador.value?.valortotal) || 0) - totRubricas.value) * 100) / 100,
+)
+
+const FORMA_ICON = { B: 'credit_card', D: 'payments', F: 'receipt_long' }
+const FORMA_COLOR = { B: 'purple', D: 'green-7', F: 'orange-8' }
+const formaIcon = (f) => FORMA_ICON[f] || 'help'
+const formaColor = (f) => FORMA_COLOR[f] || 'grey-7'
+
+const urlTitulo = (codtitulo) =>
+  codtitulo ? `${process.env.CONTAS_URL}/titulo/${codtitulo}` : null
+
+const toggleInativoAcerto = async (ac) => {
+  try {
+    if (ac.inativo) {
+      await sRh.reativarAcerto(route.params.codperiodo, ac.codperiodocolaboradoracerto)
+    } else {
+      await sRh.inativarAcerto(route.params.codperiodo, ac.codperiodocolaboradoracerto)
     }
-  })
+    $q.notify({
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: ac.inativo ? 'Acerto reativado' : 'Acerto inativado',
+    })
+    await recarregar()
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao alterar acerto'),
+    })
+  }
 }
 
 // --- LIFECYCLE ---
@@ -863,14 +891,14 @@ watch(
                 <q-tooltip>Encerrar</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="colaborador.status === 'E' && acertoStatus !== 'efetivado'"
+                v-if="colaborador.status === 'E'"
                 flat
                 round
                 icon="undo"
                 color="grey-7"
                 @click="estornarColaborador()"
               >
-                <q-tooltip>Estornar Encerramento</q-tooltip>
+                <q-tooltip>Reabrir (destrava rubricas e acertos)</q-tooltip>
               </q-btn>
             </template>
             <!-- RECIBO (só quando acerto efetivado) -->
@@ -884,25 +912,7 @@ watch(
             >
               <q-tooltip>Imprimir Recibo</q-tooltip>
             </q-btn>
-            <!-- ACERTO (Encontro de Contas) -->
-            <template v-if="podeEditar">
-              <q-btn v-if="colaborador.status !== 'E'" flat round icon="handshake" color="grey-5">
-                <q-tooltip>Encerre o colaborador primeiro</q-tooltip>
-              </q-btn>
-              <q-btn
-                v-else-if="acertoStatus === 'efetivado'"
-                flat
-                round
-                icon="undo"
-                color="grey-7"
-                @click="estornarAcerto()"
-              >
-                <q-tooltip>Estornar Acerto</q-tooltip>
-              </q-btn>
-              <q-btn v-else flat round icon="handshake" color="primary" @click="realizarAcerto()">
-                <q-tooltip>Realizar Acerto (Encontro de Contas)</q-tooltip>
-              </q-btn>
-            </template>
+            <!-- Acerto é lançado pelo "+" do card de Acertos, abaixo. -->
             <q-btn
               v-if="podeEditar"
               flat
@@ -923,6 +933,7 @@ watch(
       <div class="q-pa-md">
         <!-- RUBRICAS -->
         <CardRubricas
+          class="q-mb-md"
           :rubricas="rubricas"
           :valortotal="colaborador.valortotal"
           :status="colaborador.status"
@@ -937,6 +948,150 @@ watch(
           @nova-rubrica="abrirNovaRubrica"
           @editar-meta="editarMeta"
         />
+
+        <!-- ACERTOS -->
+        <q-card bordered flat>
+          <q-card-section class="text-grey-9 text-overline row items-center">
+            ACERTOS
+            <q-space />
+            <q-btn
+              v-if="podeEditar && colaborador.status === 'A'"
+              flat
+              round
+              size="sm"
+              color="primary"
+              icon="add"
+              @click="realizarAcerto()"
+            >
+              <q-tooltip>Novo Acerto</q-tooltip>
+            </q-btn>
+          </q-card-section>
+
+          <q-separator inset />
+
+          <template v-if="acertos.length">
+            <div class="scroll">
+              <q-markup-table flat wrap-cells>
+                <thead>
+                  <tr>
+                    <th class="text-left">Acerto</th>
+                    <th class="text-right">Rubricas</th>
+                    <th class="text-right">Créditos</th>
+                    <th class="text-right">Débitos</th>
+                    <th class="text-right">Saldo</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="ac in acertos"
+                    :key="ac.codperiodocolaboradoracerto"
+                    :class="{ 'text-grey-5': ac.inativo }"
+                  >
+                    <td class="text-left">
+                      <div class="row items-center no-wrap">
+                        <q-icon
+                          :name="formaIcon(ac.forma)"
+                          :color="ac.inativo ? 'grey-5' : formaColor(ac.forma)"
+                          class="q-mr-sm"
+                        />
+                        <div>
+                          <div>
+                            {{ ac.forma_descricao }} · {{ formataData(ac.data) }}
+                            <q-badge
+                              v-if="ac.inativo"
+                              color="grey-5"
+                              label="Inativo"
+                              class="q-ml-xs"
+                            />
+                          </div>
+                          <div v-if="ac.observacao" class="text-caption text-grey-6">
+                            {{ ac.observacao }}
+                          </div>
+                          <div
+                            v-if="ac.titulos && ac.titulos.length"
+                            class="text-caption text-grey-6"
+                          >
+                            <span v-for="(t, i) in ac.titulos" :key="i">
+                              <a
+                                :href="urlTitulo(t.codtitulo)"
+                                target="_blank"
+                                class="text-primary"
+                                >{{ t.numero }}</a
+                              >
+                              ({{ formataNumero(t.valor) }})<span v-if="i < ac.titulos.length - 1"
+                                >,
+                              </span>
+                            </span>
+                          </div>
+                          <div v-if="ac.usuariocriacao" class="text-caption text-grey-5">
+                            {{ ac.usuariocriacao }} · {{ formataData(ac.criacao) }}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td class="text-right">{{ ac.rubricas ? formataNumero(ac.rubricas) : '—' }}</td>
+                    <td class="text-right">{{ ac.creditos ? formataNumero(ac.creditos) : '—' }}</td>
+                    <td class="text-right">{{ ac.debitos ? formataNumero(ac.debitos) : '—' }}</td>
+                    <td
+                      class="text-right text-weight-medium"
+                      :class="ac.inativo ? '' : ac.saldo < 0 ? 'text-negative' : 'text-positive'"
+                    >
+                      {{ ac.saldo < 0 ? '−' : '' }}{{ formataNumero(Math.abs(ac.saldo)) }}
+                    </td>
+                    <td class="text-right">
+                      <q-btn
+                        v-if="podeEditar && colaborador.status === 'A'"
+                        flat
+                        round
+                        size="sm"
+                        color="grey-7"
+                        :icon="ac.inativo ? 'play_arrow' : 'pause'"
+                        @click="toggleInativoAcerto(ac)"
+                      >
+                        <q-tooltip>{{ ac.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
+                      </q-btn>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot v-if="acertos.length > 1">
+                  <tr class="text-weight-bold bg-grey-2">
+                    <td class="text-right">TOTAL</td>
+                    <td class="text-right">{{ formataNumero(totRubricas) }}</td>
+                    <td class="text-right">{{ formataNumero(totCreditos) }}</td>
+                    <td class="text-right">{{ formataNumero(totDebitos) }}</td>
+                    <td
+                      class="text-right"
+                      :class="totSaldo < 0 ? 'text-negative' : 'text-positive'"
+                    >
+                      {{ totSaldo < 0 ? '−' : '' }}{{ formataNumero(Math.abs(totSaldo)) }}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </q-markup-table>
+            </div>
+
+            <!-- Saldo a acertar = benefício ainda não considerado -->
+            <div
+              v-if="Math.abs(saldoAcertar) >= 0.01"
+              class="row items-center q-px-md q-py-sm bg-grey-1"
+            >
+              <q-space />
+              <span class="text-weight-medium q-mr-md">Saldo a acertar</span>
+              <span
+                class="text-weight-bold"
+                :class="saldoAcertar < 0 ? 'text-negative' : 'text-orange-9'"
+              >
+                {{ saldoAcertar < 0 ? '−' : '' }}{{ formataNumero(Math.abs(saldoAcertar)) }}
+              </span>
+            </div>
+          </template>
+
+          <q-card-section v-else class="text-center text-grey-6">
+            Nenhum acerto lançado
+          </q-card-section>
+        </q-card>
       </div>
     </template>
 

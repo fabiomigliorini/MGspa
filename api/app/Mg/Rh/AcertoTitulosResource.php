@@ -12,16 +12,16 @@ class AcertoTitulosResource extends JsonResource
 
         $titulos = collect($data['titulos'])->map(function ($t) {
             return [
-                'codtitulo'           => (int) $t->codtitulo,
-                'numero'              => $t->numero,
-                'vencimento'          => $t->vencimento,
-                'saldo'               => (float) $t->saldo,
-                'debitosaldo'         => (float) $t->debitosaldo,
-                'creditosaldo'        => (float) $t->creditosaldo,
-                'tipotitulo'          => $t->tipotitulo,
-                'codtipotitulo'       => (int) $t->codtipotitulo,
-                'sugestao_descontando'=> (float) $t->sugestao_descontando,
-                'sugestao_pagando'    => (float) $t->sugestao_pagando,
+                'codtitulo'            => $t->codtitulo !== null ? (int) $t->codtitulo : null,
+                'numero'               => $t->numero,
+                'vencimento'           => $t->vencimento,
+                'saldo'                => (float) $t->saldo,
+                'debitosaldo'          => (float) $t->debitosaldo,
+                'creditosaldo'         => (float) $t->creditosaldo,
+                'tipotitulo'           => $t->tipotitulo,
+                'codtipotitulo'        => (int) $t->codtipotitulo,
+                'sugestao_descontando' => (float) $t->sugestao_descontando,
+                'sugestao_pagando'     => (float) $t->sugestao_pagando,
             ];
         })->values();
 
