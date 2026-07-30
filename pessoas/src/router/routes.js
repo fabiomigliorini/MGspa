@@ -192,6 +192,13 @@ const routes = [
         ],
       },
 
+      // RH — Catálogo de Rubricas (admin)
+      {
+        path: '/rubrica',
+        name: 'rhRubricaCatalogo',
+        component: () => import('pages/rh/RubricaCatalogo.vue'),
+      },
+
       // RH — Metas & Variáveis (admin)
       {
         path: '/rh',

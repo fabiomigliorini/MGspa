@@ -180,24 +180,9 @@ class PeriodoService
                 $novoPC->status = 'A';
                 $novoPC->valortotal = 0;
             }
+            // Copia o setor do colaborador (vínculo agora é 1:1 em tblperiodocolaborador)
+            $novoPC->codsetor = $pc->codsetor;
             $novoPC->save();
-
-            // Duplicar PeriodoColaboradorSetor
-            $setores = PeriodoColaboradorSetor::where('codperiodocolaborador', $pc->codperiodocolaborador)->get();
-            $mapaSetores = [];
-
-            foreach ($setores as $setor) {
-                $novoSetor = PeriodoColaboradorSetor::firstOrNew([
-                    'codperiodocolaborador' => $novoPC->codperiodocolaborador,
-                    'codsetor' => $setor->codsetor,
-                ]);
-                if (!$novoSetor->exists) {
-                    $novoSetor->diastrabalhados = $destino->diasuteis;
-                }
-                $novoSetor->percentualrateio = $setor->percentualrateio;
-                $novoSetor->save();
-                $mapaSetores[$setor->codperiodocolaboradorsetor] = $novoSetor->codperiodocolaboradorsetor;
-            }
 
             // Duplicar ColaboradorRubrica recorrentes
             $rubricas = ColaboradorRubrica::where('codperiodocolaborador', $pc->codperiodocolaborador)
@@ -211,9 +196,7 @@ class PeriodoService
                     'tipovalor' => $rubrica->tipovalor,
                     'recorrente' => true,
                 ]);
-                $novaRubrica->codperiodocolaboradorsetor = isset($mapaSetores[$rubrica->codperiodocolaboradorsetor])
-                    ? $mapaSetores[$rubrica->codperiodocolaboradorsetor]
-                    : null;
+                $novaRubrica->codrubrica = $rubrica->codrubrica;
                 $novaRubrica->codindicador = isset($mapaIndicadores[$rubrica->codindicador])
                     ? $mapaIndicadores[$rubrica->codindicador]
                     : null;
@@ -222,8 +205,10 @@ class PeriodoService
                     : null;
                 $novaRubrica->percentual = $rubrica->percentual;
                 $novaRubrica->valorfixo = $rubrica->valorfixo;
+                $novaRubrica->valorunitario = $rubrica->valorunitario;
+                $novaRubrica->quantidade = $rubrica->quantidade;
                 $novaRubrica->tipocondicao = $rubrica->tipocondicao;
-                $novaRubrica->descontaabsenteismo = $rubrica->descontaabsenteismo;
+                $novaRubrica->observacao = $rubrica->observacao;
                 if (!$novaRubrica->exists) {
                     $novaRubrica->valorcalculado = 0;
                     $novaRubrica->concedido = true;
@@ -265,19 +250,6 @@ class PeriodoService
             }
         }
 
-        // Cascade diasuteis → diastrabalhados
-        if (isset($data['diasuteis']) && $data['diasuteis'] != $periodo->diasuteis) {
-            $diasUteisAntigo = $periodo->diasuteis;
-            $diasUteisNovo = $data['diasuteis'];
-
-            $codperiodocolaboradores = PeriodoColaborador::where('codperiodo', $codperiodo)
-                ->pluck('codperiodocolaborador');
-
-            PeriodoColaboradorSetor::whereIn('codperiodocolaborador', $codperiodocolaboradores)
-                ->where('diastrabalhados', $diasUteisAntigo)
-                ->update(['diastrabalhados' => $diasUteisNovo]);
-        }
-
         $periodo->fill($data);
         $periodo->save();
 
@@ -294,7 +266,6 @@ class PeriodoService
         $pcs = PeriodoColaborador::where('codperiodo', $codperiodo)->get();
         foreach ($pcs as $pc) {
             ColaboradorRubrica::where('codperiodocolaborador', $pc->codperiodocolaborador)->delete();
-            PeriodoColaboradorSetor::where('codperiodocolaborador', $pc->codperiodocolaborador)->delete();
         }
         PeriodoColaborador::where('codperiodo', $codperiodo)->delete();
         Indicador::where('codperiodo', $codperiodo)->delete();

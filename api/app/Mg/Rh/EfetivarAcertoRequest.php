@@ -15,11 +15,14 @@ class EfetivarAcertoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'titulos'                 => 'required|array|min:1',
-            'titulos.*.codtitulo'     => 'required|integer|exists:tbltitulo,codtitulo',
-            'titulos.*.pagando'       => 'required|numeric|min:0',
-            'titulos.*.descontando'   => 'required|numeric|min:0',
-            'observacao'              => 'nullable|string|max:200',
+            'forma'                 => 'required|in:B,D,F',
+            'data'                  => 'nullable|date',
+            'observacao'            => 'nullable|string|max:200',
+            'titulos'               => 'required|array|min:1',
+            // codtitulo null = linha sintética do benefício (remuneração variável)
+            'titulos.*.codtitulo'   => 'nullable|integer|exists:tbltitulo,codtitulo',
+            'titulos.*.pagando'     => 'required|numeric|min:0',
+            'titulos.*.descontando' => 'required|numeric|min:0',
         ];
     }
 
@@ -28,63 +31,43 @@ class EfetivarAcertoRequest extends FormRequest
         $validator->after(function ($v) {
             $titulos = $this->input('titulos', []);
 
-            // Ao menos um título com valor > 0
+            // Ao menos uma linha com valor > 0
             $temValor = collect($titulos)->some(function ($t) {
                 return ($t['pagando'] ?? 0) > 0 || ($t['descontando'] ?? 0) > 0;
             });
-
             if (!$temValor) {
-                $v->errors()->add('titulos', 'Ao menos um título deve ter valor de pagando ou descontando.');
+                $v->errors()->add('titulos', 'Ao menos uma linha deve ter valor de pagando ou descontando.');
                 return;
             }
 
-            // Validar saldos e consistência por título
-            $codtitulos   = array_column($titulos, 'codtitulo');
-            $saldosAtuais = DB::table('tbltitulo')
-                ->whereIn('codtitulo', $codtitulos)
-                ->pluck('saldo', 'codtitulo');
+            // Valida saldos apenas dos títulos REAIS (a linha sintética tem codtitulo null)
+            $codtitulos = array_values(array_filter(array_column($titulos, 'codtitulo')));
+            $saldos     = $codtitulos
+                ? DB::table('tbltitulo')->whereIn('codtitulo', $codtitulos)->pluck('saldo', 'codtitulo')
+                : collect();
 
             foreach ($titulos as $idx => $t) {
                 $codtitulo   = $t['codtitulo'] ?? null;
                 $pagando     = (float) ($t['pagando'] ?? 0);
                 $descontando = (float) ($t['descontando'] ?? 0);
 
-                if (!isset($saldosAtuais[$codtitulo])) {
+                if (!$codtitulo || !isset($saldos[$codtitulo])) {
                     continue;
                 }
 
-                $saldo = (float) $saldosAtuais[$codtitulo];
+                $saldo = (float) $saldos[$codtitulo];
 
-                // pagando só é válido quando saldo < 0 (crédito)
                 if ($pagando > 0 && $saldo >= 0) {
-                    $v->errors()->add(
-                        "titulos.{$idx}.pagando",
-                        "Pagando só pode ser informado para títulos com saldo negativo (crédito). Título {$codtitulo} tem saldo {$saldo}."
-                    );
+                    $v->errors()->add("titulos.{$idx}.pagando", "Pagando só vale para título com saldo negativo (crédito).");
                 }
-
-                // descontando só é válido quando saldo > 0 (débito)
                 if ($descontando > 0 && $saldo <= 0) {
-                    $v->errors()->add(
-                        "titulos.{$idx}.descontando",
-                        "Descontando só pode ser informado para títulos com saldo positivo (débito). Título {$codtitulo} tem saldo {$saldo}."
-                    );
+                    $v->errors()->add("titulos.{$idx}.descontando", "Descontando só vale para título com saldo positivo (débito).");
                 }
-
-                // pagando não pode exceder |saldo|
-                if ($pagando > 0 && $pagando > abs($saldo)) {
-                    $v->errors()->add(
-                        "titulos.{$idx}.pagando",
-                        "Pagando ({$pagando}) não pode exceder o saldo absoluto do título {$codtitulo} (" . abs($saldo) . ")."
-                    );
+                if ($pagando > 0 && $pagando > abs($saldo) + 0.001) {
+                    $v->errors()->add("titulos.{$idx}.pagando", "Pagando não pode exceder o saldo do título.");
                 }
-
-                // descontando não pode exceder |saldo|
-                if ($descontando > 0 && $descontando > abs($saldo)) {
-                    $v->errors()->add(
-                        "titulos.{$idx}.descontando",
-                        "Descontando ({$descontando}) não pode exceder o saldo absoluto do título {$codtitulo} (" . abs($saldo) . ")."
-                    );
+                if ($descontando > 0 && $descontando > abs($saldo) + 0.001) {
+                    $v->errors()->add("titulos.{$idx}.descontando", "Descontando não pode exceder o saldo do título.");
                 }
             }
         });

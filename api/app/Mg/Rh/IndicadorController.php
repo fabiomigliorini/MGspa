@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Mg\Colaborador\Colaborador;
+use Mg\Filial\Setor;
 use Mg\Usuario\Autorizador;
 
 class IndicadorController extends Controller
@@ -304,15 +305,15 @@ class IndicadorController extends Controller
             abort(403, 'Não autorizado.');
         }
 
-        $meusSetores = PeriodoColaboradorSetor::where('codperiodocolaborador', $pc->codperiodocolaborador)
-            ->pluck('codsetor')
-            ->toArray();
+        $meusSetores = array_filter([$pc->codsetor]);
 
-        $minhasUnidades = PeriodoColaboradorSetor::where('codperiodocolaborador', $pc->codperiodocolaborador)
-            ->join('tblsetor', 'tblsetor.codsetor', '=', 'tblperiodocolaboradorsetor.codsetor')
-            ->pluck('tblsetor.codunidadenegocio')
-            ->unique()
-            ->toArray();
+        $minhasUnidades = $pc->codsetor
+            ? Setor::where('codsetor', $pc->codsetor)
+                ->pluck('codunidadenegocio')
+                ->filter()
+                ->unique()
+                ->toArray()
+            : [];
 
         // Indicador coletivo do meu setor/unidade
         if (in_array($indicador->codsetor, $meusSetores) || in_array($indicador->codunidadenegocio, $minhasUnidades)) {
@@ -321,10 +322,8 @@ class IndicadorController extends Controller
 
         // Gestor pode ver indicadores de colaboradores do mesmo setor
         if ($pc->gestor && $indicador->codcolaborador) {
-            $alvoCompartilhaSetor = PeriodoColaboradorSetor::whereHas('PeriodoColaborador', function ($q) use ($indicador) {
-                $q->where('codcolaborador', $indicador->codcolaborador)
-                    ->where('codperiodo', $indicador->codperiodo);
-            })
+            $alvoCompartilhaSetor = PeriodoColaborador::where('codcolaborador', $indicador->codcolaborador)
+                ->where('codperiodo', $indicador->codperiodo)
                 ->whereIn('codsetor', $meusSetores)
                 ->exists();
 

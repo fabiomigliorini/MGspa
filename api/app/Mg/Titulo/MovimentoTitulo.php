@@ -30,6 +30,7 @@ class MovimentoTitulo extends MgModel
         'codcobranca',
         'codliquidacaotitulo',
         'codnegocioformapagamento',
+        'codperiodocolaboradoracerto',
         'codportador',
         'codtipomovimentotitulo',
         'codtitulo',
@@ -50,6 +51,7 @@ class MovimentoTitulo extends MgModel
         'codliquidacaotitulo' => 'integer',
         'codmovimentotitulo' => 'integer',
         'codnegocioformapagamento' => 'integer',
+        'codperiodocolaboradoracerto' => 'integer',
         'codportador' => 'integer',
         'codtipomovimentotitulo' => 'integer',
         'codtitulo' => 'integer',
@@ -85,6 +87,11 @@ class MovimentoTitulo extends MgModel
     public function NegocioFormaPagamento()
     {
         return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+    }
+
+    public function PeriodoColaboradorAcerto()
+    {
+        return $this->belongsTo(\Mg\Rh\PeriodoColaboradorAcerto::class, 'codperiodocolaboradoracerto', 'codperiodocolaboradoracerto');
     }
 
     public function Portador()

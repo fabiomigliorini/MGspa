@@ -4,14 +4,25 @@ namespace Mg\Rh;
 
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Colaborador\ColaboradorCargo;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
-use Mg\Portador\PortadorService;
 
+/**
+ * Acerto (Encontro de Contas) — modelo de EVENTOS.
+ *
+ * Cada acerto é um registro em tblperiodocolaboradoracerto (data, forma B/D/F,
+ * valor). A remuneração variável (benefício) NÃO é mais um título: fica só no
+ * PeriodoColaborador->valortotal e é entregue via eventos (Bee/dinheiro) — sem
+ * movimento financeiro. Os vales/adiantamentos (títulos reais a débito) são
+ * baixados por movimentos (tblmovimentotitulo tipo 601, sem liquidação,
+ * amarrados ao evento). A trigger fntblmovimentotituloaiauad baixa o saldo.
+ *
+ * Nada é excluído: um acerto errado é INATIVADO (estornando seus movimentos) e
+ * um novo é criado. Vários eventos por colaborador (parcial: parte folha, parte
+ * dinheiro, resto Bee).
+ */
 class AcertoService
 {
     // -------------------------------------------------------------------------
@@ -20,41 +31,24 @@ class AcertoService
 
     public static function listarAcertos(int $codperiodo, int $dias = 5): Collection
     {
-        $periodo = Periodo::findOrFail($codperiodo);
-
         $pcs = PeriodoColaborador::where('codperiodo', $codperiodo)
-            ->with([
-                'Colaborador.Pessoa',
-                'PeriodoColaboradorSetorS.Setor.UnidadeNegocio',
-            ])
+            ->with(['Colaborador.Pessoa', 'Setor.UnidadeNegocio'])
             ->get();
 
-        // Liquidações ativas do período, agrupadas por codpessoa
-        $liquidacoesPorPessoa = LiquidacaoTitulo::where('codperiodo', $codperiodo)
-            ->whereNull('estornado')
-            ->with('MovimentoTituloS')
+        $eventosPorPc = PeriodoColaboradorAcerto::whereIn('codperiodocolaborador', $pcs->pluck('codperiodocolaborador'))
+            ->whereNull('inativo')
             ->get()
-            ->groupBy('codpessoa');
+            ->groupBy('codperiodocolaborador');
 
-        $resultado = $pcs->map(function ($pc) use ($dias, $liquidacoesPorPessoa) {
+        return $pcs->map(function ($pc) use ($eventosPorPc) {
             $codpessoa = $pc->Colaborador->codpessoa ?? null;
+            $eventos   = $eventosPorPc->get($pc->codperiodocolaborador, collect());
 
-            $primeiroPcs = $pc->PeriodoColaboradorSetorS->first();
-            $codunidadenegocio = $primeiroPcs?->Setor?->UnidadeNegocio?->codunidadenegocio ?? null;
-            $unidade = $primeiroPcs?->Setor?->UnidadeNegocio?->descricao ?? null;
+            $efetivado  = $eventos->isNotEmpty();
+            $financeiro = $eventos->whereIn('forma', [PeriodoColaboradorAcerto::FORMA_BEE, PeriodoColaboradorAcerto::FORMA_DINHEIRO])->sum(fn ($a) => abs($a->saldo));
+            $folha      = $eventos->where('forma', PeriodoColaboradorAcerto::FORMA_FOLHA)->sum(fn ($a) => abs($a->saldo));
 
-            $liquidacoesColaborador = $liquidacoesPorPessoa->get($codpessoa, collect());
-            $efetivado = $liquidacoesColaborador->isNotEmpty();
-
-            if ($efetivado) {
-                [$creditos, $debitos, $financeiro, $folha] = static::valoresReaisLiquidacoes($liquidacoesColaborador);
-                [$remanescente_valor, $remanescente_qtd]   = static::remanescente($codpessoa);
-                $status_acerto                             = 'efetivado';
-            } else {
-                [$creditos, $debitos, $financeiro, $folha, $remanescente_valor, $remanescente_qtd] =
-                    static::simularAcerto($codpessoa, $dias);
-                $status_acerto = 'pendente';
-            }
+            [$remanescente_valor, $remanescente_qtd] = static::remanescente($codpessoa);
 
             return (object) [
                 'codperiodocolaborador' => $pc->codperiodocolaborador,
@@ -62,46 +56,17 @@ class AcertoService
                 'codpessoa'             => $codpessoa,
                 'nome'                  => $pc->Colaborador?->Pessoa?->pessoa ?? '—',
                 'status_periodo'        => $pc->status,
-                'status_acerto'         => $status_acerto,
-                'creditos'              => round($creditos, 2),
-                'debitos'               => round($debitos, 2),
+                'status_acerto'         => $efetivado ? 'efetivado' : 'pendente',
+                'creditos'              => round($financeiro, 2),
+                'debitos'               => round($folha, 2),
                 'financeiro'            => round($financeiro, 2),
                 'folha'                 => round($folha, 2),
                 'remanescente_valor'    => round($remanescente_valor, 2),
                 'remanescente_qtd'      => $remanescente_qtd,
-                'codunidadenegocio'     => $codunidadenegocio,
-                'unidade'               => $unidade,
+                'codunidadenegocio'     => $pc->Setor?->UnidadeNegocio?->codunidadenegocio ?? null,
+                'unidade'               => $pc->Setor?->UnidadeNegocio?->descricao ?? null,
             ];
         });
-
-        return $resultado;
-    }
-
-    protected static function valoresReaisLiquidacoes(Collection $liquidacoes): array
-    {
-        $creditos   = 0;
-        $debitos    = 0;
-        $financeiro = 0;
-        $folha      = 0;
-
-        foreach ($liquidacoes as $liq) {
-            $totalDebito  = $liq->MovimentoTituloS->sum('debito');
-            $totalCredito = $liq->MovimentoTituloS->sum('credito');
-
-            if ($liq->codportador == PortadorService::CAIXA) {
-                // Débitos nos movimentos = o que a empresa pagou (créditos do colaborador)
-                $creditos   += $totalDebito;
-                // Créditos nos movimentos = o que foi compensado (débitos do colaborador)
-                $debitos    += $totalCredito;
-                $financeiro += max(0, $totalDebito - $totalCredito);
-            } elseif ($liq->codportador == PortadorService::FOLHA) {
-                // Créditos nos movimentos = débitos descontados em folha
-                $debitos += $totalCredito;
-                $folha   += $totalCredito;
-            }
-        }
-
-        return [$creditos, $debitos, $financeiro, $folha];
     }
 
     protected static function remanescente(?int $codpessoa): array
@@ -123,45 +88,17 @@ class AcertoService
         return [$valor, $qtd];
     }
 
-    protected static function simularAcerto(int $codpessoa, int $dias): array
+    // -------------------------------------------------------------------------
+    // Benefício já entregue (para calcular o que resta do valortotal)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Quanto do benefício (valortotal) já foi considerado nos acertos ativos
+     * = soma da coluna `rubricas` (o quanto do benefício cada acerto pagou).
+     */
+    protected static function beneficioJaEntregue(Collection $acertos): float
     {
-        $titulos = DB::select("
-            SELECT
-                t.saldo,
-                CASE
-                    WHEN t.saldo < 0 AND t.vencimento <= CURRENT_DATE + CAST(:dias AS integer) THEN ABS(t.saldo)
-                    ELSE 0
-                END AS sugestao_pagando,
-                CASE
-                    WHEN t.saldo > 0 AND t.vencimento <= CURRENT_DATE + CAST(:dias2 AS integer) THEN t.saldo
-                    ELSE 0
-                END AS sugestao_descontando
-            FROM tbltitulo t
-            WHERE t.codpessoa = :codpessoa
-              AND t.saldo != 0
-        ", ['codpessoa' => $codpessoa, 'dias' => $dias, 'dias2' => $dias]);
-
-        $creditos            = 0;
-        $debitos             = 0;
-        $remanescente_valor  = 0;
-        $remanescente_qtd    = 0;
-
-        foreach ($titulos as $t) {
-            $creditos += $t->sugestao_pagando;
-            $debitos  += $t->sugestao_descontando;
-
-            // Remanescente: títulos não incluídos na sugestão
-            if ($t->sugestao_pagando == 0 && $t->sugestao_descontando == 0 && $t->saldo != 0) {
-                $remanescente_valor += abs($t->saldo);
-                $remanescente_qtd++;
-            }
-        }
-
-        $resultado  = $creditos - $debitos;
-        $financeiro = max(0, $resultado);
-        $folha      = max(0, -$resultado);
-
-        return [$creditos, $debitos, $financeiro, $folha, $remanescente_valor, $remanescente_qtd];
+        return (float) $acertos->sum('rubricas');
     }
 
     // -------------------------------------------------------------------------
@@ -202,8 +139,16 @@ class AcertoService
             }
         }
 
-        // Títulos com saldo != 0
-        $titulos = DB::select("
+        // Acertos ativos — base do cálculo do benefício restante (soma de `rubricas`).
+        $acertos = PeriodoColaboradorAcerto::where('codperiodocolaborador', $codperiodocolaborador)
+            ->whereNull('inativo')
+            ->get();
+
+        $beneficioRestante = round(((float) $pc->valortotal) - static::beneficioJaEntregue($acertos), 2);
+
+        // Vales/adiantamentos reais (débitos/créditos com saldo != 0).
+        // Exclui o título RH (952) legado — o benefício agora é sintético.
+        $titulosReais = DB::select("
             SELECT
                 t.codtitulo,
                 t.numero,
@@ -227,12 +172,32 @@ class AcertoService
             JOIN tbltipotitulo tt ON tt.codtipotitulo = t.codtipotitulo
             WHERE t.codpessoa = :codpessoa
               AND t.saldo != 0
+              AND t.codtipotitulo <> 952
             ORDER BY t.vencimento, t.saldo, t.codtitulo
         ", [
             'codpessoa' => $colaborador->codpessoa,
             'dias'      => $dias,
             'dias2'     => $dias,
         ]);
+
+        // Linha sintética do benefício (remuneração variável ainda não entregue).
+        // saldo < 0 = crédito (a pagar/entregar); > 0 = a descontar.
+        $titulos = [];
+        if (abs($beneficioRestante) >= 0.01) {
+            $titulos[] = (object) [
+                'codtitulo'            => null,
+                'numero'               => 'Remuneração Variável',
+                'vencimento'           => null,
+                'saldo'                => -$beneficioRestante,
+                'debitosaldo'          => $beneficioRestante < 0 ? abs($beneficioRestante) : 0,
+                'creditosaldo'         => $beneficioRestante > 0 ? $beneficioRestante : 0,
+                'tipotitulo'           => 'Benefício',
+                'codtipotitulo'        => 0,
+                'sugestao_descontando' => $beneficioRestante < 0 ? abs($beneficioRestante) : 0,
+                'sugestao_pagando'     => $beneficioRestante > 0 ? $beneficioRestante : 0,
+            ];
+        }
+        $titulos = array_merge($titulos, $titulosReais);
 
         return [
             'colaborador' => [
@@ -242,6 +207,8 @@ class AcertoService
                 'cargo'                   => $cargo?->Cargo?->cargo ?? null,
                 'tempo_casa'              => $tempoCasa,
                 'salario'                 => $salario ? (float) $salario : null,
+                'valortotal'              => (float) $pc->valortotal,
+                'beneficio_restante'      => $beneficioRestante,
                 'percentual_max_desconto' => (float) ($periodo->percentualmaxdesconto ?? 30),
             ],
             'titulos' => $titulos,
@@ -249,250 +216,219 @@ class AcertoService
     }
 
     // -------------------------------------------------------------------------
-    // Efetivação
+    // Efetivação (cria UM evento por confirmação; suporta parcial/múltiplo)
     // -------------------------------------------------------------------------
 
-    public static function efetivar(int $codperiodocolaborador, array $titulos, ?string $observacao): array
+    public static function efetivar(int $codperiodocolaborador, array $titulos, string $forma, ?string $observacao, ?string $data): array
     {
         $pc = PeriodoColaborador::with(['Colaborador', 'Periodo'])
             ->findOrFail($codperiodocolaborador);
 
-        if ($pc->status !== PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
-            throw new \Exception('Somente colaboradores com status E (encerrado) podem ter acerto efetivado.');
+        // O acerto é lançado enquanto o colaborador está ABERTO. Encerrar trava tudo.
+        if ($pc->status !== PeriodoService::STATUS_COLABORADOR_ABERTO) {
+            throw new \Exception('Colaborador encerrado — reabra para lançar acerto.');
         }
 
-        $codpessoa = $pc->Colaborador->codpessoa;
-        $codperiodo = $pc->codperiodo;
-
-        if (static::verificarLiquidacaoAtiva($codperiodo, $codpessoa)) {
-            throw new \Exception('Já existe um acerto efetivado para este colaborador neste período.');
-        }
-
-        // Buscar saldos atuais dos títulos para validação
-        $codtitulos   = array_column($titulos, 'codtitulo');
-        $saldosAtuais = DB::table('tbltitulo')
-            ->whereIn('codtitulo', $codtitulos)
-            ->pluck('saldo', 'codtitulo');
-
-        // Separar em créditos (saldo < 0 → pagando) e débitos (saldo > 0 → descontando)
-        $creditos  = []; // [codtitulo => pagando]
-        $debitos   = []; // [codtitulo => descontando]
+        // Percorre as linhas: total pagando/descontando e movimentos de baixa
+        // (só para títulos reais; a linha sintética do benefício tem codtitulo null).
+        // Decompõe o acerto: rubricas (benefício = linha sintética codtitulo null),
+        // creditos (títulos a crédito pagos) e debitos (títulos a débito descontados).
+        $rubricas   = 0.0;
+        $creditos   = 0.0;
+        $debitos    = 0.0;
+        $movimentos = []; // [codtitulo, debito, credito]
 
         foreach ($titulos as $t) {
-            $codtitulo   = (int) $t['codtitulo'];
-            $pagando     = (float) ($t['pagando'] ?? 0);
-            $descontando = (float) ($t['descontando'] ?? 0);
+            $codtitulo   = $t['codtitulo'] ?? null;
+            $pagando     = round((float) ($t['pagando'] ?? 0), 2);
+            $descontando = round((float) ($t['descontando'] ?? 0), 2);
+
+            if (!$codtitulo) {
+                // Linha sintética = benefício (rubricas). Não gera movimento.
+                $rubricas += $pagando;
+                continue;
+            }
 
             if ($pagando > 0) {
-                $creditos[$codtitulo] = $pagando;
+                // Título a crédito sendo pago → débito baixa o crédito.
+                $creditos    += $pagando;
+                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'debito' => $pagando, 'credito' => null];
             }
             if ($descontando > 0) {
-                $debitos[$codtitulo] = $descontando;
+                // Título a débito (vale) sendo descontado → crédito baixa o débito.
+                $debitos     += $descontando;
+                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'debito' => null, 'credito' => $descontando];
             }
         }
 
-        $totalPagando     = array_sum($creditos);
-        $totalDescontando = array_sum($debitos);
-        $resultado        = $totalPagando - $totalDescontando;
+        $saldo = round($rubricas + $creditos - $debitos, 2);
 
-        // Observação
-        $periodo    = $pc->Periodo;
-        $obsLiquidacao = 'RH Período de '
-            . $periodo->periodoinicial->format('d/m/Y')
-            . ' a '
-            . $periodo->periodofinal->format('d/m/Y');
-        if (!empty($observacao)) {
-            $obsLiquidacao .= "\n" . $observacao;
-        }
+        $agora    = Carbon::now();
+        $dataForm = $data ? Carbon::parse($data)->toDateString() : $agora->toDateString();
 
-        $agora   = Carbon::now();
-        $hoje    = $agora->toDateString();
-        $usuario = Auth::user()->codusuario;
-
-        $liquidacoesCriadas = [];
-
-        if ($resultado >= 0) {
-            // Cenário A ou C: 1 liquidação portador CAIXA
-            if (!empty($creditos) || !empty($debitos)) {
-                $liq = static::criarLiquidacao($codpessoa, $codperiodo, PortadorService::CAIXA, $obsLiquidacao, $usuario, $hoje, $agora, $totalPagando, $totalDescontando);
-
-                foreach ($creditos as $codtitulo => $valor) {
-                    static::criarMovimento($liq->codliquidacaotitulo, $codtitulo, PortadorService::CAIXA, $valor, null, $hoje, $agora);
-                }
-                foreach ($debitos as $codtitulo => $valor) {
-                    static::criarMovimento($liq->codliquidacaotitulo, $codtitulo, PortadorService::CAIXA, null, $valor, $hoje, $agora);
-                }
-
-                $liquidacoesCriadas[] = [
-                    'codliquidacaotitulo' => $liq->codliquidacaotitulo,
-                    'portador'            => 'Caixa Financeiro',
-                    'total'               => round($resultado, 2),
-                ];
-            }
-        } else {
-            // Cenário D: até 2 liquidações
-            $restanteLiq2 = [];
-
-            // Liq 1: portador CAIXA — só se tem créditos pra compensar
-            if (!empty($creditos)) {
-                $capLiq1      = $totalPagando;
-                $creditadoLiq1 = 0;
-
-                $liq1 = static::criarLiquidacao($codpessoa, $codperiodo, PortadorService::CAIXA, $obsLiquidacao, $usuario, $hoje, $agora, $totalPagando, 0);
-
-                foreach ($creditos as $codtitulo => $valor) {
-                    static::criarMovimento($liq1->codliquidacaotitulo, $codtitulo, PortadorService::CAIXA, $valor, null, $hoje, $agora);
-                }
-
-                foreach ($debitos as $codtitulo => $valor) {
-                    if ($capLiq1 <= 0) {
-                        $restanteLiq2[$codtitulo] = $valor;
-                        continue;
-                    }
-                    $valorLiq1 = min($valor, $capLiq1);
-                    static::criarMovimento($liq1->codliquidacaotitulo, $codtitulo, PortadorService::CAIXA, null, $valorLiq1, $hoje, $agora);
-                    $capLiq1      -= $valorLiq1;
-                    $creditadoLiq1 += $valorLiq1;
-
-                    $sobra = $valor - $valorLiq1;
-                    if ($sobra > 0) {
-                        $restanteLiq2[$codtitulo] = $sobra;
-                    }
-                }
-
-                $liq1->credito = $creditadoLiq1;
-                $liq1->save();
-
-                $liquidacoesCriadas[] = [
-                    'codliquidacaotitulo' => $liq1->codliquidacaotitulo,
-                    'portador'            => 'Caixa Financeiro',
-                    'total'               => round($totalPagando, 2),
-                ];
-            } else {
-                $restanteLiq2 = $debitos;
-            }
-
-            // Liq 2: portador FOLHA — débito restante
-            if (!empty($restanteLiq2)) {
-                $folhaTotal = array_sum($restanteLiq2);
-                $liq2 = static::criarLiquidacao($codpessoa, $codperiodo, PortadorService::FOLHA, $obsLiquidacao, $usuario, $hoje, $agora, 0, $folhaTotal);
-
-                foreach ($restanteLiq2 as $codtitulo => $valor) {
-                    static::criarMovimento($liq2->codliquidacaotitulo, $codtitulo, PortadorService::FOLHA, null, $valor, $hoje, $agora);
-                }
-
-                $liquidacoesCriadas[] = [
-                    'codliquidacaotitulo' => $liq2->codliquidacaotitulo,
-                    'portador'            => 'Acerto Folha Salarial',
-                    'total'               => round($folhaTotal, 2),
-                ];
-            }
-        }
-
-        return [
-            'status'      => 'efetivado',
-            'liquidacoes' => $liquidacoesCriadas,
-            'financeiro'  => round(max(0, $resultado), 2),
-            'folha'       => round(max(0, -$resultado), 2),
-        ];
-    }
-
-    protected static function criarLiquidacao(
-        int $codpessoa,
-        int $codperiodo,
-        int $codportador,
-        string $observacao,
-        int $codusuario,
-        string $hoje,
-        Carbon $agora,
-        float $debito = 0,
-        float $credito = 0
-    ): LiquidacaoTitulo {
-        $liq = new LiquidacaoTitulo([
-            'transacao'    => $hoje,
-            'sistema'      => $agora,
-            'codportador'  => $codportador,
-            'observacao'   => $observacao,
-            'codusuario'   => $codusuario,
-            'codpessoa'    => $codpessoa,
-            'codperiodo'   => $codperiodo,
-            'tipo'         => null,
-            'codpdv'       => null,
-            'debito'       => $debito,
-            'credito'      => $credito,
+        $acerto = new PeriodoColaboradorAcerto([
+            'codperiodocolaborador' => $codperiodocolaborador,
+            'data'                  => $dataForm,
+            'forma'                 => $forma,
+            'rubricas'              => round($rubricas, 2),
+            'creditos'              => round($creditos, 2),
+            'debitos'               => round($debitos, 2),
+            'saldo'                 => $saldo,
+            'observacao'            => $observacao ?: null,
         ]);
-        $liq->save();
-        return $liq;
+        $acerto->save();
+
+        foreach ($movimentos as $m) {
+            static::criarMovimento(
+                $acerto->codperiodocolaboradoracerto,
+                $m['codtitulo'],
+                $m['debito'],
+                $m['credito'],
+                $dataForm,
+                $agora
+            );
+        }
+
+        $acerto->load(['MovimentoTituloS.Titulo', 'UsuarioCriacao']);
+
+        return ['acerto' => $acerto];
     }
 
     protected static function criarMovimento(
-        int $codliquidacaotitulo,
+        int $codperiodocolaboradoracerto,
         int $codtitulo,
-        int $codportador,
         ?float $debito,
         ?float $credito,
-        string $hoje,
-        Carbon $agora
+        string $data,
+        Carbon $agora,
+        int $tipo = MovimentoTituloService::TIPO_RH
     ): void {
         $mov = new MovimentoTitulo([
-            'codtipomovimentotitulo' => MovimentoTituloService::TIPO_RH,
-            'codtitulo'              => $codtitulo,
-            'codportador'            => $codportador,
-            'debito'                 => $debito,
-            'credito'                => $credito,
-            'historico'              => null,
-            'transacao'              => $hoje,
-            'sistema'                => $agora,
-            'codliquidacaotitulo'    => $codliquidacaotitulo,
+            'codtipomovimentotitulo'      => $tipo,
+            'codtitulo'                   => $codtitulo,
+            'codperiodocolaboradoracerto' => $codperiodocolaboradoracerto,
+            'codliquidacaotitulo'         => null,
+            'codportador'                 => null,
+            'debito'                      => $debito,
+            'credito'                     => $credito,
+            'historico'                   => 'Acerto RH',
+            'transacao'                   => $data,
+            'sistema'                     => $agora,
         ]);
         $mov->save();
     }
 
     // -------------------------------------------------------------------------
-    // Estorno
+    // Inativar / Reativar (registro nunca é excluído; toggle reversível)
     // -------------------------------------------------------------------------
 
-    public static function estornar(int $codperiodocolaborador): int
+    public static function inativarAcerto(int $codperiodocolaboradoracerto): int
     {
-        $pc = PeriodoColaborador::with('Colaborador')->findOrFail($codperiodocolaborador);
-        $codpessoa  = $pc->Colaborador->codpessoa;
-        $codperiodo = $pc->codperiodo;
-        $usuario    = Auth::user()->codusuario;
-
-        $liquidacoes = LiquidacaoTitulo::where('codperiodo', $codperiodo)
-            ->where('codpessoa', $codpessoa)
-            ->whereNull('estornado')
-            ->with('MovimentoTituloS')
-            ->get();
-
-        if ($liquidacoes->isEmpty()) {
-            throw new \Exception('Nenhuma liquidação ativa encontrada para este colaborador/período.');
+        $acerto = static::acertoEditavel($codperiodocolaboradoracerto);
+        if ($acerto->inativo) {
+            throw new \Exception('Este acerto já está inativo.');
         }
+        $qtd = static::ajustarBaixas($acerto, false); // desfaz as baixas
+        $acerto->inativo = Carbon::now();
+        $acerto->save();
+        return $qtd;
+    }
 
+    public static function reativarAcerto(int $codperiodocolaboradoracerto): int
+    {
+        $acerto = static::acertoEditavel($codperiodocolaboradoracerto);
+        if (!$acerto->inativo) {
+            throw new \Exception('Este acerto já está ativo.');
+        }
+        $qtd = static::ajustarBaixas($acerto, true); // reaplica as baixas
+        $acerto->inativo = null;
+        $acerto->save();
+        return $qtd;
+    }
+
+    protected static function acertoEditavel(int $codperiodocolaboradoracerto): PeriodoColaboradorAcerto
+    {
+        $acerto = PeriodoColaboradorAcerto::with(['MovimentoTituloS', 'PeriodoColaborador'])
+            ->findOrFail($codperiodocolaboradoracerto);
+
+        if (optional($acerto->PeriodoColaborador)->status === PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
+            throw new \Exception('Colaborador encerrado — reabra para editar o acerto.');
+        }
+        return $acerto;
+    }
+
+    /**
+     * Leva a baixa de cada título do acerto ao alvo desejado (idempotente):
+     *  - $ativar = true  → alvo = baixa ORIGINAL (movimentos tipo 601 do efetivar)
+     *  - $ativar = false → alvo = 0 (desfaz)
+     * A diferença (alvo − atual) vira um movimento de ajuste (tipo 930). Como o
+     * "original" é sempre derivado só dos 601, o toggle é estável a N idas e voltas.
+     */
+    protected static function ajustarBaixas(PeriodoColaboradorAcerto $acerto, bool $ativar): int
+    {
         $agora = Carbon::now();
+        $hoje  = $agora->toDateString();
+        $qtd   = 0;
 
-        foreach ($liquidacoes as $liq) {
-            foreach ($liq->MovimentoTituloS as $mov) {
-                MovimentoTituloService::estornar($mov);
+        foreach ($acerto->MovimentoTituloS->groupBy('codtitulo') as $codtitulo => $movs) {
+            if (!$codtitulo) {
+                continue;
+            }
+            $original = 0.0;
+            $atual    = 0.0;
+            foreach ($movs as $m) {
+                $net    = (float) ($m->debito ?? 0) - (float) ($m->credito ?? 0);
+                $atual += $net;
+                if ((int) $m->codtipomovimentotitulo === MovimentoTituloService::TIPO_RH) {
+                    $original += $net;
+                }
             }
 
-            $liq->estornado         = $agora;
-            $liq->codusuarioestorno = $usuario;
-            $liq->save();
+            $alvo  = $ativar ? $original : 0.0;
+            $delta = round($alvo - $atual, 2);
+            if (abs($delta) < 0.01) {
+                continue;
+            }
+
+            static::criarMovimento(
+                $acerto->codperiodocolaboradoracerto,
+                (int) $codtitulo,
+                $delta > 0 ? $delta : null,
+                $delta < 0 ? -$delta : null,
+                $hoje,
+                $agora,
+                MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO
+            );
+            $qtd++;
         }
 
-        return $liquidacoes->count();
+        return $qtd;
     }
 
     // -------------------------------------------------------------------------
     // Verificação
     // -------------------------------------------------------------------------
 
-    public static function verificarLiquidacaoAtiva(int $codperiodo, int $codpessoa): bool
+    public static function temAcertoAtivo(int $codperiodocolaborador): bool
     {
-        return LiquidacaoTitulo::where('codperiodo', $codperiodo)
-            ->where('codpessoa', $codpessoa)
-            ->whereNull('estornado')
+        return PeriodoColaboradorAcerto::where('codperiodocolaborador', $codperiodocolaborador)
+            ->whereNull('inativo')
             ->exists();
+    }
+
+    /**
+     * Inativa TODOS os eventos ativos do colaborador (botão "Estornar Acerto").
+     */
+    public static function estornarTodos(int $codperiodocolaborador): int
+    {
+        $codigos = PeriodoColaboradorAcerto::where('codperiodocolaborador', $codperiodocolaborador)
+            ->whereNull('inativo')
+            ->pluck('codperiodocolaboradoracerto');
+
+        foreach ($codigos as $cod) {
+            static::inativarAcerto($cod);
+        }
+
+        return $codigos->count();
     }
 }

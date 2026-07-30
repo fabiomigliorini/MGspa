@@ -121,6 +121,7 @@ class TituloDetalheResource extends Resource
                 'codportador' => $m->codportador ? (int)$m->codportador : null,
                 'portador' => optional($m->Portador)->portador,
                 'codliquidacaotitulo' => $m->codliquidacaotitulo ? (int)$m->codliquidacaotitulo : null,
+                'codperiodocolaboradoracerto' => $m->codperiodocolaboradoracerto ? (int)$m->codperiodocolaboradoracerto : null,
                 'codtituloagrupamento' => $m->codtituloagrupamento ? (int)$m->codtituloagrupamento : null,
                 'codnegocio' => optional($m->NegocioFormaPagamento)->codnegocio,
                 'codboletoretorno' => $m->codboletoretorno ? (int)$m->codboletoretorno : null,

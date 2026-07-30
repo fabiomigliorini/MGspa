@@ -298,6 +298,10 @@ const classeVencimento = computed(() => {
 })
 
 const urlMovimento = (m) => {
+  if (m.codperiodocolaboradoracerto) {
+    // Baixa por Acerto RH (app pessoas) — sem link direto daqui.
+    return null
+  }
   if (m.codliquidacaotitulo) {
     return `/liquidacao-titulo/${m.codliquidacaotitulo}`
   }
@@ -613,7 +617,8 @@ watch(() => route.fullPath, carregar)
                   <!-- Transacao -->
                   <q-item-section>
                     <q-item-label class="ellipsis text-primary text-weight-bold">
-                      <span v-if="m.codliquidacaotitulo">
+                      <span v-if="m.codperiodocolaboradoracerto"> Acerto RH </span>
+                      <span v-else-if="m.codliquidacaotitulo">
                         Liquidação {{ formataCodigo(m.codliquidacaotitulo) }}
                       </span>
                       <span v-else-if="m.codtituloagrupamento">

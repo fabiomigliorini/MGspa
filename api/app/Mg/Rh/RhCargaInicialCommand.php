@@ -59,7 +59,7 @@ class RhCargaInicialCommand extends Command
 
             $total = PeriodoColaborador::where('codperiodo', $codperiodo)->count();
             $comSetor = PeriodoColaborador::where('codperiodo', $codperiodo)
-                ->whereHas('PeriodoColaboradorSetorS')
+                ->whereNotNull('codsetor')
                 ->count();
             $semSetor = $total - $comSetor;
 

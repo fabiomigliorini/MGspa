@@ -40,28 +40,31 @@ class AcertoController extends Controller
             $resultado = AcertoService::efetivar(
                 $codperiodocolaborador,
                 $request->input('titulos', []),
-                $request->input('observacao')
+                $request->input('forma'),
+                $request->input('observacao'),
+                $request->input('data')
             );
             DB::commit();
-            return new AcertoEfetivadoResource($resultado);
+            return new PeriodoColaboradorAcertoResource($resultado['acerto']);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['erro' => $e->getMessage()], 422);
         }
     }
 
+    // Inativa TODOS os eventos ativos do colaborador (botão "Estornar Acerto").
     public function estornar(int $codperiodo, int $codperiodocolaborador)
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
         DB::beginTransaction();
         try {
-            $qtd = AcertoService::estornar($codperiodocolaborador);
+            $qtd = AcertoService::estornarTodos($codperiodocolaborador);
             DB::commit();
             return response()->json([
                 'data' => [
-                    'status'                 => 'pendente',
-                    'liquidacoes_estornadas' => $qtd,
+                    'status'             => 'pendente',
+                    'eventos_inativados' => $qtd,
                 ],
             ]);
         } catch (\Exception $e) {
@@ -70,11 +73,46 @@ class AcertoController extends Controller
         }
     }
 
-    public function recibos(int $codperiodo)
+    // Inativa UM acerto (desfaz as baixas; registro permanece).
+    public function inativarAcerto(int $codperiodo, int $codperiodocolaboradoracerto)
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
-        $pdf = AcertoReciboPdf::gerar($codperiodo);
+        DB::beginTransaction();
+        try {
+            AcertoService::inativarAcerto($codperiodocolaboradoracerto);
+            DB::commit();
+            return response()->json(['data' => ['status' => 'inativado']]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
+    // Reativa UM acerto (reaplica as baixas).
+    public function reativarAcerto(int $codperiodo, int $codperiodocolaboradoracerto)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        DB::beginTransaction();
+        try {
+            AcertoService::reativarAcerto($codperiodocolaboradoracerto);
+            DB::commit();
+            return response()->json(['data' => ['status' => 'ativo']]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
+    public function recibos(int $codperiodo, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $codunidadenegocio = $request->input('codunidadenegocio');
+        $codunidadenegocio = $codunidadenegocio ? (int) $codunidadenegocio : null;
+
+        $pdf = AcertoReciboPdf::gerar($codperiodo, [], $codunidadenegocio);
 
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
@@ -111,15 +149,13 @@ class AcertoController extends Controller
         Autorizador::autoriza(['Recursos Humanos']);
 
         $codempresa = (int) $request->input('codempresa');
-        abort_unless(in_array($codempresa, [1, 2], true), 422, 'Empresa inválida');
+        abort_unless($codempresa > 0, 422, 'Empresa inválida');
 
         $xlsx = AcertoPlanilhaCartaoXlsx::gerar($codperiodo, $codempresa);
 
-        $nome = $codempresa === 1 ? 'migliorini' : 'fdf';
-
         return response($xlsx, 200, [
             'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => "attachment; filename=\"cartao-{$nome}-{$codperiodo}.xlsx\"",
+            'Content-Disposition' => "attachment; filename=\"cartao-{$codempresa}-{$codperiodo}.xlsx\"",
         ]);
     }
 }

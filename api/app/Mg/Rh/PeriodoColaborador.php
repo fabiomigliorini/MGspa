@@ -8,8 +8,8 @@ namespace Mg\Rh;
 
 use Mg\MgModel;
 use Mg\Rh\ColaboradorRubrica;
-use Mg\Rh\PeriodoColaboradorSetor;
 use Mg\Colaborador\Colaborador;
+use Mg\Filial\Setor;
 use Mg\Rh\Periodo;
 use Mg\Titulo\Titulo;
 
@@ -22,6 +22,7 @@ class PeriodoColaborador extends MgModel
     protected $fillable = [
         'codcolaborador',
         'codperiodo',
+        'codsetor',
         'codtitulo',
         'encerramento',
         'gestor',
@@ -34,6 +35,7 @@ class PeriodoColaborador extends MgModel
         'codcolaborador' => 'integer',
         'codperiodo' => 'integer',
         'codperiodocolaborador' => 'integer',
+        'codsetor' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -55,6 +57,11 @@ class PeriodoColaborador extends MgModel
         return $this->belongsTo(Periodo::class, 'codperiodo', 'codperiodo');
     }
 
+    public function Setor()
+    {
+        return $this->belongsTo(Setor::class, 'codsetor', 'codsetor');
+    }
+
     public function Titulo()
     {
         return $this->belongsTo(Titulo::class, 'codtitulo', 'codtitulo');
@@ -67,9 +74,8 @@ class PeriodoColaborador extends MgModel
         return $this->hasMany(ColaboradorRubrica::class, 'codperiodocolaborador', 'codperiodocolaborador');
     }
 
-    public function PeriodoColaboradorSetorS()
+    public function PeriodoColaboradorAcertoS()
     {
-        return $this->hasMany(PeriodoColaboradorSetor::class, 'codperiodocolaborador', 'codperiodocolaborador');
+        return $this->hasMany(PeriodoColaboradorAcerto::class, 'codperiodocolaborador', 'codperiodocolaborador');
     }
-
 }

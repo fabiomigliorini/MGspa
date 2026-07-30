@@ -26,7 +26,7 @@ class UnidadeNegocioController extends MgController
 
     public function store(CriarUnidadeNegocioRequest $request)
     {
-        Autorizador::autoriza(['Meta']);
+        Autorizador::autoriza(['Meta', 'Recursos Humanos']);
 
         $reg = UnidadeNegocio::create($request->validated());
 
@@ -37,7 +37,7 @@ class UnidadeNegocioController extends MgController
 
     public function update(AtualizarUnidadeNegocioRequest $request, $codunidadenegocio)
     {
-        Autorizador::autoriza(['Meta']);
+        Autorizador::autoriza(['Meta', 'Recursos Humanos']);
 
         $reg = UnidadeNegocio::findOrFail($codunidadenegocio);
         $reg->update($request->validated());
@@ -47,7 +47,7 @@ class UnidadeNegocioController extends MgController
 
     public function destroy(Request $request, $codunidadenegocio)
     {
-        Autorizador::autoriza(['Meta']);
+        Autorizador::autoriza(['Meta', 'Recursos Humanos']);
 
         $reg = UnidadeNegocio::findOrFail($codunidadenegocio);
 
@@ -63,7 +63,7 @@ class UnidadeNegocioController extends MgController
 
     public function inativar(Request $request, $codunidadenegocio)
     {
-        Autorizador::autoriza(['Meta']);
+        Autorizador::autoriza(['Meta', 'Recursos Humanos']);
 
         $reg = UnidadeNegocio::findOrFail($codunidadenegocio);
         $reg->inativo = Carbon::now();
@@ -74,7 +74,7 @@ class UnidadeNegocioController extends MgController
 
     public function ativar(Request $request, $codunidadenegocio)
     {
-        Autorizador::autoriza(['Meta']);
+        Autorizador::autoriza(['Meta', 'Recursos Humanos']);
 
         $reg = UnidadeNegocio::findOrFail($codunidadenegocio);
         $reg->inativo = null;

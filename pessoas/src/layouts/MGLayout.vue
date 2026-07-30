@@ -123,6 +123,13 @@ const menuGroups = computed(() => {
           hide: !user.temPermissao('Recursos Humanos'),
         },
         {
+          label: 'Rubricas',
+          icon: 'receipt_long',
+          color: 'amber-8',
+          to: { name: 'rhRubricaCatalogo' },
+          hide: !user.temPermissao('Recursos Humanos'),
+        },
+        {
           label: 'Feriados',
           icon: 'event_busy',
           color: 'amber-8',

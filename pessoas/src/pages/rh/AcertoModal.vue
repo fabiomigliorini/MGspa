@@ -5,6 +5,7 @@ import { rhStore } from 'src/stores/rh'
 import { extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataData } from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInputData from '@components/MgInputData.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -23,8 +24,20 @@ const salvando = ref(false)
 const dadosColaborador = ref(null)
 const titulos = ref([])
 const observacao = ref('')
+const forma = ref('B')
+const formaTocada = ref(false)
+const dataEvento = ref(hoje())
 
-// --- HELPERS ---
+const FORMA_OPTIONS = [
+  { label: 'Recarga Bee', value: 'B' },
+  { label: 'Dinheiro', value: 'D' },
+  { label: 'Desconto Folha', value: 'F' },
+]
+
+function hoje() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 // --- COMPUTED TOTAIS ---
 
@@ -38,11 +51,19 @@ const totalDescontando = computed(() =>
 
 const resultado = computed(() => totalPagando.value - totalDescontando.value)
 
-const labelResultado = computed(() => {
-  if (resultado.value > 0.001) return { label: 'Financeiro', color: 'positive' }
-  if (resultado.value < -0.001) return { label: 'Acerto Folha', color: 'negative' }
-  return { label: 'Encontro Total', color: 'grey-7' }
+// Sugestão de forma pelo sinal: positivo → Bee; negativo → Folha (o usuário decide).
+const formaSugerida = computed(() => (resultado.value >= 0 ? 'B' : 'F'))
+
+watch(formaSugerida, (val) => {
+  if (!formaTocada.value) forma.value = val
 })
+
+const formaLabel = computed(() => FORMA_OPTIONS.find((o) => o.value === forma.value)?.label || '')
+
+const onFormaChange = (val) => {
+  formaTocada.value = true
+  forma.value = val
+}
 
 const pctDesconto = computed(() => {
   const salario = dadosColaborador.value?.salario
@@ -61,7 +82,9 @@ const excedeLimite = computed(() => {
 
 const podeSalvar = computed(() => totalPagando.value > 0 || totalDescontando.value > 0)
 
-// --- VALIDAÇÃO DE INPUTS ---
+// --- LINHAS ---
+
+const linhaKey = (t) => t.codtitulo ?? 'beneficio'
 
 const atualizarPagando = (titulo, val) => {
   const num = parseFloat(val) || 0
@@ -97,6 +120,8 @@ const carregar = async () => {
   titulos.value = []
   observacao.value = ''
   dadosColaborador.value = null
+  formaTocada.value = false
+  dataEvento.value = hoje()
   try {
     const ret = await sRh.getTitulosAcerto(
       props.codperiodo,
@@ -109,6 +134,7 @@ const carregar = async () => {
       pagando: t.saldo < 0 ? parseFloat(t.sugestao_pagando) || null : null,
       descontando: t.saldo > 0 ? parseFloat(t.sugestao_descontando) || null : null,
     }))
+    forma.value = formaSugerida.value
   } catch (error) {
     $q.notify({
       color: 'red-5',
@@ -136,9 +162,11 @@ const confirmar = async () => {
   salvando.value = true
   try {
     const payload = {
+      forma: forma.value,
+      data: dataEvento.value,
       observacao: observacao.value,
       titulos: titulos.value.map((t) => ({
-        codtitulo: t.codtitulo,
+        codtitulo: t.codtitulo ?? null,
         descontando: parseFloat(t.descontando) || 0,
         pagando: parseFloat(t.pagando) || 0,
       })),
@@ -148,7 +176,7 @@ const confirmar = async () => {
       color: 'green-5',
       textColor: 'white',
       icon: 'done',
-      message: 'Acerto efetivado com sucesso',
+      message: 'Acerto registrado',
     })
     emit('efetivado')
     emit('update:modelValue', false)
@@ -157,7 +185,7 @@ const confirmar = async () => {
       color: 'red-5',
       textColor: 'white',
       icon: 'error',
-      message: extrairErro(error, 'Erro ao efetivar acerto'),
+      message: extrairErro(error, 'Erro ao registrar acerto'),
     })
   } finally {
     salvando.value = false
@@ -171,27 +199,28 @@ const confirmar = async () => {
     @update:model-value="emit('update:modelValue', $event)"
     :maximized="$q.screen.lt.md"
   >
-    <q-card bordered flat style="width: 780px; max-width: 95vw; min-height: 200px">
+    <q-card flat style="width: 820px; max-width: 95vw; min-height: 200px">
       <q-inner-loading :showing="loading" />
 
       <template v-if="!loading && dadosColaborador">
         <!-- CABEÇALHO -->
-        <q-card-section class="q-pb-sm text-caption">
+        <q-card-section class="q-pb-sm">
           <div class="text-h6 text-grey-9">{{ dadosColaborador.nome }}</div>
           <div class="text-caption text-grey-7">
             {{ dadosColaborador.cargo }}
             <template v-if="dadosColaborador.tempo_casa">
               · {{ dadosColaborador.tempo_casa }}
             </template>
-            · Salário: {{ formataNumero(dadosColaborador.salario) }}
+            <template v-if="dadosColaborador.salario">
+              · Salário: {{ formataNumero(dadosColaborador.salario) }}
+            </template>
           </div>
         </q-card-section>
 
         <q-separator />
 
-        <!-- TÍTULOS -->
+        <!-- TÍTULOS (grade) -->
         <q-card-section class="q-pa-none">
-          <!-- Header -->
           <div
             class="row items-center q-px-md q-py-xs text-caption text-weight-medium text-grey-7 bg-grey-2"
           >
@@ -203,15 +232,18 @@ const confirmar = async () => {
           </div>
           <q-separator />
 
-          <!-- Linhas -->
-          <q-scroll-area style="height: 280px">
-            <template v-for="titulo in titulos" :key="titulo.codtitulo">
+          <q-scroll-area style="height: 240px">
+            <template v-for="titulo in titulos" :key="linhaKey(titulo)">
               <div class="row items-center q-col-gutter-md q-pa-sm">
                 <div class="col-3 text-body2">
                   {{ titulo.numero }}
+                  <div v-if="titulo.codtitulo === null" class="text-caption text-grey-6">
+                    benefício
+                  </div>
                 </div>
                 <div class="col-2 text-body2 q-px-sm q-py-xs">
-                  {{ formataData(titulo.vencimento) }}
+                  <template v-if="titulo.vencimento">{{ formataData(titulo.vencimento) }}</template>
+                  <span v-else class="text-grey-5">—</span>
                 </div>
                 <div
                   class="col-3 text-right text-weight-medium"
@@ -234,23 +266,21 @@ const confirmar = async () => {
                 <!-- Pagando -->
                 <div class="col-2">
                   <MgInputValor
-                    dense
+                    v-if="titulo.saldo < 0"
                     :model-value="titulo.pagando"
                     @update:model-value="(val) => atualizarPagando(titulo, val)"
-                    v-if="titulo.saldo < 0"
                     class="full-width"
                     :min="0"
                     :max="Math.abs(titulo.saldo)"
                   />
                 </div>
-                <!-- Descontando + toggle linha -->
-                <div class="col-2 no-wrap items-center">
+                <!-- Descontando -->
+                <div class="col-2">
                   <MgInputValor
-                    dense
+                    v-if="titulo.saldo > 0"
                     :model-value="titulo.descontando"
                     @update:model-value="(val) => atualizarDescontando(titulo, val)"
-                    v-if="titulo.saldo > 0"
-                    class="col"
+                    class="full-width"
                     :min="0"
                     :max="Math.abs(titulo.saldo)"
                   />
@@ -259,9 +289,8 @@ const confirmar = async () => {
               <q-separator />
             </template>
 
-            <!-- Vazio -->
             <div v-if="titulos.length === 0" class="q-pa-md text-center text-grey">
-              Nenhum título encontrado
+              Nada a acertar
             </div>
           </q-scroll-area>
           <q-separator />
@@ -269,40 +298,45 @@ const confirmar = async () => {
           <!-- Totais -->
           <div class="row items-center q-px-md q-py-sm text-weight-medium bg-grey-2">
             <div class="col-8"></div>
-            <div class="col-2 text-center text-positive">
-              {{ formataNumero(totalPagando) }}
-            </div>
-            <div class="col-2 text-center text-negative">
-              {{ formataNumero(totalDescontando) }}
-            </div>
+            <div class="col-2 text-center text-positive">{{ formataNumero(totalPagando) }}</div>
+            <div class="col-2 text-center text-negative">{{ formataNumero(totalDescontando) }}</div>
           </div>
-          <div class="row items-center q-px-md q-py-sm text-weight-medium bg-grey-2">
-            <div class="col-8 text-right text-weight-bold" :class="'text-' + labelResultado.color">
-              {{ labelResultado.label }}:
-            </div>
-            <div class="col-2 text-center" :class="'text-' + labelResultado.color">
-              <template v-if="resultado >= 0">
-                {{ formataNumero(Math.abs(resultado)) }}
-              </template>
-            </div>
-            <div class="col-2 text-center" :class="'text-' + labelResultado.color">
-              <template v-if="resultado < 0">
-                {{ formataNumero(Math.abs(resultado)) }}
-              </template>
+          <div class="row items-center q-px-md q-py-sm text-weight-bold bg-grey-2">
+            <div class="col-8 text-right">{{ formaLabel }}:</div>
+            <div class="col-4 text-center text-primary">
+              {{ formataNumero(Math.abs(resultado)) }}
             </div>
           </div>
         </q-card-section>
 
         <!-- ALERTA LIMITE FOLHA -->
         <q-banner v-if="excedeLimite" class="bg-orange-1 text-orange-9 q-mx-md q-mb-sm" rounded>
-          <template v-slot:avatar>
+          <template #avatar>
             <q-icon name="warning" color="orange" />
           </template>
-          Atenção: desconto de
-          {{ formataNumero(Math.abs(resultado)) }} representa {{ pctDesconto.toFixed(1) }}% do
-          salário ({{ formataNumero(dadosColaborador.salario) }}). Limite configurado:
-          {{ dadosColaborador.percentual_max_desconto }}%.
+          Atenção: desconto de {{ formataNumero(Math.abs(resultado)) }} representa
+          {{ pctDesconto.toFixed(1) }}% do salário ({{ formataNumero(dadosColaborador.salario) }}).
+          Limite configurado: {{ dadosColaborador.percentual_max_desconto }}%.
         </q-banner>
+
+        <!-- FORMA + DATA -->
+        <q-card-section class="q-pb-none">
+          <div class="row q-col-gutter-md items-center">
+            <div class="col-12 col-sm-8">
+              <div class="text-caption text-grey-7 q-mb-xs">Forma</div>
+              <q-option-group
+                :model-value="forma"
+                @update:model-value="onFormaChange"
+                :options="FORMA_OPTIONS"
+                color="primary"
+                inline
+              />
+            </div>
+            <div class="col-12 col-sm-4">
+              <MgInputData v-model="dataEvento" label="Data do acerto" />
+            </div>
+          </div>
+        </q-card-section>
 
         <!-- OBSERVAÇÃO -->
         <q-card-section class="q-pt-sm">

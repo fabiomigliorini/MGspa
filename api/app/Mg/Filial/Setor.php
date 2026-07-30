@@ -9,7 +9,7 @@ namespace Mg\Filial;
 use Mg\MgModel;
 use Mg\Rh\Indicador;
 use Mg\Pdv\Pdv;
-use Mg\Rh\PeriodoColaboradorSetor;
+use Mg\Rh\PeriodoColaborador;
 use Mg\Filial\TipoSetor;
 use Mg\Filial\UnidadeNegocio;
 
@@ -67,9 +67,9 @@ class Setor extends MgModel
         return $this->hasMany(Pdv::class, 'codsetor', 'codsetor');
     }
 
-    public function PeriodoColaboradorSetorS()
+    public function PeriodoColaboradorS()
     {
-        return $this->hasMany(PeriodoColaboradorSetor::class, 'codsetor', 'codsetor');
+        return $this->hasMany(PeriodoColaborador::class, 'codsetor', 'codsetor');
     }
 
 }

@@ -15,9 +15,23 @@ const user = useAuthStore()
 
 const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 
-const dash = computed(() => sRh.dashboard || {})
-const periodo = computed(() => dash.value.periodo || {})
-const unidades = computed(() => dash.value.unidades || [])
+const resumo = computed(() => sRh.resumo || {})
+const periodoStatus = computed(() => resumo.value.periodo?.status)
+const unidades = computed(() => resumo.value.unidades || [])
+
+const atingimento = (u) => {
+  if (u.atingimento != null) return parseFloat(u.atingimento)
+  if (!u.meta) return null
+  return ((parseFloat(u.vendas) || 0) / parseFloat(u.meta)) * 100
+}
+
+const pctVendas = (u) => {
+  if (u.pctvendas != null) return parseFloat(u.pctvendas)
+  const vendas = parseFloat(u.vendas) || 0
+  if (!vendas) return null
+  return ((parseFloat(u.total) || 0) / vendas) * 100
+}
+
 const grupos = computed(() => {
   const mapa = {}
   for (const u of unidades.value) {
@@ -40,20 +54,13 @@ const grupos = computed(() => {
 })
 
 const somaGrupo = (grupo) => {
-  const r = {
-    vendas: 0,
-    totalsalario: 0,
-    totaladicional: 0,
-    totalencargos: 0,
-    totalvariaveis: 0,
-    total: 0,
-  }
+  const r = { vendas: 0, salario: 0, adicional: 0, encargos: 0, variaveis: 0, total: 0 }
   for (const u of grupo.unidades) {
     r.vendas += parseFloat(u.vendas) || 0
-    r.totalsalario += parseFloat(u.totalsalario) || 0
-    r.totaladicional += parseFloat(u.totaladicional) || 0
-    r.totalencargos += parseFloat(u.totalencargos) || 0
-    r.totalvariaveis += parseFloat(u.totalvariaveis) || 0
+    r.salario += parseFloat(u.totalsalario) || 0
+    r.adicional += parseFloat(u.totaladicional) || 0
+    r.encargos += parseFloat(u.totalencargos) || 0
+    r.variaveis += parseFloat(u.totalvariaveis) || 0
     r.total += parseFloat(u.total) || 0
   }
   return r
@@ -63,7 +70,7 @@ const totalVendas = computed(() =>
   unidades.value.reduce((s, u) => s + (parseFloat(u.vendas) || 0), 0),
 )
 
-// --- DIALOG EDITAR META UNIDADE ---
+// --- DIALOG EDITAR META ---
 
 const dialogMeta = ref(false)
 const modelMeta = ref({ codindicador: null, meta: null })
@@ -77,16 +84,9 @@ const editarMeta = (u) => {
 const salvarMeta = async () => {
   dialogMeta.value = false
   try {
-    await sRh.atualizarMeta(modelMeta.value.codindicador, {
-      meta: modelMeta.value.meta,
-    })
-    $q.notify({
-      color: 'green-5',
-      textColor: 'white',
-      icon: 'done',
-      message: 'Meta atualizada',
-    })
-    await sRh.getDashboard(route.params.codperiodo)
+    await sRh.atualizarMeta(modelMeta.value.codindicador, { meta: modelMeta.value.meta })
+    $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Meta atualizada' })
+    await sRh.getResumo(route.params.codperiodo)
   } catch (error) {
     $q.notify({
       color: 'red-5',
@@ -101,9 +101,9 @@ const salvarMeta = async () => {
 <template>
   <!-- DIALOG EDITAR META -->
   <q-dialog v-model="dialogMeta">
-    <q-card bordered flat style="width: 400px; max-width: 90vw">
-      <q-form @submit="salvarMeta()">
-        <q-card-section class="text-grey-9 text-overline"> EDITAR META </q-card-section>
+    <q-card flat style="width: 400px; max-width: 90vw">
+      <q-form @submit.prevent="salvarMeta()">
+        <q-card-section class="text-grey-9 text-overline">EDITAR META</q-card-section>
 
         <q-separator inset />
 
@@ -165,9 +165,8 @@ const salvarMeta = async () => {
               <template v-if="u.meta">{{ formataNumero(u.meta) }}</template>
               <template v-else>—</template>
               <q-btn
-                v-if="podeEditar && u.codindicador && periodo.status === 'A'"
+                v-if="podeEditar && u.codindicador && periodoStatus === 'A'"
                 flat
-                dense
                 round
                 icon="edit"
                 size="xs"
@@ -178,16 +177,16 @@ const salvarMeta = async () => {
               </q-btn>
             </td>
             <td class="text-right">
-              {{ u.meta ? formataPercentual((u.vendas / u.meta) * 100) : '—' }}
+              {{ atingimento(u) != null ? formataPercentual(atingimento(u)) : '—' }}
             </td>
             <td>
               <q-linear-progress
-                v-if="u.meta"
-                :value="Math.min(u.vendas / u.meta || 0, 1)"
+                v-if="atingimento(u) != null"
+                :value="Math.min(atingimento(u) / 100 || 0, 1)"
                 size="8px"
                 stripe
                 rounded
-                :color="corProgresso(u.meta ? (u.vendas / u.meta) * 100 : 0)"
+                :color="corProgresso(atingimento(u))"
               />
               <span v-else class="text-grey">—</span>
             </td>
@@ -195,11 +194,9 @@ const salvarMeta = async () => {
             <td class="text-right">{{ formataNumero(u.totaladicional) }}</td>
             <td class="text-right">{{ formataNumero(u.totalencargos) }}</td>
             <td class="text-right">{{ formataNumero(u.totalvariaveis) }}</td>
+            <td class="text-right text-weight-medium">{{ formataNumero(u.total) }}</td>
             <td class="text-right text-weight-medium">
-              {{ formataNumero(u.total) }}
-            </td>
-            <td class="text-right text-weight-medium">
-              {{ u.vendas ? formataPercentual((u.total / u.vendas) * 100) : '—' }}
+              {{ pctVendas(u) != null ? formataPercentual(pctVendas(u)) : '—' }}
             </td>
           </tr>
         </tbody>
@@ -210,10 +207,10 @@ const salvarMeta = async () => {
             <td></td>
             <td></td>
             <td></td>
-            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totalsalario) }}</td>
-            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totaladicional) }}</td>
-            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totalencargos) }}</td>
-            <td class="text-right">{{ formataNumero(somaGrupo(grupo).totalvariaveis) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).salario) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).adicional) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).encargos) }}</td>
+            <td class="text-right">{{ formataNumero(somaGrupo(grupo).variaveis) }}</td>
             <td class="text-right">{{ formataNumero(somaGrupo(grupo).total) }}</td>
             <td class="text-right">
               {{
@@ -251,16 +248,20 @@ const salvarMeta = async () => {
           <td></td>
           <td></td>
           <td></td>
-          <td class="text-right">{{ formataNumero(dash.totalsalario) }}</td>
-          <td class="text-right">{{ formataNumero(dash.totaladicional) }}</td>
-          <td class="text-right">{{ formataNumero(dash.totalencargos) }}</td>
-          <td class="text-right">{{ formataNumero(dash.totalvariaveis) }}</td>
-          <td class="text-right">{{ formataNumero(dash.total) }}</td>
+          <td class="text-right">{{ formataNumero(resumo.totalsalario) }}</td>
+          <td class="text-right">{{ formataNumero(resumo.totaladicional) }}</td>
+          <td class="text-right">{{ formataNumero(resumo.totalencargos) }}</td>
+          <td class="text-right">{{ formataNumero(resumo.totalvariaveis) }}</td>
+          <td class="text-right">{{ formataNumero(resumo.total) }}</td>
           <td class="text-right">
-            {{ totalVendas ? formataPercentual((dash.total / totalVendas) * 100) : '—' }}
+            {{ totalVendas ? formataPercentual((resumo.total / totalVendas) * 100) : '—' }}
           </td>
         </tr>
       </tbody>
     </q-markup-table>
   </q-card>
+
+  <div v-if="unidades.length === 0" class="q-pa-md text-center text-grey">
+    Nenhuma unidade encontrada
+  </div>
 </template>

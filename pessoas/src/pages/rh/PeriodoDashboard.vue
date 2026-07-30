@@ -1,16 +1,18 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
 import { useAuthStore } from 'src/stores'
 import { feriadoStore } from 'src/stores/feriado'
+import { api } from 'boot/axios'
 import { formataData, formataNumero } from '@components/formatters'
+import { abrirPdf } from '@components/abrirPdf'
 import { extrairErro } from 'src/utils/rhFormatters'
-import Dashboard from './Dashboard.vue'
-import Colaboradores from './Colaboradores.vue'
-import Indicadores from './Indicadores.vue'
-import Acertos from './Acertos.vue'
+import { useReprocessamentoPeriodo } from 'src/composables/useReprocessamentoPeriodo'
+import CockpitResumo from 'src/components/rh/CockpitResumo.vue'
+import CockpitUnidade from 'src/components/rh/CockpitUnidade.vue'
+import DialogUnidade from 'src/components/rh/DialogUnidade.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -23,12 +25,11 @@ const sFeriado = feriadoStore()
 
 const loading = ref(false)
 const tab = ref(route.query.tab || 'resumo')
-const indicadoresCarregados = ref(false)
-const loadingIndicadores = ref(false)
 
 const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 
-const dash = computed(() => sRh.dashboard || {})
+// Cockpit e KPIs leem do mesmo payload (v1/rh/periodo/{cod}/resumo == dashboard)
+const dash = computed(() => sRh.resumo || {})
 const periodo = computed(() => dash.value.periodo || {})
 const totalColaboradores = computed(() => dash.value.totalcolaboradores || 0)
 const colaboradoresEncerrados = computed(() => dash.value.colaboradoresencerrados || 0)
@@ -40,6 +41,20 @@ const totalAdicional = computed(() => dash.value.totaladicional || 0)
 const totalEncargos = computed(() => dash.value.totalencargos || 0)
 const totalVariaveis = computed(() => dash.value.totalvariaveis || 0)
 const custoTotal = computed(() => dash.value.total || 0)
+
+// --- ABAS POR UNIDADE ---
+
+const unidadeTabs = computed(() => {
+  const map = new Map()
+  ;(sRh.resumo?.unidades || []).forEach((u) => {
+    if (u.codunidadenegocio && !map.has(u.codunidadenegocio)) {
+      map.set(u.codunidadenegocio, u)
+    }
+  })
+  return Array.from(map.values()).sort((a, b) =>
+    (a.descricao || '').localeCompare(b.descricao || ''),
+  )
+})
 
 // --- DIAS ÚTEIS ---
 
@@ -57,9 +72,7 @@ const editarDiasUteis = () => {
 
 const salvarDiasUteis = async () => {
   try {
-    await sRh.atualizarPeriodo(route.params.codperiodo, {
-      diasuteis: modelDiasUteis.value,
-    })
+    await sRh.atualizarPeriodo(route.params.codperiodo, { diasuteis: modelDiasUteis.value })
     editandoDiasUteis.value = false
     $q.notify({
       color: 'green-5',
@@ -112,12 +125,7 @@ const salvarPeriodo = async () => {
   dialogPeriodo.value = false
   try {
     await sRh.atualizarPeriodo(route.params.codperiodo, modelPeriodo.value)
-    $q.notify({
-      color: 'green-5',
-      textColor: 'white',
-      icon: 'done',
-      message: 'Período atualizado',
-    })
+    $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Período atualizado' })
     await sRh.getPeriodos()
     await carregar(route.params.codperiodo)
   } catch (error) {
@@ -141,12 +149,7 @@ const fecharPeriodo = () => {
   }).onOk(async () => {
     try {
       await sRh.fecharPeriodo(route.params.codperiodo)
-      $q.notify({
-        color: 'green-5',
-        textColor: 'white',
-        icon: 'done',
-        message: 'Período fechado',
-      })
+      $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Período fechado' })
       await sRh.getPeriodos()
       await carregar(route.params.codperiodo)
     } catch (error) {
@@ -169,12 +172,7 @@ const reabrirPeriodo = () => {
   }).onOk(async () => {
     try {
       await sRh.reabrirPeriodo(route.params.codperiodo)
-      $q.notify({
-        color: 'green-5',
-        textColor: 'white',
-        icon: 'done',
-        message: 'Período reaberto',
-      })
+      $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Período reaberto' })
       await sRh.getPeriodos()
       await carregar(route.params.codperiodo)
     } catch (error) {
@@ -192,7 +190,7 @@ const duplicarPeriodo = () => {
   $q.dialog({
     title: 'Duplicar Período',
     message:
-      'Será criado um novo período com a mesma configuração (colaboradores, setores e rubricas recorrentes).',
+      'Será criado um novo período com a mesma configuração (colaboradores e rubricas recorrentes).',
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Duplicar', color: 'primary', flat: true },
   }).onOk(async () => {
@@ -205,10 +203,7 @@ const duplicarPeriodo = () => {
         message: 'Período duplicado',
       })
       await sRh.getPeriodos()
-      router.push({
-        name: 'rhDashboard',
-        params: { codperiodo: ret.data.data.codperiodo },
-      })
+      router.push({ name: 'rhDashboard', params: { codperiodo: ret.data.data.codperiodo } })
     } catch (error) {
       $q.notify({
         color: 'red-5',
@@ -224,7 +219,7 @@ const importarEstrutura = () => {
   $q.dialog({
     title: 'Importar Estrutura do Período Anterior',
     message:
-      'Isto vai copiar colaboradores, setores e rubricas recorrentes do período anterior. A operação é segura e pode ser repetida — registros já existentes são preservados.',
+      'Isto vai copiar colaboradores e rubricas recorrentes do período anterior. A operação é segura e pode ser repetida — registros já existentes são preservados.',
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Importar', color: 'primary', flat: true },
   }).onOk(async () => {
@@ -253,24 +248,16 @@ const excluirPeriodo = () => {
   $q.dialog({
     title: 'Excluir Período',
     message:
-      'Tem certeza que deseja excluir este período? Todos os colaboradores, setores, rubricas e indicadores serão removidos.',
+      'Tem certeza que deseja excluir este período? Todos os colaboradores, rubricas e indicadores serão removidos.',
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'red-5', flat: true },
   }).onOk(async () => {
     try {
       await sRh.excluirPeriodo(route.params.codperiodo)
-      $q.notify({
-        color: 'green-5',
-        textColor: 'white',
-        icon: 'done',
-        message: 'Período excluído',
-      })
+      $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Período excluído' })
       await sRh.getPeriodos()
       if (sRh.periodos.length > 0) {
-        router.push({
-          name: 'rhDashboard',
-          params: { codperiodo: sRh.periodos[0].codperiodo },
-        })
+        router.push({ name: 'rhDashboard', params: { codperiodo: sRh.periodos[0].codperiodo } })
       } else {
         router.push({ name: 'rhIndex' })
       }
@@ -285,110 +272,112 @@ const excluirPeriodo = () => {
   })
 }
 
-// --- REPROCESSAMENTO ---
+// --- REPROCESSAMENTO (composable) ---
 
-const reprocessando = ref(false)
-const progresso = ref(null)
-let pollingTimer = null
+const {
+  reprocessando,
+  progresso,
+  reprocessarPeriodo,
+  cancelarReprocessamento,
+  pararPolling,
+  checarEmAndamento,
+} = useReprocessamentoPeriodo(
+  () => route.params.codperiodo,
+  () => carregar(route.params.codperiodo),
+)
 
-const verificarProgresso = async () => {
+// --- APLICAR RUBRICA EM MASSA (presenteísmo) ---
+
+const dialogMassa = ref(false)
+const modelMassa = ref({ codrubrica: null })
+
+const rubricaOptions = computed(() =>
+  (sRh.rubricas || [])
+    .filter((r) => !r.inativo)
+    .slice()
+    .sort((a, b) => (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR'))
+    .map((r) => ({ label: r.descricao, value: r.codrubrica })),
+)
+
+const abrirMassa = async () => {
+  modelMassa.value = { codrubrica: null }
+  if (sRh.rubricas.length === 0) {
+    try {
+      await sRh.getRubricas()
+    } catch (error) {
+      $q.notify({
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
+        message: extrairErro(error, 'Erro ao carregar catálogo de rubricas'),
+      })
+    }
+  }
+  dialogMassa.value = true
+}
+
+const aplicarMassa = async () => {
+  if (!modelMassa.value.codrubrica) return
+  dialogMassa.value = false
   try {
-    const data = await sRh.progressoReprocessamento(route.params.codperiodo)
-    if (!data.status) {
-      pararPolling()
-      return
-    }
-    progresso.value = data
-    if (data.status === 'concluido') {
-      pararPolling()
-      $q.notify({
-        color: 'green-5',
-        textColor: 'white',
-        icon: 'done',
-        message: data.mensagem || 'Reprocessamento concluído',
-      })
-      await carregar(route.params.codperiodo)
-    } else if (data.status === 'erro') {
-      pararPolling()
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: data.mensagem || 'Erro no reprocessamento',
-      })
-    } else if (data.status === 'cancelado') {
-      pararPolling()
-      $q.notify({
-        color: 'orange',
-        textColor: 'white',
-        icon: 'cancel',
-        message: 'Reprocessamento cancelado',
-      })
-      await carregar(route.params.codperiodo)
-    }
+    await sRh.aplicarRubricaMassa(route.params.codperiodo, modelMassa.value.codrubrica)
+    $q.notify({
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
+      message: 'Rubrica aplicada a todos os colaboradores',
+    })
+    await carregar(route.params.codperiodo)
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao aplicar rubrica em massa'),
+    })
+  }
+}
+
+// --- ADICIONAR UNIDADE ---
+
+const dialogUnidade = ref(false)
+
+// --- PDF / RELATÓRIOS (helper compartilhado @components/abrirPdf) ---
+
+const relatorioFolha = () => {
+  abrirPdf(
+    api,
+    'v1/rh/periodo/' + route.params.codperiodo + '/acertos/relatorio-folha',
+    {},
+    { title: 'Relatório Folha' },
+  )
+}
+
+// Empresas (por CNPJ) vindas do resumo — filial do colaborador → empresa.
+const empresasCartao = computed(() =>
+  (dash.value.empresascartao || []).map((e) => ({ cod: e.codempresa, nome: e.empresa })),
+)
+
+const baixarPlanilhaCartao = async (empresa) => {
+  try {
+    const ret = await api.get(
+      'v1/rh/periodo/' + route.params.codperiodo + '/acertos/planilha-cartao',
+      { params: { codempresa: empresa.cod }, responseType: 'blob' },
+    )
+    const url = URL.createObjectURL(new Blob([ret.data]))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'cartao-' + empresa.nome.toLowerCase() + '-' + route.params.codperiodo + '.xlsx'
+    a.click()
+    URL.revokeObjectURL(url)
   } catch {
-    pararPolling()
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: 'Erro ao gerar planilha ' + empresa.nome,
+    })
   }
-}
-
-const iniciarPolling = () => {
-  reprocessando.value = true
-  progresso.value = { status: 'processando', progresso: 0, mensagem: 'Iniciando...' }
-  pollingTimer = setInterval(verificarProgresso, 3000)
-}
-
-const pararPolling = () => {
-  reprocessando.value = false
-  if (pollingTimer) {
-    clearInterval(pollingTimer)
-    pollingTimer = null
-  }
-}
-
-const reprocessarPeriodo = () => {
-  $q.dialog({
-    title: 'Reprocessar Indicadores',
-    message: 'Reprocessar todas as vendas do período nos indicadores?',
-    options: {
-      type: 'checkbox',
-      model: [],
-      items: [{ label: 'Limpar lançamentos automáticos antes de reprocessar', value: 'limpar' }],
-    },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Reprocessar', color: 'primary', flat: true },
-  }).onOk(async (opcoes) => {
-    try {
-      await sRh.reprocessarPeriodo(route.params.codperiodo, opcoes.includes('limpar'))
-      iniciarPolling()
-    } catch (error) {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: extrairErro(error, 'Erro ao iniciar reprocessamento'),
-      })
-    }
-  })
-}
-
-const cancelarReprocessamento = () => {
-  $q.dialog({
-    title: 'Cancelar Reprocessamento',
-    message: 'Tem certeza que deseja cancelar o reprocessamento em andamento?',
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Confirmar', color: 'primary', flat: true },
-  }).onOk(async () => {
-    try {
-      await sRh.cancelarReprocessamento(route.params.codperiodo)
-    } catch (error) {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: extrairErro(error, 'Erro ao cancelar'),
-      })
-    }
-  })
 }
 
 // --- LIFECYCLE ---
@@ -398,8 +387,7 @@ const carregar = async (codperiodo) => {
   loading.value = true
   try {
     await Promise.all([
-      sRh.getDashboard(codperiodo),
-      sRh.getColaboradores(codperiodo),
+      sRh.getResumo(codperiodo),
       sFeriado.listagem.length === 0 ? sFeriado.getListagem() : Promise.resolve(),
     ])
   } catch (error) {
@@ -415,21 +403,8 @@ const carregar = async (codperiodo) => {
 }
 
 onMounted(async () => {
-  carregar(route.params.codperiodo)
-  // Verificar se já há reprocessamento em andamento
-  try {
-    const data = await sRh.progressoReprocessamento(route.params.codperiodo)
-    if (data.status === 'processando') {
-      iniciarPolling()
-      progresso.value = data
-    }
-  } catch {
-    // ignora
-  }
-})
-
-onUnmounted(() => {
-  pararPolling()
+  await carregar(route.params.codperiodo)
+  await checarEmAndamento()
 })
 
 watch(
@@ -437,78 +412,25 @@ watch(
   async (novoId) => {
     if (!novoId || route.name !== 'rhDashboard') return
     pararPolling()
-    progresso.value = null
+    tab.value = 'resumo'
     await carregar(novoId)
-    // Recarregar dados da aba ativa
-    if (tab.value === 'indicadores') {
-      loadingIndicadores.value = true
-      try {
-        await sRh.getIndicadores(novoId)
-        indicadoresCarregados.value = true
-      } finally {
-        loadingIndicadores.value = false
-      }
-    }
-    try {
-      const data = await sRh.progressoReprocessamento(novoId)
-      if (data.status === 'processando') {
-        iniciarPolling()
-        progresso.value = data
-      }
-    } catch {
-      // ignora
-    }
+    await checarEmAndamento()
   },
 )
 
-watch(
-  () => route.query.tab,
-  (newTab) => {
-    if (newTab) tab.value = newTab
-  },
-)
-
-watch(
-  tab,
-  async (newTab) => {
-    if (route.query.tab !== newTab) {
-      router.replace({ query: { ...route.query, tab: newTab } })
-    }
-    const codperiodo = route.params.codperiodo
-    if (!codperiodo) return
-    try {
-      if (newTab === 'resumo') {
-        await sRh.getDashboard(codperiodo)
-      } else if (newTab === 'colaboradores') {
-        await sRh.getColaboradores(codperiodo)
-      } else if (newTab === 'indicadores') {
-        loadingIndicadores.value = true
-        await sRh.getIndicadores(codperiodo)
-        indicadoresCarregados.value = true
-      }
-    } catch (error) {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: extrairErro(error, 'Erro ao carregar dados'),
-      })
-    } finally {
-      if (newTab === 'indicadores') {
-        loadingIndicadores.value = false
-      }
-    }
-  },
-  { immediate: true },
-)
+watch(tab, (novoTab) => {
+  if (route.query.tab !== novoTab) {
+    router.replace({ query: { ...route.query, tab: novoTab } })
+  }
+})
 </script>
 
 <template>
   <!-- DIALOG EDITAR PERÍODO -->
   <q-dialog v-model="dialogPeriodo">
-    <q-card bordered flat style="width: 400px; max-width: 90vw">
-      <q-form @submit="salvarPeriodo()">
-        <q-card-section class="text-grey-9 text-overline"> EDITAR PERÍODO </q-card-section>
+    <q-card flat style="width: 400px; max-width: 90vw">
+      <q-form @submit.prevent="salvarPeriodo()">
+        <q-card-section class="text-grey-9 text-overline">EDITAR PERÍODO</q-card-section>
 
         <q-separator inset />
 
@@ -561,6 +483,43 @@ watch(
     </q-card>
   </q-dialog>
 
+  <!-- DIALOG APLICAR RUBRICA EM MASSA -->
+  <q-dialog v-model="dialogMassa">
+    <q-card flat style="width: 400px; max-width: 90vw">
+      <q-form @submit.prevent="aplicarMassa()">
+        <q-card-section class="text-grey-9 text-overline">APLICAR RUBRICA A TODOS</q-card-section>
+
+        <q-separator inset />
+
+        <q-card-section>
+          <q-select
+            outlined
+            v-model="modelMassa.codrubrica"
+            label="Rubrica do Catálogo"
+            :options="rubricaOptions"
+            map-options
+            emit-value
+            autofocus
+            :rules="[(val) => !!val || 'Obrigatório']"
+          />
+          <div class="text-caption text-grey q-mt-sm">
+            A rubrica será aplicada a todos os colaboradores do período (ex: presenteísmo R$200).
+          </div>
+        </q-card-section>
+
+        <q-separator inset />
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
+          <q-btn flat label="Aplicar" type="submit" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
+
+  <!-- DIALOG UNIDADE (criar/editar) -->
+  <DialogUnidade v-model="dialogUnidade" @salvo="carregar(route.params.codperiodo)" />
+
   <div style="max-width: 1280px; margin: auto">
     <q-inner-loading :showing="loading" />
 
@@ -589,7 +548,6 @@ watch(
             <q-btn
               v-if="periodo.status === 'A'"
               flat
-              dense
               round
               icon="edit"
               size="sm"
@@ -601,7 +559,6 @@ watch(
             <q-btn
               v-if="periodo.status === 'A'"
               flat
-              dense
               round
               icon="lock"
               size="sm"
@@ -614,7 +571,6 @@ watch(
             <q-btn
               v-if="periodo.status === 'F'"
               flat
-              dense
               round
               icon="lock_open"
               size="sm"
@@ -625,7 +581,6 @@ watch(
             </q-btn>
             <q-btn
               flat
-              dense
               round
               icon="content_copy"
               size="sm"
@@ -637,7 +592,6 @@ watch(
             <q-btn
               v-if="periodo.status === 'A'"
               flat
-              dense
               round
               icon="cloud_download"
               size="sm"
@@ -649,7 +603,6 @@ watch(
             <q-btn
               v-if="periodo.status === 'A'"
               flat
-              dense
               round
               icon="sync"
               size="sm"
@@ -661,7 +614,6 @@ watch(
             </q-btn>
             <q-btn
               flat
-              dense
               round
               icon="delete"
               size="sm"
@@ -677,7 +629,7 @@ watch(
 
       <div class="q-pa-md">
         <!-- CARDS RESUMO -->
-        <div class="row q-col-gutter-md q-mb-md q-mt-sm items-stretch">
+        <div class="row q-col-gutter-md q-mb-md items-stretch">
           <div class="col-xs-4 col-sm">
             <q-card
               bordered
@@ -695,7 +647,6 @@ watch(
                   <q-btn
                     v-if="podeEditar && periodo.status === 'A'"
                     flat
-                    dense
                     round
                     icon="edit"
                     size="xs"
@@ -714,7 +665,6 @@ watch(
                   <q-input
                     v-model.number="modelDiasUteis"
                     type="number"
-                    dense
                     outlined
                     style="max-width: 70px"
                     input-class="text-center"
@@ -722,7 +672,6 @@ watch(
                   />
                   <q-btn
                     flat
-                    dense
                     round
                     icon="done"
                     size="sm"
@@ -731,7 +680,6 @@ watch(
                   />
                   <q-btn
                     flat
-                    dense
                     round
                     icon="close"
                     size="sm"
@@ -742,7 +690,6 @@ watch(
                 <q-btn
                   v-if="diasUteisBanco !== diasUteisCalculados"
                   flat
-                  dense
                   size="xs"
                   :label="'Usar calculado (' + diasUteisCalculados + ')'"
                   color="primary"
@@ -762,9 +709,7 @@ watch(
                   Feriados
                   <q-icon v-if="feriadosDoPeriodo.length > 0" name="info_outline" size="14px" />
                 </div>
-                <div class="text-h5 text-grey-9">
-                  {{ feriadosDoPeriodo.length }}
-                </div>
+                <div class="text-h5 text-grey-9">{{ feriadosDoPeriodo.length }}</div>
                 <q-tooltip v-if="feriadosDoPeriodo.length > 0">
                   <div v-for="f in feriadosDoPeriodo" :key="f.codferiado">
                     {{ formataData(f.data, 0) }} — {{ f.feriado }}
@@ -793,9 +738,7 @@ watch(
             <q-card bordered flat class="full-height">
               <q-card-section class="text-center">
                 <div class="text-caption text-grey">Encerrados</div>
-                <div class="text-h5 text-grey-9">
-                  {{ colaboradoresEncerrados }}
-                </div>
+                <div class="text-h5 text-grey-9">{{ colaboradoresEncerrados }}</div>
               </q-card-section>
             </q-card>
           </div>
@@ -806,9 +749,7 @@ watch(
                   Custo Total
                   <q-icon name="info_outline" size="14px" />
                 </div>
-                <div class="text-h5 text-grey-9">
-                  {{ formataNumero(custoTotal) }}
-                </div>
+                <div class="text-h5 text-grey-9">{{ formataNumero(custoTotal) }}</div>
                 <q-tooltip>
                   <div>Salários: {{ formataNumero(totalSalario) }}</div>
                   <div>Adicional: {{ formataNumero(totalAdicional) }}</div>
@@ -820,6 +761,36 @@ watch(
           </div>
         </div>
 
+        <!-- TOOLBAR DE AÇÕES DO PERÍODO -->
+        <div class="row items-center q-gutter-sm q-mb-md" v-if="podeEditar">
+          <q-btn
+            flat
+            icon="group_add"
+            label="Aplicar Rubrica a Todos"
+            color="primary"
+            @click="abrirMassa()"
+          >
+            <q-tooltip>Aplicar uma rubrica do catálogo a todos (ex: presenteísmo R$200)</q-tooltip>
+          </q-btn>
+          <q-space />
+          <q-btn
+            flat
+            icon="description"
+            label="Relatório Folha"
+            color="grey-7"
+            @click="relatorioFolha()"
+          />
+          <q-btn
+            v-for="e in empresasCartao"
+            :key="e.cod"
+            flat
+            icon="credit_card"
+            :label="'Cartão ' + e.nome"
+            color="grey-7"
+            @click="baixarPlanilhaCartao(e)"
+          />
+        </div>
+
         <!-- BARRA DE REPROCESSAMENTO -->
         <q-card bordered flat class="q-mb-md" v-if="reprocessando && progresso">
           <q-card-section class="q-py-sm">
@@ -829,7 +800,6 @@ watch(
               <q-space />
               <q-btn
                 flat
-                dense
                 round
                 icon="cancel"
                 size="sm"
@@ -851,37 +821,62 @@ watch(
           </q-card-section>
         </q-card>
 
-        <!-- TABS -->
-        <q-tabs
-          v-model="tab"
-          align="left"
-          active-color="primary"
-          indicator-color="primary"
-          class="text-grey-7"
-        >
-          <q-tab name="resumo" label="Resumo" />
-          <q-tab name="indicadores" label="Indicadores" />
-          <q-tab name="colaboradores" label="Colaboradores" />
-          <q-tab name="acertos" label="Acertos" />
-        </q-tabs>
+        <!-- TABS: RESUMÃO + UMA POR UNIDADE (+ adicionar unidade) -->
+        <div class="row items-center no-wrap">
+          <q-tabs
+            v-model="tab"
+            align="left"
+            active-color="primary"
+            indicator-color="primary"
+            class="col text-grey-7"
+            no-caps
+          >
+            <q-tab name="resumo" label="Resumão" />
+            <q-tab
+              v-for="u in unidadeTabs"
+              :key="u.codunidadenegocio"
+              :name="'un-' + u.codunidadenegocio"
+            >
+              <div class="row items-center no-wrap" :class="u.inativo ? 'text-grey-5' : ''">
+                <span>{{ u.descricao }}</span>
+                <q-icon v-if="u.inativo" name="pause" size="xs" class="q-ml-xs" />
+              </div>
+            </q-tab>
+          </q-tabs>
+          <q-btn
+            v-if="podeEditar"
+            flat
+            round
+            icon="add"
+            size="sm"
+            color="primary"
+            @click="dialogUnidade = true"
+          >
+            <q-tooltip>Adicionar unidade</q-tooltip>
+          </q-btn>
+        </div>
         <q-separator />
 
         <q-tab-panels v-model="tab" animated class="bg-grey-2">
           <q-tab-panel name="resumo" class="q-pa-none q-mt-md">
-            <Dashboard />
+            <CockpitResumo />
           </q-tab-panel>
 
-          <q-tab-panel name="colaboradores" class="q-pa-none q-mt-md">
-            <Colaboradores />
-          </q-tab-panel>
-
-          <q-tab-panel name="indicadores" class="q-pa-none q-mt-md">
-            <q-inner-loading :showing="loadingIndicadores" />
-            <Indicadores v-if="indicadoresCarregados" />
-          </q-tab-panel>
-
-          <q-tab-panel name="acertos" class="q-pa-none q-mt-md">
-            <Acertos />
+          <q-tab-panel
+            v-for="u in unidadeTabs"
+            :key="u.codunidadenegocio"
+            :name="'un-' + u.codunidadenegocio"
+            class="q-pa-none q-mt-md"
+          >
+            <CockpitUnidade
+              :codperiodo="route.params.codperiodo"
+              :codunidade="u.codunidadenegocio"
+              :descricao="u.descricao"
+              :unidade="u"
+              :podeEditar="podeEditar"
+              :periodoStatus="periodo.status"
+              @atualizado="carregar(route.params.codperiodo)"
+            />
           </q-tab-panel>
         </q-tab-panels>
       </div>

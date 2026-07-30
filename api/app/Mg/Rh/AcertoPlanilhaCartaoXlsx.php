@@ -6,14 +6,23 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
-class AcertoPlanilhaCartaoXlsx
+class AcertoPlanilhaCartaoXlsx implements RecargaCartaoDriver
 {
+    /**
+     * Implementação "planilha" do RecargaCartaoDriver — devolve os bytes do
+     * .xlsx CPF|Valor. Delega para o gerador estático abaixo (mantido para
+     * compatibilidade com AcertoController@planilhaCartao).
+     */
+    public function gerarRecarga(int $codperiodo, int $codempresa): string
+    {
+        return static::gerar($codperiodo, $codempresa);
+    }
+
     /**
      * Gera a planilha (XLSX) de reposição de saldo do cartão-benefício de UMA empresa mãe.
      *
-     * Valor = acerto REAL efetivado (portador Caixa) — idêntico à seção "Caixa Financeiro"
-     * do Relatório Folha. Fonte compartilhada com a prévia via
-     * AcertoRelatorioFolhaPdf::linhasCaixaFinanceiro().
+     * Valor = eventos de acerto com forma "Recarga Bee" (B) do período. Fonte
+     * compartilhada com a prévia via AcertoRelatorioFolhaPdf::linhasRecargaBee().
      *
      * Layout exigido pela operadora: cabeçalho "CPF" | "Valor", CPF com máscara
      * (###.###.###-##) e valor com vírgula decimal (100,00).
@@ -22,7 +31,7 @@ class AcertoPlanilhaCartaoXlsx
      */
     public static function gerar(int $codperiodo, int $codempresa): string
     {
-        $linhas = AcertoRelatorioFolhaPdf::linhasCaixaFinanceiro($codperiodo, $codempresa);
+        $linhas = AcertoRelatorioFolhaPdf::linhasRecargaBee($codperiodo, $codempresa);
 
         \PhpOffice\PhpSpreadsheet\Settings::setLocale('pt_br');
         $spreadsheet = new Spreadsheet();

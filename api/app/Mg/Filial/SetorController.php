@@ -4,7 +4,7 @@ namespace Mg\Filial;
 
 use Carbon\Carbon;
 use Mg\MgController;
-use Mg\Rh\PeriodoColaboradorSetor;
+use Mg\Rh\PeriodoColaborador;
 use Mg\Usuario\Autorizador;
 
 class SetorController extends MgController
@@ -44,7 +44,7 @@ class SetorController extends MgController
 
         $reg = Setor::findOrFail($codsetor);
 
-        $possuiVinculo = PeriodoColaboradorSetor::where('codsetor', $codsetor)->exists();
+        $possuiVinculo = PeriodoColaborador::where('codsetor', $codsetor)->exists();
         if ($possuiVinculo) {
             abort(422, 'Setor vinculado a colaborador não pode ser excluído.');
         }

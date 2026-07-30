@@ -14,16 +14,18 @@ class ColaboradorRubricaStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'codperiodocolaboradorsetor' => 'nullable|integer|exists:tblperiodocolaboradorsetor,codperiodocolaboradorsetor',
+            'codrubrica' => 'nullable|integer|exists:tblrubrica,codrubrica',
             'codindicador' => 'nullable|integer|exists:tblindicador,codindicador',
             'codindicadorcondicao' => 'nullable|integer|exists:tblindicador,codindicador',
             'descricao' => 'required|string|max:200',
-            'tipovalor' => 'required|string|size:1|in:P,F',
+            'observacao' => 'nullable|string',
+            'tipovalor' => 'required|string|size:1|in:P,F,Q',
             'percentual' => 'nullable|numeric',
             'valorfixo' => 'nullable|numeric',
+            'valorunitario' => 'nullable|numeric',
+            'quantidade' => 'nullable|numeric',
             'tipocondicao' => 'nullable|string|size:1|in:M,R',
             'concedido' => 'nullable|boolean',
-            'descontaabsenteismo' => 'nullable|boolean',
             'recorrente' => 'nullable|boolean',
         ];
     }

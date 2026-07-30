@@ -3,43 +3,47 @@
 namespace Mg\Rh;
 
 use Dompdf\Dompdf;
-use Mg\Titulo\LiquidacaoTitulo;
 
 class AcertoReciboPdf
 {
-    public static function gerar(int $codperiodo, array $colaboradores = []): string
+    public static function gerar(int $codperiodo, array $colaboradores = [], ?int $codunidadenegocio = null): string
     {
         ini_set('memory_limit', '256M');
 
-        $query = LiquidacaoTitulo::where('codperiodo', $codperiodo)
-            ->whereNull('estornado')
+        $periodo = Periodo::findOrFail($codperiodo);
+
+        $eventos = PeriodoColaboradorAcerto::whereNull('inativo')
+            ->whereHas('PeriodoColaborador', fn ($q) => $q->where('codperiodo', $codperiodo))
             ->with([
-                'MovimentoTituloS.Titulo.Filial.Pessoa.Cidade.Estado',
-                'MovimentoTituloS.Titulo.PeriodoColaboradorS.ColaboradorRubricaS',
-                'Pessoa.Cidade.Estado',
-                'UsuarioCriacao',
-            ]);
+                'PeriodoColaborador.Colaborador.Pessoa',
+                'PeriodoColaborador.Colaborador.Filial.Pessoa',
+                'PeriodoColaborador.Setor',
+                'MovimentoTituloS.Titulo',
+            ])
+            ->orderBy('data')
+            ->orderBy('codperiodocolaboradoracerto')
+            ->get();
 
         if (!empty($colaboradores)) {
-            $codpessoas = PeriodoColaborador::whereIn('codperiodocolaborador', $colaboradores)
-                ->with('Colaborador')
-                ->get()
-                ->pluck('Colaborador.codpessoa')
-                ->filter()
-                ->toArray();
-            $query->whereIn('codpessoa', $codpessoas);
+            $eventos = $eventos->whereIn('codperiodocolaborador', $colaboradores);
+        }
+        if ($codunidadenegocio) {
+            $eventos = $eventos->filter(
+                fn ($e) => optional(optional($e->PeriodoColaborador)->Setor)->codunidadenegocio == $codunidadenegocio
+            );
         }
 
-        $liquidacoes = $query->get();
-
-        if ($liquidacoes->isEmpty()) {
+        $grupos = $eventos->groupBy('codperiodocolaborador');
+        if ($grupos->isEmpty()) {
             return '';
         }
 
-        $html = view('rh.acerto-recibos', compact('liquidacoes'))->render();
+        $periodoLabel = $periodo->periodoinicial->format('d/m/Y') . ' a ' . $periodo->periodofinal->format('d/m/Y');
+
+        $html = view('rh.acerto-recibos', compact('grupos', 'periodoLabel'))->render();
 
         $dompdf = new Dompdf();
-        $dompdf->loadHtml($html);
+        $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper('A4', 'portrait');
         $dompdf->render();
 
