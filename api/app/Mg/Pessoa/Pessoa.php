@@ -258,6 +258,19 @@ class Pessoa extends MgModel
         return $this->hasMany(Colaborador::class, 'codpessoa', 'codpessoa');
     }
 
+    // Cartoes-beneficio (Bee) de todos os vinculos da pessoa (via colaborador).
+    public function ColaboradorCartaoS()
+    {
+        return $this->hasManyThrough(
+            \Mg\Colaborador\ColaboradorCartao::class,
+            \Mg\Colaborador\Colaborador::class,
+            'codpessoa',       // FK em tblcolaborador -> tblpessoa
+            'codcolaborador',  // FK em tblcolaboradorcartao -> tblcolaborador
+            'codpessoa',       // PK local em tblpessoa
+            'codcolaborador'   // PK local em tblcolaborador
+        );
+    }
+
     public function CupomFiscalS()
     {
         return $this->hasMany(CupomFiscal::class, 'codpessoa', 'codpessoa');

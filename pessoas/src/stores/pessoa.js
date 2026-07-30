@@ -283,7 +283,10 @@ export const pessoaStore = defineStore('pessoa', {
     // codcidade (que e Number) e o objeto ia como param da busca, quebrando /pessoa com 500.
     // Descarta o resto herdado do localStorage. Pode sair depois que os filtros rodarem.
     sanearFiltroPesquisa() {
-      if (this.filtroPesquisa.codcidade !== null && typeof this.filtroPesquisa.codcidade === 'object') {
+      if (
+        this.filtroPesquisa.codcidade !== null &&
+        typeof this.filtroPesquisa.codcidade === 'object'
+      ) {
         this.filtroPesquisa.codcidade = null
       }
     },
@@ -473,6 +476,37 @@ export const pessoaStore = defineStore('pessoa', {
       const ret = await api.delete('v1/pessoa/conta/' + codpessoaconta + '/inativo')
       const i = this.item.PessoaContaS.findIndex((item) => item.codpessoaconta === codpessoaconta)
       this.item.PessoaContaS[i] = ret.data.data
+      return ret
+    },
+
+    // Cartão-benefício (Bee). Relação hasManyThrough → recarrega o item inteiro
+    // (mais simples e consistente que mutar em memória).
+    async cartaoNovo(codpessoa, model) {
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/cartao-beneficio/', model)
+      await this.get(codpessoa)
+      return ret
+    },
+
+    async cartaoSalvar(codpessoa, codcolaboradorcartao, model) {
+      const ret = await api.put(
+        'v1/pessoa/' + codpessoa + '/cartao-beneficio/' + codcolaboradorcartao + '/',
+        model,
+      )
+      await this.get(codpessoa)
+      return ret
+    },
+
+    async cartaoInativar(codcolaboradorcartao, codpessoa) {
+      const ret = await api.post('v1/pessoa/cartao-beneficio/' + codcolaboradorcartao + '/inativo')
+      await this.get(codpessoa)
+      return ret
+    },
+
+    async cartaoAtivar(codcolaboradorcartao, codpessoa) {
+      const ret = await api.delete(
+        'v1/pessoa/cartao-beneficio/' + codcolaboradorcartao + '/inativo',
+      )
+      await this.get(codpessoa)
       return ret
     },
 
