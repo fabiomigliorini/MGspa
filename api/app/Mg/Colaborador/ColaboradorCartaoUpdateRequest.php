@@ -14,10 +14,11 @@ class ColaboradorCartaoUpdateRequest extends FormRequest
     public function rules(): array
     {
         // O vinculo (codcolaborador) nao muda na edicao — o cartao continua no
-        // mesmo colaborador. `numero` so' vem quando o usuario troca (vazio =
-        // mantem o gravado); o front omite a chave nesse caso.
+        // mesmo colaborador. O `numero` e' IMUTAVEL: nunca se sobrescreve o
+        // numero gravado; cartao errado se resolve inativando e cadastrando
+        // outro. Se vier na request, `prohibited` rejeita com 422.
         return [
-            'numero'      => 'sometimes|string|min:13|max:19',
+            'numero'      => 'prohibited',
             'validademes' => 'sometimes|required|integer|between:1,12',
             'validadeano' => 'sometimes|required|integer|between:0,99',
             'email'       => 'nullable|email|max:255',

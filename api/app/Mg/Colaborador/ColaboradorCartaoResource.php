@@ -10,9 +10,11 @@ class ColaboradorCartaoResource extends JsonResource
     {
         $ret = parent::toArray($request);
 
-        // O numero cru (decriptado pelo cast) NUNCA trafega — so' os 4 ultimos
-        // (numero_ultimos4, appendado no model).
+        // O numero cru (decriptado pelo cast) NUNCA trafega: o que sai sob a
+        // chave `numero` e' so' a mascara "1234 **** **** 1234". O model ja'
+        // declara o numero cru como $hidden; o unset e' redundancia barata.
         unset($ret['numero']);
+        $ret['numero'] = $this->numero_mascarado;
 
         // Vinculo: empresa/filial a que o cartao pertence + situacao do vinculo.
         $ret['colaborador'] = [

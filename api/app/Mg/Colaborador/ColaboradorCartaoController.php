@@ -44,12 +44,10 @@ class ColaboradorCartaoController extends Controller
 
         $dados = $request->validated();
 
-        // numero vazio/ausente = mantem o gravado (o front so' envia se trocar).
-        if (array_key_exists('numero', $dados) && filled($dados['numero'])) {
-            $this->assertNumeroInedito($reg->codcolaborador, $dados['numero'], $reg->codcolaboradorcartao);
-        } else {
-            unset($dados['numero']);
-        }
+        // O numero do cartao e' IMUTAVEL — nunca se sobrescreve o gravado. O
+        // UpdateRequest ja' rejeita a chave (`prohibited`); o unset aqui e' o
+        // segundo cinto, pra edicao NENHUMA conseguir trocar o numero.
+        unset($dados['numero']);
 
         $reg->update($dados);
 
@@ -93,16 +91,14 @@ class ColaboradorCartaoController extends Controller
 
     // numero e' `encrypted` (IV aleatorio => ciphertext muda a cada save), entao
     // nao da' pra checar duplicidade em SQL: decripta os poucos cartoes ativos
-    // do colaborador e compara os digitos em PHP.
-    private function assertNumeroInedito(int $codcolaborador, string $numero, ?int $ignorar = null): void
+    // do colaborador e compara os digitos em PHP. So' o create chama — na
+    // edicao o numero nao muda, entao nao ha' o que conferir.
+    private function assertNumeroInedito(int $codcolaborador, string $numero): void
     {
         $digitos = preg_replace('/\D/', '', $numero);
 
         $query = ColaboradorCartao::where('codcolaborador', $codcolaborador)
             ->whereNull('inativo');
-        if ($ignorar !== null) {
-            $query->where('codcolaboradorcartao', '<>', $ignorar);
-        }
 
         foreach ($query->get() as $cartao) {
             if (preg_replace('/\D/', '', (string) $cartao->numero) === $digitos) {

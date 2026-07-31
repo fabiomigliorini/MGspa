@@ -63,16 +63,16 @@ const abrirNovo = () => {
   dialogCartao.value = true
 }
 
+// O número do cartão NÃO entra no model da edição: é imutável (o back rejeita
+// a chave). Número errado se resolve inativando o cartão e cadastrando outro.
 const abrirEditar = (cartao) => {
   isNovo.value = false
   codcolaboradorcartao.value = cartao.codcolaboradorcartao
   modelCartao.value = {
-    numero: '', // vazio = mantém o número gravado
     validade:
       String(cartao.validademes).padStart(2, '0') + String(cartao.validadeano).padStart(2, '0'),
     email: cartao.email || emailPerfil.value,
     observacao: cartao.observacao || '',
-    ultimos4: cartao.numero_ultimos4,
   }
   dialogCartao.value = true
 }
@@ -88,8 +88,8 @@ const submit = async () => {
       email: modelCartao.value.email || null,
       observacao: modelCartao.value.observacao || null,
     }
-    // número só vai quando preenchido (vazio no editar = mantém o gravado).
-    if (modelCartao.value.numero) payload.numero = modelCartao.value.numero
+    // número só existe no cadastro — o PUT nunca leva `numero`.
+    if (isNovo.value && modelCartao.value.numero) payload.numero = modelCartao.value.numero
 
     if (isNovo.value) {
       payload.codcolaborador = modelCartao.value.codcolaborador
@@ -159,7 +159,8 @@ const ativar = async (cod) => {
 
         <q-card-section>
           <div class="row q-col-gutter-md">
-            <div class="col-12">
+            <!-- Número só no cadastro: é imutável, não se edita nunca. -->
+            <div class="col-12" v-if="isNovo">
               <q-input
                 outlined
                 autofocus
@@ -167,15 +168,14 @@ const ativar = async (cod) => {
                 label="Número do cartão"
                 mask="#### #### #### ####"
                 unmasked-value
-                :placeholder="isNovo ? '' : `•••• ${modelCartao.ultimos4}`"
-                :hint="isNovo ? null : 'Deixe em branco para manter o número atual'"
-                :rules="isNovo ? [(v) => !!v && v.length >= 13] : [(v) => !v || v.length >= 13]"
+                :rules="[(v) => !!v && v.length >= 13]"
               />
             </div>
 
             <div class="col-4">
               <q-input
                 outlined
+                :autofocus="!isNovo"
                 v-model="modelCartao.validade"
                 label="Validade"
                 mask="##/##"
@@ -266,7 +266,7 @@ const ativar = async (cod) => {
 
           <q-item-section>
             <q-item-label :class="element.inativo ? 'text-strike' : null">
-              •••• {{ element.numero_ultimos4 }}
+              {{ element.numero }}
               <MgInfoCriacao :registro="element" />
             </q-item-label>
             <q-item-label caption> Validade {{ element.validade }} </q-item-label>
