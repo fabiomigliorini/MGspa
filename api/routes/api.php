@@ -336,6 +336,13 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'inativar']);
     Route::delete('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'ativar']);
 
+    // ColaboradorCartao (cartao-beneficio Bee, nested em pessoa; dados sensiveis, so' RH)
+    Route::get('pessoa/{codpessoa}/cartao-beneficio/', [\Mg\Colaborador\ColaboradorCartaoController::class, 'index']);
+    Route::post('pessoa/{codpessoa}/cartao-beneficio/', [\Mg\Colaborador\ColaboradorCartaoController::class, 'create']);
+    Route::put('pessoa/{codpessoa}/cartao-beneficio/{codcolaboradorcartao}/', [\Mg\Colaborador\ColaboradorCartaoController::class, 'update']);
+    Route::post('pessoa/cartao-beneficio/{codcolaboradorcartao}/inativo', [\Mg\Colaborador\ColaboradorCartaoController::class, 'inativar']);
+    Route::delete('pessoa/cartao-beneficio/{codcolaboradorcartao}/inativo', [\Mg\Colaborador\ColaboradorCartaoController::class, 'ativar']);
+
     // Tributacao + TributacaoRegra + Tributo (migrado em 23/05/2026)
     Route::apiResource('tributacao/tributo', \Mg\Tributacao\TributoController::class)->parameters(['tributo' => 'tributo']);
     Route::apiResource('tributacao/regra', \Mg\Tributacao\TributacaoRegraController::class)->parameters(['regra' => 'regra']);
@@ -1302,6 +1309,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             Route::get('/', '\Mg\Rh\AcertoController@index');
             Route::get('/recibos', '\Mg\Rh\AcertoController@recibos');
             Route::get('/{codperiodocolaborador}/recibos', '\Mg\Rh\AcertoController@recibosColaborador');
+            Route::get('/{codperiodocolaboradoracerto}/recibo', '\Mg\Rh\AcertoController@reciboAcerto');
             Route::get('/relatorio-folha', '\Mg\Rh\AcertoController@relatorioFolha');
             Route::get('/planilha-cartao', '\Mg\Rh\AcertoController@planilhaCartao');
             Route::get('/{codperiodocolaborador}/titulos', '\Mg\Rh\AcertoController@titulos');

@@ -132,6 +132,25 @@ class AcertoController extends Controller
         ]);
     }
 
+    public function reciboAcerto(int $codperiodo, int $codperiodocolaboradoracerto, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $tipo = $request->input('tipo');
+        $tipo = in_array($tipo, ['pagamento', 'recebimento'], true) ? $tipo : null;
+
+        $pdf = AcertoReciboPdf::gerarPorAcerto($codperiodocolaboradoracerto, $tipo);
+
+        if ($pdf === '') {
+            abort(404, 'Acerto inativo ou nao encontrado.');
+        }
+
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="recibo.pdf"',
+        ]);
+    }
+
     public function relatorioFolha(int $codperiodo)
     {
         Autorizador::autoriza(['Recursos Humanos']);

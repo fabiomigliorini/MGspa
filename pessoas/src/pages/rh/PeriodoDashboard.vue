@@ -353,6 +353,16 @@ const relatorioFolha = () => {
   )
 }
 
+// Todos os recibos de todos os colaboradores do período.
+const imprimirRecibosPeriodo = () => {
+  abrirPdf(
+    api,
+    'v1/rh/periodo/' + route.params.codperiodo + '/acertos/recibos',
+    {},
+    { title: 'Recibos do período' },
+  )
+}
+
 // Empresas (por CNPJ) vindas do resumo — filial do colaborador → empresa.
 const empresasCartao = computed(() =>
   (dash.value.empresascartao || []).map((e) => ({ cod: e.codempresa, nome: e.empresa })),
@@ -773,6 +783,9 @@ watch(tab, (novoTab) => {
             <q-tooltip>Aplicar uma rubrica do catálogo a todos (ex: presenteísmo R$200)</q-tooltip>
           </q-btn>
           <q-space />
+          <q-btn flat icon="print" label="Recibos" color="grey-7" @click="imprimirRecibosPeriodo()">
+            <q-tooltip>Todos os recibos de todos os colaboradores do período</q-tooltip>
+          </q-btn>
           <q-btn
             flat
             icon="description"

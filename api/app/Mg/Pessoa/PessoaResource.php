@@ -71,6 +71,13 @@ class PessoaResource extends JsonResource
         $ret['permissaoRH'] = Autorizador::pode(['Recursos Humanos']);
         $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
 
+        // Cartões-benefício (Bee) — dados sensíveis, só para RH.
+        $ret['ColaboradorCartaoS'] = $ret['permissaoRH']
+            ? \Mg\Colaborador\ColaboradorCartaoResource::collection(
+                $this->ColaboradorCartaoS()->orderBy('codcolaboradorcartao', 'desc')->get()
+            )
+            : [];
+
         if (!$ret['permissaoFinanceiro']) {
             unset(
                 $ret['RegistroSpc'],
