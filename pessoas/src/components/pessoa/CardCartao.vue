@@ -1,29 +1,34 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
-import { colaboradorStore } from 'stores/colaborador'
 import { useAuthStore } from 'src/stores'
 import { formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const $q = useQuasar()
 const sPessoa = pessoaStore()
-const sColaborador = colaboradorStore()
 const route = useRoute()
 const user = useAuthStore()
 
+// Espelha PessoaCartao::TIPO_DESCRICAO no backend.
+const tiposCartao = [
+  { value: 'B', label: 'Benefício' },
+  { value: 'C', label: 'Corporativo' },
+]
+
 const filtroCartao = ref('ativos')
 const cartoesFiltrados = computed(() => {
-  const lista = sPessoa.item?.ColaboradorCartaoS || []
+  const lista = sPessoa.item?.PessoaCartaoS || []
   if (filtroCartao.value === 'ativos') return lista.filter((x) => !x.inativo)
   return lista
 })
 
-// O vínculo é sempre exatamente um (garantia do negócio) — o card resolve o
-// colaborador ativo sozinho, sem select. Sem vínculo ativo → add desabilitado.
-const colaboradorAtivo = computed(() => sColaborador.colaboradores.find((c) => !c.rescisao) || null)
+// O titular é a própria pessoa do perfil — colaborador ou filial. O backend
+// resolve as duas coisas em permiteCartao/cartaoTitular, então o card não
+// precisa buscar vínculo nenhum.
+const permiteCartao = computed(() => !!sPessoa.item?.permiteCartao)
 
 // E-mail pessoal do perfil (PessoaEmailS), pulando o genérico nfe@ — pré-preenche
 // o cadastro do cartão (editável). Usado p/ ativação do cartão Bee.
@@ -36,25 +41,14 @@ const emailPerfil = computed(() => {
 const dialogCartao = ref(false)
 const isNovo = ref(true)
 const salvando = ref(false)
-const codcolaboradorcartao = ref(null)
+const codpessoacartao = ref(null)
 const modelCartao = ref({})
-
-// Carrega os vínculos p/ resolver o colaborador ativo (idempotente).
-onMounted(() => {
-  if (route.params.id) sColaborador.getColaboradores(route.params.id)
-})
-watch(
-  () => route.params.id,
-  (id) => {
-    if (id) sColaborador.getColaboradores(id)
-  },
-)
 
 const abrirNovo = () => {
   isNovo.value = true
-  codcolaboradorcartao.value = null
+  codpessoacartao.value = null
   modelCartao.value = {
-    codcolaborador: colaboradorAtivo.value?.codcolaborador,
+    tipo: 'B',
     numero: '',
     validade: '',
     email: emailPerfil.value,
@@ -67,8 +61,9 @@ const abrirNovo = () => {
 // a chave). Número errado se resolve inativando o cartão e cadastrando outro.
 const abrirEditar = (cartao) => {
   isNovo.value = false
-  codcolaboradorcartao.value = cartao.codcolaboradorcartao
+  codpessoacartao.value = cartao.codpessoacartao
   modelCartao.value = {
+    tipo: cartao.tipo,
     validade:
       String(cartao.validademes).padStart(2, '0') + String(cartao.validadeano).padStart(2, '0'),
     email: cartao.email || emailPerfil.value,
@@ -83,6 +78,7 @@ const submit = async () => {
   try {
     const validade = modelCartao.value.validade || ''
     const payload = {
+      tipo: modelCartao.value.tipo,
       validademes: Number(validade.slice(0, 2)),
       validadeano: Number(validade.slice(2, 4)),
       email: modelCartao.value.email || null,
@@ -92,10 +88,9 @@ const submit = async () => {
     if (isNovo.value && modelCartao.value.numero) payload.numero = modelCartao.value.numero
 
     if (isNovo.value) {
-      payload.codcolaborador = modelCartao.value.codcolaborador
       await sPessoa.cartaoNovo(route.params.id, payload)
     } else {
-      await sPessoa.cartaoSalvar(route.params.id, codcolaboradorcartao.value, payload)
+      await sPessoa.cartaoSalvar(route.params.id, codpessoacartao.value, payload)
     }
     $q.notify({
       color: 'green-5',
@@ -159,6 +154,19 @@ const ativar = async (cod) => {
 
         <q-card-section>
           <div class="row q-col-gutter-md">
+            <div class="col-12">
+              <q-select
+                outlined
+                :autofocus="!isNovo"
+                v-model="modelCartao.tipo"
+                :options="tiposCartao"
+                map-options
+                emit-value
+                label="Tipo"
+                :rules="[(v) => !!v || 'Selecione o tipo']"
+              />
+            </div>
+
             <!-- Número só no cadastro: é imutável, não se edita nunca. -->
             <div class="col-12" v-if="isNovo">
               <q-input
@@ -175,7 +183,6 @@ const ativar = async (cod) => {
             <div class="col-4">
               <q-input
                 outlined
-                :autofocus="!isNovo"
                 v-model="modelCartao.validade"
                 label="Validade"
                 mask="##/##"
@@ -226,7 +233,7 @@ const ativar = async (cod) => {
 
   <q-card bordered flat>
     <q-card-section class="text-grey-9 text-overline row items-center">
-      CARTÃO BENEFÍCIO
+      CARTÕES
       <q-space />
       <q-btn-toggle
         v-model="filtroCartao"
@@ -249,15 +256,17 @@ const ativar = async (cod) => {
         size="sm"
         color="primary"
         v-if="user.temPermissao('Recursos Humanos')"
-        :disable="!colaboradorAtivo"
+        :disable="!permiteCartao"
         @click="abrirNovo"
       >
-        <q-tooltip v-if="!colaboradorAtivo">Cadastre o vínculo de colaborador primeiro</q-tooltip>
+        <q-tooltip v-if="!permiteCartao">
+          Cartão só para colaborador ou filial — cadastre o vínculo primeiro
+        </q-tooltip>
       </q-btn>
     </q-card-section>
 
     <q-list v-if="cartoesFiltrados.length > 0">
-      <template v-for="element in cartoesFiltrados" v-bind:key="element.codcolaboradorcartao">
+      <template v-for="element in cartoesFiltrados" v-bind:key="element.codpessoacartao">
         <q-separator inset />
         <q-item>
           <q-item-section avatar>
@@ -267,12 +276,17 @@ const ativar = async (cod) => {
           <q-item-section>
             <q-item-label :class="element.inativo ? 'text-strike' : null">
               {{ element.numero }}
+              <q-badge
+                outline
+                :color="element.tipo === 'C' ? 'deep-purple-6' : 'teal-7'"
+                :label="element.tipo_descricao"
+                class="q-ml-sm"
+              />
               <MgInfoCriacao :registro="element" />
             </q-item-label>
             <q-item-label caption> Validade {{ element.validade }} </q-item-label>
-            <q-item-label caption v-if="element.colaborador?.empresa">
-              {{ element.colaborador.empresa
-              }}<span v-if="element.colaborador?.filial"> · {{ element.colaborador.filial }}</span>
+            <q-item-label caption v-if="sPessoa.item?.cartaoTitular">
+              {{ sPessoa.item.cartaoTitular }}
             </q-item-label>
             <q-item-label caption v-if="element.email">
               {{ element.email }}
@@ -300,7 +314,7 @@ const ativar = async (cod) => {
                 size="sm"
                 color="grey-7"
                 icon="pause"
-                @click="inativar(element.codcolaboradorcartao)"
+                @click="inativar(element.codpessoacartao)"
               >
                 <q-tooltip>Inativar</q-tooltip>
               </q-btn>
@@ -313,7 +327,7 @@ const ativar = async (cod) => {
                 size="sm"
                 color="grey-7"
                 icon="play_arrow"
-                @click="ativar(element.codcolaboradorcartao)"
+                @click="ativar(element.codpessoacartao)"
               >
                 <q-tooltip>Ativar</q-tooltip>
               </q-btn>

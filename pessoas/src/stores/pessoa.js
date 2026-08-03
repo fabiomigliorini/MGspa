@@ -479,33 +479,31 @@ export const pessoaStore = defineStore('pessoa', {
       return ret
     },
 
-    // Cartão-benefício (Bee). Relação hasManyThrough → recarrega o item inteiro
-    // (mais simples e consistente que mutar em memória).
+    // Cartões (Benefício/Corporativo) da pessoa — colaborador ou filial.
+    // Recarrega o item inteiro: a legenda cartaoTitular vem do PessoaResource.
     async cartaoNovo(codpessoa, model) {
-      const ret = await api.post('v1/pessoa/' + codpessoa + '/cartao-beneficio/', model)
+      const ret = await api.post('v1/pessoa/' + codpessoa + '/cartao/', model)
       await this.get(codpessoa)
       return ret
     },
 
-    async cartaoSalvar(codpessoa, codcolaboradorcartao, model) {
+    async cartaoSalvar(codpessoa, codpessoacartao, model) {
       const ret = await api.put(
-        'v1/pessoa/' + codpessoa + '/cartao-beneficio/' + codcolaboradorcartao + '/',
+        'v1/pessoa/' + codpessoa + '/cartao/' + codpessoacartao + '/',
         model,
       )
       await this.get(codpessoa)
       return ret
     },
 
-    async cartaoInativar(codcolaboradorcartao, codpessoa) {
-      const ret = await api.post('v1/pessoa/cartao-beneficio/' + codcolaboradorcartao + '/inativo')
+    async cartaoInativar(codpessoacartao, codpessoa) {
+      const ret = await api.post('v1/pessoa/cartao/' + codpessoacartao + '/inativo')
       await this.get(codpessoa)
       return ret
     },
 
-    async cartaoAtivar(codcolaboradorcartao, codpessoa) {
-      const ret = await api.delete(
-        'v1/pessoa/cartao-beneficio/' + codcolaboradorcartao + '/inativo',
-      )
+    async cartaoAtivar(codpessoacartao, codpessoa) {
+      const ret = await api.delete('v1/pessoa/cartao/' + codpessoacartao + '/inativo')
       await this.get(codpessoa)
       return ret
     },

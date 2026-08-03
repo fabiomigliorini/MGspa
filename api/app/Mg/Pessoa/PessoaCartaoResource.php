@@ -1,10 +1,10 @@
 <?php
 
-namespace Mg\Colaborador;
+namespace Mg\Pessoa;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class ColaboradorCartaoResource extends JsonResource
+class PessoaCartaoResource extends JsonResource
 {
     public function toArray($request): array
     {
@@ -16,13 +16,10 @@ class ColaboradorCartaoResource extends JsonResource
         unset($ret['numero']);
         $ret['numero'] = $this->numero_mascarado;
 
-        // Vinculo: empresa/filial a que o cartao pertence + situacao do vinculo.
-        $ret['colaborador'] = [
-            'codcolaborador' => $this->codcolaborador,
-            'filial' => $this->Colaborador?->Filial?->filial,
-            'empresa' => $this->Colaborador?->Filial?->Empresa?->empresa,
-            'rescisao' => $this->Colaborador?->rescisao,
-        ];
+        // `tipo` e `tipo_descricao` saem sozinhos (o segundo vem do $appends).
+        // A empresa/filial do titular NAO fica aqui: e' dado da pessoa, igual
+        // para todos os cartoes dela — o PessoaResource devolve como
+        // `cartaoTitular`, calculado uma vez so'.
 
         return $ret;
     }

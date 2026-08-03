@@ -336,12 +336,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'inativar']);
     Route::delete('pessoa/conta/{codpessoaconta}/inativo', [\Mg\Pessoa\PessoaContaController::class, 'ativar']);
 
-    // ColaboradorCartao (cartao-beneficio Bee, nested em pessoa; dados sensiveis, so' RH)
-    Route::get('pessoa/{codpessoa}/cartao-beneficio/', [\Mg\Colaborador\ColaboradorCartaoController::class, 'index']);
-    Route::post('pessoa/{codpessoa}/cartao-beneficio/', [\Mg\Colaborador\ColaboradorCartaoController::class, 'create']);
-    Route::put('pessoa/{codpessoa}/cartao-beneficio/{codcolaboradorcartao}/', [\Mg\Colaborador\ColaboradorCartaoController::class, 'update']);
-    Route::post('pessoa/cartao-beneficio/{codcolaboradorcartao}/inativo', [\Mg\Colaborador\ColaboradorCartaoController::class, 'inativar']);
-    Route::delete('pessoa/cartao-beneficio/{codcolaboradorcartao}/inativo', [\Mg\Colaborador\ColaboradorCartaoController::class, 'ativar']);
+    // PessoaCartao (cartao Beneficio/Corporativo de colaborador ou filial; dados sensiveis, so' RH)
+    Route::get('pessoa/{codpessoa}/cartao/', [\Mg\Pessoa\PessoaCartaoController::class, 'index']);
+    Route::post('pessoa/{codpessoa}/cartao/', [\Mg\Pessoa\PessoaCartaoController::class, 'create']);
+    Route::put('pessoa/{codpessoa}/cartao/{codpessoacartao}/', [\Mg\Pessoa\PessoaCartaoController::class, 'update']);
+    Route::post('pessoa/cartao/{codpessoacartao}/inativo', [\Mg\Pessoa\PessoaCartaoController::class, 'inativar']);
+    Route::delete('pessoa/cartao/{codpessoacartao}/inativo', [\Mg\Pessoa\PessoaCartaoController::class, 'ativar']);
 
     // Tributacao + TributacaoRegra + Tributo (migrado em 23/05/2026)
     Route::apiResource('tributacao/tributo', \Mg\Tributacao\TributoController::class)->parameters(['tributo' => 'tributo']);
