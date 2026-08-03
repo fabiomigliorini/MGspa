@@ -6,6 +6,7 @@ import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
 import { formataTimestamp } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgSelectFilial from '@components/MgSelectFilial.vue'
 
 const $q = useQuasar()
 const sPessoa = pessoaStore()
@@ -25,9 +26,9 @@ const cartoesFiltrados = computed(() => {
   return lista
 })
 
-// O titular é a própria pessoa do perfil — colaborador ou filial. O backend
-// resolve as duas coisas em permiteCartao/cartaoTitular, então o card não
-// precisa buscar vínculo nenhum.
+// O titular é a própria pessoa do perfil — colaborador ou filial. Quem diz se
+// ela pode ter cartão é o backend (permiteCartao); a filial DO CARTÃO é outra
+// coisa, escolhida no select do dialog.
 const permiteCartao = computed(() => !!sPessoa.item?.permiteCartao)
 
 // E-mail pessoal do perfil (PessoaEmailS), pulando o genérico nfe@ — pré-preenche
@@ -49,6 +50,7 @@ const abrirNovo = () => {
   codpessoacartao.value = null
   modelCartao.value = {
     tipo: 'B',
+    codfilial: null,
     numero: '',
     validade: '',
     email: emailPerfil.value,
@@ -64,6 +66,7 @@ const abrirEditar = (cartao) => {
   codpessoacartao.value = cartao.codpessoacartao
   modelCartao.value = {
     tipo: cartao.tipo,
+    codfilial: cartao.codfilial,
     validade:
       String(cartao.validademes).padStart(2, '0') + String(cartao.validadeano).padStart(2, '0'),
     email: cartao.email || emailPerfil.value,
@@ -79,6 +82,7 @@ const submit = async () => {
     const validade = modelCartao.value.validade || ''
     const payload = {
       tipo: modelCartao.value.tipo,
+      codfilial: modelCartao.value.codfilial,
       validademes: Number(validade.slice(0, 2)),
       validadeano: Number(validade.slice(2, 4)),
       email: modelCartao.value.email || null,
@@ -164,6 +168,20 @@ const ativar = async (cod) => {
                 emit-value
                 label="Tipo"
                 :rules="[(v) => !!v || 'Selecione o tipo']"
+              />
+            </div>
+
+            <!-- De qual filial/empresa é o cartão. Não precisa ser a do vínculo
+                 da pessoa: é escolha livre do RH, obrigatória nos dois tipos. -->
+            <div class="col-12">
+              <!-- Na edição carrega também as inativas: se a filial do cartão
+                   tiver sido inativada depois, sem isso o select não acharia a
+                   opção e mostraria o código cru no lugar do nome. -->
+              <MgSelectFilial
+                outlined
+                v-model="modelCartao.codfilial"
+                :inativos="!isNovo"
+                :rules="[(v) => !!v || 'Selecione a filial']"
               />
             </div>
 
@@ -285,8 +303,11 @@ const ativar = async (cod) => {
               <MgInfoCriacao :registro="element" />
             </q-item-label>
             <q-item-label caption> Validade {{ element.validade }} </q-item-label>
-            <q-item-label caption v-if="sPessoa.item?.cartaoTitular">
-              {{ sPessoa.item.cartaoTitular }}
+            <!-- No corporativo importa saber de qual loja é o cartão. No
+                 benefício a filial é só registro (o cartão é da pessoa), e a
+                 linha não aparece. -->
+            <q-item-label caption v-if="element.tipo === 'C' && element.filial">
+              {{ element.filial }}
             </q-item-label>
             <q-item-label caption v-if="element.email">
               {{ element.email }}

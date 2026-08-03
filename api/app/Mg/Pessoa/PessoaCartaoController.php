@@ -15,6 +15,7 @@ class PessoaCartaoController extends Controller
         Autorizador::autoriza(['Recursos Humanos']);
 
         $regs = PessoaCartao::where('codpessoa', $codpessoa)
+            ->with('Filial.Empresa')   // o Resource expoe filial/empresa — evita N+1
             ->orderBy('codpessoacartao', 'desc')
             ->get();
 

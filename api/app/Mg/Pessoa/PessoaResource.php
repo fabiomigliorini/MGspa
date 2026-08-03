@@ -72,33 +72,19 @@ class PessoaResource extends JsonResource
         $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
 
         // Cartões (Benefício/Corporativo) — dados sensíveis, só para RH.
+        // Cada cartão traz a própria filial/empresa (eager-load evita N+1).
         $ret['PessoaCartaoS'] = $ret['permissaoRH']
             ? PessoaCartaoResource::collection(
-                $this->PessoaCartaoS()->orderBy('codpessoacartao', 'desc')->get()
+                $this->PessoaCartaoS()->with('Filial.Empresa')
+                    ->orderBy('codpessoacartao', 'desc')->get()
             )
             : [];
 
-        // Titular do cartão: quem pode ter (colaborador ou filial) e a legenda
-        // empresa/filial. Calculado uma vez por pessoa — é igual para todos os
-        // cartões dela, então não se repete dentro de cada PessoaCartaoResource.
-        $colaborador = $this->ColaboradorS()->whereNull('rescisao')->with('Filial.Empresa')->first();
-        $filiais = \Mg\Filial\Filial::where('codpessoa', $this->codpessoa)->whereNull('inativo')
-            ->with('Empresa')->get();
-
-        $ret['permiteCartao'] = $colaborador !== null || $filiais->isNotEmpty();
-        $ret['cartaoTitular'] = null;
-        if ($colaborador) {
-            // O negócio garante um vínculo por pessoa.
-            $ret['cartaoTitular'] = trim(
-                ($colaborador->Filial?->Empresa?->empresa ?? '') . ' · ' . ($colaborador->Filial?->filial ?? ''),
-                ' ·'
-            ) ?: null;
-        } elseif ($filiais->isNotEmpty()) {
-            // Uma pessoa pode responder por mais de uma filial (ex.: codpessoa 1321).
-            $ret['cartaoTitular'] = $filiais
-                ->map(fn ($f) => trim(($f->Empresa?->empresa ?? '') . ' · ' . $f->filial, ' ·'))
-                ->implode(', ');
-        }
+        // Quem pode ter cartão: colaborador ou pessoa de uma filial. Só decide a
+        // exibição do card e o botão de adicionar — a filial DO CARTÃO é escolha
+        // do RH no cadastro, não sai daqui.
+        $ret['permiteCartao'] = $this->ColaboradorS()->exists()
+            || \Mg\Filial\Filial::where('codpessoa', $this->codpessoa)->exists();
 
         if (!$ret['permissaoFinanceiro']) {
             unset(

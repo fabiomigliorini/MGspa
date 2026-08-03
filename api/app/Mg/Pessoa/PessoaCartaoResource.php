@@ -17,9 +17,11 @@ class PessoaCartaoResource extends JsonResource
         $ret['numero'] = $this->numero_mascarado;
 
         // `tipo` e `tipo_descricao` saem sozinhos (o segundo vem do $appends).
-        // A empresa/filial do titular NAO fica aqui: e' dado da pessoa, igual
-        // para todos os cartoes dela — o PessoaResource devolve como
-        // `cartaoTitular`, calculado uma vez so'.
+
+        // Filial/empresa DO CARTAO (nao do vinculo do titular): dois cartoes da
+        // mesma pessoa podem ser de empresas diferentes.
+        $ret['filial'] = $this->Filial?->filial;
+        $ret['empresa'] = $this->Filial?->Empresa?->empresa;
 
         return $ret;
     }
