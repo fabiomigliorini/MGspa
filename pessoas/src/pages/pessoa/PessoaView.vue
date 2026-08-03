@@ -10,7 +10,7 @@ import CardTelefone from 'components/pessoa/CardTelefone.vue'
 import CardEmail from 'components/pessoa/CardEmail.vue'
 import CardEndereco from 'components/pessoa/CardEndereco.vue'
 import CardPessoaConta from 'components/pessoa/CardPessoaConta.vue'
-import CardCartaoBeneficio from 'components/pessoa/CardCartaoBeneficio.vue'
+import CardCartao from 'components/pessoa/CardCartao.vue'
 import CardDependentes from 'components/pessoa/CardDependentes.vue'
 import CardArquivos from 'components/pessoa/CardArquivos.vue'
 import CardRegistroSpc from 'components/pessoa/CardRegistroSpc.vue'
@@ -116,9 +116,9 @@ watch(
                   <card-pessoa-conta />
                 </div>
 
-                <!-- CARTAO BENEFICIO -->
-                <div class="col-12" v-if="sPessoa.item?.permissaoRH">
-                  <card-cartao-beneficio />
+                <!-- CARTOES (beneficio/corporativo) -->
+                <div class="col-12" v-if="sPessoa.item?.permissaoRH && sPessoa.item?.permiteCartao">
+                  <card-cartao />
                 </div>
 
                 <!-- DEPENDENTES -->
