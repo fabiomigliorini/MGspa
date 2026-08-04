@@ -62,16 +62,28 @@
             vertical-align: top;
         }
 
+        /* data + "Pag. x/y" nunca quebram: sobra folga para o nome ao lado */
         .recibo-header .right {
             text-align: right;
+            white-space: nowrap;
+        }
+
+        /* nome do colaborador, entre usuario e data. Pode quebrar em duas linhas no caso
+           extremo (nome longo + usuario longo + "Pag. x/y") em vez de colidir com a data. */
+        .recibo-header .center {
+            text-align: center;
+            padding-left: 8px;
+            padding-right: 8px;
         }
 
         .bold {
             font-weight: bold;
         }
 
+        /* espaco entre a faixa RECIBO/valor e o texto do corpo: enxuto de proposito,
+           e o que permite 8 titulos numa folha (ver .itens-table margin-top) */
         .recibo-faixa {
-            padding: 15px 15px;
+            padding: 2px 6px;
         }
 
         .faixa-table {
@@ -87,7 +99,7 @@
 
         .titulo-recibo,
         .titulo-valor {
-            font-size: 25pt;
+            font-size: 20pt;
             font-weight: bold;
             letter-spacing: 2px;
         }
@@ -101,7 +113,7 @@
         }
 
         .recibo-corpo {
-            padding: 12px 10px 3px 10px;
+            padding: 2px 10px 0px 6px;
             font-size: 10pt;
             line-height: 1.4;
         }
@@ -119,8 +131,8 @@
         .itens-table {
             width: 100%;
             border: 1.5px solid #000;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin-top: 6px;
+            margin-bottom: 15px;
         }
 
         .itens-table th {
@@ -174,7 +186,7 @@
         }
 
         .recibo-rodape {
-            padding: 3px 10px 4px 10px;
+            padding: 3px 10px 3px 10px;
         }
 
         .rodape-data {

@@ -64,15 +64,17 @@
         <tr>
             <td class="recibo-inner">
 
-                {{-- Header: empresa, recibo, usuario, data --}}
+                {{-- Header: empresa, recibo, usuario, pessoa, data --}}
                 <div class="recibo-header">
                     <table>
                         <tr>
-                            <td class="bold">{{ $filialP->fantasia ?? '' }} {{ $filialP->telefone1 ?? '' }}</td>
+                            <td class="bold" colspan="2">{{ $filialP->fantasia ?? '' }}
+                                {{ $filialP->telefone1 ?? '' }}</td>
                             <td class="right">Recibo: {{ formataCodigo($ev->codperiodocolaboradoracerto) }}</td>
                         </tr>
                         <tr>
                             <td>Usuario: {{ $ev->usuariocriacao ?? '—' }}</td>
+                            <td class="center bold">Pessoa: {{ $pessoa->pessoa ?? '—' }}</td>
                             <td class="right">Data: {{ $ev->criacao?->format('d/m/Y H:i:s') }}
                                 @if (count($paginas) > 1)
                                     &nbsp;&nbsp;Pag. {{ $numPagina }}/{{ count($paginas) }}
