@@ -404,8 +404,16 @@ watch(
   async (novoId) => {
     if (!novoId || route.name !== 'rhDashboard') return
     pararPolling()
-    tab.value = 'resumo'
+    // Carrega o resumo do período novo ANTES de decidir a aba — é ele que diz
+    // quais unidades existem lá.
     await carregar(novoId)
+    // Mantém a aba pedida se a unidade existir no período novo; senão, Resumão.
+    const desejada = route.query.tab || 'resumo'
+    tab.value =
+      desejada === 'resumo' ||
+      unidadeTabs.value.some((u) => 'un-' + u.codunidadenegocio === desejada)
+        ? desejada
+        : 'resumo'
     await checarEmAndamento()
   },
 )
@@ -822,7 +830,7 @@ watch(tab, (novoTab) => {
             class="col text-grey-7"
             no-caps
           >
-            <q-tab name="resumo" label="Resumão" />
+            <q-tab name="resumo" label="Resumo" />
             <q-tab
               v-for="u in unidadeTabs"
               :key="u.codunidadenegocio"

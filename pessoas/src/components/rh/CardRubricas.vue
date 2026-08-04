@@ -1,8 +1,17 @@
 <script setup>
-import { tipoIndicadorLabel } from 'src/utils/rhFormatters'
+import { computed } from 'vue'
+import {
+  tipoIndicadorLabel,
+  corProgresso,
+  calcAtingimento,
+  statusColaboradorLabel,
+  statusColaboradorColor,
+} from 'src/utils/rhFormatters'
 import { formataNumero, formataCodigo } from '@components/formatters'
+import MgTabelaValores from '@components/MgTabelaValores.vue'
+import BtnExtratoIndicador from 'src/components/rh/BtnExtratoIndicador.vue'
 
-defineProps({
+const props = defineProps({
   rubricas: { type: Array, default: () => [] },
   valortotal: { type: Number, default: 0 },
   status: { type: String, default: 'A' },
@@ -43,6 +52,61 @@ const rubricaIndicador = (r) => r.indicador || r.indicador_condicao || null
 // Rótulo consolidado da coluna Indicador / Condição.
 const indicadorCondicaoLabel = (r) =>
   r.indicador ? tipoIndicadorLabel(r.indicador.tipo) : condicaoLabel(r)
+
+// Atingimento do indicador que serve de base (ou de condição) da rubrica.
+const atingimentoRubrica = (r) => {
+  const ind = rubricaIndicador(r)
+  return ind ? calcAtingimento(ind.valoracumulado ?? ind.vendas, ind.meta, ind.atingimento) : null
+}
+
+// A coluna Ações só existe quando dá para editar — declarar aqui evita o v-if
+// duplicado em <th> e <td> que desalinhava a tabela.
+const colunas = computed(() => {
+  const cols = [
+    { nome: 'descricao', label: 'Descrição', tipo: 'slot', largura: '24%' },
+    { nome: 'tipovalor', label: 'Tipo', tipo: 'slot', align: 'center', largura: '8%' },
+    { nome: 'valor', label: '%/Valor', tipo: 'slot', align: 'right', largura: '11%' },
+    { nome: 'indicador', label: 'Indicador / Condição', tipo: 'slot', largura: '18%' },
+    {
+      nome: 'atingimento',
+      label: 'Ating.',
+      tipo: 'percentual',
+      largura: '7%',
+      classe: 'text-weight-bold',
+      valor: atingimentoRubrica,
+      cor: corProgresso,
+    },
+    {
+      nome: 'progresso',
+      label: 'Progresso',
+      tipo: 'progresso',
+      largura: '10%',
+      valor: atingimentoRubrica,
+      cor: corProgresso,
+    },
+    {
+      nome: 'valorcalculado',
+      label: 'Calculado',
+      tipo: 'numero',
+      largura: '10%',
+      classe: 'text-weight-bold',
+    },
+  ]
+  if (props.podeEditar) {
+    cols.push({ nome: 'acoes', label: 'Ações', tipo: 'slot', align: 'right', largura: '6%' })
+  }
+  return cols
+})
+
+const rodape = computed(() => [
+  {
+    classe: 'text-weight-bold bg-grey-2',
+    valores: { descricao: 'TOTAL', valorcalculado: props.valortotal },
+  },
+])
+
+// Rubrica não concedida entra apagada — o valor calculado dela é zero.
+const linhaClasse = (r) => (!r.concedido ? 'text-grey-5' : '')
 </script>
 
 <template>
@@ -63,145 +127,120 @@ const indicadorCondicaoLabel = (r) =>
       </q-btn>
     </q-card-section>
 
-    <q-markup-table flat separator="horizontal" v-if="rubricas.length > 0" class="rh-tabela">
-      <thead>
-        <tr class="text-left">
-          <th>Descrição</th>
-          <th class="text-center">Tipo</th>
-          <th class="text-right">%/Valor</th>
-          <th>Indicador / Condição</th>
-          <th class="text-right">Calculado</th>
-          <th class="text-center">Conc.</th>
-          <th class="text-right" v-if="podeEditar">Ações</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="r in rubricas"
-          :key="r.codcolaboradorrubrica"
-          :class="!r.concedido ? 'text-grey-5' : ''"
+    <MgTabelaValores
+      :colunas="colunas"
+      :linhas="rubricas"
+      :rodape="rubricas.length ? rodape : []"
+      chave="codcolaboradorrubrica"
+      :linha-classe="linhaClasse"
+      vazio="Nenhuma rubrica cadastrada."
+    >
+      <template #celula-descricao="{ linha }">
+        {{ rubricaDescricao(linha) }}
+        <q-icon
+          v-if="linha.observacao"
+          name="sticky_note_2"
+          size="xs"
+          color="grey-6"
+          class="q-ml-xs"
         >
-          <td>
-            {{ rubricaDescricao(r) }}
-            <q-icon
-              v-if="r.observacao"
-              name="sticky_note_2"
-              size="xs"
-              color="grey-6"
-              class="q-ml-xs"
-            >
-              <q-tooltip>{{ r.observacao }}</q-tooltip>
-            </q-icon>
-          </td>
-          <td class="text-center">
-            <q-badge :color="tipoValorColor(r.tipovalor)" :label="tipoValorLabel(r.tipovalor)" />
-          </td>
-          <td class="text-right">
-            <template v-if="r.tipovalor === 'P'">{{ r.percentual }}%</template>
-            <template v-else-if="r.tipovalor === 'Q'">
-              {{ formataNumero(r.valorunitario) }} × {{ r.quantidade }}
-            </template>
-            <template v-else>{{ formataNumero(r.valorfixo) }}</template>
-          </td>
-          <td>
-            <div class="row items-center no-wrap">
-              <span>{{ indicadorCondicaoLabel(r) }}</span>
-              <template v-if="rubricaIndicador(r)">
-                <q-btn
-                  flat
-                  round
-                  icon="receipt_long"
-                  size="sm"
-                  color="grey-7"
-                  v-if="codperiodo"
-                  :to="{
-                    name: nomeRotaExtrato,
-                    params: { codperiodo, codindicador: rubricaIndicador(r).codindicador },
-                  }"
-                >
-                  <q-tooltip>Extrato do indicador</q-tooltip>
-                </q-btn>
-                <q-btn
-                  flat
-                  round
-                  icon="edit"
-                  size="sm"
-                  color="grey-7"
-                  @click="emit('editar-meta', rubricaIndicador(r))"
-                  v-if="podeEditar && status === 'A'"
-                >
-                  <q-tooltip>Editar meta</q-tooltip>
-                </q-btn>
-              </template>
-            </div>
-          </td>
-          <td class="text-right text-weight-bold">
-            {{ formataNumero(r.valorcalculado) }}
-          </td>
-          <td class="text-center">
-            <q-toggle
-              v-if="podeEditar && status === 'A'"
-              :model-value="r.concedido"
-              @update:model-value="emit('toggle-concedido', r)"
+          <q-tooltip>{{ linha.observacao }}</q-tooltip>
+        </q-icon>
+      </template>
+
+      <template #celula-tipovalor="{ linha }">
+        <q-badge
+          :color="tipoValorColor(linha.tipovalor)"
+          :label="tipoValorLabel(linha.tipovalor)"
+        />
+      </template>
+
+      <template #celula-valor="{ linha }">
+        <template v-if="linha.tipovalor === 'P'">{{ linha.percentual }}%</template>
+        <template v-else-if="linha.tipovalor === 'Q'">
+          {{ formataNumero(linha.valorunitario) }} × {{ linha.quantidade }}
+        </template>
+        <template v-else>{{ formataNumero(linha.valorfixo) }}</template>
+      </template>
+
+      <template #celula-indicador="{ linha }">
+        <div class="row items-center no-wrap">
+          <span>{{ indicadorCondicaoLabel(linha) }}</span>
+          <template v-if="rubricaIndicador(linha)">
+            <BtnExtratoIndicador
+              v-if="codperiodo"
+              :codperiodo="codperiodo"
+              :codindicador="rubricaIndicador(linha).codindicador"
+              :nome-rota="nomeRotaExtrato"
             />
-            <q-icon
-              v-else
-              :name="r.concedido ? 'check_circle' : 'cancel'"
-              :color="r.concedido ? 'green' : 'red'"
-              size="sm"
-            />
-          </td>
-          <td class="text-right" v-if="podeEditar">
             <q-btn
               flat
               round
+              dense
               icon="edit"
               size="sm"
               color="grey-7"
-              @click="emit('editar', r)"
-              v-if="status === 'A'"
+              @click="emit('editar-meta', rubricaIndicador(linha))"
+              v-if="podeEditar && status === 'A'"
             >
-              <q-tooltip>Editar</q-tooltip>
+              <q-tooltip>Editar meta</q-tooltip>
             </q-btn>
-            <q-btn
-              flat
-              round
-              icon="delete"
-              size="sm"
-              color="grey-7"
-              @click="emit('excluir', r)"
-              v-if="status === 'A'"
-            >
-              <q-tooltip>Excluir</q-tooltip>
-            </q-btn>
-          </td>
-        </tr>
-        <!-- TOTAL -->
-        <tr class="text-weight-bold bg-grey-2">
-          <td colspan="4" class="text-right">TOTAL</td>
-          <td class="text-right">
-            {{ formataNumero(valortotal) }}
-          </td>
-          <td class="text-center">
-            <q-badge
-              :color="status === 'A' ? 'green' : 'blue'"
-              :label="status === 'A' ? 'Aberto' : 'Encerrado'"
-            />
-          </td>
-          <td v-if="podeEditar" class="text-right">
-            <a
-              v-if="codtitulo"
-              :href="linkTitulo"
-              target="_blank"
-              class="text-primary text-caption"
-            >
-              {{ formataCodigo(codtitulo) }}
-              <q-icon name="open_in_new" size="xs" />
-            </a>
-          </td>
-        </tr>
-      </tbody>
-    </q-markup-table>
-    <div v-else class="q-pa-md text-center text-grey">Nenhuma rubrica cadastrada</div>
+          </template>
+        </div>
+      </template>
+
+      <template #celula-concedido="{ linha }">
+        <q-toggle
+          v-if="podeEditar && status === 'A'"
+          :model-value="linha.concedido"
+          @update:model-value="emit('toggle-concedido', linha)"
+        />
+        <q-icon
+          v-else
+          :name="linha.concedido ? 'check_circle' : 'cancel'"
+          :color="linha.concedido ? 'green' : 'red'"
+          size="sm"
+        />
+      </template>
+
+      <template #celula-acoes="{ linha }">
+        <template v-if="status === 'A'">
+          <q-btn
+            flat
+            round
+            dense
+            icon="edit"
+            size="sm"
+            color="grey-7"
+            @click="emit('editar', linha)"
+          >
+            <q-tooltip>Editar</q-tooltip>
+          </q-btn>
+          <q-btn
+            flat
+            round
+            dense
+            icon="delete"
+            size="sm"
+            color="grey-7"
+            @click="emit('excluir', linha)"
+          >
+            <q-tooltip>Excluir</q-tooltip>
+          </q-btn>
+        </template>
+      </template>
+
+      <!-- Status do colaborador e link do título fecham a linha de TOTAL -->
+      <template #rodape-concedido>
+        <q-badge :color="statusColaboradorColor(status)" :label="statusColaboradorLabel(status)" />
+      </template>
+
+      <template #rodape-acoes>
+        <a v-if="codtitulo" :href="linkTitulo" target="_blank" class="text-primary text-caption">
+          {{ formataCodigo(codtitulo) }}
+          <q-icon name="open_in_new" size="xs" />
+        </a>
+      </template>
+    </MgTabelaValores>
   </q-card>
 </template>

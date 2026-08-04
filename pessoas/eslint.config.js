@@ -44,6 +44,11 @@ export default [
       'prefer-promise-reject-errors': 'off',
       'vue/multi-word-component-names': 'off',
 
+      // O compilador de template resolve identificadores em RUNTIME: um nome que
+      // não existe no setup compila, passa no build e só estoura quando a tela
+      // renderiza. Esta regra é o único gate que pega isso antes do navegador.
+      'vue/no-undef-properties': 'error',
+
       // allow debugger during development only
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
     },

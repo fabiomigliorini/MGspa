@@ -111,6 +111,7 @@ import { pessoaStore } from 'src/stores/pessoa'
 import { useAuthStore } from 'src/stores'
 import { useRoute, useRouter } from 'vue-router'
 import { colaboradorStore } from 'src/stores/colaborador'
+import { formataDiaSemana, formataDataAbreviada } from '@components/formatters'
 
 export default {
   components: {
@@ -384,6 +385,9 @@ export default {
       range,
       route,
       router,
+      // Usados no template da coluna de gozo — sem expor aqui, Options API não os enxerga.
+      formataDiaSemana,
+      formataDataAbreviada,
     }
   },
   async mounted() {

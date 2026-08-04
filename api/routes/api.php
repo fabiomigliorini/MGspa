@@ -1273,7 +1273,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
         Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/gestor', '\Mg\Rh\PeriodoColaboradorController@toggleGestor');
         Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorController@atualizarSetor');
-        Route::get('setores', '\Mg\Rh\PeriodoColaboradorController@setores');
 
         // Catalogo de rubricas (tblrubrica)
         Route::get('rubrica', '\Mg\Rh\RubricaController@index');

@@ -479,6 +479,9 @@ export default {
       cliente: true,
     })
     const razaoVazia = ref(false)
+    // Último CNPJ consultado — o watch do step compara com o atual pra não
+    // refazer a busca à toa.
+    const cnpjConsultado = ref(null)
     const cadastrosEncontrados = ref([])
     const sefazCadastro = ref([])
     const receitaWsCadastro = ref([])
@@ -490,6 +493,7 @@ export default {
       user,
       model,
       razaoVazia,
+      cnpjConsultado,
       sPessoa,
       sefazCadastro,
       cadastrosEncontrados,

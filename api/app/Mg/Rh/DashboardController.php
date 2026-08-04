@@ -16,12 +16,9 @@ class DashboardController extends Controller
 
         $periodo = Periodo::findOrFail($codperiodo);
 
-        // Carrega colaboradores com cargo e setores
+        // Carrega colaboradores com setores
         $periodoColaboradores = PeriodoColaborador::where('codperiodo', $codperiodo)
-            ->with([
-                'Colaborador.ColaboradorCargoS.Cargo',
-                'Setor',
-            ])
+            ->with(['Setor'])
             ->get();
 
         $totalColaboradores = $periodoColaboradores->count();
@@ -29,35 +26,9 @@ class DashboardController extends Controller
             ->where('status', PeriodoService::STATUS_COLABORADOR_ENCERRADO)
             ->count();
 
-        // Mapa salário/adicional por colaborador
-        $salarioMap = [];
-        foreach ($periodoColaboradores as $pc) {
-            $colaborador = $pc->Colaborador;
-            if (!$colaborador) {
-                $salarioMap[$pc->codperiodocolaborador] = ['salario' => 0, 'adicional' => 0];
-                continue;
-            }
-
-            // Cargo ativo: sem data fim, mais recente por início
-            $cargos = $colaborador->ColaboradorCargoS->sortByDesc('inicio');
-            $cargoAtivo = $cargos->firstWhere('fim', null) ?? $cargos->first();
-
-            $salario = 0;
-            $adicionalPct = 0;
-
-            if ($cargoAtivo) {
-                // Salário: do ColaboradorCargo, fallback do Cargo
-                $salario = $cargoAtivo->salario ?: ($cargoAtivo->Cargo->salario ?? 0);
-                $adicionalPct = $cargoAtivo->Cargo->adicional ?? 0;
-            }
-
-            $adicionalValor = $salario * $adicionalPct / 100;
-
-            $salarioMap[$pc->codperiodocolaborador] = [
-                'salario' => round($salario, 2),
-                'adicional' => round($adicionalValor, 2),
-            ];
-        }
+        // Salário / adicional / encargos por colaborador — mesma fonte que a aba
+        // da filial e a tela do colaborador usam, para os totais fecharem.
+        $custoMap = CustoColaboradorService::mapaPorPeriodo($codperiodo);
 
         // Indicadores de vendas por unidade
         $indicadoresUnidade = Indicador::where('codperiodo', $codperiodo)
@@ -93,6 +64,7 @@ class DashboardController extends Controller
             $codColabsVistos = [];
             $totalSalarioUnidade = 0;
             $totalAdicionalUnidade = 0;
+            $totalEncargosUnidade = 0;
             $totalVarUnidade = 0;
 
             foreach ($periodoColaboradores as $pc) {
@@ -102,14 +74,16 @@ class DashboardController extends Controller
                 if (in_array($pc->codperiodocolaborador, $codColabsVistos)) continue;
                 $codColabsVistos[] = $pc->codperiodocolaborador;
 
-                $info = $salarioMap[$pc->codperiodocolaborador] ?? ['salario' => 0, 'adicional' => 0];
-                $totalSalarioUnidade += $info['salario'];
-                $totalAdicionalUnidade += $info['adicional'];
+                $custo = $custoMap[$pc->codperiodocolaborador] ?? null;
+                $totalSalarioUnidade += $custo['salario'] ?? 0;
+                $totalAdicionalUnidade += $custo['adicional'] ?? 0;
+                // Encargos já vêm arredondados por colaborador: o agregado é soma
+                // pura, para bater com o subtotal por setor da aba da filial.
+                $totalEncargosUnidade += $custo['encargos'] ?? 0;
                 $totalVarUnidade += $pc->valortotal ?? 0;
             }
 
-            $baseEncargos = $totalSalarioUnidade + $totalAdicionalUnidade;
-            $totalEncargosUnidade = round($baseEncargos * $fatorEncargos, 2);
+            $totalEncargosUnidade = round($totalEncargosUnidade, 2);
 
             $indicadorUnidade = $indicadoresUnidade->firstWhere('codunidadenegocio', $un->codunidadenegocio);
 
@@ -210,6 +184,10 @@ class DashboardController extends Controller
             ])
             ->get();
 
+        // Mesmo mapa de custo do Resumão — é o que faz o total desta aba ser
+        // idêntico à linha desta unidade lá.
+        $custoMap = CustoColaboradorService::mapaPorPeriodo($codperiodo, $codunidade);
+
         // Setores ATIVOS da unidade + os inativos que tiveram colaboradores no período
         // (mantém o histórico ao visualizar períodos passados).
         $codsetoresComColab = $colaboradores->pluck('codsetor')->filter()->unique()->values()->all();
@@ -222,7 +200,7 @@ class DashboardController extends Controller
             ->orderBy('setor')
             ->get();
 
-        $setoresOut = $setores->map(function ($setor) use ($indicadores, $colaboradores) {
+        $setoresOut = $setores->map(function ($setor) use ($indicadores, $colaboradores, $custoMap) {
             $indSetor = $indicadores->where('codsetor', $setor->codsetor);
             $colabSetor = $colaboradores->where('codsetor', $setor->codsetor);
 
@@ -249,9 +227,13 @@ class DashboardController extends Controller
                     'atingimento' => $i->meta ? round($i->valoracumulado / $i->meta * 100, 2) : null,
                     'lancamentos_count' => $i->indicador_lancamento_s_count,
                 ])->values(),
-                'colaboradores' => $colabSetor->map(function ($pc) use ($indicadores) {
+                'totais' => static::somaCusto($colabSetor, $custoMap),
+                'colaboradores' => $colabSetor->map(function ($pc) use ($indicadores, $custoMap) {
                     $cargos = $pc->Colaborador?->ColaboradorCargoS?->sortByDesc('inicio');
                     $cargoAtivo = $cargos?->firstWhere('fim', null) ?? $cargos?->first();
+
+                    $custo = $custoMap[$pc->codperiodocolaborador] ?? null;
+                    $variaveis = (float) ($pc->valortotal ?? 0);
 
                     // Só os indicadores que este colaborador TEM RUBRICA amarrada
                     // (via codindicador ou codindicadorcondicao das ColaboradorRubricaS).
@@ -273,7 +255,11 @@ class DashboardController extends Controller
                         'cargo' => $cargoAtivo?->Cargo?->cargo,
                         'gestor' => $pc->gestor,
                         'status' => $pc->status,
-                        'variaveis' => $pc->valortotal,
+                        'variaveis' => $variaveis,
+                        'salario' => $custo['salario'] ?? 0,
+                        'adicional' => $custo['adicional'] ?? 0,
+                        'encargos' => $custo['encargos'] ?? 0,
+                        'total' => round(($custo['custo'] ?? 0) + $variaveis, 2),
                         'encerramento' => $pc->encerramento,
                         'codtitulo' => $pc->codtitulo,
                         'indicadores' => $indsColab->map(fn($i) => [
@@ -295,11 +281,43 @@ class DashboardController extends Controller
             'descricao' => $unidade->descricao,
             'vendas' => $indUnidade?->valoracumulado ?? 0,
             'meta' => $indUnidade?->meta,
+            // Habilita o extrato na linha de total da aba, igual ao Resumão.
+            'codindicador' => $indUnidade?->codindicador,
             'atingimento' => $indUnidade && $indUnidade->meta
                 ? round($indUnidade->valoracumulado / $indUnidade->meta * 100, 2)
                 : null,
+            'totais' => static::somaCusto($colaboradores, $custoMap),
             'setores' => $setoresOut->values(),
         ]);
+    }
+
+    /**
+     * Soma o custo de uma coleção de PeriodoColaborador. Todas as parcelas já
+     * vêm arredondadas do CustoColaboradorService, então somar é exato — é o
+     * que faz setor, unidade e Resumão fecharem entre si.
+     */
+    protected static function somaCusto($periodoColaboradores, array $custoMap): array
+    {
+        $salario = 0;
+        $adicional = 0;
+        $encargos = 0;
+        $variaveis = 0;
+
+        foreach ($periodoColaboradores as $pc) {
+            $custo = $custoMap[$pc->codperiodocolaborador] ?? null;
+            $salario += $custo['salario'] ?? 0;
+            $adicional += $custo['adicional'] ?? 0;
+            $encargos += $custo['encargos'] ?? 0;
+            $variaveis += $pc->valortotal ?? 0;
+        }
+
+        return [
+            'salario' => round($salario, 2),
+            'adicional' => round($adicional, 2),
+            'encargos' => round($encargos, 2),
+            'variaveis' => round($variaveis, 2),
+            'total' => round($salario + $adicional + $encargos + $variaveis, 2),
+        ];
     }
 
     protected static function gerarAlertas(int $codperiodo): array
