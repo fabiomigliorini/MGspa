@@ -5,6 +5,8 @@ namespace Mg\Rh;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
 class RubricaController extends Controller
@@ -40,7 +42,24 @@ class RubricaController extends Controller
         Autorizador::autoriza(['Recursos Humanos']);
 
         $reg = Rubrica::findOrFail($codrubrica);
-        $reg->update($request->validated());
+        $descricaoAnterior = $reg->descricao;
+
+        DB::transaction(function () use ($reg, $request, $descricaoAnterior, $codrubrica) {
+            $reg->update($request->validated());
+
+            // tblcolaboradorrubrica.descricao e denormalizada (NOT NULL, unica fonte
+            // para as avulsas, usada em PDFs e como chave ao duplicar periodo). Sem
+            // isso o card do colaborador segue exibindo o nome antigo pra sempre.
+            // Propaga em TODOS os vinculos, inclusive de periodos ja encerrados.
+            // So a descricao propaga: tipovalor/valores sao snapshot ajustado por colaborador.
+            if ($reg->descricao !== $descricaoAnterior) {
+                ColaboradorRubrica::where('codrubrica', $codrubrica)->update([
+                    'descricao' => $reg->descricao,
+                    'alteracao' => Carbon::now(),
+                    'codusuarioalteracao' => Auth::id(),
+                ]);
+            }
+        });
 
         return new RubricaResource($reg->refresh());
     }

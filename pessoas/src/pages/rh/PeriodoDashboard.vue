@@ -15,6 +15,7 @@ import CockpitUnidade from 'src/components/rh/CockpitUnidade.vue'
 import DialogUnidade from 'src/components/rh/DialogUnidade.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelectRubrica from '@components/MgSelectRubrica.vue'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -291,28 +292,9 @@ const {
 const dialogMassa = ref(false)
 const modelMassa = ref({ codrubrica: null })
 
-const rubricaOptions = computed(() =>
-  (sRh.rubricas || [])
-    .filter((r) => !r.inativo)
-    .slice()
-    .sort((a, b) => (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR'))
-    .map((r) => ({ label: r.descricao, value: r.codrubrica })),
-)
-
-const abrirMassa = async () => {
+// O catálogo é carregado pelo próprio MgSelectRubrica (v1/select/rubrica).
+const abrirMassa = () => {
   modelMassa.value = { codrubrica: null }
-  if (sRh.rubricas.length === 0) {
-    try {
-      await sRh.getRubricas()
-    } catch (error) {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: extrairErro(error, 'Erro ao carregar catálogo de rubricas'),
-      })
-    }
-  }
   dialogMassa.value = true
 }
 
@@ -502,13 +484,9 @@ watch(tab, (novoTab) => {
         <q-separator inset />
 
         <q-card-section>
-          <q-select
-            outlined
+          <MgSelectRubrica
             v-model="modelMassa.codrubrica"
             label="Rubrica do Catálogo"
-            :options="rubricaOptions"
-            map-options
-            emit-value
             autofocus
             :rules="[(val) => !!val || 'Obrigatório']"
           />
