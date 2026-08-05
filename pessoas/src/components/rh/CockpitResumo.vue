@@ -30,7 +30,13 @@ const CAMPOS_CUSTO = {
 }
 
 const colunas = [
-  { nome: 'descricao', label: 'Unidade', tipo: 'texto', largura: '14%', classe: 'text-weight-medium' },
+  {
+    nome: 'descricao',
+    label: 'Unidade',
+    tipo: 'texto',
+    largura: '14%',
+    classe: 'text-weight-medium',
+  },
   { nome: 'vendas', label: 'Vendas', tipo: 'numero', largura: '10%' },
   { nome: 'meta', label: 'Meta', tipo: 'numero', largura: '10%' },
   {
@@ -54,14 +60,15 @@ const colunas = [
   { nome: 'totalencargos', label: 'Encargos', tipo: 'numero', largura: '9%' },
   { nome: 'totalvariaveis', label: 'Variáveis', tipo: 'numero', largura: '9%' },
   { nome: 'total', label: 'Total', tipo: 'numero', largura: '9%', classe: 'text-weight-medium' },
-  {
-    nome: 'pctvendas',
-    label: '% Vendas',
-    tipo: 'percentual',
-    largura: '5%',
-    classe: 'text-weight-medium',
-    valor: (u) => (u.pctvendas != null ? parseFloat(u.pctvendas) : calcPctVendas(u.total, u.vendas)),
-  },
+  // {
+  //   nome: 'pctvendas',
+  //   label: '% Vendas',
+  //   tipo: 'percentual',
+  //   largura: '5%',
+  //   classe: 'text-weight-medium',
+  //   valor: (u) =>
+  //     u.pctvendas != null ? parseFloat(u.pctvendas) : calcPctVendas(u.total, u.vendas),
+  // },
 ]
 
 const grupos = computed(() => {
@@ -102,9 +109,7 @@ const grupos = computed(() => {
   return result
 })
 
-const totalVendas = computed(
-  () => somaCampos(unidades.value, { vendas: 'vendas' }).vendas,
-)
+const totalVendas = computed(() => somaCampos(unidades.value, { vendas: 'vendas' }).vendas)
 
 const rodapeGeral = computed(() => [
   {

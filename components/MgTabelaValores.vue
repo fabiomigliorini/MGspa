@@ -1,5 +1,6 @@
 <script setup>
 import { computed, useSlots, watchEffect } from 'vue'
+import { useRouter } from 'vue-router'
 import MgEmptyState from './MgEmptyState.vue'
 import { formataNumero, formataPercentual } from './formatters'
 
@@ -45,6 +46,13 @@ const props = defineProps({
   // Linha clicável: cursor-pointer + emit 'linha-click'.
   clicavel: { type: Boolean, default: false },
 
+  // Destino da linha: rota (objeto/string) ou (linha) => rota.
+  // Com ela a linha vira navegação de verdade — Ctrl/⌘/Shift+clique e botão do
+  // meio abrem em outra aba, como um <a href> faria. Não dá pra embrulhar <tr>
+  // num <a> (HTML inválido), então o destino fica aqui e a nova aba é aberta na
+  // mão. Sem ela, `clicavel` + `linha-click` continuam funcionando igual.
+  linhaTo: { type: [Object, String, Function], default: null },
+
   // false = tabela só de rodapé (linha de total isolada num card).
   cabecalho: { type: Boolean, default: true },
 
@@ -63,6 +71,7 @@ const props = defineProps({
 
 const emit = defineEmits(['linha-click'])
 const slots = useSlots()
+const router = useRouter()
 
 // Slot `celula-x`/`rodape-x` sem coluna `x` é ignorado sem erro nenhum — some da
 // tela em silêncio. Em dev, aponta o dedo.
@@ -145,11 +154,47 @@ const linhasRender = computed(() =>
 
 const vazia = computed(() => props.linhas.length === 0 && props.rodape.length === 0)
 
+const destinoDe = (linha) =>
+  typeof props.linhaTo === 'function' ? props.linhaTo(linha) : props.linhaTo
+
+const linhaInterativa = computed(() => props.clicavel || props.linhaTo != null)
+
+// Mesmas teclas que um <a href> respeita para abrir em outra aba/janela.
+const pediuNovaAba = (ev) => ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button === 1
+
 // Clique em botão/link dentro da linha não navega — dispensa @click.stop no chamador.
+const ignoraAlvo = (ev) => !!ev.target?.closest?.('button, a, input, .q-toggle, .q-checkbox')
+
+const navegar = (ev, linha) => {
+  const to = destinoDe(linha)
+  if (!to) return false
+  if (pediuNovaAba(ev)) {
+    window.open(router.resolve(to).href, '_blank', 'noopener')
+  } else {
+    router.push(to)
+  }
+  return true
+}
+
 const onClickLinha = (ev, linha) => {
-  if (!props.clicavel) return
-  if (ev.target?.closest?.('button, a, input, .q-toggle, .q-checkbox')) return
+  if (!linhaInterativa.value) return
+  if (ignoraAlvo(ev)) return
+  if (navegar(ev, linha)) return
   emit('linha-click', linha)
+}
+
+// O botão do meio não dispara `click` — só `auxclick`. Sem isto, "abrir em nova
+// aba" com a rodinha funcionaria no link do nome e morreria no resto da linha.
+const onAuxClickLinha = (ev, linha) => {
+  if (ev.button !== 1 || props.linhaTo == null) return
+  if (ignoraAlvo(ev)) return
+  navegar(ev, linha)
+}
+
+// Botão do meio em <tr> aciona o autoscroll do navegador — segurar o mousedown
+// evita que o cursor de rolagem apareça junto com a nova aba.
+const onMouseDownLinha = (ev) => {
+  if (ev.button === 1 && props.linhaTo != null && !ignoraAlvo(ev)) ev.preventDefault()
 }
 </script>
 
@@ -181,8 +226,10 @@ const onClickLinha = (ev, linha) => {
         <tr
           v-for="(sub, iSub) in r.subs"
           :key="iSub"
-          :class="[r.classe, clicavel ? 'cursor-pointer' : '']"
+          :class="[r.classe, linhaInterativa ? 'cursor-pointer' : '']"
           @click="onClickLinha($event, r.linha)"
+          @auxclick="onAuxClickLinha($event, r.linha)"
+          @mousedown="onMouseDownLinha($event)"
         >
           <template v-for="col in colunas" :key="col.nome">
             <td

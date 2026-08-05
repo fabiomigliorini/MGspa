@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
 import {
   corProgresso,
@@ -37,7 +36,6 @@ const props = defineProps({
 const emit = defineEmits(['atualizado'])
 
 const $q = useQuasar()
-const router = useRouter()
 const sRh = rhStore()
 
 const loading = ref(false)
@@ -134,6 +132,9 @@ const rodapeFilial = computed(() => {
 // Os individuais (Vendedor/Caixa) aparecem na linha de cada colaborador.
 const indicadoresColetivos = (setor) => (setor.indicadores || []).filter((i) => i.tipo === 'S')
 
+// Destino do colaborador — serve o link do nome E a linha inteira da tabela
+// (`linha-to`), que leva pro detalhe (tela de rubricas). As ações de
+// encerrar/estornar/recalcular ficam só lá.
 // O "voltar" no detalhe deriva a aba da unidade do próprio colaborador (resource).
 const colaboradorTo = (c) => ({
   name: 'rhColaboradorDetalhe',
@@ -284,10 +285,6 @@ const editarMeta = (ind) => {
   dialogMeta.value = true
 }
 
-// Linha inteira leva pro detalhe (tela de rubricas). As ações de
-// encerrar/estornar/recalcular ficam só lá.
-const irParaDetalhe = (c) => router.push(colaboradorTo(c))
-
 onMounted(() => carregar())
 
 // Também observa o período: ficando na mesma aba com o período trocado, a
@@ -375,9 +372,8 @@ watch(
           :rodape="(setor.colaboradores || []).length ? rodapeSetor(setor) : []"
           chave="codperiodocolaborador"
           sub-linhas="indicadores"
-          clicavel
+          :linha-to="colaboradorTo"
           vazio="Nenhum colaborador neste setor."
-          @linha-click="irParaDetalhe"
         >
           <!-- router-link renderiza <a href> de verdade: Ctrl/⌘+clique, botão do
                meio e "abrir em nova aba" passam direto pro navegador, e o clique
