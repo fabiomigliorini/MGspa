@@ -12,33 +12,37 @@ register(process.env.SERVICE_WORKER_FILE, {
   // registrationOptions: { scope: './' },
 
   ready(/* registration */) {
-    // console.log('Service worker is active.')
+    console.log('Service worker is active.')
   },
 
   registered(/* registration */) {
-    // console.log('Service worker has been registered.')
+    console.log('Service worker has been registered.')
   },
 
   cached(/* registration */) {
-    // console.log('Content has been cached for offline use.')
+    console.log('Content has been cached for offline use.')
   },
 
   updatefound(/* registration */) {
-    // console.log('New content is downloading.')
+    console.log('New content is downloading.')
   },
 
   updated(/* registration */) {
     console.log('New content is available; please refresh.')
-    // Avisa o MgUserMenu (banner "Nova versão") — desacoplado via evento de window.
-    window.__pwaNovaVersao = true
-    window.dispatchEvent(new Event('pwa-nova-versao'))
+    // NÃO acende a tarja aqui. O aviso de nova versão é derivado do BUILD_ID do
+    // bundle vs /version.json (ver components/pwaAtualizacao.js). Este callback
+    // dispara em TODO page load enquanto houver um worker em "waiting" — era
+    // exatamente isso que fazia a tarja voltar sem fim. Aqui ele só encurta a
+    // latência de detecção, e é idempotente.
+    window.dispatchEvent(new Event('pwa-sw-atualizado'))
   },
 
   offline() {
-    // console.log('No internet connection found. App is running in offline mode.')
+    console.log('No internet connection found. App is running in offline mode.')
   },
 
-  error(/* err */) {
-    // console.error('Error during service worker registration:', err)
+  error(err) {
+    console.error('Error during service worker registration')
+    console.error('Error during service worker registration:', err)
   },
 })

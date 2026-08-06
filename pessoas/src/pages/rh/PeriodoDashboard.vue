@@ -15,6 +15,7 @@ import CockpitUnidade from 'src/components/rh/CockpitUnidade.vue'
 import DialogUnidade from 'src/components/rh/DialogUnidade.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelectRubrica from '@components/MgSelectRubrica.vue'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -291,28 +292,9 @@ const {
 const dialogMassa = ref(false)
 const modelMassa = ref({ codrubrica: null })
 
-const rubricaOptions = computed(() =>
-  (sRh.rubricas || [])
-    .filter((r) => !r.inativo)
-    .slice()
-    .sort((a, b) => (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR'))
-    .map((r) => ({ label: r.descricao, value: r.codrubrica })),
-)
-
-const abrirMassa = async () => {
+// O catálogo é carregado pelo próprio MgSelectRubrica (v1/select/rubrica).
+const abrirMassa = () => {
   modelMassa.value = { codrubrica: null }
-  if (sRh.rubricas.length === 0) {
-    try {
-      await sRh.getRubricas()
-    } catch (error) {
-      $q.notify({
-        color: 'red-5',
-        textColor: 'white',
-        icon: 'error',
-        message: extrairErro(error, 'Erro ao carregar catálogo de rubricas'),
-      })
-    }
-  }
   dialogMassa.value = true
 }
 
@@ -422,8 +404,16 @@ watch(
   async (novoId) => {
     if (!novoId || route.name !== 'rhDashboard') return
     pararPolling()
-    tab.value = 'resumo'
+    // Carrega o resumo do período novo ANTES de decidir a aba — é ele que diz
+    // quais unidades existem lá.
     await carregar(novoId)
+    // Mantém a aba pedida se a unidade existir no período novo; senão, Resumão.
+    const desejada = route.query.tab || 'resumo'
+    tab.value =
+      desejada === 'resumo' ||
+      unidadeTabs.value.some((u) => 'un-' + u.codunidadenegocio === desejada)
+        ? desejada
+        : 'resumo'
     await checarEmAndamento()
   },
 )
@@ -502,13 +492,9 @@ watch(tab, (novoTab) => {
         <q-separator inset />
 
         <q-card-section>
-          <q-select
-            outlined
+          <MgSelectRubrica
             v-model="modelMassa.codrubrica"
             label="Rubrica do Catálogo"
-            :options="rubricaOptions"
-            map-options
-            emit-value
             autofocus
             :rules="[(val) => !!val || 'Obrigatório']"
           />
@@ -844,7 +830,7 @@ watch(tab, (novoTab) => {
             class="col text-grey-7"
             no-caps
           >
-            <q-tab name="resumo" label="Resumão" />
+            <q-tab name="resumo" label="Resumo" />
             <q-tab
               v-for="u in unidadeTabs"
               :key="u.codunidadenegocio"

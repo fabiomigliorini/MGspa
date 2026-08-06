@@ -71,12 +71,20 @@ class PessoaResource extends JsonResource
         $ret['permissaoRH'] = Autorizador::pode(['Recursos Humanos']);
         $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
 
-        // Cartões-benefício (Bee) — dados sensíveis, só para RH.
-        $ret['ColaboradorCartaoS'] = $ret['permissaoRH']
-            ? \Mg\Colaborador\ColaboradorCartaoResource::collection(
-                $this->ColaboradorCartaoS()->orderBy('codcolaboradorcartao', 'desc')->get()
+        // Cartões (Benefício/Corporativo) — dados sensíveis, só para RH.
+        // Cada cartão traz a própria filial/empresa (eager-load evita N+1).
+        $ret['PessoaCartaoS'] = $ret['permissaoRH']
+            ? PessoaCartaoResource::collection(
+                $this->PessoaCartaoS()->with('Filial.Empresa')
+                    ->orderBy('codpessoacartao', 'desc')->get()
             )
             : [];
+
+        // Quem pode ter cartão: colaborador ou pessoa de uma filial. Só decide a
+        // exibição do card e o botão de adicionar — a filial DO CARTÃO é escolha
+        // do RH no cadastro, não sai daqui.
+        $ret['permiteCartao'] = $this->ColaboradorS()->exists()
+            || \Mg\Filial\Filial::where('codpessoa', $this->codpessoa)->exists();
 
         if (!$ret['permissaoFinanceiro']) {
             unset(

@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Colaborador\Colaborador;
-use Mg\Filial\Setor;
 use Mg\Usuario\Autorizador;
 
 class PeriodoColaboradorController extends Controller
@@ -248,27 +247,5 @@ class PeriodoColaboradorController extends Controller
         $pc->save();
 
         return new PeriodoColaboradorResource($pc->load('Setor.UnidadeNegocio'));
-    }
-
-    // Lista de setores ativos (com unidade) para os selects do RH.
-    public function setores()
-    {
-        Autorizador::autoriza(['Recursos Humanos']);
-
-        $setores = Setor::whereNull('inativo')
-            ->with('UnidadeNegocio')
-            ->orderBy('codunidadenegocio')
-            ->orderBy('setor')
-            ->get()
-            ->map(fn($s) => [
-                'codsetor' => $s->codsetor,
-                'setor' => $s->setor,
-                'codunidadenegocio' => $s->codunidadenegocio,
-                'unidade_negocio_nome' => $s->UnidadeNegocio?->descricao,
-                'label' => ($s->UnidadeNegocio?->descricao ? $s->UnidadeNegocio->descricao . ' — ' : '') . $s->setor,
-            ])
-            ->values();
-
-        return response()->json(['data' => $setores]);
     }
 }

@@ -29,9 +29,12 @@ register(process.env.SERVICE_WORKER_FILE, {
 
   updated(/* registration */) {
     console.log('New content is available; please refresh.')
-    // Avisa o MgUserMenu (banner "Nova versão") — desacoplado via evento de window.
-    window.__pwaNovaVersao = true
-    window.dispatchEvent(new Event('pwa-nova-versao'))
+    // NÃO acende a tarja aqui. O aviso de nova versão é derivado do BUILD_ID do
+    // bundle vs /version.json (ver components/pwaAtualizacao.js). Este callback
+    // dispara em TODO page load enquanto houver um worker em "waiting" — era
+    // exatamente isso que fazia a tarja voltar sem fim. Aqui ele só encurta a
+    // latência de detecção, e é idempotente.
+    window.dispatchEvent(new Event('pwa-sw-atualizado'))
   },
 
   offline() {

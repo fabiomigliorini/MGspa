@@ -16,7 +16,7 @@ import {
   formataTimestamp,
   formataCodigo,
 } from '@components/formatters'
-import DialogEditarMeta from './DialogEditarMeta.vue'
+import DialogEditarMeta from 'src/components/rh/DialogEditarMeta.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const $q = useQuasar()

@@ -8,10 +8,13 @@ import { useAuthStore } from 'src/stores'
 import { formataData, formataFromNow, formataNumero } from '@components/formatters'
 import { abrirPdf } from '@components/abrirPdf'
 import { tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
-import DialogEditarMeta from './DialogEditarMeta.vue'
+import DialogEditarMeta from 'src/components/rh/DialogEditarMeta.vue'
 import AcertoModal from './AcertoModal.vue'
 import CardRubricas from 'src/components/rh/CardRubricas.vue'
+import MgTabelaValores from '@components/MgTabelaValores.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelectSetor from '@components/MgSelectSetor.vue'
+import MgSelectRubrica from '@components/MgSelectRubrica.vue'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -63,8 +66,7 @@ const voltarTo = computed(() => {
 })
 
 // --- DIALOG EDITAR COLABORADOR (setor + gestor) ---
-
-const setorOptions = computed(() => sRh.setores || [])
+// O catálogo de setores é carregado pelo próprio MgSelectSetor (v1/select/setor).
 
 const dialogColaborador = ref(false)
 const salvandoColaborador = ref(false)
@@ -137,15 +139,6 @@ const modeloVazio = () => ({
   observacao: '',
 })
 
-const rubricaOptions = computed(() => [
-  { label: 'Outros (avulsa)', value: 0 },
-  ...(sRh.rubricas || [])
-    .filter((r) => !r.inativo)
-    .slice()
-    .sort((a, b) => (a.descricao || '').localeCompare(b.descricao || '', 'pt-BR'))
-    .map((r) => ({ label: r.descricao, value: r.codrubrica })),
-])
-
 const totalQ = computed(
   () =>
     (Number(modelRubrica.value.valorunitario) || 0) * (Number(modelRubrica.value.quantidade) || 0),
@@ -182,14 +175,13 @@ const editarRubrica = (r) => {
   dialogRubrica.value = true
 }
 
-const onSelecionarRubrica = (codrubrica) => {
-  modelRubrica.value.codrubrica = codrubrica
-  if (!codrubrica) {
+// `r` é a opção inteira emitida pelo MgSelectRubrica (o select já gravou o
+// codrubrica via v-model); null quando é "Outros (avulsa)".
+const onSelecionarRubrica = (r) => {
+  if (!r) {
     modelRubrica.value.descricao = ''
     return
   }
-  const r = (sRh.rubricas || []).find((x) => x.codrubrica === codrubrica)
-  if (!r) return
   // Snapshot da descrição do catálogo (coluna é NOT NULL — igual ao aplicarMassa).
   modelRubrica.value.descricao = r.descricao
   modelRubrica.value.tipovalor = r.tipovalor
@@ -497,6 +489,28 @@ const saldoAcertar = computed(
   () => Math.round(((Number(colaborador.value?.valortotal) || 0) - totRubricas.value) * 100) / 100,
 )
 
+const colunasAcertos = [
+  { nome: 'acerto', label: 'Acerto', tipo: 'slot', largura: '40%' },
+  { nome: 'rubricas', label: 'Rubricas', tipo: 'slot', align: 'right', largura: '13%' },
+  { nome: 'creditos', label: 'Créditos', tipo: 'slot', align: 'right', largura: '13%' },
+  { nome: 'debitos', label: 'Débitos', tipo: 'slot', align: 'right', largura: '13%' },
+  { nome: 'saldo', label: 'Saldo', tipo: 'slot', align: 'right', largura: '13%' },
+  { nome: 'acoes', label: '', tipo: 'slot', align: 'right', largura: '8%' },
+]
+
+const rodapeAcertos = computed(() => [
+  {
+    classe: 'text-weight-bold bg-grey-2',
+    valores: {
+      acerto: 'TOTAL',
+      rubricas: totRubricas.value,
+      creditos: totCreditos.value,
+      debitos: totDebitos.value,
+      saldo: totSaldo.value,
+    },
+  },
+])
+
 const FORMA_ICON = { B: 'credit_card', D: 'payments', F: 'receipt_long' }
 const FORMA_COLOR = { B: 'purple', D: 'green-7', F: 'orange-8' }
 const formaIcon = (f) => FORMA_ICON[f] || 'help'
@@ -531,12 +545,15 @@ const toggleInativoAcerto = async (ac) => {
 
 // --- LIFECYCLE ---
 
+const acharNaLista = () =>
+  sRh.colaboradores.find(
+    (c) => String(c.codperiodocolaborador) === String(route.params.codperiodocolaborador),
+  ) || null
+
+// Depois de gravar: força o refetch, senão o cache da store devolve o de antes.
 const recarregar = async () => {
-  await sRh.getColaboradores(route.params.codperiodo)
-  colaborador.value =
-    sRh.colaboradores.find(
-      (c) => String(c.codperiodocolaborador) === String(route.params.codperiodocolaborador),
-    ) || null
+  await sRh.getColaboradores(route.params.codperiodo, true)
+  colaborador.value = acharNaLista()
   await fetchAcertoStatus()
 }
 
@@ -544,17 +561,11 @@ const carregar = async () => {
   loading.value = true
   try {
     await Promise.all([
-      sRh.colaboradores.length === 0
-        ? sRh.getColaboradores(route.params.codperiodo)
-        : Promise.resolve(),
+      // O cache por período fica na store — aqui é só pedir.
+      sRh.getColaboradores(route.params.codperiodo),
       sRh.periodos.length === 0 ? sRh.getPeriodos() : Promise.resolve(),
-      sRh.rubricas.length === 0 ? sRh.getRubricas() : Promise.resolve(),
-      sRh.setores.length === 0 ? sRh.getSetores() : Promise.resolve(),
     ])
-    colaborador.value =
-      sRh.colaboradores.find(
-        (c) => String(c.codperiodocolaborador) === String(route.params.codperiodocolaborador),
-      ) || null
+    colaborador.value = acharNaLista()
     await fetchAcertoStatus()
   } catch (error) {
     $q.notify({
@@ -573,7 +584,7 @@ onMounted(() => {
 })
 
 watch(
-  () => route.params.codperiodocolaborador,
+  () => [route.params.codperiodo, route.params.codperiodocolaborador],
   () => {
     if (route.name === 'rhColaboradorDetalhe') carregar()
   },
@@ -596,15 +607,12 @@ watch(
           <div class="row q-col-gutter-md">
             <!-- CATÁLOGO -->
             <div class="col-12">
-              <q-select
-                outlined
-                :model-value="modelRubrica.codrubrica"
+              <MgSelectRubrica
+                v-model="modelRubrica.codrubrica"
                 label="Rubrica do Catálogo"
-                :options="rubricaOptions"
-                map-options
-                emit-value
+                permite-avulsa
                 autofocus
-                @update:model-value="onSelecionarRubrica"
+                @select="onSelecionarRubrica"
               />
             </div>
 
@@ -826,17 +834,7 @@ watch(
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-select
-                outlined
-                v-model="formColaborador.codsetor"
-                label="Setor"
-                :options="setorOptions"
-                option-label="label"
-                option-value="codsetor"
-                emit-value
-                map-options
-                autofocus
-              />
+              <MgSelectSetor v-model="formColaborador.codsetor" autofocus />
             </div>
             <div class="col-12">
               <q-toggle v-model="formColaborador.gestor" label="Gestor" />
@@ -997,192 +995,164 @@ watch(
 
           <q-separator inset />
 
-          <template v-if="acertos.length">
-            <div class="scroll">
-              <q-markup-table flat wrap-cells>
-                <thead>
-                  <tr>
-                    <th class="text-left">Acerto</th>
-                    <th class="text-right">Rubricas</th>
-                    <th class="text-right">Créditos</th>
-                    <th class="text-right">Débitos</th>
-                    <th class="text-right">Saldo</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="ac in acertos"
-                    :key="ac.codperiodocolaboradoracerto"
-                    :class="{ 'text-grey-5': ac.inativo }"
-                  >
-                    <td class="text-left">
-                      <div class="row items-center no-wrap">
-                        <q-icon
-                          :name="formaIcon(ac.forma)"
-                          :color="ac.inativo ? 'grey-5' : formaColor(ac.forma)"
-                          class="q-mr-sm"
-                        />
-                        <div>
-                          <div>
-                            {{ ac.forma_descricao }} · {{ formataData(ac.data) }}
-                            <q-badge
-                              v-if="ac.inativo"
-                              color="grey-5"
-                              label="Inativo"
-                              class="q-ml-xs"
-                            />
-                          </div>
-                          <div v-if="ac.observacao" class="text-caption text-grey-6">
-                            {{ ac.observacao }}
-                          </div>
-                          <div
-                            v-if="ac.titulos && ac.titulos.length"
-                            class="text-caption text-grey-6"
-                          >
-                            <span v-for="(t, i) in ac.titulos" :key="i">
-                              <a
-                                :href="urlTitulo(t.codtitulo)"
-                                target="_blank"
-                                class="text-primary"
-                                >{{ t.numero }}</a
-                              >
-                              ({{ formataNumero(t.valor) }})<span v-if="i < ac.titulos.length - 1"
-                                >,
-                              </span>
-                            </span>
-                          </div>
-                          <div v-if="ac.usuariocriacao" class="text-caption text-grey-5">
-                            {{ ac.usuariocriacao }} · {{ formataData(ac.criacao) }}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td class="text-right">
-                      <div v-if="ac.rubricas" class="row items-center justify-end no-wrap">
-                        <span>{{ formataNumero(ac.rubricas) }}</span>
-                        <q-btn
-                          v-if="!ac.inativo"
-                          flat
-                          round
-                          size="sm"
-                          color="grey-6"
-                          icon="print"
-                          class="q-ml-xs"
-                          @click="imprimirReciboTipo(ac, 'pagamento')"
-                        >
-                          <q-tooltip>Recibo de pagamento</q-tooltip>
-                        </q-btn>
-                      </div>
-                      <template v-else>—</template>
-                    </td>
-                    <td class="text-right">
-                      <div v-if="ac.creditos" class="row items-center justify-end no-wrap">
-                        <span>{{ formataNumero(ac.creditos) }}</span>
-                        <q-btn
-                          v-if="!ac.inativo"
-                          flat
-                          round
-                          size="sm"
-                          color="grey-6"
-                          icon="print"
-                          class="q-ml-xs"
-                          @click="imprimirReciboTipo(ac, 'pagamento')"
-                        >
-                          <q-tooltip>Recibo de pagamento</q-tooltip>
-                        </q-btn>
-                      </div>
-                      <template v-else>—</template>
-                    </td>
-                    <td class="text-right">
-                      <div v-if="ac.debitos" class="row items-center justify-end no-wrap">
-                        <span>{{ formataNumero(ac.debitos) }}</span>
-                        <q-btn
-                          v-if="!ac.inativo"
-                          flat
-                          round
-                          size="sm"
-                          color="grey-6"
-                          icon="print"
-                          class="q-ml-xs"
-                          @click="imprimirReciboTipo(ac, 'recebimento')"
-                        >
-                          <q-tooltip>Recibo de recebimento</q-tooltip>
-                        </q-btn>
-                      </div>
-                      <template v-else>—</template>
-                    </td>
-                    <td
-                      class="text-right text-weight-medium"
-                      :class="ac.inativo ? '' : ac.saldo < 0 ? 'text-negative' : 'text-positive'"
-                    >
-                      {{ ac.saldo < 0 ? '−' : '' }}{{ formataNumero(Math.abs(ac.saldo)) }}
-                    </td>
-                    <td class="text-right">
-                      <div class="row items-center justify-end no-wrap">
-                        <q-btn
-                          v-if="!ac.inativo && (ac.rubricas || ac.creditos || ac.debitos)"
-                          flat
-                          round
-                          size="sm"
-                          color="grey-7"
-                          icon="print"
-                          @click="imprimirReciboAcerto(ac)"
-                        >
-                          <q-tooltip>Imprimir recibos deste acerto</q-tooltip>
-                        </q-btn>
-                        <q-btn
-                          v-if="podeEditar && colaborador.status === 'A'"
-                          flat
-                          round
-                          size="sm"
-                          color="grey-7"
-                          :icon="ac.inativo ? 'play_arrow' : 'pause'"
-                          @click="toggleInativoAcerto(ac)"
-                        >
-                          <q-tooltip>{{ ac.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
-                        </q-btn>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-                <tfoot v-if="acertos.length > 1">
-                  <tr class="text-weight-bold bg-grey-2">
-                    <td class="text-right">TOTAL</td>
-                    <td class="text-right">{{ formataNumero(totRubricas) }}</td>
-                    <td class="text-right">{{ formataNumero(totCreditos) }}</td>
-                    <td class="text-right">{{ formataNumero(totDebitos) }}</td>
-                    <td
-                      class="text-right"
-                      :class="totSaldo < 0 ? 'text-negative' : 'text-positive'"
-                    >
-                      {{ totSaldo < 0 ? '−' : '' }}{{ formataNumero(Math.abs(totSaldo)) }}
-                    </td>
-                    <td></td>
-                  </tr>
-                </tfoot>
-              </q-markup-table>
-            </div>
+          <MgTabelaValores
+            :colunas="colunasAcertos"
+            :linhas="acertos"
+            :rodape="acertos.length > 1 ? rodapeAcertos : []"
+            chave="codperiodocolaboradoracerto"
+            :linha-classe="(ac) => (ac.inativo ? 'text-grey-5' : '')"
+            wrap-cells
+            vazio="Nenhum acerto lançado."
+          >
+            <template #celula-acerto="{ linha: ac }">
+              <div class="row items-center no-wrap">
+                <q-icon
+                  :name="formaIcon(ac.forma)"
+                  :color="ac.inativo ? 'grey-5' : formaColor(ac.forma)"
+                  class="q-mr-sm"
+                />
+                <div>
+                  <div>
+                    {{ ac.forma_descricao }} · {{ formataData(ac.data) }}
+                    <q-badge v-if="ac.inativo" color="grey-5" label="Inativo" class="q-ml-xs" />
+                  </div>
+                  <div v-if="ac.observacao" class="text-caption text-grey-6">
+                    {{ ac.observacao }}
+                  </div>
+                  <div v-if="ac.titulos && ac.titulos.length" class="text-caption text-grey-6">
+                    <span v-for="(t, i) in ac.titulos" :key="i">
+                      <a :href="urlTitulo(t.codtitulo)" target="_blank" class="text-primary">{{
+                        t.numero
+                      }}</a>
+                      ({{ formataNumero(t.valor) }})<span v-if="i < ac.titulos.length - 1">, </span>
+                    </span>
+                  </div>
+                  <div v-if="ac.usuariocriacao" class="text-caption text-grey-5">
+                    {{ ac.usuariocriacao }} · {{ formataData(ac.criacao) }}
+                  </div>
+                </div>
+              </div>
+            </template>
 
-            <!-- Saldo a acertar = benefício ainda não considerado -->
-            <div
-              v-if="Math.abs(saldoAcertar) >= 0.01"
-              class="row items-center q-px-md q-py-sm bg-grey-1"
-            >
-              <q-space />
-              <span class="text-weight-medium q-mr-md">Saldo a acertar</span>
+            <template #celula-rubricas="{ linha: ac }">
+              <div v-if="ac.rubricas" class="row items-center justify-end no-wrap">
+                <span>{{ formataNumero(ac.rubricas) }}</span>
+                <q-btn
+                  v-if="!ac.inativo"
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-6"
+                  icon="print"
+                  class="q-ml-xs"
+                  @click="imprimirReciboTipo(ac, 'pagamento')"
+                >
+                  <q-tooltip>Recibo de pagamento</q-tooltip>
+                </q-btn>
+              </div>
+              <template v-else>—</template>
+            </template>
+
+            <template #celula-creditos="{ linha: ac }">
+              <div v-if="ac.creditos" class="row items-center justify-end no-wrap">
+                <span>{{ formataNumero(ac.creditos) }}</span>
+                <q-btn
+                  v-if="!ac.inativo"
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-6"
+                  icon="print"
+                  class="q-ml-xs"
+                  @click="imprimirReciboTipo(ac, 'pagamento')"
+                >
+                  <q-tooltip>Recibo de pagamento</q-tooltip>
+                </q-btn>
+              </div>
+              <template v-else>—</template>
+            </template>
+
+            <template #celula-debitos="{ linha: ac }">
+              <div v-if="ac.debitos" class="row items-center justify-end no-wrap">
+                <span>{{ formataNumero(ac.debitos) }}</span>
+                <q-btn
+                  v-if="!ac.inativo"
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-6"
+                  icon="print"
+                  class="q-ml-xs"
+                  @click="imprimirReciboTipo(ac, 'recebimento')"
+                >
+                  <q-tooltip>Recibo de recebimento</q-tooltip>
+                </q-btn>
+              </div>
+              <template v-else>—</template>
+            </template>
+
+            <template #celula-saldo="{ linha: ac }">
               <span
-                class="text-weight-bold"
-                :class="saldoAcertar < 0 ? 'text-negative' : 'text-orange-9'"
+                class="text-weight-medium"
+                :class="ac.inativo ? '' : ac.saldo < 0 ? 'text-negative' : 'text-positive'"
               >
-                {{ saldoAcertar < 0 ? '−' : '' }}{{ formataNumero(Math.abs(saldoAcertar)) }}
+                {{ ac.saldo < 0 ? '−' : '' }}{{ formataNumero(Math.abs(ac.saldo)) }}
               </span>
-            </div>
-          </template>
+            </template>
 
-          <q-card-section v-else class="text-center text-grey-6">
-            Nenhum acerto lançado
-          </q-card-section>
+            <template #celula-acoes="{ linha: ac }">
+              <div class="row items-center justify-end no-wrap">
+                <q-btn
+                  v-if="!ac.inativo && (ac.rubricas || ac.creditos || ac.debitos)"
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-7"
+                  icon="print"
+                  @click="imprimirReciboAcerto(ac)"
+                >
+                  <q-tooltip>Imprimir recibos deste acerto</q-tooltip>
+                </q-btn>
+                <q-btn
+                  v-if="podeEditar && colaborador.status === 'A'"
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-7"
+                  :icon="ac.inativo ? 'play_arrow' : 'pause'"
+                  @click="toggleInativoAcerto(ac)"
+                >
+                  <q-tooltip>{{ ac.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
+                </q-btn>
+              </div>
+            </template>
+
+            <template #rodape-saldo="{ valor }">
+              <span :class="valor < 0 ? 'text-negative' : 'text-positive'">
+                {{ valor < 0 ? '−' : '' }}{{ formataNumero(Math.abs(valor)) }}
+              </span>
+            </template>
+          </MgTabelaValores>
+
+          <!-- Saldo a acertar = benefício ainda não considerado -->
+          <div
+            v-if="acertos.length && Math.abs(saldoAcertar) >= 0.01"
+            class="row items-center q-px-md q-py-sm bg-grey-1"
+          >
+            <q-space />
+            <span class="text-weight-medium q-mr-md">Saldo a acertar</span>
+            <span
+              class="text-weight-bold"
+              :class="saldoAcertar < 0 ? 'text-negative' : 'text-orange-9'"
+            >
+              {{ saldoAcertar < 0 ? '−' : '' }}{{ formataNumero(Math.abs(saldoAcertar)) }}
+            </span>
+          </div>
         </q-card>
       </div>
     </template>
