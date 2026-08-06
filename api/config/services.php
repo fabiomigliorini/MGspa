@@ -45,15 +45,4 @@ return [
         'default_redirect' => env('AUTH_DEFAULT_REDIRECT', 'https://sistema-dev.mgpapelaria.com.br'),
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Backend legado (MGspa/laravel) — para proxy de rotas ainda não migradas
-    |--------------------------------------------------------------------------
-    | Configurado mas não usado no Marco 1 (só entra em ação nos Marcos 3+).
-    */
-    'legacy' => [
-        'url' => env('LEGACY_API_URL', 'https://api-mgspa-dev.mgpapelaria.com.br/api'),
-        'imagens_url' => env('LEGACY_IMAGENS_URL', 'https://api-mgspa-dev.mgpapelaria.com.br/imagens'),
-    ],
-
 ];

@@ -1,7 +1,5 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -352,7 +350,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // NaturezaOperacao trio (migrado em 23/05/2026)
     Route::apiResource('natureza-operacao/cfop', \Mg\NaturezaOperacao\CfopController::class)->parameters(['cfop' => 'codcfop']);
-    Route::apiResource('natureza-operacao/{codnaturezaoperacao}/tributacao', \Mg\NaturezaOperacao\TributacaoNaturezaOperacaoController::class)->parameters(['tributacao' => 'codtributacaonaturezaoperacao']);
+    // ->names() explícito: sem ele o Laravel deriva o nome do último segmento
+    // ("tributacao") e colide com o apiResource('tributacao') acima, o que
+    // quebra o route:cache.
+    Route::apiResource('natureza-operacao/{codnaturezaoperacao}/tributacao', \Mg\NaturezaOperacao\TributacaoNaturezaOperacaoController::class)
+        ->parameters(['tributacao' => 'codtributacaonaturezaoperacao'])
+        ->names('natureza-operacao.tributacao');
     Route::apiResource('natureza-operacao', \Mg\NaturezaOperacao\NaturezaOperacaoController::class)->parameters(['natureza-operacao' => 'codnaturezaoperacao']);
 
     // Cidade trio (migrado em 23/05/2026)
@@ -1344,49 +1347,3 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     });
 
 });
-
-/*
-|--------------------------------------------------------------------------
-| Proxy fallback pro MGspa/laravel legado
-|--------------------------------------------------------------------------
-| Catch-all: rotas ainda não migradas pra cá são repassadas pro backend
-| antigo (api-mgspa-dev). Os frontends apontam só pra api-dev, e a
-| migração controller-por-controller fica transparente.
-|
-| Controlado por env LEGACY_PROXY_ENABLED (default: true).
-| Quando todas as rotas estiverem migradas, setar pra false e remover.
-*/
-if (filter_var(env('LEGACY_PROXY_ENABLED', true), FILTER_VALIDATE_BOOLEAN)) {
-    Route::any('{any}', function (Request $request) {
-        // `$request->path()` já vem com o prefixo "api/...". O legacy serve
-        // sob o mesmo caminho, então LEGACY_API_URL aponta pra raiz do
-        // backend antigo (sem o /api). Concatenamos aqui.
-        $url = rtrim(config('services.legacy.url'), '/') . '/' . $request->path();
-
-        $headers = collect($request->headers->all())
-            ->except(['host', 'content-length'])
-            ->mapWithKeys(fn ($v, $k) => [$k => is_array($v) ? ($v[0] ?? '') : $v])
-            ->filter()
-            ->toArray();
-
-        $upstream = Http::withHeaders($headers)
-            ->withOptions([
-                'http_errors' => false,
-                'verify' => filter_var(env('LEGACY_VERIFY_SSL', false), FILTER_VALIDATE_BOOLEAN),
-            ])
-            ->timeout(60)
-            ->send($request->method(), $url, [
-                'query' => $request->query(),
-                'body' => $request->getContent(),
-            ]);
-
-        // Devolve a resposta upstream sem mexer em headers de hop-by-hop
-        $excluded = ['transfer-encoding', 'content-length', 'connection'];
-        $respHeaders = collect($upstream->headers())
-            ->reject(fn ($_, $k) => in_array(strtolower($k), $excluded))
-            ->mapWithKeys(fn ($v, $k) => [$k => is_array($v) ? implode(', ', $v) : $v])
-            ->toArray();
-
-        return response($upstream->body(), $upstream->status(), $respHeaders);
-    })->where('any', '.*');
-}
