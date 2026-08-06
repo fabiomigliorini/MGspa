@@ -28,7 +28,8 @@ for entry in "${PROJECTS[@]}"; do
   docker compose exec -T "$service" sh -c "cd /opt/www/MGspa/$project && npm i && quasar build -m pwa"
 
   echo ""
-  read -n 1 -s -r -p ">>> [$project] finalizado. Pressione qualquer tecla para continuar..."
+  #read -n 1 -s -r -p ">>> [$project] finalizado. Pressione qualquer tecla para continuar..."
+  echo ">>> [$project] finalizado. Pressione qualquer tecla para continuar..."
   echo ""
 done
 
