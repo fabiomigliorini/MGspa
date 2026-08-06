@@ -1,24 +1,28 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
-import { useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
 import {
   corProgresso,
-  tipoIndicadorLabel,
-  tipoIndicadorColor,
+  calcAtingimento,
+  statusColaboradorLabel,
+  statusColaboradorColor,
   extrairErro,
 } from 'src/utils/rhFormatters'
 import { formataNumero, formataPercentual } from '@components/formatters'
 import { api } from 'boot/axios'
 import { abrirPdf } from '@components/abrirPdf'
+import MgTabelaValores from '@components/MgTabelaValores.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import BtnExtratoIndicador from 'src/components/rh/BtnExtratoIndicador.vue'
+import BadgeTipoIndicador from 'src/components/rh/BadgeTipoIndicador.vue'
 import AcoesUnidade from 'src/components/rh/AcoesUnidade.vue'
 import AcoesSetor from 'src/components/rh/AcoesSetor.vue'
 import DialogUnidade from 'src/components/rh/DialogUnidade.vue'
 import DialogSetor from 'src/components/rh/DialogSetor.vue'
 import DialogAdicionarColaboradores from 'src/components/rh/DialogAdicionarColaboradores.vue'
-import DialogEditarMeta from 'src/pages/rh/DialogEditarMeta.vue'
+import DialogEditarMeta from 'src/components/rh/DialogEditarMeta.vue'
 
 const props = defineProps({
   codperiodo: { type: [Number, String], required: true },
@@ -32,7 +36,6 @@ const props = defineProps({
 const emit = defineEmits(['atualizado'])
 
 const $q = useQuasar()
-const router = useRouter()
 const sRh = rhStore()
 
 const loading = ref(false)
@@ -40,18 +43,98 @@ const dados = ref(null)
 
 const setores = computed(() => dados.value?.setores || [])
 
-const atingimentoInd = (ind) => {
-  if (ind.atingimento != null) return parseFloat(ind.atingimento)
-  const vendas = parseFloat(ind.valoracumulado ?? ind.vendas) || 0
-  const meta = parseFloat(ind.meta) || 0
-  if (!vendas || !meta) return null
-  return (vendas / meta) * 100
+const atingimentoInd = (ind) =>
+  ind ? calcAtingimento(ind.valoracumulado ?? ind.vendas, ind.meta, ind.atingimento) : null
+
+// Colunas do colaborador (custo) usam rowspan; as do indicador repetem por
+// sub-linha. Mesmo conjunto de colunas serve as tabelas de setor e o total
+// da filial — é o que garante que as duas fiquem alinhadas.
+const colunas = [
+  { nome: 'nome', label: 'Nome', tipo: 'texto', largura: '18%', agrupada: true },
+  { nome: 'tipo', label: 'Tipo', tipo: 'slot', align: 'center', largura: '6%' },
+  { nome: 'indicador', label: 'Indicador', tipo: 'slot', align: 'right', largura: '10%' },
+  { nome: 'meta', label: 'Meta', tipo: 'slot', align: 'right', largura: '10%' },
+  {
+    nome: 'atingimento',
+    label: 'Ating.',
+    tipo: 'percentual',
+    largura: '5%',
+    classe: 'text-weight-bold',
+    valor: (linha, sub) => atingimentoInd(sub),
+    cor: corProgresso,
+  },
+  {
+    nome: 'progresso',
+    label: 'Progresso',
+    tipo: 'progresso',
+    largura: '7%',
+    valor: (linha, sub) => atingimentoInd(sub),
+    cor: corProgresso,
+  },
+  { nome: 'salario', label: 'Salário', tipo: 'numero', largura: '8%', agrupada: true },
+  { nome: 'adicional', label: 'Adicional', tipo: 'numero', largura: '7%', agrupada: true },
+  { nome: 'encargos', label: 'Encargos', tipo: 'numero', largura: '7%', agrupada: true },
+  { nome: 'variaveis', label: 'Variáveis', tipo: 'numero', largura: '8%', agrupada: true },
+  {
+    nome: 'total',
+    label: 'Total',
+    tipo: 'numero',
+    largura: '8%',
+    agrupada: true,
+    classe: 'text-weight-medium',
+  },
+  { nome: 'status', label: 'Status', tipo: 'slot', align: 'center', largura: '6%', agrupada: true },
+]
+
+// Subtotal do setor: só dinheiro. Somar os indicadores individuais (V/C) daria
+// double-count contra o coletivo (S) e contra o da unidade (U).
+const rodapeSetor = (setor) => {
+  const t = setor.totais
+  if (!t) return []
+  return [
+    {
+      valores: {
+        nome: 'Subtotal',
+        salario: t.salario,
+        adicional: t.adicional,
+        encargos: t.encargos,
+        variaveis: t.variaveis,
+        total: t.total,
+      },
+    },
+  ]
 }
+
+// Total da filial: aqui Indicador/Meta/Ating./Progresso SÃO preenchidos, com o
+// indicador de unidade — a linha vira o clone da linha desta filial no Resumão.
+const rodapeFilial = computed(() => {
+  const d = dados.value
+  if (!d?.totais) return []
+  return [
+    {
+      valores: {
+        nome: 'Total da Filial',
+        indicador: d.vendas,
+        meta: d.meta,
+        atingimento: calcAtingimento(d.vendas, d.meta, d.atingimento),
+        progresso: calcAtingimento(d.vendas, d.meta, d.atingimento),
+        salario: d.totais.salario,
+        adicional: d.totais.adicional,
+        encargos: d.totais.encargos,
+        variaveis: d.totais.variaveis,
+        total: d.totais.total,
+      },
+    },
+  ]
+})
 
 // Cabeçalho do card mostra só o indicador COLETIVO do setor (tipo S).
 // Os individuais (Vendedor/Caixa) aparecem na linha de cada colaborador.
 const indicadoresColetivos = (setor) => (setor.indicadores || []).filter((i) => i.tipo === 'S')
 
+// Destino do colaborador — serve o link do nome E a linha inteira da tabela
+// (`linha-to`), que leva pro detalhe (tela de rubricas). As ações de
+// encerrar/estornar/recalcular ficam só lá.
 // O "voltar" no detalhe deriva a aba da unidade do próprio colaborador (resource).
 const colaboradorTo = (c) => ({
   name: 'rhColaboradorDetalhe',
@@ -202,14 +285,12 @@ const editarMeta = (ind) => {
   dialogMeta.value = true
 }
 
-// Linha inteira leva pro detalhe (tela de rubricas). As ações de
-// encerrar/estornar/recalcular ficam só lá.
-const irParaDetalhe = (c) => router.push(colaboradorTo(c))
-
 onMounted(() => carregar())
 
+// Também observa o período: ficando na mesma aba com o período trocado, a
+// unidade não muda e sem isso a tabela continuaria com os dados antigos.
 watch(
-  () => props.codunidade,
+  () => [props.codperiodo, props.codunidade],
   () => carregar(),
 )
 </script>
@@ -259,11 +340,7 @@ watch(
           <div class="row items-center q-gutter-sm">
             <template v-for="ind in indicadoresColetivos(setor)" :key="ind.codindicador">
               <div class="text-caption text-grey-7">
-                <q-badge
-                  :color="tipoIndicadorColor(ind.tipo)"
-                  :label="tipoIndicadorLabel(ind.tipo)"
-                  class="q-mr-xs"
-                />
+                <BadgeTipoIndicador :tipo="ind.tipo" class="q-mr-xs" />
                 {{ formataNumero(ind.valoracumulado ?? ind.vendas) }}
                 <template v-if="ind.meta"> / {{ formataNumero(ind.meta) }} </template>
                 <span
@@ -289,133 +366,98 @@ watch(
         </q-card-section>
 
         <!-- COLABORADORES DO SETOR -->
-        <q-markup-table
-          flat
-          separator="horizontal"
-          style="table-layout: fixed"
-          v-if="(setor.colaboradores || []).length > 0"
+        <MgTabelaValores
+          :colunas="colunas"
+          :linhas="setor.colaboradores || []"
+          :rodape="(setor.colaboradores || []).length ? rodapeSetor(setor) : []"
+          chave="codperiodocolaborador"
+          sub-linhas="indicadores"
+          :linha-to="colaboradorTo"
+          vazio="Nenhum colaborador neste setor."
         >
-          <colgroup>
-            <col style="width: 30%" />
-            <col style="width: 10%" />
-            <col style="width: 19%" />
-            <col style="width: 19%" />
-            <col style="width: 11%" />
-            <col style="width: 11%" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th class="text-left">Nome</th>
-              <th class="text-left">Tipo</th>
-              <th class="text-right">Indicador</th>
-              <th class="text-right">Meta</th>
-              <th class="text-right">Variáveis</th>
-              <th class="text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="c in setor.colaboradores"
-              :key="c.codperiodocolaborador"
-              class="cursor-pointer"
-              @click="irParaDetalhe(c)"
-            >
-              <td>
-                <div class="text-primary">{{ c.nome }}</div>
-                <div class="text-caption text-grey" v-if="c.cargo">{{ c.cargo }}</div>
-              </td>
-              <!-- TIPO (chip por indicador) -->
-              <td>
-                <div
-                  v-for="ind in c.indicadores || []"
-                  :key="ind.codindicador"
-                  class="row items-center q-mb-xs"
-                  style="min-height: 32px"
-                >
-                  <q-badge
-                    :color="tipoIndicadorColor(ind.tipo)"
-                    :label="tipoIndicadorLabel(ind.tipo)"
-                  />
-                </div>
-                <span v-if="!(c.indicadores || []).length" class="text-grey">—</span>
-              </td>
-              <!-- INDICADOR (valor + extrato) -->
-              <td class="text-right">
-                <div
-                  v-for="ind in c.indicadores || []"
-                  :key="ind.codindicador"
-                  class="row items-center justify-end no-wrap q-mb-xs"
-                  style="min-height: 32px"
-                >
-                  <span class="text-weight-medium">{{ formataNumero(ind.vendas) }}</span>
-                  <q-btn
-                    flat
-                    round
-                    size="sm"
-                    color="primary"
-                    icon="receipt_long"
-                    class="q-ml-xs"
-                    @click.stop
-                    :to="{
-                      name: 'rhIndicadorExtrato',
-                      params: { codperiodo: codperiodo, codindicador: ind.codindicador },
-                    }"
-                  >
-                    <q-tooltip>Ver Extrato</q-tooltip>
-                  </q-btn>
-                </div>
-                <span v-if="!(c.indicadores || []).length" class="text-grey">—</span>
-              </td>
-              <!-- META (valor + % + editar meta) -->
-              <td class="text-right">
-                <div
-                  v-for="ind in c.indicadores || []"
-                  :key="ind.codindicador"
-                  class="row items-center justify-end no-wrap q-mb-xs"
-                  style="min-height: 32px"
-                >
-                  <template v-if="ind.meta">
-                    {{ formataNumero(ind.meta) }}
-                    <span
-                      v-if="atingimentoInd(ind) != null"
-                      class="text-weight-bold q-ml-xs"
-                      :class="'text-' + corProgresso(atingimentoInd(ind))"
-                    >
-                      {{ formataPercentual(atingimentoInd(ind)) }}
-                    </span>
-                  </template>
-                  <span v-else class="text-grey">—</span>
-                  <q-btn
-                    v-if="podeEditar && periodoStatus === 'A'"
-                    flat
-                    round
-                    size="sm"
-                    color="grey-7"
-                    icon="edit"
-                    class="q-ml-xs"
-                    @click.stop="editarMeta(ind)"
-                  >
-                    <q-tooltip>Editar Meta</q-tooltip>
-                  </q-btn>
-                </div>
-                <span v-if="!(c.indicadores || []).length" class="text-grey">—</span>
-              </td>
-              <td class="text-right text-weight-medium">{{ formataNumero(c.variaveis) }}</td>
-              <td class="text-center">
-                <q-badge
-                  :color="c.status === 'A' ? 'green' : 'blue'"
-                  :label="c.status === 'A' ? 'Aberto' : 'Encerrado'"
-                />
-              </td>
-            </tr>
-          </tbody>
-        </q-markup-table>
-        <div v-else class="q-pa-md text-center text-grey">Nenhum colaborador neste setor</div>
+          <!-- router-link renderiza <a href> de verdade: Ctrl/⌘+clique, botão do
+               meio e "abrir em nova aba" passam direto pro navegador, e o clique
+               simples continua navegando pelo router (sem recarregar a página). -->
+          <template #celula-nome="{ linha }">
+            <router-link :to="colaboradorTo(linha)" class="text-primary">
+              {{ linha.nome }}
+            </router-link>
+            <div class="text-caption text-grey" v-if="linha.cargo">{{ linha.cargo }}</div>
+          </template>
+
+          <template #celula-tipo="{ sub }">
+            <BadgeTipoIndicador v-if="sub" :tipo="sub.tipo" />
+            <span v-else class="text-grey">—</span>
+          </template>
+
+          <!-- INDICADOR: valor + extrato -->
+          <template #celula-indicador="{ sub }">
+            <div v-if="sub" class="row items-center justify-end no-wrap">
+              <span class="text-weight-medium">{{ formataNumero(sub.vendas) }}</span>
+              <BtnExtratoIndicador
+                :codperiodo="codperiodo"
+                :codindicador="sub.codindicador"
+                class="q-ml-xs"
+              />
+            </div>
+            <span v-else class="text-grey">—</span>
+          </template>
+
+          <!-- META: valor + editar -->
+          <template #celula-meta="{ sub }">
+            <div v-if="sub" class="row items-center justify-end no-wrap">
+              <span>{{ sub.meta ? formataNumero(sub.meta) : '—' }}</span>
+              <q-btn
+                v-if="podeEditar && periodoStatus === 'A'"
+                flat
+                round
+                dense
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                class="q-ml-xs"
+                @click.stop="editarMeta(sub)"
+              >
+                <q-tooltip>Editar Meta</q-tooltip>
+              </q-btn>
+            </div>
+            <span v-else class="text-grey">—</span>
+          </template>
+
+          <template #celula-status="{ linha }">
+            <q-badge
+              :color="statusColaboradorColor(linha.status)"
+              :label="statusColaboradorLabel(linha.status)"
+            />
+          </template>
+        </MgTabelaValores>
       </q-card>
 
-      <div v-if="setores.length === 0" class="q-pa-md text-center text-grey">
-        Nenhum setor cadastrado nesta unidade
-      </div>
+      <!-- TOTAL DA FILIAL — espelha a linha desta filial no Resumão -->
+      <q-card bordered flat class="q-mb-md" v-if="rodapeFilial.length && setores.length">
+        <MgTabelaValores
+          :colunas="colunas"
+          :linhas="[]"
+          :rodape="rodapeFilial"
+          :cabecalho="false"
+        >
+          <template #rodape-indicador="{ valor }">
+            <div class="row items-center justify-end no-wrap">
+              <span>{{ valor != null ? formataNumero(valor) : '—' }}</span>
+              <BtnExtratoIndicador
+                v-if="dados?.codindicador"
+                :codperiodo="codperiodo"
+                :codindicador="dados.codindicador"
+                class="q-ml-xs"
+              />
+            </div>
+          </template>
+        </MgTabelaValores>
+      </q-card>
+
+      <MgEmptyState v-if="setores.length === 0">
+        Nenhum setor cadastrado nesta unidade.
+      </MgEmptyState>
     </template>
 
     <!-- DIALOGS -->

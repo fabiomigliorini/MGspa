@@ -14,6 +14,10 @@
 --      colaborador ou filial e' a aplicacao (PessoaCartaoController).
 --   3) Cria a coluna `tipo`: 'B' = Beneficio (Bee), 'C' = Corporativo.
 --      Os cartoes que ja' existiam viram 'B', que e' o correto.
+--   4) Cria a coluna `codfilial`: de qual filial/empresa o cartao E'. E'
+--      obrigatoria nos dois tipos e INDEPENDENTE do titular — o RH escolhe
+--      no cadastro, e nao precisa ser a filial do vinculo da pessoa. Na
+--      migracao herda a filial do vinculo de origem.
 --
 -- SUBSTITUI o antigo rh_cartao_beneficio.sql (removido no mesmo commit —
 -- rodar aquele script hoje recriaria a tabela na forma velha).
@@ -102,7 +106,8 @@ END $$;
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tblpessoacartao (
   codpessoacartao      bigserial PRIMARY KEY,
-  codpessoa            bigint NOT NULL,
+  codpessoa            bigint NOT NULL,   -- titular: colaborador ou pessoa da filial
+  codfilial            bigint NOT NULL,   -- de qual filial/empresa E' o cartao (escolha livre)
   tipo                 char(1) NOT NULL DEFAULT 'B',   -- B = Beneficio, C = Corporativo
   numero               text NOT NULL,   -- criptografado (cast encrypted) — nunca legivel no banco
   validademes          smallint NOT NULL,
@@ -121,22 +126,58 @@ CREATE TABLE IF NOT EXISTS tblpessoacartao (
 ALTER TABLE tblpessoacartao ADD COLUMN IF NOT EXISTS email varchar(255);
 
 -- ---------------------------------------------------------------------
--- 3) Titular: codcolaborador -> codpessoa
+-- 3) Titular (codcolaborador -> codpessoa) e filial dona do cartao
+--
+-- Sao dois conceitos DIFERENTES, e e' por isso que viraram duas colunas:
+--   codpessoa = quem carrega o cartao (colaborador ou pessoa da filial);
+--   codfilial = de qual filial/empresa o cartao E'. O RH escolhe no cadastro,
+--               e NAO precisa ser a filial do vinculo da pessoa.
+-- Na migracao nao ha' o que escolher, entao herda a filial do vinculo de
+-- origem — que e' o que o cartao significava ate' aqui.
 -- ---------------------------------------------------------------------
 ALTER TABLE tblpessoacartao ADD COLUMN IF NOT EXISTS codpessoa bigint;
+ALTER TABLE tblpessoacartao ADD COLUMN IF NOT EXISTS codfilial bigint;
 
--- Backfill: pega a pessoa do vinculo a que o cartao pertencia.
+-- Backfill 1: base pre-migracao — pega pessoa e filial do vinculo de origem.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns
-             WHERE table_name = 'tblpessoacartao' AND column_name = 'codcolaborador') THEN
+             WHERE table_schema = current_schema() AND table_name = 'tblpessoacartao'
+               AND column_name = 'codcolaborador') THEN
     UPDATE tblpessoacartao pc
-       SET codpessoa = c.codpessoa
+       SET codpessoa = coalesce(pc.codpessoa, c.codpessoa),
+           codfilial = coalesce(pc.codfilial, c.codfilial)
       FROM tblcolaborador c
      WHERE c.codcolaborador = pc.codcolaborador
-       AND pc.codpessoa IS NULL;
+       AND (pc.codpessoa IS NULL OR pc.codfilial IS NULL);
   END IF;
 END $$;
+
+-- Backfill 2 (rede de seguranca): base JA' migrada, onde codcolaborador nao
+-- existe mais. Resolve a filial pelo vinculo ativo da pessoa; se a pessoa for
+-- uma filial, usa a propria. Cobre cartoes cadastrados entre uma versao do
+-- script e outra.
+UPDATE tblpessoacartao pc
+   SET codfilial = sub.codfilial
+  FROM (
+    SELECT c.codpessoa, min(c.codfilial) AS codfilial
+      FROM tblcolaborador c
+     WHERE c.rescisao IS NULL
+     GROUP BY c.codpessoa
+  ) sub
+ WHERE sub.codpessoa = pc.codpessoa
+   AND pc.codfilial IS NULL;
+
+UPDATE tblpessoacartao pc
+   SET codfilial = sub.codfilial
+  FROM (
+    SELECT f.codpessoa, min(f.codfilial) AS codfilial
+      FROM tblfilial f
+     WHERE f.inativo IS NULL
+     GROUP BY f.codpessoa
+  ) sub
+ WHERE sub.codpessoa = pc.codpessoa
+   AND pc.codfilial IS NULL;
 
 -- Se algum cartao ficou sem titular resolvido (vinculo apagado, ou
 -- tblcolaborador.codpessoa nulo), aborta com mensagem clara em vez de estourar
@@ -152,9 +193,17 @@ BEGIN
       'Migracao abortada: % cartao(oes) sem codpessoa resolvido. Rode: SELECT codpessoacartao, codcolaborador FROM tblpessoacartao WHERE codpessoa IS NULL;',
       v_pendentes;
   END IF;
+
+  SELECT count(*) INTO v_pendentes FROM tblpessoacartao WHERE codfilial IS NULL;
+  IF v_pendentes > 0 THEN
+    RAISE EXCEPTION
+      'Migracao abortada: % cartao(oes) sem codfilial resolvido (vinculo sem filial, ou titular que nao e colaborador nem filial). Rode: SELECT codpessoacartao, codpessoa FROM tblpessoacartao WHERE codfilial IS NULL;',
+      v_pendentes;
+  END IF;
 END $$;
 
 ALTER TABLE tblpessoacartao ALTER COLUMN codpessoa SET NOT NULL;
+ALTER TABLE tblpessoacartao ALTER COLUMN codfilial SET NOT NULL;
 
 -- Criar a FK exige SHARE ROW EXCLUSIVE em tblpessoa, que bloqueia escrita
 -- naquela tabela quente. Por isso ela so' e' criada quando NAO existe: numa
@@ -168,6 +217,14 @@ BEGIN
     ALTER TABLE tblpessoacartao
       ADD CONSTRAINT tblpessoacartao_codpessoa_fkey
       FOREIGN KEY (codpessoa) REFERENCES tblpessoa(codpessoa) ON UPDATE CASCADE;
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                 WHERE conname = 'tblpessoacartao_codfilial_fkey'
+                   AND conrelid = to_regclass('tblpessoacartao')) THEN
+    ALTER TABLE tblpessoacartao
+      ADD CONSTRAINT tblpessoacartao_codfilial_fkey
+      FOREIGN KEY (codfilial) REFERENCES tblfilial(codfilial) ON UPDATE CASCADE;
   END IF;
 END $$;
 
@@ -184,7 +241,7 @@ BEGIN
                AND column_name = 'codcolaborador') THEN
     DROP TABLE IF EXISTS _bkp_cartao_vinculo;
     CREATE TABLE _bkp_cartao_vinculo AS
-      SELECT codpessoacartao, codcolaborador, codpessoa FROM tblpessoacartao;
+      SELECT codpessoacartao, codcolaborador, codpessoa, codfilial FROM tblpessoacartao;
   END IF;
 END $$;
 
@@ -207,6 +264,7 @@ ALTER TABLE tblpessoacartao
 -- ---------------------------------------------------------------------
 DROP INDEX IF EXISTS idx_cc_colaborador;
 CREATE INDEX IF NOT EXISTS idx_pc_pessoa ON tblpessoacartao(codpessoa);
+CREATE INDEX IF NOT EXISTS idx_pc_filial ON tblpessoacartao(codfilial);
 
 ALTER TABLE tblpessoacartao DROP CONSTRAINT IF EXISTS chk_cc_validademes;
 ALTER TABLE tblpessoacartao DROP CONSTRAINT IF EXISTS chk_cc_validadeano;
@@ -224,6 +282,12 @@ COMMIT;
 -- ---------------------------------------------------------------------
 \echo '== cartoes por tipo =='
 SELECT tipo, count(*) AS cartoes FROM tblpessoacartao GROUP BY tipo ORDER BY tipo;
+\echo '== cartoes por empresa/filial =='
+SELECT e.empresa, f.filial, count(*) AS cartoes
+FROM tblpessoacartao pc
+JOIN tblfilial f ON f.codfilial = pc.codfilial
+JOIN tblempresa e ON e.codempresa = f.codempresa
+GROUP BY e.empresa, f.filial ORDER BY 1, 2;
 \echo '== colunas =='
 SELECT column_name, data_type FROM information_schema.columns
 WHERE table_name = 'tblpessoacartao' ORDER BY ordinal_position;

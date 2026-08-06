@@ -38,6 +38,7 @@ class PessoaCartao extends MgModel
 
     protected $fillable = [
         'codpessoa',
+        'codfilial',
         'tipo',
         'numero',
         'validademes',
@@ -57,6 +58,7 @@ class PessoaCartao extends MgModel
     protected $casts = [
         'codpessoacartao' => 'integer',
         'codpessoa' => 'integer',
+        'codfilial' => 'integer',
         'numero' => 'encrypted',   // criptografado em repouso; nunca sai em claro (ver Resource)
         'validademes' => 'integer',
         'validadeano' => 'integer',
@@ -104,5 +106,12 @@ class PessoaCartao extends MgModel
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
+    }
+
+    // De qual filial/empresa o cartao E' — escolha do RH no cadastro, sem
+    // relacao obrigatoria com o vinculo do titular.
+    public function Filial()
+    {
+        return $this->belongsTo(\Mg\Filial\Filial::class, 'codfilial', 'codfilial');
     }
 }

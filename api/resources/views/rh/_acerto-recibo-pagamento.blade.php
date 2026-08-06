@@ -90,15 +90,17 @@
         <tr>
             <td class="recibo-inner">
 
-                {{-- Header --}}
+                {{-- Header: empresa, recibo, usuario, pessoa, data --}}
                 <div class="recibo-header">
                     <table>
                         <tr>
-                            <td class="bold">{{ $filialP->fantasia ?? '' }} {{ $filialP->telefone1 ?? '' }}</td>
+                            <td class="bold" colspan="2">{{ $filialP->fantasia ?? '' }}
+                                {{ $filialP->telefone1 ?? '' }}</td>
                             <td class="right">Recibo: {{ formataCodigo($ev->codperiodocolaboradoracerto) }}</td>
                         </tr>
                         <tr>
                             <td>Usuario: {{ $ev->usuariocriacao ?? '—' }}</td>
+                            <td class="center bold">Pessoa: {{ $pessoa->pessoa ?? '—' }}</td>
                             <td class="right">Data: {{ $ev->criacao?->format('d/m/Y H:i:s') }}
                                 @if (count($paginas) > 1)
                                     &nbsp;&nbsp;Pag. {{ $numPagina }}/{{ count($paginas) }}
@@ -129,7 +131,7 @@
                                 , CNPJ {{ formataCnpjCpf($filialP->cnpj, $filialP->fisica ?? false) }}
                             @endif,
                             a importancia de <strong>{{ $valorExtenso }}</strong>,
-                            referente a' bonificacao abaixo discriminada:
+                            referente à bonificação abaixo discriminada:
                         </p>
                     @endif
 

@@ -6,6 +6,7 @@ import { rhStore } from 'src/stores/rh'
 import { useAuthStore } from 'src/stores'
 import { formataData } from '@components/formatters'
 import { extrairErro } from 'src/utils/rhFormatters'
+import { useNavegacaoPeriodo } from 'src/composables/useNavegacaoPeriodo'
 import MGLayout from 'layouts/MGLayout.vue'
 import MgInputData from '@components/MgInputData.vue'
 
@@ -95,9 +96,8 @@ const periodoSelecionado = (codperiodo) => {
   return String(route.params.codperiodo) === String(codperiodo)
 }
 
-const selecionarPeriodo = (codperiodo) => {
-  router.push({ name: 'rhDashboard', params: { codperiodo } })
-}
+// Mantém a tela atual (aba de filial, colaborador, extrato) no período destino.
+const { navegando, irParaPeriodo: selecionarPeriodo } = useNavegacaoPeriodo()
 
 const carregar = async () => {
   try {
@@ -228,7 +228,14 @@ onMounted(() => {
               </q-item-label>
             </q-item-section>
             <q-item-section side>
+              <!-- Resolver o equivalente no período destino pode dar um request. -->
+              <q-spinner
+                v-if="String(navegando) === String(periodo.codperiodo)"
+                color="primary"
+                size="20px"
+              />
               <q-badge
+                v-else
                 :color="
                   periodoSelecionado(periodo.codperiodo) ? 'white' : statusColor(periodo.status)
                 "

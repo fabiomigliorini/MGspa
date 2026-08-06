@@ -480,7 +480,7 @@ export const pessoaStore = defineStore('pessoa', {
     },
 
     // Cartões (Benefício/Corporativo) da pessoa — colaborador ou filial.
-    // Recarrega o item inteiro: a legenda cartaoTitular vem do PessoaResource.
+    // Recarrega o item inteiro: a lista de cartões vem dentro do PessoaResource.
     async cartaoNovo(codpessoa, model) {
       const ret = await api.post('v1/pessoa/' + codpessoa + '/cartao/', model)
       await this.get(codpessoa)

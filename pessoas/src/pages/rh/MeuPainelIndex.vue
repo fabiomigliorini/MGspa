@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
 import { formataData } from '@components/formatters'
 import { extrairErro } from 'src/utils/rhFormatters'
+import { useNavegacaoPeriodo } from 'src/composables/useNavegacaoPeriodo'
 import MGLayout from 'layouts/MGLayout.vue'
 
 const $q = useQuasar()
@@ -20,9 +21,8 @@ const statusColor = (status) => (status === 'A' ? 'green' : 'grey')
 
 const periodoSelecionado = (codperiodo) => String(route.params.codperiodo) === String(codperiodo)
 
-const selecionarPeriodo = (codperiodo) => {
-  router.push({ name: 'rhMeuPainelDashboard', params: { codperiodo } })
-}
+// Mantém a tela atual (colaborador da equipe) no período destino.
+const { navegando, irParaPeriodo: selecionarPeriodo } = useNavegacaoPeriodo()
 
 const carregar = async () => {
   loading.value = true
@@ -84,7 +84,14 @@ onMounted(() => {
               </q-item-label>
             </q-item-section>
             <q-item-section side>
+              <!-- Resolver o equivalente no período destino pode dar um request. -->
+              <q-spinner
+                v-if="String(navegando) === String(periodo.codperiodo)"
+                color="primary"
+                size="20px"
+              />
               <q-badge
+                v-else
                 :color="
                   periodoSelecionado(periodo.codperiodo) ? 'white' : statusColor(periodo.status)
                 "

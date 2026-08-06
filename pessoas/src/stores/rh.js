@@ -9,7 +9,10 @@ export const rhStore = defineStore('rh', {
     indicadores: [],
     rubricas: [],
     resumo: {},
-    setores: [],
+    // De qual período são as listas acima. Sem isso a lista de um período
+    // sobrevive à troca para outro e o `.find()` por PK falha silenciosamente.
+    codperiodoColaboradores: null,
+    codperiodoIndicadores: null,
   }),
 
   actions: {
@@ -79,10 +82,20 @@ export const rhStore = defineStore('rh', {
 
     // --- COLABORADORES DO PERÍODO ---
 
-    async getColaboradores(codperiodo) {
+    // Devolve a lista do período pedido. Só reaproveita o cache quando ele é
+    // DAQUELE período; `forcar` é para depois de gravar algo.
+    async getColaboradores(codperiodo, forcar = false) {
+      if (
+        !forcar &&
+        this.colaboradores.length > 0 &&
+        String(this.codperiodoColaboradores) === String(codperiodo)
+      ) {
+        return this.colaboradores
+      }
       const ret = await api.get('v1/rh/periodo/' + codperiodo + '/colaborador')
       this.colaboradores = ret.data.data
-      return ret
+      this.codperiodoColaboradores = codperiodo
+      return this.colaboradores
     },
 
     async encerrar(codperiodo, codperiodocolaborador) {
@@ -119,13 +132,8 @@ export const rhStore = defineStore('rh', {
       return ret
     },
 
-    // --- SETORES (catálogo p/ select) ---
-
-    async getSetores() {
-      const ret = await api.get('v1/rh/setores')
-      this.setores = ret.data.data
-      return ret.data.data
-    },
+    // --- SETORES ---
+    // O catálogo p/ select vem do MgSelectSetor (v1/select/setor), não daqui.
 
     async atualizarSetorColaborador(codperiodo, codperiodocolaborador, codsetor) {
       const ret = await api.patch(
@@ -263,10 +271,18 @@ export const rhStore = defineStore('rh', {
 
     // --- INDICADORES ---
 
-    async getIndicadores(codperiodo) {
+    async getIndicadores(codperiodo, forcar = false) {
+      if (
+        !forcar &&
+        this.indicadores.length > 0 &&
+        String(this.codperiodoIndicadores) === String(codperiodo)
+      ) {
+        return this.indicadores
+      }
       const ret = await api.get('v1/rh/periodo/' + codperiodo + '/indicador')
       this.indicadores = ret.data.data
-      return ret
+      this.codperiodoIndicadores = codperiodo
+      return this.indicadores
     },
 
     async criarIndicador(codperiodo, data) {

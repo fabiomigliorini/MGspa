@@ -9,10 +9,12 @@ import { formataNumero } from '@components/formatters'
 import MGLayout from 'layouts/MGLayout.vue'
 import RubricaForm from 'src/components/rh/RubricaForm.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 const $q = useQuasar()
 const sRh = rhStore()
 const user = useAuthStore()
+const cache = useSelectCacheStore()
 
 const { rubricas } = storeToRefs(sRh)
 
@@ -21,6 +23,17 @@ const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 const rubricasOrdenadas = computed(() =>
   [...rubricas.value].sort((a, b) => a.descricao.localeCompare(b.descricao)),
 )
+
+// Depois de mexer no catálogo, derruba os dois caches que guardam a descrição:
+//  - o do MgSelectRubrica (padrão LOCAL, carrega uma vez por sessão);
+//  - o de colaboradores, cujas rubricas trazem a descrição denormalizada e que as
+//    telas só refazem quando a lista está vazia — sem isso o card do colaborador
+//    segue exibindo o nome antigo até dar F5, mesmo com o backend já propagando.
+const recarregar = async () => {
+  cache.invalidate('rubrica')
+  sRh.colaboradores = []
+  await sRh.getRubricas()
+}
 
 // --- DIALOG ---
 const dialog = ref(false)
@@ -63,7 +76,7 @@ const submit = async () => {
       message: isNovo.value ? 'Rubrica criada' : 'Rubrica atualizada',
     })
     dialog.value = false
-    await sRh.getRubricas()
+    await recarregar()
   } catch (error) {
     $q.notify({
       color: 'red-5',
@@ -91,7 +104,7 @@ const excluir = (r) => {
         icon: 'done',
         message: 'Rubrica excluída',
       })
-      await sRh.getRubricas()
+      await recarregar()
     } catch (error) {
       $q.notify({
         color: 'red-5',
@@ -116,7 +129,7 @@ const toggleInativo = async (r) => {
       icon: 'done',
       message: r.inativo ? 'Rubrica ativada' : 'Rubrica inativada',
     })
-    await sRh.getRubricas()
+    await recarregar()
   } catch (error) {
     $q.notify({
       color: 'red-5',

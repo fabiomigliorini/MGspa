@@ -16,7 +16,7 @@ class AcertoReciboPdf
                 'PeriodoColaborador.Colaborador.Pessoa',
                 'PeriodoColaborador.Colaborador.Filial.Pessoa.Cidade.Estado',
                 'PeriodoColaborador.ColaboradorRubricaS',
-                'PeriodoColaborador.Setor',
+                'PeriodoColaborador.Setor.UnidadeNegocio',
                 'MovimentoTituloS.Titulo',
             ])
             ->get();
@@ -30,11 +30,15 @@ class AcertoReciboPdf
             );
         }
 
-        // Um recibo por acerto; mantem os acertos de um mesmo colaborador juntos (nome, depois data).
+        // Um recibo por acerto; agrupa por unidade de negocio em ordem alfabetica
+        // (Administrativo, Andre Maggi, Botanico, Centro, ...) e, dentro da unidade, mantem
+        // os acertos de um mesmo colaborador juntos (nome, depois data).
         $acertos = $eventos->sortBy(function ($e) {
-            $nome = optional(optional(optional($e->PeriodoColaborador)->Colaborador)->Pessoa)->pessoa ?? '';
+            $pc = optional($e->PeriodoColaborador);
+            $unidade = self::chaveAlfabetica(optional(optional($pc->Setor)->UnidadeNegocio)->descricao);
+            $nome = optional(optional($pc->Colaborador)->Pessoa)->pessoa ?? '';
             $data = $e->data ? $e->data->format('Y-m-d') : '';
-            return sprintf('%s|%s|%08d', $nome, $data, $e->codperiodocolaboradoracerto);
+            return sprintf('%s|%s|%s|%08d', $unidade, $nome, $data, $e->codperiodocolaboradoracerto);
         })->values();
 
         if ($acertos->isEmpty()) {
@@ -64,6 +68,17 @@ class AcertoReciboPdf
         }
 
         return self::render(collect([$ev]), $tipo);
+    }
+
+    // Chave de ordenacao alfabetica: dobra acentos para ASCII e descarta o resto, senao
+    // "Botanico"/"Deposito" cairiam depois de "Sinopel" na comparacao byte a byte.
+    // Sem unidade vai para o fim da impressao.
+    private static function chaveAlfabetica(?string $texto): string
+    {
+        $ascii = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', (string) $texto) ?: (string) $texto;
+        $chave = strtoupper(preg_replace('/[^A-Za-z0-9 ]/', '', $ascii));
+
+        return $chave === '' ? 'ZZZZZZZZ' : $chave;
     }
 
     private static function render($acertos, ?string $tipo = null): string

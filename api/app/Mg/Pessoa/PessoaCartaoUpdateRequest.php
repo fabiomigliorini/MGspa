@@ -22,6 +22,7 @@ class PessoaCartaoUpdateRequest extends FormRequest
         return [
             'numero'      => 'prohibited',
             'tipo'        => ['sometimes', 'required', Rule::in(array_keys(PessoaCartao::TIPO_DESCRICAO))],
+            'codfilial'   => 'sometimes|required|integer|exists:tblfilial,codfilial',
             'validademes' => 'sometimes|required|integer|between:1,12',
             'validadeano' => 'sometimes|required|integer|between:0,99',
             'email'       => 'nullable|email|max:255',

@@ -232,6 +232,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/certidao-emissor/{id}', [\Mg\Select\SelectCertidaoEmissorController::class, 'show'])->whereNumber('id');
     Route::get('select/certidao-tipo', [\Mg\Select\SelectCertidaoTipoController::class, 'index']);
     Route::get('select/certidao-tipo/{id}', [\Mg\Select\SelectCertidaoTipoController::class, 'show'])->whereNumber('id');
+    Route::get('select/rubrica', [\Mg\Select\SelectRubricaController::class, 'index']);
+    Route::get('select/rubrica/{id}', [\Mg\Select\SelectRubricaController::class, 'show'])->whereNumber('id');
 
     // Banco (migrado em 23/05/2026)
     Route::get('banco', [\Mg\Banco\BancoController::class, 'index']);
@@ -1271,7 +1273,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
         Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/gestor', '\Mg\Rh\PeriodoColaboradorController@toggleGestor');
         Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorController@atualizarSetor');
-        Route::get('setores', '\Mg\Rh\PeriodoColaboradorController@setores');
 
         // Catalogo de rubricas (tblrubrica)
         Route::get('rubrica', '\Mg\Rh\RubricaController@index');

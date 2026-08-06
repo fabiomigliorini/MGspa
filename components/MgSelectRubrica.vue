@@ -3,21 +3,32 @@ import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
-// Carrega TUDO uma vez de v1/select/setor, cacheia (lista + byId no store
+// Carrega TUDO uma vez de v1/select/rubrica, cacheia (lista + byId no store
 // compartilhado) e filtra no FRONT ao digitar. clearable é opcional (default false).
+//
+// O endpoint devolve, além de value/label, os campos do catálogo usados como
+// snapshot ao vincular a rubrica (tipovalor, tipocondicao, recorrente,
+// valorpadrao, valorunitariopadrao). O evento `select` emite a opção INTEIRA,
+// pra quem consome pré-preencher o formulário sem outra chamada.
+//
+// permiteAvulsa prepende a pseudo-opção "Outros (avulsa)" (value 0): rubrica
+// digitada à mão, que grava codrubrica null e só tem descrição.
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
-  label: { type: String, default: 'Setor' },
+  label: { type: String, default: 'Rubrica' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  permiteAvulsa: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 
 const cache = useSelectCacheStore()
-const ENTITY = 'setor'
-const ENDPOINT = 'v1/select/setor'
+const ENTITY = 'rubrica'
+const ENDPOINT = 'v1/select/rubrica'
 
-const opcoes = ref([])
+const OPCAO_AVULSA = { value: 0, label: 'Outros (avulsa)' }
+
+const filtradas = ref([])
 const carregando = ref(false)
 
 // O store cacheia inativos num bucket separado (`{ent}__inativos`) — ler sempre
@@ -25,13 +36,18 @@ const carregando = ref(false)
 const chaveCache = computed(() => (props.inativos ? `${ENTITY}__inativos` : ENTITY))
 const permitidos = computed(() => cache.entities[chaveCache.value]?.items || [])
 
+// A avulsa fica sempre no topo, fora do filtro: é uma escolha, não um registro.
+const opcoes = computed(() =>
+  props.permiteAvulsa ? [OPCAO_AVULSA, ...filtradas.value] : filtradas.value,
+)
+
 async function carregar() {
   carregando.value = true
   try {
     await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
-    opcoes.value = permitidos.value
+    filtradas.value = permitidos.value
   } catch {
-    opcoes.value = []
+    filtradas.value = []
   } finally {
     carregando.value = false
   }
@@ -40,7 +56,7 @@ async function carregar() {
 function filtrar(val, update) {
   update(() => {
     const needle = (val || '').toLowerCase()
-    opcoes.value = needle
+    filtradas.value = needle
       ? permitidos.value.filter((v) => (v.label || '').toLowerCase().includes(needle))
       : permitidos.value
   })
@@ -48,7 +64,8 @@ function filtrar(val, update) {
 
 function onUpdate(v) {
   emit('update:modelValue', v)
-  emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
+  // Avulsa (0) e vazio não têm registro de catálogo: emite null.
+  emit('select', v ? permitidos.value.find((o) => o.value === v) || null : null)
 }
 
 onMounted(() => carregar())
