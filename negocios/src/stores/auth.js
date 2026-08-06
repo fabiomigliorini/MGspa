@@ -2,6 +2,15 @@ import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import axios from 'axios'
 
+// As chamadas de auth NAO passam pela instancia `api` (boot/axios.js) porque vao
+// para o API_AUTH_URL e nao podem carregar o interceptor de 401 — sem timeout
+// explicito herdariam o default do axios, que e 0 = esperar para sempre.
+// Uma lentidao pontual da API deixava a janela morta em definitivo: a
+// sincronizacao trava no `await carregarUsuario()` e nunca solta.
+// Mesmos valores dos outros apps (notas, contas, pessoas, agro, estoque).
+const TIMEOUT_USERINFO = 2000
+const TIMEOUT_TOKEN = 10000
+
 export const useAuthStore = defineStore('auth', {
   persist: {
     pick: ['usuario', 'token'],
@@ -28,11 +37,10 @@ export const useAuthStore = defineStore('auth', {
         scope: 'view-user',
       })
       try {
-        let { data } = await axios.post(
-          process.env.API_AUTH_URL + '/oauth/token',
-          params,
-          { withCredentials: true },
-        )
+        let { data } = await axios.post(process.env.API_AUTH_URL + '/oauth/token', params, {
+          withCredentials: true,
+          timeout: TIMEOUT_TOKEN,
+        })
         if (data.access_token) {
           await this.aplicarToken(data)
         }
@@ -87,6 +95,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         let { data } = await axios.post(process.env.API_AUTH_URL + '/oauth/token', params, {
           withCredentials: true,
+          timeout: TIMEOUT_TOKEN,
         })
         if (data.access_token) {
           await this.aplicarToken(data)
@@ -111,7 +120,9 @@ export const useAuthStore = defineStore('auth', {
           client_id: process.env.CLIENT_ID,
           client_secret: process.env.CLIENT_SECRET,
         })
-        await axios.post(process.env.API_AUTH_URL + '/oauth/revoke', params)
+        await axios.post(process.env.API_AUTH_URL + '/oauth/revoke', params, {
+          timeout: TIMEOUT_TOKEN,
+        })
         this.usuario = {}
         this.token = {}
       } catch (error) {
@@ -131,6 +142,7 @@ export const useAuthStore = defineStore('auth', {
           // retorna claims OIDC + custom MGspa num único objeto plano
           let { data } = await axios.get(`${process.env.API_AUTH_URL}/userinfo`, {
             headers: { Authorization: 'Bearer ' + this.token.access_token },
+            timeout: TIMEOUT_USERINFO,
           })
           this.usuario = data
           if (data.meta?.expires_at) {
@@ -150,6 +162,7 @@ export const useAuthStore = defineStore('auth', {
       try {
         const { data } = await axios.get(`${process.env.API_AUTH_URL}/userinfo`, {
           headers: { Authorization: 'Bearer ' + novoToken.access_token },
+          timeout: TIMEOUT_USERINFO,
         })
         if (data.meta?.expires_at) {
           novoToken.expires_at = data.meta.expires_at
