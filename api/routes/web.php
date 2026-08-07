@@ -1,17 +1,14 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Controllers\ApproveAuthorizationController;
 use Laravel\Passport\Http\Controllers\AuthorizationController;
 use Laravel\Passport\Http\Controllers\DenyAuthorizationController;
 use Mg\Auth\AuthController;
+use Mg\Auth\LoginController;
 use Mg\Auth\UserInfoController;
 
-Route::get('/', function () {
-    return redirect('login');
-});
+Route::redirect('/', 'login');
 
 /*
 |--------------------------------------------------------------------------
@@ -20,23 +17,7 @@ Route::get('/', function () {
 | Se já tem cookie access_token válido, redireciona pra redirect_uri.
 | Senão renderiza form que via JavaScript POSTa em /oauth/token.
 */
-Route::get('/login', function (Request $request) {
-    $accessToken = $request->cookie('access_token');
-
-    if ($accessToken) {
-        $request->headers->set('Authorization', 'Bearer ' . $accessToken);
-        if (Auth::guard('api')->check()) {
-            return redirect()->to(
-                $request->query('redirect_uri') ?? config('services.auth.default_redirect')
-            );
-        }
-    }
-
-    return view('login', [
-        'redirect_uri' => $request->query('redirect_uri'),
-        'error' => $request->boolean('error'),
-    ]);
-})->name('login');
+Route::get('/login', [LoginController::class, 'show'])->name('login');
 
 /*
 |--------------------------------------------------------------------------

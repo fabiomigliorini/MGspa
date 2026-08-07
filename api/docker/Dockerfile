@@ -39,7 +39,11 @@ RUN apk add --no-cache --virtual .build-deps-redis linux-headers && \
     docker-php-ext-enable redis && \
     apk del .build-deps-redis
 
-# Limites de memória
-RUN echo "memory_limit = 512M" > /usr/local/etc/php/conf.d/99-custom.ini
+# Limites de memória + OPcache
+COPY docker/php-custom.ini /usr/local/etc/php/conf.d/99-custom.ini
+
+# Pool do PHP-FPM — sobrescreve o pm.max_children = 5 da imagem oficial.
+# Prefixo zzz- para carregar depois de www.conf e zz-docker.conf.
+COPY docker/php-fpm-pool.conf /usr/local/etc/php-fpm.d/zzz-pool.conf
 
 CMD ["php-fpm"]
