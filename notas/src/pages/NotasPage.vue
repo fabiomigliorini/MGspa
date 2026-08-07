@@ -390,6 +390,10 @@ onMounted(async () => {
         >
           <q-item-section avatar style="min-width: 32px">
             <q-icon :name="getStatusIcon(nota.status)" :color="getStatusColor(nota.status)" />
+            <!-- tpemis 9: emitida em contingencia off-line, ainda a transmitir -->
+            <q-icon v-if="nota.tpemis == 9" name="cloud_off" color="orange" size="xs">
+              <q-tooltip>Emitida em contingência off-line</q-tooltip>
+            </q-icon>
           </q-item-section>
 
           <q-item-section>
