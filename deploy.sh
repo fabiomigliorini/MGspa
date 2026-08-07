@@ -11,8 +11,8 @@
 #   git pull          -> traz o codigo novo
 #   composer install  -> ajusta o vendor pro codigo novo
 #   optimize          -> cacheia ja com o codigo e o vendor finais
-#   builds            -> frontends
-#   queue:restart     -> por ultimo, pros 16 workers subirem lendo o cache novo
+#   queue:restart     -> workers sobem lendo o cache novo; fecha o backend
+#   builds            -> frontends, que nao dependem de nada acima
 #
 set -euo pipefail
 
@@ -71,6 +71,18 @@ if confirma "php artisan optimize"; then
   docker exec -u 82:82 mgspa-api php artisan optimize
 fi
 
+# ----------------------------------------------------------------- Fila
+# Logo apos o optimize: os workers precisam do cache novo, mas nao tem
+# relacao nenhuma com os builds dos frontends. Deixar pro fim manteria os
+# 16 workers com codigo velho durante os minutos de build.
+titulo "Fila — reinicia os workers"
+if confirma "queue:restart no mglara e na api"; then
+  docker exec mglara-mglara-1 php artisan queue:restart
+  # O sinal vai pro Redis e as 16 replicas (api-worker-N) escutam —
+  # basta rodar uma vez no container da api.
+  docker exec mgspa-api php artisan queue:restart
+fi
+
 # ------------------------------------------------------------ Frontends
 for entry in "${PROJECTS[@]}"; do
   project="${entry%%:*}"
@@ -84,14 +96,5 @@ for entry in "${PROJECTS[@]}"; do
     echo ">>> [$project] finalizado."
   fi
 done
-
-# ----------------------------------------------------------------- Fila
-titulo "Fila — reinicia os workers"
-if confirma "queue:restart no mglara e na api"; then
-  docker exec mglara-mglara-1 php artisan queue:restart
-  # O sinal vai pro Redis e as 16 replicas (api-worker-N) escutam —
-  # basta rodar uma vez no container da api.
-  docker exec mgspa-api php artisan queue:restart
-fi
 
 titulo "Deploy concluído"
