@@ -82,6 +82,12 @@ class NotaFiscalDetailResource extends JsonResource
             'nfeinutilizacao' => $this->nfeinutilizacao,
             'nfedatainutilizacao' => $this->nfedatainutilizacao,
             'justificativa' => $this->justificativa,
+
+            // Contingencia off-line: tpemis 9 = emitida sem passar pela SEFAZ.
+            // Faz parte da chave de acesso, por isso e' a fonte da verdade da nota.
+            'tpemis' => $this->tpemis,
+            'contingenciadata' => $this->contingenciadata,
+            'contingenciajustificativa' => $this->contingenciajustificativa,
             // 'nfexml' => $this->nfexml,
             // 'nfeprotocolo' => $this->nfeprotocolo,
             // 'nferejeicao' => $this->nferejeicao,

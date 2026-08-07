@@ -20,6 +20,8 @@ class Empresa extends MgModel
 
 
     protected $fillable = [
+        'contingenciaautomatica',
+        'contingenciatolerancia',
         'contingenciadata',
         'contingenciajustificativa',
         'empresa',
@@ -32,6 +34,8 @@ class Empresa extends MgModel
         'codempresa' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'contingenciaautomatica' => 'boolean',
+        'contingenciatolerancia' => 'integer',
         'contingenciadata' => 'datetime',
         'criacao' => 'datetime',
         'fatorencargos' => 'float',

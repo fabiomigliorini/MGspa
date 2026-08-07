@@ -11,6 +11,7 @@ import { formataTimestamp, formataNumero, formataNumeroNota } from '@components/
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import api from '../services/api'
 import notaFiscalService from '../services/notaFiscalService'
+import inutilizacaoService from '../services/inutilizacaoService'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -269,7 +270,13 @@ const justificativa = ref('Falha de sistema, saltou numeracao')
 const inutilizando = ref(new Set())
 const inutilizados = ref(new Set())
 
-const chave = (g, n) => `${g.codfilial}-${g.serie}-${g.modelo}-${n}`
+// A chave identifica a FAIXA, nao um numero solto
+const chave = (g, f) => `${g.codfilial}-${g.serie}-${g.modelo}-${f.numeroinicial}-${f.numerofinal}`
+
+const rotuloFaixa = (f) =>
+  f.numeroinicial === f.numerofinal
+    ? `Número ${f.numeroinicial}`
+    : `Números ${f.numeroinicial} a ${f.numerofinal} (${f.quantidade})`
 
 const abrirDialogLacunas = async () => {
   showDialogLacunas.value = true
@@ -289,35 +296,38 @@ const abrirDialogLacunas = async () => {
   }
 }
 
-const inutilizarLacuna = async (grupo, numero) => {
-  const k = chave(grupo, numero)
-  const novoSet = new Set(inutilizando.value)
-  novoSet.add(k)
-  inutilizando.value = novoSet
+/**
+ * Inutiliza a faixa inteira numa chamada so.
+ *
+ * Antes era um POST por numero, e cada um criava uma tblnotafiscal falsa. Agora vai uma
+ * requisicao por faixa e nenhuma nota e fabricada.
+ */
+const inutilizarFaixa = async (grupo, faixa) => {
+  const k = chave(grupo, faixa)
+  inutilizando.value = new Set(inutilizando.value).add(k)
 
   try {
-    const resultado = await notaFiscalService.criarParaInutilizar({
+    const inut = await inutilizacaoService.inutilizar({
       codfilial: grupo.codfilial,
-      serie: grupo.serie,
       modelo: grupo.modelo,
-      numero,
+      serie: grupo.serie,
+      numeroinicial: faixa.numeroinicial,
+      numerofinal: faixa.numerofinal,
       justificativa: justificativa.value,
     })
 
-    const novoInutilizados = new Set(inutilizados.value)
-    novoInutilizados.add(k)
-    inutilizados.value = novoInutilizados
+    inutilizados.value = new Set(inutilizados.value).add(k)
 
     $q.notify({
-      color: 'green-5',
-      icon: 'done',
-      message: `Número ${numero} inutilizado — ${resultado.cStat} ${resultado.xMotivo}`,
+      color: inut.homologada ? 'green-5' : 'red-5',
+      icon: inut.homologada ? 'done' : 'error',
+      message: `${rotuloFaixa(faixa)} — ${inut.cstat ?? ''} ${inut.xmotivo ?? ''}`,
     })
   } catch (error) {
     $q.notify({
       color: 'red-5',
       icon: 'error',
-      message: `Número ${numero}: ${error.response?.data?.message || error.message}`,
+      message: `${rotuloFaixa(faixa)}: ${error.response?.data?.message || error.message}`,
     })
   } finally {
     const novoSet = new Set(inutilizando.value)
@@ -816,13 +826,18 @@ onMounted(async () => {
                 {{ grupo.filial }} — Série {{ grupo.serie }} — Modelo {{ grupo.modelo }}
               </q-item-label>
               <q-list separator dense>
-                <q-item v-for="numero in grupo.lacunas" :key="numero" dense>
+                <!-- Uma linha por FAIXA de numeros consecutivos, nao por numero solto -->
+                <q-item
+                  v-for="faixa in grupo.faixas"
+                  :key="`${faixa.numeroinicial}-${faixa.numerofinal}`"
+                  dense
+                >
                   <q-item-section>
-                    <q-item-label>Número {{ numero }}</q-item-label>
+                    <q-item-label>{{ rotuloFaixa(faixa) }}</q-item-label>
                   </q-item-section>
                   <q-item-section side>
                     <q-icon
-                      v-if="inutilizados.has(chave(grupo, numero))"
+                      v-if="inutilizados.has(chave(grupo, faixa))"
                       name="done"
                       color="green"
                     />
@@ -834,11 +849,11 @@ onMounted(async () => {
                       size="sm"
                       color="red-7"
                       icon="block"
-                      :loading="inutilizando.has(chave(grupo, numero))"
+                      :loading="inutilizando.has(chave(grupo, faixa))"
                       :disable="justificativa.length < 15"
-                      @click="inutilizarLacuna(grupo, numero)"
+                      @click="inutilizarFaixa(grupo, faixa)"
                     >
-                      <q-tooltip>Inutilizar</q-tooltip>
+                      <q-tooltip>Inutilizar a faixa inteira</q-tooltip>
                     </q-btn>
                   </q-item-section>
                 </q-item>

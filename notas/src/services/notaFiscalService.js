@@ -31,34 +31,8 @@ export default {
   },
 
   // ==================== NFE ACTIONS ====================
-  async criar(codnotafiscal) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/criar`)
-    return response.data
-  },
-
-  async enviarSincrono(codnotafiscal) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/enviar-sincrono`)
-    return response.data
-  },
-
-  async consultar(codnotafiscal) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/consultar`)
-    return response.data
-  },
-
-  async cancelar(codnotafiscal, justificativa) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/cancelar`, {
-      justificativa,
-    })
-    return response.data
-  },
-
-  async inutilizar(codnotafiscal, justificativa) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/inutilizar`, {
-      justificativa,
-    })
-    return response.data
-  },
+  // Ver nota em notaFiscalStore.js: quem executa as acoes de NFe e o
+  // @components/MgNotaFiscalAcoes.vue. Metodos sem chamador foram removidos.
 
   async detectarLacunas() {
     const response = await api.get('/v1/nota-fiscal/lacunas')

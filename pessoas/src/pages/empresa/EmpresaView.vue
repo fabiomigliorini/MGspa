@@ -4,6 +4,7 @@ import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from 'src/composables/useAuth'
 
 const MGLayout = defineAsyncComponent(() => import('layouts/MGLayout.vue'))
 
@@ -97,6 +98,82 @@ const confirmarExclusao = () => {
         textColor: 'white',
         icon: 'error',
         message: error.response?.data?.message || 'Erro ao excluir empresa',
+      })
+    }
+  })
+}
+
+// ---------------------------------------------------------------- Contingencia NFC-e
+const { temPermissao } = useAuth()
+const podeContingencia = computed(() => temPermissao('Gerente'))
+const salvandoContingencia = ref(false)
+
+const emContingencia = computed(() => sEmpresa.item?.modoemissaonfce == 9)
+
+const salvarConfContingencia = async () => {
+  salvandoContingencia.value = true
+  try {
+    await sEmpresa.atualizarEmpresa(sEmpresa.item.codempresa, {
+      contingenciaautomatica: sEmpresa.item.contingenciaautomatica,
+      contingenciatolerancia: sEmpresa.item.contingenciatolerancia,
+    })
+    $q.notify({ color: 'green-5', icon: 'done', message: 'Configuração salva!' })
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      icon: 'error',
+      message: error.response?.data?.message || 'Erro ao salvar configuração',
+    })
+  } finally {
+    salvandoContingencia.value = false
+  }
+}
+
+const entrarContingencia = () => {
+  $q.dialog({
+    title: 'Entrar em contingência',
+    message:
+      'Toda NFC-e passará a ser emitida off-line, sem passar pela SEFAZ, e transmitida ' +
+      'depois pelo robô (prazo legal de 24h). Informe a justificativa:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      isValid: (val) => val && val.length >= 15,
+    },
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Entrar em contingência', flat: true, color: 'orange' },
+  }).onOk(async (justificativa) => {
+    try {
+      await sEmpresa.entrarContingencia(sEmpresa.item.codempresa, justificativa)
+      $q.notify({ color: 'orange', icon: 'cloud_off', message: 'Empresa em contingência off-line' })
+    } catch (error) {
+      $q.notify({
+        color: 'red-5',
+        icon: 'error',
+        message: error.response?.data?.message || 'Erro ao entrar em contingência',
+      })
+    }
+  })
+}
+
+const sairContingencia = () => {
+  $q.dialog({
+    title: 'Voltar ao modo normal',
+    message:
+      'A NFC-e volta a ser transmitida direto para a SEFAZ. As notas já emitidas ' +
+      'off-line continuam pendentes e serão transmitidas pelo robô.',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Voltar ao normal', flat: true, color: 'primary' },
+  }).onOk(async () => {
+    try {
+      await sEmpresa.sairContingencia(sEmpresa.item.codempresa)
+      $q.notify({ color: 'green-5', icon: 'cloud_done', message: 'Emissão normal restabelecida' })
+    } catch (error) {
+      $q.notify({
+        color: 'red-5',
+        icon: 'error',
+        message: error.response?.data?.message || 'Erro ao sair da contingência',
       })
     }
   })
@@ -232,6 +309,82 @@ onMounted(() => {
             <!-- COLUNA LATERAL -->
             <div class="col-xs-12 col-md-4">
               <div class="row q-col-gutter-md">
+                <!-- CARD CONTINGENCIA NFC-e -->
+                <div class="col-12">
+                  <q-card bordered flat>
+                    <q-card-section class="text-grey-9 text-overline row items-center">
+                      CONTINGÊNCIA NFC-e
+                      <q-space />
+                      <q-badge :color="emContingencia ? 'orange' : 'secondary'">
+                        <q-icon
+                          :name="emContingencia ? 'cloud_off' : 'cloud_done'"
+                          size="xs"
+                          class="q-mr-xs"
+                        />
+                        {{ emContingencia ? 'Off-line' : 'Normal' }}
+                      </q-badge>
+                    </q-card-section>
+
+                    <q-card-section
+                      v-if="emContingencia && sEmpresa.item?.contingenciadata"
+                      class="q-pt-none"
+                    >
+                      <div class="text-caption text-grey-7">Desde</div>
+                      <div class="text-body2 q-mb-sm">
+                        {{ formataTimestamp(sEmpresa.item.contingenciadata) }}
+                      </div>
+                      <div class="text-caption text-grey-7">Justificativa</div>
+                      <div class="text-body2">
+                        {{ sEmpresa.item.contingenciajustificativa || '-' }}
+                      </div>
+                    </q-card-section>
+
+                    <q-separator inset />
+
+                    <q-card-section class="q-pt-md">
+                      <q-toggle
+                        v-model="sEmpresa.item.contingenciaautomatica"
+                        label="Contingência automática"
+                        :disable="!podeContingencia"
+                        @update:model-value="salvarConfContingencia"
+                      />
+                      <div class="text-caption text-grey-7 q-mb-md">
+                        Entra em contingência após 10 comunicações seguidas com a SEFAZ acima da
+                        tolerância (ou com erro), e volta ao normal após 20 dentro dela.
+                      </div>
+
+                      <q-input
+                        v-model.number="sEmpresa.item.contingenciatolerancia"
+                        outlined
+                        type="number"
+                        label="Tolerância (segundos)"
+                        :disable="!podeContingencia"
+                        :loading="salvandoContingencia"
+                        @blur="salvarConfContingencia"
+                      />
+                    </q-card-section>
+
+                    <q-card-actions v-if="podeContingencia" align="right">
+                      <q-btn
+                        v-if="!emContingencia"
+                        flat
+                        color="orange"
+                        icon="cloud_off"
+                        label="Forçar contingência"
+                        @click="entrarContingencia"
+                      />
+                      <q-btn
+                        v-else
+                        flat
+                        color="primary"
+                        icon="cloud_done"
+                        label="Voltar ao normal"
+                        @click="sairContingencia"
+                      />
+                    </q-card-actions>
+                  </q-card>
+                </div>
+
                 <!-- CARD FILIAIS -->
                 <div class="col-12">
                   <q-card bordered flat>

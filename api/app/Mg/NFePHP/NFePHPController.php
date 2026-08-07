@@ -66,7 +66,20 @@ class NFePHPController extends MgController
     public function inutilizar(Request $request, $id)
     {
         $nf = NotaFiscal::findOrFail($id);
-        $res = NFePHPService::inutilizar($nf, $request->justificativa);
+        $inut = \Mg\Inutilizacao\InutilizacaoService::inutilizar(
+            $nf->Filial,
+            (int) $nf->modelo,
+            (int) $nf->serie,
+            (int) $nf->numero,
+            (int) $nf->numero,
+            $request->justificativa
+        );
+        $res = (object) [
+            'sucesso' => $inut->homologada,
+            'cStat' => $inut->cstat,
+            'xMotivo' => $inut->xmotivo,
+            'codinutilizacao' => $inut->codinutilizacao,
+        ];
         return response()->json($res, 200);
     }
 

@@ -19,7 +19,12 @@ class NFePHPDownloadService
             $tools->model('55');
             //este serviço somente opera em ambiente de produção
             $tools->setEnvironment(1);
-            $response = $tools->sefazDownload($chave);
+            $response = NFePHPService::chamarSefazComRetry(
+                fn() => $tools->sefazDownload($chave),
+                'download',
+                $tools,
+                $filial
+            );
 
             $stz = new Standardize($response);
             $std = $stz->toStd();

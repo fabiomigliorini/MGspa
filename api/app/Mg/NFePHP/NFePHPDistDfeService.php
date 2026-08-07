@@ -49,7 +49,12 @@ class NFePHPDistDfeService
             $ultNSU = DistribuicaoDfe::where('codfilial', $filial->codfilial)->max('nsu')??0;
         }
         Log::info("NFePHPCommandDistDfe - Filial {$filial->codfilial} - ultNSU {$ultNSU} numNSU {$numNSU} chave {$chave}");
-        $resp = $tools->sefazDistDFe($ultNSU, $numNSU, $chave);
+        $resp = NFePHPService::chamarSefazComRetry(
+            fn() => $tools->sefazDistDFe($ultNSU, $numNSU, $chave),
+            'distDFe',
+            $tools,
+            $filial
+        );
 
         $st = (new Standardize($resp))->toStd();
         switch ($st->cStat) {
@@ -89,7 +94,7 @@ class NFePHPDistDfeService
             $dd->save();
 
             //salva arquivo com Dfe compactada
-            $path = NFePHPPathService::pathDfeGz($dd, true);
+            $path = NFePHPPathService::pathDfe($dd, true);
             $gz = base64_decode($doc->nodeValue);
             file_put_contents($path, $gz);
 
@@ -126,7 +131,7 @@ class NFePHPDistDfeService
     public static function processar($dd)
     {
         $dt = $dd->dfeTipo;
-        $path = NFePHPPathService::pathDfeGz($dd, true);
+        $path = NFePHPPathService::pathDfe($dd, true);
         $gz = file_get_contents($path);
         switch ($dt->schemaxml) {
             case 'resEvento_v1.01.xsd':
@@ -600,7 +605,7 @@ class NFePHPDistDfeService
 
     public static function carregarXml(DistribuicaoDfe $dd)
     {
-        $path = NFePHPPathService::pathDfeGz($dd, true);
+        $path = NFePHPPathService::pathDfe($dd, true);
         return gzdecode(file_get_contents($path));
     }
 

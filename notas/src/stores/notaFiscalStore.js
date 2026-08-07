@@ -289,96 +289,11 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
     },
 
     // ==================== NFE ACTIONS ====================
-
-    async criarNfe(codnotafiscal) {
-      try {
-        const response = await notaFiscalService.criar(codnotafiscal)
-
-        // Atualiza currentNota com a nota retornada
-        if (response.nota) {
-          this.currentNota = response.nota
-          this.syncCurrentNotaToList()
-        }
-
-        // Retorna o resultado da operação
-        return response.resultado
-      } catch (error) {
-        console.error('Erro ao criar NFe:', error)
-        throw error
-      }
-    },
-
-    async enviarNfeSincrono(codnotafiscal) {
-      try {
-        const response = await notaFiscalService.enviarSincrono(codnotafiscal)
-
-        // Atualiza currentNota com a nota retornada
-        if (response.nota) {
-          this.currentNota = response.nota
-          this.syncCurrentNotaToList()
-        }
-
-        // Retorna o resultado da operação
-        return response.resultado
-      } catch (error) {
-        console.error('Erro ao enviar NFe:', error)
-        throw error
-      }
-    },
-
-    async consultarNfe(codnotafiscal) {
-      try {
-        const response = await notaFiscalService.consultar(codnotafiscal)
-
-        // Atualiza currentNota com a nota retornada
-        if (response.nota) {
-          this.currentNota = response.nota
-          this.syncCurrentNotaToList()
-        }
-
-        // Retorna o resultado da operação
-        return response.resultado
-      } catch (error) {
-        console.error('Erro ao consultar NFe:', error)
-        throw error
-      }
-    },
-
-    async cancelarNfe(codnotafiscal, justificativa) {
-      try {
-        const response = await notaFiscalService.cancelar(codnotafiscal, justificativa)
-
-        // Atualiza currentNota com a nota retornada
-        if (response.nota) {
-          this.currentNota = response.nota
-          this.syncCurrentNotaToList()
-        }
-
-        // Retorna o resultado da operação
-        return response.resultado
-      } catch (error) {
-        console.error('Erro ao cancelar NFe:', error)
-        throw error
-      }
-    },
-
-    async inutilizarNfe(codnotafiscal, justificativa) {
-      try {
-        const response = await notaFiscalService.inutilizar(codnotafiscal, justificativa)
-
-        // Atualiza currentNota com a nota retornada
-        if (response.nota) {
-          this.currentNota = response.nota
-          this.syncCurrentNotaToList()
-        }
-
-        // Retorna o resultado da operação
-        return response.resultado
-      } catch (error) {
-        console.error('Erro ao inutilizar NFe:', error)
-        throw error
-      }
-    },
+    //
+    // As acoes de NFe (criar/enviar/consultar/cancelar/inutilizar) NAO ficam aqui: quem
+    // as executa e o componente compartilhado @components/MgNotaFiscalAcoes.vue, que usa
+    // a instancia de api direto. Este bloco existia duplicando aquele fluxo e nao tinha
+    // nenhum chamador — foi removido para nao desencontrar das duas implementacoes.
 
     async enviarEmailNfe(codnotafiscal, destinatario = null) {
       try {

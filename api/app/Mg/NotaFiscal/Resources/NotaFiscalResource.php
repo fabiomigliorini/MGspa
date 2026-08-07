@@ -36,6 +36,7 @@ class NotaFiscalResource extends JsonResource
             'valortotal' => $this->valortotal,
 
             'status' => $this->status,
+            'tpemis' => $this->tpemis,
 
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,

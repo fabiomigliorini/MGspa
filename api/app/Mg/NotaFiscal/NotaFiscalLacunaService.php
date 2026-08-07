@@ -2,16 +2,19 @@
 
 namespace Mg\NotaFiscal;
 
-use Exception;
 use Illuminate\Support\Facades\DB;
-use Mg\Filial\Filial;
-use Mg\NaturezaOperacao\Operacao;
-use Mg\NFePHP\NFePHPService;
 
 class NotaFiscalLacunaService
 {
     /**
-     * Detecta lacunas na numeração de notas fiscais dos últimos 90 dias
+     * Detecta lacunas na numeracao de notas fiscais dos ultimos 90 dias.
+     *
+     * Devolve FAIXAS de numeros consecutivos, nao numeros soltos, porque inutilizacao e
+     * ato sobre um intervalo — e a tela oferece "Inutilizar 1201-1250" num clique.
+     *
+     * Numeros ja cobertos por inutilizacao homologada sao excluidos. Sem isso a lacuna
+     * reapareceria para sempre: antes deste PR o sistema criava uma tblnotafiscal falsa
+     * para "tapar" o buraco, o que era justamente o efeito colateral que se quer eliminar.
      */
     public static function detectarLacunas(): array
     {
@@ -39,16 +42,31 @@ class NotaFiscalLacunaService
                     AND nf.serie = ?
                     AND nf.modelo = ?
                 WHERE nf.codnotafiscal IS NULL
+                AND NOT EXISTS (
+                    SELECT 1
+                    FROM tblinutilizacao i
+                    WHERE i.codfilial = ?
+                    AND i.modelo = ?
+                    AND i.serie = ?
+                    AND i.protocolo IS NOT NULL
+                    AND s.numero BETWEEN i.numeroinicial AND i.numerofinal
+                )
                 ORDER BY s.numero
-            ", [$c->min_numero, $c->max_numero, $c->codfilial, $c->serie, $c->modelo]);
+            ", [
+                $c->min_numero, $c->max_numero,
+                $c->codfilial, $c->serie, $c->modelo,
+                $c->codfilial, $c->modelo, $c->serie,
+            ]);
 
             if (count($lacunas) > 0) {
+                $numeros = array_map(fn($l) => (int) $l->numero, $lacunas);
                 $resultado[] = [
                     'codfilial' => $c->codfilial,
                     'filial' => $c->filial,
                     'serie' => $c->serie,
                     'modelo' => $c->modelo,
-                    'lacunas' => array_map(fn($l) => $l->numero, $lacunas),
+                    'lacunas' => $numeros,
+                    'faixas' => static::agruparEmFaixas($numeros),
                 ];
             }
         }
@@ -57,64 +75,37 @@ class NotaFiscalLacunaService
     }
 
     /**
-     * Cria registro de nota fiscal para um número saltado e inutiliza na SEFAZ
+     * Agrupa numeros consecutivos em faixas: [1,2,3,7,9,10] -> 1-3, 7-7, 9-10.
      */
-    public static function criarParaInutilizar(int $codfilial, int $serie, int $modelo, int $numero, string $justificativa): object
+    public static function agruparEmFaixas(array $numeros): array
     {
-        // Verifica se já existe registro com esse número
-        $existente = NotaFiscal::where('codfilial', $codfilial)
-            ->where('serie', $serie)
-            ->where('modelo', $modelo)
-            ->where('numero', $numero)
-            ->first();
-
-        if ($existente) {
-            if (!empty($existente->nfeinutilizacao)) {
-                throw new Exception("Número {$numero} já está inutilizado.");
-            }
-            $nf = $existente;
-        } else {
-            // Busca emissão/saída da nota anterior
-            $notaAnterior = NotaFiscal::where('codfilial', $codfilial)
-                ->where('serie', $serie)
-                ->where('modelo', $modelo)
-                ->where('numero', '<', $numero)
-                ->orderBy('numero', 'desc')
-                ->first();
-
-            $emissao = $notaAnterior ? $notaAnterior->emissao : now();
-            $saida = $notaAnterior ? $notaAnterior->saida : now();
-
-            // Natureza de operação de venda
-            $codnaturezaoperacao = config('services.mercos.codnaturezaoperacao');
-            if (!$codnaturezaoperacao) {
-                throw new Exception('MERCOS_CODNATUREZAOPERACAO não configurado no .env.');
-            }
-
-            // Busca estoque local da filial
-            $filial = Filial::findOrFail($codfilial);
-            $estoqueLocal = $filial->EstoqueLocalS()->first();
-            if (!$estoqueLocal) {
-                throw new Exception('Estoque local não encontrado para a filial.');
-            }
-
-            // Cria registro mínimo
-            $nf = NotaFiscal::create([
-                'codfilial' => $codfilial,
-                'serie' => $serie,
-                'modelo' => $modelo,
-                'numero' => $numero,
-                'emitida' => true,
-                'codpessoa' => 1, // Consumidor
-                'codnaturezaoperacao' => $codnaturezaoperacao,
-                'codoperacao' => Operacao::SAIDA,
-                'codestoquelocal' => $estoqueLocal->codestoquelocal,
-                'emissao' => $emissao,
-                'saida' => $saida,
-            ]);
+        if (empty($numeros)) {
+            return [];
         }
 
-        // Inutiliza usando fluxo existente
-        return NFePHPService::inutilizar($nf, $justificativa);
+        sort($numeros);
+        $faixas = [];
+        $inicio = $anterior = $numeros[0];
+
+        foreach (array_slice($numeros, 1) as $numero) {
+            if ($numero === $anterior + 1) {
+                $anterior = $numero;
+                continue;
+            }
+            $faixas[] = static::faixa($inicio, $anterior);
+            $inicio = $anterior = $numero;
+        }
+        $faixas[] = static::faixa($inicio, $anterior);
+
+        return $faixas;
+    }
+
+    protected static function faixa(int $inicio, int $fim): array
+    {
+        return [
+            'numeroinicial' => $inicio,
+            'numerofinal' => $fim,
+            'quantidade' => ($fim - $inicio) + 1,
+        ];
     }
 }
