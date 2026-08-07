@@ -18,7 +18,6 @@ use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\PixCob;
 use Mg\Saurus\SaurusPedido;
-use Mg\Stone\StonePreTransacao;
 use Mg\Woo\WooPedidoNegocio;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
@@ -244,11 +243,6 @@ class Negocio extends MgModel
     public function SaurusPedidoS()
     {
         return $this->hasMany(SaurusPedido::class, 'codnegocio', 'codnegocio');
-    }
-
-    public function StonePreTransacaoS()
-    {
-        return $this->hasMany(StonePreTransacao::class, 'codnegocio', 'codnegocio');
     }
 
     public function WooPedidoNegocioS()

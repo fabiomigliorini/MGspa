@@ -11,7 +11,7 @@ use Carbon\Carbon;
 class PixWebhookService
 {
 
-    // Cria ou Atualiza Filial na Stone
+    // Processa o arquivo JSON recebido do webhook de Pix
     public static function processar (string $arquivo)
     {
         $obj = PixJsonService::carregar($arquivo);

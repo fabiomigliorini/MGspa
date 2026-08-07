@@ -106,7 +106,7 @@ class NotaFiscalProdutoBarraResource extends JsonResource
         // dd($produtoBarra->ProdutoVariacao);
 
         if ($imagem = $produtoBarra->ProdutoVariacao?->ProdutoImagem?->Imagem?->arquivo) {
-            $imagem = "https://sistema.mgpapelaria.com.br/MGLara/public/imagens/{$imagem}";
+            $imagem = config('services.mglara.imagens_url') . "/{$imagem}";
         } else {
             $imagem = null;
         };

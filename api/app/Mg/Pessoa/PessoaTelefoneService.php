@@ -120,7 +120,7 @@ class PessoaTelefoneService
         $msg = 'Código de verificação MG Papelaria: ';
 
         $response = Http::withHeaders(['Accept' => 'application/json'])
-            ->get('https://api.smsdev.com.br/v1/send?key=' . env('CHAVE_API_SMS')
+            ->get('https://api.smsdev.com.br/v1/send?key=' . config('services.sms.chave')
                 . '&type=9&number=' . $telefone . '&msg=' . $msg . $random);
 
         return $response->json();

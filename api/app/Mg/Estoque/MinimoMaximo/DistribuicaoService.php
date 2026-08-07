@@ -390,7 +390,7 @@ class DistribuicaoService
             // codigo do produto
             $sheet->mergeCells("A{$linha}:A{$linha3}");
             $sheet->setCellValue("A{$linha}", $prod->codproduto);
-            $sheet->getCell("A{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
+            $sheet->getCell("A{$linha}")->getHyperlink()->setUrl(config('services.mglara.produto_url') . "/{$prod->codproduto}");
             $sheet->getStyle("A{$linha}:A{$linha3}")->getNumberFormat()->setFormatCode('000000');
 
             // Produto
@@ -544,7 +544,7 @@ class DistribuicaoService
 
         // Gera Arquivo XLSX
         $writer = new Xlsx($spreadsheet);
-        $dir = env('TRANSFERENCIA_PATH', '/tmp/');
+        $dir = config('mg.paths.transferencia');
         $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - Deposito - Filiais - {$marca->marca}.xlsx";
         $v = 0;
         while (file_exists($arquivo)) {

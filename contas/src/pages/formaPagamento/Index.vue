@@ -21,7 +21,7 @@ const FLAGS = [
   { key: 'valecompra', label: 'Vale Compra' },
   { key: 'pix', label: 'Pix' },
   { key: 'lio', label: 'Lio' },
-  { key: 'stone', label: 'Stone' },
+  { key: 'pagarme', label: 'PagarMe' },
   { key: 'safrapay', label: 'SafraPay' },
   { key: 'integracao', label: 'Integração' },
 ]
@@ -40,7 +40,7 @@ const emptyModel = () => ({
   valecompra: false,
   lio: false,
   pix: false,
-  stone: false,
+  pagarme: false,
   integracao: false,
   safrapay: false,
 })
@@ -86,7 +86,7 @@ const abrirEditar = (row) => {
     valecompra: !!row.valecompra,
     lio: !!row.lio,
     pix: !!row.pix,
-    stone: !!row.stone,
+    pagarme: !!row.pagarme,
     integracao: !!row.integracao,
     safrapay: !!row.safrapay,
   }

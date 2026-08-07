@@ -368,7 +368,7 @@ class NFePHPDistDfeService
             $pessoa->telefone1 = $emit->getElementsByTagName('fone')->item(0)->nodeValue??'0';
             $pessoa->ie = $emit->getElementsByTagName('IE')->item(0)->nodeValue;
 
-            $pessoa->email = 'nfe@mgpapelaria.com.br';
+            $pessoa->email = config('mail.destinatarios.nfe');
 
             $pessoa->fornecedor = true;
             $pessoa->notafiscal = 0;

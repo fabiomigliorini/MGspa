@@ -15,7 +15,7 @@ class ExtratoBbApiService
         Carbon $dataFimSolicitacao = null,
         $numeroPaginaSolicitacao = 1
     ){
-        $url = env('BB_URL_EXTRATO') . '/conta-corrente/agencia/' . $agenciaBeneficiario . '/conta/' . $contaBeneficiario
+        $url = config('services.bb.url_extrato') . '/conta-corrente/agencia/' . $agenciaBeneficiario . '/conta/' . $contaBeneficiario
             . '?gw-dev-app-key=' . $gwDevAppKey
             . '&numeroPaginaSolicitacao=' . $numeroPaginaSolicitacao;
 

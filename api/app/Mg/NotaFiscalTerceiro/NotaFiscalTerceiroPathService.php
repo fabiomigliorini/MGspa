@@ -13,7 +13,7 @@ class NotaFiscalTerceiroPathService
      * NFE_TERCEIRO_PATH=/opt/www/NFePHP/Arquivos/NFeTerceiro/
      */
     public static function pathNFe(Filial $filial) {
-      return env('NFE_PHP_PATH') . "DistDFe/{$filial->codfilial}/";
+      return config('mg.paths.nfe_php') . "DistDFe/{$filial->codfilial}/";
     }
 
     public static function pathDFe ( $filial, $numnsu, bool $criar = false)

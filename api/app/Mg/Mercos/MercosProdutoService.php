@@ -44,7 +44,7 @@ class MercosProdutoService {
 
         $saldo_estoque = 10000;
         if ($p->estoque) {
-            $locais = env('MERCOS_CODESTOQUELOCAL_DISPONIVEL');
+            $locais = config('services.mercos.codestoquelocal_disponivel');
             $sql = '
                 select sum(es.saldoquantidade) as saldoquantidade
                 from tblestoquelocalprodutovariacao elpv
@@ -345,7 +345,7 @@ class MercosProdutoService {
         if ($mp == null) {
             $mp = static::procurarPeloId($agregador_id);
             if ($mp == null) {
-                return ProdutoBarra::findOrFail(env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO'));
+                return ProdutoBarra::findOrFail(config('services.mercos.codprodutobarra_nao_cadastrado'));
             }
         }
         if (empty($mp)) {
@@ -363,7 +363,7 @@ class MercosProdutoService {
         if ($pb = $qry->first()) {
             return $pb;
         }
-        return ProdutoBarra::findOrFail(env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO'));
+        return ProdutoBarra::findOrFail(config('services.mercos.codprodutobarra_nao_cadastrado'));
     }
 
     // carrega model Produto Pelo ID do Mercos
@@ -475,7 +475,7 @@ class MercosProdutoService {
     // Altera Estoque no Mercos
     public static function sincronizaEstoque()
     {
-        $locais = env('MERCOS_CODESTOQUELOCAL_DISPONIVEL');
+        $locais = config('services.mercos.codestoquelocal_disponivel');
         $sql = '
             select mp.codproduto, mp.codprodutovariacao, mp.codprodutoembalagem, mp.saldoquantidade, floor(sum(es.saldoquantidade) / coalesce(pe.quantidade, 1))
             from tblmercosproduto mp

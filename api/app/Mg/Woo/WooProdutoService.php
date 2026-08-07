@@ -27,7 +27,7 @@ class WooProdutoService
     public function __construct(Produto $prod, float $fatorPreco = null)
     {
         $this->prod = $prod;
-        $this->fatorPreco = $fatorPreco ?? ((float) env('WOO_FATOR_PRECO', 1));
+        $this->fatorPreco = $fatorPreco ?? ((float) config('services.woo.fator_preco'));
         $this->wp = WooProduto::where('codproduto', $prod->codproduto)->whereNull('inativo')->whereNull('codprodutovariacao')->first();
         $this->api = new WooApi();
         $this->exportacao = Carbon::now();
@@ -191,7 +191,7 @@ class WooProdutoService
 
         // Variacoes como atributos
         if ($variacao) {
-            $attribute_id = env('WOO_ATTRIBUTE_ID');
+            $attribute_id = config('services.woo.attribute_id');
             $product->attributes[0] = (object) [
                 'id' => $attribute_id, // ID do atributo global no WooCommerce (se existir)
                 'name' => 'Variação',
@@ -373,7 +373,7 @@ class WooProdutoService
 
     public static function estoque(ProdutoVariacao $pv, float $multiplicador = 1)
     {
-        $locais = env('WOO_API_CODESTOQUELOCAL_DISPONIVEL');
+        $locais = config('services.woo.codestoquelocal_disponivel');
         $sql = '
             select sum(es.saldoquantidade) as saldoquantidade
             from tblestoquelocalprodutovariacao elpv
@@ -478,7 +478,7 @@ class WooProdutoService
             Log::info("Imagem nova para o Woo: {$pi->codprodutoimagem} - {$pi->Imagem->arquivo}");
             $codprodutoimagem[] = $pi->codprodutoimagem;
             $images[] =  (object) [
-                'src' => 'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' . $pi->Imagem->arquivo
+                'src' => config('services.mglara.imagens_url') . '/' . $pi->Imagem->arquivo
             ];
         }
 
@@ -546,7 +546,7 @@ class WooProdutoService
         }
 
         // codigo do atributo generico
-        $attribute_id = env('WOO_ATTRIBUTE_ID');
+        $attribute_id = config('services.woo.attribute_id');
         $ids = [];
 
         // percorre todas variacoes
@@ -644,7 +644,7 @@ class WooProdutoService
                 ->first();
         }
         if (!$wp) {
-            return ProdutoBarra::findOrFail(env('WOO_CODPRODUTOBARRA_NAO_CADASTRADO'));
+            return ProdutoBarra::findOrFail(config('services.woo.codprodutobarra_nao_cadastrado'));
         }
         if (!empty($wp->codprodutobarraunidade)) {
             return $wp->ProdutoBarraUnidade;
@@ -655,7 +655,7 @@ class WooProdutoService
             $pv = $wp->ProdutoVariacao;
         }
         if (!$pv) {
-            return ProdutoBarra::findOrFail(env('WOO_CODPRODUTOBARRA_NAO_CADASTRADO'));
+            return ProdutoBarra::findOrFail(config('services.woo.codprodutobarra_nao_cadastrado'));
             // throw new Exception("Impossivel localizar variação do produto!", 1);
         }
         $pb = $pv->ProdutoBarraS()->where(   'codprodutoembalagem', null)->first();

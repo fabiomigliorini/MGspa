@@ -86,7 +86,7 @@ class NotaFiscalLacunaService
             $saida = $notaAnterior ? $notaAnterior->saida : now();
 
             // Natureza de operação de venda
-            $codnaturezaoperacao = env('MERCOS_CODNATUREZAOPERACAO');
+            $codnaturezaoperacao = config('services.mercos.codnaturezaoperacao');
             if (!$codnaturezaoperacao) {
                 throw new Exception('MERCOS_CODNATUREZAOPERACAO não configurado no .env.');
             }

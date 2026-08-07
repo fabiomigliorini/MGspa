@@ -22,7 +22,7 @@ class FormaPagamentoResource extends Resource
             'valecompra' => (bool) $this->valecompra,
             'lio' => (bool) $this->lio,
             'pix' => (bool) $this->pix,
-            'stone' => (bool) $this->stone,
+            'pagarme' => (bool) $this->pagarme,
             'integracao' => (bool) $this->integracao,
             'safrapay' => (bool) $this->safrapay,
             'inativo' => $this->inativo,

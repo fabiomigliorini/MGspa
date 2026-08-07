@@ -38,4 +38,17 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Endereços usados pela regra de negócio
+    |--------------------------------------------------------------------------
+    | 'nfe' é o e-mail de fallback quando a pessoa não tem um cadastrado e
+    | precisamos preencher o destinatário de um documento fiscal.
+    */
+    'destinatarios' => [
+        'estoque_faltando' => env('MAIL_ADDRES_ESTOQUE_FALTANDO'),
+        'aniversariantes' => env('MAIL_ANIVERSARIANTES'),
+        'nfe' => env('MAIL_NFE', 'nfe@mgpapelaria.com.br'),
+    ],
+
 ];

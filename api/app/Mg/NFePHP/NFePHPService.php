@@ -1095,7 +1095,7 @@ class NFePHPService extends MgService
 
         // Executa comando de impressao
         $url = \URL::temporarySignedRoute('nota-fiscal.danfe', now()->addMinutes(10), ['codnotafiscal' => $nf->codnotafiscal]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
         exec($cmd);
 
         // retorna

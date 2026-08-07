@@ -33,10 +33,10 @@ class MercosApi
     {
         // Traz variaves de ambiente
         $this->debug = $debug;
-        $this->url = (!empty($url)) ? $url : env('MERCOS_BASEURL');
-        $this->applicationToken = (!empty($user)) ? $user : env('MERCOS_APPLICATION_TOKEN');
-        $this->companyToken = (!empty($password)) ? $password : env('MERCOS_COMPANY_TOKEN');
-        // $this->languagePTBR = (!empty($language_ptbr))?$language_ptbr:env('MERCOS_LANGUAGE_PTBR');
+        $this->url = (!empty($url)) ? $url : config('services.mercos.url');
+        $this->applicationToken = (!empty($user)) ? $user : config('services.mercos.application_token');
+        $this->companyToken = (!empty($password)) ? $password : config('services.mercos.company_token');
+        // $this->languagePTBR = (!empty($language_ptbr))?$language_ptbr:config('services.mercos.language_ptbr');
     }
 
     public function get($url, $data = [], $http_header = null, $data_as_json = true)

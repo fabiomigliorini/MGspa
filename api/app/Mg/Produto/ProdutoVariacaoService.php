@@ -103,13 +103,13 @@ class ProdutoVariacaoService
 
                 if ($mes->movimentos) {
                     // recalcula Custo Médio para origem
-                    $url = env('MGLARA_URL') . "estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
+                    $url = config('services.mglara.url') . "estoque/calcula-custo-medio/{$mes->codestoquemesorigem}";
                     $res = json_decode(file_get_contents($url));
                     if ($res->response != "Agendado") {
                         throw new \Exception("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesorigem}.. $url");
                     }
                     // recalcula Custo Médio para destino
-                    $url = env('MGLARA_URL') . "estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
+                    $url = config('services.mglara.url') . "estoque/calcula-custo-medio/{$mes->codestoquemesdestino}";
                     $res = json_decode(file_get_contents($url));
                     if ($res->response != "Agendado") {
                         throw new \Exception("Rode Manualmente... erro ao calcular custo medio do mes {$mes->codestoquemesdestino}.. $url");

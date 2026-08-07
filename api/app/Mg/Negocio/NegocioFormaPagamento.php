@@ -15,7 +15,6 @@ use Mg\Negocio\Negocio;
 use Mg\Usuario\Usuario;
 use Mg\Lio\LioPedido;
 use Mg\Pix\PixCob;
-use Mg\Stone\StoneTransacao;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\SaurusPedido;
@@ -37,7 +36,6 @@ class NegocioFormaPagamento extends MgModel
         'codpessoa',
         'codpixcob',
         'codsauruspedido',
-        'codstonetransacao',
         'codtitulo',
         'dias',
         'integracao',
@@ -63,7 +61,6 @@ class NegocioFormaPagamento extends MgModel
         'codpessoa' => 'integer',
         'codpixcob' => 'integer',
         'codsauruspedido' => 'integer',
-        'codstonetransacao' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -114,11 +111,6 @@ class NegocioFormaPagamento extends MgModel
     public function SaurusPedido()
     {
         return $this->belongsTo(SaurusPedido::class, 'codsauruspedido', 'codsauruspedido');
-    }
-
-    public function StoneTransacao()
-    {
-        return $this->belongsTo(StoneTransacao::class, 'codstonetransacao', 'codstonetransacao');
     }
 
     public function Titulo()

@@ -10,7 +10,6 @@ use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Portador\Portador;
-use Mg\Pix\GerenciaNet\GerenciaNetService;
 use Mg\Pix\Sicredi\PixSicrediService;
 use Mg\FormaPagamento\FormaPagamento;
 use Illuminate\Support\Facades\DB;
@@ -63,8 +62,6 @@ class PixService
         $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
         $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio}!";
 
-        // Portador Hardcoded por enquanto
-        // $cob->codportador = env('PIX_GERENCIANET_CODPORTADOR');
         //procura portador do BB pra filial com convenio
         $portador = Portador::where('codfilial', $negocio->codfilial)
             ->whereNull('inativo')
@@ -183,10 +180,6 @@ class PixService
                 return PixBbService::transmitirPixCob($cob);
                 break;
 
-            case 364:
-                return GerenciaNetService::transmitirPixCob($cob);
-                break;
-
             case 748:
                 return PixSicrediService::transmitirPixCob($cob);
                 break;
@@ -205,10 +198,6 @@ class PixService
         switch ($cob->Portador->Banco->numerobanco) {
             case 1:
                 $cob = PixBbService::consultarPixCob($cob);
-                break;
-
-            case 364:
-                $cob = GerenciaNetService::consultarPixCob($cob);
                 break;
 
             case 748:
@@ -332,10 +321,6 @@ class PixService
                 );
                 break;
 
-            case 364:
-                $pixRecebidos = GerenciaNetService::consultarPix($portador);
-                break;
-
             case 748:
                 $pixRecebidos = PixSicrediService::consultarPix(
                     $portador,
@@ -361,14 +346,6 @@ class PixService
                 }
                 $qrcode = PixBbApiService::qrCode($cob->qrcode);
                 $qrcode = 'data:image/png;base64,' . base64_encode($qrcode);
-                break;
-
-            case 364:
-                if (empty($cob->locationid)) {
-                    throw new \Exception('Sem LocationID registrado!', 1);
-                }
-                $qrcode = GerenciaNetService::qrCode($cob->locationid);
-                $qrcode = $qrcode['imagemQrcode'];
                 break;
 
             case 748:
@@ -402,7 +379,7 @@ class PixService
     public static function imprimirQrCode(PixCob $cob, $impressora)
     {
         $url = \URL::temporarySignedRoute('pix.cob.pdf', now()->addMinutes(10), ['codpixcob' => $cob->codpixcob]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
         exec($cmd);
     }
 

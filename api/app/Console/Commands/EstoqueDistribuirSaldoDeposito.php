@@ -83,7 +83,7 @@ class EstoqueDistribuirSaldoDeposito extends Command
           $ret = VendaMensalService::atualizar();
         }
         if ($this->option('enviar-mail-faltando')) {
-          $destinatario = env('MAIL_ADDRES_ESTOQUE_FALTANDO', null);
+          $destinatario = config('mail.destinatarios.estoque_faltando');
           $ret = Mail::to($destinatario)->queue(new FaltandoMail());
         }
         return $ret;

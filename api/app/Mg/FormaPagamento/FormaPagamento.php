@@ -33,7 +33,7 @@ class FormaPagamento extends MgModel
         'parcelas',
         'pix',
         'safrapay',
-        'stone',
+        'pagarme',
         'valecompra'
     ];
 
@@ -55,7 +55,7 @@ class FormaPagamento extends MgModel
         'parcelas' => 'integer',
         'pix' => 'boolean',
         'safrapay' => 'boolean',
-        'stone' => 'boolean',
+        'pagarme' => 'boolean',
         'valecompra' => 'boolean'
     ];
 

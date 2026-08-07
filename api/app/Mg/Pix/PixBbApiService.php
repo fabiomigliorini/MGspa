@@ -49,7 +49,7 @@ class PixBbApiService
             $arr['devedor']['cnpj'] = str_pad(number_format($cnpj, 0, '.', ''), 14, '0', STR_PAD_LEFT);
         }
         $body = json_encode($arr);
-        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
+        $url = config('services.bb.url_pix') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
         $auth = "Authorization: Bearer {$token}";
         $curl = curl_init();
         $opt = [
@@ -89,7 +89,7 @@ class PixBbApiService
         $txid
     )
     {
-        $url = env('BB_URL_PIX') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
+        $url = config('services.bb.url_pix') . '/cob/' . $txid . '?gw-dev-app-key=' . $gwDevAppKey;
         $auth = "Authorization: Bearer {$token}";
 
         $curl = curl_init();
@@ -147,7 +147,7 @@ class PixBbApiService
         }
 
         // monta URL
-        $url = env('BB_URL_PIX') . '/pix?' . http_build_query($data);
+        $url = config('services.bb.url_pix') . '/pix?' . http_build_query($data);
 
         // Token Auth
         $auth = "Authorization: Bearer {$token}";

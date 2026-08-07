@@ -15,7 +15,7 @@ class MdfeNfePhpPathService
     public static function pathMdfe(Filial $filial)
     {
         $ambiente = ($filial->nfeambiente == 1)?'producao':'homologacao';
-        return env('NFE_PHP_PATH') . "Mdfe/{$filial->codfilial}/{$ambiente}/";
+        return config('mg.paths.nfe_php') . "Mdfe/{$filial->codfilial}/{$ambiente}/";
     }
 
     public static function pathMdfeCriado(Mdfe $mdfe, bool $criar = false)
@@ -92,7 +92,7 @@ class MdfeNfePhpPathService
     public static function pathDfeGz(DistribuicaoDfe $dfe, bool $criar = false)
     {
         $ambiente = ($dfe->Filial->nfeambiente == 1)?'producao':'homologacao';
-        $path = env('NFE_PHP_PATH') . "DFe/{$dfe->codfilial}/{$ambiente}/" . $dfe->criacao->format('Y/m');
+        $path = config('mg.paths.nfe_php') . "DFe/{$dfe->codfilial}/{$ambiente}/" . $dfe->criacao->format('Y/m');
         if ($criar) {
             @mkdir($path, 0775, true);
         }

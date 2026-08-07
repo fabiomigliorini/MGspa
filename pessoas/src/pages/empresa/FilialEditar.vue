@@ -30,7 +30,6 @@ export default {
       idtokennfce: '',
       tokenibpt: '',
       empresadominio: null,
-      stonecode: '',
       senhacertificado: '',
     })
 
@@ -51,7 +50,6 @@ export default {
           idtokennfce: f.idtokennfce || '',
           tokenibpt: f.tokenibpt || '',
           empresadominio: f.empresadominio,
-          stonecode: f.stonecode || '',
           senhacertificado: '',
         }
       } catch (error) {
@@ -84,7 +82,6 @@ export default {
           nfcetokenid: m.idtokennfce,
           tokenibpt: m.tokenibpt,
           empresadominio: m.empresadominio,
-          stonecode: m.stonecode,
         }
         if (m.senhacertificado) {
           payload.senhacertificado = m.senhacertificado

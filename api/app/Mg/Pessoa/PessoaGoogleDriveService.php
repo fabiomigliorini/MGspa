@@ -14,7 +14,7 @@ class PessoaGoogleDriveService
     public function __construct()
     {
         $client = new Client();
-        $client->setAuthConfig(base_path(env('GOOGLE_DRIVE_CREDENTIALS_PATH')));
+        $client->setAuthConfig(base_path(config('services.google.drive_credentials_path')));
         $client->addScope(Drive::DRIVE);
 
         $this->driveService = new Drive($client);
@@ -80,7 +80,7 @@ class PessoaGoogleDriveService
      */
     public function createColaboradorFolder(string $empresa, string $nomeColaborador): array
     {
-        $rootFolderId = env('GOOGLE_DRIVE_FOLDER_COLABORADORES_ID');
+        $rootFolderId = config('services.google.drive_folder_colaboradores_id');
 
         // Busca ou cria pasta da empresa
         $empresaFolder = $this->findOrCreateFolder($empresa, $rootFolderId);

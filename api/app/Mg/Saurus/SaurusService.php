@@ -270,7 +270,7 @@ class SaurusService
             [
                 'codnegocio' => $ped->codnegocio,
                 'autorizacao' => $autorizacao,
-                'codpessoa' => env('SAFRA_CODPESSOA')
+                'codpessoa' => config('mg.codpessoa_safra')
             ],
             [
                 'codsauruspedido' => $ped->codsauruspedido,

@@ -8,7 +8,7 @@ class CertificadoService
 {
     public static function pfxPath(Filial $filial): string
     {
-        $path = env('NFE_PHP_PATH') . "/Certs/{$filial->codfilial}.pfx";
+        $path = config('mg.paths.nfe_php') . "/Certs/{$filial->codfilial}.pfx";
         if (!file_exists($path)) {
             throw new \Exception("Filial não possui certificado válido!");
         }

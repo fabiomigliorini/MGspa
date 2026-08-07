@@ -29,7 +29,7 @@ class PagarMeApi {
     public function __construct($secret_key)
     {
         // Traz variaves de ambiente
-        $this->url = env('PAGAR_ME_API_BASE_URL');
+        $this->url = config('services.pagarme.url');
         $this->secretKey = $secret_key;
     }
 

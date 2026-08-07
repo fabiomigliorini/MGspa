@@ -14,10 +14,10 @@ class ApiService
 
         try {
             $curl = curl_init();
-            $url = env('SAURUS_S2PAY_URL') . '/api/FunctionAutorizacao';
+            $url = config('services.saurus.url') . '/api/FunctionAutorizacao';
             $headers = [
                 'Chave: ' . $chave,
-                'Credencial: ' . env('SAURUS_S2PAY_CREDENTIAL'),
+                'Credencial: ' . config('services.saurus.credential'),
                 'Content-Type: application/json',
             ];
 
@@ -56,7 +56,7 @@ class ApiService
         $autorizacao = self::functionAutorizacao($chavePDV, $pessoa->cnpj);
 
         $curl = curl_init();
-        $url = env('SAURUS_S2PAY_URL') . '/api/FunctionPdv';
+        $url = config('services.saurus.url') . '/api/FunctionPdv';
         $headers = [
             'Authorization: ' . $autorizacao->response->chavePublica,
             'Content-Type: application/json'
@@ -64,11 +64,11 @@ class ApiService
 
         $data = [
             'id' => $chavePDV,
-            'dominio' => env('SAURUS_S2PAY_DOMINIO'),
+            'dominio' => config('services.saurus.dominio'),
             'numero' => "$numero",
             'razaoSocial' => $pessoa->pessoa,#pessoa-filial
             'documento' => str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT),#pessoa-filial
-            'chavePublica' => env('SAURUS_S2PAY_CREDENTIAL'), #env
+            'chavePublica' => config('services.saurus.credential'), #env
         ];
 
         $opt = [
@@ -104,7 +104,7 @@ class ApiService
 
     public static function functionPdvVerificar($autorizacao) {
         $curl = curl_init();
-        $url = env('SAURUS_S2PAY_URL') . '/api/FunctionPdv';
+        $url = config('services.saurus.url') . '/api/FunctionPdv';
         $headers = [
             'Authorization: ' . $autorizacao,
             'Content-Type: application/json'
@@ -137,7 +137,7 @@ class ApiService
 
     public static function functionPedidoCriar($ped, $pdv, $pos) {
         $curl = curl_init();
-        $url = env('SAURUS_S2PAY_URL') . '/api/FunctionPedido?substituir=1';
+        $url = config('services.saurus.url') . '/api/FunctionPedido?substituir=1';
         $headers = [
             'Authorization: ' . $pdv->autorizacao,
             'Content-Type: application/json'
@@ -196,7 +196,7 @@ class ApiService
 
     public static function functionPagamentoConsultar($idfaturapag, $autorizacao) {
         $curl = curl_init();
-        $url = env('SAURUS_S2PAY_URL') . '/api/FunctionPagamento?idFaturaPag='. $idfaturapag .'&type=pagamento';
+        $url = config('services.saurus.url') . '/api/FunctionPagamento?idFaturaPag='. $idfaturapag .'&type=pagamento';
         $headers = [
             'Authorization: ' . $autorizacao,
             'Content-Type: application/json'
