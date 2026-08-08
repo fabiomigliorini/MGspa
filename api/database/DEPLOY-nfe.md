@@ -16,8 +16,18 @@ emitida** — não é degradação de leitura, é parada total.
 Não dá para mover antes (o código antigo lê de `Certs/`). Então **copia**, e as duas árvores
 ficam válidas durante a transição — inclusive se for preciso reverter o deploy.
 
+
+> ### ⚠️ Rode a migração SEMPRE com `-u 82:82`
+>
+> `docker exec mgspa-api ...` roda como **root**, mas o `php-fpm pool www` e os workers
+> rodam como **uid 82**. Diretório criado por root sai `drwxr-sr-x` — sem escrita para o
+> grupo. Se a migração criar a pasta do dia como root, **a emissão de uma nota nova naquele
+> dia falha ao gravar o XML**.
+>
+> Use `docker exec -u 82:82 mgspa-api ...` em todos os comandos de migração.
+
 ```bash
-docker exec mgspa-api php artisan nfe-php:migrar-arquivos --apenas=certificado
+docker exec -u 82:82 mgspa-api php artisan nfe-php:migrar-arquivos --apenas=certificado
 ls -la /opt/www/Arquivos/NFePHP/certificados/
 ```
 
@@ -115,10 +125,11 @@ de risco nos primeiros segundos, e o acervo antigo fica para o fim. A distribui�
 
 ```bash
 # Confere o mapeamento antes (não move nada)
-docker exec mgspa-api php artisan nfe-php:migrar-arquivos --fases --dry-run | head -40
+docker exec -u 82:82 mgspa-api php artisan nfe-php:migrar-arquivos --fases --dry-run | head -40
 
 # Roda as fases: 7d, 15d, 30d, 90d, 1a, 2a, 5a, tudo
-docker exec -d mgspa-api php artisan nfe-php:migrar-arquivos --fases
+# O -u 82:82 e' OBRIGATORIO: ver aviso no passo 0
+docker exec -d -u 82:82 mgspa-api php artisan nfe-php:migrar-arquivos --fases
 
 # Acompanha
 docker exec mgspa-api tail -f storage/logs/laravel-$(date +%F).log | grep -i migrar
@@ -133,8 +144,8 @@ acervo" não terminar** — ela lê mês fechado, que pode estar no meio da migr
 Se quiser rodar em pedaços manualmente, em vez do `--fases`:
 
 ```bash
-docker exec mgspa-api php artisan nfe-php:migrar-arquivos --desde=$(date -d '7 days ago' +%F)
-docker exec mgspa-api php artisan nfe-php:migrar-arquivos --desde=$(date -d '30 days ago' +%F)
+docker exec -u 82:82 mgspa-api php artisan nfe-php:migrar-arquivos --desde=$(date -d '7 days ago' +%F)
+docker exec -u 82:82 mgspa-api php artisan nfe-php:migrar-arquivos --desde=$(date -d '30 days ago' +%F)
 # ... e assim por diante, até sem --desde
 ```
 
@@ -179,6 +190,7 @@ pessoas) com a tolerância que os números indicarem.
 | Código com problema, arquivos **já migrados** | Não reverter só o código: o antigo lê da árvore velha, que está vazia. Corrigir para frente. |
 | Contingência automática oscilando | `contingenciaautomatica = false` na empresa. Sai do automático na hora, sem deploy. |
 | Envio travado numa nota | O progresso vive no Redis com TTL de 1h: `Cache::forget("nfe:envio:{cod}")`. |
+| Erro ao gravar XML depois da migração | Pasta criada por root. `docker exec -u 0 mgspa-api chown -R 82:82 /opt/www/Arquivos/NFePHP/` e rode o resto com `-u 82:82`. |
 
 ## Pontos de atenção conhecidos
 
