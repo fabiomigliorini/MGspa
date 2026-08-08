@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 use Mg\Filial\Filial;
 use Mg\NFePHP\NFePHPPathService;
+use Mg\Mdfe\Mdfe;
 use Mg\NotaFiscal\NotaFiscal;
 
 /**
@@ -58,8 +59,14 @@ class NFePHPClassificarLegadoCommand extends Command
 
     protected $description = 'Le o legado arquivo por arquivo, classifica pelo conteudo e resgata o que a estrutura nova sabe guardar';
 
-    /** Quanto do arquivo basta ler: raiz, chave e tpEvento ficam todos no comeco. */
-    const BYTES_CABECALHO = 8192;
+    /**
+     * Quanto do arquivo basta ler.
+     *
+     * 8 KB dariam para o XML nu, mas parte do acervo guardou o envelope SOAP inteiro da
+     * resposta — e a o <tpEvento> fica bem mais para baixo. 32 KB cobre com folga e o
+     * custo e irrelevante (le so o inicio, nao carrega o arquivo).
+     */
+    const BYTES_CABECALHO = 32768;
 
     protected array $contagem = [];
     protected array $exemplos = [];
@@ -185,6 +192,7 @@ class NFePHPClassificarLegadoCommand extends Command
             'assinada',
             'cancelamento',
             'cartacorrecao',
+            'encerramento',
             'manifestacao',
             'inutilizacao',
             'pedido-ou-consulta',
@@ -216,6 +224,7 @@ class NFePHPClassificarLegadoCommand extends Command
             $tipo = match (true) {
                 $tpEvento === '110111' => 'cancelamento',
                 $tpEvento === '110110' => 'cartacorrecao',
+                $tpEvento === '110112' => 'encerramento',   // so MDF-e
                 $tpEvento !== null && str_starts_with($tpEvento, '2102') => 'manifestacao',
                 default => 'evento-desconhecido',
             };
@@ -315,11 +324,18 @@ class NFePHPClassificarLegadoCommand extends Command
             );
         }
 
-        // Documentos das NOSSAS notas: so migram se a nota existir em tblnotafiscal —
-        // e dela que saem filial, modelo e emissao, que definem o caminho novo.
         if (empty($c['chave'])) {
             return null;
         }
+
+        // O modelo esta na propria chave (posicoes 21-22): 55 NF-e, 65 NFC-e, 58 MDF-e.
+        // MDF-e nunca esta em tblnotafiscal — tem tabela e arvore proprias.
+        if (substr($c['chave'], 20, 2) === '58') {
+            return $this->destinoMdfe($c);
+        }
+
+        // Documentos das NOSSAS notas: so migram se a nota existir em tblnotafiscal —
+        // e dela que saem filial, modelo e emissao, que definem o caminho novo.
         $nf = NotaFiscal::where('nfechave', $c['chave'])->first();
         if (!$nf) {
             return null;
@@ -330,6 +346,22 @@ class NFePHPClassificarLegadoCommand extends Command
             'assinada' => NFePHPPathService::pathNFeAssinada($nf, true),
             'cancelamento' => NFePHPPathService::pathNFeCancelada($nf, true),
             'cartacorrecao' => NFePHPPathService::pathCartaCorrecao($nf, (int) $c['seq'], true),
+            default => null,
+        };
+    }
+
+    protected function destinoMdfe(array $c): ?string
+    {
+        $mdfe = Mdfe::where('chmdfe', $c['chave'])->first();
+        if (!$mdfe) {
+            return null;
+        }
+
+        return match ($c['tipo']) {
+            'autorizada' => NFePHPPathService::pathMdfeAutorizado($mdfe, true),
+            'assinada' => NFePHPPathService::pathMdfeAssinado($mdfe, true),
+            'cancelamento' => NFePHPPathService::pathMdfeCancelado($mdfe, true),
+            'encerramento' => NFePHPPathService::pathMdfeEncerrado($mdfe, true),
             default => null,
         };
     }
