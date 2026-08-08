@@ -144,6 +144,12 @@ class NotaFiscalDetailResource extends JsonResource
         $ret['cidade'] = $this->Pessoa?->Cidade?->cidade;
         $ret['uf'] = $this->Pessoa?->Cidade?->Estado?->sigla;
 
+        // Destinatários do e-mail da NFe — exatamente o que o NFePHPMailService usa quando
+        // ninguém informa destinatário (o envio automático). Fica separado de `email`, que é
+        // a coluna de tblpessoa e costuma ser outro endereço: o botão de reenvio sugeria o
+        // `email` e mandava para quem NUNCA recebe o automático.
+        $ret['emailnfe'] = $this->Pessoa?->PessoaEmailS->where('nfe', true)->pluck('email')->implode(', ');
+
         return $ret;
     }
 

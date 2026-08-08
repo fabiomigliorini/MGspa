@@ -244,8 +244,13 @@ function enviarEmailNfe(event) {
     title: 'Enviar Email',
     message: 'Digite o endereço de e-mail',
     prompt: {
-      model: props.nota?.pessoa?.email || '',
-      type: 'email',
+      // Sugere os e-mails marcados "Envio de NFe" — os MESMOS que recebem o envio
+      // automatico. Antes sugeria pessoa.email (coluna de tblpessoa, normalmente o de
+      // cobranca), entao o reenvio manual ia para quem nunca recebeu o automatico.
+      // `type` e text, e nao email, porque podem ser varios separados por virgula — o
+      // NFePHPMailService ja aceita a lista assim.
+      model: props.nota?.pessoa?.emailnfe || props.nota?.pessoa?.email || '',
+      type: 'text',
       outlined: true,
     },
     cancel: { label: 'Cancelar', flat: true },

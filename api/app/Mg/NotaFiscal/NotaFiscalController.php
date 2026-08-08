@@ -713,6 +713,7 @@ class NotaFiscalController extends Controller
             'Filial',
             'EstoqueLocal',
             'Pessoa.Cidade.Estado',
+            'Pessoa.PessoaEmailS',
             'NaturezaOperacao',
             'Operacao',
             'PessoaTransportador',
