@@ -25,6 +25,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
+    // Tabela IBPT - tributos aproximados da Lei 12.741 (08/08/2026)
+    // A importacao e um request por UF: o dedup do axios no front usa o corpo da
+    // requisicao como chave e, com FormData, dois POSTs para a mesma URL colidem.
+    Route::get('ibpt', [\Mg\Ibpt\IbptController::class, 'index']);
+    Route::post('ibpt/{uf}', [\Mg\Ibpt\IbptController::class, 'importar'])->where('uf', '[A-Za-z]{2}');
+
     // Feriado (migrado em 23/05/2026)
     Route::get('feriado/', [\Mg\Feriado\FeriadoController::class, 'index']);
     Route::get('feriado/{codferiado}', [\Mg\Feriado\FeriadoController::class, 'show'])->whereNumber('codferiado');

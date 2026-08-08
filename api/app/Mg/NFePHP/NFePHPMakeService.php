@@ -512,14 +512,15 @@ class NFePHPMakeService
             if ($nf->NaturezaOperacao->ibpt) {
 
                 try {
-                    // Faz consulta ao WebService do IBPT
+                    // Busca na tabela do IBPT (que se atualiza pela API quando possivel)
                     $tax = $ibpt->pesquisar($nfpb);
 
-                    // Se nao houve erro ao consultar
-                    if (!isset($tax->error)) {
+                    // So calcula se temos percentual - NCM sem tributacao conhecida
+                    // sai com vTotTrib zerado, sem sujar a fonte nos dados adicionais
+                    if ($tax->nacional !== null) {
 
                         // monta string com fonte do IBPT para utilizar nos Dados Adicionais
-                        $ibptFonte = "{$tax->fonte} {$tax->chave} {$tax->versao}";
+                        $ibptFonte = trim("{$tax->fonte} {$tax->chave} {$tax->versao}");
 
                         // Valcula valor dos tributos
                         $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado) ? $tax->importado : $tax->nacional)) / 100;
