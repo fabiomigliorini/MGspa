@@ -155,25 +155,22 @@ onMounted(async () => {
 
           <!-- Dados da nota/evento -->
           <q-item-section top>
-            <!-- NotaFiscalTerceiro -->
-            <template v-if="item.codnotafiscalterceiro > 0">
+            <!-- NfeTerceiro -->
+            <template v-if="item.codnfeterceiro > 0">
               <q-item-label lines="1">
-                <span class="text-weight-medium" v-if="item.NotaFiscalTerceiro?.codpessoa">
-                  {{ item.NotaFiscalTerceiro.Pessoa?.fantasia }}
+                <span class="text-weight-medium" v-if="item.NfeTerceiro?.codpessoa">
+                  {{ item.NfeTerceiro.Pessoa?.fantasia }}
                 </span>
                 <span class="text-weight-medium" v-else>
-                  {{ item.NotaFiscalTerceiro?.emitente }}
+                  {{ item.NfeTerceiro?.emitente }}
                 </span>
               </q-item-label>
               <q-item-label lines="1">
-                <span
-                  class="text-grey-8 text-weight-medium"
-                  v-if="item.NotaFiscalTerceiro?.valortotal"
-                >
-                  R$ {{ formataNumero(item.NotaFiscalTerceiro.valortotal) }}
+                <span class="text-grey-8 text-weight-medium" v-if="item.NfeTerceiro?.valortotal">
+                  R$ {{ formataNumero(item.NfeTerceiro.valortotal) }}
                 </span>
-                <span class="text-grey-8" v-if="item.NotaFiscalTerceiro?.natop">
-                  - {{ item.NotaFiscalTerceiro.natop }}
+                <span class="text-grey-8" v-if="item.NfeTerceiro?.natureza">
+                  - {{ item.NfeTerceiro.natureza }}
                 </span>
               </q-item-label>
             </template>

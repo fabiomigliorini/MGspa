@@ -28,7 +28,6 @@ use Mg\Negocio\NegocioFormaPagamento;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalPagamento;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pessoa\PessoaCertidao;
 use Mg\Pessoa\PessoaConta;
@@ -362,11 +361,6 @@ class Pessoa extends MgModel
     public function NotaFiscalPagamentoS()
     {
         return $this->hasMany(NotaFiscalPagamento::class, 'codpessoa', 'codpessoa');
-    }
-
-    public function NotaFiscalTerceiroS()
-    {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codpessoa', 'codpessoa');
     }
 
     public function PagarMePedidoS()

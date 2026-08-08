@@ -99,10 +99,16 @@ Nunca usa o `sefazStatus` — ele responde OK em situação que na prática falh
   em [inutilizacao.sql](inutilizacao.sql)). Inócuo na prática.
 - **`ReprocessarPeriodoJob`** (`$timeout = 1800`) segue acima do `retry_after` de 960. Já
   estava quebrado com 90; melhorou, não foi resolvido.
-- **`Mg\NotaFiscalTerceiro` vai ser removido**, com DDL — foi uma tentativa abandonada de
-  substituir o `Mg\NfeTerceiro`. A camada de service/controller já é órfã (nenhuma rota,
-  nenhum chamador) e o `NotaFiscalTerceiroPathService` aponta para a árvore `DistDFe/`. A
-  remoção esbarra em código vivo: `tbldistribuicaodfe.codnotafiscalterceiro` e o bloco que
-  o `DistribuicaoDfeResource` devolve ao front.
+- **`Mg\NotaFiscalTerceiro` foi removido** — tentativa abandonada de substituir o
+  `Mg\NfeTerceiro`, que parou de escrever em 2021-07-16 e nunca mais teve uma linha alterada.
+  Saíram as 12 classes, as 6 tabelas, as 7 sequences e a coluna
+  `tbldistribuicaodfe.codnotafiscalterceiro`. DDL e ordem de execução em
+  [notafiscalterceiro_remover.sql](notafiscalterceiro_remover.sql).
+  Na mesma remoção, o bloco do `DistribuicaoDfeResource` passou a ler `NfeTerceiro`: ele
+  nunca tinha ganhado esse bloco, então a tela de Distribuição DFe só exibia emitente/valor
+  nas 7.219 linhas legadas e deixava em branco as 94.307 modernas. Podem sobrar XMLs órfãos
+  em `{NFE_PHP_PATH}/DistDFe/` — árvore do antigo `NotaFiscalTerceiroPathService`, distinta
+  da que o `NFePHPPathService` usa hoje. Não foram apagados: são documentos fiscais de
+  2020-2021, no limite dos 5 anos de guarda.
 - **`legado/`** guarda o que o classificador não conseguiu interpretar na reorganização.
   Retenção ainda não decidida.

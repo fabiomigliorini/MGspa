@@ -14,7 +14,6 @@ use Mg\Negocio\NegocioCaixaMercadoria;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NfeTerceiro\NfeTerceiro;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\PixCob;
 use Mg\Saurus\SaurusPedido;
@@ -223,11 +222,6 @@ class Negocio extends MgModel
     public function NfeTerceiroS()
     {
         return $this->hasMany(NfeTerceiro::class, 'codnegocio', 'codnegocio');
-    }
-
-    public function NotaFiscalTerceiroS()
-    {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codnegocio', 'codnegocio');
     }
 
     public function PagarMePedidoS()

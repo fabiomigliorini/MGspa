@@ -9,7 +9,6 @@ import mdfe from './mdfe'
 import filtroMarca from './filtro/marca'
 import filtroUsuario from './filtro/usuario'
 import filtroFilial from './filtro/filial'
-import filtroNotaFiscalTerceiro from './filtro/nota-fiscal-terceiro'
 import filtroDfeDistribuicao from './filtro/dfe-distribuicao'
 import filtroPix from './filtro/pix'
 import estoqueSaldoConferencia from './estoque-saldo-conferencia'
@@ -26,7 +25,6 @@ const store = new Vuex.Store({
     filtroMarca,
     filtroUsuario,
     filtroFilial,
-    filtroNotaFiscalTerceiro,
     filtroDfeDistribuicao,
     filtroPix,
     estoqueSaldoConferencia

@@ -11,7 +11,6 @@ use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\NaturezaOperacao\TributacaoNaturezaOperacao;
 use Mg\Tributacao\TributacaoRegra;
 use Mg\ContaContabil\ContaContabil;
@@ -137,11 +136,6 @@ class NaturezaOperacao extends MgModel
     public function NotaFiscalS()
     {
         return $this->hasMany(NotaFiscal::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
-    }
-
-    public function NotaFiscalTerceiroS()
-    {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
     }
 
     public function TributacaoNaturezaOperacaoS()

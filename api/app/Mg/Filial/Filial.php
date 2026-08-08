@@ -20,7 +20,6 @@ use Mg\Meta\MetaFilial;
 use Mg\Negocio\Negocio;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
 use Mg\PagarMe\PagarMePos;
@@ -189,11 +188,6 @@ class Filial extends MgModel
     public function NotaFiscalS()
     {
         return $this->hasMany(NotaFiscal::class, 'codfilial', 'codfilial');
-    }
-
-    public function NotaFiscalTerceiroS()
-    {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codfilial', 'codfilial');
     }
 
     public function PagarMePagamentoS()

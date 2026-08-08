@@ -245,11 +245,6 @@
         "coluna": "codfilial",
         "metodo": "NotaFiscalS"
       },
-      "tblnotafiscalterceiro.codfilial": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codfilial",
-        "metodo": "NotaFiscalTerceiroS"
-      },
       "tblpagarmepagamento.codfilial": {
         "tabela": "tblpagarmepagamento",
         "coluna": "codfilial",
@@ -1074,11 +1069,6 @@
         "coluna": "codpessoa",
         "metodo": "NotaFiscalPagamentoS"
       },
-      "tblnotafiscalterceiro.codpessoa": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codpessoa",
-        "metodo": "NotaFiscalTerceiroS"
-      },
       "tblpagarmepedido.codpessoa": {
         "tabela": "tblpagarmepedido",
         "coluna": "codpessoa",
@@ -1643,11 +1633,6 @@
         "coluna": "codnaturezaoperacao",
         "metodo": "NotaFiscalS"
       },
-      "tblnotafiscalterceiro.codnaturezaoperacao": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codnaturezaoperacao",
-        "metodo": "NotaFiscalTerceiroS"
-      },
       "tbltributacaonaturezaoperacao.codnaturezaoperacao": {
         "tabela": "tbltributacaonaturezaoperacao",
         "coluna": "codnaturezaoperacao",
@@ -1819,11 +1804,6 @@
         "tabela": "tblnfeterceiro",
         "coluna": "codnegocio",
         "metodo": "NfeTerceiroS"
-      },
-      "tblnotafiscalterceiro.codnegocio": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codnegocio",
-        "metodo": "NotaFiscalTerceiroS"
       },
       "tblpagarmepedido.codnegocio": {
         "tabela": "tblpagarmepedido",
@@ -2587,11 +2567,6 @@
         "tabela": "tblnotafiscalreferenciada",
         "coluna": "codnotafiscal",
         "metodo": "NotaFiscalReferenciadaS"
-      },
-      "tblnotafiscalterceiro.codnotafiscal": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codnotafiscal",
-        "metodo": "NotaFiscalTerceiroS"
       }
     }
   },
@@ -2866,11 +2841,6 @@
         "coluna": "codprodutobarra",
         "metodo": "NotaFiscalProdutoBarraS"
       },
-      "tblnotafiscalterceiroprodutobarra.codprodutobarra": {
-        "tabela": "tblnotafiscalterceiroprodutobarra",
-        "coluna": "codprodutobarra",
-        "metodo": "NotaFiscalTerceiroProdutoBarraS"
-      },
       "tblprancheta.codprodutobarra": {
         "tabela": "tblprancheta",
         "coluna": "codprodutobarra",
@@ -3120,72 +3090,6 @@
       }
     },
     "hasMany": []
-  },
-  "tblnotafiscalterceiro": {
-    "tabela": "tblnotafiscalterceiro",
-    "campocodigo": "codnotafiscalterceiro",
-    "namespace": "Mg\\NotaFiscalTerceiro",
-    "classe": "NotaFiscalTerceiro",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiro.php",
-    "belongsTo": {
-      "codfilial": {
-        "tabela": "tblfilial",
-        "coluna": "codfilial",
-        "metodo": "Filial"
-      },
-      "codnaturezaoperacao": {
-        "tabela": "tblnaturezaoperacao",
-        "coluna": "codnaturezaoperacao",
-        "metodo": "NaturezaOperacao"
-      },
-      "codnegocio": {
-        "tabela": "tblnegocio",
-        "coluna": "codnegocio",
-        "metodo": "Negocio"
-      },
-      "codnotafiscal": {
-        "tabela": "tblnotafiscal",
-        "coluna": "codnotafiscal",
-        "metodo": "NotaFiscal"
-      },
-      "codpessoa": {
-        "tabela": "tblpessoa",
-        "coluna": "codpessoa",
-        "metodo": "Pessoa"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": {
-      "tbldistribuicaodfe.codnotafiscalterceiro": {
-        "tabela": "tbldistribuicaodfe",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "DistribuicaoDfeS"
-      },
-      "tblnotafiscalterceiroduplicata.codnotafiscalterceiro": {
-        "tabela": "tblnotafiscalterceiroduplicata",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "NotaFiscalTerceiroDuplicataS"
-      },
-      "tblnotafiscalterceirogrupo.codnotafiscalterceiro": {
-        "tabela": "tblnotafiscalterceirogrupo",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "NotaFiscalTerceiroGrupoS"
-      },
-      "tblnotafiscalterceiropagamento.codnotafiscalterceiro": {
-        "tabela": "tblnotafiscalterceiropagamento",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "NotaFiscalTerceiroPagamentoS"
-      }
-    }
   },
   "tblempresa": {
     "tabela": "tblempresa",
@@ -3607,11 +3511,6 @@
         "coluna": "codfilial",
         "metodo": "Filial"
       },
-      "codnotafiscalterceiro": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "NotaFiscalTerceiro"
-      },
       "coddistribuicaodfeevento": {
         "tabela": "tbldistribuicaodfeevento",
         "coluna": "coddistribuicaodfeevento",
@@ -3621,147 +3520,6 @@
         "tabela": "tblnfeterceiro",
         "coluna": "codnfeterceiro",
         "metodo": "NfeTerceiro"
-      }
-    },
-    "hasMany": []
-  },
-  "tblnotafiscalterceiroduplicata": {
-    "tabela": "tblnotafiscalterceiroduplicata",
-    "campocodigo": "codnotafiscalterceiroduplicata",
-    "namespace": "Mg\\NotaFiscalTerceiro",
-    "classe": "NotaFiscalTerceiroDuplicata",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroDuplicata.php",
-    "belongsTo": {
-      "codnotafiscalterceiro": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "NotaFiscalTerceiro"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": []
-  },
-  "tblnotafiscalterceirogrupo": {
-    "tabela": "tblnotafiscalterceirogrupo",
-    "campocodigo": "codnotafiscalterceirogrupo",
-    "namespace": "Mg\\NotaFiscalTerceiro",
-    "classe": "NotaFiscalTerceiroGrupo",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroGrupo.php",
-    "belongsTo": {
-      "codnotafiscalterceiro": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "NotaFiscalTerceiro"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": {
-      "tblnotafiscalterceiroitem.codnotafiscalterceirogrupo": {
-        "tabela": "tblnotafiscalterceiroitem",
-        "coluna": "codnotafiscalterceirogrupo",
-        "metodo": "NotaFiscalTerceiroItemS"
-      },
-      "tblnotafiscalterceiroprodutobarra.codnotafiscalterceirogrupo": {
-        "tabela": "tblnotafiscalterceiroprodutobarra",
-        "coluna": "codnotafiscalterceirogrupo",
-        "metodo": "NotaFiscalTerceiroProdutoBarraS"
-      }
-    }
-  },
-  "tblnotafiscalterceiroitem": {
-    "tabela": "tblnotafiscalterceiroitem",
-    "campocodigo": "codnotafiscalterceiroitem",
-    "namespace": "Mg\\NotaFiscalTerceiro",
-    "classe": "NotaFiscalTerceiroItem",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroItem.php",
-    "belongsTo": {
-      "codnotafiscalterceirogrupo": {
-        "tabela": "tblnotafiscalterceirogrupo",
-        "coluna": "codnotafiscalterceirogrupo",
-        "metodo": "NotaFiscalTerceiroGrupo"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": []
-  },
-  "tblnotafiscalterceiroprodutobarra": {
-    "tabela": "tblnotafiscalterceiroprodutobarra",
-    "campocodigo": "codnotafiscalterceiroprodutobarra",
-    "namespace": "Mg\\NotaFiscalTerceiro",
-    "classe": "NotaFiscalTerceiroProdutoBarra",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroProdutoBarra.php",
-    "belongsTo": {
-      "codnotafiscalterceirogrupo": {
-        "tabela": "tblnotafiscalterceirogrupo",
-        "coluna": "codnotafiscalterceirogrupo",
-        "metodo": "NotaFiscalTerceiroGrupo"
-      },
-      "codprodutobarra": {
-        "tabela": "tblprodutobarra",
-        "coluna": "codprodutobarra",
-        "metodo": "ProdutoBarra"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": []
-  },
-  "tblnotafiscalterceiropagamento": {
-    "tabela": "tblnotafiscalterceiropagamento",
-    "campocodigo": "codnotafiscalterceiropagamento",
-    "namespace": "Mg\\NotaFiscalTerceiro",
-    "classe": "NotaFiscalTerceiroPagamento",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiroPagamento.php",
-    "belongsTo": {
-      "codnotafiscalterceiro": {
-        "tabela": "tblnotafiscalterceiro",
-        "coluna": "codnotafiscalterceiro",
-        "metodo": "NotaFiscalTerceiro"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
       }
     },
     "hasMany": []

@@ -344,11 +344,6 @@ Legenda: ✅ migrado · ⏭️ pulado · 🟢 candidato leve · 🟡 médio · �
 | 🔴 | `NotaFiscalReferenciadaController` | nested |
 | 🔴 | `NotaFiscalTransferenciaController` | scheduled command |
 
-### Mg\NotaFiscalTerceiro
-| Status | Controller | Notas |
-|---|---|---|
-| 🔴 | `NotaFiscalTerceiroController` | nota fiscal de terceiros |
-
 ### Mg\PagarMe
 | Status | Controller | Notas |
 |---|---|---|
@@ -528,7 +523,7 @@ Depois de Pessoa core:
 **Linchpin = NotaFiscal core** (já depende de Pessoa+Produto) desbloqueia:
 - `NotaFiscalController` + 7 subs (30+ rotas, nfephp-org/*, dompdf)
 - `NFePHPController`, `MdfeController`, `DfeController`
-- `NfeTerceiroController`, `NotaFiscalTerceiroController`
+- `NfeTerceiroController`
 - `TributacaoService` (NotaFiscalItemTributo)
 
 **Linchpin = Titulo** (depende de Pessoa) desbloqueia:
@@ -575,7 +570,6 @@ Catch-all em `Route::any('{any}')` repassa rotas ainda não migradas pro MGspa/l
 - `app/Mg/NfeTerceiro/NfeTerceiro.php`
 - `app/Mg/NotaFiscal/NotaFiscal.php`
 - `app/Mg/NotaFiscal/NotaFiscalProdutoBarra.php`
-- `app/Mg/NotaFiscalTerceiro/NotaFiscalTerceiro.php`
 - `app/Mg/Produto/TipoProduto.php`
 - `app/Mg/Tributacao/NcmTributacao.php`
 - `app/Mg/NaturezaOperacao/Operacao.php`, `DominioAcumulador.php`

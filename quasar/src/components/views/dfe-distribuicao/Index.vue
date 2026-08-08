@@ -117,23 +117,23 @@
 
               <q-item-section top>
 
-                <!-- NotaFiscalTerceiro -->
-                <template v-if="item.codnotafiscalterceiro > 0">
+                <!-- NfeTerceiro -->
+                <template v-if="item.codnfeterceiro > 0">
 
                   <q-item-label lines="1">
-                    <span class="text-weight-medium" v-if="item.NotaFiscalTerceiro.codpessoa">
-                      {{ item.NotaFiscalTerceiro.Pessoa.fantasia }}
+                    <span class="text-weight-medium" v-if="item.NfeTerceiro.codpessoa">
+                      {{ item.NfeTerceiro.Pessoa.fantasia }}
                     </span>
                     <span class="text-weight-medium" v-else>
-                      {{ item.NotaFiscalTerceiro.emitente }}
+                      {{ item.NfeTerceiro.emitente }}
                     </span>
                   </q-item-label>
                   <q-item-label lines="1">
-                    <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
-                      R$ {{ numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00') }}
+                    <span class="text-grey-8 text-weight-medium" v-if="item.NfeTerceiro.valortotal">
+                      R$ {{ numeral(item.NfeTerceiro.valortotal).format('0,0.00') }}
                     </span>
-                    <span class="text-grey-8" v-if="item.NotaFiscalTerceiro.natop">
-                      - {{ item.NotaFiscalTerceiro.natop }}
+                    <span class="text-grey-8" v-if="item.NfeTerceiro.natureza">
+                      - {{ item.NfeTerceiro.natureza }}
                     </span>
                   </q-item-label>
                 </template>
@@ -157,8 +157,8 @@
                       {{ item.DistribuicaoDfeEvento.DfeEvento.dfeevento }}
                       ({{ item.DistribuicaoDfeEvento.DfeEvento.tpevento }})
                     </span>
-                    <span class="text-grey-8 text-weight-medium" v-if="item.NotaFiscalTerceiro.valortotal">
-                      {{ numeral(item.NotaFiscalTerceiro.valortotal).format('0,0.00') }}
+                    <span class="text-grey-8 text-weight-medium" v-if="item.NfeTerceiro.valortotal">
+                      {{ numeral(item.NfeTerceiro.valortotal).format('0,0.00') }}
                     </span>
                   </q-item-label>
                 </template>
