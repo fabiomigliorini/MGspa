@@ -155,6 +155,14 @@ class NFePHPClassificarLegadoCommand extends Command
             return;
         }
 
+        // Gravacao que falhou la atras. Nao ha o que classificar nem o que preservar —
+        // fica parado, para decisao manual.
+        if (trim($cabecalho) === '') {
+            $this->registrar('arquivo-vazio', $path);
+            $this->ficaram++;
+            return;
+        }
+
         // Parte do acervo guardou a resposta SOAP com o XML interno ESCAPADO
         // (&lt;retInutNFe&gt;). Sem decodificar, nenhuma busca por elemento casa.
         if (str_contains($cabecalho, '&lt;')) {
@@ -286,7 +294,13 @@ class NFePHPClassificarLegadoCommand extends Command
         // Vem PRIMEIRO de proposito: a resposta de consulta de situacao carrega os dados
         // do evento (tpEvento + nProt) no corpo, entao seria classificada como evento se
         // testada depois. Nao e documento, e pergunta — fica no legado.
-        foreach (['retConsSitNFe', 'retConsSitMDFe', 'consSitNFe', 'consSitMDFe', 'retConsReciNFe'] as $raiz) {
+        // MDF-e: o retorno da transmissao (retEnviMDFe, cStat 103 "Arquivo recebido com
+        // sucesso") e recibo do lote, nao documento — o MDF-e autorizado fica em
+        // autorizado/ como procMDFe. Vinham todos da pasta retorno/, o balde indistinto.
+        foreach ([
+            'retConsSitNFe', 'retConsSitMDFe', 'consSitNFe', 'consSitMDFe', 'retConsReciNFe',
+            'retEnviMDFe', 'retConsReciMDFe', 'consReciMDFe', 'enviMDFe',
+        ] as $raiz) {
             if ($this->tem($xml, $raiz)) {
                 return ['tipo' => 'pedido-ou-consulta', 'chave' => $chave, 'tpEvento' => null, 'seq' => null];
             }
@@ -472,11 +486,18 @@ class NFePHPClassificarLegadoCommand extends Command
     }
 
     /**
-     * O acervo mistura <procInutNFe> e <ProcInutNFe>, entao a comparacao e case-insensitive.
+     * Procura um elemento no XML, tolerante a:
+     *   - case      — o acervo mistura <procInutNFe> e <ProcInutNFe>
+     *   - namespace — o corpo do SOAP pode vir como <ns2:retEnviMDFe>
+     *
+     * O sufixo [\s>/] evita casar prefixo de outro elemento (retEnviMDFe x retEnviMDFeXyz).
      */
     protected function tem(string $xml, string $elemento): bool
     {
-        return stripos($xml, '<' . $elemento) !== false;
+        return (bool) preg_match(
+            '/<(?:[a-z0-9._-]+:)?' . preg_quote($elemento, '/') . '[\s>\/]/i',
+            $xml
+        );
     }
 
     protected function extrair(string $regex, string $xml): ?string
