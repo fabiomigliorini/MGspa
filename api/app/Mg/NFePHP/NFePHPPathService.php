@@ -26,7 +26,7 @@ use Mg\Mdfe\Mdfe;
  *                              {chave}-cce-{seq}.xml  carta de correcao, uma por sequencia
  *                              {chave}.pdf            DANFE / DANFCE / DAMDFE
  *
- *   inutilizacao/              {modelo}-{serie}-{nIni}-{nFin}-inut.xml
+ *   inutilizacoes/             {modelo}-{serie}-{nIni}-{nFin}-inut.xml
  *                              Arvore propria porque inutilizacao cobre uma FAIXA de
  *                              numeracao e nao pertence a documento nenhum: um procInutNFe
  *                              de 1..50 teria de ser duplicado em 50 pastas. A data que o
@@ -46,7 +46,7 @@ use Mg\Mdfe\Mdfe;
  *                              vai no nome para um `find -name "*{chave}*"` continuar
  *                              atravessando as duas arvores.
  *
- *   certificado/{codfilial}.pfx
+ *   certificados/{codfilial}.pfx
  *
  * POR QUE ESTADO NO SUFIXO E NAO EM PASTA
  *
@@ -61,9 +61,10 @@ class NFePHPPathService
     const TIPO_NFE = 'nfe';
     const TIPO_NFCE = 'nfce';
     const TIPO_MDFE = 'mdfe';
-    const TIPO_INUTILIZACAO = 'inutilizacao';
+    const TIPO_INUTILIZACAO = 'inutilizacoes';
     const TIPO_DFE = 'dfe';
     const TIPO_CONVERSA = 'conversas';
+    const DIR_CERTIFICADO = 'certificados';
 
     /**
      * Nucleo unico: todas as arvores tem a mesma forma.
@@ -286,6 +287,6 @@ class NFePHPPathService
      */
     public static function pathCertificado(Filial $filial)
     {
-        return rtrim(config('mg.paths.nfe_php'), '/') . "/certificado/{$filial->codfilial}.pfx";
+        return rtrim(config('mg.paths.nfe_php'), '/') . '/' . static::DIR_CERTIFICADO . "/{$filial->codfilial}.pfx";
     }
 }

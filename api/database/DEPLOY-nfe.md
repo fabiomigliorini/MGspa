@@ -18,8 +18,12 @@ ficam válidas durante a transição — inclusive se for preciso reverter o dep
 
 ```bash
 docker exec mgspa-api php artisan nfe-php:migrar-arquivos --apenas=certificado
-ls -la /opt/www/Arquivos/NFePHP/Arquivos/certificado/
+ls -la /opt/www/Arquivos/NFePHP/certificados/
 ```
+
+> **Se você já rodou este passo antes da correção de caminho**, os `.pfx` foram parar em
+> `NFePHP/Arquivos/certificado/`. Basta rodar o command de novo: ele agora também procura
+> ali e copia para o lugar certo (`NFePHP/certificados/`).
 
 O command avisa se sobrar alguma filial sem certificado no destino. **Se avisar, pare** —
 aquela filial não emite. Os `Certs/` antigos só saem na limpeza manual, no fim de tudo.
@@ -52,10 +56,15 @@ alguém poderia reinutilizar por cima.
 
 ```
 REDIS_QUEUE_RETRY_AFTER=960
+NFE_PHP_PATH='/opt/www/Arquivos/NFePHP/'
 ```
 
-Tem que ser maior que o `$timeout` do job mais longo (`NFePHPResolverJob` = 900s). Abaixo
-disso a fila devolve o job ainda em execução.
+`REDIS_QUEUE_RETRY_AFTER` tem que ser maior que o `$timeout` do job mais longo
+(`NFePHPResolverJob` = 900s). Abaixo disso a fila devolve o job ainda em execução.
+
+`NFE_PHP_PATH` **muda**: sai o `Arquivos/` que existia dentro de `NFePHP/` e era redundante.
+A árvore legada continua em `NFePHP/Arquivos/` até a migração terminar — o command sabe ler
+de lá e escrever na raiz nova.
 
 ## 3. Deploy do código
 
@@ -81,7 +90,7 @@ Emitir **uma** NFC-e de teste e conferir:
 
 - O toast evolui "Criando arquivo XML" → "Enviando para a SEFAZ" → verde, num Notify só.
 - No devtools: **1 POST** `/enviar` + vários **GET** `/enviar` de 3 em 3s, nenhum passando de 15s.
-- Os arquivos aparecem em `nfce/{filial}/{ambiente}/{AAAA}/{MM}/{DD}/`.
+- Os arquivos aparecem em `/opt/www/Arquivos/NFePHP/nfce/{filial}/{ambiente}/{AAAA}/{MM}/{DD}/`.
 - O card "Comunicação com a SEFAZ" na tela da nota lista a conversa, com duração.
 
 ```sql

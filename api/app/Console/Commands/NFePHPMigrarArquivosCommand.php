@@ -115,7 +115,7 @@ class NFePHPMigrarArquivosCommand extends Command
         $this->newLine();
         $this->info("Movidos: {$this->movidos}  Pulados: {$this->pulados}  Falhas: {$this->falhas}");
         $this->line('Confira o que sobrou na arvore antiga:');
-        $this->line('  find ' . rtrim(config('mg.paths.nfe_php'), '/') . '/{NFe,Mdfe,DFe,Certs} -type f | wc -l');
+        $this->line('  find ' . $this->raizLegado() . '/{NFe,Mdfe,DFe,Certs} -type f | wc -l');
     }
 
     /** O --limite vale para as tres arvores, senao a "amostra pequena" processa tudo. */
@@ -124,9 +124,20 @@ class NFePHPMigrarArquivosCommand extends Command
         return $this->option('limite') ? 'limit ' . (int) $this->option('limite') : '';
     }
 
+    /** Destino: a raiz nova, sem o 'Arquivos/' redundante. */
     protected function raiz(): string
     {
         return rtrim(config('mg.paths.nfe_php'), '/');
+    }
+
+    /**
+     * Origem: a arvore legada vivia num subdiretorio 'Arquivos/' dentro de NFePHP/, o que
+     * era redundante (NFePHP/Arquivos/NFe/...). O NFE_PHP_PATH passou a apontar para
+     * NFePHP/ direto, entao o legado fica um nivel abaixo do destino.
+     */
+    protected function raizLegado(): string
+    {
+        return $this->raiz() . '/Arquivos';
     }
 
     protected function migrarNotasFiscais(bool $dryRun, ?string $desde = null): void
@@ -181,7 +192,7 @@ class NFePHPMigrarArquivosCommand extends Command
             $emissao = Carbon::parse($nota->emissao);
             $ambiente = ($nota->nfeambiente == 1) ? 'producao' : 'homologacao';
             $ym = $emissao->format('Ym');
-            $antigo = "{$this->raiz()}/NFe/{$nota->codfilial}/{$ambiente}";
+            $antigo = "{$this->raizLegado()}/NFe/{$nota->codfilial}/{$ambiente}";
             $tipo = ($nota->modelo == NotaFiscalService::MODELO_NFCE)
                 ? NFePHPPathService::TIPO_NFCE
                 : NFePHPPathService::TIPO_NFE;
@@ -241,7 +252,7 @@ class NFePHPMigrarArquivosCommand extends Command
             $emissao = Carbon::parse($mdfe->emissao);
             $ambiente = ($mdfe->nfeambiente == 1) ? 'producao' : 'homologacao';
             $ym = $emissao->format('Y/m');
-            $antigo = "{$this->raiz()}/Mdfe/{$mdfe->codfilial}/{$ambiente}";
+            $antigo = "{$this->raizLegado()}/Mdfe/{$mdfe->codfilial}/{$ambiente}";
             $novoDir = NFePHPPathService::pathDiretorio(
                 NFePHPPathService::TIPO_MDFE,
                 $filiais[$mdfe->codfilial],
@@ -276,7 +287,7 @@ class NFePHPMigrarArquivosCommand extends Command
             }
             $criacao = Carbon::parse($dfe->criacao);
             $ambiente = ($dfe->nfeambiente == 1) ? 'producao' : 'homologacao';
-            $origem = "{$this->raiz()}/DFe/{$dfe->codfilial}/{$ambiente}/"
+            $origem = "{$this->raizLegado()}/DFe/{$dfe->codfilial}/{$ambiente}/"
                 . $criacao->format('Y/m') . "/{$dfe->coddistribuicaodfe}.xml.gz";
 
             $nsu = number_format((float) $dfe->nsu, 0, '', '');
@@ -300,7 +311,7 @@ class NFePHPMigrarArquivosCommand extends Command
      */
     protected function migrarCertificados(bool $dryRun): void
     {
-        $destinoDir = "{$this->raiz()}/certificado";
+        $destinoDir = $this->raiz() . '/' . NFePHPPathService::DIR_CERTIFICADO;
         $this->info('Certificados (copia, nao move):');
 
         foreach (Filial::all() as $filial) {
@@ -310,7 +321,11 @@ class NFePHPMigrarArquivosCommand extends Command
                 continue;
             }
             // O caminho antigo tinha barra dupla: config termina em '/' e concatenava '/Certs/'
-            foreach (["{$this->raiz()}//Certs/{$filial->codfilial}.pfx", "{$this->raiz()}/Certs/{$filial->codfilial}.pfx"] as $origem) {
+            foreach ([
+                "{$this->raizLegado()}//Certs/{$filial->codfilial}.pfx",
+                "{$this->raizLegado()}/Certs/{$filial->codfilial}.pfx",
+                "{$this->raizLegado()}/certificado/{$filial->codfilial}.pfx",
+            ] as $origem) {
                 if (!file_exists($origem)) {
                     continue;
                 }
