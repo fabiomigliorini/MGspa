@@ -99,8 +99,10 @@ Nunca usa o `sefazStatus` — ele responde OK em situação que na prática falh
   em [inutilizacao.sql](inutilizacao.sql)). Inócuo na prática.
 - **`ReprocessarPeriodoJob`** (`$timeout = 1800`) segue acima do `retry_after` de 960. Já
   estava quebrado com 90; melhorou, não foi resolvido.
-- **`Mg\NotaFiscalTerceiro`** tem uma camada de service/controller órfã (nenhuma rota,
-  nenhum chamador) cujo `NotaFiscalTerceiroPathService` aponta para a árvore `DistDFe/`.
-  Só os *models* do namespace estão em uso, como relações. Candidato a remoção.
+- **`Mg\NotaFiscalTerceiro` vai ser removido**, com DDL — foi uma tentativa abandonada de
+  substituir o `Mg\NfeTerceiro`. A camada de service/controller já é órfã (nenhuma rota,
+  nenhum chamador) e o `NotaFiscalTerceiroPathService` aponta para a árvore `DistDFe/`. A
+  remoção esbarra em código vivo: `tbldistribuicaodfe.codnotafiscalterceiro` e o bloco que
+  o `DistribuicaoDfeResource` devolve ao front.
 - **`legado/`** guarda o que o classificador não conseguiu interpretar na reorganização.
   Retenção ainda não decidida.
