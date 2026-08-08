@@ -1,7 +1,9 @@
 # Deploy — NFe (estrutura de arquivos, log SEFAZ, contingência, envio assíncrono)
 
-Commits `50f1b1898` + `0e1a14821`. Ordem importa: **DDL → deploy → testes → migração de arquivos**.
-A migração dos arquivos é a única etapa que exige janela; o resto entra com o sistema no ar.
+Ordem importa: **certificados → DDL → deploy → fumaça → migração dos arquivos (em paralelo)**.
+
+O passo 0 (certificados) é bloqueante: sem ele a emissão para por completo. Os demais
+entram com o sistema no ar, e a migração roda em janelas crescentes durante o expediente.
 
 ---
 
