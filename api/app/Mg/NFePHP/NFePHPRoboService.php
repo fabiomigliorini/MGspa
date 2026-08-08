@@ -110,17 +110,13 @@ class NFePHPRoboService
             }
         }
 
-        // se resolveu com procedimento acima, manda o email e retorna sucesso
+        // se resolveu com procedimento acima, retorna sucesso
+        // (o e-mail sai sozinho: quem despacha o NFePHPMailJob e o vincularProtocolo-
+        // Autorizacao do NFePHPService, na transicao da nota para autorizada)
         if (static::resolvido($nf)) {
-            try {
-                $resMail = NFePHPMailService::mail($nf);
-            } catch (\Exception $e) {
-                $resMail = $e->getMessage();
-            }
             return (object) [
                 'resolvido' => true,
                 'resEnvioSincrono' => $resEnvioSincrono,
-                'resMail' => $resMail ?? null
             ];
         }
 
@@ -138,20 +134,12 @@ class NFePHPRoboService
             ];
         }
 
-        // se resolveu com procedimento acima, manda o email e retorna sucesso
+        // se resolveu com procedimento acima, retorna sucesso
         if (static::resolvido($nf)) {
-            if (empty($nf->nfecancelamento)) {
-                try {
-                    $resMail =  NFePHPMailService::mail($nf);
-                } catch (\Exception $e) {
-                    $resMail = $e->getMessage();
-                }
-            }
             return (object) [
                 'resolvido' => true,
                 'resEnvioSincrono' => $resEnvioSincrono,
                 'resConsulta' => $resConsulta,
-                'resMail' => $resMail ?? null
             ];
         }
 
@@ -177,16 +165,10 @@ class NFePHPRoboService
 
             // se resolveu, retorna sucesso
             if (static::resolvido($nf)) {
-                try {
-                    $resMail = NFePHPMailService::mail($nf);
-                } catch (\Exception $e) {
-                    $resMail = $e->getMessage();
-                }
                 return (object) [
                     'resolvido' => true,
                     'resEnvioSincrono' => $resEnvioSincrono,
                     'resCriar' => $resCriar,
-                    'resMail' => $resMail ?? null
                 ];
             }
         }

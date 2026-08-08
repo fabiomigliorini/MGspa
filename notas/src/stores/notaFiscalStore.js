@@ -464,6 +464,20 @@ export const useNotaFiscalStore = defineStore('notaFiscal', {
       }
     },
 
+    /**
+     * Remove uma nota excluída da lista, sem requisição.
+     */
+    removerNotaDaLista(codnotafiscal) {
+      const index = this.notas.findIndex((n) => n.codnotafiscal === codnotafiscal)
+      if (index === -1) return
+
+      this.notas.splice(index, 1)
+      this.pagination.total--
+      if (this.currentNota?.codnotafiscal === codnotafiscal) {
+        this.currentNota = null
+      }
+    },
+
     // ==================== ITENS ====================
 
     async fetchItens(codnotafiscal) {

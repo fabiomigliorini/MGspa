@@ -9,18 +9,22 @@ import { Notify } from 'quasar'
  * O axios dos apps tem timeout de 15s, mas o envio à SEFAZ leva até ~4 min no pior caso.
  * O cliente abortava aos 15s enquanto o backend seguia rodando e segurando o lock da nota
  * — e o retry do usuário batia em "Outra operação já está em andamento". Agora o POST só
- * enfileira (responde na hora) e o progresso vem de um GET a cada 3s.
+ * enfileira (responde na hora) e o progresso vem de um GET com cadência em rampa.
  *
  * Sem prefixo Mg por não ser componente, igual a abrirPdf.js e formatters.js.
  * Espelha pessoas/src/composables/useReprocessamentoPeriodo.js.
  */
 
-const INTERVALO_MS = 3000
+// Rampa: a NFC-e autoriza em ~1,5s, então esperar 3s fixos pela PRIMEIRA consulta fazia a
+// linha só ficar verde bem depois de a nota já estar autorizada. Os ticks rápidos cobrem o
+// caso comum e a NFe lenta cai no teto sem gerar centenas de requisições.
+const ATRASOS_MS = [0, 400, 800, 1500]
+const INTERVALO_MAX_MS = 3000
 // Desiste só depois de 5 falhas seguidas: é PDV, uma oscilação de rede não pode
 // abortar o acompanhamento de um envio que está indo bem no servidor.
 const MAX_ERROS_SEGUIDOS = 5
-// Teto de segurança para não vazar setInterval se o backend nunca chegar a um estado
-// terminal (~6 min).
+// Teto de segurança para não vazar o timer se o backend nunca chegar a um estado
+// terminal (4 ticks rápidos + 116 x 3s ~ 6 min).
 const MAX_POLLS = 120
 
 export function useNotaFiscalEnvio({ api, codnotafiscal }) {
@@ -38,7 +42,7 @@ export function useNotaFiscalEnvio({ api, codnotafiscal }) {
 
   function pararPolling() {
     if (timer) {
-      clearInterval(timer)
+      clearTimeout(timer)
       timer = null
     }
     enviando.value = false
@@ -93,7 +97,12 @@ export function useNotaFiscalEnvio({ api, codnotafiscal }) {
     resolver = rejeitar = null
   }
 
+  function agendarVerificacao() {
+    timer = setTimeout(verificar, ATRASOS_MS[polls] ?? INTERVALO_MAX_MS)
+  }
+
   async function verificar() {
+    timer = null
     polls += 1
     if (polls > MAX_POLLS) {
       falhar(
@@ -122,6 +131,7 @@ export function useNotaFiscalEnvio({ api, codnotafiscal }) {
 
       if (data.status === 'concluido' || data.status === 'erro') {
         finalizar(data)
+        return
       }
     } catch (error) {
       errosSeguidos += 1
@@ -129,14 +139,22 @@ export function useNotaFiscalEnvio({ api, codnotafiscal }) {
         falhar(
           new Error('Sem conexão para acompanhar o envio. Consulte a nota para ver o resultado.'),
         )
+        return
       }
     }
+
+    // Só reagenda aqui: todo caminho terminal retornou acima. Encadear setTimeout em vez de
+    // usar setInterval também garante que duas consultas nunca se sobreponham.
+    //
+    // O `enviando` é a trava do desmonte: clearTimeout não alcança uma consulta que já está
+    // em voo, então sem isto um onUnmounted no meio do await ressuscitaria o polling.
+    if (enviando.value) agendarVerificacao()
   }
 
   function iniciarPolling() {
     if (timer) return
     enviando.value = true
-    timer = setInterval(verificar, INTERVALO_MS)
+    agendarVerificacao()
   }
 
   /**

@@ -36,14 +36,15 @@ const loading = computed(() => notaFiscalStore.pagination.loading)
 const notas = computed(() => notaFiscalStore.notas)
 const hasActiveFilters = computed(() => notaFiscalStore.hasActiveFilters)
 
-async function atualizarNotaNaLista(codnotafiscal) {
-  try {
-    const fresh = await notaFiscalService.get(codnotafiscal)
-    notaFiscalStore.currentNota = fresh.data ?? fresh
-    notaFiscalStore.syncCurrentNotaToList()
-  } catch {
-    /* segue */
+// As acoes do MgNotaFiscalAcoes ja devolvem a nota atualizada no payload (o mesmo
+// NotaFiscalDetailResource que o GET devolveria); refazer a requisicao so atrasava a linha
+// virar verde depois de a NFC-e ja estar autorizada.
+function onAcaoConcluida(acao, nota) {
+  if (acao === 'excluir') {
+    notaFiscalStore.removerNotaDaLista(nota?.codnotafiscal)
+    return
   }
+  notaFiscalStore.setCurrentNota(nota)
 }
 
 // Infinite scroll
@@ -445,7 +446,7 @@ onMounted(async () => {
                   compact
                   :nota="nota"
                   :api="api"
-                  @action-completed="atualizarNotaNaLista(nota.codnotafiscal)"
+                  @action-completed="onAcaoConcluida"
                 />
               </div>
             </div>
@@ -457,7 +458,7 @@ onMounted(async () => {
               compact
               :nota="nota"
               :api="api"
-              @action-completed="atualizarNotaNaLista(nota.codnotafiscal)"
+              @action-completed="onAcaoConcluida"
             />
           </q-item-section>
         </q-item>

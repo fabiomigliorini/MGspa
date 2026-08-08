@@ -131,18 +131,19 @@ async function enviarNfe(event, offline = null) {
   try {
     const r = await iniciarEnvio(offline)
 
-    if (r.contingencia) {
-      // Nao foi a SEFAZ: o robo transmite depois, dentro do prazo de 24h.
-      if (cupom.value && props.impressora) await imprimir()
-      await abrirDanfe()
-    } else if (r.sucesso) {
-      if (cupom.value && props.impressora) await imprimir()
-      if (deveAbrirDanfeAposEnviar.value) await abrirDanfe()
-    } else {
+    if (!r.contingencia && !r.sucesso) {
       throw new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
     }
 
+    // Emite ANTES de imprimir e abrir o DANFE: sincronizar o estado da nota nao pode ficar
+    // atras da impressora termica nem da geracao do PDF, senao a linha da listagem so fica
+    // verde segundos depois de a nota ja estar autorizada.
     emit('action-completed', 'enviar', r.nota)
+
+    // Contingencia nao foi a SEFAZ (o robo transmite depois, dentro do prazo de 24h), mas o
+    // cupom precisa sair do mesmo jeito — por isso ela abre o DANFE mesmo em modo compact.
+    if (cupom.value && props.impressora) await imprimir()
+    if (r.contingencia || deveAbrirDanfeAposEnviar.value) await abrirDanfe()
   } catch (error) {
     // O Notify de erro ja foi emitido pelo composable; aqui so o caso do cStat negado
     if (error?.message && !error.message.startsWith('Sem conex')) {

@@ -712,7 +712,7 @@ class NotaFiscalController extends Controller
         return NotaFiscal::with([
             'Filial',
             'EstoqueLocal',
-            'Pessoa',
+            'Pessoa.Cidade.Estado',
             'NaturezaOperacao',
             'Operacao',
             'PessoaTransportador',
@@ -724,6 +724,7 @@ class NotaFiscalController extends Controller
             'NotaFiscalDuplicatasS',
             'NotaFiscalReferenciadaS',
             'NotaFiscalCartaCorrecaoS',
+            'NfeTerceiroS',
         ])->findOrFail($codnotafiscal);
     }
 }

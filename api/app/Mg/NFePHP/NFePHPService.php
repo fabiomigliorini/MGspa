@@ -479,6 +479,11 @@ class NFePHPService extends MgService
         }
         $infProt = $protNFe->infProt;
 
+        // Le ANTES de sobrescrever: o e-mail sai na TRANSICAO para autorizada, e nao toda
+        // vez que o protocolo e revinculado. Sem isso, clicar Consultar duas vezes numa nota
+        // ja autorizada mandaria dois e-mails — nao existe coluna de controle no banco.
+        $jaAutorizada = !empty($nf->nfeautorizacao);
+
         // Guarda no Banco de Dados informação da Autorização
         $nf->nfeautorizacao = $infProt->nProt;
         $nf->nfedataautorizacao = Carbon::parse($infProt->dhRecbto);
@@ -495,6 +500,12 @@ class NFePHPService extends MgService
         // Salva o Arquivo com a NFe Aprovada
         $pathAprovada = NFePHPPathService::pathNFeAutorizada($nf, true);
         file_put_contents($pathAprovada, $xmlProtocolado);
+
+        // So depois do XML em disco: o NFeAutorizadaMail anexa esse arquivo e estoura se
+        // faltar. Este e o unico disparo de e-mail de NFe autorizada do sistema.
+        if (!$jaAutorizada) {
+            NFePHPMailJob::dispatch($nf->codnotafiscal)->onQueue('low');
+        }
 
         return true;
     }

@@ -3,14 +3,17 @@
 namespace Mg\NFePHP;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
 
 /**
- * Envio de NFe assíncrono: o "supermétodo" que faz criar + enviar + mail.
+ * Envio de NFe assíncrono: o "supermétodo" que faz criar + enviar.
+ *
+ * O e-mail saiu daqui: quem despacha o NFePHPMailJob é o vincularProtocoloAutorizacao do
+ * NFePHPService, o único ponto onde a nota passa a autorizada — assim o e-mail também sai
+ * para quem autoriza por fora deste job (botão Consultar, robô de pendentes, rotas legadas).
  *
  * POR QUE ASSÍNCRONO
  *
@@ -140,16 +143,11 @@ class NFePHPEnvioService
             static::etapa($codnotafiscal, 'enviando', 'Enviando para a SEFAZ...');
             $res = NFePHPService::enviarSincrono($nf);
 
-            if (!empty($res->sucesso)) {
-                static::etapa($codnotafiscal, 'email', 'Enviando e-mail...');
-                try {
-                    NFePHPMailService::mail($nf->fresh());
-                } catch (\Throwable $e) {
-                    // e-mail é best-effort: a nota já está autorizada neste ponto
-                    Log::warning("NF#{$codnotafiscal}: falha ao enviar e-mail: " . $e->getMessage());
-                }
-            }
-
+            // O e-mail NAO e disparado aqui: quem despacha o NFePHPMailJob e o proprio
+            // vincularProtocoloAutorizacao(), para cobrir tambem quem autoriza por fora
+            // deste job (botao Consultar, robo de pendentes, rotas legadas). Tirar o e-mail
+            // daqui tambem tira uma query do caminho critico — o 'concluido' abaixo e o que
+            // o front espera para pintar a linha de verde.
             static::gravar($codnotafiscal, [
                 'status' => 'concluido',
                 'etapa' => 'concluido',
