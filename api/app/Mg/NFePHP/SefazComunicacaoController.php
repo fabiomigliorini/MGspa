@@ -30,10 +30,13 @@ class SefazComunicacaoController extends MgController
             abort(500, 'Falha ao descompactar o arquivo.');
         }
 
-        $nome = "sefaz-{$reg->codsefazcomunicacao}-{$reg->operacao}.xml";
+        // .txt/text-plain de proposito: o arquivo nao e XML puro, e o log da conversa
+        // (marcadores REQUEST/RESPONSE + cabecalhos HTTP + os dois envelopes SOAP).
+        // Servido como application/xml o navegador tenta parsear e morre na 1a linha.
+        $nome = "sefaz-{$reg->codsefazcomunicacao}-{$reg->operacao}.txt";
 
         return response($conteudo, 200, [
-            'Content-Type' => 'application/xml',
+            'Content-Type' => 'text/plain; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$nome}\"",
         ]);
     }

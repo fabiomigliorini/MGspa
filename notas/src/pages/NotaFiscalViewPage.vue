@@ -573,7 +573,10 @@ const abrirSefazXml = async (codsefazcomunicacao) => {
     const { data } = await api.get(`/v1/sefaz-comunicacao/${codsefazcomunicacao}/xml`, {
       responseType: 'blob',
     })
-    const url = URL.createObjectURL(new Blob([data], { type: 'application/xml' }))
+    // text/plain: o conteudo e o log da conversa (REQUEST/RESPONSE + cabecalhos HTTP +
+    // os dois envelopes SOAP), nao um XML valido. Como application/xml o navegador
+    // aborta no parse e mostra "Start tag expected".
+    const url = URL.createObjectURL(new Blob([data], { type: 'text/plain;charset=utf-8' }))
     window.open(url, '_blank')
   } catch (error) {
     $q.notify({
