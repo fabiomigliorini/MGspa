@@ -5,6 +5,25 @@ A migração dos arquivos é a única etapa que exige janela; o resto entra com 
 
 ---
 
+## 0. CERTIFICADOS — antes de tudo, senão a emissão para
+
+O `CertificadoService::pfxPath()` passou a ler de `certificado/{codfilial}.pfx`. Se o código
+subir antes de o `.pfx` estar lá, o `instanciaTools()` lança exceção e **nenhuma NFe é
+emitida** — não é degradação de leitura, é parada total.
+
+Não dá para mover antes (o código antigo lê de `Certs/`). Então **copia**, e as duas árvores
+ficam válidas durante a transição — inclusive se for preciso reverter o deploy.
+
+```bash
+docker exec mgspa-api php artisan nfe-php:migrar-arquivos --apenas=certificado
+ls -la /opt/www/Arquivos/NFePHP/Arquivos/certificado/
+```
+
+O command avisa se sobrar alguma filial sem certificado no destino. **Se avisar, pare** —
+aquela filial não emite. Os `Certs/` antigos só saem na limpeza manual, no fim de tudo.
+
+---
+
 ## 1. DDL (antes do deploy do código)
 
 Os três são aditivos — só criam tabela e coluna, não alteram nada existente.
@@ -68,28 +87,49 @@ select operacao, tentativa, cstat, duracaoms, sucesso from tblsefazcomunicacao
 order by criacao desc limit 10;
 ```
 
-## 5. Migração dos arquivos — FIM DE SEMANA
+## 5. Migração dos arquivos — em paralelo, logo após o deploy
 
-**Não há fallback de leitura.** Enquanto roda, DANFE/XML de nota cujo arquivo ainda não foi
-movido dá 404. A **emissão não é afetada** (o código novo escreve direto na árvore nova).
+**Não há fallback de leitura.** Enquanto a migração não passa por um arquivo, DANFE/XML
+daquela nota dá 404. A **emissão não é afetada** (o código novo escreve direto na árvore
+nova, e o certificado já foi para o lugar no passo 0).
 
-**Não rodar a exportação da contabilidade (`DominioXMLService`) durante a janela.**
+Por isso roda em **janelas crescentes**: as notas que as pessoas de fato pedem saem da zona
+de risco nos primeiros segundos, e o acervo antigo fica para o fim. A distribuição justifica:
+
+| Faixa | Notas | % |
+|---|---|---|
+| Últimos 12 meses | 327.674 | 9,8% |
+| 1 a 3 anos | 663.338 | 19,9% |
+| Mais de 3 anos | 2.339.163 | **70,2%** |
 
 ```bash
-# 5.1 dimensionar
-find /opt/www/Arquivos/NFePHP/Arquivos/NFe -type f | wc -l
-du -sh /opt/www/Arquivos/NFePHP/Arquivos/
+# Confere o mapeamento antes (não move nada)
+docker exec mgspa-api php artisan nfe-php:migrar-arquivos --fases --dry-run | head -40
 
-# 5.2 amostra e conferência do mapeamento
-docker exec mgspa-api php artisan nfe-php:migrar-arquivos --limite=100 --dry-run
-docker exec mgspa-api php artisan nfe-php:migrar-arquivos --limite=100
-find /opt/www/Arquivos/NFePHP/Arquivos/nfe /opt/www/Arquivos/NFePHP/Arquivos/nfce -type f | head
+# Roda as fases: 7d, 15d, 30d, 90d, 1a, 2a, 5a, tudo
+docker exec -d mgspa-api php artisan nfe-php:migrar-arquivos --fases
 
-# 5.3 lote completo, em background
-docker exec -d mgspa-api php artisan nfe-php:migrar-arquivos
+# Acompanha
 docker exec mgspa-api tail -f storage/logs/laravel-$(date +%F).log | grep -i migrar
+```
 
-# 5.4 O QUE SOBROU NA ÁRVORE ANTIGA É O RELATÓRIO DE ERRO
+Cada fase é idempotente: o que já foi movido não existe mais na origem e é pulado de
+imediato, então a sobreposição entre janelas custa quase nada.
+
+**Não rodar a exportação da contabilidade (`DominioXMLService`) enquanto a fase "todo o
+acervo" não terminar** — ela lê mês fechado, que pode estar no meio da migração.
+
+Se quiser rodar em pedaços manualmente, em vez do `--fases`:
+
+```bash
+docker exec mgspa-api php artisan nfe-php:migrar-arquivos --desde=$(date -d '7 days ago' +%F)
+docker exec mgspa-api php artisan nfe-php:migrar-arquivos --desde=$(date -d '30 days ago' +%F)
+# ... e assim por diante, até sem --desde
+```
+
+### O que sobrou é o relatório de erro
+
+```bash
 find /opt/www/Arquivos/NFePHP/Arquivos/NFe \
      /opt/www/Arquivos/NFePHP/Arquivos/Mdfe \
      /opt/www/Arquivos/NFePHP/Arquivos/DFe -type f | wc -l
@@ -97,8 +137,9 @@ find /opt/www/Arquivos/NFePHP/Arquivos/NFe -type f | head -50
 ```
 
 Só depois de zerar (ou explicar) o resíduo é que as árvores antigas saem — **na mão, por
-você**, nunca pelo command. `CTe/` e `Imagens/` podem ir junto: a primeira está vazia e a
-segunda é resíduo de 2015 (o logo da DANFE vem de `public_path()`).
+você**, nunca pelo command. `Certs/`, `CTe/` e `Imagens/` podem ir junto: a primeira já foi
+copiada, a segunda está vazia e a terceira é resíduo de 2015 (o logo da DANFE vem de
+`public_path()`).
 
 ## 6. Depois do deploy, com calma
 
