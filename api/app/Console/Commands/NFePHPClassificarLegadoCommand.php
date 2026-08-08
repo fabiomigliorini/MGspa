@@ -108,24 +108,30 @@ class NFePHPClassificarLegadoCommand extends Command
 
         $this->info("Varrendo {$origem} ...");
 
-        $iterator = new \RecursiveIteratorIterator(
+        // Coleta a lista ANTES de mover. Iterar e mover ao mesmo tempo faz o readdir
+        // devolver entradas repetidas (o diretorio encolhe sob a leitura), o que inflava
+        // os contadores — na rodada anterior deu 145 mil "processados" para 79 mil arquivos.
+        $arquivos = [];
+        foreach (new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($origem, \FilesystemIterator::SKIP_DOTS)
-        );
+        ) as $arquivo) {
+            if ($arquivo->isFile() && in_array(strtolower($arquivo->getExtension()), ['xml', 'pdf'], true)) {
+                $arquivos[] = $arquivo->getPathname();
+            }
+        }
+        $this->info('Arquivos encontrados: ' . count($arquivos));
 
         $processados = 0;
-        foreach ($iterator as $arquivo) {
-            if (!$arquivo->isFile() || strtolower($arquivo->getExtension()) !== 'xml') {
-                continue;
-            }
+        foreach ($arquivos as $path) {
             if ($limite !== null && $processados >= $limite) {
                 break;
             }
             $processados++;
 
-            $this->processar($arquivo->getPathname(), $dryRun, $relatorio);
+            $this->processar($path, $dryRun, $relatorio);
 
             if ($processados % 5000 === 0) {
-                $this->line("  ... {$processados} arquivos");
+                $this->line("  ... {$processados}");
             }
         }
 
@@ -136,11 +142,23 @@ class NFePHPClassificarLegadoCommand extends Command
 
     protected function processar(string $path, bool $dryRun, bool $relatorio): void
     {
+        // PDF nao tem XML para interpretar: a chave so pode vir do nome mesmo.
+        if (strtolower(pathinfo($path, PATHINFO_EXTENSION)) === 'pdf') {
+            $this->processarPdf($path, $dryRun, $relatorio);
+            return;
+        }
+
         $cabecalho = @file_get_contents($path, false, null, 0, static::BYTES_CABECALHO);
         if ($cabecalho === false) {
             $this->registrar('erro-leitura', $path);
             $this->falhas++;
             return;
+        }
+
+        // Parte do acervo guardou a resposta SOAP com o XML interno ESCAPADO
+        // (&lt;retInutNFe&gt;). Sem decodificar, nenhuma busca por elemento casa.
+        if (str_contains($cabecalho, '&lt;')) {
+            $cabecalho = html_entity_decode($cabecalho, ENT_QUOTES | ENT_XML1);
         }
 
         $c = $this->classificar($cabecalho);
@@ -213,6 +231,42 @@ class NFePHPClassificarLegadoCommand extends Command
         return $this->dirLegado . '/' . $relativo;
     }
 
+    protected function processarPdf(string $path, bool $dryRun, bool $relatorio): void
+    {
+        $chave = preg_match('/(\d{44})/', basename($path), $m) ? $m[1] : null;
+        $this->registrar($chave ? 'pdf' : 'pdf-sem-chave', $path);
+
+        if ($relatorio) {
+            return;
+        }
+
+        $destino = null;
+        if ($chave) {
+            $nf = NotaFiscal::where('nfechave', $chave)->first();
+            $destino = $nf ? NFePHPPathService::pathDanfe($nf, true) : null;
+        }
+
+        $paraLegado = false;
+        if ($destino === null && $chave) {
+            $destino = $this->caminhoLegado($path);
+            $paraLegado = true;
+        }
+
+        if ($destino === null) {
+            $this->ficaram++;
+            return;
+        }
+
+        if ($dryRun) {
+            $this->line("  {$path}\n    -> {$destino}");
+        }
+        $paraLegado ? $this->paraLegado++ : $this->movidos++;
+
+        if (!$dryRun) {
+            $this->mover($path, $destino, $paraLegado);
+        }
+    }
+
     /**
      * Classifica pelo conteudo. Devolve tipo, chave, tpEvento e sequencia quando houver.
      *
@@ -221,7 +275,9 @@ class NFePHPClassificarLegadoCommand extends Command
      */
     protected function classificar(string $xml): array
     {
-        $chave = $this->extrair('/(?:<chNFe>|Id="NFe)(\d{44})/', $xml);
+        // MDF-e usa <chMDFe> / Id="MDFe...". Sem isso a chave saia nula e todo evento de
+        // MDF-e caia no legado, mesmo estando em tblmdfe.
+        $chave = $this->extrair('/(?:<chNFe>|<chMDFe>|Id="NFe|Id="MDFe)(\d{44})/', $xml);
         $tpEvento = $this->extrair('/<tpEvento>(\d+)<\/tpEvento>/', $xml);
         $seq = $this->extrair('/<nSeqEvento>(\d+)<\/nSeqEvento>/', $xml) ?? '1';
         $prot = $this->extrair('/<nProt>(\d+)<\/nProt>/', $xml);
@@ -430,17 +486,23 @@ class NFePHPClassificarLegadoCommand extends Command
 
     protected function mover(string $origem, string $destino, bool $paraLegado = false): void
     {
+        // Destino ja existe: o mesmo documento ja foi migrado noutro formato de nome
+        // (o acervo grava a mesma inutilizacao como -inu, -ProcInutNFe e -procInutNFe).
+        // E duplicata, nao perda. Vai para o legado — deixar em Arquivos/ poluiria a fila
+        // do que NAO foi interpretado, que e o unico proposito daquela pasta agora.
         if (file_exists($destino)) {
-            // Destino ja existe: o documento ja foi migrado noutro formato de nome.
-            // E duplicata, nao perda — fica no legado.
-            $this->ficaram++;
-            if ($paraLegado) {
-                $this->paraLegado--;
-            } else {
-                $this->movidos--;
-            }
             $this->registrar('duplicata-destino-existe', $origem);
-            return;
+            if (!$paraLegado) {
+                $this->movidos--;
+                $this->paraLegado++;
+            }
+            $legado = $this->caminhoLegado($origem);
+            if (file_exists($legado)) {
+                $this->paraLegado--;
+                $this->ficaram++;
+                return;
+            }
+            $destino = $legado;
         }
 
         try {
