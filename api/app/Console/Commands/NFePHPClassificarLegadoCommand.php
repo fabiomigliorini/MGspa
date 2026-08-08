@@ -55,6 +55,7 @@ class NFePHPClassificarLegadoCommand extends Command
         {--legado=legado : para onde vai o que e reconhecido mas nao cabe na estrutura nova}
         {--relatorio : so classifica e conta, nao move nada (rode isto primeiro)}
         {--limite= : maximo de arquivos a processar}
+        {--listar= : em vez do resumo, lista os caminhos desta classificacao}
         {--dry-run : mostra origem -> destino sem mover}';
 
     protected $description = 'Le o legado arquivo por arquivo, classifica pelo conteudo e resgata o que a estrutura nova sabe guardar';
@@ -74,6 +75,7 @@ class NFePHPClassificarLegadoCommand extends Command
     protected int $paraLegado = 0;
     protected int $ficaram = 0;
 
+    protected ?string $listar = null;
     protected string $dirOrigem = '';
     protected string $dirLegado = '';
     protected int $falhas = 0;
@@ -93,7 +95,8 @@ class NFePHPClassificarLegadoCommand extends Command
             return 1;
         }
 
-        $relatorio = (bool) $this->option('relatorio');
+        $this->listar = $this->option('listar');
+        $relatorio = (bool) $this->option('relatorio') || $this->listar !== null;
         $dryRun = (bool) $this->option('dry-run') || $relatorio;
         $limite = $this->option('limite') ? (int) $this->option('limite') : null;
 
@@ -142,6 +145,10 @@ class NFePHPClassificarLegadoCommand extends Command
 
         $c = $this->classificar($cabecalho);
         $this->registrar($c['tipo'], $path);
+
+        if ($this->listar !== null && $c['tipo'] === $this->listar) {
+            $this->line($path);
+        }
 
         if ($relatorio) {
             return;
@@ -219,6 +226,16 @@ class NFePHPClassificarLegadoCommand extends Command
         $seq = $this->extrair('/<nSeqEvento>(\d+)<\/nSeqEvento>/', $xml) ?? '1';
         $prot = $this->extrair('/<nProt>(\d+)<\/nProt>/', $xml);
 
+        // --- Consultas -------------------------------------------------------------
+        // Vem PRIMEIRO de proposito: a resposta de consulta de situacao carrega os dados
+        // do evento (tpEvento + nProt) no corpo, entao seria classificada como evento se
+        // testada depois. Nao e documento, e pergunta — fica no legado.
+        foreach (['retConsSitNFe', 'retConsSitMDFe', 'consSitNFe', 'consSitMDFe', 'retConsReciNFe'] as $raiz) {
+            if ($this->tem($xml, $raiz)) {
+                return ['tipo' => 'pedido-ou-consulta', 'chave' => $chave, 'tpEvento' => null, 'seq' => null];
+            }
+        }
+
         // --- Eventos com protocolo (procEventoNFe) --------------------------------
         if ($this->tem($xml, 'procEventoNFe') || ($tpEvento !== null && $prot !== null)) {
             $tipo = match (true) {
@@ -274,7 +291,7 @@ class NFePHPClassificarLegadoCommand extends Command
         //   <envEvento> / <evento> sem protocolo = -ped-eve.xml
         //   <cancNFe> sem retorno = -ped-can.xml
         //   <consSitNFe> = consulta
-        foreach (['inutNFe', 'envEvento', 'consSitNFe', 'cancNFe', 'evento'] as $raiz) {
+        foreach (['inutNFe', 'envEvento', 'retEnvEvento', 'cancNFe', 'evento', 'enviNFe', 'retEnviNFe'] as $raiz) {
             if ($this->tem($xml, $raiz)) {
                 return ['tipo' => 'pedido-ou-consulta', 'chave' => $chave, 'tpEvento' => $tpEvento, 'seq' => $seq];
             }
