@@ -1,7 +1,7 @@
 import { Dialog, Notify, Platform } from 'quasar'
 import MgRelatorioPdfDialog from './MgRelatorioPdfDialog.vue'
 
-function extrairErro(error, fallback) {
+export function extrairErro(error, fallback) {
   const data = error?.response?.data
   if (!data) return error?.message || fallback
   if (data.errors) {

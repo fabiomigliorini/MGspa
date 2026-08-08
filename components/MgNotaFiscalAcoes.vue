@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { abrirPdf } from '@components/abrirPdf'
+import { abrirXml } from '@components/abrirXml'
 import { useNotaFiscalEnvio } from '@components/useNotaFiscalEnvio'
 
 const props = defineProps({
@@ -91,11 +92,6 @@ function stop(event) {
 
 function mensagemErro(error, fallback) {
   return error?.response?.data?.message || error?.message || fallback
-}
-
-async function xmlUrlFromApi(url) {
-  const { data } = await props.api.get(url, { responseType: 'blob' })
-  return URL.createObjectURL(new Blob([data], { type: 'application/xml' }))
 }
 
 async function imprimir() {
@@ -305,18 +301,18 @@ async function abrirDanfe(event) {
   )
 }
 
-async function abrirXml(event) {
+function verXml(event) {
   stop(event)
-  try {
-    const url = await xmlUrlFromApi(`/v1/nota-fiscal/${codnotafiscal.value}/xml`)
-    window.open(url, '_blank')
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao abrir XML',
-      caption: mensagemErro(error),
-    })
-  }
+  return abrirXml(
+    props.api,
+    `/v1/nota-fiscal/${codnotafiscal.value}/xml`,
+    {},
+    {
+      titulo: `XML da ${cupom.value ? 'NFC-e' : 'NFe'}`,
+      nomeArquivo: `nfe-${codnotafiscal.value}.xml`,
+      erroFallback: 'Erro ao abrir XML',
+    },
+  )
 }
 
 // Retoma o acompanhamento se o envio ja estava correndo (F5 na tela de detalhe).
@@ -415,7 +411,7 @@ defineExpose({ enviarNfe, podeEnviar, loadingEnviar })
       :size="btnSize"
       color="orange"
       icon="code"
-      @click="abrirXml"
+      @click="verXml"
     >
       <q-tooltip>Abrir XML</q-tooltip>
     </q-btn>

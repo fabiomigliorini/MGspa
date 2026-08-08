@@ -4,6 +4,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useNfeTerceiroStore } from '../stores/nfeTerceiroStore'
 import nfeTerceiroService from '../services/nfeTerceiroService'
+import api from '../services/api'
+import { abrirXml } from '@components/abrirXml'
 import MgInputData from '@components/MgInputData.vue'
 import {
   formataCnpjCpf,
@@ -283,9 +285,17 @@ const handleGerarGuiaSt = () => {
   })
 }
 
-const handleOpenXml = () => {
-  window.open(nfeTerceiroService.xml(nfe.value.codnfeterceiro), '_blank')
-}
+const handleOpenXml = () =>
+  abrirXml(
+    api,
+    `/v1/nfe-terceiro/${nfe.value.codnfeterceiro}/xml`,
+    {},
+    {
+      titulo: `XML da NFe #${nfe.value.codnfeterceiro}`,
+      nomeArquivo: `nfe-terceiro-${nfe.value.codnfeterceiro}.xml`,
+      erroFallback: 'Erro ao abrir XML',
+    },
+  )
 
 const handleOpenDanfe = () => {
   window.open(nfeTerceiroService.danfe(nfe.value.codnfeterceiro), '_blank')

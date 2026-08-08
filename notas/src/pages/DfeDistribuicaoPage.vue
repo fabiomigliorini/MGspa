@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useDfeDistribuicaoStore } from '../stores/dfeDistribuicaoStore'
 import dfeDistribuicaoService from '../services/dfeDistribuicaoService'
+import api from '../services/api'
+import { abrirXml } from '@components/abrirXml'
 import { formataChave, formataCnpjCpf, formataNumero, tempoRelativo } from '@components/formatters'
 import DfeConsultarSefazDialog from '../components/dialogs/DfeConsultarSefazDialog.vue'
 
@@ -84,18 +86,17 @@ const handleConsultarSefaz = async (coddistribuicaodfe) => {
   }
 }
 
-const handleVerXml = async (coddistribuicaodfe) => {
-  try {
-    const url = await dfeDistribuicaoService.xml(coddistribuicaodfe)
-    window.open(url)
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao carregar XML',
-      caption: error.message,
-    })
-  }
-}
+const handleVerXml = (coddistribuicaodfe) =>
+  abrirXml(
+    api,
+    `/v1/dfe/distribuicao/${coddistribuicaodfe}/xml`,
+    {},
+    {
+      titulo: `Documento #${coddistribuicaodfe}`,
+      nomeArquivo: `dfe-${coddistribuicaodfe}.xml`,
+      erroFallback: 'Erro ao carregar XML',
+    },
+  )
 
 onMounted(async () => {
   if (!dfeStore.initialLoadDone) {

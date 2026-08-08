@@ -31,6 +31,7 @@ import NotaFiscalCartaCorrecaoDialog from '../components/dialogs/NotaFiscalCarta
 import NotaFiscalItemDialog from 'src/components/dialogs/NotaFiscalItemDialog.vue'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import { abrirXml } from '@components/abrirXml'
 import api from '../services/api'
 import { useAuth } from '../composables/useAuth'
 
@@ -566,29 +567,20 @@ const carregarSefazComunicacoes = async () => {
   }
 }
 
-// Vai por axios (que injeta o Bearer) e abre como blob. window.open direto nao
-// funciona: a rota e autenticada e a aba nova nao carrega o token.
-const abrirSefazXml = async (codsefazcomunicacao) => {
-  try {
-    const { data } = await api.get(`/v1/sefaz-comunicacao/${codsefazcomunicacao}/xml`, {
-      responseType: 'blob',
-    })
-    // text/plain: o conteudo e o log da conversa (REQUEST/RESPONSE + cabecalhos HTTP +
-    // os dois envelopes SOAP), nao um XML valido. Como application/xml o navegador
-    // aborta no parse e mostra "Start tag expected".
-    const url = URL.createObjectURL(new Blob([data], { type: 'text/plain;charset=utf-8' }))
-    window.open(url, '_blank')
-  } catch (error) {
-    $q.notify({
-      color: 'red-5',
-      icon: 'error',
-      message:
-        error.response?.status === 404
-          ? 'XML não disponível (retenção de 2 anos)'
-          : 'Erro ao abrir o XML da comunicação',
-    })
-  }
-}
+// O conteudo nao e um XML puro: e o log da conversa (marcadores REQUEST/RESPONSE +
+// cabecalhos HTTP + os dois envelopes SOAP). O MgXmlDialog reconhece esse formato e
+// separa em abas.
+const abrirSefazXml = (c) =>
+  abrirXml(
+    api,
+    `/v1/sefaz-comunicacao/${c.codsefazcomunicacao}/xml`,
+    {},
+    {
+      titulo: `SEFAZ #${c.codsefazcomunicacao} — ${c.operacao}`,
+      nomeArquivo: `sefaz-${c.codsefazcomunicacao}-${c.operacao}.txt`,
+      erroFallback: 'Erro ao abrir o XML da comunicação',
+    },
+  )
 
 const enviarCartaCorrecao = async (texto) => {
   loadingCartaCorrecao.value = true
@@ -2172,9 +2164,9 @@ onUnmounted(() => {
                       size="sm"
                       color="grey-7"
                       icon="code"
-                      @click="abrirSefazXml(c.codsefazcomunicacao)"
+                      @click="abrirSefazXml(c)"
                     >
-                      <q-tooltip>Baixar XML da conversa</q-tooltip>
+                      <q-tooltip>Ver XML da conversa</q-tooltip>
                     </q-btn>
                   </q-item-section>
                 </q-item>
