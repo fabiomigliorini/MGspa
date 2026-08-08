@@ -48,13 +48,11 @@ use Mg\Mdfe\Mdfe;
  *
  *   certificados/{codfilial}.pfx
  *
- * POR QUE ESTADO NO SUFIXO E NAO EM PASTA
+ * ESTADO VAI NO SUFIXO DO ARQUIVO, NUNCA EM PASTA
  *
- * A estrutura antiga separava por estado (assinadas/, enviadas/aprovadas/, canceladas/),
- * o que espalhava os arquivos de uma mesma nota por 4 pastas. O sintoma disso estava no
- * proprio codigo: NFePHPService::xml(), ::danfe() e o DominioXMLService faziam, cada um,
- * um fallback em cascata por 3 pastas para achar o XML de uma nota. Com tudo na mesma
- * pasta, isso vira um file_exists por ordem de prioridade no mesmo diretorio.
+ * Todos os artefatos de uma mesma nota moram no mesmo diretorio, distinguidos pelo sufixo.
+ * Assim achar o XML de uma nota e um file_exists por ordem de prioridade dentro de UM
+ * diretorio, em vez de um fallback em cascata por varias pastas.
  */
 class NFePHPPathService
 {
@@ -282,8 +280,7 @@ class NFePHPPathService
     // ------------------------------------------------------------------ Certificado
 
     /**
-     * O rtrim resolve a barra dupla que o codigo antigo gerava (o env NFE_PHP_PATH ja
-     * termina em '/' e o caminho era concatenado com '/Certs/...').
+     * O rtrim e necessario: o env NFE_PHP_PATH termina em '/'.
      */
     public static function pathCertificado(Filial $filial)
     {

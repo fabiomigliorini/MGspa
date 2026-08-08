@@ -710,11 +710,6 @@ class MdfeNfePhpService
             $mdfe->Filial
         );
 
-        // dd($path);
-        // $path = '/opt/www/NFePHP/Arquivos/Mdfe/401/homologacao/retorno/2021/03/51210300018267882987589200000002021999997972-2021-03-12.19-42-16-Retorno.xml';
-        // $path = "/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000011999999986-2021-03-12.19-48-58-Retorno.xml";
-        // $resp = file_get_contents($path);
-
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
@@ -767,8 +762,6 @@ class MdfeNfePhpService
             $mdfe->Filial
         );
         file_put_contents(NFePHPPathService::pathMdfeCancelado($mdfe, true), $resp);
-        // $path = '/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000021999999975-2021-03-12.22-53-07-Retorno.xml';
-        // $resp = file_get_contents($path);
 
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -830,9 +823,6 @@ class MdfeNfePhpService
             $mdfe->Filial
         );
         file_put_contents(NFePHPPathService::pathMdfeEncerrado($mdfe, true), $resp);
-
-        // $path = "/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000011999999986-2021-03-12.22-16-28-Retorno.xml";
-        // $resp = file_get_contents($path);
 
         $st = new Standardize();
         $respStd = $st->toStd($resp);

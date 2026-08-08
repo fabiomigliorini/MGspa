@@ -241,7 +241,7 @@ class NFePHPService extends MgService
         // Assina XML
         $xmlAssinado = $tools->signNFe($xml);
 
-        // Grava arquivo XML Assinado na pasta de "assinadas"
+        // Grava o XML assinado
         $nf = $nf->fresh();
         $path = NFePHPPathService::pathNFeAssinada($nf, true);
         file_put_contents($path, $xmlAssinado);
