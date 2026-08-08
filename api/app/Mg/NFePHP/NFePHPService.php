@@ -129,13 +129,21 @@ class NFePHPService extends MgService
         $filial = $filial ?? $nf?->Filial;
 
         while (true) {
+            // Abre o registro ANTES da chamada: durante os ate 40s de conversa a tela ja
+            // mostra a tentativa em andamento, e se o processo morrer no meio o registro
+            // sobrevive como evidencia de que a tentativa existiu.
+            $idLog = ($filial !== null)
+                ? SefazLogService::iniciar($filial, $operacao, $tentativa + 1, $nf)
+                : null;
+
             $inicio = microtime(true);
             try {
                 $resp = $fn();
-                static::registrarConversa($filial, $operacao, $tentativa + 1, $inicio, true, $tools, $nf);
+                static::registrarConversa($idLog, $filial, $operacao, $tentativa + 1, $inicio, true, $tools, $nf);
                 return $resp;
             } catch (SoapException $e) {
                 static::registrarConversa(
+                    $idLog,
                     $filial,
                     $operacao,
                     $tentativa + 1,
@@ -166,6 +174,7 @@ class NFePHPService extends MgService
      * ativaria, sem ninguém perceber.
      */
     protected static function registrarConversa(
+        ?int $idLog,
         ?Filial $filial,
         string $operacao,
         int $tentativa,
@@ -180,7 +189,7 @@ class NFePHPService extends MgService
         }
 
         $duracaoms = (microtime(true) - $inicio) * 1000;
-        SefazLogService::registrar($filial, $operacao, $tentativa, $duracaoms, $sucesso, $tools, $nf, $erro);
+        SefazLogService::finalizar($idLog, $filial, $operacao, $tentativa, $duracaoms, $sucesso, $tools, $nf, $erro);
 
         if (ContingenciaService::operacaoRelevante($operacao)) {
             ContingenciaService::avaliar($filial->Empresa);

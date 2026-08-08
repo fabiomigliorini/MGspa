@@ -23,14 +23,49 @@ use Mg\NotaFiscal\NotaFiscal;
 class SefazLogService
 {
     /**
-     * Grava a conversa. NUNCA lanca: uma falha de disco ou de banco aqui nao pode derrubar
-     * uma emissao no balcao.
+     * Abre o registro ANTES da chamada.
      *
-     * Devolve o id da linha, ou null se o log falhou. Quem chama decide o que fazer depois
-     * — em especial, a avaliacao de contingencia roda FORA daqui, justamente para que uma
-     * excecao nela nao seja engolida por este try/catch.
+     * Duas razoes para nao esperar a resposta:
+     *
+     *  - Observabilidade: uma chamada a SEFAZ pode levar 40s. Registrando so no fim, a
+     *    tela nao mostra nada enquanto a conversa esta acontecendo — justo quando alguem
+     *    esta olhando para entender por que a emissao demora.
+     *  - Evidencia: se o processo morrer no meio da chamada (timeout do FPM, kill), o
+     *    registro sobrevive mostrando que a tentativa existiu. Antes se perdia tudo.
+     *
+     * A linha nasce com sucesso=false e duracaoms=0; o finalizar() completa.
+     * NUNCA lanca: falha de log nao pode derrubar uma emissao no balcao.
      */
-    public static function registrar(
+    public static function iniciar(Filial $filial, string $operacao, int $tentativa, ?NotaFiscal $nf = null): ?int
+    {
+        try {
+            $comunicacao = SefazComunicacao::create([
+                'codfilial' => $filial->codfilial,
+                'codnotafiscal' => $nf?->codnotafiscal,
+                'operacao' => mb_substr($operacao, 0, 50),
+                'ambiente' => $filial->nfeambiente,
+                'tentativa' => $tentativa,
+                'duracaoms' => 0,
+                'sucesso' => false,
+                'xmotivo' => 'Em andamento...',
+                'codusuariocriacao' => static::codusuario(),
+            ]);
+
+            return $comunicacao->codsefazcomunicacao;
+        } catch (\Throwable $e) {
+            Log::warning("SefazLogService: falha ao abrir registro de '{$operacao}': " . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Completa o registro com o resultado e grava o .gz.
+     *
+     * Se o iniciar() falhou ($id nulo), ainda tenta gravar a linha inteira aqui — assim uma
+     * falha momentanea do banco no inicio nao faz a conversa se perder de vez.
+     */
+    public static function finalizar(
+        ?int $id,
         Filial $filial,
         string $operacao,
         int $tentativa,
@@ -46,20 +81,29 @@ class SefazLogService
             $responseHead = $tools->soap->responseHead ?? null;
             $responseBody = $tools->soap->responseBody ?? ($tools->lastResponse ?? null);
 
-            $comunicacao = SefazComunicacao::create([
-                'codfilial' => $filial->codfilial,
-                'codnotafiscal' => $nf?->codnotafiscal,
-                'operacao' => mb_substr($operacao, 0, 50),
-                'ambiente' => $filial->nfeambiente,
-                'tentativa' => $tentativa,
+            $dados = [
                 'httpcode' => static::httpCode($responseHead),
                 'cstat' => static::extrair('/<cStat>(\d+)<\/cStat>/', $responseBody, 4),
                 'xmotivo' => static::extrair('/<xMotivo>(.*?)<\/xMotivo>/', $responseBody, 255),
                 'duracaoms' => (int) round($duracaoms),
                 'sucesso' => $sucesso,
                 'erro' => $erro ? mb_substr($erro, 0, 500) : null,
-                'codusuariocriacao' => static::codusuario(),
-            ]);
+            ];
+
+            $comunicacao = $id ? SefazComunicacao::find($id) : null;
+
+            if ($comunicacao) {
+                $comunicacao->fill($dados)->save();
+            } else {
+                $comunicacao = SefazComunicacao::create(array_merge($dados, [
+                    'codfilial' => $filial->codfilial,
+                    'codnotafiscal' => $nf?->codnotafiscal,
+                    'operacao' => mb_substr($operacao, 0, 50),
+                    'ambiente' => $filial->nfeambiente,
+                    'tentativa' => $tentativa,
+                    'codusuariocriacao' => static::codusuario(),
+                ]));
+            }
 
             $arquivo = static::gravarConversa(
                 $filial,
@@ -79,8 +123,8 @@ class SefazLogService
 
             return $comunicacao->codsefazcomunicacao;
         } catch (\Throwable $e) {
-            Log::warning("SefazLogService: falha ao registrar '{$operacao}': " . $e->getMessage());
-            return null;
+            Log::warning("SefazLogService: falha ao finalizar '{$operacao}': " . $e->getMessage());
+            return $id;
         }
     }
 

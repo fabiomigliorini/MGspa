@@ -19,7 +19,11 @@ export default {
     return data
   },
 
-  xmlUrl(codinutilizacao) {
-    return `${process.env.API_URL}/v1/inutilizacao/${codinutilizacao}/xml`
+  // Blob via axios: a rota e autenticada, entao window.open direto daria 401/404.
+  async abrirXml(codinutilizacao) {
+    const { data } = await api.get(`/v1/inutilizacao/${codinutilizacao}/xml`, {
+      responseType: 'blob',
+    })
+    return URL.createObjectURL(new Blob([data], { type: 'application/xml' }))
   },
 }

@@ -566,8 +566,25 @@ const carregarSefazComunicacoes = async () => {
   }
 }
 
-const abrirSefazXml = (codsefazcomunicacao) => {
-  window.open(`${process.env.API_URL}/v1/sefaz-comunicacao/${codsefazcomunicacao}/xml`, '_blank')
+// Vai por axios (que injeta o Bearer) e abre como blob. window.open direto nao
+// funciona: a rota e autenticada e a aba nova nao carrega o token.
+const abrirSefazXml = async (codsefazcomunicacao) => {
+  try {
+    const { data } = await api.get(`/v1/sefaz-comunicacao/${codsefazcomunicacao}/xml`, {
+      responseType: 'blob',
+    })
+    const url = URL.createObjectURL(new Blob([data], { type: 'application/xml' }))
+    window.open(url, '_blank')
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      icon: 'error',
+      message:
+        error.response?.status === 404
+          ? 'XML não disponível (retenção de 2 anos)'
+          : 'Erro ao abrir o XML da comunicação',
+    })
+  }
 }
 
 const enviarCartaCorrecao = async (texto) => {
@@ -2121,7 +2138,10 @@ onUnmounted(() => {
               <q-list v-else separator>
                 <q-item v-for="c in sefazComunicacoes" :key="c.codsefazcomunicacao">
                   <q-item-section avatar>
+                    <!-- duracaoms 0 = registro aberto, conversa ainda em andamento -->
+                    <q-spinner v-if="!c.sucesso && !c.duracaoms" color="primary" size="sm" />
                     <q-icon
+                      v-else
                       :name="c.sucesso ? 'done' : 'error'"
                       :color="c.sucesso ? 'green' : 'red'"
                     />
@@ -2138,8 +2158,8 @@ onUnmounted(() => {
                       <span v-else-if="c.erro" class="text-red">{{ c.erro }}</span>
                     </q-item-label>
                     <q-item-label caption>
-                      {{ formataTimestamp(c.criacao, 4, true) }} —
-                      {{ (c.duracaoms / 1000).toFixed(1) }}s
+                      {{ formataTimestamp(c.criacao, 4, true) }}
+                      <span v-if="c.duracaoms"> — {{ (c.duracaoms / 1000).toFixed(1) }}s</span>
                     </q-item-label>
                   </q-item-section>
                   <q-item-section side v-if="c.temxml && temPermissao('Gerente')">
