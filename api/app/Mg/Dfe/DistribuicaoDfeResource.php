@@ -54,17 +54,16 @@ class DistribuicaoDfeResource extends Resource
             $ret['DistribuicaoDfeEvento'] = $arr;
         }
 
-        // NotaFiscalTerceiro
-        $ret['NotaFiscalTerceiro'] = [];
-        $qry = $this->NotaFiscalTerceiro()->select([
+        // NfeTerceiro
+        $ret['NfeTerceiro'] = [];
+        $qry = $this->NfeTerceiro()->select([
             'codpessoa',
             'emitente',
             'indsituacao',
             'nfechave',
             'valortotal',
             'cnpj',
-            'cpf',
-            'natop'
+            'natureza'
         ]);
         if ($nft = $qry->first()) {
             $arr = $nft->toArray();
@@ -77,7 +76,7 @@ class DistribuicaoDfeResource extends Resource
                 ])->first();
             }
             $arr['Pessoa'] = $pessoa;
-            $ret['NotaFiscalTerceiro'] = $arr;
+            $ret['NfeTerceiro'] = $arr;
         }
 
         return $ret;

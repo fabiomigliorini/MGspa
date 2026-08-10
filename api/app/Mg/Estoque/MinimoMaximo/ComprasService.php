@@ -230,9 +230,9 @@ class ComprasService
         $linhaInicial = $linha;
         foreach ($produtos as $prod) {
             $sheet->setCellValue("A{$linha}", $prod->codproduto);
-            $sheet->getCell("A{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
+            $sheet->getCell("A{$linha}")->getHyperlink()->setUrl(config('services.mglara.produto_url') . "/{$prod->codproduto}");
             $sheet->setCellValue("B{$linha}", $prod->codprodutovariacao);
-            $sheet->getCell("B{$linha}")->getHyperlink()->setUrl("http://sistema.mgpapelaria.com.br/MGLara/produto/{$prod->codproduto}");
+            $sheet->getCell("B{$linha}")->getHyperlink()->setUrl(config('services.mglara.produto_url') . "/{$prod->codproduto}");
 
             $sheet->setCellValue("C{$linha}", $prod->produto);
             if (!empty($prod->descontinuado)) {
@@ -374,7 +374,7 @@ class ComprasService
 
         // Gera Arquivo XLSX
         $writer = new Xlsx($spreadsheet);
-        $dir = env('PEDIDO_PATH', '/tmp/');
+        $dir = config('mg.paths.pedido');
         $arquivo = $dir . Carbon::today()->format('Y-m-d') . " - {$marca->marca}.xlsx";
         $v = 0;
         while (file_exists($arquivo)) {

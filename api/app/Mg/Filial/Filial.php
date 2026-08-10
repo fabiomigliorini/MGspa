@@ -20,7 +20,6 @@ use Mg\Meta\MetaFilial;
 use Mg\Negocio\Negocio;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
 use Mg\PagarMe\PagarMePos;
@@ -28,7 +27,6 @@ use Mg\Pdv\Pdv;
 use Mg\Portador\Portador;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPinPad;
-use Mg\Stone\StoneFilial;
 use Mg\Titulo\Titulo;
 use Mg\Filial\UnidadeNegocio;
 use Mg\Usuario\Usuario;
@@ -71,7 +69,6 @@ class Filial extends MgModel
         'pagarmeid',
         'pagarmesk',
         'senhacertificado',
-        'stonecode',
         'tokenibpt',
         'ultimonsu',
         'validadecertificado'
@@ -95,7 +92,6 @@ class Filial extends MgModel
         'inativo' => 'datetime',
         'nfeambiente' => 'integer',
         'nfeserie' => 'integer',
-        'stonecode' => 'float',
         'ultimonsu' => 'integer',
         'validadecertificado' => 'date'
     ];
@@ -194,11 +190,6 @@ class Filial extends MgModel
         return $this->hasMany(NotaFiscal::class, 'codfilial', 'codfilial');
     }
 
-    public function NotaFiscalTerceiroS()
-    {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codfilial', 'codfilial');
-    }
-
     public function PagarMePagamentoS()
     {
         return $this->hasMany(PagarMePagamento::class, 'codfilial', 'codfilial');
@@ -232,11 +223,6 @@ class Filial extends MgModel
     public function SaurusPinPadS()
     {
         return $this->hasMany(SaurusPinPad::class, 'codfilial', 'codfilial');
-    }
-
-    public function StoneFilialS()
-    {
-        return $this->hasMany(StoneFilial::class, 'codfilial', 'codfilial');
     }
 
     public function TituloS()

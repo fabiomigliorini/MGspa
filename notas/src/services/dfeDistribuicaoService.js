@@ -6,14 +6,6 @@ export default {
     return response.data
   },
 
-  async xml(coddistribuicaodfe) {
-    const response = await api.get(`/v1/dfe/distribuicao/${coddistribuicaodfe}/xml`, {
-      responseType: 'blob',
-    })
-    const blob = new Blob([response.data], { type: 'text/xml' })
-    return URL.createObjectURL(blob)
-  },
-
   async processar(coddistribuicaodfe) {
     const response = await api.get(`/v1/dfe/distribuicao/${coddistribuicaodfe}/processar`)
     return response.data

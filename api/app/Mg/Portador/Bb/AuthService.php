@@ -26,7 +26,7 @@ class AuthService
     private static function token(Portador $portador): array
     {
         $curl = curl_init();
-        $url = env('BB_URL_OAUTH') . '/token';
+        $url = config('services.bb.url_oauth') . '/token';
         $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
         $body = 'grant_type=client_credentials&scope=' . self::SCOPE;
         curl_setopt_array($curl, [

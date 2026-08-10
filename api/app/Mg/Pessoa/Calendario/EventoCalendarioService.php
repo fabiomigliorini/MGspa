@@ -37,15 +37,15 @@ class EventoCalendarioService
         self::TIPO_ANV_DEP => '{dependente} - Anivesário de dependente do Colaborador {colaborador}',
     ];
 
-    // Google Calendar ID por tipo de evento
+    // Chave de config com o Google Calendar ID, por tipo de evento
     const TIPO_CALENDARIOS = [
-        self::TIPO_ANV_COL => 'GOOGLE_CALENDAR_ID_ANIVERSARIOS',
-        self::TIPO_ANV_EMP => 'GOOGLE_CALENDAR_ID_ANIVERSARIOS',
-        self::TIPO_ANV_DEP => 'GOOGLE_CALENDAR_ID_ANIVERSARIOS',
-        self::TIPO_EXP_FIM => 'GOOGLE_CALENDAR_ID_EVENTOS_RH',
-        self::TIPO_EXP_REN => 'GOOGLE_CALENDAR_ID_EVENTOS_RH',
-        self::TIPO_FER_INI => 'GOOGLE_CALENDAR_ID_EVENTOS_RH',
-        self::TIPO_FER_FIM => 'GOOGLE_CALENDAR_ID_EVENTOS_RH',
+        self::TIPO_ANV_COL => 'services.google.calendar_aniversarios',
+        self::TIPO_ANV_EMP => 'services.google.calendar_aniversarios',
+        self::TIPO_ANV_DEP => 'services.google.calendar_aniversarios',
+        self::TIPO_EXP_FIM => 'services.google.calendar_eventos_rh',
+        self::TIPO_EXP_REN => 'services.google.calendar_eventos_rh',
+        self::TIPO_FER_INI => 'services.google.calendar_eventos_rh',
+        self::TIPO_FER_FIM => 'services.google.calendar_eventos_rh',
     ];
 
     // Google Calendar colorId por tipo de evento
@@ -75,13 +75,13 @@ class EventoCalendarioService
      */
     public static function resolverCalendarId(string $tipo): string
     {
-        $envKey = self::TIPO_CALENDARIOS[$tipo] ?? null;
+        $chave = self::TIPO_CALENDARIOS[$tipo] ?? null;
 
-        if (!$envKey || !env($envKey)) {
-            throw new \RuntimeException("Calendar ID não configurado para tipo: {$tipo} (env: {$envKey})");
+        if (!$chave || !config($chave)) {
+            throw new \RuntimeException("Calendar ID não configurado para tipo: {$tipo} (config: {$chave})");
         }
 
-        return env($envKey);
+        return config($chave);
     }
 
     /**
@@ -202,7 +202,7 @@ class EventoCalendarioService
             $template
         );
 
-        $link = $pessoaLink ? env('PESSOAS_URL') . "/pessoa/{$pessoaLink->codpessoa}" : '';
+        $link = $pessoaLink ? config('mg.apps.pessoas') . "/pessoa/{$pessoaLink->codpessoa}" : '';
         $description = trim(($evento->observacoes ?? '') . "\n" . $link);
 
         $date = $evento->dataevento->toDateString();

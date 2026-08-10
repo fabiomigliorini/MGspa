@@ -159,7 +159,7 @@ class WooExportarProduto extends Command
     
     private function estoque() 
     {
-                $locais = env('WOO_API_CODESTOQUELOCAL_DISPONIVEL');
+                $locais = config('services.woo.codestoquelocal_disponivel');
 
         Log::info("Exportando para Woo Estoques desatualizados!");
         $sql = '

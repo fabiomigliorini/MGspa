@@ -97,8 +97,6 @@ defineExpose({
 
     <q-input outlined v-model.number="model.empresadominio" label="Empresa Domínio" type="number" />
 
-    <q-input outlined v-model="model.stonecode" label="Stone Code" />
-
     <q-input outlined v-model="model.senhacertificado" label="Senha Certificado" type="password" />
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">

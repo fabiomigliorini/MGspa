@@ -27,7 +27,13 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    /*
+     * Sem isto o navegador refaz o preflight a CADA requisição: o polling do envio de NFe
+     * pagava um OPTIONS por consulta, dobrando o número de requisições. 10 min cobrem o
+     * polling inteiro (que dura segundos) e mantêm curta a janela de propagação caso as
+     * regras acima mudem — navegador com cache quente só enxerga a mudança ao expirar.
+     */
+    'max_age' => 600,
 
     'supports_credentials' => true,
 

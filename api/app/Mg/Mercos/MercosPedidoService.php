@@ -96,17 +96,17 @@ class MercosPedidoService
             return $mp;
         }
 
-        $n->codestoquelocal = env('MERCOS_CODESTOQUELOCAL');
+        $n->codestoquelocal = config('services.mercos.codestoquelocal');
         $n->codfilial = $n->EstoqueLocal->codfilial;
         // $n->lancamento = $ped->data_criacao;
         $n->lancamento = $ped->data_emissao;
         if (empty($n->lancamento)) {
             $n->lancamento = $ped->ultima_alteracao;
         }
-        $n->codnaturezaoperacao = env('MERCOS_CODNATUREZAOPERACAO');
+        $n->codnaturezaoperacao = config('services.mercos.codnaturezaoperacao');
         $n->codoperacao = $n->NaturezaOperacao->codoperacao;
         $n->codnegociostatus = 1;
-        $n->codpessoavendedor = env('MERCOS_CODPESSOAVENDEDOR');
+        $n->codpessoavendedor = config('services.mercos.codpessoavendedor');
         $n->codusuario = Auth::user()->codusuario;
         $n->codusuariocriacao = $n->codusuario;
         $n->codusuarioalteracao = $n->codusuario;
@@ -170,7 +170,7 @@ class MercosPedidoService
             case 1193916: // PIX
                 $nfp = NegocioFormaPagamento::firstOrNew([
                     'codnegocio' => $n->codnegocio,
-                    'codformapagamento' => env('MERCOS_CODFORMAPAGAMENTO_MERCOSPAY')
+                    'codformapagamento' => config('services.mercos.codformapagamento_mercospay')
                 ]);
                 $nfp->valorpagamento = $n->valortotal;
                 $nfp->valortotal = $n->valortotal;
@@ -268,7 +268,7 @@ class MercosPedidoService
         }
 
         // se for item nao localizado coloca descricao nas observacoes do item
-        if ($npb->codprodutobarra == env('MERCOS_CODPRODUTOBARRA_NAO_CADASTRADO')) {
+        if ($npb->codprodutobarra == config('services.mercos.codprodutobarra_nao_cadastrado')) {
             $npb->observacoes = "{$item->produto_codigo} - {$item->produto_nome}";
         }
 

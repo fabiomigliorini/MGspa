@@ -12,7 +12,7 @@ const FLAGS = [
   'valecompra',
   'lio',
   'pix',
-  'stone',
+  'pagarme',
   'integracao',
   'safrapay',
 ]
@@ -28,7 +28,7 @@ const defaultFilters = () => ({
   valecompra: null,
   lio: null,
   pix: null,
-  stone: null,
+  pagarme: null,
   integracao: null,
   safrapay: null,
   inativo: false,

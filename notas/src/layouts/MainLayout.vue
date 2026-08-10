@@ -30,6 +30,7 @@ const menuGroups = [
       { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
       { label: 'DFe', icon: 'sync', color: 'blue', to: '/dfe' },
       { label: 'Domínio', icon: 'file_download', color: 'deep-orange', to: '/dominio' },
+      { label: 'IBPT', icon: 'upload_file', color: 'deep-purple', to: '/ibpt' },
     ],
   },
   {

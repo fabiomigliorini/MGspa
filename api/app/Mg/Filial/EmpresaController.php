@@ -34,6 +34,28 @@ class EmpresaController extends MgController
         return new EmpresaResource($reg);
     }
 
+    /**
+     * Forca a entrada em contingencia off-line da NFC-e.
+     *
+     * POST entra / DELETE sai, nunca toggle — mesmo padrao de inativar/ativar do projeto.
+     */
+    public function contingenciaEntrar(EmpresaContingenciaRequest $request, $codempresa)
+    {
+        $reg = Empresa::findOrFail($codempresa);
+        $reg = \Mg\NFePHP\ContingenciaService::forcar($reg, $request->justificativa);
+        return new EmpresaResource($reg);
+    }
+
+    /**
+     * Volta ao modo de emissao normal.
+     */
+    public function contingenciaSair($codempresa)
+    {
+        $reg = Empresa::findOrFail($codempresa);
+        $reg = \Mg\NFePHP\ContingenciaService::normalizar($reg);
+        return new EmpresaResource($reg);
+    }
+
     public function destroy($codempresa)
     {
         $reg = Empresa::findOrFail($codempresa);

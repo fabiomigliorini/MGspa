@@ -410,6 +410,23 @@ const routes = [
   },
 
   {
+    path: '/ibpt',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'ibpt',
+        component: () => import('pages/IbptPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Tabela IBPT',
+          permissions: ['Administrador', 'Contador'],
+        },
+      },
+    ],
+  },
+
+  {
     path: '/login',
     name: 'login',
     component: () => import('pages/LoginPage.vue'),

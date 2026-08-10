@@ -31,7 +31,11 @@ import NotaFiscalCartaCorrecaoDialog from '../components/dialogs/NotaFiscalCarta
 import NotaFiscalItemDialog from 'src/components/dialogs/NotaFiscalItemDialog.vue'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import { abrirXml } from '@components/abrirXml'
 import api from '../services/api'
+import { useAuth } from '../composables/useAuth'
+
+const { temPermissao } = useAuth()
 
 const router = useRouter()
 const route = useRoute()
@@ -183,6 +187,7 @@ const loadData = async () => {
 // As ações já retornam a nota atualizada no payload, então usamos direto, evitando que
 // o cache do fetchNota devolva a versão antiga (status DIG) da nota já aberta.
 const onActionCompleted = async (_action, notaAtualizada) => {
+  carregarSefazComunicacoes()
   if (notaAtualizada) {
     notaFiscalStore.setCurrentNota(notaAtualizada)
   } else {
@@ -543,6 +548,39 @@ const abrirEspelhoPdf = async () => {
     })
   }
 }
+
+// ---------------------------------------------------------- Comunicacao com a SEFAZ
+// Toda conversa (inclusive as tentativas que falharam) fica registrada na
+// tblsefazcomunicacao, com o XML de request/response gzipado em disco.
+const sefazComunicacoes = ref([])
+const loadingSefaz = ref(false)
+
+const carregarSefazComunicacoes = async () => {
+  loadingSefaz.value = true
+  try {
+    const { data } = await api.get(`/v1/nota-fiscal/${route.params.codnotafiscal}/sefaz`)
+    sefazComunicacoes.value = data.data ?? []
+  } catch {
+    sefazComunicacoes.value = []
+  } finally {
+    loadingSefaz.value = false
+  }
+}
+
+// O conteudo nao e um XML puro: e o log da conversa (marcadores REQUEST/RESPONSE +
+// cabecalhos HTTP + os dois envelopes SOAP). O MgXmlDialog reconhece esse formato e
+// separa em abas.
+const abrirSefazXml = (c) =>
+  abrirXml(
+    api,
+    `/v1/sefaz-comunicacao/${c.codsefazcomunicacao}/xml`,
+    {},
+    {
+      titulo: `SEFAZ #${c.codsefazcomunicacao} — ${c.operacao}`,
+      nomeArquivo: `sefaz-${c.codsefazcomunicacao}-${c.operacao}.txt`,
+      erroFallback: 'Erro ao abrir o XML da comunicação',
+    },
+  )
 
 const enviarCartaCorrecao = async (texto) => {
   loadingCartaCorrecao.value = true
@@ -968,6 +1006,7 @@ const handleKeyDown = (e) => {
 // Lifecycle
 onMounted(() => {
   loadData()
+  carregarSefazComunicacoes()
   window.addEventListener('keydown', handleKeyDown)
 })
 
@@ -1262,6 +1301,14 @@ onUnmounted(() => {
                   <q-icon :name="getStatusIcon(nota.status)" size="sm" class="q-mr-xs" />
                   {{ getStatusLabel(nota.status) }}
                 </q-badge>
+                <q-badge v-if="nota.tpemis == 9" color="orange" class="text-subtitle2 q-ml-xs">
+                  <q-icon name="cloud_off" size="sm" class="q-mr-xs" />
+                  Contingência
+                  <q-tooltip>
+                    NFC-e emitida em contingência off-line. Deve ser transmitida à SEFAZ em até 24h
+                    — o robô cuida disso automaticamente.
+                  </q-tooltip>
+                </q-badge>
               </div>
 
               <!-- NFE TERCEIRO -->
@@ -1377,6 +1424,7 @@ onUnmounted(() => {
                 :nota="nota"
                 :api="api"
                 show-extras
+                :pode-forcar-contingencia="temPermissao('Gerente')"
                 @action-completed="onActionCompleted"
               />
 
@@ -2046,6 +2094,83 @@ onUnmounted(() => {
                   </q-card>
                 </div>
               </div>
+            </q-card-section>
+          </q-card>
+        </div>
+
+        <!-- Comunicação com a SEFAZ -->
+        <div class="col-12 col-sm-12 col-md-6">
+          <q-card flat bordered class="full-height">
+            <q-card-section class="bg-primary text-white">
+              <div class="text-body2">
+                <q-icon name="swap_horiz" size="1.5em" class="q-mr-sm" />
+                Comunicação com a SEFAZ
+                <q-badge
+                  color="white"
+                  text-color="primary"
+                  class="q-ml-sm text-weight-bold text-caption"
+                >
+                  {{ sefazComunicacoes.length }}
+                </q-badge>
+                <q-btn
+                  flat
+                  dense
+                  color="white"
+                  icon="refresh"
+                  size="md"
+                  :loading="loadingSefaz"
+                  @click="carregarSefazComunicacoes"
+                  class="q-ml-sm"
+                >
+                  <q-tooltip>Atualizar</q-tooltip>
+                </q-btn>
+              </div>
+            </q-card-section>
+            <q-card-section class="q-pa-none">
+              <div v-if="sefazComunicacoes.length === 0" class="q-pa-md text-grey-7">
+                Nenhuma comunicação registrada
+              </div>
+              <q-list v-else separator>
+                <q-item v-for="c in sefazComunicacoes" :key="c.codsefazcomunicacao">
+                  <q-item-section avatar>
+                    <!-- duracaoms 0 = registro aberto, conversa ainda em andamento -->
+                    <q-spinner v-if="!c.sucesso && !c.duracaoms" color="primary" size="sm" />
+                    <q-icon
+                      v-else
+                      :name="c.sucesso ? 'done' : 'error'"
+                      :color="c.sucesso ? 'green' : 'red'"
+                    />
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-bold">
+                      {{ c.operacao }}
+                      <span v-if="c.tentativa > 1" class="text-orange">
+                        (tentativa {{ c.tentativa }})
+                      </span>
+                    </q-item-label>
+                    <q-item-label caption>
+                      <span v-if="c.cstat">{{ c.cstat }} - {{ c.xmotivo }}</span>
+                      <span v-else-if="c.erro" class="text-red">{{ c.erro }}</span>
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ formataTimestamp(c.criacao, 4, true) }}
+                      <span v-if="c.duracaoms"> — {{ (c.duracaoms / 1000).toFixed(1) }}s</span>
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side v-if="c.temxml && temPermissao('Gerente')">
+                    <q-btn
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      icon="code"
+                      @click="abrirSefazXml(c)"
+                    >
+                      <q-tooltip>Ver XML da conversa</q-tooltip>
+                    </q-btn>
+                  </q-item-section>
+                </q-item>
+              </q-list>
             </q-card-section>
           </q-card>
         </div>

@@ -25,6 +25,12 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::middleware(['auth:api'])->prefix('v1')->group(function () {
+    // Tabela IBPT - tributos aproximados da Lei 12.741 (08/08/2026)
+    // A importacao e um request por UF: o dedup do axios no front usa o corpo da
+    // requisicao como chave e, com FormData, dois POSTs para a mesma URL colidem.
+    Route::get('ibpt', [\Mg\Ibpt\IbptController::class, 'index']);
+    Route::post('ibpt/{uf}', [\Mg\Ibpt\IbptController::class, 'importar'])->where('uf', '[A-Za-z]{2}');
+
     // Feriado (migrado em 23/05/2026)
     Route::get('feriado/', [\Mg\Feriado\FeriadoController::class, 'index']);
     Route::get('feriado/{codferiado}', [\Mg\Feriado\FeriadoController::class, 'show'])->whereNumber('codferiado');
@@ -114,6 +120,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('empresa/{codempresa}', [\Mg\Filial\EmpresaController::class, 'show']);
     Route::put('empresa/{codempresa}', [\Mg\Filial\EmpresaController::class, 'update']);
     Route::delete('empresa/{codempresa}', [\Mg\Filial\EmpresaController::class, 'destroy']);
+    Route::post('empresa/{codempresa}/contingencia', [\Mg\Filial\EmpresaController::class, 'contingenciaEntrar']);
+    Route::delete('empresa/{codempresa}/contingencia', [\Mg\Filial\EmpresaController::class, 'contingenciaSair']);
 
     // CertidaoEmissor (migrado em 23/05/2026)
     Route::get('certidao-emissor/', [\Mg\Certidao\CertidaoEmissorController::class, 'index']);
@@ -633,20 +641,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Permissões
     Route::apiResource('permissao', '\Mg\Permissao\PermissaoController');
 
-    // Stone Connect (consumido pelo Quasar — telas stone-connect)
-    Route::group(['prefix' => 'stone-connect'], function () {
-        Route::group(['prefix' => 'filial'], function () {
-            Route::post('', '\Mg\Stone\Connect\FilialController@store');
-            Route::get('', '\Mg\Stone\Connect\FilialController@index');
-            Route::get('{codstonefilial}', '\Mg\Stone\Connect\FilialController@show');
-            Route::get('{codstonefilial}/webhook', '\Mg\Stone\Connect\FilialController@showWebhook');
-        });
-        Route::group(['prefix' => 'pos'], function () {
-            Route::post('', '\Mg\Stone\Connect\PosController@store');
-            Route::delete('{codstonepos}', '\Mg\Stone\Connect\PosController@destroy');
-        });
-    });
-
     // Pessoa
     Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
     Route::get('pessoa/verifica-ie-sefaz', '\Mg\Pessoa\PessoaController@verificaIeSefaz');
@@ -691,7 +685,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // NOTA FISCAL
     Route::prefix('nota-fiscal')->group(function () {
         Route::get('lacunas', '\Mg\NotaFiscal\NotaFiscalController@detectarLacunas');
-        Route::post('criar-para-inutilizar', '\Mg\NotaFiscal\NotaFiscalController@criarParaInutilizar');
         Route::get('relatorio', '\Mg\NotaFiscal\NotaFiscalController@relatorio');
         // Rotas específicas de Transferencia/Dashboard ANTES do apiResource
         // (caso contrário `nota-fiscal/notas-por-emitir` casa com `nota-fiscal/{codnotafiscal}`)
@@ -724,6 +717,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('{codnotafiscal}/carta-correcao', '\Mg\NotaFiscal\NotaFiscalController@cartaCorrecao');
         Route::get('{codnotafiscal}/carta-correcao/pdf', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController@pdf');
         Route::get('{codnotafiscal}/espelho', '\Mg\NotaFiscal\NotaFiscalController@espelho');
+        // Envio assincrono: POST enfileira, GET devolve o progresso (mesmo path, padrao do RH)
+        Route::post('{codnotafiscal}/enviar', '\Mg\NotaFiscal\NotaFiscalController@enviar');
+        Route::get('{codnotafiscal}/enviar', '\Mg\NotaFiscal\NotaFiscalController@progressoEnvio');
+        Route::get('{codnotafiscal}/sefaz', '\Mg\NotaFiscal\NotaFiscalController@sefazComunicacoes');
         Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')
             ->parameters(['item' => 'codnotafiscalprodutobarra']);
         Route::apiResource('{codnotafiscal}/pagamento', '\Mg\NotaFiscal\NotaFiscalPagamentoController')
@@ -733,6 +730,15 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::apiResource('{codnotafiscal}/referenciada', '\Mg\NotaFiscal\NotaFiscalReferenciadaController')
             ->parameters(['referenciada' => 'codnotafiscalreferenciada']);
     });
+
+    // Inutilizacao de numeracao (por FAIXA)
+    Route::get('inutilizacao', [\Mg\Inutilizacao\InutilizacaoController::class, 'index']);
+    Route::post('inutilizacao', [\Mg\Inutilizacao\InutilizacaoController::class, 'store']);
+    Route::get('inutilizacao/{codinutilizacao}', [\Mg\Inutilizacao\InutilizacaoController::class, 'show'])->whereNumber('codinutilizacao');
+    Route::get('inutilizacao/{codinutilizacao}/xml', [\Mg\Inutilizacao\InutilizacaoController::class, 'xml'])->whereNumber('codinutilizacao');
+
+    // Log de comunicacao com a SEFAZ
+    Route::get('sefaz-comunicacao/{id}/xml', [\Mg\NFePHP\SefazComunicacaoController::class, 'xml'])->whereNumber('id');
 
     // Negocio
     Route::get('negocio/{codnegocio}/comanda', '\Mg\Negocio\NegocioController@comanda')

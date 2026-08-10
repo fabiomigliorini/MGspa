@@ -5,7 +5,7 @@ namespace Mg\PagarMe;
 class PagarMeWebhookService
 {
 
-    // Cria ou Atualiza Filial na Stone
+    // Processa o arquivo JSON recebido do webhook da PagarMe
     public static function processar (string $arquivo)
     {
         $obj = PagarMeJsonService::carregar($arquivo);

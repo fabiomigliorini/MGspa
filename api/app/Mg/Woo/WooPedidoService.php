@@ -187,8 +187,8 @@ class WooPedidoService
 
         if ($criar) {
             // busca local e natureza
-            $el = EstoqueLocal::findOrFail(env('WOO_CODESTOQUELOCAL'));
-            $no = NaturezaOperacao::findOrFail(env('WOO_CODNATUREZAOPERACAO'));
+            $el = EstoqueLocal::findOrFail(config('services.woo.codestoquelocal'));
+            $no = NaturezaOperacao::findOrFail(config('services.woo.codnaturezaoperacao'));
 
             // cria o negocio
             $n = Negocio::create([
@@ -199,14 +199,14 @@ class WooPedidoService
                 'codestoquelocal' => $el->codestoquelocal,
                 'codoperacao' => $no->codoperacao, // Saida
                 'codnaturezaoperacao' => $no->codnaturezaoperacao, // Venda
-                'codusuario' => env('WOO_CODUSUARIO'),
-                'codpessoavendedor' => env('WOO_CODPESSOAVENDEDOR'),
+                'codusuario' => config('services.woo.codusuario'),
+                'codpessoavendedor' => config('services.woo.codpessoavendedor'),
                 'valorprodutos' => 0,
                 'valortotal' => 0,
                 'valoraprazo' => 0,
                 'valoravista' => 0,
                 'uuid' => Str::uuid(),
-                'codpdv' => env('WOO_CODPDV'),
+                'codpdv' => config('services.woo.codpdv'),
             ]);
 
             // Amarra o Negocio ao Pedido do Woo

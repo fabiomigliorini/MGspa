@@ -220,7 +220,7 @@ class PagarMeService
 
         $ret = $api->postOrders(
             $pes->pessoa,
-            $pes->email ?? 'nfe@mgpapelaria.com.br',
+            $pes->email ?? config('mail.destinatarios.nfe'),
             $valortotal,
             $descricao,
             1,
@@ -356,7 +356,7 @@ class PagarMeService
         }
 
         $fp = FormaPagamento::firstOrNew([
-            'stone' => true,
+            'pagarme' => true,
             'integracao' => true
         ]);
 
@@ -398,7 +398,7 @@ class PagarMeService
             [
                 'codnegocio' => $ped->codnegocio,
                 'autorizacao' => $autorizacao,
-                'codpessoa' => env('PAGAR_ME_CODPESSOA')
+                'codpessoa' => config('services.pagarme.codpessoa')
             ],
             [
                 'codpagarmepedido' => $ped->codpagarmepedido,

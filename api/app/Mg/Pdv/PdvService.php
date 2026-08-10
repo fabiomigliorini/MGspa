@@ -349,7 +349,7 @@ class PdvService
                 fp.valecompra,
                 fp.lio,
                 fp.pix,
-                fp.stone,
+                fp.pagarme,
                 fp.integracao,
                 :sincronizado as sincronizado
             from tblformapagamento fp
@@ -388,8 +388,8 @@ class PdvService
             inner join tblnegocio n on (n.codnegocio = pc.codnegocio)
             group by n.codnegocio 
         ),
-        stone as (
-            select ped.codnegocio, sum(ped.valorpagoliquido)  as valorstone
+        pagarme as (
+            select ped.codnegocio, sum(ped.valorpagoliquido)  as valorpagarme
             from tblpagarmepedido ped
             group by ped.codnegocio
         ),
@@ -404,17 +404,17 @@ class PdvService
             p.fantasia,
             n.valortotal, 
             pix.valorpix, 
-            stone.valorstone, 
+            pagarme.valorpagarme, 
             tit.valortitulo,
             coalesce(n.valortotal, 0) 
                 - coalesce(pix.valorpix, 0)
-                - coalesce(stone.valorstone, 0) 
+                - coalesce(pagarme.valorpagarme, 0) 
                 - coalesce(tit.valortitulo, 0) 
                 as valordiferenca
         from tblnegocio n
         inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
         left join pix on (pix.codnegocio = n.codnegocio)
-        left join stone on (stone.codnegocio = n.codnegocio)
+        left join pagarme on (pagarme.codnegocio = n.codnegocio)
         left join tit on (tit.codnegocio = n.codnegocio)
         left join tblpessoa p on (p.codpessoa = n.codpessoa)
         where n.lancamento between :dia and :dia + \'1 day\'::interval - \'1 second\'::interval

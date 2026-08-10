@@ -120,7 +120,7 @@ class NegocioService
     public static function movimentaEstoque(Negocio $negocio)
     {
         // Chama MGLara para fazer movimentacao do estoque com delay de 10 segundos
-        $url = env('MGLARA_URL') . "estoque/gera-movimento-negocio/{$negocio->codnegocio}?delay=10";
+        $url = config('services.mglara.url') . "estoque/gera-movimento-negocio/{$negocio->codnegocio}?delay=10";
         $ret = json_decode(file_get_contents($url));
         if (@$ret->response !== 'Agendado') {
             dd($ret);

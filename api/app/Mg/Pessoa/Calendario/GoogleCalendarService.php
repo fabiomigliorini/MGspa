@@ -15,7 +15,7 @@ class GoogleCalendarService
     public function __construct()
     {
         $client = new Client();
-        $client->setAuthConfig(base_path(env('GOOGLE_DRIVE_CREDENTIALS_PATH')));
+        $client->setAuthConfig(base_path(config('services.google.drive_credentials_path')));
         $client->addScope(Calendar::CALENDAR);
 
         $this->calendarService = new Calendar($client);

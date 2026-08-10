@@ -21,6 +21,10 @@ Schedule::command('upf-mt:importar')->cron('0 6 1-3 * *')->withoutOverlapping();
 
 Schedule::command('nota-fiscal:transferencia-entrada')->hourly();
 Schedule::command('nfe-php:resolver-pendentes')->everyTenMinutes();
+
+// Retencao de 2 anos dos XMLs de conversa com a SEFAZ. So mexe em conversas/ — as arvores
+// de documento fiscal ficam para sempre.
+Schedule::command('nfe-php:limpar-conversas')->dailyAt('03:20');
 Schedule::command('nfe-php:dist-dfe')->everyThirtyMinutes();
 Schedule::command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt('00:01');
 Schedule::command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);

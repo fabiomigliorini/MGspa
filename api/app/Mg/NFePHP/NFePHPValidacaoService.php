@@ -11,12 +11,12 @@ use Mg\NotaFiscal\NotaFiscalService;
 
 class NFePHPValidacaoService
 {
-    public static function validar(NotaFiscal $nf)
+    public static function validar(NotaFiscal $nf, ?int $tpEmis = null)
     {
         static::validarEmitente($nf);
         static::validarPessoaNFCe($nf);
         static::validarPessoaNFe($nf);
-        static::validarOffLine($nf);
+        static::validarOffLine($nf, $tpEmis);
         static::validarCertidoes($nf);
         static::validarPagamento($nf);
     }
@@ -54,12 +54,21 @@ class NFePHPValidacaoService
         return true;
     }
 
-    public static function validarOffLine(NotaFiscal $nf)
+    /**
+     * Regras de quem pode ser emitido off-line.
+     *
+     * Recebe o tpEmis JA RESOLVIDO em vez de reconsultar Empresa->modoemissaonfce: com o
+     * override manual (o usuario avancado forcando offline), a empresa pode estar em modo
+     * normal e a nota sair offline mesmo assim — e nesse caso a validacao precisa valer.
+     * Antes essa nota passava batido.
+     */
+    public static function validarOffLine(NotaFiscal $nf, ?int $tpEmis = null)
     {
         if ($nf->modelo != NotaFiscalService::MODELO_NFCE) {
             return true;
         }
-        if ($nf->Filial->Empresa->modoemissaonfce != Empresa::MODOEMISSAONFCE_OFFLINE) {
+        $tpEmis = $tpEmis ?? $nf->Filial->Empresa->modoemissaonfce;
+        if ($tpEmis != NotaFiscalService::TPEMIS_OFFLINE) {
             return true;
         }
         if ($nf->NaturezaOperacao->finnfe != 1) {

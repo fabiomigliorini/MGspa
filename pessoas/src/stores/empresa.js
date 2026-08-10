@@ -80,6 +80,22 @@ export const empresaStore = defineStore('empresa', {
       return ret
     },
 
+    /**
+     * Forca a entrada em contingencia off-line da NFC-e.
+     * POST entra / DELETE sai — nunca toggle.
+     */
+    async entrarContingencia(codempresa, justificativa) {
+      const ret = await api.post(`v1/empresa/${codempresa}/contingencia`, { justificativa })
+      this.item = ret.data.data
+      return this.item
+    },
+
+    async sairContingencia(codempresa) {
+      const ret = await api.delete(`v1/empresa/${codempresa}/contingencia`)
+      this.item = ret.data.data
+      return this.item
+    },
+
     async atualizarFilial(codfilial, model) {
       const ret = await api.put('v1/filial/' + codfilial, model)
       this.filial = ret.data.data

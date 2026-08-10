@@ -26,7 +26,7 @@ class FormaPagamentoUpdateRequest extends FormRequest
             'valecompra' => 'boolean',
             'lio' => 'boolean',
             'pix' => 'boolean',
-            'stone' => 'boolean',
+            'pagarme' => 'boolean',
             'integracao' => 'boolean',
             'safrapay' => 'boolean',
         ];

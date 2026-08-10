@@ -12,6 +12,8 @@ use Mg\NotaFiscal\Requests\NotaFiscalStatusRequest;
 use Mg\NotaFiscal\Resources\NotaFiscalResource;
 use Mg\NotaFiscal\Resources\NotaFiscalDetailResource;
 use Mg\NFePHP\NFePHPService;
+use Mg\NFePHP\NFePHPEnvioService;
+use Mg\Inutilizacao\InutilizacaoService;
 use Mg\NotaFiscal\NotaFiscalDevolucaoService;
 
 class NotaFiscalController extends Controller
@@ -334,22 +336,7 @@ class NotaFiscalController extends Controller
         $resultado = NFePHPService::criar($nota, $offline);
 
         // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = NotaFiscal::with([
-            'Filial',
-            'EstoqueLocal',
-            'Pessoa',
-            'NaturezaOperacao',
-            'Operacao',
-            'PessoaTransportador',
-            'EstadoPlaca',
-            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
-            'NotaFiscalProdutoBarraS.Cfop',
-            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
-            'NotaFiscalPagamentoS',
-            'NotaFiscalDuplicatasS',
-            'NotaFiscalReferenciadaS',
-            'NotaFiscalCartaCorrecaoS',
-        ])->findOrFail($codnotafiscal);
+        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
 
         return response()->json([
             'nota' => new NotaFiscalDetailResource($notaAtualizada),
@@ -367,22 +354,7 @@ class NotaFiscalController extends Controller
         $resultado = NFePHPService::enviarSincrono($nota);
 
         // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = NotaFiscal::with([
-            'Filial',
-            'EstoqueLocal',
-            'Pessoa',
-            'NaturezaOperacao',
-            'Operacao',
-            'PessoaTransportador',
-            'EstadoPlaca',
-            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
-            'NotaFiscalProdutoBarraS.Cfop',
-            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
-            'NotaFiscalPagamentoS',
-            'NotaFiscalDuplicatasS',
-            'NotaFiscalReferenciadaS',
-            'NotaFiscalCartaCorrecaoS',
-        ])->findOrFail($codnotafiscal);
+        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
 
         return response()->json([
             'nota' => new NotaFiscalDetailResource($notaAtualizada),
@@ -400,22 +372,7 @@ class NotaFiscalController extends Controller
         $resultado = NFePHPService::consultar($nota);
 
         // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = NotaFiscal::with([
-            'Filial',
-            'EstoqueLocal',
-            'Pessoa',
-            'NaturezaOperacao',
-            'Operacao',
-            'PessoaTransportador',
-            'EstadoPlaca',
-            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
-            'NotaFiscalProdutoBarraS.Cfop',
-            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
-            'NotaFiscalPagamentoS',
-            'NotaFiscalDuplicatasS',
-            'NotaFiscalReferenciadaS',
-            'NotaFiscalCartaCorrecaoS',
-        ])->findOrFail($codnotafiscal);
+        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
 
         return response()->json([
             'nota' => new NotaFiscalDetailResource($notaAtualizada),
@@ -437,22 +394,7 @@ class NotaFiscalController extends Controller
         $resultado = NFePHPService::cancelar($nota, $request->justificativa);
 
         // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = NotaFiscal::with([
-            'Filial',
-            'EstoqueLocal',
-            'Pessoa',
-            'NaturezaOperacao',
-            'Operacao',
-            'PessoaTransportador',
-            'EstadoPlaca',
-            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
-            'NotaFiscalProdutoBarraS.Cfop',
-            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
-            'NotaFiscalPagamentoS',
-            'NotaFiscalDuplicatasS',
-            'NotaFiscalReferenciadaS',
-            'NotaFiscalCartaCorrecaoS',
-        ])->findOrFail($codnotafiscal);
+        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
 
         return response()->json([
             'nota' => new NotaFiscalDetailResource($notaAtualizada),
@@ -471,25 +413,25 @@ class NotaFiscalController extends Controller
 
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
-        $resultado = NFePHPService::inutilizar($nota, $request->justificativa);
+        // Faixa de 1: e o botao da propria nota. A inutilizacao por faixa de verdade
+        // fica no endpoint v1/inutilizacao.
+        $inut = InutilizacaoService::inutilizar(
+            $nota->Filial,
+            (int) $nota->modelo,
+            (int) $nota->serie,
+            (int) $nota->numero,
+            (int) $nota->numero,
+            $request->justificativa
+        );
+        $resultado = (object) [
+            'sucesso' => $inut->homologada,
+            'cStat' => $inut->cstat,
+            'xMotivo' => $inut->xmotivo,
+            'codinutilizacao' => $inut->codinutilizacao,
+        ];
 
         // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = NotaFiscal::with([
-            'Filial',
-            'EstoqueLocal',
-            'Pessoa',
-            'NaturezaOperacao',
-            'Operacao',
-            'PessoaTransportador',
-            'EstadoPlaca',
-            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
-            'NotaFiscalProdutoBarraS.Cfop',
-            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
-            'NotaFiscalPagamentoS',
-            'NotaFiscalDuplicatasS',
-            'NotaFiscalReferenciadaS',
-            'NotaFiscalCartaCorrecaoS',
-        ])->findOrFail($codnotafiscal);
+        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
 
         return response()->json([
             'nota' => new NotaFiscalDetailResource($notaAtualizada),
@@ -686,22 +628,7 @@ class NotaFiscalController extends Controller
         $resultado = NFePHPService::cartaCorrecao($nota, $request->texto);
 
         // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = NotaFiscal::with([
-            'Filial',
-            'EstoqueLocal',
-            'Pessoa',
-            'NaturezaOperacao',
-            'Operacao',
-            'PessoaTransportador',
-            'EstadoPlaca',
-            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
-            'NotaFiscalProdutoBarraS.Cfop',
-            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
-            'NotaFiscalPagamentoS',
-            'NotaFiscalDuplicatasS',
-            'NotaFiscalReferenciadaS',
-            'NotaFiscalCartaCorrecaoS',
-        ])->findOrFail($codnotafiscal);
+        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
 
         return response()->json([
             'nota' => new NotaFiscalDetailResource($notaAtualizada),
@@ -717,27 +644,88 @@ class NotaFiscalController extends Controller
         return response()->json(NotaFiscalLacunaService::detectarLacunas());
     }
 
+
     /**
-     * Cria registro de nota fiscal e inutiliza na SEFAZ
+     * Enfileira o envio da NFe e devolve o progresso inicial.
+     *
+     * 202 porque o trabalho ainda nao terminou: quem acompanha e o GET no mesmo path.
+     *
+     * O parametro `offline` e tri-state e so vem quando o usuario avancado forca o modo:
+     * ausente = automatico (segue a conf da empresa), true = contingencia, false = online.
      */
-    public function criarParaInutilizar(Request $request)
+    public function enviar(Request $request, int $codnotafiscal)
     {
-        $request->validate([
-            'codfilial' => 'required|integer',
-            'serie' => 'required|integer',
-            'modelo' => 'required|integer|in:55,65',
-            'numero' => 'required|integer|min:1',
-            'justificativa' => 'required|string|min:15',
+        $offline = $request->has('offline') ? $request->boolean('offline') : null;
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        return response()->json(NFePHPEnvioService::iniciar($nota, $offline), 202);
+    }
+
+    /**
+     * Progresso do envio (polling de 3 em 3s).
+     *
+     * Enquanto processa devolve so o payload do Redis, SEM tocar o Postgres — sao ~80
+     * polls por envio. A nota completa so vai junto no estado terminal.
+     */
+    public function progressoEnvio(int $codnotafiscal)
+    {
+        $progresso = NFePHPEnvioService::progresso($codnotafiscal);
+
+        if (empty($progresso)) {
+            return response()->json(['status' => null]);
+        }
+
+        if (in_array($progresso['status'] ?? null, ['concluido', 'erro'])) {
+            $progresso['nota'] = new NotaFiscalDetailResource($this->notaDetalhe($codnotafiscal));
+        }
+
+        return response()->json($progresso);
+    }
+
+    /**
+     * Conversas com a SEFAZ desta nota, mais recentes primeiro.
+     */
+    public function sefazComunicacoes(int $codnotafiscal)
+    {
+        $sql = '
+            select codsefazcomunicacao, operacao, tentativa, httpcode, cstat, xmotivo,
+                   duracaoms, sucesso, erro, (arquivo is not null) as temxml, criacao
+            from tblsefazcomunicacao
+            where codnotafiscal = :codnotafiscal
+            order by criacao desc, codsefazcomunicacao desc
+            limit 200
+        ';
+
+        return response()->json([
+            'data' => DB::select($sql, ['codnotafiscal' => $codnotafiscal]),
         ]);
+    }
 
-        $resultado = NotaFiscalLacunaService::criarParaInutilizar(
-            $request->codfilial,
-            $request->serie,
-            $request->modelo,
-            $request->numero,
-            $request->justificativa
-        );
-
-        return response()->json($resultado);
+    /**
+     * Nota com os relacionamentos que o NotaFiscalDetailResource consome.
+     *
+     * Este bloco de eager load estava duplicado 7x no controller — extraido para nao
+     * virar a 8a copia com os endpoints de envio.
+     */
+    private function notaDetalhe(int $codnotafiscal): NotaFiscal
+    {
+        return NotaFiscal::with([
+            'Filial',
+            'EstoqueLocal',
+            'Pessoa.Cidade.Estado',
+            'Pessoa.PessoaEmailS',
+            'NaturezaOperacao',
+            'Operacao',
+            'PessoaTransportador',
+            'EstadoPlaca',
+            'NotaFiscalProdutoBarraS.ProdutoBarra.ProdutoVariacao.Produto',
+            'NotaFiscalProdutoBarraS.Cfop',
+            'NotaFiscalProdutoBarraS.NotaFiscalItemTributoS.Tributo',
+            'NotaFiscalPagamentoS',
+            'NotaFiscalDuplicatasS',
+            'NotaFiscalReferenciadaS',
+            'NotaFiscalCartaCorrecaoS',
+            'NfeTerceiroS',
+        ])->findOrFail($codnotafiscal);
     }
 }

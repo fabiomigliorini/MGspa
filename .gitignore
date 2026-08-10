@@ -10,3 +10,8 @@
 .php_cs.cache
 
 /utils/DB/*.pdf
+
+# Config do Claude Code — local de cada maquina/dev, nao do projeto.
+# O harness escreve permissoes aqui sozinho durante as sessoes, o que sujava o
+# `git status` a cada uso. Vale para a raiz e para todos os apps.
+.claude/

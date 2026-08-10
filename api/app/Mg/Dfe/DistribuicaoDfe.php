@@ -9,7 +9,6 @@ namespace Mg\Dfe;
 use Mg\MgModel;
 use Mg\Dfe\DfeTipo;
 use Mg\Filial\Filial;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\Dfe\DistribuicaoDfeEvento;
 use Mg\NfeTerceiro\NfeTerceiro;
 
@@ -24,7 +23,6 @@ class DistribuicaoDfe extends MgModel
         'coddistribuicaodfeevento',
         'codfilial',
         'codnfeterceiro',
-        'codnotafiscalterceiro',
         'data',
         'nfechave',
         'nsu'
@@ -37,7 +35,6 @@ class DistribuicaoDfe extends MgModel
         'coddistribuicaodfeevento' => 'integer',
         'codfilial' => 'integer',
         'codnfeterceiro' => 'integer',
-        'codnotafiscalterceiro' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
@@ -65,11 +62,6 @@ class DistribuicaoDfe extends MgModel
     public function NfeTerceiro()
     {
         return $this->belongsTo(NfeTerceiro::class, 'codnfeterceiro', 'codnfeterceiro');
-    }
-
-    public function NotaFiscalTerceiro()
-    {
-        return $this->belongsTo(NotaFiscalTerceiro::class, 'codnotafiscalterceiro', 'codnotafiscalterceiro');
     }
 
 }

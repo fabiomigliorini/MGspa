@@ -12,6 +12,9 @@ use NFePHP\Common\Keys;
 use NFePHP\Common\Strings;
 use NFePHP\DA\MDFe\Damdfe;
 
+use Mg\NFePHP\NFePHPPathService;
+use Mg\NFePHP\NFePHPService;
+
 class MdfeNfePhpService
 {
 
@@ -562,7 +565,7 @@ class MdfeNfePhpService
         $xmlAssinado = $tools->signMDFe($xml);
 
         // Salva XML
-        $path = MdfeNfePhpPathService::pathMdfeCriado($mdfe, true);
+        $path = NFePHPPathService::pathMdfeAssinado($mdfe, true);
         file_put_contents($path, $xmlAssinado);
 
         return $xmlAssinado;
@@ -578,7 +581,7 @@ class MdfeNfePhpService
         }
 
         // Carrega Arquivo XML Assinado
-        $path = MdfeNfePhpPathService::pathMdfeCriado($mdfe);
+        $path = NFePHPPathService::pathMdfeAssinado($mdfe);
         if (!file_exists($path)) {
             throw new \Exception("Arquivo da MDFe não localizado ($path)!");
         }
@@ -588,9 +591,12 @@ class MdfeNfePhpService
         $idLote = str_pad(1, 15, '0', STR_PAD_LEFT);
 
         // Envia Lote para Sefaz
-        $resp = $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1);
-        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
-        file_put_contents($path, $resp);
+        $resp = NFePHPService::chamarSefazComRetry(
+            fn() => $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1),
+            'mdfeEnviaLote',
+            $tools,
+            $mdfe->Filial
+        );
 
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -650,9 +656,12 @@ class MdfeNfePhpService
 
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
 
-        $resp = $tools->sefazConsultaRecibo($envio->recibo);
-        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
-        file_put_contents($path, $resp);
+        $resp = NFePHPService::chamarSefazComRetry(
+            fn() => $tools->sefazConsultaRecibo($envio->recibo),
+            'mdfeConsultaRecibo',
+            $tools,
+            $mdfe->Filial
+        );
 
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -694,14 +703,12 @@ class MdfeNfePhpService
 
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
 
-        $resp = $tools->sefazConsultaChave($mdfe->chmdfe);
-        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
-        file_put_contents($path, $resp);
-
-        // dd($path);
-        // $path = '/opt/www/NFePHP/Arquivos/Mdfe/401/homologacao/retorno/2021/03/51210300018267882987589200000002021999997972-2021-03-12.19-42-16-Retorno.xml';
-        // $path = "/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000011999999986-2021-03-12.19-48-58-Retorno.xml";
-        // $resp = file_get_contents($path);
+        $resp = NFePHPService::chamarSefazComRetry(
+            fn() => $tools->sefazConsultaChave($mdfe->chmdfe),
+            'mdfeConsultaChave',
+            $tools,
+            $mdfe->Filial
+        );
 
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -748,11 +755,13 @@ class MdfeNfePhpService
         // Workaround CPF
         $tools->config->cnpj = $tools->config->cpf;
 
-        $resp = $tools->sefazCancela($mdfe->chmdfe, $justificativa, $mdfe->protocoloautorizacao);
-        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
-        file_put_contents($path, $resp);
-        // $path = '/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000021999999975-2021-03-12.22-53-07-Retorno.xml';
-        // $resp = file_get_contents($path);
+        $resp = NFePHPService::chamarSefazComRetry(
+            fn() => $tools->sefazCancela($mdfe->chmdfe, $justificativa, $mdfe->protocoloautorizacao),
+            'mdfeCancela',
+            $tools,
+            $mdfe->Filial
+        );
+        file_put_contents(NFePHPPathService::pathMdfeCancelado($mdfe, true), $resp);
 
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -807,12 +816,13 @@ class MdfeNfePhpService
         $encerramento->setTimezone('America/Sao_Paulo');
         $dtEnc = $encerramento->format('Y-m-d'); // Opcional, caso nao seja preenchido pegara HOJE
 
-        $resp = $tools->sefazEncerra($mdfe->chmdfe, $mdfe->protocoloautorizacao, $cUF, $cMun, $dtEnc);
-        $path = MdfeNfePhpPathService::pathMdfeRetorno($mdfe, true);
-        file_put_contents($path, $resp);
-
-        // $path = "/opt/www/NFePHP/Arquivos/Mdfe/801/homologacao/retorno/2021/03/51210300060452129168589200000000011999999986-2021-03-12.22-16-28-Retorno.xml";
-        // $resp = file_get_contents($path);
+        $resp = NFePHPService::chamarSefazComRetry(
+            fn() => $tools->sefazEncerra($mdfe->chmdfe, $mdfe->protocoloautorizacao, $cUF, $cMun, $dtEnc),
+            'mdfeEncerra',
+            $tools,
+            $mdfe->Filial
+        );
+        file_put_contents(NFePHPPathService::pathMdfeEncerrado($mdfe, true), $resp);
 
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -889,7 +899,7 @@ class MdfeNfePhpService
         ]);
 
         // Carrega o Arquivo com o XML Assinado
-        $pathAssinada = MdfeNfePhpPathService::pathMdfeCriado($mdfe);
+        $pathAssinada = NFePHPPathService::pathMdfeAssinado($mdfe);
         $xmlAssinado = file_get_contents($pathAssinada);
 
         // Vincula o Protocolo no XML Assinado
@@ -898,7 +908,7 @@ class MdfeNfePhpService
         $xmlProtocolado = Complements::toAuthorize($xmlAssinado, $resp);
 
         // Salva o Arquivo com a NFe Aprovada
-        $pathAprovada = MdfeNfePhpPathService::pathMdfeAutorizado($mdfe, true);
+        $pathAprovada = NFePHPPathService::pathMdfeAutorizado($mdfe, true);
         file_put_contents($pathAprovada, $xmlProtocolado);
 
         return true;
@@ -907,10 +917,10 @@ class MdfeNfePhpService
 
     public static function damdfe(Mdfe $mdfe)
     {
-        $path = MdfeNfePhpPathService::pathMdfeAutorizado($mdfe);
+        $path = NFePHPPathService::pathMdfeAutorizado($mdfe);
 
         // if (!file_exists($path)) {
-        //     $path = MdfeNfePhpPathService::pathMdfeCriado($mdfe);
+        //     $path = NFePHPPathService::pathMdfeAssinado($mdfe);
         // }
 
         if (!file_exists($path)) {
@@ -923,7 +933,7 @@ class MdfeNfePhpService
         $damdfe = new Damdfe($xml);
         $pdf = $damdfe->render();
 
-        $pathDamdfe = MdfeNfePhpPathService::pathDamdfe($mdfe, true);
+        $pathDamdfe = NFePHPPathService::pathDamdfe($mdfe, true);
         file_put_contents($pathDamdfe, $pdf);
 
         return $pathDamdfe;

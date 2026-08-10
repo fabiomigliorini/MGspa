@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Mg\Filial\Filial;
 use Mg\NFePHP\NFePHPPathService;
 use Mg\NotaFiscal\NotaFiscal;
+use Mg\NotaFiscal\NotaFiscalService;
 
 class DominioXMLService
 {
@@ -126,7 +127,7 @@ class DominioXMLService
         // mais as notas de saida emitidas por outra filial,
         // cujo destino seja esta filial
         $sql = '
-            select nf.codfilial, nf.codnotafiscal, nf.nfechave
+            select nf.codfilial, nf.codnotafiscal, nf.nfechave, nf.modelo, nf.emissao
             from tblnotafiscal nf
             where nf.codfilial = :codfilial
             and nf.emissao between :inicio and :fim
@@ -136,7 +137,7 @@ class DominioXMLService
             and nf.nfecancelamento is null
             and nf.nfeautorizacao is not null
             union
-            select nf.codfilial, nf.codnotafiscal, nf.nfechave
+            select nf.codfilial, nf.codnotafiscal, nf.nfechave, nf.modelo, nf.emissao
             from tblfilial f
             inner join tblpessoa p  on (p.codpessoa = f.codpessoa)
             inner join tblnotafiscal nf on (nf.codpessoa = p.codpessoa)
@@ -162,18 +163,27 @@ class DominioXMLService
 
         // Percorre todas as notas
         $registros = 0;
-        $codfilialUltima = null;
+        $filiais = [];
         foreach ($notas as $nota) {
 
-            // Monta Path dos XML
-            if ($codfilialUltima != $nota->codfilial) {
-                $filial = Filial::findOrFail($nota->codfilial);
-                $pathXml = NFePHPPathService::pathNFe($filial) . "enviadas/aprovadas/" . $mes->format('Ym');
+            // Cache das filiais (a consulta traz notas de mais de uma)
+            if (!isset($filiais[$nota->codfilial])) {
+                $filiais[$nota->codfilial] = Filial::findOrFail($nota->codfilial);
             }
 
-            // tenta adicionar o XML no arquivo ZIP
-            $pattern = $pathXml . '/*' . $nota->nfechave . '*.[xX][mM][lL]';
-            if ($adicionados = $za->addGlob($pattern, 0, ['remove_all_path' => true])) {
+            // Caminho EXATO do XML autorizado. Antes isso era um glob "*{chave}*.xml"
+            // numa pasta que so tinha protNFe; na estrutura nova todos os artefatos da
+            // chave moram na mesma pasta, entao o glob traria assinado + proc +
+            // cancelado e o ZIP sairia com 3 XMLs por nota.
+            $path = NFePHPPathService::pathDiretorio(
+                ($nota->modelo == NotaFiscalService::MODELO_NFCE)
+                    ? NFePHPPathService::TIPO_NFCE
+                    : NFePHPPathService::TIPO_NFE,
+                $filiais[$nota->codfilial],
+                Carbon::parse($nota->emissao)
+            ) . "/{$nota->nfechave}-proc.xml";
+
+            if (file_exists($path) && $za->addFile($path, basename($path))) {
                 $registros += 1;
             }
         }

@@ -309,13 +309,6 @@ export default {
                         </div>
                       </div>
 
-                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.stonecode">
-                        <div class="text-overline text-grey-7">Stone Code</div>
-                        <div class="text-body2">
-                          {{ sEmpresa.filial.stonecode }}
-                        </div>
-                      </div>
-
                       <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.ultimonsu">
                         <div class="text-overline text-grey-7">Último NSU</div>
                         <div class="text-body2">

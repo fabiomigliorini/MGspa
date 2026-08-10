@@ -13,7 +13,7 @@ class PixSicrediApiService
 
     private static function opcoesCurlMTls(): array
     {
-        $cert = env('SICREDI_CERTIFICADO');
+        $cert = config('services.sicredi.certificado');
         if (empty($cert) || !file_exists($cert)) {
             throw new \Exception('Certificado do Sicredi não configurado ou não encontrado!');
         }
@@ -21,12 +21,12 @@ class PixSicrediApiService
             CURLOPT_SSLCERT => $cert,
             CURLOPT_SSLCERTTYPE => 'PEM',
         ];
-        $key = env('SICREDI_CERTIFICADO_KEY');
+        $key = config('services.sicredi.certificado_key');
         if (!empty($key)) {
             $opt[CURLOPT_SSLKEY] = $key;
             $opt[CURLOPT_SSLKEYTYPE] = 'PEM';
         }
-        $senha = env('SICREDI_CERTIFICADO_SENHA');
+        $senha = config('services.sicredi.certificado_senha');
         if (!empty($senha)) {
             $opt[CURLOPT_SSLCERTPASSWD] = $senha;
         }
@@ -35,7 +35,7 @@ class PixSicrediApiService
 
     public static function token(Portador $portador): array
     {
-        $url = env('SICREDI_URL_OAUTH');
+        $url = config('services.sicredi.url_oauth');
         $authorization = base64_encode("{$portador->bbclientid}:{$portador->bbclientsecret}");
         $body = 'grant_type=client_credentials&scope=cob.read+cob.write+pix.read+pix.write';
 
@@ -105,7 +105,7 @@ class PixSicrediApiService
         }
 
         $body = json_encode($arr);
-        $url = env('SICREDI_URL_PIX') . '/cob/' . $txid;
+        $url = config('services.sicredi.url_pix') . '/cob/' . $txid;
         $curl = curl_init();
         $opt = [
             CURLOPT_URL => $url,
@@ -138,7 +138,7 @@ class PixSicrediApiService
         string $token,
         string $txid
     ): array {
-        $url = env('SICREDI_URL_PIX') . '/cob/' . $txid;
+        $url = config('services.sicredi.url_pix') . '/cob/' . $txid;
         $curl = curl_init();
         $opt = [
             CURLOPT_URL => $url,
@@ -183,7 +183,7 @@ class PixSicrediApiService
             $data['paginacao.paginaAtual'] = $paginaAtual;
         }
 
-        $url = env('SICREDI_URL_PIX') . '/pix';
+        $url = config('services.sicredi.url_pix') . '/pix';
         if (!empty($data)) {
             $url .= '?' . http_build_query($data);
         }

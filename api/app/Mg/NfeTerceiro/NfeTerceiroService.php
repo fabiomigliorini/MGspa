@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Support\Facades\Auth;
 use Mg\Dfe\DfeTipo;
 use Mg\NFePHP\NFePHPManifestacaoService;
+use Mg\NFePHP\NFePHPService;
 use Mg\NFePHP\NFePHPPathService;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
@@ -131,7 +132,7 @@ class NfeTerceiroService
         if (!$dd) {
             abort(404, 'XML não disponível para esta NFe.');
         }
-        $path = NFePHPPathService::pathDfeGz($dd);
+        $path = NFePHPPathService::pathDfe($dd);
         if (!file_exists($path)) {
             abort(404, 'Arquivo XML não localizado no servidor.');
         }
@@ -151,7 +152,7 @@ class NfeTerceiroService
         $dd = $nft->DistribuicaoDfeS()->where('coddfetipo', $dfeTipo->coddfetipo)->first();
 
         if ($dd) {
-            $path = NFePHPPathService::pathDfeGz($dd);
+            $path = NFePHPPathService::pathDfe($dd);
             if (file_exists($path)) {
                 return;
             }
@@ -290,7 +291,12 @@ class NfeTerceiroService
         // consulta nfe na sefaz
         $tools = NFePHPConfigService::instanciaTools($nfeTerceiro->Filial);
         // $tools->setEnvironment(1);
-        $resp = $tools->sefazDownload($nfeTerceiro->nfechave);
+        $resp = NFePHPService::chamarSefazComRetry(
+            fn() => $tools->sefazDownload($nfeTerceiro->nfechave),
+            'download',
+            $tools,
+            $nfeTerceiro->Filial
+        );
 
         // converte resposta em objeto
         $stz = new Standardize($resp);

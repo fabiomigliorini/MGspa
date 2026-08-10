@@ -25,7 +25,7 @@ class SelectProdutoBarraController extends Controller
                     marca,
                     referencia,
                     inativo,
-                    'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' || imagem as imagem,
+                    '" . config('services.mglara.imagens_url') . "/' || imagem as imagem,
                     codprodutobarra as value,
                     descricao as label
                   FROM vwProdutoBarra
@@ -94,7 +94,7 @@ class SelectProdutoBarraController extends Controller
                     marca,
                     referencia,
                     inativo,
-                    'https://sistema.mgpapelaria.com.br/MGLara/public/imagens/' || imagem as imagem,
+                    '" . config('services.mglara.imagens_url') . "/' || imagem as imagem,
                     codprodutobarra as value,
                     descricao as label
                   FROM vwProdutoBarra

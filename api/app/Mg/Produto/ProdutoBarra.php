@@ -11,7 +11,6 @@ use Mg\CupomFiscal\CupomFiscalProdutoBarra;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NfeTerceiro\NfeTerceiroItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiroProdutoBarra;
 use Mg\Produto\Prancheta;
 use Mg\ValeCompra\ValeCompraModeloProdutoBarra;
 use Mg\ValeCompra\ValeCompraProdutoBarra;
@@ -102,11 +101,6 @@ class ProdutoBarra extends MgModel
     public function NotaFiscalProdutoBarraS()
     {
         return $this->hasMany(NotaFiscalProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
-    }
-
-    public function NotaFiscalTerceiroProdutoBarraS()
-    {
-        return $this->hasMany(NotaFiscalTerceiroProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
     public function PranchetaS()

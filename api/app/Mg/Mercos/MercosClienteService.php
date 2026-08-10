@@ -150,7 +150,7 @@ class MercosClienteService {
         if (isset($cidade[0])) {
             $codcidade = $cidade[0]->codcidade;
         } else {
-            $codcidade = env('CODCIDADE_SINOP');
+            $codcidade = config('mg.codcidade_sinop');
         }
         $p->codcidade = $codcidade;
 

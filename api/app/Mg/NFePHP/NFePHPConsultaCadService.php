@@ -20,7 +20,12 @@ class NFePHPConsultaCadService
             //este serviço somente opera em ambiente de produção
             $tools->setEnvironment(1);
 
-            $response = $tools->sefazCadastro($uf, $cnpj, $iest, $cpf);
+            $response = NFePHPService::chamarSefazComRetry(
+                fn() => $tools->sefazCadastro($uf, $cnpj, $iest, $cpf),
+                'cadastro',
+                $tools,
+                $filial
+            );
 
             //você pode padronizar os dados de retorno atraves da classe abaixo
             //de forma a facilitar a extração dos dados do XML

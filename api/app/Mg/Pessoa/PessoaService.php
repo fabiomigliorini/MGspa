@@ -718,7 +718,7 @@ class PessoaService
             }
         }
         if (empty($data['email'])) {
-            $data['email'] = 'nfe@mgpapelaria.com.br';
+            $data['email'] = config('mail.destinatarios.nfe');
         }
 
         if ($endereco = PessoaEndereco::where('codpessoa', $pessoa->codpessoa)
@@ -768,7 +768,7 @@ class PessoaService
     {
         return Http::withHeaders([
             'Accept' => 'application/json',
-            'Authorization' => 'Bearer' . env('RECEITA_WS_TOKEN'),
+            'Authorization' => 'Bearer' . config('services.receitaws.token'),
         ])->get('https://receitaws.com.br/v1/cnpj/' . $cnpj);
     }
 
@@ -1062,7 +1062,7 @@ class PessoaService
 
     public static function enviaEmailGeral()
     {
-        $email = env('MAIL_ANIVERSARIANTES', null);
+        $email = config('mail.destinatarios.aniversariantes');
         if (!$email) {
             throw new Exception("MAIL_ANIVERSARIANTES não está definido no .env!", 1);
         }

@@ -6,6 +6,7 @@ use Exception;
 use Carbon\Carbon;
 use stdClass;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NaturezaOperacao\Operacao;
@@ -60,10 +61,59 @@ class NFePHPMakeService
         return !empty($nf->numero);
     }
 
-    public static function montarXml(NotaFiscal $nf, $offline = false)
+    /**
+     * Decide o tpEmis da NFC-e — e essa decisão define a CHAVE DE ACESSO.
+     *
+     * O tpEmis é um dos campos da chave (Keys::build(..., $tpEmis, $codigo), formato
+     * ...%01d%08d). Como o cNF aqui é determinístico (99999999 - numero), o tpEmis é a
+     * única coisa que pode fazer a chave mudar entre duas gerações do mesmo XML.
+     *
+     * O bug que isso corrige: o tpEmis vinha de Empresa->modoemissaonfce no momento da
+     * recriação. Uma NFC-e emitida offline (cupom já impresso, chave terminando em 9)
+     * recriada depois que a empresa voltou ao modo online saía com tpEmis 1, gerando
+     * chave DIFERENTE — e o NFePHPMakeService sobrescreve nfechave no banco. O cliente
+     * ficava com um cupom cuja chave não existe na SEFAZ. Era exatamente o caminho do
+     * robô, que chama criar() sem $offline quando o envio falha.
+     *
+     * A regra da Receita é explícita: ao transmitir nota emitida em contingência,
+     * mantém-se a mesma chave de acesso, incluindo o mesmo código numérico.
+     *
+     * $offline é tri-state: null = automático (segue a nota, senão a empresa),
+     * true = força offline, false = força online.
+     */
+    protected static function resolverTpEmis(NotaFiscal $nf, $offline = null): int
     {
+        $override = ($offline === null) ? null
+            : ($offline ? NotaFiscalService::TPEMIS_OFFLINE : NotaFiscalService::TPEMIS_NORMAL);
+
+        // Nota já tem chave: o tpEmis dela MANDA, porque a chave não pode mudar.
+        if (!empty($nf->nfechave) && !empty($nf->tpemis)) {
+            if ($override !== null && $override != $nf->tpemis) {
+                Log::warning(
+                    "NF#{$nf->codnotafiscal}: override explícito de tpEmis {$nf->tpemis} -> {$override}. " .
+                    "A CHAVE DE ACESSO VAI MUDAR (chave atual: {$nf->nfechave})."
+                );
+                return $override;
+            }
+            return (int) $nf->tpemis;
+        }
+
+        if ($override !== null) {
+            return $override;
+        }
+
+        return (int) $nf->Filial->Empresa->modoemissaonfce;
+    }
+
+    public static function montarXml(NotaFiscal $nf, $offline = null)
+    {
+        // Resolve o tpEmis ANTES de validar: e ele que define a chave de acesso, e a
+        // validacao de emissao off-line precisa saber o modo real desta nota (que pode
+        // divergir do modo da empresa, no caso de override manual).
+        $tpEmisResolvido = static::resolverTpEmis($nf, $offline);
+
         // Valida se o preenchimento da NFe está correto
-        NFePHPValidacaoService::validar($nf);
+        NFePHPValidacaoService::validar($nf, $tpEmisResolvido);
 
         // Confere se nota Fiscal tem Número
         if (!static::gerarNumeroNotaFiscal($nf)) {
@@ -144,30 +194,37 @@ class NFePHPMakeService
             // 7=Contingência SVC-RS (SEFAZ Virtual de Contingência do RS);
             // 9=Contingência off-line da NFC-e (as demais opções de contingência são válidas também para a NFC-e);
             // Nota: Para a NFC-e somente estão disponíveis e são válidas as opções de contingência 5 e 9.
-            $std->tpEmis = 1;
+            $std->tpEmis = NotaFiscalService::TPEMIS_NORMAL;
 
             // DANFE NFCe
         } else {
             $std->tpImp = 4; // Danfe NFC-e
-            if ($offline) {
-                $std->tpEmis = Empresa::MODOEMISSAONFCE_OFFLINE;
-            } else {
-                $std->tpEmis = $nf->Filial->Empresa->modoemissaonfce;
-            }
+            $std->tpEmis = $tpEmisResolvido;
 
             // Se estiver em modo OffLine
-            if ($std->tpEmis == Empresa::MODOEMISSAONFCE_OFFLINE) {
+            if ($std->tpEmis == NotaFiscalService::TPEMIS_OFFLINE) {
 
-                // Salva Informacao de NFCe Offline na tabela
-                $nf->tpemis = NotaFiscalService::TPEMIS_OFFLINE;
-                $nf->save();
+                // Congela dhCont/xJust NA NOTA na primeira vez que ela sai offline.
+                // Antes isso vinha de Empresa->contingenciadata, o que dava fatal error
+                // quando se forcava offline com a empresa em modo normal (a coluna e nula
+                // em 6 das 7 empresas) e trocava o dhCont das notas pendentes a cada novo
+                // episodio de contingencia.
+                if (empty($nf->contingenciadata)) {
+                    $empresa = $nf->Filial->Empresa;
+                    $nf->contingenciadata = $empresa->contingenciadata ?? Carbon::now();
+                    $nf->contingenciajustificativa = $empresa->contingenciajustificativa
+                        ?: 'Emissao off-line da NFC-e por indisponibilidade da SEFAZ';
+                }
 
-                // $aRetorno['tpEmis'] = $nf->tpemis;
-
-                // Data, Hora e Justificativa da contingencia
-                $std->dhCont = $nf->Filial->Empresa->contingenciadata->toW3cString();
-                $std->xJust = $nf->Filial->Empresa->contingenciajustificativa; //Justificativa da entrada em contingência
+                $std->dhCont = $nf->contingenciadata->toW3cString();
+                $std->xJust = $nf->contingenciajustificativa;
             }
+
+            // SEMPRE persiste o tpemis resolvido. Antes so gravava dentro do if de
+            // offline, entao uma nota criada offline e recriada online ficava com
+            // tpemis = 9 mentindo no banco.
+            $nf->tpemis = $std->tpEmis;
+            $nf->save();
         }
 
         // Cria Tag Ide
@@ -455,14 +512,15 @@ class NFePHPMakeService
             if ($nf->NaturezaOperacao->ibpt) {
 
                 try {
-                    // Faz consulta ao WebService do IBPT
+                    // Busca na tabela do IBPT (que se atualiza pela API quando possivel)
                     $tax = $ibpt->pesquisar($nfpb);
 
-                    // Se nao houve erro ao consultar
-                    if (!isset($tax->error)) {
+                    // So calcula se temos percentual - NCM sem tributacao conhecida
+                    // sai com vTotTrib zerado, sem sujar a fonte nos dados adicionais
+                    if ($tax->nacional !== null) {
 
                         // monta string com fonte do IBPT para utilizar nos Dados Adicionais
-                        $ibptFonte = "{$tax->fonte} {$tax->chave} {$tax->versao}";
+                        $ibptFonte = trim("{$tax->fonte} {$tax->chave} {$tax->versao}");
 
                         // Valcula valor dos tributos
                         $vTotTribFederal = ($nfpb->valortotal * (($nfpb->ProdutoBarra->Produto->importado) ? $tax->importado : $tax->nacional)) / 100;

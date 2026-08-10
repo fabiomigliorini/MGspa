@@ -14,11 +14,9 @@ use Mg\Negocio\NegocioCaixaMercadoria;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\NfeTerceiro\NfeTerceiro;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\PixCob;
 use Mg\Saurus\SaurusPedido;
-use Mg\Stone\StonePreTransacao;
 use Mg\Woo\WooPedidoNegocio;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
@@ -226,11 +224,6 @@ class Negocio extends MgModel
         return $this->hasMany(NfeTerceiro::class, 'codnegocio', 'codnegocio');
     }
 
-    public function NotaFiscalTerceiroS()
-    {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codnegocio', 'codnegocio');
-    }
-
     public function PagarMePedidoS()
     {
         return $this->hasMany(PagarMePedido::class, 'codnegocio', 'codnegocio');
@@ -244,11 +237,6 @@ class Negocio extends MgModel
     public function SaurusPedidoS()
     {
         return $this->hasMany(SaurusPedido::class, 'codnegocio', 'codnegocio');
-    }
-
-    public function StonePreTransacaoS()
-    {
-        return $this->hasMany(StonePreTransacao::class, 'codnegocio', 'codnegocio');
     }
 
     public function WooPedidoNegocioS()

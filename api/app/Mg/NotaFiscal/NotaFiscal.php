@@ -15,7 +15,6 @@ use Mg\NotaFiscal\NotaFiscalDuplicatas;
 use Mg\NotaFiscal\NotaFiscalPagamento;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\NotaFiscal\NotaFiscalReferenciada;
-use Mg\NotaFiscalTerceiro\NotaFiscalTerceiro;
 use Mg\Cidade\Estado;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Filial\Filial;
@@ -50,6 +49,8 @@ class NotaFiscal extends MgModel
         'ipidevolucaovalor',
         'ipivalor',
         'justificativa',
+        'contingenciadata',
+        'contingenciajustificativa',
         'modelo',
         'nfeautorizacao',
         'nfecancelamento',
@@ -118,6 +119,7 @@ class NotaFiscal extends MgModel
         'saida' => 'datetime',
         'serie' => 'integer',
         'tpemis' => 'integer',
+        'contingenciadata' => 'datetime',
         'valordesconto' => 'float',
         'valorfrete' => 'float',
         'valoroutras' => 'float',
@@ -214,11 +216,6 @@ class NotaFiscal extends MgModel
     public function NotaFiscalReferenciadaS()
     {
         return $this->hasMany(NotaFiscalReferenciada::class, 'codnotafiscal', 'codnotafiscal');
-    }
-
-    public function NotaFiscalTerceiroS()
-    {
-        return $this->hasMany(NotaFiscalTerceiro::class, 'codnotafiscal', 'codnotafiscal');
     }
 
 }

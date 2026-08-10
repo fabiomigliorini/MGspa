@@ -26,58 +26,134 @@ class NFePHPService extends MgService
     const EXCEPTION_XML_ASSINADO_INEXISTENTE = 998;
 
     /**
-     * Serializa operações concorrentes na mesma NotaFiscal.
+     * TTL do lock.
      *
-     * Tenta adquirir um Cache::lock atômico (chave única por codnotafiscal).
-     * Se já houver outro processo segurando o lock, lança \Exception imediatamente.
+     * Era 120s, MENOR que o pior caso real de enviarSincrono (~243s: envio com 3
+     * tentativas de 40s + consulta de recuperação com outras 3). Ou seja, o lock expirava
+     * com o processo ainda vivo e uma segunda operação entrava em paralelo na mesma nota
+     * — exatamente o que ele deveria impedir. 300s cobre a operação mais longa com folga
+     * e continua curto o bastante para não travar a nota se o processo morrer.
+     */
+    const LOCK_TTL = 300;
+
+    /**
+     * Serializa operações concorrentes sobre o mesmo alvo.
+     *
+     * Tenta adquirir um Cache::lock atômico. Se já houver outro processo segurando o
+     * lock, lança \Exception imediatamente.
      *
      * O objeto retornado é um "guard" com __destruct() que libera o lock
-     * automaticamente quando a variável cair fora de escopo (no return ou
-     * em qualquer exception do corpo do método chamador) — sem try/finally.
+     * automaticamente quando a variável cair fora de escopo (no return ou em qualquer
+     * exception do corpo do método chamador) — sem try/finally.
      *
-     * TTL de 120s serve apenas como fallback caso o processo morra sem
-     * chegar ao destructor (segfault, kill -9, etc).
+     * O TTL serve apenas como fallback caso o processo morra sem chegar ao destructor
+     * (segfault, kill -9, etc).
+     *
+     * Além do lock, grava um MARCADOR na store de cache normal. Isso é necessário porque
+     * Cache::has() NÃO enxerga a chave do lock: config/cache.php define
+     * lock_connection = 'default' (Redis DB 0) e connection = 'cache' (DB 1) — mesmo
+     * prefixo, database diferente. O marcador é o que permite ao robô perguntar
+     * "esta nota está ocupada?" sem tentar adquirir o lock (o que o roubaria).
      */
-    protected static function lockDaNotaFiscal(NotaFiscal $nf)
+    protected static function lock(string $chave, ?string $mensagem = null)
     {
-        $lock = Cache::lock("nfephp-nf-{$nf->codnotafiscal}", 120);
+        $lock = Cache::lock("nfephp-{$chave}", static::LOCK_TTL);
 
         if (!$lock->get()) {
-            throw new \Exception(
-                "Outra operação já está em andamento para a Nota Fiscal #{$nf->codnotafiscal}. Tente novamente."
-            );
+            throw new \Exception($mensagem ?? "Outra operação já está em andamento. Tente novamente.");
         }
 
-        return new class($lock) {
-            public function __construct(private $lock) {}
+        $marcador = "nfephp-ocupado-{$chave}";
+        Cache::put($marcador, now()->toIso8601String(), static::LOCK_TTL);
+
+        return new class($lock, $marcador) {
+            public function __construct(private $lock, private string $marcador) {}
             public function __destruct()
             {
                 try {
                     $this->lock->release();
+                    Cache::forget($this->marcador);
                 } catch (\Throwable $e) {
-                    // ignora — TTL do lock serve como fallback
+                    // ignora — TTL do lock e do marcador servem como fallback
                 }
             }
         };
     }
 
+    protected static function lockDaNotaFiscal(NotaFiscal $nf)
+    {
+        return static::lock(
+            "nf-{$nf->codnotafiscal}",
+            "Outra operação já está em andamento para a Nota Fiscal #{$nf->codnotafiscal}. Tente novamente."
+        );
+    }
+
     /**
-     * Executa uma chamada à SEFAZ com retry para erros transitórios de rede/TLS.
+     * Há operação em andamento nesta nota?
+     *
+     * Leitura pura: não adquire o lock (o que o roubaria de quem o tem). É o que permite
+     * ao robô ceder a vez ao usuário em vez de disputar e falhar em cascata. Cobre as 8
+     * operações que passam pelo lock, não só o envio.
+     */
+    public static function operacaoEmAndamento(int $codnotafiscal): bool
+    {
+        return Cache::has("nfephp-ocupado-nf-{$codnotafiscal}");
+    }
+
+    /**
+     * Executa uma chamada à SEFAZ com retry para erros transitórios de rede/TLS,
+     * registrando CADA TENTATIVA na tblsefazcomunicacao.
      *
      * Mitiga o "unexpected eof while reading" do OpenSSL 3.x quando servidores
      * SEFAZ encerram a conexão sem o close_notify do TLS, além de timeouts e
      * resets eventuais. Outras SoapExceptions (HTTP 500, XML inválido, etc.)
      * propagam imediatamente — só vale retentar erro de transporte.
+     *
+     * É público porque é o funil de TODA conversa com a SEFAZ do projeto — as 20
+     * chamadas, incluindo MDF-e, DFe, manifestação e consulta de cadastro. Antes
+     * metade delas chamava $tools->sefazX() direto: ficavam sem retry (sofrendo do
+     * mesmo bug de TLS que a NFe já contornava) e fora do log.
+     *
+     * O log entra aqui, e não no chamador, porque é aqui que se sabe o número da
+     * tentativa — e é justamente o retry que se quer enxergar depois.
      */
-    protected static function chamarSefazComRetry(callable $fn, string $operacao)
-    {
+    public static function chamarSefazComRetry(
+        callable $fn,
+        string $operacao,
+        $tools = null,
+        ?Filial $filial = null,
+        ?NotaFiscal $nf = null
+    ) {
         $atrasosMs = [500, 1500];
         $tentativa = 0;
+        $filial = $filial ?? $nf?->Filial;
 
         while (true) {
+            // Abre o registro ANTES da chamada: durante os ate 40s de conversa a tela ja
+            // mostra a tentativa em andamento, e se o processo morrer no meio o registro
+            // sobrevive como evidencia de que a tentativa existiu.
+            $idLog = ($filial !== null)
+                ? SefazLogService::iniciar($filial, $operacao, $tentativa + 1, $nf)
+                : null;
+
+            $inicio = microtime(true);
             try {
-                return $fn();
+                $resp = $fn();
+                static::registrarConversa($idLog, $filial, $operacao, $tentativa + 1, $inicio, true, $tools, $nf);
+                return $resp;
             } catch (SoapException $e) {
+                static::registrarConversa(
+                    $idLog,
+                    $filial,
+                    $operacao,
+                    $tentativa + 1,
+                    $inicio,
+                    false,
+                    $tools,
+                    $nf,
+                    $e->getMessage()
+                );
+
                 if (!static::ehErroTransitorioSefaz($e) || $tentativa >= count($atrasosMs)) {
                     throw $e;
                 }
@@ -86,6 +162,37 @@ class NFePHPService extends MgService
                 Log::warning("SEFAZ {$operacao} falhou (tentativa {$tentativa}, retry em {$espera}ms): " . $e->getMessage());
                 usleep($espera * 1000);
             }
+        }
+    }
+
+    /**
+     * Registra a tentativa e avalia contingência.
+     *
+     * A avaliação de contingência fica FORA do try/catch do SefazLogService de
+     * propósito: o log pode falhar em silêncio, a decisão de contingência não pode.
+     * Se estivesse dentro, uma exceção nela seria engolida e a contingência nunca
+     * ativaria, sem ninguém perceber.
+     */
+    protected static function registrarConversa(
+        ?int $idLog,
+        ?Filial $filial,
+        string $operacao,
+        int $tentativa,
+        float $inicio,
+        bool $sucesso,
+        $tools,
+        ?NotaFiscal $nf,
+        ?string $erro = null
+    ): void {
+        if ($filial === null) {
+            return;
+        }
+
+        $duracaoms = (microtime(true) - $inicio) * 1000;
+        SefazLogService::finalizar($idLog, $filial, $operacao, $tentativa, $duracaoms, $sucesso, $tools, $nf, $erro);
+
+        if (ContingenciaService::operacaoRelevante($operacao)) {
+            ContingenciaService::avaliar($filial->Empresa);
         }
     }
 
@@ -104,7 +211,7 @@ class NFePHPService extends MgService
     public static function sefazStatus(Filial $filial)
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
-        $resp = static::chamarSefazComRetry(fn() => $tools->sefazStatus(), 'status');
+        $resp = static::chamarSefazComRetry(fn() => $tools->sefazStatus(), 'status', $tools, $filial);
         $st = new Standardize();
         $r = $st->toStd($resp);
         return $r;
@@ -114,13 +221,13 @@ class NFePHPService extends MgService
     {
         $tools = NFePHPConfigService::instanciaTools($filial);
         $tools->model('65');
-        $resp = static::chamarSefazComRetry(fn() => $tools->sefazCsc(1), 'csc');
+        $resp = static::chamarSefazComRetry(fn() => $tools->sefazCsc(1), 'csc', $tools, $filial);
         $st = new Standardize();
         $r = $st->toStd($resp);
         return $r;
     }
 
-    public static function criar(NotaFiscal $nf, $offline = false)
+    public static function criar(NotaFiscal $nf, $offline = null)
     {
         $guard = static::lockDaNotaFiscal($nf);
 
@@ -134,7 +241,7 @@ class NFePHPService extends MgService
         // Assina XML
         $xmlAssinado = $tools->signNFe($xml);
 
-        // Grava arquivo XML Assinado na pasta de "assinadas"
+        // Grava o XML assinado
         $nf = $nf->fresh();
         $path = NFePHPPathService::pathNFeAssinada($nf, true);
         file_put_contents($path, $xmlAssinado);
@@ -169,7 +276,10 @@ class NFePHPService extends MgService
         // Envia Lote para Sefaz
         $resp = static::chamarSefazComRetry(
             fn() => $tools->sefazEnviaLote([$xmlAssinado], $idLote),
-            "enviaLote NF#{$nf->codnotafiscal}"
+            "enviaLote",
+            $tools,
+            null,
+            $nf
         );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -239,7 +349,10 @@ class NFePHPService extends MgService
         try {
             $resp = static::chamarSefazComRetry(
                 fn() => $tools->sefazEnviaLote([$xmlAssinado], $idLote, 1),
-                "enviaLote sincrono NF#{$nf->codnotafiscal}"
+                "enviaLote",
+                $tools,
+                null,
+                $nf
             );
         } catch (SoapException $e) {
             // Erro nao transitorio (XML invalido, HTTP 500, etc.): a nota nao foi
@@ -366,6 +479,11 @@ class NFePHPService extends MgService
         }
         $infProt = $protNFe->infProt;
 
+        // Le ANTES de sobrescrever: o e-mail sai na TRANSICAO para autorizada, e nao toda
+        // vez que o protocolo e revinculado. Sem isso, clicar Consultar duas vezes numa nota
+        // ja autorizada mandaria dois e-mails — nao existe coluna de controle no banco.
+        $jaAutorizada = !empty($nf->nfeautorizacao);
+
         // Guarda no Banco de Dados informação da Autorização
         $nf->nfeautorizacao = $infProt->nProt;
         $nf->nfedataautorizacao = Carbon::parse($infProt->dhRecbto);
@@ -382,6 +500,12 @@ class NFePHPService extends MgService
         // Salva o Arquivo com a NFe Aprovada
         $pathAprovada = NFePHPPathService::pathNFeAutorizada($nf, true);
         file_put_contents($pathAprovada, $xmlProtocolado);
+
+        // So depois do XML em disco: o NFeAutorizadaMail anexa esse arquivo e estoura se
+        // faltar. Este e o unico disparo de e-mail de NFe autorizada do sistema.
+        if (!$jaAutorizada) {
+            NFePHPMailJob::dispatch($nf->codnotafiscal)->onQueue('low');
+        }
 
         return true;
     }
@@ -450,17 +574,6 @@ class NFePHPService extends MgService
         return true;
     }
 
-    public static function vincularProtocoloInutilizacao(NotaFiscal $nf, $nProt, $dhRecbto, $justificativa)
-    {
-        // Guarda no Banco de Dados informação da Autorização
-        $nf->justificativa = $justificativa;
-        $nf->nfeinutilizacao = $nProt;
-        $nf->nfedatainutilizacao = $dhRecbto;
-        $nf->save(); // Dispara observers
-
-        return true;
-    }
-
     public static function consultarRecibo(NotaFiscal $nf)
     {
         $guard = static::lockDaNotaFiscal($nf);
@@ -477,7 +590,10 @@ class NFePHPService extends MgService
         // Busca na sefaz status do recibo
         $resp = static::chamarSefazComRetry(
             fn() => $tools->sefazConsultaRecibo($nf->nfereciboenvio),
-            "consultaRecibo NF#{$nf->codnotafiscal}"
+            "consultaRecibo",
+            $tools,
+            null,
+            $nf
         );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -551,7 +667,10 @@ class NFePHPService extends MgService
         // solicita a sefaz cancelamento
         $resp = static::chamarSefazComRetry(
             fn() => $tools->sefazCancela($nf->nfechave, $justificativa, $nf->nfeautorizacao),
-            "cancela NF#{$nf->codnotafiscal}"
+            "cancela",
+            $tools,
+            null,
+            $nf
         );
         // return $resp;
         $st = new Standardize();
@@ -589,9 +708,24 @@ class NFePHPService extends MgService
         ];
     }
 
-    public static function inutilizar(NotaFiscal $nf, $justificativa)
-    {
-        $guard = static::lockDaNotaFiscal($nf);
+    /**
+     * Inutiliza uma FAIXA de numeracao na SEFAZ.
+     *
+     * Nao recebe NotaFiscal de proposito: inutilizacao e ato sobre um intervalo, que pode
+     * cobrir numeros que nunca tiveram nota. Quem orquestra (persistencia, marcacao das
+     * notas da faixa, gravacao do XML) e o InutilizacaoService.
+     *
+     * Devolve os dados crus da resposta; nao grava nada no banco.
+     */
+    public static function inutilizar(
+        Filial $filial,
+        int $modelo,
+        int $serie,
+        int $numeroInicial,
+        int $numeroFinal,
+        string $justificativa
+    ) {
+        $guard = static::lock("inut-{$filial->codfilial}-{$modelo}-{$serie}-{$numeroInicial}-{$numeroFinal}");
 
         // Valida Justificativa
         $justificativa = Strings::replaceSpecialsChars(trim($justificativa));
@@ -603,76 +737,71 @@ class NFePHPService extends MgService
         }
 
         // Valida Pessoa Juridica
-        if (!empty($nf->Filial->Pessoa->fisica)) {
-            throw new \Exception('Impossível inutilizar Nota Fiscal de Emitente Pessoal Física! Corrija as incoerências e transmita a nota fiscal novamente!');
+        if (!empty($filial->Pessoa->fisica)) {
+            throw new \Exception('Impossível inutilizar numeração de Emitente Pessoa Física!');
         }
 
-        // Valida Autorização
-        // if (!empty($nf->nfeautorizacao)) {
-        //     throw new \Exception('Esta nota já está autorizada! Impossível prosseguir com a Inutilização!');
-        // }
-
-        // Valida Cancelamento
-        // if (!empty($nf->nfecancelamento)) {
-        //     throw new \Exception('Esta nota já está Cancelada! Impossível prosseguir com a Inutilização!');
-        // }
-
-        // Valida Inutilizacao
-        // if (!empty($nf->nfeinutilizacao)) {
-        //     throw new \Exception('Esta nota já está Inutilizada! Impossível prosseguir com a Inutilização!');
-        // }
-
         // Instancia Tools para a configuracao e certificado
-        $tools = NFePHPConfigService::instanciaTools($nf->Filial);
-        $tools->model($nf->modelo);
+        $tools = NFePHPConfigService::instanciaTools($filial);
+        $tools->model($modelo);
 
-        // solicita a sefaz cancelamento
         $resp = static::chamarSefazComRetry(
-            fn() => $tools->sefazInutiliza($nf->serie, $nf->numero, $nf->numero, $justificativa, $nf->Filial->nfeambiente),
-            "inutiliza NF#{$nf->codnotafiscal}"
+            fn() => $tools->sefazInutiliza($serie, $numeroInicial, $numeroFinal, $justificativa, $filial->nfeambiente),
+            'inutiliza',
+            $tools,
+            $filial
         );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
 
-        // inicializa variaveis para retorno
         $sucesso = false;
         $cStat = null;
         $xMotivo = 'Falha Comunicação SEFAZ!';
+        $protocolo = null;
+        $protocolodata = null;
+        $xml = null;
 
-        // Se veio cStat do Protocolo
         if (isset($respStd->infInut->cStat)) {
-
-            // Se Inutilizacao Homologada
-            if ($respStd->infInut->cStat == 102) {
-                // 102 - Inutilizacao de Numero Homologado
-                static::vincularProtocoloInutilizacao($nf, $respStd->infInut->nProt, Carbon::parse($respStd->infInut->dhRecbto), $justificativa);
-                $nf = $nf->fresh();
-                $sucesso = true;
-            } elseif ($respStd->infInut->cStat == 256) {
-                // 256 - Rejeicao: uma NF-e da faixa ja esta inutilizada na Base de dados da SEFAZ [nProt:151260000693525]
-                preg_match('/\[nProt:(\d+)\]/', $respStd->infInut->xMotivo, $matches);
-                $prot = $matches[1] ?? null;
-                static::vincularProtocoloInutilizacao($nf, $prot, Carbon::parse($respStd->infInut->dhRecbto), "{$respStd->infInut->cStat} - {$respStd->infInut->xMotivo}");
-            } elseif ($respStd->infInut->cStat == 563) {
-                // 563 - [+151260007488494]Rejeicao: Acesso BD NFE-Inutilizacao (Chave: Ano, CNPJ Emit, Modelo, Serie, nNFIni, nNFFin): ja existe um Pedido de inutilizacao igual (NT 2011/004)
-                preg_match('/\[\+(\d+)\]/', $respStd->infInut->xMotivo, $matches);
-                $prot = $matches[1] ?? null;
-                static::vincularProtocoloInutilizacao($nf, $prot, Carbon::parse($respStd->infInut->dhRecbto), "{$respStd->infInut->cStat} - {$respStd->infInut->xMotivo}");
-            }
-
-            // joga mensagem recebida da Sefaz para Variaveis de Retorno
             $cStat = $respStd->infInut->cStat;
             $xMotivo = $respStd->infInut->xMotivo;
+            $protocolodata = isset($respStd->infInut->dhRecbto)
+                ? Carbon::parse($respStd->infInut->dhRecbto)
+                : null;
+
+            // 102 - Inutilizacao de Numero Homologado
+            if ($cStat == 102) {
+                $sucesso = true;
+                $protocolo = $respStd->infInut->nProt ?? null;
+                $xml = Complements::toAuthorize($tools->lastRequest, $resp);
+
+            // 256 - uma NF-e DA FAIXA ja esta inutilizada [nProt:...]
+            // 563 - [+prot]ja existe um Pedido de inutilizacao igual
+            //
+            // Com faixa de 1 o protocolo devolvido E daquele numero, entao vale aproveitar
+            // (era o comportamento antigo). Com faixa maior de 1 ele pertence a UM dos
+            // numeros e nao a faixa — gravar na linha inteira seria falso, entao falha
+            // pedindo para estreitar.
+            } elseif (in_array($cStat, [256, 563])) {
+                if ($numeroInicial != $numeroFinal) {
+                    throw new \Exception(
+                        "{$cStat} - {$xMotivo} Estreite a faixa: parte dela já está inutilizada na SEFAZ."
+                    );
+                }
+                $regex = ($cStat == 256) ? '/\[nProt:(\d+)\]/' : '/\[\+(\d+)\]/';
+                preg_match($regex, $xMotivo, $matches);
+                $protocolo = $matches[1] ?? null;
+                $sucesso = !empty($protocolo);
+            }
         }
 
-        // Retorna Resultado do processo
         return (object) [
             'sucesso' => $sucesso,
             'cStat' => $cStat,
             'xMotivo' => $xMotivo,
-            'nfeinutilizacao' => $nf->nfeinutilizacao,
-            'nfedatainutilizacao' => ($nf->nfedatainutilizacao) ? $nf->nfedatainutilizacao->toW3cString() : null,
-            'resp' => $resp
+            'protocolo' => $protocolo,
+            'protocolodata' => $protocolodata,
+            'xml' => $xml,
+            'resp' => $resp,
         ];
     }
 
@@ -718,7 +847,10 @@ class NFePHPService extends MgService
         $nSeqEvento++;
         $resp = static::chamarSefazComRetry(
             fn() => $tools->sefazCCe($nf->nfechave, $justificativa, $nSeqEvento),
-            "cce NF#{$nf->codnotafiscal}"
+            "cce",
+            $tools,
+            null,
+            $nf
         );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -751,7 +883,11 @@ class NFePHPService extends MgService
 
                 // Salva arquivo XML com retorno
                 $xml = Complements::toAuthorize($tools->lastRequest, $resp);
-                $pathCartaCorrecao = NFePHPPathService::pathCartaCorrecao($nf, true);
+                $pathCartaCorrecao = NFePHPPathService::pathCartaCorrecao(
+                    $nf,
+                    (int) $respStd->retEvento->infEvento->nSeqEvento,
+                    true
+                );
                 file_put_contents($pathCartaCorrecao, $xml);
 
                 // Variaveis de retorno
@@ -842,7 +978,10 @@ class NFePHPService extends MgService
         // consulta chave da NFe na sefaz
         $resp = static::chamarSefazComRetry(
             fn() => $tools->sefazConsultaChave($nf->nfechave, $nf->Filial->nfeambiente),
-            "consultaChave NF#{$nf->codnotafiscal}"
+            "consultaChave",
+            $tools,
+            null,
+            $nf
         );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -1095,7 +1234,7 @@ class NFePHPService extends MgService
 
         // Executa comando de impressao
         $url = \URL::temporarySignedRoute('nota-fiscal.danfe', now()->addMinutes(10), ['codnotafiscal' => $nf->codnotafiscal]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . env('ABLY_APP_KEY') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
+        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
         exec($cmd);
 
         // retorna
@@ -1134,7 +1273,9 @@ class NFePHPService extends MgService
         $cpf = $cpf;
         $response = static::chamarSefazComRetry(
             fn() => $tools->sefazCadastro($uf, $cnpj, $iest, $cpf),
-            "cadastro {$uf} {$cnpj}{$cpf}"
+            'cadastro',
+            $tools,
+            $filial
         );
         $stdCl = (new Standardize($response))->toStd();
         return $stdCl;

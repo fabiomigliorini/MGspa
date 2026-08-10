@@ -81,7 +81,7 @@ class NotaFiscalTransferenciaService extends MGModel
 
     public static function geraTransferencias($codfilial)
     {
-        $codnaturezaoperacaoTransferenciaSaida = env('CODNATUREZAOPERACAO_TRANSFERENCIA_SAIDA');
+        $codnaturezaoperacaoTransferenciaSaida = config('mg.codnaturezaoperacao_transferencia_saida');
         if (empty($codnaturezaoperacaoTransferenciaSaida)) {
             throw new \Exception('Variavel CODNATUREZAOPERACAO_TRANSFERENCIA_SAIDA nao configurada no .env', 1);
         }

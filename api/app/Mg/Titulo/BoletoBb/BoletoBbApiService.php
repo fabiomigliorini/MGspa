@@ -76,7 +76,7 @@ class BoletoBbApiService
         ];
         $body = json_encode($arr);
         $curl = curl_init();
-        $url = env('BB_URL_COBRANCA') . '/boletos?gw-dev-app-key=' . $gwDevAppKey;
+        $url = config('services.bb.url_cobranca') . '/boletos?gw-dev-app-key=' . $gwDevAppKey;
         $auth = "Authorization: Bearer {$token}";
         $opt = [
             CURLOPT_URL => $url,
@@ -107,7 +107,7 @@ class BoletoBbApiService
     public static function consultar ($bbtoken, $gwDevAppKey, $numeroConvenio, $nossoNumero)
     {
         $curl = curl_init();
-        $url = env('BB_URL_COBRANCA') . '/boletos/' . $nossoNumero;
+        $url = config('services.bb.url_cobranca') . '/boletos/' . $nossoNumero;
         $url .= '?gw-dev-app-key=' . $gwDevAppKey;
         $url .= '&numeroConvenio=' . $numeroConvenio;
         $auth = "Authorization: Bearer {$bbtoken}";
@@ -139,7 +139,7 @@ class BoletoBbApiService
     public static function baixar ($bbtoken, $gwDevAppKey, $numeroConvenio, $nossoNumero)
     {
         $curl = curl_init();
-        $url = env('BB_URL_COBRANCA') . '/boletos/' . $nossoNumero . '/baixar';
+        $url = config('services.bb.url_cobranca') . '/boletos/' . $nossoNumero . '/baixar';
         $url .= '?gw-dev-app-key=' . $gwDevAppKey;
         $body = json_encode([
             'numeroConvenio' => $numeroConvenio
@@ -183,7 +183,7 @@ class BoletoBbApiService
     )
     {
         $curl = curl_init();
-        $url = env('BB_URL_COBRANCA') . '/boletos';
+        $url = config('services.bb.url_cobranca') . '/boletos';
         $url .= '?gw-dev-app-key=' . $gwDevAppKey;
         $url .= '&indicadorSituacao=' . $indicadorSituacao;
         $url .= '&agenciaBeneficiario=' . $agenciaBeneficiario;

@@ -36,7 +36,7 @@ const flags = [
   { key: 'valecompra', label: 'Vale Compra' },
   { key: 'pix', label: 'Pix' },
   { key: 'lio', label: 'Lio' },
-  { key: 'stone', label: 'Stone' },
+  { key: 'pagarme', label: 'PagarMe' },
   { key: 'safrapay', label: 'SafraPay' },
   { key: 'integracao', label: 'Integração' },
 ]

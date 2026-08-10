@@ -17,7 +17,7 @@ class ProdutoBarraService
      */
     public static function geraMovimentoVariacao($codprodutovariacao): void
     {
-        $base = rtrim((string) env('MGLARA_URL'), '/');
+        $base = rtrim((string) config('services.mglara.url'), '/');
         if ($base === '' || empty($codprodutovariacao)) {
             return;
         }

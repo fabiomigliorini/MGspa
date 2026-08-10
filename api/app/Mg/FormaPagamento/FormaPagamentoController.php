@@ -17,7 +17,7 @@ class FormaPagamentoController extends Controller
         $result = FormaPagamentoService::listar($request->only([
             'codformapagamento', 'formapagamento', 'inativo',
             'avista', 'boleto', 'fechamento', 'notafiscal', 'entrega',
-            'valecompra', 'lio', 'pix', 'stone', 'integracao', 'safrapay',
+            'valecompra', 'lio', 'pix', 'pagarme', 'integracao', 'safrapay',
             'todos',
         ]));
         return FormaPagamentoResource::collection($result);

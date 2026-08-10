@@ -39,10 +39,10 @@ class WooApi
     {
         // Traz variaves de ambiente
         $this->debug = $debug;
-        $this->url = (!empty($url)) ? $url : env('WOO_API_URL');
-        $this->key = (!empty($key)) ? $key : env('WOO_API_KEY');
-        $this->secret = (!empty($secret)) ? $secret : env('WOO_API_SECRET');
-        // $this->languagePTBR = (!empty($language_ptbr))?$language_ptbr:env('WOO_LANGUAGE_PTBR');
+        $this->url = (!empty($url)) ? $url : config('services.woo.url');
+        $this->key = (!empty($key)) ? $key : config('services.woo.key');
+        $this->secret = (!empty($secret)) ? $secret : config('services.woo.secret');
+        // $this->languagePTBR = (!empty($language_ptbr))?$language_ptbr:config('services.woo.language_ptbr');
     }
 
     public function get($url, $data = [], $http_header = null, $data_as_json = true)

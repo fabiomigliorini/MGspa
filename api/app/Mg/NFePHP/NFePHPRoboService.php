@@ -36,7 +36,15 @@ class NFePHPRoboService
             and nf.nfecancelamento is null
             and nf.nfeinutilizacao is null
             and nf.numero != 0
-            and nf.emissao >= (now() - '{$minutos} minutes'::interval)
+            and (
+                nf.emissao >= (now() - '{$minutos} minutes'::interval)
+                -- NFC-e emitida offline tem 24h de prazo legal para ser transmitida.
+                -- Com a janela padrao de 60 min ela simplesmente nunca era retentada.
+                -- 26h da margem sobre o prazo. Nao subir a janela geral: o robo passaria
+                -- a reprocessar toda nota rejeitada de vez a cada 10 min, em chamada
+                -- SEFAZ inutil.
+                or (nf.tpemis = 9 and nf.emissao >= (now() - '26 hours'::interval))
+            )
             order by emissao {$desc}, codnotafiscal {$desc}
             limit {$per_page} offset {$offset}
         ";
@@ -102,17 +110,13 @@ class NFePHPRoboService
             }
         }
 
-        // se resolveu com procedimento acima, manda o email e retorna sucesso
+        // se resolveu com procedimento acima, retorna sucesso
+        // (o e-mail sai sozinho: quem despacha o NFePHPMailJob e o vincularProtocolo-
+        // Autorizacao do NFePHPService, na transicao da nota para autorizada)
         if (static::resolvido($nf)) {
-            try {
-                $resMail = NFePHPMailService::mail($nf);
-            } catch (\Exception $e) {
-                $resMail = $e->getMessage();
-            }
             return (object) [
                 'resolvido' => true,
                 'resEnvioSincrono' => $resEnvioSincrono,
-                'resMail' => $resMail ?? null
             ];
         }
 
@@ -130,20 +134,12 @@ class NFePHPRoboService
             ];
         }
 
-        // se resolveu com procedimento acima, manda o email e retorna sucesso
+        // se resolveu com procedimento acima, retorna sucesso
         if (static::resolvido($nf)) {
-            if (empty($nf->nfecancelamento)) {
-                try {
-                    $resMail =  NFePHPMailService::mail($nf);
-                } catch (\Exception $e) {
-                    $resMail = $e->getMessage();
-                }
-            }
             return (object) [
                 'resolvido' => true,
                 'resEnvioSincrono' => $resEnvioSincrono,
                 'resConsulta' => $resConsulta,
-                'resMail' => $resMail ?? null
             ];
         }
 
@@ -169,16 +165,10 @@ class NFePHPRoboService
 
             // se resolveu, retorna sucesso
             if (static::resolvido($nf)) {
-                try {
-                    $resMail = NFePHPMailService::mail($nf);
-                } catch (\Exception $e) {
-                    $resMail = $e->getMessage();
-                }
                 return (object) [
                     'resolvido' => true,
                     'resEnvioSincrono' => $resEnvioSincrono,
                     'resCriar' => $resCriar,
-                    'resMail' => $resMail ?? null
                 ];
             }
         }

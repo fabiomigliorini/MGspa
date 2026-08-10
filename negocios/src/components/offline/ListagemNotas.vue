@@ -64,10 +64,10 @@ const setNotaRef = (codnotafiscal, el) => {
 const nova = async (modelo) => {
   try {
     // busca registros na ApI
-    const { data } = await api.post(
-      `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/nota-fiscal`,
-      { pdv: sSinc.pdv.uuid, modelo },
-    )
+    const { data } = await api.post(`/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/nota-fiscal`, {
+      pdv: sSinc.pdv.uuid,
+      modelo,
+    })
     Notify.create({
       type: 'positive',
       message: 'Nota Fiscal Criada!',
@@ -188,6 +188,16 @@ defineExpose({
               class="q-mr-xs"
             />
             {{ getStatusOption(nota.status).label }}
+            <!-- tpemis 9: emitida off-line, o robo transmite depois (prazo de 24h) -->
+            <q-icon
+              v-if="nota.tpemis == 9"
+              name="cloud_off"
+              color="orange"
+              size="xs"
+              class="q-ml-sm"
+            >
+              <q-tooltip>Emitida em contingência off-line</q-tooltip>
+            </q-icon>
           </q-item-label>
         </q-item-section>
       </q-item>

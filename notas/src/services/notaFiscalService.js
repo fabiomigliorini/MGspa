@@ -31,42 +31,11 @@ export default {
   },
 
   // ==================== NFE ACTIONS ====================
-  async criar(codnotafiscal) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/criar`)
-    return response.data
-  },
-
-  async enviarSincrono(codnotafiscal) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/enviar-sincrono`)
-    return response.data
-  },
-
-  async consultar(codnotafiscal) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/consultar`)
-    return response.data
-  },
-
-  async cancelar(codnotafiscal, justificativa) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/cancelar`, {
-      justificativa,
-    })
-    return response.data
-  },
-
-  async inutilizar(codnotafiscal, justificativa) {
-    const response = await api.post(`/v1/nota-fiscal/${codnotafiscal}/inutilizar`, {
-      justificativa,
-    })
-    return response.data
-  },
+  // Ver nota em notaFiscalStore.js: quem executa as acoes de NFe e o
+  // @components/MgNotaFiscalAcoes.vue. Metodos sem chamador foram removidos.
 
   async detectarLacunas() {
     const response = await api.get('/v1/nota-fiscal/lacunas')
-    return response.data
-  },
-
-  async criarParaInutilizar(data) {
-    const response = await api.post('/v1/nota-fiscal/criar-para-inutilizar', data)
     return response.data
   },
 
@@ -115,17 +84,6 @@ export default {
 
     // Cria um URL temporário do blob
     const blob = new Blob([response.data], { type: 'application/pdf' })
-    return URL.createObjectURL(blob)
-  },
-
-  async xml(codnotafiscal) {
-    // Faz o download do XML via API (com autenticação via header)
-    const response = await api.get(`/v1/nota-fiscal/${codnotafiscal}/xml`, {
-      responseType: 'blob',
-    })
-
-    // Cria um URL temporário do blob
-    const blob = new Blob([response.data], { type: 'application/xml' })
     return URL.createObjectURL(blob)
   },
 

@@ -19,7 +19,7 @@ class FormaPagamentoService
             $q->palavras('formapagamento', $filtros['formapagamento']);
         }
 
-        foreach (['avista', 'boleto', 'fechamento', 'notafiscal', 'entrega', 'valecompra', 'lio', 'pix', 'stone', 'integracao', 'safrapay'] as $flag) {
+        foreach (['avista', 'boleto', 'fechamento', 'notafiscal', 'entrega', 'valecompra', 'lio', 'pix', 'pagarme', 'integracao', 'safrapay'] as $flag) {
             if (array_key_exists($flag, $filtros) && $filtros[$flag] !== null && $filtros[$flag] !== '') {
                 $q->where($flag, filter_var($filtros[$flag], FILTER_VALIDATE_BOOLEAN));
             }

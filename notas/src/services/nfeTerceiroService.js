@@ -127,11 +127,6 @@ export default {
     return response.data
   },
 
-  xml(codnfeterceiro) {
-    const base = process.env.API_URL.replace(/\/$/, '')
-    return `${base}/v1/nfe-terceiro/${codnfeterceiro}/xml`
-  },
-
   danfe(codnfeterceiro) {
     const base = process.env.API_URL.replace(/\/$/, '')
     return `${base}/v1/nfe-terceiro/${codnfeterceiro}/danfe`

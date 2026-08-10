@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useDfeDistribuicaoStore } from '../stores/dfeDistribuicaoStore'
 import dfeDistribuicaoService from '../services/dfeDistribuicaoService'
+import api from '../services/api'
+import { abrirXml } from '@components/abrirXml'
 import { formataChave, formataCnpjCpf, formataNumero, tempoRelativo } from '@components/formatters'
 import DfeConsultarSefazDialog from '../components/dialogs/DfeConsultarSefazDialog.vue'
 
@@ -84,18 +86,17 @@ const handleConsultarSefaz = async (coddistribuicaodfe) => {
   }
 }
 
-const handleVerXml = async (coddistribuicaodfe) => {
-  try {
-    const url = await dfeDistribuicaoService.xml(coddistribuicaodfe)
-    window.open(url)
-  } catch (error) {
-    $q.notify({
-      type: 'negative',
-      message: 'Erro ao carregar XML',
-      caption: error.message,
-    })
-  }
-}
+const handleVerXml = (coddistribuicaodfe) =>
+  abrirXml(
+    api,
+    `/v1/dfe/distribuicao/${coddistribuicaodfe}/xml`,
+    {},
+    {
+      titulo: `Documento #${coddistribuicaodfe}`,
+      nomeArquivo: `dfe-${coddistribuicaodfe}.xml`,
+      erroFallback: 'Erro ao carregar XML',
+    },
+  )
 
 onMounted(async () => {
   if (!dfeStore.initialLoadDone) {
@@ -154,25 +155,22 @@ onMounted(async () => {
 
           <!-- Dados da nota/evento -->
           <q-item-section top>
-            <!-- NotaFiscalTerceiro -->
-            <template v-if="item.codnotafiscalterceiro > 0">
+            <!-- NfeTerceiro -->
+            <template v-if="item.codnfeterceiro > 0">
               <q-item-label lines="1">
-                <span class="text-weight-medium" v-if="item.NotaFiscalTerceiro?.codpessoa">
-                  {{ item.NotaFiscalTerceiro.Pessoa?.fantasia }}
+                <span class="text-weight-medium" v-if="item.NfeTerceiro?.codpessoa">
+                  {{ item.NfeTerceiro.Pessoa?.fantasia }}
                 </span>
                 <span class="text-weight-medium" v-else>
-                  {{ item.NotaFiscalTerceiro?.emitente }}
+                  {{ item.NfeTerceiro?.emitente }}
                 </span>
               </q-item-label>
               <q-item-label lines="1">
-                <span
-                  class="text-grey-8 text-weight-medium"
-                  v-if="item.NotaFiscalTerceiro?.valortotal"
-                >
-                  R$ {{ formataNumero(item.NotaFiscalTerceiro.valortotal) }}
+                <span class="text-grey-8 text-weight-medium" v-if="item.NfeTerceiro?.valortotal">
+                  R$ {{ formataNumero(item.NfeTerceiro.valortotal) }}
                 </span>
-                <span class="text-grey-8" v-if="item.NotaFiscalTerceiro?.natop">
-                  - {{ item.NotaFiscalTerceiro.natop }}
+                <span class="text-grey-8" v-if="item.NfeTerceiro?.natureza">
+                  - {{ item.NfeTerceiro.natureza }}
                 </span>
               </q-item-label>
             </template>
