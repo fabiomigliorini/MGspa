@@ -26,7 +26,6 @@ class CargaResource extends Resource
         $ret['Safra'] = $this->whenLoaded('Safra');
         $ret['Veiculo'] = $this->whenLoaded('Veiculo');
         $ret['PessoaMotorista'] = $this->whenLoaded('PessoaMotorista');
-        $ret['TabelaClassificacao'] = $this->whenLoaded('TabelaClassificacao');
 
         if ($this->relationLoaded('CargaPontoS')) {
             $ret['CargaPontoS'] = CargaPontoResource::collection($this->CargaPontoS);

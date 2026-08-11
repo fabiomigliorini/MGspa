@@ -60,4 +60,12 @@ db.version(6).stores({
   tabelaclassificacao: 'codtabelaclassificacao, codcultura, sincronizado',
 })
 
+// v7: a camada de tabela some — o parâmetro passa a ser POR CULTURA e carrega a
+// fórmula inteira (metodo/reduzbase/ordem/tolerância/fator/deságio). Índice por
+// codcultura porque toda leitura é "os parâmetros desta cultura, em ordem".
+db.version(7).stores({
+  tabelaclassificacao: null, // valores migraram p/ 'parametroclassificacao'
+  parametroclassificacao: 'codparametroclassificacao, codcultura, sincronizado',
+})
+
 export default db

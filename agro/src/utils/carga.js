@@ -14,7 +14,7 @@ export function agoraLocal() {
 
 // Mapeia uma carga vinda do servidor (GET /v1/carga) para o shape offline que o
 // Dexie/board usam. O servidor entrega colunas cruas + relações em PascalCase
-// (CargaPontoS, TabelaClassificacao) e as leituras já na chave `classificacao`;
+// (CargaPontoS) e as leituras já na chave `classificacao`;
 // aqui achatamos pro mesmo formato de `nova()` em stores/carga.js.
 //
 // Dois campos derivados ficam de fora de propósito:
@@ -52,7 +52,6 @@ export function normalizarCargaDoServidor(cs) {
     placacarreta: cs.placacarreta ?? null,
     codpessoamotorista: cs.codpessoamotorista ?? null,
     motorista: cs.motorista ?? null,
-    codtabelaclassificacao: cs.codtabelaclassificacao ?? null,
     pbt: cs.pbt ?? null,
     tara: cs.tara ?? null,
     bruto: cs.bruto ?? null,

@@ -53,7 +53,6 @@ class CargaSincronizarRequest extends FormRequest
             'tara' => ['nullable', 'numeric', 'gte:0'],
 
             // Tabela resolvida + leituras da classificacao (o modelo por formula)
-            'codtabelaclassificacao' => ['nullable', 'exists:tbltabelaclassificacao,codtabelaclassificacao'],
             'classificacao' => ['array'],
             'classificacao.*.codparametroclassificacao' => ['required', 'exists:tblparametroclassificacao,codparametroclassificacao'],
             'classificacao.*.leitura' => ['nullable', 'numeric'],

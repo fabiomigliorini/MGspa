@@ -388,15 +388,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('variedade/{codvariedade}/inativo', [\Mg\Cultura\VariedadeController::class, 'ativar']);
     Route::apiResource('variedade', \Mg\Cultura\VariedadeController::class)->parameters(['variedade' => 'codvariedade']);
 
-    // Classificacao de graos: catalogo de parametros + tabelas nomeadas (dominio Mg\Classificacao)
+    // Classificacao de graos: parametros por cultura, com a formula inteira
+    // (metodo/reduzbase/ordem/tolerancia/fator/desagio). Rota PLANA de proposito:
+    // o app agro sincroniza o cadastro inteiro pro Dexie; filtra com ?codcultura=
     Route::post('parametro-classificacao/{codparametroclassificacao}/inativo', [\Mg\Classificacao\ParametroClassificacaoController::class, 'inativar']);
     Route::delete('parametro-classificacao/{codparametroclassificacao}/inativo', [\Mg\Classificacao\ParametroClassificacaoController::class, 'ativar']);
     Route::apiResource('parametro-classificacao', \Mg\Classificacao\ParametroClassificacaoController::class)->parameters(['parametro-classificacao' => 'codparametroclassificacao']);
-
-    Route::post('tabela-classificacao/{codtabelaclassificacao}/padrao', [\Mg\Classificacao\TabelaClassificacaoController::class, 'padrao']);
-    Route::post('tabela-classificacao/{codtabelaclassificacao}/inativo', [\Mg\Classificacao\TabelaClassificacaoController::class, 'inativar']);
-    Route::delete('tabela-classificacao/{codtabelaclassificacao}/inativo', [\Mg\Classificacao\TabelaClassificacaoController::class, 'ativar']);
-    Route::apiResource('tabela-classificacao', \Mg\Classificacao\TabelaClassificacaoController::class)->parameters(['tabela-classificacao' => 'codtabelaclassificacao']);
 
     Route::post('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'inativar']);
     Route::delete('cultura-tributo/{codculturatributo}/inativo', [\Mg\Cultura\CulturaTributoController::class, 'ativar']);

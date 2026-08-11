@@ -5,9 +5,14 @@
 // Nomenclatura: pbt = caminhão+carga; tara = caminhão vazio; bruto = pbt - tara
 // (grão); desconto = classificação; liquido = bruto - desconto (seco).
 //
-// O desconto é uma FÓRMULA EM CASCATA dirigida pela tabela de classificação:
-// para cada parâmetro (em ordem) desconta sobre a base corrente; parâmetros com
-// reduzbase (impureza, umidade) reduzem a base dos próximos.
+// O desconto é uma FÓRMULA EM CASCATA dirigida pelos parâmetros de classificação
+// da cultura: para cada parâmetro (em ordem) desconta sobre a base corrente;
+// parâmetros com reduzbase (impureza, umidade) reduzem a base dos próximos.
+//
+// É a conta das cartilhas de classificação (IN MAPA 11/2007 soja, 60/2011 milho):
+// impureza sobre o peso recebido, umidade sobre o peso já limpo, defeitos sobre o
+// peso limpo e seco. Equivale à eq. 07 do boletim AGAIS 01/09,
+// DE = 100 − (100−QI)·(100−QU)/100.
 
 function arredondar(valor, casas = 3) {
   const f = 10 ** casas
@@ -18,9 +23,10 @@ function temValor(v) {
   return v !== null && v !== undefined && v !== ''
 }
 
-// Percentual (fração) de desconto de um item conforme o método do parâmetro.
-// FATOR: (leitura-tol) × fator/100 (secagem, por ponto).
-// NORMALIZADO: (leitura-tol)/(100-tol) × (100-desagio)/100.
+// Percentual (fração) de desconto conforme o método do parâmetro.
+// NORMALIZADO (padrão): (leitura-tol)/(100-tol) × (100-desagio)/100 — a fórmula
+// da norma (PDI/PDU das cartilhas, eq. 02/05 do AGAIS).
+// FATOR: (leitura-tol) × fator/100 — taxa comercial por ponto (secagem).
 function percentualItem(item, leitura) {
   const tol = Number(item.tolerancia) || 0
   const excesso = Number(leitura) - tol

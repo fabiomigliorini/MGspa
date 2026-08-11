@@ -32,14 +32,8 @@ const emit = defineEmits(['update:modelValue', 'salvar', 'avancar', 'cancelar'])
 
 const $q = useQuasar()
 const store = useCargaStore()
-const {
-  plantiosDaSafra,
-  tabelasDaSafra,
-  culturaAtiva,
-  safraAtiva,
-  veiculosAtivos,
-  unidadesAtivas,
-} = storeToRefs(store)
+const { plantiosDaSafra, culturaAtiva, safraAtiva, veiculosAtivos, unidadesAtivas } =
+  storeToRefs(store)
 const { online } = storeToRefs(useSincronizacaoStore())
 
 // Máximo do campo de chegada = agora (não deixa lançar no futuro). Precisa do
@@ -240,30 +234,28 @@ function saldoContrato(cod) {
   return store.saldoContratoOffline(cod)
 }
 
-// Tabela de classificação usada: a escolhida na carga -> a do contrato do ponto
-// -> a padrão da cultura. O select mostra a efetiva e permite trocar.
-const codTabelaSel = computed({
-  get: () => store.resolverCodTabela(local.value || {}),
-  set: (v) => {
-    if (local.value) local.value.codtabelaclassificacao = v
-  },
+// Parâmetros de classificação da cultura da safra da carga, na ordem da cascata.
+// Sem escolha nenhuma no romaneio: a cultura define a fórmula.
+const itensCarga = computed(() => store.parametrosDaCarga(local.value || {}))
+
+// Estado vazio da classificação. Sem parâmetro cadastrado o desconto sairia 0 em
+// silêncio e o líquido viria igual ao bruto — o operador precisa saber ONDE isso
+// se resolve, não só que está vazio.
+const avisoClassificacao = computed(() => {
+  if (!local.value || itensCarga.value.length) return null
+  return {
+    titulo: `Nenhum parâmetro de classificação ativo para ${culturaAtiva.value?.cultura || 'a cultura desta safra'}.`,
+    dica: 'Cadastre em Culturas › Classificação (umidade, impureza, avariados) — sem parâmetro não há desconto e o líquido sairia igual ao bruto.',
+  }
 })
-const codTabelaContrato = computed(() => store.codTabelaContrato(local.value || {}))
-const divergeContrato = computed(
-  () => !!codTabelaContrato.value && codTabelaSel.value !== codTabelaContrato.value,
+
+// Trava do botão CLASSIFICAR. Só vale NA etapa CLASSIFICACAO: nas seguintes
+// (TARA/FINALIZADO) a carga já passou por aqui, e travar de novo impediria
+// corrigir um romaneio cujo parâmetro foi inativado depois.
+// As LEITURAS continuam opcionais — a trava é só a existência dos parâmetros.
+const erroClassificacao = computed(() =>
+  local.value?.etapa === 'CLASSIFICACAO' ? avisoClassificacao.value?.titulo || null : null,
 )
-const opcoesTabela = computed(() =>
-  tabelasDaSafra.value.map((t) => ({
-    label: t.tabelaclassificacao,
-    value: t.codtabelaclassificacao,
-  })),
-)
-function nomeTabela(cod) {
-  return (
-    tabelasDaSafra.value.find((t) => t.codtabelaclassificacao === cod)?.tabelaclassificacao || '—'
-  )
-}
-const itensCarga = computed(() => store.itensResolvidos(codTabelaSel.value))
 
 const calc = computed(() => (local.value ? calcularCarga(local.value, itensCarga.value) : {}))
 
@@ -346,11 +338,21 @@ function fmt(v, dec = 0) {
   })
 }
 
-// Trava de coleção (sem campo pra destacar): exige ao menos uma origem/destino.
-// Placa, pbt, tara e o "soma fecha" são :rules nos campos do q-form.
+// Travas de coleção (sem campo pra destacar). Rodam nos TRÊS botões — as :rules dos
+// campos só valem no submit do q-form, e o "Salvar" (salvarSemAvancar) é @click.
 function entradaValida() {
   if (!origens.value.length && !destinos.value.length) {
     $q.notify({ type: 'warning', message: 'Informe ao menos uma origem ou destino.' })
+    return false
+  }
+  // Linha sem entidade seria DESCARTADA em silêncio (o filtro `pontoCompleto` do
+  // store.salvar e o `contaDoPonto` do backend fazem o mesmo corte) — o romaneio
+  // sairia sem a origem que o operador viu na tela. Ou escolhe, ou remove a linha.
+  if ((local.value?.pontos || []).some((p) => !pontoCompleto(p))) {
+    $q.notify({
+      type: 'negative',
+      message: 'Selecione o talhão/unidade/contrato de cada origem e destino, ou remova a linha.',
+    })
     return false
   }
   return true
@@ -363,13 +365,9 @@ function validarFinalizacao() {
     $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
     return false
   }
-  if (!origens.value.every(pontoCompleto) || !destinos.value.every(pontoCompleto)) {
-    $q.notify({
-      type: 'negative',
-      message: 'Selecione o talhão/unidade/contrato de cada origem e destino.',
-    })
-    return false
-  }
+  // Entidade de cada linha: mesma trava do fluxo normal (não duplicar a regra).
+  // Importante porque salvar() de carga FINALIZADA passa só por aqui.
+  if (!entradaValida()) return false
   if (!somaPercBate(origens.value) || !somaPercBate(destinos.value)) {
     $q.notify({ type: 'negative', message: 'A soma dos % de origem e de destino deve ser 100.' })
     return false
@@ -433,6 +431,12 @@ const finalizando = computed(() => proxima.value === 'FINALIZADO')
 
 function avancar() {
   if (!entradaValida()) return
+  // Espelha a :rules do select de tabela: sem tabela/parâmetros o desconto sairia
+  // 0 em silêncio e o romaneio mentiria o líquido.
+  if (erroClassificacao.value) {
+    $q.notify({ type: 'negative', message: erroClassificacao.value })
+    return
+  }
   const prox = proxima.value
   if (!prox) return
   // Antes de finalizar: origem+destino completos, % fecha 100 e líquido > 0.
@@ -528,7 +532,7 @@ function imprimir() {
               class="col-6 col-sm-4"
               autofocus
               lazy-rules
-              :rules="[() => !!local.placa]"
+              :rules="[() => !!local.placa || 'Informe a placa.']"
               @filter="filtrarPlaca"
               @update:model-value="resolverPlaca"
               @blur="onPlacaBlur"
@@ -601,12 +605,16 @@ function imprimir() {
                 v-if="p.contatipo === 'PLANTIO'"
                 :model-value="p.codplantio"
                 class="col"
+                lazy-rules
+                :rules="[(v) => !!v || 'Selecione o talhão.']"
                 @update:model-value="(v) => onEntidade(p, v)"
               />
               <SelectUnidade
                 v-else-if="p.contatipo === 'UNIDADE'"
                 :model-value="p.codunidadearmazenadora"
                 class="col"
+                lazy-rules
+                :rules="[(v) => !!v || 'Selecione a unidade.']"
                 @update:model-value="(v) => onEntidade(p, v)"
               />
               <SelectContrato
@@ -614,6 +622,8 @@ function imprimir() {
                 :model-value="p.codcontrato"
                 operacao="compra"
                 class="col"
+                lazy-rules
+                :rules="[(v) => !!v || 'Selecione o contrato.']"
                 @update:model-value="(v) => onEntidade(p, v)"
               />
               <MgInputValor
@@ -628,8 +638,10 @@ function imprimir() {
                 lazy-rules
                 :rules="[() => !finalizando || somaPercBate(origens) || 'Soma dos % deve ser 100']"
               />
+              <!-- Sempre visível: com a entidade obrigatória, uma linha semeada e
+                   impreenchível (ex.: safra sem talhão cadastrado) travaria o
+                   registro sem saída. Remover é a válvula de escape. -->
               <q-btn
-                v-if="origens.length > 1"
                 flat
                 round
                 color="grey-7"
@@ -669,6 +681,8 @@ function imprimir() {
                   v-if="p.contatipo === 'UNIDADE'"
                   :model-value="p.codunidadearmazenadora"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => !!v || 'Selecione a unidade.']"
                   @update:model-value="(v) => onEntidade(p, v)"
                 />
                 <SelectContrato
@@ -676,6 +690,8 @@ function imprimir() {
                   :model-value="p.codcontrato"
                   operacao="venda"
                   class="col"
+                  lazy-rules
+                  :rules="[(v) => !!v || 'Selecione o contrato.']"
                   @update:model-value="(v) => onEntidade(p, v)"
                 />
                 <MgInputValor
@@ -693,7 +709,6 @@ function imprimir() {
                   ]"
                 />
                 <q-btn
-                  v-if="destinos.length > 1"
                   flat
                   round
                   color="grey-7"
@@ -754,7 +769,9 @@ function imprimir() {
             suffix="kg"
             label="Peso bruto total (caminhão + carga)"
             lazy-rules
-            :rules="[() => novo || local.etapa !== 'PBT' || !!local.pbt]"
+            :rules="[
+              (v) => novo || local.etapa !== 'PBT' || v > 0 || 'Informe o peso bruto (PBT).',
+            ]"
           />
           <MgInputValor
             v-if="mostrarTara"
@@ -763,28 +780,35 @@ function imprimir() {
             suffix="kg"
             label="Tara (caminhão vazio)"
             lazy-rules
-            :rules="[() => novo || local.etapa !== 'TARA' || !!local.tara]"
+            :rules="[
+              (v) => novo || local.etapa !== 'TARA' || v > 0 || 'Informe a tara.',
+              // Cruzadas: cobradas assim que os DOIS pesos existem — na etapa TARA
+              // (ENTRADA/TRANSFERENCIA) e na etapa PBT (SAIDA, que pesa a tara antes).
+              // Antes só o FINALIZADO barrava, e o erro aparecia no fim do fluxo.
+              (v) =>
+                v == null ||
+                local.pbt == null ||
+                v < Number(local.pbt) ||
+                'A tara deve ser menor que o PBT.',
+              () =>
+                local.pbt == null ||
+                local.tara == null ||
+                Number(calc.liquido) > 0 ||
+                'Líquido (PBT − tara − desconto) deve ser maior que zero.',
+            ]"
           />
 
           <!-- Classificação (só recebimento, a partir da etapa) -->
           <div v-if="mostrarClassificacao">
-            <q-select
-              v-model="codTabelaSel"
-              :options="opcoesTabela"
-              emit-value
-              map-options
-              outlined
-              label="Tabela de classificação"
-              class="q-mb-sm"
-            />
             <q-banner
-              v-if="divergeContrato"
+              v-if="avisoClassificacao"
               dense
               rounded
               class="bg-orange-1 text-orange-9 q-mb-sm"
             >
               <template #avatar><q-icon name="warning" color="orange-8" /></template>
-              Tabela diferente da do contrato ({{ nomeTabela(codTabelaContrato) }}).
+              {{ avisoClassificacao.titulo }}
+              <div class="text-caption">{{ avisoClassificacao.dica }}</div>
             </q-banner>
             <div class="row q-col-gutter-md">
               <div
@@ -798,6 +822,11 @@ function imprimir() {
                   suffix="%"
                   :label="`${item.ordem}. ${item.parametroclassificacao}`"
                   :hint="hintItem(item)"
+                  lazy-rules
+                  :rules="[
+                    (v) =>
+                      v == null || (v >= 0 && v <= 100) || 'Leitura deve ficar entre 0 e 100%.',
+                  ]"
                 />
                 <div v-if="foraTolerancia(item)" class="text-caption text-orange-9 q-pl-sm">
                   acima da tolerância
@@ -808,9 +837,6 @@ function imprimir() {
                 >
                   − {{ fmt(descontoParam(item.codparametroclassificacao)) }} kg
                 </div>
-              </div>
-              <div v-if="!itensCarga.length" class="col-12 text-caption text-grey-6">
-                Nenhum parâmetro na tabela selecionada.
               </div>
             </div>
           </div>

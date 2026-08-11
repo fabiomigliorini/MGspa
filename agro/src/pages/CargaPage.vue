@@ -59,7 +59,10 @@ function novaCarga() {
   // Sem safra ativa (ex.: cold start offline sem cache) a carga nasceria com
   // codsafra:null — invisível no board e rejeitada pra sempre no sync. Barra antes.
   if (!codsafraAtiva.value) {
-    $q.notify({ type: 'warning', message: 'Sincronize ao menos uma safra antes de registrar cargas.' })
+    $q.notify({
+      type: 'warning',
+      message: 'Sincronize ao menos uma safra antes de registrar cargas.',
+    })
     return
   }
   cargaSel.value = store.nova()
@@ -136,8 +139,8 @@ function abreviar(nome) {
   return !nome ? '?' : ABREV[nome] || nome.slice(0, 4)
 }
 
-// Nome do parâmetro offline-safe: item da tabela resolvida → nested do server
-// (só cargas puxadas) → catálogo em cache → código. Cargas locais só têm o cod.
+// Nome do parâmetro offline-safe: parâmetro da cultura → nested do server
+// (só cargas puxadas) → cadastro em cache → código. Cargas locais só têm o cod.
 function nomeParametro(row, porCod) {
   return (
     porCod.get(row.codparametroclassificacao)?.parametroclassificacao ||
@@ -152,7 +155,7 @@ function nomeParametro(row, porCod) {
 // tolerância (gera desconto). Vale p/ FATOR e NORMALIZADO — mesma condição de
 // percentualItem em utils/desconto.js.
 function chipsClassificacao(carga) {
-  const itens = store.itensResolvidos(store.resolverCodTabela(carga))
+  const itens = store.parametrosDaCarga(carga)
   const porCod = new Map(itens.map((i) => [i.codparametroclassificacao, i]))
   return (carga.classificacao || [])
     .filter((c) => c.leitura !== null && c.leitura !== undefined && c.leitura !== '')
@@ -169,19 +172,20 @@ function chipsClassificacao(carga) {
     })
 }
 
-// Aviso (só ENTRADA, onde a classificação vale): sem tabela resolvida (desconto
-// ficaria 0 em silêncio) ou tabela divergente da do contrato.
+// Aviso (só ENTRADA, onde a classificação vale): cultura sem parâmetro ativo, que
+// faria o desconto sair 0 em silêncio.
 function avisoTabela(carga) {
   if (carga.sentido !== 'ENTRADA') return null
-  const resolvida = store.resolverCodTabela(carga)
-  if (!resolvida) return 'Sem tabela de classificação — desconto não aplicado'
-  const doContrato = store.codTabelaContrato(carga)
-  if (doContrato && doContrato !== resolvida) return 'Tabela diferente da do contrato'
+  if (!store.parametrosDaCarga(carga).length) {
+    return 'Cultura sem parâmetros de classificação — desconto não aplicado'
+  }
   return null
 }
 
 function hora(iso) {
-  return !iso ? '' : new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+  return !iso
+    ? ''
+    : new Date(iso).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
 }
 
 function pageStyleFn(offset) {
@@ -362,12 +366,7 @@ onMounted(async () => {
                   </div>
                   <div class="column items-end">
                     <div class="row items-center no-wrap q-gutter-x-xs">
-                      <q-icon
-                        v-if="avisoTabela(carga)"
-                        name="warning"
-                        color="orange-7"
-                        size="18px"
-                      >
+                      <q-icon v-if="avisoTabela(carga)" name="warning" color="orange-7" size="18px">
                         <q-tooltip>{{ avisoTabela(carga) }}</q-tooltip>
                       </q-icon>
                       <q-icon v-if="carga.syncerro" name="sync_problem" color="red-6" size="18px">
@@ -384,7 +383,8 @@ onMounted(async () => {
                       </q-icon>
                     </div>
                     <div class="text-caption text-grey-6 no-wrap">
-                      <span v-if="carga.codcarga">#{{ carga.codcarga }} · </span>{{ hora(carga.data) }}
+                      <span v-if="carga.codcarga">#{{ carga.codcarga }} · </span
+                      >{{ hora(carga.data) }}
                     </div>
                   </div>
                 </div>
@@ -429,7 +429,9 @@ onMounted(async () => {
                         · {{ fmt(sacas(carga.liquido, pesosaca), 1) }} sc</span
                       >
                     </template>
-                    <template v-else-if="carga.bruto != null">Bruto {{ fmt(carga.bruto) }} kg</template>
+                    <template v-else-if="carga.bruto != null"
+                      >Bruto {{ fmt(carga.bruto) }} kg</template
+                    >
                     <template v-else-if="carga.pbt != null">PBT {{ fmt(carga.pbt) }} kg</template>
                     <template v-else>{{ carga.motorista || 'Aguardando pesagem' }}</template>
                   </div>

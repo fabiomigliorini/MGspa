@@ -14,8 +14,7 @@ class CulturaResource extends Resource
         // relação carregada em snake por padrão) — reexpostas em PascalCase abaixo.
         unset(
             $ret['safra_s'],
-            $ret['tabela_classificacao'],
-            $ret['tabela_classificacao_s'],
+            $ret['parametro_classificacao_s'],
             $ret['variedade_s'],
             $ret['cultura_tributo_s'],
         );
@@ -29,12 +28,8 @@ class CulturaResource extends Resource
             $ret['VariedadeS'] = VariedadeResource::collection($this->VariedadeS);
         }
 
-        if ($this->relationLoaded('TabelaClassificacao')) {
-            $ret['TabelaClassificacao'] = $this->whenLoaded('TabelaClassificacao');
-        }
-
-        if ($this->relationLoaded('TabelaClassificacaoS')) {
-            $ret['TabelaClassificacaoS'] = \Mg\Classificacao\TabelaClassificacaoResource::collection($this->TabelaClassificacaoS);
+        if ($this->relationLoaded('ParametroClassificacaoS')) {
+            $ret['ParametroClassificacaoS'] = \Mg\Classificacao\ParametroClassificacaoResource::collection($this->ParametroClassificacaoS);
         }
 
         return $ret;

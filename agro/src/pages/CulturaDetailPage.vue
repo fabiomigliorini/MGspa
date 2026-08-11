@@ -253,15 +253,17 @@ onMounted(() => store.carregarCultura(codcultura))
       <!-- Tributos / descontos fiscais (FETHAB, SENAR, ...) -->
       <CulturaTributosCard :codcultura="codcultura" class="q-mb-md" />
 
-      <!-- Tabela de classificação (referência) -->
+      <!-- Classificação: os parâmetros que calculam o desconto do recebimento -->
       <q-card bordered flat class="overflow-hidden">
         <q-item clickable v-ripple :to="{ name: 'cultura-desconto', params: { codcultura } }">
           <q-item-section avatar>
-            <q-avatar color="deep-orange-1" text-color="deep-orange-8" icon="percent" />
+            <q-avatar color="deep-orange-1" text-color="deep-orange-8" icon="rule" />
           </q-item-section>
           <q-item-section>
-            <q-item-label class="text-subtitle1">Tabela de classificação</q-item-label>
-            <q-item-label caption>Parâmetros, tolerâncias e deságios</q-item-label>
+            <q-item-label class="text-subtitle1">Classificação</q-item-label>
+            <q-item-label caption
+              >Umidade, impureza, avariados — tolerâncias e fórmula</q-item-label
+            >
           </q-item-section>
           <q-item-section side>
             <q-icon name="settings" color="grey-7" />
