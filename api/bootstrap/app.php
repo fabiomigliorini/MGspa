@@ -49,5 +49,45 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Nota sem manifestacao do destinatario (cStat 632) e condicao de negocio
+        // rotineira, nao falha de sistema. Sem isto cada clique no DANFE de uma nota
+        // nao manifestada viraria ERROR com stack trace no laravel.log. O download()
+        // ja emite um Log::warning com cStat/xMotivo, que e o registro util.
+        $exceptions->dontReport(\Mg\NfeTerceiro\NfeTerceiroXmlIndisponivelException::class);
+
+        // /nfe-terceiro/{id}/xml e /danfe sao abertas em <a target="_blank"> pelo MGsis:
+        // navegacao top-level, Accept: text/html. Um abort(404) ali vira a pagina generica
+        // do framework — errors::404 tem @section('message', __('Not Found')) HARDCODED,
+        // entao a mensagem real ("632 - sem manifestacao do destinatario") se perde com
+        // APP_DEBUG=false, e o usuario ve so "Not Found".
         //
+        // Hook TIPADO em vez de publicar errors/404.blade.php: publicar a view mudaria
+        // TODOS os 404 da API e passaria a ecoar texto nao escrito para usuario — o
+        // ModelNotFoundException do route-model-binding preserva a mensagem, e o usuario
+        // leria "No query results for model [Mg\NfeTerceiro\NfeTerceiro] 82466".
+        //
+        // 409 e nao 404: a NfeTerceiro EXISTE; o que falta e uma pre-condicao.
+        $exceptions->render(function (
+            \Mg\NfeTerceiro\NfeTerceiroXmlIndisponivelException $e,
+            \Illuminate\Http\Request $request
+        ) {
+            $dados = [
+                'message' => $e->getMessage(),
+                'sugestao' => $e->sugestao,
+            ];
+
+            // HTML e so para navegacao top-level de verdade. Qualquer XHR leva JSON —
+            // ajax() (X-Requested-With, que o MGsis manda explicitamente em downloadNfe
+            // porque cross-origin o jQuery nao poe sozinho) alem do expectsJson() normal,
+            // senao um XHR que mande Accept: text/html receberia uma pagina inteira.
+            if ($request->ajax() || $request->expectsJson()) {
+                return response()->json($dados, 409);
+            }
+
+            return response()->view(
+                'errors.mg-mensagem',
+                $dados + ['titulo' => 'XML da NFe indisponível'],
+                409
+            );
+        });
     })->create();

@@ -284,11 +284,7 @@ class NfeTerceiroController
         $xmlContent = file_get_contents($request->file('xml')->getRealPath());
         $nft = NfeTerceiroService::uploadXml($xmlContent);
 
-        if ($nft) {
-            return new NfeTerceiroResource($nft->load(static::RELATIONS_SHOW));
-        }
-
-        return response()->json(['message' => 'XML processado'], 200);
+        return new NfeTerceiroResource($nft->load(static::RELATIONS_SHOW));
     }
 
     // ==================== DOCUMENTOS ====================
@@ -350,8 +346,8 @@ class NfeTerceiroController
     public function download($codnfeterceiro)
     {
         $nft = NfeTerceiro::findOrFail($codnfeterceiro);
-        NfeTerceiroService::download($nft);
+        $nft = NfeTerceiroService::download($nft);
 
-        return new NfeTerceiroResource($nft->fresh());
+        return new NfeTerceiroResource($nft);
     }
 }
