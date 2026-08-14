@@ -21,6 +21,14 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   const ultimaSincronizacao = ref(Number(localStorage.getItem(CHAVE_ULTIMA_SINC)) || null)
   const saldosUnidades = ref([]) // snapshot do estoque por unidade armazenadora
 
+  // Ultima pagina da resposta. O Laravel embrulha o Resource em `data` e joga a
+  // paginacao em `meta` — ler `data.last_page` dava undefined e o laco parava na
+  // PRIMEIRA pagina (50 itens, MgModel::$perPage). Sumia contrato/talhao/carga do
+  // 51o em diante. O fallback cobre endpoint que devolve array cru (ex.: v1/veiculo).
+  function ultimaPagina(data) {
+    return data?.meta?.last_page ?? data?.last_page ?? 1
+  }
+
   // Baixa todas as paginas de um endpoint e regrava a tabela Dexie.
   async function puxarTabela(endpoint, tabelaDexie) {
     const todos = []
@@ -30,7 +38,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
       const { data } = await api.get(endpoint, { params: { page }, skipLoading: true })
       const itens = Array.isArray(data) ? data : (data.data ?? [])
       todos.push(...itens)
-      last = data.last_page ?? 1
+      last = ultimaPagina(data)
       page++
     } while (page <= last)
 
@@ -54,7 +62,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
         })
         const itens = Array.isArray(data) ? data : (data.data ?? [])
         await db.plantio.bulkPut(itens.map((i) => ({ ...i, sincronizado })))
-        last = data.last_page ?? 1
+        last = ultimaPagina(data)
         page++
       } while (page <= last)
     }
@@ -64,7 +72,6 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     await puxarTabela('v1/cultura', db.cultura)
     await puxarTabela('v1/variedade', db.variedade)
     await puxarTabela('v1/parametro-classificacao', db.parametroclassificacao)
-    await puxarTabela('v1/tabela-classificacao', db.tabelaclassificacao)
     await puxarTabela('v1/fazenda', db.fazenda)
     await puxarTabela('v1/talhao', db.talhao)
     await puxarTabela('v1/safra', db.safra)
@@ -100,13 +107,12 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     // Só sobrescreve o que o backend REALMENTE devolveu. Uma resposta parcial/vazia
     // (ex.: dedup de POSTs concorrentes no api.js) NÃO pode zerar o liquido/codcarga
     // já calculados localmente — senão a carga finalizada fica "— kg / 0 sc".
-    // Com codcarga presente (resposta real), o servidor é a autoridade: regrava a
-    // tabela resolvida, o snapshot placa/motorista e o desconto por parâmetro.
+    // Com codcarga presente (resposta real), o servidor é a autoridade: regrava o
+    // snapshot placa/motorista e o desconto por parâmetro.
     const patch = { sincronizado: 1, syncerro: null }
     if (oficial.codcarga != null) {
       const norm = normalizarCargaDoServidor(oficial)
       patch.codcarga = norm.codcarga
-      patch.codtabelaclassificacao = norm.codtabelaclassificacao
       patch.placa = norm.placa
       patch.motorista = norm.motorista
       patch.codveiculo = norm.codveiculo
@@ -141,7 +147,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
         .filter((c) => c.uuid && !pendentes.has(c.uuid))
         .map((c) => ({ ...normalizarCargaDoServidor(c), sincronizado: 1 }))
       if (gravar.length) await db.carga.bulkPut(gravar)
-      last = data.last_page ?? 1
+      last = ultimaPagina(data)
       params.page++
     } while (params.page <= last)
   }

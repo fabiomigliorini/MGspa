@@ -6,7 +6,6 @@ use Mg\MgModel;
 use Mg\Safra\Safra;
 use Mg\Veiculo\Veiculo;
 use Mg\Pessoa\Pessoa;
-use Mg\Classificacao\TabelaClassificacao;
 
 /**
  * Carga = caminhao no patio (offline-first, sync por uuid). UMA entidade que
@@ -17,8 +16,8 @@ use Mg\Classificacao\TabelaClassificacao;
  * Nomenclatura de pesagem: pbt = caminhao+carga; tara = caminhao vazio;
  * bruto = pbt - tara (grao); desconto = classificacao; liquido = bruto - desconto.
  * As leituras da classificacao vivem na filha tblcargaclassificacao (uma linha
- * por parametro), e a tabela usada e codtabelaclassificacao (resolvida do
- * contrato do ponto ou do padrao da cultura).
+ * por parametro); os valores da formula vivem no parametro da cultura da safra
+ * (tblparametroclassificacao) — nao ha mais tabela de classificacao.
  */
 class Carga extends MgModel
 {
@@ -36,7 +35,6 @@ class Carga extends MgModel
         'motorista',
         'codveiculo',
         'codpessoamotorista',
-        'codtabelaclassificacao',
         'pbt',
         'tara',
         'bruto',
@@ -54,7 +52,6 @@ class Carga extends MgModel
         'codcarga' => 'integer',
         'codpessoamotorista' => 'integer',
         'codsafra' => 'integer',
-        'codtabelaclassificacao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codveiculo' => 'integer',
@@ -81,11 +78,6 @@ class Carga extends MgModel
     public function PessoaMotorista()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoamotorista', 'codpessoa');
-    }
-
-    public function TabelaClassificacao()
-    {
-        return $this->belongsTo(TabelaClassificacao::class, 'codtabelaclassificacao', 'codtabelaclassificacao');
     }
 
     // Tabelas Filhas

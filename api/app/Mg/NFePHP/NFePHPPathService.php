@@ -9,6 +9,7 @@ use Mg\NotaFiscal\NotaFiscalService;
 use Mg\Dfe\DistribuicaoDfe;
 use Mg\Filial\Filial;
 use Mg\Mdfe\Mdfe;
+use Mg\NfeTerceiro\NfeTerceiro;
 
 /**
  * Caminhos em disco de tudo que a biblioteca NFePHP gera ou recebe.
@@ -33,6 +34,10 @@ use Mg\Mdfe\Mdfe;
  *                              identifica e a da INUTILIZACAO, nao a emissao de nada.
  *
  *   dfe/                       {nsu}-{chave}.xml.gz   documento de terceiro recebido
+ *                              {chave}-proc.xml.gz    procNFe obtido FORA do distDFe
+ *                                                     (consChNFe ou upload manual): nao
+ *                                                     tem NSU, logo nao tem row em
+ *                                                     tbldistribuicaodfe
  *                              {chave}-manif-{tpEvento}-{seq}.xml   nossa manifestacao
  *                              Indexado por NSU (contador sequencial por CNPJ), que e o
  *                              que se usa para conferir lacuna de recebimento.
@@ -236,6 +241,32 @@ class NFePHPPathService
             : "{$nsu}-{$dfe->nfechave}.xml.gz";
 
         return static::path(static::TIPO_DFE, $dfe->Filial, $dfe->criacao, $arquivo, $criar);
+    }
+
+    /**
+     * procNFe completo de nota de TERCEIRO obtido FORA do fluxo distDFe: consChNFe
+     * (sefazDownload) ou upload manual de XML.
+     *
+     * NAO entra em tbldistribuicaodfe de proposito. Aquela tabela e o log fiel do que o web
+     * service DistDFe entregou, indexada por NSU (UNIQUE codfilial+nsu, NOT NULL), e o
+     * max(nsu) dela e o cursor do robo em NFePHPDistDfeService::consultar(). Um consChNFe
+     * nao tem NSU de distribuicao: um NSU sintetico alto avancaria o cursor e faria o robo
+     * pular documentos da SEFAZ em silencio; 0 colidiria no indice ja na segunda nota.
+     *
+     * A data e a EMISSAO da nota, nunca "hoje": o caminho precisa ser reproduzivel na
+     * leitura, e assim o arquivo cai no mesmo diretorio dos demais artefatos do dia. Isso
+     * pressupoe que emissao nao muda depois de gravada — hoje NfeTerceiroController@update
+     * nao a expoe. Se algum dia expuser, o arquivo "some".
+     */
+    public static function pathProcNfeTerceiro(NfeTerceiro $nft, bool $criar = false)
+    {
+        return static::path(
+            static::TIPO_DFE,
+            $nft->Filial,
+            $nft->emissao,
+            "{$nft->nfechave}-proc.xml.gz",
+            $criar
+        );
     }
 
     /**

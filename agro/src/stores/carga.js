@@ -95,7 +95,6 @@ export const useCargaStore = defineStore('carga', () => {
   const culturas = ref([])
   const variedades = ref([])
   const parametros = ref([])
-  const tabelas = ref([])
   const veiculos = ref([])
   const unidades = ref([])
   const contratos = ref([])
@@ -116,82 +115,32 @@ export const useCargaStore = defineStore('carga', () => {
   const culturaAtiva = computed(
     () => culturas.value.find((c) => c.codcultura === safraAtiva.value?.codcultura) || null,
   )
-  // Tabelas da cultura da safra, DEDUPLICADAS por nome. A migração deixou tabelas
-  // "Padrão X" repetidas no banco; sem isso o select mostraria 4 opções idênticas e
-  // o operador poderia gravar um cod não-canônico. Preferimos a tabela padrão da
-  // cultura; senão o menor cod. (Limpeza definitiva do banco é operação manual.)
-  const tabelasDaSafra = computed(() => {
-    const daCultura = tabelas.value
-      .filter((t) => t.codcultura === safraAtiva.value?.codcultura && !t.inativo)
-      .sort((a, b) => a.codtabelaclassificacao - b.codtabelaclassificacao)
-    const padrao = culturaAtiva.value?.codtabelaclassificacao
-    const porNome = new Map()
-    for (const t of daCultura) {
-      if (!porNome.has(t.tabelaclassificacao) || t.codtabelaclassificacao === padrao) {
-        porNome.set(t.tabelaclassificacao, t)
-      }
-    }
-    return [...porNome.values()]
-  })
   const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 
-  // Itens (valores) resolvidos de uma tabela, já com metodo/reduzbase do catálogo
-  // e ordenados pela cascata — o que o utils/desconto.js consome.
-  // Espelha o backend: parâmetro INATIVO fica de fora do cálculo (senão o preview
-  // local desconta e o servidor não → o líquido "pula" após o sync). O `metodo`
-  // truthy também é exigido — sem o catálogo em cache, percentualItem cairia em
-  // NORMALIZADO silenciosamente (erra a Umidade, que é FATOR); melhor não descontar
-  // até o catálogo chegar (o servidor é a autoridade e corrige no sync).
-  function itensResolvidos(codtabela) {
-    const t = tabelas.value.find((x) => x.codtabelaclassificacao === codtabela)
-    if (!t) return []
-    return (t.TabelaClassificacaoItemS || [])
-      .map((i) => {
-        const p =
-          i.ParametroClassificacao ||
-          parametros.value.find(
-            (x) => x.codparametroclassificacao === i.codparametroclassificacao,
-          ) ||
-          {}
-        return {
-          codparametroclassificacao: i.codparametroclassificacao,
-          parametroclassificacao: p.parametroclassificacao,
-          metodo: p.metodo,
-          reduzbase: p.reduzbase,
-          inativo: p.inativo,
-          ordem: i.ordem,
-          tolerancia: i.tolerancia,
-          fator: i.fator,
-          desagio: i.desagio,
-        }
-      })
-      .filter((it) => !it.inativo && it.metodo)
+  // Parâmetros de classificação da cultura da safra ATIVA, na ordem da cascata —
+  // é o que o utils/desconto.js consome e o que o CargaDialog renderiza.
+  // Espelha o backend (ParametroClassificacaoService::daCultura): parâmetro
+  // INATIVO fica de fora do cálculo, senão o preview local desconta, o servidor
+  // não, e o líquido "pula" depois do sync.
+  const parametrosDaSafra = computed(() => parametrosDaCultura(safraAtiva.value?.codcultura))
+
+  // Idem, para uma cultura qualquer — o board precisa disso porque uma carga pode
+  // ser de outra safra que não a ativa.
+  function parametrosDaCultura(codcultura) {
+    if (!codcultura) return []
+    return parametros.value
+      .filter((p) => p.codcultura === codcultura && !p.inativo)
       .sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0))
   }
 
-  // Tabela do contrato do ponto (quando o contrato aponta a sua).
-  function codTabelaContrato(carga) {
-    for (const p of carga.pontos || []) {
-      if (p.contatipo === 'CONTRATO' && p.codcontrato) {
-        const c = contratos.value.find((x) => x.codcontrato === p.codcontrato)
-        if (c?.codtabelaclassificacao) return c.codtabelaclassificacao
-      }
-    }
-    return null
-  }
-
-  // Tabela usada pela carga: a escolhida -> a do contrato do ponto -> a padrão da cultura.
-  function resolverCodTabela(carga) {
-    return (
-      carga.codtabelaclassificacao ||
-      codTabelaContrato(carga) ||
-      culturaAtiva.value?.codtabelaclassificacao ||
-      null
-    )
+  // Parâmetros que valem para UMA carga — pela cultura da safra dela.
+  function parametrosDaCarga(carga) {
+    const s = safras.value.find((x) => x.codsafra === carga?.codsafra)
+    return parametrosDaCultura(s?.codcultura)
   }
 
   function calcularLocal(carga) {
-    return calcularCarga(carga, itensResolvidos(resolverCodTabela(carga)))
+    return calcularCarga(carga, parametrosDaCarga(carga))
   }
 
   const plantiosDaSafra = computed(() =>
@@ -334,7 +283,6 @@ export const useCargaStore = defineStore('carga', () => {
     culturas.value = await db.cultura.toArray()
     variedades.value = await db.variedade.toArray()
     parametros.value = await db.parametroclassificacao.toArray()
-    tabelas.value = await db.tabelaclassificacao.toArray()
     plantios.value = await db.plantio.toArray()
     veiculos.value = await db.veiculo.toArray()
     unidades.value = await db.unidadearmazenadora.toArray()
@@ -426,7 +374,6 @@ export const useCargaStore = defineStore('carga', () => {
       placacarreta: null,
       codpessoamotorista: null,
       motorista: null,
-      codtabelaclassificacao: null,
       pbt: null,
       tara: null,
       bruto: null,
@@ -450,9 +397,8 @@ export const useCargaStore = defineStore('carga', () => {
       pontos: (carga.pontos || []).filter(pontoCompleto).map((p) => ({ ...p })),
       classificacao: (carga.classificacao || []).map((c) => ({ ...c })),
     }
-    limpa.codtabelaclassificacao = resolverCodTabela(limpa)
     // syncerro: null — reeditar/salvar limpa uma rejeição anterior e rearma o envio.
-    Object.assign(limpa, calcularCarga(limpa, itensResolvidos(limpa.codtabelaclassificacao)), {
+    Object.assign(limpa, calcularCarga(limpa, parametrosDaCarga(limpa)), {
       sincronizado: 0,
       syncerro: null,
     })
@@ -503,7 +449,6 @@ export const useCargaStore = defineStore('carga', () => {
     culturas,
     variedades,
     parametros,
-    tabelas,
     veiculos,
     unidades,
     contratos,
@@ -517,10 +462,9 @@ export const useCargaStore = defineStore('carga', () => {
     contratosAtivos,
     safraAtiva,
     culturaAtiva,
-    tabelasDaSafra,
-    resolverCodTabela,
-    itensResolvidos,
-    codTabelaContrato,
+    parametrosDaSafra,
+    parametrosDaCultura,
+    parametrosDaCarga,
     pesosaca,
     plantiosDaSafra,
     etapasDoSentido,

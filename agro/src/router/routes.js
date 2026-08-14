@@ -81,16 +81,13 @@ const routes = [
         meta: { auth: true, title: 'Variedades' },
       },
       {
+        // Path e name preservados: o cadastro de classificação é o mesmo lugar
+        // de sempre (Cultura › Classificação), só que agora é UMA tela — os
+        // parâmetros carregam a fórmula, não há mais tabela intermediária.
         path: 'cultura/:codcultura/desconto',
         name: 'cultura-desconto',
-        component: () => import('pages/CulturaDescontoPage.vue'),
-        meta: { auth: true, title: 'Tabelas de Classificação' },
-      },
-      {
-        path: 'parametros-classificacao',
-        name: 'parametros-classificacao',
         component: () => import('pages/ParametroClassificacaoPage.vue'),
-        meta: { auth: true, title: 'Parâmetros de Classificação' },
+        meta: { auth: true, title: 'Classificação' },
       },
 
       {

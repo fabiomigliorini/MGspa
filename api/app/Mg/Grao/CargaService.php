@@ -4,9 +4,9 @@ namespace Mg\Grao;
 
 use Mg\MgService;
 use Mg\Safra\Safra;
-use Mg\Cultura\Cultura;
 use Mg\Contrato\Contrato;
-use Mg\Classificacao\TabelaClassificacaoItem;
+use Mg\Classificacao\ParametroClassificacao;
+use Mg\Classificacao\ParametroClassificacaoService;
 use Mg\Veiculo\Veiculo;
 use Mg\Pessoa\Pessoa;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +23,6 @@ class CargaService extends MgService
         'Safra.Cultura',
         'Veiculo',
         'PessoaMotorista',
-        'TabelaClassificacao',
         'CargaClassificacaoS.ParametroClassificacao',
         'CargaPontoS.Plantio.Talhao',
         'CargaPontoS.Plantio.Variedade',
@@ -200,29 +199,29 @@ class CargaService extends MgService
             return;
         }
 
-        // itens da tabela resolvida (com metodo/reduzbase via ParametroClassificacao), em ordem
-        $itens = static::itensDaTabela($carga);
+        // parametros da cultura da safra, na ordem da cascata
+        $parametros = static::parametrosDaCarga($carga);
         $leiturasPorParam = $leituras->keyBy('codparametroclassificacao');
 
-        // zera descontos (parametros sem item na tabela / sem leitura ficam 0)
+        // zera descontos (parametros de outra cultura / sem leitura ficam 0)
         foreach ($leituras as $cc) {
             $cc->desconto = 0.0;
         }
 
         $base = (float) $bruto;
         $total = 0.0;
-        foreach ($itens as $item) {
-            $cc = $leiturasPorParam->get($item->codparametroclassificacao);
+        foreach ($parametros as $p) {
+            $cc = $leiturasPorParam->get($p->codparametroclassificacao);
             $leitura = $cc?->leitura;
             if ($leitura === null || $leitura === '') {
                 continue; // sem leitura -> desconto 0, base inalterada
             }
-            $desc = round($base * static::percentualDesconto($item, (float) $leitura), 3);
+            $desc = round($base * static::percentualDesconto($p, (float) $leitura), 3);
             if ($cc) {
                 $cc->desconto = $desc;
             }
             $total += $desc;
-            if (optional($item->ParametroClassificacao)->reduzbase) {
+            if ($p->reduzbase) {
                 $base -= $desc;
             }
         }
@@ -236,64 +235,42 @@ class CargaService extends MgService
     }
 
     /**
-     * Percentual de desconto (fracao) de um parametro conforme o metodo do
-     * catalogo. FATOR: (leitura-tol) x fator/100 (secagem). NORMALIZADO:
-     * (leitura-tol)/(100-tol) x (100-desagio)/100. Abaixo da tolerancia -> 0.
+     * Percentual de desconto (fracao) de um parametro conforme o seu metodo.
+     *
+     * NORMALIZADO (padrao): (leitura-tol)/(100-tol) x (100-desagio)/100 — e a
+     * formula da IN MAPA 11/2007 (soja) e 60/2011 (milho), a mesma PDI/PDU da
+     * Cartilha da Aprosoja e as eq. 02/05 do boletim AGAIS 01/09.
+     * FATOR: (leitura-tol) x fator/100 — taxa comercial por ponto (secagem).
+     * Abaixo da tolerancia -> 0 (nao ha bonus por grao mais seco/limpo).
      */
-    protected static function percentualDesconto(TabelaClassificacaoItem $item, float $leitura): float
+    protected static function percentualDesconto(ParametroClassificacao $p, float $leitura): float
     {
-        $tol = (float) $item->tolerancia;
+        $tol = (float) $p->tolerancia;
         $excesso = $leitura - $tol;
         if ($excesso <= 0) {
             return 0.0;
         }
-        if (optional($item->ParametroClassificacao)->metodo === 'FATOR') {
-            return $excesso * ((float) $item->fator) / 100.0;
+        if ($p->metodo === 'FATOR') {
+            return $excesso * ((float) $p->fator) / 100.0;
         }
         $den = 100.0 - $tol;
         if ($den <= 0) {
             return 0.0;
         }
-        return ($excesso / $den) * (100.0 - (float) $item->desagio) / 100.0;
+        return ($excesso / $den) * (100.0 - (float) $p->desagio) / 100.0;
     }
 
-    /** Itens (valores) da tabela resolvida, com o catalogo carregado, em ordem de cascata. */
-    protected static function itensDaTabela(Carga $carga)
+    /** Parametros ATIVOS da cultura da safra da carga, em ordem de cascata. */
+    protected static function parametrosDaCarga(Carga $carga)
     {
-        $cod = static::resolverCodTabela($carga);
-        if (empty($cod)) {
-            return collect();
-        }
-        return TabelaClassificacaoItem::with('ParametroClassificacao')
-            ->where('codtabelaclassificacao', $cod)
-            ->whereHas('ParametroClassificacao', fn ($q) => $q->whereNull('inativo'))
-            ->orderBy('ordem')
-            ->get();
+        return ParametroClassificacaoService::daCultura(static::codculturaDaCarga($carga));
     }
 
-    /** Tabela usada: a da carga -> a do contrato do ponto -> a padrao da cultura. */
-    public static function resolverCodTabela(Carga $carga): ?int
+    /** Cultura da carga = cultura da safra. Unica origem, sem cascata. */
+    public static function codculturaDaCarga(Carga $carga): ?int
     {
-        if (!empty($carga->codtabelaclassificacao)) {
-            return (int) $carga->codtabelaclassificacao;
-        }
-        $carga->loadMissing('CargaPontoS');
-        foreach ($carga->CargaPontoS as $p) {
-            if ($p->contatipo === 'CONTRATO' && $p->codcontrato) {
-                $cod = optional(Contrato::find($p->codcontrato))->codtabelaclassificacao;
-                if (!empty($cod)) {
-                    return (int) $cod;
-                }
-            }
-        }
-        $codcultura = optional(Safra::find($carga->codsafra))->codcultura;
-        if (!empty($codcultura)) {
-            $cod = optional(Cultura::find($codcultura))->codtabelaclassificacao;
-            if (!empty($cod)) {
-                return (int) $cod;
-            }
-        }
-        return null;
+        $cod = optional(Safra::find($carga->codsafra))->codcultura;
+        return empty($cod) ? null : (int) $cod;
     }
 
     /**

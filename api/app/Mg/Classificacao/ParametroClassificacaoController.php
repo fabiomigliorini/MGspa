@@ -24,12 +24,14 @@ class ParametroClassificacaoController extends MgController
         $model->fill($request->validated());
         $model->save();
 
-        return new ParametroClassificacaoResource($model->fresh());
+        return new ParametroClassificacaoResource($model->fresh(ParametroClassificacaoService::WITH));
     }
 
     public function show(Request $request, $id)
     {
-        return new ParametroClassificacaoResource(ParametroClassificacao::findOrFail($id));
+        return new ParametroClassificacaoResource(
+            ParametroClassificacao::with(ParametroClassificacaoService::WITH)->findOrFail($id)
+        );
     }
 
     public function update(ParametroClassificacaoUpdateRequest $request, $id)
@@ -38,7 +40,7 @@ class ParametroClassificacaoController extends MgController
         $model->fill($request->validated());
         $model->update();
 
-        return new ParametroClassificacaoResource($model->fresh());
+        return new ParametroClassificacaoResource($model->fresh(ParametroClassificacaoService::WITH));
     }
 
     public function destroy($id)
@@ -48,7 +50,7 @@ class ParametroClassificacaoController extends MgController
             $model->delete();
         } catch (QueryException $e) {
             if (($e->errorInfo[0] ?? null) === '23503') {
-                abort(409, 'Existem tabelas ou classificações usando este parâmetro! Impossível excluir!');
+                abort(409, 'Existem cargas classificadas com este parâmetro! Impossível excluir!');
             }
             throw $e;
         }
@@ -59,13 +61,13 @@ class ParametroClassificacaoController extends MgController
     {
         $model = ParametroClassificacao::findOrFail($id);
         ParametroClassificacaoService::inativar($model);
-        return new ParametroClassificacaoResource($model->fresh());
+        return new ParametroClassificacaoResource($model->fresh(ParametroClassificacaoService::WITH));
     }
 
     public function ativar(Request $request, $id)
     {
         $model = ParametroClassificacao::findOrFail($id);
         ParametroClassificacaoService::ativar($model);
-        return new ParametroClassificacaoResource($model->fresh());
+        return new ParametroClassificacaoResource($model->fresh(ParametroClassificacaoService::WITH));
     }
 }
