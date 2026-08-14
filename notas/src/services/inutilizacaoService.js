@@ -13,10 +13,23 @@ export default {
     return data.data
   },
 
+  // Filiais que tem inutilizacao NAQUELE ANO, com os totais do ano — as abas do topo.
+  async filiais(ano) {
+    const { data } = await api.get('/v1/inutilizacao/filial', { params: { ano } })
+    return data.data
+  },
+
+  // Anos que tem inutilizacao, de todas as filiais — o filtro principal da tela.
+  async anos() {
+    const { data } = await api.get('/v1/inutilizacao/ano')
+    return data.data
+  },
+
   async inutilizar(payload) {
     // Chamada a SEFAZ com retry leva ate ~122s; o timeout global do axios e 15s.
     const { data } = await api.post('/v1/inutilizacao', payload, { timeout: 150000 })
-    return data
+    // O store devolve um Resource, entao o registro vem dentro de data.
+    return data.data
   },
 
   // Nao ha helper de XML aqui: quem for exibir a inutilizacao usa o abrirXml compartilhado

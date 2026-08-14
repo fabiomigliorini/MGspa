@@ -13,7 +13,7 @@ class SelectFilialController extends Controller
         $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
 
         $qry = Filial::query()
-            ->select(['codfilial', 'filial', 'nfeserie', 'funruralvenda', 'inativo'])
+            ->select(['codfilial', 'filial', 'nfeserie', 'funruralvenda', 'emitenfe', 'inativo'])
             ->orderBy('codempresa')
             ->orderBy('codfilial');
 
@@ -30,6 +30,7 @@ class SelectFilialController extends Controller
             'label' => $item->filial,
             'nfeserie' => $item->nfeserie,
             'funruralvenda' => (bool) $item->funruralvenda,
+            'emitenfe' => (bool) $item->emitenfe,
             'inativo' => $item->inativo,
         ]);
     }
@@ -45,6 +46,7 @@ class SelectFilialController extends Controller
             'label' => $item->filial,
             'nfeserie' => $item->nfeserie,
             'funruralvenda' => (bool) $item->funruralvenda,
+            'emitenfe' => (bool) $item->emitenfe,
             'inativo' => $item->inativo,
         ];
     }

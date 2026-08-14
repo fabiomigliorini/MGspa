@@ -9,6 +9,7 @@ import NaturezaOperacaoFiltrosDrawer from 'src/components/drawers/NaturezaOperac
 import TributacaoNaturezaOperacaoFiltrosDrawer from 'src/components/drawers/TributacaoNaturezaOperacaoFiltrosDrawer.vue'
 import DfeDistribuicaoFiltrosDrawer from 'src/components/drawers/DfeDistribuicaoFiltrosDrawer.vue'
 import NfeTerceiroFiltrosDrawer from 'src/components/drawers/NfeTerceiroFiltrosDrawer.vue'
+import InutilizacaoAnosDrawer from 'src/components/drawers/InutilizacaoAnosDrawer.vue'
 
 const routes = [
   {
@@ -84,6 +85,24 @@ const routes = [
         meta: {
           auth: true,
           title: 'Notas Fiscais',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/inutilizacao',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'inutilizacao',
+        component: () => import('pages/InutilizacaoPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Inutilizações',
+          leftDrawer: InutilizacaoAnosDrawer,
           permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },

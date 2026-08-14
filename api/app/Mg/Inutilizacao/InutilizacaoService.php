@@ -156,42 +156,102 @@ class InutilizacaoService
     }
 
     /**
-     * Listagem com filtros. SQL cru, que e a preferencia do projeto em leitura.
+     * Listagem com filtros, para a tela de inutilizacoes.
      */
     public static function listar(array $filtros = [])
     {
-        $where = [];
-        $params = [];
+        $qry = Inutilizacao::with('Filial');
 
         if (!empty($filtros['codfilial'])) {
-            $where[] = 'i.codfilial = :codfilial';
-            $params['codfilial'] = $filtros['codfilial'];
+            $qry->where('codfilial', $filtros['codfilial']);
         }
         if (!empty($filtros['modelo'])) {
-            $where[] = 'i.modelo = :modelo';
-            $params['modelo'] = $filtros['modelo'];
+            $qry->where('modelo', $filtros['modelo']);
         }
         if (!empty($filtros['serie'])) {
-            $where[] = 'i.serie = :serie';
-            $params['serie'] = $filtros['serie'];
+            $qry->where('serie', $filtros['serie']);
         }
         if (!empty($filtros['numero'])) {
-            $where[] = ':numero between i.numeroinicial and i.numerofinal';
-            $params['numero'] = $filtros['numero'];
+            $qry->where('numeroinicial', '<=', $filtros['numero'])
+                ->where('numerofinal', '>=', $filtros['numero']);
         }
 
-        $sqlWhere = $where ? ('where ' . implode(' and ', $where)) : '';
-        $limite = (int) ($filtros['limite'] ?? 200);
+        // Faixa de datas, e nao "extract(year from protocolodata) = :ano", para que a consulta
+        // continue aproveitavel por um indice em (codfilial, protocolodata) se um dia a tabela
+        // crescer a ponto de precisar de um. Custa a mesma linha de codigo.
+        if (!empty($filtros['ano'])) {
+            $ano = (int) $filtros['ano'];
+            $qry->where('protocolodata', '>=', "{$ano}-01-01")
+                ->where('protocolodata', '<', ($ano + 1) . '-01-01');
+        }
 
-        $sql = "
-            select i.*, f.filial
+        $qry->orderBy('protocolodata', 'desc')->orderBy('numeroinicial', 'desc');
+
+        // Limite so quando pedido: a tela carrega o ano inteiro e o pior ano do historico tem
+        // 11.231 faixas (filial 101 em 2020). Um default cortaria isso em silencio.
+        if (!empty($filtros['limite'])) {
+            $qry->limit((int) $filtros['limite']);
+        }
+
+        return $qry->get();
+    }
+
+    /**
+     * Anos que tem inutilizacao, de TODAS as filiais — o filtro principal da tela.
+     *
+     * protocolodata e NOT NULL desde database/inutilizacao_protocolodata.sql, que datou o
+     * historico importado pela criacao e limpou as datas em 1969 vindas da importacao.
+     */
+    public static function anos(): array
+    {
+        $sql = '
+            select extract(year from protocolodata)::int as ano,
+                count(*) as faixas,
+                sum(numerofinal - numeroinicial + 1) as numeros
+            from tblinutilizacao
+            group by 1
+            order by 1 desc
+        ';
+
+        return array_map(fn ($reg) => [
+            'ano' => (int) $reg->ano,
+            'faixas' => (int) $reg->faixas,
+            'numeros' => (int) $reg->numeros,
+        ], DB::select($sql));
+    }
+
+    /**
+     * Filiais que tem inutilizacao NAQUELE ANO, com os totais do ano — as abas do topo.
+     *
+     * Recortado pelo ano de proposito: a aba precisa refletir o que o usuario vai encontrar
+     * se clicar nela. Uma filial que so inutilizou em 2014 nao aparece quando o ano e 2026.
+     *
+     * Nao e a mesma lista de quem PODE inutilizar (essa e emitenfe, no select do dialog):
+     * aqui interessa quem tem historico para mostrar, inclusive filial ja desativada.
+     */
+    public static function filiais(int $ano): array
+    {
+        $sql = '
+            select i.codfilial,
+                f.filial,
+                count(*) as faixas,
+                sum(i.numerofinal - i.numeroinicial + 1) as numeros
             from tblinutilizacao i
             inner join tblfilial f on (f.codfilial = i.codfilial)
-            {$sqlWhere}
-            order by i.criacao desc, i.codinutilizacao desc
-            limit {$limite}
-        ";
+            where i.protocolodata >= :inicio
+            and i.protocolodata < :fim
+            group by i.codfilial, f.filial
+            order by i.codfilial
+        ';
 
-        return DB::select($sql, $params);
+        return array_map(fn ($reg) => [
+            'codfilial' => (int) $reg->codfilial,
+            'filial' => $reg->filial,
+            'faixas' => (int) $reg->faixas,
+            'numeros' => (int) $reg->numeros,
+        ], DB::select($sql, [
+            'inicio' => "{$ano}-01-01",
+            'fim' => ($ano + 1) . '-01-01',
+        ]));
     }
 }

@@ -16,10 +16,31 @@ class InutilizacaoController extends MgController
             'modelo',
             'serie',
             'numero',
+            'ano',
             'limite',
         ]));
 
-        return response()->json(['data' => $regs]);
+        return InutilizacaoResource::collection($regs);
+    }
+
+    /**
+     * Anos com inutilizacao — o filtro principal da tela.
+     */
+    public function anos()
+    {
+        return response()->json(['data' => InutilizacaoService::anos()]);
+    }
+
+    /**
+     * Filiais que tem inutilizacao no ano — as abas do topo da tela.
+     */
+    public function filiais(Request $request)
+    {
+        $request->validate(['ano' => 'required|integer|min:2000|max:2100']);
+
+        return response()->json([
+            'data' => InutilizacaoService::filiais((int) $request->ano),
+        ]);
     }
 
     public function show(int $codinutilizacao)

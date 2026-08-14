@@ -30,6 +30,7 @@ export const useSelectFilialStore = defineStore('selectFilial', {
             label: item.label,
             value: item.value,
             nfeserie: item.nfeserie,
+            emitenfe: item.emitenfe,
           }))
           .sort((a, b) => a.value - b.value)
 
