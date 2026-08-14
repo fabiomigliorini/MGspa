@@ -12,6 +12,11 @@ class NotaFiscalLacunaService
      * Devolve FAIXAS de numeros consecutivos, nao numeros soltos, porque inutilizacao e
      * ato sobre um intervalo — e a tela oferece "Inutilizar 1201-1250" num clique.
      *
+     * O "nf.emitida = true" do LEFT JOIN nao e detalhe: tblnotafiscal guarda TAMBEM as notas
+     * de ENTRADA (compra/transferencia recebida), que carregam o numero de quem EMITIU e
+     * ficam gravadas sob o NOSSO codfilial/modelo. Sem esse filtro uma entrada de terceiro
+     * "ocupa" o numero e a lacuna some da tela — foi exatamente o caso da 74577 da filial 102.
+     *
      * Numeros ja cobertos por inutilizacao homologada sao excluidos. Sem isso a lacuna
      * reapareceria para sempre: antes deste PR o sistema criava uma tblnotafiscal falsa
      * para "tapar" o buraco, o que era justamente o efeito colateral que se quer eliminar.
@@ -41,6 +46,7 @@ class NotaFiscalLacunaService
                     AND nf.codfilial = ?
                     AND nf.serie = ?
                     AND nf.modelo = ?
+                    AND nf.emitida = true
                 WHERE nf.codnotafiscal IS NULL
                 AND NOT EXISTS (
                     SELECT 1
