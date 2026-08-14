@@ -23,10 +23,13 @@ const showDialogLacunas = ref(false)
 
 const filialAtual = computed(() => filiais.value.find((f) => f.codfilial === codfilial.value))
 
+// Na tabela o cabecalho ja diz "Número", entao a celula mostra so o valor.
 const rotuloFaixa = (f) =>
   f.numeroinicial === f.numerofinal
-    ? `Número ${f.numeroinicial}`
-    : `Números ${f.numeroinicial} a ${f.numerofinal} (${f.quantidade})`
+    ? formataNumero(f.numeroinicial, 0)
+    : `${formataNumero(f.numeroinicial, 0)} a ${formataNumero(f.numerofinal, 0)} (${f.quantidade})`
+
+const rotuloModelo = (modelo) => (modelo === 65 ? 'Modelo 65 — NFC-e' : `Modelo ${modelo} — NF-e`)
 
 const abrirXmlFaixa = (faixa) =>
   abrirXml(
@@ -34,7 +37,7 @@ const abrirXmlFaixa = (faixa) =>
     `v1/inutilizacao/${faixa.codinutilizacao}/xml`,
     {},
     {
-      titulo: `Inutilização ${rotuloFaixa(faixa)}`,
+      titulo: `Inutilização — modelo ${faixa.modelo}, série ${faixa.serie}, nº ${rotuloFaixa(faixa)}`,
       nomeArquivo: `${faixa.modelo}-${faixa.serie}-${faixa.numeroinicial}-${faixa.numerofinal}-inut.xml`,
     },
   )
@@ -128,48 +131,54 @@ onMounted(() => inutilizacaoStore.inicializar())
             </div>
           </q-card-section>
 
-          <q-list separator>
-            <q-item v-for="faixa in grupo.faixas" :key="faixa.codinutilizacao">
-              <q-item-section>
-                <q-item-label>
-                  {{ rotuloFaixa(faixa) }}
-                  <q-badge color="blue-grey-5" class="q-ml-sm">
-                    Mod {{ faixa.modelo }} / Sér {{ faixa.serie }}
-                  </q-badge>
-                  <q-badge v-if="faixa.ambiente === 2" color="orange-6" class="q-ml-sm">
-                    Homologação
-                  </q-badge>
-                  <q-badge v-if="!faixa.homologada" color="red-5" class="q-ml-sm">
-                    Sem protocolo
-                  </q-badge>
-                </q-item-label>
-                <q-item-label caption>{{ faixa.justificativa }}</q-item-label>
-                <q-item-label caption>
-                  Protocolo {{ formataProtocolo(faixa.protocolo) }}
-                  <template v-if="faixa.protocolodata">
-                    — {{ formataTimestamp(faixa.protocolodata, 4, true) }}
-                  </template>
-                </q-item-label>
-              </q-item-section>
+          <!-- Uma tabela por modelo: NF-e e NFC-e tem numeracoes independentes -->
+          <q-card-section v-for="mod in grupo.modelos" :key="mod.modelo" class="q-pt-sm">
+            <div class="text-subtitle2 text-weight-medium text-capitalize q-mb-sm">
+              {{ rotuloModelo(mod.modelo) }}
+            </div>
 
-              <q-item-section side>
-                <div class="row items-center no-wrap">
-                  <MgInfoCriacao :registro="faixa" />
-                  <q-btn
-                    v-if="faixa.temxml"
-                    flat
-                    round
-                    size="sm"
-                    color="grey-7"
-                    icon="code"
-                    @click="abrirXmlFaixa(faixa)"
-                  >
-                    <q-tooltip>Ver XML</q-tooltip>
-                  </q-btn>
-                </div>
-              </q-item-section>
-            </q-item>
-          </q-list>
+            <q-markup-table flat bordered wrap-cells>
+              <thead>
+                <tr>
+                  <th class="text-left text-grey-7">Série</th>
+                  <th class="text-left text-grey-7">Número</th>
+                  <th class="text-left text-grey-7">Data</th>
+                  <th class="text-left text-grey-7">Protocolo</th>
+                  <th class="text-left text-grey-7">Justificativa</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="faixa in mod.faixas" :key="faixa.codinutilizacao">
+                  <td>{{ faixa.serie }}</td>
+                  <td>{{ rotuloFaixa(faixa) }}</td>
+                  <!-- Data, protocolo e justificativa sao contexto, nao a informacao que se
+                       procura na linha: ficam no mesmo cinza discreto do titulo do modelo. -->
+                  <td class="text-no-wrap text-grey-7">
+                    {{ formataTimestamp(faixa.protocolodata, 4, true) }}
+                  </td>
+                  <td class="text-no-wrap text-grey-7">
+                    {{ formataProtocolo(faixa.protocolo) }}
+                  </td>
+                  <td class="text-grey-7">{{ faixa.justificativa }}</td>
+                  <td class="text-right text-no-wrap">
+                    <MgInfoCriacao :registro="faixa" />
+                    <q-btn
+                      v-if="faixa.temxml"
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      icon="code"
+                      @click="abrirXmlFaixa(faixa)"
+                    >
+                      <q-tooltip>Ver XML</q-tooltip>
+                    </q-btn>
+                  </td>
+                </tr>
+              </tbody>
+            </q-markup-table>
+          </q-card-section>
         </q-card>
       </template>
     </div>

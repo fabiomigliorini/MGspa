@@ -27,8 +27,9 @@ export const useInutilizacaoStore = defineStore('inutilizacao', {
 
   getters: {
     /**
-     * Agrupa as faixas do ano carregado em meses, do mais recente para o mais antigo —
-     * e um card por mes na tela.
+     * Agrupa as faixas do ano em meses (um card cada, do mais recente para o mais antigo) e,
+     * dentro do mes, por modelo — NF-e e NFC-e sao numeracoes independentes e viram uma
+     * tabela cada, senao os numeros de uma se misturam com os da outra.
      */
     faixasPorMes: (state) => {
       const meses = new Map()
@@ -36,15 +37,32 @@ export const useInutilizacaoStore = defineStore('inutilizacao', {
       state.faixas.forEach((faixa) => {
         const mes = mesLocal(faixa.protocolodata)
         if (!meses.has(mes)) {
-          meses.set(mes, { mes, faixas: [], totalFaixas: 0, totalNumeros: 0 })
+          meses.set(mes, { mes, modelos: new Map(), totalFaixas: 0, totalNumeros: 0 })
         }
         const grupo = meses.get(mes)
-        grupo.faixas.push(faixa)
         grupo.totalFaixas += 1
         grupo.totalNumeros += faixa.quantidade
+
+        if (!grupo.modelos.has(faixa.modelo)) {
+          grupo.modelos.set(faixa.modelo, {
+            modelo: faixa.modelo,
+            faixas: [],
+            totalFaixas: 0,
+            totalNumeros: 0,
+          })
+        }
+        const porModelo = grupo.modelos.get(faixa.modelo)
+        porModelo.faixas.push(faixa)
+        porModelo.totalFaixas += 1
+        porModelo.totalNumeros += faixa.quantidade
       })
 
-      return [...meses.values()].sort((a, b) => b.mes.localeCompare(a.mes))
+      return [...meses.values()]
+        .sort((a, b) => b.mes.localeCompare(a.mes))
+        .map((grupo) => ({
+          ...grupo,
+          modelos: [...grupo.modelos.values()].sort((a, b) => a.modelo - b.modelo),
+        }))
     },
 
     totalFaixasAno: (state) => state.faixas.length,
