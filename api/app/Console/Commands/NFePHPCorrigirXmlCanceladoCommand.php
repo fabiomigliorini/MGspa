@@ -62,6 +62,7 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
             'corrigidos' => 0,
             'sem_proc' => 0,
             'sem_evento' => 0,
+            'layout_antigo' => 0,
             'erro' => 0,
         ];
 
@@ -100,8 +101,21 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
                 continue;
             }
 
+            // O cancelRegister le ->item(0)->nodeValue sem checar nulo, entao um arquivo
+            // fora do layout de eventos o faz estourar. Ate 2014 o cancelamento era o
+            // retCancNFe antigo, anterior ao evento 110111: nao ha retEvento para aproveitar.
+            // Detectar aqui e o que separa "nao da para recuperar" de "quebrou".
+            $proc = file_get_contents($pathProc);
+            if (!$this->eventoAproveitavel($atual) || !$this->protocoloValido($proc)) {
+                $stats['layout_antigo']++;
+                if ($verbose) {
+                    $this->line("  <comment>layout antigo, sem evento recuperavel</comment> {$path}");
+                }
+                continue;
+            }
+
             try {
-                $montado = Complements::cancelRegister(file_get_contents($pathProc), $atual);
+                $montado = Complements::cancelRegister($proc, $atual);
             } catch (\Throwable $e) {
                 $stats['erro']++;
                 $this->registrarErro($path, $e->getMessage());
@@ -148,6 +162,43 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
         }
 
         return 0;
+    }
+
+    /**
+     * O arquivo tem um <retEvento> com todos os campos que o cancelRegister vai ler?
+     */
+    private function eventoAproveitavel(string $xml): bool
+    {
+        $dom = new \DOMDocument();
+        if (!@$dom->loadXML($xml)) {
+            return false;
+        }
+        foreach ($dom->getElementsByTagName('retEvento') as $evento) {
+            $inf = $evento->getElementsByTagName('infEvento')->item(0);
+            if (!$inf) {
+                continue;
+            }
+            foreach (['cStat', 'nProt', 'chNFe', 'tpEvento'] as $tag) {
+                if (!$inf->getElementsByTagName($tag)->item(0)) {
+                    continue 2;
+                }
+            }
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * O -proc.xml tem protNFe com chNFe? Sem isso o cancelRegister recusa o documento.
+     */
+    private function protocoloValido(string $xml): bool
+    {
+        $dom = new \DOMDocument();
+        if (!@$dom->loadXML($xml)) {
+            return false;
+        }
+        $prot = $dom->getElementsByTagName('protNFe')->item(0);
+        return $prot && $prot->getElementsByTagName('chNFe')->item(0);
     }
 
     /**
