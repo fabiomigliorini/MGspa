@@ -18,7 +18,7 @@ class BeeRecargaController extends Controller
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
-        $recargas = BeeRecarga::with(['Filial.Empresa', 'Titulo'])
+        $recargas = BeeRecarga::with(['Filial.Empresa', 'Titulo.Portador'])
             ->where('codperiodo', $codperiodo)
             ->orderBy('codbeerecarga', 'desc')
             ->get();
@@ -69,10 +69,11 @@ class BeeRecargaController extends Controller
                 (int) $request->input('codempresa'),
                 $request->input('itens'),
                 $request->input('dia'),
-                $request->input('observacao')
+                $request->input('observacao'),
+                $request->input('codportador')
             );
             DB::commit();
-            $recarga->load(['Filial.Empresa', 'Titulo']);
+            $recarga->load(['Filial.Empresa', 'Titulo.Portador']);
             return new BeeRecargaResource($recarga);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -102,7 +103,7 @@ class BeeRecargaController extends Controller
         try {
             $recarga = BeeRecargaService::confirmar($codperiodo, $codbeerecarga);
             DB::commit();
-            $recarga->load(['Filial.Empresa', 'Titulo']);
+            $recarga->load(['Filial.Empresa', 'Titulo.Portador']);
             return new BeeRecargaResource($recarga);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -118,7 +119,7 @@ class BeeRecargaController extends Controller
         try {
             $recarga = BeeRecargaService::inativar($codperiodo, $codbeerecarga);
             DB::commit();
-            $recarga->load(['Filial.Empresa', 'Titulo']);
+            $recarga->load(['Filial.Empresa', 'Titulo.Portador']);
             return new BeeRecargaResource($recarga);
         } catch (\Exception $e) {
             DB::rollBack();

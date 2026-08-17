@@ -30,6 +30,11 @@ class BeeRecargaResource extends JsonResource
         $ret['titulo'] = $titulo ? $titulo->numero : null;
         $ret['titulo_estornado'] = $titulo ? $titulo->estornado : null;
 
+        // De onde o dinheiro sai. Mora no título (tblbeerecarga não guarda
+        // codportador de propósito — seria a mesma informação em dois lugares).
+        $portador = $titulo ? $titulo->getRelationValue('Portador') : null;
+        $ret['portador'] = $portador ? $portador->portador : null;
+
         return $ret;
     }
 }

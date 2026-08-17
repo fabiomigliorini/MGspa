@@ -21,7 +21,6 @@ const sRh = rhStore()
 const user = useAuthStore()
 
 const loading = ref(false)
-const gerando = ref(null)
 const empresas = ref([])
 const previas = ref({}) // { [codempresa]: linhas }
 const recargas = ref([])
@@ -39,9 +38,6 @@ const periodo = computed(
 // Prefixo próprio: o PeriodoDashboard usa `un-<codunidadenegocio>` e as duas
 // telas compartilham a querystring `?tab=` ao trocar de período.
 const nomeTab = (codempresa) => 'emp-' + codempresa
-const empresaAtiva = computed(() =>
-  empresas.value.find((e) => nomeTab(e.codempresa) === tab.value),
-)
 
 // --- COLUNAS ---
 // `tipo: 'numero'` já dá alinhamento à direita, formatação e o valor do rodapé.
@@ -80,12 +76,20 @@ const colunasLote = [
 ]
 
 // --- DERIVADOS ---
+// A prévia traz o quadro INTEIRO da empresa (é dela que sai a lista do diálogo,
+// e dá para recarregar quem ainda não tem acerto). Para contagens e totais o
+// que interessa é quem está envolvido em recarga — senão os cards contariam
+// gente que não tem nada a ver com o cartão.
 const previaDaEmpresa = (codempresa) => previas.value[codempresa] || []
+
+const envolvido = (l) => Number(l.extrato) !== 0 || Number(l.recarga) !== 0
+
+const envolvidosDaEmpresa = (codempresa) => previaDaEmpresa(codempresa).filter(envolvido)
 
 const soma = (linhas, campo) => linhas.reduce((s, l) => s + (Number(l[campo]) || 0), 0)
 
 const rodapeEmpresa = (codempresa) => {
-  const linhas = previaDaEmpresa(codempresa)
+  const linhas = envolvidosDaEmpresa(codempresa)
   if (!linhas.length) return []
   return [
     {
@@ -100,16 +104,16 @@ const rodapeEmpresa = (codempresa) => {
 }
 
 // Só o que ainda há para pagar. Sem o max, um adiantado de -1000 anularia dez
-// pendências de +100 e a tela diria "0,00" — e isto alimenta o badge da aba e o
-// `:disable` do botão, que por sua vez só considera saldo > 0.
+// pendências de +100 e o badge da aba diria "nada pendente".
 const saldoDaEmpresa = (codempresa) =>
   previaDaEmpresa(codempresa).reduce((s, l) => s + Math.max(Number(l.saldo) || 0, 0), 0)
 
 const recargasDaEmpresa = (codempresa) =>
   recargas.value.filter((r) => Number(r.codempresa) === Number(codempresa))
 
-// KPIs do período inteiro, como no PeriodoDashboard.
-const todasPrevias = computed(() => Object.values(previas.value).flat())
+// KPIs do período inteiro, como no PeriodoDashboard. Só os envolvidos: o quadro
+// inteiro só existe para alimentar o diálogo.
+const todasPrevias = computed(() => Object.values(previas.value).flat().filter(envolvido))
 const totalExtrato = computed(() => soma(todasPrevias.value, 'extrato'))
 const totalRecarregado = computed(() => soma(todasPrevias.value, 'recarga'))
 const totalSaldo = computed(() =>
@@ -178,27 +182,13 @@ const registrarLote = async (recarga, mensagem) => {
   await baixarPlanilha(recarga)
 }
 
-const gerar = async (empresa) => {
-  gerando.value = empresa.codempresa
-  try {
-    const ret = await sRh.gerarRecarga(route.params.codperiodo, {
-      codempresa: empresa.codempresa,
-    })
-    await registrarLote(ret.data.data, 'Recarga gerada para ' + empresa.empresa)
-  } catch (error) {
-    notificaErro(error, 'Erro ao gerar a recarga')
-  } finally {
-    gerando.value = null
-  }
-}
-
 const abrirAvulsa = (empresa, seed = []) => {
   empresaAvulsa.value = empresa
   seedAvulsa.value = seed
   dialogAvulsa.value = true
 }
 
-const avulsaGerada = (recarga) => registrarLote(recarga, 'Recarga avulsa gerada')
+const avulsaGerada = (recarga) => registrarLote(recarga, 'Recarga gerada')
 
 const baixarPlanilha = async (recarga) => {
   try {
@@ -290,7 +280,7 @@ onMounted(carregar)
 
       <div class="q-pa-md">
         <MgEmptyState v-if="!empresas.length" icon="credit_card">
-          Nenhum acerto com forma "Recarga Bee" neste período.
+          Nenhum colaborador neste período.
         </MgEmptyState>
 
         <template v-else>
@@ -352,7 +342,12 @@ onMounted(carregar)
               </q-card>
             </div>
             <div class="col-xs-4 col-sm">
-              <q-card bordered flat class="full-height" :class="totalSemCartao ? 'bg-orange-1' : ''">
+              <q-card
+                bordered
+                flat
+                class="full-height"
+                :class="totalSemCartao ? 'bg-orange-1' : ''"
+              >
                 <q-card-section class="text-center" style="cursor: help">
                   <div class="text-caption" :class="totalSemCartao ? 'text-orange-9' : 'text-grey'">
                     Sem Cartão
@@ -366,22 +361,6 @@ onMounted(carregar)
                 </q-card-section>
               </q-card>
             </div>
-          </div>
-
-          <!-- TOOLBAR DE AÇÕES DA EMPRESA ATIVA -->
-          <div class="row items-center q-gutter-sm q-mb-md" v-if="podeEditar">
-            <q-space />
-            <q-btn
-              flat
-              icon="credit_card"
-              :label="'Gerar Recarga ' + (empresaAtiva ? empresaAtiva.empresa : '')"
-              color="primary"
-              :disable="!empresaAtiva || !saldoDaEmpresa(empresaAtiva.codempresa)"
-              :loading="gerando === empresaAtiva?.codempresa"
-              @click="gerar(empresaAtiva)"
-            >
-              <q-tooltip>Cria o título de adiantamento à Beevale e baixa a planilha</q-tooltip>
-            </q-btn>
           </div>
 
           <!-- TABS: UMA POR EMPRESA MÃE -->
@@ -413,14 +392,17 @@ onMounted(carregar)
               :name="nomeTab(e.codempresa)"
               class="q-pa-none q-mt-md"
             >
-              <!-- COLABORADORES DA EMPRESA -->
+              <!-- AÇÃO DA EMPRESA + SITUAÇÃO (recolhida) -->
               <q-card bordered flat class="q-mb-md">
                 <q-card-section class="text-grey-9 text-overline row items-center">
                   {{ e.empresa }}
+                  <q-badge
+                    v-if="saldoDaEmpresa(e.codempresa)"
+                    color="orange"
+                    class="q-ml-sm"
+                    :label="formataNumero(saldoDaEmpresa(e.codempresa)) + ' a recarregar'"
+                  />
                   <q-space />
-                  <div class="text-caption text-grey-7">
-                    {{ previaDaEmpresa(e.codempresa).length }} colaboradores
-                  </div>
                   <q-btn
                     v-if="podeEditar"
                     flat
@@ -428,53 +410,59 @@ onMounted(carregar)
                     icon="add"
                     size="sm"
                     color="primary"
-                    class="q-ml-sm"
                     @click="abrirAvulsa(e)"
                   >
                     <q-tooltip>Nova recarga — escolher quem entra e com quanto</q-tooltip>
                   </q-btn>
                 </q-card-section>
 
-                <MgTabelaValores
-                  :colunas="colunas"
-                  :linhas="previaDaEmpresa(e.codempresa)"
-                  :rodape="rodapeEmpresa(e.codempresa)"
-                  chave="codperiodocolaborador"
-                  vazio="Nenhum acerto com forma &quot;Recarga Bee&quot; nesta empresa no período."
+                <q-expansion-item
+                  expand-separator
+                  :label="envolvidosDaEmpresa(e.codempresa).length + ' colaboradores na recarga'"
+                  header-class="text-grey-7"
                 >
-                  <template #celula-nome="{ linha }">
-                    {{ linha.nome }}
-                    <q-icon
-                      v-if="linha.sem_cartao"
-                      name="warning"
-                      color="orange-7"
-                      size="xs"
-                      class="q-ml-xs"
-                    >
-                      <q-tooltip>Sem cartão-benefício ativo cadastrado</q-tooltip>
-                    </q-icon>
-                    <q-tooltip v-else>
-                      {{ linha.filial }} — cartão {{ linha.cartao }}, val. {{ linha.validade }}
-                    </q-tooltip>
-                  </template>
-                  <template #celula-cpf="{ linha }">
-                    {{ formataCnpjCpf(linha.cpf, linha.fisica) }}
-                  </template>
-                  <template #celula-acoes="{ linha }">
-                    <q-btn
-                      v-if="linha.saldo > 0"
-                      flat
-                      round
-                      dense
-                      icon="add_card"
-                      size="sm"
-                      color="primary"
-                      @click="abrirAvulsa(e, [linha.codperiodocolaborador])"
-                    >
-                      <q-tooltip>Recarregar só {{ linha.nome }}</q-tooltip>
-                    </q-btn>
-                  </template>
-                </MgTabelaValores>
+                  <MgTabelaValores
+                    :colunas="colunas"
+                    :linhas="envolvidosDaEmpresa(e.codempresa)"
+                    :rodape="rodapeEmpresa(e.codempresa)"
+                    chave="codperiodocolaborador"
+                    vazio="Ninguém desta empresa tem acerto Bee ou recarga no período."
+                  >
+                    <template #celula-nome="{ linha }">
+                      {{ linha.nome }}
+                      <q-icon
+                        v-if="linha.sem_cartao"
+                        name="warning"
+                        color="orange-7"
+                        size="xs"
+                        class="q-ml-xs"
+                      >
+                        <q-tooltip>Sem cartão-benefício ativo cadastrado</q-tooltip>
+                      </q-icon>
+                      <q-tooltip v-else>
+                        {{ linha.filial }} — cartão {{ linha.cartao }}, val. {{ linha.validade }}
+                      </q-tooltip>
+                    </template>
+                    <template #celula-cpf="{ linha }">
+                      {{ formataCnpjCpf(linha.cpf, linha.fisica) }}
+                    </template>
+                    <!-- Sem v-if de saldo: recarregar de novo quem já foi pago é
+                       caso de uso (adiantamento), não erro. -->
+                    <template #celula-acoes="{ linha }">
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="add_card"
+                        size="sm"
+                        color="primary"
+                        @click="abrirAvulsa(e, [linha.codperiodocolaborador])"
+                      >
+                        <q-tooltip>Recarregar só {{ linha.nome }}</q-tooltip>
+                      </q-btn>
+                    </template>
+                  </MgTabelaValores>
+                </q-expansion-item>
               </q-card>
 
               <!-- LOTES JÁ GERADOS -->
@@ -495,6 +483,10 @@ onMounted(carregar)
                   />
                   <q-badge outline color="grey-7" class="q-ml-sm">
                     Título {{ r.titulo }} — {{ r.filial }}
+                  </q-badge>
+                  <q-badge v-if="r.portador" outline color="blue-8" class="q-ml-sm">
+                    {{ r.portador }}
+                    <q-tooltip>Portador de onde o adiantamento sai</q-tooltip>
                   </q-badge>
                   <q-space />
                   <div class="text-h6 text-grey-9 q-mr-md">{{ formataNumero(r.valor) }}</div>

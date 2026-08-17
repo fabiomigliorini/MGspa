@@ -4,7 +4,9 @@ namespace Mg\Rh;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mg\Filial\Filial;
 use Mg\Pessoa\PessoaCartao;
+use Mg\Portador\Portador;
 use Mg\Titulo\TituloService;
 
 /**
@@ -33,16 +35,15 @@ class BeeRecargaService
     const CODCONTACONTABIL = 312;      // Vale Alimentacao Colaboradores
 
     /**
-     * Empresas mãe com acerto Bee no período — uma tab da tela por linha daqui.
-     * Empresa sem recarga no período não vira tab.
+     * Empresas mãe com colaborador no período — uma tab da tela por linha daqui.
      *
      * A empresa vem da filial do VÍNCULO (tblcolaborador.codfilial ->
      * tblfilial.codempresa), não da unidade de negócio onde a pessoa trabalha.
      *
-     * A aba sobrevive a estar totalmente recarregada: o critério é o ACERTO
-     * (tblperiodocolaboradoracerto), que continua lá depois de gerar o lote —
-     * quem zera é o saldo, calculado na prévia. Assim o histórico do lote
-     * continua alcançável.
+     * Parte do VÍNCULO, não do acerto: como dá para recarregar quem ainda não
+     * tem acerto Bee, a aba precisa existir antes de existir acerto nenhum —
+     * senão não haveria por onde começar. `total` continua sendo o extrato dos
+     * acertos Bee (o que a empresa deve pelo cartão), e vem zero quando não há.
      */
     public static function empresas(int $codperiodo): array
     {
@@ -50,16 +51,17 @@ class BeeRecargaService
             SELECT
                 e.codempresa,
                 e.empresa,
-                SUM(ABS(a.saldo)) AS total
-            FROM tblperiodocolaboradoracerto a
-            JOIN tblperiodocolaborador pc ON pc.codperiodocolaborador = a.codperiodocolaborador
-            JOIN tblcolaborador col       ON col.codcolaborador = pc.codcolaborador
-            JOIN tblfilial f              ON f.codfilial = col.codfilial
-            JOIN tblempresa e             ON e.codempresa = f.codempresa
+                COALESCE(SUM(ABS(a.saldo)), 0) AS total
+            FROM tblperiodocolaborador pc
+            JOIN tblcolaborador col ON col.codcolaborador = pc.codcolaborador
+            JOIN tblfilial f        ON f.codfilial = col.codfilial
+            JOIN tblempresa e       ON e.codempresa = f.codempresa
+            LEFT JOIN tblperiodocolaboradoracerto a
+                   ON a.codperiodocolaborador = pc.codperiodocolaborador
+                  AND a.inativo IS NULL
+                  AND a.forma = :forma
+                  AND a.saldo <> 0
             WHERE pc.codperiodo = :codperiodo
-              AND a.inativo IS NULL
-              AND a.forma = :forma
-              AND a.saldo <> 0
             GROUP BY e.codempresa, e.empresa
             ORDER BY e.empresa
         ", [
@@ -69,7 +71,14 @@ class BeeRecargaService
     }
 
     /**
-     * Situação de recarga de cada colaborador da empresa.
+     * Situação de recarga de cada colaborador da empresa — TODO o quadro do
+     * período, tenha acerto Bee ou não.
+     *
+     * Lista todo mundo porque é daqui que sai a lista do diálogo de nova
+     * recarga, e dá para recarregar quem ainda não tem acerto (adiantamento).
+     * Quem não tem acerto nem recarga vem com os três valores zerados; é a tela
+     * que separa "envolvido na recarga" (extrato ou recarga <> 0) do resto, para
+     * os totais não contarem o quadro inteiro.
      *
      * Três valores por linha:
      *   extrato = a que ele tem direito no período (o que a tela de acerto
@@ -132,9 +141,6 @@ class BeeRecargaService
             ) r ON true
             WHERE pc.codperiodo = :codperiodo
               AND f.codempresa = :codempresa
-              -- Tem acerto Bee OU tem recarga viva. A segunda metade é o que
-              -- impede uma recarga já paga de sumir da tela.
-              AND (a.codperiodocolaboradoracerto IS NOT NULL OR r.recarregado > 0)
             GROUP BY pc.codperiodocolaborador, p.codpessoa, p.pessoa, p.cnpj, p.fisica,
                      s.codsetor, s.setor, f.codfilial, f.filial
             ORDER BY s.setor NULLS FIRST, p.pessoa
@@ -207,7 +213,8 @@ class BeeRecargaService
         int $codempresa,
         ?array $itens = null,
         ?string $dia = null,
-        ?string $observacao = null
+        ?string $observacao = null,
+        ?int $codportador = null
     ): BeeRecarga {
         // Serializa gerações concorrentes do mesmo período (double-submit, duas
         // abas). Sem isto, duas transações leriam a mesma prévia e criariam dois
@@ -238,13 +245,25 @@ class BeeRecargaService
 
         $valor = array_sum(array_column($linhas, 'valor'));
         $hoje = Carbon::today();
-        $codfilial = static::codfilialDoTitulo($linhas);
+
+        // O portador escolhido manda na filial do título quando ele tem uma:
+        // dizer "sai da conta do Depósito" e lançar o título no Botânico seria
+        // incoerente, e o TituloService::atualizar recusaria qualquer edição
+        // depois. Portador sem filial (Carteira, Programação Pagamentos) cai na
+        // heurística do maior valor.
+        $portador = static::portadorValidado($codportador, $codempresa);
+        $codfilial = $portador && $portador->codfilial
+            ? (int) $portador->codfilial
+            : static::codfilialDoTitulo($linhas);
 
         // `dia` é quando o saldo tem que estar no cartão; as datas do título
         // continuam sendo hoje, porque o adiantamento à Beevale é lançado agora.
+        // O título nasce EM ABERTO: o portador diz de onde o dinheiro vai sair,
+        // e a baixa continua sendo do Financeiro, pela tela de Liquidação.
         $titulo = TituloService::criar([
             'codtipotitulo' => static::CODTIPOTITULO_ADTO,
             'codfilial' => $codfilial,
+            'codportador' => $portador ? $portador->codportador : null,
             'codpessoa' => static::CODPESSOA_BEEVALE,
             'codcontacontabil' => static::CODCONTACONTABIL,
             'valor' => $valor,
@@ -294,6 +313,43 @@ class BeeRecargaService
      * também a Fazenda, cuja operação está em Renascer (402) e não na filial
      * homônima 401 — uma heurística de "menor código" erraria esse caso.
      */
+    /**
+     * Portador do título, quando o RH escolheu um.
+     *
+     * O TituloService só valida filial x portador no atualizar(), não no criar()
+     * — então a validação tem que vir daqui, senão o lote nasce num estado que a
+     * tela de títulos se recusa a salvar depois.
+     *
+     * A trava que importa é a EMPRESA: o lote é de um CNPJ só, e um portador da
+     * filial errada jogaria o adiantamento na empresa errada. Portador sem
+     * filial (Carteira, Programação Pagamentos) serve a qualquer uma.
+     */
+    protected static function portadorValidado(?int $codportador, int $codempresa): ?Portador
+    {
+        if (empty($codportador)) {
+            return null;
+        }
+
+        $portador = Portador::find($codportador);
+        if (!$portador) {
+            throw new \Exception('Portador não encontrado.');
+        }
+        if ($portador->inativo) {
+            throw new \Exception("Portador {$portador->portador} está inativo.");
+        }
+
+        if ($portador->codfilial) {
+            $filial = Filial::find($portador->codfilial);
+            if (!$filial || (int) $filial->codempresa !== $codempresa) {
+                throw new \Exception(
+                    "Portador {$portador->portador} é de outra empresa — o lote é de um CNPJ só."
+                );
+            }
+        }
+
+        return $portador;
+    }
+
     protected static function codfilialDoTitulo(array $linhas): int
     {
         $porFilial = [];
@@ -355,17 +411,11 @@ class BeeRecargaService
                 continue;
             }
 
-            // Tolerância de meio centavo, como no EfetivarAcertoRequest: os dois
-            // lados arredondam em 2 casas e a comparação não pode falhar por isso.
-            if ($valor > $linha->saldo + 0.005) {
-                $erros[] = sprintf(
-                    '%s: saldo disponível %s, solicitado %s. A tela está desatualizada — recarregue.',
-                    $linha->nome,
-                    number_format($linha->saldo, 2, ',', '.'),
-                    number_format($valor, 2, ',', '.')
-                );
-                continue;
-            }
+            // Não há teto: recarregar acima do extrato é adiantamento, e o RH
+            // pode pagar de novo depois do acerto fechado. O excedente aparece
+            // como saldo NEGATIVO na prévia — quem confere o mês vê "Adiantado"
+            // em vez de nada. Quem decide é a tela, que mostra o saldo de agora
+            // ao lado de cada valor digitado.
 
             $l = clone $linha;
             $l->valor = $valor;

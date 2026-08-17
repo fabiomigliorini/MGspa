@@ -23,6 +23,9 @@ class GerarRecargaRequest extends FormRequest
     {
         return [
             'codempresa' => 'required|integer|exists:tblempresa,codempresa',
+            // Nulo = título sem portador, como era antes. A checagem de empresa
+            // e de inativo é regra de negócio e mora no service.
+            'codportador' => 'nullable|integer|exists:tblportador,codportador',
             'dia' => 'nullable|date',
             'observacao' => 'nullable|string|max:200',
             'itens' => 'nullable|array|min:1',
