@@ -65,8 +65,20 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
             'erro' => 0,
         ];
 
+        // Em producao sao dezenas de milhares de arquivos: listar um por um afoga o terminal.
+        // O detalhe fica atras de -v; sem ele, so o progresso e as anomalias (que sao poucas).
+        $verbose = $this->output->isVerbose();
+
         foreach ($this->arquivosCancelados($raiz) as $path) {
             $stats['varridos']++;
+
+            if ($stats['varridos'] % 500 === 0) {
+                $this->line(sprintf(
+                    '  ... %d varridos, %d corrigidos',
+                    $stats['varridos'],
+                    $stats['corrigidos']
+                ));
+            }
 
             $atual = @file_get_contents($path);
             if ($atual === false) {
