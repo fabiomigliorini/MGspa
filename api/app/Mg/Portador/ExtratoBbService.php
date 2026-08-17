@@ -19,7 +19,7 @@ class ExtratoBbService
         $falhas = 0;
         //  dd($dataInicioSolicitacao, $dataFimSolicitacao);
         do {
-            $bbtoken = AuthService::verificaTokenValido($portador);
+            $bbtoken = AuthService::verificaTokenValido($portador, AuthService::SCOPE_EXTRATO);
 
             $extrato = ExtratoBbApiService::contaCorrente(
                 $bbtoken,
