@@ -18,6 +18,7 @@ const menuGroups = [
       { label: 'Início', icon: 'home', color: 'brown', to: '/' },
       { label: 'Notas', icon: 'description', color: 'blue', to: '/nota' },
       { label: 'NFe Terceiro', icon: 'move_to_inbox', color: 'orange', to: '/nfe-terceiro' },
+      { label: 'Inutilizações', icon: 'block', color: 'red', to: '/inutilizacao' },
     ],
   },
   {

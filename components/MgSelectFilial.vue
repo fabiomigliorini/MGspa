@@ -10,6 +10,9 @@ const props = defineProps({
   label: { type: String, default: 'Filial' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // Só as filiais que emitem documento fiscal — quem não emite não pode, por exemplo,
+  // inutilizar numeração, e oferecer a opção só gera erro lá na frente.
+  emiteNfe: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 
@@ -20,7 +23,10 @@ const ENDPOINT = 'v1/select/filial'
 const opcoes = ref([])
 const carregando = ref(false)
 
-const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
+const permitidos = computed(() => {
+  const itens = cache.entities[ENTITY]?.items || []
+  return props.emiteNfe ? itens.filter((i) => i.emitenfe) : itens
+})
 
 async function carregar() {
   carregando.value = true

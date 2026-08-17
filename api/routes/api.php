@@ -730,6 +730,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // Inutilizacao de numeracao (por FAIXA)
     Route::get('inutilizacao', [\Mg\Inutilizacao\InutilizacaoController::class, 'index']);
+    Route::get('inutilizacao/ano', [\Mg\Inutilizacao\InutilizacaoController::class, 'anos']);
+    Route::get('inutilizacao/filial', [\Mg\Inutilizacao\InutilizacaoController::class, 'filiais']);
     Route::post('inutilizacao', [\Mg\Inutilizacao\InutilizacaoController::class, 'store']);
     Route::get('inutilizacao/{codinutilizacao}', [\Mg\Inutilizacao\InutilizacaoController::class, 'show'])->whereNumber('codinutilizacao');
     Route::get('inutilizacao/{codinutilizacao}/xml', [\Mg\Inutilizacao\InutilizacaoController::class, 'xml'])->whereNumber('codinutilizacao');
