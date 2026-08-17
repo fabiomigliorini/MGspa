@@ -56,5 +56,10 @@ export const extrairErro = (error, fallback) => {
     const primeiro = Object.values(data.errors).flat()[0]
     if (primeiro) return primeiro
   }
+  // Os controllers do RH respondem { erro: '...' } em 422 — sem esta linha toda
+  // mensagem de regra de negócio do módulo virava o fallback genérico. O typeof
+  // é porque dois endpoints fora do RH usam `erro` como flag booleana/objeto em
+  // respostas de sucesso (206/200), que nunca chegam aqui mas não custam nada.
+  if (typeof data.erro === 'string') return data.erro
   return data.mensagem || data.message || fallback
 }

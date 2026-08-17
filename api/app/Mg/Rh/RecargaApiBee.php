@@ -11,17 +11,17 @@ namespace Mg\Rh;
  *   - Cadastro de beneficiário por CPF (garantir que exista antes de recarregar).
  *   - Geração do pagamento/recarga em lote e retorno do protocolo.
  *
- * A fonte dos valores continua sendo
- * AcertoRelatorioFolhaPdf::linhasRecargaBee($codperiodo, $codempresa)
- * (mesmo layout CPF|Valor já usado por AcertoPlanilhaCartaoXlsx).
+ * O lote já chega persistido (com título de adiantamento e itens gravados), e a
+ * fonte dos valores é BeeRecargaService::linhasDoLote($recarga->codbeerecarga)
+ * — o mesmo layout CPF|Valor já usado por AcertoPlanilhaCartaoXlsx.
  */
 class RecargaApiBee implements RecargaCartaoDriver
 {
-    public function gerarRecarga(int $codperiodo, int $codempresa): string
+    public function gerarRecarga(BeeRecarga $recarga): string
     {
         // TODO: autenticar (usuário + token) → cadastrar beneficiários por CPF →
         //       gerar recarga em lote a partir de
-        //       AcertoRelatorioFolhaPdf::linhasRecargaBee($codperiodo, $codempresa)
+        //       BeeRecargaService::linhasDoLote($recarga->codbeerecarga)
         //       → devolver o protocolo/retorno da API.
         throw new \RuntimeException(
             'Integração Bee ainda não implementada — pendente de credenciais (usuário/token) da Bee.'

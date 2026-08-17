@@ -123,6 +123,13 @@ const menuGroups = computed(() => {
           hide: !user.temPermissao('Recursos Humanos'),
         },
         {
+          label: 'Recarga Bee',
+          icon: 'credit_card',
+          color: 'amber-8',
+          to: { name: 'rhRecargaIndex' },
+          hide: !user.temPermissao('Recursos Humanos'),
+        },
+        {
           label: 'Rubricas',
           icon: 'receipt_long',
           color: 'amber-8',

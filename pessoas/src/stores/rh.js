@@ -385,6 +385,55 @@ export const rhStore = defineStore('rh', {
       return ret
     },
 
+    // --- RECARGA BEE ---
+
+    async getEmpresasRecarga(codperiodo) {
+      const ret = await api.get('v1/rh/periodo/' + codperiodo + '/recarga/empresas')
+      return ret
+    },
+
+    async getPreviaRecarga(codperiodo, codempresa) {
+      const ret = await api.get('v1/rh/periodo/' + codperiodo + '/recarga/previa', {
+        params: { codempresa },
+      })
+      return ret
+    },
+
+    async getRecargas(codperiodo) {
+      const ret = await api.get('v1/rh/periodo/' + codperiodo + '/recarga')
+      return ret
+    },
+
+    // Sem `itens` gera o lote do mês (todos com saldo, pelo saldo cheio); com
+    // `itens` ([{codperiodocolaborador, valor}]) gera o lote avulso. O servidor
+    // revalida cada valor contra o saldo do banco — nunca mandar saldo daqui.
+    async gerarRecarga(codperiodo, payload) {
+      const ret = await api.post('v1/rh/periodo/' + codperiodo + '/recarga', payload)
+      return ret
+    },
+
+    async baixarPlanilhaRecarga(codperiodo, codbeerecarga) {
+      const ret = await api.get(
+        'v1/rh/periodo/' + codperiodo + '/recarga/' + codbeerecarga + '/planilha',
+        { responseType: 'blob' },
+      )
+      return ret
+    },
+
+    async confirmarRecarga(codperiodo, codbeerecarga) {
+      const ret = await api.post(
+        'v1/rh/periodo/' + codperiodo + '/recarga/' + codbeerecarga + '/confirmar',
+      )
+      return ret
+    },
+
+    async inativarRecarga(codperiodo, codbeerecarga) {
+      const ret = await api.post(
+        'v1/rh/periodo/' + codperiodo + '/recarga/' + codbeerecarga + '/inativo',
+      )
+      return ret
+    },
+
     // --- MEU PAINEL ---
 
     async getMeuPainelPeriodos() {

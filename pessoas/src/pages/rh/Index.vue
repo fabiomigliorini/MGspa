@@ -99,6 +99,11 @@ const periodoSelecionado = (codperiodo) => {
 // Mantém a tela atual (aba de filial, colaborador, extrato) no período destino.
 const { navegando, irParaPeriodo: selecionarPeriodo } = useNavegacaoPeriodo()
 
+// Rota sem período (entrada pelo menu) -> tela equivalente no período aberto.
+const DESTINO_SEM_PERIODO = {
+  rhRecargaIndex: 'rhRecarga',
+}
+
 const carregar = async () => {
   try {
     await sRh.getPeriodos()
@@ -106,7 +111,7 @@ const carregar = async () => {
       const aberto = sRh.periodos.find((p) => p.status === 'A')
       const periodo = aberto || sRh.periodos[0]
       router.replace({
-        name: 'rhDashboard',
+        name: DESTINO_SEM_PERIODO[route.name] || 'rhDashboard',
         params: { codperiodo: periodo.codperiodo },
       })
     }

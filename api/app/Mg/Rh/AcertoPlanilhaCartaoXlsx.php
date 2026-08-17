@@ -11,27 +11,30 @@ class AcertoPlanilhaCartaoXlsx implements RecargaCartaoDriver
     /**
      * Implementação "planilha" do RecargaCartaoDriver — devolve os bytes do
      * .xlsx CPF|Valor. Delega para o gerador estático abaixo (mantido para
-     * compatibilidade com AcertoController@planilhaCartao).
+     * compatibilidade com BeeRecargaController@planilha).
      */
-    public function gerarRecarga(int $codperiodo, int $codempresa): string
+    public function gerarRecarga(BeeRecarga $recarga): string
     {
-        return static::gerar($codperiodo, $codempresa);
+        return static::gerar($recarga->codbeerecarga);
     }
 
     /**
-     * Gera a planilha (XLSX) de reposição de saldo do cartão-benefício de UMA empresa mãe.
+     * Gera a planilha (XLSX) de reposição de saldo de UM lote de recarga.
      *
-     * Valor = eventos de acerto com forma "Recarga Bee" (B) do período. Fonte
-     * compartilhada com a prévia via AcertoRelatorioFolhaPdf::linhasRecargaBee().
+     * Lê os ITENS gravados do lote (BeeRecargaService::linhasDaPlanilha), nunca
+     * o acerto atual: um arquivo rebaixado meses depois reproduz exatamente o
+     * que foi enviado à operadora. É a versão agrupada por CPF — quem tem dois
+     * vínculos sai numa linha só, porque a operadora recusa CPF repetido.
      *
      * Layout exigido pela operadora: cabeçalho "CPF" | "Valor", CPF com máscara
-     * (###.###.###-##) e valor com vírgula decimal (100,00).
+     * (###.###.###-##). O valor vai como NÚMERO, com formato de exibição
+     * pt-BR — como texto ("100,00") o Excel não somava a coluna.
      *
      * @return string bytes do arquivo .xlsx
      */
-    public static function gerar(int $codperiodo, int $codempresa): string
+    public static function gerar(int $codbeerecarga): string
     {
-        $linhas = AcertoRelatorioFolhaPdf::linhasRecargaBee($codperiodo, $codempresa);
+        $linhas = BeeRecargaService::linhasDaPlanilha($codbeerecarga);
 
         \PhpOffice\PhpSpreadsheet\Settings::setLocale('pt_br');
         $spreadsheet = new Spreadsheet();
@@ -46,8 +49,14 @@ class AcertoPlanilhaCartaoXlsx implements RecargaCartaoDriver
         foreach ($linhas as $l) {
             $cpf = $l->fisica ? formataCpf(sprintf('%.0f', (float) $l->cpf)) : formataCnpj(sprintf('%.0f', (float) $l->cpf));
             $sheet->setCellValueExplicit("A{$linha}", $cpf, DataType::TYPE_STRING);
-            $sheet->setCellValueExplicit("B{$linha}", number_format((float) $l->valor, 2, ',', ''), DataType::TYPE_STRING);
+            $sheet->setCellValue("B{$linha}", (float) $l->valor);
             $linha++;
+        }
+
+        // Célula numérica + máscara: soma no Excel e continua exibindo 1.234,56.
+        if ($linha > 2) {
+            $ultima = $linha - 1;
+            $sheet->getStyle("B2:B{$ultima}")->getNumberFormat()->setFormatCode('#,##0.00');
         }
 
         $sheet->getColumnDimension('A')->setWidth(18);

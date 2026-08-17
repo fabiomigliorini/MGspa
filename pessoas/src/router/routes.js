@@ -220,6 +220,14 @@ const routes = [
             name: 'rhIndicadorExtrato',
             component: () => import('pages/rh/IndicadorExtrato.vue'),
           },
+          {
+            path: ':codperiodo/recarga',
+            name: 'rhRecarga',
+            component: () => import('pages/rh/RecargaDashboard.vue'),
+          },
+          // Entrada pelo menu, sem período: o Index.vue redireciona para
+          // `rhRecarga` no período aberto (ver carregar()).
+          { path: 'recarga', name: 'rhRecargaIndex' },
         ],
       },
 

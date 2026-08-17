@@ -345,33 +345,6 @@ const imprimirRecibosPeriodo = () => {
   )
 }
 
-// Empresas (por CNPJ) vindas do resumo — filial do colaborador → empresa.
-const empresasCartao = computed(() =>
-  (dash.value.empresascartao || []).map((e) => ({ cod: e.codempresa, nome: e.empresa })),
-)
-
-const baixarPlanilhaCartao = async (empresa) => {
-  try {
-    const ret = await api.get(
-      'v1/rh/periodo/' + route.params.codperiodo + '/acertos/planilha-cartao',
-      { params: { codempresa: empresa.cod }, responseType: 'blob' },
-    )
-    const url = URL.createObjectURL(new Blob([ret.data]))
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'cartao-' + empresa.nome.toLowerCase() + '-' + route.params.codperiodo + '.xlsx'
-    a.click()
-    URL.revokeObjectURL(url)
-  } catch {
-    $q.notify({
-      color: 'red-5',
-      textColor: 'white',
-      icon: 'error',
-      message: 'Erro ao gerar planilha ' + empresa.nome,
-    })
-  }
-}
-
 // --- LIFECYCLE ---
 
 const carregar = async (codperiodo) => {
@@ -780,14 +753,14 @@ watch(tab, (novoTab) => {
             @click="relatorioFolha()"
           />
           <q-btn
-            v-for="e in empresasCartao"
-            :key="e.cod"
             flat
             icon="credit_card"
-            :label="'Cartão ' + e.nome"
+            label="Gerar Recarga"
             color="grey-7"
-            @click="baixarPlanilhaCartao(e)"
-          />
+            :to="{ name: 'rhRecarga', params: { codperiodo: route.params.codperiodo } }"
+          >
+            <q-tooltip>Recarga do cartão-benefício Bee</q-tooltip>
+          </q-btn>
         </div>
 
         <!-- BARRA DE REPROCESSAMENTO -->

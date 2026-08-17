@@ -131,11 +131,14 @@ export function useNavegacaoPeriodo() {
   /** Rota equivalente à atual, no período destino. */
   const resolverRotaNoPeriodo = async (codperiodoDestino) => {
     switch (route.name) {
+      // A aba é `un-<codunidadenegocio>` no dashboard e `emp-<codempresa>` na
+      // recarga — nenhuma das duas é period-scoped, então preserva direto, sem
+      // request. `route.name` devolve o usuário para a MESMA tela: sem isso a
+      // Recarga cairia no `default` e iria pro dashboard a cada troca de período.
       case 'rhDashboard':
-        // A aba é `un-<codunidadenegocio>`, e unidade não é period-scoped —
-        // preserva direto, sem request.
+      case 'rhRecarga':
         return {
-          name: 'rhDashboard',
+          name: route.name,
           params: { codperiodo: codperiodoDestino },
           query: route.query.tab ? { tab: route.query.tab } : {},
         }
