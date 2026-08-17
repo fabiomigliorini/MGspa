@@ -114,7 +114,7 @@ class BoletoBbService
         }
 
         // verifica se tem token valido
-        $bbtoken = AuthService::verificaTokenValido($titulo->Portador, AuthService::SCOPE_COBRANCA);
+        $bbtoken = AuthService::verificaTokenValido($titulo->Portador);
 
         // monta variaveis com dados da cobranca
         $endereco = $titulo->Pessoa->enderecocobranca;
@@ -208,7 +208,7 @@ class BoletoBbService
      */
     public static function consultar(TituloBoleto $tituloBoleto)
     {
-        $bbtoken = AuthService::verificaTokenValido($tituloBoleto->Portador, AuthService::SCOPE_COBRANCA);
+        $bbtoken = AuthService::verificaTokenValido($tituloBoleto->Portador);
         $ret = BoletoBbApiService::consultar(
             $bbtoken,
             $tituloBoleto->Portador->bbdevappkey,
@@ -257,7 +257,7 @@ class BoletoBbService
      */
     public static function baixar(TituloBoleto $tituloBoleto)
     {
-        $bbtoken = AuthService::verificaTokenValido($tituloBoleto->Portador, AuthService::SCOPE_COBRANCA);
+        $bbtoken = AuthService::verificaTokenValido($tituloBoleto->Portador);
         $ret = BoletoBbApiService::baixar(
             $bbtoken,
             $tituloBoleto->Portador->bbdevappkey,
@@ -453,109 +453,98 @@ class BoletoBbService
         // percorre portadores
         foreach ($portadores as $portador) {
 
-            // a falha de um portador nao pode abortar a rodada dos demais
-            try {
+            // inicializa indice de consulta
+            $indice = 0;
 
-                // inicializa indice de consulta
-                $indice = 0;
+            // percorre enquanto indicador de continuidade = 'S'
+            do {
 
-                // percorre enquanto indicador de continuidade = 'S'
-                do {
+                // loga pesquisa
+                Log::info("Boleto BB - Consultando Liquidados - Portador #{$portador->codportador} - Indice {$indice}");
 
-                    // loga pesquisa
-                    Log::info("Boleto BB - Consultando Liquidados - Portador #{$portador->codportador} - Indice {$indice}");
+                // autentica na API
+                $bbtoken = AuthService::verificaTokenValido($portador);
 
-                    // autentica na API
-                    $bbtoken = AuthService::verificaTokenValido($portador, AuthService::SCOPE_COBRANCA);
+                // pega listagem dos boletos baixados / pagos
+                $listagem = BoletoBbApiService::consultarListagem(
+                    $bbtoken,
+                    $portador->bbdevappkey,
+                    'B',
+                    $portador->agencia,
+                    $portador->conta,
+                    $dataInicioMovimento,
+                    $dataFimMovimento,
+                    $indice
+                );
 
-                    // pega listagem dos boletos baixados / pagos
-                    $listagem = BoletoBbApiService::consultarListagem(
-                        $bbtoken,
-                        $portador->bbdevappkey,
-                        'B',
-                        $portador->agencia,
-                        $portador->conta,
-                        $dataInicioMovimento,
-                        $dataFimMovimento,
-                        $indice
-                    );
+                // se listagem vazia  cai fora
+                if ($listagem == null) {
+                    break;
+                }
 
-                    // se listagem vazia  cai fora
-                    if ($listagem == null) {
+                // Formato novo listagem vazia -- Outubro/2020
+                //array:1 [
+                //  "erros" => array:1 [
+                //      0 => array:4 [
+                //          "codigoMensagem" => "4722678"
+                //          "versaoMensagem" => "1"
+                //          "codigoRetorno" => "1047"
+                //          "textoMensagem" => "Não existem boletos a serem listados."
+                //      ]
+                //  ]
+                //]
+                if (isset($listagem['erros'][0]['codigoRetorno'])) {
+                    if ($listagem['erros'][0]['codigoRetorno'] == '1047') {
                         break;
                     }
+                }
 
-                    // Formato novo listagem vazia -- Outubro/2020
-                    //array:1 [
-                    //  "erros" => array:1 [
-                    //      0 => array:4 [
-                    //          "codigoMensagem" => "4722678"
-                    //          "versaoMensagem" => "1"
-                    //          "codigoRetorno" => "1047"
-                    //          "textoMensagem" => "Não existem boletos a serem listados."
-                    //      ]
-                    //  ]
-                    //]
-                    if (isset($listagem['erros'][0]['codigoRetorno'])) {
-                        if ($listagem['erros'][0]['codigoRetorno'] == '1047') {
-                            break;
-                        }
+                // precorre lsitagem de boletos
+                foreach ($listagem['boletos'] as $bol) {
+
+                    // procura registro pelo nosso numero
+                    $tituloBoleto = TituloBoleto::where([
+                        'nossonumero' => $bol['numeroBoletoBB'],
+                        'codportador' => $portador->codportador
+                    ])->first();
+
+                    // se nao encontrou ignora
+                    if (!$tituloBoleto) {
+                        continue;
                     }
 
-                    // precorre lsitagem de boletos
-                    foreach ($listagem['boletos'] as $bol) {
-
-                        // procura registro pelo nosso numero
-                        $tituloBoleto = TituloBoleto::where([
-                            'nossonumero' => $bol['numeroBoletoBB'],
-                            'codportador' => $portador->codportador
-                        ])->first();
-
-                        // se nao encontrou ignora
-                        if (!$tituloBoleto) {
-                            continue;
-                        }
-
-                        // se tem valor pago != do registrado no banco
-                        // ou se o estado do boleto e diferente
-                        if (
-                            $tituloBoleto->valorpago != $bol['valorPago'] ||
-                            $tituloBoleto->estadotitulocobranca != $bol['codigoEstadoTituloCobranca']
-                        ) {
-                            // consulta o boleto
-                            Log::info("Boleto BB - Consultando TituloBoleto #{$tituloBoleto->codtituloboleto}");
-                            $tituloBoleto = static::consultar($tituloBoleto);
+                    // se tem valor pago != do registrado no banco
+                    // ou se o estado do boleto e diferente
+                    if (
+                        $tituloBoleto->valorpago != $bol['valorPago'] ||
+                        $tituloBoleto->estadotitulocobranca != $bol['codigoEstadoTituloCobranca']
+                    ) {
+                        // consulta o boleto
+                        Log::info("Boleto BB - Consultando TituloBoleto #{$tituloBoleto->codtituloboleto}");
+                        $tituloBoleto = static::consultar($tituloBoleto);
+                    } else {
+                        // persiste os dados que api retornou
+                        $dataCredito = $bol['dataCredito'];
+                        if ($dataCredito == '01.01.0001') {
+                            $dataCredito = null;
                         } else {
-                            // persiste os dados que api retornou
-                            $dataCredito = $bol['dataCredito'];
-                            if ($dataCredito == '01.01.0001') {
-                                $dataCredito = null;
-                            } else {
-                                $dataCredito = Carbon::parse($dataCredito);
-                            }
-                            $tituloBoleto = $tituloBoleto->update([
-                                'dataregistro' => Carbon::parse($bol['dataRegistro']),
-                                'vencimento' => Carbon::parse($bol['dataVencimento']),
-                                'valororiginal' => $bol['valorOriginal'],
-                                'valoratual' => $bol['valorAtual'],
-                                'datacredito' => $dataCredito,
-                            ]);
+                            $dataCredito = Carbon::parse($dataCredito);
                         }
+                        $tituloBoleto = $tituloBoleto->update([
+                            'dataregistro' => Carbon::parse($bol['dataRegistro']),
+                            'vencimento' => Carbon::parse($bol['dataVencimento']),
+                            'valororiginal' => $bol['valorOriginal'],
+                            'valoratual' => $bol['valorAtual'],
+                            'datacredito' => $dataCredito,
+                        ]);
                     }
+                }
 
-                    // pega o indice para continuar consulta
-                    $indice = $listagem['proximoIndice'];
+                // pega o indice para continuar consulta
+                $indice = $listagem['proximoIndice'];
 
-                    // repete enquanto api retornar indicadorContinuidade
-                } while ($listagem['indicadorContinuidade'] == 'S');
-
-            } catch (\Exception $e) {
-                Log::error(
-                    "Boleto BB - Erro ao consultar liquidados do Portador "
-                    . "#{$portador->codportador} ({$portador->portador}): {$e->getMessage()}"
-                );
-                continue;
-            }
+                // repete enquanto api retornar indicadorContinuidade
+            } while ($listagem['indicadorContinuidade'] == 'S');
         }
     }
 }

@@ -16,7 +16,7 @@ class PixBbService
     public static function transmitirPixCob(PixCob $pixCob)
     {
         $filial = CertificadoService::filialDoPortador($pixCob->Portador);
-        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador, AuthService::SCOPE_PIX);
+        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::transmitirPixCob(
             $filial,
             $bbtoken,
@@ -52,7 +52,7 @@ class PixBbService
     public static function consultarPixCob(PixCob $pixCob)
     {
         $filial = CertificadoService::filialDoPortador($pixCob->Portador);
-        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador, AuthService::SCOPE_PIX);
+        $bbtoken = AuthService::verificaTokenValido($pixCob->Portador);
         $dadosPix = PixBbApiService::consultarPixCob(
             $filial,
             $bbtoken,
@@ -94,7 +94,7 @@ class PixBbService
         int $pagina = 0
     ) {
         $filial = CertificadoService::filialDoPortador($portador);
-        $bbtoken = AuthService::verificaTokenValido($portador, AuthService::SCOPE_PIX);
+        $bbtoken = AuthService::verificaTokenValido($portador);
 
         $strInicio = null;
         if (!empty($inicio)) {
