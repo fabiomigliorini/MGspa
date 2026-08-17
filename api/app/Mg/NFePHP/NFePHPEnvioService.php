@@ -5,30 +5,29 @@ namespace Mg\NFePHP;
 use Illuminate\Support\Facades\Cache;
 
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
 
 /**
- * Envio de NFe assíncrono: o "supermétodo" que faz criar + enviar.
+ * Transmissão da NFe à SEFAZ, assíncrona.
  *
- * O e-mail saiu daqui: quem despacha o NFePHPMailJob é o vincularProtocoloAutorizacao do
+ * Faz UMA coisa: pega o XML assinado que já está em disco e o entrega à SEFAZ. Não cria, não
+ * recria, não decide tpEmis — isso é do /criar. Quem encadeia criar + transmitir é o botão
+ * Emitir, no front, que também é quem sabe que uma NFC-e em contingência off-line simplesmente
+ * não passa por aqui (o robô de pendentes transmite depois, dentro das 24h).
+ *
+ * O e-mail não sai daqui: quem despacha o NFePHPMailJob é o vincularProtocoloAutorizacao do
  * NFePHPService, o único ponto onde a nota passa a autorizada — assim o e-mail também sai
  * para quem autoriza por fora deste job (botão Consultar, robô de pendentes, rotas legadas).
  *
  * POR QUE ASSÍNCRONO
  *
- * O axios dos apps tem timeout de 15s, mas enviarSincrono leva até ~243s no pior caso
- * (envio com 3 tentativas de 40s + consulta de recuperação com outras 3). O cliente
- * abortava aos 15s enquanto o PHP-FPM continuava rodando e segurando o lock da nota — e o
- * retry do usuário batia em "Outra operação já está em andamento". Não era lock órfão: era
- * o cliente desistindo 16× mais rápido que a operação.
+ * É a única ação de NFe que precisa ser. O axios dos apps tem timeout de 15s, mas
+ * enviarSincrono leva até ~243s no pior caso (envio com 3 tentativas de 40s + consulta de
+ * recuperação com outras 3). O cliente abortava aos 15s enquanto o PHP-FPM continuava rodando
+ * e segurando o lock da nota — e o retry do usuário batia em "Outra operação já está em
+ * andamento". Não era lock órfão: era o cliente desistindo 16× mais rápido que a operação.
  *
- * POR QUE O SUPERMÉTODO
- *
- * Antes o FRONT orquestrava: POST /criar -> parseava o XML com DOMParser para achar
- * <tpEmis> -> decidia se era contingência -> POST /enviar-sincrono -> POST /mail. Ou seja,
- * decisão fiscal tomada no navegador, em 3 round-trips. O backend já sabe tudo isso
- * (tpemis está persistido na nota).
+ * Criar/consultar/cancelar/inutilizar continuam síncronos: nenhuma delas chega perto disso.
  *
  * Progresso em Cache, no mesmo padrão de Mg\Rh\ReprocessarPeriodoService.
  */
@@ -79,22 +78,13 @@ class NFePHPEnvioService
     }
 
     /**
-     * Enfileira o envio. IDEMPOTENTE: se já houver envio em andamento, devolve o progresso
+     * Enfileira a transmissão. IDEMPOTENTE: se já houver uma em andamento, devolve o progresso
      * atual sem despachar nada.
      *
      * É essa idempotência que mata o "Outra operação já está em andamento" que o usuário
-     * via ao reclicar: em vez de erro, o segundo clique se anexa ao envio que já corre.
-     *
-     * $offline é tri-state: null = automático (segue a conf da empresa), true = força
-     * contingência, false = força online.
-     *
-     * $recriar = false transmite o XML assinado que JÁ existe, sem passar pelo criar(). É o
-     * retry certo para a nota que ficou em ERR por falha de comunicação: o documento está
-     * bom, só não chegou. E para a NFC-e emitida em contingência é o único caminho que
-     * preserva a chave de acesso — refazer o XML com outro tpEmis mudaria a chave do cupom
-     * que já está com o cliente.
+     * via ao reclicar: em vez de erro, o segundo clique se anexa à transmissão que já corre.
      */
-    public static function iniciar(NotaFiscal $nf, ?bool $offline = null, bool $recriar = true): array
+    public static function iniciar(NotaFiscal $nf): array
     {
         if (static::emAndamento($nf->codnotafiscal)) {
             return static::progresso($nf->codnotafiscal);
@@ -104,21 +94,20 @@ class NFePHPEnvioService
 
         // Sem chave não existe XML assinado para transmitir. Barra aqui para o erro sair no
         // POST, em vez de só aparecer no polling depois de o job falhar.
-        if (!$recriar && empty($nf->nfechave)) {
-            throw new \Exception('Nota fiscal sem chave de acesso: não há XML assinado para transmitir!');
+        if (empty($nf->nfechave)) {
+            throw new \Exception('Nota fiscal sem chave de acesso: crie o XML antes de transmitir!');
         }
 
         $payload = static::gravar($nf->codnotafiscal, [
             'status' => 'processando',
             'etapa' => 'fila',
             'mensagem' => 'Na fila...',
-            'contingencia' => false,
             'sucesso' => null,
             'cStat' => null,
             'xMotivo' => null,
         ]);
 
-        NFePHPEnviarJob::dispatch($nf->codnotafiscal, $offline, $recriar)->onQueue('urgent');
+        NFePHPEnviarJob::dispatch($nf->codnotafiscal)->onQueue('urgent');
 
         return $payload;
     }
@@ -127,38 +116,12 @@ class NFePHPEnvioService
      * Corpo do job. Grava o erro no progresso e RELANÇA, para o job aparecer em
      * tbljobsfailedspa e no log do worker.
      */
-    public static function executar(int $codnotafiscal, ?bool $offline = null, bool $recriar = true): void
+    public static function executar(int $codnotafiscal): void
     {
         $nf = NotaFiscal::findOrFail($codnotafiscal);
 
         try {
-            // $recriar = false pula direto para a transmissão do XML assinado que já existe:
-            // é o reenvio puro, para quando a nota caiu em ERR por falha de comunicação e o
-            // documento não tem nada de errado. Numa NFC-e de contingência refazer o XML aqui
-            // ainda recalcularia a chave de acesso e órfanaria o cupom já entregue.
-            if ($recriar) {
-                static::etapa($codnotafiscal, 'criando', 'Criando arquivo XML...');
-                NFePHPService::criar($nf, $offline);
-                $nf = $nf->fresh();
-
-                // Contingência off-line: a nota NÃO vai à SEFAZ agora. O DANFE é impresso e o
-                // robô transmite depois, dentro do prazo de 24h. O front usa esse flag para
-                // decidir imprimir cupom e abrir a DANFE.
-                if ($nf->tpemis == NotaFiscalService::TPEMIS_OFFLINE) {
-                    static::gravar($codnotafiscal, [
-                        'status' => 'concluido',
-                        'etapa' => 'concluido',
-                        'mensagem' => 'NFC-e emitida em contingência off-line',
-                        'contingencia' => true,
-                        'sucesso' => true,
-                        'cStat' => null,
-                        'xMotivo' => 'Emitida em contingência off-line',
-                    ]);
-                    return;
-                }
-            }
-
-            static::etapa($codnotafiscal, 'enviando', 'Enviando para a SEFAZ...');
+            static::etapa($codnotafiscal, 'transmitindo', 'Transmitindo para a SEFAZ...');
             $res = NFePHPService::enviarSincrono($nf);
 
             // O e-mail NAO e disparado aqui: quem despacha o NFePHPMailJob e o proprio
@@ -170,7 +133,6 @@ class NFePHPEnvioService
                 'status' => 'concluido',
                 'etapa' => 'concluido',
                 'mensagem' => "{$res->cStat} - {$res->xMotivo}",
-                'contingencia' => false,
                 'sucesso' => (bool) $res->sucesso,
                 'cStat' => $res->cStat,
                 'xMotivo' => $res->xMotivo,
@@ -180,7 +142,6 @@ class NFePHPEnvioService
                 'status' => 'erro',
                 'etapa' => 'erro',
                 'mensagem' => $e->getMessage(),
-                'contingencia' => false,
                 'sucesso' => false,
                 'cStat' => null,
                 'xMotivo' => $e->getMessage(),
