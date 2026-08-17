@@ -83,7 +83,7 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
             $atual = @file_get_contents($path);
             if ($atual === false) {
                 $stats['erro']++;
-                Log::warning("corrigir-xml-cancelado: falha ao ler {$path}");
+                $this->registrarErro($path, 'falha ao ler o arquivo');
                 continue;
             }
 
@@ -104,7 +104,7 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
                 $montado = Complements::cancelRegister(file_get_contents($pathProc), $atual);
             } catch (\Throwable $e) {
                 $stats['erro']++;
-                Log::warning("corrigir-xml-cancelado: {$path}: " . $e->getMessage());
+                $this->registrarErro($path, $e->getMessage());
                 continue;
             }
 
@@ -118,16 +118,18 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
             }
 
             if ($dryRun) {
-                $this->line("  <info>corrigiria</info> {$path}");
+                if ($verbose) {
+                    $this->line("  <info>corrigiria</info> {$path}");
+                }
             } else {
                 if ($backup && !@copy($path, $path . '.bak')) {
                     $stats['erro']++;
-                    Log::warning("corrigir-xml-cancelado: falha ao gerar .bak de {$path}");
+                    $this->registrarErro($path, 'falha ao gerar o .bak (permissao de escrita?)');
                     continue;
                 }
                 if (@file_put_contents($path, $montado) === false) {
                     $stats['erro']++;
-                    Log::warning("corrigir-xml-cancelado: falha ao gravar {$path}");
+                    $this->registrarErro($path, 'falha ao gravar (permissao de escrita?)');
                     continue;
                 }
             }
@@ -146,6 +148,17 @@ class NFePHPCorrigirXmlCanceladoCommand extends Command
         }
 
         return 0;
+    }
+
+    /**
+     * Erro sempre visivel no terminal, alem do log. Um comando que reescreve documento
+     * fiscal nao pode falhar em silencio — foi assim que 14 falhas passaram despercebidas
+     * numa primeira execucao em producao.
+     */
+    private function registrarErro(string $path, string $motivo): void
+    {
+        $this->line("  <fg=red>ERRO</> {$motivo} — {$path}");
+        Log::warning("corrigir-xml-cancelado: {$path}: {$motivo}");
     }
 
     /**
