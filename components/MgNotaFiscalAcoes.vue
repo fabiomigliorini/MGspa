@@ -43,6 +43,9 @@ const {
   api: props.api,
   codnotafiscal,
 })
+// tpemis 9 = emitida em contingencia off-line (faz parte da chave de acesso)
+const emContingencia = computed(() => props.nota?.tpemis == 9)
+
 const podeEnviar = computed(
   () => props.nota?.emitida && ['DIG', 'ERR'].includes(props.nota?.status),
 )
@@ -52,8 +55,11 @@ const podeConsultar = computed(
 const podeCancelar = computed(() => props.nota?.emitida && props.nota?.status === 'AUT')
 const podeInutilizar = computed(() => props.nota?.emitida && props.nota?.status === 'ERR')
 const podeEnviarEmail = computed(() => props.nota?.emitida && props.nota?.status === 'AUT')
+// Contingencia entra aqui porque o cupom precisa ser reimpresso mesmo antes da autorizacao:
+// o backend gera a DANFE a partir do XML assinado quando tpEmis e 9.
 const podeAbrirDanfe = computed(
-  () => props.nota?.emitida && ['AUT', 'CAN'].includes(props.nota?.status),
+  () =>
+    props.nota?.emitida && (['AUT', 'CAN'].includes(props.nota?.status) || emContingencia.value),
 )
 const podeAbrirXml = computed(() => props.nota?.emitida && props.nota?.nfechave)
 const podeExcluir = computed(() => props.nota?.emitida && props.nota?.status === 'DIG')
@@ -69,12 +75,17 @@ const temAcoes = computed(
 const deveAbrirDanfeAposEnviar = computed(() => props.abrirDanfeAposEnviar ?? !props.compact)
 const cupom = computed(() => props.nota?.modelo == 65)
 
-// tpemis 9 = emitida em contingencia off-line (faz parte da chave de acesso)
-const emContingencia = computed(() => props.nota?.tpemis == 9)
 // Forcar o modo so faz sentido na NFC-e, que e a unica com contingencia off-line
 const podeForcarModo = computed(
   () => props.podeForcarContingencia && cupom.value && podeEnviar.value,
 )
+// Transmitir o XML assinado que JA existe, sem passar pelo criar().
+//
+// Vale para QUALQUER nota que ja tenha chave, nao so a de contingencia: uma rejeicao por
+// falha de comunicacao nao tem nada de errado no XML, entao reenviar o mesmo arquivo e a
+// acao mais segura — nao recria nada e nao mexe na chave de acesso. Para a nota emitida em
+// contingencia e o unico caminho que preserva a chave do cupom que ja esta com o cliente.
+const podeTransmitir = computed(() => podeEnviar.value && !!props.nota?.nfechave)
 
 const btnSize = computed(() => (props.compact ? 'sm' : undefined))
 
@@ -127,14 +138,19 @@ async function enviarNfe(event, offline = null) {
   try {
     const r = await iniciarEnvio(offline)
 
+    // Emite ANTES de tratar o erro, e ANTES de imprimir e abrir o DANFE.
+    //
+    // Antes do erro porque a nota MUDA no banco mesmo quando o envio fracassa: ela ja ganhou
+    // numero, chave e status ERR antes de a SEFAZ recusar ou de a conexao cair. Sair pelo
+    // throw sem sincronizar deixava o card mostrando "Em Digitacao" ate o usuario dar F5.
+    //
+    // Antes da impressora e do PDF porque sincronizar nao pode ficar atras deles, senao a
+    // linha da listagem so fica verde segundos depois de a nota ja estar autorizada.
+    if (r.nota) emit('action-completed', 'enviar', r.nota)
+
     if (!r.contingencia && !r.sucesso) {
       throw new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
     }
-
-    // Emite ANTES de imprimir e abrir o DANFE: sincronizar o estado da nota nao pode ficar
-    // atras da impressora termica nem da geracao do PDF, senao a linha da listagem so fica
-    // verde segundos depois de a nota ja estar autorizada.
-    emit('action-completed', 'enviar', r.nota)
 
     // Contingencia nao foi a SEFAZ (o robo transmite depois, dentro do prazo de 24h), mas o
     // cupom precisa sair do mesmo jeito — por isso ela abre o DANFE mesmo em modo compact.
@@ -146,6 +162,61 @@ async function enviarNfe(event, offline = null) {
       $q.notify({ type: 'negative', message: 'Erro ao enviar NFe', caption: mensagemErro(error) })
     }
   }
+}
+
+/**
+ * Transmite o XML assinado que JA existe, SEM recriar — preserva a chave de acesso.
+ *
+ * E o retry certo para a nota que ficou em ERR por falha de comunicacao: o XML esta bom,
+ * so nao chegou. E para a nota em contingencia e o unico jeito de transmitir sem orfanar o
+ * cupom ja entregue. O robo de pendentes faz o mesmo a cada 10 min; este botao e para
+ * quando o usuario quer resolver na hora.
+ *
+ * Nao abre a DANFE no fim: nada aqui muda o conteudo do documento.
+ */
+async function transmitirNfe(event) {
+  stop(event)
+  try {
+    const r = await iniciarEnvio(null, false)
+
+    // Sincroniza antes do throw: mesmo recusada, a nota volta com o status atualizado.
+    if (r.nota) emit('action-completed', 'transmitir', r.nota)
+
+    if (!r.sucesso) {
+      throw new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
+    }
+  } catch (error) {
+    if (error?.message && !error.message.startsWith('Sem conex')) {
+      $q.notify({
+        type: 'negative',
+        message: 'Erro ao transmitir NFe',
+        caption: mensagemErro(error),
+      })
+    }
+  }
+}
+
+/**
+ * Forca o envio on-line. Recriar o XML com tpEmis 1 REFAZ a chave de acesso, entao quando a
+ * nota ja saiu em contingencia isso orfana o cupom que o cliente levou — dai a confirmacao.
+ * Nota ainda sem chave (DIG) segue direto, que e o uso legitimo do botao.
+ */
+function forcarOnline(event) {
+  stop(event)
+
+  if (!emContingencia.value || !props.nota?.nfechave) {
+    return enviarNfe(event, false)
+  }
+
+  $q.dialog({
+    title: 'Forçar envio on-line',
+    message:
+      'Esta NFC-e foi emitida em contingência off-line. Forçar o envio on-line RECRIA o XML e ' +
+      'MUDA a chave de acesso — o cupom já entregue ao cliente passará a apontar para uma chave ' +
+      'que não existe na SEFAZ. Para transmitir mantendo a chave, use "Transmitir à SEFAZ agora".',
+    cancel: { label: 'Cancelar', flat: true },
+    ok: { label: 'Forçar on-line', flat: true, color: 'negative' },
+  }).onOk(() => enviarNfe(null, false))
 }
 
 async function consultarNfe(event) {
@@ -343,6 +414,24 @@ defineExpose({ enviarNfe, podeEnviar, loadingEnviar })
       <q-tooltip>Criar XML e enviar para SEFAZ</q-tooltip>
     </q-btn>
 
+    <!--
+      Reenvio do XML que ja existe. Fica ao lado do Enviar porque e a metade que o Enviar
+      NAO oferece: la o XML e sempre refeito, aqui o documento e exatamente o mesmo.
+    -->
+    <q-btn
+      v-if="showExtras && podeTransmitir"
+      flat
+      dense
+      round
+      :size="btnSize"
+      color="teal"
+      icon="cloud_upload"
+      :loading="loadingEnviar"
+      @click="transmitirNfe"
+    >
+      <q-tooltip>Transmitir o XML já assinado, sem recriar (mantém a chave de acesso)</q-tooltip>
+    </q-btn>
+
     <q-btn
       v-if="podeConsultar"
       flat
@@ -395,12 +484,12 @@ defineExpose({ enviarNfe, podeEnviar, loadingEnviar })
       dense
       round
       :size="btnSize"
-      color="teal"
+      color="blue-grey-6"
       icon="cloud_done"
       :loading="loadingEnviar"
-      @click="(e) => enviarNfe(e, false)"
+      @click="forcarOnline"
     >
-      <q-tooltip>Forçar envio on-line (ignora a contingência da empresa)</q-tooltip>
+      <q-tooltip>Forçar envio on-line (recria o XML e muda a chave de acesso)</q-tooltip>
     </q-btn>
 
     <q-btn

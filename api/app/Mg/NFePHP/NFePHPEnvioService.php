@@ -87,14 +87,26 @@ class NFePHPEnvioService
      *
      * $offline é tri-state: null = automático (segue a conf da empresa), true = força
      * contingência, false = força online.
+     *
+     * $recriar = false transmite o XML assinado que JÁ existe, sem passar pelo criar(). É o
+     * retry certo para a nota que ficou em ERR por falha de comunicação: o documento está
+     * bom, só não chegou. E para a NFC-e emitida em contingência é o único caminho que
+     * preserva a chave de acesso — refazer o XML com outro tpEmis mudaria a chave do cupom
+     * que já está com o cliente.
      */
-    public static function iniciar(NotaFiscal $nf, ?bool $offline = null): array
+    public static function iniciar(NotaFiscal $nf, ?bool $offline = null, bool $recriar = true): array
     {
         if (static::emAndamento($nf->codnotafiscal)) {
             return static::progresso($nf->codnotafiscal);
         }
 
         static::validar($nf);
+
+        // Sem chave não existe XML assinado para transmitir. Barra aqui para o erro sair no
+        // POST, em vez de só aparecer no polling depois de o job falhar.
+        if (!$recriar && empty($nf->nfechave)) {
+            throw new \Exception('Nota fiscal sem chave de acesso: não há XML assinado para transmitir!');
+        }
 
         $payload = static::gravar($nf->codnotafiscal, [
             'status' => 'processando',
@@ -106,7 +118,7 @@ class NFePHPEnvioService
             'xMotivo' => null,
         ]);
 
-        NFePHPEnviarJob::dispatch($nf->codnotafiscal, $offline)->onQueue('urgent');
+        NFePHPEnviarJob::dispatch($nf->codnotafiscal, $offline, $recriar)->onQueue('urgent');
 
         return $payload;
     }
@@ -115,29 +127,35 @@ class NFePHPEnvioService
      * Corpo do job. Grava o erro no progresso e RELANÇA, para o job aparecer em
      * tbljobsfailedspa e no log do worker.
      */
-    public static function executar(int $codnotafiscal, ?bool $offline = null): void
+    public static function executar(int $codnotafiscal, ?bool $offline = null, bool $recriar = true): void
     {
         $nf = NotaFiscal::findOrFail($codnotafiscal);
 
         try {
-            static::etapa($codnotafiscal, 'criando', 'Criando arquivo XML...');
-            NFePHPService::criar($nf, $offline);
-            $nf = $nf->fresh();
+            // $recriar = false pula direto para a transmissão do XML assinado que já existe:
+            // é o reenvio puro, para quando a nota caiu em ERR por falha de comunicação e o
+            // documento não tem nada de errado. Numa NFC-e de contingência refazer o XML aqui
+            // ainda recalcularia a chave de acesso e órfanaria o cupom já entregue.
+            if ($recriar) {
+                static::etapa($codnotafiscal, 'criando', 'Criando arquivo XML...');
+                NFePHPService::criar($nf, $offline);
+                $nf = $nf->fresh();
 
-            // Contingência off-line: a nota NÃO vai à SEFAZ agora. O DANFE é impresso e o
-            // robô transmite depois, dentro do prazo de 24h. O front usa esse flag para
-            // decidir imprimir cupom e abrir a DANFE.
-            if ($nf->tpemis == NotaFiscalService::TPEMIS_OFFLINE) {
-                static::gravar($codnotafiscal, [
-                    'status' => 'concluido',
-                    'etapa' => 'concluido',
-                    'mensagem' => 'NFC-e emitida em contingência off-line',
-                    'contingencia' => true,
-                    'sucesso' => true,
-                    'cStat' => null,
-                    'xMotivo' => 'Emitida em contingência off-line',
-                ]);
-                return;
+                // Contingência off-line: a nota NÃO vai à SEFAZ agora. O DANFE é impresso e o
+                // robô transmite depois, dentro do prazo de 24h. O front usa esse flag para
+                // decidir imprimir cupom e abrir a DANFE.
+                if ($nf->tpemis == NotaFiscalService::TPEMIS_OFFLINE) {
+                    static::gravar($codnotafiscal, [
+                        'status' => 'concluido',
+                        'etapa' => 'concluido',
+                        'mensagem' => 'NFC-e emitida em contingência off-line',
+                        'contingencia' => true,
+                        'sucesso' => true,
+                        'cStat' => null,
+                        'xMotivo' => 'Emitida em contingência off-line',
+                    ]);
+                    return;
+                }
             }
 
             static::etapa($codnotafiscal, 'enviando', 'Enviando para a SEFAZ...');

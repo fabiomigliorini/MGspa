@@ -34,12 +34,13 @@ class NFePHPEnviarJob implements ShouldQueue
 
     public function __construct(
         public int $codnotafiscal,
-        public ?bool $offline = null
+        public ?bool $offline = null,
+        public bool $recriar = true
     ) {
     }
 
     public function handle(): void
     {
-        NFePHPEnvioService::executar($this->codnotafiscal, $this->offline);
+        NFePHPEnvioService::executar($this->codnotafiscal, $this->offline, $this->recriar);
     }
 }

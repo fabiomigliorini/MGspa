@@ -652,13 +652,18 @@ class NotaFiscalController extends Controller
      *
      * O parametro `offline` e tri-state e so vem quando o usuario avancado forca o modo:
      * ausente = automatico (segue a conf da empresa), true = contingencia, false = online.
+     *
+     * `recriar = false` transmite o XML assinado que ja existe, sem refazer a chave de
+     * acesso — o reenvio puro de uma nota que caiu em ERR por falha de comunicacao, e o
+     * unico caminho seguro para a NFC-e presa em contingencia off-line.
      */
     public function enviar(Request $request, int $codnotafiscal)
     {
         $offline = $request->has('offline') ? $request->boolean('offline') : null;
+        $recriar = $request->has('recriar') ? $request->boolean('recriar') : true;
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
-        return response()->json(NFePHPEnvioService::iniciar($nota, $offline), 202);
+        return response()->json(NFePHPEnvioService::iniciar($nota, $offline, $recriar), 202);
     }
 
     /**

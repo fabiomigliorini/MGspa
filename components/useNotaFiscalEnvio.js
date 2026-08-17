@@ -165,8 +165,12 @@ export function useNotaFiscalEnvio({ api, codnotafiscal }) {
    *
    * `offline` é tri-state: null = automático (segue a conf da empresa),
    * true = força contingência, false = força online.
+   *
+   * `recriar = false` transmite o XML assinado que já existe, sem passar pelo criar(): o
+   * reenvio puro de quem caiu em ERR por falha de comunicação, e o único caminho que
+   * preserva a chave de acesso de uma NFC-e emitida em contingência.
    */
-  function iniciarEnvio(offline = null) {
+  function iniciarEnvio(offline = null, recriar = true) {
     return new Promise((resolve, reject) => {
       resolver = resolve
       rejeitar = reject
@@ -174,7 +178,10 @@ export function useNotaFiscalEnvio({ api, codnotafiscal }) {
       etapaAtual = null
       abrirNotify('Na fila...')
 
-      const corpo = offline === null ? {} : { offline }
+      // Só manda o que difere do default: o corpo vazio de sempre continua vazio.
+      const corpo = {}
+      if (offline !== null) corpo.offline = offline
+      if (!recriar) corpo.recriar = false
 
       api
         .post(url(), corpo)
