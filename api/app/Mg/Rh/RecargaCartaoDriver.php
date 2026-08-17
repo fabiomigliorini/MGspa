@@ -9,16 +9,15 @@ namespace Mg\Rh;
  *  - AcertoPlanilhaCartaoXlsx: gera a planilha CPF|Valor (fluxo atual, manual).
  *  - RecargaApiBee: integração direta com a API da Bee (futuro).
  *
- * A fonte de dados (linhas CPF|Valor) é sempre
- * AcertoRelatorioFolhaPdf::linhasRecargaBee(), garantindo que planilha e
- * API tragam exatamente os mesmos valores da prévia "Recarga Bee".
+ * O driver opera sobre um LOTE já persistido (BeeRecarga), e a fonte dos
+ * valores é sempre BeeRecargaService::linhasDoLote() — assim planilha e API
+ * enviam exatamente as mesmas linhas, e o que foi enviado fica gravado.
  */
 interface RecargaCartaoDriver
 {
     /**
-     * Monta a recarga de UMA empresa mãe para o período informado e devolve o
-     * artefato pronto para entrega — bytes do arquivo na planilha; protocolo/
-     * retorno da API nas integrações diretas.
+     * Entrega o lote e devolve o artefato — bytes do arquivo na planilha;
+     * protocolo/retorno da API nas integrações diretas.
      */
-    public function gerarRecarga(int $codperiodo, int $codempresa): string;
+    public function gerarRecarga(BeeRecarga $recarga): string;
 }

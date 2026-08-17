@@ -3,7 +3,6 @@
 namespace Mg\Rh;
 
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\DB;
 use Mg\Filial\Setor;
 use Mg\Filial\UnidadeNegocio;
 use Mg\Usuario\Autorizador;
@@ -127,26 +126,6 @@ class DashboardController extends Controller
 
         $alertas = static::gerarAlertas($codperiodo);
 
-        // Empresas (por CNPJ) com colaboradores no período — botões dinâmicos da
-        // planilha do cartão-benefício. Empresa = filial do colaborador (registro
-        // mais recente por codpessoa), mesma resolução usada pela planilha.
-        $empresasCartao = DB::select("
-            SELECT DISTINCT e.codempresa, e.empresa
-            FROM tblperiodocolaborador pc
-            JOIN tblcolaborador c ON c.codcolaborador = pc.codcolaborador
-            JOIN LATERAL (
-                SELECT col.codfilial
-                FROM tblcolaborador col
-                WHERE col.codpessoa = c.codpessoa
-                ORDER BY col.codcolaborador DESC
-                LIMIT 1
-            ) uc ON true
-            JOIN tblfilial f ON f.codfilial = uc.codfilial
-            JOIN tblempresa e ON e.codempresa = f.codempresa
-            WHERE pc.codperiodo = :codperiodo
-            ORDER BY e.empresa
-        ", ['codperiodo' => $codperiodo]);
-
         return response()->json([
             'periodo' => new PeriodoResource($periodo),
             'totalcolaboradores' => $totalColaboradores,
@@ -157,7 +136,6 @@ class DashboardController extends Controller
             'totalvariaveis' => round($totalVariaveisGeral, 2),
             'total' => round($totalGeral, 2),
             'unidades' => $custosPorUnidade,
-            'empresascartao' => $empresasCartao,
             'alertas' => $alertas,
         ]);
     }

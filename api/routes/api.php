@@ -1320,12 +1320,31 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             Route::get('/{codperiodocolaborador}/recibos', '\Mg\Rh\AcertoController@recibosColaborador');
             Route::get('/{codperiodocolaboradoracerto}/recibo', '\Mg\Rh\AcertoController@reciboAcerto');
             Route::get('/relatorio-folha', '\Mg\Rh\AcertoController@relatorioFolha');
-            Route::get('/planilha-cartao', '\Mg\Rh\AcertoController@planilhaCartao');
             Route::get('/{codperiodocolaborador}/titulos', '\Mg\Rh\AcertoController@titulos');
             Route::post('/{codperiodocolaborador}/efetivar', '\Mg\Rh\AcertoController@efetivar');
             Route::post('/{codperiodocolaborador}/estornar', '\Mg\Rh\AcertoController@estornar');
             Route::post('/{codperiodocolaboradoracerto}/inativo', '\Mg\Rh\AcertoController@inativarAcerto');
             Route::delete('/{codperiodocolaboradoracerto}/inativo', '\Mg\Rh\AcertoController@reativarAcerto');
+        });
+
+        // Recarga do cartao-beneficio Bee — um lote por EMPRESA MAE (a empresa
+        // vem da filial do vinculo: tblcolaborador.codfilial ->
+        // tblfilial.codempresa), com o titulo de adiantamento lancado na filial
+        // que concentra o maior valor do lote. Nao ha' DELETE em /inativo:
+        // reativar nao faz sentido, porque o titulo ja' foi estornado.
+        //
+        // O POST atende os dois casos, de proposito: sem `itens` gera o lote do
+        // mes (todos com saldo, pelo saldo cheio); com `itens`
+        // ([{codperiodocolaborador, valor}]) gera o lote avulso. Duas rotas
+        // seriam dois lugares pra esquecer o FOR UPDATE do service.
+        Route::prefix('periodo/{codperiodo}/recarga')->group(function () {
+            Route::get('/', '\Mg\Rh\BeeRecargaController@index');
+            Route::get('/empresas', '\Mg\Rh\BeeRecargaController@empresas');
+            Route::get('/previa', '\Mg\Rh\BeeRecargaController@previa');
+            Route::post('/', '\Mg\Rh\BeeRecargaController@gerar');
+            Route::get('/{codbeerecarga}/planilha', '\Mg\Rh\BeeRecargaController@planilha');
+            Route::post('/{codbeerecarga}/confirmar', '\Mg\Rh\BeeRecargaController@confirmar');
+            Route::post('/{codbeerecarga}/inativo', '\Mg\Rh\BeeRecargaController@inativar');
         });
     });
 

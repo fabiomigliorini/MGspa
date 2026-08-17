@@ -127,33 +127,4 @@ class AcertoRelatorioFolhaPdf
         return $dompdf->output();
     }
 
-    /**
-     * Linhas planas (nome, cpf, fisica, valor) da RECARGA BEE de UMA empresa mãe
-     * — fonte da planilha/API do cartão. São os eventos de acerto com forma 'B'
-     * (Recarga Bee) do período, para as filiais daquela empresa.
-     */
-    public static function linhasRecargaBee(int $codperiodo, int $codempresa): array
-    {
-        return DB::select("
-            SELECT
-                p.pessoa AS nome,
-                p.cnpj   AS cpf,
-                p.fisica,
-                ABS(a.saldo) AS valor
-            FROM tblperiodocolaboradoracerto a
-            JOIN tblperiodocolaborador pc ON pc.codperiodocolaborador = a.codperiodocolaborador
-            JOIN tblcolaborador col       ON col.codcolaborador = pc.codcolaborador
-            JOIN tblpessoa p              ON p.codpessoa = col.codpessoa
-            JOIN tblfilial f              ON f.codfilial = col.codfilial
-            WHERE pc.codperiodo = :codperiodo
-              AND a.inativo IS NULL
-              AND a.forma = 'B'
-              AND a.saldo <> 0
-              AND f.codempresa = :codempresa
-            ORDER BY p.pessoa
-        ", [
-            'codperiodo' => $codperiodo,
-            'codempresa' => $codempresa,
-        ]);
-    }
 }
