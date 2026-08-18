@@ -79,10 +79,17 @@ const cupom = computed(() => props.nota?.modelo == 65)
 // Nota em fluxo de emissao: ainda pode ganhar (ou refazer) XML e ir para a SEFAZ
 const emFluxo = computed(() => props.nota?.emitida && ['DIG', 'ERR'].includes(props.nota?.status))
 
+// Ha o que fazer com esta nota. Exposto para o F9 da tela de detalhe, que chama emitir() —
+// o metodo cobre os dois casos, criando o XML so quando ele ainda nao existe.
 const podeEmitir = computed(() => emFluxo.value)
-const podeCriarXml = computed(() => emFluxo.value)
-// Sem chave nao ha XML assinado em disco para entregar
+
+// Emitir e Transmitir sao excludentes, e o que decide e a existencia da chave: sem XML o
+// caminho e criar+transmitir; com XML pronto so falta entregar a SEFAZ, e oferecer "Emitir"
+// ali sugeriria refazer o documento do zero.
+const mostrarEmitir = computed(() => emFluxo.value && !props.nota?.nfechave)
 const podeTransmitir = computed(() => emFluxo.value && !!props.nota?.nfechave)
+
+const podeCriarXml = computed(() => emFluxo.value)
 // Espelha a unica pre-condicao do consultarSemLock: ter chave. Status nao entra — e
 // justamente a nota em estado inconsistente que mais precisa reconsultar a SEFAZ.
 const podeConsultar = computed(() => props.nota?.emitida && !!props.nota?.nfechave)
@@ -567,9 +574,9 @@ defineExpose({ emitir, podeEmitir, loadingEmitir: emitindo })
     class="row no-wrap q-gutter-xs"
     v-if="temAcoes || podeAbrirDanfe || (showExtras && nota?.emitida)"
   >
-    <!-- O caminho feliz num clique: criar (se preciso) -> transmitir -> DANFE -->
+    <!-- O caminho feliz num clique: criar -> transmitir -> DANFE -->
     <q-btn
-      v-if="podeEmitir"
+      v-if="mostrarEmitir"
       flat
       dense
       round
@@ -584,8 +591,10 @@ defineExpose({ emitir, podeEmitir, loadingEmitir: emitindo })
     </q-btn>
 
     <!--
-      As duas metades do Emitir, cada uma como botao proprio: e o que permite ao usuario
-      resolver um problema no meio do caminho sem refazer o que ja deu certo.
+      Criar XML e a metade do Emitir que so interessa a quem esta resolvendo um problema:
+      fica atras do showExtras. Ja o Transmitir aparece em qualquer tela, porque ele SUBSTITUI
+      o Emitir assim que a nota tem chave — nesse ponto o documento ja existe e refaze-lo do
+      zero nao e o que se quer.
     -->
     <q-btn
       v-if="showExtras && podeCriarXml"
@@ -603,7 +612,7 @@ defineExpose({ emitir, podeEmitir, loadingEmitir: emitindo })
     </q-btn>
 
     <q-btn
-      v-if="showExtras && podeTransmitir"
+      v-if="podeTransmitir"
       flat
       dense
       round
