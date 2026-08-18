@@ -315,7 +315,9 @@ onMounted(async () => {
           :to="'/nota/' + nota.codnotafiscal"
           class="q-py-xs"
         >
-          <q-item-section avatar style="min-width: 32px">
+          <!-- items-center: os dois icones tem tamanhos diferentes, entao sem isso ficam
+               alinhados pela esquerda e o menor parece deslocado -->
+          <q-item-section avatar style="min-width: 32px" class="items-center">
             <q-icon :name="getStatusIcon(nota.status)" :color="getStatusColor(nota.status)" />
             <!-- tpemis 9: emitida em contingencia off-line, ainda a transmitir -->
             <q-icon v-if="nota.tpemis == 9" name="cloud_off" color="orange" size="xs">
@@ -378,8 +380,13 @@ onMounted(async () => {
             </div>
           </q-item-section>
 
-          <!-- Ações -->
-          <q-item-section side style="width: 95px" class="gt-sm">
+          <!--
+            Ações. A largura precisa comportar o MAIOR conjunto que a barra mostra em modo
+            compact: uma NFC-e de contingência em ERR tem Emitir + Consultar + DANFE +
+            Inutilizar. Com 95px (que cabia 3) o quarto botão empurrava a linha e a listagem
+            inteira ganhava scroll horizontal.
+          -->
+          <q-item-section side style="width: 140px" class="gt-sm">
             <MgNotaFiscalAcoes
               compact
               :nota="nota"
