@@ -28,18 +28,17 @@ class NFePHPEnviarJob implements ShouldQueue
 
     /**
      * Declarativo (ver acima). Serve de base para o cálculo do REDIS_QUEUE_RETRY_AFTER,
-     * que precisa ser MAIOR que isto. Cobre criar + enviarSincrono (~243s) + mail.
+     * que precisa ser MAIOR que isto. Cobre o enviarSincrono (~243s no pior caso) com folga.
      */
     public $timeout = 420;
 
     public function __construct(
-        public int $codnotafiscal,
-        public ?bool $offline = null
+        public int $codnotafiscal
     ) {
     }
 
     public function handle(): void
     {
-        NFePHPEnvioService::executar($this->codnotafiscal, $this->offline);
+        NFePHPEnvioService::executar($this->codnotafiscal);
     }
 }

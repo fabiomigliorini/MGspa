@@ -699,7 +699,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('{codnotafiscal}/unificar', '\Mg\NotaFiscal\NotaFiscalController@unificar');
         Route::post('{codnotafiscal}/unificar-itens', '\Mg\NotaFiscal\NotaFiscalController@unificarItens');
         Route::post('{codnotafiscal}/criar', '\Mg\NotaFiscal\NotaFiscalController@criar');
-        Route::post('{codnotafiscal}/enviar-sincrono', '\Mg\NotaFiscal\NotaFiscalController@enviarSincrono');
         Route::post('{codnotafiscal}/consultar', '\Mg\NotaFiscal\NotaFiscalController@consultar');
         Route::post('{codnotafiscal}/cancelar', '\Mg\NotaFiscal\NotaFiscalController@cancelar');
         Route::post('{codnotafiscal}/inutilizar', '\Mg\NotaFiscal\NotaFiscalController@inutilizar');
@@ -707,7 +706,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('{codnotafiscal}/danfe', '\Mg\NotaFiscal\NotaFiscalController@danfe')
             ->name('nota-fiscal.danfe')
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
-        Route::get('{codnotafiscal}/xml', '\Mg\NotaFiscal\NotaFiscalController@xml');
+        Route::get('{codnotafiscal}/xml', '\Mg\NotaFiscal\NotaFiscalController@xmls');
+        Route::get('{codnotafiscal}/xml/{tipo}', '\Mg\NotaFiscal\NotaFiscalController@xml');
         Route::post('{codnotafiscal}/imprimir', '\Mg\NotaFiscal\NotaFiscalController@imprimir');
         Route::post('{codnotafiscal}/incorporar-valores', '\Mg\NotaFiscal\NotaFiscalController@incorporarValores');
         Route::post('{codnotafiscal}/recalcular-tributacao', '\Mg\NotaFiscal\NotaFiscalController@recalcularTributacao');
@@ -715,8 +715,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('{codnotafiscal}/carta-correcao/pdf', '\Mg\NotaFiscal\NotaFiscalCartaCorrecaoController@pdf');
         Route::get('{codnotafiscal}/espelho', '\Mg\NotaFiscal\NotaFiscalController@espelho');
         // Envio assincrono: POST enfileira, GET devolve o progresso (mesmo path, padrao do RH)
-        Route::post('{codnotafiscal}/enviar', '\Mg\NotaFiscal\NotaFiscalController@enviar');
-        Route::get('{codnotafiscal}/enviar', '\Mg\NotaFiscal\NotaFiscalController@progressoEnvio');
+        Route::post('{codnotafiscal}/transmitir', '\Mg\NotaFiscal\NotaFiscalController@transmitir');
+        Route::get('{codnotafiscal}/transmitir', '\Mg\NotaFiscal\NotaFiscalController@progressoTransmissao');
         Route::get('{codnotafiscal}/sefaz', '\Mg\NotaFiscal\NotaFiscalController@sefazComunicacoes');
         Route::apiResource('{codnotafiscal}/item', '\Mg\NotaFiscal\NotaFiscalProdutoBarraController')
             ->parameters(['item' => 'codnotafiscalprodutobarra']);

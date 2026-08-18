@@ -3,6 +3,17 @@ import inutilizacaoService from '../services/inutilizacaoService'
 import notaFiscalService from '../services/notaFiscalService'
 
 /**
+ * A data que posiciona a faixa no tempo.
+ *
+ * Normalmente e a do ato na SEFAZ. Mas a linha e gravada ANTES da chamada (para nao perder o
+ * rastro se a resposta se perder num timeout), entao a faixa ainda nao confirmada tem
+ * protocolodata vazia — e `new Date(null)` cai no epoch, jogando ela num card "Dez/1969" no
+ * fim da pagina, justamente a que precisa ser vista primeiro. O backend usa o mesmo
+ * coalesce para agrupar e ordenar (InutilizacaoService::anos).
+ */
+export const dataEfetiva = (faixa) => faixa?.protocolodata || faixa?.criacao
+
+/**
  * Chave YYYY-MM-01 do mes, no fuso LOCAL.
  *
  * Nao da para fatiar a string do JSON: o backend serializa em UTC (uma inutilizacao de
@@ -35,7 +46,7 @@ export const useInutilizacaoStore = defineStore('inutilizacao', {
       const meses = new Map()
 
       state.faixas.forEach((faixa) => {
-        const mes = mesLocal(faixa.protocolodata)
+        const mes = mesLocal(dataEfetiva(faixa))
         if (!meses.has(mes)) {
           meses.set(mes, { mes, modelos: new Map(), totalFaixas: 0, totalNumeros: 0 })
         }

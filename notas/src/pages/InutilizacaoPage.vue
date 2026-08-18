@@ -11,7 +11,7 @@ import {
   formataProtocolo,
   formataTimestamp,
 } from '@components/formatters'
-import { useInutilizacaoStore } from '../stores/inutilizacaoStore'
+import { useInutilizacaoStore, dataEfetiva } from '../stores/inutilizacaoStore'
 import InutilizacaoDialog from '../components/dialogs/InutilizacaoDialog.vue'
 import LacunasDialog from '../components/dialogs/LacunasDialog.vue'
 
@@ -155,9 +155,26 @@ onMounted(() => inutilizacaoStore.inicializar())
                   <!-- Data, protocolo e justificativa sao contexto, nao a informacao que se
                        procura na linha: ficam no mesmo cinza discreto do titulo do modelo. -->
                   <td class="text-no-wrap text-grey-7">
-                    {{ formataTimestamp(faixa.protocolodata, 4, true) }}
+                    {{ formataTimestamp(dataEfetiva(faixa), 4, true) }}
                   </td>
-                  <td class="text-no-wrap text-grey-7">
+                  <!--
+                    Sem protocolo, a faixa foi enviada a SEFAZ mas a resposta nao voltou (ou
+                    foi recusada). Ela pode estar inutilizada la e nao aqui, entao precisa
+                    saltar aos olhos: e a unica linha da tela que pede acao.
+                  -->
+                  <td v-if="!faixa.homologada" class="text-no-wrap">
+                    <q-badge color="negative" class="text-weight-medium">
+                      <q-icon name="warning" size="xs" class="q-mr-xs" />
+                      Sem protocolo
+                    </q-badge>
+                    <q-tooltip>
+                      {{
+                        faixa.xmotivo ||
+                        'A SEFAZ não confirmou esta inutilização. Consulte a situação da faixa antes de tentar de novo.'
+                      }}
+                    </q-tooltip>
+                  </td>
+                  <td v-else class="text-no-wrap text-grey-7">
                     {{ formataProtocolo(faixa.protocolo) }}
                   </td>
                   <td class="text-grey-7">{{ faixa.justificativa }}</td>

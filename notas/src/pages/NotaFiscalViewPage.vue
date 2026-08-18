@@ -11,7 +11,6 @@ import {
   getPagamentoIcon,
   getPagamentoColor,
   getFreteLabel,
-  STATUS_OPTIONS,
 } from '../constants/notaFiscal'
 import {
   formataCnpjCpf,
@@ -96,11 +95,6 @@ const cartasCorrecao = computed(() => {
 const maiorSequenciaCartaCorrecao = computed(() => {
   if (cartasCorrecao.value.length === 0) return 0
   return Math.max(...cartasCorrecao.value.map((c) => c.sequencia || 0))
-})
-
-// Status disponíveis para alteração (exclui o status atual)
-const statusDisponiveis = computed(() => {
-  return STATUS_OPTIONS.filter((status) => status.value !== nota.value?.status)
 })
 
 // URL base para negócios
@@ -840,165 +834,15 @@ const copiarChave = () => {
   }
 }
 
-// Alterar status manualmente
-const statusDialog = ref(false)
-
-const abrirDialogStatus = () => {
-  statusDialog.value = true
-}
-
-const alterarStatus = async (novoStatus) => {
-  const statusLabel = STATUS_OPTIONS.find((s) => s.value === novoStatus)?.label
-  $q.dialog({
-    title: 'Confirmar alteração de status',
-    message: `Esta ação irá alterar o status da nota para "${statusLabel}". Digite ALTERAR para confirmar:`,
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      isValid: (val) => val === 'ALTERAR',
-    },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Confirmar', color: 'warning', flat: true },
-  }).onOk(async () => {
-    try {
-      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, novoStatus)
-
-      $q.notify({
-        type: 'positive',
-        message: 'Status alterado com sucesso',
-      })
-
-      statusDialog.value = false
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao alterar status',
-        caption: error.response?.data?.message || error.message,
-      })
-    }
-  })
-}
-
-// Limpar autorização/cancelamento
-const limparAutorizacao = async () => {
-  $q.dialog({
-    title: 'Limpar Autorização',
-    message:
-      'Esta ação irá limpar a autorização e cancelamento da nota. O status será alterado para "Erro". Digite LIMPAR para confirmar:',
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      isValid: (val) => val === 'LIMPAR',
-    },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Confirmar', color: 'warning', flat: true },
-  }).onOk(async () => {
-    try {
-      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
-        status: 'ERR',
-        nfeautorizacao: null,
-        nfedataautorizacao: null,
-        nfecancelamento: null,
-        nfedatacancelamento: null,
-      })
-
-      $q.notify({
-        type: 'positive',
-        message: 'Autorização e cancelamento limpos com sucesso',
-      })
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao limpar autorização',
-        caption: error.response?.data?.message || error.message,
-      })
-    }
-  })
-}
-
-// Limpar cancelamento
-const limparCancelamento = async () => {
-  $q.dialog({
-    title: 'Limpar Cancelamento',
-    message:
-      'Esta ação irá limpar o cancelamento da nota. O status será alterado para "Autorizada". Digite LIMPAR para confirmar:',
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      isValid: (val) => val === 'LIMPAR',
-    },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Confirmar', color: 'warning', flat: true },
-  }).onOk(async () => {
-    try {
-      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
-        status: 'AUT',
-        nfecancelamento: null,
-        nfedatacancelamento: null,
-      })
-
-      $q.notify({
-        type: 'positive',
-        message: 'Cancelamento limpo com sucesso',
-      })
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao limpar cancelamento',
-        caption: error.response?.data?.message || error.message,
-      })
-    }
-  })
-}
-
-// Limpar inutilização
-const limparInutilizacao = async () => {
-  $q.dialog({
-    title: 'Limpar Inutilização',
-    message:
-      'Esta ação irá limpar a inutilização da nota. O status será alterado para "Erro". Digite LIMPAR para confirmar:',
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      isValid: (val) => val === 'LIMPAR',
-    },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Confirmar', color: 'warning', flat: true },
-  }).onOk(async () => {
-    try {
-      await notaFiscalStore.alterarStatusNfe(nota.value.codnotafiscal, {
-        status: 'ERR',
-        nfeinutilizacao: null,
-        nfedatainutilizacao: null,
-      })
-
-      $q.notify({
-        type: 'positive',
-        message: 'Inutilização limpa com sucesso',
-      })
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao limpar inutilização',
-        caption: error.response?.data?.message || error.message,
-      })
-    }
-  })
-}
-
 // Ref do componente de ações
 const acoesRef = ref(null)
 
-// Atalho F9 para enviar NFe
+// Atalho F9 para emitir a NFe
 const handleKeyDown = (e) => {
   if (e.key === 'F9') {
     e.preventDefault()
-    if (acoesRef.value?.podeEnviar && !acoesRef.value?.loadingEnviar) {
-      acoesRef.value.enviarNfe()
+    if (acoesRef.value?.podeEmitir && !acoesRef.value?.loadingEmitir) {
+      acoesRef.value.emitir()
     }
   }
 }
@@ -1339,18 +1183,6 @@ onUnmounted(() => {
                     |
                     {{ formataTimestamp(nota.nfedataautorizacao, 4, true) }}
                   </span>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    icon="clear"
-                    color="negative"
-                    class="q-ml-xs"
-                    @click="limparAutorizacao"
-                  >
-                    <q-tooltip>Limpar autorização e cancelamento</q-tooltip>
-                  </q-btn>
                 </div>
               </template>
 
@@ -1365,18 +1197,6 @@ onUnmounted(() => {
                     |
                     {{ formataTimestamp(nota.nfedatacancelamento, 4, true) }}
                   </span>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    icon="clear"
-                    color="negative"
-                    class="q-ml-xs"
-                    @click="limparCancelamento"
-                  >
-                    <q-tooltip>Limpar cancelamento</q-tooltip>
-                  </q-btn>
                 </div>
               </template>
 
@@ -1391,18 +1211,6 @@ onUnmounted(() => {
                     |
                     {{ formataTimestamp(nota.nfedatainutilizacao, 4, true) }}
                   </span>
-                  <q-btn
-                    flat
-                    dense
-                    round
-                    size="sm"
-                    icon="clear"
-                    color="negative"
-                    class="q-ml-xs"
-                    @click="limparInutilizacao"
-                  >
-                    <q-tooltip>Limpar inutilização</q-tooltip>
-                  </q-btn>
                 </div>
               </template>
 
@@ -1424,14 +1232,8 @@ onUnmounted(() => {
                 :nota="nota"
                 :api="api"
                 show-extras
-                :pode-forcar-contingencia="temPermissao('Gerente')"
                 @action-completed="onActionCompleted"
               />
-
-              <!-- Alterar Status -->
-              <q-btn dense round flat color="grey-7" icon="edit_note" @click="abrirDialogStatus">
-                <q-tooltip>Alterar status manualmente</q-tooltip>
-              </q-btn>
             </q-card-actions>
           </q-card>
         </div>
@@ -2349,45 +2151,6 @@ onUnmounted(() => {
         <q-card-section class="q-pa-md" style="height: calc(100% - 56px)">
           <iframe :src="espelhoPdfUrl" style="width: 100%; height: 100%; border: none" />
         </q-card-section>
-      </q-card>
-    </q-dialog>
-
-    <!-- Dialog Alterar Status -->
-    <q-dialog v-model="statusDialog">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Alterar Status da NFe</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-banner class="bg-warning text-grey-8 rounded-borders q-mb-sm">
-            <template v-slot:avatar>
-              <q-icon name="warning" />
-            </template>
-            Não altere o status sem ter CERTEZA ABSOLUTA. A alteração pode levar à perda de dados.
-            Somente confirme a operação se você tem as informações da nota fiscal para reparar em
-            caso de erro.
-          </q-banner>
-          <div class="text-body2 q-mb-md">Selecione o novo status:</div>
-          <div class="row q-col-gutter-sm">
-            <div v-for="status in statusDisponiveis" :key="status.value" class="col-6 col-sm-4">
-              <q-btn
-                unelevated
-                :color="status.color"
-                class="full-width"
-                stack
-                @click="alterarStatus(status.value)"
-              >
-                <q-icon :name="status.icon" size="md" />
-                <div class="text-caption q-mt-xs">{{ status.label }}</div>
-              </q-btn>
-            </div>
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
-        </q-card-actions>
       </q-card>
     </q-dialog>
 

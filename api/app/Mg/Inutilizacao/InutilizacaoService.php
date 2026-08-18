@@ -176,16 +176,19 @@ class InutilizacaoService
                 ->where('numerofinal', '>=', $filtros['numero']);
         }
 
-        // Faixa de datas, e nao "extract(year from protocolodata) = :ano", para que a consulta
-        // continue aproveitavel por um indice em (codfilial, protocolodata) se um dia a tabela
-        // crescer a ponto de precisar de um. Custa a mesma linha de codigo.
+        // Faixa de datas, e nao "extract(year from ...) = :ano", para que a consulta continue
+        // aproveitavel por um indice se um dia a tabela crescer a ponto de precisar de um.
+        // O coalesce acompanha o agrupamento de anos(): a faixa ainda sem protocolo pertence
+        // ao ano em que foi tentada — e e justamente a que o usuario precisa achar.
         if (!empty($filtros['ano'])) {
             $ano = (int) $filtros['ano'];
-            $qry->where('protocolodata', '>=', "{$ano}-01-01")
-                ->where('protocolodata', '<', ($ano + 1) . '-01-01');
+            $qry->whereRaw('coalesce(protocolodata, criacao) >= ?', ["{$ano}-01-01"])
+                ->whereRaw('coalesce(protocolodata, criacao) < ?', [($ano + 1) . '-01-01']);
         }
 
-        $qry->orderBy('protocolodata', 'desc')->orderBy('numeroinicial', 'desc');
+        // Pendente no topo do ano: sem protocolo a faixa exige acao, entao nao pode ficar
+        // enterrada no meio de milhares de linhas ja homologadas.
+        $qry->orderByRaw('coalesce(protocolodata, criacao) desc')->orderBy('numeroinicial', 'desc');
 
         // Limite so quando pedido: a tela carrega o ano inteiro e o pior ano do historico tem
         // 11.231 faixas (filial 101 em 2020). Um default cortaria isso em silencio.
@@ -199,13 +202,19 @@ class InutilizacaoService
     /**
      * Anos que tem inutilizacao, de TODAS as filiais — o filtro principal da tela.
      *
-     * protocolodata e NOT NULL desde database/inutilizacao_protocolodata.sql, que datou o
-     * historico importado pela criacao e limpou as datas em 1969 vindas da importacao.
+     * O coalesce com criacao existe porque a linha e gravada ANTES da chamada a SEFAZ, e a
+     * coluna protocolodata voltou a aceitar nulo por causa disso: se a resposta se perder num
+     * timeout, o registro previo e a unica prova de que a faixa ja foi enviada — sem ele, a
+     * proxima tentativa bate em "faixa ja inutilizada" sem ninguem entender o motivo.
+     *
+     * Essas faixas pendentes PRECISAM aparecer (sao as que exigem acao), entao caem no ano em
+     * que foram tentadas, e nao num "ano 0" a parte. E o mesmo criterio que o
+     * database/inutilizacao_protocolodata.sql usou para datar o historico importado.
      */
     public static function anos(): array
     {
         $sql = '
-            select extract(year from protocolodata)::int as ano,
+            select extract(year from coalesce(protocolodata, criacao))::int as ano,
                 count(*) as faixas,
                 sum(numerofinal - numeroinicial + 1) as numeros
             from tblinutilizacao
@@ -238,8 +247,8 @@ class InutilizacaoService
                 sum(i.numerofinal - i.numeroinicial + 1) as numeros
             from tblinutilizacao i
             inner join tblfilial f on (f.codfilial = i.codfilial)
-            where i.protocolodata >= :inicio
-            and i.protocolodata < :fim
+            where coalesce(i.protocolodata, i.criacao) >= :inicio
+            and coalesce(i.protocolodata, i.criacao) < :fim
             group by i.codfilial, f.filial
             order by i.codfilial
         ';

@@ -326,40 +326,21 @@ class NotaFiscalController extends Controller
     }
 
     /**
-     * Cria o XML da nota fiscal
+     * Cria e assina o XML da nota fiscal. NAO fala com a SEFAZ, entao e sincrono.
+     *
+     * `offline` e tri-state: ausente = automatico (segue o modo de emissao da empresa),
+     * true = contingencia off-line, false = on-line. So a NFC-e (65) tem contingencia.
+     *
+     * Nao devolve o XML no corpo: quem quiser o arquivo pede em /xml/{tipo}.
      */
     public function criar(Request $request, int $codnotafiscal)
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);
-        $offline = $request->boolean('offline', false);
+        $offline = $request->has('offline') ? $request->boolean('offline') : null;
 
-        $resultado = NFePHPService::criar($nota, $offline);
+        NFePHPService::criar($nota, $offline);
 
-        // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
-
-        return response()->json([
-            'nota' => new NotaFiscalDetailResource($notaAtualizada),
-            'resultado' => $resultado,
-        ]);
-    }
-
-    /**
-     * Envia a nota fiscal de forma síncrona
-     */
-    public function enviarSincrono(int $codnotafiscal)
-    {
-        $nota = NotaFiscal::findOrFail($codnotafiscal);
-
-        $resultado = NFePHPService::enviarSincrono($nota);
-
-        // Recarrega a nota e retorna o resource com o resultado da operação
-        $notaAtualizada = $this->notaDetalhe($codnotafiscal);
-
-        return response()->json([
-            'nota' => new NotaFiscalDetailResource($notaAtualizada),
-            'resultado' => $resultado,
-        ]);
+        return new NotaFiscalDetailResource($this->notaDetalhe($codnotafiscal));
     }
 
     /**
@@ -484,13 +465,26 @@ class NotaFiscalController extends Controller
     }
 
     /**
-     * Retorna o XML da nota fiscal
+     * Lista os XMLs que existem em disco para a nota (assinado, autorizado, denegado,
+     * cancelado e uma entrada por carta de correcao).
+     *
+     * So lista o que da para abrir, entao quem consome nao precisa tratar 404.
      */
-    public function xml(int $codnotafiscal)
+    public function xmls(int $codnotafiscal)
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
-        $xml = NFePHPService::xml($nota);
+        return response()->json(['data' => NFePHPService::listarXmls($nota)]);
+    }
+
+    /**
+     * Retorna um XML especifico da nota fiscal, pelo tipo devolvido em /xml.
+     */
+    public function xml(int $codnotafiscal, string $tipo)
+    {
+        $nota = NotaFiscal::findOrFail($codnotafiscal);
+
+        $xml = NFePHPService::xmlPorTipo($nota, $tipo);
 
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
@@ -650,24 +644,23 @@ class NotaFiscalController extends Controller
      *
      * 202 porque o trabalho ainda nao terminou: quem acompanha e o GET no mesmo path.
      *
-     * O parametro `offline` e tri-state e so vem quando o usuario avancado forca o modo:
-     * ausente = automatico (segue a conf da empresa), true = contingencia, false = online.
+     * Transmite o XML assinado que JA existe — nao cria nem recria nada. Quem monta o
+     * documento e o /criar; encadear os dois e papel do botao Emitir, no front.
      */
-    public function enviar(Request $request, int $codnotafiscal)
+    public function transmitir(int $codnotafiscal)
     {
-        $offline = $request->has('offline') ? $request->boolean('offline') : null;
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
-        return response()->json(NFePHPEnvioService::iniciar($nota, $offline), 202);
+        return response()->json(NFePHPEnvioService::iniciar($nota), 202);
     }
 
     /**
-     * Progresso do envio (polling de 3 em 3s).
+     * Progresso da transmissao (polling em rampa, ate 3 em 3s).
      *
      * Enquanto processa devolve so o payload do Redis, SEM tocar o Postgres — sao ~80
-     * polls por envio. A nota completa so vai junto no estado terminal.
+     * polls por transmissao. A nota completa so vai junto no estado terminal.
      */
-    public function progressoEnvio(int $codnotafiscal)
+    public function progressoTransmissao(int $codnotafiscal)
     {
         $progresso = NFePHPEnvioService::progresso($codnotafiscal);
 

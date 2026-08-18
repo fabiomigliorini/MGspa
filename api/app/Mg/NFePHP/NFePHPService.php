@@ -231,6 +231,14 @@ class NFePHPService extends MgService
     {
         $guard = static::lockDaNotaFiscal($nf);
 
+        // Recriar o XML de uma nota que ja saiu do fluxo de emissao sobrescreveria o
+        // -assinado.xml com os dados ATUAIS da nota, deixando-o divergente do -proc.xml que
+        // a SEFAZ autorizou. Para recriar de verdade, limpe a autorizacao antes.
+        if (!in_array($nf->status, [NotaFiscalStatusService::STATUS_DIGITACAO, NotaFiscalStatusService::STATUS_ERRO])) {
+            $label = NotaFiscalStatusService::STATUS_LABELS[$nf->status] ?? $nf->status;
+            throw new \Exception("Não é possível criar o XML de uma nota fiscal {$label}!");
+        }
+
         // Instancia Tools para a configuracao e certificado
         $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
         $tools->model($nf->modelo);
@@ -538,7 +546,7 @@ class NFePHPService extends MgService
         return true;
     }
 
-    public static function vincularProtocoloCancelamento(NotaFiscal $nf, $procEventoNFe, $resp, $justificativa = null, $tools = null)
+    public static function vincularProtocoloCancelamento(NotaFiscal $nf, $procEventoNFe, $resp, $justificativa = null)
     {
         // Verifica se tem o infEvento
         if (!isset($procEventoNFe->retEvento->infEvento)) {
@@ -557,17 +565,25 @@ class NFePHPService extends MgService
         $nf->nfedatacancelamento = Carbon::parse($infEvento->dhRegEvento);
         $nf->save(); // Dispara observers
 
-        // Pega XML do Cancelamento
-        if (isset($procEventoNFe->evento)) {
-            $xmlProtocolado = $resp;
-        } else {
-            // $xmlProtocolado = Complements::toAuthorize($tools->lastRequest, $resp);
-            $pathAutorizada = NFePHPPathService::pathNFeAutorizada($nf);
-            $xmlAutorizado = file_get_contents($pathAutorizada);
-            $xmlProtocolado = Complements::cancelRegister($xmlAutorizado, $resp);
+        // Monta o XML do cancelamento: a NFe autorizada com o <retEvento> anexado.
+        //
+        // O cancelRegister serve aos DOIS caminhos que chegam aqui — ele so procura um
+        // <retEvento> com chNFe casando, e tanto o retEnvEvento (cancelar) quanto o
+        // retConsSitNFe (consultar) tem isso dentro. Antes o caminho da consulta gravava o
+        // $resp cru, que e o envelope SOAP inteiro, SEM a nota: um XML que a DANFE nao
+        // renderiza e que o contador baixava no lugar do documento. Pior, ele sobrescrevia
+        // o arquivo bom assim que qualquer consulta rodasse depois do cancelamento.
+        $pathAutorizada = NFePHPPathService::pathNFeAutorizada($nf);
+        if (!file_exists($pathAutorizada)) {
+            // Sem o autorizado nao ha o que montar. Gravar o $resp cru so recriaria o lixo —
+            // e a resposta da SEFAZ ja fica registrada em tblsefazcomunicacao e em conversas/.
+            Log::warning("NF#{$nf->codnotafiscal}: XML autorizado inexistente, -cancelado.xml nao gravado ($pathAutorizada)");
+            return true;
         }
 
-        // Salva o Arquivo com a NFe Aprovada
+        $xmlProtocolado = Complements::cancelRegister(file_get_contents($pathAutorizada), $resp);
+
+        // Salva o Arquivo com a NFe Cancelada
         $pathNFeCancelada = NFePHPPathService::pathNFeCancelada($nf, true);
         file_put_contents($pathNFeCancelada, $xmlProtocolado);
 
@@ -686,7 +702,7 @@ class NFePHPService extends MgService
         if (isset($respStd->retEvento->infEvento->cStat)) {
 
             // Processa Retorno do Evento
-            $sucesso = static::processarEventoCancelamento($nf, $respStd, $resp, $justificativa, $tools);
+            $sucesso = static::processarEventoCancelamento($nf, $respStd, $resp, $justificativa);
             $nf = $nf->fresh();
 
             // joga mensagem recebida da Sefaz para Variaveis de Retorno
@@ -934,7 +950,7 @@ class NFePHPService extends MgService
         return false;
     }
 
-    public static function processarEventoCancelamento(NotaFiscal $nf, $procEventoNFe, $resp, $justificativa = null, $tools = null)
+    public static function processarEventoCancelamento(NotaFiscal $nf, $procEventoNFe, $resp, $justificativa = null)
     {
 
         // Se Autorizado
@@ -942,7 +958,7 @@ class NFePHPService extends MgService
         // 135 - Evento registrado e vinculado A NFe
         // 155 - Cancelamento Homologado Fora de Prazo
         if (in_array($procEventoNFe->retEvento->infEvento->cStat, [101, 135, 155])) {
-            static::vincularProtocoloCancelamento($nf, $procEventoNFe, $resp, $justificativa, $tools);
+            static::vincularProtocoloCancelamento($nf, $procEventoNFe, $resp, $justificativa);
             return true;
         }
 
@@ -1075,8 +1091,23 @@ class NFePHPService extends MgService
 
     public static function danfe(NotaFiscal $nf)
     {
+        // Nota cancelada: prefere o -cancelado.xml, que e a NFe autorizada com o <retEvento>
+        // anexado. As classes Danfe/Danfce acham esse evento sozinhas e carimbam "CANCELADA".
+        //
+        // Nao basta o arquivo existir: os gravados antes da correcao do
+        // vincularProtocoloCancelamento podem ser o envelope SOAP da consulta, sem a nota
+        // dentro — o Danfce lancaria "o xml do DANFE deve ser uma NFC-e modelo 65". Nesses
+        // casos a DANFE sai do autorizado, sem tarja, como sempre saiu.
+        $path = null;
+        if (!empty($nf->nfecancelamento)) {
+            $pathCancelada = NFePHPPathService::pathNFeCancelada($nf);
+            if (file_exists($pathCancelada) && str_contains(file_get_contents($pathCancelada), '<infNFe')) {
+                $path = $pathCancelada;
+            }
+        }
+
         // busca XML autorizado
-        $path = NFePHPPathService::pathNFeAutorizada($nf);
+        $path = $path ?? NFePHPPathService::pathNFeAutorizada($nf);
         if (!file_exists($path)) {
 
             // busca XML Assinado
@@ -1260,6 +1291,70 @@ class NFePHPService extends MgService
         if (!file_exists($path)) {
             throw new \Exception("Não existe arquivo XML para esta Nota Fiscal!", 1);
         }
+        return file_get_contents($path);
+    }
+
+    /**
+     * Caminho de cada tipo de XML da nota, indexado pelo tipo que a API expoe.
+     *
+     * Sao 4 slots fixos (sobrescritos a cada nova versao do documento) mais uma entrada por
+     * carta de correcao — a CCe e a unica que se acumula, por isso leva a sequencia no tipo.
+     * As conversas com a SEFAZ NAO entram aqui: ja tem endpoint e tela proprios.
+     */
+    protected static function caminhosXml(NotaFiscal $nf): array
+    {
+        if (empty($nf->nfechave)) {
+            return [];
+        }
+
+        $caminhos = [
+            'assinado' => ['XML Assinado', NFePHPPathService::pathNFeAssinada($nf)],
+            'autorizado' => ['XML Autorizado', NFePHPPathService::pathNFeAutorizada($nf)],
+            'denegado' => ['XML Denegado', NFePHPPathService::pathNFeDenegada($nf)],
+            'cancelado' => ['XML Cancelamento', NFePHPPathService::pathNFeCancelada($nf)],
+        ];
+
+        foreach ($nf->NotaFiscalCartaCorrecaoS as $cce) {
+            $caminhos["cce-{$cce->sequencia}"] = [
+                "Carta de Correção {$cce->sequencia}",
+                NFePHPPathService::pathCartaCorrecao($nf, $cce->sequencia),
+            ];
+        }
+
+        return $caminhos;
+    }
+
+    /**
+     * Lista os XMLs que existem em disco para a nota. So devolve o que da para abrir —
+     * quem chama nao precisa adivinhar nem tratar 404.
+     */
+    public static function listarXmls(NotaFiscal $nf): array
+    {
+        $xmls = [];
+
+        foreach (static::caminhosXml($nf) as $tipo => [$label, $path]) {
+            if (file_exists($path)) {
+                $xmls[] = ['tipo' => $tipo, 'label' => $label];
+            }
+        }
+
+        return $xmls;
+    }
+
+    public static function xmlPorTipo(NotaFiscal $nf, string $tipo): string
+    {
+        $caminhos = static::caminhosXml($nf);
+
+        if (!isset($caminhos[$tipo])) {
+            throw new \Exception("Tipo de XML desconhecido ({$tipo})!", 1);
+        }
+
+        [$label, $path] = $caminhos[$tipo];
+
+        if (!file_exists($path)) {
+            throw new \Exception("Não existe {$label} para esta Nota Fiscal!", 1);
+        }
+
         return file_get_contents($path);
     }
 

@@ -88,7 +88,7 @@ const nova = async (modelo) => {
   }
 }
 
-// Dispara o envio da nota recem-criada na instancia correta do componente.
+// Dispara a emissao da nota recem-criada na instancia correta do componente.
 const enviar = async (nota) => {
   if (!nota) {
     return
@@ -96,7 +96,7 @@ const enviar = async (nota) => {
   await nextTick()
   const comp = notaRefs.get(nota.codnotafiscal)
   if (comp) {
-    await comp.enviarNfe()
+    await comp.emitir()
   }
 }
 
