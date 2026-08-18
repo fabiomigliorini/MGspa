@@ -299,8 +299,11 @@ function criarXmlComEscolha(event) {
       type: 'radio',
       model: 'online',
       items: [
-        { label: 'On-line — transmite à SEFAZ agora', value: 'online' },
-        { label: 'Off-line — contingência, o robô transmite depois', value: 'offline' },
+        { label: 'On-line — para transmissão imediata', value: 'online' },
+        {
+          label: 'Off-line — para transmissão posterior',
+          value: 'offline',
+        },
       ],
     },
     cancel: { label: 'Cancelar', flat: true },
