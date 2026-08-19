@@ -105,11 +105,6 @@ class BeeRecargaService
      * da tela se o acerto que a originou fosse inativado depois — o item
      * continuaria contando e ninguém veria. Os predicados de `a` têm que ficar
      * no ON; movê-los para o WHERE transforma o LEFT JOIN de volta em INNER.
-     *
-     * `confirmado` é a defesa contra o buraco irmão: soma dos itens em lotes com
-     * status OK IGNORANDO o `inativo`. Um lote confirmado que foi inativado sai
-     * de `recarga` e o colaborador volta a aparecer zerado — mas o dinheiro está
-     * no cartão dele. Comparar `confirmado` com `recarga` denuncia esse caso.
      */
     public static function previa(int $codperiodo, int $codempresa): array
     {
@@ -126,7 +121,6 @@ class BeeRecargaService
                 f.filial,
                 COALESCE(SUM(ABS(a.saldo)), 0) AS extrato,
                 MAX(r.recarregado) AS recarga,
-                MAX(r.confirmado) AS confirmado,
                 COALESCE(SUM(ABS(a.saldo)), 0) - MAX(r.recarregado) AS saldo
             FROM tblperiodocolaborador pc
             JOIN tblcolaborador col ON col.codcolaborador = pc.codcolaborador
@@ -140,8 +134,7 @@ class BeeRecargaService
                   AND a.saldo <> 0
             LEFT JOIN LATERAL (
                 SELECT
-                    COALESCE(SUM(i.valor) FILTER (WHERE br.inativo IS NULL), 0) AS recarregado,
-                    COALESCE(SUM(i.valor) FILTER (WHERE br.status = :statusok), 0) AS confirmado
+                    COALESCE(SUM(i.valor) FILTER (WHERE br.inativo IS NULL), 0) AS recarregado
                 FROM tblbeerecargaperiodocolaborador i
                 JOIN tblbeerecarga br ON br.codbeerecarga = i.codbeerecarga
                 WHERE i.codperiodocolaborador = pc.codperiodocolaborador
@@ -155,7 +148,6 @@ class BeeRecargaService
             'codperiodo' => $codperiodo,
             'codempresa' => $codempresa,
             'forma' => PeriodoColaboradorAcerto::FORMA_BEE,
-            'statusok' => BeeRecarga::STATUS_OK,
         ]);
 
         return static::anexarCartao($linhas);
@@ -190,14 +182,7 @@ class BeeRecargaService
             $cartao = $daPessoa ? $daPessoa->first() : null;
             $l->extrato = (float) $l->extrato;
             $l->recarga = (float) $l->recarga;
-            $l->confirmado = (float) $l->confirmado;
             $l->saldo = (float) $l->saldo;
-            // Confirmado no cartão que não está em lote vivo: alguém inativou um
-            // lote já confirmado. O dinheiro está com a pessoa e o sistema
-            // esqueceu — a tela precisa gritar isso.
-            $l->confirmado_orfao = round($l->confirmado - $l->recarga, 2) > 0
-                ? round($l->confirmado - $l->recarga, 2)
-                : 0.0;
             $l->cartao = $cartao ? $cartao->numero_mascarado : null;
             $l->validade = $cartao ? $cartao->validade : null;
             $l->cartoes = $daPessoa ? $daPessoa->count() : 0;
@@ -426,18 +411,31 @@ class BeeRecargaService
                 continue;
             }
 
-            // A recarga ENTREGA um direito que já existe; ela nunca o cria. Sem
-            // este teto dá para pôr dinheiro no cartão sem rubrica nem título
-            // que o lastreie, e o excedente não é reconciliado com a folha nem
-            // transportado para o período seguinte — some como saldo negativo.
-            // Quem precisa de mais lança um adiantamento (rubrica + acerto), que
-            // sobe o extrato pelo caminho certo.
+            // Sem extrato não há direito nenhum, e o direito só nasce de rubrica
+            // ou título em aberto, sempre pela via do acerto. Mensagem própria
+            // porque o teto abaixo diria apenas "saldo disponível 0,00", que não
+            // conta ao RH o que fazer.
+            if ($linha->extrato <= 0) {
+                $erros[] = sprintf(
+                    '%s: sem extrato no período. Lance a rubrica e o acerto antes de recarregar.',
+                    $linha->nome
+                );
+                continue;
+            }
+
+            // A recarga ENTREGA um direito que já existe; ela nunca o cria. O
+            // teto é o SALDO (extrato menos o que já foi para o cartão), então a
+            // soma das recargas de um colaborador nunca passa do que o acerto
+            // dele justifica. Recarga parcial segue livre — o que se proíbe é o
+            // excedente, que não é reconciliado com a folha nem transportado
+            // para o período seguinte. Para entregar mais, sobe-se o extrato
+            // pelo acerto, que é onde a decisão do valor pertence.
             //
             // Tolerância de meio centavo, como no EfetivarAcertoRequest: os dois
             // lados arredondam em 2 casas e a comparação não pode falhar por isso.
             if ($valor > $linha->saldo + 0.005) {
                 $erros[] = sprintf(
-                    '%s: saldo disponível %s, solicitado %s. Para pagar mais, lance um adiantamento.',
+                    '%s: saldo disponível %s, solicitado %s. Para entregar mais, lance o acerto antes.',
                     $linha->nome,
                     number_format($linha->saldo, 2, ',', '.'),
                     number_format($valor, 2, ',', '.')

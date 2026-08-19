@@ -6,7 +6,6 @@ import { extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataCnpjCpf } from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
-import MgSelectPortador from '@components/MgSelectPortador.vue'
 
 /**
  * Monta um lote de recarga escolhendo quem entra e com quanto.
@@ -14,9 +13,16 @@ import MgSelectPortador from '@components/MgSelectPortador.vue'
  * Abre com quem tem saldo já marcado pelo valor cheio — o lote do mês é abrir e
  * confirmar; daí dá para desmarcar ou reduzir valores.
  *
- * A recarga ENTREGA um direito que já existe; ela não o cria. Por isso o teto de
- * cada linha é o saldo, e quem não tem saldo não entra: para pagar mais, o
- * caminho é o adiantamento (rubrica + acerto), que sobe o extrato antes.
+ * Os três valores por linha:
+ *   Extrato — tudo a que o colaborador tem direito no período;
+ *   Recarga — o que já foi para o cartão dele;
+ *   Saldo   — a diferença. Positivo é o que falta entregar; negativo é o que
+ *             foi entregue além do extrato.
+ *
+ * O valor digitado pode ficar abaixo do saldo (recarga parcial), nunca acima: a
+ * recarga entrega um direito que já existe, e o direito nasce de rubrica ou
+ * título em aberto, pela via do acerto. Para entregar mais, sobe-se o extrato
+ * pelo acerto — é lá que a decisão do valor pertence.
  *
  * Daqui NUNCA sai saldo: só codperiodocolaborador e valor. O saldo mostrado ao
  * lado de cada linha é referência visual; quem manda é o banco, que revalida
@@ -31,10 +37,6 @@ const props = defineProps({
   // propósito: a página já é dona desses dados, e um segundo fetch deixaria o
   // diálogo mostrar um saldo diferente da tela atrás dele.
   linhas: { type: Array, default: () => [] },
-
-  // codperiodocolaborador a marcar na abertura. A ação de linha manda um; o
-  // botão do cabeçalho manda vazio e marca todo mundo que tem saldo.
-  seed: { type: Array, default: () => [] },
 })
 
 const emit = defineEmits(['update:modelValue', 'gerado'])
@@ -66,11 +68,16 @@ const semAcento = (texto) =>
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
 
-// Quem tem o que receber. É trava: sem saldo não há o que entregar.
+// Quem tem o que receber. É trava: sem saldo não há o que entregar, e o valor
+// digitado tem o saldo por teto.
 const temSaldo = (l) => Number(l.saldo) > 0
 
-// Quem está envolvido na recarga. Quem não tem extrato nem recarga pertence ao
-// diálogo de adiantamento, não a este.
+// Separa os dois motivos de não ter saldo — nunca teve direito, ou já recebeu
+// tudo. A trava é a mesma; o que o RH precisa fazer a seguir é diferente.
+const temExtrato = (l) => Number(l.extrato) > 0
+
+// Quem aparece: tem extrato ou já recebeu recarga. Quem não tem nem um nem
+// outro não tem nada a ver com a recarga do período.
 const envolvidas = computed(() =>
   props.linhas.filter((l) => Number(l.extrato) !== 0 || Number(l.recarga) !== 0),
 )
@@ -146,11 +153,9 @@ const preparar = () => {
   marcados.value = {}
   valores.value = {}
 
-  // Sem seed, abre como o lote do mês: todo mundo que tem saldo, pelo cheio.
-  // Com seed (quem acabou de receber adiantamento), só aqueles.
-  const alvo = props.seed.length
-    ? envolvidas.value.filter((l) => props.seed.includes(l.codperiodocolaborador) && temSaldo(l))
-    : envolvidas.value.filter(temSaldo)
+  // Abre como o lote do mês: todo mundo que tem saldo, pelo valor cheio. Daí o
+  // RH desmarca ou reduz o que quiser.
+  const alvo = envolvidas.value.filter(temSaldo)
 
   for (const l of alvo) {
     marcados.value[l.codperiodocolaborador] = true
@@ -213,27 +218,24 @@ const submit = async () => {
       <q-card-section class="q-pb-none">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-sm-4">
-            <q-input outlined dense clearable v-model="busca" label="Buscar colaborador" autofocus>
+            <q-input outlined clearable v-model="busca" label="Buscar colaborador" autofocus>
               <template #prepend>
                 <q-icon name="search" />
               </template>
             </q-input>
           </div>
-          <div class="col-12 col-sm-4">
-            <MgSelectPortador v-model="codportador" clearable label="Debitar do portador" />
+          <div class="col-6 col-sm-4">
+            <MgInputData v-model="dia" label="Data do crédito" />
           </div>
-          <div class="col-6 col-sm-2">
-            <MgInputData v-model="dia" dense label="Data do crédito" />
-          </div>
-          <div class="col-6 col-sm-2">
-            <q-input outlined dense v-model="observacao" label="Observação" maxlength="200">
+          <div class="col-6 col-sm-4">
+            <q-input outlined v-model="observacao" label="Observação" maxlength="200">
               <q-tooltip>Vai para o histórico do lote e do título de adiantamento</q-tooltip>
             </q-input>
           </div>
         </div>
       </q-card-section>
 
-      <q-card-section class="row items-center q-py-sm">
+      <q-card-section class="row items-center q-py-sm q-mt-md">
         <q-btn
           flat
           dense
@@ -242,6 +244,7 @@ const submit = async () => {
           label="Marcar quem tem saldo"
           @click="marcarTodos()"
         />
+        <q-space />
         <q-btn flat dense size="sm" color="grey-7" label="Limpar" @click="limpar()" />
       </q-card-section>
 
@@ -258,8 +261,17 @@ const submit = async () => {
             <q-checkbox
               dense
               :model-value="marcada(l)"
+              :disable="!temSaldo(l)"
               @update:model-value="(v) => alternar(l, v)"
-            />
+            >
+              <q-tooltip v-if="!temSaldo(l)">
+                {{
+                  temExtrato(l)
+                    ? 'Sem saldo — o extrato deste período já foi entregue no cartão'
+                    : 'Sem extrato no período — lance a rubrica e o acerto antes de recarregar'
+                }}
+              </q-tooltip>
+            </q-checkbox>
           </div>
 
           <div class="col q-pl-sm">
@@ -285,6 +297,16 @@ const submit = async () => {
             </div>
           </div>
 
+          <div class="col-2 text-right text-caption text-grey-7">
+            <div>{{ formataNumero(l.extrato) }}</div>
+            <div class="text-grey-5">extrato</div>
+          </div>
+
+          <div class="col-2 text-right text-caption text-grey-7">
+            <div>{{ formataNumero(l.recarga) }}</div>
+            <div class="text-grey-5">recarga</div>
+          </div>
+
           <div class="col-2 text-right text-caption">
             <div
               :class="
@@ -293,8 +315,7 @@ const submit = async () => {
             >
               {{ formataNumero(l.saldo) }}
             </div>
-            <div v-if="Number(l.saldo) < 0" class="text-red-7">a conferir</div>
-            <div v-else class="text-grey-5">saldo</div>
+            <div class="text-grey-5">saldo</div>
           </div>
 
           <div class="col-3 q-pl-md">
