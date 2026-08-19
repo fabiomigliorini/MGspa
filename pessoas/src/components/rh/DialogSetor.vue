@@ -26,8 +26,12 @@ const salvando = ref(false)
 // Lista local: `props.setor` é uma cópia rasa congelada no clique do lápis, o pai
 // nunca a reatribui. Sem cópia local o diálogo nunca veria a lista mudar.
 const colaboradores = ref([])
-const ocupado = ref(null) // codperiodocolaborador em operação
-const alterado = ref(false) // houve remoção → pai precisa recarregar
+// Remoção é PENDENTE: a lixeira só marca, o DELETE sai no Salvar. Assim o
+// Cancelar realmente desfaz.
+const marcados = ref([])
+// Só vira true quando um DELETE de fato passou — aí o pai precisa recarregar
+// mesmo que o diálogo continue aberto por causa de alguma falha.
+const alterado = ref(false)
 
 const isNovo = computed(() => !cad.value.codsetor)
 
@@ -47,13 +51,13 @@ watch(
             indicadorcoletivo: false,
           }
       colaboradores.value = props.setor?.colaboradores ? [...props.setor.colaboradores] : []
+      marcados.value = []
       alterado.value = false
     }
   },
 )
-// O `salvo` sai no FECHAMENTO, não a cada lixeira: a remoção é imediata e o
-// diálogo continua aberto para várias — avisar o pai a cada clique recarregaria
-// a unidade inteira à toa por cima de uma lista local já correta.
+// Rede de segurança: se algum DELETE passou mas o diálogo ficou aberto (outro
+// falhou), o pai ainda precisa recarregar quando o usuário fechar no Cancelar.
 watch(dialog, (v) => {
   emit('update:modelValue', v)
   if (!v && alterado.value) {
@@ -62,10 +66,46 @@ watch(dialog, (v) => {
   }
 })
 
+const notificar = (color, icon, message) => $q.notify({ color, textColor: 'white', icon, message })
+
+const marcado = (c) => marcados.value.includes(c.codperiodocolaborador)
+
+// Só alterna a marca — nenhuma chamada à API aqui.
+const toggleRemover = (c) => {
+  marcados.value = marcado(c)
+    ? marcados.value.filter((x) => x !== c.codperiodocolaborador)
+    : [...marcados.value, c.codperiodocolaborador]
+}
+
+// Aplica as remoções pendentes. Uma a uma: não há transação entre requisições,
+// então quem passa some da lista e quem falha é devolvido (desmarcado) com o
+// motivo — tipicamente o 422 de acerto ativo.
+const aplicarRemocoes = async () => {
+  const falhas = []
+  for (const codpc of [...marcados.value]) {
+    const c = colaboradores.value.find((x) => x.codperiodocolaborador === codpc)
+    if (!c) continue
+    try {
+      await sRh.excluirColaborador(props.codperiodo, codpc)
+      colaboradores.value = colaboradores.value.filter((x) => x.codperiodocolaborador !== codpc)
+      marcados.value = marcados.value.filter((x) => x !== codpc)
+      alterado.value = true
+    } catch (error) {
+      marcados.value = marcados.value.filter((x) => x !== codpc)
+      falhas.push(`${c.nome}: ${extrairErro(error, 'erro ao remover')}`)
+    }
+  }
+  return falhas
+}
+
 const submit = async () => {
   if (salvando.value) return
   salvando.value = true
   try {
+    // As remoções vêm primeiro: se alguma falhar, o diálogo fica aberto com o
+    // motivo e o usuário decide, em vez de fechar deixando o erro passar batido.
+    const falhas = isNovo.value ? [] : await aplicarRemocoes()
+
     const payload = {
       setor: cad.value.setor,
       codunidadenegocio: cad.value.codunidadenegocio,
@@ -79,55 +119,22 @@ const submit = async () => {
     } else {
       await sRh.atualizarSetor(cad.value.codsetor, payload)
     }
-    $q.notify({
-      color: 'green-5',
-      textColor: 'white',
-      icon: 'done',
-      message: isNovo.value ? 'Setor criado' : 'Setor atualizado',
-    })
+
+    if (falhas.length > 0) {
+      notificar('red-5', 'error', falhas.join(' | '))
+      return
+    }
+
+    notificar('green-5', 'done', isNovo.value ? 'Setor criado' : 'Setor atualizado')
     // Zera antes de fechar: o watch(dialog) emitiria um segundo `salvo`.
     alterado.value = false
     dialog.value = false
     emit('salvo')
   } catch (error) {
-    $q.notify({
-      color: 'red-5',
-      textColor: 'white',
-      icon: 'error',
-      message: extrairErro(error, 'Erro ao salvar setor'),
-    })
+    notificar('red-5', 'error', extrairErro(error, 'Erro ao salvar setor'))
   } finally {
     salvando.value = false
   }
-}
-
-const notificar = (color, icon, message) => $q.notify({ color, textColor: 'white', icon, message })
-
-const tirarDaLista = (c) => {
-  colaboradores.value = colaboradores.value.filter(
-    (x) => x.codperiodocolaborador !== c.codperiodocolaborador,
-  )
-  alterado.value = true
-}
-
-const removerColaborador = (c) => {
-  $q.dialog({
-    title: 'Remover Colaborador',
-    message: `Remover "${c.nome}" do período? Ele poderá ser adicionado em outro setor; metas e saldos de indicadores não são afetados. As rubricas configuradas para ele neste período serão perdidas.`,
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Remover', color: 'red-5', flat: true },
-  }).onOk(async () => {
-    ocupado.value = c.codperiodocolaborador
-    try {
-      await sRh.excluirColaborador(props.codperiodo, c.codperiodocolaborador)
-      tirarDaLista(c)
-      notificar('green-5', 'done', 'Colaborador removido')
-    } catch (error) {
-      notificar('red-5', 'error', extrairErro(error, 'Erro ao remover colaborador'))
-    } finally {
-      ocupado.value = null
-    }
-  })
 }
 </script>
 
@@ -178,8 +185,8 @@ const removerColaborador = (c) => {
           </div>
         </q-card-section>
 
-        <!-- COLABORADORES DO SETOR — daqui pra baixo a ação é IMEDIATA, não
-             depende do Salvar. O separador marca essa fronteira. -->
+        <!-- COLABORADORES DO SETOR — a lixeira só MARCA; o DELETE sai no Salvar,
+             para o Cancelar poder desfazer. -->
         <template v-if="!isNovo">
           <q-separator inset />
 
@@ -193,8 +200,16 @@ const removerColaborador = (c) => {
             <q-list bordered separator v-if="colaboradores.length > 0">
               <q-item v-for="c in colaboradores" :key="c.codperiodocolaborador">
                 <q-item-section>
-                  <q-item-label>{{ c.nome }}</q-item-label>
-                  <q-item-label caption v-if="c.cargo">{{ c.cargo }}</q-item-label>
+                  <q-item-label :class="marcado(c) ? 'text-strike text-grey-6' : ''">
+                    {{ c.nome }}
+                  </q-item-label>
+                  <q-item-label
+                    caption
+                    v-if="c.cargo"
+                    :class="marcado(c) ? 'text-strike text-grey-6' : ''"
+                  >
+                    {{ c.cargo }}
+                  </q-item-label>
                 </q-item-section>
 
                 <!-- O badge é quem explica por que a lixeira está travada: o
@@ -212,20 +227,27 @@ const removerColaborador = (c) => {
                     dense
                     round
                     type="button"
-                    icon="delete"
+                    :icon="marcado(c) ? 'undo' : 'delete'"
                     size="sm"
-                    color="grey-7"
+                    :color="marcado(c) ? 'red-5' : 'grey-7'"
                     :disable="c.status === 'E'"
-                    :loading="ocupado === c.codperiodocolaborador"
-                    @click="removerColaborador(c)"
+                    @click="toggleRemover(c)"
                   >
-                    <q-tooltip>Remover do período</q-tooltip>
+                    <q-tooltip>
+                      {{ marcado(c) ? 'Desfazer remoção' : 'Remover do período' }}
+                    </q-tooltip>
                   </q-btn>
                 </q-item-section>
               </q-item>
             </q-list>
 
             <div v-else class="q-pa-md text-center text-grey">Nenhum colaborador neste setor</div>
+
+            <div v-if="marcados.length > 0" class="text-caption text-red-7 q-mt-sm">
+              {{ marcados.length }} colaborador(es) será(ão) removido(s) do período ao salvar. Metas
+              e saldos de indicadores não são afetados; as rubricas configuradas para eles neste
+              período serão perdidas.
+            </div>
           </q-card-section>
         </template>
 
