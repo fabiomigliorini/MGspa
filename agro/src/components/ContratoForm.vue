@@ -189,6 +189,7 @@ async function salvar() {
           <div class="col-12 col-sm-9">
             <MgSelectPessoa
               v-model="cad.form.codpessoa"
+              clearable
               label="Contraparte"
               lazy-rules
               :rules="[(v) => !!v || 'Informe a contraparte']"
@@ -202,7 +203,7 @@ async function salvar() {
 
           <!-- CORRETORA -->
           <div class="col-12 col-sm-9">
-            <MgSelectPessoa v-model="cad.form.codpessoacorretora" label="Corretora" />
+            <MgSelectPessoa v-model="cad.form.codpessoacorretora" label="Corretora" clearable />
           </div>
 
           <!-- NUMERO DA CORRETORA -->
@@ -251,7 +252,7 @@ async function salvar() {
 
           <!-- COOPERATIVA -->
           <div class="col-12 col-sm-9">
-            <MgSelectPessoa v-model="cad.form.codpessoacooperativa" label="Cooperativa" />
+            <MgSelectPessoa v-model="cad.form.codpessoacooperativa" label="Cooperativa" clearable />
           </div>
 
           <!-- NUMERO DA COOPERATIVA -->

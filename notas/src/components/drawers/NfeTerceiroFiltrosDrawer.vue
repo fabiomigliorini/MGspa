@@ -224,6 +224,7 @@ onMounted(() => {
       <div class="q-mb-md">
         <SelectPessoa
           v-model="filters.codpessoa"
+          clearable
           label="Fornecedor"
           :bottom-slots="false"
           @select="handlePessoaSelect"

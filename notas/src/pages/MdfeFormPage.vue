@@ -195,6 +195,7 @@ const submit = async () => {
               <div class="col">
                 <SelectPessoa
                   v-model="veiculo.codpessoacondutor"
+                  clearable
                   label="Condutor"
                   :bottom-slots="false"
                 />

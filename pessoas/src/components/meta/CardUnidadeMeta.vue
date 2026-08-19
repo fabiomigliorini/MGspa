@@ -509,6 +509,7 @@ const removerFixo = (fixo) => {
             <div class="col-12" v-if="isNovaPessoa">
               <SelectPessoa
                 v-model="modelPessoa.codpessoa"
+                clearable
                 outlined
                 label="Colaborador"
                 :rules="[(v) => !!v || 'Obrigatorio']"

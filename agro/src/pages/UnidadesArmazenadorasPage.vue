@@ -122,7 +122,7 @@ onMounted(store.carregar)
                 />
               </div>
               <div v-if="form.tipo === 'TERCEIRO'" class="col-12">
-                <MgSelectPessoa v-model="form.codpessoa" label="Dono (armazém de terceiro)" />
+                <MgSelectPessoa v-model="form.codpessoa" label="Dono (armazém de terceiro)" clearable />
               </div>
               <div class="col-12">
                 <q-input

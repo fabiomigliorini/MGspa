@@ -241,6 +241,7 @@ watch(
             <div class="col-12">
               <SelectPessoa
                 v-model="form.codpessoa"
+                clearable
                 label="Credenciadora / Administradora"
                 :disable="notaBloqueada"
                 hint="Empresa processadora do pagamento (opcional)"

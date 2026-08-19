@@ -516,6 +516,7 @@ watch(() => route.fullPath, carregar)
               <div class="col-9">
                 <SelectPessoa
                   v-model="editar.codpessoa"
+                  clearable
                   outlined
                   label="Pessoa"
                   autofocus
