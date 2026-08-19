@@ -161,8 +161,35 @@ class PeriodoColaboradorController extends Controller
             return response()->json(['erro' => 'Não é possível excluir um colaborador encerrado. Estorne o encerramento primeiro.'], 422);
         }
 
+        // Só acerto ATIVO barra: inativar o acerto já estorna as liquidações, então
+        // financeiramente ele está desfeito e não faz sentido travar a remoção.
+        $acertos = PeriodoColaboradorAcerto::where('codperiodocolaborador', $codperiodocolaborador)
+            ->whereNull('inativo')
+            ->count();
+        if ($acertos > 0) {
+            return response()->json(['erro' => 'Não é possível remover um colaborador com acerto ativo (' . $acertos . '). Inative os acertos antes de removê-lo.'], 422);
+        }
+
+        // Recarga Bee tem FK sem ON DELETE, então o delete estouraria SQLSTATE 23503 cru.
+        $recargas = BeeRecargaPeriodoColaborador::where('codperiodocolaborador', $codperiodocolaborador)->count();
+        if ($recargas > 0) {
+            return response()->json(['erro' => 'Não é possível remover um colaborador incluído em lote de recarga Bee. Cancele a recarga antes de removê-lo.'], 422);
+        }
+
         DB::beginTransaction();
         try {
+            // Os acertos inativos vão junto pelo ON DELETE CASCADE, mas tblmovimentotitulo
+            // aponta pra eles com FK sem ON DELETE — o cascade estouraria 23503. Desvincula
+            // antes: o movimento (e o estorno dele) continua no título, preservando o
+            // histórico financeiro; só perde o ponteiro pro acerto que vai deixar de existir.
+            $codsAcerto = PeriodoColaboradorAcerto::where('codperiodocolaborador', $codperiodocolaborador)
+                ->pluck('codperiodocolaboradoracerto');
+            if ($codsAcerto->isNotEmpty()) {
+                DB::table('tblmovimentotitulo')
+                    ->whereIn('codperiodocolaboradoracerto', $codsAcerto)
+                    ->update(['codperiodocolaboradoracerto' => null]);
+            }
+
             ColaboradorRubrica::where('codperiodocolaborador', $codperiodocolaborador)->delete();
             $pc->delete();
             DB::commit();

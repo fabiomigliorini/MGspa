@@ -233,6 +233,13 @@ const editarSetor = (setor) => {
   dialogSetor.value = true
 }
 
+// Remover/mover colaborador muda o custo do período, então além do refetch da
+// unidade é preciso bubblar pro PeriodoDashboard recarregar os KPIs do topo.
+const onSalvoSetor = async () => {
+  await carregar()
+  emit('atualizado')
+}
+
 const toggleSetor = async (setor) => {
   try {
     if (setor.inativo) {
@@ -466,7 +473,8 @@ watch(
       v-model="dialogSetor"
       :setor="setorEdit"
       :codunidadenegocio="codunidade"
-      @salvo="carregar()"
+      :codperiodo="codperiodo"
+      @salvo="onSalvoSetor()"
     />
     <DialogAdicionarColaboradores
       v-model="dialogAddColab"
