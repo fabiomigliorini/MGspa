@@ -111,6 +111,24 @@ class BeeRecargaController extends Controller
         }
     }
 
+    // Desfaz a confirmação (OK -> PEND). Confirmar trava o lote contra inativar;
+    // este é o caminho de volta para quem confirmou por engano.
+    public function desconfirmar(int $codperiodo, int $codbeerecarga)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        DB::beginTransaction();
+        try {
+            $recarga = BeeRecargaService::desconfirmar($codperiodo, $codbeerecarga);
+            DB::commit();
+            $recarga->load(['Filial.Empresa', 'Titulo.Portador']);
+            return new BeeRecargaResource($recarga);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
+    }
+
     public function inativar(int $codperiodo, int $codbeerecarga)
     {
         Autorizador::autoriza(['Recursos Humanos']);

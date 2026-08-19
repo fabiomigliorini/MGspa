@@ -16,11 +16,7 @@
         </div>
       </q-infinite-scroll>
 
-      <q-page-sticky
-        position="bottom-right"
-        :offset="[18, 18]"
-        v-if="user.temPermissao('Publico')"
-      >
+      <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="user.temPermissao('Publico')">
         <q-btn fab icon="add" color="accent" :to="{ name: 'pessoanova' }" />
       </q-page-sticky>
     </template>
@@ -62,6 +58,7 @@
               v-model="sPessoa.filtroPesquisa.pessoa"
               ref="pessoa"
               label="Pessoa"
+              clearable
               autofocus
               unmasked-value
             />
@@ -131,12 +128,12 @@ import { debounce } from 'quasar'
 export default {
   components: {
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
-    SelectGrupoEconomico: defineAsyncComponent(() =>
-      import('@components/MgSelectGrupoEconomico.vue'),
+    SelectGrupoEconomico: defineAsyncComponent(
+      () => import('@components/MgSelectGrupoEconomico.vue'),
     ),
     SelectCidade: defineAsyncComponent(() => import('@components/MgSelectCidade.vue')),
-    SelectFormaPagamento: defineAsyncComponent(() =>
-      import('@components/MgSelectFormaPagamento.vue'),
+    SelectFormaPagamento: defineAsyncComponent(
+      () => import('@components/MgSelectFormaPagamento.vue'),
     ),
     SelectGrupoCliente: defineAsyncComponent(() => import('@components/MgSelectGrupoCliente.vue')),
     CardPessoas: defineAsyncComponent(() => import('components/pessoa/CardPessoas.vue')),

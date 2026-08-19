@@ -80,9 +80,20 @@ class AcertoController extends Controller
 
         DB::beginTransaction();
         try {
+            $acerto = PeriodoColaboradorAcerto::findOrFail($codperiodocolaboradoracerto);
             AcertoService::inativarAcerto($codperiodocolaboradoracerto);
             DB::commit();
-            return response()->json(['data' => ['status' => 'inativado']]);
+
+            // O dinheiro que já foi para o cartão não volta com o estorno. Sem
+            // este aviso o colaborador fica com saldo negativo na tela de
+            // recarga e ninguém sabe de onde veio.
+            [$vivo, $confirmado] = AcertoService::recargaJaEnviada($acerto->codperiodocolaborador);
+
+            return response()->json(['data' => [
+                'status' => 'inativado',
+                'recarga_enviada' => $vivo,
+                'recarga_confirmada' => $confirmado,
+            ]]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['erro' => $e->getMessage()], 422);
