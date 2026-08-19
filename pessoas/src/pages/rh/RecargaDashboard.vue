@@ -245,12 +245,12 @@ onMounted(carregar)
             <q-btn
               flat
               round
-              icon="paid"
-              size="sm"
+              icon="arrow_back"
+              size="md"
               color="grey-7"
               :to="{ name: 'rhDashboard', params: { codperiodo: route.params.codperiodo } }"
             >
-              <q-tooltip>Metas &amp; Variáveis do período</q-tooltip>
+              <q-tooltip>Metas e variáveis do período</q-tooltip>
             </q-btn>
           </div>
         </q-item-section>
