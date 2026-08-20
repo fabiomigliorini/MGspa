@@ -18,6 +18,13 @@ class GoogleCalendarService
         $client->setAuthConfig(base_path(config('services.google.drive_credentials_path')));
         $client->addScope(Calendar::CALENDAR);
 
+        // O container nao tem pcntl, entao o $timeout do job nunca é aplicado:
+        // sem isto, uma chamada pendurada prende um worker por tempo indefinido.
+        $client->setHttpClient(new \GuzzleHttp\Client([
+            'timeout' => 15,
+            'connect_timeout' => 5,
+        ]));
+
         $this->calendarService = new Calendar($client);
     }
 

@@ -53,14 +53,24 @@ class AppServiceProvider extends ServiceProvider
         //   Não depende de integrações externas.
         \Mg\NotaFiscal\NotaFiscal::observe(\Mg\NotaFiscal\Observers\NotaFiscalObserver::class);
 
-        // Observers PENDENTES (dependem de Google Calendar/Drive — precisam
-        // credentials em storage/app/google/credentials.json + GOOGLE_DRIVE_*_ID
-        // configurados. Ativar individualmente após validar credenciais):
-        // \Mg\Pessoa\Pessoa::observe(\Mg\Pessoa\PessoaObserver::class);
-        // \Mg\Pessoa\Dependente::observe(\Mg\Pessoa\DependenteObserver::class);
-        // \Mg\Colaborador\Colaborador::observe(\Mg\Colaborador\ColaboradorObserver::class);
-        // \Mg\Colaborador\Ferias::observe(\Mg\Colaborador\FeriasObserver::class);
-        // \Mg\Pessoa\Calendario\EventoCalendario::observe(\Mg\Pessoa\Calendario\EventoCalendarioObserver::class);
+        // Observers de RH que alimentam o Google Calendar. A cadeia é:
+        //   Ferias/Colaborador/Dependente -> EventoCalendario -> Google Calendar
+        // Ferias/Colaborador/Dependente gravam as linhas em tbleventocalendario;
+        // EventoCalendario é quem envia ao Google; Pessoa propaga alteração de
+        // `nascimento` para os eventos de aniversário.
+        //
+        // Ficaram comentados no import do Laravel 8 (a8901f4b) e a sincronização
+        // ficou parada de mar/2026 a ago/2026 sem sintoma nenhum — não comentar
+        // de novo sem antes checar com o RH.
+        //
+        // O envio depende de storage/app/google/credentials.json e roda na fila:
+        // com QUEUE_CONNECTION=redis (produção) sai do request; com `sync` (dev)
+        // roda inline, e aí uma falha do Google derruba o cadastro de férias.
+        \Mg\Pessoa\Pessoa::observe(\Mg\Pessoa\PessoaObserver::class);
+        \Mg\Pessoa\Dependente::observe(\Mg\Pessoa\DependenteObserver::class);
+        \Mg\Colaborador\Colaborador::observe(\Mg\Colaborador\ColaboradorObserver::class);
+        \Mg\Colaborador\Ferias::observe(\Mg\Colaborador\FeriasObserver::class);
+        \Mg\Pessoa\Calendario\EventoCalendario::observe(\Mg\Pessoa\Calendario\EventoCalendarioObserver::class);
     }
 
     private static function validaCpf(string $cpf): bool

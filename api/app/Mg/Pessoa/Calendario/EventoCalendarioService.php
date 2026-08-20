@@ -2,7 +2,6 @@
 
 namespace Mg\Pessoa\Calendario;
 
-use Exception;
 use Google\Service\Exception as GoogleException;
 use Illuminate\Support\Facades\Log;
 
@@ -97,10 +96,12 @@ class EventoCalendarioService
             return;
         }
 
-        $calendarService = app(GoogleCalendarService::class);
-        $calendarId = self::resolverCalendarId($evento->tipo);
-
         try {
+            // Dentro do try: falha de credencial ou de Calendar ID vira status
+            // ERRO gravado, em vez de escapar sem deixar rastro no evento.
+            $calendarService = app(GoogleCalendarService::class);
+            $calendarId = self::resolverCalendarId($evento->tipo);
+
             // Evento inativo: deletar do Google se existir
             if ($evento->inativo) {
                 if ($evento->googleeventid) {
@@ -164,7 +165,7 @@ class EventoCalendarioService
                 'codeventocalendario' => $evento->codeventocalendario,
                 'googleeventid' => $evento->googleeventid,
             ]);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('EventoCalendario::sync - erro na sincronização', [
                 'codeventocalendario' => $evento->codeventocalendario,
                 'googleeventid' => $evento->googleeventid,
