@@ -28,7 +28,6 @@ const tab = ref(route.query.tab || null)
 
 const dialogAvulsa = ref(false)
 const empresaAvulsa = ref({})
-const seedAvulsa = ref([])
 
 const podeEditar = computed(() => user.temPermissao('Recursos Humanos'))
 const periodo = computed(
@@ -40,34 +39,8 @@ const periodo = computed(
 const nomeTab = (codempresa) => 'emp-' + codempresa
 
 // --- COLUNAS ---
-// `tipo: 'numero'` já dá alinhamento à direita, formatação e o valor do rodapé.
-// A coluna Ações só existe quando dá para editar — declarar aqui (e não com
-// v-if no <th>/<td>) é o que mantém o colgroup alinhado.
-const colunas = computed(() => {
-  const editando = podeEditar.value
-  const cols = [
-    { nome: 'setor', label: 'Setor', largura: editando ? '18%' : '20%', vazio: 'Sem setor' },
-    { nome: 'nome', label: 'Colaborador', tipo: 'slot', largura: editando ? '27%' : '30%' },
-    { nome: 'cpf', label: 'CPF', tipo: 'slot', largura: editando ? '14%' : '16%' },
-    { nome: 'extrato', label: 'Extrato', tipo: 'numero', largura: '11%' },
-    { nome: 'recarga', label: 'Recarga', tipo: 'numero', largura: '11%' },
-    {
-      nome: 'saldo',
-      label: 'Saldo',
-      tipo: 'numero',
-      largura: '12%',
-      classe: 'text-weight-bold',
-      // Negativo = recarregado além do extrato; vermelho para não passar por
-      // "nada a fazer".
-      cor: (valor) => (valor > 0 ? 'orange-9' : valor < 0 ? 'red-7' : 'grey-6'),
-    },
-  ]
-  if (editando) {
-    cols.push({ nome: 'acoes', label: '', tipo: 'slot', align: 'right', largura: '7%' })
-  }
-  return cols
-})
-
+// Só a tabela de itens do lote sobrou na tela; a situação por colaborador vive
+// no diálogo de nova recarga.
 const colunasLote = [
   { nome: 'setor', label: 'Setor', largura: '24%', vazio: 'Sem setor' },
   { nome: 'nome', label: 'Colaborador', largura: '40%' },
@@ -76,37 +49,26 @@ const colunasLote = [
 ]
 
 // --- DERIVADOS ---
-// A prévia traz o quadro INTEIRO da empresa (é dela que sai a lista do diálogo,
-// e dá para recarregar quem ainda não tem acerto). Para contagens e totais o
-// que interessa é quem está envolvido em recarga — senão os cards contariam
-// gente que não tem nada a ver com o cartão.
+// A prévia traz o quadro INTEIRO da empresa — é dela que sai a lista do diálogo,
+// e dá para recarregar quem ainda não tem acerto. Para os totais o que interessa
+// é quem está envolvido em recarga; senão os cards contariam o quadro todo.
 const previaDaEmpresa = (codempresa) => previas.value[codempresa] || []
 
 const envolvido = (l) => Number(l.extrato) !== 0 || Number(l.recarga) !== 0
 
-const envolvidosDaEmpresa = (codempresa) => previaDaEmpresa(codempresa).filter(envolvido)
-
 const soma = (linhas, campo) => linhas.reduce((s, l) => s + (Number(l[campo]) || 0), 0)
 
-const rodapeEmpresa = (codempresa) => {
-  const linhas = envolvidosDaEmpresa(codempresa)
-  if (!linhas.length) return []
-  return [
-    {
-      valores: {
-        setor: 'Subtotal',
-        extrato: soma(linhas, 'extrato'),
-        recarga: soma(linhas, 'recarga'),
-        saldo: soma(linhas, 'saldo'),
-      },
-    },
-  ]
-}
+const saldoDaEmpresa = (codempresa) => soma(previaDaEmpresa(codempresa), 'saldo')
 
-// Só o que ainda há para pagar. Sem o max, um adiantado de -1000 anularia dez
-// pendências de +100 e o badge da aba diria "nada pendente".
-const saldoDaEmpresa = (codempresa) =>
-  previaDaEmpresa(codempresa).reduce((s, l) => s + Math.max(Number(l.saldo) || 0, 0), 0)
+const pendentesDaEmpresa = (codempresa) =>
+  previaDaEmpresa(codempresa).filter((l) => Number(l.saldo) > 0).length
+
+const frasePendentes = (codempresa) => {
+  const n = pendentesDaEmpresa(codempresa)
+  if (!n) return 'Ninguém com saldo a receber'
+  if (n === 1) return '1 colaborador espera receber o saldo'
+  return n + ' colaboradores esperam receber o saldo'
+}
 
 const recargasDaEmpresa = (codempresa) =>
   recargas.value.filter((r) => Number(r.codempresa) === Number(codempresa))
@@ -115,15 +77,16 @@ const recargasDaEmpresa = (codempresa) =>
 // inteiro só existe para alimentar o diálogo.
 const todasPrevias = computed(() => Object.values(previas.value).flat().filter(envolvido))
 const totalExtrato = computed(() => soma(todasPrevias.value, 'extrato'))
-const totalRecarregado = computed(() => soma(todasPrevias.value, 'recarga'))
-const totalSaldo = computed(() =>
-  todasPrevias.value.reduce((s, l) => s + Math.max(Number(l.saldo) || 0, 0), 0),
+const totalRecarga = computed(() => soma(todasPrevias.value, 'recarga'))
+// Extrato − Recarga, com sinal: positivo é o que falta entregar, negativo é o
+// que já foi entregue além do extrato. Somar os dois lados é a leitura certa do
+// período — o detalhe por pessoa está no diálogo.
+const totalSaldo = computed(() => soma(todasPrevias.value, 'saldo'))
+
+const corSaldo = computed(() =>
+  totalSaldo.value > 0 ? 'text-orange-9' : totalSaldo.value < 0 ? 'text-red-9' : 'text-grey',
 )
-// Recarregado além do extrato — acontece quando um acerto é inativado depois de
-// o lote já ter sido gerado. Só aparece quando existe.
-const totalAdiantado = computed(() =>
-  todasPrevias.value.reduce((s, l) => s + Math.min(Number(l.saldo) || 0, 0), 0),
-)
+
 const totalSemCartao = computed(() => todasPrevias.value.filter((l) => l.sem_cartao).length)
 const lotesAtivos = computed(() => recargas.value.filter((r) => !r.inativo))
 
@@ -173,18 +136,23 @@ const notificaOk = (message) => {
 
 // --- AÇÕES ---
 // Os dois caminhos de criação (lote do mês e lote avulso) terminam aqui, senão
-// divergem: quem gera precisa aparecer na lista, zerar o saldo na prévia e
-// baixar a planilha.
+// divergem: quem gera precisa aparecer na lista e zerar o saldo na prévia.
+//
+// O download NÃO sai daqui: a planilha é do botão do card, quando o RH quiser.
+// Baixar sozinho ao gerar atropela quem só queria lançar o lote.
 const registrarLote = async (recarga, mensagem) => {
   recargas.value.unshift(recarga)
   await carregarPrevia(recarga.codempresa)
   notificaOk(mensagem)
-  await baixarPlanilha(recarga)
 }
 
-const abrirAvulsa = (empresa, seed = []) => {
+// O adiantamento à Beevale é do Financeiro: a baixa acontece na tela de
+// Liquidação, no app de contas. Mesmo padrão do ColaboradorDetalhe.
+const urlTitulo = (codtitulo) =>
+  codtitulo ? `${process.env.CONTAS_URL}/titulo/${codtitulo}` : null
+
+const abrirAvulsa = (empresa) => {
   empresaAvulsa.value = empresa
-  seedAvulsa.value = seed
   dialogAvulsa.value = true
 }
 
@@ -211,6 +179,16 @@ const confirmar = async (recarga) => {
     notificaOk('Recarga confirmada')
   } catch (error) {
     notificaErro(error, 'Erro ao confirmar a recarga')
+  }
+}
+
+const desconfirmar = async (recarga) => {
+  try {
+    const ret = await sRh.desconfirmarRecarga(route.params.codperiodo, recarga.codbeerecarga)
+    substituir(ret.data.data)
+    notificaOk('Confirmação desfeita')
+  } catch (error) {
+    notificaErro(error, 'Erro ao desconfirmar')
   }
 }
 
@@ -267,12 +245,12 @@ onMounted(carregar)
             <q-btn
               flat
               round
-              icon="paid"
-              size="sm"
+              icon="arrow_back"
+              size="md"
               color="grey-7"
               :to="{ name: 'rhDashboard', params: { codperiodo: route.params.codperiodo } }"
             >
-              <q-tooltip>Metas &amp; Variáveis do período</q-tooltip>
+              <q-tooltip>Metas e variáveis do período</q-tooltip>
             </q-btn>
           </div>
         </q-item-section>
@@ -305,20 +283,27 @@ onMounted(carregar)
             <div class="col-xs-4 col-sm">
               <q-card bordered flat class="full-height">
                 <q-card-section class="text-center">
-                  <div class="text-caption text-grey">Recarregado</div>
-                  <div class="text-h5 text-grey-9">{{ formataNumero(totalRecarregado) }}</div>
+                  <div class="text-caption text-grey">Recarga</div>
+                  <div class="text-h5 text-grey-9">{{ formataNumero(totalRecarga) }}</div>
                 </q-card-section>
               </q-card>
             </div>
             <div class="col-xs-4 col-sm">
-              <q-card bordered flat class="full-height" :class="totalSaldo ? 'bg-orange-1' : ''">
-                <q-card-section class="text-center">
-                  <div class="text-caption" :class="totalSaldo ? 'text-orange-9' : 'text-grey'">
-                    Saldo
-                  </div>
-                  <div class="text-h5" :class="totalSaldo ? 'text-orange-9' : 'text-grey-9'">
+              <q-card
+                bordered
+                flat
+                class="full-height"
+                :class="totalSaldo > 0 ? 'bg-orange-1' : totalSaldo < 0 ? 'bg-red-1' : ''"
+              >
+                <q-card-section class="text-center" style="cursor: help">
+                  <div class="text-caption" :class="corSaldo">Saldo</div>
+                  <div class="text-h5" :class="totalSaldo ? corSaldo : 'text-grey-9'">
                     {{ formataNumero(totalSaldo) }}
                   </div>
+                  <q-tooltip>
+                    Extrato menos Recarga. Positivo é o que falta entregar; negativo é o que já foi
+                    entregue além do extrato.
+                  </q-tooltip>
                 </q-card-section>
               </q-card>
             </div>
@@ -327,17 +312,6 @@ onMounted(carregar)
                 <q-card-section class="text-center">
                   <div class="text-caption text-grey">Lotes</div>
                   <div class="text-h5 text-grey-9">{{ lotesAtivos.length }}</div>
-                </q-card-section>
-              </q-card>
-            </div>
-            <div class="col-xs-4 col-sm" v-if="totalAdiantado">
-              <q-card bordered flat class="full-height bg-red-1">
-                <q-card-section class="text-center" style="cursor: help">
-                  <div class="text-caption text-red-9">Adiantado</div>
-                  <div class="text-h5 text-red-9">{{ formataNumero(-totalAdiantado) }}</div>
-                  <q-tooltip>
-                    Já recarregado além do extrato — acerto inativado depois do lote.
-                  </q-tooltip>
                 </q-card-section>
               </q-card>
             </div>
@@ -372,16 +346,12 @@ onMounted(carregar)
             class="text-grey-7"
             no-caps
           >
-            <q-tab v-for="e in empresas" :key="e.codempresa" :name="nomeTab(e.codempresa)">
-              <div class="row items-center no-wrap">
-                <span>{{ e.empresa }}</span>
-                <q-badge v-if="saldoDaEmpresa(e.codempresa)" color="orange" rounded class="q-ml-xs">
-                  <q-tooltip>
-                    {{ formataNumero(saldoDaEmpresa(e.codempresa)) }} a recarregar
-                  </q-tooltip>
-                </q-badge>
-              </div>
-            </q-tab>
+            <q-tab
+              v-for="e in empresas"
+              :key="e.codempresa"
+              :name="nomeTab(e.codempresa)"
+              :label="e.empresa"
+            />
           </q-tabs>
           <q-separator />
 
@@ -392,77 +362,35 @@ onMounted(carregar)
               :name="nomeTab(e.codempresa)"
               class="q-pa-none q-mt-md"
             >
-              <!-- AÇÃO DA EMPRESA + SITUAÇÃO (recolhida) -->
+              <!-- RESUMO DA EMPRESA -->
               <q-card bordered flat class="q-mb-md">
-                <q-card-section class="text-grey-9 text-overline row items-center">
-                  {{ e.empresa }}
-                  <q-badge
-                    v-if="saldoDaEmpresa(e.codempresa)"
-                    color="orange"
-                    class="q-ml-sm"
-                    :label="formataNumero(saldoDaEmpresa(e.codempresa)) + ' a recarregar'"
-                  />
-                  <q-space />
-                  <q-btn
-                    v-if="podeEditar"
-                    flat
-                    round
-                    icon="add"
-                    size="sm"
-                    color="primary"
-                    @click="abrirAvulsa(e)"
-                  >
-                    <q-tooltip>Nova recarga — escolher quem entra e com quanto</q-tooltip>
-                  </q-btn>
+                <q-card-section class="row items-start no-wrap">
+                  <div class="col">
+                    <div class="text-h6 text-grey-9">{{ e.empresa }}</div>
+                    <div class="text-caption text-grey-7 q-mt-md">
+                      Saldo — extrato menos recarga
+                    </div>
+                    <div class="text-h4 text-grey-9">
+                      {{ formataNumero(saldoDaEmpresa(e.codempresa)) }}
+                    </div>
+                    <div class="text-caption text-grey-7 q-mt-xs">
+                      {{ frasePendentes(e.codempresa) }}
+                    </div>
+                  </div>
+                  <div class="col-auto">
+                    <q-btn
+                      v-if="podeEditar"
+                      flat
+                      round
+                      icon="add"
+                      size="sm"
+                      color="primary"
+                      @click="abrirAvulsa(e)"
+                    >
+                      <q-tooltip>Nova recarga — entrega o saldo nos cartões</q-tooltip>
+                    </q-btn>
+                  </div>
                 </q-card-section>
-
-                <q-expansion-item
-                  expand-separator
-                  :label="envolvidosDaEmpresa(e.codempresa).length + ' colaboradores na recarga'"
-                  header-class="text-grey-7"
-                >
-                  <MgTabelaValores
-                    :colunas="colunas"
-                    :linhas="envolvidosDaEmpresa(e.codempresa)"
-                    :rodape="rodapeEmpresa(e.codempresa)"
-                    chave="codperiodocolaborador"
-                    vazio="Ninguém desta empresa tem acerto Bee ou recarga no período."
-                  >
-                    <template #celula-nome="{ linha }">
-                      {{ linha.nome }}
-                      <q-icon
-                        v-if="linha.sem_cartao"
-                        name="warning"
-                        color="orange-7"
-                        size="xs"
-                        class="q-ml-xs"
-                      >
-                        <q-tooltip>Sem cartão-benefício ativo cadastrado</q-tooltip>
-                      </q-icon>
-                      <q-tooltip v-else>
-                        {{ linha.filial }} — cartão {{ linha.cartao }}, val. {{ linha.validade }}
-                      </q-tooltip>
-                    </template>
-                    <template #celula-cpf="{ linha }">
-                      {{ formataCnpjCpf(linha.cpf, linha.fisica) }}
-                    </template>
-                    <!-- Sem v-if de saldo: recarregar de novo quem já foi pago é
-                       caso de uso (adiantamento), não erro. -->
-                    <template #celula-acoes="{ linha }">
-                      <q-btn
-                        flat
-                        round
-                        dense
-                        icon="add_card"
-                        size="sm"
-                        color="primary"
-                        @click="abrirAvulsa(e, [linha.codperiodocolaborador])"
-                      >
-                        <q-tooltip>Recarregar só {{ linha.nome }}</q-tooltip>
-                      </q-btn>
-                    </template>
-                  </MgTabelaValores>
-                </q-expansion-item>
               </q-card>
 
               <!-- LOTES JÁ GERADOS -->
@@ -481,9 +409,14 @@ onMounted(carregar)
                     :label="r.inativo ? 'Inativa' : r.status_descricao"
                     class="q-ml-sm"
                   />
-                  <q-badge outline color="grey-7" class="q-ml-sm">
-                    Título {{ r.titulo }} — {{ r.filial }}
-                  </q-badge>
+                  <a
+                    :href="urlTitulo(r.codtitulo)"
+                    target="_blank"
+                    class="q-ml-md text-primary text-body1 text-weight-bold"
+                  >
+                    Título - {{ r.codtitulo }}
+                    <q-tooltip>Abrir o título no app de Contas</q-tooltip>
+                  </a>
                   <q-badge v-if="r.portador" outline color="blue-8" class="q-ml-sm">
                     {{ r.portador }}
                     <q-tooltip>Portador de onde o adiantamento sai</q-tooltip>
@@ -515,7 +448,20 @@ onMounted(carregar)
                     <q-tooltip>Confirmar que o saldo caiu nos cartões</q-tooltip>
                   </q-btn>
                   <q-btn
-                    v-if="podeEditar && !r.inativo"
+                    v-if="podeEditar && !r.inativo && r.status === 'OK'"
+                    flat
+                    round
+                    dense
+                    icon="undo"
+                    size="sm"
+                    color="grey-7"
+                    class="q-ml-sm"
+                    @click="desconfirmar(r)"
+                  >
+                    <q-tooltip>Desfazer a confirmação (destrava a inativação)</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    v-if="podeEditar && !r.inativo && r.status !== 'OK'"
                     flat
                     round
                     dense
@@ -557,7 +503,6 @@ onMounted(carregar)
       :codperiodo="route.params.codperiodo"
       :empresa="empresaAvulsa"
       :linhas="previaDaEmpresa(empresaAvulsa.codempresa)"
-      :seed="seedAvulsa"
       @gerado="avulsaGerada"
     />
   </div>

@@ -356,6 +356,7 @@ async function salvar() {
               <div class="col-xs-12">
                 <SelectPessoa
                   v-model="finalizar.codpessoa"
+                  clearable
                   outlined
                   label="Pessoa"
                   :rules="[(v) => !!v || 'Obrigatório']"

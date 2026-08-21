@@ -210,7 +210,7 @@ const apropriar = () => {
                 autofocus
                 outlined
                 autogrow
-                v-model.number="edicaoNatureza.observacoes"
+                v-model="edicaoNatureza.observacoes"
                 label="Observações"
               />
             </div>

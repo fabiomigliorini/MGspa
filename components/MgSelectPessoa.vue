@@ -16,7 +16,6 @@ const props = defineProps({
   customClass: { type: String, default: '' },
   disable: { type: Boolean, default: false },
   readonly: { type: Boolean, default: false },
-  maxChars: { type: Number, default: 25 },
   inativos: { type: Boolean, default: false },
   somenteVendedores: { type: Boolean, default: false },
   clearable: { type: Boolean, default: false },
@@ -90,11 +89,6 @@ async function carregarPorId(codpessoa) {
   } catch {
     // sem registro: deixa o select sem opção resolvida
   }
-}
-
-const truncateLabel = (label) => {
-  if (!label) return ''
-  return label.length > props.maxChars ? label.substring(0, props.maxChars) + '...' : label
 }
 
 onMounted(() => {
@@ -292,20 +286,6 @@ const handleUpdate = (value) => {
           </q-item-label>
         </q-item-section>
       </q-item>
-    </template>
-
-    <template v-slot:selected-item="scope">
-      <q-chip
-        removable
-        @remove="handleUpdate(null)"
-        :color="scope.opt.fisica ? 'blue' : 'purple'"
-        text-color="white"
-        :icon="scope.opt.fisica ? 'person' : 'business'"
-      >
-        <span :class="scope.opt.inativo ? 'text-strike' : ''">
-          {{ truncateLabel(scope.opt.label) }}
-        </span>
-      </q-chip>
     </template>
 
     <template v-slot:no-option>

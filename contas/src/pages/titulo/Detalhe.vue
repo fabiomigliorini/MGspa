@@ -980,6 +980,7 @@ watch(() => route.fullPath, carregar)
               <div class="col-12">
                 <SelectPessoa
                   v-model="model.codpessoa"
+                  clearable
                   outlined
                   label="Pessoa"
                   :rules="[(v) => !!v || 'Obrigatório']"

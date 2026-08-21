@@ -103,7 +103,7 @@ const submit = async () => {
             ]"
           />
 
-          <SelectPessoa v-model="form.codpessoaproprietario" label="Proprietário" />
+          <SelectPessoa v-model="form.codpessoaproprietario" label="Proprietário" clearable />
 
           <q-select
             v-model="form.tipoproprietario"

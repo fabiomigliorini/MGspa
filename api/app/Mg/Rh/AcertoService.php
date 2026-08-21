@@ -334,6 +334,28 @@ class AcertoService
         return $qtd;
     }
 
+    /**
+     * Quanto deste colaborador já foi para o cartão-benefício.
+     *
+     * Serve de aviso ao estornar um acerto: o dinheiro do cartão não volta, e
+     * sem o acerto que o lastreava o colaborador fica com saldo negativo na
+     * tela de recarga até alguém refazer a conta. Devolve
+     * [em lote vivo, confirmado nos cartões].
+     */
+    public static function recargaJaEnviada(int $codperiodocolaborador): array
+    {
+        $r = DB::selectOne("
+            SELECT
+                COALESCE(SUM(i.valor) FILTER (WHERE b.inativo IS NULL), 0) AS vivo,
+                COALESCE(SUM(i.valor) FILTER (WHERE b.status = :statusok), 0) AS confirmado
+            FROM tblbeerecargaperiodocolaborador i
+            JOIN tblbeerecarga b ON b.codbeerecarga = i.codbeerecarga
+            WHERE i.codperiodocolaborador = :codpc
+        ", ['codpc' => $codperiodocolaborador, 'statusok' => BeeRecarga::STATUS_OK]);
+
+        return [(float) $r->vivo, (float) $r->confirmado];
+    }
+
     public static function reativarAcerto(int $codperiodocolaboradoracerto): int
     {
         $acerto = static::acertoEditavel($codperiodocolaboradoracerto);

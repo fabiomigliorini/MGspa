@@ -133,11 +133,11 @@ class BeeRecargaService
                   AND a.forma = :forma
                   AND a.saldo <> 0
             LEFT JOIN LATERAL (
-                SELECT COALESCE(SUM(i.valor), 0) AS recarregado
+                SELECT
+                    COALESCE(SUM(i.valor) FILTER (WHERE br.inativo IS NULL), 0) AS recarregado
                 FROM tblbeerecargaperiodocolaborador i
                 JOIN tblbeerecarga br ON br.codbeerecarga = i.codbeerecarga
                 WHERE i.codperiodocolaborador = pc.codperiodocolaborador
-                  AND br.inativo IS NULL
             ) r ON true
             WHERE pc.codperiodo = :codperiodo
               AND f.codempresa = :codempresa
@@ -411,11 +411,37 @@ class BeeRecargaService
                 continue;
             }
 
-            // Não há teto: recarregar acima do extrato é adiantamento, e o RH
-            // pode pagar de novo depois do acerto fechado. O excedente aparece
-            // como saldo NEGATIVO na prévia — quem confere o mês vê "Adiantado"
-            // em vez de nada. Quem decide é a tela, que mostra o saldo de agora
-            // ao lado de cada valor digitado.
+            // Sem extrato não há direito nenhum, e o direito só nasce de rubrica
+            // ou título em aberto, sempre pela via do acerto. Mensagem própria
+            // porque o teto abaixo diria apenas "saldo disponível 0,00", que não
+            // conta ao RH o que fazer.
+            if ($linha->extrato <= 0) {
+                $erros[] = sprintf(
+                    '%s: sem extrato no período. Lance a rubrica e o acerto antes de recarregar.',
+                    $linha->nome
+                );
+                continue;
+            }
+
+            // A recarga ENTREGA um direito que já existe; ela nunca o cria. O
+            // teto é o SALDO (extrato menos o que já foi para o cartão), então a
+            // soma das recargas de um colaborador nunca passa do que o acerto
+            // dele justifica. Recarga parcial segue livre — o que se proíbe é o
+            // excedente, que não é reconciliado com a folha nem transportado
+            // para o período seguinte. Para entregar mais, sobe-se o extrato
+            // pelo acerto, que é onde a decisão do valor pertence.
+            //
+            // Tolerância de meio centavo, como no EfetivarAcertoRequest: os dois
+            // lados arredondam em 2 casas e a comparação não pode falhar por isso.
+            if ($valor > $linha->saldo + 0.005) {
+                $erros[] = sprintf(
+                    '%s: saldo disponível %s, solicitado %s. Para entregar mais, lance o acerto antes.',
+                    $linha->nome,
+                    number_format($linha->saldo, 2, ',', '.'),
+                    number_format($valor, 2, ',', '.')
+                );
+                continue;
+            }
 
             $l = clone $linha;
             $l->valor = $valor;
@@ -447,11 +473,39 @@ class BeeRecargaService
     }
 
     /**
+     * Desfaz a confirmação (OK -> PEND).
+     *
+     * Existe porque confirmar TRAVA o lote: depois de dizer que o saldo caiu nos
+     * cartões, inativar passaria a apagar o registro de um pagamento que já
+     * aconteceu. Quem confirmou por engano desconfirma e só então inativa.
+     *
+     * Desconfirmar em si é sempre seguro — é só o RH dizendo "ainda não conferi".
+     */
+    public static function desconfirmar(int $codperiodo, int $codbeerecarga): BeeRecarga
+    {
+        $recarga = BeeRecarga::where('codperiodo', $codperiodo)->findOrFail($codbeerecarga);
+
+        if ($recarga->status != BeeRecarga::STATUS_OK) {
+            throw new \Exception('Esta recarga ainda não foi confirmada.');
+        }
+
+        $recarga->status = BeeRecarga::STATUS_PENDENTE;
+        $recarga->save();
+
+        return $recarga;
+    }
+
+    /**
      * Inativa o lote e estorna o adiantamento.
      *
      * Os itens ficam gravados — são o histórico do que foi enviado à operadora.
      * Eles apenas param de contar na prévia, que filtra pelo `inativo` do lote,
      * e por isso os colaboradores voltam a aparecer como pendentes.
+     *
+     * Só vale para lote PENDENTE. Confirmado significa que o dinheiro está no
+     * cartão do colaborador, e dali não volta: inativar faria o sistema esquecer
+     * o pagamento e recarregar a mesma pessoa de novo no próximo lote. Corrigir
+     * valor de lote confirmado é pelo ACERTO, que deixa o rastro do negativo.
      */
     public static function inativar(int $codperiodo, int $codbeerecarga): BeeRecarga
     {
@@ -463,7 +517,25 @@ class BeeRecargaService
             throw new \Exception('Esta recarga já está inativa.');
         }
 
-        TituloService::estornar($recarga->getRelationValue('Titulo'));
+        if ($recarga->status == BeeRecarga::STATUS_OK) {
+            throw new \Exception(
+                'Esta recarga já foi confirmada nos cartões. Inativar faria o sistema esquecer um '
+                . 'pagamento que já aconteceu, e o colaborador seria recarregado de novo. Se a '
+                . 'confirmação foi engano, desconfirme antes; se o valor foi errado, corrija pelo acerto.'
+            );
+        }
+
+        // O TituloService recusa título movimentado com uma frase que não diz o
+        // que fazer. Aqui a causa é sempre a mesma: o Financeiro já liquidou o
+        // adiantamento, e o dinheiro saiu do banco.
+        try {
+            TituloService::estornar($recarga->getRelationValue('Titulo'));
+        } catch (\Exception $e) {
+            throw new \Exception(
+                'O adiantamento à Beevale já foi liquidado pelo Financeiro. Estorne a liquidação '
+                . 'antes de inativar a recarga. (' . $e->getMessage() . ')'
+            );
+        }
 
         $recarga->inativo = Carbon::now();
         $recarga->save();

@@ -420,6 +420,13 @@ export const rhStore = defineStore('rh', {
       return ret
     },
 
+    async desconfirmarRecarga(codperiodo, codbeerecarga) {
+      const ret = await api.delete(
+        'v1/rh/periodo/' + codperiodo + '/recarga/' + codbeerecarga + '/confirmar',
+      )
+      return ret
+    },
+
     async confirmarRecarga(codperiodo, codbeerecarga) {
       const ret = await api.post(
         'v1/rh/periodo/' + codperiodo + '/recarga/' + codbeerecarga + '/confirmar',

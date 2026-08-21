@@ -1344,6 +1344,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             Route::post('/', '\Mg\Rh\BeeRecargaController@gerar');
             Route::get('/{codbeerecarga}/planilha', '\Mg\Rh\BeeRecargaController@planilha');
             Route::post('/{codbeerecarga}/confirmar', '\Mg\Rh\BeeRecargaController@confirmar');
+            Route::delete('/{codbeerecarga}/confirmar', '\Mg\Rh\BeeRecargaController@desconfirmar');
             Route::post('/{codbeerecarga}/inativo', '\Mg\Rh\BeeRecargaController@inativar');
         });
     });

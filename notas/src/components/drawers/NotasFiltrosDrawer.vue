@@ -232,6 +232,7 @@ watch(
       <div class="q-mb-md">
         <SelectPessoa
           v-model="notaFiscalStore.filters.codpessoa"
+          clearable
           label="Pessoa (Cliente/Fornecedor)"
           :bottom-slots="false"
           @select="handlePessoaSelect"

@@ -520,6 +520,7 @@ onMounted(() => {
               <div class="col-12">
                 <SelectPessoa
                   v-model="form.codpessoa"
+                  clearable
                   label="Cliente/Fornecedor *"
                   :disable="notaBloqueada"
                   @clear="handleClearPessoa"
@@ -676,6 +677,7 @@ onMounted(() => {
               <div class="col-12 col-sm-6">
                 <SelectPessoa
                   v-model="form.codpessoatransportador"
+                  clearable
                   label="Transportador"
                   :disable="notaBloqueada"
                 />
