@@ -8,6 +8,7 @@ use JasperPHP\core\Instructions;
 use JasperPHP\elements\Report;
 use JasperPHP\processors\PdfProcessor;
 use Mg\Pdv\Pdv;
+use Mg\Pessoa\Pessoa;
 
 class NegocioComandaService
 {
@@ -36,7 +37,7 @@ class NegocioComandaService
         exec($cmd);
     }
 
-    public static function unificar(Negocio $negocio, Negocio $negocioComanda, Pdv $pdv = null)
+    public static function unificar(Negocio $negocio, Negocio $negocioComanda, Pdv $pdv = null, array $escolhas = [])
     {
         // verifica se nao está tentando unificar a comanda nela mesma
         if ($negocioComanda->codnegocio == $negocio->codnegocio) {
@@ -58,6 +59,10 @@ class NegocioComandaService
             throw new \Exception("Negócio e Comanda são de Filiais diferentes!", 1);
         }
 
+        // verifica se os dois movimentam o mesmo estoque
+        if ($negocioComanda->codestoquelocal != $negocio->codestoquelocal) {
+            throw new \Exception("Negócio e Comanda são de Estoques diferentes!", 1);
+        }
 
         // verifica se tem item pra "puxar"
         if ($negocioComanda->NegocioProdutoBarras()->count() == 0) {
@@ -67,17 +72,22 @@ class NegocioComandaService
         // novo PDV ao qual o negocio sera associado
         $codpdv = $pdv->codpdv ?? null;
 
+        // resolve cliente, vendedor e observacoes divergentes entre os dois
+        $merge = static::resolverMerge($negocio, $negocioComanda, $escolhas);
+
         // se o negocio "destino" não tem nenhum item, "inverte" os papeis
         // a "comanda" vira o negocio "destino"
         if ($negocio->NegocioProdutoBarras()->count() == 0) {
             // puxa pro usuario
-            $negocioComanda->update([
+            $negocioComanda->update(array_merge($merge, [
                 'codusuario' => $negocio->codusuario,
                 'codpdv' => $codpdv,
-            ]);
-            $negocioComanda->fresh();
-            return $negocioComanda;
+            ]));
+            return $negocioComanda->fresh();
         }
+
+        // aplica no destino o cliente, vendedor e observacoes resolvidos
+        $negocio->fill($merge);
 
         // duplica os itens da comanda pro destino
         foreach ($negocioComanda->NegocioProdutoBarras as $pbComanda) {
@@ -97,8 +107,8 @@ class NegocioComandaService
                 $negocio->valortotal += $pbComanda->valortotal;
             }
         }
+        $negocio->save();
         if ($codpdv != null) {
-            $negocio->save();
             NegocioService::recalcularTotal($negocio);
         }
 
@@ -135,5 +145,41 @@ class NegocioComandaService
         }
 
         return $negocio->fresh();
+    }
+
+    /**
+     * Decide o cliente, o vendedor e as observacoes que ficam depois de unificar.
+     * Quando o campo vem em $escolhas, quem manda é o usuário (tela de conflito).
+     */
+    private static function resolverMerge(Negocio $negocio, Negocio $negocioComanda, array $escolhas)
+    {
+        // vendedor: traz o da comanda quando o negocio não tem vendedor
+        $codpessoavendedor = $negocio->codpessoavendedor;
+        if (array_key_exists('codpessoavendedor', $escolhas)) {
+            $codpessoavendedor = $escolhas['codpessoavendedor'];
+        } elseif (empty($negocio->codpessoavendedor)) {
+            $codpessoavendedor = $negocioComanda->codpessoavendedor;
+        }
+
+        // cliente: traz o da comanda quando o negocio ainda está no Consumidor
+        $codpessoa = $negocio->codpessoa;
+        if (array_key_exists('codpessoa', $escolhas)) {
+            $codpessoa = $escolhas['codpessoa'];
+        } elseif (empty($negocio->codpessoa) || $negocio->codpessoa == Pessoa::CONSUMIDOR) {
+            $codpessoa = $negocioComanda->codpessoa;
+        }
+
+        // observacoes: concatena sempre, sem repetir
+        $observacoes = [];
+        foreach ([$negocio->observacoes, $negocioComanda->observacoes] as $obs) {
+            $obs = trim($obs ?? '');
+            if (empty($obs) || in_array($obs, $observacoes)) {
+                continue;
+            }
+            $observacoes[] = $obs;
+        }
+        $observacoes = implode(' - ', $observacoes) ?: null;
+
+        return compact('codpessoa', 'codpessoavendedor', 'observacoes');
     }
 }

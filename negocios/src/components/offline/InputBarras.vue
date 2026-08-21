@@ -5,6 +5,9 @@ import { useRouter } from 'vue-router'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
 import { listagemStore } from 'stores/listagem'
+import { sincronizacaoStore } from 'stores/sincronizacao'
+import DialogUnificarComanda from './DialogUnificarComanda.vue'
+import { conflitosComanda } from '../../utils/comanda.js'
 import { Notify, Dialog, debounce } from 'quasar'
 import { falar } from '../../utils/falar.js'
 import emitter from '../../utils/emitter.js'
@@ -15,11 +18,15 @@ const router = useRouter()
 const sProduto = produtoStore()
 const sNegocio = negocioStore()
 const sListagem = listagemStore()
+const sSinc = sincronizacaoStore()
 const quantidade = ref(1)
 const barras = ref(null)
 const barcodeVideo = ref(null)
 const dialogOrcamento = ref(false)
 const uuidOrcamento = ref(null)
+const dialogConflito = ref(false)
+const comandaConflito = ref({})
+var resolverConflito = null
 
 var stream = null
 var leitorLigado = ref(false)
@@ -80,10 +87,64 @@ const informarVendedor = async (codpessoavendedor) => {
   audio.play()
 }
 
+const falhaComanda = () => {
+  let audio = new Audio('/erro.mp3')
+  audio.play()
+  falar('Falha ao buscar comanda!')
+}
+
+// abre a tela de conflito e espera o usuario escolher
+// devolve as escolhas, ou null se ele desistir
+const perguntarConflito = (comanda) => {
+  comandaConflito.value = comanda
+  dialogConflito.value = true
+  return new Promise((resolve) => {
+    resolverConflito = resolve
+  })
+}
+
+const responderConflito = (escolhas) => {
+  if (!resolverConflito) {
+    return
+  }
+  const resolve = resolverConflito
+  resolverConflito = null
+  resolve(escolhas)
+}
+
 const unificarComanda = async (codnegociocomanda) => {
+  let escolhas = {}
+
+  // negocio nao sincronizado nao le comanda, quem avisa o usuario é o store
+  if (sNegocio.negocio.sincronizado) {
+    const comanda = await sSinc.getNegocio(codnegociocomanda)
+    if (!comanda) {
+      falhaComanda()
+      return
+    }
+    if (comanda.codestoquelocal != sNegocio.negocio.codestoquelocal) {
+      Notify.create({
+        type: 'negative',
+        message: 'Negócio e Comanda são de Estoques diferentes!',
+        timeout: 3000, // 3 segundos
+        actions: [{ icon: 'close', color: 'white' }],
+      })
+      falhaComanda()
+      return
+    }
+    const conflitos = conflitosComanda(sNegocio.negocio, comanda)
+    if (conflitos.pessoa || conflitos.vendedor) {
+      escolhas = await perguntarConflito(comanda)
+      // desistiu, não faz nada
+      if (!escolhas) {
+        return
+      }
+    }
+  }
+
   let sucesso = false
   try {
-    sucesso = await sNegocio.unificarComanda(codnegociocomanda)
+    sucesso = await sNegocio.unificarComanda(codnegociocomanda, escolhas)
   } catch (error) {
     console.log(error)
   }
@@ -93,9 +154,7 @@ const unificarComanda = async (codnegociocomanda) => {
     audio.play()
     falar('Comanda Lida!')
   } else {
-    let audio = new Audio('/erro.mp3')
-    audio.play()
-    falar('Falha ao buscar comanda!')
+    falhaComanda()
   }
 }
 
@@ -593,4 +652,12 @@ onUnmounted(() => {
       </q-card-section>
     </q-card>
   </q-dialog>
+
+  <dialog-unificar-comanda
+    v-model="dialogConflito"
+    :negocio="sNegocio.negocio"
+    :comanda="comandaConflito"
+    @confirmar="responderConflito($event)"
+    @cancelar="responderConflito(null)"
+  />
 </template>
