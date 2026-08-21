@@ -811,12 +811,13 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
-    async unificarComanda(codnegocio, codnegociocomanda) {
+    async unificarComanda(codnegocio, codnegociocomanda, escolhas = {}) {
       try {
         const { data } = await api.post(
           `/v1/pdv/negocio/${codnegocio}/unificar/${codnegociocomanda}`,
           {
             pdv: this.pdv.uuid,
+            ...escolhas,
           },
         )
         return data

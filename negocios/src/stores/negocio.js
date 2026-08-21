@@ -1504,7 +1504,7 @@ export const negocioStore = defineStore('negocio', {
       }
     },
 
-    async unificarComanda(codnegociocomanda) {
+    async unificarComanda(codnegociocomanda, escolhas = {}) {
       if (!this.negocio.sincronizado) {
         Notify.create({
           type: 'negative',
@@ -1515,7 +1515,11 @@ export const negocioStore = defineStore('negocio', {
         return false
       }
       try {
-        const ret = await sSinc.unificarComanda(this.negocio.codnegocio, codnegociocomanda)
+        const ret = await sSinc.unificarComanda(
+          this.negocio.codnegocio,
+          codnegociocomanda,
+          escolhas,
+        )
         if (!ret) {
           return false
         }

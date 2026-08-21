@@ -449,12 +449,19 @@ class PdvController
         NegocioComandaService::imprimir($negocio, $impressora);
     }
 
-    public function unificarComanda(PdvRequest $request, $codnegocio, $codnegociocomanda)
+    public function unificarComanda(PdvUnificarComandaRequest $request, $codnegocio, $codnegociocomanda)
     {
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($codnegocio);
         $negocioComanda = Negocio::findOrFail($codnegociocomanda);
-        $negocio = NegocioComandaService::unificar($negocio, $negocioComanda, $pdv);
+        // só manda o que o usuario escolheu na tela de conflito
+        $escolhas = [];
+        foreach (['codpessoa', 'codpessoavendedor'] as $campo) {
+            if ($request->has($campo)) {
+                $escolhas[$campo] = $request->input($campo);
+            }
+        }
+        $negocio = NegocioComandaService::unificar($negocio, $negocioComanda, $pdv, $escolhas);
         return [
             'negocio' => new NegocioResource($negocio),
             'comanda' => new NegocioResource($negocioComanda->fresh())
