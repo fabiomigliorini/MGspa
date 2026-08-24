@@ -59,14 +59,21 @@ const atingimentoRubrica = (r) => {
   return ind ? calcAtingimento(ind.valoracumulado ?? ind.vendas, ind.meta, ind.atingimento) : null
 }
 
+// Meta do mesmo indicador. Meta zerada conta como sem meta, igual em
+// calcAtingimento — null faz a tabela cair no em-dash sozinha.
+const metaRubrica = (r) => {
+  const meta = parseFloat(rubricaIndicador(r)?.meta)
+  return meta || null
+}
+
 // A coluna Ações só existe quando dá para editar — declarar aqui evita o v-if
 // duplicado em <th> e <td> que desalinhava a tabela.
 const colunas = computed(() => {
   const cols = [
-    { nome: 'descricao', label: 'Descrição', tipo: 'slot', largura: '24%' },
+    { nome: 'descricao', label: 'Descrição', tipo: 'slot', largura: '20%' },
     { nome: 'tipovalor', label: 'Tipo', tipo: 'slot', align: 'center', largura: '8%' },
     { nome: 'valor', label: '%/Valor', tipo: 'slot', align: 'right', largura: '11%' },
-    { nome: 'indicador', label: 'Indicador / Condição', tipo: 'slot', largura: '18%' },
+    { nome: 'indicador', label: 'Indicador / Condição', tipo: 'slot', largura: '16%' },
     {
       nome: 'atingimento',
       label: 'Ating.',
@@ -83,6 +90,13 @@ const colunas = computed(() => {
       largura: '10%',
       valor: atingimentoRubrica,
       cor: corProgresso,
+    },
+    {
+      nome: 'meta',
+      label: 'Meta',
+      tipo: 'numero',
+      largura: '9%',
+      valor: metaRubrica,
     },
     {
       nome: 'valorcalculado',
