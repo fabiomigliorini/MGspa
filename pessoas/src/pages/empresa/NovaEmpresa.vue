@@ -16,11 +16,11 @@ export default {
     const router = useRouter()
     const loading = ref(false)
 
+    // Empresa nova nasce Normal; contingencia so faz sentido depois de existir
+    // o codempresa, entao o painel aparece somente na tela de edicao.
     const model = ref({
       empresa: '',
       modoemissaonfce: 1,
-      contingenciadata: null,
-      contingenciajustificativa: '',
     })
 
     const salvar = async () => {
