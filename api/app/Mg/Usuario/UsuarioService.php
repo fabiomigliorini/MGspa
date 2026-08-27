@@ -92,8 +92,12 @@ class UsuarioService extends MgService
         return array_map(fn ($r) => (int) $r->codfilial, $rows);
     }
 
-    public static function atualizaPermissoes(Usuario $usuario, array $permissoes): Usuario
+    /**
+     * @return bool Se alguma permissão foi de fato adicionada ou removida.
+     */
+    public static function atualizaPermissoes(Usuario $usuario, array $permissoes): bool
     {
+        $houveMudanca = false;
         foreach ($permissoes as $codgrupousuario => $filiais) {
             foreach ($filiais as $codfilial => $value) {
                 $existe = $usuario->GrupoUsuarioUsuarioS()
@@ -105,23 +109,30 @@ class UsuarioService extends MgService
                         ->where('codgrupousuario', $codgrupousuario)
                         ->where('codfilial', $codfilial)
                         ->delete();
+                    $houveMudanca = true;
                 } elseif ($value && !$existe) {
                     GrupoUsuarioUsuario::create([
                         'codusuario' => $usuario->codusuario,
                         'codgrupousuario' => $codgrupousuario,
                         'codfilial' => $codfilial,
                     ]);
+                    $houveMudanca = true;
                 }
             }
         }
-        return $usuario;
+        return $houveMudanca;
     }
 
     public static function updateUsuario(Usuario $usuario, array $data): Usuario
     {
         $usuario->fill($data);
         $usuario->save();
-        static::atualizaPermissoes($usuario, $data['permissoes'] ?? []);
+        // As permissões vivem em tblgrupousuariousuario. Se só elas mudarem, o
+        // model do usuário não fica dirty, o Eloquent nem chega a gravar e o
+        // audit trail (alteracao/codusuarioalteracao) ficaria pra trás.
+        if (static::atualizaPermissoes($usuario, $data['permissoes'] ?? [])) {
+            $usuario->touch();
+        }
         return $usuario;
     }
 

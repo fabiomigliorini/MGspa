@@ -2,12 +2,14 @@
 
 namespace Mg\Usuario;
 
+use DateTimeInterface;
 use Illuminate\Auth\Authenticatable;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\Access\Authorizable;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Passport\HasApiTokens;
 use Mg\Filial\Filial;
 use Mg\Imagem\Imagem;
@@ -33,7 +35,19 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
 
     protected $primaryKey = 'codusuario';
 
-    public $timestamps = false;
+    /**
+     * Audit trail — idêntico ao Mg\MgModel, replicado aqui porque este model não
+     * pode estendê-lo: precisa estender Model + os contratos de autenticação
+     * (ver SKIP_TABELAS em Mg\Gerador\GeradorModelCommand).
+     *
+     * As constantes e $timestamps têm que ficar na classe: um trait não pode
+     * declará-los, porque colidem com os homônimos de Illuminate\...\Model
+     * (fatal error de constante/propriedade incompatível no PHP 8.3).
+     */
+    const CREATED_AT = 'criacao';
+    const UPDATED_AT = 'alteracao';
+
+    public $timestamps = true;
 
     protected $fillable = [
         'codecf',
@@ -71,6 +85,51 @@ class Usuario extends Model implements AuthenticatableContract, CanResetPassword
         'senha',
         'remember_token',
     ];
+
+    public static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (($usuario = static::usuarioAutenticado()) !== null) {
+                $model->attributes['codusuariocriacao'] = $usuario->codusuario;
+                $model->attributes['codusuarioalteracao'] = $usuario->codusuario;
+            }
+        });
+
+        static::updating(function ($model) {
+            if (($usuario = static::usuarioAutenticado()) !== null) {
+                $model->attributes['codusuarioalteracao'] = $usuario->codusuario;
+            }
+        });
+    }
+
+    /**
+     * Usuário autenticado para o stamp de auditoria.
+     *
+     * Auth::user() usa o guard padrão ('web'/sessão), que nunca está autenticado
+     * em requisições de token Bearer (que usam o guard 'api'/Passport). Por isso
+     * resolvemos o usuário a partir do guard que estiver de fato autenticado.
+     */
+    protected static function usuarioAutenticado()
+    {
+        foreach (['api', 'web'] as $guard) {
+            if (Auth::guard($guard)->check()) {
+                return Auth::guard($guard)->user();
+            }
+        }
+        return Auth::user();
+    }
+
+    /**
+     * Data "naive", igual ao resto da API (Mg\MgModel) — é o que o
+     * parseLocalDate() do frontend espera. O default do Eloquent (ISO-8601 em
+     * UTC) faz o navegador reconverter e deslocar a hora.
+     */
+    protected function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
 
     public function findForPassport(string $username): ?self
     {
