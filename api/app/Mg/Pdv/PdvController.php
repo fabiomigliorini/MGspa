@@ -47,6 +47,11 @@ class PdvController
         if ($request->codfilial) {
             $query->where('codfilial', $request->codfilial);
         }
+        if ($request->status == 'excluido') {
+            $query->whereNotNull('excluido');
+        } else {
+            $query->whereNull('excluido');
+        }
         if ($request->status) {
             match ($request->status) {
                 'autorizado' => $query->where('autorizado', true)->whereNull('inativo'),
@@ -54,6 +59,7 @@ class PdvController
                 'nao_autorizado' => $query->where(function ($q) {
                     $q->where('autorizado', false)->orWhereNull('autorizado');
                 })->whereNull('inativo'),
+                'excluido' => $query,
             };
         }
         if ($request->ip) {
@@ -125,6 +131,22 @@ class PdvController
         Autorizador::autoriza([]);
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::reativar($pdv);
+        return new PdvResource($pdv);
+    }
+
+    public static function excluir($codpdv)
+    {
+        Autorizador::autoriza([]);
+        $pdv = Pdv::findOrFail($codpdv);
+        $pdv = PdvService::excluir($pdv);
+        return new PdvResource($pdv);
+    }
+
+    public static function restaurar($codpdv)
+    {
+        Autorizador::autoriza([]);
+        $pdv = Pdv::findOrFail($codpdv);
+        $pdv = PdvService::restaurar($pdv);
         return new PdvResource($pdv);
     }
 

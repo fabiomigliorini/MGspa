@@ -6,7 +6,7 @@ import moment from 'moment/min/moment-with-locales'
 import SelectFilial from 'components/selects/SelectFilial.vue'
 import SelectSetor from 'components/selects/SelectSetor.vue'
 import DialogEditarPdv from 'components/pdv/DialogEditarPdv.vue'
-import { Notify } from 'quasar'
+import { Dialog, Notify } from 'quasar'
 
 moment.locale('pt-br')
 
@@ -48,25 +48,40 @@ const salvarPdv = async (formData) => {
   }
 }
 
+const excluir = (pdv) => {
+  Dialog.create({
+    title: 'Excluir',
+    message: `Remover o dispositivo ${pdv.apelido || formataCodigo(pdv.codpdv)} da listagem?`,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(() => {
+    sPdv.excluir(pdv)
+  })
+}
+
 const statusColor = (pdv) => {
+  if (pdv.excluido) return 'grey'
   if (pdv.autorizado) return 'green'
   if (pdv.inativo) return 'red'
   return 'orange'
 }
 
 const statusIcon = (pdv) => {
+  if (pdv.excluido) return 'delete'
   if (pdv.autorizado) return 'check_circle'
   if (pdv.inativo) return 'cancel'
   return 'warning'
 }
 
 const statusLabel = (pdv) => {
+  if (pdv.excluido) return 'Excluído'
   if (pdv.autorizado) return 'Autorizado'
   if (pdv.inativo) return 'Inativo'
   return 'Não Autorizado'
 }
 
 const statusClass = (pdv) => {
+  if (pdv.excluido) return 'bg-grey-3'
   if (pdv.autorizado) return 'bg-green-1'
   if (pdv.inativo) return 'bg-red-1'
   return 'bg-orange-1'
@@ -104,6 +119,7 @@ onMounted(() => {
               { label: 'Autorizado', value: 'autorizado' },
               { label: 'Inativo', value: 'inativo' },
               { label: 'Não Autorizado', value: 'nao_autorizado' },
+              { label: 'Excluído', value: 'excluido' },
             ]"
             emit-value
             map-options
@@ -194,7 +210,19 @@ onMounted(() => {
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="pdv.autorizado"
+                v-if="pdv.excluido"
+                flat
+                dense
+                round
+                icon="restore_from_trash"
+                size="xs"
+                color="primary"
+                @click="sPdv.restaurar(pdv)"
+              >
+                <q-tooltip>Restaurar</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-else-if="pdv.autorizado"
                 flat
                 dense
                 round
@@ -228,6 +256,18 @@ onMounted(() => {
                 @click="sPdv.autorizar(pdv)"
               >
                 <q-tooltip>Autorizar</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="pdv.inativo && !pdv.excluido"
+                flat
+                dense
+                round
+                icon="delete"
+                size="xs"
+                color="red"
+                @click="excluir(pdv)"
+              >
+                <q-tooltip>Excluir da Listagem</q-tooltip>
               </q-btn>
             </q-item-label>
           </q-item-section>

@@ -128,6 +128,52 @@ export const pdvStore = defineStore('pdv', {
       }
     },
 
+    async excluir(pdv) {
+      try {
+        await api.post(`/v1/pdv/dispositivo/${pdv.codpdv}/excluido`)
+        const i = this.dispositivos.findIndex((el) => {
+          return el.codpdv == pdv.codpdv
+        })
+        this.dispositivos.splice(i, 1)
+      } catch (error) {
+        console.log(error)
+        var message = error?.response?.data?.message
+        if (!message) {
+          message = error?.message
+        }
+        Notify.create({
+          type: 'negative',
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
+    },
+
+    async restaurar(pdv) {
+      try {
+        await api.delete(`/v1/pdv/dispositivo/${pdv.codpdv}/excluido`)
+        const i = this.dispositivos.findIndex((el) => {
+          return el.codpdv == pdv.codpdv
+        })
+        this.dispositivos.splice(i, 1)
+      } catch (error) {
+        console.log(error)
+        var message = error?.response?.data?.message
+        if (!message) {
+          message = error?.message
+        }
+        Notify.create({
+          type: 'negative',
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
+    },
+
     async findByUuid(uuid) {
       if (this.dispositivos.length == 0) {
         await this.getDispositivos()

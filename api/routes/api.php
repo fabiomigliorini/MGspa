@@ -880,6 +880,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::delete('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@desautorizar');
         Route::post('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@inativar');
         Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
+        Route::post('dispositivo/{codpdv}/excluido', '\Mg\Pdv\PdvController@excluir');
+        Route::delete('dispositivo/{codpdv}/excluido', '\Mg\Pdv\PdvController@restaurar');
         Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
         Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
         Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');

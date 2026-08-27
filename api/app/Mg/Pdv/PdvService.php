@@ -35,6 +35,7 @@ class PdvService
         $pdv->navegador = $navegador;
         $pdv->versaonavegador = $versaonavegador;
         $pdv->plataforma = $plataforma;
+        $pdv->excluido = null;
 
         if (!$pdv->exists) {
             $pdv->apelido = $apelido;
@@ -98,6 +99,24 @@ class PdvService
     {
         $pdv->update([
             'inativo' => null
+        ]);
+        return $pdv;
+    }
+
+    public static function excluir(Pdv $pdv)
+    {
+        $pdv->update([
+            'excluido' => Carbon::now(),
+            'inativo' => $pdv->inativo ?? Carbon::now(),
+            'autorizado' => false
+        ]);
+        return $pdv;
+    }
+
+    public static function restaurar(Pdv $pdv)
+    {
+        $pdv->update([
+            'excluido' => null
         ]);
         return $pdv;
     }
