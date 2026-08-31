@@ -40,6 +40,11 @@ class PessoaResource extends JsonResource
 
         $ret['mercosId'] = $this->MercosClienteS()->orderBy('clienteid')->get()->pluck('clienteid');
 
+        // Permissões para o frontend. Ficam antes dos filhos porque alguns deles
+        // só são serializados para quem tem acesso (contas bancárias, cartões).
+        $ret['permissaoRH'] = Autorizador::pode(['Recursos Humanos']);
+        $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
+
         // Filhos
         $ret['RegistroSpc'] = RegistroSpcResource::collection(
             $this->RegistroSpcS()->orderBy('criacao', 'desc')->get()
@@ -56,9 +61,13 @@ class PessoaResource extends JsonResource
         $ret['PessoaEnderecoS'] = PessoaEnderecoResource::collection(
             $this->PessoaEnderecoS()->orderBy('ordem')->get()
         );
-        $ret['PessoaContaS'] = PessoaContaResource::collection(
-            $this->PessoaContaS()->orderBy('alteracao')->get()
-        );
+        // Contas bancárias — destino de pagamento (agência, conta, chaves PIX),
+        // só para Financeiro/RH.
+        $ret['PessoaContaS'] = $ret['permissaoFinanceiro']
+            ? PessoaContaResource::collection(
+                $this->PessoaContaS()->orderBy('alteracao')->get()
+            )
+            : [];
         $ret['DependenteS'] = DependenteResource::collection(
             $this->DependenteS()->orderBy('coddependente', 'desc')->get()
         );
@@ -66,10 +75,6 @@ class PessoaResource extends JsonResource
             $this->DependeteResponsavelS()->orderBy('coddependente', 'desc')->get()
         );
         $ret['UsuarioS'] = $this->UsuarioS()->orderBy('usuario')->get(['codusuario', 'usuario']);
-
-        // Permissões para o frontend
-        $ret['permissaoRH'] = Autorizador::pode(['Recursos Humanos']);
-        $ret['permissaoFinanceiro'] = Autorizador::pode(['Financeiro', 'Recursos Humanos']);
 
         // Cartões (Benefício/Corporativo) — dados sensíveis, só para RH.
         // Cada cartão traz a própria filial/empresa (eager-load evita N+1).

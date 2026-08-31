@@ -112,7 +112,7 @@ watch(
                 </div>
 
                 <!-- CONTA -->
-                <div class="col-12" v-if="sPessoa.item?.permissaoRH">
+                <div class="col-12" v-if="sPessoa.item?.permissaoFinanceiro">
                   <card-pessoa-conta />
                 </div>
 
