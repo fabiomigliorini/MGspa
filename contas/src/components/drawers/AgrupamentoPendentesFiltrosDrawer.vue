@@ -74,6 +74,7 @@ function clear() {
       />
       <MgSelectFormaPagamento
         v-model="store.filters.codformapagamento"
+        multiple
         outlined
         clearable
         :bottom-slots="false"

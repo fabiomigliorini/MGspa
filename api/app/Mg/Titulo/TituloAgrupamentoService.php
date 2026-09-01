@@ -416,8 +416,8 @@ class TituloAgrupamentoService
             $params['codtipotitulo'] = (int)$filtros['codtipotitulo'];
         }
         if (!empty($filtros['codformapagamento'])) {
-            $sql .= ' and p.codformapagamento = :codformapagamento ';
-            $params['codformapagamento'] = (int)$filtros['codformapagamento'];
+            $cods = array_map('intval', (array)$filtros['codformapagamento']);
+            $sql .= ' and coalesce(p.codformapagamento, -1) in (' . implode(',', $cods) . ') ';
         }
         if (!empty($filtros['vencimento_de'])) {
             $sql .= ' and t.vencimento >= :vencimento_de ';
