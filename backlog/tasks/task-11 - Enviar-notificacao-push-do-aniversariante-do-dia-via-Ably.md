@@ -4,10 +4,11 @@ title: Enviar notificacao push do aniversariante do dia via Ably
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-12 16:15'
+updated_date: '2026-09-12 17:14'
 labels:
   - pessoas
 dependencies: []
+priority: low
 type: feature
 ordinal: 11000
 ---

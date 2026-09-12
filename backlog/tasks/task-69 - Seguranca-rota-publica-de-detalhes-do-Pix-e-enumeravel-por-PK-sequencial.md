@@ -4,11 +4,11 @@ title: 'Seguranca: rota publica de detalhes do Pix e enumeravel por PK sequencia
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:54'
-updated_date: '2026-09-12 16:15'
+updated_date: '2026-09-12 17:13'
 labels:
   - api
 dependencies: []
-priority: high
+priority: critical
 type: bug
 ordinal: 69000
 ---
