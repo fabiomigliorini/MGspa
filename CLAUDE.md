@@ -19,6 +19,16 @@ Atalho sugerido no seu shell: `alias backlog=/opt/www/MGspa/backlog.sh`
 
 ### Regras de trabalho
 
+**0. O Backlog.md é o controle de tarefas do projeto — use sempre, do começo ao fim.**
+Antes de começar qualquer trabalho, procure no backlog se já existe task para aquilo; se
+existir, trabalhe nela em vez de abrir outra. Durante o trabalho, mantenha o estado da task
+em dia: a task é a fonte de verdade do que está sendo feito, não a conversa do chat. Ao
+concluir, feche-a. Nenhum trabalho de projeto deve acontecer fora de uma task.
+
+    ./backlog.sh search "banco"
+    ./backlog.sh task list -s "To Do"
+    ./backlog.sh task list -s "In Progress"
+
 **1. Toda pendência descoberta vira task, na hora.** Bug encontrado, TODO que ia virar
 comentário no código, ideia que surgiu no meio de outra coisa — criar a task, não deixar no
 chat nem comentada no fonte.
