@@ -1,6 +1,7 @@
 project_name: "MGspa"
 default_status: "To Do"
 statuses: ["To Do", "In Progress", "Done"]
+priorities: ["Critical", "High", "Medium", "Low"]
 labels: []
 date_format: yyyy-mm-dd
 max_column_width: 20

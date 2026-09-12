@@ -4,10 +4,11 @@ title: Ligar o simulador de tributacao a API (hoje esta mockado)
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:54'
-updated_date: '2026-09-12 16:15'
+updated_date: '2026-09-12 17:14'
 labels:
   - notas
 dependencies: []
+priority: medium
 type: feature
 ordinal: 72000
 ---

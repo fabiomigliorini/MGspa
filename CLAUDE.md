@@ -58,9 +58,22 @@ Não repita a natureza como label; para filtrar use `--type`:
     ./backlog.sh task list --type bug --plain
     ./backlog.sh task list -l negocios --plain
 
-Prioridade só quando for evidente: bug, defeito em produção ou problema de segurança nascem
-`high`. Fora isso, **deixar sem prioridade** — não chutar. Nunca atribuir responsável a outra
-pessoa; cada um pega a sua.
+**Prioridade é obrigatória — toda task nasce com uma.** São quatro níveis, definidos por
+**impacto**, nunca pela natureza do trabalho (essa já é o `type`). Bug não é automaticamente
+urgente e feature pode ser: o que decide é o quanto dói.
+
+- `Critical` — gente parada, dinheiro saindo errado ou dado exposto **agora**. Larga o que
+  está fazendo. Exige justificar o porquê na descrição. Se tiver mais de 2 ou 3 no backlog,
+  alguma não é Critical.
+- `High` — dói toda semana, tem workaround manual, ou tem prazo externo (fiscal/legal).
+- `Medium` — melhora real de rotina, sem workaround doendo.
+- `Low` — quando sobrar tempo; não morre se ficar um ano. **É o default**: na dúvida, entra
+  `Low`. Errar pra baixo é barato de promover; `high` inflado não ordena nada.
+
+    ./backlog.sh task list --sort priority --plain
+    ./backlog.sh task list --priority critical --plain
+
+Nunca atribuir responsável a outra pessoa; cada um pega a sua.
 
 **2. Ao começar uma task:** marcar em andamento e atribuir a si.
 

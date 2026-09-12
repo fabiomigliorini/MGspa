@@ -4,10 +4,11 @@ title: Ligar a contingencia automatica depois de calibrar a tolerancia
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:56'
-updated_date: '2026-09-12 16:15'
+updated_date: '2026-09-12 17:14'
 labels:
   - api
 dependencies: []
+priority: medium
 type: feature
 ordinal: 90000
 ---

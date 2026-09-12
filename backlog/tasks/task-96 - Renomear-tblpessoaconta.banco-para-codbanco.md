@@ -4,9 +4,11 @@ title: Renomear tblpessoaconta.banco para codbanco
 status: To Do
 assignee: []
 created_date: '2026-09-12 16:26'
+updated_date: '2026-09-12 17:14'
 labels:
   - pessoas
 dependencies: []
+priority: medium
 type: chore
 ordinal: 95000
 ---

@@ -4,10 +4,11 @@ title: Destinar Caixa (Totais) e Vale-compra a um app
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:56'
-updated_date: '2026-09-12 17:35'
+updated_date: '2026-09-12 17:14'
 labels:
   - estoque
 dependencies: []
+priority: low
 type: feature
 ordinal: 84000
 ---

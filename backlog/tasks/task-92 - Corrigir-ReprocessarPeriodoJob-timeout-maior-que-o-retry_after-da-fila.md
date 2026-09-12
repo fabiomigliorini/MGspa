@@ -4,10 +4,11 @@ title: 'Corrigir ReprocessarPeriodoJob: timeout maior que o retry_after da fila'
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:56'
-updated_date: '2026-09-12 16:14'
+updated_date: '2026-09-12 17:13'
 labels:
   - api
 dependencies: []
+priority: high
 type: bug
 ordinal: 92000
 ---

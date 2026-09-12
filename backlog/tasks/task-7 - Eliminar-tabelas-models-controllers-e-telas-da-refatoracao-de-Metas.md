@@ -4,11 +4,12 @@ title: Aposentar as Metas antigas preservando o historico
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-12 16:44'
+updated_date: '2026-09-12 17:14'
 labels:
   - pessoas
   - api
 dependencies: []
+priority: medium
 type: chore
 ordinal: 7000
 ---
