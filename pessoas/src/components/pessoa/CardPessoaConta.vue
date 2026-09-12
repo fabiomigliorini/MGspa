@@ -26,9 +26,9 @@ const contasFiltradas = computed(() => {
   return lista
 })
 
-// "001, Brasil" — codigo FEBRABAN (numeroBanco) + nome, ambos vindos do Resource.
+// "Brasil, 001" — nome + codigo FEBRABAN (numeroBanco), ambos vindos do Resource.
 const bancoLabel = (conta) =>
-  [conta.numeroBanco?.toString().padStart(3, '0'), conta.nomeBanco].filter(Boolean).join(', ')
+  [conta.nomeBanco, conta.numeroBanco?.toString().padStart(3, '0')].filter(Boolean).join(', ')
 
 const dialogNovaConta = ref(false)
 const modelContaBancaria = ref({})

@@ -1,5 +1,20 @@
 # MGspa
 
+## Commits — sempre esperar autorização
+
+**Nunca commitar sem o OK explícito de quem pediu.** Ao terminar uma alteração:
+
+1. Deixe o trabalho pronto na árvore de trabalho — **sem** `git add`, **sem** `git commit`.
+2. Diga o que mudou e **como testar**: a tela, a URL, o comando a rodar.
+3. Espere a validação. Só commite depois de um "pode commitar" claro.
+
+Vale para **qualquer** alteração, inclusive as que parecem triviais, as de documentação e as
+do próprio `backlog/`. "Terminei a implementação" não é autorização para commitar — quem
+testa é quem autoriza.
+
+Se a validação apontar problema, corrija e volte ao passo 2: a correção também não vai
+commitada sozinha.
+
 ## Gestão de tarefas — Backlog.md
 
 As tarefas do projeto vivem em `backlog/` como arquivos markdown, versionadas junto com o
@@ -59,4 +74,5 @@ pessoa; cada um pega a sua.
 
     [FIX] TASK-42 Corrige rateio de xerox quando não fecha 100%
 
-O arquivo `.md` da task entra no mesmo commit do código.
+O arquivo `.md` da task entra no mesmo commit do código — e o commit só acontece depois da
+autorização, conforme a seção **Commits** acima.
