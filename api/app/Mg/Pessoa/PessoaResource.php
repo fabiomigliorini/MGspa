@@ -65,7 +65,7 @@ class PessoaResource extends JsonResource
         // só para Financeiro/RH.
         $ret['PessoaContaS'] = $ret['permissaoFinanceiro']
             ? PessoaContaResource::collection(
-                $this->PessoaContaS()->orderBy('alteracao')->get()
+                $this->PessoaContaS()->with('Banco')->orderBy('alteracao')->get()
             )
             : [];
         $ret['DependenteS'] = DependenteResource::collection(
