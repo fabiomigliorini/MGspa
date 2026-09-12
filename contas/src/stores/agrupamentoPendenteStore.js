@@ -8,7 +8,7 @@ const defaultFilters = () => ({
   codgrupoeconomico: null,
   codpessoa: null,
   codtipotitulo: null,
-  codformapagamento: null,
+  codformapagamento: [],
   vencimento_de: null,
   vencimento_ate: null,
   valor_de: null,

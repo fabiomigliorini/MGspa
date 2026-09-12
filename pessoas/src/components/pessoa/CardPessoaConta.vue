@@ -467,7 +467,7 @@ const submit = () => {
         icon="add"
         size="sm"
         color="primary"
-        v-if="user.temPermissao('Publico')"
+        v-if="user.temAlgumaPermissao(['Financeiro', 'Recursos Humanos'])"
         @click=";((dialogNovaConta = true), (editarConta = false), (modelContaBancaria = {}))"
       />
     </q-card-section>
@@ -522,7 +522,7 @@ const submit = () => {
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label caption v-if="user.temPermissao('Publico')">
+            <q-item-label caption v-if="user.temAlgumaPermissao(['Financeiro', 'Recursos Humanos'])">
               <!-- EDITAR -->
               <q-btn
                 flat

@@ -48,6 +48,21 @@ const salvarPdv = async (formData) => {
   }
 }
 
+const autorizar = async (pdv) => {
+  await sPdv.autorizar(pdv)
+  buscar()
+}
+
+const inativar = async (pdv) => {
+  await sPdv.inativar(pdv)
+  buscar()
+}
+
+const reativar = async (pdv) => {
+  await sPdv.reativar(pdv)
+  buscar()
+}
+
 const statusColor = (pdv) => {
   if (pdv.autorizado) return 'green'
   if (pdv.inativo) return 'red'
@@ -201,7 +216,7 @@ onMounted(() => {
                 icon="pause"
                 size="xs"
                 color="red"
-                @click="sPdv.inativar(pdv)"
+                @click="inativar(pdv)"
               >
                 <q-tooltip>Inativar</q-tooltip>
               </q-btn>
@@ -213,7 +228,7 @@ onMounted(() => {
                 icon="play_arrow"
                 size="xs"
                 color="green"
-                @click="sPdv.reativar(pdv)"
+                @click="reativar(pdv)"
               >
                 <q-tooltip>Reativar</q-tooltip>
               </q-btn>
@@ -225,7 +240,7 @@ onMounted(() => {
                 icon="check_circle"
                 size="xs"
                 color="green"
-                @click="sPdv.autorizar(pdv)"
+                @click="autorizar(pdv)"
               >
                 <q-tooltip>Autorizar</q-tooltip>
               </q-btn>

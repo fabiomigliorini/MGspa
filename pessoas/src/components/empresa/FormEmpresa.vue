@@ -1,6 +1,5 @@
 <script setup>
 import { ref, computed } from 'vue'
-import MgInputData from '@components/MgInputData.vue'
 
 const props = defineProps({
   modelValue: {
@@ -26,11 +25,6 @@ const model = computed({
   },
 })
 
-const opcoesModoemissao = [
-  { label: 'Normal', value: 1 },
-  { label: 'Offline', value: 9 },
-]
-
 const validaObrigatorio = (val) => !!val || 'Campo obrigatório'
 
 const submit = async () => {
@@ -55,28 +49,6 @@ defineExpose({
       :rules="[validaObrigatorio]"
       lazy-rules
       class="q-pa-none"
-    />
-
-    <q-select
-      outlined
-      v-model="model.modoemissaonfce"
-      :options="opcoesModoemissao"
-      label="Modo Emissão NFCe *"
-      emit-value
-      map-options
-      :rules="[validaObrigatorio]"
-      lazy-rules
-      class="q-pa-none"
-    />
-
-    <MgInputData v-model="model.contingenciadata" type="timestamp" label="Data de Contingência" />
-
-    <q-input
-      outlined
-      v-model="model.contingenciajustificativa"
-      label="Justificativa de Contingência"
-      type="textarea"
-      rows="3"
     />
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">

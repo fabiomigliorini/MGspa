@@ -37,9 +37,12 @@ export const produtoStore = defineStore('produto', {
       const palavras = texto.split(' ')
 
       // Busca produto baseados na primeira palavra de pesquisa
+      // distinct() é obrigatório: buscaArr é indice multiEntry, entao um produto com duas
+      // variacoes da mesma palavra casa duas vezes com o startsWithIgnoreCase e sairia repetido
       var colProdutos = await db.produto
         .where('buscaArr')
         .startsWithIgnoreCase(palavras[0])
+        .distinct()
         .and((p) => p.inativo == null)
 
       // se estiver buscando por mais de uma palavra

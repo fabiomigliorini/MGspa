@@ -122,11 +122,11 @@ const confirmar = (codpessoa, cpf) => {
 }
 
 const pesquisa = debounce(async () => {
-  consultando.value = true
-
   // verifica se tem texto de busca
-  const texto = cnpj.value.trim()
+  // o botao de limpar zera o cnpj, entao o valor pode chegar nulo aqui
+  const texto = (cnpj.value ?? '').trim()
   if (texto.length < 3) {
+    consultando.value = false
     return
   }
 
@@ -153,7 +153,10 @@ const pesquisa = debounce(async () => {
   }
 
   // Busca Pessoas baseados na primeira palavra de pesquisa
-  var colPessoas = await db.pessoa.where('buscaArr').startsWithIgnoreCase(palavras[0])
+  // distinct() é obrigatório: buscaArr é indice multiEntry, entao uma pessoa com duas
+  // variacoes da mesma palavra (ex: "SAN" na razao social e "San" na fantasia) casa duas
+  // vezes com o startsWithIgnoreCase e sairia repetida na lista
+  var colPessoas = await db.pessoa.where('buscaArr').startsWithIgnoreCase(palavras[0]).distinct()
 
   if (props.somenteAtivos) {
     colPessoas.and((p) => p.inativo == null)

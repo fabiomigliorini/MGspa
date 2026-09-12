@@ -70,7 +70,10 @@ const pesquisa = (textoPesquisa, update) => {
     }
 
     // Busca Pessoas baseados na primeira palavra de pesquisa
-    var colPessoas = await db.pessoa.where('buscaArr').startsWithIgnoreCase(palavras[0])
+    // distinct() é obrigatório: buscaArr é indice multiEntry, entao uma pessoa com duas
+    // variacoes da mesma palavra (ex: "SAN" na razao social e "San" na fantasia) casa duas
+    // vezes com o startsWithIgnoreCase e sairia repetida na lista
+    var colPessoas = await db.pessoa.where('buscaArr').startsWithIgnoreCase(palavras[0]).distinct()
 
     if (props.somenteAtivos) {
       colPessoas.and((p) => p.inativo == null)

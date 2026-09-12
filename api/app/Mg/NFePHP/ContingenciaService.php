@@ -139,13 +139,16 @@ class ContingenciaService
     /**
      * Volta para o modo online.
      *
-     * NAO limpa contingenciadata/contingenciajustificativa: elas viram historico do ultimo
-     * episodio. As notas emitidas offline ja carregam as suas congeladas (tblnotafiscal),
-     * entao limpar aqui nao quebraria a retransmissao — mas o historico e util e nao custa.
+     * Limpa contingenciadata: fora da contingencia ela so confundiria, porque descreve
+     * um episodio encerrado e nao o estado atual. As notas emitidas offline carregam as
+     * suas proprias congeladas (tblnotafiscal), entao a retransmissao nao depende desta.
+     *
+     * A justificativa fica: nao atrapalha e serve de rascunho para o proximo episodio.
      */
     public static function normalizar(Empresa $empresa): Empresa
     {
         $empresa->modoemissaonfce = Empresa::MODOEMISSAONFCE_NORMAL;
+        $empresa->contingenciadata = null;
         $empresa->save();
 
         return $empresa;

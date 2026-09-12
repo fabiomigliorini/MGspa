@@ -17,7 +17,10 @@ const modoEmissaoLabel = computed(() => {
   return modos[props.empresa.modoemissaonfce] || '-'
 })
 
+// So faz sentido mostrar a contingencia enquanto a emissao esta offline; com a
+// empresa em modo normal a data nao diz nada sobre o estado atual.
 const contingenciaFormatada = computed(() => {
+  if (props.empresa.modoemissaonfce !== 9) return null
   if (!props.empresa.contingenciadata) return null
   return formataTimestamp(props.empresa.contingenciadata)
 })

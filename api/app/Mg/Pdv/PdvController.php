@@ -55,6 +55,8 @@ class PdvController
                     $q->where('autorizado', false)->orWhereNull('autorizado');
                 })->whereNull('inativo'),
             };
+        } else {
+            $query->whereNull('inativo');
         }
         if ($request->ip) {
             $query->where('ip', 'ilike', "%{$request->ip}%");

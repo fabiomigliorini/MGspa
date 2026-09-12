@@ -1,5 +1,6 @@
 <script setup>
 import { formataTimestamp, formataDataAbreviada } from '@components/formatters'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
@@ -184,6 +185,8 @@ const ativar = async (codusuario) => {
       >
         <q-tooltip>Ativar</q-tooltip>
       </q-btn>
+
+      <MgInfoCriacao :registro="sUsuario.detalheUsuarios" />
     </q-card-section>
 
     <q-separator inset />

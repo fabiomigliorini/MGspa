@@ -8,6 +8,7 @@ export default {
   components: {
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
     FormEmpresa: defineAsyncComponent(() => import('components/empresa/FormEmpresa.vue')),
+    CardContingencia: defineAsyncComponent(() => import('components/empresa/CardContingencia.vue')),
   },
 
   setup() {
@@ -18,11 +19,10 @@ export default {
     const loading = ref(false)
     const loadingPage = ref(false)
 
+    // Somente o que o PUT deve gravar. Modo de emissao e contingencia sao
+    // escritos exclusivamente pelos endpoints dedicados (CardContingencia).
     const model = ref({
       empresa: '',
-      modoemissaonfce: 1,
-      contingenciadata: null,
-      contingenciajustificativa: '',
     })
 
     const carregarEmpresa = async () => {
@@ -31,9 +31,6 @@ export default {
         const ret = await sEmpresa.get(route.params.codempresa)
         model.value = {
           empresa: ret.data.data.empresa,
-          modoemissaonfce: ret.data.data.modoemissaonfce,
-          contingenciadata: ret.data.data.contingenciadata,
-          contingenciajustificativa: ret.data.data.contingenciajustificativa,
         }
       } catch (error) {
         console.log(error)
@@ -124,6 +121,10 @@ export default {
 
           <q-card-section>
             <FormEmpresa v-model="model" :loading="loading" @submit="salvar" />
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <CardContingencia />
           </q-card-section>
         </q-card>
       </q-page>
