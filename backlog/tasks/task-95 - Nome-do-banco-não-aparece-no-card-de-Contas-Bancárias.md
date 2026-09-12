@@ -4,12 +4,12 @@ title: Nome do banco não aparece no card de Contas Bancárias
 status: In Progress
 assignee: []
 created_date: '2026-09-12 16:02'
-updated_date: '2026-09-12 16:05'
+updated_date: '2026-09-12 16:15'
 labels:
-  - bug
   - pessoas
 dependencies: []
 priority: high
+type: bug
 ordinal: 1000
 ---
 

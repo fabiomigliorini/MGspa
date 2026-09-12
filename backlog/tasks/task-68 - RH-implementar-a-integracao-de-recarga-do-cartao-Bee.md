@@ -4,10 +4,11 @@ title: 'RH: implementar a integracao de recarga do cartao Bee'
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:54'
+updated_date: '2026-09-12 16:15'
 labels:
-  - feature
   - api
 dependencies: []
+type: feature
 ordinal: 68000
 ---
 

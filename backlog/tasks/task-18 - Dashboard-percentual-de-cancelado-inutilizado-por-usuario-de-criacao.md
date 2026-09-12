@@ -4,10 +4,11 @@ title: 'Dashboard: percentual de cancelado/inutilizado por usuario de criacao'
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
+updated_date: '2026-09-12 16:15'
 labels:
-  - feature
   - notas
 dependencies: []
+type: feature
 ordinal: 18000
 ---
 

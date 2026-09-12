@@ -4,11 +4,12 @@ title: Prancheta de pesquisa de produtos sem codigo
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
+updated_date: '2026-09-12 16:15'
 labels:
-  - feature
   - negocios
 dependencies: []
 priority: low
+type: feature
 ordinal: 49000
 ---
 

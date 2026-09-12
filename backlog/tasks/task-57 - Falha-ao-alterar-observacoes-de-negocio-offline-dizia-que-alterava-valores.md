@@ -4,11 +4,12 @@ title: Falha ao alterar observacoes de negocio offline (dizia que alterava valor
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
+updated_date: '2026-09-12 16:15'
 labels:
-  - bug
   - negocios
 dependencies: []
 priority: low
+type: bug
 ordinal: 57000
 ---
 

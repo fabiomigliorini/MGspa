@@ -33,10 +33,15 @@ concluir, feche-a. Nenhum trabalho de projeto deve acontecer fora de uma task.
 comentário no código, ideia que surgiu no meio de outra coisa — criar a task, não deixar no
 chat nem comentada no fonte.
 
-    ./backlog.sh task create "Título curto" -l bug,negocios -d "contexto e origem"
+    ./backlog.sh task create "Título curto" --type bug -l negocios -d "contexto e origem"
 
-Labels: `bug` ou `feature`, mais o app de origem — `pessoas`, `notas`, `negocios`, `contas`,
-`estoque`, `agro`, `api`, `components`.
+**Type** = a natureza do trabalho: `bug` ou `feature` (o Backlog.md também aceita
+`enhancement`, `task`, `chore`, `docs`, `spike`). **Label** = só o app de origem —
+`pessoas`, `notas`, `negocios`, `contas`, `estoque`, `agro`, `api`, `components`.
+Não repita a natureza como label; para filtrar use `--type`:
+
+    ./backlog.sh task list --type bug --plain
+    ./backlog.sh task list -l negocios --plain
 
 Prioridade só quando for evidente: bug, defeito em produção ou problema de segurança nascem
 `high`. Fora isso, **deixar sem prioridade** — não chutar. Nunca atribuir responsável a outra

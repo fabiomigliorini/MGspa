@@ -4,10 +4,11 @@ title: Implementar carregamento e atualizacao dos tributos da reforma
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:54'
+updated_date: '2026-09-12 16:15'
 labels:
-  - feature
   - notas
 dependencies: []
+type: feature
 ordinal: 70000
 ---
 

@@ -4,10 +4,11 @@ title: 'PlantioDetailPage: listar as cargas do talhao'
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:54'
+updated_date: '2026-09-12 16:15'
 labels:
-  - feature
   - agro
 dependencies: []
+type: feature
 ordinal: 73000
 ---
 

@@ -4,10 +4,11 @@ title: Decidir a retencao de legado/ e dos XMLs orfaos em DistDFe/
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:56'
+updated_date: '2026-09-12 16:15'
 labels:
-  - feature
   - api
 dependencies: []
+type: feature
 ordinal: 93000
 ---
 
