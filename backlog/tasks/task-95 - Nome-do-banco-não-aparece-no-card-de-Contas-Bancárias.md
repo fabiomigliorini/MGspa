@@ -1,10 +1,11 @@
 ---
 id: TASK-95
 title: Nome do banco não aparece no card de Contas Bancárias
-status: In Progress
-assignee: []
+status: Done
+assignee:
+  - '@fabio'
 created_date: '2026-09-12 16:02'
-updated_date: '2026-09-12 16:15'
+updated_date: '2026-09-12 16:26'
 labels:
   - pessoas
 dependencies: []
@@ -25,6 +26,6 @@ Correção sugerida: declarar em PessoaConta a relação belongsTo(Mg\\Banco\\Ba
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Card de Contas Bancárias mostra o nome do banco
-- [ ] #2 Resource não usa @ para suprimir o erro
+- [x] #1 Card de Contas Bancárias mostra o nome do banco
+- [x] #2 Resource não usa @ para suprimir o erro
 <!-- AC:END -->

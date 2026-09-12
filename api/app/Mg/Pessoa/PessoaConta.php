@@ -6,6 +6,7 @@
 
 namespace Mg\Pessoa;
 
+use Mg\Banco\Banco;
 use Mg\MgModel;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
@@ -35,7 +36,7 @@ class PessoaConta extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'banco' => 'float',
+        'banco' => 'integer',
         'cnpj' => 'float',
         'codpessoa' => 'integer',
         'codpessoaconta' => 'integer',
@@ -51,6 +52,12 @@ class PessoaConta extends MgModel
 
 
     // Chaves Estrangeiras
+    // Apesar do nome, a coluna 'banco' guarda o codbanco (FK para tblbanco).
+    public function Banco()
+    {
+        return $this->belongsTo(Banco::class, 'banco', 'codbanco');
+    }
+
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
