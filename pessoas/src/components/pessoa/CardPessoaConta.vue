@@ -26,6 +26,10 @@ const contasFiltradas = computed(() => {
   return lista
 })
 
+// "Brasil, 001" — nome + codigo FEBRABAN (numeroBanco), ambos vindos do Resource.
+const bancoLabel = (conta) =>
+  [conta.nomeBanco, conta.numeroBanco?.toString().padStart(3, '0')].filter(Boolean).join(', ')
+
 const dialogNovaConta = ref(false)
 const modelContaBancaria = ref({})
 const editarConta = ref(false)
@@ -488,8 +492,8 @@ const submit = () => {
           <q-item-section>
             <q-item-label :class="contas.inativo ? 'text-strike' : null">
               <span v-if="contas.agencia && contas.conta">
-                {{ contas.tipo == 1 ? 'Corrente' : 'Poupança' }}, {{ contas.nomeBanco }},
-                {{ contas.banco }}, {{ contas.agencia }}, {{ contas.conta }}
+                {{ contas.tipo == 1 ? 'Corrente' : 'Poupança' }}, {{ bancoLabel(contas) }},
+                {{ contas.agencia }}, {{ contas.conta }}
               </span>
               <span v-if="contas.pixcpf">
                 {{ formataCpf(contas.pixcpf.toString().padStart(11, '0')) }}
