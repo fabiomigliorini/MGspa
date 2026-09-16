@@ -51,13 +51,17 @@ const cad = computed(() => props.cad)
     </div>
 
     <!-- VALOR PADRÃO (conforme tipo de cálculo) -->
-    <div v-if="cad.tipovalor === 'F'" class="col-12 col-sm-6">
+    <div v-if="cad.tipovalor === 'F'" class="col-12">
       <MgInputValor v-model="cad.valorpadrao" label="Valor Padrão" prefix="R$" />
     </div>
-    <div v-else-if="cad.tipovalor === 'P'" class="col-12 col-sm-6">
-      <MgInputValor v-model="cad.valorpadrao" label="Percentual Padrão %" />
+    <div v-else-if="cad.tipovalor === 'P'" class="col-12">
+      <MgInputValor
+        v-model="cad.valorpadrao"
+        label="Percentual Padrão %"
+        hint="Em setor coletivo será a % para distribuir entre a equipe"
+      />
     </div>
-    <div v-else-if="cad.tipovalor === 'Q'" class="col-12 col-sm-6">
+    <div v-else-if="cad.tipovalor === 'Q'" class="col-12">
       <MgInputValor v-model="cad.valorunitariopadrao" label="Valor Unitário Padrão" prefix="R$" />
     </div>
 

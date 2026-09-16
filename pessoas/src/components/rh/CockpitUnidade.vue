@@ -372,6 +372,26 @@ watch(
           />
         </q-card-section>
 
+        <!-- RATEIO: quanto da comissão do setor coletivo já foi distribuída.
+             Abaixo de 100% é a perda do mês; acima, erro a conferir. -->
+        <template v-for="ind in indicadoresColetivos(setor)" :key="'rateio-' + ind.codindicador">
+          <q-card-section v-if="ind.rateio" class="q-pt-none q-pb-sm">
+            <div
+              class="text-caption"
+              :class="ind.rateio.distribuido > 100.001 ? 'text-red-9' : 'text-grey-7'"
+            >
+              <q-icon
+                :name="ind.rateio.distribuido > 100.001 ? 'warning' : 'pie_chart'"
+                size="xs"
+                class="q-mr-xs"
+              />
+              Comissão do setor {{ ind.rateio.pool_percentual }}% =
+              {{ formataNumero(ind.rateio.pool_valor) }} ·
+              {{ formataPercentual(ind.rateio.distribuido) }} distribuído
+            </div>
+          </q-card-section>
+        </template>
+
         <!-- COLABORADORES DO SETOR -->
         <MgTabelaValores
           :colunas="colunas"
@@ -442,12 +462,7 @@ watch(
 
       <!-- TOTAL DA FILIAL — espelha a linha desta filial no Resumão -->
       <q-card bordered flat class="q-mb-md" v-if="rodapeFilial.length && setores.length">
-        <MgTabelaValores
-          :colunas="colunas"
-          :linhas="[]"
-          :rodape="rodapeFilial"
-          :cabecalho="false"
-        >
+        <MgTabelaValores :colunas="colunas" :linhas="[]" :rodape="rodapeFilial" :cabecalho="false">
           <template #rodape-indicador="{ valor }">
             <div class="row items-center justify-end no-wrap">
               <span>{{ valor != null ? formataNumero(valor) : '—' }}</span>
