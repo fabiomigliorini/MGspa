@@ -86,6 +86,62 @@ class CalculoRubricaService
         $pc->save();
     }
 
+    /**
+     * Rateio dos indicadores COLETIVOS: quanto do pool do setor já está
+     * distribuído em comissão. Devolve, por indicador,
+     * ['pool' => 6.0, 'soma' => 4.68, 'distribuido' => 78.0].
+     *
+     * O pool não tem coluna própria — vem do catálogo, do "Percentual Padrão"
+     * da tblrubrica de onde a rubrica saiu, que para um setor coletivo é o
+     * percentual CHEIO do setor (ex.: 6% da venda do xerox). Já o percentual
+     * gravado na rubrica do colaborador é o efetivo, com a fatia da pessoa
+     * embutida — o rh_rubricas.sql colapsou o rateio dentro dele ("50% de 5%
+     * = 2,5%"). Daí: fatia da pessoa = percentual / pool, e o quanto o setor
+     * distribuiu = soma dos percentuais / pool.
+     *
+     * Sem pool no catálogo devolve 'distribuido' nulo: a tela simplesmente não
+     * mostra o rateio, em vez de inventar um número.
+     *
+     * Uma query para a lista toda — o cockpit de uma unidade tem dezenas de
+     * indicadores e um accessor no model viraria N+1.
+     *
+     * Conta só rubrica concedida: a não concedida vale zero no cálculo, então
+     * somá-la faria o setor parecer distribuído sem ninguém receber.
+     */
+    public static function rateioDistribuido(array $codsIndicador): array
+    {
+        if (empty($codsIndicador)) {
+            return [];
+        }
+
+        $linhas = ColaboradorRubrica::query()
+            ->leftJoin('tblrubrica', 'tblrubrica.codrubrica', '=', 'tblcolaboradorrubrica.codrubrica')
+            ->whereIn('tblcolaboradorrubrica.codindicador', $codsIndicador)
+            ->where('tblcolaboradorrubrica.tipovalor', self::TIPO_PERCENTUAL)
+            ->where('tblcolaboradorrubrica.concedido', true)
+            ->whereNotNull('tblcolaboradorrubrica.percentual')
+            ->groupBy('tblcolaboradorrubrica.codindicador')
+            ->selectRaw('tblcolaboradorrubrica.codindicador as codindicador')
+            ->selectRaw('sum(tblcolaboradorrubrica.percentual) as soma')
+            ->selectRaw('max(tblrubrica.valorpadrao) as pool')
+            ->get();
+
+        $ret = [];
+
+        foreach ($linhas as $linha) {
+            $pool = (float) $linha->pool;
+            $soma = (float) $linha->soma;
+
+            $ret[(int) $linha->codindicador] = [
+                'pool' => $pool ?: null,
+                'soma' => round($soma, 6),
+                'distribuido' => $pool ? round($soma / $pool * 100, 3) : null,
+            ];
+        }
+
+        return $ret;
+    }
+
     protected static function metaAtingida(ColaboradorRubrica $rubrica): bool
     {
         $indicador = $rubrica->codindicadorcondicao ? Indicador::find($rubrica->codindicadorcondicao) : null;

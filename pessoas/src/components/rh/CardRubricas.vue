@@ -38,6 +38,17 @@ const tipoValorColor = (tipo) => {
 
 const rubricaDescricao = (r) => r.descricao || r.rubrica?.descricao || '—'
 
+// Rubrica percentual sobre indicador de SETOR é fatia de um bolo coletivo: o
+// "Percentual Padrão" do catálogo é o pool cheio do setor (ex.: 6% da venda do
+// xerox) e o percentual da rubrica já vem com a fatia embutida. Mostrar os dois
+// deixa à vista quanto do pool é desta pessoa — sem isso a conta era de cabeça.
+const fatiaPool = (r) => {
+  if (r.tipovalor !== 'P' || r.indicador?.tipo !== 'S') return null
+  const pool = parseFloat(r.rubrica?.valorpadrao) || 0
+  if (!pool) return null
+  return Math.round(((parseFloat(r.percentual) || 0) / pool) * 100 * 10) / 10
+}
+
 const condicaoLabel = (rubrica) => {
   if (!rubrica.tipocondicao) return '—'
   const tipo = rubrica.tipocondicao === 'M' ? 'Meta' : 'Rank'
@@ -170,7 +181,12 @@ const linhaClasse = (r) => (!r.concedido ? 'text-grey-5' : '')
       </template>
 
       <template #celula-valor="{ linha }">
-        <template v-if="linha.tipovalor === 'P'">{{ linha.percentual }}%</template>
+        <template v-if="linha.tipovalor === 'P'">
+          {{ linha.percentual }}%
+          <div v-if="fatiaPool(linha)" class="text-caption text-grey-7">
+            {{ fatiaPool(linha) }}% do pool
+          </div>
+        </template>
         <template v-else-if="linha.tipovalor === 'Q'">
           {{ formataNumero(linha.valorunitario) }} × {{ linha.quantidade }}
         </template>

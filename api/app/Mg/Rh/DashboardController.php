@@ -152,6 +152,16 @@ class DashboardController extends Controller
             ->withCount('IndicadorLancamentoS')
             ->get();
 
+        // Quanto do pool de cada setor coletivo já está distribuído em comissão
+        // — é o que deixa o cockpit mostrar "78% distribuído" e avisar quando
+        // passa de 100%. Uma query para todos os indicadores da unidade.
+        $rateio = CalculoRubricaService::rateioDistribuido(
+            $indicadores
+                ->where('tipo', ProcessarVendaService::TIPO_SETOR)
+                ->pluck('codindicador')
+                ->all()
+        );
+
         $colaboradores = PeriodoColaborador::where('codperiodo', $codperiodo)
             ->whereHas('Setor', fn($q) => $q->where('codunidadenegocio', $codunidade))
             ->with([
@@ -178,7 +188,7 @@ class DashboardController extends Controller
             ->orderBy('setor')
             ->get();
 
-        $setoresOut = $setores->map(function ($setor) use ($indicadores, $colaboradores, $custoMap) {
+        $setoresOut = $setores->map(function ($setor) use ($indicadores, $colaboradores, $custoMap, $rateio) {
             $indSetor = $indicadores->where('codsetor', $setor->codsetor);
             $colabSetor = $colaboradores->where('codsetor', $setor->codsetor);
 
@@ -204,6 +214,10 @@ class DashboardController extends Controller
                     'valoracumulado' => $i->valoracumulado,
                     'atingimento' => $i->meta ? round($i->valoracumulado / $i->meta * 100, 2) : null,
                     'lancamentos_count' => $i->indicador_lancamento_s_count,
+                    // Rateio do setor coletivo: o pool em % e em R$, e quanto
+                    // dele já está distribuído. Null quando o setor não rateia
+                    // comissão (sem pool no catálogo da rubrica).
+                    'rateio' => static::rateioDoIndicador($i, $rateio),
                 ])->values(),
                 'totais' => static::somaCusto($colabSetor, $custoMap),
                 'colaboradores' => $colabSetor->map(function ($pc) use ($indicadores, $custoMap) {
@@ -267,6 +281,32 @@ class DashboardController extends Controller
             'totais' => static::somaCusto($colaboradores, $custoMap),
             'setores' => $setoresOut->values(),
         ]);
+    }
+
+    /**
+     * Monta o bloco de rateio de um indicador coletivo a partir do mapa do
+     * CalculoRubricaService. Devolve null quando o setor não rateia comissão —
+     * a tela então não mostra nada, em vez de exibir zeros sem significado.
+     *
+     * `valor` é o pool em reais (pool% da venda acumulada do setor) e `sobra` o
+     * que ainda não foi distribuído. Sobra positiva é a perda do mês, que não é
+     * paga a ninguém; negativa quer dizer que passou do pool e precisa conferir.
+     */
+    protected static function rateioDoIndicador($indicador, array $rateio): ?array
+    {
+        $dados = $rateio[$indicador->codindicador] ?? null;
+
+        if (!$dados || !$dados['pool']) {
+            return null;
+        }
+
+        return [
+            'pool_percentual' => $dados['pool'],
+            'pool_valor' => round($indicador->valoracumulado * $dados['pool'] / 100, 2),
+            'soma_percentual' => $dados['soma'],
+            'distribuido' => $dados['distribuido'],
+            'sobra' => round(100 - $dados['distribuido'], 3),
+        ];
     }
 
     /**
