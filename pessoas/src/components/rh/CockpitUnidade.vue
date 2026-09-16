@@ -388,12 +388,6 @@ watch(
               Comissão do setor {{ ind.rateio.pool_percentual }}% =
               {{ formataNumero(ind.rateio.pool_valor) }} ·
               {{ formataPercentual(ind.rateio.distribuido) }} distribuído
-              <template v-if="ind.rateio.distribuido > 100.001">
-                — passou de 100%, o setor receberia mais que a comissão dele
-              </template>
-              <template v-else-if="ind.rateio.sobra > 0">
-                — sobram {{ formataPercentual(ind.rateio.sobra) }} (perda do mês)
-              </template>
             </div>
           </q-card-section>
         </template>
