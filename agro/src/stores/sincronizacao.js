@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
 import { notifyError } from 'src/utils/notify'
-import { normalizarCargaDoServidor } from 'src/utils/carga'
+import { normalizarCargaDoServidor, ETAPAS_ABERTAS } from 'src/utils/carga'
 
 // Store de sincronizacao offline-first (espelha o negocios):
 //  - PULL: baixa os cadastros de referencia + saldos pro Dexie (leitura offline)
@@ -29,7 +29,13 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     return data?.meta?.last_page ?? data?.last_page ?? 1
   }
 
-  // Baixa todas as paginas de um endpoint e regrava a tabela Dexie.
+  // Baixa todas as paginas de um endpoint e regrava a tabela Dexie. Depois PODA
+  // o que nao voltou do servidor: bulkPut so insere/atualiza, e uma linha
+  // apagada la (ou vinda de outro ambiente) ficava no cache pra sempre —
+  // aparecia em select, mapa e listagem como se existisse. Como todo registro
+  // deste pull recebe o mesmo `sincronizado`, o que ficou com timestamp menor e
+  // fantasma. So poda depois de TODAS as paginas terem vindo (um pull
+  // interrompido nao apaga nada).
   async function puxarTabela(endpoint, tabelaDexie) {
     const todos = []
     let page = 1
@@ -44,11 +50,15 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
 
     const sincronizado = Date.now()
     await tabelaDexie.bulkPut(todos.map((i) => ({ ...i, sincronizado })))
+    await tabelaDexie.where('sincronizado').below(sincronizado).delete()
   }
 
   // Plantios sao aninhados na safra (safra/{codsafra}/plantio). Pagina (15/pag).
   // So as safras ativas: a UI so usa a safra ativa (plantiosDaSafra), varrer as
   // inativas so multiplicava requisicoes (o plantio?page=1 repetido).
+  // Poda igual a puxarTabela, mas so entre as safras ativas puxadas — plantio de
+  // safra inativa nao e baixado e nao pode ser apagado por isso (uma carga
+  // antiga ainda resolve o rotulo do talhao por ele).
   async function puxarPlantios() {
     const safras = (await db.safra.toArray()).filter((s) => !s.inativo)
     const sincronizado = Date.now()
@@ -66,6 +76,11 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
         page++
       } while (page <= last)
     }
+    await db.plantio
+      .where('codsafra')
+      .anyOf(safras.map((s) => s.codsafra))
+      .filter((p) => (p.sincronizado || 0) < sincronizado)
+      .delete()
   }
 
   async function puxarReferencias() {
@@ -83,7 +98,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
 
   // Snapshot dos saldos por unidade (estoque depositado) p/ exibir/avisar offline.
   // Fica FORA do TTL: e 1 requisicao leve e o dado mais volatil (saldo de contrato
-  // no CargaDialog); nao e persistido no Dexie, entao rodamos sempre.
+  // no CargaForm); nao e persistido no Dexie, entao rodamos sempre.
   async function puxarSaldos() {
     const { data } = await api.get('v1/movimento-grao/saldos-unidades', { skipLoading: true })
     saldosUnidades.value = Array.isArray(data) ? data : []
@@ -126,19 +141,34 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     return oficial
   }
 
-  // PULL de cargas (board multi-dispositivo): baixa as cargas da safra+dia e faz
-  // merge no Dexie. NÃO reusa puxarTabela porque, pra carga, `sincronizado` é flag
-  // 0/1 (não timestamp) e um bulkPut cego sobrescreveria edições locais pendentes.
-  // Regras do merge: nunca tocar em linha local `sincronizado === 0`; as puxadas
-  // entram como `sincronizado: 1` (servidor é a autoridade). Casa pela PK `uuid`
-  // (o backend preserva o uuid do cliente no upsert).
+  // PULL de cargas (listagem multi-dispositivo): baixa as cargas da safra+dia e
+  // faz merge no Dexie. NÃO reusa puxarTabela porque, pra carga, `sincronizado` é
+  // flag 0/1 (não timestamp) e um bulkPut cego sobrescreveria edições locais
+  // pendentes. Regras do merge: nunca tocar em linha local `sincronizado === 0`;
+  // as puxadas entram como `sincronizado: 1` (servidor é a autoridade). Casa pela
+  // PK `uuid` (o backend preserva o uuid do cliente no upsert).
+  //
+  // Com dia filtrado, puxa TAMBÉM as cargas ainda no pátio de qualquer dia: um
+  // caminhão que chegou ontem em outro dispositivo e não finalizou tem que
+  // aparecer hoje. O endpoint só filtra etapa por igualdade → uma chamada por
+  // etapa aberta (poucas linhas cada).
   async function puxarCargas(codsafra, dataIso) {
     if (!codsafra) return
     const pendentes = new Set(
       (await db.carga.where('sincronizado').equals(0).toArray()).map((c) => c.uuid),
     )
-    const params = { codsafra, page: 1 }
-    if (dataIso) params.data = dataIso
+    if (!dataIso) {
+      await puxarPaginasCarga({ codsafra }, pendentes)
+      return
+    }
+    await puxarPaginasCarga({ codsafra, data: dataIso }, pendentes)
+    for (const etapa of ETAPAS_ABERTAS) {
+      await puxarPaginasCarga({ codsafra, etapa }, pendentes)
+    }
+  }
+
+  async function puxarPaginasCarga(filtro, pendentes) {
+    const params = { ...filtro, page: 1 }
     let last = 1
     do {
       const { data } = await api.get('v1/carga', { params, skipLoading: true })

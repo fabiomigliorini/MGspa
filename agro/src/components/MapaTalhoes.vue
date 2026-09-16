@@ -20,6 +20,7 @@ const props = defineProps({
   referencia: { type: Array, default: () => [] }, // outros talhões da MESMA fazenda (contexto no modo editar)
   outras: { type: Array, default: () => [] }, // talhões de OUTRAS fazendas [{ codfazenda, fazenda, geometria }]
   idKey: { type: String, default: 'codtalhao' }, // chave de id emitida no 'select'
+  selecionado: { type: [Number, String], default: null }, // id destacado (modo visualizar)
   height: { type: String, default: '420px' },
   offsetInferior: { type: Number, default: 0 }, // sobe os controles do rodapé (zoom/desenho) p/ acima do bottom sheet
   estatico: { type: Boolean, default: false }, // thumbnail: sem zoom/arraste, clique atravessa pro card
@@ -39,6 +40,7 @@ const buscando = ref(false)
 let map = null
 let camadaEdicao = null // L.Layer do polígono em edição
 let camadasVisualizar = [] // L.Layer dos polígonos no modo visualizar
+let camadaOutras = null // contexto cinza (outras fazendas) no modo visualizar
 
 function setOnline() {
   online.value = navigator.onLine
@@ -99,11 +101,23 @@ function montarVisualizar() {
   // Limpa o que já estava desenhado (redesenho reativo ao mudar `talhoes`).
   camadasVisualizar.forEach((c) => map.removeLayer(c))
   camadasVisualizar = []
+  if (camadaOutras) {
+    map.removeLayer(camadaOutras)
+    camadaOutras = null
+  }
+  // Demais fazendas em cinza (contexto), como no modo editar.
+  camadaOutras = desenharOutras()
 
   for (const t of props.talhoes) {
     if (!t.geometria) continue
+    const sel = props.selecionado != null && t[props.idKey] === props.selecionado
     const camada = L.geoJSON(t.geometria, {
-      style: { color: corTalhao(t), weight: 2, fillColor: corTalhao(t), fillOpacity: 0.35 },
+      style: {
+        color: corTalhao(t),
+        weight: sel ? 4 : 2,
+        fillColor: corTalhao(t),
+        fillOpacity: sel ? 0.65 : 0.35,
+      },
     }).addTo(map)
     camada.bindTooltip(t.talhao, {
       permanent: true,
@@ -289,9 +303,9 @@ onMounted(async () => {
   setTimeout(() => map && map.invalidateSize(), 250)
 })
 
-// Redesenha os polígonos quando a lista muda (ex.: cadastrou novo talhão).
+// Redesenha os polígonos quando a lista (ou o destaque) muda.
 watch(
-  () => props.talhoes,
+  () => [props.talhoes, props.selecionado],
   () => {
     if (map && props.modo === 'visualizar') montarVisualizar()
   },

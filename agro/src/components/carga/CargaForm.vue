@@ -1,17 +1,28 @@
 <script setup>
+// Formulário da carga aberta (era o CargaDialog, agora inline no centro da
+// tela como o negócio no PDV). Trabalha numa CÓPIA local da carga e emite
+// salvar/avancar/cancelar — quem persiste é a página/store. As ações ficam em
+// FABs no canto (padrão do PDV); a página dispara F3/F4 via defineExpose.
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
+import { useCargaStore } from 'src/stores/carga'
+import { useSincronizacaoStore } from 'src/stores/sincronizacao'
+import { calcularCarga, sacas } from 'src/utils/desconto'
 import {
-  useCargaStore,
-  ETAPAS_POR_SENTIDO,
+  ETAPA_META,
   CONTATIPO_PADRAO,
   novoPonto,
   pontoCompleto,
-} from 'src/stores/carga'
-import { useSincronizacaoStore } from 'src/stores/sincronizacao'
-import { calcularCarga, sacas } from 'src/utils/desconto'
-import { agoraLocal } from 'src/utils/carga'
+  semearPontos,
+  aplicarSentido,
+  etapasDaCarga,
+  proximaEtapa,
+  cargaFinalizada,
+  cargaPesada,
+  agoraLocal,
+  fmtNumero as fmt,
+} from 'src/utils/carga'
 import { imprimirTicket } from 'src/utils/ticket'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -21,29 +32,41 @@ import SelectContaTipo from 'components/SelectContaTipo.vue'
 import SelectTalhao from 'components/SelectTalhao.vue'
 import SelectUnidade from 'components/SelectUnidade.vue'
 import SelectContrato from 'components/SelectContrato.vue'
+import SelectSentido from './SelectSentido.vue'
 
 const props = defineProps({
-  modelValue: { type: Boolean, default: false },
   carga: { type: Object, default: null },
   // true = carga nova (só "Registrar", entra na 1ª etapa sem avançar)
   novo: { type: Boolean, default: false },
 })
-const emit = defineEmits(['update:modelValue', 'salvar', 'avancar', 'cancelar'])
+const emit = defineEmits(['salvar', 'avancar', 'cancelar'])
 
 const $q = useQuasar()
 const store = useCargaStore()
-const { plantiosDaSafra, culturaAtiva, safraAtiva, veiculosAtivos, unidadesAtivas } =
-  storeToRefs(store)
+const { culturaAtiva, safraAtiva, veiculosAtivos, unidadesAtivas } = storeToRefs(store)
 const { online } = storeToRefs(useSincronizacaoStore())
+
+const formRef = ref(null)
+
+// Estado do autocomplete de placa — declarado antes do watcher imediato abaixo,
+// que o zera ao trocar de carga.
+const placaOptions = ref([])
+const placaBusca = ref('')
+const cadastroCaminhao = ref(false)
 
 // Máximo do campo de chegada = agora (não deixa lançar no futuro). Precisa do
 // timestamp completo: com só a data o clamp do MgInputData zeraria a hora (00:00).
 const dataMax = agoraLocal()
 
+// Cópia local — clonada só quando MUDA a carga (uuid). A store recarrega o
+// Dexie em background (sync) e isso não pode apagar o que o operador está
+// digitando; os campos que o servidor devolve (codcarga/sync) entram por
+// watcher separado, sem tocar no resto.
 const local = ref(null)
 watch(
-  () => props.carga,
-  (c) => {
+  () => props.carga?.uuid,
+  () => {
+    const c = props.carga
     if (!c) {
       local.value = null
       return
@@ -51,22 +74,17 @@ watch(
     const carga = normalizarPontos(JSON.parse(JSON.stringify(c)))
     if (props.novo) semearPontos(carga)
     local.value = carga
+    placaBusca.value = ''
   },
   { immediate: true },
 )
-
-// Carga nova já abre com 1 origem + 1 destino no tipo padrão do sentido (a
-// unidade única é pré-selecionada pelo SelectUnidade; o talhão/contrato o
-// operador escolhe). Só semeia o que faltar.
-function semearPontos(carga) {
-  const s = carga.sentido
-  if (!carga.pontos.some((p) => p.papel === 'ORIGEM')) {
-    carga.pontos.push(novoPonto('ORIGEM', CONTATIPO_PADRAO[s]?.ORIGEM || 'UNIDADE'))
-  }
-  if (!carga.pontos.some((p) => p.papel === 'DESTINO')) {
-    carga.pontos.push(novoPonto('DESTINO', CONTATIPO_PADRAO[s]?.DESTINO || 'UNIDADE'))
-  }
-}
+watch(
+  () => [props.carga?.codcarga, props.carga?.sincronizado, props.carga?.syncerro],
+  ([codcarga, sincronizado, syncerro]) => {
+    if (!local.value || !props.carga || props.carga.uuid !== local.value.uuid) return
+    Object.assign(local.value, { codcarga, sincronizado, syncerro })
+  },
+)
 
 // Compat: cargas antigas gravaram kg por ponto e não têm `percentual`. Reconstrói
 // o % a partir do kg (proporção sobre o líquido) ou divide igualmente. Linha
@@ -105,13 +123,22 @@ function distribuirPercentual(grupo) {
   })
 }
 
-const show = computed({
-  get: () => props.modelValue,
-  set: (v) => emit('update:modelValue', v),
+// ---- Sentido (tipo de romaneio) — decidido aqui, trava após a 1ª pesagem ----
+const finalizada = computed(() => cargaFinalizada(local.value))
+const podeTrocarSentido = computed(
+  () => !!local.value && !cargaPesada(local.value) && !finalizada.value,
+)
+const sentidoSel = computed({
+  get: () => local.value?.sentido,
+  set: (s) => {
+    if (!s || !local.value || s === local.value.sentido) return
+    aplicarSentido(local.value, s)
+  },
 })
 
-const ordem = computed(() => ETAPAS_POR_SENTIDO[local.value?.sentido] || [])
+const ordem = computed(() => etapasDaCarga(local.value))
 const idxEtapa = computed(() => ordem.value.indexOf(local.value?.etapa))
+const etapaMeta = computed(() => ETAPA_META[local.value?.etapa] || {})
 const mostrarPbt = computed(() => idxEtapa.value >= ordem.value.indexOf('PBT'))
 const mostrarTara = computed(() => idxEtapa.value >= ordem.value.indexOf('TARA'))
 const mostrarClassificacao = computed(
@@ -122,26 +149,7 @@ const mostrarFiscal = computed(
   () => local.value?.sentido === 'SAIDA' && idxEtapa.value >= ordem.value.indexOf('FISCAL'),
 )
 
-const labelEtapa = {
-  PBT: 'Peso bruto total',
-  TARA: 'Tara',
-  CLASSIFICACAO: 'Classificação',
-  FISCAL: 'Nota Fiscal',
-  FINALIZADO: 'Finalizado',
-}
-const rotuloAcao = {
-  PBT: 'Pesar bruto',
-  TARA: 'Pesar tara',
-  CLASSIFICACAO: 'Classificar',
-  FISCAL: 'Notas fiscais',
-  FINALIZADO: 'Imprimir romaneio',
-}
-
 // ---- Placa (autocomplete do cache de veículos, funciona offline) ----
-const placaOptions = ref([])
-const placaBusca = ref('')
-const cadastroCaminhao = ref(false)
-
 function filtrarPlaca(val, update) {
   placaBusca.value = (val || '').toUpperCase()
   update(() => {
@@ -186,11 +194,9 @@ function onMotoristaClear() {
 const origens = computed(() => (local.value?.pontos || []).filter((p) => p.papel === 'ORIGEM'))
 const destinos = computed(() => (local.value?.pontos || []).filter((p) => p.papel === 'DESTINO'))
 
-// Grupo (origens/destinos) do ponto — pra travar o % em 100 quando é linha única.
 function grupoDoPonto(p) {
   return p.papel === 'ORIGEM' ? origens.value : destinos.value
 }
-
 function addPonto(papel) {
   const contatipo = CONTATIPO_PADRAO[local.value.sentido]?.[papel] || 'UNIDADE'
   local.value.pontos.push(novoPonto(papel, contatipo))
@@ -210,7 +216,6 @@ function onTipoChange(p) {
   p.codcontrato = null
   p.rotulo = null
 }
-// Escolheu a entidade (talhão/unidade/contrato): grava no campo certo + rótulo.
 function onEntidade(p, val) {
   if (p.contatipo === 'PLANTIO') p.codplantio = val
   else if (p.contatipo === 'UNIDADE') p.codunidadearmazenadora = val
@@ -218,7 +223,15 @@ function onEntidade(p, val) {
   setRotuloPonto(p)
 }
 function rotuloPlantio(cod) {
-  return plantiosDaSafra.value.find((o) => o.codplantio === cod)?.rotulo || null
+  return store.plantioPorId(cod)?.rotulo || null
+}
+// Talhão escolhido no mapa pode ser de OUTRA safra (soja × milho): a carga
+// segue a safra do talhão — é ela que define cultura, classificação e peso da
+// saca. A página troca a safra ativa da listagem ao salvar.
+function onPlantioSelecionado(plantio) {
+  if (plantio?.codsafra && plantio.codsafra !== local.value.codsafra) {
+    local.value.codsafra = plantio.codsafra
+  }
 }
 function rotuloUnidade(cod) {
   return (
@@ -234,8 +247,8 @@ function saldoContrato(cod) {
   return store.saldoContratoOffline(cod)
 }
 
-// Parâmetros de classificação da cultura da safra da carga, na ordem da cascata.
-// Sem escolha nenhuma no romaneio: a cultura define a fórmula.
+// ---- Classificação ----
+// Parâmetros da cultura da safra da carga, na ordem da cascata.
 const itensCarga = computed(() => store.parametrosDaCarga(local.value || {}))
 
 // Estado vazio da classificação. Sem parâmetro cadastrado o desconto sairia 0 em
@@ -252,14 +265,13 @@ const avisoClassificacao = computed(() => {
 // Trava do botão CLASSIFICAR. Só vale NA etapa CLASSIFICACAO: nas seguintes
 // (TARA/FINALIZADO) a carga já passou por aqui, e travar de novo impediria
 // corrigir um romaneio cujo parâmetro foi inativado depois.
-// As LEITURAS continuam opcionais — a trava é só a existência dos parâmetros.
 const erroClassificacao = computed(() =>
   local.value?.etapa === 'CLASSIFICACAO' ? avisoClassificacao.value?.titulo || null : null,
 )
 
 const calc = computed(() => (local.value ? calcularCarga(local.value, itensCarga.value) : {}))
 
-// Garante uma linha de leitura por parâmetro da tabela (preserva o já digitado).
+// Garante uma linha de leitura por parâmetro (preserva o já digitado).
 watch(
   itensCarga,
   (itens) => {
@@ -289,8 +301,6 @@ function descontoParam(codparam) {
       ?.desconto || null
   )
 }
-
-// Hint da tabela por parâmetro: tolerância + fator (FATOR) ou deságio (NORMALIZADO).
 function hintItem(item) {
   const partes = [`Tol. ${fmt(item.tolerancia, 1)}%`]
   if (item.metodo === 'FATOR' && Number(item.fator)) {
@@ -300,8 +310,6 @@ function hintItem(item) {
   }
   return partes.join(' · ')
 }
-
-// Leitura acima da tolerância = gera desconto (mesma condição do board e do utils).
 function foraTolerancia(item) {
   const leitura = linhaDe(item.codparametroclassificacao)?.leitura
   if (leitura === null || leitura === undefined || leitura === '') return false
@@ -318,7 +326,6 @@ const somaPercOrigens = computed(() =>
 const somaPercDestinos = computed(() =>
   destinos.value.reduce((s, p) => s + (Number(p.percentual) || 0), 0),
 )
-// Soma dos % de um grupo fecha em 100 (tolerância de arredondamento).
 function somaPercBate(grupo) {
   const soma = grupo.reduce((s, p) => s + (Number(p.percentual) || 0), 0)
   return Math.abs(soma - 100) < 0.5
@@ -330,24 +337,14 @@ function kgDoPonto(p) {
   return Math.round((liq * (Number(p.percentual) || 0)) / 100)
 }
 
-function fmt(v, dec = 0) {
-  if (v === null || v === undefined || v === '') return '—'
-  return Number(v).toLocaleString('pt-BR', {
-    minimumFractionDigits: dec,
-    maximumFractionDigits: dec,
-  })
-}
-
-// Travas de coleção (sem campo pra destacar). Rodam nos TRÊS botões — as :rules dos
-// campos só valem no submit do q-form, e o "Salvar" (salvarSemAvancar) é @click.
+// ---- Validações de coleção (sem campo pra destacar) ----
 function entradaValida() {
   if (!origens.value.length && !destinos.value.length) {
     $q.notify({ type: 'warning', message: 'Informe ao menos uma origem ou destino.' })
     return false
   }
   // Linha sem entidade seria DESCARTADA em silêncio (o filtro `pontoCompleto` do
-  // store.salvar e o `contaDoPonto` do backend fazem o mesmo corte) — o romaneio
-  // sairia sem a origem que o operador viu na tela. Ou escolhe, ou remove a linha.
+  // store.salvar e o `contaDoPonto` do backend fazem o mesmo corte).
   if ((local.value?.pontos || []).some((p) => !pontoCompleto(p))) {
     $q.notify({
       type: 'negative',
@@ -357,16 +354,11 @@ function entradaValida() {
   }
   return true
 }
-
-// Travas de finalização (origem+destino completos, % fecha 100, líquido > 0).
-// Usadas ao avançar p/ FINALIZADO e ao salvar uma carga já finalizada (edição).
 function validarFinalizacao() {
   if (!origens.value.length || !destinos.value.length) {
     $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
     return false
   }
-  // Entidade de cada linha: mesma trava do fluxo normal (não duplicar a regra).
-  // Importante porque salvar() de carga FINALIZADA passa só por aqui.
   if (!entradaValida()) return false
   if (!somaPercBate(origens.value) || !somaPercBate(destinos.value)) {
     $q.notify({ type: 'negative', message: 'A soma dos % de origem e de destino deve ser 100.' })
@@ -379,15 +371,16 @@ function validarFinalizacao() {
   return true
 }
 
-// Salvar (carga nova OU já finalizada). Numa carga finalizada mantém as travas de
-// finalização pra não regravar incompleta; nas demais, exige ao menos origem/destino.
+// ---- Ações ----
 function salvar() {
-  if (local.value.etapa === 'FINALIZADO' ? !validarFinalizacao() : !entradaValida()) return
+  if (finalizada.value ? !validarFinalizacao() : !entradaValida()) return
   emit('salvar', local.value)
 }
-
-// Cancela a carga: se já foi ao servidor (codcarga) ou sincronizou, INATIVA
-// (sai do pátio + estorna estoque); se é pendente local, DESCARTA do Dexie.
+// Salva na etapa ATUAL, sem avançar — pra corrigir um dado sem empurrar a carga.
+function salvarSemAvancar() {
+  if (!entradaValida()) return
+  emit('salvar', local.value)
+}
 function cancelarCarga() {
   const sincronizada = !!local.value.codcarga || !!local.value.sincronizado
   $q.dialog({
@@ -398,57 +391,46 @@ function cancelarCarga() {
     cancel: { label: 'Voltar', flat: true, color: 'grey-8' },
     ok: { label: 'Cancelar carga', flat: true, color: 'negative' },
     persistent: true,
-  }).onOk(() => {
-    emit('cancelar', local.value)
-    show.value = false
-  })
+  }).onOk(() => emit('cancelar', local.value))
 }
 
-// Salva na etapa ATUAL, sem avançar — pra corrigir um dado sem empurrar a carga
-// pra próxima etapa (o botão principal, esse sim, avança).
-function salvarSemAvancar() {
-  if (!entradaValida()) return
-  emit('salvar', local.value)
-}
-
-// Botão principal do rodapé: registrar (nova), salvar (finalizada) ou avançar etapa.
-function onSubmit() {
-  if (props.novo || local.value.etapa === 'FINALIZADO') salvar()
-  else avancar()
-}
-const rotuloPrincipal = computed(() => {
-  if (props.novo) return 'Registrar'
-  if (local.value?.etapa === 'FINALIZADO') return 'Salvar'
-  return rotuloAcao[local.value?.etapa]
-})
-
-const proxima = computed(() => {
-  const i = idxEtapa.value
-  return i >= 0 && i < ordem.value.length - 1 ? ordem.value[i + 1] : null
-})
+const proxima = computed(() => proximaEtapa(local.value))
 // Transição p/ FINALIZADO: ativa as :rules de "soma fecha" dos campos de líquido.
 const finalizando = computed(() => proxima.value === 'FINALIZADO')
 
 function avancar() {
   if (!entradaValida()) return
-  // Espelha a :rules do select de tabela: sem tabela/parâmetros o desconto sairia
-  // 0 em silêncio e o romaneio mentiria o líquido.
   if (erroClassificacao.value) {
     $q.notify({ type: 'negative', message: erroClassificacao.value })
     return
   }
   const prox = proxima.value
   if (!prox) return
-  // Antes de finalizar: origem+destino completos, % fecha 100 e líquido > 0.
   if (prox === 'FINALIZADO' && !validarFinalizacao()) return
   local.value.etapa = prox
   emit('avancar', local.value)
 }
 
+// Botão principal (FAB): registrar (nova), salvar (finalizada) ou avançar etapa.
+function onSubmit() {
+  if (props.novo || finalizada.value) salvar()
+  else avancar()
+}
+const rotuloPrincipal = computed(() => {
+  if (props.novo) return 'Registrar'
+  if (finalizada.value) return 'Salvar'
+  return etapaMeta.value.acao
+})
+const iconePrincipal = computed(() => {
+  if (props.novo) return 'add'
+  if (finalizada.value) return 'save'
+  return etapaMeta.value.icon
+})
+
 function fazendaNome() {
   for (const p of origens.value) {
     if (p.contatipo === 'PLANTIO') {
-      const f = plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.Fazenda?.fazenda
+      const f = store.plantioPorId(p.codplantio)?.Fazenda?.fazenda
       if (f) return f
     }
   }
@@ -456,6 +438,7 @@ function fazendaNome() {
 }
 
 function imprimir() {
+  if (!local.value || !finalizada.value) return
   const c = calc.value
   const veic = store.veiculoPorId(local.value.codveiculo)
   const itensFonte = local.value.sentido === 'SAIDA' ? destinos.value : origens.value
@@ -498,21 +481,41 @@ function imprimir() {
   })
   if (!ok) $q.notify({ type: 'warning', message: 'Permita pop-ups para imprimir o romaneio.' })
 }
+
+// Atalhos da página (F3 = principal com validação do q-form; F4 = imprimir).
+defineExpose({
+  submit: () => formRef.value?.submit(),
+  imprimir,
+})
 </script>
 
 <template>
-  <q-dialog v-model="show" :maximized="$q.screen.lt.sm">
-    <q-card v-if="local" flat style="width: 620px; max-width: 95vw">
-      <q-form @submit.prevent="onSubmit">
-        <q-card-section class="row items-center bg-primary text-white">
-          <div class="text-h6">{{ local.placa || 'Nova carga' }}</div>
-          <q-space />
-          <q-chip color="white" text-color="primary" :label="labelEtapa[local.etapa]" />
-          <q-btn flat round icon="close" v-close-popup tabindex="-1" />
+  <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit">
+    <div class="q-pa-md q-gutter-y-md carga-form">
+      <!-- Tipo de romaneio + etapa -->
+      <q-card flat bordered>
+        <q-card-section class="row items-center q-col-gutter-sm">
+          <div class="col-12 col-sm">
+            <SelectSentido v-model="sentidoSel" :disable="!podeTrocarSentido" />
+            <div v-if="!podeTrocarSentido && !finalizada" class="text-caption text-grey-6 q-mt-xs">
+              Já pesado — o tipo de romaneio não muda mais.
+            </div>
+          </div>
+          <div class="col-auto">
+            <q-chip
+              :color="etapaMeta.color"
+              text-color="white"
+              :icon="etapaMeta.icon"
+              :label="etapaMeta.label"
+            />
+          </div>
         </q-card-section>
+      </q-card>
 
-        <q-card-section class="q-gutter-y-md scroll" style="max-height: 72vh">
-          <!-- Identificação -->
+      <!-- Identificação -->
+      <q-card flat bordered>
+        <q-card-section>
+          <div class="text-subtitle2 text-grey-8 q-mb-sm">Caminhão</div>
           <div class="row q-col-gutter-x-md">
             <q-select
               :model-value="local.placa"
@@ -529,7 +532,7 @@ function imprimir() {
               option-value="value"
               emit-value
               map-options
-              class="col-6 col-sm-4"
+              class="col-6 col-sm-3"
               autofocus
               lazy-rules
               :rules="[() => !!local.placa || 'Informe a placa.']"
@@ -552,7 +555,7 @@ function imprimir() {
               v-model="local.placacarreta"
               label="Carreta"
               outlined
-              class="col-6 col-sm-4"
+              class="col-6 col-sm-3"
               @update:model-value="local.placacarreta = ($event || '').toUpperCase()"
             />
 
@@ -562,7 +565,7 @@ function imprimir() {
               label="Motorista"
               clearable
               :bottom-slots="false"
-              class="col-12 col-sm-4"
+              class="col-12 col-sm-3"
               @select="onMotoristaSelect"
               @clear="onMotoristaClear"
             />
@@ -573,7 +576,7 @@ function imprimir() {
               hint="Offline — texto livre"
               outlined
               clearable
-              class="col-12 col-sm-4"
+              class="col-12 col-sm-3"
               @update:model-value="local.codpessoamotorista = null"
             />
 
@@ -582,103 +585,42 @@ function imprimir() {
               type="timestamp"
               label="Chegada"
               :max="dataMax"
-              class="col-6 col-sm-4"
+              class="col-12 col-sm-3"
             />
           </div>
+        </q-card-section>
+      </q-card>
 
-          <!-- Origens -->
-          <div>
-            <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
-            <div
-              v-for="(p, i) in origens"
-              :key="'o' + i"
-              class="row q-col-gutter-sm items-center q-mb-xs"
-            >
-              <SelectContaTipo
-                v-model="p.contatipo"
-                papel="ORIGEM"
-                label="Origem"
-                class="col-3"
-                @update:model-value="onTipoChange(p)"
-              />
-              <SelectTalhao
-                v-if="p.contatipo === 'PLANTIO'"
-                :model-value="p.codplantio"
-                class="col"
-                lazy-rules
-                :rules="[(v) => !!v || 'Selecione o talhão.']"
-                @update:model-value="(v) => onEntidade(p, v)"
-              />
-              <SelectUnidade
-                v-else-if="p.contatipo === 'UNIDADE'"
-                :model-value="p.codunidadearmazenadora"
-                class="col"
-                lazy-rules
-                :rules="[(v) => !!v || 'Selecione a unidade.']"
-                @update:model-value="(v) => onEntidade(p, v)"
-              />
-              <SelectContrato
-                v-else
-                :model-value="p.codcontrato"
-                operacao="compra"
-                class="col"
-                lazy-rules
-                :rules="[(v) => !!v || 'Selecione o contrato.']"
-                @update:model-value="(v) => onEntidade(p, v)"
-              />
-              <MgInputValor
-                v-model="p.percentual"
-                :decimals="1"
-                suffix="%"
-                :min="0"
-                :max="100"
-                label="%"
-                :readonly="origens.length === 1"
-                class="col-3"
-                lazy-rules
-                :rules="[() => !finalizando || somaPercBate(origens) || 'Soma dos % deve ser 100']"
-              />
-              <!-- Sempre visível: com a entidade obrigatória, uma linha semeada e
-                   impreenchível (ex.: safra sem talhão cadastrado) travaria o
-                   registro sem saída. Remover é a válvula de escape. -->
-              <q-btn
-                flat
-                round
-                color="grey-7"
-                icon="close"
-                class="col-auto"
-                @click="removerPonto(p)"
-              />
-            </div>
-            <div
-              v-if="origens.length"
-              class="text-caption q-mb-xs"
-              :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'"
-            >
-              Soma: {{ fmt(somaPercOrigens, 1) }}%
-              <span v-if="calc.liquido"> · líquido {{ fmt(calc.liquido) }} kg</span>
-            </div>
-            <div>
-              <q-btn flat dense color="primary" icon="add" @click="addPonto('ORIGEM')" />
-            </div>
-          </div>
-
-          <q-separator />
-
-          <!-- Destinos -->
-          <div>
-            <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
-            <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-sm">
-              <div class="row q-col-gutter-sm items-center">
+      <!-- Origens / Destinos -->
+      <q-card flat bordered>
+        <q-card-section>
+          <div class="row q-col-gutter-lg">
+            <div class="col-12 col-md-6">
+              <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
+              <div
+                v-for="(p, i) in origens"
+                :key="'o' + i"
+                class="row q-col-gutter-sm items-center q-mb-xs"
+              >
                 <SelectContaTipo
                   v-model="p.contatipo"
-                  papel="DESTINO"
-                  label="Destino"
-                  class="col-3"
+                  papel="ORIGEM"
+                  label="Origem"
+                  class="col-4"
                   @update:model-value="onTipoChange(p)"
                 />
+                <SelectTalhao
+                  v-if="p.contatipo === 'PLANTIO'"
+                  :model-value="p.codplantio"
+                  :codsafra="local.codsafra"
+                  class="col"
+                  lazy-rules
+                  :rules="[(v) => !!v || 'Selecione o talhão.']"
+                  @update:model-value="(v) => onEntidade(p, v)"
+                  @select="onPlantioSelecionado"
+                />
                 <SelectUnidade
-                  v-if="p.contatipo === 'UNIDADE'"
+                  v-else-if="p.contatipo === 'UNIDADE'"
                   :model-value="p.codunidadearmazenadora"
                   class="col"
                   lazy-rules
@@ -688,7 +630,7 @@ function imprimir() {
                 <SelectContrato
                   v-else
                   :model-value="p.codcontrato"
-                  operacao="venda"
+                  operacao="compra"
                   class="col"
                   lazy-rules
                   :rules="[(v) => !!v || 'Selecione o contrato.']"
@@ -701,13 +643,15 @@ function imprimir() {
                   :min="0"
                   :max="100"
                   label="%"
-                  :readonly="destinos.length === 1"
+                  :readonly="origens.length === 1"
                   class="col-3"
                   lazy-rules
                   :rules="[
-                    () => !finalizando || somaPercBate(destinos) || 'Soma dos % deve ser 100',
+                    () => !finalizando || somaPercBate(origens) || 'Soma dos % deve ser 100',
                   ]"
                 />
+                <!-- Sempre visível: uma linha semeada e impreenchível (ex.: safra sem
+                     talhão) travaria o registro sem saída. Remover é a válvula. -->
                 <q-btn
                   flat
                   round
@@ -717,196 +661,274 @@ function imprimir() {
                   @click="removerPonto(p)"
                 />
               </div>
-              <div v-if="p.contatipo === 'CONTRATO' && p.codcontrato" class="text-caption q-pl-sm">
-                <span v-if="saldoContrato(p.codcontrato) === Infinity" class="text-deep-purple-7">
-                  <q-icon name="all_inclusive" /> Volume em aberto
-                </span>
-                <span
-                  v-else
-                  :class="
-                    (kgDoPonto(p) || 0) > saldoContrato(p.codcontrato) + 1
-                      ? 'text-negative text-weight-medium'
-                      : 'text-grey-6'
-                  "
-                >
-                  Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
-                  <span v-if="kgDoPonto(p)"> · esta carga ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
-                </span>
-              </div>
               <div
-                v-if="mostrarFiscal && p.contatipo === 'CONTRATO'"
-                class="row q-col-gutter-sm q-mt-xs"
+                v-if="origens.length"
+                class="text-caption q-mb-xs"
+                :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'"
               >
-                <q-input v-model="p.numeronf" label="Nº NF" outlined class="col" />
-                <MgInputValor
-                  v-model="p.valornf"
-                  :decimals="2"
-                  prefix="R$"
-                  label="Valor NF"
-                  class="col"
-                />
+                Soma: {{ fmt(somaPercOrigens, 1) }}%
+                <span v-if="calc.liquido"> · líquido {{ fmt(calc.liquido) }} kg</span>
               </div>
+              <q-btn
+                flat
+                dense
+                color="primary"
+                icon="add"
+                label="Origem"
+                @click="addPonto('ORIGEM')"
+              />
             </div>
-            <div
-              v-if="destinos.length"
-              class="text-caption q-mb-xs"
-              :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'"
-            >
-              Soma: {{ fmt(somaPercDestinos, 1) }}%
-            </div>
-            <div>
-              <q-btn flat color="primary" icon="add" dense @click="addPonto('DESTINO')" />
-            </div>
-          </div>
 
-          <q-separator />
-
-          <!-- Pesos (ordem por sentido) -->
-          <MgInputValor
-            v-if="mostrarPbt"
-            v-model="local.pbt"
-            :decimals="0"
-            suffix="kg"
-            label="Peso bruto total (caminhão + carga)"
-            lazy-rules
-            :rules="[
-              (v) => novo || local.etapa !== 'PBT' || v > 0 || 'Informe o peso bruto (PBT).',
-            ]"
-          />
-          <MgInputValor
-            v-if="mostrarTara"
-            v-model="local.tara"
-            :decimals="0"
-            suffix="kg"
-            label="Tara (caminhão vazio)"
-            lazy-rules
-            :rules="[
-              (v) => novo || local.etapa !== 'TARA' || v > 0 || 'Informe a tara.',
-              // Cruzadas: cobradas assim que os DOIS pesos existem — na etapa TARA
-              // (ENTRADA/TRANSFERENCIA) e na etapa PBT (SAIDA, que pesa a tara antes).
-              // Antes só o FINALIZADO barrava, e o erro aparecia no fim do fluxo.
-              (v) =>
-                v == null ||
-                local.pbt == null ||
-                v < Number(local.pbt) ||
-                'A tara deve ser menor que o PBT.',
-              () =>
-                local.pbt == null ||
-                local.tara == null ||
-                Number(calc.liquido) > 0 ||
-                'Líquido (PBT − tara − desconto) deve ser maior que zero.',
-            ]"
-          />
-
-          <!-- Classificação (só recebimento, a partir da etapa) -->
-          <div v-if="mostrarClassificacao">
-            <q-banner
-              v-if="avisoClassificacao"
-              dense
-              rounded
-              class="bg-orange-1 text-orange-9 q-mb-sm"
-            >
-              <template #avatar><q-icon name="warning" color="orange-8" /></template>
-              {{ avisoClassificacao.titulo }}
-              <div class="text-caption">{{ avisoClassificacao.dica }}</div>
-            </q-banner>
-            <div class="row q-col-gutter-md">
-              <div
-                v-for="item in itensCarga"
-                :key="item.codparametroclassificacao"
-                class="col-6 col-sm-4"
-              >
-                <MgInputValor
-                  v-model="linhaDe(item.codparametroclassificacao).leitura"
-                  :decimals="1"
-                  suffix="%"
-                  :label="`${item.ordem}. ${item.parametroclassificacao}`"
-                  :hint="hintItem(item)"
-                  lazy-rules
-                  :rules="[
-                    (v) =>
-                      v == null || (v >= 0 && v <= 100) || 'Leitura deve ficar entre 0 e 100%.',
-                  ]"
-                />
-                <div v-if="foraTolerancia(item)" class="text-caption text-orange-9 q-pl-sm">
-                  acima da tolerância
+            <div class="col-12 col-md-6">
+              <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
+              <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-sm">
+                <div class="row q-col-gutter-sm items-center">
+                  <SelectContaTipo
+                    v-model="p.contatipo"
+                    papel="DESTINO"
+                    label="Destino"
+                    class="col-4"
+                    @update:model-value="onTipoChange(p)"
+                  />
+                  <SelectUnidade
+                    v-if="p.contatipo === 'UNIDADE'"
+                    :model-value="p.codunidadearmazenadora"
+                    class="col"
+                    lazy-rules
+                    :rules="[(v) => !!v || 'Selecione a unidade.']"
+                    @update:model-value="(v) => onEntidade(p, v)"
+                  />
+                  <SelectContrato
+                    v-else
+                    :model-value="p.codcontrato"
+                    operacao="venda"
+                    class="col"
+                    lazy-rules
+                    :rules="[(v) => !!v || 'Selecione o contrato.']"
+                    @update:model-value="(v) => onEntidade(p, v)"
+                  />
+                  <MgInputValor
+                    v-model="p.percentual"
+                    :decimals="1"
+                    suffix="%"
+                    :min="0"
+                    :max="100"
+                    label="%"
+                    :readonly="destinos.length === 1"
+                    class="col-3"
+                    lazy-rules
+                    :rules="[
+                      () => !finalizando || somaPercBate(destinos) || 'Soma dos % deve ser 100',
+                    ]"
+                  />
+                  <q-btn
+                    flat
+                    round
+                    color="grey-7"
+                    icon="close"
+                    class="col-auto"
+                    @click="removerPonto(p)"
+                  />
                 </div>
                 <div
-                  v-if="descontoParam(item.codparametroclassificacao)"
-                  class="text-caption text-orange-8 q-pl-sm"
+                  v-if="p.contatipo === 'CONTRATO' && p.codcontrato"
+                  class="text-caption q-pl-sm"
                 >
-                  − {{ fmt(descontoParam(item.codparametroclassificacao)) }} kg
+                  <span v-if="saldoContrato(p.codcontrato) === Infinity" class="text-deep-purple-7">
+                    <q-icon name="all_inclusive" /> Volume em aberto
+                  </span>
+                  <span
+                    v-else
+                    :class="
+                      (kgDoPonto(p) || 0) > saldoContrato(p.codcontrato) + 1
+                        ? 'text-negative text-weight-medium'
+                        : 'text-grey-6'
+                    "
+                  >
+                    Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
+                    <span v-if="kgDoPonto(p)"> · esta carga ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                  </span>
                 </div>
+                <div
+                  v-if="mostrarFiscal && p.contatipo === 'CONTRATO'"
+                  class="row q-col-gutter-sm q-mt-xs"
+                >
+                  <q-input v-model="p.numeronf" label="Nº NF" outlined class="col" />
+                  <MgInputValor
+                    v-model="p.valornf"
+                    :decimals="2"
+                    prefix="R$"
+                    label="Valor NF"
+                    class="col"
+                  />
+                </div>
+              </div>
+              <div
+                v-if="destinos.length"
+                class="text-caption q-mb-xs"
+                :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'"
+              >
+                Soma: {{ fmt(somaPercDestinos, 1) }}%
+              </div>
+              <q-btn
+                flat
+                dense
+                color="primary"
+                icon="add"
+                label="Destino"
+                @click="addPonto('DESTINO')"
+              />
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <!-- Pesagem (ordem por sentido) -->
+      <q-card v-if="mostrarPbt || mostrarTara" flat bordered>
+        <q-card-section>
+          <div class="text-subtitle2 text-grey-8 q-mb-sm">Pesagem</div>
+          <div class="row q-col-gutter-md">
+            <MgInputValor
+              v-if="mostrarPbt"
+              v-model="local.pbt"
+              :decimals="0"
+              suffix="kg"
+              label="Peso bruto total (caminhão + carga)"
+              class="col-12 col-sm-6"
+              lazy-rules
+              :rules="[
+                (v) => novo || local.etapa !== 'PBT' || v > 0 || 'Informe o peso bruto (PBT).',
+              ]"
+            />
+            <MgInputValor
+              v-if="mostrarTara"
+              v-model="local.tara"
+              :decimals="0"
+              suffix="kg"
+              label="Tara (caminhão vazio)"
+              class="col-12 col-sm-6"
+              lazy-rules
+              :rules="[
+                (v) => novo || local.etapa !== 'TARA' || v > 0 || 'Informe a tara.',
+                // Cruzadas: cobradas assim que os DOIS pesos existem.
+                (v) =>
+                  v == null ||
+                  local.pbt == null ||
+                  v < Number(local.pbt) ||
+                  'A tara deve ser menor que o PBT.',
+                () =>
+                  local.pbt == null ||
+                  local.tara == null ||
+                  Number(calc.liquido) > 0 ||
+                  'Líquido (PBT − tara − desconto) deve ser maior que zero.',
+              ]"
+            />
+          </div>
+
+          <!-- Prévia do resultado (ao vivo; o gravado fica no resumo à direita) -->
+          <div v-if="mostrarResultado" class="row text-center bg-grey-1 rounded-borders q-pa-sm">
+            <div class="col">
+              <div class="text-caption text-grey-7">Bruto</div>
+              <div class="text-weight-medium">{{ fmt(calc.bruto) }} kg</div>
+            </div>
+            <div class="col">
+              <div class="text-caption text-grey-7">Desconto</div>
+              <div class="text-weight-medium text-orange-9">{{ fmt(calc.desconto) }} kg</div>
+            </div>
+            <div class="col">
+              <div class="text-caption text-grey-7">Líquido</div>
+              <div class="text-weight-medium text-green-9">{{ fmt(calc.liquido) }} kg</div>
+            </div>
+            <div class="col">
+              <div class="text-caption text-grey-7">Sacas</div>
+              <div class="text-weight-medium">{{ fmt(sacasLiquido, 1) }}</div>
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+
+      <!-- Classificação (só recebimento, a partir da etapa) -->
+      <q-card v-if="mostrarClassificacao" flat bordered>
+        <q-card-section>
+          <div class="text-subtitle2 text-grey-8 q-mb-sm">Classificação</div>
+          <q-banner
+            v-if="avisoClassificacao"
+            dense
+            rounded
+            class="bg-orange-1 text-orange-9 q-mb-sm"
+          >
+            <template #avatar><q-icon name="warning" color="orange-8" /></template>
+            {{ avisoClassificacao.titulo }}
+            <div class="text-caption">{{ avisoClassificacao.dica }}</div>
+          </q-banner>
+          <div class="row q-col-gutter-md">
+            <div
+              v-for="item in itensCarga"
+              :key="item.codparametroclassificacao"
+              class="col-6 col-sm-4 col-md-3"
+            >
+              <MgInputValor
+                v-model="linhaDe(item.codparametroclassificacao).leitura"
+                :decimals="1"
+                suffix="%"
+                :label="`${item.ordem}. ${item.parametroclassificacao}`"
+                :hint="hintItem(item)"
+                lazy-rules
+                :rules="[
+                  (v) => v == null || (v >= 0 && v <= 100) || 'Leitura deve ficar entre 0 e 100%.',
+                ]"
+              />
+              <div v-if="foraTolerancia(item)" class="text-caption text-orange-9 q-pl-sm">
+                acima da tolerância
+              </div>
+              <div
+                v-if="descontoParam(item.codparametroclassificacao)"
+                class="text-caption text-orange-8 q-pl-sm"
+              >
+                − {{ fmt(descontoParam(item.codparametroclassificacao)) }} kg
               </div>
             </div>
           </div>
-
-          <!-- Resultado -->
-          <q-card v-if="mostrarResultado" flat bordered class="bg-grey-1">
-            <q-card-section class="q-pa-sm row text-center">
-              <div class="col">
-                <div class="text-caption text-grey-7">Bruto</div>
-                <div class="text-weight-medium">{{ fmt(calc.bruto) }} kg</div>
-              </div>
-              <div class="col">
-                <div class="text-caption text-grey-7">Desconto</div>
-                <div class="text-weight-medium text-orange-9">{{ fmt(calc.desconto) }} kg</div>
-              </div>
-              <div class="col">
-                <div class="text-caption text-grey-7">Líquido</div>
-                <div class="text-weight-medium text-green-9">{{ fmt(calc.liquido) }} kg</div>
-              </div>
-              <div class="col">
-                <div class="text-caption text-grey-7">Sacas</div>
-                <div class="text-weight-medium">{{ fmt(sacasLiquido, 1) }}</div>
-              </div>
-            </q-card-section>
-          </q-card>
-
-          <q-input
-            v-model="local.observacao"
-            label="Observação"
-            type="textarea"
-            autogrow
-            outlined
-          />
         </q-card-section>
+      </q-card>
 
-        <q-separator />
+      <q-input
+        v-model="local.observacao"
+        label="Observação"
+        type="textarea"
+        autogrow
+        outlined
+        bg-color="white"
+      />
 
-        <q-card-actions align="right">
-          <q-btn
-            v-if="!novo"
-            flat
-            color="negative"
-            icon="cancel"
-            label="Cancelar carga"
-            class="q-mr-auto"
-            tabindex="-1"
-            @click="cancelarCarga"
-          />
-          <q-btn
-            v-if="local.etapa === 'FINALIZADO'"
-            flat
-            color="primary"
-            icon="print"
-            label="Imprimir romaneio"
-            tabindex="-1"
-            @click="imprimir()"
-          />
-          <q-btn flat label="Fechar" color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn
-            v-if="!novo && local.etapa !== 'FINALIZADO'"
-            flat
-            color="grey-9"
-            label="Salvar"
-            @click="salvarSemAvancar"
-          />
-          <q-btn type="submit" flat color="primary" :label="rotuloPrincipal" />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
+      <!-- Espaço pros FABs não cobrirem o último campo -->
+      <div class="q-py-xl" />
+    </div>
+
+    <q-page-sticky position="bottom-right" :offset="[18, 18]">
+      <div class="row items-center q-gutter-sm">
+        <q-btn v-if="!novo" fab icon="delete" color="negative" @click="cancelarCarga">
+          <q-tooltip>Cancelar carga</q-tooltip>
+        </q-btn>
+        <q-btn v-if="finalizada" fab icon="print" color="accent" @click="imprimir">
+          <q-tooltip>Imprimir romaneio (F4)</q-tooltip>
+        </q-btn>
+        <q-btn v-if="!novo && !finalizada" fab icon="save" color="grey-7" @click="salvarSemAvancar">
+          <q-tooltip>Salvar sem avançar</q-tooltip>
+        </q-btn>
+        <q-btn type="submit" fab :icon="iconePrincipal" :label="rotuloPrincipal" color="primary">
+          <q-tooltip>F3</q-tooltip>
+        </q-btn>
+      </div>
+    </q-page-sticky>
+  </q-form>
 
   <CaminhaoDialog v-model="cadastroCaminhao" :placa="placaBusca" @criado="onCaminhaoCriado" />
 </template>
+
+<style scoped>
+.carga-form {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+</style>

@@ -1,3 +1,198 @@
+// Domínio da Carga (pátio): constantes do fluxo, helpers puros e mapeamento do
+// servidor. Fica FORA da store pra ser importável por componentes de exibição
+// (item de lista, resumo, progresso) sem puxar o Pinia — e sem import circular
+// (a store importa daqui).
+
+// Etapas por sentido — controlam a ordem de pesagem e a barra de progresso.
+// ENTRADA chega cheio (pesa PBT antes); SAIDA chega vazio (pesa tara antes).
+export const ETAPAS_POR_SENTIDO = {
+  ENTRADA: ['PBT', 'CLASSIFICACAO', 'TARA', 'FINALIZADO'],
+  SAIDA: ['TARA', 'PBT', 'FISCAL', 'FINALIZADO'],
+  TRANSFERENCIA: ['PBT', 'TARA', 'FINALIZADO'],
+}
+
+export const ETAPA_FINAL = 'FINALIZADO'
+
+// Etapas "no pátio" (união dos fluxos, sem a final). Usado no pull do servidor:
+// o endpoint só filtra etapa por igualdade, então varre uma a uma.
+export const ETAPAS_ABERTAS = ['PBT', 'TARA', 'CLASSIFICACAO', 'FISCAL']
+
+export const SENTIDOS = [
+  { value: 'ENTRADA', label: 'Recebimento', icon: 'local_shipping', color: 'green-7' },
+  { value: 'SAIDA', label: 'Expedição', icon: 'outbound', color: 'green-8' },
+  { value: 'TRANSFERENCIA', label: 'Transferência', icon: 'swap_horiz', color: 'blue-grey-7' },
+]
+
+export const ETAPA_META = {
+  PBT: { label: 'Peso Bruto', acao: 'Pesar bruto', icon: 'scale', color: 'orange-8' },
+  TARA: { label: 'Tara', acao: 'Pesar tara', icon: 'monitor_weight', color: 'teal-7' },
+  CLASSIFICACAO: {
+    label: 'Classificação',
+    acao: 'Classificar',
+    icon: 'science',
+    color: 'deep-purple-6',
+  },
+  FISCAL: {
+    label: 'Nota Fiscal',
+    acao: 'Notas fiscais',
+    icon: 'receipt_long',
+    color: 'deep-orange-7',
+  },
+  FINALIZADO: { label: 'Finalizado', acao: 'Finalizar', icon: 'task_alt', color: 'green-7' },
+}
+
+// Tipo (contatipo) padrão da origem/destino por sentido — usado ao semear a
+// carga nova, ao trocar o sentido e ao clicar "+" em origem/destino.
+// Recebimento entra do talhão pra unidade; expedição sai da unidade pro
+// contrato; transferência unidade↔unidade.
+export const CONTATIPO_PADRAO = {
+  ENTRADA: { ORIGEM: 'PLANTIO', DESTINO: 'UNIDADE' },
+  SAIDA: { ORIGEM: 'UNIDADE', DESTINO: 'CONTRATO' },
+  TRANSFERENCIA: { ORIGEM: 'UNIDADE', DESTINO: 'UNIDADE' },
+}
+
+export function sentidoMeta(sentido) {
+  return SENTIDOS.find((s) => s.value === sentido) || SENTIDOS[0]
+}
+
+export function etapasDaCarga(carga) {
+  return ETAPAS_POR_SENTIDO[carga?.sentido] || []
+}
+
+export function indiceEtapa(carga) {
+  return etapasDaCarga(carga).indexOf(carga?.etapa)
+}
+
+export function proximaEtapa(carga) {
+  const ordem = etapasDaCarga(carga)
+  const i = indiceEtapa(carga)
+  return i >= 0 && i < ordem.length - 1 ? ordem[i + 1] : null
+}
+
+export function cargaFinalizada(carga) {
+  return carga?.etapa === ETAPA_FINAL
+}
+
+// Já passou pela balança? A partir daí o sentido trava: a ordem das etapas
+// diverge (ENTRADA pesa PBT antes, SAIDA pesa tara antes) e trocar embaralharia
+// o que já foi pesado.
+export function cargaPesada(carga) {
+  return carga?.pbt != null || carga?.tara != null
+}
+
+export function iconeCarga(carga) {
+  return sentidoMeta(carga?.sentido).icon
+}
+
+// Cor do avatar (espelha iconeNegocio do negocios): cancelada → cinza, rejeitada
+// pelo servidor → vermelho, finalizada → verde, senão a cor do sentido.
+export function corIconeCarga(carga) {
+  if (carga?.inativo) return 'grey-5'
+  if (carga?.syncerro) return 'negative'
+  if (cargaFinalizada(carga)) return 'green-7'
+  return sentidoMeta(carga?.sentido).color
+}
+
+// Ponto (origem/destino) novo. `percentual` (rateio da carga) é campo só-do-front:
+// o kg (`liquido`) é derivado do líquido calculado da carga na hora de salvar.
+export function novoPonto(papel, contatipo) {
+  return {
+    papel,
+    contatipo,
+    codplantio: null,
+    codunidadearmazenadora: null,
+    codcontrato: null,
+    percentual: 100,
+    liquido: null,
+    rotulo: null,
+    numeronf: null,
+    valornf: null,
+  }
+}
+
+// Ponto "completo" = tem a entidade escolhida. Sem ela o ponto não pode ser
+// gravado (o backend rejeita) e não conta no colhido/saldo.
+export function pontoCompleto(p) {
+  if (p.contatipo === 'PLANTIO') return !!p.codplantio
+  if (p.contatipo === 'UNIDADE') return !!p.codunidadearmazenadora
+  if (p.contatipo === 'CONTRATO') return !!p.codcontrato
+  return false
+}
+
+// Carga nova já abre com 1 origem + 1 destino no tipo padrão do sentido. Só
+// semeia o que faltar.
+export function semearPontos(carga) {
+  const s = carga.sentido
+  if (!carga.pontos.some((p) => p.papel === 'ORIGEM')) {
+    carga.pontos.push(novoPonto('ORIGEM', CONTATIPO_PADRAO[s]?.ORIGEM || 'UNIDADE'))
+  }
+  if (!carga.pontos.some((p) => p.papel === 'DESTINO')) {
+    carga.pontos.push(novoPonto('DESTINO', CONTATIPO_PADRAO[s]?.DESTINO || 'UNIDADE'))
+  }
+}
+
+// Troca o sentido de uma carga ainda não pesada: volta pra 1ª etapa do novo
+// fluxo e re-semeia o TIPO dos pontos que o operador ainda não preencheu (os
+// completos ficam — ele pode ter escolhido de propósito).
+export function aplicarSentido(carga, sentido) {
+  carga.sentido = sentido
+  carga.etapa = ETAPAS_POR_SENTIDO[sentido][0]
+  for (const p of carga.pontos || []) {
+    if (pontoCompleto(p)) continue
+    p.contatipo = CONTATIPO_PADRAO[sentido]?.[p.papel] || 'UNIDADE'
+    p.codplantio = null
+    p.codunidadearmazenadora = null
+    p.codcontrato = null
+    p.rotulo = null
+  }
+  semearPontos(carga)
+}
+
+// Rateia o líquido da carga entre os pontos de cada papel a partir do %. O resto
+// vai na última linha pra soma bater exata (evita o 422 "rateio não fecha").
+// Antes de pesar (liquido null) não há kg pra ratear.
+export function ratearPontos(carga) {
+  const liq = Number(carga.liquido)
+  for (const papel of ['ORIGEM', 'DESTINO']) {
+    const grupo = (carga.pontos || []).filter((p) => p.papel === papel)
+    if (!grupo.length) continue
+    if (!(liq > 0)) {
+      grupo.forEach((p) => {
+        p.liquido = null
+      })
+      continue
+    }
+    let acumulado = 0
+    grupo.forEach((p, idx) => {
+      if (idx === grupo.length - 1) {
+        p.liquido = Math.round(liq - acumulado)
+      } else {
+        const kg = Math.round((liq * (Number(p.percentual) || 0)) / 100)
+        p.liquido = kg
+        acumulado += kg
+      }
+    })
+  }
+}
+
+// "Talhão 12 · Silo 1" — os pontos que identificam a carga na listagem: de onde
+// veio (entrada) ou pra onde vai (saída).
+export function pontosResumo(carga) {
+  const origem = (carga.pontos || []).filter((p) => p.papel === 'ORIGEM')
+  const destino = (carga.pontos || []).filter((p) => p.papel === 'DESTINO')
+  const lista = (carga.sentido === 'SAIDA' ? destino : origem).map((p) => p.rotulo).filter(Boolean)
+  return lista.length ? lista.join(' · ') : 'Sem origem/destino'
+}
+
+// Número em pt-BR; vazio vira travessão (é exibição, não cálculo).
+export function fmtNumero(v, dec = 0) {
+  if (v === null || v === undefined || v === '') return '—'
+  return Number(v).toLocaleString('pt-BR', {
+    minimumFractionDigits: dec,
+    maximumFractionDigits: dec,
+  })
+}
+
 // Instante atual em wall-clock LOCAL 'YYYY-MM-DD HH:mm:ss' — MESMO formato que o
 // MgInputData (dateToIso) emite e que o backend devolve (serializeDate = Y-m-d H:i:s,
 // sem offset). Gravar UTC (new Date().toISOString()) jogava a carga da noite pro dia
@@ -13,14 +208,14 @@ export function agoraLocal() {
 }
 
 // Mapeia uma carga vinda do servidor (GET /v1/carga) para o shape offline que o
-// Dexie/board usam. O servidor entrega colunas cruas + relações em PascalCase
+// Dexie/listagem usam. O servidor entrega colunas cruas + relações em PascalCase
 // (CargaPontoS) e as leituras já na chave `classificacao`;
 // aqui achatamos pro mesmo formato de `nova()` em stores/carga.js.
 //
 // Dois campos derivados ficam de fora de propósito:
-//  - `percentual` do ponto: o CargaDialog reconstrói ao abrir (normalizarPontos).
+//  - `percentual` do ponto: o CargaForm reconstrói ao abrir (normalizarPontos).
 //  - `rotulo` do ponto: o carga store resolve no carregarCargas a partir das
-//    caches (plantios/unidades/contratos), fonte igual à do dialog — evita
+//    caches (plantios/unidades/contratos), fonte igual à do formulário — evita
 //    depender das relações aninhadas snake/Pascal do servidor.
 
 function normalizarPontoDoServidor(sp) {

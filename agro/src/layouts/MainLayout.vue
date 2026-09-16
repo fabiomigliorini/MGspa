@@ -48,7 +48,7 @@ const menuGroups = [
 </script>
 
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="hHh lpr fFf">
     <q-header reveal bordered class="bg-primary text-white">
       <q-toolbar>
         <q-btn
@@ -82,7 +82,7 @@ const menuGroups = [
       show-if-above
       bordered
       class="bg-white"
-      :width="280"
+      :width="300"
     >
       <q-scroll-area
         class="fit"
@@ -92,6 +92,20 @@ const menuGroups = [
         :horizontal-bar-style="{ display: 'none' }"
       >
         <component :is="$route.meta.leftDrawer" />
+      </q-scroll-area>
+    </q-drawer>
+
+    <q-drawer
+      v-if="$route.meta.rightDrawer"
+      v-model="rightDrawerOpen"
+      side="right"
+      show-if-above
+      bordered
+      class="bg-white"
+      :width="300"
+    >
+      <q-scroll-area class="fit">
+        <component :is="$route.meta.rightDrawer" />
       </q-scroll-area>
     </q-drawer>
 
