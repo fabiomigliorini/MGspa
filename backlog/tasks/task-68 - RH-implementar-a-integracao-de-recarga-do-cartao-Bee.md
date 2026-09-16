@@ -4,13 +4,13 @@ title: 'RH: implementar a integracao de recarga do cartao Bee'
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:54'
-updated_date: '2026-09-12 17:14'
+updated_date: '2026-09-15 15:11'
 labels:
   - api
 dependencies: []
 priority: low
 type: feature
-ordinal: 68000
+ordinal: 11000
 ---
 
 ## Description
@@ -20,3 +20,9 @@ Origem: marcacao no codigo — api/app/Mg/Rh/RecargaApiBee.php:8 e :22. Hoje o m
 implementar hoje — nao e so falta de credencial. Reavaliar a prioridade (hoje Low) quando
 a Bee publicar a API.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Conferido 15/09/2026: NAO feita. RecargaApiBee::gerarRecarga ainda lanca RuntimeException (linha 26). Bloqueio externo (API da Bee) permanece.
+<!-- SECTION:NOTES:END -->
