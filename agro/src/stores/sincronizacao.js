@@ -4,6 +4,7 @@ import { api } from 'src/services/api'
 import { db } from 'boot/db'
 import { notifyError } from 'src/utils/notify'
 import { normalizarCargaDoServidor, ETAPAS_ABERTAS } from 'src/utils/carga'
+import { lerUltimaSincronizacao, gravarUltimaSincronizacao } from 'src/utils/cacheReferencias'
 
 // Store de sincronizacao offline-first (espelha o negocios):
 //  - PULL: baixa os cadastros de referencia + saldos pro Dexie (leitura offline)
@@ -12,13 +13,12 @@ import { normalizarCargaDoServidor, ETAPAS_ABERTAS } from 'src/utils/carga'
 // O pull pesado (cadastros + plantios) so refaz quando o cache esta "velho"
 // (TTL); o snapshot de saldos e leve e roda sempre.
 const TTL_SINCRONIZACAO = 5 * 60 * 1000 // 5 min
-const CHAVE_ULTIMA_SINC = 'agro:ultimaSincronizacao'
 
 export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   const sincronizando = ref(false)
   const online = ref(true)
   // Persistido no localStorage p/ o TTL sobreviver a reload (F5).
-  const ultimaSincronizacao = ref(Number(localStorage.getItem(CHAVE_ULTIMA_SINC)) || null)
+  const ultimaSincronizacao = ref(lerUltimaSincronizacao())
   const saldosUnidades = ref([]) // snapshot do estoque por unidade armazenadora
 
   // Ultima pagina da resposta. O Laravel embrulha o Resource em `data` e joga a
@@ -211,12 +211,14 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     sincronizando.value = true
     try {
       await enviarCargasPendentes()
-      const desatualizado =
-        !ultimaSincronizacao.value || Date.now() - ultimaSincronizacao.value >= TTL_SINCRONIZACAO
+      // Lê do storage, não da ref: salvar um cadastro (api.js) apaga a validade
+      // lá, e a ref em memória ainda diria que o cache está fresco.
+      const ultima = lerUltimaSincronizacao()
+      const desatualizado = !ultima || Date.now() - ultima >= TTL_SINCRONIZACAO
       if (force || desatualizado) {
         await puxarReferencias()
         ultimaSincronizacao.value = Date.now()
-        localStorage.setItem(CHAVE_ULTIMA_SINC, String(ultimaSincronizacao.value))
+        gravarUltimaSincronizacao(ultimaSincronizacao.value)
       }
       await puxarSaldos()
       online.value = true
