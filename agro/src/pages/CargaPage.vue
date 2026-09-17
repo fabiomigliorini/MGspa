@@ -8,6 +8,7 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { db } from 'boot/db'
 import { useCargaStore } from 'src/stores/carga'
+import { ETAPA_META, cargaFinalizada, fmtNumero } from 'src/utils/carga'
 import CargaForm from 'components/carga/CargaForm.vue'
 
 const route = useRoute()
@@ -62,18 +63,69 @@ watch(() => route.params.uuid, selecionar)
 // Grava e, se o talhão escolhido no mapa levou a carga pra outra safra, troca
 // a safra ativa da listagem — senão a carga sumiria da lista após salvar.
 async function persistir(carga) {
-  const salva = await store.salvar(carga)
+  let salva
+  try {
+    salva = await store.salvar(carga)
+  } catch (e) {
+    // Falha ao gravar no Dexie (cota, aba em modo privado): a promessa morria em
+    // silêncio e o clique não produzia NADA na tela.
+    $q.notify({
+      type: 'negative',
+      message: 'Não foi possível gravar a carga neste dispositivo.',
+      caption: String(e?.message || e),
+    })
+    throw e
+  }
   if (salva.codsafra && salva.codsafra !== codsafraAtiva.value) {
     await store.definirSafra(salva.codsafra)
   }
   return salva
 }
+
+// Todo clique responde. O envio ao servidor é assíncrono (e avisa sozinho se for
+// rejeitado); aqui confirmamos o que já está garantido: gravado no aparelho.
+function avisarGravado(carga) {
+  if (cargaFinalizada(carga)) {
+    $q.notify({
+      type: 'positive',
+      icon: 'task_alt',
+      message: `Carga finalizada — ${fmtNumero(carga.liquido)} kg líquidos.`,
+      caption: 'Ela foi pra "Finalizadas", à esquerda — é de lá que ela reabre pra imprimir.',
+      timeout: 6000,
+      actions: [
+        {
+          label: 'Imprimir',
+          color: 'white',
+          handler: () => router.replace({ name: 'carga', params: { uuid: carga.uuid } }),
+        },
+      ],
+    })
+    return
+  }
+  $q.notify({
+    type: 'positive',
+    icon: ETAPA_META[carga.etapa]?.icon,
+    message: `Etapa atual: ${ETAPA_META[carga.etapa]?.label || carga.etapa}.`,
+  })
+}
+
+// Romaneio FECHADO → o centro volta em branco, pronto pro próximo caminhão (o
+// mesmo efeito do F2). Só no fechamento: nas etapas do meio o caminhão ainda vai
+// voltar à balança, e a carga precisa continuar aberta pra receber o próximo peso.
+function limparParaProxima() {
+  router.replace({ name: 'carga', params: { uuid: 'nova' } })
+}
+
 async function onSalvar(carga) {
   const salva = await persistir(carga)
   if (novo.value) router.replace({ name: 'carga', params: { uuid: salva.uuid } })
+  avisarGravado(salva)
+  if (cargaFinalizada(salva)) limparParaProxima()
 }
 async function onAvancar(carga) {
-  await persistir(carga)
+  const salva = await persistir(carga)
+  avisarGravado(salva)
+  if (cargaFinalizada(salva)) limparParaProxima()
 }
 async function onCancelar(carga) {
   // Já no servidor → inativa (estorna); pendente local → descarta do Dexie.
@@ -125,9 +177,14 @@ onUnmounted(() => {
 
 <template>
   <q-page class="bg-grey-2" :style-fn="pageStyleFn">
+    <!-- `key` = uuid: trocar de carga REMONTA o formulário. É o que devolve o
+         cursor pra placa na carga em branco que abre depois de finalizar; sem
+         isso o autofocus só valeria na primeira montagem da página. Salvar a
+         MESMA carga não muda o uuid, então nada remonta no meio da digitação. -->
     <CargaForm
       v-if="cargaSel"
       ref="formRef"
+      :key="cargaSel.uuid"
       :carga="cargaSel"
       :novo="novo"
       @salvar="onSalvar"

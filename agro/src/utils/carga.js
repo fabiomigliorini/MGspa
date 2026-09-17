@@ -23,22 +23,44 @@ export const SENTIDOS = [
   { value: 'TRANSFERENCIA', label: 'Transferência', icon: 'swap_horiz', color: 'blue-grey-7' },
 ]
 
+// `curto` é o rótulo da barra de progresso: com 4 etapas num drawer de 300px cada
+// segmento fica com ~60px, e o nome inteiro sairia cortado por reticências.
 export const ETAPA_META = {
-  PBT: { label: 'Peso Bruto', acao: 'Pesar bruto', icon: 'scale', color: 'orange-8' },
-  TARA: { label: 'Tara', acao: 'Pesar tara', icon: 'monitor_weight', color: 'teal-7' },
+  PBT: {
+    label: 'Peso Bruto',
+    curto: 'Bruto',
+    acao: 'Pesar bruto',
+    icon: 'scale',
+    color: 'orange-8',
+  },
+  TARA: {
+    label: 'Tara',
+    curto: 'Tara',
+    acao: 'Pesar tara',
+    icon: 'monitor_weight',
+    color: 'teal-7',
+  },
   CLASSIFICACAO: {
     label: 'Classificação',
+    curto: 'Classif.',
     acao: 'Classificar',
     icon: 'science',
     color: 'deep-purple-6',
   },
   FISCAL: {
     label: 'Nota Fiscal',
+    curto: 'Fiscal',
     acao: 'Notas fiscais',
     icon: 'receipt_long',
     color: 'deep-orange-7',
   },
-  FINALIZADO: { label: 'Finalizado', acao: 'Finalizar', icon: 'task_alt', color: 'green-7' },
+  FINALIZADO: {
+    label: 'Finalizado',
+    curto: 'Final',
+    acao: 'Finalizar',
+    icon: 'task_alt',
+    color: 'green-7',
+  },
 }
 
 // Tipo (contatipo) padrão da origem/destino por sentido — usado ao semear a

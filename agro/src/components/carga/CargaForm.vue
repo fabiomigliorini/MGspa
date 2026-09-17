@@ -20,6 +20,7 @@ import {
   proximaEtapa,
   cargaFinalizada,
   cargaPesada,
+  sentidoMeta,
   agoraLocal,
   fmtNumero as fmt,
 } from 'src/utils/carga'
@@ -54,6 +55,10 @@ const placaOptions = ref([])
 const placaBusca = ref('')
 const cadastroCaminhao = ref(false)
 
+// Conferência do fechamento (detalhe em `avancar`). Declarado aqui em cima
+// porque o watcher imediato da carga, logo abaixo, já o zera.
+const revisando = ref(false)
+
 // Máximo do campo de chegada = agora (não deixa lançar no futuro). Precisa do
 // timestamp completo: com só a data o clamp do MgInputData zeraria a hora (00:00).
 const dataMax = agoraLocal()
@@ -75,6 +80,7 @@ watch(
     if (props.novo) semearPontos(carga)
     local.value = carga
     placaBusca.value = ''
+    revisando.value = false
   },
   { immediate: true },
 )
@@ -372,6 +378,19 @@ function validarFinalizacao() {
 }
 
 // ---- Ações ----
+// O q-form barra o submit em SILÊNCIO quando uma `:rules` falha — a única pista é
+// o campo vermelho, que pode estar fora da tela (a classificação tem até 5 campos
+// e os últimos ficam abaixo da dobra). Sem este aviso o operador só vê "o botão
+// não faz nada". `comp` é o primeiro campo inválido, que o q-form já foca.
+function onErroValidacao(comp) {
+  const campo = comp?.$props?.label
+  $q.notify({
+    type: 'warning',
+    message: campo ? `Confira o campo “${campo}”.` : 'Confira os campos destacados.',
+    caption: 'Há dado obrigatório faltando ou fora da faixa permitida.',
+  })
+}
+
 function salvar() {
   if (finalizada.value ? !validarFinalizacao() : !entradaValida()) return
   emit('salvar', local.value)
@@ -398,6 +417,24 @@ const proxima = computed(() => proximaEtapa(local.value))
 // Transição p/ FINALIZADO: ativa as :rules de "soma fecha" dos campos de líquido.
 const finalizando = computed(() => proxima.value === 'FINALIZADO')
 
+// Revisão antes de fechar (`revisando`, declarado no topo): o clique da ÚLTIMA
+// etapa (pesar tara, no recebimento) não grava mais direto — ele valida, mostra a
+// conta fechada e vira "Salvar". O operador confere bruto/desconto/líquido/sacas
+// com o caminhão ainda na balança, e só o segundo clique finaliza o romaneio.
+//
+// Mexeu num número, o que ele conferiu não vale mais: volta pra revisão. Só os
+// campos que mudam a conta — um retorno do sync (codcarga/sincronizado) não pode
+// derrubar a revisão no meio da conferência.
+// A assinatura é STRING de propósito: um getter que devolve array cria um objeto
+// novo a cada reavaliação e o watch dispararia mesmo com os números iguais —
+// derrubando a revisão sozinho no meio da conferência.
+watch(
+  () => `${local.value?.pbt}|${local.value?.tara}|${calc.value?.desconto}|${calc.value?.liquido}`,
+  () => {
+    revisando.value = false
+  },
+)
+
 function avancar() {
   if (!entradaValida()) return
   if (erroClassificacao.value) {
@@ -405,8 +442,31 @@ function avancar() {
     return
   }
   const prox = proxima.value
-  if (!prox) return
-  if (prox === 'FINALIZADO' && !validarFinalizacao()) return
+  // Etapa fora do fluxo do sentido (ex.: romaneio gravado como CLASSIFICACAO e
+  // depois virado Expedição, que não tem essa etapa): sem aviso o botão ficava
+  // MUDO pra sempre e a carga não saía do lugar.
+  if (!prox) {
+    $q.notify({
+      type: 'negative',
+      message: `A etapa “${etapaMeta.value.label || local.value.etapa}” não faz parte do fluxo de ${sentidoMeta(local.value.sentido).label}.`,
+      caption: 'Ajuste o tipo de romaneio ou avise o suporte.',
+    })
+    return
+  }
+  if (prox === 'FINALIZADO') {
+    if (!validarFinalizacao()) return
+    // 1º clique: para aqui e mostra a operação fechada. O 2º é que grava.
+    if (!revisando.value) {
+      revisando.value = true
+      $q.notify({
+        type: 'info',
+        icon: 'fact_check',
+        message: 'Confira a operação.',
+        caption: 'O próximo clique salva e finaliza o romaneio.',
+      })
+      return
+    }
+  }
   local.value.etapa = prox
   emit('avancar', local.value)
 }
@@ -418,14 +478,16 @@ function onSubmit() {
 }
 const rotuloPrincipal = computed(() => {
   if (props.novo) return 'Registrar'
-  if (finalizada.value) return 'Salvar'
+  if (finalizada.value || revisando.value) return 'Salvar'
   return etapaMeta.value.acao
 })
 const iconePrincipal = computed(() => {
   if (props.novo) return 'add'
-  if (finalizada.value) return 'save'
+  if (finalizada.value || revisando.value) return 'save'
   return etapaMeta.value.icon
 })
+// Verde no clique que fecha o romaneio — é o único que não tem volta.
+const corPrincipal = computed(() => (revisando.value ? 'positive' : 'primary'))
 
 function fazendaNome() {
   for (const p of origens.value) {
@@ -490,7 +552,7 @@ defineExpose({
 </script>
 
 <template>
-  <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit">
+  <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit" @validation-error="onErroValidacao">
     <div class="q-pa-md q-gutter-y-md carga-form">
       <!-- Tipo de romaneio + etapa -->
       <q-card flat bordered>
@@ -844,6 +906,15 @@ defineExpose({
               <div class="text-weight-medium">{{ fmt(sacasLiquido, 1) }}</div>
             </div>
           </div>
+
+          <q-banner v-if="revisando" dense rounded class="bg-green-1 text-green-9 q-mt-sm">
+            <template #avatar><q-icon name="fact_check" color="green-8" /></template>
+            Confira a operação: <b>{{ fmt(calc.liquido) }} kg</b> líquidos ·
+            {{ fmt(sacasLiquido, 1) }} sacas.
+            <div class="text-caption">
+              <b>Salvar</b> fecha o romaneio e libera a tela pro próximo caminhão.
+            </div>
+          </q-banner>
         </q-card-section>
       </q-card>
 
@@ -916,7 +987,13 @@ defineExpose({
         <q-btn v-if="!novo && !finalizada" fab icon="save" color="grey-7" @click="salvarSemAvancar">
           <q-tooltip>Salvar sem avançar</q-tooltip>
         </q-btn>
-        <q-btn type="submit" fab :icon="iconePrincipal" :label="rotuloPrincipal" color="primary">
+        <q-btn
+          type="submit"
+          fab
+          :icon="iconePrincipal"
+          :label="rotuloPrincipal"
+          :color="corPrincipal"
+        >
           <q-tooltip>F3</q-tooltip>
         </q-btn>
       </div>

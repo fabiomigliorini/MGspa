@@ -26,7 +26,8 @@ function cor(i) {
         class="text-caption text-center ellipsis q-mt-xs"
         :class="i <= atual ? 'text-grey-9' : 'text-grey-5'"
       >
-        {{ ETAPA_META[e]?.label }}
+        {{ ETAPA_META[e]?.curto || ETAPA_META[e]?.label }}
+        <q-tooltip>{{ ETAPA_META[e]?.label }}</q-tooltip>
       </div>
     </div>
   </div>

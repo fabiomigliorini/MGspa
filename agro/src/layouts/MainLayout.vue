@@ -9,6 +9,17 @@ import { useAuth } from 'src/composables/useAuth'
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
 
+// Drawers estreitos (300px): por padrão o conteúdo do q-scroll-area cresce até a
+// largura NATURAL (um número grande, uma fila de chips) e o que passa disso é
+// cortado pelo drawer, sem barra visível pra rolar. Prender em 100% obriga o
+// conteúdo a caber e quebrar linha. Vale para os dois lados.
+const scrollAreaFit = {
+  contentStyle: { overflowX: 'hidden', width: '100%' },
+  contentActiveStyle: { overflowX: 'hidden', width: '100%' },
+  horizontalThumbStyle: { display: 'none' },
+  horizontalBarStyle: { display: 'none' },
+}
+
 const auth = useAuth()
 
 // Menu de telas internas do app (padrão do contas/estoque).
@@ -84,13 +95,7 @@ const menuGroups = [
       class="bg-white"
       :width="300"
     >
-      <q-scroll-area
-        class="fit"
-        :content-style="{ overflowX: 'hidden', width: '100%' }"
-        :content-active-style="{ overflowX: 'hidden', width: '100%' }"
-        :horizontal-thumb-style="{ display: 'none' }"
-        :horizontal-bar-style="{ display: 'none' }"
-      >
+      <q-scroll-area class="fit" v-bind="scrollAreaFit">
         <component :is="$route.meta.leftDrawer" />
       </q-scroll-area>
     </q-drawer>
@@ -104,7 +109,7 @@ const menuGroups = [
       class="bg-white"
       :width="300"
     >
-      <q-scroll-area class="fit">
+      <q-scroll-area class="fit" v-bind="scrollAreaFit">
         <component :is="$route.meta.rightDrawer" />
       </q-scroll-area>
     </q-drawer>
