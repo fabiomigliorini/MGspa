@@ -626,7 +626,8 @@ watch(
       style="width: 800px; max-width: 100vw; height: 800px; max-height: calc(100vh - 48px)"
     >
       <q-form ref="formPessoa" @submit="salvar" class="col column no-wrap">
-        <q-card-section class="q-pa-none">
+        <!-- steps 2 e 3 nao tem conteudo no cabecalho: compensa o padding (48px) do step vazio -->
+        <q-card-section class="q-pa-none" :style="step != 1 ? 'margin-bottom: -48px' : ''">
           <q-stepper flat v-model="step" ref="stepper" color="primary" animated>
             <q-step :name="1" title="DOC" icon="settings" :done="step > 1">
               <q-input
@@ -634,6 +635,7 @@ watch(
                 autofocus
                 label="Pesquisa"
                 v-model="cnpj"
+                hide-bottom-space
                 @update:model-value="pesquisa()"
                 @keydown="teclaPesquisa"
                 :rules="[(val) => (!!val && val.length > 3) || 'Digite pelo menos 3 letras']"
@@ -662,12 +664,8 @@ watch(
                 </template>
               </q-input>
             </q-step>
-            <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2">
-              <div class="text-grey-7">Selecione a Inscrição Estadual</div>
-            </q-step>
-            <q-step :name="3" title="OK" icon="create_new_folder" :done="step > 2">
-              <div class="text-grey-7">Confira os dados do cadastro</div>
-            </q-step>
+            <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2" />
+            <q-step :name="3" title="OK" icon="create_new_folder" :done="step > 2" />
           </q-stepper>
         </q-card-section>
         <q-separator />
