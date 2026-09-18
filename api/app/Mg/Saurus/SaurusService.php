@@ -145,7 +145,8 @@ class SaurusService
 
         $bandeira = self::buscaOuCriaBandeira($response->response->bandeira);
 
-        $codsauruspinpad = SaurusPinPad::where('serial', $response->response->idPinPad)->first()->codsauruspinpad;
+        // idPinPad da Saurus é o uuid (coluna id); serial é o número de série físico
+        $codsauruspinpad = SaurusPinPad::where('id', $response->response->idPinPad)->first()->codsauruspinpad;
 
         $saurusPagamento = SaurusPagamento::updateOrCreate(
             [
@@ -257,13 +258,15 @@ class SaurusService
         $tipo = 99; //Outros
         $autorizacao = null;
         $bandeira = null;
+        $serialmaquineta = $ped->SaurusPdv->SaurusPinPadS->first()->serial ?? null;
         foreach ($ped->SaurusPagamentoS as $pag) {
             $tipo = $pag->modpagamento;
-           
+
             $autorizacao = $pag->autorizacao;
             $bandeira = static::buscaOuCriaBandeira(
                 $pag->SaurusBandeira->bandeira
             );
+            $serialmaquineta = $pag->SaurusPinPad->serial ?? $serialmaquineta;
         }
 
         NegocioFormaPagamento::updateOrCreate(
@@ -282,7 +285,8 @@ class SaurusService
                 'valortroco' => null,
                 'tipo' => $tipo,
                 'bandeira' => $bandeira->tband,
-                'integracao' => true
+                'integracao' => true,
+                'serialmaquineta' => $serialmaquineta,
             ]
         );
 

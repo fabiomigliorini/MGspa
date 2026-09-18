@@ -782,7 +782,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     ) {
       try {
         const { data } = await api.post('/v1/pdv/saurus/pedido/', {
-          pdv: codsauruspos,
+          pdv: this.pdv.uuid,
           codnegocio,
           codpessoa,
           codsauruspos,

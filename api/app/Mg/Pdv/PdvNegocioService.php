@@ -239,7 +239,7 @@ class PdvNegocioService
             foreach ($negocio->NegocioFormaPagamentos as $nfp) {
                 // Validações de regra de negócio
                 if ($negocio->codpessoa == 1) { // Consumidor final
-                    if ($nfp->prazo && $nfp->parcelas > 1) {
+                    if (!$nfp->FormaPagamento->avista && $nfp->parcelas > 1) {
                         throw new Exception('Somente é permitido Parcelamento para Pessoas ou Empresas Cadastradas!', 1);
                     }
                     if ($nfp->FormaPagamento->boleto) {
@@ -248,6 +248,11 @@ class PdvNegocioService
                     if ($nfp->FormaPagamento->fechamento) {
                         throw new Exception('Somente é permitido Fechamento para Pessoas ou Empresas Cadastradas!', 1);
                     }
+                }
+
+                // cheque: cliente identificado, sem troco, CMC7 válido
+                if (PdvNegocioChequeService::ehCheque($nfp)) {
+                    PdvNegocioChequeService::validar($negocio, $nfp);
                 }
 
                 // Cálculo dos totais
@@ -318,6 +323,7 @@ class PdvNegocioService
             $negocio->valoravista = $negocio->valortotal - $prazo;
             $negocio->save();
             PdvNegocioPrazoService::baixarVales($negocio);
+            PdvNegocioChequeService::gerar($negocio);
         } else {
             $negocio->valoraprazo = 0;
             $negocio->valoravista = 0;
@@ -391,6 +397,7 @@ class PdvNegocioService
             }
         }
         PdvNegocioPrazoService::estornarBaixaVales($negocio);
+        PdvNegocioChequeService::cancelar($negocio);
 
         $negocio->codnegociostatus = NegocioService::STATUS_CANCELADO;
         $negocio->justificativa = $justificativa;

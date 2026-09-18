@@ -1,20 +1,24 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Dialog } from 'quasar'
 import { negocioStore } from 'stores/negocio'
 import { pixStore } from 'stores/pix'
 import { pagarMeStore } from 'stores/pagar-me'
 import { saurusStore } from 'stores/saurus'
-import PagamentoDinheiro from 'components/offline/PagamentoDinheiro.vue'
-import PagamentoVale from 'components/offline/PagamentoVale.vue'
-import PagamentoPix from 'components/offline/PagamentoPix.vue'
-import PagamentoPagarMe from 'components/offline/PagamentoPagarMe.vue'
-import PagamentoSaurus from 'components/offline/PagamentoSaurus.vue'
-import PagamentoPrazo from 'components/offline/PagamentoPrazo.vue'
+import ReceberDialog from 'components/offline/ReceberDialog.vue'
+import PixCobDialog from 'components/offline/PixCobDialog.vue'
+import PagarMePedidoDialog from 'components/offline/PagarMePedidoDialog.vue'
+import SaurusPedidoDialog from 'components/offline/SaurusPedidoDialog.vue'
+import PagamentoDialog from 'components/offline/PagamentoDialog.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataCpf, formataCnpj, formataNumero } from '@components/formatters'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import { formataFromNow, formataNumero } from '@components/formatters'
+import emitter from '../../utils/emitter.js'
+import {
+  iconePagamento,
+  logoBandeira,
+  resumoPagamento,
+  tituloPagamento,
+} from '../../utils/pagamento.js'
 
 const sNegocio = negocioStore()
 const sPix = pixStore()
@@ -30,10 +34,6 @@ const edicao = ref({
   valoroutras: null,
   valortotal: null,
 })
-
-const urlTitulo = (codtitulo) => {
-  return process.env.CONTAS_URL + '/titulo/' + codtitulo
-}
 
 const editarValores = () => {
   edicao.value.valorprodutos = sNegocio.negocio.valorprodutos
@@ -118,19 +118,8 @@ const recalcularValorTotal = () => {
   edicao.value.valortotal = Math.round(total * 100) / 100
 }
 
-const dialogPagamentoDinheiro = () => {
-  sNegocio.dialog.pagamentoDinheiro = true
-}
-
-const dialogPagamentoVale = () => {
-  sNegocio.dialog.pagamentoVale = true
-}
-const dialogPagamentoPix = () => {
-  sNegocio.dialog.pagamentoPix = true
-}
-
-const dialogPagamentoPrazo = () => {
-  sNegocio.dialog.pagamentoPrazo = true
+const receber = () => {
+  sNegocio.abrirReceber()
 }
 
 const dialogDetalhesPixCob = (pixCob) => {
@@ -148,57 +137,117 @@ const dialogDetalhesSaurusPedido = (ped) => {
   sSaurus.dialog.detalhesPedido = true
 }
 
-const excluirPagamento = (pag) => {
-  sNegocio.excluirPagamento(pag.uuid)
-}
-
-const dialogPagamento = () => {
-  switch (sNegocio.padrao.maquineta) {
-    case 'pagarme':
-      sNegocio.dialog.pagamentoPagarMe = true
-      break
-    case 'saurus':
-      sNegocio.dialog.pagamentoSaurus = true
-      break
-    default:
-      sNegocio.dialog.pagamentoPagarMe = true
-      break
+// pagamento de integração abre o dialog da cobrança (tem o pagador, NSU etc); o resto, o detalhe
+const abrirPagamento = (pag) => {
+  const n = sNegocio.negocio
+  const cob = pag.codpixcob && n.pixCob?.find((c) => c.codpixcob == pag.codpixcob)
+  if (cob) {
+    return dialogDetalhesPixCob(cob)
   }
+  const pagarMe =
+    pag.codpagarmepedido &&
+    n.PagarMePedidoS?.find((p) => p.codpagarmepedido == pag.codpagarmepedido)
+  if (pagarMe) {
+    return dialogDetalhesPagarMePedido(pagarMe)
+  }
+  const saurus =
+    pag.codsauruspedido && n.SaurusPedidoS?.find((p) => p.codsauruspedido == pag.codsauruspedido)
+  if (saurus) {
+    return dialogDetalhesSaurusPedido(saurus)
+  }
+  sNegocio.pagamentoDetalhe = pag
+  sNegocio.dialog.pagamento = true
 }
 
-const valorSaldoLabel = computed(() => {
-  return sNegocio.valorapagar > 0 ? 'Faltando' : 'Troco'
+// pagamento parcial lançado: chama atenção para o que ainda falta (ou o troco)
+const piscandoSaldo = ref(false)
+let timerPiscar = null
+const piscarSaldo = () => {
+  if (sNegocio.valorapagar == 0) {
+    return
+  }
+  piscandoSaldo.value = false
+  clearTimeout(timerPiscar)
+  setTimeout(() => {
+    piscandoSaldo.value = true
+    timerPiscar = setTimeout(() => (piscandoSaldo.value = false), 2000)
+  }, 50)
+}
+
+onMounted(() => {
+  emitter.on('pagamentoAdicionado', piscarSaldo)
 })
 
-const valorSaldoClass = computed(() => {
-  return sNegocio.valorapagar > 0 ? 'text-red' : 'text-green'
+onUnmounted(() => {
+  emitter.off('pagamentoAdicionado', piscarSaldo)
+  clearTimeout(timerPiscar)
 })
 
-const qrCodeColor = (cob) => {
-  if (cob.status == 'CONCLUIDA') {
-    return 'secondary'
-  }
-  return 'warning'
-}
+// cobranças ainda não pagas (a paga já virou linha em negocio.pagamentos, com integracao)
+const corCobranca = (cancelada) => (cancelada ? 'grey' : 'warning')
 
-const creditCardColor = (ped) => {
-  // paid
-  if (ped.status == 2) {
-    return 'secondary'
-  }
-  if (ped.status == 3) {
-    return 'grey'
-  }
-  return 'warning'
-}
+const resumoPedido = (ped) =>
+  [
+    ped.parcelas > 1 ? `${ped.parcelas}x ${formataNumero(ped.valorparcela)}` : null,
+    `POS ${ped.apelido}`,
+    formataFromNow(ped.criacao),
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
-const creditCardColorPagamento = (pag) => {
-  // cancelamento
-  if (pag.valorcancelamento) {
-    return 'negative'
+const cobrancas = computed(() => {
+  const n = sNegocio.negocio
+  if (!n) {
+    return []
   }
-  return 'secondary'
-}
+  const pix = (n.pixCob ?? [])
+    .filter((c) => c.status != 'CONCLUIDA')
+    .map((c) => ({
+      chave: 'pix' + c.codpixcob,
+      icone: 'pix',
+      cor: corCobranca(['EXPIRADO', 'REMOVIDA_PELO_USUARIO_RECEBEDOR'].includes(c.status)),
+      titulo: 'PIX',
+      status: c.status,
+      valor: c.valororiginal,
+      resumo: formataFromNow(c.criacao),
+      abrir: () => dialogDetalhesPixCob(c),
+    }))
+  const pedido = (ped, chave, abrir) => ({
+    chave,
+    icone: 'credit_card',
+    cor: corCobranca(ped.status == 3),
+    titulo: 'Cartão ' + (ped.tipodescricao ?? '').toLowerCase(),
+    status: ped.statusdescricao,
+    valor: ped.valortotal,
+    resumo: resumoPedido(ped),
+    abrir: () => abrir(ped),
+  })
+  const pagarMe = (n.PagarMePedidoS ?? [])
+    .filter((p) => p.status != 2)
+    .map((p) => pedido(p, 'pagarme' + p.codpagarmepedido, dialogDetalhesPagarMePedido))
+  const saurus = (n.SaurusPedidoS ?? [])
+    .filter((p) => p.status != 2)
+    .map((p) => pedido(p, 'saurus' + p.codsauruspedido, dialogDetalhesSaurusPedido))
+  return [...pix, ...pagarMe, ...saurus]
+})
+
+const temLancamento = computed(
+  () => sNegocio.negocio.pagamentos.length > 0 || cobrancas.value.length > 0,
+)
+
+// só aparece quando há o que receber (venda vazia não mostra o botão)
+const mostrarReceber = computed(
+  () =>
+    sNegocio.negocio.financeiro && sNegocio.podeEditar && !temLancamento.value && faltando.value,
+)
+
+const mostrarSaldo = computed(
+  () => sNegocio.negocio.financeiro && temLancamento.value && sNegocio.valorapagar != 0,
+)
+
+const faltando = computed(() => sNegocio.valorapagar > 0)
+
+const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
 </script>
 <template>
   <!-- Editar Valores Desconto / Frete / etc -->
@@ -305,12 +354,11 @@ const creditCardColorPagamento = (pag) => {
   </q-dialog>
 
   <!-- DIALOGS DE PAGAMENTOS -->
-  <pagamento-dinheiro />
-  <pagamento-pix />
-  <pagamento-pagar-me />
-  <pagamento-saurus />
-  <pagamento-prazo />
-  <pagamento-vale />
+  <receber-dialog />
+  <pix-cob-dialog />
+  <pagar-me-pedido-dialog />
+  <saurus-pedido-dialog />
+  <pagamento-dialog />
 
   <template v-if="sNegocio.negocio">
     <!-- TOTAIS -->
@@ -401,283 +449,86 @@ const creditCardColorPagamento = (pag) => {
           </Transition>
         </q-item-section>
       </q-item>
-
-      <!-- PAGAMENTOS -->
-      <template v-if="sNegocio.negocio.pagamentos.length > 0">
-        <template v-for="pag in sNegocio.negocio.pagamentos" :key="pag.uuid">
-          <q-item>
-            <q-item-section>
-              <q-item-label caption class="ellipsis">
-                {{ pag.formapagamento }}
-              </q-item-label>
-              <q-item-label caption v-if="pag.parceiro" class="ellipsis">
-                {{ pag.parceiro }}
-              </q-item-label>
-              <q-item-label caption v-if="pag.parcelas > 1" class="ellipsis">
-                {{ pag.parcelas }}
-                x de R$
-                {{ formataNumero(pag.valorparcela) }}
-              </q-item-label>
-              <q-item-label caption v-else-if="pag.dias && pag.dias != 30">
-                {{ pag.dias }} Dias
-              </q-item-label>
-              <q-item-label caption v-if="pag.autorizacao" class="ellipsis">
-                <span v-if="pag.nomebandeira">
-                  {{ pag.nomebandeira }}
-                </span>
-                {{ pag.autorizacao }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section class="text-right">
-              <q-item-label class="text-h5 text-grey-6">
-                {{ formataNumero(pag.valortotal) }}
-                <q-btn
-                  flat
-                  round
-                  @click="excluirPagamento(pag)"
-                  icon="delete"
-                  size="sm"
-                  v-if="!pag.integracao && sNegocio.negocio.codnegociostatus == 1"
-                />
-              </q-item-label>
-              <q-item-label caption v-if="pag.codtitulo">
-                <q-btn
-                  :href="urlTitulo(pag.codtitulo)"
-                  target="_blank"
-                  :label="pag.codtitulo"
-                  flat
-                  size="sm"
-                  dense
-                  icon-right="launch"
-                />
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-
-        <!-- <q-item v-if="1 == 1"> -->
-        <q-item v-if="sNegocio.valorapagar != 0">
-          <q-item-section>
-            <q-item-label caption>{{ valorSaldoLabel }}</q-item-label>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label :class="valorSaldoClass" class="text-right text-h5">
-              {{ formataNumero(Math.abs(sNegocio.valorapagar)) }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-      </template>
     </q-list>
 
-    <!-- BOTOES DE ADICIONAR PAGAMENTO -->
-    <q-list
-      class="q-pa-md q-gutter-sm text-right"
-      v-if="sNegocio.negocio.financeiro && sNegocio.podeEditar"
-    >
-      <!-- BOTAO DINHEIRO -->
-      <q-btn round @click="dialogPagamentoDinheiro()" icon="local_atm" color="primary">
-        <q-tooltip class="bg-accent">Dinheiro (F6)</q-tooltip>
+    <!-- RECEBER: sem nenhum lançamento ainda, o botão é a porta de entrada -->
+    <div class="q-px-md q-pt-sm" v-if="mostrarReceber">
+      <q-btn
+        outline
+        color="primary"
+        class="full-width"
+        icon="add"
+        label="Receber"
+        @click="receber()"
+      >
+        <q-badge outline color="primary" label="F8" class="q-ml-sm" />
       </q-btn>
+    </div>
 
-      <!-- BOTAO CARTAO -->
-      <q-btn round icon="credit_card" @click="dialogPagamento()" color="primary">
-        <q-tooltip class="bg-accent">Cartão (F7)</q-tooltip>
-      </q-btn>
-
-      <!-- BOTAO PIX -->
-      <q-btn round icon="pix" @click="dialogPagamentoPix()" color="primary">
-        <q-tooltip class="bg-accent">PIX (F8)</q-tooltip>
-      </q-btn>
-
-      <!-- BOTAO PRAZO -->
-      <q-btn round icon="receipt" @click="dialogPagamentoPrazo()" color="primary">
-        <q-tooltip class="bg-accent">À Prazo (F9)</q-tooltip>
-      </q-btn>
-
-      <!-- BOTAO VALE -->
-      <q-btn round @click="dialogPagamentoVale()" icon="mdi-ticket" color="primary">
-        <q-tooltip class="bg-accent">Vale Compras </q-tooltip>
-      </q-btn>
-    </q-list>
-
-    <!-- LISTAGEM DE PAGAMENTOS -->
-    <q-list>
+    <!-- PAGAMENTOS + COBRANÇAS EM ABERTO -->
+    <q-list v-if="temLancamento" class="q-pt-sm">
       <q-item
-        v-for="cob in sNegocio.negocio.pixCob"
-        :key="cob.codpixcob"
+        v-for="pag in sNegocio.negocio.pagamentos"
+        :key="pag.uuid"
         clickable
         v-ripple
-        @click="dialogDetalhesPixCob(cob)"
+        @click="abrirPagamento(pag)"
       >
-        <q-item-section avatar top>
-          <q-btn round :color="qrCodeColor(cob)" icon="qr_code" />
+        <q-item-section avatar>
+          <q-img v-if="logoBandeira(pag)" :src="logoBandeira(pag)" width="40px" :ratio="64 / 40" />
+          <q-avatar v-else color="grey-3" text-color="grey-8" :icon="iconePagamento(pag)" />
         </q-item-section>
-        <q-item-section v-if="cob.status != 'CONCLUIDA'">
-          <q-item-label lines="1">
-            {{ formataNumero(cob.valororiginal) }}
-          </q-item-label>
-          <q-item-label caption>
-            {{ cob.status }} {{ moment(cob.criacao).fromNow() }}
+        <q-item-section>
+          <q-item-label class="ellipsis">{{ tituloPagamento(pag) }}</q-item-label>
+          <q-item-label caption class="ellipsis" v-if="resumoPagamento(pag)">
+            {{ resumoPagamento(pag) }}
           </q-item-label>
         </q-item-section>
-        <template v-else>
-          <q-item-section v-for="pix in cob.PixS" :key="pix.codpix">
-            <q-item-label lines="1">
-              {{ formataNumero(pix.valor) }}
-            </q-item-label>
-            <q-item-label caption>
-              {{ pix.nome }}
-              <br />
-              <template v-if="pix.cpf">
-                {{ formataCpf(pix.cpf) }}
-              </template>
-              <template v-if="pix.cnpj">
-                {{ formataCnpj(pix.cnpj) }}
-              </template>
-            </q-item-label>
-          </q-item-section>
-        </template>
+        <q-item-section side class="text-subtitle1 text-weight-bold text-grey-9">
+          {{ formataNumero(pag.valortotal) }}
+        </q-item-section>
       </q-item>
 
-      <template v-for="ped in sNegocio.negocio.PagarMePedidoS" :key="ped.codpagarmepedido">
-        <template v-if="ped.status != 2">
-          <q-item clickable v-ripple @click="dialogDetalhesPagarMePedido(ped)">
-            <q-item-section avatar top>
-              <q-btn round :color="creditCardColor(ped)" icon="credit_card" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label lines="1">
-                {{ formataNumero(ped.valortotal) }}
-              </q-item-label>
-              <q-item-label caption v-if="ped.parcelas > 1">
-                {{ formataNumero(ped.valor) }}
-                em {{ ped.parcelas }}
-                parcelas de R$
-                {{ formataNumero(ped.valorparcela) }}
-                <span v-if="ped.valorjuros"> C/Juros </span>
-              </q-item-label>
-              <q-item-label caption>
-                <span class="text-uppercase">
-                  {{ ped.tipodescricao }}
-                </span>
-                | POS {{ ped.apelido }} |
-                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
-                {{ moment(ped.criacao).fromNow() }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-        <template v-else>
-          <q-item
-            clickable
-            v-ripple
-            @click="dialogDetalhesPagarMePedido(ped)"
-            v-for="pag in ped.PagarMePagamentoS"
-            :key="pag.codpagarmepagamento"
+      <q-item v-for="cob in cobrancas" :key="cob.chave" clickable v-ripple @click="cob.abrir()">
+        <q-item-section avatar>
+          <q-avatar :color="cob.cor" text-color="white" :icon="cob.icone" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="ellipsis">
+            {{ cob.titulo }}
+            <q-badge :color="cob.cor" :label="cob.status" class="q-ml-xs text-lowercase" />
+          </q-item-label>
+          <q-item-label caption class="ellipsis">{{ cob.resumo }}</q-item-label>
+        </q-item-section>
+        <q-item-section side class="text-subtitle1 text-weight-bold text-grey-6">
+          {{ formataNumero(cob.valor) }}
+        </q-item-section>
+      </q-item>
+
+      <!-- SALDO: faltando é a ação de receber (clique ou F8); troco só informa -->
+      <div class="q-px-sm q-pt-sm" v-if="mostrarSaldo">
+        <q-item
+          class="rounded-borders q-px-sm"
+          :class="[faltando ? 'bg-red-1' : 'bg-green-1', { 'animated flash': piscandoSaldo }]"
+          :clickable="podeReceber"
+          v-ripple="podeReceber"
+          @click="podeReceber && receber()"
+        >
+          <q-item-section>
+            <q-item-label class="text-subtitle1" :class="faltando ? 'text-red-9' : 'text-green-9'">
+              {{ faltando ? 'Faltando' : 'Troco' }}
+              <q-badge v-if="podeReceber" outline color="red-9" label="F8" class="q-ml-sm" />
+            </q-item-label>
+          </q-item-section>
+          <q-item-section
+            side
+            class="text-h5 text-weight-bold"
+            :class="faltando ? 'text-red-9' : 'text-green-9'"
           >
-            <q-item-section avatar top>
-              <q-btn round :color="creditCardColorPagamento(pag)" icon="credit_card" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label lines="1" v-if="pag.valorpagamento">
-                {{ formataNumero(pag.valorpagamento) }}
-              </q-item-label>
-              <q-item-label lines="1" v-if="pag.valorcancelamento" class="text-negative">
-                {{ formataNumero(pag.valorcancelamento) }}
-                Cancelamento
-              </q-item-label>
-              <q-item-label caption v-if="pag.parcelas > 1">
-                {{ formataNumero(ped.valor) }}
-                em {{ pag.parcelas }}
-                parcelas de R$
-                {{ formataNumero(ped.valorparcela) }}
-                <span v-if="ped.valorjuros"> C/Juros </span>
-              </q-item-label>
-              <q-item-label caption>
-                {{ pag.nome }}
-
-                <span class="text-uppercase">
-                  {{ pag.bandeira }}
-                  {{ pag.tipodescricao }}
-                </span>
-                | POS {{ pag.apelido }} |
-                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
-                {{ moment(pag.transacao).fromNow() }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </template>
-
-      <template v-for="ped in sNegocio.negocio.SaurusPedidoS" :key="ped.codsauruspedido">
-        <template v-if="ped.status != 2">
-          <q-item clickable v-ripple @click="dialogDetalhesSaurusPedido(ped)">
-            <q-item-section avatar top>
-              <q-btn round :color="creditCardColor(ped)" icon="credit_card" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label lines="1">
-                {{ formataNumero(ped.valortotal) }}
-              </q-item-label>
-              <q-item-label caption v-if="ped.parcelas > 1">
-                {{ formataNumero(ped.valor) }}
-                em {{ ped.parcelas }}
-                parcelas de R$
-                {{ formataNumero(ped.valorparcela) }}
-                <span v-if="ped.valorjuros"> C/Juros </span>
-              </q-item-label>
-              <q-item-label caption>
-                <span class="text-uppercase">
-                  {{ ped.tipodescricao }}
-                </span>
-                | POS {{ ped.apelido }} |
-                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
-                {{ moment(ped.criacao).fromNow() }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-        <template v-else>
-          <q-item
-            clickable
-            v-ripple
-            @click="dialogDetalhesSaurusPedido(ped)"
-            v-for="pag in ped.SaurusPagamentoS"
-            :key="pag.codsauruspagamento"
-          >
-            <q-item-section avatar top>
-              <q-btn round :color="creditCardColorPagamento(pag)" icon="credit_card" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label lines="1" v-if="pag.valortotal">
-                {{ formataNumero(pag.valortotal) }}
-              </q-item-label>
-              <q-item-label lines="1" v-if="pag.valorcancelamento" class="text-negative">
-                {{ formataNumero(pag.valorcancelamento) }}
-                Cancelamento
-              </q-item-label>
-              <q-item-label caption v-if="pag.parcelas > 1">
-                {{ formataNumero(ped.valor) }}
-                em {{ pag.parcelas }}
-                parcelas de R$
-                {{ formataNumero(ped.valorparcela) }}
-                <span v-if="ped.valorjuros"> C/Juros </span>
-              </q-item-label>
-              <q-item-label caption>
-                {{ pag.nome }}
-
-                <span class="text-uppercase">
-                  {{ pag.bandeira }}
-                  {{ pag.tipodescricao }}
-                </span>
-                | POS {{ pag.apelido }} |
-                <span class="text-uppercase">{{ ped.statusdescricao }}</span> |
-                {{ moment(pag.transacao).fromNow() }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </template>
-      </template>
+            {{ formataNumero(Math.abs(sNegocio.valorapagar)) }}
+          </q-item-section>
+        </q-item>
+      </div>
     </q-list>
   </template>
 </template>
