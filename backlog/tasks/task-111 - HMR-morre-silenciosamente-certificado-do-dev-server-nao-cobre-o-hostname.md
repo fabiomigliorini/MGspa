@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-17 20:27'
-updated_date: '2026-09-18 19:40'
+updated_date: '2026-09-18 20:30'
 labels:
   - negocios
   - pessoas
@@ -57,3 +57,12 @@ Verificado: no negocios, handshake 101 no sistema-dev e no negocios-dev, e Brave
 
 Historico: a correcao com mkcert (certificado curinga compartilhado pelos 6 apps) foi implementada em 17/09 e desfeita em 18/09 a pedido do Fabio, por incomodar demais. A task nasceu como TASK-104 e foi renumerada para TASK-111 porque um merge trouxe outra TASK-104 ja commitada.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-18 20:30
+---
+Limite descoberto em 18/09, depois do commit: o Brave guarda UM certificado aceito por host, e aceitar outro substitui o anterior (testado num Brave limpo: aceitar o cert do nginx em sistema-dev:443 faz o sistema-dev:9900 pedir o aviso de novo). O sistema-dev e compartilhado pelo nginx (443) e pelos dev servers dos apps, cada um com um certificado diferente. Quem abre o negocios pelo sistema-dev perde a excecao sempre que aceita o certificado de outro servico nesse host, e o HMR e os fetch morrem calados com a pagina ainda aberta. Solucao sem mudar codigo: abrir o negocios por https://negocios-dev.mgpapelaria.com.br:9900, host que so o negocios usa. Nos outros apps o mesmo acontece entre abas abertas pelo sistema-dev.
+---
+<!-- COMMENTS:END -->
