@@ -1,114 +1,73 @@
 <script setup>
-import { ref } from 'vue'
+// Dialog especialista da cobrança PIX (QR Code): transmite ao banco se for nova, mostra o QR,
+// foca em Consultar (Enter) e consulta sozinho a cada 3s enquanto estiver pendente.
+import { ref, watch } from 'vue'
 import { Notify, debounce } from 'quasar'
-import { negocioStore } from 'stores/negocio'
+import QRCode from 'qrcode'
 import { pixStore } from 'stores/pix'
-import { db } from 'src/boot/db'
 import {
   formataCpf,
   formataCnpj,
   formataNumero,
   formataTimestampCompleto,
 } from '@components/formatters'
+import { useConsultaAutomatica } from '../../composables/useConsultaAutomatica.js'
 import emitter from '../../utils/emitter.js'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
-import MgInputValor from '@components/MgInputValor.vue'
 
-const sNegocio = negocioStore()
 const sPix = pixStore()
 
-const valorPagamento = ref(null)
-const formPix = ref(null)
 const btnConsultarRef = ref(null)
-const portadores = ref([])
-const codportador = ref(null)
+const qrDataUrl = ref(null)
 
-const inicializarValores = async () => {
-  valorPagamento.value = sNegocio.valorapagar
-  // Buscar codfilial do negócio aberto via estoquelocal
-  const estoqueLocal = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
-  if (estoqueLocal?.codfilial) {
-    portadores.value = await sPix.carregarPortadores(estoqueLocal.codfilial)
-  } else {
-    portadores.value = []
-  }
-  // Pré-selecionar padrão somente se existir na lista
-  if (
-    sNegocio.padrao.codportador &&
-    portadores.value.find((p) => p.codportador === sNegocio.padrao.codportador)
-  ) {
-    codportador.value = sNegocio.padrao.codportador
-  } else {
-    codportador.value = null
+const pendente = () => !['CONCLUIDA', 'EXPIRADO'].includes(sPix.pixCob?.status)
+
+const verificarConcluida = () => {
+  if (sPix.pixCob.status == 'CONCLUIDA') {
+    parar()
+    sPix.dialog.detalhesPixCob = false
+    emitter.emit('pagamentoAdicionado')
   }
 }
 
-const valorRule = [
-  (value) => {
-    if (!value) {
-      return 'Preencha o valor!'
-    }
-    if (parseFloat(value) <= 0.01) {
-      return 'Preencha o valor!'
-    }
-    if (parseFloat(value) > sNegocio.valorapagar) {
-      return 'Valor maior que o saldo do Negócio!'
-    }
-    return true
+const { iniciar, parar } = useConsultaAutomatica({
+  pendente,
+  consultar: async () => {
+    const ok = await sPix.consultarPixCob(true)
+    verificarConcluida()
+    return ok
   },
-]
+})
 
-const salvar = async () => {
-  const pixCob = await sNegocio.criarPixCob(valorPagamento.value, codportador.value)
-  if (pixCob == false) {
-    return
+const consultar = debounce(async () => {
+  await sPix.consultarPixCob()
+  verificarConcluida()
+  iniciar()
+}, 500)
+
+const onShow = async () => {
+  if (sPix.pixCob.qrcode == null) {
+    await sPix.transmitirPixCob()
   }
-  sPix.pixCob = pixCob
-  sPix.dialog.detalhesPixCob = true
-  sNegocio.dialog.pagamentoPix = false
+  btnConsultarRef.value?.$el?.focus()
+  iniciar()
 }
 
-const pixChave = async () => {
-  const valido = await formPix.value.validate()
-  if (!valido) {
-    return false
-  }
-  sNegocio.dialog.pagamentoPix = false
-  sNegocio.adicionarPagamento(
-    parseInt(process.env.CODFORMAPAGAMENTO_PIXCHAVE), // codformapagamento Pix
-    16, // tipo Deposito Bancario
-    null, // codtitulo
-    valorPagamento.value, // valorpagamento
-    null, // valorjuros
-    null, // valortroco
-    null, // codpessoa
-    null, // bandeira
-    null, // autorizacao
-    1, // parcelas
-    valorPagamento.value, // valorparcela
-    null, // dias // valorparcela
-  )
+const onHide = () => {
+  parar()
 }
+
+// QR gerado localmente (funciona sem internet e não manda o payload para fora)
+watch(
+  () => sPix.pixCob?.qrcode,
+  async (qrcode) => {
+    qrDataUrl.value = qrcode ? await QRCode.toDataURL(qrcode, { width: 512, margin: 1 }) : null
+  },
+  { immediate: true },
+)
 
 const transmitir = () => {
   sPix.transmitirPixCob()
 }
-
-const transmitirSeNovo = async () => {
-  if (sPix.pixCob.qrcode == null) {
-    await sPix.transmitirPixCob()
-  }
-  btnConsultarRef.value.$el.focus()
-}
-
-const consultar = debounce(async () => {
-  await sPix.consultarPixCob()
-  if (sPix.pixCob.status == 'CONCLUIDA') {
-    sPix.dialog.detalhesPixCob = false
-    emitter.emit('pagamentoAdicionado')
-  }
-}, 500)
 
 const imprimir = () => {
   sPix.imprimirPixCob()
@@ -127,9 +86,9 @@ const textoMensagem = () => {
   mensagem += '*Obrigado* pela confiança!'
   return mensagem
 }
+
 const mensagem = () => {
-  const mensagem = textoMensagem()
-  navigator.clipboard.writeText(mensagem).then(() => {
+  navigator.clipboard.writeText(textoMensagem()).then(() => {
     Notify.create({
       type: 'positive',
       message: 'Mensagem copiada para a área de transferência!',
@@ -140,106 +99,17 @@ const mensagem = () => {
 }
 
 const whatsapp = () => {
-  const mensagem = textoMensagem()
-  window.open('whatsapp://send?text=' + encodeURI(mensagem))
+  window.open('whatsapp://send?text=' + encodeURI(textoMensagem()))
 }
 </script>
 <template>
-  <!-- DIALOG -->
-  <q-dialog v-model="sNegocio.dialog.pagamentoPix" @before-show="inicializarValores()">
-    <q-card>
-      <q-form @submit="salvar()" ref="formPix">
-        <q-card-section>
-          <!-- SELEÇÃO DE PORTADOR -->
-          <q-tabs
-            v-if="portadores.length > 0"
-            v-model="codportador"
-            dense
-            active-color="primary"
-            indicator-color="primary"
-            active-bg-color="blue-1"
-            align="center"
-            class="q-mb-lg"
-          >
-            <q-tab
-              v-for="port in portadores"
-              :key="port.codportador"
-              :name="port.codportador"
-              no-caps
-            >
-              <q-avatar size="28px" class="q-my-sm">
-                <q-img
-                  :src="'/bancos/' + port.codbanco + '.svg'"
-                  @error="(evt) => (evt.target.src = '/bancos/pix.svg')"
-                />
-              </q-avatar>
-              <div class="text-caption text-grey-7">
-                {{ port.banco }}
-              </div>
-              <div class="text-caption text-grey-7 text-bold">
-                {{ port.conta }}-{{ port.contadigito }}
-              </div>
-            </q-tab>
-          </q-tabs>
-          <div v-else class="text-grey-6 text-italic q-pa-sm q-mb-md">
-            Nenhum Portador configurado para PIX
-          </div>
-
-          <!-- VALOR -->
-          <q-list>
-            <q-item>
-              <q-item-section>
-                <MgInputValor
-                  prefix="R$"
-                  :min="0.01"
-                  :max="sNegocio.valorapagar"
-                  v-model="valorPagamento"
-                  :rules="valorRule"
-                  autofocus
-                  class="q-input-grande text-h4"
-                  input-class="text-weight-bold text-h2 text-primary"
-                  :borderless="true"
-                  :outlined="false"
-                />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Cancelar"
-            color="grey-8"
-            @click="sNegocio.dialog.pagamentoPix = false"
-            tabindex="-1"
-          />
-          <q-btn
-            type="button"
-            flat
-            label="PIX Pela Chave (Manual)"
-            @click="pixChave()"
-            color="primary"
-          />
-          <q-btn
-            type="submit"
-            flat
-            label="PIX Automático (QR CODE)"
-            color="primary"
-            :disable="!codportador || !valorPagamento || valorPagamento <= 0"
-          />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
-
-  <!-- DETALHES DO PIX -->
-  <q-dialog v-model="sPix.dialog.detalhesPixCob" @show="transmitirSeNovo()">
-    <q-card>
+  <q-dialog v-model="sPix.dialog.detalhesPixCob" @show="onShow" @hide="onHide">
+    <q-card flat>
       <q-card-section>
         <div class="text-h6">Cobrança PIX de R$ {{ formataNumero(sPix.pixCob.valororiginal) }}</div>
         <div class="text-subtitle2 text-grey">
           {{ sPix.pixCob.status }}
+          <span v-if="pendente()"> · consultando automaticamente</span>
         </div>
 
         <template v-if="sPix.pixCob.status == 'CONCLUIDA'">
@@ -314,14 +184,7 @@ const whatsapp = () => {
           </template>
         </template>
         <template v-else>
-          <q-img
-            v-if="sPix.pixCob.qrcode"
-            class="q-my-lg"
-            :src="
-              'https://api.qrserver.com/v1/create-qr-code/?size=513x513&data=' + sPix.pixCob.qrcode
-            "
-            ratio="1"
-          />
+          <q-img v-if="qrDataUrl" class="q-my-lg" :src="qrDataUrl" ratio="1" />
           <q-list>
             <!-- ID -->
             <q-item>

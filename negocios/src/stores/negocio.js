@@ -71,7 +71,7 @@ function descontosIguais(a, b) {
 
 export const negocioStore = defineStore('negocio', {
   persist: {
-    pick: ['padrao', 'paginaAtual', 'ultimos'],
+    pick: ['padrao', 'paginaAtual', 'ultimos', 'maquinetasRecentes'],
   },
 
   state: () => ({
@@ -80,14 +80,19 @@ export const negocioStore = defineStore('negocio', {
     ultimos: [],
     dialog: {
       valores: false,
-      pagamentoDinheiro: false,
-      pagamentoVale: false,
-      pagamentoPix: false,
-      pagamentoPagarMe: false,
-      pagamentoSaurus: false,
-      pagamentoCartaoManual: false,
-      pagamentoPrazo: false,
+      receber: false,
+      pagamento: false,
     },
+    // pagamento aberto no dialog de detalhe (drawer de totais)
+    pagamentoDetalhe: null,
+    // wizard Receber: valor deste pagamento, forma escolhida e vale bipado
+    receber: {
+      valor: null,
+      forma: null,
+      codtituloVale: null,
+    },
+    // maquininhas usadas em cartão manual neste PDV, mais recente primeiro
+    maquinetasRecentes: [],
     padrao: {
       codestoquelocal: 101001, //Deposito
       codpessoa: 1, //Consumidor
@@ -135,6 +140,15 @@ export const negocioStore = defineStore('negocio', {
           .reduce((prev, curr) => prev + curr, 0)
       }
       return Math.round((this.negocio.valortotal - pagamentos) * 100) / 100
+    },
+    // mesma regra do PdvNegocioService::fechar: venda >= 1.000 sem CPF/CNPJ não fecha
+    faltaIdentificarCliente() {
+      return (
+        !!this.negocio?.venda &&
+        this.negocio.valortotal >= 1000 &&
+        !this.negocio.Pessoa?.cnpj &&
+        !this.negocio.cpf
+      )
     },
     gruposDuplicadosPorBarras() {
       if (!this.negocio || !this.negocio.itens) {
@@ -1194,96 +1208,138 @@ export const negocioStore = defineStore('negocio', {
       await this.atualizarListagem()
     },
 
-    async adicionarPagamento(
+    // abre o wizard Receber; forma/codtituloVale pulam direto para o passo da forma (bipagem VAL…)
+    abrirReceber({ forma = null, codtituloVale = null } = {}) {
+      if (this.valorapagar <= 0) {
+        Notify.create({
+          type: 'negative',
+          message: 'Não há nada a receber!',
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return
+      }
+      // venda >= 1.000 exige CPF/CNPJ (o fechamento no backend recusa); o vale traz a pessoa dele
+      if (!codtituloVale && this.faltaIdentificarCliente) {
+        Notify.create({
+          type: 'negative',
+          message:
+            'Obrigatório identificar o CPF para vendas acima de R$ 1.000,00! Informe o cliente (F10).',
+          timeout: 5000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return
+      }
+      this.receber = {
+        valor: this.valorapagar > 0 ? this.valorapagar : null,
+        forma,
+        codtituloVale,
+      }
+      this.dialog.receber = true
+    },
+
+    registrarMaquinetaRecente({ serial, apelido, codpessoa }) {
+      this.maquinetasRecentes = [
+        { serial, apelido, codpessoa },
+        ...this.maquinetasRecentes.filter((m) => m.serial !== serial),
+      ].slice(0, 5)
+    },
+
+    async adicionarPagamento({
       codformapagamento,
       tipo,
-      codtitulo,
       valorpagamento,
-      valorjuros,
-      valortroco,
-      codpessoa,
-      bandeira,
-      autorizacao,
-      parcelas,
-      valorparcela,
-      dias,
-    ) {
-      await this.recarregar()
+      codtitulo = null,
+      valorjuros = null,
+      valortroco = null,
+      codpessoa = null,
+      bandeira = null,
+      autorizacao = null,
+      parcelas = null,
+      valorparcela = null,
+      dias = null,
+      serialmaquineta = null,
+      cmc7 = null,
+      chequevencimento = null,
+      chequecnpj = null,
+      chequeemitente = null,
+    }) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
 
-      // descricao forma de pagamento
-      const fp = await db.formaPagamento.get(codformapagamento)
+        // descricao forma de pagamento
+        const fp = await db.formaPagamento.get(codformapagamento)
 
-      // nome parceiro
-      let parceiro = null
-      if (codpessoa) {
-        const pes = await db.pessoa.get(codpessoa)
-        parceiro = pes.fantasia
-      }
+        // nome parceiro
+        let parceiro = null
+        if (codpessoa) {
+          const pes = await db.pessoa.get(codpessoa)
+          parceiro = pes?.fantasia ?? null
+        }
 
-      // nome bandeira
-      let nomebandeira = null
-      if (bandeira) {
-        const band = bandeirasCartao.find((el) => {
-          return el.bandeira == bandeira
-        })
-        nomebandeira = band.nome
-      }
+        // nome bandeira
+        const nomebandeira = bandeira
+          ? (bandeirasCartao.find((el) => el.bandeira == bandeira)?.nome ?? null)
+          : null
 
-      // nome Tipo
-      let nometipo = null
-      if (tipo) {
-        const tp = tiposPagamento.find((el) => {
-          return el.tipo == tipo
-        })
-        nometipo = tp.nome
-      }
+        // nome Tipo
+        const nometipo = tipo ? (tiposPagamento.find((el) => el.tipo == tipo)?.nome ?? null) : null
 
-      // objeto do pagamento
-      const pagamento = {
-        codnegocioformapagamento: null,
-        uuid: uid(),
-        codformapagamento: codformapagamento,
-        formapagamento: fp.formapagamento,
-        alteracao: formataTimestampIso(new Date()),
-        criacao: formataTimestampIso(new Date()),
-        valorpagamento: valorpagamento,
-        codtitulo: codtitulo,
-        valorjuros: valorjuros,
-        valortotal: valorpagamento + valorjuros,
-        valortroco: valortroco,
-        avista: fp.avista,
-        tipo: tipo,
-        nometipo: nometipo,
-        integracao: false,
-        codpessoa: codpessoa,
-        parceiro: parceiro,
-        bandeira: bandeira,
-        nomebandeira: nomebandeira,
-        autorizacao: autorizacao,
-        parcelas: parcelas,
-        valorparcela: valorparcela,
-        dias: dias,
-      }
-      this.negocio.pagamentos.push(pagamento)
+        // objeto do pagamento
+        const pagamento = {
+          codnegocioformapagamento: null,
+          uuid: uid(),
+          codformapagamento,
+          formapagamento: fp.formapagamento,
+          alteracao: formataTimestampIso(new Date()),
+          criacao: formataTimestampIso(new Date()),
+          valorpagamento,
+          codtitulo,
+          valorjuros,
+          valortotal: Math.round((valorpagamento + (valorjuros || 0)) * 100) / 100,
+          valortroco,
+          avista: fp.avista,
+          tipo,
+          nometipo,
+          integracao: false,
+          codpessoa,
+          parceiro,
+          bandeira,
+          nomebandeira,
+          autorizacao,
+          parcelas,
+          valorparcela,
+          dias,
+          serialmaquineta,
+          cmc7,
+          chequevencimento,
+          chequecnpj,
+          chequeemitente,
+        }
+        this.negocio.pagamentos.push(pagamento)
 
-      // recalcula total por causa dos juros
-      this.recalcularValorTotal()
+        // recalcula total por causa dos juros
+        await this.recalcularValorTotal()
 
-      // salva
-      this.salvar()
+        // salva
+        await this.salvar()
+        return pagamento
+      })
     },
 
     async excluirPagamento(uuid) {
-      await this.recarregar()
-      const index = this.negocio.pagamentos.findIndex(function (item) {
-        return item.uuid == uuid
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        const index = this.negocio.pagamentos.findIndex(function (item) {
+          return item.uuid == uuid
+        })
+        if (index > -1) {
+          this.negocio.pagamentos.splice(index, 1)
+          // recalcula total por causa dos juros
+          await this.recalcularValorTotal()
+        }
+        await this.salvar()
       })
-      if (index > -1) {
-        this.negocio.pagamentos.splice(index, 1)
-        // recalcula total por causa dos juros
-        this.recalcularValorTotal()
-      }
-      this.salvar()
     },
 
     async fechar() {
@@ -1363,6 +1419,7 @@ export const negocioStore = defineStore('negocio', {
       } catch (error) {
         console.log(error)
       }
+      return false
     },
 
     async criarPagarMePedido(
@@ -1411,6 +1468,7 @@ export const negocioStore = defineStore('negocio', {
       } catch (error) {
         console.log(error)
       }
+      return false
     },
 
     async criarSaurusPedido(
