@@ -1,3 +1,12 @@
+import { markRaw, defineAsyncComponent } from 'vue'
+
+// Drawers do pátio: o MainLayout renderiza `meta.leftDrawer`/`meta.rightDrawer`
+// como componente. markRaw evita o Vue tornar o componente reativo via $route.
+const CargaLeftDrawer = markRaw(
+  defineAsyncComponent(() => import('components/carga/CargaLeftDrawer.vue')),
+)
+const CargaResumo = markRaw(defineAsyncComponent(() => import('components/carga/CargaResumo.vue')))
+
 const routes = [
   {
     path: '/',
@@ -14,10 +23,16 @@ const routes = [
       },
 
       {
-        path: 'carga',
+        // carga/:uuid abre a carga; carga/nova registra uma; sem uuid = só listagem.
+        path: 'carga/:uuid?',
         name: 'carga',
         component: () => import('pages/CargaPage.vue'),
-        meta: { auth: true, title: 'Pátio de Cargas' },
+        meta: {
+          auth: true,
+          title: 'Pátio de Cargas',
+          leftDrawer: CargaLeftDrawer,
+          rightDrawer: CargaResumo,
+        },
       },
       {
         path: 'extrato',

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { ehRecursoDeReferencia, invalidarReferencias } from 'src/utils/cacheReferencias'
 
 // baseURL = process.env.API_URL (= .../api/), padrão do monorepo. Os endpoints
 // de domínio ficam sob v1/ — cada chamada inclui o prefixo (ex.: 'v1/cultura'),
@@ -29,7 +30,14 @@ api.defaults.adapter = (config) => {
   const chave = chaveRequisicao(config)
   if (!chave) return adapterPadrao(config)
   if (requisicoesEmVoo.has(chave)) return requisicoesEmVoo.get(chave)
-  const promessa = adapterPadrao(config).finally(() => requisicoesEmVoo.delete(chave))
+  const promessa = adapterPadrao(config)
+    .then((resposta) => {
+      // Cadastro alterado com sucesso: o cache do pátio fica velho e o próximo
+      // sync refaz o pull (senão o registro novo só aparece depois do TTL).
+      if (ehRecursoDeReferencia(config.url)) invalidarReferencias()
+      return resposta
+    })
+    .finally(() => requisicoesEmVoo.delete(chave))
   requisicoesEmVoo.set(chave, promessa)
   return promessa
 }
