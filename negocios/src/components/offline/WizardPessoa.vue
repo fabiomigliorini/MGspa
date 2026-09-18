@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { LoadingBar, Notify, debounce, Dialog } from 'quasar'
 import { db } from 'boot/db'
 import {
@@ -29,6 +29,11 @@ const dialog = ref(false)
 const step = ref(3)
 const stepper = ref(null)
 const opcoes = ref([])
+// navegacao por teclado na lista de pessoas: 1o registro ja vem selecionado apos a pesquisa
+const indice = ref(0)
+const itensPessoa = ref([])
+// texto que gerou as opcoes atuais: Enter antes do debounce terminar nao confirma resultado velho
+const textoPesquisado = ref(null)
 const tiposTelefone = ref([
   {
     label: 'Celular',
@@ -74,6 +79,8 @@ const props = defineProps({
 const abrir = () => {
   step.value = 1
   opcoes.value = []
+  indice.value = 0
+  textoPesquisado.value = null
 
   cnpj.value = null
   if (sNegocio.negocio.cpf) {
@@ -199,9 +206,46 @@ const pesquisa = debounce(async () => {
   })
   // esconde barra
   opcoes.value = arrPessoas.slice(0, 20)
+  indice.value = 0
+  textoPesquisado.value = texto
   LoadingBar.stop()
   consultando.value = false
 }, 1000)
+
+const moverSelecao = (delta) => {
+  indice.value = Math.min(Math.max(indice.value + delta, 0), opcoes.value.length - 1)
+  nextTick(() => {
+    itensPessoa.value[indice.value]?.$el?.scrollIntoView({ block: 'nearest' })
+  })
+}
+
+// setas navegam na lista e Enter confirma, sem tirar o foco do campo de pesquisa
+const teclaPesquisa = (e) => {
+  switch (e.key) {
+    case 'ArrowDown':
+    case 'ArrowUp':
+      if (opcoes.value.length) {
+        e.preventDefault()
+        moverSelecao(e.key == 'ArrowDown' ? 1 : -1)
+      }
+      break
+
+    case 'Enter':
+      // impede o submit do form (salvar() e do passo de cadastro)
+      e.preventDefault()
+      if (consultando.value || (cnpj.value ?? '').trim() != textoPesquisado.value) {
+        return
+      }
+      if (opcoes.value.length) {
+        confirmar(opcoes.value[indice.value].codpessoa, null)
+      } else if (isCpfValido(cnpj.value)) {
+        confirmar(1, cnpj.value)
+      } else if (isCnpjValido(cnpj.value)) {
+        nova(false)
+      }
+      break
+  }
+}
 
 const nova = async (fisica) => {
   cnpj.value = cnpj.value.replace(/\D/g, '')
@@ -577,399 +621,409 @@ watch(
 </script>
 <template>
   <q-dialog v-model="dialog">
-    <q-card style="width: 800px; max-width: 100vw">
-      <q-form ref="formPessoa" @submit="salvar">
+    <q-card
+      class="column no-wrap"
+      style="width: 800px; max-width: 100vw; height: 800px; max-height: calc(100vh - 48px)"
+    >
+      <q-form ref="formPessoa" @submit="salvar" class="col column no-wrap">
         <q-card-section class="q-pa-none">
-          <q-scroll-area style="height: 800px; max-height: 70vh">
-            <q-stepper flat v-model="step" ref="stepper" color="primary" animated>
-              <q-step :name="1" title="DOC" icon="settings" :done="step > 1">
-                <div class="row">
-                  <q-input
-                    outlined
-                    autofocus
-                    label="Pesquisa"
-                    v-model="cnpj"
-                    class="col-12"
-                    @update:model-value="pesquisa()"
-                    :rules="[(val) => (!!val && val.length > 3) || 'Digite pelo menos 3 letras']"
-                    :inputmode="inputCnpjModeNumeric ? 'numeric' : 'search'"
-                    ref="inputCnpj"
-                  >
-                    <template v-slot:append>
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        @click=";((cnpj = null), inputCnpj.focus())"
-                        icon="close"
-                        tabindex="-1"
-                      />
-                      <q-btn
-                        flat
-                        dense
-                        round
-                        @click="
-                          ;((inputCnpjModeNumeric = !inputCnpjModeNumeric), inputCnpj.focus())
-                        "
-                        :icon="inputCnpjModeNumeric ? 'mdi-alphabetical-variant' : 'mdi-numeric'"
-                        tabindex="-1"
-                        class="desktop-hide"
-                      />
-                      <!-- <q-icon name="search" /> -->
-                    </template>
-                  </q-input>
-
-                  <div
-                    class="col-12 text-center"
-                    style="margin-top: 15vh; height: 300px"
-                    v-if="consultando"
-                  >
-                    <q-spinner color="grey" size="200px" />
-                  </div>
-                  <template v-else-if="opcoes.length == 0">
-                    <div class="col-12 text-center text-grey" style="margin-top: 15vh" v-if="cnpj">
-                      <q-icon name="mdi-account-cancel-outline" size="200px" />
-                      <br />
-                      Nenhuma cadastro de pessoa encontrado!
-                    </div>
-                    <div class="col-12 text-center text-grey" style="margin-top: 15vh" v-else>
-                      <q-icon name="mdi-account-search-outline" size="200px" />
-                      <br />
-                      Digite o CNPJ, CPF ou o nome para pesquisar!
-                    </div>
-                  </template>
-                  <q-list separator class="col-12" v-else>
-                    <template v-for="p in opcoes" :key="p.codpessoa">
-                      <q-item clickable v-ripple @click="confirmar(p.codpessoa, null)">
-                        <q-item-section avatar>
-                          <q-avatar
-                            color="primary"
-                            text-color="white"
-                            icon="person"
-                            v-if="p.fisica"
-                          />
-                          <q-avatar color="primary" text-color="white" icon="warehouse" v-else />
-                        </q-item-section>
-                        <q-item-section>
-                          <q-item-label class="text-h6 text-primary">{{ p.fantasia }}</q-item-label>
-                          <q-item-label class="text-weight-bolder text-grey-7" v-if="p.cnpj">
-                            {{ formataCnpjCpf(p.cnpj, p.fisica) }}
-                          </q-item-label>
-                          <q-item-label class="text-weight-bolder text-grey-7" v-if="p.ie">
-                            {{ formataIe(p.ie, p.uf) }}
-                          </q-item-label>
-                          <q-item-label caption>
-                            {{ p.pessoa }}
-                          </q-item-label>
-                        </q-item-section>
-                        <q-item-section class="gt-xs" side>
-                          <q-item-label class="text-weight-bolder text-grey-7" v-if="p.cidade">
-                            {{ p.cidade }} / {{ p.uf }}
-                          </q-item-label>
-                          <q-item-label v-if="p.bairro">
-                            {{ p.bairro }}
-                          </q-item-label>
-                          <q-item-label caption v-if="p.endereco">
-                            {{ p.endereco }}, {{ p.numero }}
-                          </q-item-label>
-                          <q-item-label v-if="p.complemento"> - {{ p.complemento }} </q-item-label>
-                        </q-item-section>
-                      </q-item>
-                    </template>
-                  </q-list>
+          <q-stepper flat v-model="step" ref="stepper" color="primary" animated>
+            <q-step :name="1" title="DOC" icon="settings" :done="step > 1">
+              <q-input
+                outlined
+                autofocus
+                label="Pesquisa"
+                v-model="cnpj"
+                @update:model-value="pesquisa()"
+                @keydown="teclaPesquisa"
+                :rules="[(val) => (!!val && val.length > 3) || 'Digite pelo menos 3 letras']"
+                :inputmode="inputCnpjModeNumeric ? 'numeric' : 'search'"
+                ref="inputCnpj"
+              >
+                <template v-slot:append>
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    @click=";((cnpj = null), inputCnpj.focus())"
+                    icon="close"
+                    tabindex="-1"
+                  />
+                  <q-btn
+                    flat
+                    dense
+                    round
+                    @click=";((inputCnpjModeNumeric = !inputCnpjModeNumeric), inputCnpj.focus())"
+                    :icon="inputCnpjModeNumeric ? 'mdi-alphabetical-variant' : 'mdi-numeric'"
+                    tabindex="-1"
+                    class="desktop-hide"
+                  />
+                  <!-- <q-icon name="search" /> -->
+                </template>
+              </q-input>
+            </q-step>
+            <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2">
+              <div class="text-grey-7">Selecione a Inscrição Estadual</div>
+            </q-step>
+            <q-step :name="3" title="OK" icon="create_new_folder" :done="step > 2">
+              <div class="text-grey-7">Confira os dados do cadastro</div>
+            </q-step>
+          </q-stepper>
+        </q-card-section>
+        <q-separator />
+        <q-scroll-area class="col">
+          <div class="q-px-lg q-py-md">
+            <div class="row" v-if="step == 1">
+              <div
+                class="col-12 text-center"
+                style="margin-top: 15vh; height: 300px"
+                v-if="consultando"
+              >
+                <q-spinner color="grey" size="200px" />
+              </div>
+              <template v-else-if="opcoes.length == 0">
+                <div class="col-12 text-center text-grey" style="margin-top: 15vh" v-if="cnpj">
+                  <q-icon name="mdi-account-cancel-outline" size="200px" />
+                  <br />
+                  Nenhuma cadastro de pessoa encontrado!
                 </div>
-              </q-step>
-
-              <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2">
-                <div
-                  class="col-12 text-center"
-                  style="margin-top: 15vh; height: 300px"
-                  v-if="consultando"
-                >
-                  <q-spinner color="primary" size="200px" v-if="consultando" />
+                <div class="col-12 text-center text-grey" style="margin-top: 15vh" v-else>
+                  <q-icon name="mdi-account-search-outline" size="200px" />
+                  <br />
+                  Digite o CNPJ, CPF ou o nome para pesquisar!
                 </div>
-                <q-list separator v-else>
-                  <template v-for="(ie, i) in consultaSefaz.retSefaz" :key="i">
-                    <q-item clickable v-ripple @click="parseIe(ie)">
-                      <q-item-section avatar>
-                        <q-avatar color="primary" text-color="white">
-                          {{ i + 1 }}
-                        </q-avatar>
-                      </q-item-section>
-                      <q-item-section>
-                        <q-item-label class="text-h6 text-primary">
-                          <b class="text-negative" v-if="ie.cSit == '0'"> Não Habilitada! </b>
-                          {{ formataIe(ie.IE, ie.UF) }}/{{ ie.UF }}
-                        </q-item-label>
-                        <q-item-label class="text-weight-bolder text-grey-7" v-if="ie.xFant">
-                          {{ ie.xFant }}
-                        </q-item-label>
-                        <q-item-label caption v-if="ie.xNome">
-                          {{ ie.xNome }}
-                        </q-item-label>
-                      </q-item-section>
-                      <q-item-section class="gt-xs" side v-if="ie.ender">
-                        <template v-if="ie.ender[0] != undefined">
-                          <q-item-label class="text-weight-bolder text-grey-7">
-                            {{ ie.ender[0].xMun }}/{{ ie.UF }}
-                          </q-item-label>
-                          <q-item-label v-if="ie.ender[0].xBairro">
-                            {{ ie.ender[0].xBairro }}
-                          </q-item-label>
-                          <q-item-label caption v-if="ie.ender[0].xLgr">
-                            {{ ie.ender[0].xLgr }}, {{ ie.ender[0].nro }}
-                          </q-item-label>
-                          <q-item-label caption v-if="ie.ender[0].xCpl">
-                            {{ ie.ender[0].xCpl }}
-                          </q-item-label>
-                        </template>
-                      </q-item-section>
-                    </q-item>
-                  </template>
-                  <q-item clickable v-ripple @click="outraIe()">
+              </template>
+              <q-list separator class="col-12" v-else>
+                <template v-for="(p, i) in opcoes" :key="p.codpessoa">
+                  <q-item
+                    :ref="(el) => (itensPessoa[i] = el)"
+                    clickable
+                    v-ripple
+                    :active="i === indice"
+                    active-class="bg-blue-1 text-primary"
+                    @click="confirmar(p.codpessoa, null)"
+                  >
                     <q-item-section avatar>
-                      <q-avatar color="negative" text-color="white"> S </q-avatar>
+                      <q-avatar color="primary" text-color="white" icon="person" v-if="p.fisica" />
+                      <q-avatar color="primary" text-color="white" icon="warehouse" v-else />
                     </q-item-section>
                     <q-item-section>
-                      <q-item-label class="text-h6 text-negative"> Sem IE / Outra IE </q-item-label>
+                      <q-item-label class="text-h6 text-primary">{{ p.fantasia }}</q-item-label>
+                      <q-item-label class="text-weight-bolder text-grey-7" v-if="p.cnpj">
+                        {{ formataCnpjCpf(p.cnpj, p.fisica) }}
+                      </q-item-label>
+                      <q-item-label class="text-weight-bolder text-grey-7" v-if="p.ie">
+                        {{ formataIe(p.ie, p.uf) }}
+                      </q-item-label>
                       <q-item-label caption>
-                        Pessoa <b>NÃO TEM INSCRIÇÃO</b> estadual <b>OU</b> deseja
-                        <b>INFORMAR MANUALMENTE</b>.
+                        {{ p.pessoa }}
                       </q-item-label>
                     </q-item-section>
+                    <q-item-section class="gt-xs" side>
+                      <q-item-label class="text-weight-bolder text-grey-7" v-if="p.cidade">
+                        {{ p.cidade }} / {{ p.uf }}
+                      </q-item-label>
+                      <q-item-label v-if="p.bairro">
+                        {{ p.bairro }}
+                      </q-item-label>
+                      <q-item-label caption v-if="p.endereco">
+                        {{ p.endereco }}, {{ p.numero }}
+                      </q-item-label>
+                      <q-item-label v-if="p.complemento"> - {{ p.complemento }} </q-item-label>
+                    </q-item-section>
                   </q-item>
-                </q-list>
-              </q-step>
-
-              <q-step :name="3" title="OK" icon="create_new_folder" :done="step > 2">
-                <div class="row q-col-gutter-md q-mb-md">
+                </template>
+              </q-list>
+            </div>
+            <template v-else-if="step == 2">
+              <div
+                class="col-12 text-center"
+                style="margin-top: 15vh; height: 300px"
+                v-if="consultando"
+              >
+                <q-spinner color="primary" size="200px" v-if="consultando" />
+              </div>
+              <q-list separator v-else>
+                <template v-for="(ie, i) in consultaSefaz.retSefaz" :key="i">
+                  <q-item clickable v-ripple @click="parseIe(ie)">
+                    <q-item-section avatar>
+                      <q-avatar color="primary" text-color="white">
+                        {{ i + 1 }}
+                      </q-avatar>
+                    </q-item-section>
+                    <q-item-section>
+                      <q-item-label class="text-h6 text-primary">
+                        <b class="text-negative" v-if="ie.cSit == '0'"> Não Habilitada! </b>
+                        {{ formataIe(ie.IE, ie.UF) }}/{{ ie.UF }}
+                      </q-item-label>
+                      <q-item-label class="text-weight-bolder text-grey-7" v-if="ie.xFant">
+                        {{ ie.xFant }}
+                      </q-item-label>
+                      <q-item-label caption v-if="ie.xNome">
+                        {{ ie.xNome }}
+                      </q-item-label>
+                    </q-item-section>
+                    <q-item-section class="gt-xs" side v-if="ie.ender">
+                      <template v-if="ie.ender[0] != undefined">
+                        <q-item-label class="text-weight-bolder text-grey-7">
+                          {{ ie.ender[0].xMun }}/{{ ie.UF }}
+                        </q-item-label>
+                        <q-item-label v-if="ie.ender[0].xBairro">
+                          {{ ie.ender[0].xBairro }}
+                        </q-item-label>
+                        <q-item-label caption v-if="ie.ender[0].xLgr">
+                          {{ ie.ender[0].xLgr }}, {{ ie.ender[0].nro }}
+                        </q-item-label>
+                        <q-item-label caption v-if="ie.ender[0].xCpl">
+                          {{ ie.ender[0].xCpl }}
+                        </q-item-label>
+                      </template>
+                    </q-item-section>
+                  </q-item>
+                </template>
+                <q-item clickable v-ripple @click="outraIe()">
+                  <q-item-section avatar>
+                    <q-avatar color="negative" text-color="white"> S </q-avatar>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label class="text-h6 text-negative"> Sem IE / Outra IE </q-item-label>
+                    <q-item-label caption>
+                      Pessoa <b>NÃO TEM INSCRIÇÃO</b> estadual <b>OU</b> deseja
+                      <b>INFORMAR MANUALMENTE</b>.
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </template>
+            <template v-else>
+              <div class="row q-col-gutter-md q-mb-md">
+                <q-input
+                  class="col-md-3 col-sm-6 col-xs-12"
+                  outlined
+                  v-model="pessoa.cnpj"
+                  label="CPF"
+                  mask="###.###.###-##"
+                  :rules="[(val) => !!val || 'Obrigatório']"
+                  v-if="pessoa.fisica"
+                  inputmode="numeric"
+                />
+                <q-input
+                  class="col-md-3 col-sm-6 col-xs-12"
+                  outlined
+                  v-model="pessoa.cnpj"
+                  label="CNPJ"
+                  mask="##.###.###/####-##"
+                  :rules="[
+                    (val) => !!val || 'Obrigatório',
+                    (val) => isCnpjValido(val) || 'Inválido',
+                  ]"
+                  v-else
+                  inputmode="numeric"
+                />
+                <q-input
+                  class="col-md-3 col-sm-6 col-xs-12"
+                  outlined
+                  v-model="pessoa.ie"
+                  label="Inscrição Estadual"
+                  :rules="[(val) => validarIe(val)]"
+                  counter
+                  maxlength="20"
+                  inputmode="tel"
+                />
+              </div>
+              <div class="row q-col-gutter-md q-mb-md">
+                <MgInputFormatado
+                  class="col-md-6 col-sm-12 col-xs-12"
+                  outlined
+                  v-model="pessoa.pessoa"
+                  label="Razão Social"
+                  :rules="[
+                    (val) => !!val || 'Obrigatório',
+                    (val) => val.length > 3 || 'Muito Curto',
+                    (val) => val.length <= 100 || 'Muito longo, abrevie!',
+                  ]"
+                  counter
+                  maxlength="100"
+                  autofocus
+                />
+                <MgInputFormatado
+                  class="col-md-6 col-sm-12 col-xs-12"
+                  outlined
+                  v-model="pessoa.fantasia"
+                  label="Fantasia"
+                  :rules="[
+                    (val) => !!val || 'Obrigatório',
+                    (val) => val.length > 3 || 'Muito Curto',
+                    (val) => val.length <= 50 || 'Muito longo, abrevie!',
+                  ]"
+                  maxlength="50"
+                />
+              </div>
+              <div class="row q-col-gutter-md q-mb-md">
+                <template v-for="(e, i) in pessoa.emails" :key="i">
                   <q-input
-                    class="col-md-3 col-sm-6 col-xs-12"
-                    outlined
-                    v-model="pessoa.cnpj"
-                    label="CPF"
-                    mask="###.###.###-##"
-                    :rules="[(val) => !!val || 'Obrigatório']"
-                    v-if="pessoa.fisica"
-                    inputmode="numeric"
-                  />
-                  <q-input
-                    class="col-md-3 col-sm-6 col-xs-12"
-                    outlined
-                    v-model="pessoa.cnpj"
-                    label="CNPJ"
-                    mask="##.###.###/####-##"
-                    :rules="[
-                      (val) => !!val || 'Obrigatório',
-                      (val) => isCnpjValido(val) || 'Inválido',
-                    ]"
-                    v-else
-                    inputmode="numeric"
-                  />
-                  <q-input
-                    class="col-md-3 col-sm-6 col-xs-12"
-                    outlined
-                    v-model="pessoa.ie"
-                    label="Inscrição Estadual"
-                    :rules="[(val) => validarIe(val)]"
-                    counter
-                    maxlength="20"
-                    inputmode="tel"
-                  />
-                </div>
-                <div class="row q-col-gutter-md q-mb-md">
-                  <MgInputFormatado
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
-                    v-model="pessoa.pessoa"
-                    label="Razão Social"
+                    v-model="pessoa.emails[i]"
+                    label="Email"
                     :rules="[
                       (val) => !!val || 'Obrigatório',
-                      (val) => val.length > 3 || 'Muito Curto',
-                      (val) => val.length <= 100 || 'Muito longo, abrevie!',
+                      (val) => isEmailValido(val) || 'Inválido',
+                      (val) => val.length <= 100 || 'Muito longo!',
                     ]"
                     counter
                     maxlength="100"
-                    autofocus
-                  />
-                  <MgInputFormatado
+                    inputmode="email"
+                    type="email"
+                  >
+                    <template v-slot:append>
+                      <q-btn flat round dense icon="add" @click="novoEmail()" tabindex="-1" />
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="remove"
+                        @click="removerEmail(i)"
+                        v-if="pessoa.emails.length > 1"
+                        tabindex="-1"
+                      />
+                    </template>
+                  </q-input>
+                </template>
+              </div>
+              <div class="row q-col-gutter-md q-mb-md">
+                <template v-for="(e, i) in pessoa.telefones" :key="i">
+                  <q-input
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
-                    v-model="pessoa.fantasia"
-                    label="Fantasia"
+                    v-model="pessoa.telefones[i].numero"
+                    label="Telefone"
+                    ref="inputTelefone"
                     :rules="[
                       (val) => !!val || 'Obrigatório',
-                      (val) => val.length > 3 || 'Muito Curto',
-                      (val) => val.length <= 50 || 'Muito longo, abrevie!',
+                      (val) => isTelefoneValido(val, pessoa.telefones[i].tipo) || 'Inválido',
+                      (val) => val.length <= 20 || 'Muito longo!',
                     ]"
+                    counter
+                    maxlength="20"
+                    :mask="mascaraTelefone(pessoa.telefones[i].tipo)"
+                    inputmode="tel"
+                  >
+                    <template v-slot:before>
+                      <q-select
+                        outlined
+                        v-model="pessoa.telefones[i].tipo"
+                        :options="tiposTelefone"
+                        label="Tipo"
+                        emit-value
+                        map-options
+                        style="width: 90px"
+                      />
+                    </template>
+                    <template v-slot:append>
+                      <q-btn flat round dense icon="add" @click="novoTelefone()" tabindex="-1" />
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="remove"
+                        @click="removerTelefone(i)"
+                        v-if="pessoa.telefones.length > 1"
+                        tabindex="-1"
+                      />
+                    </template>
+                  </q-input>
+                </template>
+              </div>
+
+              <template v-for="(e, i) in pessoa.enderecos" :key="i">
+                <div class="row q-col-gutter-md q-mb-md">
+                  <q-input
+                    class="col-md-3 col-sm-3 col-xs-12"
+                    outlined
+                    v-model="pessoa.enderecos[i].cep"
+                    label="CEP"
+                    :rules="[(val) => !!val || 'Obrigatório']"
+                    mask="##.###-###"
+                    @update:model-value="consultarCep(i)"
+                    inputmode="numeric"
+                  >
+                  </q-input>
+                  <MgInputFormatado
+                    class="col-md-6 col-sm-6 col-xs-8"
+                    outlined
+                    v-model="pessoa.enderecos[i].endereco"
+                    label="Endereço"
+                    :rules="[
+                      (val) => !!val || 'Obrigatório',
+                      (val) => val.length <= 60 || 'Muito longo!',
+                    ]"
+                    counter
+                    maxlength="60"
+                  >
+                    <template v-slot:append>
+                      <q-btn flat round dense icon="add" @click="novoEndereco()" tabindex="-1" />
+                      <q-btn
+                        flat
+                        round
+                        dense
+                        icon="remove"
+                        @click="removerEndereco(i)"
+                        v-if="pessoa.enderecos.length > 1"
+                        tabindex="-1"
+                      />
+                    </template>
+                  </MgInputFormatado>
+                  <q-input
+                    class="col-md-3 col-sm-3 col-xs-4"
+                    outlined
+                    v-model="pessoa.enderecos[i].numero"
+                    label="Número"
+                    :rules="[
+                      (val) => !!val || 'Obrigatório',
+                      (val) => val.length <= 10 || 'Muito longo!',
+                    ]"
+                    counter
+                    maxlength="10"
+                    inputmode="tel"
+                  >
+                  </q-input>
+                  <MgInputFormatado
+                    class="col-md-3 col-sm-3 col-xs-12"
+                    outlined
+                    v-model="pessoa.enderecos[i].bairro"
+                    label="Bairro"
+                    :rules="[
+                      (val) => !!val || 'Obrigatório',
+                      (val) => val.length <= 50 || 'Muito longo!',
+                    ]"
+                    counter
                     maxlength="50"
+                  >
+                  </MgInputFormatado>
+                  <MgInputFormatado
+                    class="col-md-3 col-sm-3 col-xs-12"
+                    outlined
+                    v-model="pessoa.enderecos[i].complemento"
+                    label="Complemento"
+                    :rules="[(val) => String(val).length <= 50 || 'Muito longo!']"
+                    counter
+                    maxlength="50"
+                  >
+                  </MgInputFormatado>
+                  <select-cidade
+                    outlined
+                    v-model="pessoa.enderecos[i].codcidade"
+                    class="col-md-6 col-sm-6 col-xs-12"
+                    label="Cidade"
+                    :rules="[(val) => !!val || 'Obrigatório']"
                   />
                 </div>
-                <div class="row q-col-gutter-md q-mb-md">
-                  <template v-for="(e, i) in pessoa.emails" :key="i">
-                    <q-input
-                      class="col-md-6 col-sm-12 col-xs-12"
-                      outlined
-                      v-model="pessoa.emails[i]"
-                      label="Email"
-                      :rules="[
-                        (val) => !!val || 'Obrigatório',
-                        (val) => isEmailValido(val) || 'Inválido',
-                        (val) => val.length <= 100 || 'Muito longo!',
-                      ]"
-                      counter
-                      maxlength="100"
-                      inputmode="email"
-                      type="email"
-                    >
-                      <template v-slot:append>
-                        <q-btn flat round dense icon="add" @click="novoEmail()" tabindex="-1" />
-                        <q-btn
-                          flat
-                          round
-                          dense
-                          icon="remove"
-                          @click="removerEmail(i)"
-                          v-if="pessoa.emails.length > 1"
-                          tabindex="-1"
-                        />
-                      </template>
-                    </q-input>
-                  </template>
-                </div>
-                <div class="row q-col-gutter-md q-mb-md">
-                  <template v-for="(e, i) in pessoa.telefones" :key="i">
-                    <q-input
-                      class="col-md-6 col-sm-12 col-xs-12"
-                      outlined
-                      v-model="pessoa.telefones[i].numero"
-                      label="Telefone"
-                      ref="inputTelefone"
-                      :rules="[
-                        (val) => !!val || 'Obrigatório',
-                        (val) => isTelefoneValido(val, pessoa.telefones[i].tipo) || 'Inválido',
-                        (val) => val.length <= 20 || 'Muito longo!',
-                      ]"
-                      counter
-                      maxlength="20"
-                      :mask="mascaraTelefone(pessoa.telefones[i].tipo)"
-                      inputmode="tel"
-                    >
-                      <template v-slot:before>
-                        <q-select
-                          outlined
-                          v-model="pessoa.telefones[i].tipo"
-                          :options="tiposTelefone"
-                          label="Tipo"
-                          emit-value
-                          map-options
-                          style="width: 90px"
-                        />
-                      </template>
-                      <template v-slot:append>
-                        <q-btn flat round dense icon="add" @click="novoTelefone()" tabindex="-1" />
-                        <q-btn
-                          flat
-                          round
-                          dense
-                          icon="remove"
-                          @click="removerTelefone(i)"
-                          v-if="pessoa.telefones.length > 1"
-                          tabindex="-1"
-                        />
-                      </template>
-                    </q-input>
-                  </template>
-                </div>
-
-                <template v-for="(e, i) in pessoa.enderecos" :key="i">
-                  <div class="row q-col-gutter-md q-mb-md">
-                    <q-input
-                      class="col-md-3 col-sm-3 col-xs-12"
-                      outlined
-                      v-model="pessoa.enderecos[i].cep"
-                      label="CEP"
-                      :rules="[(val) => !!val || 'Obrigatório']"
-                      mask="##.###-###"
-                      @update:model-value="consultarCep(i)"
-                      inputmode="numeric"
-                    >
-                    </q-input>
-                    <MgInputFormatado
-                      class="col-md-6 col-sm-6 col-xs-8"
-                      outlined
-                      v-model="pessoa.enderecos[i].endereco"
-                      label="Endereço"
-                      :rules="[
-                        (val) => !!val || 'Obrigatório',
-                        (val) => val.length <= 60 || 'Muito longo!',
-                      ]"
-                      counter
-                      maxlength="60"
-                    >
-                      <template v-slot:append>
-                        <q-btn flat round dense icon="add" @click="novoEndereco()" tabindex="-1" />
-                        <q-btn
-                          flat
-                          round
-                          dense
-                          icon="remove"
-                          @click="removerEndereco(i)"
-                          v-if="pessoa.enderecos.length > 1"
-                          tabindex="-1"
-                        />
-                      </template>
-                    </MgInputFormatado>
-                    <q-input
-                      class="col-md-3 col-sm-3 col-xs-4"
-                      outlined
-                      v-model="pessoa.enderecos[i].numero"
-                      label="Número"
-                      :rules="[
-                        (val) => !!val || 'Obrigatório',
-                        (val) => val.length <= 10 || 'Muito longo!',
-                      ]"
-                      counter
-                      maxlength="10"
-                      inputmode="tel"
-                    >
-                    </q-input>
-                    <MgInputFormatado
-                      class="col-md-3 col-sm-3 col-xs-12"
-                      outlined
-                      v-model="pessoa.enderecos[i].bairro"
-                      label="Bairro"
-                      :rules="[
-                        (val) => !!val || 'Obrigatório',
-                        (val) => val.length <= 50 || 'Muito longo!',
-                      ]"
-                      counter
-                      maxlength="50"
-                    >
-                    </MgInputFormatado>
-                    <MgInputFormatado
-                      class="col-md-3 col-sm-3 col-xs-12"
-                      outlined
-                      v-model="pessoa.enderecos[i].complemento"
-                      label="Complemento"
-                      :rules="[(val) => String(val).length <= 50 || 'Muito longo!']"
-                      counter
-                      maxlength="50"
-                    >
-                    </MgInputFormatado>
-                    <select-cidade
-                      outlined
-                      v-model="pessoa.enderecos[i].codcidade"
-                      class="col-md-6 col-sm-6 col-xs-12"
-                      label="Cidade"
-                      :rules="[(val) => !!val || 'Obrigatório']"
-                    />
-                  </div>
-                </template>
-              </q-step>
-            </q-stepper>
-          </q-scroll-area>
-        </q-card-section>
+              </template>
+            </template>
+          </div>
+        </q-scroll-area>
+        <q-separator />
         <q-card-actions>
           <q-btn flat color="primary" label="Salvar" type="submit" v-if="step == 3" />
           <q-btn
