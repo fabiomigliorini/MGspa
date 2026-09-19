@@ -1,10 +1,10 @@
 ---
 id: TASK-112
 title: Certificado do nginx de dev nao tem SAN e quebra os XHR do navegador
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-17 21:01'
-updated_date: '2026-09-18 18:53'
+updated_date: '2026-09-19 19:47'
 labels:
   - api
 dependencies: []
