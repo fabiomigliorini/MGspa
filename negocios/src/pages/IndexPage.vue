@@ -6,6 +6,7 @@ import { negocioStore } from 'stores/negocio'
 import { produtoStore } from 'stores/produto'
 import { useAuthStore } from 'stores/auth'
 import { pagarMeStore } from 'stores/pagar-me'
+import { saurusStore } from 'stores/saurus'
 import { pixStore } from 'stores/pix'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
 import InputBarras from 'components/offline/InputBarras.vue'
@@ -24,6 +25,7 @@ const sNegocio = negocioStore()
 const sProduto = produtoStore()
 const sAuth = useAuthStore()
 const sPagarMe = pagarMeStore()
+const sSaurus = saurusStore()
 const sPix = pixStore()
 const listagemNotasRef = ref(null)
 const dialogOrcamentoSelecionar = ref(false)
@@ -80,34 +82,13 @@ const hotkeys = (event) => {
       comanda()
       break
 
-    case 'F6': // Dinheiro
+    // Receber: F8 é a oficial; F6/F7/F9 fazem o mesmo para não quebrar o hábito antigo
+    case 'F6':
+    case 'F7':
+    case 'F8':
+    case 'F9':
       event.preventDefault()
-      dinheiro()
-      break
-
-    case 'F7': // PagarMe
-      event.preventDefault()
-      switch (sNegocio.padrao.maquineta) {
-        case 'pagarme':
-          pagarMe()
-          break
-        case 'saurus':
-          saurus()
-          break
-        default:
-          pagarMe()
-          break
-      }
-      break
-
-    case 'F8': // PIX
-      event.preventDefault()
-      pix()
-      break
-
-    case 'F9': // A Prazo
-      event.preventDefault()
-      prazo()
+      receber()
       break
 
     case 'F10': // Pessoa
@@ -174,13 +155,12 @@ const carregareOuCriarNegocio = async () => {
 }
 
 const fecharDialogs = async () => {
-  sNegocio.dialog.pagamentoDinheiro = false
+  sNegocio.dialog.receber = false
   sNegocio.dialog.valores = false
-  sNegocio.dialog.pagamentoPix = false
-  sNegocio.dialog.pagamentoPagarMe = false
-  sNegocio.dialog.pagamentoCartaoManual = false
   sAuth.dialog.login = false
   sPagarMe.dialog.detalhesPedido = false
+  sSaurus.dialog.detalhesPedido = false
+  sPix.dialog.detalhesPixCob = false
   dialogOrcamentoSelecionar.value = false
   dialogOrcamento.value = false
   dialogOrcamentoTermica.value = false
@@ -252,70 +232,21 @@ const cancelar = async () => {
   })
 }
 
-const dinheiro = async () => {
+const receber = async () => {
   if (!sNegocio.podeEditar) {
     return
   }
-  await fecharDialogs()
-  sNegocio.dialog.pagamentoDinheiro = true
-}
-
-const pagarMe = async () => {
-  if (!sNegocio.podeEditar) {
-    return
-  }
-  if (sPagarMe.dialog.detalhesPedido) {
-    await sPagarMe.consultarPedido()
-    if (sPagarMe.pedido.status == 2) {
-      sPagarMe.dialog.detalhesPedido = false
-    }
-    abrirDocumentoSeFechado()
+  if (!sNegocio.negocio.financeiro) {
+    Notify.create({
+      type: 'negative',
+      message: 'Esta natureza de operação não tem financeiro!',
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: 'close', color: 'white' }],
+    })
     return
   }
   await fecharDialogs()
-  sNegocio.dialog.pagamentoPagarMe = true
-  return
-}
-
-const saurus = async () => {
-  if (!sNegocio.podeEditar) {
-    return
-  }
-  if (sPagarMe.dialog.detalhesPedido) {
-    await sPagarMe.consultarPedido()
-    if (sPagarMe.pedido.status == 2) {
-      sPagarMe.dialog.detalhesPedido = false
-    }
-    abrirDocumentoSeFechado()
-    return
-  }
-  await fecharDialogs()
-  sNegocio.dialog.pagamentoSaurus = true
-  return
-}
-
-const pix = async () => {
-  if (!sNegocio.podeEditar) {
-    return
-  }
-  if (sPix.dialog.detalhesPixCob) {
-    await sPix.consultarPixCob()
-    if (sPix.pixCob.status == 'CONCLUIDA') {
-      sPix.dialog.detalhesPixCob = false
-    }
-    abrirDocumentoSeFechado()
-    return
-  }
-  await fecharDialogs()
-  sNegocio.dialog.pagamentoPix = true
-}
-
-const prazo = async () => {
-  if (!sNegocio.podeEditar) {
-    return
-  }
-  await fecharDialogs()
-  sNegocio.dialog.pagamentoPrazo = true
+  sNegocio.abrirReceber()
 }
 
 const checarImpressora = () => {
@@ -529,6 +460,7 @@ const romaneioOuNota = async () => {
   imprimirAbrirRomaneio()
 }
 
+// saldo zerou → fecha a venda; ainda falta → o painel de totais pisca o que falta
 const pagamentoAdicionado = () => {
   if (!sNegocio.podeEditar) {
     return
@@ -542,14 +474,12 @@ const pagamentoAdicionado = () => {
 onMounted(() => {
   carregareOuCriarNegocio()
   document.addEventListener('keydown', hotkeys)
-  emitter.on('pagamentoAdicionado', () => {
-    pagamentoAdicionado()
-  })
+  emitter.on('pagamentoAdicionado', pagamentoAdicionado)
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', hotkeys)
-  emitter.off('pagamentoAdicionado')
+  emitter.off('pagamentoAdicionado', pagamentoAdicionado)
 })
 </script>
 

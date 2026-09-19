@@ -137,6 +137,11 @@ const modeloVazio = () => ({
   concedido: true,
   recorrente: true,
   observacao: '',
+  // Como a fatia está gravada hoje, para o aviso de rateio não somar o valor
+  // antigo com o que está sendo digitado. Não vai no payload.
+  _codindicadorOriginal: null,
+  _percentualOriginal: null,
+  _concedidoOriginal: false,
 })
 
 const totalQ = computed(
@@ -171,6 +176,9 @@ const editarRubrica = (r) => {
     concedido: r.concedido,
     recorrente: r.recorrente,
     observacao: r.observacao || '',
+    _codindicadorOriginal: r.codindicador,
+    _percentualOriginal: r.percentual,
+    _concedidoOriginal: r.concedido,
   }
   dialogRubrica.value = true
 }
@@ -206,6 +214,79 @@ watch(
     }
   },
 )
+
+// --- RATEIO DO SETOR COLETIVO (xerox, venda remota) ---
+//
+// Num setor coletivo o indicador é um bolo só: a comissão do setor (o "pool",
+// ex.: 6% da venda do xerox) é dividida entre a equipe, e o gerente dita a
+// fatia de cada um depois que o período fecha. O percentual gravado na rubrica
+// é o EFETIVO, com a fatia já embutida (20% de 6% = 1,2) — é assim desde que o
+// rh_rubricas.sql colapsou o rateio no percentual.
+//
+// O que faltava era enxergar a conta: sem o pool à vista, a multiplicação era
+// feita de cabeça e as fatias do setor não fechavam. Aqui só se mostra; quem
+// paga continua sendo o percentual efetivo, sem normalização (soma abaixo de
+// 100% é a perda do mês — regra definida em 16/09/2026, TASK-4).
+
+const arredonda = (n) => Math.round((Number(n) || 0) * 1000) / 1000
+
+// Indicador coletivo escolhido como base, quando ele rateia comissão.
+const rateioBase = computed(() => {
+  if (modelRubrica.value.tipovalor !== 'P') return null
+  const ind = (indicadores.value || []).find(
+    (i) => i.codindicador === modelRubrica.value.codindicador,
+  )
+  return ind?.rateio?.pool_percentual ? ind : null
+})
+
+// A conta com o valor que está sendo digitado, descontando a fatia que ESTA
+// rubrica já tem gravada — senão editar somaria o valor antigo com o novo.
+const rateioInfo = computed(() => {
+  const ind = rateioBase.value
+  if (!ind) return null
+
+  const pool = Number(ind.rateio.pool_percentual) || 0
+  let somaOutros = Number(ind.rateio.soma_percentual) || 0
+
+  if (
+    modelRubrica.value._codindicadorOriginal === ind.codindicador &&
+    modelRubrica.value._concedidoOriginal
+  ) {
+    somaOutros -= Number(modelRubrica.value._percentualOriginal) || 0
+  }
+
+  const percentual = Number(modelRubrica.value.percentual) || 0
+  const distribuido = arredonda(((somaOutros + percentual) / pool) * 100)
+
+  return {
+    pool,
+    poolValor: Number(ind.rateio.pool_valor) || 0,
+    outros: arredonda((somaOutros / pool) * 100),
+    fatia: arredonda((percentual / pool) * 100),
+    distribuido,
+    sobra: arredonda(100 - distribuido),
+    valor: ((Number(ind.valoracumulado) || 0) * percentual) / 100,
+    excedeu: distribuido > 100.001,
+  }
+})
+
+// A fatia é o número que o gerente passa; o percentual efetivo é derivado dela.
+// Ref própria (em vez de computed com setter) para digitar sem laço de reação.
+const fatiaRateio = ref(null)
+
+watch(
+  () => [rateioInfo.value?.pool, modelRubrica.value.percentual],
+  () => {
+    fatiaRateio.value = rateioInfo.value ? rateioInfo.value.fatia : null
+  },
+  { immediate: true },
+)
+
+const aplicarFatiaRateio = (valor) => {
+  const pool = rateioInfo.value?.pool
+  if (!pool) return
+  modelRubrica.value.percentual = Math.round((((Number(valor) || 0) * pool) / 100) * 1e6) / 1e6
+}
 
 const salvarRubrica = async () => {
   if (salvando.value) return
@@ -697,6 +778,44 @@ watch(
                   </template>
                 </q-select>
               </div>
+
+              <!-- RATEIO DO SETOR: fatia do pool + quanto o setor já distribuiu -->
+              <template v-if="rateioInfo">
+                <div class="col-4">
+                  <MgInputValor
+                    :model-value="fatiaRateio"
+                    @update:model-value="aplicarFatiaRateio"
+                    label="Fatia do pool %"
+                    hint="O % que o gerente deu"
+                  />
+                </div>
+                <div class="col-8">
+                  <q-banner
+                    dense
+                    rounded
+                    :class="rateioInfo.excedeu ? 'bg-red-1 text-red-9' : 'bg-blue-1 text-blue-9'"
+                  >
+                    <template #avatar>
+                      <q-icon :name="rateioInfo.excedeu ? 'warning' : 'pie_chart'" />
+                    </template>
+                    <div>
+                      Pool do setor: <strong>{{ rateioInfo.pool }}%</strong> da venda =
+                      <strong>{{ formataNumero(rateioInfo.poolValor) }}</strong>
+                    </div>
+                    <div>
+                      Outros {{ rateioInfo.outros }}% + esta {{ rateioInfo.fatia }}% =
+                      <strong>{{ rateioInfo.distribuido }}%</strong> do pool
+                    </div>
+                    <div v-if="rateioInfo.excedeu" class="text-weight-medium">
+                      Passou de 100%: o setor receberia mais que a comissão dele.
+                    </div>
+                    <div v-else-if="rateioInfo.sobra > 0">
+                      Sobram {{ rateioInfo.sobra }}%, que não são pagos a ninguém (perda do mês).
+                    </div>
+                    <div v-else>Fecha 100% do pool.</div>
+                  </q-banner>
+                </div>
+              </template>
             </template>
 
             <!-- UNITÁRIO × QUANTIDADE -->

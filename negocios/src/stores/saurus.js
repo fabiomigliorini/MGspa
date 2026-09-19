@@ -8,78 +8,43 @@ const sNegocio = negocioStore()
 export const saurusStore = defineStore('saurus', {
   state: () => ({
     pedido: {},
-    pedidosPendentes: {},
     dialog: {
       detalhesPedido: false,
     },
   }),
 
   actions: {
-    async consultarPedidosPendentes() {
-      try {
-        const { data } = await api.get('/v1/pdv/saurus/pedido/pendentes')
-        this.pedidosPendentes = data.data
-      } catch (error) {
-        console.log(error)
-        var message = error?.response?.data?.message
-        if (!message) {
-          message = error?.message
-        }
-        Notify.create({
-          type: 'negative',
-          message: message,
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        return false
-      }
-    },
-
-    async importarPedidosPendentes() {
-      try {
-        const { data } = await api.patch('/v1/pdv/saurus/pedido/pendentes')
-        this.pedidosPendentes = data.data
-      } catch (error) {
-        console.log(error)
-        var message = error?.response?.data?.message
-        if (!message) {
-          message = error?.message
-        }
-        Notify.create({
-          type: 'negative',
-          message: message,
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        return false
-      }
-    },
-
-    async consultarPedido() {
+    // silencioso = consulta automática (sem Notify)
+    async consultarPedido(silencioso = false) {
       try {
         const { data } = await api.post(
           '/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido + '/consultar',
         )
         this.pedido = data.data
         await this.atualizarSaurusPedido()
-        Notify.create({
-          type: 'positive',
-          message: 'Consulta Efetuada!',
-          timeout: 1000, // 1 segundo
-          actions: [{ icon: 'close', color: 'white' }],
-        })
+        if (!silencioso) {
+          Notify.create({
+            type: 'positive',
+            message: 'Consulta Efetuada!',
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+        }
+        return true
       } catch (error) {
         console.log(error)
-        var message = error?.response?.data?.message
-        if (!message) {
-          message = error?.message
+        if (!silencioso) {
+          var message = error?.response?.data?.message
+          if (!message) {
+            message = error?.message
+          }
+          Notify.create({
+            type: 'negative',
+            message: message,
+            timeout: 3000, // 3 segundos
+            actions: [{ icon: 'close', color: 'white' }],
+          })
         }
-        Notify.create({
-          type: 'negative',
-          message: message,
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
         return false
       }
     },
@@ -111,9 +76,7 @@ export const saurusStore = defineStore('saurus', {
 
     async cancelarPedido() {
       try {
-        const { data } = await api.delete(
-          '/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido,
-        )
+        const { data } = await api.delete('/v1/pdv/saurus/pedido/' + this.pedido.codsauruspedido)
         this.pedido = data.data
         await this.atualizarSaurusPedido()
         Notify.create({

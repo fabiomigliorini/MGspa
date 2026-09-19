@@ -503,10 +503,11 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-    public function criarSaurusPedido(Request $request)
+    public function criarSaurusPedido(PdvRequest $request)
     {
         $data = (object) $request->all();
-        $pdvSaurus = SaurusPdv::where('codsauruspdv', $request->pdv)->firstOrFail();
+        $pdv = PdvService::autoriza($request->pdv);
+        $pdvSaurus = SaurusPdv::findOrFail($data->codsauruspos);
         $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
         $negocio = Negocio::findOrFail($request->codnegocio);
         SaurusService::cancelarPedidosAbertosPdv($pdvSaurus->codsauruspdv);
@@ -538,7 +539,7 @@ class PdvController
             $modpagamento,
             $data->parcelas,
             0,
-            $data->codpessoa,
+            auth()->user()->codusuario,
             now(),
             $pdvSaurus,
             $pos
@@ -796,7 +797,6 @@ class PdvController
                 ],
                 [
                     'apelido' => $pdvSaurus->apelido,
-                    'serial' => $responsePdvSaurus->response->pinPads[0],
                     'codfilial' => $pdvSaurus->codfilial,
                     'codsauruspdv' => $pdvSaurus->codsauruspdv,
                 ]

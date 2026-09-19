@@ -410,7 +410,8 @@ class PagarMeService
                 'valortroco' => null,
                 'tipo' => $tipo,
                 'bandeira' => $bandeira,
-                'integracao' => true
+                'integracao' => true,
+                'serialmaquineta' => $ped->PagarMePos->serial ?? null,
             ]
         );
 

@@ -4,10 +4,11 @@ title: Atualizar ou arquivar os documentos de migracao ja obsoletos
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:56'
-updated_date: '2026-09-12 16:15'
+updated_date: '2026-09-15 15:05'
 labels:
   - api
 dependencies: []
+priority: low
 type: feature
 ordinal: 94000
 ---

@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Mg\Filial\Setor;
 use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
+use Mg\Saurus\SaurusPinPad;
 
 class PdvService
 {
@@ -323,11 +324,13 @@ class PdvService
         ]);
         foreach ($regs as $reg) {
             $reg->PagarMePosS = PagarMePos::select(['codpagarmepos', 'serial', 'apelido'])->where('codfilial', $reg->codfilial)->whereNull('inativo')->get();
-            $reg->SaurusPosS = SaurusPdv::select(['tblsauruspdv.codsauruspdv', 'tblsauruspdv.id as serial', 'tblsauruspdv.apelido'])
-                ->join('tblsauruspinpad', 'tblsauruspinpad.codsauruspdv', '=', 'tblsauruspdv.codsauruspdv')
+            // um registro por pinpad; serial é o número de série físico (null até o 1º uso no PDV)
+            $reg->SaurusPosS = SaurusPinPad::select(['tblsauruspinpad.codsauruspinpad', 'tblsauruspinpad.serial', 'tblsauruspdv.codsauruspdv', 'tblsauruspdv.apelido'])
+                ->join('tblsauruspdv', 'tblsauruspdv.codsauruspdv', '=', 'tblsauruspinpad.codsauruspdv')
                 ->where('tblsauruspdv.codfilial', $reg->codfilial)
                 ->whereNull('tblsauruspdv.inativo')
-                ->groupBy('tblsauruspdv.codsauruspdv', 'tblsauruspdv.id', 'tblsauruspdv.apelido')
+                ->whereNull('tblsauruspinpad.inativo')
+                ->orderBy('tblsauruspdv.apelido')
                 ->get();
         }
         return $regs;
@@ -353,6 +356,7 @@ class PdvService
                 fp.integracao,
                 :sincronizado as sincronizado
             from tblformapagamento fp
+            where fp.inativo is null
             ';
         $regs = DB::select($sql, [
             'sincronizado' => $sincronizado

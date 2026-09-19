@@ -4,84 +4,26 @@ import { uid } from 'quasar'
 import { db } from 'boot/db'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { calcularCarga } from 'src/utils/desconto'
-import { agoraLocal } from 'src/utils/carga'
+import {
+  SENTIDOS,
+  ETAPAS_POR_SENTIDO,
+  ETAPA_FINAL,
+  CONTATIPO_PADRAO,
+  novoPonto,
+  pontoCompleto,
+  ratearPontos,
+  agoraLocal,
+} from 'src/utils/carga'
 import { notifyError } from 'src/utils/notify'
 
-// Etapas por sentido — controlam as colunas do board e a ordem de pesagem.
-// ENTRADA chega cheio (pesa PBT antes); SAIDA chega vazio (pesa tara antes).
-export const ETAPAS_POR_SENTIDO = {
-  ENTRADA: ['PBT', 'CLASSIFICACAO', 'TARA', 'FINALIZADO'],
-  SAIDA: ['TARA', 'PBT', 'FISCAL', 'FINALIZADO'],
-  TRANSFERENCIA: ['PBT', 'TARA', 'FINALIZADO'],
-}
+// Constantes e helpers puros do domínio vivem em utils/carga.js (importáveis
+// pelos componentes de exibição sem puxar o Pinia). Re-exportados aqui por
+// conveniência de quem já importa da store.
+export { SENTIDOS, ETAPAS_POR_SENTIDO, CONTATIPO_PADRAO, novoPonto, pontoCompleto, ratearPontos }
 
-export const SENTIDOS = [
-  { value: 'ENTRADA', label: 'Recebimento', icon: 'local_shipping', color: 'green-7' },
-  { value: 'SAIDA', label: 'Expedição', icon: 'outbound', color: 'green-8' },
-  { value: 'TRANSFERENCIA', label: 'Transferência', icon: 'swap_horiz', color: 'blue-grey-7' },
-]
-
-// Tipo (contatipo) padrão da origem/destino por sentido — usado ao semear a
-// carga nova e ao clicar "Origem +"/"Destino +". Recebimento entra do talhão
-// pra unidade; expedição sai da unidade pro contrato; transferência unidade↔unidade.
-export const CONTATIPO_PADRAO = {
-  ENTRADA: { ORIGEM: 'PLANTIO', DESTINO: 'UNIDADE' },
-  SAIDA: { ORIGEM: 'UNIDADE', DESTINO: 'CONTRATO' },
-  TRANSFERENCIA: { ORIGEM: 'UNIDADE', DESTINO: 'UNIDADE' },
-}
-
-// Ponto (origem/destino) novo. `percentual` (rateio da carga) é campo só-do-front:
-// o kg (`liquido`) é derivado do líquido calculado da carga na hora de salvar.
-export function novoPonto(papel, contatipo) {
-  return {
-    papel,
-    contatipo,
-    codplantio: null,
-    codunidadearmazenadora: null,
-    codcontrato: null,
-    percentual: 100,
-    liquido: null,
-    rotulo: null,
-    numeronf: null,
-    valornf: null,
-  }
-}
-
-// Ponto "completo" = tem a entidade escolhida. Sem ela o ponto não pode ser
-// gravado (o backend rejeita) e não conta no colhido/saldo.
-export function pontoCompleto(p) {
-  if (p.contatipo === 'PLANTIO') return !!p.codplantio
-  if (p.contatipo === 'UNIDADE') return !!p.codunidadearmazenadora
-  if (p.contatipo === 'CONTRATO') return !!p.codcontrato
-  return false
-}
-
-// Rateia o líquido da carga entre os pontos de cada papel a partir do %. O resto
-// vai na última linha pra soma bater exata (evita o 422 "rateio não fecha").
-// Antes de pesar (liquido null) não há kg pra ratear.
-export function ratearPontos(carga) {
-  const liq = Number(carga.liquido)
-  for (const papel of ['ORIGEM', 'DESTINO']) {
-    const grupo = (carga.pontos || []).filter((p) => p.papel === papel)
-    if (!grupo.length) continue
-    if (!(liq > 0)) {
-      grupo.forEach((p) => {
-        p.liquido = null
-      })
-      continue
-    }
-    let acumulado = 0
-    grupo.forEach((p, idx) => {
-      if (idx === grupo.length - 1) {
-        p.liquido = Math.round(liq - acumulado)
-      } else {
-        const kg = Math.round((liq * (Number(p.percentual) || 0)) / 100)
-        p.liquido = kg
-        acumulado += kg
-      }
-    })
-  }
-}
+// Sem filtro de data a lista de finalizadas mostraria a safra inteira no drawer;
+// corta nas últimas N (como o "Últimos" do PDV) — pra ver mais, filtra o dia.
+const LIMITE_FINALIZADAS_SEM_DATA = 30
 
 // Store da Carga unificada (pátio) — lê/grava no Dexie (offline-first) e dispara
 // a sincronização em background. O extrato (saldos) é gerado no servidor; aqui
@@ -100,8 +42,8 @@ export const useCargaStore = defineStore('carga', () => {
   const contratos = ref([])
   const saldosUnidades = ref([]) // snapshot do servidor [{codunidadearmazenadora, saldokg, ...}]
   const codsafraAtiva = ref(null)
-  const sentidoAtivo = ref('ENTRADA')
-  const dataFiltro = ref(null) // dia filtrado no board (ISO YYYY-MM-DD); vazio = todos
+  const uuidAtivo = ref(null) // carga aberta no centro da tela (rota carga/:uuid)
+  const dataFiltro = ref(null) // dia filtrado na listagem (ISO YYYY-MM-DD); vazio = todos
 
   const veiculosAtivos = computed(() => veiculos.value.filter((v) => !v.inativo))
   const veiculoPorId = (codveiculo) =>
@@ -118,7 +60,7 @@ export const useCargaStore = defineStore('carga', () => {
   const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
 
   // Parâmetros de classificação da cultura da safra ATIVA, na ordem da cascata —
-  // é o que o utils/desconto.js consome e o que o CargaDialog renderiza.
+  // é o que o utils/desconto.js consome e o que o CargaForm renderiza.
   // Espelha o backend (ParametroClassificacaoService::daCultura): parâmetro
   // INATIVO fica de fora do cálculo, senão o preview local desconta, o servidor
   // não, e o líquido "pula" depois do sync.
@@ -143,33 +85,127 @@ export const useCargaStore = defineStore('carga', () => {
     return calcularCarga(carga, parametrosDaCarga(carga))
   }
 
-  const plantiosDaSafra = computed(() =>
-    plantios.value
-      .filter((p) => p.codsafra === codsafraAtiva.value && !p.inativo)
-      .map((p) => ({
-        ...p,
-        rotulo: `${p.talhao ?? 'Talhão ' + p.codplantio}${
-          p.Variedade?.variedade ? ' — ' + p.Variedade.variedade : ''
-        }`,
-      })),
+  const safrasAtivas = computed(() => safras.value.filter((s) => !s.inativo))
+
+  // Rótulo do plantio: "Talhão — Variedade" (a relação Variedade vem do servidor
+  // no cache do plantio).
+  function rotuloDoPlantio(p) {
+    return `${p.talhao ?? 'Talhão ' + p.codplantio}${
+      p.Variedade?.variedade ? ' — ' + p.Variedade.variedade : ''
+    }`
+  }
+
+  // Plantios ativos de UMA safra, com rótulo — o PlantioMapaDialog escolhe a
+  // safra pelo mapa, então não depende da safra ativa da listagem.
+  function plantiosPorSafra(codsafra) {
+    if (!codsafra) return []
+    return plantios.value
+      .filter((p) => p.codsafra === codsafra && !p.inativo)
+      .map((p) => ({ ...p, rotulo: rotuloDoPlantio(p) }))
+  }
+
+  // Plantio por id, de qualquer safra (o ponto de uma carga pode apontar pra
+  // outra safra que não a ativa).
+  function plantioPorId(codplantio) {
+    const p = plantios.value.find((x) => x.codplantio === codplantio)
+    return p ? { ...p, rotulo: rotuloDoPlantio(p) } : null
+  }
+
+  const plantiosDaSafra = computed(() => plantiosPorSafra(codsafraAtiva.value))
+
+  const cargaAtiva = computed(() => cargas.value.find((c) => c.uuid === uuidAtivo.value) || null)
+
+  // Cargas ainda no pátio (qualquer sentido, qualquer dia). Um caminhão que
+  // chegou ontem e ainda não pesou a tara PRECISA continuar aparecendo, por
+  // isso a data não filtra aqui — só a lista de finalizadas.
+  const cargasNoPatio = computed(() =>
+    cargas.value.filter((c) => !c.inativo && c.etapa !== ETAPA_FINAL),
   )
 
-  const etapasDoSentido = computed(() => ETAPAS_POR_SENTIDO[sentidoAtivo.value] || [])
-
-  // Cargas do sentido ativo, do dia filtrado, agrupadas por etapa (board).
-  // O recorte por dia vive AQUI (só o kanban usa) — `cargas` continua full-safra
-  // pras derivadas (produtividade/colhido) e pra IndexPage.
-  const cargasPorEtapa = computed(() => {
-    const grupos = {}
-    for (const e of etapasDoSentido.value) grupos[e] = []
+  // Finalizadas do dia filtrado; sem data, as últimas N da safra.
+  const cargasFinalizadas = computed(() => {
     const dia = dataFiltro.value
-    for (const c of cargas.value) {
-      if (c.inativo || c.sentido !== sentidoAtivo.value) continue
-      if (dia && String(c.data).slice(0, 10) !== dia) continue
-      if (grupos[c.etapa]) grupos[c.etapa].push(c)
-    }
-    return grupos
+    const lista = cargas.value.filter(
+      (c) => !c.inativo && c.etapa === ETAPA_FINAL && (!dia || String(c.data).slice(0, 10) === dia),
+    )
+    return dia ? lista : lista.slice(0, LIMITE_FINALIZADAS_SEM_DATA)
   })
+
+  // Totais das finalizadas exibidas (só faz sentido com o dia filtrado).
+  const totaisFinalizadas = computed(() => {
+    let bruto = 0
+    let desconto = 0
+    let liquido = 0
+    for (const c of cargasFinalizadas.value) {
+      bruto += Number(c.bruto) || 0
+      desconto += Number(c.desconto) || 0
+      liquido += Number(c.liquido) || 0
+    }
+    return {
+      bruto,
+      desconto,
+      liquido,
+      sacas: liquido / pesosaca.value,
+      pct: bruto > 0 ? (desconto / bruto) * 100 : 0,
+    }
+  })
+
+  // Siglas dos parâmetros conhecidos (o catálogo não tem coluna de sigla); demais
+  // caem no fallback dos 4 primeiros caracteres.
+  const ABREV = {
+    Impureza: 'Imp',
+    Umidade: 'Umid',
+    Avariados: 'Avar',
+    Esverdeados: 'Esv',
+    Quebrados: 'Queb',
+  }
+  function abreviar(nome) {
+    return !nome ? '?' : ABREV[nome] || nome.slice(0, 4)
+  }
+
+  // Nome do parâmetro offline-safe: parâmetro da cultura → nested do server
+  // (só cargas puxadas) → cadastro em cache → código. Cargas locais só têm o cod.
+  function nomeParametro(row, porCod) {
+    return (
+      porCod.get(row.codparametroclassificacao)?.parametroclassificacao ||
+      row.ParametroClassificacao?.parametroclassificacao ||
+      parametros.value.find((p) => p.codparametroclassificacao === row.codparametroclassificacao)
+        ?.parametroclassificacao ||
+      `#${row.codparametroclassificacao}`
+    )
+  }
+
+  // Chips de classificação: só leituras preenchidas; `fora` = leitura acima da
+  // tolerância (gera desconto). Vale p/ FATOR e NORMALIZADO — mesma condição de
+  // percentualItem em utils/desconto.js.
+  function chipsClassificacao(carga) {
+    const itens = parametrosDaCarga(carga)
+    const porCod = new Map(itens.map((i) => [i.codparametroclassificacao, i]))
+    return (carga?.classificacao || [])
+      .filter((c) => c.leitura !== null && c.leitura !== undefined && c.leitura !== '')
+      .map((c) => {
+        const item = porCod.get(c.codparametroclassificacao)
+        return {
+          key: c.codparametroclassificacao,
+          label: abreviar(nomeParametro(c, porCod)),
+          nome: nomeParametro(c, porCod),
+          leitura: c.leitura,
+          // Só marca "fora" quando há item resolvido (senão tolerância viraria 0 e
+          // todo parâmetro inativo/sem catálogo apareceria falsamente vermelho).
+          fora: item ? Number(c.leitura) > (Number(item.tolerancia) || 0) : false,
+        }
+      })
+  }
+
+  // Aviso (só ENTRADA, onde a classificação vale): cultura sem parâmetro ativo, que
+  // faria o desconto sair 0 em silêncio.
+  function avisoClassificacao(carga) {
+    if (carga?.sentido !== 'ENTRADA') return null
+    if (!parametrosDaCarga(carga).length) {
+      return 'Cultura sem parâmetros de classificação — desconto não aplicado'
+    }
+    return null
+  }
 
   // kg de um ponto = sua fatia do líquido da carga pelo % (fonte da verdade).
   // O `p.liquido` gravado é derivado e pode envelhecer (ex.: carga finalizada
@@ -260,11 +296,11 @@ export const useCargaStore = defineStore('carga', () => {
     return pessoa ? `${c.contrato} — ${pessoa}` : `${c.contrato}`
   }
 
-  // Rótulo de um ponto a partir das caches — mesma fonte do CargaDialog. Usado pra
+  // Rótulo de um ponto a partir das caches — mesma fonte do CargaForm. Usado pra
   // preencher o `rotulo` das cargas puxadas do servidor (que vêm sem ele).
   function rotuloPonto(p) {
     if (p.contatipo === 'PLANTIO') {
-      return plantiosDaSafra.value.find((o) => o.codplantio === p.codplantio)?.rotulo || null
+      return plantioPorId(p.codplantio)?.rotulo || null
     }
     if (p.contatipo === 'UNIDADE') {
       return (
@@ -336,8 +372,8 @@ export const useCargaStore = defineStore('carga', () => {
     await puxarCargasDoDia()
   }
 
-  function definirSentido(sentido) {
-    sentidoAtivo.value = sentido
+  function abrir(uuid) {
+    uuidAtivo.value = uuid || null
   }
 
   // Troca o dia filtrado no board e puxa as cargas (multi-dispositivo). Vazio =
@@ -356,12 +392,13 @@ export const useCargaStore = defineStore('carga', () => {
     saldosUnidades.value = sincronizacao.saldosUnidades
   }
 
-  // Nova carga do sentido informado (ou do board atual). Começa na 1ª etapa.
-  // A semeadura de origem/destino padrão é feita no CargaDialog (camada de UI).
+  // Nova carga (default Recebimento — o operador troca no formulário enquanto
+  // não pesou). Começa na 1ª etapa do sentido. A semeadura de origem/destino
+  // padrão é feita no CargaForm (camada de UI).
   // Sem safra ativa retorna null — uma carga com codsafra:null seria órfã.
-  function nova(sentido = null) {
+  function nova(sentido = 'ENTRADA') {
     if (!codsafraAtiva.value) return null
-    const s = sentido || sentidoAtivo.value
+    const s = sentido
     return {
       uuid: uid(),
       codcarga: null,
@@ -423,6 +460,13 @@ export const useCargaStore = defineStore('carga', () => {
     return limpa
   }
 
+  // Reenvio manual (botão no resumo): limpa a rejeição anterior e tenta de novo.
+  async function reenviar(carga) {
+    await db.carga.update(carga.uuid, { sincronizado: 0, syncerro: null })
+    await carregarCargas()
+    await sincronizar({ force: false })
+  }
+
   async function inativar(carga) {
     carga.inativo = agoraLocal()
     await salvar(carga)
@@ -454,21 +498,28 @@ export const useCargaStore = defineStore('carga', () => {
     contratos,
     saldosUnidades,
     codsafraAtiva,
-    sentidoAtivo,
+    uuidAtivo,
     dataFiltro,
     veiculosAtivos,
     veiculoPorId,
     unidadesAtivas,
     contratosAtivos,
     safraAtiva,
+    safrasAtivas,
     culturaAtiva,
     parametrosDaSafra,
     parametrosDaCultura,
     parametrosDaCarga,
     pesosaca,
     plantiosDaSafra,
-    etapasDoSentido,
-    cargasPorEtapa,
+    plantiosPorSafra,
+    plantioPorId,
+    cargaAtiva,
+    cargasNoPatio,
+    cargasFinalizadas,
+    totaisFinalizadas,
+    chipsClassificacao,
+    avisoClassificacao,
     colhidoPorPlantio,
     produtividade,
     saldoUnidadeOffline,
@@ -477,11 +528,12 @@ export const useCargaStore = defineStore('carga', () => {
     carregarReferencias,
     carregarCargas,
     definirSafra,
-    definirSentido,
+    abrir,
     definirData,
     sincronizar,
     nova,
     salvar,
+    reenviar,
     inativar,
     descartarPendente,
     adicionarVeiculo,

@@ -435,6 +435,17 @@ onMounted(async () => {
             { label: 'Por talhão', value: 'talhao' },
           ]"
         />
+        <q-btn
+          flat
+          round
+          size="sm"
+          color="primary"
+          icon="add"
+          class="q-ml-sm"
+          @click="novoPlantio()"
+        >
+          <q-tooltip>Plantar talhão</q-tooltip>
+        </q-btn>
       </div>
 
       <!-- Um card por fazenda: cabeçalho c/ totais + mapa + tabela agrupada -->

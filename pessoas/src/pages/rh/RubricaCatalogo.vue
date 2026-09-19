@@ -196,9 +196,9 @@ onMounted(() => {
 
         <q-separator inset />
 
+        <!-- Sem MgInfoCriacao aqui: quem criou/alterou já aparece na linha da
+             rubrica na listagem, e dentro do dialog o balão escapava do card. -->
         <q-card-actions align="right" class="text-primary">
-          <MgInfoCriacao v-if="!isNovo" :registro="cad" />
-          <q-space />
           <q-btn flat label="Cancelar" v-close-popup tabindex="-1" color="grey-8" />
           <q-btn flat label="Salvar" type="submit" :loading="salvando" />
         </q-card-actions>

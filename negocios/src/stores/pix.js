@@ -62,29 +62,35 @@ export const pixStore = defineStore('pix', {
       }
     },
 
-    async consultarPixCob() {
+    // silencioso = consulta automática (sem Notify)
+    async consultarPixCob(silencioso = false) {
       try {
         const { data } = await api.post('/v1/pix/cob/' + this.pixCob.codpixcob + '/consultar')
         this.pixCob = data.data
         await this.atualizarPixCobNegocio()
-        Notify.create({
-          type: 'positive',
-          message: 'Consulta Efetuada!',
-          timeout: 1000, // 1 segundo
-          actions: [{ icon: 'close', color: 'white' }],
-        })
+        if (!silencioso) {
+          Notify.create({
+            type: 'positive',
+            message: 'Consulta Efetuada!',
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+        }
+        return true
       } catch (error) {
         console.log(error)
-        var message = error?.response?.data?.message
-        if (!message) {
-          message = error?.message
+        if (!silencioso) {
+          var message = error?.response?.data?.message
+          if (!message) {
+            message = error?.message
+          }
+          Notify.create({
+            type: 'negative',
+            message: message,
+            timeout: 3000, // 3 segundos
+            actions: [{ icon: 'close', color: 'white' }],
+          })
         }
-        Notify.create({
-          type: 'negative',
-          message: message,
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
         return false
       }
     },
@@ -138,7 +144,7 @@ export const pixStore = defineStore('pix', {
 
       // procura pix cob no negcoio
       const index = sNegocio.negocio.pixCob.findIndex(
-        (pixCob) => (pixCob.codpixcob = this.pixCob.codpixcob),
+        (pixCob) => pixCob.codpixcob === this.pixCob.codpixcob,
       )
 
       // se nao existir recarrega da api

@@ -58,6 +58,30 @@ class PeriodoColaboradorController extends Controller
             ->with(['Setor', 'UnidadeNegocio'])
             ->get();
 
+        // Quanto do pool de cada setor coletivo já está distribuído em comissão.
+        // Calculado aqui, uma query para todos: a coleção de coletivos é a mesma
+        // para todo colaborador, então fazer isso no Resource viraria N+1. O
+        // valor viaja no próprio model e sai no JSON junto com o indicador.
+        $rateio = CalculoRubricaService::rateioDistribuido(
+            $coletivos->where('tipo', ProcessarVendaService::TIPO_SETOR)->pluck('codindicador')->all()
+        );
+
+        foreach ($coletivos as $ind) {
+            $dados = $rateio[$ind->codindicador] ?? null;
+
+            if (!$dados || !$dados['pool']) {
+                continue;
+            }
+
+            $ind->rateio = [
+                'pool_percentual' => $dados['pool'],
+                'pool_valor' => round($ind->valoracumulado * $dados['pool'] / 100, 2),
+                'soma_percentual' => $dados['soma'],
+                'distribuido' => $dados['distribuido'],
+                'sobra' => round(100 - $dados['distribuido'], 3),
+            ];
+        }
+
         foreach ($colaboradores as $c) {
             $c->indicadores_pessoais = $indicadores->get($c->codcolaborador, collect());
             $c->indicadores_coletivos = $coletivos;

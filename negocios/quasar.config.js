@@ -131,16 +131,13 @@ export default defineConfig((/* ctx */) => {
       port: 9900,
       open: false,
       host: '0.0.0.0',
+      // O Vite só aceita o WebSocket do HMR de hosts desta lista, mesmo com HTTPS.
+      allowedHosts: ['.mgpapelaria.com.br'],
       client: {
         overlay: {
           warnings: false,
           errors: true,
         },
-      },
-      hmr: {
-        protocol: 'wss',
-        host: 'negocios-dev.mgpapelaria.com.br',
-        port: 9900,
       },
     },
 

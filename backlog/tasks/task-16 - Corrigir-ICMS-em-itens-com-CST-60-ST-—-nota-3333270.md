@@ -4,10 +4,11 @@ title: Corrigir ICMS em itens com CST 60 (ST) — nota 3333270
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-12 16:15'
+updated_date: '2026-09-12 17:13'
 labels:
   - notas
 dependencies: []
+priority: high
 type: bug
 ordinal: 16000
 ---
