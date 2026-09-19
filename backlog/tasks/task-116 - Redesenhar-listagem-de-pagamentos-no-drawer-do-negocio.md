@@ -1,17 +1,17 @@
 ---
 id: TASK-116
 title: Redesenhar listagem de pagamentos no drawer do negocio
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-18 18:44'
-updated_date: '2026-09-18 18:50'
+updated_date: '2026-09-19 19:32'
 labels:
   - negocios
 dependencies: []
 priority: medium
 type: enhancement
-ordinal: 105000
+ordinal: 108000
 ---
 
 ## Description
