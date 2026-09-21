@@ -5,6 +5,7 @@ import { ref, computed } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { formataNumero } from '@components/formatters'
 import { calcularParcelas } from '../../../utils/parcelamento.js'
+import { VISUAL } from '../../../utils/pagamento.js'
 import ListaOpcoes from './ListaOpcoes.vue'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
@@ -26,7 +27,7 @@ const FORMAS = [
     valor: parseInt(process.env.CODFORMAPAGAMENTO_FECHAMENTO),
     label: 'Fechamento Mensal',
     caption: 'Financeiro cobra no fim do mês; vence no último dia do mês seguinte',
-    icone: 'calendar_month',
+    ...VISUAL.fechamento,
     tipo: 5, // Crédito Loja
     valorMinimo: 0,
     valorMinimoParcela: 40,
@@ -39,7 +40,7 @@ const FORMAS = [
     valor: parseInt(process.env.CODFORMAPAGAMENTO_BOLETO),
     label: 'Boleto',
     caption: 'Mínimo R$ 70,00 · parcela mínima R$ 100,00 · até 4x',
-    icone: 'account_balance',
+    ...VISUAL.boleto,
     tipo: 15, // Boleto Bancário
     valorMinimo: 70,
     valorMinimoParcela: 100,
@@ -51,7 +52,7 @@ const FORMAS = [
     valor: parseInt(process.env.CODFORMAPAGAMENTO_CARTEIRA),
     label: 'Crediário',
     caption: 'Mínimo R$ 30,00 · parcela mínima R$ 50,00 · até 4x',
-    icone: 'wallet',
+    ...VISUAL.crediario,
     tipo: 5, // Crédito Loja
     valorMinimo: 30,
     valorMinimoParcela: 50,

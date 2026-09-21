@@ -6,6 +6,7 @@ import { negocioStore } from 'stores/negocio'
 import { pixStore } from 'stores/pix'
 import { db } from 'boot/db'
 import ListaOpcoes from './ListaOpcoes.vue'
+import { VISUAL } from '../../../utils/pagamento.js'
 
 const emit = defineEmits(['concluido', 'cobranca'])
 
@@ -40,6 +41,7 @@ const opcoesModo = computed(() => {
       label: 'QR Code',
       caption: 'Gera a cobrança no banco e confirma sozinho',
       icone: 'qr_code',
+      cor: VISUAL.pix.cor,
       desabilitado: !!motivoQr,
       motivo: motivoQr,
     },
@@ -49,6 +51,7 @@ const opcoesModo = computed(() => {
       label: 'Pela chave (manual)',
       caption: 'Cliente já transferiu; lança como depósito',
       icone: 'key',
+      cor: VISUAL.pix.cor,
     },
   ]
 })
@@ -59,7 +62,9 @@ const opcoesConta = computed(() =>
     valor: p.codportador,
     label: p.banco,
     caption: `Conta ${p.conta}-${p.contadigito}`,
+    logo: `/bancos/${p.codbanco}.svg`,
     icone: 'account_balance',
+    cor: VISUAL.pix.cor,
   })),
 )
 

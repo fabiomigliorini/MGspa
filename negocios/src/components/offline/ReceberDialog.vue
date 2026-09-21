@@ -18,6 +18,7 @@ import FormaVale from './receber/FormaVale.vue'
 import FormaPix from './receber/FormaPix.vue'
 import FormaCheque from './receber/FormaCheque.vue'
 import emitter from '../../utils/emitter.js'
+import { VISUAL } from '../../utils/pagamento.js'
 
 const $q = useQuasar()
 const sNegocio = negocioStore()
@@ -50,13 +51,13 @@ const temFalta = computed(() => diferenca.value < 0)
 
 // ordem pela frequência de uso no caixa: cartão, PIX, dinheiro, depois o resto
 const FORMAS = [
-  { tecla: 1, valor: 'cartao', label: 'Cartão', icone: 'credit_card', componente: FormaCartao },
-  { tecla: 2, valor: 'pix', label: 'PIX', icone: 'pix', componente: FormaPix },
-  { tecla: 3, valor: 'dinheiro', label: 'Dinheiro', icone: 'local_atm', troco: true },
-  { tecla: 4, valor: 'entrega', label: 'Pagamento na Entrega', icone: 'delivery_dining' },
-  { tecla: 5, valor: 'prazo', label: 'Prazo', icone: 'receipt', componente: FormaPrazo },
-  { tecla: 6, valor: 'vale', label: 'Vale Compras', icone: 'mdi-ticket', componente: FormaVale },
-  { tecla: 7, valor: 'cheque', label: 'Cheque', icone: 'mdi-checkbook', componente: FormaCheque },
+  { tecla: 1, valor: 'cartao', label: 'Cartão', ...VISUAL.cartao, componente: FormaCartao },
+  { tecla: 2, valor: 'pix', label: 'PIX', ...VISUAL.pix, componente: FormaPix },
+  { tecla: 3, valor: 'dinheiro', label: 'Dinheiro', ...VISUAL.dinheiro, troco: true },
+  { tecla: 4, valor: 'entrega', label: 'Pagamento na Entrega', ...VISUAL.entrega },
+  { tecla: 5, valor: 'prazo', label: 'Prazo', ...VISUAL.prazo, componente: FormaPrazo },
+  { tecla: 6, valor: 'vale', label: 'Vale Compras', ...VISUAL.vale, componente: FormaVale },
+  { tecla: 7, valor: 'cheque', label: 'Cheque', ...VISUAL.cheque, componente: FormaCheque },
 ]
 
 const formaAtual = computed(() => FORMAS.find((f) => f.valor === sNegocio.receber.forma))
@@ -374,7 +375,12 @@ const tecla = (e) => {
                 <q-tooltip class="bg-accent">Alterar valor (Insert)</q-tooltip>
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">
-                <q-icon :name="formaAtual.icone" size="xs" class="q-mr-xs" />
+                <q-icon
+                  :name="formaAtual.icone"
+                  :color="formaAtual.cor"
+                  size="xs"
+                  class="q-mr-xs"
+                />
                 {{ formaAtual.troco ? 'Recebido em' : 'Receber em' }} {{ formaAtual.label }}
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">

@@ -8,6 +8,7 @@ import { negocioStore } from 'stores/negocio'
 import { db } from 'boot/db'
 import { formataNumero } from '@components/formatters'
 import { calcularParcelas } from '../../../utils/parcelamento.js'
+import { VISUAL } from '../../../utils/pagamento.js'
 import cartoesManuais from '../../../data/cartoes-manuais.json'
 import ListaOpcoes from './ListaOpcoes.vue'
 import ListaFiltravel from './ListaFiltravel.vue'
@@ -19,9 +20,9 @@ const sNegocio = negocioStore()
 const CODPESSOA_SAFRA = 20119
 const CODPESSOA_STONE = 9993
 const TIPOS = [
-  { tecla: 1, valor: 1, label: 'Débito', icone: 'mdi-credit-card-fast-outline' },
-  { tecla: 2, valor: 2, label: 'Crédito', icone: 'mdi-credit-card-clock-outline' },
-  { tecla: 3, valor: 3, label: 'Voucher', icone: 'mdi-silverware-fork-knife' },
+  { tecla: 1, valor: 1, label: 'Débito', ...VISUAL.debito },
+  { tecla: 2, valor: 2, label: 'Crédito', ...VISUAL.credito },
+  { tecla: 3, valor: 3, label: 'Voucher', ...VISUAL.voucher },
 ]
 
 const listaRef = ref(null)
@@ -121,6 +122,7 @@ const opcoesModo = computed(() => {
           ? 'Enviar para a maquininha (padrão do PDV)'
           : 'Enviar para a maquininha',
       icone: 'point_of_sale',
+      cor: VISUAL.cartao.cor,
       desabilitado: !sincronizado,
       motivo: 'Negócio ainda não sincronizado com o servidor',
     })
@@ -130,6 +132,7 @@ const opcoesModo = computed(() => {
       valor: 'sem-maquineta',
       label: 'Enviar para a maquininha',
       icone: 'point_of_sale',
+      cor: VISUAL.cartao.cor,
       desabilitado: true,
       motivo: 'Nenhuma maquininha cadastrada nesta filial',
     })
@@ -142,6 +145,7 @@ const opcoesModo = computed(() => {
       label: 'Manual',
       caption: 'Digitar a autorização da maquininha',
       icone: 'edit_note',
+      cor: VISUAL.cartao.cor,
     },
     ...opcoes.map((o, i) => ({ ...o, tecla: i < 9 ? i + 1 : null })),
   ]
@@ -172,6 +176,7 @@ const opcoesMaquineta = computed(() => {
       caption: p.serial ?? 'sem serial cadastrado',
       serial: p.serial,
       icone: 'point_of_sale',
+      cor: VISUAL.cartao.cor,
       desabilitado: !p.serial,
       motivo: 'Sem serial cadastrado — digite o serial acima',
     }))
@@ -182,6 +187,7 @@ const opcoesMaquineta = computed(() => {
       caption: `${r.serial} · usada recentemente`,
       serial: r.serial,
       icone: 'history',
+      cor: VISUAL.cartao.cor,
     })),
     ...cadastradas,
   ]
