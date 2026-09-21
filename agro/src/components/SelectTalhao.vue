@@ -37,7 +37,7 @@ function onSelect(p) {
     outlined
     readonly
     placeholder="Clique para escolher no mapa"
-    class="cursor-pointer"
+    class="cursor-pointer select-talhao"
     v-bind="$attrs"
     @click="dialog = true"
   >
@@ -59,3 +59,12 @@ function onSelect(p) {
     @select="onSelect"
   />
 </template>
+
+<style scoped>
+/* `readonly` aqui só bloqueia a digitação (a escolha é no mapa). O tracejado
+   que o Quasar pinta em campo readonly faz a caixa parecer desabilitada ao
+   lado dos selects da mesma linha — borda igual à dos vizinhos. */
+.select-talhao.q-field--readonly :deep(.q-field__control)::before {
+  border-style: solid;
+}
+</style>

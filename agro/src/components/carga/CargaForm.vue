@@ -664,10 +664,14 @@ defineExpose({
                 :key="'o' + i"
                 class="row q-col-gutter-sm items-center q-mb-xs"
               >
+                <!-- `bottom-slots`: os campos ao lado têm :rules e o Quasar reserva 20px
+                     embaixo deles (q-field--with-bottom). Sem reservar aqui também, este
+                     select desce 10px em relação ao resto da linha. -->
                 <SelectContaTipo
                   v-model="p.contatipo"
                   papel="ORIGEM"
                   label="Origem"
+                  bottom-slots
                   class="col-4"
                   @update:model-value="onTipoChange(p)"
                 />
@@ -719,7 +723,7 @@ defineExpose({
                   round
                   color="grey-7"
                   icon="close"
-                  class="col-auto"
+                  class="col-auto ponto-remover"
                   @click="removerPonto(p)"
                 />
               </div>
@@ -743,12 +747,14 @@ defineExpose({
 
             <div class="col-12 col-md-6">
               <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
-              <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-sm">
+              <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-xs">
                 <div class="row q-col-gutter-sm items-center">
+                  <!-- `bottom-slots`: mesmo motivo da coluna de origem. -->
                   <SelectContaTipo
                     v-model="p.contatipo"
                     papel="DESTINO"
                     label="Destino"
+                    bottom-slots
                     class="col-4"
                     @update:model-value="onTipoChange(p)"
                   />
@@ -788,14 +794,11 @@ defineExpose({
                     round
                     color="grey-7"
                     icon="close"
-                    class="col-auto"
+                    class="col-auto ponto-remover"
                     @click="removerPonto(p)"
                   />
                 </div>
-                <div
-                  v-if="p.contatipo === 'CONTRATO' && p.codcontrato"
-                  class="text-caption q-pl-sm"
-                >
+                <div v-if="p.contatipo === 'CONTRATO' && p.codcontrato" class="text-caption">
                   <span v-if="saldoContrato(p.codcontrato) === Infinity" class="text-deep-purple-7">
                     <q-icon name="all_inclusive" /> Volume em aberto
                   </span>
@@ -1007,5 +1010,11 @@ defineExpose({
 .carga-form {
   max-width: 1000px;
   margin: 0 auto;
+}
+
+/* Os campos da linha reservam 20px embaixo pra mensagem de validação; sem o
+   mesmo desconto, o botão centraliza na linha inteira e fica abaixo da caixa. */
+.ponto-remover {
+  margin-bottom: 20px;
 }
 </style>
