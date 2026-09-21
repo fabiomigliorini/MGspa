@@ -3,14 +3,14 @@ id: TASK-2
 title: Corrigir criacao de periodo com datas erradas (01/03 a 25/03/2026)
 status: Done
 assignee: []
-created_date: "2026-09-12 15:53"
-updated_date: "2026-09-15 14:46"
+created_date: '2026-09-12 15:53'
+updated_date: '2026-09-15 14:46'
 labels:
   - pessoas
 dependencies: []
 priority: high
 type: bug
-ordinal: 1000
+ordinal: 2000
 ---
 
 ## Description

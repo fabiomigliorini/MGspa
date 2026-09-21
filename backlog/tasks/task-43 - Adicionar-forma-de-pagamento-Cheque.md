@@ -1,17 +1,17 @@
 ---
 id: TASK-43
 title: Adicionar forma de pagamento Cheque
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-16 16:26'
+updated_date: '2026-09-19 19:32'
 labels:
   - negocios
 dependencies: []
 priority: medium
 type: feature
-ordinal: 43000
+ordinal: 107000
 ---
 
 ## Description

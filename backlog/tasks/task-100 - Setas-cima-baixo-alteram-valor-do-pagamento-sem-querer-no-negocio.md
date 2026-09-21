@@ -1,11 +1,11 @@
 ---
 id: TASK-100
 title: 'Redesenhar recebimento do negocio: wizard por teclado (setas alteravam valor)'
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-16 14:58'
-updated_date: '2026-09-18 20:58'
+updated_date: '2026-09-19 19:47'
 labels:
   - negocios
 dependencies: []
