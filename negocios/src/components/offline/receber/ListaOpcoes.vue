@@ -2,6 +2,7 @@
 // Lista de opções operada pelo teclado: ↑/↓ movem, Enter escolhe, tecla numérica escolhe direto.
 // Visual (logo ou ícone colorido) à esquerda, igual à listagem de pagamentos; tecla à direita.
 // Quem tem o foco é o dialog pai, que repassa o evento via tecla(e).
+// Opção com `grupo` abre um cabeçalho quando o grupo muda em relação à anterior.
 import { ref, watch, nextTick, onMounted } from 'vue'
 import LogoPagamento from '../LogoPagamento.vue'
 
@@ -115,40 +116,43 @@ defineExpose({ tecla })
 </script>
 <template>
   <q-list ref="raiz">
-    <q-item
-      v-for="(opcao, i) in opcoes"
-      :key="opcao.valor ?? i"
-      :ref="(el) => (itens[i] = el)"
-      clickable
-      v-ripple
-      :active="i === indice"
-      active-class="bg-blue-1 text-primary"
-      :disable="opcao.desabilitado"
-      @click="escolher(i)"
-    >
-      <q-item-section avatar v-if="opcao.logo || opcao.icone">
-        <logo-pagamento :logo="opcao.logo" :icone="opcao.icone" :cor="opcao.cor" />
-      </q-item-section>
-      <q-item-section>
-        <q-item-label class="text-h6 text-weight-regular">{{ opcao.label }}</q-item-label>
-        <q-item-label class="text-body2 text-grey-7" v-if="opcao.desabilitado && opcao.motivo">
-          {{ opcao.motivo }}
-        </q-item-label>
-        <q-item-label class="text-body2 text-grey-7" v-else-if="opcao.caption">
-          {{ opcao.caption }}
-        </q-item-label>
-      </q-item-section>
-      <q-item-section side v-if="opcao.tecla != null">
-        <q-avatar
-          size="40px"
-          font-size="18px"
-          :color="i === indice ? 'primary' : 'grey-3'"
-          :text-color="i === indice ? 'white' : 'grey-8'"
-          class="text-weight-bold"
-        >
-          {{ opcao.tecla }}
-        </q-avatar>
-      </q-item-section>
-    </q-item>
+    <template v-for="(opcao, i) in opcoes" :key="opcao.valor ?? i">
+      <q-item-label header v-if="opcao.grupo && opcao.grupo !== opcoes[i - 1]?.grupo">
+        {{ opcao.grupo }}
+      </q-item-label>
+      <q-item
+        :ref="(el) => (itens[i] = el)"
+        clickable
+        v-ripple
+        :active="i === indice"
+        active-class="bg-blue-1 text-primary"
+        :disable="opcao.desabilitado"
+        @click="escolher(i)"
+      >
+        <q-item-section avatar v-if="opcao.logo || opcao.icone">
+          <logo-pagamento :logo="opcao.logo" :icone="opcao.icone" :cor="opcao.cor" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="text-h6 text-weight-regular">{{ opcao.label }}</q-item-label>
+          <q-item-label class="text-body2 text-grey-7" v-if="opcao.desabilitado && opcao.motivo">
+            {{ opcao.motivo }}
+          </q-item-label>
+          <q-item-label class="text-body2 text-grey-7" v-else-if="opcao.caption">
+            {{ opcao.caption }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side v-if="opcao.tecla != null">
+          <q-avatar
+            size="40px"
+            font-size="18px"
+            :color="i === indice ? 'primary' : 'grey-3'"
+            :text-color="i === indice ? 'white' : 'grey-8'"
+            class="text-weight-bold"
+          >
+            {{ opcao.tecla }}
+          </q-avatar>
+        </q-item-section>
+      </q-item>
+    </template>
   </q-list>
 </template>
