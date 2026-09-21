@@ -126,28 +126,18 @@ const editar = () => {
   editando.value = true
 }
 
-const aplicarEdicao = async () => {
+const aplicarEdicao = () => {
   const v = parseFloat(valorEdicao.value)
   if (!v || v <= 0) {
     avisar('Informe o valor!')
     return
   }
   sNegocio.receber.valor = Math.round(v * 100) / 100
-  // dinheiro: Enter no valor já lança
-  if (formaAtual.value.troco) {
-    await dinheiro()
-    return
-  }
   editando.value = false
   focar()
 }
 
 const cancelarEdicao = () => {
-  // dinheiro não tem modo texto: Esc volta para a escolha da forma
-  if (formaAtual.value.troco) {
-    voltar()
-    return
-  }
   editando.value = false
   focar()
 }
@@ -159,7 +149,7 @@ const escolherForma = (forma) => {
   prepararValor()
 }
 
-// passo 2 → Dinheiro lança direto; as outras seguem para as perguntas da forma
+// passo 2 → Dinheiro lança (após conferir recebido/troco); as outras seguem para as perguntas da forma
 const continuar = async () => {
   if (!valor.value || valor.value <= 0) {
     editar()
@@ -385,7 +375,7 @@ const tecla = (e) => {
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">
                 <q-icon :name="formaAtual.icone" size="xs" class="q-mr-xs" />
-                Receber em {{ formaAtual.label }}
+                {{ formaAtual.troco ? 'Recebido em' : 'Receber em' }} {{ formaAtual.label }}
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">
                 <span class="text-grey-5 q-ml-sm"> Tecla Insert altera o valor à Receber </span>
@@ -398,7 +388,7 @@ const tecla = (e) => {
               prefix="R$"
               :min="0.01"
               autofocus
-              :hint="formaAtual.troco ? 'Enter lança · Esc volta' : 'Enter aplica · Esc desfaz'"
+              hint="Enter aplica · Esc desfaz"
               class="q-field--auto-height"
               input-class="text-right text-h2 text-weight-bold text-primary"
             />
@@ -445,9 +435,11 @@ const tecla = (e) => {
           flat
           color="primary"
           :label="
-            formaAtual.troco || formaAtual.valor === 'entrega'
-              ? 'Lançar (Enter)'
-              : 'Continuar (Enter)'
+            editando
+              ? 'Aplicar (Enter)'
+              : formaAtual.troco || formaAtual.valor === 'entrega'
+                ? 'Lançar (Enter)'
+                : 'Continuar (Enter)'
           "
           tabindex="-1"
           @click="editando ? aplicarEdicao() : continuar()"
