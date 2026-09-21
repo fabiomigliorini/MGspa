@@ -4,7 +4,8 @@ import { computed } from 'vue'
 import { Dialog } from 'quasar'
 import { negocioStore } from 'stores/negocio'
 import { formataData, formataNumero } from '@components/formatters'
-import { iconePagamento, logoBandeira, tituloPagamento } from '../../utils/pagamento.js'
+import { tituloPagamento, visualPagamento } from '../../utils/pagamento.js'
+import LogoPagamento from './LogoPagamento.vue'
 
 const sNegocio = negocioStore()
 
@@ -55,8 +56,7 @@ const excluir = () => {
     <q-card flat style="width: 400px; max-width: 90vw" v-if="pag">
       <q-item class="q-pt-md">
         <q-item-section avatar>
-          <q-img v-if="logoBandeira(pag)" :src="logoBandeira(pag)" width="40px" :ratio="64 / 40" />
-          <q-avatar v-else color="grey-3" text-color="grey-8" :icon="iconePagamento(pag)" />
+          <logo-pagamento v-bind="visualPagamento(pag)" size="44px" />
         </q-item-section>
         <q-item-section>
           <q-item-label class="text-subtitle1">{{ tituloPagamento(pag) }}</q-item-label>

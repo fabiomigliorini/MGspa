@@ -6,6 +6,7 @@ import { negocioStore } from 'stores/negocio'
 import { pixStore } from 'stores/pix'
 import { db } from 'boot/db'
 import ListaOpcoes from './ListaOpcoes.vue'
+import { VISUAL } from '../../../utils/pagamento.js'
 
 const emit = defineEmits(['concluido', 'cobranca'])
 
@@ -15,6 +16,7 @@ const sPix = pixStore()
 const listaRef = ref(null)
 const etapa = ref('modo')
 const portadores = ref([])
+const codfilial = ref(null)
 const criando = ref(false)
 
 const valor = computed(() => sNegocio.receber.valor)
@@ -22,6 +24,7 @@ const valor = computed(() => sNegocio.receber.valor)
 onMounted(async () => {
   const loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
   if (loc?.codfilial) {
+    codfilial.value = loc.codfilial
     portadores.value = await sPix.carregarPortadores(loc.codfilial)
   }
 })
@@ -40,6 +43,7 @@ const opcoesModo = computed(() => {
       label: 'QR Code',
       caption: 'Gera a cobrança no banco e confirma sozinho',
       icone: 'qr_code',
+      cor: VISUAL.pix.cor,
       desabilitado: !!motivoQr,
       motivo: motivoQr,
     },
@@ -49,19 +53,30 @@ const opcoesModo = computed(() => {
       label: 'Pela chave (manual)',
       caption: 'Cliente já transferiu; lança como depósito',
       icone: 'key',
+      cor: VISUAL.pix.cor,
     },
   ]
 })
 
-const opcoesConta = computed(() =>
-  portadores.value.map((p, i) => ({
+// contas da filial do negócio primeiro; o separador só aparece quando há dos dois grupos
+const opcoesConta = computed(() => {
+  const daFilial = portadores.value.filter((p) => p.codfilial === codfilial.value)
+  const outras = portadores.value.filter((p) => p.codfilial !== codfilial.value)
+  const agrupar = daFilial.length > 0 && outras.length > 0
+  return [...daFilial, ...outras].map((p, i) => ({
     tecla: i < 9 ? i + 1 : null,
     valor: p.codportador,
     label: p.banco,
-    caption: `Conta ${p.conta}-${p.contadigito}`,
+    caption:
+      p.codfilial === codfilial.value || !p.filial
+        ? `Conta ${p.conta}-${p.contadigito}`
+        : `Conta ${p.conta}-${p.contadigito} · ${p.filial}`,
+    logo: `/bancos/${p.codbanco}.svg`,
     icone: 'account_balance',
-  })),
-)
+    cor: VISUAL.pix.cor,
+    grupo: agrupar ? (p.codfilial === codfilial.value ? 'Da filial' : 'Outras filiais') : null,
+  }))
+})
 
 const escolherModo = (opcao) => {
   if (opcao.valor === 'chave') {

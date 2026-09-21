@@ -41,6 +41,7 @@ const filtradas = computed(() => {
         label: `Usar serial digitado: ${filtro.value.trim()}`,
         serial: filtro.value.trim(),
         icone: 'keyboard',
+        cor: 'indigo-6',
         digitado: true,
       },
     ]

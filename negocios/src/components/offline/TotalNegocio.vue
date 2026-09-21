@@ -10,15 +10,11 @@ import PixCobDialog from 'components/offline/PixCobDialog.vue'
 import PagarMePedidoDialog from 'components/offline/PagarMePedidoDialog.vue'
 import SaurusPedidoDialog from 'components/offline/SaurusPedidoDialog.vue'
 import PagamentoDialog from 'components/offline/PagamentoDialog.vue'
+import LogoPagamento from 'components/offline/LogoPagamento.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { formataFromNow, formataNumero } from '@components/formatters'
 import emitter from '../../utils/emitter.js'
-import {
-  iconePagamento,
-  logoBandeira,
-  resumoPagamento,
-  tituloPagamento,
-} from '../../utils/pagamento.js'
+import { resumoPagamento, tituloPagamento, visualPagamento } from '../../utils/pagamento.js'
 
 const sNegocio = negocioStore()
 const sPix = pixStore()
@@ -475,8 +471,7 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
         @click="abrirPagamento(pag)"
       >
         <q-item-section avatar>
-          <q-img v-if="logoBandeira(pag)" :src="logoBandeira(pag)" width="40px" :ratio="64 / 40" />
-          <q-avatar v-else color="grey-3" text-color="grey-8" :icon="iconePagamento(pag)" />
+          <logo-pagamento v-bind="visualPagamento(pag)" size="40px" />
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis">{{ tituloPagamento(pag) }}</q-item-label>

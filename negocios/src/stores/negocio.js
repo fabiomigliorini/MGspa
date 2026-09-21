@@ -1342,8 +1342,16 @@ export const negocioStore = defineStore('negocio', {
       })
     },
 
-    async fechar() {
+    // se o negocio ainda nao subiu pro servidor, tenta sincronizar antes de desistir
+    async garantirSincronizado() {
       if (!this.negocio.sincronizado) {
+        await this.sincronizar(this.negocio.uuid)
+      }
+      return this.negocio.sincronizado
+    },
+
+    async fechar() {
+      if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',
           message: 'Impossível fechar um negócio não sincronizado com o servidor!',
@@ -1369,7 +1377,7 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async cancelar(justificativa) {
-      if (!this.negocio.sincronizado) {
+      if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',
           message: 'Impossível cancelar um negócio não sincronizado com o servidor!',
@@ -1395,7 +1403,7 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async criarPixCob(valor, codportador) {
-      if (!this.negocio.sincronizado) {
+      if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',
           message: 'Impossível criar Cobrança PIX em um negócio não sincronizado com o servidor!',
@@ -1431,7 +1439,7 @@ export const negocioStore = defineStore('negocio', {
       parcelas,
       jurosloja,
     ) {
-      if (!this.negocio.sincronizado) {
+      if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',
           message:
@@ -1480,7 +1488,7 @@ export const negocioStore = defineStore('negocio', {
       parcelas,
       jurosloja,
     ) {
-      if (!this.negocio.sincronizado) {
+      if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',
           message:
@@ -1563,7 +1571,7 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async unificarComanda(codnegociocomanda, escolhas = {}) {
-      if (!this.negocio.sincronizado) {
+      if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',
           message: 'Impossível ler Comandas em um negócio não sincronizado com o servidor!',

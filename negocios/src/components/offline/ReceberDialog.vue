@@ -18,6 +18,7 @@ import FormaVale from './receber/FormaVale.vue'
 import FormaPix from './receber/FormaPix.vue'
 import FormaCheque from './receber/FormaCheque.vue'
 import emitter from '../../utils/emitter.js'
+import { VISUAL } from '../../utils/pagamento.js'
 
 const $q = useQuasar()
 const sNegocio = negocioStore()
@@ -50,13 +51,13 @@ const temFalta = computed(() => diferenca.value < 0)
 
 // ordem pela frequência de uso no caixa: cartão, PIX, dinheiro, depois o resto
 const FORMAS = [
-  { tecla: 1, valor: 'cartao', label: 'Cartão', icone: 'credit_card', componente: FormaCartao },
-  { tecla: 2, valor: 'pix', label: 'PIX', icone: 'pix', componente: FormaPix },
-  { tecla: 3, valor: 'dinheiro', label: 'Dinheiro', icone: 'local_atm', troco: true },
-  { tecla: 4, valor: 'entrega', label: 'Pagamento na Entrega', icone: 'delivery_dining' },
-  { tecla: 5, valor: 'prazo', label: 'Prazo', icone: 'receipt', componente: FormaPrazo },
-  { tecla: 6, valor: 'vale', label: 'Vale Compras', icone: 'mdi-ticket', componente: FormaVale },
-  { tecla: 7, valor: 'cheque', label: 'Cheque', icone: 'mdi-checkbook', componente: FormaCheque },
+  { tecla: 1, valor: 'cartao', label: 'Cartão', ...VISUAL.cartao, componente: FormaCartao },
+  { tecla: 2, valor: 'pix', label: 'PIX', ...VISUAL.pix, componente: FormaPix },
+  { tecla: 3, valor: 'dinheiro', label: 'Dinheiro', ...VISUAL.dinheiro, troco: true },
+  { tecla: 4, valor: 'entrega', label: 'Pagamento na Entrega', ...VISUAL.entrega },
+  { tecla: 5, valor: 'prazo', label: 'Prazo', ...VISUAL.prazo, componente: FormaPrazo },
+  { tecla: 6, valor: 'vale', label: 'Vale Compras', ...VISUAL.vale, componente: FormaVale },
+  { tecla: 7, valor: 'cheque', label: 'Cheque', ...VISUAL.cheque, componente: FormaCheque },
 ]
 
 const formaAtual = computed(() => FORMAS.find((f) => f.valor === sNegocio.receber.forma))
@@ -126,28 +127,18 @@ const editar = () => {
   editando.value = true
 }
 
-const aplicarEdicao = async () => {
+const aplicarEdicao = () => {
   const v = parseFloat(valorEdicao.value)
   if (!v || v <= 0) {
     avisar('Informe o valor!')
     return
   }
   sNegocio.receber.valor = Math.round(v * 100) / 100
-  // dinheiro: Enter no valor já lança
-  if (formaAtual.value.troco) {
-    await dinheiro()
-    return
-  }
   editando.value = false
   focar()
 }
 
 const cancelarEdicao = () => {
-  // dinheiro não tem modo texto: Esc volta para a escolha da forma
-  if (formaAtual.value.troco) {
-    voltar()
-    return
-  }
   editando.value = false
   focar()
 }
@@ -159,7 +150,7 @@ const escolherForma = (forma) => {
   prepararValor()
 }
 
-// passo 2 → Dinheiro lança direto; as outras seguem para as perguntas da forma
+// passo 2 → Dinheiro lança (após conferir recebido/troco); as outras seguem para as perguntas da forma
 const continuar = async () => {
   if (!valor.value || valor.value <= 0) {
     editar()
@@ -384,8 +375,13 @@ const tecla = (e) => {
                 <q-tooltip class="bg-accent">Alterar valor (Insert)</q-tooltip>
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">
-                <q-icon :name="formaAtual.icone" size="xs" class="q-mr-xs" />
-                Receber em {{ formaAtual.label }}
+                <q-icon
+                  :name="formaAtual.icone"
+                  :color="formaAtual.cor"
+                  size="xs"
+                  class="q-mr-xs"
+                />
+                {{ formaAtual.troco ? 'Recebido em' : 'Receber em' }} {{ formaAtual.label }}
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">
                 <span class="text-grey-5 q-ml-sm"> Tecla Insert altera o valor à Receber </span>
@@ -398,7 +394,7 @@ const tecla = (e) => {
               prefix="R$"
               :min="0.01"
               autofocus
-              :hint="formaAtual.troco ? 'Enter lança · Esc volta' : 'Enter aplica · Esc desfaz'"
+              hint="Enter aplica · Esc desfaz"
               class="q-field--auto-height"
               input-class="text-right text-h2 text-weight-bold text-primary"
             />
@@ -445,9 +441,11 @@ const tecla = (e) => {
           flat
           color="primary"
           :label="
-            formaAtual.troco || formaAtual.valor === 'entrega'
-              ? 'Lançar (Enter)'
-              : 'Continuar (Enter)'
+            editando
+              ? 'Aplicar (Enter)'
+              : formaAtual.troco || formaAtual.valor === 'entrega'
+                ? 'Lançar (Enter)'
+                : 'Continuar (Enter)'
           "
           tabindex="-1"
           @click="editando ? aplicarEdicao() : continuar()"
