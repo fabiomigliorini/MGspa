@@ -104,7 +104,7 @@ onMounted(() => carregar(route.params.codcarga))
       </q-card>
 
       <template v-else>
-        <q-banner v-if="carga.inativo" dense rounded class="bg-red-1 text-red-10 q-mb-md">
+        <q-banner v-if="carga.inativo" rounded class="bg-red-1 text-red-10 q-mb-md">
           <template #avatar><q-icon name="block" color="negative" /></template>
           Romaneio cancelado em {{ formataTimestamp(carga.inativo) }}. Os pesos não entram no
           estoque.
@@ -150,7 +150,7 @@ onMounted(() => carregar(route.params.codcarga))
               <q-card-section class="q-pb-none">
                 <div class="text-subtitle2 text-grey-8">Pesagem</div>
               </q-card-section>
-              <q-list dense>
+              <q-list>
                 <q-item v-for="p in pesos" :key="p.label">
                   <q-item-section>
                     <q-item-label caption>{{ p.label }}</q-item-label>
@@ -270,7 +270,7 @@ onMounted(() => carregar(route.params.codcarga))
               <q-card-section class="q-pb-sm">
                 <div class="text-subtitle2 text-grey-8">Classificação</div>
               </q-card-section>
-              <q-markup-table flat dense>
+              <q-markup-table flat>
                 <thead>
                   <tr>
                     <th class="text-left">Parâmetro</th>

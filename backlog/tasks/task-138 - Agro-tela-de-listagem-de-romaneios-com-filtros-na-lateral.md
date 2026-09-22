@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-22 12:23'
-updated_date: '2026-09-22 12:40'
+updated_date: '2026-09-22 13:54'
 labels:
   - agro
 dependencies:
@@ -40,29 +40,35 @@ Ajuste aditivo em CargaListItem.vue: prop sync (default true) com v-if no bloco 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Implementado.
+REABERTA: a listagem entregue ficou ruim visualmente.
 
-Arquivos novos:
-- agro/src/stores/cargaListagem.js -- setup store com persist (pick filtros+agrupar). pinia-plugin-persistedstate ja estava registrado em stores/index.js; esta e a primeira store do agro a usar.
-- agro/src/components/cargas/CargasFiltrosDrawer.vue
-- agro/src/pages/CargasPage.vue
-- agro/src/utils/abrirPdf.js (copia do estoque)
+Causa: reusei o CargaListItem, que e item do drawer de 300px do patio (avatar grande,
+labels empilhados, barra de progresso). Esticado numa pagina larga virou bloco solto,
+sem colunas, com a barra de progresso deformada. O cabecalho de totais tambem tinha
+q-separator vertical dentro de row q-col-gutter-md, que renderiza como bloco cinza.
+eslint, prettier, quasar build e o transform do Vite passaram todos -- nenhum ve layout.
 
-Alterados:
-- agro/src/router/routes.js: rotas cargas e cargas/:codcarga + import do drawer com markRaw/defineAsyncComponent.
-- agro/src/layouts/MainLayout.vue: item Romaneios no grupo Operacao.
-- agro/src/components/carga/CargaListItem.vue: props sync (default true) e ambosLados. Sem a prop sync toda linha da tela nova mostraria "Pendente" (dado do servidor nao tem sincronizado/syncerro).
-- agro/src/utils/carga.js: + normalizarCargaParaExibicao() e rotulosDoPapel().
+Refeito espelhando a NotasPage de verdade:
+- q-page cru: sem q-pa-md, sem max-width/margin auto, sem q-card em volta da lista.
+- q-item dense hoverable clickable class="q-py-xs" em q-list separator.
+- q-item-section avatar min-width 32px com q-icon puro (nao q-avatar).
+- Conteudo num GRID: div.row items-center com celulas q-px-sm col-<xs> col-md-<n> em
+  text-caption, somando 12 no md: romaneio 2 | placa 2 | origem->destino 3 | chegada 2 |
+  desconto 1 | liquido 2. Segunda linha col-12 com etapa pendente (colorida), motorista e safra.
+- Barra de totais repetindo as MESMAS larguras (2+2+3 = col-md-7, depois 2, 1, 2) pra cada
+  total cair em cima da sua coluna.
+- Tres estados e FAB fab-mini iguais aos da notas.
+- CargaListItem revertido ao original (as props sync/ambosLados viraram codigo morto quando
+  a pagina parou de usa-lo). O patio segue como estava.
 
-Decisoes que valem lembrar:
-- Selects proprios no drawer (q-select alimentado pela store) em vez de SelectUnidade/SelectContrato/SelectTalhao: aqueles leem o Dexie, populado so pelo onMounted do CargaPage. Quem cai direto em /cargas teria selects VAZIOS e sem erro nenhum.
-- params() manda inativo 1 ou 9 SEMPRE -- sem a chave o backend traz as canceladas.
-- buscar() usa requisicaoId incremental em vez de abortar por loading (o fetchNotas do notas perde o filtro digitado durante um scroll).
-- todasPaginas() varre a paginacao dos cadastros (perPage 50; o 51o contrato sumiria).
-- agrupar fica fora do watch de filtros: trocar agrupamento nao refaz a busca da tela.
-- data_inicio default = 1o dia do mes corrente.
+Verificado com SCREENSHOT: o headless Chrome VOLTOU a funcionar neste ambiente (a memoria
+que dizia signal 16 estava desatualizada). Renderizei o markup exato da template com os
+dados REAIS do endpoint e o CSS do Quasar do node_modules, em 1600px e em 430px.
+O estreito pegou um defeito adicional: liquido em col-12 deixava uma linha inteira vazia
+so com o travessao nas cargas sem pesar -- virou col-6, dividindo a linha com o desconto
+(que e exatamente o que a notas faz no campo valor).
 
-Verificado: eslint limpo; os 8 modulos compilam pelo Vite (HTTP 200 em https://localhost:8088/<modulo>); endpoint devolve envelope data/links/meta/totais com totais no TOPO.
+eslint e prettier limpos; os dois modulos compilam pelo Vite.
 
 FALTA VALIDACAO VISUAL do usuario em https://sistema-dev.mgpapelaria.com.br:8088/#/cargas
 <!-- SECTION:NOTES:END -->

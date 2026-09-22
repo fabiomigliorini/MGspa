@@ -88,9 +88,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="q-pa-sm">
+  <div class="q-pa-md">
     <div class="row items-center no-wrap">
-      <div class="text-subtitle2 text-grey-8">
+      <div class="text-subtitle1 text-grey-8">
         Filtros
         <q-badge v-if="store.contagemFiltros" color="primary" class="q-ml-xs">
           {{ store.contagemFiltros }}
@@ -100,7 +100,6 @@ onMounted(() => {
       <q-btn
         v-if="store.contagemFiltros"
         flat
-        dense
         round
         icon="close"
         color="grey-7"
@@ -113,10 +112,10 @@ onMounted(() => {
 
   <q-separator />
 
-  <div class="q-pa-sm q-gutter-y-sm">
+  <div class="q-pa-md q-gutter-y-md">
     <div class="text-caption text-grey-7">Período e safra</div>
-    <MgInputData v-model="filtros.data_inicio" type="date" label="De" dense />
-    <MgInputData v-model="filtros.data_fim" type="date" label="Até" dense />
+    <MgInputData v-model="filtros.data_inicio" type="date" label="De" />
+    <MgInputData v-model="filtros.data_fim" type="date" label="Até" />
     <q-select
       v-model="filtros.codsafra"
       :options="safras"
@@ -125,7 +124,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       clearable
       label="Safra"
     />
@@ -137,7 +135,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       clearable
       label="Cultura"
     />
@@ -145,7 +142,7 @@ onMounted(() => {
 
   <q-separator />
 
-  <div class="q-pa-sm q-gutter-y-sm">
+  <div class="q-pa-md q-gutter-y-md">
     <div class="text-caption text-grey-7">Tipo e situação</div>
     <q-select
       v-model="filtros.sentido"
@@ -153,7 +150,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       clearable
       label="Tipo de romaneio"
     />
@@ -163,16 +159,15 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       clearable
       label="Etapa"
     />
-    <q-toggle v-model="filtros.canceladas" label="Incluir canceladas" dense />
+    <q-toggle v-model="filtros.canceladas" label="Incluir canceladas" />
   </div>
 
   <q-separator />
 
-  <div class="q-pa-sm q-gutter-y-sm">
+  <div class="q-pa-md q-gutter-y-md">
     <div class="text-caption text-grey-7">Origem e destino</div>
     <q-select
       v-model="filtros.codunidadearmazenadora"
@@ -182,7 +177,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       clearable
       label="Unidade armazenadora"
     />
@@ -197,7 +191,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       clearable
       label="Talhão"
     />
@@ -209,7 +202,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       clearable
       label="Contrato"
     />
@@ -225,7 +217,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       label="Lado"
       hint="Aplica-se aos campos acima"
     />
@@ -233,16 +224,15 @@ onMounted(() => {
 
   <q-separator />
 
-  <div class="q-pa-sm q-gutter-y-sm">
+  <div class="q-pa-md q-gutter-y-md">
     <div class="text-caption text-grey-7">Caminhão</div>
-    <q-input v-model="filtros.placa" outlined dense clearable label="Placa" />
-    <q-input v-model="filtros.placacarreta" outlined dense clearable label="Carreta" />
-    <q-input v-model="filtros.motorista" outlined dense clearable label="Motorista" />
+    <q-input v-model="filtros.placa" outlined clearable label="Placa" />
+    <q-input v-model="filtros.placacarreta" outlined clearable label="Carreta" />
+    <q-input v-model="filtros.motorista" outlined clearable label="Motorista" />
     <q-input
       v-model.number="filtros.codcarga"
       type="number"
       outlined
-      dense
       clearable
       label="Nº do romaneio"
     />
@@ -250,7 +240,7 @@ onMounted(() => {
 
   <q-separator />
 
-  <div class="q-pa-sm q-gutter-y-sm">
+  <div class="q-pa-md q-gutter-y-md">
     <div class="text-caption text-grey-7">Relatório</div>
     <q-select
       v-model="store.agrupar"
@@ -258,7 +248,6 @@ onMounted(() => {
       emit-value
       map-options
       outlined
-      dense
       label="Agrupar por"
       hint="Vale só para o PDF"
     />

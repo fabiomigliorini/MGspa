@@ -1,23 +1,23 @@
 <script setup>
 // Drawer esquerdo do pátio (espelha OfflineLeftDrawerTabNegocios do PDV):
-// safra + status do sync, "No pátio" (qualquer sentido, qualquer dia) e
-// "Finalizadas" (as últimas). A seleção é pela rota carga/:uuid.
+// filtro de safra, "No pátio" (qualquer sentido, qualquer dia) e "Finalizadas"
+// (as últimas). A seleção é pela rota carga/:uuid.
+//
+// Sem botão de sincronizar aqui: o gatilho é único e vive fora do drawer. Este
+// componente não fala com a store de sincronização.
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
-import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { fmtNumero } from 'src/utils/carga'
 import CargaListItem from './CargaListItem.vue'
 
 const router = useRouter()
 const $q = useQuasar()
 const store = useCargaStore()
-const sinc = useSincronizacaoStore()
 
 const { safras, codsafraAtiva, cargasNoPatio, cargasFinalizadas, totaisFinalizadas, pesosaca } =
   storeToRefs(store)
-const { online, sincronizando } = storeToRefs(sinc)
 
 function rota(carga) {
   return { name: 'carga', params: { uuid: carga.uuid } }
@@ -39,30 +39,17 @@ function novaCarga() {
 
 <template>
   <div class="q-pa-sm">
-    <div class="row items-center no-wrap q-gutter-x-xs">
-      <q-select
-        :model-value="codsafraAtiva"
-        :options="safras"
-        option-value="codsafra"
-        option-label="safra"
-        emit-value
-        map-options
-        outlined
-        label="Safra"
-        class="col"
-        @update:model-value="store.definirSafra"
-      />
-      <q-btn
-        flat
-        round
-        :icon="online ? 'cloud_done' : 'cloud_off'"
-        :color="online ? 'green-7' : 'orange-7'"
-        :loading="sincronizando"
-        @click="store.sincronizar({ force: true })"
-      >
-        <q-tooltip>{{ online ? 'Online' : 'Offline' }} — sincronizar tudo</q-tooltip>
-      </q-btn>
-    </div>
+    <q-select
+      :model-value="codsafraAtiva"
+      :options="safras"
+      option-value="codsafra"
+      option-label="safra"
+      emit-value
+      map-options
+      outlined
+      label="Safra"
+      @update:model-value="store.definirSafra"
+    />
   </div>
 
   <q-separator />
