@@ -7,6 +7,11 @@ const CargaLeftDrawer = markRaw(
 )
 const CargaResumo = markRaw(defineAsyncComponent(() => import('components/carga/CargaResumo.vue')))
 
+// Filtros da listagem de romaneios (tela de consulta, separada do pátio).
+const CargasFiltrosDrawer = markRaw(
+  defineAsyncComponent(() => import('components/cargas/CargasFiltrosDrawer.vue')),
+)
+
 const routes = [
   {
     path: '/',
@@ -33,6 +38,24 @@ const routes = [
           leftDrawer: CargaLeftDrawer,
           rightDrawer: CargaResumo,
         },
+      },
+      {
+        // Consulta do histórico — plural, pra não colidir com o pátio
+        // (`carga/:uuid`), que é a tela de operação e continua offline-first.
+        path: 'cargas',
+        name: 'cargas',
+        component: () => import('pages/CargasPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Romaneios',
+          leftDrawer: CargasFiltrosDrawer,
+        },
+      },
+      {
+        path: 'cargas/:codcarga',
+        name: 'carga-detalhe',
+        component: () => import('pages/CargaDetailPage.vue'),
+        meta: { auth: true, title: 'Romaneio' },
       },
       {
         path: 'extrato',

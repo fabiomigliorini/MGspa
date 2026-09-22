@@ -21,8 +21,8 @@ import { notifyError } from 'src/utils/notify'
 // conveniência de quem já importa da store.
 export { SENTIDOS, ETAPAS_POR_SENTIDO, CONTATIPO_PADRAO, novoPonto, pontoCompleto, ratearPontos }
 
-// Sem filtro de data a lista de finalizadas mostraria a safra inteira no drawer;
-// corta nas últimas N (como o "Últimos" do PDV) — pra ver mais, filtra o dia.
+// A lista de finalizadas mostraria a safra inteira no drawer; corta nas últimas
+// N (como o "Últimos" do PDV).
 const LIMITE_FINALIZADAS_SEM_DATA = 30
 
 // Store da Carga unificada (pátio) — lê/grava no Dexie (offline-first) e dispara
@@ -131,7 +131,7 @@ export const useCargaStore = defineStore('carga', () => {
     return dia ? lista : lista.slice(0, LIMITE_FINALIZADAS_SEM_DATA)
   })
 
-  // Totais das finalizadas exibidas (só faz sentido com o dia filtrado).
+  // Totais das finalizadas exibidas (as últimas N da lista ao lado).
   const totaisFinalizadas = computed(() => {
     let bruto = 0
     let desconto = 0
@@ -146,7 +146,7 @@ export const useCargaStore = defineStore('carga', () => {
       desconto,
       liquido,
       sacas: liquido / pesosaca.value,
-      pct: bruto > 0 ? (desconto / bruto) * 100 : 0,
+      descontoSacas: desconto / pesosaca.value,
     }
   })
 
@@ -460,11 +460,14 @@ export const useCargaStore = defineStore('carga', () => {
     return limpa
   }
 
-  // Reenvio manual (botão no resumo): limpa a rejeição anterior e tenta de novo.
+  // Botão de sincronizar do resumo: faz as DUAS coisas num clique — destrava
+  // ESTA carga (limpa a rejeição, que o ciclo normal pula de propósito) e roda o
+  // ciclo completo forçado, igual ao botão da nuvem: empurra todas as pendências,
+  // refaz o pull dos cadastros ignorando o TTL e atualiza os saldos.
   async function reenviar(carga) {
     await db.carga.update(carga.uuid, { sincronizado: 0, syncerro: null })
     await carregarCargas()
-    await sincronizar({ force: false })
+    await sincronizar({ force: true })
   }
 
   async function inativar(carga) {

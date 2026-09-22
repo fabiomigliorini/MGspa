@@ -95,13 +95,6 @@ export function cargaFinalizada(carga) {
   return carga?.etapa === ETAPA_FINAL
 }
 
-// Já passou pela balança? A partir daí o sentido trava: a ordem das etapas
-// diverge (ENTRADA pesa PBT antes, SAIDA pesa tara antes) e trocar embaralharia
-// o que já foi pesado.
-export function cargaPesada(carga) {
-  return carga?.pbt != null || carga?.tara != null
-}
-
 export function iconeCarga(carga) {
   return sentidoMeta(carga?.sentido).icon
 }
@@ -254,6 +247,41 @@ function normalizarPontoDoServidor(sp) {
     valornf: sp.valornf ?? null,
     chavenf: sp.chavenf ?? null,
   }
+}
+
+// Carga do servidor -> shape que os componentes de EXIBIÇÃO esperam (`pontos`
+// com `rotulo` pronto). Não confundir com normalizarCargaDoServidor, logo
+// abaixo: aquela produz o shape OFFLINE, que vai pro Dexie e descarta o rótulo
+// de propósito (a store do pátio resolve pelas caches locais).
+//
+// Aqui o rótulo vem do backend (CargaPontoService::rotulo) porque as telas de
+// consulta são online e não têm cache nenhum pra consultar.
+export function normalizarCargaParaExibicao(cs) {
+  return {
+    ...cs,
+    pontos: (cs.CargaPontoS || []).map((sp) => ({
+      papel: sp.papel,
+      contatipo: sp.contatipo,
+      codplantio: sp.codplantio ?? null,
+      codunidadearmazenadora: sp.codunidadearmazenadora ?? null,
+      codcontrato: sp.codcontrato ?? null,
+      liquido: sp.liquido ?? null,
+      rotulo: sp.rotulo ?? null,
+      numeronf: sp.numeronf ?? null,
+      valornf: sp.valornf ?? null,
+      chavenf: sp.chavenf ?? null,
+    })),
+  }
+}
+
+// Rótulos de um papel, juntos — "Talhão 12 · Talhão 14". Espelha
+// CargaRelatorioService::rotulosDoPapel pra tela e PDF dizerem a mesma coisa.
+export function rotulosDoPapel(carga, papel) {
+  return (carga?.pontos || [])
+    .filter((p) => p.papel === papel)
+    .map((p) => p.rotulo)
+    .filter(Boolean)
+    .join(' · ')
 }
 
 export function normalizarCargaDoServidor(cs) {

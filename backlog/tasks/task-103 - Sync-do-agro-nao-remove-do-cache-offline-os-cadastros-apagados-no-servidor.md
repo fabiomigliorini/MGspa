@@ -1,11 +1,11 @@
 ---
 id: TASK-103
 title: Sync do agro nao remove do cache offline os cadastros apagados no servidor
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-16 21:14'
-updated_date: '2026-09-16 21:14'
+updated_date: '2026-09-22 13:54'
 labels:
   - agro
 dependencies: []

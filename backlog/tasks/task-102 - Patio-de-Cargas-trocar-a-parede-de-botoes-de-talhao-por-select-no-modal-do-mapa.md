@@ -3,11 +3,11 @@ id: TASK-102
 title: >-
   Patio de Cargas: trocar a parede de botoes de talhao por select no modal do
   mapa
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-16 20:45'
-updated_date: '2026-09-16 20:47'
+updated_date: '2026-09-22 13:54'
 labels:
   - agro
 dependencies: []

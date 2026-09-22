@@ -1,6 +1,6 @@
 <script setup>
 // Passo do wizard: cartão. Etapas: tipo → parcelas (crédito) → modo (maquininha ou manual)
-// → [maquininha do manual] → [bandeira] → [autorização].
+// → [outras maquininhas] → [maquininha do manual] → [bandeira] → [autorização].
 // Enviar para a maquininha cria o pedido e emite 'cobranca'; manual lança direto.
 import { ref, computed, onMounted } from 'vue'
 import { Notify } from 'quasar'
@@ -49,22 +49,28 @@ onMounted(async () => {
 })
 
 // ---- maquininhas da filial; a padrão do PDV só vem pré-selecionada (pode estar com defeito) ----
-const maquinetasEnvio = computed(() => [
-  ...posSaurus.value.map((p) => ({
-    valor: `saurus-${p.codsauruspdv}`,
-    tipoMaquineta: 'saurus',
-    nome: 'SafraPay',
-    logo: '/logo-cartoes/Safra.jpg',
-    pos: p,
-  })),
-  ...posPagarMe.value.map((p) => ({
-    valor: `pagarme-${p.codpagarmepos}`,
-    tipoMaquineta: 'pagarme',
-    nome: 'Stone',
-    logo: '/logo-cartoes/Stone.jpg',
-    pos: p,
-  })),
-])
+// SaurusPosS traz uma linha POR PINPAD, então um PDV com 2 ou 3 aparelhos repetia na lista
+// (mesmo apelido, mesmo `valor`, teclas diferentes — e key duplicada no v-for). Quem recebe a
+// cobrança é o PDV (codsauruspdv), logo os pinpads dele são uma opção só.
+const maquinetasEnvio = computed(() => {
+  const todas = [
+    ...posSaurus.value.map((p) => ({
+      valor: `saurus-${p.codsauruspdv}`,
+      tipoMaquineta: 'saurus',
+      nome: 'SafraPay',
+      logo: '/logo-cartoes/Safra.jpg',
+      pos: p,
+    })),
+    ...posPagarMe.value.map((p) => ({
+      valor: `pagarme-${p.codpagarmepos}`,
+      tipoMaquineta: 'pagarme',
+      nome: 'Stone',
+      logo: '/logo-cartoes/Stone.jpg',
+      pos: p,
+    })),
+  ]
+  return todas.filter((m, i) => todas.findIndex((o) => o.valor === m.valor) === i)
+})
 
 const valorPadrao = computed(() => {
   if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
@@ -106,28 +112,32 @@ const valorMaquininha = computed(
   () => Math.round((valor.value + (plano.value?.valorjuros || 0)) * 100) / 100,
 )
 
-const opcoesModo = computed(() => {
+// padrão do PDV primeiro, depois as demais da filial
+const maquinetasOrdenadas = computed(() => {
+  const padrao = maquinetasEnvio.value.find((m) => m.valor === valorPadrao.value)
+  return padrao
+    ? [padrao, ...maquinetasEnvio.value.filter((m) => m.valor !== valorPadrao.value)]
+    : [...maquinetasEnvio.value]
+})
+
+// Manual primeiro (tecla 0); as maquininhas recebidas vêm 1..9 na ordem dada.
+// A etapa 'outras' pede comManual=false: Manual já foi oferecido na etapa anterior, e
+// omiti-lo não mexe na numeração das maquininhas (a padrão segue 1, as demais 2, 3…)
+const montarModo = (lista, comManual = true) => {
   const sincronizado = sNegocio.negocio.sincronizado
-  const opcoes = []
-  // padrão do PDV primeiro, depois as demais da filial
-  const envio = [...maquinetasEnvio.value].sort((a, b) =>
-    a.valor === valorPadrao.value ? -1 : b.valor === valorPadrao.value ? 1 : 0,
-  )
-  envio.forEach((m) => {
-    opcoes.push({
-      ...m,
-      label: `${m.pos.apelido} · ${m.nome}`,
-      caption:
-        m.valor === valorPadrao.value
-          ? 'Enviar para a maquininha (padrão do PDV)'
-          : 'Enviar para a maquininha',
-      icone: 'point_of_sale',
-      cor: VISUAL.cartao.cor,
-      desabilitado: !sincronizado,
-      motivo: 'Negócio ainda não sincronizado com o servidor',
-    })
-  })
-  if (!envio.length) {
+  const opcoes = lista.map((m) => ({
+    ...m,
+    label: `${m.pos.apelido} · ${m.nome}`,
+    caption:
+      m.valor === valorPadrao.value
+        ? 'Enviar para a maquininha (padrão do PDV)'
+        : 'Enviar para a maquininha',
+    icone: 'point_of_sale',
+    cor: VISUAL.cartao.cor,
+    desabilitado: !sincronizado,
+    motivo: 'Negócio ainda não sincronizado com o servidor',
+  }))
+  if (!lista.length) {
     opcoes.push({
       valor: 'sem-maquineta',
       label: 'Enviar para a maquininha',
@@ -137,19 +147,55 @@ const opcoesModo = computed(() => {
       motivo: 'Nenhuma maquininha cadastrada nesta filial',
     })
   }
-  // Manual sempre primeiro (tecla 0); maquininhas 1..9, padrão do PDV primeiro e já selecionada
   return [
-    {
-      tecla: 0,
-      valor: 'manual',
-      label: 'Manual',
-      caption: 'Digitar a autorização da maquininha',
-      icone: 'edit_note',
-      cor: VISUAL.cartao.cor,
-    },
+    ...(comManual
+      ? [
+          {
+            tecla: 0,
+            valor: 'manual',
+            label: 'Manual',
+            caption: 'Digitar a autorização da maquininha',
+            icone: 'edit_note',
+            cor: VISUAL.cartao.cor,
+          },
+        ]
+      : []),
     ...opcoes.map((o, i) => ({ ...o, tecla: i < 9 ? i + 1 : null })),
   ]
+}
+
+// a lista cheia de maquininhas confunde o caixa: havendo padrão do PDV e qualquer outra,
+// mostra só a padrão e joga as demais para a etapa 'outras'
+const colapsar = computed(
+  () =>
+    maquinetasEnvio.value.some((m) => m.valor === valorPadrao.value) &&
+    maquinetasEnvio.value.length > 1,
+)
+
+const opcoesModo = computed(() => {
+  if (!colapsar.value) {
+    return montarModo(maquinetasOrdenadas.value)
+  }
+  return [
+    ...montarModo(maquinetasOrdenadas.value.slice(0, 1)),
+    {
+      valor: 'mais',
+      label: 'Selecione Outra Maquineta',
+      caption:
+        maquinetasEnvio.value.length === 2
+          ? 'mais 1 nesta filial'
+          : `mais ${maquinetasEnvio.value.length - 1} nesta filial`,
+      icone: 'expand_more',
+      cor: 'grey-6',
+      // sem sincronizar nenhuma maquininha serve; o item continua visível só para
+      // avisar que existem outras, com o mesmo motivo das demais
+      desabilitado: !sNegocio.negocio.sincronizado,
+      motivo: 'Negócio ainda não sincronizado com o servidor',
+    },
+  ]
 })
+
+const opcoesTodas = computed(() => montarModo(maquinetasOrdenadas.value, false))
 
 // parceiro do cartão manual (Stone, SafraPay, Brasil Card…); só os que aceitam o tipo escolhido
 const opcoesParceiro = computed(() =>
@@ -238,6 +284,12 @@ const escolherPlano = (opcao) => {
 }
 
 const escolherModo = (opcao) => {
+  // etapa separada em vez de expandir no lugar: lista nova recomeça a seleção na padrão
+  // (expandindo in-place o cursor cairia na 1a "outra") e o Esc colapsa pelo histórico
+  if (opcao.valor === 'mais') {
+    irPara('outras')
+    return
+  }
   if (opcao.tipoMaquineta) {
     parceiro.value = null
     posEscolhida.value = opcao
@@ -383,6 +435,17 @@ defineExpose({ tecla })
         :inicial="valorPadrao"
         @escolher="escolherModo"
       />
+    </template>
+
+    <template v-else-if="etapa === 'outras'">
+      <div style="max-height: 40vh; overflow-y: auto">
+        <lista-opcoes
+          ref="listaRef"
+          :opcoes="opcoesTodas"
+          :inicial="valorPadrao"
+          @escolher="escolherModo"
+        />
+      </div>
     </template>
 
     <template v-else-if="etapa === 'parceiro'">

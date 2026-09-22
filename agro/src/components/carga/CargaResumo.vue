@@ -192,6 +192,7 @@ function kgPonto(p) {
           >
             <q-tooltip>
               {{ carga.syncerro || (carga.sincronizado ? 'Sincronizada' : 'Pendente') }} — reenviar
+              esta carga e sincronizar tudo
             </q-tooltip>
           </q-btn>
         </q-item-section>

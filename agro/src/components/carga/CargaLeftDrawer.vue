@@ -1,33 +1,23 @@
 <script setup>
 // Drawer esquerdo do pátio (espelha OfflineLeftDrawerTabNegocios do PDV):
-// filtros de safra/dia, "No pátio" (qualquer sentido, qualquer dia) e
-// "Finalizadas". A seleção é pela rota carga/:uuid.
+// filtro de safra, "No pátio" (qualquer sentido, qualquer dia) e "Finalizadas"
+// (as últimas). A seleção é pela rota carga/:uuid.
+//
+// Sem botão de sincronizar aqui: o gatilho é único e vive fora do drawer. Este
+// componente não fala com a store de sincronização.
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
-import { useSincronizacaoStore } from 'src/stores/sincronizacao'
-import { agoraLocal, fmtNumero } from 'src/utils/carga'
-import MgInputData from '@components/MgInputData.vue'
+import { fmtNumero } from 'src/utils/carga'
 import CargaListItem from './CargaListItem.vue'
 
 const router = useRouter()
 const $q = useQuasar()
 const store = useCargaStore()
-const sinc = useSincronizacaoStore()
 
-const {
-  safras,
-  codsafraAtiva,
-  dataFiltro,
-  cargasNoPatio,
-  cargasFinalizadas,
-  totaisFinalizadas,
-  pesosaca,
-} = storeToRefs(store)
-const { online, sincronizando } = storeToRefs(sinc)
-
-const hojeIso = agoraLocal().slice(0, 10)
+const { safras, codsafraAtiva, cargasNoPatio, cargasFinalizadas, totaisFinalizadas, pesosaca } =
+  storeToRefs(store)
 
 function rota(carga) {
   return { name: 'carga', params: { uuid: carga.uuid } }
@@ -57,31 +47,9 @@ function novaCarga() {
       emit-value
       map-options
       outlined
-      dense
       label="Safra"
-      class="q-mb-sm"
       @update:model-value="store.definirSafra"
     />
-    <div class="row items-center no-wrap q-gutter-x-xs">
-      <MgInputData
-        :model-value="dataFiltro"
-        type="date"
-        label="Dia"
-        :max="hojeIso"
-        class="col"
-        @update:model-value="store.definirData"
-      />
-      <q-btn
-        flat
-        round
-        :icon="online ? 'cloud_done' : 'cloud_off'"
-        :color="online ? 'green-7' : 'orange-7'"
-        :loading="sincronizando"
-        @click="store.sincronizar({ force: true })"
-      >
-        <q-tooltip>{{ online ? 'Online' : 'Offline' }} — clique para sincronizar</q-tooltip>
-      </q-btn>
-    </div>
   </div>
 
   <q-separator />
@@ -108,24 +76,21 @@ function novaCarga() {
   </div>
 
   <q-item-label header class="row items-center">
-    Finalizadas{{ dataFiltro ? ' do dia' : '' }}
+    Finalizadas
     <q-badge color="green-7" class="q-ml-sm" :label="cargasFinalizadas.length" />
   </q-item-label>
   <q-banner
-    v-if="dataFiltro && cargasFinalizadas.length"
-    dense
-    rounded
-    class="bg-green-1 text-green-10 q-mx-sm q-mb-sm"
+    v-if="cargasFinalizadas.length"
+    class="bg-green-1 text-green-10 q-mx-sm q-mb-sm rounded-borders"
   >
-    <template #avatar><q-icon name="agriculture" color="green-8" /></template>
     <div class="text-weight-medium">
-      {{ fmtNumero(totaisFinalizadas.liquido) }} kg ·
+      {{ fmtNumero(totaisFinalizadas.liquido) }} kg -
       {{ fmtNumero(totaisFinalizadas.sacas, 1) }} sacas
     </div>
-    <div class="text-caption">
-      Desconto {{ fmtNumero(totaisFinalizadas.desconto) }} kg ({{
-        fmtNumero(totaisFinalizadas.pct, 1)
-      }}%)
+    <div class="text-caption text-weight-medium">
+      Descontos de {{ fmtNumero(totaisFinalizadas.desconto) }} kg - ({{
+        fmtNumero(totaisFinalizadas.descontoSacas, 1)
+      }}sc)
     </div>
   </q-banner>
   <template v-for="c in cargasFinalizadas" :key="c.uuid">
@@ -134,8 +99,5 @@ function novaCarga() {
   </template>
   <div v-if="!cargasFinalizadas.length" class="text-grey-5 text-center q-pa-md">
     Nenhuma carga finalizada
-  </div>
-  <div v-else-if="!dataFiltro" class="text-caption text-grey-6 text-center q-pa-md">
-    Mostrando as últimas {{ cargasFinalizadas.length }} — filtre um dia para ver todas.
   </div>
 </template>

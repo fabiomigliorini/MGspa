@@ -1,10 +1,10 @@
 ---
 id: TASK-110
 title: 'Patio: limpar a tela ao finalizar o romaneio, pronta para o proximo caminhao'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-09-17 19:21'
-updated_date: '2026-09-17 19:41'
+updated_date: '2026-09-22 13:54'
 labels:
   - agro
 dependencies: []

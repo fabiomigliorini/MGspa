@@ -1,11 +1,11 @@
 ---
 id: TASK-125
 title: 'Agro/Patio: alinhar os campos de origem e destino do grao'
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-21 18:33'
-updated_date: '2026-09-21 18:36'
+updated_date: '2026-09-22 13:51'
 labels:
   - agro
 dependencies: []
