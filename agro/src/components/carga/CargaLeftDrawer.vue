@@ -60,7 +60,7 @@ function novaCarga() {
         :loading="sincronizando"
         @click="store.sincronizar({ force: true })"
       >
-        <q-tooltip>{{ online ? 'Online' : 'Offline' }} — clique para sincronizar</q-tooltip>
+        <q-tooltip>{{ online ? 'Online' : 'Offline' }} — sincronizar tudo</q-tooltip>
       </q-btn>
     </div>
   </div>
@@ -94,19 +94,16 @@ function novaCarga() {
   </q-item-label>
   <q-banner
     v-if="cargasFinalizadas.length"
-    dense
-    rounded
-    class="bg-green-1 text-green-10 q-mx-sm q-mb-sm"
+    class="bg-green-1 text-green-10 q-mx-sm q-mb-sm rounded-borders"
   >
-    <template #avatar><q-icon name="agriculture" color="green-8" /></template>
     <div class="text-weight-medium">
-      {{ fmtNumero(totaisFinalizadas.liquido) }} kg ·
+      {{ fmtNumero(totaisFinalizadas.liquido) }} kg -
       {{ fmtNumero(totaisFinalizadas.sacas, 1) }} sacas
     </div>
-    <div class="text-caption">
-      Desconto {{ fmtNumero(totaisFinalizadas.desconto) }} kg ({{
-        fmtNumero(totaisFinalizadas.pct, 1)
-      }}%)
+    <div class="text-caption text-weight-medium">
+      Descontos de {{ fmtNumero(totaisFinalizadas.desconto) }} kg - ({{
+        fmtNumero(totaisFinalizadas.descontoSacas, 1)
+      }}sc)
     </div>
   </q-banner>
   <template v-for="c in cargasFinalizadas" :key="c.uuid">
@@ -115,8 +112,5 @@ function novaCarga() {
   </template>
   <div v-if="!cargasFinalizadas.length" class="text-grey-5 text-center q-pa-md">
     Nenhuma carga finalizada
-  </div>
-  <div v-else class="text-caption text-grey-6 text-center q-pa-md">
-    Mostrando as últimas {{ cargasFinalizadas.length }} finalizadas.
   </div>
 </template>

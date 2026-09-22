@@ -1,11 +1,11 @@
 ---
 id: TASK-105
 title: Cadastro recem-criado nao aparece no patio ate o TTL de 5 min do sync expirar
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-16 21:52'
-updated_date: '2026-09-16 21:53'
+updated_date: '2026-09-22 13:54'
 labels:
   - agro
 dependencies: []

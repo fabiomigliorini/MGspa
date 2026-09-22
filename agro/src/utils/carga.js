@@ -95,13 +95,6 @@ export function cargaFinalizada(carga) {
   return carga?.etapa === ETAPA_FINAL
 }
 
-// Já passou pela balança? A partir daí o sentido trava: a ordem das etapas
-// diverge (ENTRADA pesa PBT antes, SAIDA pesa tara antes) e trocar embaralharia
-// o que já foi pesado.
-export function cargaPesada(carga) {
-  return carga?.pbt != null || carga?.tara != null
-}
-
 export function iconeCarga(carga) {
   return sentidoMeta(carga?.sentido).icon
 }

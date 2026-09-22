@@ -19,7 +19,6 @@ import {
   etapasDaCarga,
   proximaEtapa,
   cargaFinalizada,
-  cargaPesada,
   sentidoMeta,
   agoraLocal,
   fmtNumero as fmt,
@@ -129,30 +128,58 @@ function distribuirPercentual(grupo) {
   })
 }
 
-// ---- Sentido (tipo de romaneio) — decidido aqui, trava após a 1ª pesagem ----
+// ---- Sentido (tipo de romaneio) — muda até FINALIZAR; depois, nunca mais ----
+// Trocar reposiciona a carga na 1ª etapa do novo fluxo (aplicarSentido), mas os
+// pesos já lidos ficam — e continuam visíveis pelos `|| != null` de mostrarPbt/
+// mostrarTara abaixo. O sinal do extrato vem de papel+contatipo, não do sentido,
+// então o servidor não se importa com a troca.
 const finalizada = computed(() => cargaFinalizada(local.value))
-const podeTrocarSentido = computed(
-  () => !!local.value && !cargaPesada(local.value) && !finalizada.value,
-)
+const podeTrocarSentido = computed(() => !!local.value && !finalizada.value)
 const sentidoSel = computed({
   get: () => local.value?.sentido,
   set: (s) => {
     if (!s || !local.value || s === local.value.sentido) return
     aplicarSentido(local.value, s)
+    // A revisão era do fluxo antigo: sem zerar, o FAB seguiria verde escrito
+    // "Salvar" enquanto o clique só avançaria uma etapa do fluxo novo.
+    revisando.value = false
   },
 })
 
 const ordem = computed(() => etapasDaCarga(local.value))
 const idxEtapa = computed(() => ordem.value.indexOf(local.value?.etapa))
 const etapaMeta = computed(() => ETAPA_META[local.value?.etapa] || {})
-const mostrarPbt = computed(() => idxEtapa.value >= ordem.value.indexOf('PBT'))
-const mostrarTara = computed(() => idxEtapa.value >= ordem.value.indexOf('TARA'))
+// O `|| != null` segura o caso da troca de sentido: ENTRADA pesa PBT primeiro,
+// SAIDA pesa a tara — sem isso um peso já lido ficaria escondido (e ineditável)
+// até o novo fluxo alcançar a etapa dele.
+const mostrarPbt = computed(
+  () => idxEtapa.value >= ordem.value.indexOf('PBT') || local.value?.pbt != null,
+)
+const mostrarTara = computed(
+  () => idxEtapa.value >= ordem.value.indexOf('TARA') || local.value?.tara != null,
+)
+// Mesma regra dos pesos: o que JÁ foi preenchido continua à vista depois de uma
+// troca de sentido. A classificação entra no líquido (o servidor aplica toda
+// leitura presente, seja qual for o sentido) e a NF viaja no ponto — esconder
+// qualquer um dos dois deixaria dado influenciando o romaneio sem quem o edite.
+const temLeitura = computed(() =>
+  (local.value?.classificacao || []).some(
+    (c) => c.leitura !== null && c.leitura !== undefined && c.leitura !== '',
+  ),
+)
+const temNf = computed(() =>
+  (local.value?.pontos || []).some((p) => !!p.numeronf || p.valornf != null),
+)
 const mostrarClassificacao = computed(
   () =>
-    local.value?.sentido === 'ENTRADA' && idxEtapa.value >= ordem.value.indexOf('CLASSIFICACAO'),
+    (local.value?.sentido === 'ENTRADA' &&
+      idxEtapa.value >= ordem.value.indexOf('CLASSIFICACAO')) ||
+    temLeitura.value,
 )
 const mostrarFiscal = computed(
-  () => local.value?.sentido === 'SAIDA' && idxEtapa.value >= ordem.value.indexOf('FISCAL'),
+  () =>
+    (local.value?.sentido === 'SAIDA' && idxEtapa.value >= ordem.value.indexOf('FISCAL')) ||
+    temNf.value,
 )
 
 // ---- Placa (autocomplete do cache de veículos, funciona offline) ----
@@ -559,8 +586,8 @@ defineExpose({
         <q-card-section class="row items-center q-col-gutter-sm">
           <div class="col-12 col-sm">
             <SelectSentido v-model="sentidoSel" :disable="!podeTrocarSentido" />
-            <div v-if="!podeTrocarSentido && !finalizada" class="text-caption text-grey-6 q-mt-xs">
-              Já pesado — o tipo de romaneio não muda mais.
+            <div v-if="finalizada" class="text-caption text-red-4 q-mt-xs">
+              Romaneio finalizado — o tipo não muda mais.
             </div>
           </div>
           <div class="col-auto">

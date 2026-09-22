@@ -1,9 +1,10 @@
 ---
 id: TASK-108
 title: 'Patio de Cargas: resumo cortando texto e botao principal sem retorno'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-09-17 19:06'
+updated_date: '2026-09-22 13:54'
 labels:
   - agro
 dependencies: []
