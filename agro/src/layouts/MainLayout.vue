@@ -28,6 +28,7 @@ const menuGroups = [
     label: 'Operação',
     items: [
       { label: 'Pátio de Cargas', icon: 'local_shipping', color: 'green-7', to: { name: 'carga' } },
+      { label: 'Romaneios', icon: 'fact_check', color: 'blue-grey-7', to: { name: 'cargas' } },
       {
         label: 'Estoque & Extrato',
         icon: 'inventory_2',

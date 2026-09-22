@@ -256,6 +256,41 @@ function normalizarPontoDoServidor(sp) {
   }
 }
 
+// Carga do servidor -> shape que os componentes de EXIBIÇÃO esperam (`pontos`
+// com `rotulo` pronto). Não confundir com normalizarCargaDoServidor, logo
+// abaixo: aquela produz o shape OFFLINE, que vai pro Dexie e descarta o rótulo
+// de propósito (a store do pátio resolve pelas caches locais).
+//
+// Aqui o rótulo vem do backend (CargaPontoService::rotulo) porque as telas de
+// consulta são online e não têm cache nenhum pra consultar.
+export function normalizarCargaParaExibicao(cs) {
+  return {
+    ...cs,
+    pontos: (cs.CargaPontoS || []).map((sp) => ({
+      papel: sp.papel,
+      contatipo: sp.contatipo,
+      codplantio: sp.codplantio ?? null,
+      codunidadearmazenadora: sp.codunidadearmazenadora ?? null,
+      codcontrato: sp.codcontrato ?? null,
+      liquido: sp.liquido ?? null,
+      rotulo: sp.rotulo ?? null,
+      numeronf: sp.numeronf ?? null,
+      valornf: sp.valornf ?? null,
+      chavenf: sp.chavenf ?? null,
+    })),
+  }
+}
+
+// Rótulos de um papel, juntos — "Talhão 12 · Talhão 14". Espelha
+// CargaRelatorioService::rotulosDoPapel pra tela e PDF dizerem a mesma coisa.
+export function rotulosDoPapel(carga, papel) {
+  return (carga?.pontos || [])
+    .filter((p) => p.papel === papel)
+    .map((p) => p.rotulo)
+    .filter(Boolean)
+    .join(' · ')
+}
+
 export function normalizarCargaDoServidor(cs) {
   return {
     uuid: cs.uuid,

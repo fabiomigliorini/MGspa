@@ -24,6 +24,10 @@ class CargaPontoResource extends Resource
         $ret['UnidadeArmazenadora'] = $this->whenLoaded('UnidadeArmazenadora');
         $ret['Contrato'] = $this->whenLoaded('Contrato');
 
+        // Nome legivel da conta ("Talhao 12 — TMG 7262"). As telas online nao
+        // tem o cache Dexie que o patio usa pra montar isso no front.
+        $ret['rotulo'] = CargaPontoService::rotulo($this->resource);
+
         return $ret;
     }
 }

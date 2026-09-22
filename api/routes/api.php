@@ -426,6 +426,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // O extrato (tblmovimentograo) e gerado pelo servidor a partir dos pontos.
     Route::get('carga', [\Mg\Grao\CargaController::class, 'index']);
     Route::post('carga/sincronizar', [\Mg\Grao\CargaController::class, 'sincronizar']);
+    // Consulta do historico (tela /cargas) — rotas estaticas antes do wildcard.
+    Route::get('carga/listagem', [\Mg\Grao\CargaController::class, 'listagem']);
+    Route::get('carga/relatorio', [\Mg\Grao\CargaController::class, 'relatorio']);
     Route::post('carga/{codcarga}/inativo', [\Mg\Grao\CargaController::class, 'inativar']);
     Route::delete('carga/{codcarga}/inativo', [\Mg\Grao\CargaController::class, 'ativar']);
     Route::get('carga/{codcarga}', [\Mg\Grao\CargaController::class, 'show'])->whereNumber('codcarga');

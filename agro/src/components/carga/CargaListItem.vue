@@ -5,7 +5,14 @@
 // (TASK-73) e em qualquer outra lista de cargas.
 import { computed } from 'vue'
 import { formataHora, tempoRelativo } from '@components/formatters'
-import { iconeCarga, corIconeCarga, pontosResumo, fmtNumero, ETAPA_META } from 'src/utils/carga'
+import {
+  iconeCarga,
+  corIconeCarga,
+  pontosResumo,
+  rotulosDoPapel,
+  fmtNumero,
+  ETAPA_META,
+} from 'src/utils/carga'
 import { sacas } from 'src/utils/desconto'
 import CargaEtapaProgresso from './CargaEtapaProgresso.vue'
 
@@ -15,6 +22,22 @@ const props = defineProps({
   to: { type: [String, Object], default: null },
   // aviso de classificação (cultura sem parâmetro) — quem tem a store passa.
   aviso: { type: String, default: null },
+  // Ícone de sincronização. Só faz sentido em lista alimentada pelo Dexie: a
+  // carga vinda do servidor não tem `sincronizado`, e o ícone acusaria
+  // "Pendente" em toda linha. Default true preserva o pátio.
+  sync: { type: Boolean, default: true },
+  // Mostra origem → destino em vez de só o lado que identifica a carga
+  // (pontosResumo). Numa tela filtrada por unidade, ver um lado só confunde.
+  ambosLados: { type: Boolean, default: false },
+})
+
+// "Talhão 12 → Silo 1". Sem um dos lados, cai no resumo de um lado só.
+const resumo = computed(() => {
+  if (!props.ambosLados) return pontosResumo(props.carga)
+  const origem = rotulosDoPapel(props.carga, 'ORIGEM')
+  const destino = rotulosDoPapel(props.carga, 'DESTINO')
+  if (origem && destino) return `${origem} → ${destino}`
+  return origem || destino || pontosResumo(props.carga)
 })
 
 // Métrica adaptada à etapa: líquido (com sacas) > bruto > PBT > tara > ação pendente.
@@ -47,7 +70,7 @@ const metrica = computed(() => {
           {{ carga.placacarreta }}
         </span>
       </q-item-label>
-      <q-item-label caption class="ellipsis">{{ pontosResumo(carga) }}</q-item-label>
+      <q-item-label caption class="ellipsis">{{ resumo }}</q-item-label>
       <q-item-label caption>
         {{ formataHora(carga.data) }} · {{ tempoRelativo(carga.data) }}
       </q-item-label>
@@ -63,6 +86,7 @@ const metrica = computed(() => {
           <q-tooltip>{{ carga.syncerro }}</q-tooltip>
         </q-icon>
         <q-icon
+          v-if="sync"
           :name="carga.sincronizado ? 'cloud_done' : 'cloud_off'"
           :color="carga.sincronizado ? 'green-5' : 'orange-6'"
           size="18px"

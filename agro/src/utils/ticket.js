@@ -23,6 +23,73 @@ function linha(rotulo, valor) {
   return `<tr><td class="r">${rotulo}</td><td class="v">${valor}</td></tr>`
 }
 
+const TITULO_POR_SENTIDO = {
+  SAIDA: 'ROMANEIO DE EXPEDIÇÃO',
+  TRANSFERENCIA: 'ROMANEIO DE TRANSFERÊNCIA',
+  ENTRADA: 'ROMANEIO DE RECEBIMENTO',
+}
+
+const ASSINATURAS_POR_SENTIDO = {
+  SAIDA: ['Conferente', 'Motorista', 'Expedidor'],
+}
+const ASSINATURAS_PADRAO = ['Classificador', 'Motorista', 'Recebedor']
+
+// Monta o objeto do ticket a partir do payload do SERVIDOR (CargaResource com
+// CargaService::WITH). O pátio tem a sua própria montagem, no CargaForm, porque
+// lá os dados vêm do Dexie e o rótulo/fazenda são resolvidos pelas caches
+// locais — aqui tudo já vem mastigado do backend.
+//
+// As duas montagens precisam gerar o MESMO ticket; se mexer numa, conferir a
+// outra lado a lado na mesma carga.
+export function ticketDoServidor(c) {
+  const pontos = c.CargaPontoS || []
+  const itensFonte = pontos.filter((p) => p.papel === (c.sentido === 'SAIDA' ? 'DESTINO' : 'ORIGEM'))
+
+  // CUIDADO com o casing: `Safra`, `Veiculo` e `Plantio` são PascalCase porque
+  // os Resources os expõem na mão; as relações DENTRO deles (`cultura`,
+  // `fazenda`) são serializadas pelo Eloquent, que usa snake_case.
+  const cultura = c.Safra?.cultura || null
+  const pesosaca = Number(cultura?.pesosaca) || 60
+
+  // Nome da fazenda sai do primeiro talhão de origem. Sem talhão — expedição,
+  // transferência — cai no genérico, igual ao pátio.
+  const fazenda =
+    pontos.find((p) => p.contatipo === 'PLANTIO' && p.Plantio?.fazenda?.fazenda)?.Plantio?.fazenda
+      ?.fazenda || 'MG Agro'
+
+  return {
+    titulo: TITULO_POR_SENTIDO[c.sentido] || TITULO_POR_SENTIDO.ENTRADA,
+    rotuloItens: c.sentido === 'SAIDA' ? 'Destinos' : 'Origens',
+    assinaturas: ASSINATURAS_POR_SENTIDO[c.sentido] || ASSINATURAS_PADRAO,
+    numero: c.codcarga,
+    data: c.data,
+    fazenda,
+    cultura: cultura?.cultura,
+    safra: c.Safra?.safra,
+    placa: c.placa,
+    placacarreta: c.placacarreta,
+    veiculo: c.Veiculo?.veiculo || null,
+    motorista: c.motorista,
+    // `liquido` do ponto é o rateio já gravado pelo servidor — no pátio ele é
+    // derivado do % na hora, aqui já veio calculado.
+    itens: itensFonte.map((p) => ({ rotulo: p.rotulo, kg: p.liquido })),
+    pbt: c.pbt,
+    tara: c.tara,
+    bruto: c.bruto,
+    classificacao: (c.classificacao || [])
+      .filter((l) => l.leitura !== null && l.leitura !== undefined && l.leitura !== '')
+      .map((l) => ({
+        nome: l.ParametroClassificacao?.parametroclassificacao || `#${l.codparametroclassificacao}`,
+        leitura: l.leitura,
+        desconto: l.desconto,
+      })),
+    desconto: c.desconto,
+    liquido: c.liquido,
+    sacas: c.liquido != null ? Number(c.liquido) / pesosaca : null,
+    pesosaca,
+  }
+}
+
 export function imprimirTicket(t) {
   const numero = t.numero ? `Nº ${t.numero}` : 'Nº provisório'
   const itens = (t.itens || [])

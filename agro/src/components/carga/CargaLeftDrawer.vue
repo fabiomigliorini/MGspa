@@ -1,14 +1,13 @@
 <script setup>
 // Drawer esquerdo do pátio (espelha OfflineLeftDrawerTabNegocios do PDV):
-// filtros de safra/dia, "No pátio" (qualquer sentido, qualquer dia) e
-// "Finalizadas". A seleção é pela rota carga/:uuid.
+// safra + status do sync, "No pátio" (qualquer sentido, qualquer dia) e
+// "Finalizadas" (as últimas). A seleção é pela rota carga/:uuid.
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
-import { agoraLocal, fmtNumero } from 'src/utils/carga'
-import MgInputData from '@components/MgInputData.vue'
+import { fmtNumero } from 'src/utils/carga'
 import CargaListItem from './CargaListItem.vue'
 
 const router = useRouter()
@@ -16,18 +15,9 @@ const $q = useQuasar()
 const store = useCargaStore()
 const sinc = useSincronizacaoStore()
 
-const {
-  safras,
-  codsafraAtiva,
-  dataFiltro,
-  cargasNoPatio,
-  cargasFinalizadas,
-  totaisFinalizadas,
-  pesosaca,
-} = storeToRefs(store)
+const { safras, codsafraAtiva, cargasNoPatio, cargasFinalizadas, totaisFinalizadas, pesosaca } =
+  storeToRefs(store)
 const { online, sincronizando } = storeToRefs(sinc)
-
-const hojeIso = agoraLocal().slice(0, 10)
 
 function rota(carga) {
   return { name: 'carga', params: { uuid: carga.uuid } }
@@ -49,27 +39,18 @@ function novaCarga() {
 
 <template>
   <div class="q-pa-sm">
-    <q-select
-      :model-value="codsafraAtiva"
-      :options="safras"
-      option-value="codsafra"
-      option-label="safra"
-      emit-value
-      map-options
-      outlined
-      dense
-      label="Safra"
-      class="q-mb-sm"
-      @update:model-value="store.definirSafra"
-    />
     <div class="row items-center no-wrap q-gutter-x-xs">
-      <MgInputData
-        :model-value="dataFiltro"
-        type="date"
-        label="Dia"
-        :max="hojeIso"
+      <q-select
+        :model-value="codsafraAtiva"
+        :options="safras"
+        option-value="codsafra"
+        option-label="safra"
+        emit-value
+        map-options
+        outlined
+        label="Safra"
         class="col"
-        @update:model-value="store.definirData"
+        @update:model-value="store.definirSafra"
       />
       <q-btn
         flat
@@ -108,11 +89,11 @@ function novaCarga() {
   </div>
 
   <q-item-label header class="row items-center">
-    Finalizadas{{ dataFiltro ? ' do dia' : '' }}
+    Finalizadas
     <q-badge color="green-7" class="q-ml-sm" :label="cargasFinalizadas.length" />
   </q-item-label>
   <q-banner
-    v-if="dataFiltro && cargasFinalizadas.length"
+    v-if="cargasFinalizadas.length"
     dense
     rounded
     class="bg-green-1 text-green-10 q-mx-sm q-mb-sm"
@@ -135,7 +116,7 @@ function novaCarga() {
   <div v-if="!cargasFinalizadas.length" class="text-grey-5 text-center q-pa-md">
     Nenhuma carga finalizada
   </div>
-  <div v-else-if="!dataFiltro" class="text-caption text-grey-6 text-center q-pa-md">
-    Mostrando as últimas {{ cargasFinalizadas.length }} — filtre um dia para ver todas.
+  <div v-else class="text-caption text-grey-6 text-center q-pa-md">
+    Mostrando as últimas {{ cargasFinalizadas.length }} finalizadas.
   </div>
 </template>

@@ -19,12 +19,33 @@ use Illuminate\Validation\ValidationException;
  */
 class CargaService extends MgService
 {
+    /**
+     * CONTRATO DO SYNC OFFLINE — nao enxugar. O patio puxa por GET v1/carga e
+     * normalizarCargaDoServidor() (agro/src/utils/carga.js) depende de
+     * `classificacao` e `CargaPontoS` completos; tirar relacao daqui quebra o
+     * cache offline em silencio. Telas de consulta usam WITH_LISTAGEM.
+     */
     const WITH = [
         'Safra.Cultura',
         'Veiculo',
         'PessoaMotorista',
         'CargaClassificacaoS.ParametroClassificacao',
         'CargaPontoS.Plantio.Talhao',
+        'CargaPontoS.Plantio.Fazenda',
+        'CargaPontoS.Plantio.Variedade',
+        'CargaPontoS.UnidadeArmazenadora',
+        'CargaPontoS.Contrato.Pessoa',
+    ];
+
+    /**
+     * Eager load da listagem/relatorio: so o necessario pro rotulo do ponto e
+     * pra saca (pesosaca da cultura). Fora ficam CargaClassificacaoS (a listagem
+     * nao mostra leitura) e Plantio.Talhao (Plantio ja tem a coluna `talhao`).
+     * Veiculo/PessoaMotorista tambem saem: placa e motorista sao snapshot em
+     * tblcarga (snapshotCaminhaoMotorista).
+     */
+    const WITH_LISTAGEM = [
+        'Safra.Cultura',
         'CargaPontoS.Plantio.Variedade',
         'CargaPontoS.UnidadeArmazenadora',
         'CargaPontoS.Contrato.Pessoa',
@@ -39,10 +60,26 @@ class CargaService extends MgService
     const CONTATIPOS = ['PLANTIO', 'UNIDADE', 'CONTRATO'];
     const ETAPA_FINAL = 'FINALIZADO';
 
-    public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)
+    /**
+     * @param array|null $with Relacoes do eager load. Default = WITH (contrato do
+     *                         sync). A listagem/relatorio passa WITH_LISTAGEM.
+     */
+    public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null, ?array $with = null)
     {
-        $qry = Carga::query()->with(static::WITH);
+        $qry = Carga::query()->with($with ?? static::WITH);
+        $qry = static::qryFiltros($qry, $filter);
+        $qry = self::qryOrdem($qry, $sort ?: ['-data']);
+        $qry = self::qryColunas($qry, $fields);
+        return $qry;
+    }
 
+    /**
+     * Filtros da carga — fonte unica de WHERE, compartilhada pela listagem
+     * paginada e pelo relatorio PDF (e o que faz "imprimir o que estou vendo"
+     * ser verdade).
+     */
+    public static function qryFiltros($qry, ?array $filter = null)
+    {
         if (!empty($filter['codcarga'])) {
             $qry->where('codcarga', $filter['codcarga']);
         }
@@ -59,17 +96,116 @@ class CargaService extends MgService
             $qry->where('etapa', $filter['etapa']);
         }
         if (!empty($filter['inativo'])) {
+            // ATENCAO: sem a chave nenhum scope roda e as CANCELADAS vem junto.
+            // 1 = ativas, 2 = canceladas, 9 = todas (MgModel::scopeAtivoInativo).
             $qry->AtivoInativo($filter['inativo']);
         }
         if (!empty($filter['data'])) {
             // Coluna e timestamp (chegada no patio); whereDate trunca a parte de
             // data pra o dia inteiro entrar, sem cortar o que vem apos a meia-noite.
+            // Usado pelo pull do patio — nao trocar por range.
             $qry->whereDate('data', $filter['data']);
         }
+        if (!empty($filter['data_inicio'])) {
+            $qry->where('data', '>=', $filter['data_inicio'] . ' 00:00:00');
+        }
+        if (!empty($filter['data_fim'])) {
+            $qry->where('data', '<=', $filter['data_fim'] . ' 23:59:59');
+        }
+        if (!empty($filter['codcultura'])) {
+            $qry->whereHas('Safra', fn ($q) => $q->where('codcultura', $filter['codcultura']));
+        }
+        if (!empty($filter['codveiculo'])) {
+            $qry->where('codveiculo', $filter['codveiculo']);
+        }
+        if (!empty($filter['codpessoamotorista'])) {
+            $qry->where('codpessoamotorista', $filter['codpessoamotorista']);
+        }
+        foreach (['placa', 'placacarreta', 'motorista'] as $col) {
+            if (!empty($filter[$col])) {
+                $qry->where($col, 'ilike', '%' . $filter[$col] . '%');
+            }
+        }
 
-        $qry = self::qryOrdem($qry, $sort ?: ['-data']);
-        $qry = self::qryColunas($qry, $fields);
+        static::qryFiltrosPonto($qry, $filter);
+
         return $qry;
+    }
+
+    /**
+     * Filtros de origem/destino, que vivem em tblcargaponto (N:N com a carga).
+     *
+     * `whereHas` (EXISTS correlacionado), NUNCA join: o join duplica a linha da
+     * carga quando ela tem 2+ pontos, e ai `->paginate()` conta errado — a pagina
+     * de 50 entrega 47 cargas distintas e o meta.total mente.
+     *
+     * E UM whereHas POR FILTRO, nunca um so pros tres: `contatipo` e excludente
+     * (sincronizarPontos grava apenas uma das tres FKs por linha), entao pedir
+     * unidade+talhao no mesmo EXISTS exigiria a MESMA linha sendo UNIDADE e
+     * PLANTIO — resultado sempre vazio. Separados, a semantica e "a carga tocou
+     * o silo 1 E tocou o talhao 12", que e o que se espera.
+     *
+     * `papel` e opcional: por padrao casa nos dois lados, porque a mesma unidade
+     * e DESTINO num recebimento e ORIGEM numa expedicao — quem filtra "Silo 1"
+     * quer o movimento inteiro.
+     */
+    protected static function qryFiltrosPonto($qry, ?array $filter = null): void
+    {
+        $papel = $filter['papel'] ?? null;
+        $papel = in_array($papel, ['ORIGEM', 'DESTINO'], true) ? $papel : null;
+
+        $ponto = function (callable $where) use ($qry, $papel) {
+            $qry->whereHas('CargaPontoS', function ($q) use ($where, $papel) {
+                $where($q);
+                if ($papel) {
+                    $q->where('papel', $papel);
+                }
+            });
+        };
+
+        // A FK basta: codunidadearmazenadora so e preenchida quando contatipo =
+        // UNIDADE (idem plantio/contrato), entao nao precisa filtrar contatipo
+        // junto — e assim o indice parcial e usado.
+        foreach (['codunidadearmazenadora', 'codplantio', 'codcontrato'] as $col) {
+            if (!empty($filter[$col])) {
+                $ponto(fn ($q) => $q->where($col, $filter[$col]));
+            }
+        }
+
+        if (!empty($filter['codpessoacontrato'])) {
+            $ponto(fn ($q) => $q->whereHas(
+                'Contrato',
+                fn ($c) => $c->where('codpessoa', $filter['codpessoacontrato'])
+            ));
+        }
+    }
+
+    /**
+     * Totais do recorte INTEIRO (nao da pagina) — uma query agregada, sem eager
+     * load e sem ordem. E o que a barra de totais da listagem mostra: quem
+     * filtrou "setembro" quer o liquido de setembro, nao o das 50 primeiras.
+     *
+     * `sacas` fica de fora: depende do pesosaca da cultura, que varia por safra;
+     * somar sacas de soja com milho nao significa nada. O front soma por linha
+     * quando o recorte tem uma cultura so.
+     */
+    public static function totais(?array $filter = null): array
+    {
+        $qry = static::qryFiltros(Carga::query(), $filter);
+
+        $row = $qry->selectRaw(
+            'count(*) as qtd'
+            . ', coalesce(sum(bruto), 0) as bruto'
+            . ', coalesce(sum(desconto), 0) as desconto'
+            . ', coalesce(sum(liquido), 0) as liquido'
+        )->first();
+
+        return [
+            'qtd' => (int) ($row->qtd ?? 0),
+            'bruto' => (float) ($row->bruto ?? 0),
+            'desconto' => (float) ($row->desconto ?? 0),
+            'liquido' => (float) ($row->liquido ?? 0),
+        ];
     }
 
     /**
