@@ -28,13 +28,19 @@ class NFePHPService extends MgService
     /**
      * TTL do lock.
      *
-     * Era 120s, MENOR que o pior caso real de enviarSincrono (~243s: envio com 3
-     * tentativas de 40s + consulta de recuperação com outras 3). Ou seja, o lock expirava
-     * com o processo ainda vivo e uma segunda operação entrava em paralelo na mesma nota
-     * — exatamente o que ele deveria impedir. 300s cobre a operação mais longa com folga
-     * e continua curto o bastante para não travar a nota se o processo morrer.
+     * Precisa ser MAIOR que o pior caso real de enviarSincrono, senão o lock expira com o
+     * processo ainda vivo e uma segunda operação entra em paralelo na mesma nota —
+     * exatamente o que ele deveria impedir.
+     *
+     * Conta do pior caso, com o soaptimeout de 60 da TASK-148 (CURLOPT_TIMEOUT = 80):
+     * envio com 3 tentativas (~242s) + as esperas do laço de recuperação (17,5s) + uma
+     * consulta que estoura e encerra o laço (~80s) = ~340s. 600s cobre isso com folga e
+     * continua curto o bastante para não travar a nota por muito tempo se o processo
+     * morrer sem chegar ao destructor.
+     *
+     * Já foi 120s (quando cada tentativa custava 40s) e 300s.
      */
-    const LOCK_TTL = 300;
+    const LOCK_TTL = 600;
 
     /**
      * Serializa operações concorrentes sobre o mesmo alvo.
@@ -122,9 +128,13 @@ class NFePHPService extends MgService
         string $operacao,
         $tools = null,
         ?Filial $filial = null,
-        ?NotaFiscal $nf = null
+        ?NotaFiscal $nf = null,
+        ?array $atrasosMs = null
     ) {
-        $atrasosMs = [500, 1500];
+        // Cada tentativa custa até CURLOPT_TIMEOUT (soaptimeout + 20 = 80s), então o
+        // padrão de 3 tentativas é um teto de ~242s POR CHAMADA. Quem chama de dentro de
+        // um laço que já insiste sozinho passa [] para não multiplicar isso.
+        $atrasosMs = $atrasosMs ?? [500, 1500];
         $tentativa = 0;
         $filial = $filial ?? $nf?->Filial;
 
@@ -457,7 +467,11 @@ class NFePHPService extends MgService
             foreach ([500, 2000, 5000, 10000] as $esperaMs) {
                 usleep($esperaMs * 1000);
                 try {
-                    $resConsulta = static::consultarSemLock($nf);
+                    // Tentativa unica por consulta (atrasos []): o retry interno de 3x
+                    // multiplicaria este laco por 3, e o pior caso do envio passaria de
+                    // 20 min — acima do lock da nota, do $timeout do job e do teto do
+                    // front. Quem insiste aqui e o proprio laco, com backoff.
+                    $resConsulta = static::consultarSemLock($nf, []);
                     $nf = $nf->fresh();
                     $recuperada = !empty($nf->nfeautorizacao);
                     Log::info("enviarSincrono NF#{$nf->codnotafiscal}: consulta de recuperacao cStat={$resConsulta->cStat} ({$resConsulta->xMotivo}) recuperada=" . ($recuperada ? 'sim' : 'nao'));
@@ -472,7 +486,11 @@ class NFePHPService extends MgService
                         break;
                     }
                 } catch (\Exception $e) {
-                    Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta: " . $e->getMessage());
+                    // Sem resposta da SEFAZ: insistir custa mais um timeout inteiro por
+                    // tentativa e ela nao esta em condicoes de responder. A nota fica para
+                    // o robo de pendentes, que e justamente para isso.
+                    Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta, desiste: " . $e->getMessage());
+                    break;
                 }
             }
         }
@@ -1026,7 +1044,7 @@ class NFePHPService extends MgService
      * nota (ex: enviarSincrono na recuperacao por duplicidade) — o lock nao e
      * reentrante, entao chamar consultar() de dentro do envio lancaria excecao.
      */
-    protected static function consultarSemLock(NotaFiscal $nf)
+    protected static function consultarSemLock(NotaFiscal $nf, ?array $atrasosRetry = null)
     {
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
@@ -1044,7 +1062,8 @@ class NFePHPService extends MgService
             "consultaChave",
             $tools,
             null,
-            $nf
+            $nf,
+            $atrasosRetry
         );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
