@@ -81,7 +81,7 @@ const nova = async (modelo) => {
     console.log(error)
     Notify.create({
       type: 'negative',
-      message: error.response.data.message,
+      message: error.response?.data?.message || error.message,
       timeout: 3000, // 3 segundos
       actions: [{ icon: 'close', color: 'white' }],
     })

@@ -3,9 +3,10 @@ id: TASK-153
 title: >-
   ListagemNotas.nova() derreferencia error.response.data.message sem guarda:
   erro de rede vira TypeError e o operador nao recebe aviso
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
+updated_date: '2026-09-23 16:34'
 labels:
   - negocios
 dependencies: []
