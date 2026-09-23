@@ -1,11 +1,11 @@
 ---
 id: TASK-142
-title: 'Wizard Receber cartao: colapsar as outras maquininhas'
-status: Done
+title: 'Wizard Receber cartao: maquininha padrao no topo e cabecalho Outras Maquinetas'
+status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-22 20:09'
-updated_date: '2026-09-22 20:33'
+updated_date: '2026-09-23 13:55'
 labels:
   - negocios
 dependencies: []
@@ -17,27 +17,23 @@ ordinal: 152000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Operadores se confundem com a lista cheia de maquininhas da filial na etapa Cartao do wizard Receber. Passa a mostrar so Manual (0) e a maquininha padrao do PDV (1), com uma linha 'Selecione outra maquininha' que abre a sub-etapa 'outras' com a lista completa (2,3,4...). Sub-etapa em vez de expandir in-place porque o ListaOpcoes guarda o indice: expandindo no lugar, o cursor de quem chega no pivo por seta+Enter cai na primeira 'outra' maquininha e um segundo Enter cobraria na maquininha errada.
+Operadores se confundem com a lista cheia de maquininhas da filial na etapa Cartao do wizard Receber. A etapa passa a abrir com a maquininha padrao do PDV na tecla 0 (ja pre-selecionada) e Manual na tecla 1; as demais da filial ficam abaixo, separadas pelo cabeçalho 'Outras Maquinetas', numeradas de 2 em diante. Tudo numa tela so - sem sub-etapa e sem esconder opcao.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Implementado em negocios/src/components/offline/receber/FormaCartao.vue (unico arquivo; ListaOpcoes.vue nao foi tocado).
+1a tentativa (22/09, commit 0932885d) escondia as outras maquininhas atras de uma linha 'Selecione outra maquininha' que abria a sub-etapa 'outras'. RECUSADA na validacao: esconder opcao nao foi aceito. O commit foi revertido (FormaCartao.vue e FormaPix.vue voltaram ao estado de b52e2fa5) e a etapa foi refeita numa tela so.
 
-Etapa 'modo' passa a mostrar so: 0 Manual, 1 maquininha padrao do PDV (pre-selecionada) e a linha 'Selecione outra maquininha' (avatar cinza expand_more, sem atalho numerico). Escolher essa linha vai para a nova sub-etapa 'outras', que lista as maquininhas mantendo a numeracao (1 = padrao, 2, 3, 4...).
+Solucao atual, em negocios/src/components/offline/receber/FormaCartao.vue (opcoesModo): lista unica, sem sub-etapa. Ordem fixa 0 = maquininha padrao do PDV (ja pre-selecionada via :inicial=valorPadrao), 1 = Manual, e as demais da filial sob o cabeçalho 'Outras Maquinetas' em 2, 3, 4... O cabeçalho sai do campo 'grupo' que o ListaOpcoes ja suportava - basta marcar as 'outras'; a padrao fica sem grupo, no topo.
 
-Ajuste (22/09, apos validacao): a etapa 'outras' nao repete a opcao Manual - ela ja foi oferecida na etapa anterior e ficava redundante. montarModo ganhou o parametro comManual (default true). A numeracao nao muda, porque Manual tem tecla fixa 0 e as maquininhas sempre contam de 1.
+Sem padrao configurado (ou negocio de outro estoque local) nao ha o que destacar: Manual volta ao 0 e as maquininhas contam de 1, sob o cabeçalho 'Maquinetas'. Filial sem maquininha nenhuma mantem a linha desabilitada 'Nenhuma maquininha cadastrada nesta filial'. Negocio nao sincronizado desabilita todas as maquininhas (Manual continua valendo) e a selecao inicial cai no Manual, como antes.
 
-DEDUPLICACAO (achado na 1a validacao, 22/09): SaurusPosS vem do PdvService::estoqueLocal com uma linha POR PINPAD, e um PDV com varios aparelhos repetia na lista - mesmo apelido, mesmo 'valor' (saurus-{codsauruspdv}), teclas diferentes apontando para a mesma maquininha, e key duplicada no v-for do ListaOpcoes. No Botanico eram 14 linhas para 8 maquininhas reais (BOT Alfa 3x, BOT Bravo 3x, BOT Foxtrot 3x); no Centro, 11 para 9. Quem recebe a cobranca e o PDV, entao maquinetasEnvio agora deduplica por 'valor'. Isso era boa parte da confusao relatada. A lista do cartao MANUAL nao pode ser deduplicada do mesmo jeito (la o que importa e o serial de cada pinpad) - virou a TASK-143.
+DEDUPLICACAO (achado na 1a validacao, mantido): SaurusPosS vem do PdvService::estoqueLocal com uma linha POR PINPAD, e um PDV com varios aparelhos repetia na lista - mesmo apelido, mesmo 'valor' (saurus-{codsauruspdv}), teclas diferentes apontando para a mesma maquininha, e key duplicada no v-for do ListaOpcoes. No Botanico eram 14 linhas para 8 maquininhas reais (BOT Alfa 3x, BOT Bravo 3x, BOT Foxtrot 3x); no Centro, 11 para 9. Quem recebe a cobranca e o PDV, entao maquinetasEnvio deduplica por 'valor'. Sem isso a nova numeracao ficaria 'Alfa 2, Alfa 3, Alfa 4'. A lista do cartao MANUAL nao pode ser deduplicada do mesmo jeito (la o que importa e o serial de cada pinpad) - e a TASK-143.
 
-Por que sub-etapa e nao expandir a lista no lugar: o ListaOpcoes guarda o indice selecionado e so o recalcula enquanto 'interagiu' for falso. Expandindo in-place, quem chega na linha pela seta e da Enter fica com indice=2, que apos a expansao vira a PRIMEIRA 'outra' maquininha - um segundo Enter (tecla presa/duplo toque de caixa) dispararia criarSaurusPedido/criarPagarMePedido na maquininha errada, acendendo a de outro caixa. Clique e teclado tambem divergiriam, porque @click nao marca 'interagiu'. Com sub-etapa o compilador do Vue da keys distintas a cada branch do v-if (modo=2, outras=3), forcando unmount+mount: instancia nova, selecao recomeca na padrao. De brinde o Esc colapsa pelo historico, sem ganhar um segundo significado.
+ListaOpcoes.vue: o cabeçalho de grupo ganhou 'q-mt-md q-pb-xs text-subtitle1 text-weight-bold' - respiro antes do titulo e o titulo em 16px/700 (o default do q-item-label header e 14px/400, cinza demais para separar bloco). So classes utilitarias, sem style inline e sem bloco <style>. Afeta tambem os cabeçalhos 'Da filial'/'Outras filiais' do PIX, que ficam com o mesmo tratamento.
 
-Detalhes: :inicial=valorPadrao tambem na etapa 'outras' (Enter acidental recai na padrao, nunca numa arbitraria); colapsa havendo padrao do PDV e mais de 1 maquininha; o pivo fica desabilitado com o mesmo motivo quando o negocio nao esta sincronizado; sem padrao configurado ou negocio de outro estoque local, lista cheia como antes. O sort de ordenacao virou find+filter (o comparador antigo nao definia ordem total, so funcionava pela estabilidade do sort do V8). Texto usa 'maquininha', palavra que o resto da tela usa.
+ATENCAO AO TESTAR: o Deposito (101001) tem UMA maquininha so cadastrada (DEP Alfa), entao la aparecem so 0 e 1 - nao ha 'Outras Maquinetas'. Testar no Botanico (102001, 8 maquininhas) ou Centro (103001, 9).
 
-ATENCAO AO TESTAR: o Deposito (101001) tem UMA maquininha so cadastrada (DEP Alfa, 0 Stone), entao la nao aparece nem pode aparecer o link - nao ha outra. Testar no Botanico (102001, 8 maquininhas) ou Centro (103001, 9).
-
-Verificado: eslint limpo; SFC compila (script+template, bindings ok); keys dos branches conferidas no render gerado; script setup real executado com stubs nos 9 cenarios de borda e depois com os dados REAIS das 5 filiais que tem maquininha (consultados no Postgres), conferindo que nao sobra valor duplicado; screenshots headless das duas etapas em desktop e 400px. quasar build nao rodou: dist/spa pertence a outro usuario (EACCES), nao e erro de codigo.
-
-Ver TASK-144 (PIX), que aplica o mesmo padrao na etapa QR Code.
+Verificado: eslint limpo nos tres arquivos; logica de opcoesModo rodada fora do componente nos 5 cenarios (padrao no meio da lista, sem padrao, padrao unico, filial sem maquininha, negocio nao sincronizado), conferindo ordem, teclas e deduplicacao; screenshot headless da etapa em 900px e 400px.
 <!-- SECTION:NOTES:END -->
