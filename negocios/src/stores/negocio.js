@@ -43,6 +43,24 @@ function instalarListenerMultiAba(store) {
   }
 }
 
+// Resposta do servidor que chegou fora de ordem e reabriria o negócio que está na tela.
+//
+// O status só anda para frente (1 aberto → 2 fechado → 3 cancelado) e `fechar()` só marca
+// 2 depois que o servidor confirma, então um retorno com 1 para um negócio local já
+// fechado é sempre resposta velha — em geral o PUT do sincronizar ou um GET do polling de
+// PIX/maquininha que demorou. Aplicá-la devolvia a tela para "aberto" no meio da emissão,
+// desmontando o card da nota que estava transmitindo (TASK-146).
+function respostaAtrasada(atual, ret) {
+  const atrasada =
+    atual?.uuid === ret?.uuid && atual?.codnegociostatus > 1 && ret?.codnegociostatus == 1
+  if (atrasada) {
+    console.warn(
+      `[negócio ${ret.uuid}] resposta atrasada descartada: servidor devolveu status 1 com o negócio já em ${atual.codnegociostatus}`,
+    )
+  }
+  return atrasada
+}
+
 // Compara dois valores numéricos com tolerância, tratando
 // null/undefined/''/NaN como "sem valor". Tolerância 0.0001.
 function numerosIguais(a, b) {
@@ -1151,7 +1169,9 @@ export const negocioStore = defineStore('negocio', {
           })
           if (this.negocio.uuid == ret.uuid) {
             this.negocio.codnegocio = ret.codnegocio
-            this.negocio.codnegociostatus = ret.codnegociostatus
+            if (!respostaAtrasada(this.negocio, ret)) {
+              this.negocio.codnegociostatus = ret.codnegociostatus
+            }
             if (
               this.negocio.valortotal == ret.valortotal &&
               this.negocio.valordesconto == ret.valordesconto &&
@@ -1203,6 +1223,10 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async atualizarNegocioPeloObjeto(neg) {
+      // Resposta atrasada nao reabre negocio fechado na tela (ver respostaAtrasada)
+      if (respostaAtrasada(this.negocio, neg)) {
+        return
+      }
       this.negocio = { ...neg }
       db.negocio.put(neg)
       await this.atualizarListagem()

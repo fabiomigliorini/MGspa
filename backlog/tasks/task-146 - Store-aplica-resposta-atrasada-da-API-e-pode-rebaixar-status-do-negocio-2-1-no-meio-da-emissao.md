@@ -3,9 +3,10 @@ id: TASK-146
 title: >-
   Store aplica resposta atrasada da API e pode rebaixar status do negocio (2->1)
   no meio da emissao
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
+updated_date: '2026-09-23 16:40'
 labels:
   - negocios
 dependencies: []
