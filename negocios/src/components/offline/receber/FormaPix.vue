@@ -1,7 +1,6 @@
 <script setup>
 // Passo do wizard: PIX. Etapa 1 = QR Code (cobrança no banco) ou chave manual;
-// etapa 2 (só QR) = conta que recebe; etapa 3 (opcional) = contas das outras filiais.
-// QR emite 'cobranca' para o wizard abrir o dialog do PixCob.
+// etapa 2 (só QR) = conta que recebe. QR emite 'cobranca' para o wizard abrir o dialog do PixCob.
 import { ref, computed, onMounted } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { pixStore } from 'stores/pix'
@@ -10,12 +9,6 @@ import ListaOpcoes from './ListaOpcoes.vue'
 import { VISUAL } from '../../../utils/pagamento.js'
 
 const emit = defineEmits(['concluido', 'cobranca'])
-
-// As duas contas que abrem a listagem saem por banco, não por codportador: o Sicredi é a
-// conta da empresa mãe (vale para qualquer PDV) e o BB é sempre o da filial do negócio.
-// Mesma convenção do PixService no backend, que já acha o BB da filial por codbanco.
-const CODBANCO_SICREDI = 748
-const CODBANCO_BB = 1
 
 const sNegocio = negocioStore()
 const sPix = pixStore()
@@ -65,55 +58,88 @@ const opcoesModo = computed(() => {
   ]
 })
 
-const doBanco = (codbanco) =>
-  portadores.value.find((p) => p.codbanco === codbanco && p.codfilial === codfilial.value) ??
-  portadores.value.find((p) => p.codbanco === codbanco)
-
-// Sicredi da empresa mãe serve qualquer filial; o BB tem que ser o da filial do negócio.
-// Numeração sem buracos: sem Sicredi, o BB da filial assume o 0.
-const primarios = computed(() =>
-  [
-    doBanco(CODBANCO_SICREDI),
-    portadores.value.find((p) => p.codbanco === CODBANCO_BB && p.codfilial === codfilial.value),
-  ].filter(Boolean),
-)
-
-const outros = computed(() => portadores.value.filter((p) => !primarios.value.includes(p)))
-
-const montarOpcao = (p, tecla) => ({
-  tecla,
-  valor: p.codportador,
-  label: p.banco,
-  // a filial vem sempre, mesmo na conta da própria filial: o operador confere de quem é a conta
-  caption: p.filial
-    ? `Conta ${p.conta}-${p.contadigito} · ${p.filial}`
-    : `Conta ${p.conta}-${p.contadigito}`,
-  logo: `/bancos/${p.codbanco}.svg`,
-  icone: 'account_balance',
-  cor: VISUAL.pix.cor,
-})
-
-// abre só com as contas do dia a dia; as demais ficam atrás do pivô
 const opcoesConta = computed(() => {
-  const itens = primarios.value.map((p, i) => montarOpcao(p, i))
-  if (outros.value.length) {
-    itens.push({
-      tecla: null,
-      valor: '__outras',
-      label: 'Selecione portador de outra filial',
-      icone: 'more_horiz',
-      cor: 'grey-6',
-    })
-  }
-  return itens
-})
+  const padraoCod = sNegocio.padrao?.codportador
+  const localCodfilial = codfilial.value
 
-// continua a contagem de onde a listagem principal parou
-const opcoesOutras = computed(() =>
-  outros.value.map((p, i) =>
-    montarOpcao(p, primarios.value.length + i < 10 ? primarios.value.length + i : null),
-  ),
-)
+  // separa por filial
+  const daFilial = portadores.value.filter((p) => p.codfilial === localCodfilial)
+  const outras = portadores.value.filter((p) => p.codfilial !== localCodfilial)
+
+  // encontra o portador padrao (pode ser de outra filial)
+  const padraoPortador = padraoCod
+    ? portadores.value.find((p) => p.codportador === padraoCod)
+    : null
+
+  // tenta identificar Banco do Brasil entre os da filial local
+  const isBancoDoBrasil = (p) => {
+    if (!p) return false
+    if (p.codbanco) {
+      const cb = String(p.codbanco)
+      if (cb === '1' || cb === '001') return true
+    }
+    if (p.banco && typeof p.banco === 'string') {
+      return /brasil/i.test(p.banco) || /banco do brasil/i.test(p.banco) || /bb\b/i.test(p.banco)
+    }
+    return false
+  }
+
+  const bbLocal = daFilial.find((p) => isBancoDoBrasil(p)) || null
+
+  // Construir lista: padrao (se existir) -> bbLocal (se existir e diferente do padrao) -> demais da filial -> outras filiais
+  const used = new Set()
+  const ordered = []
+
+  if (padraoPortador) {
+    ordered.push(padraoPortador)
+    used.add(padraoPortador.codportador)
+  }
+
+  if (bbLocal && !used.has(bbLocal.codportador)) {
+    ordered.push(bbLocal)
+    used.add(bbLocal.codportador)
+  }
+
+  // demais da filial
+  for (const p of daFilial) {
+    if (!used.has(p.codportador)) {
+      ordered.push(p)
+      used.add(p.codportador)
+    }
+  }
+
+  // então as outras filiais
+  for (const p of outras) {
+    if (!used.has(p.codportador)) {
+      ordered.push(p)
+      used.add(p.codportador)
+    }
+  }
+
+  const agrupar = daFilial.length > 0 && outras.length > 0
+
+  return ordered.map((p, i) => ({
+    tecla: i < 9 ? i + 1 : null,
+    valor: p.codportador,
+    label: p.banco,
+    caption: (() => {
+      if (!p.filial) return `Conta ${p.conta}-${p.contadigito}`
+      // mostrar filial explicitamente para o bbLocal mesmo quando for da filial local
+      if (p === bbLocal) return `Conta ${p.conta}-${p.contadigito} · ${p.filial}`
+      return p.codfilial === localCodfilial
+        ? `Conta ${p.conta}-${p.contadigito}`
+        : `Conta ${p.conta}-${p.contadigito} · ${p.filial}`
+    })(),
+    logo: `/bancos/${p.codbanco}.svg`,
+    icone: 'account_balance',
+    cor: VISUAL.pix.cor,
+    grupo: (() => {
+      if (i < 2 && (padraoPortador || bbLocal)) return 'Principais PIX'
+      if (!agrupar) return null
+      return p.codfilial === localCodfilial ? 'Da filial' : 'Outras filiais'
+    })(),
+  }))
+})
 
 const escolherModo = (opcao) => {
   if (opcao.valor === 'chave') {
@@ -125,14 +151,6 @@ const escolherModo = (opcao) => {
     return
   }
   etapa.value = 'conta'
-}
-
-const escolherConta = (opcao) => {
-  if (opcao.valor === '__outras') {
-    etapa.value = 'outras'
-    return
-  }
-  qr(opcao.valor)
 }
 
 const chave = async () => {
@@ -162,10 +180,6 @@ const qr = async (codportador) => {
 // devolve true quando consumiu a tecla
 const tecla = (e) => {
   if (e.key === 'Escape') {
-    if (etapa.value === 'outras') {
-      etapa.value = 'conta'
-      return true
-    }
     if (etapa.value === 'conta') {
       etapa.value = 'modo'
       return true
@@ -182,18 +196,10 @@ defineExpose({ tecla })
     <template v-if="etapa === 'modo'">
       <lista-opcoes ref="listaRef" :opcoes="opcoesModo" @escolher="escolherModo" />
     </template>
-    <template v-else-if="etapa === 'conta'">
-      <lista-opcoes
-        ref="listaRef"
-        :opcoes="opcoesConta"
-        :inicial="sNegocio.padrao.codportador"
-        @escolher="escolherConta"
-      />
-    </template>
     <template v-else>
       <lista-opcoes
         ref="listaRef"
-        :opcoes="opcoesOutras"
+        :opcoes="opcoesConta"
         :inicial="sNegocio.padrao.codportador"
         @escolher="(o) => qr(o.valor)"
       />

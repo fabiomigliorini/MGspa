@@ -117,7 +117,11 @@ defineExpose({ tecla })
 <template>
   <q-list ref="raiz">
     <template v-for="(opcao, i) in opcoes" :key="opcao.valor ?? i">
-      <q-item-label header v-if="opcao.grupo && opcao.grupo !== opcoes[i - 1]?.grupo">
+      <q-item-label
+        header
+        class="q-mt-md q-pb-xs text-subtitle1 text-weight-bold"
+        v-if="opcao.grupo && opcao.grupo !== opcoes[i - 1]?.grupo"
+      >
         {{ opcao.grupo }}
       </q-item-label>
       <q-item
