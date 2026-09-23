@@ -163,9 +163,20 @@ class NFePHPEnvioService
     /**
      * Encerra o progresso como 'erro'. Chamado pelo catch do executar() e pelo failed()
      * do job, que cobre o que nem chega ao handle().
+     *
+     * Nunca sobrescreve um estado terminal: o failed() pode chegar DEPOIS de a
+     * transmissão ter concluído (o retry_after devolve o job e, com $tries = 1, um
+     * segundo worker o marca como failed enquanto o original ainda roda, ou logo após
+     * ele terminar). Apagar um 'concluido' com sucesso daria erro ao operador e cupom
+     * nenhum, com a nota autorizada.
      */
     public static function registrarFalha(int $codnotafiscal, \Throwable $e): array
     {
+        $atual = static::progresso($codnotafiscal);
+        if (in_array($atual['status'] ?? null, ['concluido', 'erro'], true)) {
+            return $atual;
+        }
+
         return static::gravar($codnotafiscal, [
             'status' => 'erro',
             'etapa' => 'erro',
