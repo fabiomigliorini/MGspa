@@ -46,4 +46,15 @@ class NFePHPEnviarJob implements ShouldQueue
     {
         NFePHPEnvioService::executar($this->codnotafiscal);
     }
+
+    /**
+     * Rede de segurança para o que não passa pelo catch do executar(): job marcado como
+     * failed antes do handle() (o retry_after devolvendo o job com $tries = 1), erro de
+     * desserialização, timeout imposto. Sem isto o progresso ficava 'processando' e a
+     * nota travada até o TTL (TASK-147).
+     */
+    public function failed(\Throwable $e): void
+    {
+        NFePHPEnvioService::registrarFalha($this->codnotafiscal, $e);
+    }
 }

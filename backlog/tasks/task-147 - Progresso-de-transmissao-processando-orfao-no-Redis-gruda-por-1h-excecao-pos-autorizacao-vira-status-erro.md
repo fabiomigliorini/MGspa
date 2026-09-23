@@ -3,9 +3,10 @@ id: TASK-147
 title: >-
   Progresso de transmissao 'processando' orfao no Redis gruda por 1h; excecao
   pos-autorizacao vira status 'erro'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
+updated_date: '2026-09-23 16:37'
 labels:
   - api
 dependencies: []
