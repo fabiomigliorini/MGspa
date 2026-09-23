@@ -3,9 +3,10 @@ id: TASK-150
 title: >-
   Corrida na geracao do PDF do DANFE: front, MGprint e MailJob regravam o mesmo
   {chave}.pdf sem lock
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
+updated_date: '2026-09-23 16:38'
 labels:
   - api
 dependencies: []

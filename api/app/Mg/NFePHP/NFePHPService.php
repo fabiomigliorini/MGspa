@@ -1211,17 +1211,39 @@ class NFePHPService extends MgService
         // Gera PDF
         $pdf = $danfe->render($logo);
 
-        // Salva PDF
+        // Salva o PDF de forma ATOMICA: monta num temporario exclusivo deste processo e só
+        // no fim publica com rename(). Escrever direto no caminho final deixava uma janela
+        // em que outro processo — o /danfe do front, o MGprint depois do /imprimir, o
+        // NFePHPMailJob — lia um arquivo truncado e devolvia 500 ou PDF corrompido, e dois
+        // deles gerando ao mesmo tempo ainda disputavam o mesmo .tmp.pdf (TASK-150).
         $pathDanfe = NFePHPPathService::pathDanfe($nf, true);
-        file_put_contents($pathDanfe, $pdf);
+        $pathTemp = static::pathTempPdf($pathDanfe);
+        file_put_contents($pathTemp, $pdf);
 
-        // Quebra o PDF em várias páginas se necessário
-        if ($nf->modelo == NotaFiscalService::MODELO_NFCE) {
-            static::quebraPdfDanfePaginas($pathDanfe);
+        try {
+            // Quebra o PDF em várias páginas se necessário
+            if ($nf->modelo == NotaFiscalService::MODELO_NFCE) {
+                static::quebraPdfDanfePaginas($pathTemp);
+            }
+
+            // rename no mesmo filesystem é atômico: ninguém enxerga PDF pela metade
+            rename($pathTemp, $pathDanfe);
+        } catch (\Throwable $e) {
+            @unlink($pathTemp);
+            throw $e;
         }
 
         // retorna o caminho do PDF
         return $pathDanfe;
+    }
+
+    /**
+     * Temporário exclusivo deste processo, ao lado do arquivo final (mesmo filesystem,
+     * para o rename ser atômico).
+     */
+    protected static function pathTempPdf(string $pathFinal): string
+    {
+        return $pathFinal . '.' . getmypid() . '.' . uniqid() . '.tmp.pdf';
     }
 
     public static function quebraPdfDanfePaginas(string $pathDanfe): void
@@ -1281,7 +1303,9 @@ class NFePHPService extends MgService
             $mpdf->useTemplate($tplIdx, 0, -$i * $alturaMaxMm, $larguraMm, $alturaMm);
         }
 
-        $tmpOutput = $pathDanfe . '.tmp.pdf';
+        // Temporário por processo: com nome fixo, duas geracoes simultaneas da mesma nota
+        // escreviam no mesmo arquivo (TASK-150).
+        $tmpOutput = static::pathTempPdf($pathDanfe);
         $mpdf->Output($tmpOutput, \Mpdf\Output\Destination::FILE);
 
         if (!file_exists($tmpOutput)) {
