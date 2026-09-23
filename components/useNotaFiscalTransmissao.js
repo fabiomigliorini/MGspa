@@ -130,6 +130,9 @@ export function useNotaFiscalTransmissao({ api, codnotafiscal }) {
     const res = resolver
     const rej = rejeitar
     resolver = rejeitar = null
+    // Quem receber este erro não precisa notificar de novo: o toast abaixo já conta ao
+    // operador o que aconteceu, com a mensagem da SEFAZ.
+    if (erro) erro.notificado = true
     if (erro) rej?.(erro)
     else res?.(dados)
     fecharNotify(

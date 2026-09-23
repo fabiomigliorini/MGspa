@@ -219,7 +219,9 @@ async function criarXml(offline = null) {
     const corpo = offline === null ? {} : { offline }
     const { data } = await props.api.post(`/v1/nota-fiscal/${codnotafiscal.value}/criar`, corpo)
     const nota = data?.data ?? data
-    emit('action-completed', 'criar', nota)
+    // Mesma regra do transmitir: componente desmontado nao mexe na lista da tela atual,
+    // que ja e de outro negocio
+    if (!desmontado) emit('action-completed', 'criar', nota)
     return nota
   } finally {
     loadingCriar.value = false
@@ -239,7 +241,10 @@ async function transmitirXml() {
   if (r.nota && !desmontado) emit('action-completed', 'transmitir', r.nota)
 
   if (!r.sucesso) {
-    throw new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
+    const erro = new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
+    // O composable ja mostrou este mesmo motivo no toast da transmissao
+    erro.notificado = true
+    throw erro
   }
 
   return r.nota ?? props.nota
@@ -283,8 +288,12 @@ async function emitir(event) {
       if (!desmontado && (nota?.tpemis == 9 || deveAbrirDanfeAposEnviar.value)) await abrirDanfe()
     }
   } catch (error) {
-    // O Notify da transmissao ja saiu pelo composable; aqui cobre criar e cStat recusado
-    $q.notify({ type: 'negative', message: 'Erro ao emitir NFe', caption: mensagemErro(error) })
+    // Erro vindo da transmissao ja saiu no toast do composable, com a mensagem da SEFAZ;
+    // notificar de novo daria dois toasts vermelhos para a mesma falha. Aqui cobre o que
+    // nao passou por la: criar XML, imprimir, abrir DANFE.
+    if (!error?.notificado) {
+      $q.notify({ type: 'negative', message: 'Erro ao emitir NFe', caption: mensagemErro(error) })
+    }
   } finally {
     emitindo.value = false
   }
@@ -325,13 +334,15 @@ function criarXmlComEscolha(event) {
 
 function transmitirNfe(event) {
   stop(event)
-  return transmitirXml().catch((error) =>
+  return transmitirXml().catch((error) => {
+    // Ja notificado no toast da transmissao (ver emitir)
+    if (error?.notificado) return
     $q.notify({
       type: 'negative',
       message: 'Erro ao transmitir NFe',
       caption: mensagemErro(error),
-    }),
-  )
+    })
+  })
 }
 
 async function consultarNfe(event) {
