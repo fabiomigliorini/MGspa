@@ -56,9 +56,9 @@ class PixConsultar extends Command
         $fim = $this->option('fim')??null;
         if (!empty($fim)) {
             $fim = Carbon::parse($fim);
-	} else {
-            $fim = Carbon::now()->endOfDay();
-	}
+        } else {
+            $fim = Carbon::now();
+        }
         $pagina = $this->option('pagina')??0;
 
         $qry = Portador::ativo()->whereNotNull('pixdict')->orderBy('codportador');

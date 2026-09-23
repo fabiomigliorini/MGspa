@@ -122,10 +122,6 @@ class PixService
             }
         }
 
-        if (empty($cob->cpf) && !empty($negocio->cpf)) {
-            $cob->cpf = $negocio->cpf;
-        }
-
         // Texto para ser apresentado pro cliente
         $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
         $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
@@ -556,11 +552,11 @@ class PixService
     {
 
         $sql = '
-            select 
-                pi.cpf, 
+            select
+                pi.cpf,
                 pi.cnpj,
                 pi.nome
-            from tblpix pi  
+            from tblpix pi
             where cast(coalesce(to_char(pi.cnpj, \'FM00000000000000\'), to_char(pi.cpf, \'FM00000000000\')) as varchar) = :cnpjCpf
             ORDER BY criacao desc
             LIMIT 1
