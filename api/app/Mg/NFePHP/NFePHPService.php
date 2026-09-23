@@ -1323,15 +1323,23 @@ class NFePHPService extends MgService
         }
 
         // Temporário por processo: com nome fixo, duas geracoes simultaneas da mesma nota
-        // escreviam no mesmo arquivo (TASK-150).
+        // escreviam no mesmo arquivo (TASK-150). Como o nome agora e unico, ninguem mais
+        // sobrescreve o lixo de uma geracao que falhou — por isso a limpeza explicita.
         $tmpOutput = static::pathTempPdf($pathDanfe);
-        $mpdf->Output($tmpOutput, \Mpdf\Output\Destination::FILE);
+        try {
+            $mpdf->Output($tmpOutput, \Mpdf\Output\Destination::FILE);
 
-        if (!file_exists($tmpOutput)) {
-            throw new \RuntimeException('Falha ao gerar PDF quebrado em páginas');
+            if (!file_exists($tmpOutput)) {
+                throw new \RuntimeException('Falha ao gerar PDF quebrado em páginas');
+            }
+
+            if (!rename($tmpOutput, $pathDanfe)) {
+                throw new \RuntimeException("Falha ao publicar o PDF quebrado em páginas ({$pathDanfe})");
+            }
+        } catch (\Throwable $e) {
+            @unlink($tmpOutput);
+            throw $e;
         }
-
-        rename($tmpOutput, $pathDanfe);
     }
 
     public static function imprimir(NotaFiscal $nf, $impressora = null)
