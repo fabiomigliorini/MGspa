@@ -3,9 +3,10 @@ id: TASK-149
 title: >-
   Robo de pendentes re-enfileira todos a cada 10 min sem dedup e segura o lock
   da nota por minutos com SEFAZ lenta
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
+updated_date: '2026-09-23 16:39'
 labels:
   - api
 dependencies: []

@@ -6,13 +6,14 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Foundation\Bus\Dispatchable;
 
 use Log;
 
 use Mg\NotaFiscal\NotaFiscal;
 
-class NFePHPResolverJob implements ShouldQueue
+class NFePHPResolverJob implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -27,6 +28,22 @@ class NFePHPResolverJob implements ShouldQueue
      * enviarSincrono + criar + enviarSincrono + consultar.
      */
     public $timeout = 900;
+
+    /**
+     * Uma nota, um job na fila.
+     *
+     * A varredura roda a cada 10 min e despacha ate 1000 pendentes. Com a SEFAZ lenta cada
+     * job segura um worker por minutos, entao a varredura seguinte empilhava de novo as
+     * mesmas notas que ainda nao tinham sido processadas — e cada copia extra tirava um
+     * worker de quem esta no balcao (TASK-149). O lock e liberado no fim do job; o
+     * $uniqueFor e so o teto de seguranca, casado ao $timeout.
+     */
+    public $uniqueFor = 900;
+
+    public function uniqueId(): string
+    {
+        return (string) $this->codnotafiscal;
+    }
 
     protected $codnotafiscal;
 
