@@ -1,9 +1,10 @@
 ---
 id: TASK-98
-title: 'RH: IndicadorController@lancamentos sem Autorizador'
+title: Lançamentos de indicador do RH estão sem controle de acesso
 status: To Do
 assignee: []
 created_date: '2026-09-15 15:11'
+updated_date: '2026-09-23 21:06'
 labels:
   - api
 dependencies: []

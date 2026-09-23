@@ -4,6 +4,7 @@ title: Usuario ainda pode esbarrar no lock da nota segurado pelo robo de pendent
 status: To Do
 assignee: []
 created_date: '2026-09-23 20:18'
+updated_date: '2026-09-23 21:01'
 labels:
   - api
 dependencies: []
@@ -19,3 +20,12 @@ Origem: varredura da TASK-123 (achado U13). A TASK-149 reduziu a chance (dedup p
 
 Ideias (confirmar): fazer o lock esperar um pouco em vez de falhar na hora (Cache::lock()->block(n)); ou devolver 409 com mensagem propria, preservada mesmo com APP_DEBUG=false, e o front tratar com texto amigavel ('A nota esta sendo processada, aguarde'); ou o robo nao pegar o lock de nota emitida nos ultimos minutos.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-23 21:01
+---
+Dobrada na TASK-123 (regra 3 do CLAUDE.md): virou o critério de aceite #4 da task-mãe, e o detalhe técnico desta descrição está preservado nas notas da TASK-123. Arquivada para sair do board — não foi descartada.
+---
+<!-- COMMENTS:END -->

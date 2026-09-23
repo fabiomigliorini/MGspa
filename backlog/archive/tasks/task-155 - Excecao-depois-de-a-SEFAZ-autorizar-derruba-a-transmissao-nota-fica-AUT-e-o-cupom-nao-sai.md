@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-23 20:18'
+updated_date: '2026-09-23 21:01'
 labels:
   - api
 dependencies: []
@@ -29,3 +30,12 @@ Qualquer excecao dali sobe por processarProtocolo -> enviarSincrono -> NFePHPEnv
 
 Fix proposto (confirmar): depois do $nf->save() a autorizacao e fato consumado; o que vem depois e recuperavel (o botao Consultar e o robo revinculam o protocolo e regeram o XML). Envolver o trecho pos-save em try/catch, logar como erro alto (Log::error, para alguem olhar) e devolver true mesmo assim, em vez de derrubar a transmissao inteira. Avaliar se o XML autorizado ausente precisa de alerta proprio — ele e o documento fiscal e nao pode ficar faltando em silencio.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-23 21:01
+---
+Dobrada na TASK-123 (regra 3 do CLAUDE.md): virou o critério de aceite #2 da task-mãe, e o detalhe técnico desta descrição está preservado nas notas da TASK-123. Arquivada para sair do board — não foi descartada.
+---
+<!-- COMMENTS:END -->

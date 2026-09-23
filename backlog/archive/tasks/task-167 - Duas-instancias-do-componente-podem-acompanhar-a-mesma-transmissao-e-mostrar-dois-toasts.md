@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-23 20:38'
+updated_date: '2026-09-23 21:01'
 labels:
   - components
 dependencies: []
@@ -25,3 +26,12 @@ Nao gera cupom duplicado (so o emitir imprime, e depois do criarXml a nota tem c
 
 Fix possivel: mover o registro do acompanhamento para um Map em nivel de modulo, chaveado por codnotafiscal, para a segunda instancia se anexar a cadeia existente em vez de abrir outra. Casa com a TASK-156 (retomada), que precisa do mesmo registro para terminar em impressao.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-23 21:01
+---
+Dobrada na TASK-123 (regra 3 do CLAUDE.md): virou o critério de aceite #6 da task-mãe, e o detalhe técnico desta descrição está preservado nas notas da TASK-123. Arquivada para sair do board — não foi descartada.
+---
+<!-- COMMENTS:END -->

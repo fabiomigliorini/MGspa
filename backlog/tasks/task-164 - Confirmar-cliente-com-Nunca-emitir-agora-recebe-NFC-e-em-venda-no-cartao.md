@@ -1,9 +1,12 @@
 ---
 id: TASK-164
-title: 'Confirmar: cliente com ''Nunca emitir'' agora recebe NFC-e em venda no cartao'
+title: >-
+  Cliente marcado 'Nunca emitir' passou a receber NFC-e em venda no cartão —
+  confirmar
 status: To Do
 assignee: []
 created_date: '2026-09-23 20:38'
+updated_date: '2026-09-23 21:02'
 labels:
   - negocios
 dependencies: []

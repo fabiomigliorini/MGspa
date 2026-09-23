@@ -4,6 +4,7 @@ title: Conferir REDIS_QUEUE_RETRY_AFTER e CACHE_STORE em producao
 status: To Do
 assignee: []
 created_date: '2026-09-23 20:19'
+updated_date: '2026-09-23 21:01'
 labels:
   - api
 dependencies: []
@@ -31,3 +32,12 @@ Comandos para rodar em PRODUCAO (nao tenho acesso):
 
 Se retry_after for menor que 960: subir para 960 no .env de producao e reiniciar os workers (php artisan queue:restart). Regra: retry_after PRECISA ser maior que o maior $timeout de job (hoje 900).
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-23 21:01
+---
+Dobrada na TASK-123 (regra 3 do CLAUDE.md): virou o critério de aceite #5 da task-mãe, e o detalhe técnico desta descrição está preservado nas notas da TASK-123. Arquivada para sair do board — não foi descartada.
+---
+<!-- COMMENTS:END -->
