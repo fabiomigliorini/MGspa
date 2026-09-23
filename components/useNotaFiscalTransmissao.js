@@ -7,7 +7,7 @@ import { Notify } from 'quasar'
  * POR QUE EXISTE
  *
  * É a única ação de NFe que não cabe num request comum. O axios dos apps tem timeout de 15s,
- * mas a transmissão à SEFAZ leva até ~4 min no pior caso. O cliente abortava aos 15s enquanto
+ * mas a transmissão à SEFAZ leva até ~5 min no pior caso. O cliente abortava aos 15s enquanto
  * o backend seguia rodando e segurando o lock da nota — e o retry do usuário batia em "Outra
  * operação já está em andamento". Agora o POST só enfileira (responde na hora) e o progresso
  * vem de um GET com cadência em rampa.
@@ -32,7 +32,7 @@ import { Notify } from 'quasar'
 // caso comum e a NFe lenta cai no intervalo máximo sem gerar centenas de requisições.
 const ATRASOS_MS = [0, 400, 800, 1500]
 const INTERVALO_MAX_MS = 3000
-// Teto por TEMPO, não por contagem: o job tem $timeout de 420s e ainda pode esperar na fila.
+// Teto por TEMPO, não por contagem: o job tem $timeout de 900s e ainda pode esperar na fila.
 // Ao estourar, a própria nota é consultada antes de dar o resultado.
 const TEMPO_MAX_MS = 15 * 60 * 1000
 // A cada tantas falhas seguidas do GET de progresso, pergunta à própria nota: se o progresso

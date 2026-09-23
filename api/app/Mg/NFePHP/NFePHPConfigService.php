@@ -67,11 +67,12 @@ class NFePHPConfigService
     /**
      * $timeoutSegundos vira CONNECTTIMEOUT no SoapCurl e CURLOPT_TIMEOUT + 20.
      *
-     * O padrão 20 (o mesmo do sped-common) atende todas as operações em que alguém está
-     * esperando na tela. Só o ENVIO pede mais: com a SEFAZ lenta, estourar antes da
-     * resposta faz o retry cair em "204 Duplicidade" sobre uma nota que ela já estava
-     * processando (TASK-148). O envio roda em job, então esperar não custa a ninguém —
-     * já uma consulta ou um cancelamento têm o operador parado na frente (TASK-159).
+     * O padrão 20 (o mesmo do sped-common) é o que vale para todas as operações hoje.
+     * O parâmetro existe porque o envio chegou a usar 60s (TASK-148) e voltou atrás:
+     * esperar mais pela SEFAZ briga com a contingência, que manda o cupom sair offline
+     * quando ela passa de 15s, e alongava o pior caso além do que o robô de pendentes
+     * suporta. Fica como alavanca, para ser usada só com dado de produção que a
+     * justifique.
      */
     public static function instanciaTools(
         Filial $filial,

@@ -22,10 +22,10 @@ use Mg\NotaFiscal\NotaFiscalStatusService;
  * POR QUE ASSÍNCRONO
  *
  * É a única ação de NFe que precisa ser. O axios dos apps tem timeout de 15s, mas
- * enviarSincrono leva até ~243s no pior caso (envio com 3 tentativas de 40s + consulta de
- * recuperação com outras 3). O cliente abortava aos 15s enquanto o PHP-FPM continuava rodando
+ * enviarSincrono leva até ~300s no pior caso (envio com 3 tentativas de 40s, mais o laço de
+ * recuperação por consulta). O cliente abortava aos 15s enquanto o PHP-FPM continuava rodando
  * e segurando o lock da nota — e o retry do usuário batia em "Outra operação já está em
- * andamento". Não era lock órfão: era o cliente desistindo 16× mais rápido que a operação.
+ * andamento". Não era lock órfão: era o cliente desistindo 20× mais rápido que a operação.
  *
  * Criar/consultar/cancelar/inutilizar continuam síncronos: nenhuma delas chega perto disso.
  *
@@ -165,10 +165,15 @@ class NFePHPEnvioService
      * do job, que cobre o que nem chega ao handle().
      *
      * Nunca sobrescreve um estado terminal: o failed() pode chegar DEPOIS de a
-     * transmissão ter concluído (o retry_after devolve o job e, com $tries = 1, um
-     * segundo worker o marca como failed enquanto o original ainda roda, ou logo após
-     * ele terminar). Apagar um 'concluido' com sucesso daria erro ao operador e cupom
-     * nenhum, com a nota autorizada.
+     * transmissão ter concluído, quando o retry_after devolve o job e, com $tries = 1, um
+     * segundo worker o marca como failed. Apagar um 'concluido' com sucesso daria erro ao
+     * operador e cupom nenhum, com a nota autorizada.
+     *
+     * LIMITAÇÃO conhecida: se esse failed chegar enquanto o job original AINDA roda, o
+     * progresso está em 'processando' e a guarda não pega — grava 'erro' por cima de uma
+     * transmissão viva. Cobrir isso exigiria marcar no progresso qual execução é a dona.
+     * Hoje o gatilho é remoto (retry_after 960s contra pior caso ~300s), então fica
+     * registrado em vez de resolvido.
      */
     public static function registrarFalha(int $codnotafiscal, \Throwable $e): array
     {
