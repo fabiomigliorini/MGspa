@@ -3,9 +3,10 @@ id: TASK-152
 title: >-
   fechar() deixa a flag 'fechando' presa quando o negocio nao e editavel (return
   dentro do try sem finally)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
+updated_date: '2026-09-23 16:34'
 labels:
   - negocios
 dependencies: []

@@ -204,8 +204,11 @@ const fechar = debounce(async () => {
     emitter.emit('negocioAlterado')
   } catch (error) {
     console.log(error)
+  } finally {
+    // finally: sem ele o `return` do negocio nao editavel deixava a flag presa e todo
+    // F3 seguinte caia em "Duplo fechamento detectado"
+    fechando = false
   }
-  fechando = false
 }, 300)
 
 const cancelar = async () => {
