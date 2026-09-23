@@ -314,7 +314,7 @@ export const negocioStore = defineStore('negocio', {
       // se nao tem offline busca na api
       if (negocio == undefined) {
         try {
-          await this.recarregarDaApi(codnegocio)
+          await this.recarregarDaApi(codnegocio, true)
           return this.negocio
         } catch (error) {
           console.log(error)
@@ -335,7 +335,7 @@ export const negocioStore = defineStore('negocio', {
         await this.carregarChavesEstrangeiras()
       } else {
         try {
-          await this.recarregarDaApi(codnegocio)
+          await this.recarregarDaApi(codnegocio, true)
         } catch (error) {
           this.negocio = { ...negocio }
           await this.carregarChavesEstrangeiras()
@@ -353,7 +353,7 @@ export const negocioStore = defineStore('negocio', {
       // verifica se deve recarregar da api
       if (negocio == undefined) {
         try {
-          await this.recarregarDaApi(uuid)
+          await this.recarregarDaApi(uuid, true)
           return this.negocio
         } catch (error) {
           console.log(error)
@@ -374,7 +374,7 @@ export const negocioStore = defineStore('negocio', {
         await this.carregarChavesEstrangeiras()
       } else {
         try {
-          await this.recarregarDaApi(uuid)
+          await this.recarregarDaApi(uuid, true)
         } catch (error) {
           this.negocio = { ...negocio }
           await this.carregarChavesEstrangeiras()
@@ -1163,13 +1163,21 @@ export const negocioStore = defineStore('negocio', {
       try {
         const ret = await sSinc.putNegocio(negocio)
         if (ret) {
+          // Compara com o estado mais fresco que temos: se o negócio é o da tela, ele
+          // pode ter sido fechado enquanto este PUT estava em voo.
+          const atual = this.negocio?.uuid == ret.uuid ? this.negocio : negocio
+          const atrasada = respostaAtrasada(atual, ret)
+
+          // O Dexie precisa da mesma proteção da store: `atualizarListagem` lê dele pelo
+          // índice [codnegociostatus+codpdv] e `recarregar()` copia dele para a tela, então
+          // gravar 1 aqui reabria o negócio fechado pelos dois caminhos.
           db.negocio.update(ret.uuid, {
             codnegocio: ret.codnegocio,
-            codnegociostatus: ret.codnegociostatus,
+            ...(atrasada ? {} : { codnegociostatus: ret.codnegociostatus }),
           })
           if (this.negocio.uuid == ret.uuid) {
             this.negocio.codnegocio = ret.codnegocio
-            if (!respostaAtrasada(this.negocio, ret)) {
+            if (!atrasada) {
               this.negocio.codnegociostatus = ret.codnegociostatus
             }
             if (
@@ -1194,14 +1202,17 @@ export const negocioStore = defineStore('negocio', {
       return retorno
     },
 
-    async recarregarDaApi(codOrUuid) {
+    // `forcar` = o servidor manda, sem a proteção contra resposta atrasada. É para a
+    // recarga explícita (botão "Recarregar do servidor") e para o carregamento da tela,
+    // onde o GET é fresco e recém-pedido. Os polls de PIX/maquininha, que rodam em
+    // segundo plano, ficam no padrão protegido.
+    async recarregarDaApi(codOrUuid, forcar = false) {
       try {
         const ret = await sSinc.getNegocio(codOrUuid)
         if (!ret.codnegocio) {
           return false
         }
-        await this.atualizarNegocioPeloObjeto(ret)
-        return true
+        return await this.atualizarNegocioPeloObjeto(ret, forcar)
       } catch (error) {
         console.log(error)
         return false
@@ -1214,7 +1225,7 @@ export const negocioStore = defineStore('negocio', {
         if (!ret.codnegocio) {
           return false
         }
-        await this.atualizarNegocioPeloObjeto(ret)
+        await this.atualizarNegocioPeloObjeto(ret, true)
         return true
       } catch (error) {
         console.log(error)
@@ -1222,14 +1233,17 @@ export const negocioStore = defineStore('negocio', {
       }
     },
 
-    async atualizarNegocioPeloObjeto(neg) {
+    // Devolve false quando descarta o objeto, para quem chamou não anunciar um
+    // recarregamento que não aconteceu.
+    async atualizarNegocioPeloObjeto(neg, forcar = false) {
       // Resposta atrasada nao reabre negocio fechado na tela (ver respostaAtrasada)
-      if (respostaAtrasada(this.negocio, neg)) {
-        return
+      if (!forcar && respostaAtrasada(this.negocio, neg)) {
+        return false
       }
       this.negocio = { ...neg }
       db.negocio.put(neg)
       await this.atualizarListagem()
+      return true
     },
 
     // abre o wizard Receber; forma/codtituloVale pulam direto para o passo da forma (bipagem VAL…)
