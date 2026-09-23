@@ -115,6 +115,11 @@ class PixSicrediService
         }
         $strFim = null;
         if (!empty($fim)) {
+            // O Sicredi recusa um fim posterior ao seu relogio.
+            $limiteFim = Carbon::now();
+            if ($fim->gt($limiteFim)) {
+                $fim = $limiteFim;
+            }
             $strFim = $fim->toIso8601String();
         }
         $ret = PixSicrediApiService::consultarPix(

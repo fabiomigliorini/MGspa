@@ -69,7 +69,7 @@ class PixController
         if ($fim = $request->fim) {
             $fim = Carbon::parse($fim);
         } else {
-            $fim = Carbon::today()->endOfDay();
+            $fim = Carbon::now();
         }
         $portador = Portador::findOrFail($codportador);
         $ret = PixService::consultarPix(
@@ -96,7 +96,7 @@ class PixController
         if ($fim = $request->fim) {
             $fim = Carbon::parse($fim);
         } else {
-            $fim = Carbon::today()->endOfDay();
+            $fim = Carbon::now();
         }
         $qry = Portador::ativo()->whereNotNull('pixdict')->orderBy('codfilial');
         if ($request->codfilial) {
