@@ -30,11 +30,11 @@ class NFePHPEnviarJob implements ShouldQueue
      * Declarativo (ver acima). Serve de base para o cálculo do REDIS_QUEUE_RETRY_AFTER,
      * que precisa ser MAIOR que isto.
      *
-     * Pior caso do enviarSincrono depois da TASK-148: 3 tentativas de envio a 80s
-     * (soaptimeout 60 + 20 do SoapCurl) = ~242s, mais o laço de recuperação por consulta
-     * (17,5s de espera + uma consulta que estoura em 80s e encerra o laço) = ~340s. As
-     * consultas de recuperação são de tentativa única de propósito: com o retry de 3x
-     * delas, este número passava de 20 min e estourava lock, timeout e o teto do front.
+     * Pior caso do enviarSincrono: 3 tentativas de envio a 80s (soaptimeout 60 + 20 do
+     * SoapCurl) = ~240s, mais o laço de recuperação por consulta (17,5s de espera + uma
+     * consulta que estoura em 40s e encerra o laço) = ~300s. As consultas de recuperação
+     * são de tentativa única de propósito: com o retry de 3x delas, este número passava
+     * de 20 min e estourava lock, timeout e o teto do front (TASK-159).
      */
     public $timeout = 900;
 

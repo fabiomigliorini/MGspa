@@ -172,12 +172,12 @@ const deveAbrirDanfeAposEnviar = computed(() => props.abrirDanfeAposEnviar ?? !p
 const btnSize = computed(() => (props.compact ? 'sm' : undefined))
 
 // Consultar/cancelar/inutilizar sao sincronos e uma chamada a SEFAZ com retry leva ate
-// ~242s (3 tentativas de 80s: soaptimeout 60 + 20 do SoapCurl, TASK-148). O timeout
-// global do axios e 15s (existe por causa de socket HTTP/2 morto), entao a sobrescrita e
-// por request. Abortar antes do backend terminar e pior que esperar: o PHP segue rodando
-// e segurando o lock da nota, e o proximo clique do operador bate em "Outra operacao ja
-// esta em andamento". Teto do php-fpm (request_terminate_timeout) e 300s.
-const TIMEOUT_SEFAZ = 290000
+// ~122s (3 tentativas de 40s: soaptimeout 20 + 20 do SoapCurl). O timeout global do axios
+// e 15s (existe por causa de socket HTTP/2 morto), entao a sobrescrita e por request.
+// Abortar antes do backend terminar e pior que esperar: o PHP segue rodando e segurando o
+// lock da nota, e o proximo clique do operador bate em "Outra operacao ja esta em
+// andamento". So o ENVIO usa timeout maior, e ele nao passa por aqui (roda em job).
+const TIMEOUT_SEFAZ = 150000
 
 function stop(event) {
   if (event) {
