@@ -134,6 +134,41 @@ export function pontoCompleto(p) {
   return false
 }
 
+// Divide 100% igualmente entre as linhas do grupo (resto na última) — soma = 100.
+// Puro por design: usado tanto pelo CargaForm (normalizarPontos, cargas antigas
+// sem percentual) quanto pelo bloco de edição de origem/destino (add/remove linha).
+export function distribuirPercentual(grupo) {
+  const n = grupo.length
+  if (!n) return
+  const base = Math.floor((100 / n) * 10) / 10
+  let acumulado = 0
+  grupo.forEach((p, idx) => {
+    if (idx === n - 1) {
+      p.percentual = Math.round((100 - acumulado) * 10) / 10
+    } else {
+      p.percentual = base
+      acumulado += base
+    }
+  })
+}
+
+// Pontos de um papel (ORIGEM/DESTINO) — mesmo filtro usado no form e no bloco de
+// origem/destino, pra não duplicar o `.filter` em cada lugar que precisa da lista.
+export function pontosPorPapel(carga, papel) {
+  return (carga?.pontos || []).filter((p) => p.papel === papel)
+}
+
+// Soma de % de um grupo de pontos — exibição (caption "Soma: X%") e validação
+// (rateio precisa fechar 100% pra finalizar) usam a mesma conta.
+export function somaPercentual(pontos) {
+  return (pontos || []).reduce((s, p) => s + (Number(p.percentual) || 0), 0)
+}
+
+// Soma "bate" 100% (com folga de arredondamento).
+export function somaPercBate(pontos) {
+  return Math.abs(somaPercentual(pontos) - 100) < 0.5
+}
+
 // Carga nova já abre com 1 origem + 1 destino no tipo padrão do sentido. Só
 // semeia o que faltar.
 export function semearPontos(carga) {

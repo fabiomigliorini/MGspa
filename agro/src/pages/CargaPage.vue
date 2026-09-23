@@ -187,6 +187,7 @@ onUnmounted(() => {
       :key="cargaSel.uuid"
       :carga="cargaSel"
       :novo="novo"
+      :persistir="persistir"
       @salvar="onSalvar"
       @avancar="onAvancar"
       @cancelar="onCancelar"
