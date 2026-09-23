@@ -35,6 +35,18 @@ class NFePHPEnvioService
 {
     const CACHE_TTL = 3600;
 
+    /**
+     * TTL curto para o progresso 'processando'.
+     *
+     * Se o worker morre sem passar pelo catch (docker restart, OOM, reboot), o progresso
+     * fica 'processando' para sempre até o TTL: iniciar() é idempotente e se anexa a esse
+     * progresso morto sem redespachar nada, o robô de pendentes cede a vez e a nota fica
+     * travada — com 3600s, por uma hora (TASK-147). Com o TTL casado ao $timeout do job,
+     * um progresso órfão se apaga sozinho e a nota volta a ser transmissível. O estado
+     * terminal continua com CACHE_TTL, porque aí o dado interessa a quem for consultar.
+     */
+    const CACHE_TTL_PROCESSANDO = 960;
+
     public static function chaveProgresso(int $codnotafiscal): string
     {
         return "nfe:envio:{$codnotafiscal}";
@@ -53,7 +65,10 @@ class NFePHPEnvioService
 
     protected static function gravar(int $codnotafiscal, array $payload): array
     {
-        Cache::put(static::chaveProgresso($codnotafiscal), $payload, static::CACHE_TTL);
+        $ttl = ($payload['status'] ?? null) === 'processando'
+            ? static::CACHE_TTL_PROCESSANDO
+            : static::CACHE_TTL;
+        Cache::put(static::chaveProgresso($codnotafiscal), $payload, $ttl);
         return $payload;
     }
 
@@ -118,9 +133,11 @@ class NFePHPEnvioService
      */
     public static function executar(int $codnotafiscal): void
     {
-        $nf = NotaFiscal::findOrFail($codnotafiscal);
-
         try {
+            // findOrFail dentro do try: fora dele, a nota apagada entre o dispatch e o
+            // handle deixava o progresso preso em 'processando' (TASK-147).
+            $nf = NotaFiscal::findOrFail($codnotafiscal);
+
             static::etapa($codnotafiscal, 'transmitindo', 'Transmitindo para a SEFAZ...');
             $res = NFePHPService::enviarSincrono($nf);
 
@@ -138,15 +155,35 @@ class NFePHPEnvioService
                 'xMotivo' => $res->xMotivo,
             ]);
         } catch (\Throwable $e) {
-            static::gravar($codnotafiscal, [
-                'status' => 'erro',
-                'etapa' => 'erro',
-                'mensagem' => $e->getMessage(),
-                'sucesso' => false,
-                'cStat' => null,
-                'xMotivo' => $e->getMessage(),
-            ]);
+            static::registrarFalha($codnotafiscal, $e);
             throw $e;
         }
+    }
+
+    /**
+     * Encerra o progresso como 'erro'. Chamado pelo catch do executar() e pelo failed()
+     * do job, que cobre o que nem chega ao handle().
+     *
+     * Nunca sobrescreve um estado terminal: o failed() pode chegar DEPOIS de a
+     * transmissão ter concluído (o retry_after devolve o job e, com $tries = 1, um
+     * segundo worker o marca como failed enquanto o original ainda roda, ou logo após
+     * ele terminar). Apagar um 'concluido' com sucesso daria erro ao operador e cupom
+     * nenhum, com a nota autorizada.
+     */
+    public static function registrarFalha(int $codnotafiscal, \Throwable $e): array
+    {
+        $atual = static::progresso($codnotafiscal);
+        if (in_array($atual['status'] ?? null, ['concluido', 'erro'], true)) {
+            return $atual;
+        }
+
+        return static::gravar($codnotafiscal, [
+            'status' => 'erro',
+            'etapa' => 'erro',
+            'mensagem' => $e->getMessage(),
+            'sucesso' => false,
+            'cStat' => null,
+            'xMotivo' => $e->getMessage(),
+        ]);
     }
 }

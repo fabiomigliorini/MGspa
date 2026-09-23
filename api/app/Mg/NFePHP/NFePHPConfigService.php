@@ -86,6 +86,14 @@ class NFePHPConfigService
         $soap = new SoapCurl();
         $soap->protocol(SoapInterface::SSL_TLSV1_2);
         $soap->httpVersion('1.1');
+
+        // Timeout de 60s (padrao do sped-common e 20, que vira CONNECTTIMEOUT 20 +
+        // TIMEOUT 40 no SoapCurl). Com a SEFAZ lenta os 40s estouravam ANTES de ela
+        // responder, o retry entao caia em "204 Duplicidade" sobre uma nota que ela ja
+        // estava processando e a autorizacao so aparecia depois, pelo robo de pendentes:
+        // o operador ficava sem cupom (TASK-148). Esperar e mais barato que recuperar.
+        $soap->timeout(60);
+
         $tools->loadSoapClass($soap);
 
         return $tools;

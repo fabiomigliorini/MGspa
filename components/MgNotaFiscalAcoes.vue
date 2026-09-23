@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { abrirPdf } from '@components/abrirPdf'
 import { abrirXml } from '@components/abrirXml'
@@ -42,6 +42,14 @@ const codnotafiscal = computed(() => props.nota?.codnotafiscal)
 const { transmitindo, iniciarTransmissao, checarEmAndamento } = useNotaFiscalTransmissao({
   api: props.api,
   codnotafiscal,
+})
+
+// A transmissao sobrevive ao componente (ver useNotaFiscalTransmissao). O que muda quando o
+// card ja saiu da tela e o que fazer com o resultado: nao abrir documento nem mexer na lista
+// de uma tela que nao e mais esta.
+let desmontado = false
+onUnmounted(() => {
+  desmontado = true
 })
 
 /**
@@ -163,10 +171,13 @@ const deveAbrirDanfeAposEnviar = computed(() => props.abrirDanfeAposEnviar ?? !p
 
 const btnSize = computed(() => (props.compact ? 'sm' : undefined))
 
-// Consultar/cancelar/inutilizar sao sincronos e uma chamada a SEFAZ com retry leva
-// ate ~122s. O timeout global do axios e 15s (existe por causa de socket HTTP/2 morto),
-// entao a sobrescrita e por request.
-const TIMEOUT_SEFAZ = 150000
+// Consultar/cancelar/inutilizar sao sincronos e uma chamada a SEFAZ com retry leva ate
+// ~242s (3 tentativas de 80s: soaptimeout 60 + 20 do SoapCurl, TASK-148). O timeout
+// global do axios e 15s (existe por causa de socket HTTP/2 morto), entao a sobrescrita e
+// por request. Abortar antes do backend terminar e pior que esperar: o PHP segue rodando
+// e segurando o lock da nota, e o proximo clique do operador bate em "Outra operacao ja
+// esta em andamento". Teto do php-fpm (request_terminate_timeout) e 300s.
+const TIMEOUT_SEFAZ = 290000
 
 function stop(event) {
   if (event) {
@@ -208,7 +219,9 @@ async function criarXml(offline = null) {
     const corpo = offline === null ? {} : { offline }
     const { data } = await props.api.post(`/v1/nota-fiscal/${codnotafiscal.value}/criar`, corpo)
     const nota = data?.data ?? data
-    emit('action-completed', 'criar', nota)
+    // Mesma regra do transmitir: componente desmontado nao mexe na lista da tela atual,
+    // que ja e de outro negocio
+    if (!desmontado) emit('action-completed', 'criar', nota)
     return nota
   } finally {
     loadingCriar.value = false
@@ -225,10 +238,13 @@ async function criarXml(offline = null) {
 async function transmitirXml() {
   const r = await iniciarTransmissao()
 
-  if (r.nota) emit('action-completed', 'transmitir', r.nota)
+  if (r.nota && !desmontado) emit('action-completed', 'transmitir', r.nota)
 
   if (!r.sucesso) {
-    throw new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
+    const erro = new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
+    // O composable ja mostrou este mesmo motivo no toast da transmissao
+    erro.notificado = true
+    throw erro
   }
 
   return r.nota ?? props.nota
@@ -264,13 +280,18 @@ async function emitir(event) {
     }
 
     // 3. O documento so existe para o cliente se ele sair impresso.
+    //    Se o card ja saiu da tela (o operador foi para outro negocio enquanto a SEFAZ
+    //    demorava), o cupom ainda vai para a termica — e fisico e e do cliente que pagou —,
+    //    mas o DANFE nao abre em cima de outra tela. Ao voltar, o card recarrega autorizado.
     if (nota?.tpemis == 9 || nota?.status === 'AUT') {
       if (props.nota?.modelo == 65 && props.impressora) await imprimir()
-      if (nota?.tpemis == 9 || deveAbrirDanfeAposEnviar.value) await abrirDanfe()
+      if (!desmontado && (nota?.tpemis == 9 || deveAbrirDanfeAposEnviar.value)) await abrirDanfe()
     }
   } catch (error) {
-    // O Notify da transmissao ja saiu pelo composable; aqui cobre criar e cStat recusado
-    if (error?.message && !error.message.startsWith('Sem conex')) {
+    // Erro vindo da transmissao ja saiu no toast do composable, com a mensagem da SEFAZ;
+    // notificar de novo daria dois toasts vermelhos para a mesma falha. Aqui cobre o que
+    // nao passou por la: criar XML, imprimir, abrir DANFE.
+    if (!error?.notificado) {
       $q.notify({ type: 'negative', message: 'Erro ao emitir NFe', caption: mensagemErro(error) })
     }
   } finally {
@@ -314,13 +335,13 @@ function criarXmlComEscolha(event) {
 function transmitirNfe(event) {
   stop(event)
   return transmitirXml().catch((error) => {
-    if (error?.message && !error.message.startsWith('Sem conex')) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao transmitir NFe',
-        caption: mensagemErro(error),
-      })
-    }
+    // Ja notificado no toast da transmissao (ver emitir)
+    if (error?.notificado) return
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao transmitir NFe',
+      caption: mensagemErro(error),
+    })
   })
 }
 

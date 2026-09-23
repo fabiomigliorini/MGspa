@@ -28,13 +28,19 @@ class NFePHPService extends MgService
     /**
      * TTL do lock.
      *
-     * Era 120s, MENOR que o pior caso real de enviarSincrono (~243s: envio com 3
-     * tentativas de 40s + consulta de recuperação com outras 3). Ou seja, o lock expirava
-     * com o processo ainda vivo e uma segunda operação entrava em paralelo na mesma nota
-     * — exatamente o que ele deveria impedir. 300s cobre a operação mais longa com folga
-     * e continua curto o bastante para não travar a nota se o processo morrer.
+     * Precisa ser MAIOR que o pior caso real de enviarSincrono, senão o lock expira com o
+     * processo ainda vivo e uma segunda operação entra em paralelo na mesma nota —
+     * exatamente o que ele deveria impedir.
+     *
+     * Conta do pior caso, com o soaptimeout de 60 da TASK-148 (CURLOPT_TIMEOUT = 80):
+     * envio com 3 tentativas (~242s) + as esperas do laço de recuperação (17,5s) + uma
+     * consulta que estoura e encerra o laço (~80s) = ~340s. 600s cobre isso com folga e
+     * continua curto o bastante para não travar a nota por muito tempo se o processo
+     * morrer sem chegar ao destructor.
+     *
+     * Já foi 120s (quando cada tentativa custava 40s) e 300s.
      */
-    const LOCK_TTL = 300;
+    const LOCK_TTL = 600;
 
     /**
      * Serializa operações concorrentes sobre o mesmo alvo.
@@ -122,9 +128,13 @@ class NFePHPService extends MgService
         string $operacao,
         $tools = null,
         ?Filial $filial = null,
-        ?NotaFiscal $nf = null
+        ?NotaFiscal $nf = null,
+        ?array $atrasosMs = null
     ) {
-        $atrasosMs = [500, 1500];
+        // Cada tentativa custa até CURLOPT_TIMEOUT (soaptimeout + 20 = 80s), então o
+        // padrão de 3 tentativas é um teto de ~242s POR CHAMADA. Quem chama de dentro de
+        // um laço que já insiste sozinho passa [] para não multiplicar isso.
+        $atrasosMs = $atrasosMs ?? [500, 1500];
         $tentativa = 0;
         $filial = $filial ?? $nf?->Filial;
 
@@ -199,13 +209,32 @@ class NFePHPService extends MgService
     protected static function ehErroTransitorioSefaz(SoapException $e): bool
     {
         // libcurl: 7=connect failed, 28=timeout, 35=ssl connect, 52=empty reply, 56=recv error
-        if (in_array((int) $e->getCode(), [7, 28, 35, 52, 56], true)) {
+        // HTTP do gateway da SEFAZ sobrecarregada: 500 (o SoapCurl remapeia para 89),
+        // 502, 503, 504. Sao transitorios por definicao, e tratar como definitivo fazia
+        // a nota ficar sem autorizacao ate o robo, mesmo quando o 504 escondia um envio
+        // que a SEFAZ processou (TASK-148). Retentar e seguro: reenvio de nota ja
+        // autorizada volta 204 e cai na recuperacao por consulta logo abaixo.
+        if (in_array((int) $e->getCode(), [7, 28, 35, 52, 56, 89, 500, 502, 503, 504], true)) {
             return true;
         }
         return (bool) preg_match(
             '/unexpected eof|SSL_read|Connection reset|Operation timed out|Resolving timed out|SSL connect error|Empty reply/i',
             $e->getMessage()
         );
+    }
+
+    /**
+     * Lote recebido/em processamento no envio SINCRONO (indSinc=1).
+     *
+     * 103 = lote recebido, 105 = lote em processamento. Nenhum dos dois traz protNFe,
+     * entao caem no ramo de "rejeicao raiz" e a nota ficava como nao autorizada — mas
+     * eles nao sao rejeicao nenhuma: a SEFAZ aceitou e ainda esta processando, o que
+     * acontece justamente quando ela esta sobrecarregada. Vao para a recuperacao por
+     * consulta, como a duplicidade (TASK-148).
+     */
+    protected static function ehLoteEmProcessamento($cStat): bool
+    {
+        return in_array((int) $cStat, [103, 105], true);
     }
 
     public static function sefazStatus(Filial $filial)
@@ -416,29 +445,53 @@ class NFePHPService extends MgService
         //  (b) o envio falhou no transporte sem resposta nenhuma — a 1a requisicao pode
         //      ter autorizado enquanto a resposta se perdia.
         // Em ambos o protocolo de autorizacao nao veio; buscamos consultando a chave.
-        if (!$sucesso && ($erroEnvio !== null || static::ehDuplicidade($cStat))) {
+        if (!$sucesso && ($erroEnvio !== null || static::ehDuplicidade($cStat) || static::ehLoteEmProcessamento($cStat))) {
 
-            // Espera curta antes de consultar: apos autorizar, a SEFAZ leva um instante
-            // para replicar a nota ao servico de consulta. Consulta imediata pode voltar
-            // 217 (NFe nao consta) mesmo a nota tendo acabado de ser autorizada.
-            usleep(500 * 1000);
-            $motivo = ($erroEnvio !== null) ? 'falha no envio' : 'duplicidade';
+            if ($erroEnvio !== null) {
+                $motivo = 'falha no envio';
+            } elseif (static::ehDuplicidade($cStat)) {
+                $motivo = 'duplicidade';
+            } else {
+                $motivo = "lote em processamento ({$cStat})";
+            }
             Log::info("enviarSincrono NF#{$nf->codnotafiscal}: {$motivo} -> consultando chave para recuperar autorizacao");
 
+            // Consulta com backoff: apos autorizar, a SEFAZ leva um instante para replicar
+            // a nota ao servico de consulta, e uma consulta unica 0,5s depois voltava 217
+            // ("NFe nao consta") mesmo com a nota recem-autorizada — o operador ficava sem
+            // cupom e a nota so era resolvida pelo robo, minutos depois (TASK-148). Quando
+            // a SEFAZ esta sobrecarregada a replicacao demora mais, entao insiste um pouco.
             // Reusa o nucleo de consultar() (sem lock — ja seguramos o lock aqui).
-            // Best-effort: se a consulta tambem falhar, a nota fica para o robo
+            // Best-effort: se todas as consultas falharem, a nota fica para o robo
             // (NFePHPRoboService) resolver depois.
-            try {
-                $resConsulta = static::consultarSemLock($nf);
-                $nf = $nf->fresh();
-                if (!empty($nf->nfeautorizacao)) {
-                    $sucesso = true;
-                    $cStat = $resConsulta->cStat;
-                    $xMotivo = $resConsulta->xMotivo;
+            foreach ([500, 2000, 5000, 10000] as $esperaMs) {
+                usleep($esperaMs * 1000);
+                try {
+                    // Tentativa unica por consulta (atrasos []): o retry interno de 3x
+                    // multiplicaria este laco por 3, e o pior caso do envio passaria de
+                    // 20 min — acima do lock da nota, do $timeout do job e do teto do
+                    // front. Quem insiste aqui e o proprio laco, com backoff.
+                    $resConsulta = static::consultarSemLock($nf, []);
+                    $nf = $nf->fresh();
+                    $recuperada = !empty($nf->nfeautorizacao);
+                    Log::info("enviarSincrono NF#{$nf->codnotafiscal}: consulta de recuperacao cStat={$resConsulta->cStat} ({$resConsulta->xMotivo}) recuperada=" . ($recuperada ? 'sim' : 'nao'));
+                    if ($recuperada) {
+                        $sucesso = true;
+                        $cStat = $resConsulta->cStat;
+                        $xMotivo = $resConsulta->xMotivo;
+                        break;
+                    }
+                    // Denegada/cancelada/inutilizada: resposta definitiva, insistir nao muda
+                    if (!static::ehNaoConsta($resConsulta->cStat)) {
+                        break;
+                    }
+                } catch (\Exception $e) {
+                    // Sem resposta da SEFAZ: insistir custa mais um timeout inteiro por
+                    // tentativa e ela nao esta em condicoes de responder. A nota fica para
+                    // o robo de pendentes, que e justamente para isso.
+                    Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta, desiste: " . $e->getMessage());
+                    break;
                 }
-                Log::info("enviarSincrono NF#{$nf->codnotafiscal}: consulta de recuperacao cStat={$resConsulta->cStat} ({$resConsulta->xMotivo}) recuperada=" . (!empty($nf->nfeautorizacao) ? 'sim' : 'nao'));
-            } catch (\Exception $e) {
-                Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta: " . $e->getMessage());
             }
         }
 
@@ -476,6 +529,18 @@ class NFePHPService extends MgService
     protected static function ehDuplicidade($cStat): bool
     {
         return in_array((int) $cStat, [204, 539], true);
+    }
+
+    /**
+     * 217 = "NFe nao consta na base de dados da SEFAZ".
+     *
+     * Numa consulta de recuperacao logo apos o envio isso e quase sempre replicacao
+     * ainda em andamento, nao ausencia real — vale reconsultar. Qualquer outro cStat
+     * ja e resposta definitiva (TASK-148).
+     */
+    protected static function ehNaoConsta($cStat): bool
+    {
+        return (int) $cStat === 217;
     }
 
     public static function vincularProtocoloAutorizacao(NotaFiscal $nf, $protNFe, $resp)
@@ -979,7 +1044,7 @@ class NFePHPService extends MgService
      * nota (ex: enviarSincrono na recuperacao por duplicidade) — o lock nao e
      * reentrante, entao chamar consultar() de dentro do envio lancaria excecao.
      */
-    protected static function consultarSemLock(NotaFiscal $nf)
+    protected static function consultarSemLock(NotaFiscal $nf, ?array $atrasosRetry = null)
     {
         // valida se existe Chave da NFe
         if (empty($nf->nfechave)) {
@@ -997,7 +1062,8 @@ class NFePHPService extends MgService
             "consultaChave",
             $tools,
             null,
-            $nf
+            $nf,
+            $atrasosRetry
         );
         $st = new Standardize();
         $respStd = $st->toStd($resp);
@@ -1164,17 +1230,39 @@ class NFePHPService extends MgService
         // Gera PDF
         $pdf = $danfe->render($logo);
 
-        // Salva PDF
+        // Salva o PDF de forma ATOMICA: monta num temporario exclusivo deste processo e só
+        // no fim publica com rename(). Escrever direto no caminho final deixava uma janela
+        // em que outro processo — o /danfe do front, o MGprint depois do /imprimir, o
+        // NFePHPMailJob — lia um arquivo truncado e devolvia 500 ou PDF corrompido, e dois
+        // deles gerando ao mesmo tempo ainda disputavam o mesmo .tmp.pdf (TASK-150).
         $pathDanfe = NFePHPPathService::pathDanfe($nf, true);
-        file_put_contents($pathDanfe, $pdf);
+        $pathTemp = static::pathTempPdf($pathDanfe);
+        file_put_contents($pathTemp, $pdf);
 
-        // Quebra o PDF em várias páginas se necessário
-        if ($nf->modelo == NotaFiscalService::MODELO_NFCE) {
-            static::quebraPdfDanfePaginas($pathDanfe);
+        try {
+            // Quebra o PDF em várias páginas se necessário
+            if ($nf->modelo == NotaFiscalService::MODELO_NFCE) {
+                static::quebraPdfDanfePaginas($pathTemp);
+            }
+
+            // rename no mesmo filesystem é atômico: ninguém enxerga PDF pela metade
+            rename($pathTemp, $pathDanfe);
+        } catch (\Throwable $e) {
+            @unlink($pathTemp);
+            throw $e;
         }
 
         // retorna o caminho do PDF
         return $pathDanfe;
+    }
+
+    /**
+     * Temporário exclusivo deste processo, ao lado do arquivo final (mesmo filesystem,
+     * para o rename ser atômico).
+     */
+    protected static function pathTempPdf(string $pathFinal): string
+    {
+        return $pathFinal . '.' . getmypid() . '.' . uniqid() . '.tmp.pdf';
     }
 
     public static function quebraPdfDanfePaginas(string $pathDanfe): void
@@ -1234,14 +1322,24 @@ class NFePHPService extends MgService
             $mpdf->useTemplate($tplIdx, 0, -$i * $alturaMaxMm, $larguraMm, $alturaMm);
         }
 
-        $tmpOutput = $pathDanfe . '.tmp.pdf';
-        $mpdf->Output($tmpOutput, \Mpdf\Output\Destination::FILE);
+        // Temporário por processo: com nome fixo, duas geracoes simultaneas da mesma nota
+        // escreviam no mesmo arquivo (TASK-150). Como o nome agora e unico, ninguem mais
+        // sobrescreve o lixo de uma geracao que falhou — por isso a limpeza explicita.
+        $tmpOutput = static::pathTempPdf($pathDanfe);
+        try {
+            $mpdf->Output($tmpOutput, \Mpdf\Output\Destination::FILE);
 
-        if (!file_exists($tmpOutput)) {
-            throw new \RuntimeException('Falha ao gerar PDF quebrado em páginas');
+            if (!file_exists($tmpOutput)) {
+                throw new \RuntimeException('Falha ao gerar PDF quebrado em páginas');
+            }
+
+            if (!rename($tmpOutput, $pathDanfe)) {
+                throw new \RuntimeException("Falha ao publicar o PDF quebrado em páginas ({$pathDanfe})");
+            }
+        } catch (\Throwable $e) {
+            @unlink($tmpOutput);
+            throw $e;
         }
-
-        rename($tmpOutput, $pathDanfe);
     }
 
     public static function imprimir(NotaFiscal $nf, $impressora = null)

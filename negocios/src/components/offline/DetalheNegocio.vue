@@ -149,7 +149,8 @@ const recarregarDaApi = () => {
       ],
     },
   }).onOk(async () => {
-    if (await sNegocio.recarregarDaApi(sNegocio.negocio.uuid)) {
+    // forcar: o operador pediu o dado do servidor e ja confirmou que pode perder o local
+    if (await sNegocio.recarregarDaApi(sNegocio.negocio.uuid, true)) {
       sNegocio.atualizarListagem()
       Notify.create({
         type: 'positive',

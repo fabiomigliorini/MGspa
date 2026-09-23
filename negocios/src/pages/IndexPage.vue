@@ -204,8 +204,11 @@ const fechar = debounce(async () => {
     emitter.emit('negocioAlterado')
   } catch (error) {
     console.log(error)
+  } finally {
+    // finally: sem ele o `return` do negocio nao editavel deixava a flag presa e todo
+    // F3 seguinte caia em "Duplo fechamento detectado"
+    fechando = false
   }
-  fechando = false
 }, 300)
 
 const cancelar = async () => {
@@ -416,10 +419,10 @@ const romaneioOuNotaVenda = async () => {
     return
   } else {
     // busca a pessoa
-    const p = db.pessoa.get(sNegocio.negocio.codpessoa)
+    const p = await db.pessoa.get(sNegocio.negocio.codpessoa)
 
-    // age de acordo com o cadastro
-    switch (p.notafiscal) {
+    // age de acordo com o cadastro (pessoa fora do cache offline cai no padrao)
+    switch (p?.notafiscal) {
       case 1: // 1 - Sempre
         novaNota(55)
         return

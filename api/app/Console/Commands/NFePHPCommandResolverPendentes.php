@@ -45,7 +45,10 @@ class NFePHPCommandResolverPendentes extends Command
         $pendentes = NFePHPRoboService::pendentes($minutos, $quantidade);
         foreach ($pendentes as $pendente) {
             $this->info("Agendando Job para #$pendente->codnotafiscal");
-            NFePHPResolverJob::dispatch($pendente->codnotafiscal);
+            // Fila 'low': é trabalho de fundo e não pode competir com a transmissão do
+            // balcão, que vai em 'urgent'. O worker consome urgent,high,default,low nessa
+            // ordem (TASK-149).
+            NFePHPResolverJob::dispatch($pendente->codnotafiscal)->onQueue('low');
         }
     }
 }
