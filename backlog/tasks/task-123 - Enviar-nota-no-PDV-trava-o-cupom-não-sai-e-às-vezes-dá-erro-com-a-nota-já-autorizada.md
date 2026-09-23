@@ -3,17 +3,17 @@ id: TASK-123
 title: >-
   Enviar nota no PDV trava: o cupom não sai e às vezes dá erro com a nota já
   autorizada
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-21 15:32'
-updated_date: '2026-09-23 21:18'
+updated_date: '2026-09-23 22:04'
 labels:
   - components
 dependencies: []
 priority: high
 type: bug
-ordinal: 115000
+ordinal: 179000
 ---
 
 ## Description
