@@ -4,7 +4,7 @@ title: Fazer venda de vale-compras
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-12 17:45'
+updated_date: '2026-09-23 20:30'
 labels:
   - negocios
   - api
@@ -143,6 +143,18 @@ negocio e copia os pagamentos 1:1.
 (b) DENTRO DA NOTA — zero mudanca no NotaFiscalNegocioService, mas tributa o vale na
     venda e de novo no resgate.
 (c) BLOQUEAR NOTA no negocio que tem vale — simples, joga o problema pro balcao.
+
+FUNDAMENTO JURIDICO (23/09/2026): ver backlog/docs/doc-1 - Tese-de-regularidade-fiscal-da-
+venda-de-vale-compras.md — memorando com a tese de que a venda do vale e recebimento antecipado
+SEM fato gerador de ICMS, com o documento fiscal devido so na saida da mercadoria (resgate,
+tPag=12 Vale Presente). Sustenta a alternativa (a) no ponto principal (vale fora da nota), MAS
+VEDA EXPRESSAMENTE a implementacao via vTroco inflado: declarar vTroco de valor que nao foi
+devolvido em dinheiro e registro inveridico (Lei 8.137/1990). O caminho indicado no memorando
+(secao 3.3) e informar no detPag apenas a fracao do pagamento correspondente a nota
+(ex.: transacao de 700, nota de 500 -> tPag=03 vPag=500 com o cAut real), sem troco. Tambem
+veda a alternativa (b)/(c) na forma de item fictitio na nota. O memorando exige do ERP uma
+trilha de auditoria (secao 5) e um relatorio mensal de conciliacao DIMP (secao 4.4) — tratar
+como requisito fiscal da implementacao, nao como opcional.
 
 ### Decisao 3 — escopo do vale
 
