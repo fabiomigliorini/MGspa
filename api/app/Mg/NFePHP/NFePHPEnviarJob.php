@@ -28,9 +28,14 @@ class NFePHPEnviarJob implements ShouldQueue
 
     /**
      * Declarativo (ver acima). Serve de base para o cálculo do REDIS_QUEUE_RETRY_AFTER,
-     * que precisa ser MAIOR que isto. Cobre o enviarSincrono (~243s no pior caso) com folga.
+     * que precisa ser MAIOR que isto.
+     *
+     * Pior caso do enviarSincrono depois da TASK-148: 3 tentativas de envio a 80s
+     * (soaptimeout 60 + 20 do SoapCurl) + as 4 consultas de recuperação com backoff
+     * (17,5s de espera, mais o tempo delas) — algo perto de 8 min no papel, embora o
+     * caso real com SEFAZ lenta fique em dezenas de segundos.
      */
-    public $timeout = 420;
+    public $timeout = 900;
 
     public function __construct(
         public int $codnotafiscal

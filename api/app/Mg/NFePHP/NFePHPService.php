@@ -199,13 +199,32 @@ class NFePHPService extends MgService
     protected static function ehErroTransitorioSefaz(SoapException $e): bool
     {
         // libcurl: 7=connect failed, 28=timeout, 35=ssl connect, 52=empty reply, 56=recv error
-        if (in_array((int) $e->getCode(), [7, 28, 35, 52, 56], true)) {
+        // HTTP do gateway da SEFAZ sobrecarregada: 500 (o SoapCurl remapeia para 89),
+        // 502, 503, 504. Sao transitorios por definicao, e tratar como definitivo fazia
+        // a nota ficar sem autorizacao ate o robo, mesmo quando o 504 escondia um envio
+        // que a SEFAZ processou (TASK-148). Retentar e seguro: reenvio de nota ja
+        // autorizada volta 204 e cai na recuperacao por consulta logo abaixo.
+        if (in_array((int) $e->getCode(), [7, 28, 35, 52, 56, 89, 500, 502, 503, 504], true)) {
             return true;
         }
         return (bool) preg_match(
             '/unexpected eof|SSL_read|Connection reset|Operation timed out|Resolving timed out|SSL connect error|Empty reply/i',
             $e->getMessage()
         );
+    }
+
+    /**
+     * Lote recebido/em processamento no envio SINCRONO (indSinc=1).
+     *
+     * 103 = lote recebido, 105 = lote em processamento. Nenhum dos dois traz protNFe,
+     * entao caem no ramo de "rejeicao raiz" e a nota ficava como nao autorizada — mas
+     * eles nao sao rejeicao nenhuma: a SEFAZ aceitou e ainda esta processando, o que
+     * acontece justamente quando ela esta sobrecarregada. Vao para a recuperacao por
+     * consulta, como a duplicidade (TASK-148).
+     */
+    protected static function ehLoteEmProcessamento($cStat): bool
+    {
+        return in_array((int) $cStat, [103, 105], true);
     }
 
     public static function sefazStatus(Filial $filial)
@@ -416,29 +435,45 @@ class NFePHPService extends MgService
         //  (b) o envio falhou no transporte sem resposta nenhuma — a 1a requisicao pode
         //      ter autorizado enquanto a resposta se perdia.
         // Em ambos o protocolo de autorizacao nao veio; buscamos consultando a chave.
-        if (!$sucesso && ($erroEnvio !== null || static::ehDuplicidade($cStat))) {
+        if (!$sucesso && ($erroEnvio !== null || static::ehDuplicidade($cStat) || static::ehLoteEmProcessamento($cStat))) {
 
-            // Espera curta antes de consultar: apos autorizar, a SEFAZ leva um instante
-            // para replicar a nota ao servico de consulta. Consulta imediata pode voltar
-            // 217 (NFe nao consta) mesmo a nota tendo acabado de ser autorizada.
-            usleep(500 * 1000);
-            $motivo = ($erroEnvio !== null) ? 'falha no envio' : 'duplicidade';
+            if ($erroEnvio !== null) {
+                $motivo = 'falha no envio';
+            } elseif (static::ehDuplicidade($cStat)) {
+                $motivo = 'duplicidade';
+            } else {
+                $motivo = "lote em processamento ({$cStat})";
+            }
             Log::info("enviarSincrono NF#{$nf->codnotafiscal}: {$motivo} -> consultando chave para recuperar autorizacao");
 
+            // Consulta com backoff: apos autorizar, a SEFAZ leva um instante para replicar
+            // a nota ao servico de consulta, e uma consulta unica 0,5s depois voltava 217
+            // ("NFe nao consta") mesmo com a nota recem-autorizada — o operador ficava sem
+            // cupom e a nota so era resolvida pelo robo, minutos depois (TASK-148). Quando
+            // a SEFAZ esta sobrecarregada a replicacao demora mais, entao insiste um pouco.
             // Reusa o nucleo de consultar() (sem lock — ja seguramos o lock aqui).
-            // Best-effort: se a consulta tambem falhar, a nota fica para o robo
+            // Best-effort: se todas as consultas falharem, a nota fica para o robo
             // (NFePHPRoboService) resolver depois.
-            try {
-                $resConsulta = static::consultarSemLock($nf);
-                $nf = $nf->fresh();
-                if (!empty($nf->nfeautorizacao)) {
-                    $sucesso = true;
-                    $cStat = $resConsulta->cStat;
-                    $xMotivo = $resConsulta->xMotivo;
+            foreach ([500, 2000, 5000, 10000] as $esperaMs) {
+                usleep($esperaMs * 1000);
+                try {
+                    $resConsulta = static::consultarSemLock($nf);
+                    $nf = $nf->fresh();
+                    $recuperada = !empty($nf->nfeautorizacao);
+                    Log::info("enviarSincrono NF#{$nf->codnotafiscal}: consulta de recuperacao cStat={$resConsulta->cStat} ({$resConsulta->xMotivo}) recuperada=" . ($recuperada ? 'sim' : 'nao'));
+                    if ($recuperada) {
+                        $sucesso = true;
+                        $cStat = $resConsulta->cStat;
+                        $xMotivo = $resConsulta->xMotivo;
+                        break;
+                    }
+                    // Denegada/cancelada/inutilizada: resposta definitiva, insistir nao muda
+                    if (!static::ehNaoConsta($resConsulta->cStat)) {
+                        break;
+                    }
+                } catch (\Exception $e) {
+                    Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta: " . $e->getMessage());
                 }
-                Log::info("enviarSincrono NF#{$nf->codnotafiscal}: consulta de recuperacao cStat={$resConsulta->cStat} ({$resConsulta->xMotivo}) recuperada=" . (!empty($nf->nfeautorizacao) ? 'sim' : 'nao'));
-            } catch (\Exception $e) {
-                Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta: " . $e->getMessage());
             }
         }
 
@@ -476,6 +511,18 @@ class NFePHPService extends MgService
     protected static function ehDuplicidade($cStat): bool
     {
         return in_array((int) $cStat, [204, 539], true);
+    }
+
+    /**
+     * 217 = "NFe nao consta na base de dados da SEFAZ".
+     *
+     * Numa consulta de recuperacao logo apos o envio isso e quase sempre replicacao
+     * ainda em andamento, nao ausencia real — vale reconsultar. Qualquer outro cStat
+     * ja e resposta definitiva (TASK-148).
+     */
+    protected static function ehNaoConsta($cStat): bool
+    {
+        return (int) $cStat === 217;
     }
 
     public static function vincularProtocoloAutorizacao(NotaFiscal $nf, $protNFe, $resp)

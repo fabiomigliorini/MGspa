@@ -3,9 +3,10 @@ id: TASK-148
 title: >-
   Envio a SEFAZ lenta/instavel: timeout 40s, HTTP 5xx e cStat 103/105 tratados
   como erro definitivo
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
+updated_date: '2026-09-23 16:36'
 labels:
   - api
 dependencies: []
