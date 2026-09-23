@@ -416,10 +416,10 @@ const romaneioOuNotaVenda = async () => {
     return
   } else {
     // busca a pessoa
-    const p = db.pessoa.get(sNegocio.negocio.codpessoa)
+    const p = await db.pessoa.get(sNegocio.negocio.codpessoa)
 
-    // age de acordo com o cadastro
-    switch (p.notafiscal) {
+    // age de acordo com o cadastro (pessoa fora do cache offline cai no padrao)
+    switch (p?.notafiscal) {
       case 1: // 1 - Sempre
         novaNota(55)
         return
