@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { abrirPdf } from '@components/abrirPdf'
 import { abrirXml } from '@components/abrirXml'
@@ -42,6 +42,14 @@ const codnotafiscal = computed(() => props.nota?.codnotafiscal)
 const { transmitindo, iniciarTransmissao, checarEmAndamento } = useNotaFiscalTransmissao({
   api: props.api,
   codnotafiscal,
+})
+
+// A transmissao sobrevive ao componente (ver useNotaFiscalTransmissao). O que muda quando o
+// card ja saiu da tela e o que fazer com o resultado: nao abrir documento nem mexer na lista
+// de uma tela que nao e mais esta.
+let desmontado = false
+onUnmounted(() => {
+  desmontado = true
 })
 
 /**
@@ -225,7 +233,7 @@ async function criarXml(offline = null) {
 async function transmitirXml() {
   const r = await iniciarTransmissao()
 
-  if (r.nota) emit('action-completed', 'transmitir', r.nota)
+  if (r.nota && !desmontado) emit('action-completed', 'transmitir', r.nota)
 
   if (!r.sucesso) {
     throw new Error(`${r.cStat ?? ''} - ${r.xMotivo ?? 'Erro desconhecido'}`)
@@ -264,15 +272,16 @@ async function emitir(event) {
     }
 
     // 3. O documento so existe para o cliente se ele sair impresso.
+    //    Se o card ja saiu da tela (o operador foi para outro negocio enquanto a SEFAZ
+    //    demorava), o cupom ainda vai para a termica — e fisico e e do cliente que pagou —,
+    //    mas o DANFE nao abre em cima de outra tela. Ao voltar, o card recarrega autorizado.
     if (nota?.tpemis == 9 || nota?.status === 'AUT') {
       if (props.nota?.modelo == 65 && props.impressora) await imprimir()
-      if (nota?.tpemis == 9 || deveAbrirDanfeAposEnviar.value) await abrirDanfe()
+      if (!desmontado && (nota?.tpemis == 9 || deveAbrirDanfeAposEnviar.value)) await abrirDanfe()
     }
   } catch (error) {
     // O Notify da transmissao ja saiu pelo composable; aqui cobre criar e cStat recusado
-    if (error?.message && !error.message.startsWith('Sem conex')) {
-      $q.notify({ type: 'negative', message: 'Erro ao emitir NFe', caption: mensagemErro(error) })
-    }
+    $q.notify({ type: 'negative', message: 'Erro ao emitir NFe', caption: mensagemErro(error) })
   } finally {
     emitindo.value = false
   }
@@ -313,15 +322,13 @@ function criarXmlComEscolha(event) {
 
 function transmitirNfe(event) {
   stop(event)
-  return transmitirXml().catch((error) => {
-    if (error?.message && !error.message.startsWith('Sem conex')) {
-      $q.notify({
-        type: 'negative',
-        message: 'Erro ao transmitir NFe',
-        caption: mensagemErro(error),
-      })
-    }
-  })
+  return transmitirXml().catch((error) =>
+    $q.notify({
+      type: 'negative',
+      message: 'Erro ao transmitir NFe',
+      caption: mensagemErro(error),
+    }),
+  )
 }
 
 async function consultarNfe(event) {
