@@ -68,14 +68,14 @@ export const valeModeloStore = defineStore(
     // aqui a tela mostra os mesmos numeros enquanto se edita.
     //   valorProdutos = soma dos itens do kit
     //   valoravulso   = digitado (e o que permite modelo sem produto)
-    //   valorTotal    = a face do vale
+    //   valorVale     = a face do vale (produtos + avulso), o crédito
     const valorProdutos = computed(() =>
       form.value.itens.reduce(
         (soma, i) => soma + Number(i.quantidade || 0) * Number(i.valorunitario || 0),
         0,
       ),
     )
-    const valorTotal = computed(() => valorProdutos.value + Number(form.value.valoravulso || 0))
+    const valorVale = computed(() => valorProdutos.value + Number(form.value.valoravulso || 0))
 
     async function carregar(pagina = 1) {
       carregando.value = true
@@ -217,7 +217,7 @@ export const valeModeloStore = defineStore(
       salvando,
       isNovo,
       valorProdutos,
-      valorTotal,
+      valorVale,
       carregar,
       carregarMais,
       limparFiltros,

@@ -12,9 +12,12 @@ use Mg\Pessoa\Pessoa;
  * modelo + turma + ano do catalogo antigo (ver database/vale_catalogo.sql).
  * O valor vem em tres partes: "valorprodutos" e a soma dos itens do kit,
  * "valoravulso" e digitado a mao (e o que permite modelo sem produto
- * nenhum) e "valortotal" e a soma dos dois -- a FACE do vale, o credito
- * que a emissao vai gerar. So o avulso e digitado; os outros dois o
- * service calcula.
+ * nenhum) e "valorvale" e a soma dos dois -- a FACE do vale, o credito que
+ * a emissao vai gerar. So o avulso e digitado; os outros dois o service
+ * calcula.
+ *
+ * A face chama "valorvale" e nao "valortotal" (decisao 22): no negocio
+ * "valortotal" ja quer dizer a fatia paga depois do rateio de desconto.
  * "codpessoafavorecido" e opcional: sem escola o vale e ao portador e o
  * favorecido vira Consumidor na emissao.
  */
@@ -43,7 +46,7 @@ class ValeModelo extends MgModel
         'inativo' => 'datetime',
         'valoravulso' => 'float',
         'valorprodutos' => 'float',
-        'valortotal' => 'float',
+        'valorvale' => 'float',
     ];
 
     public function PessoaFavorecido()

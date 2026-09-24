@@ -94,7 +94,23 @@ ALTER TABLE tblvalemodelo DROP COLUMN turma, DROP COLUMN ano,
 
 Os números justificam os cortes: **0 de 204** modelos usam `desconto`, **139 de 204** têm `turma`
 preenchida (por isso a descrição concatena em vez de descartar) e **1 de 204** usa `observacoes`, que
-fica. A FK de `tblvalecompra` acompanha o rename sozinha; quem quebra é o PHP do MGLara.
+fica. A FK de `tblvalecompra` acompanha o rename sozinha; quem quebra é o PHP do MGLara **e 4 pontos
+da API** — `ProdutoBarraService::unificaBarras()`, `ProdutoBarra`, `Pessoa` e `ValeCompra` —, todos
+repontados no milestone 1.
+
+O arquivo tem mais **dois blocos**, cada um com a sua guarda, para o modelo carregar as mesmas duas
+parcelas do vale emitido (decisões 17, 21 e 22). Rodar o arquivo inteiro resolve banco novo e banco
+já migrado:
+
+```sql
+ALTER TABLE tblvalemodelo ADD COLUMN valoravulso numeric(14,2);  -- valor livre
+ALTER TABLE tblvalemodelo ADD COLUMN valorvale   numeric(14,2);  -- face = produtos + avulso
+-- as três colunas de valor ficam NOT NULL DEFAULT 0 (soma nunca dá null)
+-- 3º bloco: renomeia valortotal -> valorvale em quem migrou antes da decisão 22
+```
+
+Assim `tblvalemodelo` já tem `valorprodutos`/`valoravulso`/`valorvale` com o mesmo significado que
+terão em `tblnegociovale`, e a semeadura do milestone 2 é cópia campo a campo.
 
 ### Composição dos totais
 

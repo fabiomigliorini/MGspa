@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
+import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { valeModeloStore } from 'stores/valeModelo'
 import { formataReal } from '@components/formatters'
@@ -10,19 +11,35 @@ import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputProdutoBarras from '@components/MgInputProdutoBarras.vue'
 
+const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const sVale = valeModeloStore()
-const { form, carregandoForm, salvando, isNovo, valorProdutos, valorTotal } = storeToRefs(sVale)
+const { form, carregandoForm, salvando, isNovo, valorProdutos, valorVale } = storeToRefs(sVale)
 
 // Bipar ou digitar o codigo acrescenta o item ao kit; o multiplicador do
 // campo ("5*") entra como quantidade.
 const acrescentarProduto = (produto, quantidade) => sVale.itemAcrescentar(produto, quantidade)
 
-const submit = async () => {
-  if (await sVale.salvar()) {
-    router.push('/vale-modelo')
-  }
+const confirmarRemocaoItem = (indice, item) => {
+  $q.dialog({
+    title: 'Remover item',
+    message: `Remover "${item.produto}" do kit?`,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Remover', color: 'red-5', flat: true },
+  }).onOk(() => sVale.itemRemover(indice))
+}
+
+// ---- 4. confirmacao de gravacao ----
+const submit = () => {
+  $q.dialog({
+    title: isNovo.value ? 'Salvar modelo' : 'Salvar alterações',
+    message: `Confirma salvar "${form.value.modelo}" com face de ${formataReal(valorVale.value)}?`,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Salvar', color: 'primary', flat: true },
+  }).onOk(async () => {
+    if (await sVale.salvar()) router.push('/vale-modelo')
+  })
 }
 
 onMounted(async () => {
@@ -80,6 +97,37 @@ onMounted(async () => {
           </q-card-section>
         </q-card>
 
+        <!-- VALOR DO VALE -->
+        <q-card bordered flat class="q-mb-md">
+          <q-card-section class="q-pb-none">
+            <div class="text-grey-9 text-overline">Valor do vale</div>
+          </q-card-section>
+          <q-card-section>
+            <div class="row q-col-gutter-md items-center">
+              <div class="col-12 col-sm-4">
+                <MgInputValor
+                  :model-value="valorProdutos"
+                  label="Produtos do kit"
+                  prefix="R$"
+                  readonly
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <MgInputValor v-model="form.valoravulso" label="Avulso" prefix="R$" :min="0" />
+              </div>
+              <div class="col-12 col-sm-4">
+                <MgInputValor :model-value="valorVale" label="Total (face)" prefix="R$" readonly />
+              </div>
+              <div class="col-12">
+                <div class="text-caption text-grey-7">
+                  O total é a face do vale — o crédito que a emissão vai gerar. Um modelo sem
+                  produto nenhum vale o avulso digitado.
+                </div>
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
         <!-- ITENS DO KIT -->
         <q-card bordered flat class="q-mb-md">
           <q-card-section class="row items-center q-pb-none">
@@ -125,48 +173,17 @@ onMounted(async () => {
               <div class="col-3 col-md-1 text-right q-pt-md">
                 {{ formataReal((item.quantidade || 0) * (item.valorunitario || 0)) }}
               </div>
-              <div class="col-1 q-pt-sm">
+              <div class="col-1 q-pt-sm text-left">
                 <q-btn
                   flat
                   round
                   size="sm"
                   color="grey-7"
                   icon="delete"
-                  @click="sVale.itemRemover(indice)"
+                  @click="confirmarRemocaoItem(indice, item)"
                 >
                   <q-tooltip>Remover item</q-tooltip>
                 </q-btn>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
-
-        <!-- VALOR DO VALE -->
-        <q-card bordered flat class="q-mb-md">
-          <q-card-section class="q-pb-none">
-            <div class="text-grey-9 text-overline">Valor do vale</div>
-          </q-card-section>
-          <q-card-section>
-            <div class="row q-col-gutter-md items-center">
-              <div class="col-12 col-sm-4">
-                <MgInputValor
-                  :model-value="valorProdutos"
-                  label="Produtos do kit"
-                  prefix="R$"
-                  readonly
-                />
-              </div>
-              <div class="col-12 col-sm-4">
-                <MgInputValor v-model="form.valoravulso" label="Avulso" prefix="R$" :min="0" />
-              </div>
-              <div class="col-12 col-sm-4">
-                <MgInputValor :model-value="valorTotal" label="Total" prefix="R$" readonly />
-              </div>
-              <div class="col-12">
-                <div class="text-caption text-grey-7">
-                  O total é a face do vale — o crédito que a emissão vai gerar. Um modelo sem
-                  produto nenhum vale o avulso digitado.
-                </div>
               </div>
             </div>
           </q-card-section>

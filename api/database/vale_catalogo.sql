@@ -99,7 +99,11 @@ COMMIT;
 --
 --   valorprodutos = soma dos itens do kit   (calculado, read-only na tela)
 --   valoravulso   = valor digitado a mao    (sempre aberto)
---   valortotal    = valorprodutos + valoravulso  <- a FACE do vale
+--   valorvale     = valorprodutos + valoravulso  <- a FACE do vale
+--
+-- Decisao 22: a face chama "valorvale", nao "valortotal". No negocio
+-- "valortotal" ja quer dizer a fatia paga depois do rateio de desconto, e
+-- o milestone 2 semeia daqui direto o tblnegociovale.valorvale.
 --
 -- E o que permite modelo sem produto nenhum: kit vazio, valor digitado.
 -- As tres colunas ficam NOT NULL DEFAULT 0 para a soma nunca dar null.
@@ -126,22 +130,51 @@ IF EXISTS (
 END IF;
 
 ALTER TABLE tblvalemodelo ADD COLUMN valoravulso numeric(14,2);
-ALTER TABLE tblvalemodelo ADD COLUMN valortotal  numeric(14,2);
+ALTER TABLE tblvalemodelo ADD COLUMN valorvale   numeric(14,2);
 
 UPDATE tblvalemodelo
    SET valorprodutos = coalesce(valorprodutos, 0),
        valoravulso   = 0,
-       valortotal    = coalesce(valorprodutos, 0);
+       valorvale     = coalesce(valorprodutos, 0);
 
 ALTER TABLE tblvalemodelo
   ALTER COLUMN valorprodutos SET DEFAULT 0,
   ALTER COLUMN valorprodutos SET NOT NULL,
   ALTER COLUMN valoravulso   SET DEFAULT 0,
   ALTER COLUMN valoravulso   SET NOT NULL,
-  ALTER COLUMN valortotal    SET DEFAULT 0,
-  ALTER COLUMN valortotal    SET NOT NULL;
+  ALTER COLUMN valorvale     SET DEFAULT 0,
+  ALTER COLUMN valorvale     SET NOT NULL;
 
-RAISE NOTICE 'vale_catalogo.sql: valoravulso e valortotal criados.';
+RAISE NOTICE 'vale_catalogo.sql: valoravulso e valorvale criados.';
+
+END $$;
+
+COMMIT;
+
+-- =====================================================================
+-- Renomeia valortotal -> valorvale (decisao 22)
+--
+-- So faz sentido em banco que rodou o bloco 2 na versao antiga, quando a
+-- face ainda se chamava valortotal. Em banco novo o bloco 2 ja cria
+-- valorvale e este aqui nao faz nada.
+-- =====================================================================
+
+BEGIN;
+
+DO $$
+BEGIN
+
+IF NOT EXISTS (
+  SELECT 1 FROM information_schema.columns
+   WHERE table_name = 'tblvalemodelo' AND column_name = 'valortotal'
+) THEN
+  RAISE NOTICE 'vale_catalogo.sql: face ja se chama valorvale.';
+  RETURN;
+END IF;
+
+ALTER TABLE tblvalemodelo RENAME COLUMN valortotal TO valorvale;
+
+RAISE NOTICE 'vale_catalogo.sql: valortotal renomeado para valorvale.';
 
 END $$;
 

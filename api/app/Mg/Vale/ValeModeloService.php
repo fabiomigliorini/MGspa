@@ -22,12 +22,12 @@ class ValeModeloService extends MgService
         if (!empty($filter['codpessoafavorecido'])) {
             $qry->where('tblvalemodelo.codpessoafavorecido', $filter['codpessoafavorecido']);
         }
-        // Faixa sobre a face (valortotal), que e o numero que a tela mostra.
+        // Faixa sobre a face (valorvale), que e o numero que a tela mostra.
         if (isset($filter['valorde']) && $filter['valorde'] !== '') {
-            $qry->where('tblvalemodelo.valortotal', '>=', $filter['valorde']);
+            $qry->where('tblvalemodelo.valorvale', '>=', $filter['valorde']);
         }
         if (isset($filter['valorate']) && $filter['valorate'] !== '') {
-            $qry->where('tblvalemodelo.valortotal', '<=', $filter['valorate']);
+            $qry->where('tblvalemodelo.valorvale', '<=', $filter['valorate']);
         }
         // 1=ativo (default), 2=inativo, 9=todos. O default e "ativo" de
         // proposito: o catalogo e sazonal e 169 dos 204 modelos estao
@@ -47,8 +47,8 @@ class ValeModeloService extends MgService
 
     /**
      * Grava cabecalho e itens. Do valor, so o avulso vem do cliente:
-     * valorprodutos e sempre a soma dos itens e valortotal e a soma dos
-     * dois, para a face bater com o kit impresso no vale.
+     * valorprodutos e sempre a soma dos itens e valorvale (a face) e a soma
+     * dos dois, para o credito bater com o kit impresso no vale.
      */
     public static function salvar(array $dados, ?ValeModelo $modelo = null)
     {
@@ -102,7 +102,7 @@ class ValeModeloService extends MgService
 
         $modelo->valorprodutos = round($somaItens, 2);
         $modelo->valoravulso = round((float) $modelo->valoravulso, 2);
-        $modelo->valortotal = round($modelo->valorprodutos + $modelo->valoravulso, 2);
+        $modelo->valorvale = round($modelo->valorprodutos + $modelo->valoravulso, 2);
         $modelo->save();
     }
 
