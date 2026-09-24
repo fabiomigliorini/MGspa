@@ -5,7 +5,7 @@ status: To Do
 assignee:
   - '@fabio'
 created_date: '2026-09-22 20:30'
-updated_date: '2026-09-23 13:55'
+updated_date: '2026-09-23 21:02'
 labels:
   - negocios
 dependencies: []
@@ -21,3 +21,12 @@ Na etapa QR Code do PIX a lista traz todos os portadores, de todas as filiais. A
 
 Se a lista voltar a incomodar, a saida NAO e esconder: seguir o padrao da TASK-142 (destacar as contas do dia a dia no topo, com tecla baixa, e as demais abaixo de um cabecalho, todas visiveis). Nao reabrir a sub-etapa.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-23 21:02
+---
+Dobrada na TASK-142 (regra 3 do CLAUDE.md): o conteúdo está nas notas da task-mãe. Arquivada para sair do board — não foi descartada.
+---
+<!-- COMMENTS:END -->

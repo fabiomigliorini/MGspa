@@ -64,8 +64,22 @@ class NFePHPConfigService
         return json_encode($config);
     }
 
-    public static function instanciaTools(Filial $filial, $versao = '4.00', $schemes = null)
-    {
+    /**
+     * $timeoutSegundos vira CONNECTTIMEOUT no SoapCurl e CURLOPT_TIMEOUT + 20.
+     *
+     * O padrão 20 (o mesmo do sped-common) é o que vale para todas as operações hoje.
+     * O parâmetro existe porque o envio chegou a usar 60s (TASK-148) e voltou atrás:
+     * esperar mais pela SEFAZ briga com a contingência, que manda o cupom sair offline
+     * quando ela passa de 15s, e alongava o pior caso além do que o robô de pendentes
+     * suporta. Fica como alavanca, para ser usada só com dado de produção que a
+     * justifique.
+     */
+    public static function instanciaTools(
+        Filial $filial,
+        $versao = '4.00',
+        $schemes = null,
+        int $timeoutSegundos = 20
+    ) {
         // Monta Configuracao da Filial
         $config = static::config($filial, $versao, $schemes);
 
@@ -87,12 +101,7 @@ class NFePHPConfigService
         $soap->protocol(SoapInterface::SSL_TLSV1_2);
         $soap->httpVersion('1.1');
 
-        // Timeout de 60s (padrao do sped-common e 20, que vira CONNECTTIMEOUT 20 +
-        // TIMEOUT 40 no SoapCurl). Com a SEFAZ lenta os 40s estouravam ANTES de ela
-        // responder, o retry entao caia em "204 Duplicidade" sobre uma nota que ela ja
-        // estava processando e a autorizacao so aparecia depois, pelo robo de pendentes:
-        // o operador ficava sem cupom (TASK-148). Esperar e mais barato que recuperar.
-        $soap->timeout(60);
+        $soap->timeout($timeoutSegundos);
 
         $tools->loadSoapClass($soap);
 

@@ -1,9 +1,10 @@
 ---
 id: TASK-118
-title: 'Cobranca Saurus: separar criar do enviar (erro no envio nao atualiza listagem)'
+title: Cobrança na maquininha falha e o PDV não fica sabendo
 status: To Do
 assignee: []
 created_date: '2026-09-18 20:59'
+updated_date: '2026-09-23 21:02'
 labels:
   - negocios
 dependencies: []

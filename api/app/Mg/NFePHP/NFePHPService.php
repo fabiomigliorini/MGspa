@@ -32,13 +32,14 @@ class NFePHPService extends MgService
      * processo ainda vivo e uma segunda operação entra em paralelo na mesma nota —
      * exatamente o que ele deveria impedir.
      *
-     * Conta do pior caso, com o soaptimeout de 60 da TASK-148 (CURLOPT_TIMEOUT = 80):
-     * envio com 3 tentativas (~242s) + as esperas do laço de recuperação (17,5s) + uma
-     * consulta que estoura e encerra o laço (~80s) = ~340s. 600s cobre isso com folga e
-     * continua curto o bastante para não travar a nota por muito tempo se o processo
-     * morrer sem chegar ao destructor.
+     * Conta do pior caso: envio com 3 tentativas a 40s (soaptimeout 20, CURLOPT_TIMEOUT
+     * = 40) = ~122s, mais o laço de recuperação por consulta indo até o fim — 17,5s de
+     * esperas e 4 consultas de 40s (tentativa única) = ~178s. Total ~300s. 600s cobre
+     * isso com folga e continua curto o bastante para não travar a nota por muito tempo
+     * se o processo morrer sem chegar ao destructor.
      *
-     * Já foi 120s (quando cada tentativa custava 40s) e 300s.
+     * Já foi 120s e 300s, ambos MENORES que o pior caso da época — o lock expirava com o
+     * processo vivo, que é o cenário que ele existe para impedir.
      */
     const LOCK_TTL = 600;
 
@@ -131,8 +132,8 @@ class NFePHPService extends MgService
         ?NotaFiscal $nf = null,
         ?array $atrasosMs = null
     ) {
-        // Cada tentativa custa até CURLOPT_TIMEOUT (soaptimeout + 20 = 80s), então o
-        // padrão de 3 tentativas é um teto de ~242s POR CHAMADA. Quem chama de dentro de
+        // Cada tentativa custa até CURLOPT_TIMEOUT (soaptimeout 20 + 20 = 40s), então o
+        // padrão de 3 tentativas é um teto de ~122s POR CHAMADA. Quem chama de dentro de
         // um laço que já insiste sozinho passa [] para não multiplicar isso.
         $atrasosMs = $atrasosMs ?? [500, 1500];
         $tentativa = 0;
@@ -164,7 +165,7 @@ class NFePHPService extends MgService
                     $e->getMessage()
                 );
 
-                if (!static::ehErroTransitorioSefaz($e) || $tentativa >= count($atrasosMs)) {
+                if (!static::ehErroTransitorioSefaz($e, $operacao) || $tentativa >= count($atrasosMs)) {
                     throw $e;
                 }
                 $espera = $atrasosMs[$tentativa];
@@ -206,17 +207,38 @@ class NFePHPService extends MgService
         }
     }
 
-    protected static function ehErroTransitorioSefaz(SoapException $e): bool
+    /**
+     * Erro que vale retentar.
+     *
+     * $operacao existe porque HTTP 5xx só é seguro retentar quando o reenvio tem como se
+     * recuperar. Um 502/504 pode esconder uma requisição que a SEFAZ processou; no envio
+     * de NFe ('enviaLote') isso é recuperável, porque o reenvio volta 204 e o
+     * enviarSincrono busca a autorização por consulta logo abaixo. Em todo o resto, não:
+     * num EVENTO — cancelamento, carta de correção, eventos de MDF-e — o reenvio volta
+     * 573 ("duplicidade de evento"), que hoje não é tratado, e o evento fica registrado
+     * na SEFAZ e não no nosso banco (TASK-166). O envio de MDF-e ('mdfeEnviaLote')
+     * também fica de fora de propósito: é envio, mas não tem laço de recuperação.
+     *
+     * Alargar isso para o funil inteiro ampliava justamente essa janela, e no cenário
+     * mais provável — SEFAZ sobrecarregada respondendo 5xx (TASK-159).
+     *
+     * Os erros de transporte continuam valendo para todas as operações, como sempre
+     * valeram — incluindo o 28 (timeout), que já carrega a mesma ambiguidade.
+     */
+    protected static function ehErroTransitorioSefaz(SoapException $e, ?string $operacao = null): bool
     {
+        $codigo = (int) $e->getCode();
+
         // libcurl: 7=connect failed, 28=timeout, 35=ssl connect, 52=empty reply, 56=recv error
-        // HTTP do gateway da SEFAZ sobrecarregada: 500 (o SoapCurl remapeia para 89),
-        // 502, 503, 504. Sao transitorios por definicao, e tratar como definitivo fazia
-        // a nota ficar sem autorizacao ate o robo, mesmo quando o 504 escondia um envio
-        // que a SEFAZ processou (TASK-148). Retentar e seguro: reenvio de nota ja
-        // autorizada volta 204 e cai na recuperacao por consulta logo abaixo.
-        if (in_array((int) $e->getCode(), [7, 28, 35, 52, 56, 89, 500, 502, 503, 504], true)) {
+        if (in_array($codigo, [7, 28, 35, 52, 56], true)) {
             return true;
         }
+
+        // HTTP do gateway da SEFAZ sobrecarregada (o SoapCurl remapeia 500 para 89)
+        if ($operacao === 'enviaLote' && in_array($codigo, [89, 500, 502, 503, 504], true)) {
+            return true;
+        }
+
         return (bool) preg_match(
             '/unexpected eof|SSL_read|Connection reset|Operation timed out|Resolving timed out|SSL connect error|Empty reply/i',
             $e->getMessage()
@@ -360,7 +382,11 @@ class NFePHPService extends MgService
     {
         $guard = static::lockDaNotaFiscal($nf);
 
-        // Instancia Tools para a configuracao e certificado
+        // Instancia Tools para a configuracao e certificado — timeout padrao (20s, cURL
+        // 40s), como sempre foi. Chegou a ser 60s (TASK-148) e voltou: esperar mais pela
+        // SEFAZ briga com a contingencia, que existe justamente para mandar o cupom sair
+        // offline quando ela passa de 15s, e o pior caso maior nao cabia no robo. Quem
+        // segura a nota lenta e o laco de recuperacao por consulta, logo abaixo.
         $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V4');
         $tools->model($nf->modelo);
 
@@ -392,9 +418,9 @@ class NFePHPService extends MgService
                 $nf
             );
         } catch (SoapException $e) {
-            // Erro nao transitorio (XML invalido, HTTP 500, etc.): a nota nao foi
-            // processada pela SEFAZ — propaga direto.
-            if (!static::ehErroTransitorioSefaz($e)) {
+            // Erro nao transitorio (XML invalido, etc.): a nota nao foi processada pela
+            // SEFAZ — propaga direto.
+            if (!static::ehErroTransitorioSefaz($e, 'enviaLote')) {
                 throw $e;
             }
             // Erro transitorio (ex: SSL 'unexpected eof') e SEM resposta: a 1a requisicao
@@ -486,11 +512,15 @@ class NFePHPService extends MgService
                         break;
                     }
                 } catch (\Exception $e) {
-                    // Sem resposta da SEFAZ: insistir custa mais um timeout inteiro por
-                    // tentativa e ela nao esta em condicoes de responder. A nota fica para
-                    // o robo de pendentes, que e justamente para isso.
-                    Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta, desiste: " . $e->getMessage());
-                    break;
+                    // NAO desiste: este laco so roda quando o envio ja deu errado, ou seja
+                    // com o link para a SEFAZ instavel — e justamente a consulta seguinte
+                    // pode achar a nota autorizada. Desistir na primeira falha jogava fora
+                    // as janelas de 2s, 5s e 10s, que existem porque a replicacao demora,
+                    // e devolvia a nota ao robo com o cliente esperando o cupom. Cada
+                    // consulta e tentativa unica, entao o laco inteiro custa no maximo
+                    // ~177s mesmo com todas estourando.
+                    Log::warning("enviarSincrono NF#{$nf->codnotafiscal}: falha ao recuperar autorizacao por consulta, tentara de novo: " . $e->getMessage());
+                    continue;
                 }
             }
         }

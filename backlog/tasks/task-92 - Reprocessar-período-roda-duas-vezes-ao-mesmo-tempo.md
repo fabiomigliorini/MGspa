@@ -1,10 +1,10 @@
 ---
 id: TASK-92
-title: 'Corrigir ReprocessarPeriodoJob: timeout maior que o retry_after da fila'
+title: Reprocessar período roda duas vezes ao mesmo tempo
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:56'
-updated_date: '2026-09-15 14:46'
+updated_date: '2026-09-23 21:06'
 labels:
   - api
 dependencies: []

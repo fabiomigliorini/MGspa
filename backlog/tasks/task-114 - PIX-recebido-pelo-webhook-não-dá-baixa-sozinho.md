@@ -1,9 +1,10 @@
 ---
 id: TASK-114
-title: 'PixWebhookService::processar nao faz nada'
+title: PIX recebido pelo webhook não dá baixa sozinho
 status: To Do
 assignee: []
 created_date: '2026-09-16 16:03'
+updated_date: '2026-09-23 21:06'
 labels:
   - api
 dependencies: []

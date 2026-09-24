@@ -1,18 +1,18 @@
 ---
 id: TASK-145
 title: 'Sicredi: consulta PIX rejeita data fim no futuro por fuso horario'
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-23 11:34'
-updated_date: '2026-09-23 15:37'
+updated_date: '2026-09-23 21:12'
 labels:
   - negocios
   - api
 dependencies: []
 priority: high
 type: bug
-ordinal: 153000
+ordinal: 178000
 ---
 
 ## Description

@@ -4,6 +4,7 @@ title: Retomar transmissao em andamento nunca termina em impressao do cupom
 status: To Do
 assignee: []
 created_date: '2026-09-23 20:18'
+updated_date: '2026-09-23 21:01'
 labels:
   - components
 dependencies: []
@@ -26,3 +27,12 @@ Efeito: se o operador der F5 (ou fechar a aba e voltar) no meio de uma transmiss
 
 Fix proposto (confirmar): extrair o passo 3 do emitir() (MgNotaFiscalAcoes ~:266-270) para uma funcao e chama-la tambem no fim de transmitirNfe() e de um checarEmAndamento() que passe a devolver a Promise terminal (setando resolver) e a emitir action-completed; no PDV, rodar checarEmAndamento() no onMounted tambem em compact, limitado as notas DIG/ERR que ja tem chave (e 1 GET por nota em transmissao, nao por linha da lista).
 <!-- SECTION:DESCRIPTION:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-23 21:01
+---
+Dobrada na TASK-123 (regra 3 do CLAUDE.md): virou o critério de aceite #3 da task-mãe, e o detalhe técnico desta descrição está preservado nas notas da TASK-123. Arquivada para sair do board — não foi descartada.
+---
+<!-- COMMENTS:END -->

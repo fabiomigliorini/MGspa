@@ -1175,7 +1175,7 @@ export const negocioStore = defineStore('negocio', {
             codnegocio: ret.codnegocio,
             ...(atrasada ? {} : { codnegociostatus: ret.codnegociostatus }),
           })
-          if (this.negocio.uuid == ret.uuid) {
+          if (this.negocio?.uuid == ret.uuid) {
             this.negocio.codnegocio = ret.codnegocio
             if (!atrasada) {
               this.negocio.codnegociostatus = ret.codnegociostatus

@@ -12,6 +12,12 @@ Vale para **qualquer** alteração, inclusive as que parecem triviais, as de doc
 do próprio `backlog/`. "Terminei a implementação" não é autorização para commitar — quem
 testa é quem autoriza.
 
+**Instrução sobre _como_ commitar não é permissão para commitar.** "Faça commits separados",
+"um commit por task", "vai fazendo", "resolve tudo" dizem o formato e o ritmo do trabalho,
+para quando a autorização vier. Continue deixando na árvore e perguntando.
+
+Só faça o commit se for escrito explicitamente para fazer.
+
 Se a validação apontar problema, corrija e volte ao passo 2: a correção também não vai
 commitada sozinha.
 
@@ -44,9 +50,35 @@ concluir, feche-a. Nenhum trabalho de projeto deve acontecer fora de uma task.
     ./backlog.sh task list -s "To Do"
     ./backlog.sh task list -s "In Progress"
 
-**1. Toda pendência descoberta vira task, na hora.** Bug encontrado, TODO que ia virar
-comentário no código, ideia que surgiu no meio de outra coisa — criar a task, não deixar no
-chat nem comentada no fonte.
+**1. Task só nasce a pedido de quem prioriza — nunca por iniciativa própria.** Achou um bug,
+um TODO no fonte, uma ideia, um efeito colateral de outra correção? **Conte no chat e espere.**
+Quem decide se aquilo merece existir no backlog é quem vai priorizar e testar. Sem um "pode
+criar" explícito, não existe `task create` — vale inclusive para o que parece obviamente um
+bug, e vale para task de documentação e do próprio `backlog/`.
+
+Pendência descoberta não fica esquecida em comentário no fonte: ela é relatada. Mas o destino
+dela não é `task create` automático — é critério de aceite numa task que já existe (regra 3),
+ou task nova depois do OK.
+
+**Revisar o próprio trabalho não abre task.** Se a revisão do que você acabou de escrever
+achou problema, conserte antes de pedir validação — não abra task para o efeito colateral do
+seu próprio fix.
+
+**Não proponha task que você não consiga explicar em uma frase a quem não leu o código.** Se o
+único jeito de justificar é citar nome de função ou flag, o item é critério de aceite de algo
+maior — ou não existe.
+
+**2. Antes de criar uma task autorizada, procurar sinergia e consolidar.** O achado quase
+sempre tem casa numa task que já existe:
+
+    ./backlog.sh search "nota fiscal"
+    ./backlog.sh task list --search "transmissao" --plain
+    ./backlog.sh task list -s "To Do" -l negocios --plain
+
+`--search` varre título, descrição, notas e comentários. Se existe task aberta do mesmo
+sintoma, da mesma tela ou do mesmo mecanismo, o achado entra **nela** como critério de aceite
+(regra 3) — não vira arquivo novo. Arquivo novo só quando a busca não achou nenhuma casa. Na
+dúvida entre duas casas, perguntar em vez de duplicar.
 
     ./backlog.sh task create "Título curto" --type bug -l negocios -d "contexto e origem"
 
@@ -75,15 +107,35 @@ urgente e feature pode ser: o que decide é o quanto dói.
 
 Nunca atribuir responsável a outra pessoa; cada um pega a sua.
 
-**2. Ao começar uma task:** marcar em andamento e atribuir a si.
+**3. Uma task por problema vivido — não uma task por causa encontrada.** O título é o
+**sintoma, na língua de quem usa o sistema**: "Emissão de nota enrosca e não sai a impressão
+automática". Não é a causa técnica: "Guard de resposta atrasada não protegia o IndexedDB". Se
+o título só faz sentido depois de ler o código, está errado — quem abre o board tem que
+reconhecer o problema porque viveu.
+
+Investigar um sintoma acha várias causas. Elas **não** viram tasks: viram critérios de aceite
+dentro da task-mãe, um por causa.
+
+    ./backlog.sh task edit TASK-42 --ac "achado novo da investigação"
+    ./backlog.sh task edit TASK-42 --check-ac 1
+
+A task fecha quando todos os critérios estão marcados. Causa raiz, arquivo, linha e roteiro de
+teste ficam na descrição e nas notas da task-mãe — ali pode ser técnico quanto precisar.
+
+**Task separada — quando autorizada — só se o trabalho for de OUTRA funcionalidade**: outra
+tela, outro app, outro domínio. Bug no quiosque achado enquanto se conserta a nota: candidato
+a task nova, porque quem testa é outra pessoa em outro lugar. Terceira causa do mesmo sintoma
+na mesma tela: critério de aceite, sem perguntar nada.
+
+**4. Ao começar uma task:** marcar em andamento e atribuir a si.
 
     ./backlog.sh task edit TASK-42 -s "In Progress" -a @fabio
 
-**3. Ao terminar:** marcar concluída.
+**5. Ao terminar:** marcar concluída.
 
     ./backlog.sh task edit TASK-42 -s Done
 
-**4. Commits de correção citam o id da task**, seguindo a convenção do repo:
+**6. Commits de correção citam o id da task**, seguindo a convenção do repo:
 
     [FIX] TASK-42 Corrige rateio de xerox quando não fecha 100%
 

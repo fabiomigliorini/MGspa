@@ -4,7 +4,7 @@ title: 'Agro/Patio: sem dia filtrado o pull baixa a safra inteira, pagina por pa
 status: To Do
 assignee: []
 created_date: '2026-09-21 21:33'
-updated_date: '2026-09-21 21:45'
+updated_date: '2026-09-23 21:04'
 labels:
   - agro
 dependencies: []
@@ -24,3 +24,12 @@ dataFiltro nasce null (o filtro de dia do CargaLeftDrawer comeca vazio) e puxarC
 <!-- SECTION:NOTES:BEGIN -->
 21/09/2026: o campo 'Dia' do CargaLeftDrawer foi REMOVIDO da tela (veio do legado e nao servia no layout novo). Com isso dataFiltro fica null sempre e o pull largo passou a ser o unico caminho — o que torna esta task o lugar onde se decide o recorte. store.definirData continua existindo mas sem nenhum chamador; ou volta como filtro/periodo aqui, ou sai junto com a correcao do pull.
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-23 21:04
+---
+Dobrada na TASK-169 (regra 3 do CLAUDE.md): virou o critério de aceite #3 da task-mãe, e o texto desta descrição está preservado nas notas da TASK-169. Arquivada para sair do board — não foi descartada.
+---
+<!-- COMMENTS:END -->
