@@ -12,6 +12,9 @@ use Mg\Produto\ProdutoBarra;
  * (decisao 19 do plano). Os nomes de valor sao os mesmos de
  * tblnegocioprodutobarra, entao semear o vale a partir do modelo
  * (milestone 2) e copia campo a campo.
+ *
+ * NAO REGERAR com `gerador:model`: ele sobrescreve o arquivo inteiro, e este
+ * model tem docblock e relacoes escritos a mao.
  */
 class ValeModeloProdutoBarra extends MgModel
 {

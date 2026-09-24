@@ -1134,10 +1134,10 @@
         "coluna": "codpessoafavorecido",
         "metodo": "ValeCompraFavorecidoS"
       },
-      "tblvalecompramodelo.codpessoafavorecido": {
-        "tabela": "tblvalecompramodelo",
+      "tblvalemodelo.codpessoafavorecido": {
+        "tabela": "tblvalemodelo",
         "coluna": "codpessoafavorecido",
-        "metodo": "ValeCompraModeloFavorecidoS"
+        "metodo": "ValeModeloFavorecidoS"
       },
       "tblveiculo.codpessoaproprietario": {
         "tabela": "tblveiculo",
@@ -1525,9 +1525,9 @@
         "metodo": "UsuarioCriacao"
       },
       "codvalecompramodelo": {
-        "tabela": "tblvalecompramodelo",
+        "tabela": "tblvalemodelo",
         "coluna": "codvalecompramodelo",
-        "metodo": "ValeCompraModelo"
+        "metodo": "ValeModelo"
       }
     },
     "hasMany": {
@@ -1949,12 +1949,12 @@
       }
     }
   },
-  "tblvalecompramodelo": {
-    "tabela": "tblvalecompramodelo",
-    "campocodigo": "codvalecompramodelo",
-    "namespace": "Mg\\ValeCompra",
-    "classe": "ValeCompraModelo",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraModelo.php",
+  "tblvalemodelo": {
+    "tabela": "tblvalemodelo",
+    "campocodigo": "codvalemodelo",
+    "namespace": "Mg\\Vale",
+    "classe": "ValeModelo",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Vale/ValeModelo.php",
     "belongsTo": {
       "codpessoafavorecido": {
         "tabela": "tblpessoa",
@@ -1978,10 +1978,10 @@
         "coluna": "codvalecompramodelo",
         "metodo": "ValeCompraS"
       },
-      "tblvalecompramodeloprodutobarra.codvalecompramodelo": {
-        "tabela": "tblvalecompramodeloprodutobarra",
-        "coluna": "codvalecompramodelo",
-        "metodo": "ValecompramodeloprodutobarraS"
+      "tblvalemodeloprodutobarra.codvalemodelo": {
+        "tabela": "tblvalemodeloprodutobarra",
+        "coluna": "codvalemodelo",
+        "metodo": "ValeModeloProdutoBarraS"
       }
     }
   },
@@ -2846,10 +2846,10 @@
         "coluna": "codprodutobarra",
         "metodo": "PranchetaS"
       },
-      "tblvalecompramodeloprodutobarra.codprodutobarra": {
-        "tabela": "tblvalecompramodeloprodutobarra",
+      "tblvalemodeloprodutobarra.codprodutobarra": {
+        "tabela": "tblvalemodeloprodutobarra",
         "coluna": "codprodutobarra",
-        "metodo": "ValeCompraModeloProdutoBarraS"
+        "metodo": "ValeModeloProdutoBarraS"
       },
       "tblvalecompraprodutobarra.codprodutobarra": {
         "tabela": "tblvalecompraprodutobarra",
@@ -5467,12 +5467,12 @@
       }
     }
   },
-  "tblvalecompramodeloprodutobarra": {
-    "tabela": "tblvalecompramodeloprodutobarra",
-    "campocodigo": "codvalecompramodeloprodutobarra",
-    "namespace": "Mg\\ValeCompra",
-    "classe": "ValeCompraModeloProdutoBarra",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraModeloProdutoBarra.php",
+  "tblvalemodeloprodutobarra": {
+    "tabela": "tblvalemodeloprodutobarra",
+    "campocodigo": "codvalemodeloprodutobarra",
+    "namespace": "Mg\\Vale",
+    "classe": "ValeModeloProdutoBarra",
+    "arquivo": "/opt/www/MGspa/api/app/Mg/Vale/ValeModeloProdutoBarra.php",
     "belongsTo": {
       "codprodutobarra": {
         "tabela": "tblprodutobarra",
@@ -5489,10 +5489,10 @@
         "coluna": "codusuariocriacao",
         "metodo": "UsuarioCriacao"
       },
-      "codvalecompramodelo": {
-        "tabela": "tblvalecompramodelo",
-        "coluna": "codvalecompramodelo",
-        "metodo": "ValeCompraModelo"
+      "codvalemodelo": {
+        "tabela": "tblvalemodelo",
+        "coluna": "codvalemodelo",
+        "metodo": "ValeModelo"
       }
     },
     "hasMany": []

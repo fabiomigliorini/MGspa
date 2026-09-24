@@ -20,6 +20,10 @@ use Mg\Pessoa\Pessoa;
  * "valortotal" ja quer dizer a fatia paga depois do rateio de desconto.
  * "codpessoafavorecido" e opcional: sem escola o vale e ao portador e o
  * favorecido vira Consumidor na emissao.
+ *
+ * NAO REGERAR com `gerador:model`: ele sobrescreve o arquivo inteiro e poe
+ * TODAS as colunas no fillable. "valorprodutos" e "valorvale" ficam de fora de
+ * proposito -- quem calcula os dois e o ValeModeloService.
  */
 class ValeModelo extends MgModel
 {
