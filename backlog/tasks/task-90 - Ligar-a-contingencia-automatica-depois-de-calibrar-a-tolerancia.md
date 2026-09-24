@@ -1,16 +1,16 @@
 ---
 id: TASK-90
 title: Ligar a contingencia automatica depois de calibrar a tolerancia
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-12 15:56'
-updated_date: '2026-09-15 15:11'
+updated_date: '2026-09-24 12:25'
 labels:
   - api
 dependencies: []
 priority: medium
 type: feature
-ordinal: 14000
+ordinal: 183000
 ---
 
 ## Description

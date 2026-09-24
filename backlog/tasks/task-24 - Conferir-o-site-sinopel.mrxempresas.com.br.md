@@ -1,16 +1,16 @@
 ---
 id: TASK-24
 title: Conferir o site sinopel.mrxempresas.com.br
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-12 17:14'
+updated_date: '2026-09-24 12:25'
 labels:
   - notas
 dependencies: []
 priority: low
 type: feature
-ordinal: 24000
+ordinal: 185000
 ---
 
 ## Description

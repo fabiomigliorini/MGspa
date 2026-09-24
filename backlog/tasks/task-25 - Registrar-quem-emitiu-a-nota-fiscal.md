@@ -1,16 +1,16 @@
 ---
 id: TASK-25
 title: Registrar quem emitiu a nota fiscal
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-15 15:11'
+updated_date: '2026-09-24 12:24'
 labels:
   - notas
 dependencies: []
 priority: medium
 type: feature
-ordinal: 7000
+ordinal: 181000
 ---
 
 ## Description

@@ -1,16 +1,16 @@
 ---
 id: TASK-88
 title: Historico de salario do colaborador
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-12 15:56'
-updated_date: '2026-09-15 15:11'
+updated_date: '2026-09-24 12:24'
 labels:
   - pessoas
 dependencies: []
 priority: low
 type: feature
-ordinal: 12000
+ordinal: 182000
 ---
 
 ## Description

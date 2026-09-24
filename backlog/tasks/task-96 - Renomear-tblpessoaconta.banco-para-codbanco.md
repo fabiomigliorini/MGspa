@@ -1,16 +1,16 @@
 ---
 id: TASK-96
 title: Renomear tblpessoaconta.banco para codbanco
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-12 16:26'
-updated_date: '2026-09-15 15:11'
+updated_date: '2026-09-24 12:25'
 labels:
   - pessoas
 dependencies: []
 priority: medium
 type: chore
-ordinal: 16000
+ordinal: 184000
 ---
 
 ## Description

@@ -1,17 +1,17 @@
 ---
 id: TASK-142
 title: 'Wizard Receber: a lista de maquininha atrapalha quem opera'
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-22 20:09'
-updated_date: '2026-09-23 21:02'
+updated_date: '2026-09-24 12:23'
 labels:
   - negocios
 dependencies: []
 priority: medium
 type: enhancement
-ordinal: 152000
+ordinal: 180000
 ---
 
 ## Description
