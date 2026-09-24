@@ -1165,13 +1165,17 @@ export const negocioStore = defineStore('negocio', {
       return itens
     },
 
+    // valoravulso = null significa "usa o do modelo". Zero e' uma escolha
+    // legitima (operador limpou o campo) e por isso nao serve de default:
+    // sem isso o avulso do kit sumia para quem chamasse a action sem
+    // informar o valor.
     async valeAdicionar({
       codvalemodelo = null,
       codpessoafavorecido = null,
       favorecido = null,
       aluno = null,
       turma = null,
-      valoravulso = 0,
+      valoravulso = null,
     }) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
@@ -1184,6 +1188,12 @@ export const negocioStore = defineStore('negocio', {
         const codpessoa = parseInt(codpessoafavorecido) || 1
         const pessoa = await db.pessoa.get(codpessoa)
         const modelo = codvalemodelo ? await db.valeModelo.get(parseInt(codvalemodelo)) : null
+
+        // o modelo semeia os itens E o valor avulso (decisao do plano)
+        const avulso =
+          valoravulso === null || valoravulso === undefined
+            ? parseFloat(modelo?.valoravulso) || 0
+            : parseFloat(valoravulso) || 0
 
         // validade informativa: 1 ano da emissao (decisao 8)
         const validade = new Date()
@@ -1202,7 +1212,7 @@ export const negocioStore = defineStore('negocio', {
           aluno,
           turma,
           valorprodutos: 0,
-          valoravulso: parseFloat(valoravulso) || 0,
+          valoravulso: avulso,
           valorvale: 0,
           valordesconto: null,
           valorfrete: null,
