@@ -29,15 +29,16 @@ vale é recebimento antecipado sem fato gerador de ICMS; o documento fiscal sai 
 | 9 | **Comprovante térmico 80mm com código de barras**, como o vale de devolução | O caixa passa a bipar em vez de digitar o número |
 | 10 | **REVISADA — a estrutura TRANSACIONAL morre e é convertida; o CATÁLOGO evolui in place** | Os 204 modelos nunca se movem: `ALTER TABLE … RENAME` resolve. Nada com o nome `valecompra` sobrevive assim mesmo, e some a conversão do catálogo |
 | 11 | **Prefixo `tblnegocio` em tudo que aponta para `codnegocio`** | O vale emitido é `tblnegociovale`; o catálogo, que não aponta para negócio, é `tblvalemodelo` |
-| 12 | **Modelo enxuto**: sem `desconto`, e `modelo`+`turma`+`ano` viram uma `descricao` só | `totalprodutos` e `total` colapsam em `valorprodutos`, que mapeia 1:1 para a face do vale |
+| 12 | **Modelo enxuto**: sem `desconto`, e `modelo`+`turma`+`ano` viram uma `descricao` só | Some `totalprodutos`; `total` vira `valorprodutos`. A face passa a ser `valortotal` (decisão 21) |
 | 13 | **Vale ao portador**: favorecido opcional no modelo e `= Consumidor (1)` no vale quando não há escola | Capacidade nova — passa a dar para vender vale-presente avulso; o resgate por bipagem já funciona sem mudança |
 | 14 | **O DDL do catálogo acontece já na Fase 2** | Zero retrabalho na tela nova, ao custo de perder o fallback do MGLara antes de a venda nova estar validada |
 | 15 | **Os itens do vale são editáveis na venda** — dá para tirar item e mudar quantidade | O valor do vale passa a ser a **soma dos seus itens** |
 | 16 | **Na grade do vale só se tira e ajusta — não se acrescenta** | O modelo define o universo do vale; item fora da lista o cliente leva como mercadoria. O `InputBarras` não é tocado e a bipagem segue caindo sempre em mercadoria |
-| 17 | **Vale sem modelo não tem grade: o valor é digitado** | `valorprodutos` é derivado quando há itens e digitado quando não há; por isso o `confereTotais` não confere o vale contra os itens dele, só o total do negócio |
+| 17 | **Vale sem modelo não tem grade: o valor é digitado** | O valor digitado é `valoravulso` (decisão 21), e o `confereTotais` não confere o vale contra os itens dele, só o total do negócio |
 | 18 | **Zero toque no que é de item de mercadoria** — componentes, formulários e actions ficam como estão; o vale ganha os seus, ainda que duplicados | Separabilidade acima de reuso: dá para apagar o vale inteiro sem tocar no PDV. Custo aceito: melhoria futura na grade de item não propaga para a do vale |
 | 19 | **Desconto, frete, seguro, outras e juros NÃO descem ao item do vale** — param em `tblnegociovale` | O item do vale é só quantidade × preço; some metade das colunas dele e some o rateio item a item |
 | 20 | **`valorvales` é BRUTO, simétrico ao `valorprodutos`** — e o `valordesconto`/`valorjuros` do negócio passam a somar mercadoria + vale | Custa dois ajustes que a decisão 2 tinha dispensado: o denominador do custo de estoque no MGLara e o do `percJuros` da NFC-e |
+| 21 | **NOVA (24/09) — o valor do modelo vem em TRÊS partes**: `valorprodutos` (soma dos itens) + `valoravulso` (digitado) = `valortotal` (a face) | É o que permite modelo sem produto nenhum — vale-presente de valor redondo. Só o avulso é digitado; os outros dois o service calcula. **Atenção ao nome:** `valortotal` é a FACE no catálogo e a FATIA PAGA em `tblnegociovale` — ver seção 2 |
 
 Do escopo original, também decidido: vale usado em **qualquer filial, sem restrição**, e **sem
 breakage/expiração** nesta rodada.
@@ -70,27 +71,70 @@ enxergue o vale, mas porque o rateio de desconto dele está obsoleto e o vale ex
 
 **Uma coluna nova:** `tblnegocio.valorvales` numeric(14,2).
 
-**Catálogo — evolui in place** (`api/database/vale_catalogo.sql`), sem mover um dado. O bloco roda só
-se a tabela antiga ainda existir; é isso que o torna idempotente, porque o `UPDATE` de concatenação
-não pode rodar duas vezes:
+**Catálogo — evolui in place** (`api/database/vale_catalogo.sql`), sem mover um dado. São **dois
+blocos**, cada um com a sua guarda: o 1º só roda se a tabela antiga existir (é isso que protege o
+`UPDATE` de concatenação de rodar duas vezes), o 2º só se `valoravulso` ainda não existir. Produção
+roda o arquivo inteiro de uma vez.
 
 ```sql
+-- BLOCO 1 — rename
 ALTER TABLE tblvalecompramodelo RENAME TO tblvalemodelo;
 ALTER TABLE tblvalemodelo RENAME COLUMN codvalecompramodelo TO codvalemodelo;
 ALTER TABLE tblvalemodelo RENAME COLUMN total TO valorprodutos;
+ALTER SEQUENCE tblvalecompramodelo_codvalecompramodelo_seq
+      RENAME TO tblvalemodelo_codvalemodelo_seq;
 -- a coluna `modelo` passa a ser a descrição: sem campo novo, sem rename.
 -- 63 dos 204 estouram varchar(50) depois de concatenar (o maior fica com 85)
 ALTER TABLE tblvalemodelo ALTER COLUMN modelo TYPE varchar(100);
-UPDATE  tblvalemodelo SET modelo = concat_ws(' - ', modelo, nullif(turma,''), ano);
+-- a turma só entra quando acrescenta informação: em 105 dos 139 modelos com
+-- turma o texto já está dentro de `modelo`, e concatenar cru duplicaria.
+UPDATE tblvalemodelo SET modelo = concat_ws(' - ', modelo,
+         CASE WHEN coalesce(btrim(turma),'') = ''                    THEN NULL
+              WHEN position(lower(btrim(turma)) in lower(modelo)) > 0 THEN NULL
+              ELSE btrim(turma) END, ano);
 ALTER TABLE tblvalemodelo ALTER COLUMN codpessoafavorecido DROP NOT NULL;
 ALTER TABLE tblvalemodelo DROP COLUMN turma, DROP COLUMN ano,
                           DROP COLUMN desconto, DROP COLUMN totalprodutos;
--- idem tblvalecompramodeloprodutobarra -> tblvalemodeloprodutobarra
+-- idem tblvalecompramodeloprodutobarra -> tblvalemodeloprodutobarra, mais
+-- `preco` -> `valorunitario` e `total` -> `valorprodutos`, para bater com
+-- tblnegocioprodutobarra e a semeadura do milestone 2 ser cópia campo a campo.
+
+-- BLOCO 2 — valor em três partes (decisão 21)
+ALTER TABLE tblvalemodelo ADD COLUMN valoravulso numeric(14,2);
+ALTER TABLE tblvalemodelo ADD COLUMN valortotal  numeric(14,2);
+-- as três ficam NOT NULL DEFAULT 0 para a soma nunca dar null
 ```
 
 Os números justificam os cortes: **0 de 204** modelos usam `desconto`, **139 de 204** têm `turma`
 preenchida (por isso a descrição concatena em vez de descartar) e **1 de 204** usa `observacoes`, que
-fica. A FK de `tblvalecompra` acompanha o rename sozinha; quem quebra é o PHP do MGLara.
+fica. A FK de `tblvalecompra` acompanha o rename sozinha; quem quebra é o PHP do MGLara **e 4 pontos
+da API** — `ProdutoBarraService::unificaBarras()`, `ProdutoBarra`, `Pessoa` e `ValeCompra` —, todos
+repontados no milestone 1.
+
+### O valor do modelo, e o cuidado com `valortotal`
+
+`tblvalemodelo` guarda o valor em três colunas, todas `numeric(14,2) NOT NULL DEFAULT 0`:
+
+| coluna | de onde vem | o que é |
+|---|---|---|
+| `valorprodutos` | calculada — soma dos itens do kit | quanto o kit vale em mercadoria |
+| `valoravulso` | **digitada** | o único campo de valor que o usuário edita |
+| `valortotal` | calculada — `valorprodutos + valoravulso` | **a face**: o crédito que a emissão gera |
+
+Kit vazio + avulso digitado = vale-presente de valor redondo, sem lista de produtos.
+
+⚠️ **`valortotal` significa coisas diferentes nas duas tabelas.** No catálogo é a **face**; em
+`tblnegociovale` é a **fatia paga** (no exemplo abaixo, 180 contra uma face de 200). Ao semear o vale
+a partir do modelo, o milestone 2 mapeia:
+
+```
+tblvalemodelo.valortotal  ──>  tblnegociovale.valorprodutos   (a face, o crédito)
+tblvalemodelo.valoravulso ──>  usado quando o modelo não tem itens
+```
+
+**Ponto em aberto para o milestone 2:** decidir se `tblnegociovale` também ganha as três colunas (e
+aí `valortotal` muda de sentido lá) ou se fica com `valorprodutos` = face e `valortotal` = fatia
+paga, convivendo com a colisão de nome. Hoje o plano assume a segunda.
 
 ### Composição dos totais
 
@@ -131,13 +175,21 @@ Cada um termina com algo que dá para abrir na tela e validar.
 
 ### 1 · CRUD de modelos de vale
 **Só o cadastro. Nada de PDV, nada de `v1/pdv/`, nada de Dexie.**
-`vale_catalogo.sql` (o bloco da seção 2) · models `ValeModelo` e `ValeModeloProdutoBarra` em
+`vale_catalogo.sql` (os dois blocos da seção 2) · models `ValeModelo` e `ValeModeloProdutoBarra` em
 `api/app/Mg/Vale/` · domínio `Mg\Vale` no padrão da casa (Controller, Service estático, Resource,
-FormRequests, rotas em `auth:api`+`v1`, `Autorizador::autoriza()`) · tela de CRUD com descrição única
-e favorecido opcional.
-⚠️ **Derruba a venda de vale no MGLara**, que só volta a existir no milestone 4.
+FormRequests, rotas em `auth:api`+`v1`, `Autorizador::autoriza()`) · tela de CRUD no app **negocios**
+(menu Cadastros → Modelos de Vale), com descrição única, favorecido opcional e o valor em três partes
+(decisão 21): produtos calculado, avulso digitado, total = face.
+Listagem ordenada por **favorecido, depois descrição**, com favorecido na 1ª coluna; filtros na
+drawer esquerda (padrão `FilterDrawerShell`/`FilterGroup` do Pix no app contas): favorecido,
+descrição, faixa de valor sobre a face, e situação Ativos/Inativos/Todos. O default da listagem é
+**só ativos** — 169 dos 204 modelos estão inativos, o catálogo é sazonal.
+Formulário de novo/editar em **tela à parte** (`/vale-modelo/novo` e `/vale-modelo/:cod`), não em
+dialog.
+⚠️ **Derruba a venda de vale no MGLara**, que só volta a existir no milestone 4. Na API, 4 pontos
+precisam ser repontados no mesmo commit (ver seção 2).
 **Valida:** `select count(*), count(modelo) from tblvalemodelo` → 204/204; cadastra, edita e inativa
-um modelo pela tela.
+um modelo pela tela; cadastra um modelo **sem produto nenhum** só com valor avulso.
 
 ### 2 · Vale dentro do negócio
 Começa pelo sync do catálogo pro PDV, que é onde ele passa a ser necessário: `GET v1/pdv/vale-modelo`

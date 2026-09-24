@@ -11,8 +11,8 @@
 -- por isso as sequences tambem sao renomeadas.
 -- Decisao 12: modelo enxuto. Saem "desconto" (0 de 204 usam) e
 -- "totalprodutos" (identico a "total" nos 204); "turma" e "ano"
--- colapsam dentro da descricao; "total" vira "valorprodutos", que
--- mapeia 1:1 para a face do vale emitido.
+-- colapsam dentro da descricao; "total" vira "valorprodutos" (a soma dos
+-- itens). A face do vale emitido e "valortotal", criado no 2o bloco.
 -- Decisao 13: favorecido vira opcional (vale ao portador).
 --
 -- A FK de tblvalecompra acompanha o rename sozinha. Quem quebra e o
@@ -89,6 +89,59 @@ ALTER TABLE tblvalemodeloprodutobarra RENAME COLUMN preco TO valorunitario;
 ALTER TABLE tblvalemodeloprodutobarra RENAME COLUMN total TO valorprodutos;
 
 RAISE NOTICE 'vale_catalogo.sql: catalogo migrado para tblvalemodelo.';
+
+END $$;
+
+COMMIT;
+
+-- =====================================================================
+-- Valor do modelo em tres partes (decisao de 24/09/2026)
+--
+--   valorprodutos = soma dos itens do kit   (calculado, read-only na tela)
+--   valoravulso   = valor digitado a mao    (sempre aberto)
+--   valortotal    = valorprodutos + valoravulso  <- a FACE do vale
+--
+-- E o que permite modelo sem produto nenhum: kit vazio, valor digitado.
+-- As tres colunas ficam NOT NULL DEFAULT 0 para a soma nunca dar null.
+--
+-- Bloco separado e com guarda propria: producao roda o arquivo inteiro de
+-- uma vez, e um banco que ja migrou o rename pega so as colunas novas.
+-- =====================================================================
+
+BEGIN;
+
+DO $$
+BEGIN
+
+IF to_regclass('tblvalemodelo') IS NULL THEN
+  RAISE EXCEPTION 'vale_catalogo.sql: rode o bloco do rename antes deste.';
+END IF;
+
+IF EXISTS (
+  SELECT 1 FROM information_schema.columns
+   WHERE table_name = 'tblvalemodelo' AND column_name = 'valoravulso'
+) THEN
+  RAISE NOTICE 'vale_catalogo.sql: colunas de valor ja aplicadas.';
+  RETURN;
+END IF;
+
+ALTER TABLE tblvalemodelo ADD COLUMN valoravulso numeric(14,2);
+ALTER TABLE tblvalemodelo ADD COLUMN valortotal  numeric(14,2);
+
+UPDATE tblvalemodelo
+   SET valorprodutos = coalesce(valorprodutos, 0),
+       valoravulso   = 0,
+       valortotal    = coalesce(valorprodutos, 0);
+
+ALTER TABLE tblvalemodelo
+  ALTER COLUMN valorprodutos SET DEFAULT 0,
+  ALTER COLUMN valorprodutos SET NOT NULL,
+  ALTER COLUMN valoravulso   SET DEFAULT 0,
+  ALTER COLUMN valoravulso   SET NOT NULL,
+  ALTER COLUMN valortotal    SET DEFAULT 0,
+  ALTER COLUMN valortotal    SET NOT NULL;
+
+RAISE NOTICE 'vale_catalogo.sql: valoravulso e valortotal criados.';
 
 END $$;
 

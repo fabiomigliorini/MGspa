@@ -15,7 +15,7 @@ const colunas = [
   { name: 'favorecido', label: 'Favorecido', field: 'favorecido', align: 'left' },
   { name: 'modelo', label: 'Descrição', field: 'modelo', align: 'left' },
   { name: 'itens', label: 'Itens', field: (r) => r.itens.length, align: 'right' },
-  { name: 'valorprodutos', label: 'Valor', field: 'valorprodutos', align: 'right' },
+  { name: 'valortotal', label: 'Valor', field: 'valortotal', align: 'right' },
   { name: 'inativo', label: 'Situação', field: 'inativo', align: 'center' },
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
 ]
@@ -76,7 +76,7 @@ onMounted(() => sVale.carregar(1))
             </q-td>
           </template>
 
-          <template #body-cell-valorprodutos="props">
+          <template #body-cell-valortotal="props">
             <q-td :props="props">{{ formataReal(props.value) }}</q-td>
           </template>
 

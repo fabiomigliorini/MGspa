@@ -13,7 +13,7 @@ import MgSelectProdutoBarra from '@components/MgSelectProdutoBarra.vue'
 const route = useRoute()
 const router = useRouter()
 const sVale = valeModeloStore()
-const { form, carregandoForm, salvando, isNovo, face } = storeToRefs(sVale)
+const { form, carregandoForm, salvando, isNovo, valorProdutos, valorTotal } = storeToRefs(sVale)
 
 // O select nao guarda selecao: escolher um produto acrescenta o item e limpa.
 const produtoNovo = ref(null)
@@ -88,7 +88,7 @@ onMounted(async () => {
           <q-card-section class="row items-center q-pb-none">
             <div class="text-grey-9 text-overline">Itens do kit</div>
             <q-space />
-            <div class="text-subtitle1 text-weight-medium">{{ formataReal(face) }}</div>
+            <div class="text-subtitle1 text-weight-medium">{{ formataReal(valorProdutos) }}</div>
           </q-card-section>
           <q-card-section>
             <div class="q-mb-md">
@@ -139,6 +139,37 @@ onMounted(async () => {
                 >
                   <q-tooltip>Remover item</q-tooltip>
                 </q-btn>
+              </div>
+            </div>
+          </q-card-section>
+        </q-card>
+
+        <!-- VALOR DO VALE -->
+        <q-card bordered flat class="q-mb-md">
+          <q-card-section class="q-pb-none">
+            <div class="text-grey-9 text-overline">Valor do vale</div>
+          </q-card-section>
+          <q-card-section>
+            <div class="row q-col-gutter-md items-center">
+              <div class="col-12 col-sm-4">
+                <MgInputValor
+                  :model-value="valorProdutos"
+                  label="Produtos do kit"
+                  prefix="R$"
+                  readonly
+                />
+              </div>
+              <div class="col-12 col-sm-4">
+                <MgInputValor v-model="form.valoravulso" label="Avulso" prefix="R$" :min="0" />
+              </div>
+              <div class="col-12 col-sm-4">
+                <MgInputValor :model-value="valorTotal" label="Total" prefix="R$" readonly />
+              </div>
+              <div class="col-12">
+                <div class="text-caption text-grey-7">
+                  O total é a face do vale — o crédito que a emissão vai gerar. Um modelo sem
+                  produto nenhum vale o avulso digitado.
+                </div>
               </div>
             </div>
           </q-card-section>

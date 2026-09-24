@@ -22,11 +22,12 @@ class ValeModeloService extends MgService
         if (!empty($filter['codpessoafavorecido'])) {
             $qry->where('tblvalemodelo.codpessoafavorecido', $filter['codpessoafavorecido']);
         }
+        // Faixa sobre a face (valortotal), que e o numero que a tela mostra.
         if (isset($filter['valorde']) && $filter['valorde'] !== '') {
-            $qry->where('tblvalemodelo.valorprodutos', '>=', $filter['valorde']);
+            $qry->where('tblvalemodelo.valortotal', '>=', $filter['valorde']);
         }
         if (isset($filter['valorate']) && $filter['valorate'] !== '') {
-            $qry->where('tblvalemodelo.valorprodutos', '<=', $filter['valorate']);
+            $qry->where('tblvalemodelo.valortotal', '<=', $filter['valorate']);
         }
         // 1=ativo (default), 2=inativo, 9=todos. O default e "ativo" de
         // proposito: o catalogo e sazonal e 169 dos 204 modelos estao
@@ -45,9 +46,9 @@ class ValeModeloService extends MgService
     }
 
     /**
-     * Grava cabecalho e itens. A face (valorprodutos) nunca vem do cliente:
-     * e sempre a soma dos itens, para o credito emitido no milestone 4 bater
-     * com o kit impresso no vale.
+     * Grava cabecalho e itens. Do valor, so o avulso vem do cliente:
+     * valorprodutos e sempre a soma dos itens e valortotal e a soma dos
+     * dois, para a face bater com o kit impresso no vale.
      */
     public static function salvar(array $dados, ?ValeModelo $modelo = null)
     {
@@ -68,7 +69,7 @@ class ValeModeloService extends MgService
     private static function sincronizarItens(ValeModelo $modelo, array $itens)
     {
         $mantidos = [];
-        $face = 0;
+        $somaItens = 0;
 
         foreach ($itens as $item) {
             $quantidade = round((float) ($item['quantidade'] ?? 0), 3);
@@ -92,14 +93,16 @@ class ValeModeloService extends MgService
             $reg->save();
 
             $mantidos[] = $reg->codvalemodeloprodutobarra;
-            $face += $valorprodutos;
+            $somaItens += $valorprodutos;
         }
 
         ValeModeloProdutoBarra::where('codvalemodelo', $modelo->codvalemodelo)
             ->whereNotIn('codvalemodeloprodutobarra', $mantidos ?: [0])
             ->delete();
 
-        $modelo->valorprodutos = round($face, 2);
+        $modelo->valorprodutos = round($somaItens, 2);
+        $modelo->valoravulso = round((float) $modelo->valoravulso, 2);
+        $modelo->valortotal = round($modelo->valorprodutos + $modelo->valoravulso, 2);
         $modelo->save();
     }
 

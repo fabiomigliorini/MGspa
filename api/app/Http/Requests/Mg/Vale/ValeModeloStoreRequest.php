@@ -18,6 +18,8 @@ class ValeModeloStoreRequest extends FormRequest
             // opcional: sem escola o vale e ao portador (decisao 13)
             'codpessoafavorecido' => ['nullable', 'integer', 'exists:tblpessoa,codpessoa'],
             'observacoes' => ['nullable', 'max:200'],
+            // valorprodutos e valortotal sao calculados; so o avulso e digitado
+            'valoravulso' => ['nullable', 'numeric', 'gte:0'],
             'itens' => ['array'],
             'itens.*.codvalemodeloprodutobarra' => ['nullable', 'integer'],
             'itens.*.codprodutobarra' => ['required', 'integer', 'exists:tblprodutobarra,codprodutobarra'],
@@ -31,6 +33,7 @@ class ValeModeloStoreRequest extends FormRequest
         return [
             'modelo' => 'descrição',
             'codpessoafavorecido' => 'favorecido',
+            'valoravulso' => 'valor avulso',
             'itens.*.codprodutobarra' => 'produto',
             'itens.*.quantidade' => 'quantidade',
             'itens.*.valorunitario' => 'valor unitário',

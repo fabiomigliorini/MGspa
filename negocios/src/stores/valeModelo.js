@@ -35,6 +35,7 @@ const formVazio = () => ({
   modelo: '',
   codpessoafavorecido: null,
   observacoes: null,
+  valoravulso: 0,
   itens: [],
 })
 
@@ -63,14 +64,18 @@ export const valeModeloStore = defineStore(
       return total
     })
 
-    // A face do modelo e sempre a soma dos itens -- o backend recalcula na
-    // gravacao, e aqui a tela mostra o mesmo numero enquanto se edita.
-    const face = computed(() =>
+    // O valor tem tres partes e o backend recalcula duas delas na gravacao;
+    // aqui a tela mostra os mesmos numeros enquanto se edita.
+    //   valorProdutos = soma dos itens do kit
+    //   valoravulso   = digitado (e o que permite modelo sem produto)
+    //   valorTotal    = a face do vale
+    const valorProdutos = computed(() =>
       form.value.itens.reduce(
         (soma, i) => soma + Number(i.quantidade || 0) * Number(i.valorunitario || 0),
         0,
       ),
     )
+    const valorTotal = computed(() => valorProdutos.value + Number(form.value.valoravulso || 0))
 
     async function carregar(pagina = 1) {
       carregando.value = true
@@ -152,6 +157,7 @@ export const valeModeloStore = defineStore(
           modelo: f.modelo,
           codpessoafavorecido: f.codpessoafavorecido,
           observacoes: f.observacoes,
+          valoravulso: f.valoravulso || 0,
           itens: f.itens.map((i) => ({
             codvalemodeloprodutobarra: i.codvalemodeloprodutobarra,
             codprodutobarra: i.codprodutobarra,
@@ -209,7 +215,8 @@ export const valeModeloStore = defineStore(
       carregandoForm,
       salvando,
       isNovo,
-      face,
+      valorProdutos,
+      valorTotal,
       carregar,
       carregarMais,
       limparFiltros,
