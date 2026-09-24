@@ -138,6 +138,18 @@ class PdvNegocioService
     // pela mesma razao.
     public static function importarVales(Negocio $negocio, $vales)
     {
+        // Vale so existe onde ha financeiro: ele vira titulo de credito no
+        // fechamento, e em natureza sem financeiro nunca viraria credito
+        // nenhum -- seria dinheiro cobrado do cliente sem contrapartida.
+        // Vale que esta sendo EXCLUIDO passa, senao um negocio que trocou de
+        // natureza nao conseguiria mais se livrar do vale.
+        $ativos = array_filter($vales, function ($vale) {
+            return empty($vale['inativo']);
+        });
+        if (count($ativos) > 0 && !$negocio->NaturezaOperacao->financeiro) {
+            throw new Exception('A Natureza de Operação deste negócio não gera financeiro: não é possível vender Vale Compras nela!', 1);
+        }
+
         foreach ($vales as $vale) {
             $nv = NegocioVale::firstOrNew(['uuid' => $vale['uuid']]);
             if (!empty($nv->codnegocio) && $nv->codnegocio != $negocio->codnegocio) {
