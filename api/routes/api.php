@@ -509,6 +509,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'ativar']);
     Route::apiResource('moeda', \Mg\Moeda\MoedaController::class)->parameters(['moeda' => 'moeda']);
 
+    // ValeModelo (catalogo do kit de vale compras; CRUD no app negocios)
+    Route::post('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'inativar']);
+    Route::delete('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'ativar']);
+    Route::apiResource('vale-modelo', \Mg\Vale\ValeModeloController::class)->parameters(['vale-modelo' => 'valeModelo']);
+
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);
     Route::post('unidade-medida/{id}/inativo', [\Mg\Produto\UnidadeMedidaController::class, 'inativar']);

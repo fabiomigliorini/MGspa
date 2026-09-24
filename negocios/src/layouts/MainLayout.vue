@@ -36,6 +36,10 @@ const menuGroups = [
     ],
   },
   {
+    label: 'Cadastros',
+    items: [{ label: 'Modelos de Vale', icon: 'card_giftcard', color: 'pink', to: '/vale-modelo' }],
+  },
+  {
     label: 'Configurações',
     items: [{ label: 'Config', icon: 'settings', color: 'grey-8', to: '/config/padrao' }],
   },

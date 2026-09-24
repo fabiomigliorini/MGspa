@@ -89,6 +89,29 @@ const routes = [
     children: [{ path: '', component: () => import('pages/ListagemPage.vue') }],
   },
 
+  // MODELOS DE VALE COMPRAS
+  {
+    path: '/vale-modelo',
+    component: () => import('layouts/ValeModeloLayout.vue'),
+    children: [{ path: '', component: () => import('pages/ValeModeloPage.vue') }],
+  },
+  {
+    path: '/vale-modelo',
+    component: () => import('layouts/ValeModeloFormLayout.vue'),
+    children: [
+      {
+        path: 'novo',
+        name: 'valeModeloNovo',
+        component: () => import('pages/ValeModeloFormPage.vue'),
+      },
+      {
+        path: ':codvalemodelo',
+        name: 'valeModeloEditar',
+        component: () => import('pages/ValeModeloFormPage.vue'),
+      },
+    ],
+  },
+
   // CONFERENCIA CAIXA
   {
     path: '/conferencia',

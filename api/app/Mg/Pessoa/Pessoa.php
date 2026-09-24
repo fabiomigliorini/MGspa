@@ -40,7 +40,7 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloAgrupamento;
 use Mg\Usuario\Usuario;
 use Mg\ValeCompra\ValeCompra;
-use Mg\ValeCompra\ValeCompraModelo;
+use Mg\Vale\ValeModelo;
 use Mg\Veiculo\Veiculo;
 use Mg\Cidade\Cidade;
 use Mg\Pessoa\EstadoCivil;
@@ -428,9 +428,9 @@ class Pessoa extends MgModel
         return $this->hasMany(ValeCompra::class, 'codpessoafavorecido', 'codpessoa');
     }
 
-    public function ValeCompraModeloFavorecidoS()
+    public function ValeModeloFavorecidoS()
     {
-        return $this->hasMany(ValeCompraModelo::class, 'codpessoafavorecido', 'codpessoa');
+        return $this->hasMany(ValeModelo::class, 'codpessoafavorecido', 'codpessoa');
     }
 
     public function VeiculoS()

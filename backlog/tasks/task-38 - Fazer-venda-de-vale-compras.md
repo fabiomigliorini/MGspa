@@ -1,10 +1,11 @@
 ---
 id: TASK-38
 title: Fazer venda de vale-compras
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-23 20:30'
+updated_date: '2026-09-24 20:29'
 labels:
   - negocios
   - api
@@ -98,99 +99,22 @@ mesmo cupom, que e justamente o objetivo.
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-LEVANTAMENTO FEITO EM 2026-09-12. TRES DECISOES EM ABERTO — decidir na hora de executar.
+MILESTONE 1 (CRUD de modelos de vale) implementado em 2026-09-24, aguardando validacao.
 
-### Decisao 1 — como o vale entra no negocio
+Feito:
+- api/database/vale_catalogo.sql RODADO no banco de DEV: tblvalecompramodelo ->
+  tblvalemodelo e tblvalecompramodeloprodutobarra -> tblvalemodeloprodutobarra,
+  in place, 204/204 modelos e 4.369 itens preservados. PENDENTE RODAR EM PRODUCAO.
+- Dominio Mg\Vale na api (model, service, resource, form requests, controller) e
+  rotas v1/vale-modelo em auth:api.
+- App negocios: menu Cadastros > Modelos de Vale, rota /vale-modelo, store de
+  dominio valeModelo.js e tela ValeModeloPage.vue.
 
-(a) VALE COMO ITEM PRODUTO-SERVICO (era a recomendacao do levantamento)
-    Produto "VALE COMPRAS" com codtipoproduto = 9 (Servicos) e tblproduto.estoque = false.
-    O job de estoque ja ignora os dois casos — ver MGLara
-    app/Jobs/EstoqueGeraMovimentoNegocioProdutoBarra.php, que so gera movimento se
-    NaturezaOperacao->estoque AND Produto->TipoProduto->estoque AND Produto->estoque.
-    Entao vale como item nao mexe em estoque sem tocar em nada do motor.
-    tblvalecompra continua existindo e ganha o vinculo com o item
-    (codnegocioprodutobarra ou codnegocio), guardando escola/aluno/turma/modelo e a
-    lista do kit pra impressao e conferencia no resgate. tblvalecompramodelo fica igual.
-    No fechamento, gera o titulo tipo 3 igual a devolucao faz hoje.
-    + Um negocio, um cartao, vende vale puro ou misturado.
-    - Precisa resolver o fiscal (decisao 2) e excluir o produto-servico dos relatorios
-      de venda e dos indicadores de RH (senao conta a venda duas vezes: na emissao e no
-      resgate).
+Fora do escopo deste milestone (vao no milestone 2): endpoint v1/pdv/vale-modelo,
+db.version(7) do Dexie e sincronizarValeModelo().
 
-(b) NEGOCIO SEPARADO COM NATUREZA PROPRIA
-    Natureza "Venda de Vale Compras" com estoque=false, financeiro=true, emitida=false.
-    Fiel ao modelo atual e limpo fiscalmente, mas NAO resolve o cartao unico — continuam
-    duas vendas, que e o motivo da task existir. So serve se a decisao for tratar o
-    cartao unico de outro jeito.
-
-(c) TROCO EM VALE
-    Sem item: o cliente paga a mais e o excedente vira vale, como troco. Encaixa perfeito
-    na NFCe (vPag - vTroco = vNF, ja suportado: PdvNegocioService::fechar soma
-    valortotal - valortroco, e NotaFiscalNegocioService copia o troco pro pagamento da
-    nota). Mas nao permite vender vale sozinho (o fechamento exige pelo menos um item) e
-    perde a amarracao com escola/aluno/kit. Serviria no maximo como complemento de (a).
-
-### Decisao 2 — tratamento fiscal (se valer a decisao 1a)
-
-A NFCe nao e automatica: e sob demanda, por PdvController@notaFiscal ->
-NotaFiscalNegocioService::gerarNotaFiscalDoNegocio, que hoje leva TODOS os itens do
-negocio e copia os pagamentos 1:1.
-
-(a) FORA DA NOTA, COMO TROCO — nota sai so com as mercadorias e o valor do vale vai como
-    troco no pagamento (vPag - vTroco = vNF). O fato gerador do ICMS fica no resgate,
-    como ja e hoje. Evita tributar duas vezes. Exige filtrar o item no
-    NotaFiscalNegocioService e ajustar o bloco de pagamentos.
-(b) DENTRO DA NOTA — zero mudanca no NotaFiscalNegocioService, mas tributa o vale na
-    venda e de novo no resgate.
-(c) BLOQUEAR NOTA no negocio que tem vale — simples, joga o problema pro balcao.
-
-FUNDAMENTO JURIDICO (23/09/2026): ver backlog/docs/doc-1 - Tese-de-regularidade-fiscal-da-
-venda-de-vale-compras.md — memorando com a tese de que a venda do vale e recebimento antecipado
-SEM fato gerador de ICMS, com o documento fiscal devido so na saida da mercadoria (resgate,
-tPag=12 Vale Presente). Sustenta a alternativa (a) no ponto principal (vale fora da nota), MAS
-VEDA EXPRESSAMENTE a implementacao via vTroco inflado: declarar vTroco de valor que nao foi
-devolvido em dinheiro e registro inveridico (Lei 8.137/1990). O caminho indicado no memorando
-(secao 3.3) e informar no detPag apenas a fracao do pagamento correspondente a nota
-(ex.: transacao de 700, nota de 500 -> tPag=03 vPag=500 com o cAut real), sem troco. Tambem
-veda a alternativa (b)/(c) na forma de item fictitio na nota. O memorando exige do ERP uma
-trilha de auditoria (secao 5) e um relatorio mensal de conciliacao DIMP (secao 4.4) — tratar
-como requisito fiscal da implementacao, nao como opcional.
-
-### Decisao 3 — escopo do vale
-
-(a) So modelo de kit, como hoje: escolhe escola/serie no catalogo tblvalecompramodelo,
-    carrega os itens, ajusta quantidade e desconto.
-(b) Modelo de kit + vale de valor livre (vale-presente / credito avulso, sem escola nem
-    lista de produtos).
-(c) Kit primeiro, valor livre em outra task.
-
-### Decisao 4 — destino do cadastro de modelos de kit
-
-O catalogo de kits (tblvalecompramodelo + tblvalecompramodeloprodutobarra) so tem
-manutencao no MGLara (telas vale-compra-modelo, ValeCompraModeloController). Um modelo
-guarda escola (codpessoafavorecido), turma, ano e a lista de produtos com quantidade e
-preco; e dele que a venda do vale carrega os itens.
-
-Se a venda sair do MGLara, o cadastro nao pode ficar orfao no sistema velho. Opcoes:
-converter pro negocios junto com a venda, mandar pro estoque/pessoas, ou deixar no MGLara
-por enquanto. Sao poucos modelos e mexem uma vez por ano (inicio do ano letivo), entao
-talvez nao valha a conversao imediata — mas precisa de decisao antes de aposentar a tela
-de venda.
-
-### Pontos de atencao levantados
-
-- CONTABIL: hoje o vale separa as contas 82 (Venda Vale) e 83 (Credito Vale). Dentro de
-  um negocio normal a receita cai em "Venda" (conta 2). Definir se isso importa pro
-  gerencial — lembrando que pagamento a vista nao gera titulo, entao a conta contabil so
-  aparece nas vendas a prazo.
-- RH: PdvNegocioService::fechar dispara ProcessarVendaJob. Vale como item entraria nos
-  indicadores de venda do vendedor na emissao E no resgate. Precisa excluir o produto do
-  calculo.
-- OFFLINE: a tela de negocio e offline-first (Dexie). Decidir se o catalogo de modelos de
-  kit sincroniza pro offline ou se a emissao de vale exige estar online.
-- IMPRESSAO: o vale so pode ser impresso depois do fechamento no servidor, porque o
-  codigo de barras e o codtitulo. Mesmo comportamento do vale de devolucao hoje.
-- FAVORECIDO: manter a escola como codpessoa do titulo de credito, como e hoje.
-- Resolve a metade "Vale-compra" da TASK-84 (destinar Caixa e Vale-compra a um app):
-  vale-compra fica no negocios.
+QUEBRA CONHECIDA E PREVISTA: o modulo vale compras do MGLara (ValeCompraController,
+ValeCompraModeloController e 9 blades) para de funcionar ate o milestone 4.
+Na api foram repontados 4 lugares que tambem quebrariam: ProdutoBarraService::
+unificaBarras(), ProdutoBarra, Pessoa e ValeCompra.
 <!-- SECTION:NOTES:END -->

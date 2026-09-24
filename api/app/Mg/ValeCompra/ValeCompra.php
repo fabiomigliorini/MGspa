@@ -13,7 +13,7 @@ use Mg\Filial\Filial;
 use Mg\Pessoa\Pessoa;
 use Mg\Titulo\Titulo;
 use Mg\Usuario\Usuario;
-use Mg\ValeCompra\ValeCompraModelo;
+use Mg\Vale\ValeModelo;
 
 class ValeCompra extends MgModel
 {
@@ -85,9 +85,9 @@ class ValeCompra extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
-    public function ValeCompraModelo()
+    public function ValeModelo()
     {
-        return $this->belongsTo(ValeCompraModelo::class, 'codvalecompramodelo', 'codvalecompramodelo');
+        return $this->belongsTo(ValeModelo::class, 'codvalecompramodelo', 'codvalemodelo');
     }
 
 
