@@ -1,16 +1,16 @@
 ---
 id: TASK-57
 title: Falha ao alterar observacoes de negocio offline (dizia que alterava valores)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-15 15:11'
+updated_date: '2026-09-24 12:27'
 labels:
   - negocios
 dependencies: []
 priority: low
 type: bug
-ordinal: 135000
+ordinal: 186000
 ---
 
 ## Description
