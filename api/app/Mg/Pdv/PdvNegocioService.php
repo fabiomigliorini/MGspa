@@ -89,28 +89,45 @@ class PdvNegocioService
             'codnegocio' => $negocio->codnegocio
         ])[0];
 
-        if ($negocio->valorprodutos != floatval($tot->valorprodutos)) {
+        if (!static::valoresBatem($negocio->valorprodutos, $tot->valorprodutos)) {
             return false;
         }
-        if ($negocio->valorvales != floatval($totVale->valorvales)) {
+        if (!static::valoresBatem($negocio->valorvales, $totVale->valorvales)) {
             return false;
         }
-        if ($negocio->valordesconto != floatval($tot->valordesconto) + floatval($totVale->valordesconto)) {
+        if (!static::valoresBatem($negocio->valordesconto, floatval($tot->valordesconto) + floatval($totVale->valordesconto))) {
             return false;
         }
-        if ($negocio->valorfrete != floatval($tot->valorfrete) + floatval($totVale->valorfrete)) {
+        if (!static::valoresBatem($negocio->valorfrete, floatval($tot->valorfrete) + floatval($totVale->valorfrete))) {
             return false;
         }
-        if ($negocio->valoroutras != floatval($tot->valoroutras) + floatval($totVale->valoroutras)) {
+        if (!static::valoresBatem($negocio->valoroutras, floatval($tot->valoroutras) + floatval($totVale->valoroutras))) {
             return false;
         }
-        if ($negocio->valorseguro != floatval($tot->valorseguro) + floatval($totVale->valorseguro)) {
+        if (!static::valoresBatem($negocio->valorseguro, floatval($tot->valorseguro) + floatval($totVale->valorseguro))) {
             return false;
         }
-        if (($negocio->valortotal - $negocio->valorjuros) != floatval($tot->valortotal) + floatval($totVale->valortotal)) {
+        if (!static::valoresBatem($negocio->valortotal - $negocio->valorjuros, floatval($tot->valortotal) + floatval($totVale->valortotal))) {
             return false;
         }
         return true;
+    }
+
+    // Dois valores de dinheiro conferem?
+    //
+    // Comparar float com == nao serve aqui. Todo valor deste negocio tem no
+    // maximo 2 casas, mas os dois lados chegam como float e QUALQUER conta
+    // entre eles vira ruido de ponto flutuante: 12.90 + 86.26 da
+    // 99.16000000000001, que para o PHP e diferente de 99.16. Com duas
+    // colecoes somando (mercadoria + vale) isso deixou de ser raro e virou o
+    // "Total do Negocio nao bate" aleatorio.
+    //
+    // Meio centavo de folga mata o ruido e nao deixa passar divergencia de
+    // verdade: o front arredonda tudo para 2 casas, entao erro real e de
+    // um centavo para cima.
+    public static function valoresBatem($esperado, $obtido)
+    {
+        return abs(floatval($esperado) - floatval($obtido)) < 0.005;
     }
 
     // Importa os vales do negocio vindos do PDV.
