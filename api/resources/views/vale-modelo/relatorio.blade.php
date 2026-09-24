@@ -7,9 +7,14 @@
 
     // A4 retrato: 210 - 12 - 12 = 186mm uteis. O layout fica em 184mm; a folga
     // e porque o mPDF arredonda pra cima na borda de cada celula.
-    $cols = [28, 88, 18, 25, 25]; // = 184mm
+    $cols = [13, 103, 18, 25, 25]; // = 184mm
 
     $temAvulso = (float) $modelo->valoravulso > 0;
+
+    // PNG transparente de 1x1. O mPDF ignora height no <td>, mas respeita a
+    // altura de uma <img>: e o que iguala a linha sem foto a linha com foto.
+    $espacador = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJ'
+        . 'AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAAC0lEQVQImWNgAAIAAAUAAWJVMogAAAAASUVORK5CYII=';
 @endphp
 <style>
     body {
@@ -85,7 +90,9 @@
 
     table.itens td {
         padding: 1mm;
-        vertical-align: top;
+        /* centralizado porque a linha agora tem a altura da foto: com o texto
+           no topo ele flutua longe da miniatura e a lista fica desalinhada. */
+        vertical-align: middle;
         overflow: hidden;
         border-top: 1px solid #ddd;
     }
@@ -94,9 +101,19 @@
         text-align: right;
     }
 
-    td.cod {
-        color: #555;
-        white-space: nowrap;
+    /* Precisa ser mais especifico que "table.itens th", que alinha a esquerda:
+       so a classe .r perde na especificidade e o titulo ficava sempre a
+       esquerda, desalinhado da coluna de valores. */
+    table.itens th.r {
+        text-align: right;
+    }
+
+    td.foto {
+        padding: 0.6mm 1mm;
+    }
+
+    span.cod {
+        color: #777;
     }
 
     td.tot {
@@ -192,19 +209,32 @@
         @if ($itens->isNotEmpty())
             <thead>
                 <tr>
-                    <th>Código</th>
-                    <th>Descrição</th>
-                    <th class="r">Qtde</th>
-                    <th class="r">Preço Unit.</th>
+                    <th>Imagem</th>
+                    <th>Produto</th>
+                    <th class="r">Quantidade</th>
+                    <th class="r">Preço</th>
                     <th class="r">Total</th>
                 </tr>
             </thead>
         @endif
         <tbody>
             @foreach ($itens as $item)
+                @php $foto = $fotos[$item['imagem'] ?? ''] ?? null; @endphp
                 <tr>
-                    <td class="cod">{{ $item['barras'] }}</td>
-                    <td>{{ $item['produto'] }}</td>
+                    {{-- Sem foto a celula fica vazia: o documento vale pela
+                         lista, e a coluna so some inteira se nenhum item tiver. --}}
+                    <td class="foto">
+                        @if ($foto)
+                            <img src="{{ $foto['src'] }}"
+                                 style="width: {{ $foto['w'] }}mm; height: {{ $foto['h'] }}mm">
+                        @else
+                            <img src="{{ $espacador }}" style="width: 1mm; height: 10mm">
+                        @endif
+                    </td>
+                    <td>
+                        {{ $item['produto'] }}
+                        <br><span class="cod">{{ $item['barras'] }}</span>
+                    </td>
                     <td class="r">{{ $qtd($item['quantidade']) }}</td>
                     <td class="r">{{ $num($item['valorunitario']) }}</td>
                     <td class="r tot">{{ $num($item['valorprodutos']) }}</td>

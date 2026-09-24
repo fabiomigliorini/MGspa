@@ -104,7 +104,7 @@ MILESTONE 1 (CRUD de modelos de vale) implementado em 2026-09-24, aguardando val
 Feito:
 - api/database/vale_catalogo.sql RODADO no banco de DEV: tblvalecompramodelo ->
   tblvalemodelo e tblvalecompramodeloprodutobarra -> tblvalemodeloprodutobarra,
-  in place, 204/204 modelos e 4.369 itens preservados. PENDENTE RODAR EM PRODUCAO.
+  in place, 204/204 modelos e 4.369 itens preservados. Producao roda no go-live, pelo Fabio (regra fixa no fim do plano)  -- nao e pendencia.
 - Dominio Mg\Vale na api (model, service, resource, form requests, controller) e
   rotas v1/vale-modelo em auth:api.
 - App negocios: menu Cadastros > Modelos de Vale, rota /vale-modelo, store de
@@ -147,6 +147,21 @@ Decisoes:
   entender que existe um vale ja comprado.
 - Logo com largura E altura explicitas, na proporcao do arquivo (MGPapelariaLogo.jpeg,
   402x76 -> 45mm x 8,5mm). So com a largura o mPDF estica a imagem.
+- COLUNA DE FOTO do produto (10mm). As fotos do MGLara sao 1000x1000 com ~60KB e nao
+  existe variante miniatura no servidor: o service baixa em PARALELO (curl_multi) e
+  REDUZ com GD antes de embutir. Cruas e em serie seriam ~3MB de PDF e 50 idas a rede;
+  assim um kit de 54 itens (48 com foto) da 263KB em 1,6s. Cada miniatura leva largura
+  E altura em mm calculadas da propria imagem, para nenhuma sair esticada. Foto que nao
+  baixar nao sai e o resto imprime igual -- o documento vale pela lista, e nao pode
+  deixar de sair porque o servidor de imagens piscou.
+  ATENCAO: em dev /opt/www/Arquivos/Imagens esta vazio, entao as URLs apontam para
+  producao (sistema.mgpapelaria.com.br). A api precisa de saida HTTPS para esse host.
+- O CODIGO DE BARRAS saiu da coluna propria e virou a segunda linha da descricao; a
+  largura liberada foi toda para a descricao (a tabela tem 5 colunas: foto, descricao,
+  qtde, preco e total).
+- ALTURA DE LINHA UNIFORME via <img> transparente de 1x1 esticada a 10mm nas linhas sem
+  foto. O mPDF ignora height no <td>, mas respeita a altura de uma imagem. Sem isso a
+  linha sem foto ficava em 9,3mm contra 12,2mm da linha com foto e a lista pulava.
 - Os itens saem do ValeModeloProdutoBarraResource, o mesmo que alimenta a tela, para
   "conferir o PDF contra a tela" nao comparar duas montagens de descricao diferentes.
 - Modelo avulso puro (sem itens) nao imprime cabecalho de tabela, so a face. O subtotal
@@ -158,12 +173,13 @@ Verificado em dev (tinker + render do PDF em imagem):
 - Modelo 216 (avulso puro, ao portador): "Ao portador", Avulso 100,00, TOTAL 100,00.
   Sem itens nao sai cabecalho de tabela, so a linha TOTAL.
 - Modelo 215 (1 item + avulso): Produtos 99,90 + Avulso 100,00 = TOTAL 199,90.
+- Foto: servidor inalcancavel e imagem 404 devolvem zero miniaturas sem excecao, e o
+  PDF sai do mesmo jeito (so sem a foto).
 - Kit + avulso (montado em memoria): Produtos 543,10 + Avulso 50,00 = face 593,10.
 - ?html=1 -> 200 text/html; sem o parametro -> 200 application/pdf inline; modelo
   inexistente -> 404. 12 queries para 54 itens (sem N+1).
 
 Fora do escopo deste milestone: nada de PDV, negocio ou Dexie.
-<!-- SECTION:NOTES:END -->
 
 ---
 
@@ -176,7 +192,7 @@ itemAdicionar/itemSalvar/itemInativar/juntarItensPorBarras ficaram como estavam)
 Feito:
 - api/database/vale.sql RODADO no banco de DEV (reaplicavel): tblnegociovale,
   tblnegociovaleprodutobarra e a coluna tblnegocio.valorvales.
-  PENDENTE RODAR EM PRODUCAO.
+  Producao roda no go-live, pelo Fabio (regra fixa no fim do plano)  -- nao e pendencia.
 - Models NegocioVale e NegocioValeProdutoBarra + Resources; NegocioResource passou
   a devolver 'vales' (com itens, produto, barras e imagem) para a recarga do PDV.
 - Sync do catalogo pro PDV: GET v1/pdv/vale-modelo (PdvService::valeModelo),

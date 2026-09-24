@@ -67,11 +67,129 @@ class ValeModeloRelatorioService
         $itens = $modelo->ValeModeloProdutoBarraS
             ->map(fn ($item) => (new ValeModeloProdutoBarraResource($item))->resolve());
 
+        // Chaveado pela propria URL: dois itens com a mesma foto baixam uma vez so.
+        $urls = [];
+        foreach ($itens as $item) {
+            if (!empty($item['imagem'])) {
+                $urls[$item['imagem']] = $item['imagem'];
+            }
+        }
+
         return view('vale-modelo.relatorio', [
             'modelo' => $modelo,
             'itens' => $itens,
+            'fotos' => static::miniaturas($urls),
             'logo' => static::logo(),
         ])->render();
+    }
+
+    /** Lado da miniatura no papel, em mm. */
+    private const FOTO_MM = 10.0;
+
+    /**
+     * Baixa as fotos dos itens e devolve, por URL, a miniatura pronta para
+     * embutir: ['src' => data-uri, 'w' => mm, 'h' => mm].
+     *
+     * Baixa em PARALELO e REDUZ antes de embutir. As imagens do MGLara sao
+     * 1000x1000 com ~60KB cada: num kit de 50 itens, embutir cruas dariam 3MB
+     * de PDF para miniaturas de 10mm, e em serie seriam 50 idas a rede.
+     *
+     * Foto que nao baixar ou nao decodificar simplesmente nao sai -- o
+     * documento vale pela lista de itens e precos, nao pela imagem, e nao pode
+     * deixar de imprimir porque o servidor de imagens piscou.
+     */
+    protected static function miniaturas(array $urls): array
+    {
+        if (empty($urls) || !function_exists('curl_multi_init')) {
+            return [];
+        }
+
+        $multi = curl_multi_init();
+        $handles = [];
+        foreach ($urls as $chave => $url) {
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_CONNECTTIMEOUT => 3,
+                CURLOPT_TIMEOUT => 10,
+            ]);
+            curl_multi_add_handle($multi, $ch);
+            $handles[$chave] = $ch;
+        }
+
+        do {
+            $status = curl_multi_exec($multi, $ativos);
+            if ($ativos) {
+                curl_multi_select($multi, 1.0);
+            }
+        } while ($ativos && $status === CURLM_OK);
+
+        $ret = [];
+        foreach ($handles as $chave => $ch) {
+            $corpo = curl_multi_getcontent($ch);
+            $http = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_multi_remove_handle($multi, $ch);
+            curl_close($ch);
+
+            if ($http === 200 && !empty($corpo) && ($mini = static::miniatura($corpo))) {
+                $ret[$chave] = $mini;
+            }
+        }
+        curl_multi_close($multi);
+
+        return $ret;
+    }
+
+    /**
+     * Reduz uma foto para a caixa da coluna, preservando a proporcao dela.
+     *
+     * Devolve o tamanho ja em mm justamente para o blade nao ter que adivinhar:
+     * com so uma das medidas no style, o mPDF estica a imagem.
+     */
+    protected static function miniatura(string $binario): ?array
+    {
+        $img = @imagecreatefromstring($binario);
+        if (!$img) {
+            return null;
+        }
+
+        $largura = imagesx($img);
+        $altura = imagesy($img);
+        if ($largura < 1 || $altura < 1) {
+            imagedestroy($img);
+            return null;
+        }
+
+        // 150px num quadro de 10mm da ~380dpi: sobra resolucao para impressao
+        // e o arquivo cai de ~60KB para ~4KB.
+        $lado = 150;
+        $escala = $lado / max($largura, $altura);
+        if ($escala < 1) {
+            $reduzida = imagescale($img, (int) round($largura * $escala), (int) round($altura * $escala));
+            if ($reduzida) {
+                imagedestroy($img);
+                $img = $reduzida;
+                $largura = imagesx($img);
+                $altura = imagesy($img);
+            }
+        }
+
+        ob_start();
+        imagejpeg($img, null, 75);
+        $jpeg = ob_get_clean();
+        imagedestroy($img);
+
+        if (empty($jpeg)) {
+            return null;
+        }
+
+        $mm = static::FOTO_MM / max($largura, $altura);
+        return [
+            'src' => 'data:image/jpeg;base64,' . base64_encode($jpeg),
+            'w' => round($largura * $mm, 2),
+            'h' => round($altura * $mm, 2),
+        ];
     }
 
     /** Logo embutida em base64: o mPDF nao busca imagem por URL relativa. */
