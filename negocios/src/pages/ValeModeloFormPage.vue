@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { valeModeloStore } from 'stores/valeModelo'
@@ -8,19 +8,16 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
-import MgSelectProdutoBarra from '@components/MgSelectProdutoBarra.vue'
+import MgInputProdutoBarras from '@components/MgInputProdutoBarras.vue'
 
 const route = useRoute()
 const router = useRouter()
 const sVale = valeModeloStore()
 const { form, carregandoForm, salvando, isNovo, valorProdutos, valorTotal } = storeToRefs(sVale)
 
-// O select nao guarda selecao: escolher um produto acrescenta o item e limpa.
-const produtoNovo = ref(null)
-const acrescentarProduto = (opcao) => {
-  sVale.itemAcrescentar(opcao)
-  produtoNovo.value = null
-}
+// Bipar ou digitar o codigo acrescenta o item ao kit; o multiplicador do
+// campo ("5*") entra como quantidade.
+const acrescentarProduto = (produto, quantidade) => sVale.itemAcrescentar(produto, quantidade)
 
 const submit = async () => {
   if (await sVale.salvar()) {
@@ -92,9 +89,9 @@ onMounted(async () => {
           </q-card-section>
           <q-card-section>
             <div class="q-mb-md">
-              <MgSelectProdutoBarra
-                v-model="produtoNovo"
-                label="Acrescentar produto ao kit"
+              <MgInputProdutoBarras
+                label="Acrescentar produto ao kit (bipe, ou digite 5* e o código)"
+                pesquisa
                 @select="acrescentarProduto"
               />
             </div>

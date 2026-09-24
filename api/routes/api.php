@@ -195,6 +195,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estado/{id}', [\Mg\Select\SelectEstadoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo-tipo/{id}', [\Mg\Select\SelectVeiculoTipoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo/{id}', [\Mg\Select\SelectVeiculoController::class, 'show'])->whereNumber('id');
+    Route::get('select/produto-barra/barras/{barras}', [\Mg\Select\SelectProdutoBarraController::class, 'barras']);
     Route::get('select/produto-barra/{id}', [\Mg\Select\SelectProdutoBarraController::class, 'show'])->whereNumber('id');
     Route::get('select/usuario/{id}', [\Mg\Select\SelectUsuarioController::class, 'show'])->whereNumber('id');
     Route::get('select/portador/{id}', [\Mg\Select\SelectPortadorController::class, 'show'])->whereNumber('id');

@@ -128,10 +128,11 @@ export const valeModeloStore = defineStore(
 
     // O item nasce ja com produto: escolher no select e o que acrescenta a
     // linha, entao nunca existe linha pela metade para validar.
-    function itemAcrescentar(opcao) {
+    function itemAcrescentar(opcao, quantidade = 1) {
+      const quant = Number(quantidade) || 1
       const existente = form.value.itens.find((i) => i.codprodutobarra === opcao.value)
       if (existente) {
-        existente.quantidade = Number(existente.quantidade || 0) + 1
+        existente.quantidade = Number(existente.quantidade || 0) + quant
         return
       }
       form.value.itens.push({
@@ -139,7 +140,7 @@ export const valeModeloStore = defineStore(
         codprodutobarra: opcao.value,
         produto: opcao.label,
         barras: opcao.barras,
-        quantidade: 1,
+        quantidade: quant,
         valorunitario: Number(opcao.preco || 0),
       })
     }
