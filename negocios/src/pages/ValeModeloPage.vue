@@ -20,6 +20,11 @@ const colunas = [
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
 ]
 
+// A linha inteira leva pra edição, e cada célula é um <a> de verdade: dá pra
+// abrir em nova aba com o botão do meio ou o ctrl. Só a célula de ações fica
+// de fora, com os botões dela.
+const linkEditar = (modelo) => `/vale-modelo/${modelo.codvalemodelo}`
+
 const confirmarExclusao = (modelo) => {
   $q.dialog({
     title: 'Excluir',
@@ -57,70 +62,87 @@ onMounted(() => sVale.carregar(1))
           :rows-per-page-options="[0]"
           :pagination="{ rowsPerPage: 0 }"
         >
-          <template #body-cell-favorecido="props">
-            <q-td :props="props">
-              <span v-if="props.value">{{ props.value }}</span>
-              <span v-else class="text-grey-6">Ao portador</span>
-            </q-td>
-          </template>
+          <template #body="props">
+            <q-tr :props="props">
+              <q-td key="favorecido" :props="props">
+                <router-link
+                  :to="linkEditar(props.row)"
+                  class="block text-grey-9"
+                  style="text-decoration: none"
+                >
+                  <span v-if="props.row.favorecido">{{ props.row.favorecido }}</span>
+                  <span v-else class="text-grey-6">Ao portador</span>
+                </router-link>
+              </q-td>
 
-          <template #body-cell-modelo="props">
-            <q-td :props="props">
-              <router-link
-                :to="`/vale-modelo/${props.row.codvalemodelo}`"
-                class="text-weight-medium text-primary"
-                style="text-decoration: none"
-              >
-                {{ props.value }}
-              </router-link>
-            </q-td>
-          </template>
+              <q-td key="modelo" :props="props">
+                <router-link
+                  :to="linkEditar(props.row)"
+                  class="block text-weight-medium text-primary"
+                  style="text-decoration: none"
+                >
+                  {{ props.row.modelo }}
+                </router-link>
+              </q-td>
 
-          <template #body-cell-valortotal="props">
-            <q-td :props="props">{{ formataReal(props.value) }}</q-td>
-          </template>
+              <q-td key="itens" :props="props">
+                <router-link
+                  :to="linkEditar(props.row)"
+                  class="block text-grey-9"
+                  style="text-decoration: none"
+                >
+                  {{ props.row.itens.length }}
+                </router-link>
+              </q-td>
 
-          <template #body-cell-inativo="props">
-            <q-td :props="props">
-              <q-badge v-if="props.row.inativo" color="orange-7">Inativo</q-badge>
-              <q-badge v-else color="green-6">Ativo</q-badge>
-            </q-td>
-          </template>
+              <q-td key="valortotal" :props="props">
+                <router-link
+                  :to="linkEditar(props.row)"
+                  class="block text-grey-9"
+                  style="text-decoration: none"
+                >
+                  {{ formataReal(props.row.valortotal) }}
+                </router-link>
+              </q-td>
 
-          <template #body-cell-acoes="props">
-            <q-td :props="props">
-              <MgInfoCriacao :registro="props.row" />
-              <q-btn
-                flat
-                round
-                size="sm"
-                color="grey-7"
-                icon="edit"
-                :to="`/vale-modelo/${props.row.codvalemodelo}`"
-              >
-                <q-tooltip>Editar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                round
-                size="sm"
-                color="grey-7"
-                :icon="props.row.inativo ? 'play_arrow' : 'pause'"
-                @click="sVale.alternarInativo(props.row)"
-              >
-                <q-tooltip>{{ props.row.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                round
-                size="sm"
-                color="grey-7"
-                icon="delete"
-                @click="confirmarExclusao(props.row)"
-              >
-                <q-tooltip>Excluir</q-tooltip>
-              </q-btn>
-            </q-td>
+              <q-td key="inativo" :props="props">
+                <router-link
+                  :to="linkEditar(props.row)"
+                  class="block"
+                  style="text-decoration: none"
+                >
+                  <q-badge v-if="props.row.inativo" color="orange-7">Inativo</q-badge>
+                  <q-badge v-else color="green-6">Ativo</q-badge>
+                </router-link>
+              </q-td>
+
+              <q-td key="acoes" :props="props">
+                <MgInfoCriacao :registro="props.row" />
+                <q-btn flat round size="sm" color="grey-7" icon="edit" :to="linkEditar(props.row)">
+                  <q-tooltip>Editar</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  :icon="props.row.inativo ? 'play_arrow' : 'pause'"
+                  @click="sVale.alternarInativo(props.row)"
+                >
+                  <q-tooltip>{{ props.row.inativo ? 'Ativar' : 'Inativar' }}</q-tooltip>
+                </q-btn>
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="delete"
+                  @click="confirmarExclusao(props.row)"
+                >
+                  <q-tooltip>Excluir</q-tooltip>
+                </q-btn>
+              </q-td>
+            </q-tr>
           </template>
         </q-table>
       </div>
