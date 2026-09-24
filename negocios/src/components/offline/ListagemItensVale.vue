@@ -24,6 +24,11 @@ const props = defineProps({
 const sProduto = produtoStore()
 const sNegocio = negocioStore()
 
+// A grade do vale nasce fechada: aberta, ela vira uma segunda parede de
+// cards igual a da mercadoria e some a fronteira entre as duas coisas. Quem
+// precisa dela e quem vai tirar item ou mexer na quantidade, e ai abre.
+const mostrarItens = ref(false)
+
 const dialogItem = ref(false)
 const edicao = ref({
   uuid: null,
@@ -201,80 +206,98 @@ const linkProduto = (codproduto) => {
       Vale somente de valor, sem lista de produtos.
     </q-card-section>
 
-    <q-card-section v-else>
-      <div class="row q-col-gutter-md">
-        <div
-          class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
-          v-for="item in itens"
-          :key="item.uuid"
-        >
-          <q-card flat bordered>
-            <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
-            <q-separator />
+    <template v-else>
+      <q-item clickable v-ripple @click="mostrarItens = !mostrarItens">
+        <q-item-section>
+          <q-item-label class="text-grey-8">
+            {{ itens.length }} {{ itens.length == 1 ? 'item do kit' : 'itens do kit' }}
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side class="text-grey-7">
+          {{ formataNumero(vale.valorprodutos) }}
+        </q-item-section>
+        <q-item-section side>
+          <q-icon :name="mostrarItens ? 'expand_less' : 'expand_more'" color="grey-7" />
+        </q-item-section>
+      </q-item>
+    </template>
 
-            <q-card-section class="q-pb-none">
-              <div class="absolute" style="top: 0; right: 5px; transform: translateY(-42px)">
-                <q-btn
-                  v-if="sNegocio.podeEditar"
-                  color="primary"
-                  round
-                  icon="edit"
-                  @click="editar(item)"
-                />
-                <q-btn
-                  v-if="sNegocio.podeEditar"
-                  round
-                  color="negative"
-                  icon="delete"
-                  class="q-ma-sm"
-                  @click="inativarItem(item)"
-                />
-              </div>
+    <q-slide-transition>
+      <q-card-section v-show="mostrarItens && itens.length > 0" class="q-pt-none">
+        <div class="row q-col-gutter-md">
+          <div
+            class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
+            v-for="item in itens"
+            :key="item.uuid"
+          >
+            <q-card flat bordered>
+              <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
+              <q-separator />
 
-              <Transition
-                mode="out-in"
-                :duration="{ enter: 300, leave: 300 }"
-                leave-active-class="animated bounceOut"
-                enter-active-class="animated bounceIn"
-              >
-                <div class="text-h5" :key="item.valorprodutos">
-                  <small class="text-grey-7">R$</small>
-                  {{ formataNumero(item.valorprodutos) }}
+              <q-card-section class="q-pb-none">
+                <div class="absolute" style="top: 0; right: 5px; transform: translateY(-42px)">
+                  <q-btn
+                    v-if="sNegocio.podeEditar"
+                    color="primary"
+                    round
+                    icon="edit"
+                    @click="editar(item)"
+                  />
+                  <q-btn
+                    v-if="sNegocio.podeEditar"
+                    round
+                    color="negative"
+                    icon="delete"
+                    class="q-ma-sm"
+                    @click="inativarItem(item)"
+                  />
                 </div>
-              </Transition>
 
-              <div class="text-overline text-grey-7">
-                <q-btn
-                  v-if="sNegocio.podeEditar"
-                  size="xs"
-                  label="-"
-                  round
-                  flat
-                  @click="somarQuantidade(item, -1)"
-                />
-                {{ formataNumeroInteligente(item.quantidade) }}
-                <q-btn
-                  v-if="sNegocio.podeEditar"
-                  size="xs"
-                  label="+"
-                  round
-                  flat
-                  @click="somarQuantidade(item, 1)"
-                />
-                de
-                {{ formataNumero(item.valorunitario) }}
-              </div>
-            </q-card-section>
+                <Transition
+                  mode="out-in"
+                  :duration="{ enter: 300, leave: 300 }"
+                  leave-active-class="animated bounceOut"
+                  enter-active-class="animated bounceIn"
+                >
+                  <div class="text-h5" :key="item.valorprodutos">
+                    <small class="text-grey-7">R$</small>
+                    {{ formataNumero(item.valorprodutos) }}
+                  </div>
+                </Transition>
 
-            <q-item clickable v-ripple :href="linkProduto(item.codproduto)" target="_blank">
-              <q-item-section class="text-caption text-grey-7">
-                <q-item-label overline>{{ item.barras }}</q-item-label>
-                <q-item-label>{{ item.produto }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-card>
+                <div class="text-overline text-grey-7">
+                  <q-btn
+                    v-if="sNegocio.podeEditar"
+                    size="xs"
+                    label="-"
+                    round
+                    flat
+                    @click="somarQuantidade(item, -1)"
+                  />
+                  {{ formataNumeroInteligente(item.quantidade) }}
+                  <q-btn
+                    v-if="sNegocio.podeEditar"
+                    size="xs"
+                    label="+"
+                    round
+                    flat
+                    @click="somarQuantidade(item, 1)"
+                  />
+                  de
+                  {{ formataNumero(item.valorunitario) }}
+                </div>
+              </q-card-section>
+
+              <q-item clickable v-ripple :href="linkProduto(item.codproduto)" target="_blank">
+                <q-item-section class="text-caption text-grey-7">
+                  <q-item-label overline>{{ item.barras }}</q-item-label>
+                  <q-item-label>{{ item.produto }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-card>
+          </div>
         </div>
-      </div>
-    </q-card-section>
+      </q-card-section>
+    </q-slide-transition>
   </q-card>
 </template>
