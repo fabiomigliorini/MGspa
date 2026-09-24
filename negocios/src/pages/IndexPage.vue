@@ -9,6 +9,8 @@ import { pagarMeStore } from 'stores/pagar-me'
 import { saurusStore } from 'stores/saurus'
 import { pixStore } from 'stores/pix'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
+import ListagemItensVale from 'components/offline/ListagemItensVale.vue'
+import ValeDialog from 'components/offline/ValeDialog.vue'
 import InputBarras from 'components/offline/InputBarras.vue'
 import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
@@ -157,6 +159,7 @@ const carregareOuCriarNegocio = async () => {
 const fecharDialogs = async () => {
   sNegocio.dialog.receber = false
   sNegocio.dialog.valores = false
+  sNegocio.dialog.vale = false
   sAuth.dialog.login = false
   sPagarMe.dialog.detalhesPedido = false
   sSaurus.dialog.detalhesPedido = false
@@ -251,6 +254,9 @@ const receber = async () => {
   await fecharDialogs()
   sNegocio.abrirReceber()
 }
+
+// "Vale A", "Vale B"... na ordem em que foram lançados
+const letraVale = (indice) => String.fromCharCode(65 + indice)
 
 const checarImpressora = () => {
   if (!sNegocio.padrao.impressora) {
@@ -523,7 +529,34 @@ onUnmounted(() => {
       </div>
 
       <listagem-produtos />
+
+      <!-- VALE COMPRAS: um bloco por vale, abaixo da grade de mercadoria -->
+      <div class="q-px-md" v-if="sNegocio.podeEditar || sNegocio.valesAtivos.length > 0">
+        <div class="row items-center q-mb-sm">
+          <div class="text-overline text-grey-7">Vale Compras</div>
+          <q-space />
+          <q-btn
+            v-if="sNegocio.podeEditar"
+            flat
+            round
+            size="sm"
+            color="primary"
+            icon="add"
+            @click="sNegocio.abrirVale()"
+          >
+            <q-tooltip class="bg-accent">Adicionar Vale Compras</q-tooltip>
+          </q-btn>
+        </div>
+        <listagem-itens-vale
+          v-for="(vale, indice) in sNegocio.valesAtivos"
+          :key="vale.uuid"
+          :vale="vale"
+          :letra="letraVale(indice)"
+        />
+      </div>
     </div>
+
+    <vale-dialog />
     <div style="padding-bottom: 75px"></div>
 
     <!-- ORCAMENTO SELECIONAR -->

@@ -1,4 +1,4 @@
-import { formataTimestampIso } from '@components/formatters'
+import { formataDataIso, formataTimestampIso } from '@components/formatters'
 import { defineStore } from 'pinia'
 import { toRaw } from 'vue'
 import { db } from 'boot/db'
@@ -100,7 +100,10 @@ export const negocioStore = defineStore('negocio', {
       valores: false,
       receber: false,
       pagamento: false,
+      vale: false,
     },
+    // uuid do vale aberto no dialog de vale compras; null = vale novo
+    valeEditando: null,
     // pagamento aberto no dialog de detalhe (drawer de totais)
     pagamentoDetalhe: null,
     // wizard Receber: valor deste pagamento, forma escolhida e vale bipado
@@ -146,6 +149,18 @@ export const negocioStore = defineStore('negocio', {
       return this.negocio.itens
         .filter((item) => item.inativo != null)
         .sort((a, b) => b.inativo.localeCompare(a.inativo))
+    },
+    // Os vales do negocio, na ordem em que foram lancados -- e' essa ordem
+    // que da' nome a cada secao na tela ("Vale A", "Vale B").
+    // `itensAtivos` continua significando SO' mercadoria: nada aqui encosta
+    // em negocio.itens (decisao 18).
+    valesAtivos() {
+      if (!this.negocio?.vales) {
+        return []
+      }
+      return this.negocio.vales
+        .filter((vale) => vale.inativo == null)
+        .sort((a, b) => String(a.criacao).localeCompare(String(b.criacao)))
     },
     podeEditar() {
       return this.negocio?.codnegociostatus == 1 && this.negocio?.codpdv == sSinc.pdv?.codpdv
@@ -416,6 +431,7 @@ export const negocioStore = defineStore('negocio', {
         observacoes: null,
         recebimento: null,
         valorprodutos: 0,
+        valorvales: 0,
         percentualdesconto: null,
         valordesconto: null,
         valorfrete: null,
@@ -429,6 +445,7 @@ export const negocioStore = defineStore('negocio', {
         codusuariocriacao: null,
         sincronizado: false,
         itens: [],
+        vales: [],
         pagamentos: [],
         titulos: [],
         notas: [],
@@ -469,15 +486,47 @@ export const negocioStore = defineStore('negocio', {
           }
         })
 
+      // soma a FACE dos vales compras (decisao 20: valorvales e' bruto,
+      // simetrico ao valorprodutos) e as fatias de cabecalho que couberam a
+      // cada vale -- hoje sempre nulas; o rateio entra no milestone 4.
+      // Negocio sem vale passa reto por aqui e a conta fica identica.
+      let valorvales = 0
+      ;(this.negocio.vales ?? [])
+        .filter((vale) => {
+          return vale.inativo == null
+        })
+        .forEach((vale) => {
+          valorvales += parseFloat(vale.valorvale)
+          if (vale.valordesconto > 0) {
+            valordesconto += parseFloat(vale.valordesconto)
+          }
+          if (vale.valorfrete > 0) {
+            valorfrete += parseFloat(vale.valorfrete)
+          }
+          if (vale.valorseguro > 0) {
+            valorseguro += parseFloat(vale.valorseguro)
+          }
+          if (vale.valoroutras > 0) {
+            valoroutras += parseFloat(vale.valoroutras)
+          }
+        })
+
       // soma os juros dos pagamentos
       const valorjuros = this.negocio.pagamentos.reduce((acumulador, pag) => {
         return acumulador + pag.valorjuros
       }, 0)
 
       let valortotal =
-        valorprodutos - valordesconto + valorfrete + valorseguro + valoroutras + valorjuros
+        valorprodutos +
+        valorvales -
+        valordesconto +
+        valorfrete +
+        valorseguro +
+        valoroutras +
+        valorjuros
 
       this.negocio.valorprodutos = Math.round(valorprodutos * 100) / 100
+      this.negocio.valorvales = Math.round(valorvales * 100) / 100
       this.negocio.valordesconto = Math.round(valordesconto * 100) / 100
       this.negocio.valorfrete = Math.round(valorfrete * 100) / 100
       this.negocio.valorseguro = Math.round(valorseguro * 100) / 100
@@ -592,6 +641,25 @@ export const negocioStore = defineStore('negocio', {
         i.codnegocio = null
         i.uuid = uid()
       })
+      // vales: uuid novo no vale e em cada item, senao o servidor recebe o
+      // uuid de um vale que ja e de outro negocio e recusa o PUT
+      negocio.vales = (negocio.vales ?? []).filter((v) => {
+        return v.inativo == null
+      })
+      negocio.vales.forEach((v) => {
+        v.codnegociovale = null
+        v.codnegocio = null
+        v.codtitulo = null
+        v.uuid = uid()
+        v.itens = v.itens.filter((i) => {
+          return i.inativo == null
+        })
+        v.itens.forEach((i) => {
+          i.codnegociovaleprodutobarra = null
+          i.codnegociovale = null
+          i.uuid = uid()
+        })
+      })
       db.negocio.add(negocio, uuid)
       this.negocio = { ...negocio }
       await this.carregarChavesEstrangeiras()
@@ -652,6 +720,10 @@ export const negocioStore = defineStore('negocio', {
       }
       if (this.negocio.itens == null) {
         this.negocio.itens = []
+      }
+      // negocio gravado no IndexedDB antes do vale compras existir
+      if (this.negocio.vales == null) {
+        this.negocio.vales = []
       }
       if (this.negocio.pagamentos == null) {
         this.negocio.pagamentos = []
@@ -999,6 +1071,257 @@ export const negocioStore = defineStore('negocio', {
       }
       item.valortotal = Math.round(total * 100) / 100
       this.recalcularValorTotal()
+    },
+
+    // =================================================================
+    // VALE COMPRAS
+    //
+    // O vale e' um bloco proprio do negocio, com itens proprios: nada
+    // daqui encosta em negocio.itens nem nas actions de mercadoria
+    // (decisao 18 do plano). Duplicidade aceita de proposito -- da' pra
+    // apagar o vale inteiro sem tocar no PDV.
+    // =================================================================
+
+    // uuid = editar um vale que ja' existe; sem uuid, vale novo
+    abrirVale(uuid = null) {
+      this.valeEditando = uuid
+      this.dialog.vale = true
+    },
+
+    // Quantidade x preco, e so' (decisao 19): item de vale nao tem
+    // desconto, frete, seguro nem outras.
+    valeItemRecalcularValorProdutos(item) {
+      item.valorprodutos =
+        Math.round(parseFloat(item.quantidade) * parseFloat(item.valorunitario) * 100) / 100
+    },
+
+    // valorprodutos = soma dos itens ativos
+    // valorvale     = produtos + avulso  <- a FACE, o credito que sera emitido
+    // valortotal    = a fatia PAGA: a face menos/mais o que o cabecalho
+    //                 ratear para este vale (milestone 4). Hoje = face.
+    valeRecalcularValores(vale) {
+      let valorprodutos = 0
+      vale.itens
+        .filter((item) => {
+          return item.inativo == null
+        })
+        .forEach((item) => {
+          valorprodutos += parseFloat(item.valorprodutos)
+        })
+      vale.valorprodutos = Math.round(valorprodutos * 100) / 100
+      vale.valorvale =
+        Math.round((vale.valorprodutos + parseFloat(vale.valoravulso || 0)) * 100) / 100
+
+      let valortotal = vale.valorvale
+      if (vale.valordesconto) {
+        valortotal -= parseFloat(vale.valordesconto)
+      }
+      if (vale.valorfrete) {
+        valortotal += parseFloat(vale.valorfrete)
+      }
+      if (vale.valorseguro) {
+        valortotal += parseFloat(vale.valorseguro)
+      }
+      if (vale.valoroutras) {
+        valortotal += parseFloat(vale.valoroutras)
+      }
+      vale.valortotal = Math.round(valortotal * 100) / 100
+    },
+
+    // Semeia os itens do vale a partir do kit do catalogo.
+    // A descricao, o codigo de barras e a imagem saem do cache de produtos
+    // (o catalogo so' guarda codprodutobarra / quantidade / preco), e o
+    // preco e' o do MODELO -- foi ele que a escola validou.
+    async valeItensDoModelo(codvalemodelo) {
+      if (!codvalemodelo) {
+        return []
+      }
+      const modelo = await db.valeModelo.get(parseInt(codvalemodelo))
+      if (!modelo) {
+        return []
+      }
+      const agora = formataTimestampIso(new Date())
+      const itens = []
+      for (const im of modelo.itens ?? []) {
+        const prod = await db.produto.get(parseInt(im.codprodutobarra))
+        const item = {
+          uuid: uid(),
+          codprodutobarra: parseInt(im.codprodutobarra),
+          barras: prod?.barras ?? null,
+          codproduto: prod?.codproduto ?? null,
+          produto: prod?.produto ?? 'Produto fora do cache do PDV',
+          codimagem: prod?.codimagem ?? null,
+          quantidade: parseFloat(im.quantidade),
+          valorunitario: parseFloat(im.valorunitario),
+          valorprodutos: 0,
+          criacao: agora,
+          alteracao: agora,
+          ordenacao: agora,
+          inativo: null,
+        }
+        this.valeItemRecalcularValorProdutos(item)
+        itens.push(item)
+      }
+      return itens
+    },
+
+    async valeAdicionar({
+      codvalemodelo = null,
+      codpessoafavorecido = null,
+      aluno = null,
+      turma = null,
+      valoravulso = 0,
+    }) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        if (this.negocio.vales == null) {
+          this.negocio.vales = []
+        }
+
+        // sem escola informada o vale nasce ao portador, em nome do
+        // Consumidor (decisao 13)
+        const codpessoa = parseInt(codpessoafavorecido) || 1
+        const pessoa = await db.pessoa.get(codpessoa)
+        const modelo = codvalemodelo ? await db.valeModelo.get(parseInt(codvalemodelo)) : null
+
+        // validade informativa: 1 ano da emissao (decisao 8)
+        const validade = new Date()
+        validade.setFullYear(validade.getFullYear() + 1)
+
+        const agora = formataTimestampIso(new Date())
+        const vale = {
+          uuid: uid(),
+          codnegociovale: null,
+          codtitulo: null,
+          codvalemodelo: codvalemodelo ? parseInt(codvalemodelo) : null,
+          modelo: modelo?.modelo ?? null,
+          codpessoafavorecido: codpessoa,
+          favorecido: pessoa?.fantasia ?? null,
+          aluno,
+          turma,
+          valorprodutos: 0,
+          valoravulso: parseFloat(valoravulso) || 0,
+          valorvale: 0,
+          valordesconto: null,
+          valorfrete: null,
+          valorseguro: null,
+          valoroutras: null,
+          valorjuros: null,
+          valortotal: 0,
+          validade: formataDataIso(validade),
+          codvalecompra: null,
+          observacoes: null,
+          criacao: agora,
+          alteracao: agora,
+          inativo: null,
+          itens: await this.valeItensDoModelo(codvalemodelo),
+        }
+        this.valeRecalcularValores(vale)
+        this.negocio.vales.push(vale)
+
+        // confirma se tem alguma coisa pra consertar
+        if (!(await this.isNegocioIntegro())) {
+          await this.consertarNegocioCorrompido()
+        }
+
+        await this.recalcularValorTotal()
+        await this.salvar()
+        return vale
+      })
+    },
+
+    // Cabecalho do vale (escola, aluno, turma e valor avulso). O kit de
+    // origem nao muda depois de criado: quem errou o modelo exclui o vale
+    // e lanca outro.
+    async valeSalvar(uuid, { codpessoafavorecido, aluno, turma, valoravulso }) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        const vale = (this.negocio.vales ?? []).find((v) => {
+          return v.inativo == null && v.uuid == uuid
+        })
+        if (!vale) {
+          return false
+        }
+        const codpessoa = parseInt(codpessoafavorecido) || 1
+        const pessoa = await db.pessoa.get(codpessoa)
+        vale.codpessoafavorecido = codpessoa
+        vale.favorecido = pessoa?.fantasia ?? null
+        vale.aluno = aluno
+        vale.turma = turma
+        vale.valoravulso = parseFloat(valoravulso) || 0
+        vale.alteracao = formataTimestampIso(new Date())
+        this.valeRecalcularValores(vale)
+        await this.recalcularValorTotal()
+        await this.salvar()
+        return vale
+      })
+    },
+
+    async valeExcluir(uuid) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        const vale = (this.negocio.vales ?? []).find((v) => {
+          return v.inativo == null && v.uuid == uuid
+        })
+        if (!vale) {
+          return false
+        }
+        // soft-delete, como o item de mercadoria: a linha continua indo pro
+        // servidor para o uuid nunca ser recriado
+        vale.inativo = formataTimestampIso(new Date())
+        await this.recalcularValorTotal()
+        await this.salvar()
+      })
+    },
+
+    // Na grade do vale so' se tira e se ajusta -- nao se acrescenta
+    // (decisao 16). O universo do vale e' o kit do modelo; item de fora o
+    // cliente leva como mercadoria.
+    async valeItemSalvar(valeUuid, itemUuid, quantidade, valorunitario) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        const vale = (this.negocio.vales ?? []).find((v) => {
+          return v.inativo == null && v.uuid == valeUuid
+        })
+        if (!vale) {
+          return false
+        }
+        const item = vale.itens.find((i) => {
+          return i.inativo == null && i.uuid == itemUuid
+        })
+        if (!item) {
+          return false
+        }
+        item.quantidade = parseFloat(quantidade)
+        item.valorunitario = parseFloat(valorunitario)
+        item.alteracao = formataTimestampIso(new Date())
+        this.valeItemRecalcularValorProdutos(item)
+        this.valeRecalcularValores(vale)
+        await this.recalcularValorTotal()
+        await this.salvar()
+      })
+    },
+
+    async valeItemInativar(valeUuid, itemUuid) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        const vale = (this.negocio.vales ?? []).find((v) => {
+          return v.inativo == null && v.uuid == valeUuid
+        })
+        if (!vale) {
+          return false
+        }
+        const item = vale.itens.find((i) => {
+          return i.inativo == null && i.uuid == itemUuid
+        })
+        if (!item) {
+          return false
+        }
+        item.inativo = formataTimestampIso(new Date())
+        this.valeRecalcularValores(vale)
+        await this.recalcularValorTotal()
+        await this.salvar()
+      })
     },
 
     async aplicarValores(valordesconto, valorfrete, valorseguro, valoroutras) {
@@ -1389,6 +1712,20 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async fechar() {
+      // TRAVA TEMPORARIA -- sai no milestone 5 do plano do vale compras.
+      // Quem emite o credito e o fechamento, e isso ainda nao existe: fechar
+      // agora cobraria o cliente sem gerar vale nenhum. O servidor tambem
+      // recusa (PdvNegocioService::fechar); aqui e so para avisar antes.
+      if (this.valesAtivos.length > 0) {
+        Notify.create({
+          type: 'negative',
+          message:
+            'Negócio com Vale Compras ainda não pode ser fechado! A emissão do crédito entra na próxima etapa.',
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
       if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',

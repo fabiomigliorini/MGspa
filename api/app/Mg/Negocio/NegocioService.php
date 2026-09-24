@@ -44,8 +44,14 @@ class NegocioService
     public static function recalcularTotal(Negocio $negocio)
     {
         $negocio->valorjuros = $negocio->NegocioFormaPagamentoS()->sum('valorjuros');
+        // valorvales e a face dos vales compras do negocio, bruta e simetrica
+        // ao valorprodutos (decisao 20 do plano). Sem vale ela vale 0 e a
+        // conta e a mesma de sempre -- mas sem ela um negocio com vale que
+        // passasse por aqui (unificacao de comanda, por exemplo) perderia a
+        // face do vale do total, em silencio.
         $negocio->valortotal = 
             $negocio->valorprodutos 
+            + $negocio->valorvales
             - $negocio->valordesconto
             + $negocio->valorfrete
             + $negocio->valorseguro

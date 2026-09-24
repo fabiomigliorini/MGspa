@@ -855,6 +855,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
         Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
         Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
+        // catalogo de modelos de vale compras para o cache offline do PDV
+        Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
         Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
         Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
         Route::get('impressora', '\Mg\Pdv\PdvController@impressora');

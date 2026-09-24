@@ -241,6 +241,12 @@ class PdvController
         return PdvService::formaPagamento();
     }
 
+    public function valeModelo(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        return PdvService::valeModelo();
+    }
+
     public function impressora(PdvRequest $request)
     {
         PdvService::autoriza($request->pdv);

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-24 22:24'
+updated_date: '2026-09-24 22:37'
 labels:
   - negocios
   - api
@@ -163,4 +163,34 @@ Verificado em dev (tinker + render do PDF em imagem):
   inexistente -> 404. 12 queries para 54 itens (sem N+1).
 
 Fora do escopo deste milestone: nada de PDV, negocio ou Dexie.
+<!-- SECTION:NOTES:END -->
+
+---
+
+MILESTONE 3 (Vale dentro do negocio) implementado em 2026-09-24, aguardando validacao.
+
+O vale virou um BLOCO PROPRIO do negocio: nao e produto, nao e item. Nada de
+mercadoria foi tocado (InputBarras, ListagemProdutos e as actions
+itemAdicionar/itemSalvar/itemInativar/juntarItensPorBarras ficaram como estavam).
+
+Feito:
+- api/database/vale.sql RODADO no banco de DEV (reaplicavel): tblnegociovale,
+  tblnegociovaleprodutobarra e a coluna tblnegocio.valorvales.
+  PENDENTE RODAR EM PRODUCAO.
+- Models NegocioVale e NegocioValeProdutoBarra + Resources; NegocioResource passou
+  a devolver 'vales' (com itens, produto, barras e imagem) para a recarga do PDV.
+- Sync do catalogo pro PDV: GET v1/pdv/vale-modelo (PdvService::valeModelo),
+  db.version(7) do Dexie e sincronizarValeModelo() com guarda de catalogo vazio.
+- PdvNegocioService: importarVales() faz upsert por uuid (reenvio nao duplica) e
+  confereTotais() passou a somar as duas colecoes (mercadoria + vales).
+- App negocios: actions vale* no store, ValeDialog.vue e ListagemItensVale.vue
+  (uma secao por vale, 'Vale A'/'Vale B', abaixo da grade de mercadoria).
+
+TRAVA TEMPORARIA E PROPOSITAL: negocio com vale NAO FECHA (front e backend). Sem
+ela, fechar geraria venda cobrada do cliente sem credito nenhum. Sai no milestone 5,
+que e quem emite o titulo tipo 3.
+
+A decidir na validacao: (a) o ponto de entrada do vale e um cabecalho 'Vale Compras'
+com botao + abaixo da grade de produtos; (b) o preco do item semeado vem do MODELO
+(o que a escola validou), nao do preco atual do produto.
 <!-- SECTION:NOTES:END -->

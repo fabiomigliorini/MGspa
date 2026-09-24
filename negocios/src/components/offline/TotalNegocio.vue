@@ -23,6 +23,7 @@ const sSaurus = saurusStore()
 
 const edicao = ref({
   valorprodutos: null,
+  valorvales: null,
   percentualdesconto: null,
   valordesconto: null,
   valorfrete: null,
@@ -33,6 +34,7 @@ const edicao = ref({
 
 const editarValores = () => {
   edicao.value.valorprodutos = sNegocio.negocio.valorprodutos
+  edicao.value.valorvales = sNegocio.negocio.valorvales
   if (sNegocio.negocio.valordesconto > 0 && sNegocio.negocio.valorprodutos) {
     edicao.value.percentualdesconto =
       Math.round((sNegocio.negocio.valordesconto / sNegocio.negocio.valorprodutos) * 1000) / 10
@@ -98,7 +100,8 @@ const recalcularPercentualDesconto = () => {
 }
 
 const recalcularValorTotal = () => {
-  let total = parseFloat(edicao.value.valorprodutos)
+  // a face dos vales entra no total como o valorprodutos da mercadoria
+  let total = parseFloat(edicao.value.valorprodutos) + (parseFloat(edicao.value.valorvales) || 0)
   if (edicao.value.valordesconto) {
     total -= parseFloat(edicao.value.valordesconto)
   }
@@ -368,6 +371,17 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-grey-6">
             {{ formataNumero(sNegocio.negocio.valorprodutos) }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="sNegocio.negocio.valorvales">
+        <q-item-section>
+          <q-item-label caption>Vales</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-grey-6">
+            {{ formataNumero(sNegocio.negocio.valorvales) }}
           </q-item-label>
         </q-item-section>
       </q-item>
