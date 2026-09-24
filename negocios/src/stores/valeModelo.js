@@ -140,6 +140,7 @@ export const valeModeloStore = defineStore(
         codprodutobarra: opcao.value,
         produto: opcao.label,
         barras: opcao.barras,
+        imagem: opcao.imagem || null,
         quantidade: quant,
         valorunitario: Number(opcao.preco || 0),
       })
@@ -147,6 +148,13 @@ export const valeModeloStore = defineStore(
 
     function itemRemover(indice) {
       form.value.itens.splice(indice, 1)
+    }
+
+    // Passos do +/- do card. Não desce de 1: quantidade menor que isso se
+    // digita direto no campo, que aceita fração.
+    function itemSomarQuantidade(indice, passo) {
+      const item = form.value.itens[indice]
+      item.quantidade = Math.max(1, Number(item.quantidade || 0) + passo)
     }
 
     async function salvar() {
@@ -225,6 +233,7 @@ export const valeModeloStore = defineStore(
       carregarForm,
       itemAcrescentar,
       itemRemover,
+      itemSomarQuantidade,
       salvar,
       alternarInativo,
       excluir,

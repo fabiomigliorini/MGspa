@@ -20,19 +20,27 @@ class ValeModeloController extends MgController
         Autorizador::autoriza(self::GRUPOS);
 
         [$filter, $sort, $fields] = $this->filtros($request);
+        // So o cabecalho: a listagem nao mostra nada dos itens, e o
+        // formulario e outra rota, que chama o show.
         $res = ValeModeloService::pesquisar($filter, $sort, $fields)
-            ->with('ValeModeloProdutoBarraS.ProdutoBarra')
             ->paginate()
             ->appends($request->all());
 
-        return ValeModeloResource::collection($res);
+        return ValeModeloListagemResource::collection($res);
     }
 
     public function show(Request $request, $valeModelo)
     {
         Autorizador::autoriza(self::GRUPOS);
 
-        return new ValeModeloResource(ValeModelo::findOrFail($valeModelo));
+        return new ValeModeloResource(
+            ValeModelo::with([
+                'PessoaFavorecido',
+                'ValeModeloProdutoBarraS.ProdutoBarra.Produto.UnidadeMedida',
+                'ValeModeloProdutoBarraS.ProdutoBarra.ProdutoVariacao.ProdutoImagem',
+                'ValeModeloProdutoBarraS.ProdutoBarra.ProdutoEmbalagem.UnidadeMedida',
+            ])->findOrFail($valeModelo)
+        );
     }
 
     public function store(ValeModeloStoreRequest $request)

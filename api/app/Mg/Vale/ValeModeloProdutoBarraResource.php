@@ -6,8 +6,9 @@ use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Mg\Pdv\PdvService;
 
 /**
- * Mesmo shape do item de mercadoria (NegocioProdutoBarraResource): barras +
- * descricao montada. E o que o milestone 2 vai semear dentro do vale.
+ * Mesmo shape do item de mercadoria (NegocioProdutoBarraResource): barras,
+ * descricao montada e imagem. E o que o milestone 2 vai semear dentro do
+ * vale.
  */
 class ValeModeloProdutoBarraResource extends Resource
 {
@@ -31,6 +32,13 @@ class ValeModeloProdutoBarraResource extends Resource
             $sigla,
             $quantidade
         );
+
+        // URL pronta, igual a que o select de produto devolve, para a tela
+        // nao ter que montar caminho de imagem em lugar nenhum.
+        $codimagem = optional($pb->ProdutoVariacao->ProdutoImagem)->codimagem;
+        $ret['imagem'] = $codimagem
+            ? config('services.mglara.imagens_url') . "/{$codimagem}.jpg"
+            : null;
 
         return $ret;
     }

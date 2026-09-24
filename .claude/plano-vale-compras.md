@@ -51,7 +51,7 @@ Por o vale não ser item nem produto, saem do escopo: criar produto "VALE COMPRA
 `indicadorvenda`, guarda no `ProcessarVendaService` (RH), bloqueio de devolução do item de vale,
 guarda contra o produto ser bipado por engano, action de item que não funde duplicados, e as
 exclusões em `juntarItensPorBarras` / `informarPessoa` / `itemSalvar`. Nenhum desses caminhos
-enxerga o vale. **Exceção:** o job de estoque do MGLara entrou no escopo (milestone 3), não porque
+enxerga o vale. **Exceção:** o job de estoque do MGLara entrou no escopo (milestone 4), não porque
 enxergue o vale, mas porque o rateio de desconto dele está obsoleto e o vale expõe isso.
 
 ---
@@ -94,23 +94,7 @@ ALTER TABLE tblvalemodelo DROP COLUMN turma, DROP COLUMN ano,
 
 Os números justificam os cortes: **0 de 204** modelos usam `desconto`, **139 de 204** têm `turma`
 preenchida (por isso a descrição concatena em vez de descartar) e **1 de 204** usa `observacoes`, que
-fica. A FK de `tblvalecompra` acompanha o rename sozinha; quem quebra é o PHP do MGLara **e 4 pontos
-da API** — `ProdutoBarraService::unificaBarras()`, `ProdutoBarra`, `Pessoa` e `ValeCompra` —, todos
-repontados no milestone 1.
-
-O arquivo tem mais **dois blocos**, cada um com a sua guarda, para o modelo carregar as mesmas duas
-parcelas do vale emitido (decisões 17, 21 e 22). Rodar o arquivo inteiro resolve banco novo e banco
-já migrado:
-
-```sql
-ALTER TABLE tblvalemodelo ADD COLUMN valoravulso numeric(14,2);  -- valor livre
-ALTER TABLE tblvalemodelo ADD COLUMN valorvale   numeric(14,2);  -- face = produtos + avulso
--- as três colunas de valor ficam NOT NULL DEFAULT 0 (soma nunca dá null)
--- 3º bloco: renomeia valortotal -> valorvale em quem migrou antes da decisão 22
-```
-
-Assim `tblvalemodelo` já tem `valorprodutos`/`valoravulso`/`valorvale` com o mesmo significado que
-terão em `tblnegociovale`, e a semeadura do milestone 2 é cópia campo a campo.
+fica. A FK de `tblvalecompra` acompanha o rename sozinha; quem quebra é o PHP do MGLara.
 
 ### Composição dos totais
 
@@ -155,11 +139,25 @@ Cada um termina com algo que dá para abrir na tela e validar.
 `api/app/Mg/Vale/` · domínio `Mg\Vale` no padrão da casa (Controller, Service estático, Resource,
 FormRequests, rotas em `auth:api`+`v1`, `Autorizador::autoriza()`) · tela de CRUD com descrição única
 e favorecido opcional.
-⚠️ **Derruba a venda de vale no MGLara**, que só volta a existir no milestone 4.
+⚠️ **Derruba a venda de vale no MGLara**, que só volta a existir no milestone 5.
 **Valida:** `select count(*), count(modelo) from tblvalemodelo` → 204/204; cadastra, edita e inativa
 um modelo pela tela.
 
-### 2 · Vale dentro do negócio
+### 2 · Impressão do modelo (orçamento para a escola validar)
+Documento A4 com o cabeçalho da loja, a escola favorecida, a descrição do modelo, a lista de produtos
+com quantidade, preço unitário e total, o `valoravulso` quando houver, e o `valorvale`. **Com preços**,
+que é o objetivo — a escola confere itens e valores antes da temporada. **Sem validade**: leva só a
+**data da impressão**, já que preço de material muda entre a validação e janeiro.
+`ValeModeloRelatorioService` com `html()` e `pdf()` (mPDF, padrão do `CargaRelatorioService`), rota
+aceitando `?html=1` para ajustar o layout sem re-renderizar PDF a cada tentativa, controller devolvendo
+`Content-Type: application/pdf` inline; no front, o helper `@components/abrirPdf` com o
+`MgRelatorioPdfDialog` no desktop e nova aba no mobile.
+**Por que aqui:** depende só do milestone 1 e vence **antes** da venda — as escolas validam as listas
+em nov/dez, enquanto a venda nova precisa estar pronta em janeiro.
+**Valida:** abre o PDF de um modelo real, confere itens, preços e total contra a tela, e manda para
+outra pessoa abrir.
+
+### 3 · Vale dentro do negócio
 Começa pelo sync do catálogo pro PDV, que é onde ele passa a ser necessário: `GET v1/pdv/vale-modelo`
 espelhando `PdvService::formaPagamento()`, `db.version(7)`, `sincronizarValeModelo()` e o carimbo no
 `.sort()[0]` de `inicializaVars()`.
@@ -168,16 +166,17 @@ guardar `if (!data.length) return`, e testar com catálogo cheio **e vazio**.
 Depois: `vale.sql` (as duas tabelas novas e `tblnegocio.valorvales`) · models `NegocioVale` e
 `NegocioValeProdutoBarra` em `api/app/Mg/Negocio/` · `criar()` inicializa `vales: []` e
 `recalcularValorTotal()` soma a coleção · actions `valeAdicionar`, `valeExcluir`, `valeItemSalvar`,
-`valeItemInativar` · `ValeDialog.vue` (modelo opcional → favorecido → aluno/turma; com modelo semeia
-os itens, sem modelo o valor é digitado; sem favorecido grava Consumidor) · `ListagemItensVale.vue`,
+`valeItemInativar` · `ValeDialog.vue` (modelo opcional → favorecido → aluno/turma; o modelo semeia
+os itens **e** o `valoravulso`, ambos editáveis; sem modelo, só o `valoravulso`; sem favorecido grava
+Consumidor e o vale nasce ao portador) · `ListagemItensVale.vue`,
 uma seção por vale sob "Vale A"/"Vale B", sem botão de acrescentar · `negocioAberto` faz upsert de
 `tblnegociovale` e dos itens por uuid, e o `confereTotais()` passa a somar os vales.
 ⚠️ **Trava temporária: negócio com vale não fecha.** Sem ela este milestone produziria negócio
-fechado sem crédito. O milestone 4 remove.
+fechado sem crédito. O milestone 5 remove.
 **Valida:** monta um vale, tira item, muda quantidade, vê o total do negócio subir, sincroniza e
 confere `tblnegociovale` e os itens; dois vales no mesmo negócio dão duas seções.
 
-### 3 · Rateio entre mercadoria e vales
+### 4 · Rateio entre mercadoria e vales
 O diálogo de valores do `TotalNegocio.vue` divide desconto/frete/seguro/outras entre mercadoria e
 vales na proporção dos `valorprodutos`, chama o `aplicarValores()` **intacto** para a mercadoria e
 grava a fatia do vale direto no registro dele (decisões 18 e 19).
@@ -190,7 +189,7 @@ tinha `valordesconto`; hoje tem, e tirá-lo deixa o job imune a valores de cabe�
 **face do vale inalterada**; `saidavalor` em `tblestoquemovimento` batendo com
 `valorprodutos − valordesconto` do item.
 
-### 4 · Créditos, estorno e comprovante
+### 5 · Créditos, estorno e comprovante
 `fechar()` cria o título tipo 3 / conta 83 em nome do favorecido, vencimento +1 ano, condicionado a
 `codtitulo IS NULL`, com unique index como rede. O título fica **solto**, só referenciado por
 `tblnegociovale.codtitulo` — nunca pendurado em `tblnegocioformapagamento`, porque
@@ -198,32 +197,32 @@ tinha `valordesconto`; hoje tem, e tirá-lo deixa o job imune a valores de cabe�
 pendurado num pagamento, a cada PUT de negócio fechado · `cancelar()` ganha loop próprio, com mensagem
 clara quando o vale já foi usado · bloqueia vale em natureza sem `financeiro` e vale zerado ·
 comprovante térmico 80mm com `VAL+codtitulo` lendo `tblnegociovale` · **remove a trava do
-milestone 2**.
-⚠️ Entra a trava **negócio com vale não emite NFC-e**, que o milestone 5 remove.
+milestone 3**.
+⚠️ Entra a trava **negócio com vale não emite NFC-e**, que o milestone 6 remove.
 **Valida:** fecha → título 3 / conta 83 / escola / `creditosaldo` negativo pela **face** → imprime →
 **bipa o `VAL…` de volta** e resgata em outra filial → cancela um sem uso (estorna) e um já usado
 (recusa com mensagem) → PUT no negócio já fechado trocando o cliente, e o título continua intacto.
 
-### 5 · Fiscal: rateio do `detPag`
+### 6 · Fiscal: rateio do `detPag`
 Em `gerarNotaFiscalDoNegocio`: `$nota->refresh()` e ratear os pagamentos contra `$nota->valortotal`,
 consumindo o valor dos vales primeiro do **dinheiro → PIX → cartão**; cap em
 `valortotal − valortroco`; descartar pagamento zerado; **último pagamento absorve a diferença** (a
 rede do `NFePHPMakeService:895-911` só corrige para menos, errar para mais é rejeição). Corrigir o
 `percJuros` (`:124`) e a sobra jogada no último item (`:252-257`), que com vale é justamente a fatia
-dele. Tratar as duplicatas da NFe 55. Remove a trava do milestone 4.
+dele. Tratar as duplicatas da NFe 55. Remove a trava do milestone 5.
 **Tudo condicionado a "existe vale neste negócio"**, para o caminho sem vale seguir idêntico.
 **Valida:** homologação com só mercadoria (**regressão**, diff de XML byte a byte), mercadoria+vale em
 dinheiro com troco, em PIX, em cartão, e nota de retirada com `tPag 12`.
 
-### 6 · Conciliação DIMP
+### 7 · Conciliação DIMP
 Relatório mensal (mPDF, padrão `CargaRelatorioService` com `?html=1`): recebimentos cartão/PIX ×
 notas emitidas × vendas de vale × consumos `tPag=12` × recebimentos de crediário, fechando em zero.
-Vem logo depois do fiscal de propósito — é o milestone 5 que cria a divergência entre o `cAut` da
+Vem logo depois do fiscal de propósito — é o milestone 6 que cria a divergência entre o `cAut` da
 adquirente e o valor da NFC-e, e este relatório é a única peça que a explica. Lê `tblnegociovale`
-**e** `tblvalecompra` em `UNION` até o milestone 8.
+**e** `tblvalecompra` em `UNION` até o milestone 9.
 **Valida:** rodar sobre um mês fechado e conferir que a diferença dá zero.
 
-### 7 · Consumo por escopo
+### 8 · Consumo por escopo
 Escola / turma / bipados, FIFO com o último vale parcial, N pagamentos agrupados na tela e num único
 `detPag tPag=12`. Vale ao portador fica fora do escopo por escola (todos têm favorecido = Consumidor)
 — só por bipagem.
@@ -232,7 +231,7 @@ saldo no servidor, e com escopo "escola inteira" dois PDVs montam FIFO sobre o m
 **Valida:** consumo com saldo maior e menor que a compra; **dois PDVs no mesmo pool ao mesmo tempo**;
 excluir um pagamento do lote; cancelar e reconferir saldos.
 
-### 8 · Conversão do legado e limpeza
+### 9 · Conversão do legado e limpeza
 `vale_conversao.sql` cria, para cada um dos 3.718 vales, 1 `tblnegocio` (fechado, `codpdv` null,
 natureza de venda normal, `valorprodutos` 0), 1 `tblnegocioformapagamento`, 1 `tblnegociovale` e N
 itens; reponta os 313 títulos 240. Depois dropa `tblvalecompra*` e a coluna
@@ -247,12 +246,12 @@ e os 2 abertos com saldo; abre um vale histórico com crédito vivo e resgata bi
 
 | Risco | Onde |
 |---|---|
-| **Alto** — o milestone 5 toca o gerador de NFC-e de **toda** a empresa | `NotaFiscalNegocioService` |
+| **Alto** — o milestone 6 toca o gerador de NFC-e de **toda** a empresa | `NotaFiscalNegocioService` |
 | **Alto** — consumo por escopo sem validação de saldo no servidor → estouro do crédito | `PdvNegocioPrazoService::baixarVales` |
-| **Alto** — janela sem nenhuma tela de venda de vale entre os milestones 1 e 4 | aceito; ver prazo abaixo |
+| **Alto** — janela sem nenhuma tela de venda de vale entre os milestones 1 e 5 | aceito; ver prazo abaixo |
 | **Médio** — `cancelar()` não alcança título solto sem código novo → crédito órfão vivo | `PdvNegocioService:388-398` |
 | **Médio** — `fechar()` concorrente sem `lockForUpdate` (furo que já existe, o vale amplia) | `PdvNegocioService:207-210` |
-| **Fiscal** — `cAut` real com `vPag` reduzido é o que o cruzamento DIMP enxerga; o milestone 6 é o que explica | doc-1 §4.2 |
+| **Fiscal** — `cAut` real com `vPag` reduzido é o que o cruzamento DIMP enxerga; o milestone 7 é o que explica | doc-1 §4.2 |
 | **Fiscal** — escolher item a item aproxima o vale de "mercadoria determinada", o ponto mais sensível da tese (requalificação como venda para entrega futura) | doc-1 §6; levar na consulta à SEFAZ-MT |
 
 **Prazo:** janeiro concentra **84% da venda** de vale compras — 864 vales e R$ 91,6 mil desde 2024,
@@ -263,3 +262,9 @@ agora custa quase nada, mas a venda nova precisa estar validada **antes de janei
 dona da movimentação de estoque de todo negócio (`PdvNegocioService::movimentarEstoque`), do custo
 médio, da fila de jobs de estoque e das imagens de produto. Se for desligada, o estoque da empresa
 para de se mexer **em silêncio** — a falha é engolida num `try/catch` que só escreve no log.
+
+**DDL em produção é do Fábio, e roda no go-live — não é pendência de milestone nenhum.** Todo `.sql`
+deste plano (`vale_catalogo.sql`, `vale.sql`, `vale_conversao.sql`) roda em **dev** durante o
+desenvolvimento e em **produção só no go-live**, por quem tem acesso. Um milestone está fechado
+quando funciona em dev; o banco de produção estar atrasado é o estado **esperado**, não um gap.
+Não relatar isso como pendência, não perguntar se já rodou, não sugerir rodar.

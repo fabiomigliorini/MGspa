@@ -16,7 +16,6 @@ const { modelos, carregando } = storeToRefs(sVale)
 const colunas = [
   { name: 'favorecido', label: 'Favorecido', field: 'favorecido', align: 'left' },
   { name: 'modelo', label: 'Descrição', field: 'modelo', align: 'left' },
-  { name: 'itens', label: 'Itens', field: (r) => r.itens.length, align: 'right' },
   { name: 'valorvale', label: 'Valor', field: 'valorvale', align: 'right' },
   { name: 'inativo', label: 'Situação', field: 'inativo', align: 'center' },
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
@@ -93,16 +92,6 @@ onMounted(() => sVale.carregar(1))
                   style="text-decoration: none"
                 >
                   {{ props.row.modelo }}
-                </router-link>
-              </q-td>
-
-              <q-td key="itens" :props="props">
-                <router-link
-                  :to="linkEditar(props.row)"
-                  class="block text-grey-9"
-                  style="text-decoration: none"
-                >
-                  {{ props.row.itens.length }}
                 </router-link>
               </q-td>
 

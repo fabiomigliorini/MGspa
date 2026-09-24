@@ -35,8 +35,10 @@ class ValeModeloService extends MgService
         $qry->AtivoInativo($filter['inativo'] ?? 1);
 
         if (empty($sort)) {
-            // Vale ao portador (sem favorecido) por ultimo.
-            $qry->orderByRaw('tblpessoa.fantasia asc nulls last')
+            // Vale ao portador (sem favorecido) por primeiro -- sao poucos
+            // e nao pertencem a escola nenhuma, entao ficam a mao em vez de
+            // afundar depois da ultima escola.
+            $qry->orderByRaw('tblpessoa.fantasia asc nulls first')
                 ->orderBy('tblvalemodelo.modelo');
         } else {
             $qry = self::qryOrdem($qry, $sort);
