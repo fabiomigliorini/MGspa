@@ -2,7 +2,9 @@
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
+import { api } from 'boot/axios'
 import { valeModeloStore } from 'stores/valeModelo'
+import { abrirPdf } from '@components/abrirPdf'
 import { formataReal } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
@@ -24,6 +26,15 @@ const colunas = [
 // abrir em nova aba com o botão do meio ou o ctrl. Só a célula de ações fica
 // de fora, com os botões dela.
 const linkEditar = (modelo) => `/vale-modelo/${modelo.codvalemodelo}`
+
+// Impressao do modelo com precos, para a escola conferir antes da temporada.
+const imprimir = (modelo) =>
+  abrirPdf(
+    api,
+    `v1/vale-modelo/${modelo.codvalemodelo}/relatorio`,
+    {},
+    { title: `Modelo de Vale Compras — ${modelo.modelo}` },
+  )
 
 const confirmarExclusao = (modelo) => {
   $q.dialog({
@@ -118,6 +129,16 @@ onMounted(() => sVale.carregar(1))
 
               <q-td key="acoes" :props="props">
                 <MgInfoCriacao :registro="props.row" />
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="print"
+                  @click="imprimir(props.row)"
+                >
+                  <q-tooltip>Imprimir</q-tooltip>
+                </q-btn>
                 <q-btn flat round size="sm" color="grey-7" icon="edit" :to="linkEditar(props.row)">
                   <q-tooltip>Editar</q-tooltip>
                 </q-btn>

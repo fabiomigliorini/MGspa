@@ -78,6 +78,32 @@ class ValeModeloController extends MgController
         return response()->noContent();
     }
 
+    /**
+     * Impressao do modelo em A4, para a escola conferir itens e valores antes
+     * da temporada.
+     *
+     * ?html=1 devolve o HTML cru -- e como se ajusta o layout sem re-renderizar
+     * o PDF a cada tentativa (mesmo contrato do relatorio de romaneios).
+     */
+    public function relatorio(Request $request, $valeModelo)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+
+        $modelo = ValeModelo::findOrFail($valeModelo);
+
+        if ($request->boolean('html')) {
+            return response(ValeModeloRelatorioService::html($modelo), 200, [
+                'Content-Type' => 'text/html; charset=UTF-8',
+            ]);
+        }
+
+        return response(ValeModeloRelatorioService::pdf($modelo), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="modelo-vale-'
+                . $modelo->codvalemodelo . '.pdf"',
+        ]);
+    }
+
     public function inativar(Request $request, $valeModelo)
     {
         Autorizador::autoriza(self::GRUPOS);

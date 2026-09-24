@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-24 20:29'
+updated_date: '2026-09-24 22:24'
 labels:
   - negocios
   - api
@@ -117,4 +117,50 @@ QUEBRA CONHECIDA E PREVISTA: o modulo vale compras do MGLara (ValeCompraControll
 ValeCompraModeloController e 9 blades) para de funcionar ate o milestone 4.
 Na api foram repontados 4 lugares que tambem quebrariam: ProdutoBarraService::
 unificaBarras(), ProdutoBarra, Pessoa e ValeCompra.
+
+---
+
+MILESTONE 2 (Impressao do modelo de vale) implementado em 2026-09-24, aguardando validacao.
+
+Documento A4 "Modelo de Vale Compras", com precos, para a escola conferir itens e valores
+antes da temporada. Sem validade: leva so a data da impressao no rodape, porque preco de material
+muda entre a validacao (nov/dez) e a venda (janeiro).
+
+Feito:
+- api/app/Mg/Vale/ValeModeloRelatorioService.php com html() e pdf() (mPDF, A4 retrato),
+  no padrao do Mg\Grao\CargaRelatorioService.
+- api/resources/views/vale-modelo/relatorio.blade.php: cabecalho da marca repetido em
+  toda pagina, favorecido, descricao do modelo, observacoes, tabela de itens (codigo,
+  descricao, quantidade, preco unitario e total), avulso quando houver e a face do vale.
+- ValeModeloController@relatorio + rota GET v1/vale-modelo/{valeModelo}/relatorio, com
+  ?html=1 devolvendo o HTML cru para ajustar layout sem re-renderizar PDF.
+- App negocios: botao imprimir (icone print) na linha da listagem, via @components/abrirPdf
+  (modal MgRelatorioPdfDialog no desktop, nova aba no mobile).
+
+Decisoes:
+- O documento se chama "MODELO DE VALE COMPRAS", nao "Vale Compras": sem a palavra modelo
+  a escola/cliente pode entender que e um vale ja comprado, e nao a lista a validar.
+- CABECALHO SO COM O LOGO, sem filial e sem o nome escrito ao lado (o logo ja e o nome).
+  O modelo e catalogo da empresa inteira e nao tem filial vinculada; pendurar a loja do
+  usuario logado seria inventar um vinculo que os dados nao tem.
+- A linha final e "TOTAL", nunca "Valor do Vale": mesma armadilha do titulo, da a
+  entender que existe um vale ja comprado.
+- Logo com largura E altura explicitas, na proporcao do arquivo (MGPapelariaLogo.jpeg,
+  402x76 -> 45mm x 8,5mm). So com a largura o mPDF estica a imagem.
+- Os itens saem do ValeModeloProdutoBarraResource, o mesmo que alimenta a tela, para
+  "conferir o PDF contra a tela" nao comparar duas montagens de descricao diferentes.
+- Modelo avulso puro (sem itens) nao imprime cabecalho de tabela, so a face. O subtotal
+  "Produtos" so aparece quando existe avulso; num kit puro ele repetiria a face.
+
+Verificado em dev (tinker + render do PDF em imagem):
+- Modelo 195 (kit puro, 54 itens, favorecido Escola Maria Chica): 2 paginas, thead
+  repetido, TOTAL 543,10 batendo com o banco.
+- Modelo 216 (avulso puro, ao portador): "Ao portador", Avulso 100,00, TOTAL 100,00.
+  Sem itens nao sai cabecalho de tabela, so a linha TOTAL.
+- Modelo 215 (1 item + avulso): Produtos 99,90 + Avulso 100,00 = TOTAL 199,90.
+- Kit + avulso (montado em memoria): Produtos 543,10 + Avulso 50,00 = face 593,10.
+- ?html=1 -> 200 text/html; sem o parametro -> 200 application/pdf inline; modelo
+  inexistente -> 404. 12 queries para 54 itens (sem N+1).
+
+Fora do escopo deste milestone: nada de PDV, negocio ou Dexie.
 <!-- SECTION:NOTES:END -->
