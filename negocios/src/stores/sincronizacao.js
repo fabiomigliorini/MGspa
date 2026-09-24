@@ -18,6 +18,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       config: true,
       pessoa: true,
       produto: true,
+      prancheta: true,
+      valeModelo: true,
       completa: true,
     },
     ultimaSincronizacao: {
@@ -158,14 +160,18 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           await this.sincronizarFormaPagamento()
           await this.sincronizarEstoqueLocal()
           await this.sincronizarNaturezaOperacao()
-          await this.sincronizarValeModelo()
         }
         if (this.sincronizacao.pessoa) {
           await this.sincronizarPessoa()
         }
         if (this.sincronizacao.produto) {
           await this.sincronizarProduto()
+        }
+        if (this.sincronizacao.prancheta) {
           await this.sincronizarPrancheta()
+        }
+        if (this.sincronizacao.valeModelo) {
+          await this.sincronizarValeModelo()
         }
       } catch (error) {
         console.log(error)

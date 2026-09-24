@@ -1168,6 +1168,7 @@ export const negocioStore = defineStore('negocio', {
     async valeAdicionar({
       codvalemodelo = null,
       codpessoafavorecido = null,
+      favorecido = null,
       aluno = null,
       turma = null,
       valoravulso = 0,
@@ -1196,7 +1197,8 @@ export const negocioStore = defineStore('negocio', {
           codvalemodelo: codvalemodelo ? parseInt(codvalemodelo) : null,
           modelo: modelo?.modelo ?? null,
           codpessoafavorecido: codpessoa,
-          favorecido: pessoa?.fantasia ?? null,
+          // o nome do catalogo e a rede para pessoa fora do cache do PDV
+          favorecido: pessoa?.fantasia ?? favorecido ?? null,
           aluno,
           turma,
           valorprodutos: 0,

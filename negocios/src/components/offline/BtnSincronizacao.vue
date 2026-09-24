@@ -67,7 +67,7 @@ const btnSincronizarColor = computed({
           {{ sSinc.labelSincronizacao }}
         </div>
         <div class="text-center text-grey">{{ sSinc.importacao.tempoTotal }} Segundos</div>
-        <div class="q-pa-md">
+        <div class="q-pa-md flex flex-center">
           <q-toggle
             v-model="sSinc.sincronizacao.config"
             label="Configurações"
@@ -81,6 +81,16 @@ const btnSincronizarColor = computed({
           <q-toggle
             v-model="sSinc.sincronizacao.produto"
             label="Produtos"
+            :disable="sSinc.importacao.rodando"
+          />
+          <q-toggle
+            v-model="sSinc.sincronizacao.prancheta"
+            label="Prancheta"
+            :disable="sSinc.importacao.rodando"
+          />
+          <q-toggle
+            v-model="sSinc.sincronizacao.valeModelo"
+            label="Modelos de Vale"
             :disable="sSinc.importacao.rodando"
           />
         </div>

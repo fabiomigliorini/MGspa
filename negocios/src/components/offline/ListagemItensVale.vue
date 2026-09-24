@@ -158,7 +158,9 @@ const linkProduto = (codproduto) => {
       <div class="row items-center">
         <div class="col">
           <div class="text-overline text-grey-7">Vale {{ letra }}</div>
-          <div class="text-subtitle1">{{ vale.favorecido ?? 'Ao portador' }}</div>
+          <div class="text-subtitle1">
+            {{ vale.codpessoafavorecido == 1 ? 'Ao portador' : (vale.favorecido ?? 'Ao portador') }}
+          </div>
           <div class="text-caption text-grey-7">
             <template v-if="vale.modelo">{{ vale.modelo }}<br /></template>
             <template v-if="vale.aluno">{{ vale.aluno }} </template>
