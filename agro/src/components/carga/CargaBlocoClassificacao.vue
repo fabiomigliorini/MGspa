@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
 import { calcularCarga } from 'src/utils/desconto'
-import { etapasDaCarga, indiceEtapa, fmtNumero as fmt } from 'src/utils/carga'
+import { ETAPA_META, etapasDaCarga, indiceEtapa, fmtNumero as fmt } from 'src/utils/carga'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
@@ -99,6 +99,12 @@ async function salvar() {
   <q-card v-if="mostrarClassificacao" flat bordered>
     <q-card-section>
       <div class="row items-center q-mb-sm">
+        <q-icon
+          :name="ETAPA_META.CLASSIFICACAO.icon"
+          :color="ETAPA_META.CLASSIFICACAO.color"
+          size="20px"
+          class="q-mr-sm"
+        />
         <div class="text-subtitle2 text-grey-8">Classificação</div>
         <q-space />
         <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="abrir" />
@@ -114,10 +120,10 @@ async function salvar() {
           :key="item.codparametroclassificacao"
           class="col-6 col-sm-4 col-md-3"
         >
-          <div class="text-caption text-grey-6">
+          <div class="text-caption text-grey-6 ellipsis">
             {{ item.ordem }}. {{ item.parametroclassificacao }}
           </div>
-          <div>
+          <div class="text-body1 text-weight-medium">
             <template v-if="linhaDe(item.codparametroclassificacao).leitura != null">
               {{ fmt(linhaDe(item.codparametroclassificacao).leitura, 1) }}%
             </template>

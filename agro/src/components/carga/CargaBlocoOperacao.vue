@@ -1,13 +1,19 @@
 <script setup>
+// Bloco "Operação": o tipo de romaneio como manchete (é o que a carga É) e a
+// ficha do caminhão logo abaixo. Dois controles com atrito diferente de
+// propósito — o toggle troca a operação (com confirmação depois da 1ª pesagem,
+// quem decide isso é o CargaForm em `trocarOperacao`); o lápis abre o dialog
+// dos campos do caminhão.
 import { ref, computed, inject } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
-import { agoraLocal } from 'src/utils/carga'
+import { agoraLocal, cargaFinalizada } from 'src/utils/carga'
 import { formataTimestamp } from '@components/formatters'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import CaminhaoDialog from 'components/CaminhaoDialog.vue'
+import SelectSentido from './SelectSentido.vue'
 
 const props = defineProps({
   carga: { type: Object, required: true },
@@ -22,6 +28,9 @@ const { online } = storeToRefs(useSincronizacaoStore())
 // "salvar sem avançar" já usava (troca de safra + erro tratado na página); este
 // bloco não importa a store pra persistir, só pra dado de apoio (placa/veículo).
 const persistirBloco = inject('persistirBloco')
+// Troca do tipo de romaneio — a confirmação mora LÁ (CargaForm), não aqui: a
+// guarda não pode depender de quem chama.
+const trocarOperacao = inject('trocarOperacao')
 
 // Indireção (padrão ContratoForm/SafraForm): muta o objeto reativo compartilhado
 // sem disparar vue/no-mutating-props — `carga` é a MESMA referência que o
@@ -30,6 +39,10 @@ const carga = computed(() => props.carga)
 
 // Máximo do campo de chegada = agora (não deixa lançar no futuro).
 const dataMax = agoraLocal()
+
+// Finalizada: o romaneio fechado não muda mais de operação (TASK-141 abriu a
+// troca ATÉ finalizar, não depois).
+const finalizada = computed(() => cargaFinalizada(carga.value))
 
 const dialogAberto = ref(false)
 const edicao = ref({})
@@ -110,26 +123,53 @@ async function salvar() {
   <q-card flat bordered>
     <q-card-section>
       <div class="row items-center q-mb-sm">
-        <div class="text-subtitle2 text-grey-8">Caminhão</div>
+        <div class="text-subtitle2 text-grey-8">Operação</div>
         <q-space />
         <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="abrir" />
       </div>
+
+      <!-- O toggle é o controle E o indicador: mostra o que a carga é. -->
+      <SelectSentido
+        :model-value="carga.sentido"
+        :disable="finalizada"
+        @update:model-value="trocarOperacao"
+      />
+      <div v-if="finalizada" class="text-caption text-grey-6 q-mt-xs">
+        Romaneio finalizado — a operação não muda mais.
+      </div>
+
+      <q-separator class="q-my-md" />
+
       <div class="row q-col-gutter-md">
         <div class="col-6 col-sm-3">
           <div class="text-caption text-grey-6">Placa</div>
-          <div>{{ carga.placa || '—' }}</div>
+          <div class="row items-center no-wrap">
+            <q-icon name="local_shipping" color="blue-grey-6" size="20px" class="q-mr-sm" />
+            <span class="text-body1 text-weight-medium">{{ carga.placa || '—' }}</span>
+          </div>
         </div>
         <div class="col-6 col-sm-3">
           <div class="text-caption text-grey-6">Carreta</div>
-          <div>{{ carga.placacarreta || '—' }}</div>
+          <div class="row items-center no-wrap">
+            <q-icon name="link" color="blue-grey-6" size="20px" class="q-mr-sm" />
+            <span class="text-body1 text-weight-medium">{{ carga.placacarreta || '—' }}</span>
+          </div>
         </div>
         <div class="col-12 col-sm-3">
           <div class="text-caption text-grey-6">Motorista</div>
-          <div>{{ carga.motorista || '—' }}</div>
+          <div class="row items-center no-wrap">
+            <q-icon name="person" color="blue-grey-6" size="20px" class="q-mr-sm" />
+            <span class="text-body1 text-weight-medium ellipsis">{{ carga.motorista || '—' }}</span>
+          </div>
         </div>
         <div class="col-12 col-sm-3">
           <div class="text-caption text-grey-6">Chegada</div>
-          <div>{{ carga.data ? formataTimestamp(carga.data) : '—' }}</div>
+          <div class="row items-center no-wrap">
+            <q-icon name="schedule" color="blue-grey-6" size="20px" class="q-mr-sm" />
+            <span class="text-body1 text-weight-medium">
+              {{ carga.data ? formataTimestamp(carga.data) : '—' }}
+            </span>
+          </div>
         </div>
       </div>
     </q-card-section>

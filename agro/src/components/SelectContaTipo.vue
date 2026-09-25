@@ -2,6 +2,7 @@
 // Select do tipo de conta (origem/destino do grão): PLANTIO / UNIDADE / CONTRATO.
 // Substitui o chip fixo — o operador escolhe de onde vem / pra onde vai.
 import { computed } from 'vue'
+import { CONTATIPOS } from 'src/utils/carga'
 
 const props = defineProps({
   modelValue: { type: String, default: null },
@@ -11,14 +12,10 @@ const props = defineProps({
 })
 defineEmits(['update:modelValue'])
 
-const TIPOS = [
-  { value: 'PLANTIO', label: 'Talhão', icon: 'grass', color: 'brown-5' },
-  { value: 'UNIDADE', label: 'Unidade', icon: 'warehouse', color: 'amber-7' },
-  { value: 'CONTRATO', label: 'Contrato', icon: 'description', color: 'teal-7' },
-]
-
+// Ícone/cor vêm de CONTATIPO_META (utils/carga) — o mesmo par que os blocos de
+// exibição usam pra desenhar o ponto já escolhido.
 const opcoes = computed(() =>
-  props.papel === 'DESTINO' ? TIPOS.filter((t) => t.value !== 'PLANTIO') : TIPOS,
+  props.papel === 'DESTINO' ? CONTATIPOS.filter((t) => t.value !== 'PLANTIO') : CONTATIPOS,
 )
 </script>
 

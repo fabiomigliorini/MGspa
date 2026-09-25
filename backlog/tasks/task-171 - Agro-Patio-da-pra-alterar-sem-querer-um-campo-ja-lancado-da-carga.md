@@ -1,11 +1,11 @@
 ---
 id: TASK-171
 title: 'Agro/Patio: da pra alterar sem querer um campo ja lancado da carga'
-status: To Do
+status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-09-23 21:50'
+updated_date: '2026-09-24 19:05'
 labels:
   - agro
 dependencies: []
@@ -29,6 +29,9 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [x] #3 Bloco Classificacao (leituras dos parametros da cultura) so edita por dialog
 - [x] #4 Bloco Origem/Destino do grao: um dialog so, duas colunas lado a lado
 - [ ] #5 FAB cinza 'salvar sem avancar' removido e a Observacao com lugar pra ser salva
+- [ ] #6 Trocar o tipo de romaneio com peso ja lancado pede confirmacao nomeando a consequencia; sem peso troca direto; finalizada segue bloqueada
+- [ ] #7 Blocos em leitura com icone e hierarquia: rotulo em legenda, valor em destaque, icone por tipo de ponto (talhao/armazem/contrato)
+- [ ] #8 Chip colorido de etapa sai da area das abas; a etapa segue visivel na barra de progresso do drawer direito
 <!-- AC:END -->
 
 ## Implementation Notes
