@@ -73,8 +73,30 @@ export const CONTATIPO_PADRAO = {
   TRANSFERENCIA: { ORIGEM: 'UNIDADE', DESTINO: 'UNIDADE' },
 }
 
+// Ícone/cor por tipo de ponto (contatipo). Mora aqui, junto de SENTIDOS e
+// ETAPA_META, porque quem EXIBE o ponto (bloco de origem/destino, resumo)
+// precisa do mesmo par que o SelectContaTipo usa nas opções — sem duplicar o
+// mapa em cada tela.
+export const CONTATIPO_META = {
+  PLANTIO: { value: 'PLANTIO', label: 'Talhão', icon: 'grass', color: 'brown-5' },
+  UNIDADE: { value: 'UNIDADE', label: 'Unidade', icon: 'warehouse', color: 'amber-7' },
+  CONTRATO: { value: 'CONTRATO', label: 'Contrato', icon: 'description', color: 'teal-7' },
+}
+
+// Ordem das opções do select (DESTINO não recebe grão de volta pro talhão —
+// o filtro fica no componente, que conhece o papel).
+export const CONTATIPOS = [
+  CONTATIPO_META.PLANTIO,
+  CONTATIPO_META.UNIDADE,
+  CONTATIPO_META.CONTRATO,
+]
+
 export function sentidoMeta(sentido) {
   return SENTIDOS.find((s) => s.value === sentido) || SENTIDOS[0]
+}
+
+export function contatipoMeta(contatipo) {
+  return CONTATIPO_META[contatipo] || CONTATIPO_META.UNIDADE
 }
 
 export function etapasDaCarga(carga) {
@@ -93,6 +115,16 @@ export function proximaEtapa(carga) {
 
 export function cargaFinalizada(carga) {
   return carga?.etapa === ETAPA_FINAL
+}
+
+// Já passou pela balança? A ordem das etapas diverge por sentido (ENTRADA pesa
+// PBT antes, SAIDA pesa tara antes), então trocar depois de pesar reposiciona a
+// carga no fluxo novo. Um helper com este nome existiu e sustentava a trava
+// DURA (não deixava trocar); a TASK-141 abriu a troca até FINALIZAR e ele saiu.
+// Voltou pra pedir CONFIRMAÇÃO, não pra travar de novo: sem peso a troca segue
+// direta, com peso o operador confirma sabendo a consequência.
+export function cargaPesada(carga) {
+  return carga?.pbt != null || carga?.tara != null
 }
 
 export function iconeCarga(carga) {

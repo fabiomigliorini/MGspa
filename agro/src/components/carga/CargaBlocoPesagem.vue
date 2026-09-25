@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
 import { calcularCarga } from 'src/utils/desconto'
-import { etapasDaCarga, indiceEtapa, fmtNumero as fmt } from 'src/utils/carga'
+import { ETAPA_META, etapasDaCarga, indiceEtapa, fmtNumero as fmt } from 'src/utils/carga'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
@@ -67,6 +67,12 @@ async function salvar() {
   <q-card v-if="mostrarPbt || mostrarTara" flat bordered>
     <q-card-section>
       <div class="row items-center q-mb-sm">
+        <q-icon
+          :name="ETAPA_META.PBT.icon"
+          :color="ETAPA_META.PBT.color"
+          size="20px"
+          class="q-mr-sm"
+        />
         <div class="text-subtitle2 text-grey-8">Pesagem</div>
         <q-space />
         <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="abrir" />
@@ -74,30 +80,50 @@ async function salvar() {
 
       <div v-if="mostrarResultado" class="row text-center bg-grey-1 rounded-borders q-pa-sm">
         <div class="col">
-          <div class="text-caption text-grey-7">Bruto</div>
-          <div class="text-weight-medium">{{ fmt(calc.bruto) }} kg</div>
+          <div class="text-caption text-grey-6">Bruto</div>
+          <div class="text-h6">{{ fmt(calc.bruto) }} <small>kg</small></div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-7">Desconto</div>
-          <div class="text-weight-medium text-orange-9">{{ fmt(calc.desconto) }} kg</div>
+          <div class="text-caption text-grey-6">Desconto</div>
+          <div class="text-h6 text-orange-9">{{ fmt(calc.desconto) }} <small>kg</small></div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-7">Líquido</div>
-          <div class="text-weight-medium text-green-9">{{ fmt(calc.liquido) }} kg</div>
+          <div class="text-caption text-grey-6">Líquido</div>
+          <div class="text-h6 text-green-9">{{ fmt(calc.liquido) }} <small>kg</small></div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-7">Sacas</div>
-          <div class="text-weight-medium">{{ fmt(sacasLiquido, 1) }}</div>
+          <div class="text-caption text-grey-6">Sacas</div>
+          <div class="text-h6">{{ fmt(sacasLiquido, 1) }}</div>
         </div>
       </div>
       <div v-else class="row q-col-gutter-md">
         <div v-if="mostrarPbt" class="col-6">
           <div class="text-caption text-grey-6">Peso bruto total</div>
-          <div>{{ carga.pbt != null ? `${fmt(carga.pbt)} kg` : '—' }}</div>
+          <div class="row items-center no-wrap">
+            <q-icon
+              :name="ETAPA_META.PBT.icon"
+              :color="ETAPA_META.PBT.color"
+              size="24px"
+              class="q-mr-sm"
+            />
+            <span class="text-body1 text-weight-medium">
+              {{ carga.pbt != null ? `${fmt(carga.pbt)} kg` : '—' }}
+            </span>
+          </div>
         </div>
         <div v-if="mostrarTara" class="col-6">
           <div class="text-caption text-grey-6">Tara</div>
-          <div>{{ carga.tara != null ? `${fmt(carga.tara)} kg` : '—' }}</div>
+          <div class="row items-center no-wrap">
+            <q-icon
+              :name="ETAPA_META.TARA.icon"
+              :color="ETAPA_META.TARA.color"
+              size="24px"
+              class="q-mr-sm"
+            />
+            <span class="text-body1 text-weight-medium">
+              {{ carga.tara != null ? `${fmt(carga.tara)} kg` : '—' }}
+            </span>
+          </div>
         </div>
       </div>
     </q-card-section>
@@ -147,16 +173,20 @@ async function salvar() {
           </div>
           <div v-if="mostrarPreview" class="row text-center bg-grey-1 rounded-borders q-pa-sm q-mt-sm">
             <div class="col">
-              <div class="text-caption text-grey-7">Bruto</div>
-              <div class="text-weight-medium">{{ fmt(calcPreview.bruto) }} kg</div>
+              <div class="text-caption text-grey-6">Bruto</div>
+              <div class="text-h6">{{ fmt(calcPreview.bruto) }} <small>kg</small></div>
             </div>
             <div class="col">
-              <div class="text-caption text-grey-7">Desconto</div>
-              <div class="text-weight-medium text-orange-9">{{ fmt(calcPreview.desconto) }} kg</div>
+              <div class="text-caption text-grey-6">Desconto</div>
+              <div class="text-h6 text-orange-9">
+                {{ fmt(calcPreview.desconto) }} <small>kg</small>
+              </div>
             </div>
             <div class="col">
-              <div class="text-caption text-grey-7">Líquido</div>
-              <div class="text-weight-medium text-green-9">{{ fmt(calcPreview.liquido) }} kg</div>
+              <div class="text-caption text-grey-6">Líquido</div>
+              <div class="text-h6 text-green-9">
+                {{ fmt(calcPreview.liquido) }} <small>kg</small>
+              </div>
             </div>
           </div>
         </q-card-section>

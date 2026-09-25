@@ -11,6 +11,7 @@ import {
   distribuirPercentual,
   etapasDaCarga,
   indiceEtapa,
+  contatipoMeta,
   fmtNumero as fmt,
 } from 'src/utils/carga'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -142,24 +143,60 @@ async function salvar() {
       </div>
       <div class="row q-col-gutter-lg">
         <div class="col-12 col-md-6">
-          <div class="text-caption text-grey-6 q-mb-xs">Origem</div>
+          <!-- login/logout: os mesmos ícones que o CargaResumo usa pra origem e
+               destino no drawer da direita. -->
+          <div class="text-caption text-grey-6 q-mb-xs">
+            <q-icon name="login" size="16px" class="q-mr-xs" />Origem
+          </div>
           <div v-if="!origens.length" class="text-grey-5">Nenhuma origem informada.</div>
-          <div v-for="(p, i) in origens" :key="'o' + i" class="q-mb-xs">
-            {{ p.rotulo || 'Não informado' }} · {{ fmt(p.percentual, 1) }}%
-            <span v-if="kgDoPonto(p)" class="text-grey-6"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+          <div v-for="(p, i) in origens" :key="'o' + i" class="row items-center no-wrap q-mb-sm">
+            <q-icon
+              :name="contatipoMeta(p.contatipo).icon"
+              :color="contatipoMeta(p.contatipo).color"
+              size="24px"
+              class="q-mr-sm"
+            >
+              <q-tooltip>{{ contatipoMeta(p.contatipo).label }}</q-tooltip>
+            </q-icon>
+            <div class="col">
+              <div class="text-body1 text-weight-medium ellipsis">
+                {{ p.rotulo || 'Não informado' }}
+              </div>
+              <div class="text-caption text-grey-6">
+                {{ fmt(p.percentual, 1) }}%
+                <span v-if="kgDoPonto(p)"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+              </div>
+            </div>
           </div>
           <div v-if="origens.length" class="text-caption" :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'">
             Soma: {{ fmt(somaPercOrigens, 1) }}%
           </div>
         </div>
         <div class="col-12 col-md-6">
-          <div class="text-caption text-grey-6 q-mb-xs">Destino</div>
+          <div class="text-caption text-grey-6 q-mb-xs">
+            <q-icon name="logout" size="16px" class="q-mr-xs" />Destino
+          </div>
           <div v-if="!destinos.length" class="text-grey-5">Nenhum destino informado.</div>
-          <div v-for="(p, i) in destinos" :key="'d' + i" class="q-mb-xs">
-            {{ p.rotulo || 'Não informado' }} · {{ fmt(p.percentual, 1) }}%
-            <span v-if="kgDoPonto(p)" class="text-grey-6"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
-            <div v-if="mostrarFiscal && p.numeronf" class="text-caption text-grey-6">
-              NF {{ p.numeronf }}<span v-if="p.valornf"> · R$ {{ fmt(p.valornf, 2) }}</span>
+          <div v-for="(p, i) in destinos" :key="'d' + i" class="row items-center no-wrap q-mb-sm">
+            <q-icon
+              :name="contatipoMeta(p.contatipo).icon"
+              :color="contatipoMeta(p.contatipo).color"
+              size="24px"
+              class="q-mr-sm"
+            >
+              <q-tooltip>{{ contatipoMeta(p.contatipo).label }}</q-tooltip>
+            </q-icon>
+            <div class="col">
+              <div class="text-body1 text-weight-medium ellipsis">
+                {{ p.rotulo || 'Não informado' }}
+              </div>
+              <div class="text-caption text-grey-6">
+                {{ fmt(p.percentual, 1) }}%
+                <span v-if="kgDoPonto(p)"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                <span v-if="mostrarFiscal && p.numeronf">
+                  · NF {{ p.numeronf }}<span v-if="p.valornf"> · R$ {{ fmt(p.valornf, 2) }}</span>
+                </span>
+              </div>
             </div>
           </div>
           <div v-if="destinos.length" class="text-caption" :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'">

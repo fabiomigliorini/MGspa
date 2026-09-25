@@ -24,12 +24,12 @@ import {
   somaPercBate,
   proximaEtapa,
   cargaFinalizada,
+  cargaPesada,
   sentidoMeta,
   fmtNumero as fmt,
 } from 'src/utils/carga'
 import { imprimirTicket } from 'src/utils/ticket'
-import SelectSentido from './SelectSentido.vue'
-import CargaBlocoCaminhao from './CargaBlocoCaminhao.vue'
+import CargaBlocoOperacao from './CargaBlocoOperacao.vue'
 import CargaBlocoPontos from './CargaBlocoPontos.vue'
 import CargaBlocoPesagem from './CargaBlocoPesagem.vue'
 import CargaBlocoClassificacao from './CargaBlocoClassificacao.vue'
@@ -103,25 +103,60 @@ function normalizarPontos(carga) {
   return carga
 }
 
-// ---- Sentido (tipo de romaneio) — muda até FINALIZAR; depois, nunca mais ----
+// ---- Operação (tipo de romaneio) — muda até FINALIZAR; depois, nunca mais ----
 // Trocar reposiciona a carga na 1ª etapa do novo fluxo (aplicarSentido), mas os
 // pesos já lidos ficam — cada bloco decide sozinho se ainda mostra o que já foi
 // preenchido (mesmo fora da etapa "natural" do novo fluxo). O sinal do extrato
 // vem de papel+contatipo, não do sentido, então o servidor não se importa com
 // a troca.
+//
+// Depois da 1ª pesagem a troca pede confirmação: aí já existe dado a perder de
+// vista (a carga sai do lugar no fluxo). Antes disso não há o que perder, então
+// aplica direto — a TASK-141 abriu essa edição de propósito e isto NÃO a fecha
+// de novo. A guarda mora aqui, no dono de `local`, pra não depender de quem
+// chama (o bloco de Operação só renderiza o toggle).
 const finalizada = computed(() => cargaFinalizada(local.value))
-const podeTrocarSentido = computed(() => !!local.value && !finalizada.value)
-const sentidoSel = computed({
-  get: () => local.value?.sentido,
-  set: (s) => {
-    if (!s || !local.value || s === local.value.sentido) return
-    aplicarSentido(local.value, s)
-    // A revisão era do fluxo antigo: sem zerar, o FAB seguiria verde escrito
-    // "Salvar" enquanto o clique só avançaria uma etapa do fluxo novo.
-    revisando.value = false
-  },
-})
 
+async function aplicarTroca(sentido) {
+  aplicarSentido(local.value, sentido)
+  // A revisão era do fluxo antigo: sem zerar, o FAB seguiria verde escrito
+  // "Salvar" enquanto o clique só avançaria uma etapa do fluxo novo.
+  revisando.value = false
+  // Persiste na hora, como os demais blocos: sem isso o drawer da direita (que
+  // lê da store) seguiria mostrando a operação antiga. Se a troca deixou ponto
+  // incompleto, o aviso do `entradaValida` é a informação certa na hora certa —
+  // re-escolher origem/destino costuma ser mesmo necessário depois de trocar.
+  try {
+    await persistirBloco()
+  } catch {
+    // erro já notificado por quem persiste (CargaPage); a troca segue em `local`
+  }
+}
+
+function trocarOperacao(sentido) {
+  if (!sentido || !local.value || sentido === local.value.sentido) return
+  if (finalizada.value) return
+  if (!cargaPesada(local.value)) {
+    aplicarTroca(sentido)
+    return
+  }
+  const meta = sentidoMeta(sentido)
+  $q.dialog({
+    title: 'Trocar a operação',
+    message:
+      `Esta carga já foi pesada. Ao trocar para <b>${meta.label}</b>, ` +
+      `a carga volta para a 1ª etapa do fluxo de ${meta.label} e a origem/destino ` +
+      'ainda não preenchida é redefinida. Os pesos já lidos ficam.',
+    html: true,
+    cancel: { label: 'Voltar', flat: true, color: 'grey-8' },
+    ok: { label: 'Trocar', flat: true, color: 'primary' },
+    persistent: true,
+  }).onOk(() => aplicarTroca(sentido))
+}
+
+// Sem o chip do topo, isto alimenta só o rótulo/ícone do FAB principal e a
+// mensagem de erro do `avancar` — a etapa em si aparece na barra de progresso
+// do drawer da direita (CargaEtapaProgresso), com mais informação.
 const etapaMeta = computed(() => ETAPA_META[local.value?.etapa] || {})
 
 // ---- Pontos (origens / destinos) — usados na validação/impressão; a edição
@@ -413,6 +448,7 @@ async function persistirBloco() {
   return true
 }
 provide('persistirBloco', persistirBloco)
+provide('trocarOperacao', trocarOperacao)
 provide('calc', calc)
 provide('itensCarga', itensCarga)
 provide('sacasLiquido', sacasLiquido)
@@ -429,27 +465,7 @@ defineExpose({
 <template>
   <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit" @validation-error="onErroValidacao">
     <div class="q-pa-md q-gutter-y-md carga-form">
-      <!-- Tipo de romaneio + etapa -->
-      <q-card flat bordered>
-        <q-card-section class="row items-center q-col-gutter-sm">
-          <div class="col-12 col-sm">
-            <SelectSentido v-model="sentidoSel" :disable="!podeTrocarSentido" />
-            <div v-if="finalizada" class="text-caption text-red-4 q-mt-xs">
-              Romaneio finalizado — o tipo não muda mais.
-            </div>
-          </div>
-          <div class="col-auto">
-            <q-chip
-              :color="etapaMeta.color"
-              text-color="white"
-              :icon="etapaMeta.icon"
-              :label="etapaMeta.label"
-            />
-          </div>
-        </q-card-section>
-      </q-card>
-
-      <CargaBlocoCaminhao :carga="local" :novo="novo" />
+      <CargaBlocoOperacao :carga="local" :novo="novo" />
       <CargaBlocoPontos :carga="local" :novo="novo" />
       <CargaBlocoPesagem :carga="local" :novo="novo" />
       <CargaBlocoClassificacao :carga="local" :novo="novo" />
