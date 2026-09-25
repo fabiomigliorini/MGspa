@@ -11,6 +11,7 @@ const props = defineProps({
 
 // Providos pelo CargaForm.vue.
 const persistirBloco = inject('persistirBloco')
+const concluirEtapa = inject('concluirEtapa')
 const calc = inject('calc')
 const itensCarga = inject('itensCarga')
 const avisoClassificacao = inject('avisoClassificacao')
@@ -59,10 +60,24 @@ function foraTolerancia(item, leitura) {
 
 const dialogAberto = ref(false)
 const edicao = ref({ classificacao: [] })
+// Aberto pelo botão "Classificar": toda leitura é obrigatória (0 quando o grão
+// não tem aquele defeito) e confirmar AVANÇA a carga (concluirEtapa). Pelo lápis
+// segue livre, como correção.
+const etapaAtual = ref(null)
+const rotuloConfirmar = ref('Salvar')
 
-function abrir() {
+function abrir({ etapa = null, rotulo = null } = {}) {
+  // F3 com o dialog já aberto não pode reabrir e apagar o que foi digitado.
+  if (dialogAberto.value) return
   edicao.value = { classificacao: (props.carga.classificacao || []).map((c) => ({ ...c })) }
+  etapaAtual.value = etapa
+  rotuloConfirmar.value = rotulo || 'Salvar'
   dialogAberto.value = true
+}
+defineExpose({ abrir })
+
+function leituraVazia(v) {
+  return v === null || v === undefined || v === ''
 }
 function linhaEdicao(codparam) {
   return edicao.value.classificacao.find((c) => c.codparametroclassificacao === codparam) || {}
@@ -87,7 +102,7 @@ async function salvar() {
     if (alvo) alvo.leitura = c.leitura
   }
   try {
-    const ok = await persistirBloco()
+    const ok = etapaAtual.value ? await concluirEtapa() : await persistirBloco()
     if (ok) dialogAberto.value = false
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
@@ -147,7 +162,15 @@ async function salvar() {
     <q-card style="width: 700px; max-width: 90vw">
       <q-form @submit="salvar">
         <q-card-section>
-          <div class="text-subtitle1 q-mb-md">Classificação</div>
+          <div class="row items-center text-subtitle1 q-mb-md">
+            <q-icon
+              :name="ETAPA_META.CLASSIFICACAO.icon"
+              :color="ETAPA_META.CLASSIFICACAO.color"
+              size="24px"
+              class="q-mr-sm"
+            />
+            Classificação
+          </div>
           <q-banner v-if="avisoClassificacao" dense rounded class="bg-orange-1 text-orange-9 q-mb-sm">
             <template #avatar><q-icon name="warning" color="orange-8" /></template>
             {{ avisoClassificacao.titulo }}
@@ -155,7 +178,7 @@ async function salvar() {
           </q-banner>
           <div class="row q-col-gutter-md">
             <div
-              v-for="item in itensCarga"
+              v-for="(item, i) in itensCarga"
               :key="item.codparametroclassificacao"
               class="col-6 col-sm-4 col-md-3"
             >
@@ -165,8 +188,10 @@ async function salvar() {
                 suffix="%"
                 :label="`${item.ordem}. ${item.parametroclassificacao}`"
                 :hint="hintItem(item)"
+                :autofocus="i === 0"
                 lazy-rules
                 :rules="[
+                  (v) => !etapaAtual || !leituraVazia(v) || 'Informe a leitura (0 se não houver).',
                   (v) => v == null || (v >= 0 && v <= 100) || 'Leitura deve ficar entre 0 e 100%.',
                 ]"
               />
@@ -187,7 +212,13 @@ async function salvar() {
         </q-card-section>
         <q-card-actions align="right">
           <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn label="Salvar" type="submit" flat color="primary" />
+          <q-btn
+            :label="rotuloConfirmar"
+            type="submit"
+            :flat="!etapaAtual"
+            :unelevated="!!etapaAtual"
+            color="primary"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

@@ -12,6 +12,7 @@ const props = defineProps({
 // Providos pelo CargaForm.vue — mesmos computeds que o form usa pra validar/
 // imprimir, reaproveitados aqui em vez de recalculados do zero.
 const persistirBloco = inject('persistirBloco')
+const concluirEtapa = inject('concluirEtapa')
 const calc = inject('calc')
 const itensCarga = inject('itensCarga')
 const sacasLiquido = inject('sacasLiquido')
@@ -35,11 +36,23 @@ const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.
 
 const dialogAberto = ref(false)
 const edicao = ref({})
+// Aberto pelo botão da etapa (PBT/TARA) em vez do lápis: o peso da etapa é
+// obrigatório e confirmar AVANÇA a carga (concluirEtapa), não só grava.
+const etapaAtual = ref(null)
+const rotuloConfirmar = ref('Salvar')
 
-function abrir() {
+function abrir({ etapa = null, rotulo = null } = {}) {
+  // F3 com o dialog já aberto não pode reabrir e apagar o que foi digitado.
+  if (dialogAberto.value) return
   edicao.value = { pbt: carga.value.pbt, tara: carga.value.tara }
+  etapaAtual.value = etapa
+  rotuloConfirmar.value = rotulo || 'Salvar'
   dialogAberto.value = true
 }
+defineExpose({ abrir })
+
+// Foco no peso que a balança acabou de dar: na tara quando é ela a etapa.
+const focoTara = computed(() => mostrarTara.value && carga.value.etapa === 'TARA')
 
 // Prévia ao vivo com o que está sendo digitado no dialog (ainda não salvo).
 const calcPreview = computed(() =>
@@ -55,7 +68,7 @@ const mostrarPreview = computed(
 async function salvar() {
   Object.assign(carga.value, { pbt: edicao.value.pbt, tara: edicao.value.tara })
   try {
-    const ok = await persistirBloco()
+    const ok = etapaAtual.value ? await concluirEtapa() : await persistirBloco()
     if (ok) dialogAberto.value = false
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
@@ -133,7 +146,18 @@ async function salvar() {
     <q-card style="width: 500px; max-width: 90vw">
       <q-form @submit="salvar">
         <q-card-section>
-          <div class="text-subtitle1 q-mb-md">Pesagem</div>
+          <div class="row items-center text-subtitle1 q-mb-md">
+            <template v-if="etapaAtual">
+              <q-icon
+                :name="ETAPA_META[etapaAtual].icon"
+                :color="ETAPA_META[etapaAtual].color"
+                size="24px"
+                class="q-mr-sm"
+              />
+              {{ ETAPA_META[etapaAtual].label }}
+            </template>
+            <template v-else>Pesagem</template>
+          </div>
           <div class="row q-col-gutter-md">
             <MgInputValor
               v-if="mostrarPbt"
@@ -142,7 +166,7 @@ async function salvar() {
               suffix="kg"
               label="Peso bruto total (caminhão + carga)"
               class="col-12"
-              autofocus
+              :autofocus="!focoTara"
               lazy-rules
               :rules="[
                 (v) => novo || carga.etapa !== 'PBT' || v > 0 || 'Informe o peso bruto (PBT).',
@@ -155,6 +179,7 @@ async function salvar() {
               suffix="kg"
               label="Tara (caminhão vazio)"
               class="col-12"
+              :autofocus="focoTara"
               lazy-rules
               :rules="[
                 (v) => novo || carga.etapa !== 'TARA' || v > 0 || 'Informe a tara.',
@@ -192,7 +217,13 @@ async function salvar() {
         </q-card-section>
         <q-card-actions align="right">
           <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn label="Salvar" type="submit" flat color="primary" />
+          <q-btn
+            :label="rotuloConfirmar"
+            type="submit"
+            :flat="!etapaAtual"
+            :unelevated="!!etapaAtual"
+            color="primary"
+          />
         </q-card-actions>
       </q-form>
     </q-card>
