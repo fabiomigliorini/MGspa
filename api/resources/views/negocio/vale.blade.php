@@ -59,7 +59,9 @@ use Illuminate\Support\Carbon;
 
 <body>
 
-    @foreach ($tits as $tit)
+    @foreach ($comprovantes as $comp)
+    @php($tit = $comp['titulo'])
+    @php($vale = $comp['vale'])
 
     <!-- CABECALHO -->
     <div id="header">
@@ -80,8 +82,12 @@ use Illuminate\Support\Carbon;
                     <br> -->
                     <b>{{Carbon::now()->format('d/m/Y H:i:s')}}</b>
                     <br>
-                    <b>{{formataCodigo($tit->codtitulo)}}</b>
-                    <br>
+                    <!-- o numero do vale NAO cabe aqui: o #header e'
+                         position:fixed e o Dompdf guarda so' a ultima
+                         definicao dele, entao num negocio com dois vales a
+                         pagina 1 sairia carimbada com o codigo do vale 2.
+                         O numero ja' aparece logo abaixo, no corpo, que e'
+                         onde ele e' de fato por vale. -->
                     <span class="page_number"></span>
                 </td>
             </tr>
@@ -96,9 +102,65 @@ use Illuminate\Support\Carbon;
         {{formataCodigo($tit->codtitulo)}}
     </h2>
 
+    <!-- VALE VENDIDO NESTE NEGOCIO: escola, aluno, turma e a lista do kit.
+         E' com esta lista que a familia retira o material. -->
+    @if($vale)
+    <div>
+        @if($vale->codpessoafavorecido != 1)
+        <b style="font-size: 12pt">{{ $vale->PessoaFavorecido->fantasia }}</b>
+        <br>
+        @else
+        <b style="font-size: 12pt">Ao portador</b>
+        <br>
+        @endif
+        @if(!empty($vale->aluno))
+        Aluno: {{ $vale->aluno }}
+        <br>
+        @endif
+        @if(!empty($vale->turma))
+        Turma: {{ $vale->turma }}
+        <br>
+        @endif
+        @if(!empty($vale->validade))
+        Validade: {{ formataData($vale->validade) }}
+        <br>
+        @endif
+    </div>
+
+    @php($itens = $vale->NegocioValeProdutoBarraS->whereNull('inativo'))
+    @if($itens->count())
+    <br>
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td colspan="2" style="border-bottom: 0.9px solid black;"><b>Produtos</b></td>
+            <td style="border-bottom: 0.9px solid black; text-align: right;"><b>Qtde</b></td>
+        </tr>
+        @foreach($itens as $item)
+        <tr>
+            <td style="width: 0.4cm; vertical-align: top;">{{ $loop->iteration }}</td>
+            <td style="vertical-align: top;">
+                {{ $item->ProdutoBarra->Produto->produto }}
+                @if(!empty($item->ProdutoBarra->ProdutoVariacao->variacao))
+                {{ $item->ProdutoBarra->ProdutoVariacao->variacao }}
+                @endif
+                <br>
+                <span style="font-size: 6pt;">{{ $item->ProdutoBarra->barras }}</span>
+            </td>
+            <td style="vertical-align: top; text-align: right;">{{ formataNumero($item->quantidade, 0) }}</td>
+        </tr>
+        @endforeach
+    </table>
+    @endif
+
+    @if($vale->valoravulso > 0)
+    <br>
+    <div>Valor avulso: R$ {{ formataNumero($vale->valoravulso) }}</div>
+    @endif
+    @endif
+
     <!-- CLIENTE -->
     <div>
-        @if($tit->codpessoa != 1)
+        @if(!$vale && $tit->codpessoa != 1)
         <b style="font-size: 12pt">
             {{ $tit->Pessoa->fantasia }}
         </b>
@@ -125,10 +187,10 @@ use Illuminate\Support\Carbon;
         @endif
         {{ $tit->Pessoa->Cidade->cidade }}/{{ $tit->Pessoa->Cidade->Estado->sigla }}
         @endif
-        @if(!empty($tit->codpessoavendedor))
+        @if(!$vale && !empty($tit->codpessoavendedor))
         <br> Vendedor: {{ $tit->PessoaVendedor->fantasia }}
         @endif
-        @if(!empty($tit->Usuario->codpessoa))
+        @if(!$vale && !empty($tit->Usuario->codpessoa))
         <br> Caixa: {{ $tit->Usuario->Pessoa->fantasia }}
         @endif
     </div>

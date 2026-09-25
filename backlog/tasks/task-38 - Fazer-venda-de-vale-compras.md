@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-24 22:37'
+updated_date: '2026-09-25 00:24'
 labels:
   - negocios
   - api
@@ -209,4 +209,50 @@ que e quem emite o titulo tipo 3.
 A decidir na validacao: (a) o ponto de entrada do vale e um cabecalho 'Vale Compras'
 com botao + abaixo da grade de produtos; (b) o preco do item semeado vem do MODELO
 (o que a escola validou), nao do preco atual do produto.
+
+---
+
+MILESTONES 4 a 8 implementados na noite de 24->25/09/2026, aguardando validacao.
+O relato completo, milestone a milestone, esta em .claude/plano-vale-compras.md,
+secao RESULTADO DA NOITE (topo) e Execucao da noite (fim).
+
+VEREDITO DA REGRESSAO FISCAL: o XML de uma venda so com mercadoria saiu BYTE A
+BYTE IDENTICO antes e depois da mudanca do gerador de NFC-e (5.960 bytes, diff
+vazio). Mais duas formas sem vale tambem deram diff vazio: com juros parcelados
+(5.945 bytes) e NFe 55 a prazo com duplicatas (5.493 bytes). Tudo que o vale faz
+no gerador esta atras de um unico $temVale.
+
+M4 Rateio: desconto/frete/seguro/outras divididos entre mercadoria e vales na
+proporcao dos brutos; aplicarValores() intacto para a mercadoria e a fatia do
+vale gravada direto em tblnegociovale. A FACE do vale nunca se mexe. No MGLara,
+o job de estoque parou de ajustar por desconto de cabecalho e le o proprio item.
+
+M5 Creditos: PdvNegocioValeService novo. fechar() emite titulo tipo 3 / conta 83
+em nome do favorecido, valor = a face, numero N{codnegocio}-VAL{A,B..}, titulo
+SOLTO (so tblnegociovale.codtitulo aponta). cancelar() estorna, e recusa com
+mensagem quando o vale ja foi usado. Comprovante 80mm com escola, aluno, turma e
+a lista do kit. As duas travas temporarias sairam.
+
+M6 Fiscal: rateio do detPag consumindo o vale primeiro do dinheiro, depois PIX,
+depois o resto; cap no liquido de cada pagamento; ultimo pagamento absorve a
+diferenca; percJuros e a sobra dos juros corrigidos; duplicatas da NFe 55
+rateadas. Os 6 casos pedidos foram testados gerando XML em arquivo, sem
+transmitir nada.
+
+M7 DIMP: dominio Mg\Dimp, rota v1/dimp/conciliacao?ano=&mes= com ?html=1, PDF
+mPDF. Tres conferencias que tem que dar zero. Rodado sobre julho e junho/2026.
+
+M8 Escopo: PdvValeEscopoService com FIFO por escola/turma, vale ao portador fora
+do escopo, reconferirSaldos() com lockForUpdate no fechar() (dois PDVs no mesmo
+pool: o segundo e recusado e o saldo nunca fica positivo), N pagamentos no banco
+virando 1 detPag tPag=12 na nota. FormaVale.vue ganhou o modo 'Pela escola'.
+
+ACHADO EM DADOS DE PRODUCAO (nao e desta task, relatado para decisao): a
+conferencia do DIMP encontrou 4 vendas do PDV entre junho e julho com pagamento
+lancado em duplicidade -- negocios 4485692, 4513488, 4531948 e 4501184.
+
+A DECIDIR: portador do titulo (nasceu CARTEIRA 999, o legado era nulo);
+numeracao N{codnegocio}-VAL vs o V{codvalecompra}-CR do legado; onde mora a tela
+do relatorio DIMP; e, para o milestone 9, que as triggers de valortotal do
+negocio so rodam com codpdv nulo e nao conhecem valorvales.
 <!-- SECTION:NOTES:END -->

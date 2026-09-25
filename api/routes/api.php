@@ -510,6 +510,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'ativar']);
     Route::apiResource('moeda', \Mg\Moeda\MoedaController::class)->parameters(['moeda' => 'moeda']);
 
+    // Conciliacao DIMP: explica a divergencia entre o que a adquirente
+    // informou e o que a empresa emitiu em nota (o vale compras e a maior
+    // fonte dela, por ser recebimento antecipado)
+    Route::get('dimp/conciliacao', [\Mg\Dimp\DimpConciliacaoController::class, 'relatorio']);
+
     // ValeModelo (catalogo do kit de vale compras; CRUD no app negocios)
     Route::get('vale-modelo/{valeModelo}/relatorio', [\Mg\Vale\ValeModeloController::class, 'relatorio']);
     Route::post('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'inativar']);
@@ -894,6 +899,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
         Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
         Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
+
+        // consumo de vale por escopo (escola / turma), em FIFO
+        Route::get('vale-escopo/favorecido', '\Mg\Pdv\PdvController@valeEscopoFavorecidos');
+        Route::get('vale-escopo/favorecido/{codpessoafavorecido}/turma', '\Mg\Pdv\PdvController@valeEscopoTurmas');
+        Route::get('vale-escopo/selecionar', '\Mg\Pdv\PdvController@valeEscopoSelecionar');
         Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');
         // Saurus
         Route::post('saurus/registrar-pos', '\Mg\Pdv\PdvController@registrarPosSaurus');

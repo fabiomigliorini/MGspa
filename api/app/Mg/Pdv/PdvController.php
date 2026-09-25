@@ -685,6 +685,52 @@ class PdvController
     }
 
 
+    /**
+     * Escolas com credito de vale em aberto (consumo por escopo).
+     */
+    public function valeEscopoFavorecidos(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        return response()->json(
+            PdvValeEscopoService::favorecidos($request->input('busca')),
+            200
+        );
+    }
+
+    /** Turmas com credito em aberto dentro de uma escola. */
+    public function valeEscopoTurmas(PdvRequest $request, $codpessoafavorecido)
+    {
+        PdvService::autoriza($request->pdv);
+        return response()->json(
+            PdvValeEscopoService::turmas($codpessoafavorecido),
+            200
+        );
+    }
+
+    /**
+     * Escolhe em FIFO os vales do escopo que cobrem o valor pedido.
+     *
+     * A escolha nao reserva nada: quem garante que o saldo ainda existe no
+     * fechamento e' o PdvValeEscopoService::reconferirSaldos(), com lock.
+     */
+    public function valeEscopoSelecionar(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        $request->validate([
+            'codpessoafavorecido' => 'required|integer',
+            'valor' => 'required|numeric',
+        ]);
+        return response()->json(
+            PdvValeEscopoService::selecionar(
+                $request->input('codpessoafavorecido'),
+                $request->input('turma'),
+                $request->input('valor'),
+                array_filter(explode(',', (string) $request->input('usados')))
+            ),
+            200
+        );
+    }
+
     public function buscarVale($codtitulo)
     {
         $titulo = Titulo::find($codtitulo);

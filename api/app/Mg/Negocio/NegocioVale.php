@@ -18,9 +18,12 @@ use Mg\Vale\ValeModelo;
  *   valorprodutos = soma dos itens do vale
  *   valoravulso   = valor digitado a mao
  *   valorvale     = produtos + avulso  <- a FACE, o credito emitido
- * e, separado deles, "valortotal" = a fatia PAGA depois do rateio de
- * desconto/frete/seguro/outras (milestone 4). A escola recebe a face; o
- * cliente paga a fatia.
+ * e, separado deles, "valortotal" = a fatia PAGA depois do rateio do
+ * desconto (milestone 4). A escola recebe a face; o cliente paga a fatia.
+ *
+ * So desconto e juros sao rateados para o vale. Frete, seguro e "outras"
+ * nao existem aqui: nao se cobra frete nem seguro de um vale compras, entao
+ * esses tres ficam inteiros na mercadoria.
  *
  * "codpessoafavorecido" e' a escola — ou Consumidor (1) quando o vale e'
  * ao portador (decisao 13). "inativo" e' soft-delete, igual ao item de
@@ -45,11 +48,8 @@ class NegocioVale extends MgModel
         'validade',
         'valoravulso',
         'valordesconto',
-        'valorfrete',
         'valorjuros',
-        'valoroutras',
         'valorprodutos',
-        'valorseguro',
         'valortotal',
         'valorvale',
     ];
@@ -69,11 +69,8 @@ class NegocioVale extends MgModel
         'validade' => 'date',
         'valoravulso' => 'float',
         'valordesconto' => 'float',
-        'valorfrete' => 'float',
         'valorjuros' => 'float',
-        'valoroutras' => 'float',
         'valorprodutos' => 'float',
-        'valorseguro' => 'float',
         'valortotal' => 'float',
         'valorvale' => 'float',
     ];

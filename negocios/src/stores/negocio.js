@@ -487,8 +487,9 @@ export const negocioStore = defineStore('negocio', {
         })
 
       // soma a FACE dos vales compras (decisao 20: valorvales e' bruto,
-      // simetrico ao valorprodutos) e as fatias de cabecalho que couberam a
-      // cada vale -- hoje sempre nulas; o rateio entra no milestone 4.
+      // simetrico ao valorprodutos) e a fatia do desconto que coube a cada
+      // vale. Frete, seguro e "outras" NAO sao rateados para o vale -- nao
+      // se cobra frete de vale compras -- entao continuam so' da mercadoria.
       // Negocio sem vale passa reto por aqui e a conta fica identica.
       let valorvales = 0
       ;(this.negocio.vales ?? [])
@@ -499,15 +500,6 @@ export const negocioStore = defineStore('negocio', {
           valorvales += parseFloat(vale.valorvale)
           if (vale.valordesconto > 0) {
             valordesconto += parseFloat(vale.valordesconto)
-          }
-          if (vale.valorfrete > 0) {
-            valorfrete += parseFloat(vale.valorfrete)
-          }
-          if (vale.valorseguro > 0) {
-            valorseguro += parseFloat(vale.valorseguro)
-          }
-          if (vale.valoroutras > 0) {
-            valoroutras += parseFloat(vale.valoroutras)
           }
         })
 
@@ -534,7 +526,49 @@ export const negocioStore = defineStore('negocio', {
       this.negocio.valorjuros = Math.round(valorjuros * 100) / 100
       this.negocio.valortotal = Math.round(valortotal * 100) / 100
 
+      this.ratearJuros()
       await this.recalcularTroco()
+    },
+
+    // Distribui o juros do parcelamento entre os itens e os vales.
+    //
+    // O juros nasce no pagamento, que e' do negocio inteiro, mas a nota
+    // fiscal precisa dele por item (vira "outras" no item da NF-e). Ratear
+    // aqui, e nao na hora de emitir, deixa o numero gravado e igual para
+    // quem emitir depois -- inclusive numa reemissao.
+    //
+    // NAO entra no valortotal do item nem do vale: a conferencia do servidor
+    // continua comparando "valortotal do negocio menos o juros" contra a
+    // soma dos itens. Por isso este metodo so' escreve o campo de juros e
+    // nao chama nenhum recalculo -- se chamasse, entraria em recursao com o
+    // recalcularValorTotal que o chama.
+    //
+    // Base e pesos sao os mesmos do rateio de desconto: os valores BRUTOS
+    // (valorprodutos do item, face do vale). A sobra do arredondamento fica
+    // no ultimo, como no rateio de desconto.
+    ratearJuros() {
+      const itens = this.negocio.itens.filter((item) => item.inativo == null)
+      const vales = (this.negocio.vales ?? []).filter((vale) => vale.inativo == null)
+
+      const arredonda = (num) => Math.round((parseFloat(num) || 0) * 100) / 100
+      const total = arredonda(this.negocio.valorjuros)
+      const pesos = [
+        ...itens.map((item) => arredonda(item.valorprodutos)),
+        ...vales.map((vale) => arredonda(vale.valorvale)),
+      ]
+      const base = arredonda(pesos.reduce((soma, peso) => soma + peso, 0))
+      const alvos = [...itens, ...vales]
+
+      // sem juros, ou sem nada em que ratear, ninguem guarda fatia
+      if (total == 0 || base == 0) {
+        alvos.forEach((alvo) => (alvo.valorjuros = null))
+        return
+      }
+
+      const fatias = pesos.map((peso) => arredonda((total * peso) / base))
+      const sobra = arredonda(total - fatias.reduce((soma, fatia) => soma + fatia, 0))
+      fatias[fatias.length - 1] = arredonda(fatias[fatias.length - 1] + sobra)
+      alvos.forEach((alvo, i) => (alvo.valorjuros = fatias[i] || null))
     },
 
     async recalcularTroco() {
@@ -888,6 +922,7 @@ export const negocioStore = defineStore('negocio', {
             valorfrete: null,
             valorseguro: null,
             valoroutras: null,
+            valorjuros: null,
             valortotal: null,
             criacao: formataTimestampIso(new Date()),
             alteracao: formataTimestampIso(new Date()),
@@ -1097,7 +1132,7 @@ export const negocioStore = defineStore('negocio', {
 
     // valorprodutos = soma dos itens ativos
     // valorvale     = produtos + avulso  <- a FACE, o credito que sera emitido
-    // valortotal    = a fatia PAGA: a face menos/mais o que o cabecalho
+    // valortotal    = a fatia PAGA: a face menos o desconto que o cabecalho
     //                 ratear para este vale (milestone 4). Hoje = face.
     valeRecalcularValores(vale) {
       let valorprodutos = 0
@@ -1112,18 +1147,11 @@ export const negocioStore = defineStore('negocio', {
       vale.valorvale =
         Math.round((vale.valorprodutos + parseFloat(vale.valoravulso || 0)) * 100) / 100
 
+      // a fatia paga = face menos o desconto rateado. So o desconto: frete,
+      // seguro e "outras" nao existem no vale.
       let valortotal = vale.valorvale
       if (vale.valordesconto) {
         valortotal -= parseFloat(vale.valordesconto)
-      }
-      if (vale.valorfrete) {
-        valortotal += parseFloat(vale.valorfrete)
-      }
-      if (vale.valorseguro) {
-        valortotal += parseFloat(vale.valorseguro)
-      }
-      if (vale.valoroutras) {
-        valortotal += parseFloat(vale.valoroutras)
       }
       vale.valortotal = Math.round(valortotal * 100) / 100
     },
@@ -1245,7 +1273,7 @@ export const negocioStore = defineStore('negocio', {
     // Cabecalho do vale (escola, aluno, turma e valor avulso). O kit de
     // origem nao muda depois de criado: quem errou o modelo exclui o vale
     // e lanca outro.
-    async valeSalvar(uuid, { codpessoafavorecido, aluno, turma, valoravulso }) {
+    async valeSalvar(uuid, { codpessoafavorecido, aluno, turma, valoravulso, valordesconto }) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
         const vale = (this.negocio.vales ?? []).find((v) => {
@@ -1261,6 +1289,12 @@ export const negocioStore = defineStore('negocio', {
         vale.aluno = aluno
         vale.turma = turma
         vale.valoravulso = parseFloat(valoravulso) || 0
+        // Desconto do vale: muda o que o cliente PAGA (valortotal), nunca a
+        // face -- o credito emitido e sempre o valor de face (decisao 5c).
+        // undefined = quem chamou nem mexeu no campo; deixa como esta.
+        if (valordesconto !== undefined) {
+          vale.valordesconto = parseFloat(valordesconto) || null
+        }
         vale.alteracao = formataTimestampIso(new Date())
         this.valeRecalcularValores(vale)
         await this.recalcularValorTotal()
@@ -1334,6 +1368,86 @@ export const negocioStore = defineStore('negocio', {
         await this.recalcularValorTotal()
         await this.salvar()
       })
+    },
+
+    // Rateia os valores de cabecalho (desconto / frete / seguro / outras) entre
+    // a MERCADORIA e os VALES, na proporcao do bruto de cada lado: o
+    // valorprodutos da mercadoria contra a FACE (valorvale) de cada vale
+    // (decisoes 5 e 20 do plano).
+    //
+    // A mercadoria continua sendo rateada pelo aplicarValores() INTACTO -- o
+    // que muda e' so' quanto chega la'. A fatia do vale para em
+    // tblnegociovale e NAO desce ao item dele (decisao 19): item de vale e'
+    // quantidade x preco, e so'.
+    //
+    // A FACE do vale nao se mexe: o desconto muda o que o cliente paga
+    // (valortotal), nunca o credito que a escola recebe (decisao 5c).
+    //
+    // Negocio SEM vale passa reto: a base e' so' a mercadoria e a chamada e'
+    // literalmente a de hoje.
+    async aplicarValoresCabecalho(valordesconto, valorfrete, valorseguro, valoroutras) {
+      await this.recarregar()
+
+      const vales = this.valesAtivos
+      if (!vales.length) {
+        return this.aplicarValores(valordesconto, valorfrete, valorseguro, valoroutras)
+      }
+
+      const arredonda = (num) => Math.round((parseFloat(num) || 0) * 100) / 100
+
+      const totalMercadoria = arredonda(this.negocio.valorprodutos)
+      const faces = vales.map((vale) => arredonda(vale.valorvale))
+      const base = arredonda(totalMercadoria + faces.reduce((soma, face) => soma + face, 0))
+
+      // Sem mercadoria ativa nao ha' onde jogar a sobra do arredondamento:
+      // quem absorve passa a ser o ultimo vale.
+      const temMercadoria = this.itensAtivos.length > 0
+
+      // Para cada valor de cabecalho devolve [fatiaDaMercadoria, fatiasDosVales]
+      const ratear = (valor) => {
+        const total = arredonda(Math.abs(valor || 0))
+        if (total == 0 || base == 0) {
+          return [0, faces.map(() => 0)]
+        }
+        const fatias = faces.map((face) => arredonda((total * face) / base))
+        let sobra = arredonda(total - fatias.reduce((soma, f) => soma + f, 0))
+        if (!temMercadoria) {
+          fatias[fatias.length - 1] = arredonda(fatias[fatias.length - 1] + sobra)
+          sobra = 0
+        }
+        return [sobra, fatias]
+      }
+
+      // So o DESCONTO e' rateado entre mercadoria e vales. Frete, seguro e
+      // "outras" vao inteiros para a mercadoria: nao se cobra frete nem
+      // seguro de um vale compras, e o vale nem tem coluna para eles.
+      const [mercDesconto, valeDesconto] = ratear(valordesconto)
+
+      // O uuid e' a identidade que sobrevive ao recarregar() de dentro do
+      // aplicarValores(): guardar a referencia do objeto nao serviria.
+      const fatiaPorUuid = {}
+      vales.forEach((vale, i) => {
+        fatiaPorUuid[vale.uuid] = {
+          valordesconto: valeDesconto[i] || null,
+        }
+      })
+
+      // mercadoria primeiro: o aplicarValores() recarrega do IndexedDB, entao
+      // qualquer fatia gravada nos vales antes desta linha seria descartada
+      await this.aplicarValores(mercDesconto, valorfrete, valorseguro, valoroutras)
+
+      for (const vale of this.valesAtivos) {
+        const fatia = fatiaPorUuid[vale.uuid]
+        if (!fatia) {
+          continue
+        }
+        vale.valordesconto = fatia.valordesconto
+        vale.alteracao = formataTimestampIso(new Date())
+        this.valeRecalcularValores(vale)
+      }
+
+      await this.recalcularValorTotal()
+      await this.salvar()
     },
 
     async aplicarValores(valordesconto, valorfrete, valorseguro, valoroutras) {
@@ -1724,20 +1838,6 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async fechar() {
-      // TRAVA TEMPORARIA -- sai no milestone 5 do plano do vale compras.
-      // Quem emite o credito e o fechamento, e isso ainda nao existe: fechar
-      // agora cobraria o cliente sem gerar vale nenhum. O servidor tambem
-      // recusa (PdvNegocioService::fechar); aqui e so para avisar antes.
-      if (this.valesAtivos.length > 0) {
-        Notify.create({
-          type: 'negative',
-          message:
-            'Negócio com Vale Compras ainda não pode ser fechado! A emissão do crédito entra na próxima etapa.',
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        return false
-      }
       if (!(await this.garantirSincronizado())) {
         Notify.create({
           type: 'negative',
@@ -2004,6 +2104,52 @@ export const negocioStore = defineStore('negocio', {
     async buscarVale(codtitulo) {
       const vale = await sSinc.buscarVale(codtitulo)
       return vale
+    },
+
+    // =================================================================
+    // CONSUMO DE VALE POR ESCOPO (escola / turma)
+    //
+    // O resgate por bipagem continua sendo o caminho de quem chega com o
+    // papel na mao. Este e' o outro caso: o pai chega sem papel nenhum e o
+    // caixa consome o credito da turma do filho, em FIFO.
+    // =================================================================
+
+    async valeEscopoFavorecidos(busca = null) {
+      return sSinc.valeEscopoFavorecidos(busca)
+    },
+
+    async valeEscopoTurmas(codpessoafavorecido) {
+      return sSinc.valeEscopoTurmas(codpessoafavorecido)
+    },
+
+    // Os vales ja usados NESTE negocio saem da escolha: o servidor ainda nao
+    // sabe deles (o pagamento so' baixa no fechamento), entao sem isso o
+    // FIFO devolveria o mesmo vale duas vezes.
+    async valeEscopoSelecionar(codpessoafavorecido, turma, valor) {
+      const usados = (this.negocio.pagamentos ?? [])
+        .filter((p) => p.codtitulo)
+        .map((p) => p.codtitulo)
+      return sSinc.valeEscopoSelecionar({
+        codpessoafavorecido,
+        turma: turma || null,
+        valor,
+        usados: usados.join(','),
+      })
+    },
+
+    // Um pagamento por vale: e' assim que o servidor amortiza cada credito e
+    // que o cancelamento sabe o que estornar de cada um. A tela e a nota
+    // agrupam (decisao 6), o banco nao.
+    async adicionarPagamentosVale(vales) {
+      for (const vale of vales) {
+        await this.adicionarPagamento({
+          codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_VALE),
+          tipo: 12, // tPag Vale Presente
+          codtitulo: vale.codtitulo,
+          valorpagamento: parseFloat(vale.usar),
+        })
+      }
+      return true
     },
   },
 })

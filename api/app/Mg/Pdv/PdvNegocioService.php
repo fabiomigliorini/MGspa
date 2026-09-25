@@ -50,8 +50,9 @@ class PdvNegocioService
     // O negocio tem DUAS colecoes que somam: os itens de mercadoria e os
     // vales compras (decisao 2 do plano). Cada lado tem o seu totalizador
     // bruto -- valorprodutos para a mercadoria, valorvales para a face dos
-    // vales -- e os valores de cabecalho (desconto/frete/seguro/outras)
-    // somam as duas fatias (decisao 20).
+    // vales -- e o DESCONTO de cabecalho soma as duas fatias (decisao 20).
+    // Frete, seguro e "outras" nao sao rateados para o vale e continuam
+    // batendo so' contra a mercadoria.
     //
     // Negocio sem vale: as somas do vale dao zero e a conferencia fica
     // identica ao que sempre foi.
@@ -64,6 +65,7 @@ class PdvNegocioService
                 sum(npb.valorfrete ) as valorfrete,
                 sum(npb.valoroutras ) as valoroutras,
                 sum(npb.valorseguro) as valorseguro,
+                sum(npb.valorjuros) as valorjuros,
                 sum(npb.valortotal) as valortotal
             from tblnegocioprodutobarra npb
             where npb.codnegocio = :codnegocio
@@ -73,13 +75,14 @@ class PdvNegocioService
             'codnegocio' => $negocio->codnegocio
         ])[0];
 
+        // Frete, seguro e "outras" nao entram: eles nao sao rateados para o
+        // vale (nao se cobra frete de vale compras), entao continuam sendo
+        // 100% da mercadoria.
         $sqlVale = '
             select
                 coalesce(sum(nv.valorvale), 0) as valorvales,
                 coalesce(sum(nv.valordesconto), 0) as valordesconto,
-                coalesce(sum(nv.valorfrete), 0) as valorfrete,
-                coalesce(sum(nv.valoroutras), 0) as valoroutras,
-                coalesce(sum(nv.valorseguro), 0) as valorseguro,
+                coalesce(sum(nv.valorjuros), 0) as valorjuros,
                 coalesce(sum(nv.valortotal), 0) as valortotal
             from tblnegociovale nv
             where nv.codnegocio = :codnegocio
@@ -89,27 +92,45 @@ class PdvNegocioService
             'codnegocio' => $negocio->codnegocio
         ])[0];
 
-        if (!static::valoresBatem($negocio->valorprodutos, $tot->valorprodutos)) {
+        // Qual total divergiu fica no log: a mensagem que chega no PDV e'
+        // sempre a mesma ("nao bate"), e sem isso descobrir qual dos sete
+        // valores brigou custava reproduzir o negocio inteiro na mao.
+        $divergencias = [];
+        $confere = function ($campo, $cabecalho, $somado) use (&$divergencias) {
+            if (!static::valoresBatem($cabecalho, $somado)) {
+                $divergencias[$campo] = [
+                    'cabecalho' => round(floatval($cabecalho), 2),
+                    'itens' => round(floatval($somado), 2),
+                ];
+            }
+        };
+
+        $confere('valorprodutos', $negocio->valorprodutos, $tot->valorprodutos);
+        $confere('valorvales', $negocio->valorvales, $totVale->valorvales);
+        $confere('valordesconto', $negocio->valordesconto, floatval($tot->valordesconto) + floatval($totVale->valordesconto));
+        $confere('valorfrete', $negocio->valorfrete, $tot->valorfrete);
+        $confere('valoroutras', $negocio->valoroutras, $tot->valoroutras);
+        $confere('valorseguro', $negocio->valorseguro, $tot->valorseguro);
+        $confere('valortotal', $negocio->valortotal - $negocio->valorjuros, floatval($tot->valortotal) + floatval($totVale->valortotal));
+
+        // O juros do parcelamento nasce no pagamento, no cabecalho, e e'
+        // rateado entre os itens e os vales -- e' o item que a nota fiscal
+        // le depois. Ele NAO entra no valortotal do item (por isso a linha
+        // acima subtrai o do cabecalho); esta checagem so' garante que a
+        // distribuicao nao se perdeu no caminho.
+        //
+        // Sem item e sem vale nao ha' onde ratear (existe negocio assim na
+        // base: cancelado, so' com pagamento). Ai a checagem nao se aplica.
+        $baseJuros = floatval($tot->valorprodutos) + floatval($totVale->valorvales);
+        if ($baseJuros > 0) {
+            $confere('valorjuros', $negocio->valorjuros, floatval($tot->valorjuros) + floatval($totVale->valorjuros));
+        }
+
+        if (count($divergencias) > 0) {
+            Log::warning("Totais do negocio {$negocio->codnegocio} nao batem com os itens", $divergencias);
             return false;
         }
-        if (!static::valoresBatem($negocio->valorvales, $totVale->valorvales)) {
-            return false;
-        }
-        if (!static::valoresBatem($negocio->valordesconto, floatval($tot->valordesconto) + floatval($totVale->valordesconto))) {
-            return false;
-        }
-        if (!static::valoresBatem($negocio->valorfrete, floatval($tot->valorfrete) + floatval($totVale->valorfrete))) {
-            return false;
-        }
-        if (!static::valoresBatem($negocio->valoroutras, floatval($tot->valoroutras) + floatval($totVale->valoroutras))) {
-            return false;
-        }
-        if (!static::valoresBatem($negocio->valorseguro, floatval($tot->valorseguro) + floatval($totVale->valorseguro))) {
-            return false;
-        }
-        if (!static::valoresBatem($negocio->valortotal - $negocio->valorjuros, floatval($tot->valortotal) + floatval($totVale->valortotal))) {
-            return false;
-        }
+
         return true;
     }
 
@@ -306,7 +327,14 @@ class PdvNegocioService
         }
 
         // validacao de itens informados
-        if ($negocio->NegocioProdutoBarras()->whereNull('inativo')->count() == 0) {
+        //
+        // Um vale compras sozinho E' conteudo: a venda avulsa de vale sem
+        // nenhuma mercadoria junto e' o caso mais comum do vale (era assim
+        // no MGLara, e sao 3.718 vales historicos quase todos assim).
+        if (
+            $negocio->NegocioProdutoBarraS()->whereNull('inativo')->count() == 0
+            && !$negocio->NegocioValeS()->whereNull('inativo')->exists()
+        ) {
             throw new Exception('Não foi informado nenhum produto neste negócio!', 1);
         }
 
@@ -314,14 +342,9 @@ class PdvNegocioService
             throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
         }
 
-        // TRAVA TEMPORARIA -- sai no milestone 5 do plano do vale compras.
-        // Quem emite o credito (titulo tipo 3 em nome da escola) e' o
-        // fechamento, e isso ainda nao existe. Sem esta trava, fechar aqui
-        // geraria uma venda cobrada do cliente sem nenhum credito do outro
-        // lado -- dinheiro recebido e vale que nao existe.
-        if ($negocio->NegocioValeS()->whereNull('inativo')->exists()) {
-            throw new Exception('Negócio com Vale Compras ainda não pode ser fechado! A emissão do crédito entra na próxima etapa.', 1);
-        }
+        // vale compras: natureza tem que gerar financeiro e vale nao pode
+        // estar zerado (negocio sem vale passa reto)
+        PdvNegocioValeService::validarFechamento($negocio);
 
         // validacoes de venda
         if ($negocio->NaturezaOperacao->venda == true) {
@@ -425,8 +448,18 @@ class PdvNegocioService
             $negocio->valoraprazo = $prazo;
             $negocio->valoravista = $negocio->valortotal - $prazo;
             $negocio->save();
+            // Reconfere, COM LOCK, o saldo de cada vale usado como pagamento
+            // -- antes de baixar. Com o consumo por escopo, dois PDVs montam
+            // o FIFO sobre o mesmo pool da escola e os dois passam na
+            // validacao da tela; quem separa e' esta trava.
+            PdvValeEscopoService::reconferirSaldos($negocio);
             PdvNegocioPrazoService::baixarVales($negocio);
             PdvNegocioChequeService::gerar($negocio);
+            // emite o credito de cada vale VENDIDO neste negocio (titulo
+            // tipo 3 / conta 83 em nome do favorecido). Vem depois do
+            // baixarVales de proposito: aquele consome vale ANTIGO como
+            // forma de pagamento, este cria o vale NOVO.
+            PdvNegocioValeService::emitirCreditos($negocio);
         } else {
             $negocio->valoraprazo = 0;
             $negocio->valoravista = 0;
@@ -479,6 +512,10 @@ class PdvNegocioService
             throw new Exception("Status do Negócio Não Permite Cancelamento!", 1);
         }
 
+        // vale ja' usado nao volta: avisa antes de comecar a estornar
+        // qualquer coisa
+        PdvNegocioValeService::validarCancelamento($negocio);
+
         $nfs = NotaFiscalNegocioService::notasDoNegocio($negocio->codnegocio);
         foreach ($nfs as $nf) {
             if (NotaFiscalStatusService::isAtiva($nf)) {
@@ -500,6 +537,10 @@ class PdvNegocioService
             }
         }
         PdvNegocioPrazoService::estornarBaixaVales($negocio);
+        // o credito emitido por ESTE negocio e' titulo solto: so'
+        // tblnegociovale.codtitulo aponta para ele, entao o loop dos
+        // pagamentos acima nunca o alcanca
+        PdvNegocioValeService::estornarCreditos($negocio);
         PdvNegocioChequeService::cancelar($negocio);
 
         $negocio->codnegociostatus = NegocioService::STATUS_CANCELADO;

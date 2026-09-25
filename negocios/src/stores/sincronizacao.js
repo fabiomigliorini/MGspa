@@ -915,6 +915,36 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
+    // Consumo de vale por escopo (escola / turma). Online, como o buscarVale:
+    // o saldo do credito mora no servidor e nao no cache do PDV.
+    async valeEscopoFavorecidos(busca = null) {
+      return this.getValeEscopo('/v1/pdv/vale-escopo/favorecido', { busca })
+    },
+
+    async valeEscopoTurmas(codpessoafavorecido) {
+      return this.getValeEscopo(`/v1/pdv/vale-escopo/favorecido/${codpessoafavorecido}/turma`)
+    },
+
+    async valeEscopoSelecionar(params) {
+      return this.getValeEscopo('/v1/pdv/vale-escopo/selecionar', params)
+    },
+
+    async getValeEscopo(url, params = {}) {
+      try {
+        const ret = await api.get(url, { params })
+        return ret.data
+      } catch (error) {
+        console.log(error)
+        Notify.create({
+          type: 'negative',
+          message: error.response?.data?.message ?? 'Falha ao consultar os vales da escola!',
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return null
+      }
+    },
+
     async buscarVale(codtitulo) {
       try {
         const ret = await api.get('/v1/pdv/vale/' + codtitulo)
