@@ -6,6 +6,7 @@ import { ref, computed, onMounted } from 'vue'
 import { Notify } from 'quasar'
 import { negocioStore } from 'stores/negocio'
 import { db } from 'boot/db'
+import MgInput from '@components/MgInput.vue'
 import { formataNumero } from '@components/formatters'
 import { calcularParcelas } from '../../../utils/parcelamento.js'
 import { VISUAL } from '../../../utils/pagamento.js'
@@ -354,6 +355,11 @@ const salvarManual = async () => {
   emit('concluido')
 }
 
+// botão do rodapé do wizard: só as etapas que terminam em lançamento têm ação
+const acao = computed(() =>
+  etapa.value === 'autorizacao' ? { label: 'Lançar (Enter)', executar: salvarManual } : null,
+)
+
 // devolve true quando consumiu a tecla
 const tecla = (e) => {
   if (e.key === 'Escape') {
@@ -371,7 +377,7 @@ const tecla = (e) => {
   }
 }
 
-defineExpose({ tecla })
+defineExpose({ tecla, acao })
 </script>
 <template>
   <div>
@@ -423,13 +429,7 @@ defineExpose({ tecla })
           <template v-if="plano?.valorjuros"> · com juros</template>
         </div>
       </div>
-      <q-input
-        v-model="autorizacao"
-        label="Código de autorização"
-        outlined
-        autofocus
-        maxlength="20"
-      />
+      <MgInput v-model="autorizacao" label="Código de autorização" autofocus maxlength="20" />
       <div class="text-caption text-grey-7 q-mt-sm">Enter lança o pagamento</div>
     </template>
 
