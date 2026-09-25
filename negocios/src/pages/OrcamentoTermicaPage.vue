@@ -2,7 +2,12 @@
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { negocioStore } from 'src/stores/negocio'
-import { formataCnpjCpf, formataNumero, formataTimestamp, formataCodigo } from '@components/formatters'
+import {
+  formataCnpjCpf,
+  formataNumero,
+  formataTimestamp,
+  formataCodigo,
+} from '@components/formatters'
 import BarCode from 'components/BarCode.vue'
 
 const route = useRoute()
@@ -112,6 +117,15 @@ onMounted(() => {
           <tr v-if="sNegocio.negocio.valorprodutos != sNegocio.negocio.valortotal">
             <td class="subtotal text-right">
               Produtos R$ {{ formataNumero(sNegocio.negocio.valorprodutos) }}
+            </td>
+          </tr>
+
+          <!-- o vale nao e item: sem esta linha o total nao fecha com a lista -->
+          <tr v-for="vale in sNegocio.valesAtivos" :key="vale.uuid">
+            <td class="text-right">
+              Vale Compras
+              <template v-if="vale.aluno">{{ vale.aluno }}</template>
+              R$ {{ formataNumero(vale.valorvale) }}
             </td>
           </tr>
 

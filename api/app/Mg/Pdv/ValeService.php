@@ -9,32 +9,71 @@ use Mg\Titulo\TituloService;
 
 class ValeService
 {
+    /**
+     * Comprovante termico 80mm dos vales de um negocio.
+     *
+     * Sao DOIS tipos de vale no mesmo papel, e a diferenca importa:
+     *
+     * - o vale VENDIDO neste negocio (tblnegociovale) leva escola, aluno,
+     *   turma e a lista do kit, porque e' com ela que a familia vai retirar
+     *   o material. O titulo dele e' solto (so' tblnegociovale.codtitulo
+     *   aponta), entao o loop dos pagamentos abaixo nunca o acha;
+     * - o vale que SOBROU de um resgate parcial, ou o credito de uma
+     *   devolucao, leva so' o valor -- e' o caminho que ja' rodava e nao
+     *   mudou.
+     *
+     * Os dois saem com o mesmo codigo de barras "VAL{codtitulo}", que e' o
+     * que o caixa bipa no wizard Receber.
+     */
     public static function pdf(Negocio $negocio)
     {
         $generator = new BarcodeGeneratorPNG();
-        $tits = [];
+
+        // vales vendidos neste negocio
+        $comprovantes = [];
+        foreach (PdvNegocioValeService::valesAtivos($negocio) as $i => $vale) {
+            if (empty($vale->codtitulo) || empty($vale->Titulo)) {
+                continue;
+            }
+            $comprovantes[$vale->codtitulo] = [
+                'titulo' => $vale->Titulo,
+                'vale' => $vale,
+                'letra' => PdvNegocioValeService::letra($i),
+            ];
+        }
+
+        // saldo de vale resgatado e credito de devolucao (caminho de sempre)
         foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
             if (!empty($nfp->codtitulo)) {
                 if ($nfp->Titulo->codtipotitulo == TituloService::TIPO_VALE && $nfp->Titulo->saldo < 0) {
-                    $tits[$nfp->codtitulo] = $nfp->Titulo;
+                    $comprovantes[$nfp->codtitulo] = $comprovantes[$nfp->codtitulo] ?? [
+                        'titulo' => $nfp->Titulo,
+                        'vale' => null,
+                        'letra' => null,
+                    ];
                 }
             }
             foreach ($nfp->TituloS as $tit) {
                 if ($tit->codtipotitulo == TituloService::TIPO_VALE && $tit->saldo < 0) {
-                    $tits[] = $tit;
+                    $comprovantes[$tit->codtitulo] = $comprovantes[$tit->codtitulo] ?? [
+                        'titulo' => $tit,
+                        'vale' => null,
+                        'letra' => null,
+                    ];
                 }
             }
         }
 
         $barcodes = [];
-        foreach ($tits as $tit) {
+        foreach ($comprovantes as $comp) {
+            $tit = $comp['titulo'];
             $str = 'VAL' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
             $barcodes[$tit->codtitulo] = base64_encode($generator->getBarcode($str, $generator::TYPE_CODE_128, 1, 60));
         }
 
         // carrega HTML da view
         $dompdf = new Dompdf();
-        $html = view('negocio.vale', compact('tits', 'barcodes'))->render();
+        $html = view('negocio.vale', compact('comprovantes', 'barcodes'))->render();
         $dompdf->loadHtml($html, 'UTF-8');
 
         // Bobina 80mm x 297 (altura A4)

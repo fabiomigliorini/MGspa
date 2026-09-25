@@ -25,6 +25,19 @@ const imagem = computed(() => {
   return '/produtoSemImagem.png'
 })
 
+// Total do item como o usuario ve na edicao ("Valor Total Final"): o valor dos produtos
+// menos o desconto e mais os acessorios. Mostrar so o valortotal fazia o card exibir 3,90
+// num item que na nota vale 4,64 por causa das outras despesas.
+const valorTotalFinal = computed(() => {
+  return (
+    Number(props.item.valortotal || 0) -
+    Number(props.item.valordesconto || 0) +
+    Number(props.item.valorfrete || 0) +
+    Number(props.item.valorseguro || 0) +
+    Number(props.item.valoroutras || 0)
+  )
+})
+
 const tabRural = computed(() => {
   return (
     props.item.funruralpercentual ||
@@ -116,7 +129,7 @@ const getProdutoUrl = (codproduto) => {
           <div class="col-4">
             <div class="text-caption text-grey-7">Total</div>
             <div class="text-body1 text-primary text-weight-bold">
-              {{ formataNumero(item.valortotal) }}
+              {{ formataNumero(valorTotalFinal) }}
             </div>
           </div>
 

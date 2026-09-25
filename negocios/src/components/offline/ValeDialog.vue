@@ -51,6 +51,8 @@ const form = ref({
   turma: null,
   valoravulso: 0,
   valorprodutos: 0,
+  percentualdesconto: null,
+  valordesconto: null,
 })
 
 const isNovo = computed(() => !sNegocio.valeEditando)
@@ -75,7 +77,35 @@ const formVazio = () => ({
   turma: null,
   valoravulso: 0,
   valorprodutos: 0,
+  percentualdesconto: null,
+  valordesconto: null,
 })
+
+// O que o cliente PAGA por este vale: a face menos o desconto. A face não
+// muda — o crédito que a escola recebe é sempre ela (decisão 5c do plano).
+// Frete, seguro e "outras" não entram: não se cobra isso de um vale.
+const valorPago = computed(() => {
+  const total = valorVale.value - (parseFloat(form.value.valordesconto) || 0)
+  return Math.round(total * 100) / 100
+})
+
+// % e valor andam juntos, como no item de mercadoria; a base é a FACE.
+const recalcularValorDesconto = () => {
+  if (!(form.value.percentualdesconto > 0)) {
+    form.value.valordesconto = null
+    return
+  }
+  form.value.valordesconto = Math.round(valorVale.value * form.value.percentualdesconto) / 100
+}
+
+const recalcularPercentualDesconto = () => {
+  if (!(form.value.valordesconto > 0) || !valorVale.value) {
+    form.value.percentualdesconto = null
+    return
+  }
+  form.value.percentualdesconto =
+    Math.round((form.value.valordesconto * 1000) / valorVale.value) / 10
+}
 
 // As escolas saem do próprio catálogo sincronizado: só aparece quem tem kit
 // para vender. Kit sem escola vira o grupo "ao portador".
@@ -127,6 +157,11 @@ const preparar = async () => {
     valoravulso: vale.valoravulso,
     // na edição o kit já está lançado: o valor dele vem dos itens do vale
     valorprodutos: vale.valorprodutos,
+    valordesconto: vale.valordesconto,
+    percentualdesconto:
+      vale.valordesconto > 0 && vale.valorvale > 0
+        ? Math.round((vale.valordesconto / vale.valorvale) * 1000) / 10
+        : null,
   }
 }
 
@@ -434,6 +469,43 @@ const salvar = async () => {
                 :min="0"
                 :autofocus="!temFavorecido"
               />
+            </div>
+
+            <!-- Desconto do vale, igual ao do item de mercadoria: % e valor
+                 andam juntos. A diferenca e que aqui ele NAO mexe na face:
+                 a escola recebe o valor de face, o desconto sai do que o
+                 cliente paga. -->
+            <div class="col-6 col-sm-4">
+              <MgInputValor
+                :decimals="1"
+                :min="0"
+                :max="99.9"
+                v-model="form.percentualdesconto"
+                label="% Desc"
+                suffix="%"
+                @change="recalcularValorDesconto()"
+              />
+            </div>
+            <div class="col-6 col-sm-4">
+              <MgInputValor
+                :min="0"
+                :max="valorVale"
+                v-model="form.valordesconto"
+                prefix="R$"
+                label="Desconto"
+                @change="recalcularPercentualDesconto()"
+              />
+            </div>
+
+            <div class="col-12 col-sm-8" v-if="valorPago != valorVale">
+              <div class="row items-center">
+                <div class="col text-caption text-grey-7">Cliente paga</div>
+                <div class="col-auto text-subtitle1">{{ formataNumero(valorPago) }}</div>
+              </div>
+              <div class="text-caption text-grey-7">
+                O crédito emitido continua sendo a face:
+                {{ formataNumero(valorVale) }}
+              </div>
             </div>
           </div>
         </q-card-section>

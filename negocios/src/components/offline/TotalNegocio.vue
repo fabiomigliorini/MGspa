@@ -32,12 +32,23 @@ const edicao = ref({
   valortotal: null,
 })
 
+// O desconto de cabecalho vale para o negocio inteiro -- mercadoria E vales
+// (decisao 20). A base do % e do teto e' a soma dos dois brutos; sem vale,
+// valorvales e' zero e a conta fica identica a de sempre.
+const baseRateio = computed(
+  () =>
+    Math.round(
+      (parseFloat(edicao.value.valorprodutos || 0) + parseFloat(edicao.value.valorvales || 0)) *
+        100,
+    ) / 100,
+)
+
 const editarValores = () => {
   edicao.value.valorprodutos = sNegocio.negocio.valorprodutos
   edicao.value.valorvales = sNegocio.negocio.valorvales
-  if (sNegocio.negocio.valordesconto > 0 && sNegocio.negocio.valorprodutos) {
+  if (sNegocio.negocio.valordesconto > 0 && baseRateio.value) {
     edicao.value.percentualdesconto =
-      Math.round((sNegocio.negocio.valordesconto / sNegocio.negocio.valorprodutos) * 1000) / 10
+      Math.round((sNegocio.negocio.valordesconto / baseRateio.value) * 1000) / 10
   } else {
     edicao.value.percentualdesconto = null
   }
@@ -69,7 +80,7 @@ const salvar = async () => {
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(() => {
-    sNegocio.aplicarValores(
+    sNegocio.aplicarValoresCabecalho(
       parseFloat(edicao.value.valordesconto),
       parseFloat(edicao.value.valorfrete),
       parseFloat(edicao.value.valorseguro),
@@ -84,7 +95,7 @@ const recalcularValorDesconto = () => {
     edicao.value.valordesconto = null
   } else {
     edicao.value.valordesconto =
-      Math.round(edicao.value.valorprodutos * edicao.value.percentualdesconto) / 100
+      Math.round(baseRateio.value * edicao.value.percentualdesconto) / 100
   }
   recalcularValorTotal()
 }
@@ -94,14 +105,14 @@ const recalcularPercentualDesconto = () => {
     edicao.value.percentualdesconto = null
   } else {
     edicao.value.percentualdesconto =
-      Math.round((edicao.value.valordesconto * 1000) / edicao.value.valorprodutos) / 10
+      Math.round((edicao.value.valordesconto * 1000) / baseRateio.value) / 10
   }
   recalcularValorTotal()
 }
 
 const recalcularValorTotal = () => {
   // a face dos vales entra no total como o valorprodutos da mercadoria
-  let total = parseFloat(edicao.value.valorprodutos) + (parseFloat(edicao.value.valorvales) || 0)
+  let total = baseRateio.value
   if (edicao.value.valordesconto) {
     total -= parseFloat(edicao.value.valordesconto)
   }
@@ -230,6 +241,36 @@ const cobrancas = computed(() => {
   return [...pix, ...pagarMe, ...saurus]
 })
 
+// Consumo de vários vales vira UMA linha na tela (decisão 6 do plano): no
+// FIFO por escola um pagamento de R$ 300 pode virar 5 vales, e 5 linhas
+// iguais escondem o resto do pagamento. No banco continuam N, e o grupo
+// abre em um toque para o operador poder tirar um do lote.
+const CODFORMAPAGAMENTO_VALE = parseInt(process.env.CODFORMAPAGAMENTO_VALE)
+
+const valesLancados = computed(() =>
+  (sNegocio.negocio?.pagamentos ?? []).filter(
+    (p) => p.codformapagamento == CODFORMAPAGAMENTO_VALE && p.codtitulo,
+  ),
+)
+
+const agruparVales = computed(() => valesLancados.value.length > 1)
+
+const valesExpandidos = ref(false)
+
+const valesTotal = computed(() =>
+  valesLancados.value.reduce((soma, p) => soma + parseFloat(p.valortotal), 0),
+)
+
+// a lista da tela: sem agrupamento é a de sempre, com agrupamento os vales
+// saem daqui e viram a linha única
+const pagamentosVisiveis = computed(() => {
+  const pagamentos = sNegocio.negocio?.pagamentos ?? []
+  if (!agruparVales.value) {
+    return pagamentos
+  }
+  return pagamentos.filter((p) => !(p.codformapagamento == CODFORMAPAGAMENTO_VALE && p.codtitulo))
+})
+
 const temLancamento = computed(
   () => sNegocio.negocio.pagamentos.length > 0 || cobrancas.value.length > 0,
 )
@@ -254,16 +295,36 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
     <q-card style="width: 350px; max-width: 80vw">
       <q-form ref="formItem" @submit="salvar()">
         <q-card-section>
+          <!-- sem :rules porque venda so' de vale nao tem mercadoria: cobrar
+               obrigatorio aqui travava o dialog num campo readonly que
+               ninguem consegue preencher. Quem garante que o negocio nao e'
+               zerado e' o Total, la' embaixo -->
           <div class="row justify-end q-col-gutter-md">
             <div class="col-6"></div>
             <div class="col-6">
               <MgInputValor
                 readonly
-                :min="0.01"
+                bottom-slots
                 v-model="edicao.valorprodutos"
                 prefix="R$"
                 label="Total Produtos"
-                :rules="preenchimentoObrigatorioRule"
+              />
+            </div>
+          </div>
+          <!-- a base do % e do desconto e' produtos + vales: sem mostrar os
+               vales aqui, o desconto calculado parece nao bater com nada.
+               bottom-slots: campo sem :rules nao reserva a linha da mensagem
+               embaixo -- era o degrau no espacamento entre "Total Vales" e
+               "Desconto" -->
+          <div class="row justify-end q-col-gutter-md" v-if="edicao.valorvales > 0">
+            <div class="col-6"></div>
+            <div class="col-6">
+              <MgInputValor
+                readonly
+                bottom-slots
+                v-model="edicao.valorvales"
+                prefix="R$"
+                label="Total Vales"
               />
             </div>
           </div>
@@ -283,7 +344,7 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
             </div>
             <div class="col-6">
               <MgInputValor
-                :max="edicao.valorprodutos - 0.01"
+                :max="baseRateio - 0.01"
                 v-model="edicao.valordesconto"
                 prefix="R$"
                 label="Desconto"
@@ -477,8 +538,40 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
 
     <!-- PAGAMENTOS + COBRANÇAS EM ABERTO -->
     <q-list v-if="temLancamento" class="q-pt-sm">
+      <!-- VALES AGRUPADOS: uma linha, que abre no toque -->
+      <template v-if="agruparVales">
+        <q-item clickable v-ripple @click="valesExpandidos = !valesExpandidos">
+          <q-item-section avatar>
+            <logo-pagamento v-bind="visualPagamento(valesLancados[0])" size="40px" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="ellipsis">Vale Compras</q-item-label>
+            <q-item-label caption class="ellipsis"> {{ valesLancados.length }} vales </q-item-label>
+          </q-item-section>
+          <q-item-section side class="text-subtitle1 text-weight-bold text-grey-9">
+            {{ formataNumero(valesTotal) }}
+            <q-icon :name="valesExpandidos ? 'expand_less' : 'expand_more'" color="grey-6" />
+          </q-item-section>
+        </q-item>
+        <q-item
+          v-for="pag in valesExpandidos ? valesLancados : []"
+          :key="pag.uuid"
+          clickable
+          v-ripple
+          class="q-pl-xl"
+          @click="abrirPagamento(pag)"
+        >
+          <q-item-section>
+            <q-item-label class="ellipsis">Vale #{{ pag.codtitulo }}</q-item-label>
+          </q-item-section>
+          <q-item-section side class="text-subtitle1 text-grey-8">
+            {{ formataNumero(pag.valortotal) }}
+          </q-item-section>
+        </q-item>
+      </template>
+
       <q-item
-        v-for="pag in sNegocio.negocio.pagamentos"
+        v-for="pag in pagamentosVisiveis"
         :key="pag.uuid"
         clickable
         v-ripple

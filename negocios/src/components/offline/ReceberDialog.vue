@@ -450,6 +450,14 @@ const tecla = (e) => {
           tabindex="-1"
           @click="editando ? aplicarEdicao() : continuar()"
         />
+        <q-btn
+          v-if="passo === 3 && formaRef?.acao"
+          flat
+          color="primary"
+          :label="formaRef.acao.label"
+          tabindex="-1"
+          @click="formaRef.acao.executar()"
+        />
       </q-card-actions>
     </q-card>
   </q-dialog>

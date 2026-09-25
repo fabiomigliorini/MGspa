@@ -5,7 +5,13 @@ import { db } from 'boot/db'
 import { negocioStore } from 'src/stores/negocio'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
-import { formataCnpjCpf, formataCnpj, formataNumero, formataTimestamp, formataCodigo } from '@components/formatters'
+import {
+  formataCnpjCpf,
+  formataCnpj,
+  formataNumero,
+  formataTimestamp,
+  formataCodigo,
+} from '@components/formatters'
 import { produtoStore } from 'src/stores/produto'
 import BarCode from 'components/BarCode.vue'
 
@@ -138,6 +144,19 @@ onMounted(async () => {
               {{ formataNumero(sNegocio.negocio.valorprodutos) }}
             </td>
           </tr>
+          <!-- o vale nao e item, entao nao aparece na lista acima: a linha
+               abaixo e o que explica a diferenca ate o total -->
+          <tr v-for="vale in sNegocio.valesAtivos" :key="vale.uuid">
+            <td colspan="6" class="text-right">
+              Vale Compras
+              <template v-if="vale.codpessoafavorecido != 1 && vale.favorecido">
+                — {{ vale.favorecido }}
+              </template>
+              <template v-if="vale.aluno"> ({{ vale.aluno }})</template>
+            </td>
+            <td class="text-right">{{ formataNumero(vale.valorvale) }}</td>
+          </tr>
+
           <tr v-if="sNegocio.negocio.valordesconto">
             <td colspan="6" class="text-right">Desconto</td>
             <td class="text-right">

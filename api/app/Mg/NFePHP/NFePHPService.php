@@ -18,7 +18,6 @@ use NFePHP\NFe\Complements;
 use NFePHP\NFe\Common\Standardize;
 use NFePHP\Common\Strings;
 use NFePHP\DA\NFe\Danfe;
-use NFePHP\DA\NFe\Danfce;
 
 class NFePHPService extends MgService
 {
@@ -1245,7 +1244,9 @@ class NFePHPService extends MgService
             // margem de 5 pro chrome não cortar na impressao
             $danfe->printParameters('P', 'A4', 5, 5);
         } else {
-            $danfe = new Danfce($xml);
+            // DanfceMg em vez da Danfce da sped-da: so pra imprimir seguro e outras
+            // despesas no bloco de totais (ver a classe)
+            $danfe = new DanfceMg($xml);
             $danfe->setMargins(3);
             // Imprime somente via CLiente quando offline
             $danfe->setOffLineDoublePrint(false);

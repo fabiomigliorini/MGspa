@@ -21,16 +21,20 @@
 --   valorprodutos = soma dos itens do vale   (calculado)
 --   valoravulso   = valor digitado a mao
 --   valorvale     = produtos + avulso  <- a FACE, o credito emitido
---   valortotal    = a FATIA PAGA, depois do rateio de desconto/frete/etc
+--   valortotal    = a FATIA PAGA, depois do rateio do desconto
 --                   (milestone 4). Hoje nasce igual a' face.
 -- "valorvale" e "valortotal" sao coisas diferentes DE PROPOSITO: a escola
 -- recebe a face; o cliente paga a fatia. No exemplo do plano, vale de
 -- R$ 200 com R$ 20 de desconto rateado => valorvale 200, valortotal 180,
 -- e o credito gerado e' 200 (decisao 5c).
 --
--- ITEM DE VALE E' SO' QUANTIDADE x PRECO (decisao 19): desconto, frete,
--- seguro, outras e juros param em tblnegociovale e NAO descem ao item.
--- Por isso a tabela de item tem metade das colunas da de mercadoria.
+-- ITEM DE VALE E' SO' QUANTIDADE x PRECO (decisao 19): desconto e juros
+-- param em tblnegociovale e NAO descem ao item. Por isso a tabela de item
+-- tem metade das colunas da de mercadoria.
+--
+-- E nem tudo que a mercadoria tem no cabecalho existe no vale: FRETE,
+-- SEGURO e "OUTRAS" nao sao rateados -- nao se cobra frete nem seguro de um
+-- vale compras. Eles ficam 100% na mercadoria.
 --
 -- codvalecompra: o numero do vale ANTIGO (tblvalecompra), preenchido so'
 -- na conversao do legado (milestone 9), para o papel que ja' esta' na mao
@@ -71,11 +75,12 @@ CREATE TABLE IF NOT EXISTS tblnegociovale (
   valorprodutos        numeric(14,2) NOT NULL DEFAULT 0,  -- soma dos itens
   valoravulso          numeric(14,2) NOT NULL DEFAULT 0,  -- valor digitado
   valorvale            numeric(14,2) NOT NULL DEFAULT 0,  -- FACE = produtos + avulso
+  -- So desconto e juros sao rateados entre mercadoria e vale. Frete, seguro
+  -- e "outras" NAO existem aqui de proposito: nao se cobra frete nem seguro
+  -- de um vale compras -- isso e' da mercadoria que vai ser entregue. Esses
+  -- tres ficam 100% na mercadoria.
   valordesconto        numeric(14,2),   -- fatia do cabecalho rateada (milestone 4)
-  valorfrete           numeric(14,2),
-  valorseguro          numeric(14,2),
-  valoroutras          numeric(14,2),
-  valorjuros           numeric(14,2),
+  valorjuros           numeric(14,2),   -- fatia dos juros do parcelamento
   valortotal           numeric(14,2) NOT NULL DEFAULT 0,  -- fatia PAGA, apos rateio
   validade             date,            -- informativa: emissao + 1 ano (decisao 8)
   codvalecompra        bigint,          -- numero do vale antigo (milestone 9)
@@ -105,6 +110,15 @@ CREATE TABLE IF NOT EXISTS tblnegociovaleprodutobarra (
   alteracao            timestamp(0) without time zone NOT NULL DEFAULT now(),
   codusuarioalteracao  bigint
 );
+
+-- ---------------------------------------------------------------------
+-- 2b) Banco que rodou a primeira versao deste arquivo tem as tres colunas
+--     que nao fazem sentido no vale. Nao ha' dado a preservar: elas nunca
+--     chegaram a producao e em dev so' tinham NULL.
+-- ---------------------------------------------------------------------
+ALTER TABLE tblnegociovale DROP COLUMN IF EXISTS valorfrete;
+ALTER TABLE tblnegociovale DROP COLUMN IF EXISTS valorseguro;
+ALTER TABLE tblnegociovale DROP COLUMN IF EXISTS valoroutras;
 
 -- ---------------------------------------------------------------------
 -- 3) Indices

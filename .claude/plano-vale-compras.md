@@ -1,5 +1,71 @@
 # Vale Compras dentro do negócio
 
+## RESULTADO DA NOITE (24→25/09/2026)
+
+**VEREDITO DO CASO 1 DO MILESTONE 6 (regressão do XML de venda só com mercadoria):
+DIFF VAZIO.** O XML de uma venda só com mercadoria saiu **byte a byte idêntico** antes e depois da
+mudança — 5.960 bytes dos dois lados, `diff` sem uma linha. Mais duas formas de venda sem vale foram
+pelo mesmo caminho e também deram diff vazio: com **juros** parcelados (5.945 bytes), que é onde ficam
+as duas outras linhas mexidas, e **NFe 55 a prazo com duplicatas** (5.493 bytes). A emissão de nota
+da empresa não mudou.
+
+O método está descrito no milestone 6 abaixo e foi provado antes de servir de prova: gerando duas
+vezes o XML do mesmo negócio **sem mudar nada de código**, o resultado já era byte a byte idêntico —
+então uma diferença depois seria da mudança, não do método.
+
+### Pronto
+Os cinco milestones pedidos, todos na árvore de trabalho e **sem nenhum commit**: **4** (rateio de
+desconto/frete/seguro/outras entre mercadoria e vales, e o job de estoque do MGLara aposentando o
+rateio de cabeçalho), **5** (crédito tipo 3 no fechamento, estorno no cancelamento, comprovante 80mm
+com escola/aluno/turma/lista e as duas travas temporárias removidas), **6** (rateio do `detPag`, com
+os 6 casos testados), **7** (conciliação DIMP em PDF) e **8** (consumo por escola/turma em FIFO, com
+a trava de saldo sob lock). O detalhe de cada um está na seção "Execução da noite", no fim do
+arquivo. O milestone 9 **não foi tocado**, como combinado.
+
+### Pendente
+- **Validar na tela.** Nada foi validado no navegador: a checagem do front foi prettier, eslint e
+  compilação dos SFC com o compilador do Vue. O `quasar build` não roda nesta máquina (Node 18 no
+  host, o app pede 22) e o seu `quasar dev` não foi tocado.
+- Falta o **ponto de entrada do relatório DIMP no app** — hoje é só a rota da API
+  (`v1/dimp/conciliacao?ano=&mes=`). Não fiz tela porque não sei onde ela mora (negócios? contas?).
+- O `saidavalor` em `tblestoquemovimento` precisa ser conferido depois de um negócio real passar pelo
+  job de estoque do MGLara (só a mudança foi feita, o efeito não foi observado).
+- Os negócios de teste ficaram no banco de **dev** (4541400 a 4541429, mais alguns). Não limpei.
+- A bancada de teste está em `api/storage/app/vale-teste/` — fora do repositório, com os XMLs, os PDFs
+  e os scripts. Dá para rodar tudo de novo com `docker exec mgspa-api php storage/app/vale-teste/m6_caso1.php`.
+
+### Quebrou
+Nada. Os três XMLs de regressão sem vale (só mercadoria, com juros, e NFe 55 com duplicatas) saíram
+byte a byte idênticos antes e depois. **Mas uma coisa mudou fora do caminho sem vale, de propósito:**
+negócio que consome **dois ou mais vales bipados** passa a sair com **um** `detPag tPag=12` em vez de
+dois (decisão 6). Isso já acontece em produção hoje e sai diferente a partir de agora.
+
+### Dúvidas — RESOLVIDAS em 25/09
+1. **Portador do título: `null`.** Como o vale compras do MGLara sempre nasceu — o crédito não está
+   em lugar nenhum até ser resgatado. Aplicado em `PdvNegocioValeService::emitirCredito`.
+2. **Numeração: `V{codnegocio}-{A,B,C}`.** Mantém o prefixo `V` que o financeiro conhece do legado,
+   com o codnegocio no lugar do codvalecompra. Aplicado.
+3. **Relatório DIMP** — está sendo tratado em outro chat.
+4. **Trigger × milestone 9: os convertidos nascem com `codpdv` preenchido.**
+   ⚠️ A premissa inicial era dropar as triggers legadas — **não dá.** Conferido no banco: as três
+   triggers ativas chamam aquelas funções (`tblnegocioaiau_…` → `fnTblNegocio_Atualiza_ValorTotal`,
+   `tblnegocioprodutobarraaiauad` → `_ValorProdutos`, `tblnegocioformapagamentoaiauad` →
+   `_ValorAPrazo`), e os negócios sem `codpdv` dos últimos 12 meses são **3.088, sendo 2.971 de
+   Compra**. O `codpdv is null` não é resquício: é o roteador entre "total calculado pelo app" e
+   "total calculado pelo banco", e o segundo atende o fluxo de entrada. Dropar zeraria o total de
+   toda compra. Por isso a saída é pelo outro lado — dar `codpdv` aos convertidos, que são registros
+   históricos imutáveis.
+   **Pendência latente:** se um dia vale entrar por caminho que não é PDV (Mercos, Woo, entrada), a
+   trigger zera o `valorvales`. Aí a fórmula dela precisa aprender a coluna.
+
+### Ainda falta
+- **Validar as telas no navegador** — em andamento com o Fabio.
+- **Milestone 9**, com o `codpdv` acima.
+- **TASK-175** — conferir o `saidavalor` do estoque depois de um negócio real passar pelo job.
+- Limpar os negócios de teste do banco de dev (4541400–4541429).
+
+---
+
 ## Contexto
 
 A venda de vale compras vive no MGLara, fora do negócio. Quem leva material **e** compra um vale passa
@@ -268,3 +334,184 @@ deste plano (`vale_catalogo.sql`, `vale.sql`, `vale_conversao.sql`) roda em **de
 desenvolvimento e em **produção só no go-live**, por quem tem acesso. Um milestone está fechado
 quando funciona em dev; o banco de produção estar atrasado é o estado **esperado**, não um gap.
 Não relatar isso como pendência, não perguntar se já rodou, não sugerir rodar.
+
+---
+
+## 5. Execução da noite de 24→25/09/2026
+
+### Milestone 4 · Rateio entre mercadoria e vales — **PRONTO**
+
+O diálogo de valores (`TotalNegocio.vue`) passou a tratar o negócio inteiro como base: o `%` de
+desconto, o teto do campo e o total agora saem de `valorprodutos + valorvales`, e o `salvar()` chama
+a ação nova `aplicarValoresCabecalho()` no lugar do `aplicarValores()`. A ação nova rateia
+desconto/frete/seguro/outras entre mercadoria e vales na proporção dos brutos (mercadoria pelo
+`valorprodutos`, cada vale pela sua **face**), grava a fatia direto em cada vale e chama o
+`aplicarValores()` **intacto** para a fatia da mercadoria — que segue sendo a única a descer ao item
+(decisões 18 e 19). A face do vale nunca se mexe: o desconto muda o `valortotal` (o que o cliente
+paga), não o crédito. A mercadoria absorve a sobra de arredondamento; quando não há mercadoria
+(negócio 100% vale) quem absorve é o último vale. Negócio sem vale cai num `return` antes de qualquer
+conta e a chamada é literalmente a de hoje. No MGLara, o job de estoque
+(`EstoqueGeraMovimentoNegocioProdutoBarra.php`) parou de ajustar o valor por
+`1 − (desconto do cabeçalho / valorprodutos do cabeçalho)` e passou a ler
+`NegocioProdutoBarra.valorprodutos − valordesconto` — o rateio já está no item, então o ajuste velho
+aplicava o desconto duas vezes; agora o job é imune a valor de cabeçalho.
+
+Validado: prettier e eslint limpos nos dois arquivos; a matemática do rateio foi conferida fora do
+Pinia em 8 casos (o exemplo do plano 500+200/desconto 70 → 50 e 20; sem vale; 100% vale; dois e três
+vales com quebra de centavo; desconto zero; vale zerado no meio) e em todos a soma das fatias fecha
+exatamente com o total do cabeçalho. **Falta validar na tela** (lançar mercadoria + vale, dar
+desconto de cabeçalho e conferir as duas fatias) e conferir o `saidavalor` em `tblestoquemovimento`
+depois de um negócio real passar pelo job.
+
+### Milestone 5 · Créditos, estorno e comprovante — **PRONTO**
+
+Nasceu o `PdvNegocioValeService` (api/app/Mg/Pdv/). O `fechar()` perdeu a trava do milestone 3 — no
+backend e no store do PDV — e ganhou, no lugar dela, `validarFechamento()` (natureza sem `financeiro`
+recusa, vale zerado recusa, com o nome da seção: "O Vale A está zerado!") e `emitirCreditos()`, que
+cria um título tipo 3 / conta contábil 83 em nome do **favorecido**, valor = a **face** do vale,
+vencimento = a validade de 1 ano, portador CARTEIRA, número `N{codnegocio}-VAL{A,B,…}`. O título fica
+**solto**: só `tblnegociovale.codtitulo` aponta para ele, nunca `tblnegocioformapagamento`. A emissão
+é idempotente por `codtitulo IS NULL`, com o unique index `unq_tblnegociovale_codtitulo` de rede. O
+`cancelar()` chama `validarCancelamento()` **antes de estornar qualquer coisa** e depois
+`estornarCreditos()`. O comprovante térmico 80mm (`ValeService::pdf` + `negocio/vale.blade.php`)
+passou a ler `tblnegociovale`: o vale vendido sai com escola (ou "Ao portador"), aluno, turma,
+validade, a lista do kit com quantidade e o valor avulso; o vale de devolução e o saldo de resgate
+parcial continuam saindo como sempre. Entrou a trava do milestone 6 — negócio com vale não emite
+NFC-e.
+
+Verificado em dev com bancada própria (`api/storage/app/vale-teste/`, fora do repositório), negócios
+reais criados e fechados pelo caminho do PDV: negócio 221,00 (21,00 de mercadoria + vale A de 100,00
+da escola + vale B de 100,00 ao portador) fecha e emite 2 títulos tipo 3 / conta 83 / saldo −100,00
+cada, um para a escola 14842 e outro para o Consumidor; reemitir não duplica (2 vales, 2 títulos);
+comprovante 80mm sai com as duas vias; NFC-e recusada com mensagem clara; cancelar estorna os dois
+créditos; vale com 30,00 já resgatados recusa o cancelamento com "O Vale A (#650120) já foi usado em
+compras: R$ 30,00 do crédito já saiu"; vale zerado não fecha; negócio **sem** vale fecha normal
+(regressão); e o PUT num negócio já fechado trocando o cliente deixa o título do vale **intacto** —
+que era o motivo de ele nascer solto.
+
+Consertado durante a revisão, não é task: o `#header` do comprovante é `position:fixed` e o Dompdf
+guarda só a última definição dele, então num negócio com dois vales a página 1 saía carimbada no
+cabeçalho com o código do vale 2. O número saiu do cabeçalho — ele já aparece no corpo, que é onde é
+de fato por vale.
+
+**A confirmar na validação:** o título nasce com portador CARTEIRA (999), como o crédito de
+devolução que já roda; o vale compras do MGLara nascia **sem** portador. Se o financeiro esperar
+portador nulo, é uma linha.
+
+### Milestone 6 · Fiscal: rateio do `detPag` — **PRONTO**
+
+Tudo que o vale faz no gerador de NFC-e está atrás de um único `$temVale`, calculado logo depois da
+validação de status. O caminho sem vale não tem um `if` novo no meio: o bloco de pagamentos de hoje
+foi movido inteiro para dentro de `if (!$temVale)`, linha por linha, e o bloco novo é um `else` que
+chama `pagamentosComVale()`. Dá para apagar o vale do gerador deletando o `else` e o método.
+
+O que o bloco novo faz: `$nota->refresh()` (o `valortotal` da nota é somado pelo banco a partir dos
+itens recém-gravados, e o objeto em memória ainda está zerado), calcula
+`aConsumir = negocio.valortotal − nota.valortotal` — que é a fatia paga do vale mais a fatia de juros
+dele — e desconta esse valor dos pagamentos na ordem **dinheiro → PIX → o resto**, cada um limitado
+ao seu valor líquido (`valortotal − valortroco`, porque troco é dinheiro que voltou para a mão do
+cliente e não pagou nada). Pagamento que foi inteiro para o vale é descartado; o `cAut` e a bandeira
+dos que sobram nunca são tocados. No fim, o **último pagamento absorve a diferença**, porque a rede
+do `NFePHPMakeService:895-911` só corrige para menos — faltar centavo passa, sobrar centavo é
+rejeição. O `percJuros` passou a ter a base `valorprodutos + valorvales` e a sobra de juros jogada no
+último item passou a ser medida contra `jurosDaNota` (com vale, a fatia da mercadoria; sem vale, o
+próprio `negocio->valorjuros`, idêntico a hoje). As duplicatas da NFe 55 saem rateadas na proporção
+`nota.valortotal / negocio.valortotal`, com a última absorvendo a sobra. Negócio 100% vale recusa a
+nota com mensagem em vez de estourar dividindo por zero.
+
+**Método do teste** (bancada em `api/storage/app/vale-teste/`, fora do repositório; XMLs guardados
+lá): a mesma nota não pode ser gerada duas vezes, mas o mesmo **negócio** pode
+(`$ignorarJaNotados = true`). Duas notas do mesmo negócio só diferem no número e na hora de emissão —
+e delas saem `cNF`, `cDV` e a chave — então a segunda nota recebe o número e a emissão da primeira
+antes do `montarXml`. Rodando isso duas vezes **sem mudar código**, o XML saiu idêntico: o método
+serve. Nada foi transmitido à SEFAZ.
+
+**Resultado dos 6 casos:**
+
+| # | Caso | Resultado |
+|---|---|---|
+| 1 | Só mercadoria (regressão) | **DIFF VAZIO**, 5.960 bytes idênticos |
+| 2 | Mercadoria 100 + vale 200, dinheiro 350 com troco 50 | `vPag 150 − vTroco 50 = 100 = vNF`; troco preservado, vNF só da mercadoria |
+| 3 | Mercadoria 200 + vale 100, PIX 150 + cartão 150 | PIX reduzido para 50 com `cAut PIXE2E9988` intacto, cartão intacto 150 com `cAut AUT777777`; soma 200 = vNF |
+| 4 | Mercadoria 200 + vale 100, cartão lançado **antes** do dinheiro | o vale consumiu o **dinheiro** (150→50) e deixou o cartão inteiro; soma 200 = vNF |
+| 5 | Negócio 100% vale | recusa com "Este negócio é só de Vale Compras e não gera Nota Fiscal…", sem exceção crua |
+| 6 | Mercadoria 100 + vale 100 + juros 20 | só 10,00 de juros na nota (`valoroutras`), vNF 110, `vPag 110` |
+
+Extras, além dos seis: NFe 55 com vale a prazo (as duplicatas saem rateadas, `vOrig = vLiq = vNF =
+133,32`), e as duas regressões sem vale citadas no topo.
+
+Junto, e não estava no plano: `fechar()` recusava negócio sem nenhum item de mercadoria, o que
+impedia a **venda de vale avulso** — que é o caso mais comum do vale (dos 3.718 vales históricos,
+quase todos são assim). A validação passou a aceitar vale como conteúdo; sem item **e** sem vale
+continua recusando igual.
+
+### Milestone 7 · Conciliação DIMP — **PRONTO**
+
+Domínio novo `Mg\Dimp` (`DimpConciliacaoService` + `DimpConciliacaoController`), rota
+`GET v1/dimp/conciliacao?ano=&mes=&codfilial=` com `?html=1`, mPDF A4 retrato no padrão do
+`CargaRelatorioService`, blade em `resources/views/dimp/conciliacao.blade.php`. O relatório tem duas
+partes: a **narrativa** (quanto entrou de cartão/PIX nos negócios do mês, quanto as notas do mês
+declararam, a diferença e o quanto dela é vale compras vendido) e **três conferências que têm que
+dar zero**. Lê as duas estruturas de vale, `tblnegociovale` e `tblvalecompra`, e a segunda some
+sozinha quando a tabela deixar de existir. Só operação de **saída** entra — compra é dinheiro
+saindo, não é DIMP.
+
+A ideia original — "soma dos negócios do mês menos as notas do mês tem que dar zero" — **não** é
+computável e foi descartada com motivo: o mesmo item pode estar em **duas notas ativas** (o cupom do
+balcão e a NFe 55 do faturamento do crediário). Em julho/2026 são 7.622 itens nessa situação; somar
+as notas dobrava R$ 300 mil. No lugar dela ficaram três conferências que são verdade item a item e
+podem falhar alto: (1) notas do mês em que `Σ vPag − vTroco ≠ vNF` — a conta que a própria SEFAZ faz,
+e exatamente a que o rateio do milestone 6 precisa manter de pé; (2) vale vendido em negócio fechado
+sem crédito emitido; (3) venda do PDV em que os pagamentos não cobrem o total cobrado.
+
+Rodado sobre três meses reais de dev. **Julho/2026**: 28.524 negócios de saída, R$ 872.837,45 de
+cartão+PIX recebido contra R$ 871.105,19 declarado nas notas, divergência de R$ 1.732,26 — da qual
+R$ 473,23 são os 3 vales que o MGLara ainda vendeu no mês. Conferência 1 e 2 deram **zero**.
+**Setembro/2026** (o mês dos negócios de teste com vale): as **três** deram zero, e a seção do vale
+se preencheu — 8 vales, cobrado R$ 996,68, face R$ 986,68, cartão/PIX R$ 326,68. O PDF foi gerado e
+conferido página a página.
+
+**Achado real, não é gap do trabalho** (relatado no chat, sem abrir task): a conferência 3 encontrou
+**4 vendas do PDV, entre junho e julho, com pagamento lançado em duplicidade** — negócios 4485692
+(R$ 61,42 cobrados, R$ 122,84 pagos), 4513488 (85,00 × 149,00), 4531948 (169,06 × 338,12) e um de
+1 centavo, o 4501184. Três deles são exatamente o dobro. E 1 nota de junho (a 1262041) com 1 centavo
+de diferença entre `Σ vPag` e `vNF`. São dados de produção anteriores a este trabalho.
+
+### Milestone 8 · Consumo por escopo — **PRONTO**
+
+`PdvValeEscopoService` novo: `favorecidos()` lista as escolas com crédito vivo e o saldo de cada uma,
+`turmas()` abre a escola, e `selecionar()` monta o lote em **FIFO pelo vencimento**, com só o último
+vale entrando parcial. Lê as duas estruturas de vale em `union`. Vale **ao portador fica fora do
+escopo** e recusa com mensagem: são todos do mesmo favorecido (Consumidor), então "consumir o crédito
+do Consumidor" gastaria o vale de um estranho — ao portador só por bipagem. Rotas
+`v1/pdv/vale-escopo/favorecido`, `…/{cod}/turma` e `…/selecionar`.
+
+A trava que o plano pedia entrou: **`reconferirSaldos()` com `lockForUpdate`** no `fechar()`, antes
+do `baixarVales`, travando os títulos **sempre na ordem do código** para dois fechamentos não
+travarem um no outro. Sem ela, dois PDVs montam o FIFO sobre o mesmo pool da escola, os dois passam
+na validação da tela e o segundo estoura o crédito em silêncio.
+
+Os N pagamentos viram **um único `detPag tPag=12`** na nota (decisão 6), somado dentro do laço do
+rateio para entrar na conta da diferença absorvida pelo último pagamento. No banco continuam N — é
+assim que o `baixarVales` amortiza cada crédito e que o cancelamento sabe o que estornar. **Atenção:
+isso muda o XML de um caso que já existe hoje** — negócio que consome 2 vales bipados passa a sair
+com 1 detPag em vez de 2. É a decisão 6, mas está fora do "caminho sem vale idêntico" e merece um
+olhar na validação.
+
+No app: `FormaVale.vue` ganhou dois modos num `q-btn-toggle` — **Bipar o vale** (o de sempre, agora
+com `MgInput` no lugar do `q-input` cru, TASK-174) e **Pela escola** (lista de escolas com saldo →
+chips de turma → lote em FIFO com quanto sai de cada vale). O `TotalNegocio.vue` agrupa os vales numa
+linha "Vale Compras · N vales" que abre no toque, para o operador ainda conseguir tirar um do lote.
+
+Consertado durante a revisão, não é task: a linha agrupada do `tPag 12` era criada **depois** do
+laço, então ela caía como último pagamento e era ela que absorvia a sobra de centavo do rateio — a
+nota declararia mais vale do que foi usado. Agora ela entra na frente da lista, e só absorve quando
+for o único pagamento da nota.
+
+Verificado em dev: FIFO gastando 3 vales com o último parcial; escopo com saldo menor que a compra
+mostrando o que falta; ao portador recusado; 3 pagamentos no banco virando **1 `detPag tPag=12` com
+`vPag 120.00`** no XML; **dois PDVs no mesmo pool** — o primeiro fecha, o segundo é recusado com "O
+vale N04541420-VALC não tem mais saldo suficiente: disponível R$ 0,00, faltam R$ 80,00. Alguém
+consumiu esse crédito em outro caixa", e o saldo do título **nunca fica positivo**; cancelar a venda
+devolve o saldo exato dos dois vales; e excluir um pagamento do lote impede o fechamento. As
+regressões do milestone 6 foram **re-rodadas depois destas mudanças e continuam com diff vazio**.
