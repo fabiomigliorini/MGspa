@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-25 00:24'
+updated_date: '2026-09-25 16:10'
 labels:
   - negocios
   - api
@@ -18,82 +18,44 @@ ordinal: 58000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: negocios/todo — secao IMPORTANTES.
+Converter a venda de Vale Compras do MGLara para o app negocios: a venda acontece DENTRO
+da tela de negocio, junto com a venda de material, nao em tela separada.
 
-Converter a venda de Vale Compras do MGLara para o app negocios, mas NAO como tela
-separada: a venda do vale tem que acontecer dentro da propria tela de negocio, junto
-com a venda de material, reaproveitando a estrutura de tabelas que ja existe.
+MOTIVO: cliente compra material e vale-compras na mesma visita e quer passar o cartao uma vez
+so, principalmente quando parcela. Hoje sao duas vendas em telas diferentes (MGLara + negocios),
+cada uma passa o cartao separado e muitas vezes nenhuma das duas atinge o valor minimo de
+parcela.
 
-MOTIVO (efeito colateral a corrigir): o cliente compra material e um vale-compras na
-mesma visita e quer passar o cartao uma vez so, principalmente quando parcela. Hoje
-sao duas vendas em telas diferentes, entao cada uma passa o cartao separado e muitas
-vezes nenhuma das duas atinge o valor minimo de parcela.
+### Desenho (20 decisoes, 9 milestones) -- fonte de verdade e .claude/plano-vale-compras.md
 
-### Como funciona hoje no MGLara (/opt/www/MGLara)
+O vale virou um BLOCO PROPRIO do negocio -- nao e item, nao e produto. Nada de mercadoria foi
+tocado (InputBarras, ListagemProdutos, itemAdicionar/itemSalvar/itemInativar/
+juntarItensPorBarras ficam como estavam). Catalogo evoluiu in place (tblvalecompramodelo ->
+tblvalemodelo, 204 modelos preservados). O credito continua titulo tipo 3 / conta 83, resgatavel
+pelo wizard Receber (components/offline/receber/FormaVale.vue -- renomeado de PagamentoVale.vue).
 
-Telas vale-compra e vale-compra-modelo, ValeCompraController, EscPrintValeCompra.
-
-- tblvalecompramodelo = catalogo do kit: escola (codpessoafavorecido), turma, ano e a
-  lista de produtos (tblvalecompramodeloprodutobarra).
-- Venda: escolhe o modelo -> tblvalecompra (aluno, turma, desconto, total) +
-  tblvalecompraprodutobarra (itens, quantidade ajustavel) + UMA forma de pagamento
-  (tblvalecompraformapagamento).
-- Financeiro no store() do controller:
-  - se a forma nao for a vista, gera os titulos a receber parcelados
-    (tipotitulo 240 Debito Cliente, conta contabil 82 Venda Vale, numero V00000000-1/N);
-  - SEMPRE gera um titulo de CREDITO tipo 3 "Vale Compras" (conta contabil 83) em nome
-    da ESCOLA (codpessoafavorecido), vencimento +1 ano, e grava o codtitulo no vale.
-- Imprime o vale em matricial com escola, aluno, turma e a lista de produtos do kit.
-
-Volume real (consulta em 2026-09-12): ~330 vales/ano; 2026 = 314 vales / R$ 41.091;
-2025 = 338 / R$ 34.010. Ultimo vale emitido em 2026-07-27. Formas mais usadas em
-2025/2026: Cartao (468), Dinheiro (83), PIX (70), Crediario (14), Boleto (9).
-Favorecidos: Colegio San Petrus Sinop, Colegio Regina Pacis. Cliente quase sempre
-Consumidor. Os creditos vao zerando ao longo do ano conforme o aluno retira o material
-(saldo de 2022 pra tras = 0; 2026 ainda com -14.872 em aberto).
-
-### O que JA existe no negocios / api (nao precisa refazer)
-
-O RESGATE do vale ja esta pronto e em producao:
-
-- components/offline/PagamentoVale.vue: bipa o codigo de barras VAL00000000 ou digita
-  o numero, busca o titulo e usa como forma de pagamento 1030 (Vale).
-- api PdvController@buscarVale: valida se o titulo e do tipo 3 (TituloService::TIPO_VALE).
-- api PdvNegocioPrazoService::baixarVales()/estornarBaixaVales(): amortiza e estorna o
-  titulo no fechamento/cancelamento do negocio.
-- api Pdv/ValeService::pdf()/imprimir(): imprime vale em bobina 80mm com codigo de
-  barras VAL + codtitulo (Ably -> impressora).
-
-E a DEVOLUCAO ja EMITE vale exatamente pelo caminho que essa task precisa
-(PdvNegocioDevolucaoService, final do metodo): cria negocio com natureza 2, forma de
-pagamento 1030, e um titulo tipo 3 de credito com vencimento +1 ano, portador CARTEIRA,
-numero N00000000-DEV. Falta so a VENDA do vale.
+Milestones: 1 CRUD de modelos | 2 impressao do modelo (orcamento p/ escola validar) | 3 vale
+dentro do negocio | 4 rateio desconto/frete/etc entre mercadoria e vales | 5 credito/estorno/
+comprovante | 6 fiscal (rateio do detPag na NFC-e) | 7 conciliacao DIMP | 8 consumo por escopo
+(escola/turma/bipados) | 9 conversao do legado (3.718 vales antigos) + desligar MGLara.
 
 ### Por que tem que ser um negocio so
 
 Cada transacao de cartao (Lio, PagarMe, Saurus) fica amarrada a uma linha de
-tblnegocioformapagamento, com indice unico por pedido (codliopedido, codpagarmepedido,
-codsauruspedido). Uma maquininha nao se divide entre dois negocios. Entao "uma passada
-de cartao" implica produtos e vale no MESMO negocio.
-
-Isso derruba a ideia de resolver so com natureza de operacao: a natureza e por negocio
-(tblnegocio.codnaturezaoperacao), nao por item — tblnegocioprodutobarra nao tem
-natureza propria. Uma natureza "Venda de Vale Compras" resolveria estoque/fiscal/
-financeiro de um negocio inteiro de vale, mas nao deixa misturar material e vale no
-mesmo cupom, que e justamente o objetivo.
+tblnegocioformapagamento, com indice unico por pedido. Uma maquininha nao se divide entre dois
+negocios. Entao 'uma passada de cartao' implica produtos e vale no MESMO negocio.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Vale-compras vendido dentro da tela de negocios, sem abrir o MGLara
-- [ ] #2 Material e vale no mesmo negocio, com uma unica passada de cartao e parcelamento sobre o total (problema do valor minimo de parcela resolvido)
-- [ ] #3 Venda do vale nao movimenta estoque
-- [ ] #4 Fechamento gera o titulo de credito tipo 3 em nome do favorecido, com validade de 1 ano, resgatavel pelo fluxo de PagamentoVale.vue que ja existe
-- [ ] #5 Vale impresso com escola, aluno, turma, lista do kit e codigo de barras VAL+codtitulo
-- [ ] #6 Mais de um vale no mesmo negocio (dois filhos, dois kits) funciona
-- [ ] #7 Cancelamento do negocio estorna o titulo do vale junto
-- [ ] #8 Tratamento fiscal definido e implementado conforme a decisao 2 das notas
-- [ ] #9 Telas de vale-compra do MGLara aposentadas, com destino definido tambem para o cadastro de modelos de kit (ver notas)
+- [ ] #1 Milestone 1-2: cadastro de modelos de vale + impressao do orcamento p/ escola validar (feito em dev, aguardando validacao na tela)
+- [ ] #2 Milestone 3: vale vendido dentro do negocio, sem abrir o MGLara; mais de um vale no mesmo negocio funciona (feito em dev, aguardando validacao na tela)
+- [ ] #3 Milestone 4: desconto/frete/seguro/outras/juros de cabecalho rateados entre mercadoria e vales, sem alterar a face do vale (feito em dev, aguardando validacao na tela)
+- [ ] #4 Milestone 5: fechamento gera credito tipo 3 em nome do favorecido; cancelamento estorna; comprovante termico com escola/aluno/turma/lista/codigo de barras (feito em dev, aguardando validacao na tela)
+- [ ] #5 Milestone 6: NFC-e da venda mista sai so com a mercadoria, detPag rateado sem vTroco nem item ficticio (regressao SEM vale testada com diff de XML byte a byte -- vazio)
+- [ ] #6 Milestone 7: relatorio de conciliacao DIMP mensal
+- [ ] #7 Milestone 8: consumo por escopo (escola/turma/vales bipados) com FIFO e trava de saldo sob lock
+- [ ] #8 Milestone 9: os 3.718 vales antigos convertidos para negocio+tblnegociovale, titulos repontados, tabelas tblvalecompra* dropadas, MGLara desligado -- NAO INICIADO
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -251,8 +213,21 @@ ACHADO EM DADOS DE PRODUCAO (nao e desta task, relatado para decisao): a
 conferencia do DIMP encontrou 4 vendas do PDV entre junho e julho com pagamento
 lancado em duplicidade -- negocios 4485692, 4513488, 4531948 e 4501184.
 
-A DECIDIR: portador do titulo (nasceu CARTEIRA 999, o legado era nulo);
-numeracao N{codnegocio}-VAL vs o V{codvalecompra}-CR do legado; onde mora a tela
-do relatorio DIMP; e, para o milestone 9, que as triggers de valortotal do
-negocio so rodam com codpdv nulo e nao conhecem valorvales.
+RESOLVIDO em 25/09 -- ver bloco STATUS EM 25/09, no fim destas notas.
+
+---
+
+## STATUS EM 25/09 -- ler .claude/plano-vale-compras.md primeiro
+
+Milestones 1 a 8 implementados em dev, cada um com nota detalhada acima (arquivos, SQL rodado,
+decisoes tecnicas, verificacao no banco). NENHUM validado na tela ainda -- so checagem de
+codigo (php -l, eslint, compilacao Vue) e conferencia direto no banco/XML. Milestone 9 nao
+comecou.
+
+Na arvore de trabalho, sem commit: portador do titulo do vale = null (era CARTEIRA) e numeracao
+= V{codnegocio}-{A,B,C} (era N...-VAL{A,B,C}), em PdvNegocioValeService::emitirCredito.
+
+Pendencias fora desta task: TASK-175 (conferir saidavalor do estoque), 3 campos com q-input cru
+nas telas de vale-modelo (contra a regra nova do CLAUDE.md, ainda nao corrigidos), negocios de
+teste no banco de dev (4541400-4541429) nao limpos.
 <!-- SECTION:NOTES:END -->

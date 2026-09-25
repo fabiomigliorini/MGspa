@@ -40,20 +40,29 @@ byte a byte idênticos antes e depois. **Mas uma coisa mudou fora do caminho sem
 negócio que consome **dois ou mais vales bipados** passa a sair com **um** `detPag tPag=12` em vez de
 dois (decisão 6). Isso já acontece em produção hoje e sai diferente a partir de agora.
 
-### Dúvidas que precisam de decisão
-1. **Portador do título do vale.** O crédito nasce com portador CARTEIRA (999), como o crédito de
-   devolução que já roda no MGspa. O vale compras do MGLara nascia **sem portador**. Se o financeiro
-   espera portador nulo, é uma linha em `PdvNegocioValeService::emitirCredito`.
-2. **Numeração do título.** Ficou `N{codnegocio}-VAL{A,B,…}`, no formato dos outros títulos nascidos
-   de negócio (`-DEV`, `-1/3`). O legado usava `V{codvalecompra}-CR`. Se o financeiro procura por
-   "V…", vale mudar antes de emitir o primeiro em produção.
-3. **Onde mora o relatório DIMP** no app (qual menu, qual permissão) — e se o filtro por filial
-   precisa aparecer na tela.
-4. **Milestone 9 tem um detalhe novo:** os negócios convertidos nascem com `codpdv IS NULL`, e as
-   triggers `fnTblNegocio_Atualiza_ValorTotal` / `_ValorProdutos` **só rodam quando `codpdv is null`**.
-   A fórmula delas não conhece `valorvales`, então um negócio convertido com `valorprodutos 0` teria o
-   `valortotal` zerado pelo banco na primeira alteração. Ou a trigger passa a somar `valorvales`, ou os
-   negócios convertidos nascem com `codpdv` preenchido. Decisão sua — é amanhã.
+### Dúvidas — RESOLVIDAS em 25/09
+1. **Portador do título: `null`.** Como o vale compras do MGLara sempre nasceu — o crédito não está
+   em lugar nenhum até ser resgatado. Aplicado em `PdvNegocioValeService::emitirCredito`.
+2. **Numeração: `V{codnegocio}-{A,B,C}`.** Mantém o prefixo `V` que o financeiro conhece do legado,
+   com o codnegocio no lugar do codvalecompra. Aplicado.
+3. **Relatório DIMP** — está sendo tratado em outro chat.
+4. **Trigger × milestone 9: os convertidos nascem com `codpdv` preenchido.**
+   ⚠️ A premissa inicial era dropar as triggers legadas — **não dá.** Conferido no banco: as três
+   triggers ativas chamam aquelas funções (`tblnegocioaiau_…` → `fnTblNegocio_Atualiza_ValorTotal`,
+   `tblnegocioprodutobarraaiauad` → `_ValorProdutos`, `tblnegocioformapagamentoaiauad` →
+   `_ValorAPrazo`), e os negócios sem `codpdv` dos últimos 12 meses são **3.088, sendo 2.971 de
+   Compra**. O `codpdv is null` não é resquício: é o roteador entre "total calculado pelo app" e
+   "total calculado pelo banco", e o segundo atende o fluxo de entrada. Dropar zeraria o total de
+   toda compra. Por isso a saída é pelo outro lado — dar `codpdv` aos convertidos, que são registros
+   históricos imutáveis.
+   **Pendência latente:** se um dia vale entrar por caminho que não é PDV (Mercos, Woo, entrada), a
+   trigger zera o `valorvales`. Aí a fórmula dela precisa aprender a coluna.
+
+### Ainda falta
+- **Validar as telas no navegador** — em andamento com o Fabio.
+- **Milestone 9**, com o `codpdv` acima.
+- **TASK-175** — conferir o `saidavalor` do estoque depois de um negócio real passar pelo job.
+- Limpar os negócios de teste do banco de dev (4541400–4541429).
 
 ---
 

@@ -7,7 +7,6 @@ use Exception;
 
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioVale;
-use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloService;
 
@@ -104,7 +103,7 @@ class PdvNegocioValeService
         // nao de quem pagou
         $titulo->codpessoa = $vale->codpessoafavorecido;
         $titulo->credito = $vale->valorvale;
-        $titulo->numero = 'N' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT) . "-VAL{$letra}";
+        $titulo->numero = 'V' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT) . "-{$letra}";
         $titulo->emissao = $emissao;
         $titulo->transacao = $emissao;
         $titulo->sistema = $emissao;
@@ -114,7 +113,9 @@ class PdvNegocioValeService
         $titulo->vencimentooriginal = $titulo->vencimento;
         $titulo->boleto = false;
         $titulo->gerencial = true;
-        $titulo->codportador = Portador::CARTEIRA;
+        // sem portador, como o vale compras do MGLara sempre nasceu: o credito
+        // nao esta em lugar nenhum ate ser resgatado
+        $titulo->codportador = null;
         $titulo->save();
 
         return $titulo;
