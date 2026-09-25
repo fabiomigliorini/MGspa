@@ -13,6 +13,7 @@ use Mg\Mercos\MercosPedido;
 use Mg\Negocio\NegocioCaixaMercadoria;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
+use Mg\Negocio\NegocioVale;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\PixCob;
@@ -65,7 +66,8 @@ class Negocio extends MgModel
         'valoroutras',
         'valorprodutos',
         'valorseguro',
-        'valortotal'
+        'valortotal',
+        'valorvales'
     ];
 
     protected $casts = [
@@ -102,7 +104,8 @@ class Negocio extends MgModel
         'valoroutras' => 'float',
         'valorprodutos' => 'float',
         'valorseguro' => 'float',
-        'valortotal' => 'float'
+        'valortotal' => 'float',
+        'valorvales' => 'float'
     ];
 
 
@@ -217,6 +220,12 @@ class Negocio extends MgModel
     public function NegocioProdutoBarraS()
     {
         return $this->hasMany(NegocioProdutoBarra::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function NegocioValeS()
+    {
+        return $this->hasMany(NegocioVale::class, 'codnegocio', 'codnegocio')
+            ->orderBy('codnegociovale');
     }
 
     public function NfeTerceiroS()

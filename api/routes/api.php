@@ -195,6 +195,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estado/{id}', [\Mg\Select\SelectEstadoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo-tipo/{id}', [\Mg\Select\SelectVeiculoTipoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo/{id}', [\Mg\Select\SelectVeiculoController::class, 'show'])->whereNumber('id');
+    Route::get('select/produto-barra/barras/{barras}', [\Mg\Select\SelectProdutoBarraController::class, 'barras']);
     Route::get('select/produto-barra/{id}', [\Mg\Select\SelectProdutoBarraController::class, 'show'])->whereNumber('id');
     Route::get('select/usuario/{id}', [\Mg\Select\SelectUsuarioController::class, 'show'])->whereNumber('id');
     Route::get('select/portador/{id}', [\Mg\Select\SelectPortadorController::class, 'show'])->whereNumber('id');
@@ -508,6 +509,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'inativar']);
     Route::delete('moeda/{moeda}/inativo', [\Mg\Moeda\MoedaController::class, 'ativar']);
     Route::apiResource('moeda', \Mg\Moeda\MoedaController::class)->parameters(['moeda' => 'moeda']);
+
+    // ValeModelo (catalogo do kit de vale compras; CRUD no app negocios)
+    Route::get('vale-modelo/{valeModelo}/relatorio', [\Mg\Vale\ValeModeloController::class, 'relatorio']);
+    Route::post('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'inativar']);
+    Route::delete('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'ativar']);
+    Route::apiResource('vale-modelo', \Mg\Vale\ValeModeloController::class)->parameters(['vale-modelo' => 'valeModelo']);
 
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);
@@ -848,6 +855,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
         Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
         Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
+        // catalogo de modelos de vale compras para o cache offline do PDV
+        Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
         Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
         Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
         Route::get('impressora', '\Mg\Pdv\PdvController@impressora');

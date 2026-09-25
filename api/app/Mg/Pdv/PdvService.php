@@ -364,6 +364,65 @@ class PdvService
         return $regs;
     }
 
+    /**
+     * Catalogo de modelos de vale compras para o cache offline do PDV.
+     *
+     * Espelha formaPagamento(): consulta crua, carimbo "sincronizado" em
+     * todas as linhas e so' o que esta' ativo. Os itens de cada modelo vem
+     * dentro dele, e de proposito SO' com codprodutobarra / quantidade /
+     * valorunitario: descricao, barras e imagem o PDV ja' tem no cache de
+     * produtos, e repeti-las aqui inflaria a carga (204 modelos x ~21 itens)
+     * sem acrescentar nada.
+     *
+     * O catalogo e' sazonal: fora da temporada ele pode voltar VAZIO, e
+     * quem consome precisa aguentar isso (ver sincronizarValeModelo no
+     * front).
+     */
+    public static function valeModelo()
+    {
+        $sincronizado = date('Y-m-d h:i:s');
+        $sql = '
+            select
+                vm.codvalemodelo,
+                vm.modelo,
+                vm.codpessoafavorecido,
+                p.fantasia as favorecido,
+                vm.valorprodutos,
+                vm.valoravulso,
+                vm.valorvale,
+                vm.observacoes,
+                :sincronizado as sincronizado
+            from tblvalemodelo vm
+            left join tblpessoa p on (p.codpessoa = vm.codpessoafavorecido)
+            where vm.inativo is null
+            order by vm.modelo
+            ';
+        $regs = DB::select($sql, [
+            'sincronizado' => $sincronizado
+        ]);
+
+        // Uma consulta so' para os itens de todos os modelos (em vez de uma
+        // por modelo), agrupada em memoria.
+        $itens = DB::select('
+            select
+                vmpb.codvalemodelo,
+                vmpb.codprodutobarra,
+                vmpb.quantidade,
+                vmpb.valorunitario
+            from tblvalemodeloprodutobarra vmpb
+            order by vmpb.codvalemodeloprodutobarra
+        ');
+        $porModelo = [];
+        foreach ($itens as $item) {
+            $porModelo[$item->codvalemodelo][] = $item;
+        }
+        foreach ($regs as $reg) {
+            $reg->itens = $porModelo[$reg->codvalemodelo] ?? [];
+        }
+
+        return $regs;
+    }
+
     public static function impressora()
     {
         $printers = json_decode(file_get_contents(base_path('printers.json')), true);

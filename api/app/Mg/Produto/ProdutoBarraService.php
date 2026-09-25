@@ -96,7 +96,7 @@ class ProdutoBarraService
         $regs = $pb_origem->NfeTerceiroItemS()->where('codprodutobarra', $codprodutobarraorigem)->update([
             'codprodutobarra' => $codprodutobarradestino
         ]);
-        $regs = $pb_origem->ValeCompraModeloProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+        $regs = $pb_origem->ValeModeloProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
             'codprodutobarra' => $codprodutobarradestino
         ]);
         $regs = $pb_origem->ValeCompraProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([

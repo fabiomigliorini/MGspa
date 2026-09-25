@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, nextTick } from "vue";
+import MgInput from "./MgInput.vue";
 
 const removerAcentos = (str) => {
   if (!str) return str;
@@ -38,14 +39,14 @@ const aplicarFiltro = () => {
   if (model.value == modelAnterior.value || !filtrar.value) {
     return;
   }
-  const posStart = refInput.value.getNativeElement().selectionStart;
-  const posEnd = refInput.value.getNativeElement().selectionEnd;
+  const posStart = refInput.value.nativeEl.selectionStart;
+  const posEnd = refInput.value.nativeEl.selectionEnd;
   switch (props.filtro) {
     case "primeiraLetraMaiuscula":
       model.value = primeiraLetraMaiuscula(model.value);
       nextTick(() => {
-        refInput.value.getNativeElement().selectionStart = posStart;
-        refInput.value.getNativeElement().selectionEnd = posEnd;
+        refInput.value.nativeEl.selectionStart = posStart;
+        refInput.value.nativeEl.selectionEnd = posEnd;
       });
       break;
     default:
@@ -62,7 +63,7 @@ const toggleFiltrar = () => {
 </script>
 
 <template>
-  <q-input
+  <MgInput
     ref="refInput"
     v-model="model"
     @keyup="aplicarFiltro"
@@ -76,5 +77,5 @@ const toggleFiltrar = () => {
       />
       <slot name="append" />
     </template>
-  </q-input>
+  </MgInput>
 </template>

@@ -11,6 +11,8 @@ use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
+use Mg\Negocio\NegocioVale;
+use Mg\Negocio\NegocioValeProdutoBarra;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
@@ -44,6 +46,15 @@ class PdvNegocioService
     }
 
     // Verifica se o somatorio dos itens bate com o negocio
+    //
+    // O negocio tem DUAS colecoes que somam: os itens de mercadoria e os
+    // vales compras (decisao 2 do plano). Cada lado tem o seu totalizador
+    // bruto -- valorprodutos para a mercadoria, valorvales para a face dos
+    // vales -- e os valores de cabecalho (desconto/frete/seguro/outras)
+    // somam as duas fatias (decisao 20).
+    //
+    // Negocio sem vale: as somas do vale dao zero e a conferencia fica
+    // identica ao que sempre foi.
     public static function confereTotais(Negocio $negocio)
     {
         $sql = '
@@ -61,25 +72,91 @@ class PdvNegocioService
         $tot = DB::select($sql, [
             'codnegocio' => $negocio->codnegocio
         ])[0];
-        if ($negocio->valorprodutos != floatval($tot->valorprodutos)) {
+
+        $sqlVale = '
+            select
+                coalesce(sum(nv.valorvale), 0) as valorvales,
+                coalesce(sum(nv.valordesconto), 0) as valordesconto,
+                coalesce(sum(nv.valorfrete), 0) as valorfrete,
+                coalesce(sum(nv.valoroutras), 0) as valoroutras,
+                coalesce(sum(nv.valorseguro), 0) as valorseguro,
+                coalesce(sum(nv.valortotal), 0) as valortotal
+            from tblnegociovale nv
+            where nv.codnegocio = :codnegocio
+            and nv.inativo is null
+        ';
+        $totVale = DB::select($sqlVale, [
+            'codnegocio' => $negocio->codnegocio
+        ])[0];
+
+        if (!static::valoresBatem($negocio->valorprodutos, $tot->valorprodutos)) {
             return false;
         }
-        if ($negocio->valordesconto != floatval($tot->valordesconto)) {
+        if (!static::valoresBatem($negocio->valorvales, $totVale->valorvales)) {
             return false;
         }
-        if ($negocio->valorfrete != floatval($tot->valorfrete)) {
+        if (!static::valoresBatem($negocio->valordesconto, floatval($tot->valordesconto) + floatval($totVale->valordesconto))) {
             return false;
         }
-        if ($negocio->valoroutras != floatval($tot->valoroutras)) {
+        if (!static::valoresBatem($negocio->valorfrete, floatval($tot->valorfrete) + floatval($totVale->valorfrete))) {
             return false;
         }
-        if ($negocio->valorseguro != floatval($tot->valorseguro)) {
+        if (!static::valoresBatem($negocio->valoroutras, floatval($tot->valoroutras) + floatval($totVale->valoroutras))) {
             return false;
         }
-        if (($negocio->valortotal - $negocio->valorjuros) != floatval($tot->valortotal)) {
+        if (!static::valoresBatem($negocio->valorseguro, floatval($tot->valorseguro) + floatval($totVale->valorseguro))) {
+            return false;
+        }
+        if (!static::valoresBatem($negocio->valortotal - $negocio->valorjuros, floatval($tot->valortotal) + floatval($totVale->valortotal))) {
             return false;
         }
         return true;
+    }
+
+    // Dois valores de dinheiro conferem?
+    //
+    // Comparar float com == nao serve aqui. Todo valor deste negocio tem no
+    // maximo 2 casas, mas os dois lados chegam como float e QUALQUER conta
+    // entre eles vira ruido de ponto flutuante: 12.90 + 86.26 da
+    // 99.16000000000001, que para o PHP e diferente de 99.16. Com duas
+    // colecoes somando (mercadoria + vale) isso deixou de ser raro e virou o
+    // "Total do Negocio nao bate" aleatorio.
+    //
+    // Meio centavo de folga mata o ruido e nao deixa passar divergencia de
+    // verdade: o front arredonda tudo para 2 casas, entao erro real e de
+    // um centavo para cima.
+    public static function valoresBatem($esperado, $obtido)
+    {
+        return abs(floatval($esperado) - floatval($obtido)) < 0.005;
+    }
+
+    // Importa os vales do negocio vindos do PDV.
+    //
+    // Upsert por uuid, igual aos itens de mercadoria: o PDV offline pode
+    // retransmitir o mesmo negocio varias vezes e nada pode duplicar. Vale
+    // excluido no PDV chega com "inativo" carimbado -- nunca some da lista,
+    // pela mesma razao.
+    public static function importarVales(Negocio $negocio, $vales)
+    {
+        foreach ($vales as $vale) {
+            $nv = NegocioVale::firstOrNew(['uuid' => $vale['uuid']]);
+            if (!empty($nv->codnegocio) && $nv->codnegocio != $negocio->codnegocio) {
+                throw new Exception("Tentando atualizar um vale de outro negocio {$nv->codnegocio}/{$negocio->codnegocio}!", 1);
+            }
+            $nv->fill($vale);
+            $nv->codnegocio = $negocio->codnegocio;
+            $nv->save();
+
+            foreach ($vale['itens'] ?? [] as $item) {
+                $nvpb = NegocioValeProdutoBarra::firstOrNew(['uuid' => $item['uuid']]);
+                if (!empty($nvpb->codnegociovale) && $nvpb->codnegociovale != $nv->codnegociovale) {
+                    throw new Exception("Tentando atualizar um item de outro vale {$nvpb->codnegociovale}/{$nv->codnegociovale}!", 1);
+                }
+                $nvpb->fill($item);
+                $nvpb->codnegociovale = $nv->codnegociovale;
+                $nvpb->save();
+            }
+        }
     }
 
     public static function negocioAberto(Negocio $negocio, $data, Pdv $pdv)
@@ -107,6 +184,11 @@ class PdvNegocioService
             $npb->codnegocio = $negocio->codnegocio;
             $npb->save();
         }
+
+        // importa os vales compras (bloco proprio, nao e' item)
+        // Antes da conferencia de totais: o valorvales do negocio e' somado
+        // a partir do que esta' gravado aqui.
+        static::importarVales($negocio, $data['vales'] ?? []);
 
         if (!static::confereTotais($negocio)) {
             throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
@@ -218,6 +300,15 @@ class PdvNegocioService
 
         if (!static::confereTotais($negocio)) {
             throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
+        }
+
+        // TRAVA TEMPORARIA -- sai no milestone 5 do plano do vale compras.
+        // Quem emite o credito (titulo tipo 3 em nome da escola) e' o
+        // fechamento, e isso ainda nao existe. Sem esta trava, fechar aqui
+        // geraria uma venda cobrada do cliente sem nenhum credito do outro
+        // lado -- dinheiro recebido e vale que nao existe.
+        if ($negocio->NegocioValeS()->whereNull('inativo')->exists()) {
+            throw new Exception('Negócio com Vale Compras ainda não pode ser fechado! A emissão do crédito entra na próxima etapa.', 1);
         }
 
         // validacoes de venda

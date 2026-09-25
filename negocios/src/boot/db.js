@@ -16,3 +16,10 @@ db.version(6).stores({
   impressora: 'codimpressora, impressora, nome, sincronizado',
   prancheta: 'ordem, categoria, codpranchetacategoria, sincronizado',
 })
+
+// v7: catalogo de modelos de vale compras (kit escolar) no cache offline.
+// Os itens de cada modelo viajam dentro do proprio registro, entao nao ha
+// tabela filha -- o vale so' precisa deles na hora de semear a grade.
+db.version(7).stores({
+  valeModelo: 'codvalemodelo, modelo, codpessoafavorecido, sincronizado',
+})

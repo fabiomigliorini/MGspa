@@ -49,6 +49,10 @@ class NegocioResource extends Resource
         $ret['fantasiavendedor'] = $this->PessoaVendedor->fantasia ?? null;
         $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS()->orderBy('alteracao', 'desc')->get());
         $ret['pagamentos'] = NegocioFormaPagamentoResource::collection($this->NegocioFormaPagamentoS);
+        // Vale compras: bloco proprio do negocio, com os itens dentro de cada vale.
+        // Vale inativo (excluido no PDV) viaja junto, como o item de mercadoria, para
+        // o offline saber que a linha existe e nao tentar criar outra pelo mesmo uuid.
+        $ret['vales'] = NegocioValeResource::collection($this->NegocioValeS);
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());
         $ret['PagarMePedidoS'] = PagarMePedidoResource::collection($this->PagarMePedidoS()->orderBy('criacao', 'desc')->get());
         $ret['SaurusPedidoS'] = SaurusPedidoResource::collection($this->SaurusPedidoS()->orderBy('criacao', 'desc')->get());

@@ -141,3 +141,22 @@ na mesma tela: critério de aceite, sem perguntar nada.
 
 O arquivo `.md` da task entra no mesmo commit do código — e o commit só acontece depois da
 autorização, conforme a seção **Commits** acima.
+
+## Campos de formulário — os componentes da casa, nunca o Quasar cru
+
+**Campo de texto é `@components/MgInput.vue`, não `<q-input>`.** É o mesmo q-input, com as
+duas regras que a gente vinha repetindo à mão em cada tela: o X de limpar (`clearable`) e o
+campo `readonly` ficam **fora da ordem do Tab**, para quem preenche no teclado andar campo a
+campo sem parar no botão de limpar. O X do `clearable` do Quasar tem `tabindex="0"` fixo no
+fonte e não tem prop para desligar — por isso o componente.
+
+A troca é 1:1: o `MgInput` repassa os atributos (`label`, `type`, `mask`, `maxlength`,
+`rules`, `autofocus`…), os slots `prepend`/`append`/`before`/`after`/`hint` e expõe
+`focus`/`blur`/`select`/`validate`/`resetValidation`/`nativeEl`. `outlined` já vem ligado.
+
+Cada tipo de campo tem o seu: valor/número é `MgInputValor`, data/timestamp é `MgInputData`,
+seleção é o `MgSelectXxx` do domínio. Componente do Quasar cru só quando nenhum deles cobre.
+
+**Campo novo nasce em `MgInput`.** E **todo formulário que receber manutenção troca os
+`q-input` que ainda estiverem nele**, mesmo os que não são o motivo da mexida — é assim que a
+varredura acaba. O que sobra está na **TASK-174**.

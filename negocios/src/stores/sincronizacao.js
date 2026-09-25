@@ -18,6 +18,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       config: true,
       pessoa: true,
       produto: true,
+      prancheta: true,
+      valeModelo: true,
       completa: true,
     },
     ultimaSincronizacao: {
@@ -25,6 +27,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       formaPagamento: null,
       estoqueLocal: null,
       naturezaOperacao: null,
+      valeModelo: null,
       pessoa: null,
       produto: null,
       prancheta: null,
@@ -163,7 +166,12 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         }
         if (this.sincronizacao.produto) {
           await this.sincronizarProduto()
+        }
+        if (this.sincronizacao.prancheta) {
           await this.sincronizarPrancheta()
+        }
+        if (this.sincronizacao.valeModelo) {
+          await this.sincronizarValeModelo()
         }
       } catch (error) {
         console.log(error)
@@ -182,6 +190,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.ultimaSincronizacao.formaPagamento,
         this.ultimaSincronizacao.estoqueLocal,
         this.ultimaSincronizacao.naturezaOperacao,
+        this.ultimaSincronizacao.valeModelo,
         this.ultimaSincronizacao.pessoa,
         this.ultimaSincronizacao.produto,
         this.ultimaSincronizacao.prancheta,
@@ -366,6 +375,57 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
+          timeout: 0, // 20 minutos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+      }
+    },
+
+    // Catalogo de modelos de vale compras (kit escolar).
+    //
+    // Fora do padrao das outras num ponto: o catalogo e' SAZONAL e pode
+    // voltar vazio. O template das demais le data[0].sincronizado sem olhar
+    // se veio alguma coisa, e com lista vazia isso estoura um TypeError que
+    // o catch nao sabe tratar (mexe em error.response, que nao existe) --
+    // derrubando a sincronizacao inteira dali pra frente. Por isso a guarda
+    // logo na entrada.
+    async sincronizarValeModelo() {
+      if (!this.importacao.rodando) {
+        return
+      }
+
+      // inicializa progresso
+      this.inicializaProgresso('Modelos de Vale')
+      let sincronizado = null
+
+      try {
+        // busca registros na ApI
+        let { data } = await api.get('/v1/pdv/vale-modelo', {
+          params: { pdv: this.pdv.uuid },
+        })
+
+        // catalogo vazio: limpa o cache local (nenhum modelo ativo la') e
+        // sai sem carimbar data, que so' existe quando veio registro.
+        if (!data.length) {
+          await db.valeModelo.clear()
+          return
+        }
+
+        // insere dados no banco local indexeddb
+        await db.valeModelo.bulkPut(data)
+
+        // exclui registros que nao vieram na importacao
+        sincronizado = data[0].sincronizado
+        db.valeModelo.where('sincronizado').below(sincronizado).delete()
+
+        //registra data de Sincronizacao
+        this.ultimaSincronizacao.valeModelo = sincronizado
+      } catch (error) {
+        console.log(error)
+        console.log('Impossível sincronizar Modelos de Vale')
+        Notify.create({
+          type: 'negative',
+          message: error?.response?.data?.message ?? error?.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
