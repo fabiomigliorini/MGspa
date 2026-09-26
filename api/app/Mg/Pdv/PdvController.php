@@ -400,6 +400,10 @@ class PdvController
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($codnegocio);
         $negocio = PdvNegocioService::fechar($negocio, $pdv);
+        // vales e contra vales com saldo saem sozinhos na termica do caixa
+        if (!empty($request->impressora)) {
+            ImprimirValesNegocioJob::dispatch($negocio->codnegocio, $request->impressora)->onQueue('high');
+        }
         return new NegocioResource($negocio);
     }
 

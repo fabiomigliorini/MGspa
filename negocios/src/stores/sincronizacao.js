@@ -713,10 +713,12 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
-    async fecharNegocio(codnegocio) {
+    async fecharNegocio(codnegocio, impressora) {
       try {
+        // com impressora, o backend imprime sozinho os vales e contra vales com saldo
         const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/fechar', {
           pdv: this.pdv.uuid,
+          impressora,
         })
         return data.data
       } catch (error) {

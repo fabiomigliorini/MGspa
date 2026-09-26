@@ -32,7 +32,36 @@ class ValeService
     public static function pdf(Negocio $negocio, $uuid = null, $codtitulo = null)
     {
         $generator = new BarcodeGeneratorPNG();
+        $comprovantes = static::comprovantes($negocio, $uuid, $codtitulo);
 
+        $barcodes = [];
+        foreach ($comprovantes as $comp) {
+            $tit = $comp['titulo'];
+            $str = 'VAL' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
+            $barcodes[$tit->codtitulo] = base64_encode($generator->getBarcode($str, $generator::TYPE_CODE_128, 1, 60));
+        }
+
+        // carrega HTML da view
+        $dompdf = new Dompdf();
+        $html = view('negocio.vale', compact('comprovantes', 'barcodes'))->render();
+        $dompdf->loadHtml($html, 'UTF-8');
+
+        // Bobina 80mm x 297 (altura A4)
+        $dompdf->setPaper([0.0, 0.0, 226.77, 841.89], 'portrait');
+
+        // Renderiza
+        $dompdf->render();
+
+        // retorna o PDF em uma variavel
+        return $dompdf->output();
+    }
+
+    /**
+     * Vales vendidos + saldos de vale resgatado/credito de devolucao que
+     * saem no comprovante, indexados por codtitulo (mesmos filtros do pdf).
+     */
+    public static function comprovantes(Negocio $negocio, $uuid = null, $codtitulo = null)
+    {
         // vales vendidos neste negocio
         $comprovantes = [];
         foreach (PdvNegocioValeService::valesAtivos($negocio) as $i => $vale) {
@@ -74,26 +103,7 @@ class ValeService
             }
         }
 
-        $barcodes = [];
-        foreach ($comprovantes as $comp) {
-            $tit = $comp['titulo'];
-            $str = 'VAL' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
-            $barcodes[$tit->codtitulo] = base64_encode($generator->getBarcode($str, $generator::TYPE_CODE_128, 1, 60));
-        }
-
-        // carrega HTML da view
-        $dompdf = new Dompdf();
-        $html = view('negocio.vale', compact('comprovantes', 'barcodes'))->render();
-        $dompdf->loadHtml($html, 'UTF-8');
-
-        // Bobina 80mm x 297 (altura A4)
-        $dompdf->setPaper([0.0, 0.0, 226.77, 841.89], 'portrait');
-
-        // Renderiza
-        $dompdf->render();
-
-        // retorna o PDF em uma variavel
-        return $dompdf->output();
+        return $comprovantes;
     }
 
     public static function imprimir($codnegocio, $impressora, $uuid = null, $codtitulo = null)
