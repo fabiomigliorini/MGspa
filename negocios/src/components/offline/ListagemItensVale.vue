@@ -209,7 +209,7 @@ const linkProduto = (codproduto) => {
 
   <!-- Card do vale: mesmo formato dos cards de nota/título -->
   <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
-    <q-card flat bordered>
+    <q-card flat bordered class="full-height column no-wrap">
       <!-- cabecalho abre o titulo do vale no app de contas, como a nota abre o app de notas;
            o titulo so' nasce no fechamento, antes disso nao e' link -->
       <q-item :clickable="!!urlTitulo" v-ripple="!!urlTitulo" :href="urlTitulo" target="_blank">
@@ -297,6 +297,7 @@ const linkProduto = (codproduto) => {
         </q-item-section>
       </q-item>
 
+      <q-space />
       <template v-if="sNegocio.podeEditar || podeImprimir">
         <q-separator inset />
         <q-card-actions align="right">

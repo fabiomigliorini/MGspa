@@ -16,7 +16,7 @@ const urlTitulo = (codtitulo) => {
     v-for="titulo in sNegocio.negocio.titulos"
     :key="titulo.codtitulo"
   >
-    <q-card flat bordered>
+    <q-card flat bordered class="full-height column no-wrap">
       <q-item clickable v-ripple :href="urlTitulo(titulo.codtitulo)" target="_blank">
         <q-item-section avatar>
           <q-avatar icon="receipt" color="primary" text-color="white"> </q-avatar>

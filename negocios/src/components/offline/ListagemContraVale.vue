@@ -55,7 +55,7 @@ const abrir = () =>
 <template>
   <!-- mesmo formato do card do vale vendido -->
   <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
-    <q-card flat bordered>
+    <q-card flat bordered class="full-height column no-wrap">
       <!-- cabecalho abre o titulo do vale no app de contas, como a nota abre o app de notas -->
       <q-item clickable v-ripple :href="urlTitulo()" target="_blank">
         <q-item-section avatar>
@@ -96,6 +96,7 @@ const abrir = () =>
           <q-item-label caption lines="1">Saldo do vale</q-item-label>
         </q-item-section>
       </q-item>
+      <q-space />
 
       <!-- vale esgotado: o card fica so' para consulta, sem papel para imprimir -->
       <template v-if="saldo > 0">

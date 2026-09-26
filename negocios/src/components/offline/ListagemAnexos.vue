@@ -143,7 +143,7 @@ const confissaoRatio = ref('1:2')
     </q-dialog>
 
     <!-- CARD -->
-    <q-card flat bordered>
+    <q-card flat bordered class="full-height column no-wrap">
       <q-item>
         <q-item-section avatar>
           <q-avatar icon="mdi-paperclip" color="secondary" text-color="white" />
@@ -160,6 +160,7 @@ const confissaoRatio = ref('1:2')
           </q-item-label>
         </q-item-section>
       </q-item>
+      <q-space />
       <q-separator inset />
       <q-card-actions vertical>
         <q-btn
@@ -226,7 +227,7 @@ const confissaoRatio = ref('1:2')
     :key="anexo"
     class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
   >
-    <q-card flat bordered>
+    <q-card flat bordered class="full-height column no-wrap">
       <q-item clickable v-ripple @click="abrirAnexoPdf(anexo)">
         <q-item-section avatar>
           <q-avatar icon="mdi-file-pdf-box" color="secondary" text-color="white" />
@@ -246,6 +247,7 @@ const confissaoRatio = ref('1:2')
       >
         <q-icon name="picture_as_pdf" color="grey-7" size="150px" style="margin: auto" />
       </q-item>
+      <q-space />
       <q-card-actions align="right">
         <q-btn
           flat

@@ -127,7 +127,7 @@ defineExpose({
     v-for="nota in sNegocio.negocio.notas"
     :key="nota.codnotafiscal"
   >
-    <q-card flat bordered>
+    <q-card flat bordered class="full-height column no-wrap">
       <q-item clickable v-ripple :href="urlNotaFiscal(nota.codnotafiscal)" target="_blank">
         <q-item-section avatar>
           <q-avatar
@@ -201,6 +201,7 @@ defineExpose({
           </q-item-label>
         </q-item-section>
       </q-item>
+      <q-space />
       <q-separator inset />
 
       <q-card-actions align="right" v-if="nota.emitida">
