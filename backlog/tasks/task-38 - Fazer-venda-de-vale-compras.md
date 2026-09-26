@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-26 16:00'
+updated_date: '2026-09-26 19:21'
 labels:
   - negocios
   - api
@@ -233,4 +233,6 @@ nas telas de vale-modelo (contra a regra nova do CLAUDE.md, ainda nao corrigidos
 teste no banco de dev (4541400-4541429) nao limpos.
 
 MILESTONE 9 (conversao do legado e limpeza) implementado em 26/09/2026, aguardando validacao. api/database/vale_conversao.sql RODADO em DEV: 3.718 vales viraram negocio (codpdv NULL, natureza Venda, sem item) + pagamentos + tblnegociovale no MESMO titulo + itens; 313 titulos 240 repontados; tblvalecompra*, tbltitulo.codvalecompraformapagamento e tblformapagamento.valecompra dropados. Desconto antigo virou valoravulso NEGATIVO (decisao 23): valorvale = produtos + avulso = credito do titulo em todos. Numeros antes=depois: face=credito 252.502,28, saldo -16.311,84, 176 cancelados, 4.031 titulos identicos campo a campo. Codigo: models Mg\ValeCompra removidos, flag valecompra fora da API/PDV/contas, DIMP e escopo sem o ramo do legado, negocioFechado recusa alterar negocio convertido, comprovante mostra o desconto. Relato completo em .claude/plano-vale-compras.md secao 6; bancada em api/storage/app/vale-teste/m9.php.
+
+2026-09-26: resgate no wizard Receber simplificado a pedido — saiu o modo 'Pela escola' do FormaVale (fica so bipar o vale); vale pula o passo 2 (valor) e abre direto num passo com codigo (readonly se veio do VAL… no input de barras), valor a receber, saldo do vale, valor utilizado (editavel, teto = min(saldo, a receber)), saldo a pagar e saldo do vale depois. Endpoints/store de escopo (valeEscopo*, adicionarPagamentosVale) ficaram sem uso no front.
 <!-- SECTION:NOTES:END -->

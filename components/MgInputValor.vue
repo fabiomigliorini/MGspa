@@ -197,6 +197,11 @@ function onTyped(val) {
     return;
   }
   const parsed = parseValor(val);
+  // passou do teto: trava já na digitação (o min só no blur, senão "5" rumo a "50" com min 10 quebraria)
+  if (parsed !== null && props.max !== null && parsed > props.max) {
+    emitFromNumber(props.max);
+    return;
+  }
   if (parsed !== null && parsed !== lastValid.value) {
     lastValid.value = parsed;
     emit("update:modelValue", parsed);
