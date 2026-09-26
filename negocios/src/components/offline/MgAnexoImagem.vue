@@ -22,7 +22,7 @@ onMounted(async () => {
     blobUrl.value = await blobUrlFromApi(
       api,
       `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/anexo/${props.pasta}/${props.anexo}`,
-      'image/*',
+      null,
     )
   } catch (e) {
     console.log(e)
