@@ -146,7 +146,7 @@ const registrarLote = async (recarga, mensagem) => {
   notificaOk(mensagem)
 }
 
-// O adiantamento à Beevale é do Financeiro: a baixa acontece na tela de
+// O título a pagar da Beevale é do Financeiro: a baixa acontece na tela de
 // Liquidação, no app de contas. Mesmo padrão do ColaboradorDetalhe.
 const urlTitulo = (codtitulo) =>
   codtitulo ? `${process.env.CONTAS_URL}/titulo/${codtitulo}` : null
@@ -196,7 +196,7 @@ const inativar = (recarga) => {
   $q.dialog({
     title: 'Inativar recarga',
     message:
-      'O título de adiantamento será estornado e os ' +
+      'O título a pagar da Beevale será estornado e os ' +
       recarga.colaboradores.length +
       ' colaboradores voltam a ter saldo pendente. Continuar?',
     cancel: true,
@@ -419,7 +419,7 @@ onMounted(carregar)
                   </a>
                   <q-badge v-if="r.portador" outline color="blue-8" class="q-ml-sm">
                     {{ r.portador }}
-                    <q-tooltip>Portador de onde o adiantamento sai</q-tooltip>
+                    <q-tooltip>Portador de onde o pagamento sai</q-tooltip>
                   </q-badge>
                   <q-space />
                   <div class="text-h6 text-grey-9 q-mr-md">{{ formataNumero(r.valor) }}</div>

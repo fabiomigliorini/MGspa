@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { rhStore } from 'src/stores/rh'
 import { extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataCnpjCpf } from '@components/formatters'
+import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 
@@ -218,19 +219,21 @@ const submit = async () => {
       <q-card-section class="q-pb-none">
         <div class="row q-col-gutter-md">
           <div class="col-12 col-sm-4">
-            <q-input outlined clearable v-model="busca" label="Buscar colaborador" autofocus>
+            <MgInput clearable v-model="busca" label="Buscar colaborador" autofocus>
               <template #prepend>
                 <q-icon name="search" />
               </template>
-            </q-input>
+            </MgInput>
           </div>
           <div class="col-6 col-sm-4">
             <MgInputData v-model="dia" label="Data do crédito" />
           </div>
           <div class="col-6 col-sm-4">
-            <q-input outlined v-model="observacao" label="Observação" maxlength="200">
-              <q-tooltip>Vai para o histórico do lote e do título de adiantamento</q-tooltip>
-            </q-input>
+            <!-- O MgInput não repassa o slot default: o tooltip mora no wrapper. -->
+            <div>
+              <MgInput v-model="observacao" label="Observação" maxlength="200" />
+              <q-tooltip>Vai para o histórico do lote e do título da Beevale</q-tooltip>
+            </div>
           </div>
         </div>
       </q-card-section>
