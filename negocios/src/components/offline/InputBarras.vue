@@ -7,6 +7,7 @@ import { negocioStore } from 'stores/negocio'
 import { listagemStore } from 'stores/listagem'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import DialogUnificarComanda from './DialogUnificarComanda.vue'
+import BotaoValeCompras from './BotaoValeCompras.vue'
 import { conflitosComanda } from '../../utils/comanda.js'
 import { Notify, Dialog, debounce } from 'quasar'
 import { falar } from '../../utils/falar.js'
@@ -435,6 +436,7 @@ onUnmounted(() => {
       <q-btn round dense flat icon="search" @click="sProduto.dialogPesquisa = true">
         <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
       </q-btn>
+      <botao-vale-compras />
       <q-fab icon="receipt" flat padding="5px" direction="down">
         <!-- COMANDA -->
         <q-fab-action

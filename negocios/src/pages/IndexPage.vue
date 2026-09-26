@@ -10,7 +10,6 @@ import { saurusStore } from 'stores/saurus'
 import { pixStore } from 'stores/pix'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
 import ListagemItensVale from 'components/offline/ListagemItensVale.vue'
-import ValeDialog from 'components/offline/ValeDialog.vue'
 import InputBarras from 'components/offline/InputBarras.vue'
 import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
@@ -531,31 +530,8 @@ onUnmounted(() => {
       <listagem-produtos />
 
       <!-- VALE COMPRAS: um bloco por vale, abaixo da grade de mercadoria.
-           So aparece em natureza que gera financeiro: o vale vira titulo de
-           credito no fechamento, e onde nao ha financeiro ele nunca viraria
-           credito nenhum. Vale ja lancado continua visivel de qualquer jeito,
-           para nao sumir da tela se a natureza mudar. -->
-      <div
-        class="q-px-md"
-        v-if="
-          sNegocio.valesAtivos.length > 0 || (sNegocio.podeEditar && sNegocio.negocio.financeiro)
-        "
-      >
-        <div class="row items-center q-mb-sm">
-          <div class="text-overline text-grey-7">Vale Compras</div>
-          <q-space />
-          <q-btn
-            v-if="sNegocio.podeEditar && sNegocio.negocio.financeiro"
-            flat
-            round
-            size="sm"
-            color="primary"
-            icon="add"
-            @click="sNegocio.abrirVale()"
-          >
-            <q-tooltip class="bg-accent">Adicionar Vale Compras</q-tooltip>
-          </q-btn>
-        </div>
+           O botao de adicionar fica no input de barras (BotaoValeCompras). -->
+      <div class="q-px-md" v-if="sNegocio.valesAtivos.length > 0">
         <listagem-itens-vale
           v-for="(vale, indice) in sNegocio.valesAtivos"
           :key="vale.uuid"
@@ -565,7 +541,6 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <vale-dialog />
     <div style="padding-bottom: 75px"></div>
 
     <!-- ORCAMENTO SELECIONAR -->
