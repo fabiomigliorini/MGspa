@@ -30,6 +30,7 @@ const sPagarMe = pagarMeStore()
 const sSaurus = saurusStore()
 const sPix = pixStore()
 const listagemNotasRef = ref(null)
+const listagemAnexosRef = ref(null)
 const dialogOrcamentoSelecionar = ref(false)
 const dialogOrcamento = ref(false)
 const iFrameOrcamentoRef = ref(null)
@@ -494,6 +495,31 @@ onUnmounted(() => {
         >
           <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
         </q-btn>
+        <q-btn flat color="primary" icon="mdi-paperclip" size="md" dense>
+          <q-tooltip class="bg-accent">Anexar</q-tooltip>
+          <q-menu auto-close>
+            <q-list>
+              <q-item clickable @click="listagemAnexosRef.anexar('confissao')">
+                <q-item-section avatar>
+                  <q-icon name="mdi-file-sign" color="primary" />
+                </q-item-section>
+                <q-item-section>Confissão</q-item-section>
+              </q-item>
+              <q-item clickable @click="listagemAnexosRef.anexar('pdf')">
+                <q-item-section avatar>
+                  <q-icon name="mdi-file-pdf-box" color="primary" />
+                </q-item-section>
+                <q-item-section>PDF</q-item-section>
+              </q-item>
+              <q-item clickable @click="listagemAnexosRef.anexar('imagem')">
+                <q-item-section avatar>
+                  <q-icon name="image" color="primary" />
+                </q-item-section>
+                <q-item-section>Imagem</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
       <!-- Notas, titulos, vales e anexos: todos no tamanho do card de produto.
@@ -527,10 +553,8 @@ onUnmounted(() => {
           />
         </template>
         <listagem-anexos
-          v-if="
-            sNegocio.negocio.anexos &&
-            (sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3)
-          "
+          ref="listagemAnexosRef"
+          v-if="sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3"
         />
       </div>
 

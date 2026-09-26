@@ -70,136 +70,89 @@ const ratioOptions = ref([
 ])
 
 const confissaoRatio = ref('1:2')
+
+const anexar = (pasta) => {
+  if (pasta == 'confissao') dialogConfissao.value = true
+  if (pasta == 'imagem') dialogImagem.value = true
+  if (pasta == 'pdf') dialogPdf.value = true
+}
+
+defineExpose({ anexar })
 </script>
 <template>
-  <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
-    <q-dialog v-model="dialogConfissao">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Anexar Foto da Confissão de Dívida</div>
-        </q-card-section>
+  <!-- dialogs de anexar: abertos pelo botao de clipe no cabecalho (IndexPage) -->
+  <q-dialog v-model="dialogConfissao">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Anexar Foto da Confissão de Dívida</div>
+      </q-card-section>
 
-        <q-card-section class="q-pt-none">
-          <q-select
-            outlined
-            class="q-mb-md"
-            :options="ratioOptions"
-            v-model="confissaoRatio"
-            label="Tamanho"
-            map-options
-            emit-value
-          />
-          <mg-slim :ratio="confissaoRatio" pasta="confissao" @upload="dialogConfissao = false" />
-        </q-card-section>
+      <q-card-section class="q-pt-none">
+        <q-select
+          outlined
+          class="q-mb-md"
+          :options="ratioOptions"
+          v-model="confissaoRatio"
+          label="Tamanho"
+          map-options
+          emit-value
+        />
+        <mg-slim :ratio="confissaoRatio" pasta="confissao" @upload="dialogConfissao = false" />
+      </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <q-dialog v-model="dialogImagem">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Anexar Imagem</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <mg-slim ratio="free" pasta="imagem" @upload="dialogImagem = false" />
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <q-dialog v-model="dialogPdf">
-      <q-card>
-        <q-card-section>
-          <div class="text-h6">Anexar PDF</div>
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <q-file
-            style="min-width: 250px"
-            v-model="arquivosPdf"
-            outlined
-            label="Selecione os arquivos PDF"
-            multiple
-            use-chips
-            accept=".pdf"
-            max-file-size="1024000"
-            @rejected="onRejected"
-            @update:model-value="anexarPdf"
-            counter
-          />
-        </q-card-section>
-
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- CARD -->
-    <q-card flat bordered class="full-height column no-wrap">
-      <q-item>
-        <q-item-section avatar>
-          <q-avatar icon="mdi-paperclip" color="secondary" text-color="white" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label> Anexos </q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-separator inset />
-      <q-item>
-        <q-item-section>
-          <q-item-label caption>
-            Clique em um dos botões abaixo para anexar os documentos relativos à este negócio!
-          </q-item-label>
-        </q-item-section>
-      </q-item>
-      <q-space />
-      <q-separator inset />
-      <q-card-actions vertical>
-        <q-btn
-          flat
-          color="primary"
-          align="left"
-          style="width: 100%"
-          icon="mdi-file-sign"
-          @click="dialogConfissao = true"
-        >
-          &nbsp; Confissão
-        </q-btn>
-        <q-btn
-          flat
-          color="primary"
-          align="left"
-          style="width: 100%"
-          icon="mdi-file-pdf-box"
-          @click="dialogPdf = true"
-        >
-          &nbsp; PDF
-        </q-btn>
-        <q-btn
-          flat
-          color="primary"
-          align="left"
-          style="width: 100%"
-          icon="image"
-          @click="dialogImagem = true"
-        >
-          &nbsp; Imagem
-        </q-btn>
+      <q-card-actions align="right">
+        <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
       </q-card-actions>
     </q-card>
-  </div>
+  </q-dialog>
+
+  <q-dialog v-model="dialogImagem">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Anexar Imagem</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        <mg-slim ratio="free" pasta="imagem" @upload="dialogImagem = false" />
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
+
+  <q-dialog v-model="dialogPdf">
+    <q-card>
+      <q-card-section>
+        <div class="text-h6">Anexar PDF</div>
+      </q-card-section>
+
+      <q-card-section class="q-pt-none">
+        <q-file
+          style="min-width: 250px"
+          v-model="arquivosPdf"
+          outlined
+          label="Selecione os arquivos PDF"
+          multiple
+          use-chips
+          accept=".pdf"
+          max-file-size="1024000"
+          @rejected="onRejected"
+          @update:model-value="anexarPdf"
+          counter
+        />
+      </q-card-section>
+
+      <q-card-actions align="right">
+        <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 
   <!-- ASSINATURA CONFISSAO DE DIVIDA -->
   <MgAnexoImagem
-    v-for="anexo in sNegocio.negocio.anexos.confissao"
+    v-for="anexo in sNegocio.negocio.anexos?.confissao"
     :key="anexo"
     pasta="confissao"
     :anexo="anexo"
@@ -211,7 +164,7 @@ const confissaoRatio = ref('1:2')
 
   <!-- OUTRAS IMAGENS -->
   <MgAnexoImagem
-    v-for="anexo in sNegocio.negocio.anexos.imagem"
+    v-for="anexo in sNegocio.negocio.anexos?.imagem"
     :key="anexo"
     pasta="imagem"
     :anexo="anexo"
@@ -223,7 +176,7 @@ const confissaoRatio = ref('1:2')
 
   <!-- PDF -->
   <div
-    v-for="anexo in sNegocio.negocio.anexos.pdf"
+    v-for="anexo in sNegocio.negocio.anexos?.pdf"
     :key="anexo"
     class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
   >
