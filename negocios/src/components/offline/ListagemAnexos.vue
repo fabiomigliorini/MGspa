@@ -72,7 +72,7 @@ const ratioOptions = ref([
 const confissaoRatio = ref('1:2')
 </script>
 <template>
-  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3">
+  <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
     <q-dialog v-model="dialogConfissao">
       <q-card>
         <q-card-section>
@@ -224,7 +224,7 @@ const confissaoRatio = ref('1:2')
   <div
     v-for="anexo in sNegocio.negocio.anexos.pdf"
     :key="anexo"
-    class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3"
+    class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
   >
     <q-card flat bordered>
       <q-item clickable v-ripple @click="abrirAnexoPdf(anexo)">

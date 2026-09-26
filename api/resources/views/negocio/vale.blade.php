@@ -134,6 +134,8 @@ use Illuminate\Support\Carbon;
         <tr>
             <td colspan="2" style="border-bottom: 0.9px solid black;"><b>Produtos</b></td>
             <td style="border-bottom: 0.9px solid black; text-align: right;"><b>Qtde</b></td>
+            <td style="border-bottom: 0.9px solid black; text-align: right;"><b>Preço</b></td>
+            <td style="border-bottom: 0.9px solid black; text-align: right;"><b>Total</b></td>
         </tr>
         @foreach($itens as $item)
         <tr>
@@ -147,8 +149,14 @@ use Illuminate\Support\Carbon;
                 <span style="font-size: 6pt;">{{ $item->ProdutoBarra->barras }}</span>
             </td>
             <td style="vertical-align: top; text-align: right;">{{ formataNumero($item->quantidade, 0) }}</td>
+            <td style="vertical-align: top; text-align: right; padding-left: 0.1cm;">{{ formataNumero($item->valorunitario) }}</td>
+            <td style="vertical-align: top; text-align: right; padding-left: 0.1cm;">{{ formataNumero($item->valorprodutos) }}</td>
         </tr>
         @endforeach
+        <tr>
+            <td colspan="4" style="border-top: 0.9px solid black; text-align: right;"><b>Total</b></td>
+            <td style="border-top: 0.9px solid black; text-align: right; padding-left: 0.1cm;"><b>{{ formataNumero($itens->sum('valorprodutos')) }}</b></td>
+        </tr>
     </table>
     @endif
 

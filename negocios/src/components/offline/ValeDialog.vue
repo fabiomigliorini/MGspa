@@ -33,13 +33,18 @@ const PASSO_ALUNO = 3
 const PASSO_VALOR = 4
 
 // Miolo do wizard com altura fixa: sem isso o dialog pula de tamanho a cada
-// passo (6 escolas, 10 kits, 2 campos). Os 108px descontam o header do stepper,
-// para o card fechar em ~70% da tela. O conteudo rola dentro.
-// No celular o dialog abre em tela cheia e o miolo ocupa a altura toda; ali o
-// header usa alternative-labels (104px) + 48px de padding do passo = 152px.
+// passo (6 escolas, 10 kits, 2 campos). O conteudo rola dentro.
+// O header do stepper usa sempre alternative-labels (104px, rotulo embaixo
+// da bolinha: no dialog estreito os rotulos ao lado quebram linha). Ele ja'
+// tem 24px de respiro embaixo, e o passo mais 24px em cima: a margem
+// negativa come esse segundo respiro, que sobrava entre o header e a lista.
+// Desconto = 104 do header + 24 do padding de baixo do passo = 128px.
+// No celular o dialog abre em tela cheia e o miolo ocupa a altura toda.
 const mobile = computed(() => $q.screen.lt.sm)
-const ALTURA_PASSO = computed(() =>
-  mobile.value ? 'height: calc(100dvh - 152px)' : 'height: calc(70vh - 108px)',
+const ALTURA_PASSO = computed(
+  () =>
+    (mobile.value ? 'height: calc(100dvh - 128px)' : 'height: calc(70vh - 128px)') +
+    '; margin-top: -24px',
 )
 
 const passo = ref(PASSO_FAVORECIDO)
@@ -63,11 +68,10 @@ const form = ref({
 
 const isNovo = computed(() => !sNegocio.valeEditando)
 
-// wizard: tela cheia no celular, 600px no desktop; edicao: form estreito
-const estiloCard = computed(() => {
-  if (!isNovo.value) return 'width: 350px; max-width: 90vw'
-  return mobile.value ? '' : 'width: 350px; max-width: 90vw'
-})
+// 350px; so' o wizard vai em tela cheia no celular
+const estiloCard = computed(() =>
+  mobile.value && isNovo.value ? '' : 'width: 350px; max-width: 90vw',
+)
 // Consumidor (1) e o favorecido do vale ao portador, nao uma escola: nele
 // nao ha aluno nem turma para perguntar.
 const temFavorecido = computed(
@@ -261,14 +265,7 @@ const salvar = async () => {
   <q-dialog v-model="sNegocio.dialog.vale" :maximized="mobile && isNovo" @before-show="preparar">
     <q-card flat :style="estiloCard">
       <!-- NOVO: wizard -->
-      <q-stepper
-        v-if="isNovo"
-        v-model="passo"
-        flat
-        animated
-        color="primary"
-        :alternative-labels="mobile"
-      >
+      <q-stepper v-if="isNovo" v-model="passo" flat animated color="primary" alternative-labels>
         <!-- 1. FAVORECIDO -->
         <q-step :name="PASSO_FAVORECIDO" title="Favorecido" icon="school" :done="passo > 1">
           <div class="column" :style="ALTURA_PASSO">
@@ -382,8 +379,8 @@ const salvar = async () => {
                   <div class="text-h5 text-primary">{{ formataNumero(valorVale) }}</div>
                 </div>
 
-                <div class="row q-col-gutter-md justify-center">
-                  <div class="col-12 col-sm-8">
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
                     <MgInputFormatado
                       outlined
                       autofocus
@@ -396,7 +393,7 @@ const salvar = async () => {
                       v-model="form.aluno"
                     />
                   </div>
-                  <div class="col-12 col-sm-8">
+                  <div class="col-12">
                     <MgInput clearable counter label="Turma" maxlength="40" v-model="form.turma" />
                   </div>
                 </div>
@@ -406,13 +403,7 @@ const salvar = async () => {
             <q-stepper-navigation>
               <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
               <q-btn flat label="Voltar" color="grey-8" tabindex="-1" @click="voltar()" />
-              <q-btn
-                type="submit"
-                flat
-                label="Adicionar Vale"
-                color="primary"
-                :loading="salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvando" />
             </q-stepper-navigation>
           </q-form>
         </q-step>
@@ -422,8 +413,8 @@ const salvar = async () => {
           <q-form class="column" :style="ALTURA_PASSO" @submit.prevent="salvar()">
             <div class="col scroll column">
               <div class="full-width" style="margin: auto 0">
-                <div class="row q-col-gutter-md justify-center">
-                  <div class="col-12 col-sm-8">
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
                     <MgInputValor
                       autofocus
                       lazy-rules
@@ -444,13 +435,7 @@ const salvar = async () => {
             <q-stepper-navigation>
               <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
               <q-btn flat label="Voltar" color="grey-8" tabindex="-1" @click="voltar()" />
-              <q-btn
-                type="submit"
-                flat
-                label="Adicionar Vale"
-                color="primary"
-                :loading="salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvando" />
             </q-stepper-navigation>
           </q-form>
         </q-step>

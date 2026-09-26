@@ -10,7 +10,9 @@
 // kit do modelo. Produto fora da lista o cliente leva como mercadoria, pela
 // bipagem normal.
 import { ref, computed } from 'vue'
-import { Dialog } from 'quasar'
+import { Dialog, Notify } from 'quasar'
+import { api } from 'boot/axios'
+import { abrirPdf } from '@components/abrirPdf'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
 import { formataData, formataNumero, formataNumeroInteligente } from '@components/formatters'
@@ -107,6 +109,43 @@ const excluirVale = () => {
   })
 }
 
+// Comprovante so' deste vale. O codigo de barras e' o do titulo, que so'
+// nasce no fechamento: antes disso nao ha o que imprimir.
+const podeImprimir = computed(
+  () => !!props.vale.codtitulo && sNegocio.negocio.codnegociostatus == 2,
+)
+
+const urlVale = () => '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
+
+const imprimirVale = async () => {
+  if (!sNegocio.padrao.impressora) {
+    Notify.create({
+      type: 'negative',
+      message: 'Nenhuma impressora térmica selecionada!',
+      timeout: 3000,
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return
+  }
+  await api.post(urlVale() + '/' + sNegocio.padrao.impressora, null, {
+    params: { uuid: props.vale.uuid },
+  })
+  Notify.create({
+    type: 'positive',
+    message: 'Impressão Solicitada!',
+    timeout: 1000,
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
+
+const abrirVale = () =>
+  abrirPdf(
+    api,
+    urlVale(),
+    { uuid: props.vale.uuid },
+    { title: 'Vale ' + props.letra, size: 'cupom', onImprimir: imprimirVale },
+  )
+
 const linkProduto = (codproduto) => {
   return process.env.MGLARA_URL + 'produto/' + codproduto
 }
@@ -168,9 +207,21 @@ const linkProduto = (codproduto) => {
         <q-item-section>
           <q-item-label class="ellipsis">Vale {{ letra }}</q-item-label>
         </q-item-section>
-        <q-item-section side top v-if="sNegocio.podeEditar">
+        <q-item-section side top v-if="sNegocio.podeEditar || podeImprimir">
           <div class="row no-wrap">
             <q-btn
+              v-if="podeImprimir"
+              flat
+              round
+              size="sm"
+              color="grey-7"
+              icon="print"
+              @click="abrirVale()"
+            >
+              <q-tooltip>Imprimir Vale</q-tooltip>
+            </q-btn>
+            <q-btn
+              v-if="sNegocio.podeEditar"
               flat
               round
               size="sm"
@@ -180,7 +231,15 @@ const linkProduto = (codproduto) => {
             >
               <q-tooltip>Editar Vale</q-tooltip>
             </q-btn>
-            <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirVale()">
+            <q-btn
+              v-if="sNegocio.podeEditar"
+              flat
+              round
+              size="sm"
+              color="grey-7"
+              icon="delete"
+              @click="excluirVale()"
+            >
               <q-tooltip>Excluir Vale</q-tooltip>
             </q-btn>
           </div>

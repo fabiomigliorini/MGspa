@@ -12,7 +12,7 @@ const urlTitulo = (codtitulo) => {
 </script>
 <template>
   <div
-    class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3"
+    class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
     v-for="titulo in sNegocio.negocio.titulos"
     :key="titulo.codtitulo"
   >

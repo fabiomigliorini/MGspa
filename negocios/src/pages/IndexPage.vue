@@ -518,27 +518,38 @@ onUnmounted(() => {
         </q-btn>
       </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
+      <!-- Notas, titulos, vales e anexos: todos no tamanho do card de produto.
+           Vale aparece tambem com o negocio aberto; o botao de adicionar fica
+           no input de barras (BotaoValeCompras). -->
       <div
         class="row q-col-gutter-md q-px-md"
-        v-if="sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3"
+        v-if="
+          sNegocio.negocio.codnegociostatus == 2 ||
+          sNegocio.negocio.codnegociostatus == 3 ||
+          sNegocio.valesAtivos.length > 0
+        "
       >
-        <listagem-notas ref="listagemNotasRef" />
-        <listagem-titulos />
-        <listagem-anexos v-if="sNegocio.negocio.anexos" />
-      </div>
-
-      <listagem-produtos />
-
-      <!-- VALE COMPRAS: um bloco por vale, abaixo da grade de mercadoria.
-           O botao de adicionar fica no input de barras (BotaoValeCompras). -->
-      <div class="row q-col-gutter-md q-px-md" v-if="sNegocio.valesAtivos.length > 0">
+        <template
+          v-if="sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3"
+        >
+          <listagem-notas ref="listagemNotasRef" />
+          <listagem-titulos />
+        </template>
         <listagem-itens-vale
           v-for="(vale, indice) in sNegocio.valesAtivos"
           :key="vale.uuid"
           :vale="vale"
           :letra="letraVale(indice)"
         />
+        <listagem-anexos
+          v-if="
+            sNegocio.negocio.anexos &&
+            (sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3)
+          "
+        />
       </div>
+
+      <listagem-produtos />
     </div>
 
     <div style="padding-bottom: 75px"></div>

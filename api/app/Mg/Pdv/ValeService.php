@@ -24,8 +24,11 @@ class ValeService
      *
      * Os dois saem com o mesmo codigo de barras "VAL{codtitulo}", que e' o
      * que o caixa bipa no wizard Receber.
+     *
+     * Com $uuid sai so' aquele vale vendido (botao do card do vale), sem os
+     * saldos e creditos.
      */
-    public static function pdf(Negocio $negocio)
+    public static function pdf(Negocio $negocio, $uuid = null)
     {
         $generator = new BarcodeGeneratorPNG();
 
@@ -33,6 +36,9 @@ class ValeService
         $comprovantes = [];
         foreach (PdvNegocioValeService::valesAtivos($negocio) as $i => $vale) {
             if (empty($vale->codtitulo) || empty($vale->Titulo)) {
+                continue;
+            }
+            if ($uuid && $vale->uuid != $uuid) {
                 continue;
             }
             $comprovantes[$vale->codtitulo] = [
@@ -43,7 +49,7 @@ class ValeService
         }
 
         // saldo de vale resgatado e credito de devolucao (caminho de sempre)
-        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
+        foreach ($uuid ? [] : $negocio->NegocioFormaPagamentoS as $nfp) {
             if (!empty($nfp->codtitulo)) {
                 if ($nfp->Titulo->codtipotitulo == TituloService::TIPO_VALE && $nfp->Titulo->saldo < 0) {
                     $comprovantes[$nfp->codtitulo] = $comprovantes[$nfp->codtitulo] ?? [
@@ -86,10 +92,14 @@ class ValeService
         return $dompdf->output();
     }
 
-    public static function imprimir($codnegocio, $impressora)
+    public static function imprimir($codnegocio, $impressora, $uuid = null)
     {
         // Executa comando de impressao
-        $url = \URL::temporarySignedRoute('pdv.negocio.vale', now()->addMinutes(10), ['codnegocio' => $codnegocio]);
+        $params = ['codnegocio' => $codnegocio];
+        if ($uuid) {
+            $params['uuid'] = $uuid;
+        }
+        $url = \URL::temporarySignedRoute('pdv.negocio.vale', now()->addMinutes(10), $params);
         $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'
             . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora
             . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
