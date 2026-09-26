@@ -96,7 +96,8 @@ use Illuminate\Support\Carbon;
 
 
     <h2>
-        Vale Compras
+        {{-- ja' usado em parte: o papel vale so' o que sobrou --}}
+        {{ round(abs($tit->saldo), 2) != round($tit->credito, 2) ? 'Contra Vale' : 'Vale Compras' }}
         {{$tit->numero}}
         <br>
         {{formataCodigo($tit->codtitulo)}}
@@ -216,12 +217,6 @@ use Illuminate\Support\Carbon;
 
         Sinop/MT, {{formataDataPorExtenso($tit->emissao)}}.
     </div>
-
-    <br><br><br><br><br><br>
-    <div style="margin-bottom: 0.2cm; border-bottom: 0.9px dashed black;">
-    </div>
-    <h3 style="text-align:center;">Migliorini & Migliorini Ltda</h3>
-
 
     <br><br>
     <div style="text-align:center;">
