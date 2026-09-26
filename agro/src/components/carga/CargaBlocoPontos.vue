@@ -12,8 +12,10 @@ import {
   etapasDaCarga,
   indiceEtapa,
   contatipoMeta,
+  ETAPA_META,
   fmtNumero as fmt,
 } from 'src/utils/carga'
+import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import SelectContaTipo from 'components/SelectContaTipo.vue'
 import SelectTalhao from 'components/SelectTalhao.vue'
@@ -30,6 +32,7 @@ const { unidadesAtivas } = storeToRefs(store)
 
 // Providos pelo CargaForm.vue.
 const persistirBloco = inject('persistirBloco')
+const concluirEtapa = inject('concluirEtapa')
 const calc = inject('calc')
 const finalizando = inject('finalizando')
 
@@ -71,14 +74,26 @@ function rotuloUnidade(cod) {
 // mudar junto se o talhão escolhido pertencer a outra safra) ----
 const dialogAberto = ref(false)
 const edicao = ref({ pontos: [], codsafra: null })
+// Aberto pelo botão "Notas fiscais" (etapa FISCAL da expedição): número e valor
+// da NF de cada contrato de destino são obrigatórios e confirmar AVANÇA a carga
+// (concluirEtapa). Pelo lápis segue livre, como correção.
+const etapaAtual = ref(null)
+const rotuloConfirmar = ref('Salvar')
 
-function abrir() {
+function abrir({ etapa = null, rotulo = null } = {}) {
+  // F3 com o dialog já aberto não pode reabrir e apagar o que foi digitado.
+  if (dialogAberto.value) return
   edicao.value = {
     pontos: (carga.value.pontos || []).map((p) => ({ ...p })),
     codsafra: carga.value.codsafra,
   }
+  etapaAtual.value = etapa
+  rotuloConfirmar.value = rotulo || 'Salvar'
   dialogAberto.value = true
 }
+defineExpose({ abrir })
+
+const exigeNf = computed(() => etapaAtual.value === 'FISCAL')
 
 const origensEdicao = computed(() => edicao.value.pontos.filter((p) => p.papel === 'ORIGEM'))
 const destinosEdicao = computed(() => edicao.value.pontos.filter((p) => p.papel === 'DESTINO'))
@@ -125,7 +140,7 @@ async function salvar() {
   carga.value.pontos = edicao.value.pontos
   carga.value.codsafra = edicao.value.codsafra
   try {
-    const ok = await persistirBloco()
+    const ok = etapaAtual.value ? await concluirEtapa() : await persistirBloco()
     if (ok) dialogAberto.value = false
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
@@ -211,7 +226,18 @@ async function salvar() {
     <q-card style="width: 900px; max-width: 95vw">
       <q-form @submit="salvar">
         <q-card-section>
-          <div class="text-subtitle1 q-mb-md">Origem / Destino do grão</div>
+          <div class="row items-center text-subtitle1 q-mb-md">
+            <template v-if="etapaAtual">
+              <q-icon
+                :name="ETAPA_META[etapaAtual].icon"
+                :color="ETAPA_META[etapaAtual].color"
+                size="24px"
+                class="q-mr-sm"
+              />
+              {{ ETAPA_META[etapaAtual].label }}
+            </template>
+            <template v-else>Origem / Destino do grão</template>
+          </div>
           <div class="row q-col-gutter-lg">
             <div class="col-12 col-md-6">
               <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
@@ -366,8 +392,24 @@ async function salvar() {
                   v-if="mostrarFiscal && p.contatipo === 'CONTRATO'"
                   class="row q-col-gutter-sm q-mt-xs"
                 >
-                  <q-input v-model="p.numeronf" label="Nº NF" outlined class="col" />
-                  <MgInputValor v-model="p.valornf" :decimals="2" prefix="R$" label="Valor NF" class="col" />
+                  <MgInput
+                    v-model="p.numeronf"
+                    label="Nº NF"
+                    maxlength="20"
+                    class="col"
+                    :autofocus="exigeNf"
+                    lazy-rules
+                    :rules="[(v) => !exigeNf || !!v || 'Informe o número da NF.']"
+                  />
+                  <MgInputValor
+                    v-model="p.valornf"
+                    :decimals="2"
+                    prefix="R$"
+                    label="Valor NF"
+                    class="col"
+                    lazy-rules
+                    :rules="[(v) => !exigeNf || Number(v) > 0 || 'Informe o valor da NF.']"
+                  />
                 </div>
               </div>
               <div
@@ -383,7 +425,13 @@ async function salvar() {
         </q-card-section>
         <q-card-actions align="right">
           <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn label="Salvar" type="submit" flat color="primary" />
+          <q-btn
+            :label="rotuloConfirmar"
+            type="submit"
+            :flat="!etapaAtual"
+            :unelevated="!!etapaAtual"
+            color="primary"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

@@ -14,7 +14,7 @@ use Mg\Titulo\TituloService;
  *
  * O lote é de uma EMPRESA MÃE num período — é assim que o financeiro sempre
  * fez à mão. A filial gravada no lote é a SEDE da empresa: só o lugar onde o
- * título de adiantamento é lançado, não o conjunto de colaboradores.
+ * título a pagar da Beevale é lançado, não o conjunto de colaboradores.
  *
  * A prévia é uma QUERY, não um estado: "acertos Bee da empresa no período menos
  * quem já está em lote vivo". Daí saem de graça a idempotência (ninguém é
@@ -27,11 +27,18 @@ use Mg\Titulo\TituloService;
  */
 class BeeRecargaService
 {
-    // Fornecedor e classificação do título de adiantamento. Os três valores
+    // Fornecedor e classificação do título a pagar da Beevale. Pessoa e conta
     // vêm dos lançamentos que o financeiro fazia à mão (tbltitulo dos lotes de
     // 30/07/2026) — mudar aqui muda para onde o dinheiro é lançado.
+    //
+    // O tipo NÃO é o daqueles lançamentos (120 Adto Fornecedor). Adto quer dizer
+    // "já paguei": nasce a débito e a trigger grava a criação como Liquidação.
+    // O financeiro o cria na hora do PIX, com o banco como portador; o lote nasce
+    // no RH ANTES do pagamento, então o que ele gera é a conta a pagar, que o
+    // Financeiro baixa pela Liquidação (TASK-176). Com o 120, a baixa virava
+    // recebimento e a Beevale aparecia devendo o lote à empresa.
     const CODPESSOA_BEEVALE = 26169;   // Beevale Pagamentos E Beneficios Ltda
-    const CODTIPOTITULO_ADTO = 120;    // Adto Fornecedor (credito = f -> debito)
+    const CODTIPOTITULO_PAGAR = 927;   // Duplicata A Pagar (credito = t -> conta a pagar)
     const CODCONTACONTABIL = 312;      // Vale Alimentacao Colaboradores
 
     /**
@@ -193,7 +200,7 @@ class BeeRecargaService
     }
 
     /**
-     * Gera o lote da empresa: título de adiantamento + recarga + itens, nesta
+     * Gera o lote da empresa: título a pagar da Beevale + recarga + itens, nesta
      * ordem (cada passo depende da chave gerada pelo anterior).
      *
      * Um lote por empresa mãe — é assim que o financeiro sempre lançou à mão
@@ -257,11 +264,11 @@ class BeeRecargaService
             : static::codfilialDoTitulo($linhas);
 
         // `dia` é quando o saldo tem que estar no cartão; as datas do título
-        // continuam sendo hoje, porque o adiantamento à Beevale é lançado agora.
+        // continuam sendo hoje, porque a conta a pagar à Beevale nasce agora.
         // O título nasce EM ABERTO: o portador diz de onde o dinheiro vai sair,
         // e a baixa continua sendo do Financeiro, pela tela de Liquidação.
         $titulo = TituloService::criar([
-            'codtipotitulo' => static::CODTIPOTITULO_ADTO,
+            'codtipotitulo' => static::CODTIPOTITULO_PAGAR,
             'codfilial' => $codfilial,
             'codportador' => $portador ? $portador->codportador : null,
             'codpessoa' => static::CODPESSOA_BEEVALE,
@@ -273,6 +280,19 @@ class BeeRecargaService
             'observacao' => 'Recarga cartão Bee - período ' . $codperiodo
                 . ($observacao ? ' - ' . $observacao : ''),
         ]);
+
+        // O movimento de implantação é gravado pela trigger fntbltituloai, que
+        // não sabe quem está logado: sem isto ele aparece no app de contas com o
+        // "Criado por" em branco. Quem gerou a recarga é quem criou o título.
+        // DB::table, não o model: o Eloquent carimbaria `alteracao`, e ninguém
+        // alterou o movimento — só falta dizer quem o criou.
+        DB::table('tblmovimentotitulo')
+            ->where('codtitulo', $titulo->codtitulo)
+            ->whereNull('codusuariocriacao')
+            ->update([
+                'codusuariocriacao' => $titulo->codusuariocriacao,
+                'codusuarioalteracao' => $titulo->codusuariocriacao,
+            ]);
 
         $recarga = new BeeRecarga([
             'codperiodo' => $codperiodo,
@@ -321,7 +341,7 @@ class BeeRecargaService
      * tela de títulos se recusa a salvar depois.
      *
      * A trava que importa é a EMPRESA: o lote é de um CNPJ só, e um portador da
-     * filial errada jogaria o adiantamento na empresa errada. Portador sem
+     * filial errada jogaria o título a pagar na empresa errada. Portador sem
      * filial (Carteira, Programação Pagamentos) serve a qualquer uma.
      */
     protected static function portadorValidado(?int $codportador, int $codempresa): ?Portador
@@ -496,7 +516,7 @@ class BeeRecargaService
     }
 
     /**
-     * Inativa o lote e estorna o adiantamento.
+     * Inativa o lote e estorna o título a pagar da Beevale.
      *
      * Os itens ficam gravados — são o histórico do que foi enviado à operadora.
      * Eles apenas param de contar na prévia, que filtra pelo `inativo` do lote,
@@ -526,13 +546,13 @@ class BeeRecargaService
         }
 
         // O TituloService recusa título movimentado com uma frase que não diz o
-        // que fazer. Aqui a causa é sempre a mesma: o Financeiro já liquidou o
-        // adiantamento, e o dinheiro saiu do banco.
+        // que fazer. Aqui a causa é sempre a mesma: o Financeiro já pagou o
+        // título pela Liquidação, e o dinheiro saiu do banco.
         try {
             TituloService::estornar($recarga->getRelationValue('Titulo'));
         } catch (\Exception $e) {
             throw new \Exception(
-                'O adiantamento à Beevale já foi liquidado pelo Financeiro. Estorne a liquidação '
+                'O título da Beevale já foi pago pelo Financeiro. Estorne a liquidação '
                 . 'antes de inativar a recarga. (' . $e->getMessage() . ')'
             );
         }

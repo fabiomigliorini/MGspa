@@ -9,7 +9,7 @@
 // `local`; os blocos recebem a MESMA referência via prop e persistem através
 // de `persistirBloco` (provide), que reaproveita o caminho já existente
 // (CargaPage.persistir: troca de safra + erro tratado), sem duplicar nada.
-import { ref, computed, watch, provide } from 'vue'
+import { ref, computed, watch, provide, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
@@ -33,6 +33,7 @@ import CargaBlocoOperacao from './CargaBlocoOperacao.vue'
 import CargaBlocoPontos from './CargaBlocoPontos.vue'
 import CargaBlocoPesagem from './CargaBlocoPesagem.vue'
 import CargaBlocoClassificacao from './CargaBlocoClassificacao.vue'
+import MgInput from '@components/MgInput.vue'
 
 const props = defineProps({
   carga: { type: Object, default: null },
@@ -49,6 +50,10 @@ const store = useCargaStore()
 const { culturaAtiva, safraAtiva } = storeToRefs(store)
 
 const formRef = ref(null)
+// Blocos que o botão da etapa abre (cada um expõe `abrir({ etapa, rotulo })`).
+const blocoPontos = ref(null)
+const blocoPesagem = ref(null)
+const blocoClassificacao = ref(null)
 
 // Conferência do fechamento (detalhe em `avancar`). Declarado aqui em cima
 // porque o watcher imediato da carga, logo abaixo, já o zera.
@@ -250,7 +255,10 @@ function entradaValida() {
   }
   return true
 }
-function validarFinalizacao() {
+// Origem/destino prontos pra fechar. Separado do peso porque é conferido ANTES
+// de abrir o dialog da última etapa: não adianta pesar a tara e só depois
+// descobrir que o destino não foi informado.
+function pontosProntosParaFechar() {
   if (!origens.value.length || !destinos.value.length) {
     $q.notify({ type: 'negative', message: 'Informe ao menos uma origem e um destino.' })
     return false
@@ -260,6 +268,10 @@ function validarFinalizacao() {
     $q.notify({ type: 'negative', message: 'A soma dos % de origem e de destino deve ser 100.' })
     return false
   }
+  return true
+}
+function validarFinalizacao() {
+  if (!pontosProntosParaFechar()) return false
   if (!(Number(calc.value.liquido) > 0)) {
     $q.notify({ type: 'negative', message: 'Peso líquido inválido (pbt − tara − desconto).' })
     return false
@@ -343,22 +355,61 @@ function avancar() {
     })
     return
   }
-  if (prox === 'FINALIZADO') {
+  // Já conferido (dialog da última etapa confirmado): este clique fecha.
+  if (revisando.value) {
     if (!validarFinalizacao()) return
-    // 1º clique: para aqui e mostra a operação fechada. O 2º é que grava.
-    if (!revisando.value) {
-      revisando.value = true
-      $q.notify({
-        type: 'info',
-        icon: 'fact_check',
-        message: 'Confira a operação.',
-        caption: 'O próximo clique salva e finaliza o romaneio.',
-      })
-      return
-    }
+    local.value.etapa = prox
+    emit('avancar', local.value)
+    return
   }
-  local.value.etapa = prox
-  emit('avancar', local.value)
+  if (prox === 'FINALIZADO' && !pontosProntosParaFechar()) return
+  abrirEtapa(local.value.etapa, prox)
+}
+
+// O botão da etapa abre o dialog do bloco que tem o dado DAQUELA etapa, com o
+// valor obrigatório — sem isso ele só trocava a etapa e a carga seguia sem peso
+// nem classificação. Quem avança é o confirmar do dialog (concluirEtapa).
+const BLOCO_DA_ETAPA = {
+  PBT: blocoPesagem,
+  TARA: blocoPesagem,
+  CLASSIFICACAO: blocoClassificacao,
+  FISCAL: blocoPontos,
+}
+function abrirEtapa(etapa, prox) {
+  const bloco = BLOCO_DA_ETAPA[etapa]?.value
+  if (!bloco) {
+    // Etapa sem dado próprio (não existe hoje): avança direto, como antes.
+    concluirEtapa()
+    return
+  }
+  bloco.abrir({ etapa, rotulo: prox === 'FINALIZADO' ? 'Conferir' : 'Confirmar' })
+}
+
+// Confirmar do dialog aberto pelo botão da etapa. O bloco já aplicou o valor em
+// `local`. Etapa do meio: avança e grava (a página avisa a etapa nova). Última
+// etapa: grava o peso e entra na CONFERÊNCIA (`revisando`) — o romaneio só fecha
+// no clique seguinte, em "Salvar", com o caminhão ainda na balança.
+async function concluirEtapa() {
+  const prox = proxima.value
+  if (!prox) return false
+  if (prox !== 'FINALIZADO') {
+    local.value.etapa = prox
+    emit('avancar', local.value)
+    return true
+  }
+  if (!(await persistirBloco())) return false
+  if (!validarFinalizacao()) return true // peso gravado; o aviso diz o que falta
+  // O watch da conta zera `revisando` quando pbt/tara mudam; deixa ele rodar
+  // (o peso acabou de mudar) antes de ligar a conferência.
+  await nextTick()
+  revisando.value = true
+  $q.notify({
+    type: 'info',
+    icon: 'fact_check',
+    message: 'Confira a operação.',
+    caption: 'Salvar fecha o romaneio.',
+  })
+  return true
 }
 
 // Botão principal (FAB): registrar (nova), salvar (finalizada) ou avançar etapa.
@@ -448,6 +499,7 @@ async function persistirBloco() {
   return true
 }
 provide('persistirBloco', persistirBloco)
+provide('concluirEtapa', concluirEtapa)
 provide('trocarOperacao', trocarOperacao)
 provide('calc', calc)
 provide('itensCarga', itensCarga)
@@ -466,9 +518,9 @@ defineExpose({
   <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit" @validation-error="onErroValidacao">
     <div class="q-pa-md q-gutter-y-md carga-form">
       <CargaBlocoOperacao :carga="local" :novo="novo" />
-      <CargaBlocoPontos :carga="local" :novo="novo" />
-      <CargaBlocoPesagem :carga="local" :novo="novo" />
-      <CargaBlocoClassificacao :carga="local" :novo="novo" />
+      <CargaBlocoPontos ref="blocoPontos" :carga="local" :novo="novo" />
+      <CargaBlocoPesagem ref="blocoPesagem" :carga="local" :novo="novo" />
+      <CargaBlocoClassificacao ref="blocoClassificacao" :carga="local" :novo="novo" />
 
       <q-banner v-if="revisando" dense rounded class="bg-green-1 text-green-9">
         <template #avatar><q-icon name="fact_check" color="green-8" /></template>
@@ -479,12 +531,11 @@ defineExpose({
         </div>
       </q-banner>
 
-      <q-input
+      <MgInput
         v-model="local.observacao"
         label="Observação"
         type="textarea"
         autogrow
-        outlined
         bg-color="white"
       />
 

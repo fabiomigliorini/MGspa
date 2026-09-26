@@ -3,8 +3,8 @@
  * BeeRecarga — LOTE de recarga do cartao-beneficio de UMA filial num periodo.
  *
  * Nasce no momento em que o RH exporta a planilha (por isso `exportacao` e'
- * NOT NULL: nao existe lote nao-exportado) e ja' carrega o titulo de
- * adiantamento a' Beevale que a geracao cria.
+ * NOT NULL: nao existe lote nao-exportado) e ja' carrega o titulo a pagar
+ * da Beevale que a geracao cria.
  *
  * O lote e' IMUTAVEL: a planilha de um lote antigo le' os itens gravados, nunca
  * recalcula o acerto. Inativar nao apaga item nenhum — os itens sao o historico
@@ -77,7 +77,7 @@ class BeeRecarga extends MgModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
-    // Adiantamento a' Beevale gerado junto com o lote
+    // Titulo a pagar da Beevale gerado junto com o lote
     public function Titulo()
     {
         return $this->belongsTo(Titulo::class, 'codtitulo', 'codtitulo');
