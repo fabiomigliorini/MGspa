@@ -341,7 +341,7 @@ const linkProduto = (codproduto) => {
         v-for="item in itens"
         :key="item.uuid"
       >
-        <q-card flat bordered>
+        <q-card flat bordered class="full-height">
           <q-img ratio="1" :src="sProduto.urlImagem(item.codimagem)" />
           <q-separator />
 
