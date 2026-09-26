@@ -185,6 +185,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estoque-movimento-tipo', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'index']);
     Route::get('select/tributacao', [\Mg\Select\SelectTributacaoController::class, 'index']);
     Route::get('select/moeda', [\Mg\Select\SelectMoedaController::class, 'index']);
+    Route::get('select/vale-modelo', [\Mg\Select\SelectValeModeloController::class, 'index']);
 
     // Selects: resolução por id (objeto único ou 404) — padrão GET select/{ent}/{id}
     Route::get('select/pessoa/{id}', [\Mg\Select\SelectPessoaController::class, 'show'])->whereNumber('id');
@@ -201,6 +202,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/portador/{id}', [\Mg\Select\SelectPortadorController::class, 'show'])->whereNumber('id');
     Route::get('select/natureza-operacao/{id}', [\Mg\Select\SelectNaturezaOperacaoController::class, 'show'])->whereNumber('id');
     Route::get('select/grupo-economico/{id}', [\Mg\Select\SelectGrupoEconomicoController::class, 'show'])->whereNumber('id');
+    Route::get('select/vale-modelo/{id}', [\Mg\Select\SelectValeModeloController::class, 'show'])->whereNumber('id');
     Route::get('select/tipo-produto/{id}', [\Mg\Select\SelectTipoProdutoController::class, 'show'])->whereNumber('id');
     Route::get('select/tributo/{id}', [\Mg\Select\SelectTributoController::class, 'show'])->whereNumber('id');
     Route::get('select/tipo-titulo/{id}', [\Mg\Select\SelectTipoTituloController::class, 'show'])->whereNumber('id');
@@ -517,8 +519,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // ValeModelo (catalogo do kit de vale compras; CRUD no app negocios)
     Route::get('vale-modelo/{valeModelo}/relatorio', [\Mg\Vale\ValeModeloController::class, 'relatorio']);
-    Route::get('vale-modelo-emitidos/relatorio', [\Mg\Vale\ValeEmitidoController::class, 'relatorio']);
-    Route::get('vale-modelo-emitidos', [\Mg\Vale\ValeEmitidoController::class, 'index']);
+    Route::get('vale-emitido/relatorio', [\Mg\Vale\ValeEmitidoController::class, 'relatorio']);
+    Route::get('vale-emitido', [\Mg\Vale\ValeEmitidoController::class, 'index']);
     Route::post('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'inativar']);
     Route::delete('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'ativar']);
     Route::apiResource('vale-modelo', \Mg\Vale\ValeModeloController::class)->parameters(['vale-modelo' => 'valeModelo']);

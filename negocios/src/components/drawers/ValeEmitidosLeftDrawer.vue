@@ -4,99 +4,106 @@ import FilterDrawerShell from 'components/FilterDrawerShell.vue'
 import FilterGroup from 'components/FilterGroup.vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectValeModelo from '@components/MgSelectValeModelo.vue'
-import MgInputValor from '@components/MgInputValor.vue'
 
+// A página observa os filtros e recarrega; aqui é só o formulário.
 const sVales = valeEmitidosStore()
-const limpar = () => sVales.limparFiltros()
+
 const situacaoOptions = [
   { label: 'Ativos', value: 'ativo' },
   { label: 'Cancelados', value: 'cancelado' },
   { label: 'Todos', value: 'todos' },
 ]
+
+const saldoOptions = [
+  { label: 'Com saldo', value: 1 },
+  { label: 'Todos', value: null },
+]
 </script>
 
 <template>
-  <FilterDrawerShell :active-count="sVales.filtrosAtivos" @clear="limpar">
-    <FilterGroup title="Modelo" first>
-      <MgSelectValeModelo
-        v-model="sVales.filtros.codvalemodelo"
-        label="Modelo"
-        clearable
-        :bottom-slots="false"
-      />
-    </FilterGroup>
-
-    <FilterGroup title="Busca">
-      <MgInput
-        v-model="sVales.filtros.busca"
-        label="Vale, modelo ou favorecido"
-        clearable
-        :bottom-slots="false"
-      >
-        <template #prepend><q-icon name="search" /></template>
-      </MgInput>
-    </FilterGroup>
-
-    <FilterGroup title="Favorecido">
-      <MgSelectPessoa
-        v-model="sVales.filtros.codpessoafavorecido"
-        label="Favorecido"
-        clearable
-        :bottom-slots="false"
-      />
-    </FilterGroup>
-
-    <FilterGroup title="Período">
-      <div class="column q-gutter-sm">
-        <MgInputData v-model="sVales.filtros.de" label="De" />
-        <MgInputData v-model="sVales.filtros.ate" label="Até" />
-      </div>
-    </FilterGroup>
-
-    <FilterGroup title="Valor">
-      <div class="row q-col-gutter-sm">
-        <div class="col-6">
-          <MgInputValor
-            v-model="sVales.filtros.valorde"
+  <FilterDrawerShell :active-count="sVales.filtrosAtivos" @clear="sVales.limparFiltros">
+    <FilterGroup title="Favorecido" first>
+      <div class="row q-col-gutter-md">
+        <div class="col-12">
+          <MgSelectPessoa
+            v-model="sVales.filtros.codpessoafavorecido"
+            label="Pessoa"
             clearable
             :bottom-slots="false"
-            label="De R$"
           />
         </div>
-        <div class="col-6">
-          <MgInputValor
-            v-model="sVales.filtros.valorate"
+        <div class="col-12">
+          <MgSelectValeModelo
+            v-model="sVales.filtros.codvalemodelo"
+            :codpessoa="sVales.filtros.codpessoafavorecido"
+            clearable
+          />
+        </div>
+        <div class="col-12">
+          <MgInput
+            v-model="sVales.filtros.busca"
+            label="Aluno ou turma"
             clearable
             :bottom-slots="false"
-            label="Até R$"
-          />
+          >
+            <template #prepend><q-icon name="search" /></template>
+          </MgInput>
         </div>
       </div>
     </FilterGroup>
 
-    <FilterGroup title="Negócio">
-      <MgInput
-        v-model="sVales.filtros.codnegocio"
-        type="number"
-        min="1"
-        step="1"
-        label="# Negócio"
-        clearable
-        :bottom-slots="false"
-      />
+    <FilterGroup title="Venda">
+      <div class="row q-col-gutter-md">
+        <div class="col-6">
+          <MgInputData v-model="sVales.filtros.de" label="Data" year-digits="2" />
+        </div>
+        <div class="col-6">
+          <MgInputData v-model="sVales.filtros.ate" label="Até" year-digits="2" />
+        </div>
+        <div class="col-6">
+          <MgInputValor v-model="sVales.filtros.valorde" label="Valor" prefix="R$" clearable />
+        </div>
+        <div class="col-6">
+          <MgInputValor v-model="sVales.filtros.valorate" label="Até" prefix="R$" clearable />
+        </div>
+        <div class="col-12">
+          <MgInput
+            v-model.number="sVales.filtros.codnegocio"
+            type="number"
+            label="Nº do negócio"
+            clearable
+            :bottom-slots="false"
+          />
+        </div>
+      </div>
     </FilterGroup>
 
     <FilterGroup title="Situação">
-      <q-btn-toggle
-        v-model="sVales.filtros.situacao"
-        spread
-        no-caps
-        flat
-        toggle-color="primary"
-        :options="situacaoOptions"
-      />
+      <div class="row q-col-gutter-md">
+        <div class="col-12">
+          <q-btn-toggle
+            v-model="sVales.filtros.situacao"
+            spread
+            no-caps
+            flat
+            toggle-color="primary"
+            :options="situacaoOptions"
+          />
+        </div>
+        <div class="col-12">
+          <q-btn-toggle
+            v-model="sVales.filtros.comsaldo"
+            spread
+            no-caps
+            flat
+            toggle-color="primary"
+            :options="saldoOptions"
+          />
+        </div>
+      </div>
     </FilterGroup>
   </FilterDrawerShell>
 </template>

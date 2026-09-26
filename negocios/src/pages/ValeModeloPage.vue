@@ -1,11 +1,11 @@
 <script setup>
-import { onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
 import { api } from 'boot/axios'
 import { valeModeloStore } from 'stores/valeModelo'
 import { abrirPdf } from '@components/abrirPdf'
-import { formataReal } from '@components/formatters'
+import { formataNumero } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
@@ -21,10 +21,17 @@ const colunas = [
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
 ]
 
-// A linha inteira leva pra edição, e cada célula é um <a> de verdade: dá pra
-// abrir em nova aba com o botão do meio ou o ctrl. Só a célula de ações fica
-// de fora, com os botões dela.
+// Só o lápis leva à edição: a linha não é link.
 const linkEditar = (modelo) => `/vale-modelo/${modelo.codvalemodelo}`
+
+// Vales emitidos só deste modelo (e da escola dele)
+const linkEmitidos = (modelo) => ({
+  path: '/vale-modelo/emitidos',
+  query: {
+    codvalemodelo: modelo.codvalemodelo,
+    codpessoafavorecido: modelo.codpessoafavorecido || undefined,
+  },
+})
 
 // Impressao do modelo com precos, para a escola conferir antes da temporada.
 const imprimir = (modelo) =>
@@ -44,17 +51,28 @@ const confirmarExclusao = (modelo) => {
   }).onOk(() => sVale.excluir(modelo))
 }
 
+// Quem carrega é o q-infinite-scroll, inclusive a primeira página.
+sVale.reiniciar()
+const scrollRef = ref(null)
+
 const carregarMais = async (indice, done) => {
   const temMais = await sVale.carregarMais()
   done(!temMais)
 }
 
-onMounted(() => sVale.carregar(1))
+// Filtro, gravação ou exclusão recarregam da página 1: se o scroll já tinha
+// parado no fim da lista anterior, ele volta a funcionar.
+watch(
+  () => sVale.paginacao,
+  (meta) => {
+    if (meta?.current_page === 1) scrollRef.value?.resume()
+  },
+)
 </script>
 
 <template>
   <q-page class="bg-grey-2">
-    <q-infinite-scroll @load="carregarMais" :offset="250">
+    <q-infinite-scroll ref="scrollRef" @load="carregarMais" :offset="250">
       <div class="q-pa-md" style="max-width: 1086px; margin: auto">
         <div class="row justify-end q-mb-sm">
           <q-btn
@@ -84,45 +102,21 @@ onMounted(() => sVale.carregar(1))
           <template #body="props">
             <q-tr :props="props">
               <q-td key="favorecido" :props="props">
-                <router-link
-                  :to="linkEditar(props.row)"
-                  class="block text-grey-9"
-                  style="text-decoration: none"
-                >
-                  <span v-if="props.row.favorecido">{{ props.row.favorecido }}</span>
-                  <span v-else class="text-grey-6">Ao portador</span>
-                </router-link>
+                <span v-if="props.row.favorecido">{{ props.row.favorecido }}</span>
+                <span v-else class="text-grey-6">Ao portador</span>
               </q-td>
 
-              <q-td key="modelo" :props="props">
-                <router-link
-                  :to="linkEditar(props.row)"
-                  class="block text-weight-medium text-primary"
-                  style="text-decoration: none"
-                >
-                  {{ props.row.modelo }}
-                </router-link>
+              <q-td key="modelo" :props="props" class="text-weight-medium">
+                {{ props.row.modelo }}
               </q-td>
 
               <q-td key="valorvale" :props="props">
-                <router-link
-                  :to="linkEditar(props.row)"
-                  class="block text-grey-9"
-                  style="text-decoration: none"
-                >
-                  {{ formataReal(props.row.valorvale) }}
-                </router-link>
+                {{ formataNumero(props.row.valorvale) }}
               </q-td>
 
               <q-td key="inativo" :props="props">
-                <router-link
-                  :to="linkEditar(props.row)"
-                  class="block"
-                  style="text-decoration: none"
-                >
-                  <q-badge v-if="props.row.inativo" color="orange-7">Inativo</q-badge>
-                  <q-badge v-else color="green-6">Ativo</q-badge>
-                </router-link>
+                <q-badge v-if="props.row.inativo" color="orange-7">Inativo</q-badge>
+                <q-badge v-else color="green-6">Ativo</q-badge>
               </q-td>
 
               <q-td key="acoes" :props="props">
@@ -133,7 +127,7 @@ onMounted(() => sVale.carregar(1))
                   size="sm"
                   color="grey-7"
                   icon="receipt_long"
-                  :to="`/vale-modelo/emitidos?codvalemodelo=${props.row.codvalemodelo}`"
+                  :to="linkEmitidos(props.row)"
                 >
                   <q-tooltip>Ver vales emitidos deste modelo</q-tooltip>
                 </q-btn>

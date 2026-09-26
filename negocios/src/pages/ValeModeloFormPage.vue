@@ -261,23 +261,27 @@ onMounted(async () => {
              os :rules antes de chamar o submit. Fora do form, o clique
              pularia a validação. Cancelar não existe -- a seta do cabeçalho
              já volta para a listagem. -->
-        <q-page-sticky v-if="!isNovo" position="bottom-right" :offset="[18, 82]">
-          <q-btn
-            fab
-            flat
-            color="primary"
-            icon="receipt_long"
-            :to="`/vale-modelo/emitidos?codvalemodelo=${form.codvalemodelo}`"
-          >
-            <q-tooltip anchor="center left" self="center right"
-              >Ver vales emitidos deste modelo</q-tooltip
-            >
-          </q-btn>
-        </q-page-sticky>
         <q-page-sticky position="bottom-right" :offset="[18, 18]">
-          <q-btn fab icon="save" color="primary" type="submit" :loading="salvando">
-            <q-tooltip anchor="center left" self="center right">Salvar</q-tooltip>
-          </q-btn>
+          <div class="row q-gutter-sm items-end">
+            <q-btn
+              v-if="!isNovo"
+              fab-mini
+              color="primary"
+              icon="receipt_long"
+              :to="{
+                path: '/vale-modelo/emitidos',
+                query: {
+                  codvalemodelo: form.codvalemodelo,
+                  codpessoafavorecido: form.codpessoafavorecido || undefined,
+                },
+              }"
+            >
+              <q-tooltip anchor="top middle" self="bottom middle">Vales emitidos</q-tooltip>
+            </q-btn>
+            <q-btn fab icon="save" color="primary" type="submit" :loading="salvando">
+              <q-tooltip anchor="top middle" self="bottom middle">Salvar</q-tooltip>
+            </q-btn>
+          </div>
         </q-page-sticky>
       </q-form>
     </div>

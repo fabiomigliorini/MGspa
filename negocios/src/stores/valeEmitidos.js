@@ -4,65 +4,63 @@ import { api } from 'boot/axios'
 import { Notify } from 'quasar'
 import { extrairErro } from '@components/extrairErro'
 
+// Vales compras vendidos (tblnegociovale), ativos e cancelados.
+
+const POR_PAGINA = 50
+
 const filtrosVazios = () => ({
-  busca: '',
+  busca: null,
   codvalemodelo: null,
   codpessoafavorecido: null,
   codnegocio: null,
   valorde: null,
   valorate: null,
   situacao: 'ativo',
+  comsaldo: null,
   de: null,
   ate: null,
 })
-
-const mensagemErro = (error) =>
-  extrairErro(error, 'Não foi possível carregar os vales emitidos')
 
 export const valeEmitidosStore = defineStore(
   'valeEmitidos',
   () => {
     const filtros = ref(filtrosVazios())
-    const rows = ref([])
-    const paginacao = ref({ current_page: 1, last_page: 1, total: 0 })
+    const vales = ref([])
     const carregando = ref(false)
     let solicitacao = 0
 
-    const filtrosAtivos = computed(() => {
-      const f = filtros.value
-      let total = 0
-      if (f.busca) total++
-      if (f.codvalemodelo) total++
-      if (f.codpessoafavorecido) total++
-      if (f.codnegocio) total++
-      if (f.valorde !== null && f.valorde !== '') total++
-      if (f.valorate !== null && f.valorate !== '') total++
-      if (f.situacao !== 'ativo') total++
-      if (f.de) total++
-      if (f.ate) total++
-      return total
-    })
+    const filtrosAtivos = computed(
+      () =>
+        Object.entries(filtros.value).filter(([chave, valor]) =>
+          chave === 'situacao' ? valor !== 'ativo' : valor !== null && valor !== '',
+        ).length,
+    )
 
-    async function carregar(page = 1) {
+    const params = computed(() =>
+      Object.fromEntries(
+        Object.entries(filtros.value).filter(([, valor]) => valor !== null && valor !== ''),
+      ),
+    )
+
+    // Devolve se tem mais pagina. Resposta atrasada de um filtro antigo e
+    // descartada, senao ela sobrescreveria a lista do filtro novo.
+    async function carregar(pagina = 1) {
       const id = ++solicitacao
       carregando.value = true
       try {
-        const params = Object.fromEntries(
-          Object.entries(filtros.value).filter(([, value]) => value !== null && value !== ''),
-        )
-        const { data } = await api.get('v1/vale-modelo-emitidos', {
-          params: { ...params, page },
+        const { data } = await api.get('v1/vale-emitido', {
+          params: { ...params.value, page: pagina },
         })
-        if (id !== solicitacao) return true
-        rows.value = page === 1 ? data.data : rows.value.concat(data.data)
-        paginacao.value = {
-          current_page: data.meta.current_page,
-          last_page: data.meta.last_page,
-          total: data.meta.total,
-        }
-        return paginacao.value.current_page < paginacao.value.last_page
+        if (id !== solicitacao) return false
+        vales.value = pagina === 1 ? data.data : vales.value.concat(data.data)
+        return data.data.length === POR_PAGINA
       } catch (error) {
-        if (id === solicitacao) Notify.create({ type: 'negative', message: mensagemErro(error) })
+        if (id === solicitacao) {
+          Notify.create({
+            type: 'negative',
+            message: extrairErro(error, 'Não foi possível carregar os vales emitidos'),
+          })
+        }
         return false
       } finally {
         if (id === solicitacao) carregando.value = false
@@ -73,17 +71,24 @@ export const valeEmitidosStore = defineStore(
       filtros.value = filtrosVazios()
     }
 
-    return {
-      filtros,
-      filtrosAtivos,
-      rows,
-      paginacao,
-      carregando,
-      carregar,
-      limparFiltros,
-    }
+    return { filtros, filtrosAtivos, params, vales, carregando, carregar, limparFiltros }
   },
-  { persist: { pick: ['filtros'] } },
+  {
+    persist: {
+      pick: ['filtros'],
+      // Filtro salvo por versao anterior da tela pode vir sem campo novo ou
+      // com o codigo em texto ("183"), e o select so mostra o nome quando o
+      // valor e numero.
+      afterHydrate: ({ store }) => {
+        const f = { ...filtrosVazios(), ...store.filtros }
+        for (const cod of ['codvalemodelo', 'codpessoafavorecido', 'codnegocio']) {
+          f[cod] = f[cod] ? Number(f[cod]) : null
+        }
+        if (!['ativo', 'cancelado', 'todos'].includes(f.situacao)) f.situacao = 'ativo'
+        store.filtros = f
+      },
+    },
+  },
 )
 
 if (import.meta.hot) {

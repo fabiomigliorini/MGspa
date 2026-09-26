@@ -1,17 +1,11 @@
+// Mensagem de erro de uma resposta da API: primeiro erro de validação, senão
+// a mensagem geral, senão o fallback.
 export function extrairErro(error, fallback) {
   const data = error?.response?.data
   if (!data) return error?.message || fallback
   if (data.errors) {
     const primeiro = Object.values(data.errors).flat()[0]
-    if (primeiro) return traduzirErroValidacao(primeiro)
+    if (primeiro) return primeiro
   }
-  const mensagem = data.message || data.mensagem
-  return mensagem ? traduzirErroValidacao(mensagem) : fallback
-}
-
-function traduzirErroValidacao(mensagem) {
-  if (/^the ate field must be a date after or equal to de\.?$/i.test(mensagem)) {
-    return 'A data “Até” deve ser igual ou posterior à data “De”.'
-  }
-  return mensagem
+  return data.message || data.mensagem || fallback
 }

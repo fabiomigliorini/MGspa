@@ -1,15 +1,15 @@
 <script setup>
 import MainLayout from 'layouts/MainLayout.vue'
 import UsuarioConectado from 'components/UsuarioConectado.vue'
-import ValeModeloLeftDrawer from 'components/drawers/ValeModeloLeftDrawer.vue'
+import ValeEmitidosLeftDrawer from 'components/drawers/ValeEmitidosLeftDrawer.vue'
 </script>
 <template>
-  <main-layout title="Modelos de Vale" back-to="/" left-drawer>
+  <main-layout title="Vales Emitidos" back-to="/vale-modelo" left-drawer>
     <template #usuario>
       <usuario-conectado />
     </template>
     <template #left-drawer>
-      <vale-modelo-left-drawer />
+      <vale-emitidos-left-drawer />
     </template>
     <template #content>
       <router-view :key="$route.fullPath" />

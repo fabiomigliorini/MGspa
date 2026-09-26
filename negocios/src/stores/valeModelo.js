@@ -77,7 +77,16 @@ export const valeModeloStore = defineStore(
     )
     const valorVale = computed(() => valorProdutos.value + Number(form.value.valoravulso || 0))
 
-    async function carregar(pagina = 1) {
+    // A busca em andamento: o scroll infinito espera por ela em vez de pedir
+    // a mesma pagina de novo (ou concluir que acabou).
+    let requisicao = null
+
+    function carregar(pagina = 1) {
+      requisicao = buscarPagina(pagina)
+      return requisicao
+    }
+
+    async function buscarPagina(pagina) {
       carregando.value = true
       try {
         const f = filtros.value
@@ -97,11 +106,24 @@ export const valeModeloStore = defineStore(
       }
     }
 
+    // Chamado pelo q-infinite-scroll; devolve se ainda tem pagina depois
+    // desta. Sem nada carregado ainda, carrega a primeira.
     async function carregarMais() {
+      if (requisicao) await requisicao
       const meta = paginacao.value
-      if (!meta || meta.current_page >= meta.last_page || carregando.value) return false
-      await carregar(meta.current_page + 1)
-      return true
+      if (!meta) {
+        await carregar(1)
+      } else if (meta.current_page < meta.last_page) {
+        await carregar(meta.current_page + 1)
+      }
+      return !!paginacao.value && paginacao.value.current_page < paginacao.value.last_page
+    }
+
+    // A listagem sempre abre da primeira pagina, e nao do ponto em que a
+    // store ficou na visita anterior.
+    function reiniciar() {
+      modelos.value = []
+      paginacao.value = null
     }
 
     function limparFiltros() {
@@ -228,6 +250,7 @@ export const valeModeloStore = defineStore(
       valorVale,
       carregar,
       carregarMais,
+      reiniciar,
       limparFiltros,
       novo,
       carregarForm,
