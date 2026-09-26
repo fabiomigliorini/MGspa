@@ -11,7 +11,7 @@ defineEmits(['clear'])
 
 <template>
   <div
-    class="column full-height bg-white"
+    class="column no-wrap full-height bg-white"
     style="width: 100%; max-width: 100%; min-width: 0; overflow-x: hidden; box-sizing: border-box"
   >
     <div :class="['q-pa-md', headerClass]">

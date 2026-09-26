@@ -22,8 +22,9 @@ class ValeModeloController extends MgController
         [$filter, $sort, $fields] = $this->filtros($request);
         // So o cabecalho: a listagem nao mostra nada dos itens, e o
         // formulario e outra rota, que chama o show.
+        $perPage = $request->integer('per_page');
         $res = ValeModeloService::pesquisar($filter, $sort, $fields)
-            ->paginate()
+            ->paginate($perPage > 0 ? min($perPage, 100) : null)
             ->appends($request->all());
 
         return ValeModeloListagemResource::collection($res);

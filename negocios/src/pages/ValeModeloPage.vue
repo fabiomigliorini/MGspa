@@ -56,6 +56,15 @@ onMounted(() => sVale.carregar(1))
   <q-page class="bg-grey-2">
     <q-infinite-scroll @load="carregarMais" :offset="250">
       <div class="q-pa-md" style="max-width: 1086px; margin: auto">
+        <div class="row justify-end q-mb-sm">
+          <q-btn
+            flat
+            color="primary"
+            icon="receipt_long"
+            label="Vales emitidos"
+            to="/vale-modelo/emitidos"
+          />
+        </div>
         <MgEmptyState v-if="!carregando && !modelos.length" icon="card_giftcard">
           Nenhum modelo de vale com esse filtro.
         </MgEmptyState>
@@ -118,6 +127,16 @@ onMounted(() => sVale.carregar(1))
 
               <q-td key="acoes" :props="props">
                 <MgInfoCriacao :registro="props.row" />
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="receipt_long"
+                  :to="`/vale-modelo/emitidos?codvalemodelo=${props.row.codvalemodelo}`"
+                >
+                  <q-tooltip>Ver vales emitidos deste modelo</q-tooltip>
+                </q-btn>
                 <q-btn
                   flat
                   round

@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { valeModeloStore } from 'stores/valeModelo'
 import { formataReal, formataNumero, formataNumeroInteligente } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInput from '@components/MgInput.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
@@ -123,9 +124,8 @@ onMounted(async () => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-6">
-                <q-input
+                <MgInput
                   v-model="form.modelo"
-                  outlined
                   label="Descrição"
                   maxlength="100"
                   autofocus
@@ -142,7 +142,7 @@ onMounted(async () => {
                 <div class="text-caption text-grey-7">Em branco = vale ao portador</div>
               </div>
               <div class="col-12">
-                <q-input v-model="form.observacoes" outlined label="Observações" maxlength="200" />
+                <MgInput v-model="form.observacoes" label="Observações" maxlength="200" />
               </div>
             </div>
           </q-card-section>
@@ -261,6 +261,19 @@ onMounted(async () => {
              os :rules antes de chamar o submit. Fora do form, o clique
              pularia a validação. Cancelar não existe -- a seta do cabeçalho
              já volta para a listagem. -->
+        <q-page-sticky v-if="!isNovo" position="bottom-right" :offset="[18, 82]">
+          <q-btn
+            fab
+            flat
+            color="primary"
+            icon="receipt_long"
+            :to="`/vale-modelo/emitidos?codvalemodelo=${form.codvalemodelo}`"
+          >
+            <q-tooltip anchor="center left" self="center right"
+              >Ver vales emitidos deste modelo</q-tooltip
+            >
+          </q-btn>
+        </q-page-sticky>
         <q-page-sticky position="bottom-right" :offset="[18, 18]">
           <q-btn fab icon="save" color="primary" type="submit" :loading="salvando">
             <q-tooltip anchor="center left" self="center right">Salvar</q-tooltip>

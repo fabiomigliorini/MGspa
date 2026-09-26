@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-26 15:59'
+updated_date: '2026-09-26 16:00'
 labels:
   - negocios
   - api
@@ -56,6 +56,7 @@ negocios. Entao 'uma passada de cartao' implica produtos e vale no MESMO negocio
 - [x] #6 Milestone 7: relatorio de conciliacao DIMP mensal
 - [x] #7 Milestone 8: consumo por escopo (escola/turma/vales bipados) com FIFO e trava de saldo sob lock
 - [x] #8 Milestone 9: os 3.718 vales antigos convertidos para negocio+tblnegociovale, titulos repontados, tabelas tblvalecompra* dropadas, codigo do legado removido (o modulo do MGLara ja saiu; a aplicacao MGLara continua no ar) (feito em dev, aguardando validacao)
+- [ ] #9 Comissao de caixa nao conta o vale compras (so a mercadoria do negocio)
 <!-- AC:END -->
 
 ## Implementation Notes

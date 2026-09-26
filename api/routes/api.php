@@ -517,6 +517,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // ValeModelo (catalogo do kit de vale compras; CRUD no app negocios)
     Route::get('vale-modelo/{valeModelo}/relatorio', [\Mg\Vale\ValeModeloController::class, 'relatorio']);
+    Route::get('vale-modelo-emitidos/relatorio', [\Mg\Vale\ValeEmitidoController::class, 'relatorio']);
+    Route::get('vale-modelo-emitidos', [\Mg\Vale\ValeEmitidoController::class, 'index']);
     Route::post('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'inativar']);
     Route::delete('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'ativar']);
     Route::apiResource('vale-modelo', \Mg\Vale\ValeModeloController::class)->parameters(['vale-modelo' => 'valeModelo']);

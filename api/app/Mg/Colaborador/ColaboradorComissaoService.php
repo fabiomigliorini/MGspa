@@ -50,16 +50,32 @@ class ColaboradorComissaoService
                 cx.cargo,
                 cx.comissaocaixa,
                 COUNT(n.codnegocio) AS negocios,
-                SUM(n.valortotal) AS valor,
-                SUM(n.valortotal * (cx.comissaocaixa / 100)) AS comissao
+                SUM(b.base) AS valor,
+                SUM(b.base * (cx.comissaocaixa / 100)) AS comissao
             FROM
                 tblnegocio n
             INNER JOIN cx ON cx.codusuario = n.codusuario -- Conexão direta com a CTE (melhor performance)
             INNER JOIN tblnaturezaoperacao nat ON nat.codnaturezaoperacao = n.codnaturezaoperacao
+            -- Caixa nao ganha comissao do vale compras: sai da base o que o
+            -- cliente pagou pelo vale (a fatia paga e a fatia de juros dele)
+            LEFT JOIN (
+                SELECT nv.codnegocio, SUM(nv.valortotal) AS pago
+                FROM tblnegociovale nv
+                WHERE nv.inativo IS NULL
+                GROUP BY nv.codnegocio
+            ) v ON v.codnegocio = n.codnegocio
+            CROSS JOIN LATERAL (
+                SELECT n.valortotal - COALESCE(v.pago, 0) - CASE
+                    WHEN v.pago IS NOT NULL AND n.valorprodutos + n.valorvales > 0
+                    THEN ROUND(COALESCE(n.valorjuros, 0) * n.valorvales / (n.valorprodutos + n.valorvales), 2)
+                    ELSE 0
+                END AS base
+            ) b
             WHERE
                 n.lancamento BETWEEN :inicio AND :fim
                 AND n.codnegociostatus = 2 -- Status de concluído
                 AND nat.venda = TRUE
+                AND n.valorprodutos > 0 -- negocio so de vale nao entra
             GROUP BY
                 cx.codfilial,
                 cx.filial,
