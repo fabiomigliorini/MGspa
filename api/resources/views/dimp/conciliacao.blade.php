@@ -129,18 +129,6 @@
             cartão/PIX {{ $num($valeNegocio['eletronico']) }}
         </td>
     </tr>
-    @if($valeLegado['quantidade'] > 0)
-    <tr>
-        <td>No sistema antigo (MGLara), fora do negócio<br>
-            <span class="nota">Entrou dinheiro no mês sem negócio e sem nota nenhuma. Esta linha
-            some quando o legado for convertido.</span></td>
-        <td class="c">{{ $valeLegado['quantidade'] }} vales</td>
-        <td class="v">
-            total {{ $num($valeLegado['total']) }}<br>
-            cartão/PIX {{ $num($valeLegado['eletronico']) }}
-        </td>
-    </tr>
-    @endif
     <tr>
         <td>Negócios do mês sem nota fiscal nenhuma<br>
             <span class="nota">Venda 100% vale, natureza que não emite, nota ainda em digitação

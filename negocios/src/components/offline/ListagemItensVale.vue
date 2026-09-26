@@ -176,9 +176,14 @@ const linkProduto = (codproduto) => {
         <div class="col-auto text-right">
           <div class="text-caption text-grey-7">Valor do vale</div>
           <div class="text-h5 text-primary">{{ formataNumero(vale.valorvale) }}</div>
-          <div class="text-caption text-grey-7" v-if="vale.valoravulso">
+          <div class="text-caption text-grey-7" v-if="vale.valoravulso > 0">
             {{ formataNumero(vale.valorprodutos) }} em produtos +
             {{ formataNumero(vale.valoravulso) }} avulso
+          </div>
+          <!-- vale do sistema antigo: o desconto da venda virou avulso negativo -->
+          <div class="text-caption text-grey-7" v-else-if="vale.valoravulso < 0">
+            {{ formataNumero(vale.valorprodutos) }} em produtos −
+            {{ formataNumero(-vale.valoravulso) }} de desconto
           </div>
         </div>
         <div class="col-auto q-ml-sm" v-if="sNegocio.podeEditar">

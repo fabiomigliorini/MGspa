@@ -99,7 +99,7 @@ class ProdutoBarraService
         $regs = $pb_origem->ValeModeloProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
             'codprodutobarra' => $codprodutobarradestino
         ]);
-        $regs = $pb_origem->ValeCompraProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
+        $regs = $pb_origem->NegocioValeProdutoBarraS()->where('codprodutobarra', $codprodutobarraorigem)->update([
             'codprodutobarra' => $codprodutobarradestino
         ]);
         $pb_origem->delete();

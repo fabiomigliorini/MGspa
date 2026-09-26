@@ -31,10 +31,6 @@ class PdvValeEscopoService
 
     /**
      * Escolas que têm crédito de vale em aberto, com o saldo de cada uma.
-     *
-     * Lê as DUAS estruturas: o vale dentro do negócio (tblnegociovale) e o
-     * vale do sistema antigo (tblvalecompra), que ainda tem crédito vivo. A
-     * segunda sai quando o legado for convertido.
      */
     public static function favorecidos($busca = null)
     {
@@ -144,7 +140,8 @@ class PdvValeEscopoService
     }
 
     /**
-     * Vales com crédito vivo, das duas estruturas.
+     * Vales com crédito vivo. O vale do sistema antigo foi convertido em
+     * negócio (vale_conversao.sql), então os papéis antigos saem daqui também.
      *
      * "saldo" sai positivo: no título o crédito é saldo NEGATIVO, e trocar o
      * sinal aqui evita espalhar `abs()` por todo lado.
@@ -152,28 +149,6 @@ class PdvValeEscopoService
     private static function sqlValesAbertos()
     {
         $tipoVale = TituloService::TIPO_VALE;
-
-        $legado = '';
-        if (static::tabelaExiste('tblvalecompra')) {
-            $legado = "
-                union all
-                select
-                    vc.codpessoafavorecido,
-                    vc.aluno,
-                    vc.turma,
-                    t.codtitulo,
-                    t.numero,
-                    t.vencimento,
-                    -t.saldo as saldo,
-                    'tblvalecompra' as origem
-                from tblvalecompra vc
-                inner join tbltitulo t on (t.codtitulo = vc.codtitulo)
-                where vc.inativo is null
-                  and t.codtipotitulo = {$tipoVale}
-                  and t.estornado is null
-                  and t.saldo < 0
-            ";
-        }
 
         return "
             select
@@ -183,8 +158,7 @@ class PdvValeEscopoService
                 t.codtitulo,
                 t.numero,
                 t.vencimento,
-                -t.saldo as saldo,
-                'tblnegociovale' as origem
+                -t.saldo as saldo
             from tblnegociovale nv
             inner join tbltitulo t on (t.codtitulo = nv.codtitulo)
             inner join tblnegocio n on (n.codnegocio = nv.codnegocio)
@@ -193,7 +167,6 @@ class PdvValeEscopoService
               and t.codtipotitulo = {$tipoVale}
               and t.estornado is null
               and t.saldo < 0
-            {$legado}
         ";
     }
 
@@ -265,11 +238,5 @@ class PdvValeEscopoService
                 );
             }
         }
-    }
-
-    private static function tabelaExiste($tabela)
-    {
-        $r = DB::select('select to_regclass(?) as t', [$tabela]);
-        return count($r) > 0 && $r[0]->t !== null;
     }
 }

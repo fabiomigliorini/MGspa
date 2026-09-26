@@ -17,7 +17,6 @@ use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\Rh\PeriodoColaborador;
 use Mg\Titulo\TituloBoleto;
 use Mg\Titulo\TituloNfeTerceiro;
-use Mg\ValeCompra\ValeCompra;
 use Mg\ContaContabil\ContaContabil;
 use Mg\Filial\Filial;
 use Mg\Pessoa\Pessoa;
@@ -25,7 +24,6 @@ use Mg\Portador\Portador;
 use Mg\Titulo\TipoTitulo;
 use Mg\Titulo\TituloAgrupamento;
 use Mg\Usuario\Usuario;
-use Mg\ValeCompra\ValeCompraFormaPagamento;
 
 class Titulo extends MgModel
 {
@@ -42,7 +40,6 @@ class Titulo extends MgModel
         'codportador',
         'codtipotitulo',
         'codtituloagrupamento',
-        'codvalecompraformapagamento',
         'credito',
         'creditosaldo',
         'creditototal',
@@ -78,7 +75,6 @@ class Titulo extends MgModel
         'codtituloagrupamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'codvalecompraformapagamento' => 'integer',
         'credito' => 'float',
         'creditosaldo' => 'float',
         'creditototal' => 'float',
@@ -145,11 +141,6 @@ class Titulo extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
-    public function ValeCompraFormaPagamento()
-    {
-        return $this->belongsTo(ValeCompraFormaPagamento::class, 'codvalecompraformapagamento', 'codvalecompraformapagamento');
-    }
-
 
     // Tabelas Filhas
     public function BoletoRetornoS()
@@ -205,11 +196,6 @@ class Titulo extends MgModel
     public function TituloNfeTerceiroS()
     {
         return $this->hasMany(TituloNfeTerceiro::class, 'codtitulo', 'codtitulo');
-    }
-
-    public function ValeCompraS()
-    {
-        return $this->hasMany(ValeCompra::class, 'codtitulo', 'codtitulo');
     }
 
 }

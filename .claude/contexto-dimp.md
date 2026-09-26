@@ -104,8 +104,8 @@ emitidas no mês, mesmo agrupamento. Destaque no cartão + PIX.
 **Seção 3 — A divergência que o fisco vai ver.** Seção 1 menos seção 2, e quanto dela é vale compras
 vendido.
 
-**Seção 4 — Vale compras vendido no mês.** Dentro do negócio (`tblnegociovale`) e no sistema antigo
-(`tblvalecompra`), mais os negócios do mês sem nota nenhuma.
+**Seção 4 — Vale compras vendido no mês.** Dentro do negócio (`tblnegociovale`), mais os negócios do
+mês sem nota nenhuma.
 
 **Seção 5 — Conferências.** Três, e **nenhuma é arredondamento**:
 
@@ -161,13 +161,12 @@ a `codpdv is not null`, porque a validação de fechamento que ela espelha só v
 `17` PIX · `90` sem pagamento · `99` outros.
 Eletrônicos para DIMP = `[3, 4, 17]` (`DimpConciliacaoService::TPAG_ELETRONICOS`).
 
-**Duas estruturas de vale coexistem**, e as consultas leem as duas em `union`:
-- `tblnegociovale` — o vale dentro do negócio, novo (TASK-38). Tem `codpessoafavorecido`, `aluno`,
-  `turma`, `valorvale` (a **face**, que é o crédito), `valortotal` (a fatia paga após rateio) e
-  `codtitulo`.
-- `tblvalecompra` — o vale do MGLara, que vendia fora do negócio. Some quando o milestone 9 converter
-  o legado. O código já trata a ausência (`tabelaExiste()`), então o relatório continua rodando
-  depois da conversão sem mudança.
+**O vale mora em `tblnegociovale`** — o vale dentro do negócio (TASK-38). Tem `codpessoafavorecido`,
+`aluno`, `turma`, `valorvale` (a **face**, que é o crédito), `valortotal` (a fatia paga após rateio) e
+`codtitulo`. O vale do MGLara (`tblvalecompra`), que vendia fora do negócio, **não existe mais**: o
+milestone 9 (`api/database/vale_conversao.sql`) converteu os 3.718 vales em negócios retroativos
+(marcados por `tblnegociovale.codvalecompra IS NOT NULL`, `codpdv` nulo) e dropou a tabela. Meses
+antigos passam a mostrar esses vales na seção 4, como vale dentro do negócio.
 
 **O saldo do vale mora em `tbltitulo`**, tipo 3 (`TituloService::TIPO_VALE`), conta contábil 83. O
 crédito é **saldo negativo**; as consultas fazem `-t.saldo` para trabalhar com positivo.
@@ -259,10 +258,11 @@ E uma nota: `codnotafiscal 3485335`, modelo 65, número 1262041, autorizada em 2
 5. **A tese pede o relatório "arquivado" mensalmente** (§ 5). Não há rotina de arquivamento — hoje o
    PDF é gerado sob demanda e não fica guardado em lugar nenhum.
 
-6. **`tblvalecompra` ainda é lida.** Quando o milestone 9 do vale converter o legado e dropar a
-   tabela, a seção 4 do relatório perde a linha do sistema antigo sozinha (`tabelaExiste()` já trata),
-   mas vale conferir o primeiro mês depois da conversão: os vales convertidos passam a aparecer como
-   `tblnegociovale` em negócios retroativos, e isso muda a contagem dos meses históricos.
+6. **Meses anteriores à conversão mudaram de forma.** Depois do milestone 9 os vales antigos são
+   negócios retroativos: contam em "negócios do mês", nos pagamentos por tPag e na seção 4. O cartão
+   do sistema antigo não distinguia crédito de débito e foi convertido como tPag 3; o PIX por chave
+   (5606) como tPag 16, igual ao que o PDV grava hoje — por isso ele deixou de contar como eletrônico
+   nesses meses, como já não contava nos negócios.
 
 ---
 

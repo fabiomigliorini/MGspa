@@ -349,7 +349,6 @@ class PdvService
                 fp.parcelas,
                 fp.diasentreparcelas,
                 fp.avista,
-                fp.valecompra,
                 fp.lio,
                 fp.pix,
                 fp.pagarme,

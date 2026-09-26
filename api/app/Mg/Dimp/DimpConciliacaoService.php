@@ -35,9 +35,9 @@ use Mpdf\Mpdf;
  *
  * Só operação de SAÍDA entra: compra é dinheiro saindo, não é DIMP.
  *
- * Lê as DUAS estruturas de vale: `tblnegociovale` (o vale dentro do negócio)
- * e `tblvalecompra` (o vale do sistema antigo, que vendia fora do negócio) --
- * a segunda sai quando o milestone 9 converter o legado.
+ * O vale é lido de `tblnegociovale`. O vale do sistema antigo, que vendia
+ * fora do negócio, foi convertido em negócio (vale_conversao.sql) e entra
+ * pelo mesmo caminho: meses antigos saem com o vale dentro do negócio.
  */
 class DimpConciliacaoService
 {
@@ -111,7 +111,6 @@ class DimpConciliacaoService
         $negocios = static::negociosDoMes($bind);
         $pagamentos = static::pagamentosDoMes($bind);
         $valeNegocio = static::valeNoNegocio($bind);
-        $valeLegado = static::valeLegado($bind);
         $notasDoMes = static::detPagDasNotasDoMes($bind);
         $semNota = static::negociosSemNota($bind);
 
@@ -132,7 +131,7 @@ class DimpConciliacaoService
         $eletronicoNegocio = static::somarEletronicos($pagamentos);
         $eletronicoNota = static::somarEletronicos($notasDoMes);
         $divergencia = round($eletronicoNegocio - $eletronicoNota, 2);
-        $explicadoVale = round($valeNegocio['eletronico'] + $valeLegado['eletronico'], 2);
+        $explicadoVale = round($valeNegocio['eletronico'], 2);
 
         return compact(
             'ano',
@@ -143,7 +142,6 @@ class DimpConciliacaoService
             'negocios',
             'pagamentos',
             'valeNegocio',
-            'valeLegado',
             'notasDoMes',
             'semNota',
             'conferencias',
@@ -278,40 +276,6 @@ class DimpConciliacaoService
                 ), 0) as eletronico
             from juros j
             left join eletronico e on (e.codnegocio = j.codnegocio)
-        ';
-        return (array) DB::select($sql, $bind)[0];
-    }
-
-    /**
-     * Vale vendido no SISTEMA ANTIGO (tblvalecompra), que vendia fora do
-     * negócio: entrou dinheiro no mês sem negócio e sem nota nenhuma.
-     *
-     * Sai do relatório quando o legado for convertido. Enquanto a tabela
-     * existir, ela precisa aparecer aqui, ou o mês em que o MGLara ainda
-     * vendia vale não fecha.
-     */
-    private static function valeLegado(array $bind)
-    {
-        if (!static::tabelaExiste('tblvalecompra')) {
-            return ['quantidade' => 0, 'total' => 0, 'eletronico' => 0];
-        }
-        $sql = '
-            with eletronico as (
-                select f.codvalecompra, sum(f.valorpagamento) as valor
-                from tblvalecompraformapagamento f
-                inner join tblformapagamento fp on (fp.codformapagamento = f.codformapagamento)
-                where fp.pix = true or fp.formapagamento ilike \'%cart%\'
-                group by f.codvalecompra
-            )
-            select
-                count(*) as quantidade,
-                coalesce(sum(vc.total), 0) as total,
-                coalesce(sum(coalesce(e.valor, 0)), 0) as eletronico
-            from tblvalecompra vc
-            left join eletronico e on (e.codvalecompra = vc.codvalecompra)
-            where vc.inativo is null
-              and vc.criacao between :inicio and :fim
-              ' . static::filtroFilial('vc') . '
         ';
         return (array) DB::select($sql, $bind)[0];
     }
@@ -452,11 +416,5 @@ class DimpConciliacaoService
         $r['titulo'] = 'Negócios do mês em que os pagamentos não cobrem o total cobrado';
         $r['nota'] = 'É a conferência que o fechamento do negócio faz, nas vendas do PDV. Se aparecer aqui, o caixa do dia não fecha.';
         return $r;
-    }
-
-    private static function tabelaExiste($tabela)
-    {
-        return count(DB::select('select to_regclass(?) as t', [$tabela])) > 0
-            && DB::select('select to_regclass(?) as t', [$tabela])[0]->t !== null;
     }
 }

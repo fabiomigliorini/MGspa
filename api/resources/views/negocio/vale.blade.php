@@ -155,6 +155,10 @@ use Illuminate\Support\Carbon;
     @if($vale->valoravulso > 0)
     <br>
     <div>Valor avulso: R$ {{ formataNumero($vale->valoravulso) }}</div>
+    @elseif($vale->valoravulso < 0)
+    {{-- vale do sistema antigo: o desconto da venda foi convertido em avulso negativo --}}
+    <br>
+    <div>Desconto: R$ {{ formataNumero(abs($vale->valoravulso)) }}</div>
     @endif
     @endif
 

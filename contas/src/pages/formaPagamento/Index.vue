@@ -4,6 +4,8 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useFormaPagamentoStore } from 'src/stores/formaPagamentoStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const $q = useQuasar()
 const store = useFormaPagamentoStore()
@@ -18,7 +20,6 @@ const FLAGS = [
   { key: 'fechamento', label: 'Fechamento' },
   { key: 'notafiscal', label: 'Nota Fiscal' },
   { key: 'entrega', label: 'Entrega' },
-  { key: 'valecompra', label: 'Vale Compra' },
   { key: 'pix', label: 'Pix' },
   { key: 'lio', label: 'Lio' },
   { key: 'pagarme', label: 'PagarMe' },
@@ -37,7 +38,6 @@ const emptyModel = () => ({
   fechamento: false,
   notafiscal: false,
   entrega: false,
-  valecompra: false,
   lio: false,
   pix: false,
   pagarme: false,
@@ -83,7 +83,6 @@ const abrirEditar = (row) => {
     fechamento: !!row.fechamento,
     notafiscal: !!row.notafiscal,
     entrega: !!row.entrega,
-    valecompra: !!row.valecompra,
     lio: !!row.lio,
     pix: !!row.pix,
     pagarme: !!row.pagarme,
@@ -294,9 +293,8 @@ onMounted(() => store.fetchItems(true))
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.formapagamento"
-                  outlined
                   label="Descrição"
                   maxlength="50"
                   autofocus
@@ -305,22 +303,24 @@ onMounted(() => store.fetchItems(true))
               </div>
 
               <div class="col-4">
-                <q-input
-                  v-model="model.formapagamentoecf"
-                  outlined
-                  label="Cód. ECF"
-                  maxlength="5"
+                <MgInput v-model="model.formapagamentoecf" label="Cód. ECF" maxlength="5" />
+              </div>
+              <div class="col-4">
+                <MgInputValor
+                  v-model="model.parcelas"
+                  label="Parcelas"
+                  :decimals="0"
+                  :grouping="false"
+                  :min="0"
                 />
               </div>
               <div class="col-4">
-                <q-input v-model.number="model.parcelas" outlined type="number" label="Parcelas" />
-              </div>
-              <div class="col-4">
-                <q-input
-                  v-model.number="model.diasentreparcelas"
-                  outlined
-                  type="number"
+                <MgInputValor
+                  v-model="model.diasentreparcelas"
                   label="Dias entre"
+                  :decimals="0"
+                  :grouping="false"
+                  :min="0"
                 />
               </div>
 

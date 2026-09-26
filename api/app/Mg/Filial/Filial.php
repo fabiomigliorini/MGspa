@@ -30,7 +30,6 @@ use Mg\Saurus\SaurusPinPad;
 use Mg\Titulo\Titulo;
 use Mg\Filial\UnidadeNegocio;
 use Mg\Usuario\Usuario;
-use Mg\ValeCompra\ValeCompra;
 use Mg\Filial\Empresa;
 use Mg\Pessoa\Pessoa;
 
@@ -238,11 +237,6 @@ class Filial extends MgModel
     public function UsuarioS()
     {
         return $this->hasMany(Usuario::class, 'codfilial', 'codfilial');
-    }
-
-    public function ValeCompraS()
-    {
-        return $this->hasMany(ValeCompra::class, 'codfilial', 'codfilial');
     }
 
 }

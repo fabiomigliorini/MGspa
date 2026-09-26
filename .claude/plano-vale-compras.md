@@ -46,23 +46,18 @@ dois (decisão 6). Isso já acontece em produção hoje e sai diferente a partir
 2. **Numeração: `V{codnegocio}-{A,B,C}`.** Mantém o prefixo `V` que o financeiro conhece do legado,
    com o codnegocio no lugar do codvalecompra. Aplicado.
 3. **Relatório DIMP** — está sendo tratado em outro chat.
-4. **Trigger × milestone 9: os convertidos nascem com `codpdv` preenchido.**
-   ⚠️ A premissa inicial era dropar as triggers legadas — **não dá.** Conferido no banco: as três
-   triggers ativas chamam aquelas funções (`tblnegocioaiau_…` → `fnTblNegocio_Atualiza_ValorTotal`,
-   `tblnegocioprodutobarraaiauad` → `_ValorProdutos`, `tblnegocioformapagamentoaiauad` →
-   `_ValorAPrazo`), e os negócios sem `codpdv` dos últimos 12 meses são **3.088, sendo 2.971 de
-   Compra**. O `codpdv is null` não é resquício: é o roteador entre "total calculado pelo app" e
-   "total calculado pelo banco", e o segundo atende o fluxo de entrada. Dropar zeraria o total de
-   toda compra. Por isso a saída é pelo outro lado — dar `codpdv` aos convertidos, que são registros
-   históricos imutáveis.
-   **Pendência latente:** se um dia vale entrar por caminho que não é PDV (Mercos, Woo, entrada), a
-   trigger zera o `valorvales`. Aí a fórmula dela precisa aprender a coluna.
+4. **Triggers × milestone 9 — RESOLVIDA em 25/09: os convertidos nascem com `codpdv` NULL.**
+   As triggers de total do negócio (`fnTblNegocio_Atualiza_*`) eram o motivo de os convertidos
+   precisarem de `codpdv`. O Fabio as removeu ao resolver as compras no MGsis (25/09/2026); em dev
+   não há mais trigger em `tblnegocio`, `tblnegocioprodutobarra` nem `tblnegocioformapagamento`.
+   Sem elas, nada recalcula total por baixo: os convertidos nascem com `codpdv` NULL (decisão 3b) e
+   com os totais gravados pelo próprio `vale_conversao.sql`. A pendência latente (vale entrando por
+   fora do PDV ter o `valorvales` zerado) também deixou de existir.
 
 ### Ainda falta
 - **Validar as telas no navegador** — em andamento com o Fabio.
-- **Milestone 9**, com o `codpdv` acima.
 - **TASK-175** — conferir o `saidavalor` do estoque depois de um negócio real passar pelo job.
-- Limpar os negócios de teste do banco de dev (4541400–4541429).
+- Limpar os negócios de teste do banco de dev (4541400–4541429 e os das bancadas seguintes).
 
 ---
 
@@ -107,6 +102,7 @@ vale é recebimento antecipado sem fato gerador de ICMS; o documento fiscal sai 
 
 | 21 | **`tblnegociovale` espelha as duas parcelas do modelo**: `valorprodutos` (soma dos itens) e `valoravulso` (valor livre) | Dá para saber depois quanto do crédito veio de kit e quanto foi avulso, e o operador ajusta cada parte |
 | 22 | **A face do vale chama `valorvale`**, não `valortotal` | No modelo `valortotal` é a face; no vale seria a fatia paga. Nomes próprios evitam a armadilha: `valorvale` = face = crédito; `valortotal` = fatia paga após rateio, como em todo o resto do negócio |
+| 23 | **No vale antigo convertido, o desconto vira `valoravulso` NEGATIVO** (26/09) | O sistema antigo creditava o valor pago, não a face. Com o avulso negativo, `valorvale = valorprodutos + valoravulso = crédito do título` vale para todos os vales, antigos e novos, e o título não é tocado. Só existe nos 295 convertidos com desconto; o comprovante e a tela mostram "desconto" |
 
 Do escopo original, também decidido: vale usado em **qualquer filial, sem restrição**, e **sem
 breakage/expiração** nesta rodada.
@@ -515,3 +511,65 @@ vale N04541420-VALC não tem mais saldo suficiente: disponível R$ 0,00, faltam 
 consumiu esse crédito em outro caixa", e o saldo do título **nunca fica positivo**; cancelar a venda
 devolve o saldo exato dos dois vales; e excluir um pagamento do lote impede o fechamento. As
 regressões do milestone 6 foram **re-rodadas depois destas mudanças e continuam com diff vazio**.
+
+---
+
+## 6. Execução de 26/09/2026
+
+### Milestone 9 · Conversão do legado e limpeza — **PRONTO em dev**
+
+`api/database/vale_conversao.sql` **rodado no banco de dev** (duas vezes: a segunda é no-op). Numa
+transação só, cada um dos 3.718 vales de `tblvalecompra` virou o que um vale vendido hoje no PDV grava:
+1 `tblnegocio` (natureza Venda, `codpdv` NULL, sem item de mercadoria, totais gravados pelo script),
+1 `tblnegocioformapagamento` por pagamento antigo (com o `tipo`/tPag que o PDV grava para cada forma),
+1 `tblnegociovale` apontando para o **mesmo** título de crédito e os itens do kit. Os 313 títulos a
+prazo (tipo 240) passaram a pender do pagamento novo. Depois das conferências, no mesmo script:
+`DROP` das três tabelas, de `tbltitulo.codvalecompraformapagamento` e de `tblformapagamento.valecompra`.
+Qualquer conferência que não fecha dá `RAISE` e rollback, e o legado fica intacto. Antes de rodar
+foi feito um ensaio com `ROLLBACK` e um `pg_dump` das três tabelas.
+
+Decisões (com o Fabio):
+- **Desconto antigo = avulso negativo** (decisão 23): vale 3713 → produtos 205,14 + avulso −10,26 =
+  face 194,88 = crédito do título. `valordesconto` fica zerado no vale e no negócio.
+- **Cancelado = vale inativo ou crédito estornado** (176). O vale 3130 tinha o título estornado em
+  15/01/2025 sem o vale inativado: o título manda. `tblnegociovale.inativo` fica NULL em todos, como
+  num cancelamento feito pelo PDV.
+- **Vale 2348 fiel ao legado**: dois pagamentos de 131,82 (dinheiro e crediário) para um vale de
+  131,82, com a observação no negócio.
+- Pagamento com a forma 1030 (vale pago com outro vale, 7 casos) vai **sem** `codtitulo`: a baixa já
+  está no saldo do título antigo, e com ele o cancelamento tentaria estornar uma baixa que não é deste
+  registro.
+
+Números (antes = depois): 3.718 vales · face = crédito = **252.502,28** · saldo dos créditos
+**−16.311,84** · 176 cancelados · 3.719 pagamentos / 252.634,10 forma a forma · itens em quantidade
+e valor · 313 títulos a prazo, débito 25.499,81, saldo 180,53, 2 abertos. Os **4.031 títulos**
+envolvidos saíram idênticos campo a campo (tipo, pessoa, conta, número, débito, crédito, saldo,
+estorno, vencimento, portador) e os 8.701 movimentos continuam os mesmos.
+
+Código:
+- Removidos os models `Mg\ValeCompra\*` e as relações que apontavam para eles (Titulo, Pessoa, Filial,
+  FormaPagamento, ProdutoBarra), mais as entradas do `IndiceModels.json`. O `unificaBarras` passou a
+  repontar os itens de `tblnegociovaleprodutobarra` (antes repontava o vale antigo e, sem isso,
+  unificar um código de barras usado num vale estouraria a FK).
+- Flag `valecompra` da forma de pagamento: saiu da API (model, resource, requests, filtros), do sync
+  do PDV (`PdvService::formaPagamento`) e dos 3 arquivos do app contas, cujos `q-input` viraram
+  `MgInput`/`MgInputValor` (TASK-174).
+- DIMP e escopo FIFO perderam o ramo `union` do legado: os vales antigos chegam pelo `tblnegociovale`.
+- **Trava nova:** `PdvNegocioService::negocioFechado()` recusa alterar negócio convertido. O loop do
+  fim dele reescreve tipo e conta dos títulos pendurados nos pagamentos com os da natureza Venda
+  (200/2); nos convertidos, os títulos a prazo são 240/82.
+- Comprovante 80mm e a seção do vale na tela mostram o avulso negativo como "Desconto".
+
+Verificado em dev (`api/storage/app/vale-teste/m9.php`, todos OK): models carregando; sync de formas
+sem a flag; escopo da escola somando exatamente o saldo vivo dos títulos; papel antigo V3722
+(`VAL649866`) achado pela bipagem, consumido em 10,00 e devolvido ao cancelar a venda; comprovante do
+V3713 com "Desconto: R$ 10,26"; PUT no negócio convertido recusado; recarga do negócio pela API com o
+vale e os 13 itens. DIMP: julho/2026 passou a ter 3 negócios a mais (os vales que o MGLara vendeu),
+explicando os mesmos R$ 473,23 que antes vinham da linha do sistema antigo, e o resto não explicado
+continua R$ 1.732,26.
+
+**Onde os convertidos passam a aparecer** (levantado, não alterado): comissão de caixa
+(`ColaboradorComissaoService`, soma `valortotal` por usuário) e o resumo de caixa do MGLara
+(`CaixaController`) para os períodos antigos; o histórico de compras do cliente
+(`GrupoEconomicoService::negocios`); a listagem de negócios. RH/metas, estoque, emissão de nota e
+conferência do PDV não enxergam (dependem de item de mercadoria ou de `codpdv`).

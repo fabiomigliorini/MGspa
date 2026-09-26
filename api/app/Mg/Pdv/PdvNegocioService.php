@@ -253,6 +253,12 @@ class PdvNegocioService
 
     public static function negocioFechado(Negocio $negocio, $data, Pdv $pdv)
     {
+        // Vale do sistema antigo convertido em negocio (vale_conversao.sql):
+        // e' registro historico. O loop do fim reescreveria tipo e conta dos
+        // titulos a prazo dele com os da natureza Venda.
+        if ($negocio->NegocioValeS()->whereNotNull('codvalecompra')->exists()) {
+            throw new Exception('Este negócio é um Vale Compras convertido do sistema antigo e não pode ser alterado!', 1);
+        }
         if ($negocio->valortotal != $data['valortotal']) {
             throw new Exception("Não é permitido alterar os valores de um negocio Fechado ou Cancelado {$negocio->codnegocio} {$negocio->valortotal} != {$data['valortotal']}!", 1);
         }

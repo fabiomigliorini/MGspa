@@ -299,11 +299,6 @@
         "tabela": "tblusuario",
         "coluna": "codfilial",
         "metodo": "UsuarioS"
-      },
-      "tblvalecompra.codfilial": {
-        "tabela": "tblvalecompra",
-        "coluna": "codfilial",
-        "metodo": "ValeCompraS"
       }
     }
   },
@@ -749,11 +744,6 @@
         "tabela": "tblusuario",
         "coluna": "codusuariocriacao",
         "metodo": "UsuarioCriacao"
-      },
-      "codvalecompraformapagamento": {
-        "tabela": "tblvalecompraformapagamento",
-        "coluna": "codvalecompraformapagamento",
-        "metodo": "ValeCompraFormaPagamento"
       }
     },
     "hasMany": {
@@ -811,11 +801,6 @@
         "tabela": "tbltitulonfeterceiro",
         "coluna": "codtitulo",
         "metodo": "TituloNfeTerceiroS"
-      },
-      "tblvalecompra.codtitulo": {
-        "tabela": "tblvalecompra",
-        "coluna": "codtitulo",
-        "metodo": "ValeCompraS"
       }
     }
   },
@@ -1124,16 +1109,6 @@
         "coluna": "codpessoa",
         "metodo": "UsuarioS"
       },
-      "tblvalecompra.codpessoa": {
-        "tabela": "tblvalecompra",
-        "coluna": "codpessoa",
-        "metodo": "ValeCompraS"
-      },
-      "tblvalecompra.codpessoafavorecido": {
-        "tabela": "tblvalecompra",
-        "coluna": "codpessoafavorecido",
-        "metodo": "ValeCompraFavorecidoS"
-      },
       "tblvalemodelo.codpessoafavorecido": {
         "tabela": "tblvalemodelo",
         "coluna": "codpessoafavorecido",
@@ -1391,42 +1366,6 @@
       }
     }
   },
-  "tblvalecompraformapagamento": {
-    "tabela": "tblvalecompraformapagamento",
-    "campocodigo": "codvalecompraformapagamento",
-    "namespace": "Mg\\ValeCompra",
-    "classe": "ValeCompraFormaPagamento",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraFormaPagamento.php",
-    "belongsTo": {
-      "codformapagamento": {
-        "tabela": "tblformapagamento",
-        "coluna": "codformapagamento",
-        "metodo": "FormaPagamento"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      },
-      "codvalecompra": {
-        "tabela": "tblvalecompra",
-        "coluna": "codvalecompra",
-        "metodo": "ValeCompra"
-      }
-    },
-    "hasMany": {
-      "tbltitulo.codvalecompraformapagamento": {
-        "tabela": "tbltitulo",
-        "coluna": "codvalecompraformapagamento",
-        "metodo": "TituloS"
-      }
-    }
-  },
   "tblcobrancahistoricotitulo": {
     "tabela": "tblcobrancahistoricotitulo",
     "campocodigo": "codcobrancahistoricotitulo",
@@ -1486,62 +1425,6 @@
       }
     },
     "hasMany": []
-  },
-  "tblvalecompra": {
-    "tabela": "tblvalecompra",
-    "campocodigo": "codvalecompra",
-    "namespace": "Mg\\ValeCompra",
-    "classe": "ValeCompra",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompra.php",
-    "belongsTo": {
-      "codfilial": {
-        "tabela": "tblfilial",
-        "coluna": "codfilial",
-        "metodo": "Filial"
-      },
-      "codpessoa": {
-        "tabela": "tblpessoa",
-        "coluna": "codpessoa",
-        "metodo": "Pessoa"
-      },
-      "codpessoafavorecido": {
-        "tabela": "tblpessoa",
-        "coluna": "codpessoafavorecido",
-        "metodo": "PessoaFavorecido"
-      },
-      "codtitulo": {
-        "tabela": "tbltitulo",
-        "coluna": "codtitulo",
-        "metodo": "Titulo"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      },
-      "codvalecompramodelo": {
-        "tabela": "tblvalemodelo",
-        "coluna": "codvalecompramodelo",
-        "metodo": "ValeModelo"
-      }
-    },
-    "hasMany": {
-      "tblvalecompraformapagamento.codvalecompra": {
-        "tabela": "tblvalecompraformapagamento",
-        "coluna": "codvalecompra",
-        "metodo": "ValeCompraFormaPagamentoS"
-      },
-      "tblvalecompraprodutobarra.codvalecompra": {
-        "tabela": "tblvalecompraprodutobarra",
-        "coluna": "codvalecompra",
-        "metodo": "ValeCompraProdutoBarraS"
-      }
-    }
   },
   "tbltipomovimentotitulo": {
     "tabela": "tbltipomovimentotitulo",
@@ -1673,11 +1556,6 @@
         "tabela": "tblpessoa",
         "coluna": "codformapagamento",
         "metodo": "PessoaS"
-      },
-      "tblvalecompraformapagamento.codformapagamento": {
-        "tabela": "tblvalecompraformapagamento",
-        "coluna": "codformapagamento",
-        "metodo": "ValeCompraFormaPagamentoS"
       }
     }
   },
@@ -1973,47 +1851,12 @@
       }
     },
     "hasMany": {
-      "tblvalecompra.codvalecompramodelo": {
-        "tabela": "tblvalecompra",
-        "coluna": "codvalecompramodelo",
-        "metodo": "ValeCompraS"
-      },
       "tblvalemodeloprodutobarra.codvalemodelo": {
         "tabela": "tblvalemodeloprodutobarra",
         "coluna": "codvalemodelo",
         "metodo": "ValeModeloProdutoBarraS"
       }
     }
-  },
-  "tblvalecompraprodutobarra": {
-    "tabela": "tblvalecompraprodutobarra",
-    "campocodigo": "codvalecompraprodutobarra",
-    "namespace": "Mg\\ValeCompra",
-    "classe": "ValeCompraProdutoBarra",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/ValeCompra/ValeCompraProdutoBarra.php",
-    "belongsTo": {
-      "codprodutobarra": {
-        "tabela": "tblprodutobarra",
-        "coluna": "codprodutobarra",
-        "metodo": "ProdutoBarra"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      },
-      "codvalecompra": {
-        "tabela": "tblvalecompra",
-        "coluna": "codvalecompra",
-        "metodo": "ValeCompra"
-      }
-    },
-    "hasMany": []
   },
   "tblboletomotivoocorrencia": {
     "tabela": "tblboletomotivoocorrencia",
@@ -2850,11 +2693,6 @@
         "tabela": "tblvalemodeloprodutobarra",
         "coluna": "codprodutobarra",
         "metodo": "ValeModeloProdutoBarraS"
-      },
-      "tblvalecompraprodutobarra.codprodutobarra": {
-        "tabela": "tblvalecompraprodutobarra",
-        "coluna": "codprodutobarra",
-        "metodo": "ValeCompraProdutoBarraS"
       },
       "tblwooproduto.codprodutobarraunidade": {
         "tabela": "tblwooproduto",
