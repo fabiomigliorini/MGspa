@@ -62,6 +62,12 @@ const form = ref({
 })
 
 const isNovo = computed(() => !sNegocio.valeEditando)
+
+// wizard: tela cheia no celular, 600px no desktop; edicao: form estreito
+const estiloCard = computed(() => {
+  if (!isNovo.value) return 'width: 350px; max-width: 90vw'
+  return mobile.value ? '' : 'width: 350px; max-width: 90vw'
+})
 // Consumidor (1) e o favorecido do vale ao portador, nao uma escola: nele
 // nao ha aluno nem turma para perguntar.
 const temFavorecido = computed(
@@ -253,7 +259,7 @@ const salvar = async () => {
 <template>
   <!-- so' o wizard vai em tela cheia no celular; a edicao e' um form curto -->
   <q-dialog v-model="sNegocio.dialog.vale" :maximized="mobile && isNovo" @before-show="preparar">
-    <q-card flat :style="mobile && isNovo ? '' : 'width: 600px; max-width: 90vw'">
+    <q-card flat :style="estiloCard">
       <!-- NOVO: wizard -->
       <q-stepper
         v-if="isNovo"
@@ -460,9 +466,9 @@ const salvar = async () => {
             <div class="text-h5 text-primary">{{ formataNumero(valorVale) }}</div>
           </div>
 
-          <div class="row q-col-gutter-md justify-center">
+          <div class="row q-col-gutter-md">
             <template v-if="temFavorecido">
-              <div class="col-12 col-sm-8">
+              <div class="col-12">
                 <MgInputFormatado
                   outlined
                   autofocus
@@ -475,12 +481,12 @@ const salvar = async () => {
                   v-model="form.aluno"
                 />
               </div>
-              <div class="col-12 col-sm-8">
+              <div class="col-12">
                 <MgInput clearable counter label="Turma" maxlength="40" v-model="form.turma" />
               </div>
             </template>
 
-            <div class="col-12 col-sm-8">
+            <div class="col-12">
               <MgInputValor
                 readonly
                 :model-value="form.valorprodutos"
@@ -489,7 +495,7 @@ const salvar = async () => {
               />
             </div>
 
-            <div class="col-12 col-sm-8">
+            <div class="col-12">
               <MgInputValor
                 v-model="form.valoravulso"
                 prefix="R$"
@@ -503,7 +509,7 @@ const salvar = async () => {
                  andam juntos. A diferenca e que aqui ele NAO mexe na face:
                  a escola recebe o valor de face, o desconto sai do que o
                  cliente paga. -->
-            <div class="col-6 col-sm-4">
+            <div class="col-6">
               <MgInputValor
                 :decimals="1"
                 :min="0"
@@ -514,7 +520,7 @@ const salvar = async () => {
                 @change="recalcularValorDesconto()"
               />
             </div>
-            <div class="col-6 col-sm-4">
+            <div class="col-6">
               <MgInputValor
                 :min="0"
                 :max="valorVale"
@@ -525,7 +531,7 @@ const salvar = async () => {
               />
             </div>
 
-            <div class="col-12 col-sm-8">
+            <div class="col-12">
               <MgInputValor readonly :model-value="valorPago" prefix="R$" label="Valor final" />
             </div>
           </div>

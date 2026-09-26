@@ -531,7 +531,7 @@ onUnmounted(() => {
 
       <!-- VALE COMPRAS: um bloco por vale, abaixo da grade de mercadoria.
            O botao de adicionar fica no input de barras (BotaoValeCompras). -->
-      <div class="q-px-md" v-if="sNegocio.valesAtivos.length > 0">
+      <div class="row q-col-gutter-md q-px-md" v-if="sNegocio.valesAtivos.length > 0">
         <listagem-itens-vale
           v-for="(vale, indice) in sNegocio.valesAtivos"
           :key="vale.uuid"
