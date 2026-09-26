@@ -10,6 +10,7 @@ import { saurusStore } from 'stores/saurus'
 import { pixStore } from 'stores/pix'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
 import ListagemItensVale from 'components/offline/ListagemItensVale.vue'
+import ListagemContraVale from 'components/offline/ListagemContraVale.vue'
 import InputBarras from 'components/offline/InputBarras.vue'
 import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
@@ -283,19 +284,6 @@ const imprimirRomaneio = async () => {
   })
 }
 
-const imprimirVale = async () => {
-  if (!checarImpressora()) return
-  await api.post(
-    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale/' + sNegocio.padrao.impressora,
-  )
-  Notify.create({
-    type: 'positive',
-    message: 'Impressão Solicitada!',
-    timeout: 1000,
-    actions: [{ icon: 'close', color: 'white' }],
-  })
-}
-
 const imprimirComanda = async () => {
   if (!checarImpressora()) return
   await api.post(
@@ -316,16 +304,6 @@ const romaneio = async () => {
     `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/romaneio`,
     {},
     { title: 'Romaneio', size: 'cupom', onImprimir: imprimirRomaneio },
-  )
-}
-
-const vale = async () => {
-  fecharDialogs()
-  await abrirPdf(
-    api,
-    `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/vale`,
-    {},
-    { title: 'Vale', size: 'cupom', onImprimir: imprimirVale },
   )
 }
 
@@ -541,6 +519,13 @@ onUnmounted(() => {
           :vale="vale"
           :letra="letraVale(indice)"
         />
+        <template v-if="sNegocio.negocio.codnegociostatus == 2">
+          <listagem-contra-vale
+            v-for="pagamento in sNegocio.negocio.pagamentos.filter((p) => p.valenumero)"
+            :key="pagamento.uuid"
+            :pagamento="pagamento"
+          />
+        </template>
         <listagem-anexos
           v-if="
             sNegocio.negocio.anexos &&
@@ -717,18 +702,6 @@ onUnmounted(() => {
             color="accent"
             @click="dialogOrcamentoSelecionar = true"
             v-if="sNegocio.itensAtivos.length > 0 && sNegocio.negocio.codnegociostatus != 3"
-          />
-
-          <!-- VALE -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Vale Compras"
-            label-position="left"
-            icon="mdi-ticket"
-            color="accent"
-            @click="vale()"
-            v-if="sNegocio.negocio.codnegociostatus == 2"
           />
         </q-fab>
 

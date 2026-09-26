@@ -15,7 +15,12 @@ import { api } from 'boot/axios'
 import { abrirPdf } from '@components/abrirPdf'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
-import { formataData, formataNumero, formataNumeroInteligente } from '@components/formatters'
+import {
+  formataCodigo,
+  formataData,
+  formataNumero,
+  formataNumeroInteligente,
+} from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
@@ -146,6 +151,11 @@ const abrirVale = () =>
     { title: 'Vale ' + props.letra, size: 'cupom', onImprimir: imprimirVale },
   )
 
+// o titulo do vale so' nasce no fechamento: antes disso a linha nao e' link
+const urlTitulo = computed(() =>
+  props.vale.codtitulo ? process.env.CONTAS_URL + '/titulo/' + props.vale.codtitulo : undefined,
+)
+
 const linkProduto = (codproduto) => {
   return process.env.MGLARA_URL + 'produto/' + codproduto
 }
@@ -200,49 +210,17 @@ const linkProduto = (codproduto) => {
   <!-- Card do vale: mesmo formato dos cards de nota/título -->
   <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
     <q-card flat bordered>
-      <q-item>
+      <!-- cabecalho abre o titulo do vale no app de contas, como a nota abre o app de notas;
+           o titulo so' nasce no fechamento, antes disso nao e' link -->
+      <q-item :clickable="!!urlTitulo" v-ripple="!!urlTitulo" :href="urlTitulo" target="_blank">
         <q-item-section avatar>
           <q-avatar icon="card_giftcard" color="primary" text-color="white" />
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis">Vale {{ letra }}</q-item-label>
-        </q-item-section>
-        <q-item-section side top v-if="sNegocio.podeEditar || podeImprimir">
-          <div class="row no-wrap">
-            <q-btn
-              v-if="podeImprimir"
-              flat
-              round
-              size="sm"
-              color="grey-7"
-              icon="print"
-              @click="abrirVale()"
-            >
-              <q-tooltip>Imprimir Vale</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="sNegocio.podeEditar"
-              flat
-              round
-              size="sm"
-              color="grey-7"
-              icon="edit"
-              @click="sNegocio.abrirVale(vale.uuid)"
-            >
-              <q-tooltip>Editar Vale</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="sNegocio.podeEditar"
-              flat
-              round
-              size="sm"
-              color="grey-7"
-              icon="delete"
-              @click="excluirVale()"
-            >
-              <q-tooltip>Excluir Vale</q-tooltip>
-            </q-btn>
-          </div>
+          <q-item-label caption class="ellipsis" v-if="vale.codtitulo">
+            {{ formataCodigo(vale.codtitulo) }}
+          </q-item-label>
         </q-item-section>
       </q-item>
       <q-separator inset />
@@ -318,6 +296,48 @@ const linkProduto = (codproduto) => {
           <q-icon name="chevron_right" color="grey-7" />
         </q-item-section>
       </q-item>
+
+      <template v-if="sNegocio.podeEditar || podeImprimir">
+        <q-separator inset />
+        <q-card-actions align="right">
+          <q-btn
+            v-if="podeImprimir"
+            flat
+            dense
+            round
+            size="sm"
+            color="primary"
+            icon="print"
+            @click="abrirVale()"
+          >
+            <q-tooltip>Imprimir Vale</q-tooltip>
+          </q-btn>
+          <q-btn
+            v-if="sNegocio.podeEditar"
+            flat
+            dense
+            round
+            size="sm"
+            color="grey-7"
+            icon="edit"
+            @click="sNegocio.abrirVale(vale.uuid)"
+          >
+            <q-tooltip>Editar Vale</q-tooltip>
+          </q-btn>
+          <q-btn
+            v-if="sNegocio.podeEditar"
+            flat
+            dense
+            round
+            size="sm"
+            color="negative"
+            icon="delete"
+            @click="excluirVale()"
+          >
+            <q-tooltip>Excluir Vale</q-tooltip>
+          </q-btn>
+        </q-card-actions>
+      </template>
     </q-card>
   </div>
 

@@ -26,9 +26,10 @@ class ValeService
      * que o caixa bipa no wizard Receber.
      *
      * Com $uuid sai so' aquele vale vendido (botao do card do vale), sem os
-     * saldos e creditos.
+     * saldos e creditos. Com $codtitulo sai so' aquele contra vale (botao do
+     * card do Contra Vale).
      */
-    public static function pdf(Negocio $negocio, $uuid = null)
+    public static function pdf(Negocio $negocio, $uuid = null, $codtitulo = null)
     {
         $generator = new BarcodeGeneratorPNG();
 
@@ -38,7 +39,7 @@ class ValeService
             if (empty($vale->codtitulo) || empty($vale->Titulo)) {
                 continue;
             }
-            if ($uuid && $vale->uuid != $uuid) {
+            if (($uuid && $vale->uuid != $uuid) || $codtitulo) {
                 continue;
             }
             $comprovantes[$vale->codtitulo] = [
@@ -50,6 +51,9 @@ class ValeService
 
         // saldo de vale resgatado e credito de devolucao (caminho de sempre)
         foreach ($uuid ? [] : $negocio->NegocioFormaPagamentoS as $nfp) {
+            if ($codtitulo && $nfp->codtitulo != $codtitulo) {
+                continue;
+            }
             if (!empty($nfp->codtitulo)) {
                 if ($nfp->Titulo->codtipotitulo == TituloService::TIPO_VALE && $nfp->Titulo->saldo < 0) {
                     $comprovantes[$nfp->codtitulo] = $comprovantes[$nfp->codtitulo] ?? [
@@ -92,12 +96,15 @@ class ValeService
         return $dompdf->output();
     }
 
-    public static function imprimir($codnegocio, $impressora, $uuid = null)
+    public static function imprimir($codnegocio, $impressora, $uuid = null, $codtitulo = null)
     {
         // Executa comando de impressao
         $params = ['codnegocio' => $codnegocio];
         if ($uuid) {
             $params['uuid'] = $uuid;
+        }
+        if ($codtitulo) {
+            $params['codtitulo'] = $codtitulo;
         }
         $url = \URL::temporarySignedRoute('pdv.negocio.vale', now()->addMinutes(10), $params);
         $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'

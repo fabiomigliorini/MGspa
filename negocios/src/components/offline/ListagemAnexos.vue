@@ -246,19 +246,18 @@ const confissaoRatio = ref('1:2')
       >
         <q-icon name="picture_as_pdf" color="grey-7" size="150px" style="margin: auto" />
       </q-item>
-      <q-card-actions>
-        <q-btn-group flat>
-          <q-btn
-            dense
-            flat
-            round
-            icon="delete"
-            color="negative"
-            @click="excluirAnexo('pdf', anexo)"
-          >
-            <q-tooltip class="bg-accent">Excluir</q-tooltip>
-          </q-btn>
-        </q-btn-group>
+      <q-card-actions align="right">
+        <q-btn
+          flat
+          dense
+          round
+          size="sm"
+          icon="delete"
+          color="negative"
+          @click="excluirAnexo('pdf', anexo)"
+        >
+          <q-tooltip class="bg-accent">Excluir</q-tooltip>
+        </q-btn>
       </q-card-actions>
     </q-card>
   </div>

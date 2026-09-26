@@ -424,13 +424,13 @@ class PdvController
     // ?uuid= imprime so' aquele vale do negocio; sem ele, todos
     public function imprimirVale(Request $request, $codnegocio, $impressora)
     {
-        ValeService::imprimir($codnegocio, $impressora, $request->uuid);
+        ValeService::imprimir($codnegocio, $impressora, $request->uuid, $request->codtitulo);
     }
 
     public function vale(Request $request, $codnegocio)
     {
         $negocio = Negocio::findOrFail($codnegocio);
-        $pdf = ValeService::pdf($negocio, $request->uuid);
+        $pdf = ValeService::pdf($negocio, $request->uuid, $request->codtitulo);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="ValeCompras' . $codnegocio . '.pdf"'
