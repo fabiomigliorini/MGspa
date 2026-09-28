@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
@@ -94,7 +95,7 @@ onUnmounted(() => window.removeEventListener('keydown', atalho))
 
 <template>
   <div>
-    <q-input
+    <MgInput
       :model-value="codigo"
       type="text"
       outlined
@@ -117,7 +118,7 @@ onUnmounted(() => window.removeEventListener('keydown', atalho))
           <q-tooltip>Pesquisar (F1)</q-tooltip>
         </q-btn>
       </template>
-    </q-input>
+    </MgInput>
 
     <MgDialogPesquisaProduto
       v-if="pesquisa"

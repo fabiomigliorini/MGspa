@@ -1,11 +1,11 @@
 ---
 id: TASK-174
 title: 'Campo de texto: o X de limpar rouba o Tab e cada tela repete a mesma gambiarra'
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-28 22:25'
+updated_date: '2026-09-28 22:27'
 labels:
   - components
 dependencies: []
@@ -36,8 +36,9 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 - [x] #4 Nenhum <q-input> cru sobrou em estoque/src
 - [x] #5 Nenhum <q-input> cru sobrou em agro/src
 - [x] #6 Nenhum <q-input> cru sobrou em notas/src
-- [ ] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
+- [x] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
 - [x] #8 Regra do MgInput escrita no CLAUDE.md (campo novo e form que receber manutencao usam MgInput)
+- [x] #9 Componentes compartilhados (@components) sem q-input cru fora dos proprios MgInput/MgInputValor/MgInputData
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -56,4 +57,6 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 28/09/2026: notas migrado — 115 q-input em 39 arquivos. Numericos viraram MgInputValor: quantidades e pesos com 3 casas (a quantidade do item tinha 4 na tela, o banco guarda 3), tara/capacidade/volumes sem casas, codigos/CST/CSOSN/NSU/numero/ordem sem casas nem milhar. O filtro de emissao das NF-e de terceiros (mascara DD/MM + q-date + conversao na mao) virou MgInputData, e sairam as funcoes convertToISODate/convertFromISODate. Varredura confirmou que nenhum campo migrado tinha conteudo no slot padrao (MgInput nao o repassa).
 
 28/09/2026: pessoas migrado — 133 q-input em 55 arquivos (5 em Options API: import + registro em components). Numericos viraram MgInputValor: quantidade da rubrica e do fixo da meta com 2 casas; dias de ferias/abono/desconto/gozo, dias de experiencia/renovacao, dias uteis, tolerancias, ano dos feriados, serie NF-e e codigos sem casas. Com isso os 6 apps estao sem q-input cru; falta o teste de Tab (#7).
+
+28/09/2026: MgAppsMenu (busca), MgDialogPesquisaProduto (pesquisa) e MgInputProdutoBarras (barras) trocados por MgInput. Em @components so restam os q-input que sao a base do MgInput, MgInputValor e MgInputData. App quasar/ (v1) abandonado, fora.
 <!-- SECTION:NOTES:END -->

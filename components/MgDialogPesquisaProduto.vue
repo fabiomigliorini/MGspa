@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
@@ -222,7 +223,7 @@ watch(
     <q-card class="column full-height" @keydown="aoTeclar">
       <q-card-section class="bg-primary text-white col-auto">
         <div class="row q-col-gutter-sm">
-          <q-input v-model="busca" outlined autofocus bg-color="white" label="Pesquisa" class="col">
+          <MgInput v-model="busca" outlined autofocus bg-color="white" label="Pesquisa" class="col">
             <template #append>
               <q-btn round flat icon="close" tabindex="-1" @click="busca = ''">
                 <q-tooltip>Limpar</q-tooltip>
@@ -234,7 +235,7 @@ watch(
                 <q-tooltip>Fechar</q-tooltip>
               </q-btn>
             </template>
-          </q-input>
+          </MgInput>
           <q-select
             v-model="ordem"
             outlined
