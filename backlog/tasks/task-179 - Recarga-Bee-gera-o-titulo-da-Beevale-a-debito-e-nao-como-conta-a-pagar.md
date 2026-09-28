@@ -1,11 +1,11 @@
 ---
 id: TASK-179
 title: 'Recarga Bee gera o titulo da Beevale a debito, e nao como conta a pagar'
-status: To Do
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-26 14:11'
-updated_date: '2026-09-28 21:52'
+updated_date: '2026-09-28 22:03'
 labels:
   - pessoas
 dependencies: []
@@ -28,10 +28,10 @@ Decisao (26/09/2026): o lote passa a gerar Duplicata A Pagar (927), a credito, n
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Lote novo gera o titulo da Beevale como Duplicata A Pagar (credito), sem Liquidacao na criacao
-- [ ] #2 Telas e mensagens da recarga deixam de chamar o titulo de adiantamento
-- [ ] #3 Lotes ja gerados em producao corrigidos junto com o Financeiro
-- [ ] #4 Movimento do titulo mostra quem gerou a recarga (Criado por no app de contas)
+- [x] #1 Lote novo gera o titulo da Beevale como Duplicata A Pagar (credito), sem Liquidacao na criacao
+- [x] #2 Telas e mensagens da recarga deixam de chamar o titulo de adiantamento
+- [x] #3 Lotes ja gerados em producao corrigidos junto com o Financeiro
+- [x] #4 Movimento do titulo mostra quem gerou a recarga (Criado por no app de contas)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -52,7 +52,7 @@ Por situacao:
 - Titulo ja baixado como recebimento: estornar a liquidacao antes e seguir como acima.
 - Financeiro ja compensou com titulo proprio: caso a caso com ele.
 
-26/09/2026 - Implementado (aguardando validacao, sem commit):
+26/09/2026 - Implementado (commit 9d26a4b54, no ar desde o go-live de 26/09/2026):
 - BeeRecargaService: CODTIPOTITULO_ADTO = 120 virou CODTIPOTITULO_PAGAR = 927 (Duplicata A Pagar), com o porque no comentario da constante. Portador e vencimento sem mudanca (nulo / hoje).
 - Texto "adiantamento" trocado por "titulo a pagar da Beevale" nos comentarios do BeeRecargaService/BeeRecarga, na mensagem do inativar, no dialogo de inativar e no tooltip do portador (RecargaDashboard) e no tooltip da observacao (DialogRecargaAvulsa). BeeRecargaService:85 e DialogRecargaAvulsa:340 falam do adiantamento ao COLABORADOR - nao mexidos.
 - DialogRecargaAvulsa: os 2 q-input (busca e observacao) viraram MgInput (regra do CLAUDE.md). O MgInput nao repassa slot default, entao o tooltip da observacao foi para uma div em volta do campo (unico q-input com tooltip dentro no projeto inteiro).
@@ -63,4 +63,6 @@ Por situacao:
 - BeeRecargaService::gerar: depois do TituloService::criar, carimba codusuariocriacao/codusuarioalteracao do movimento com o criador do titulo (quem gerou a recarga). DB::table e nao o model, para o Eloquent nao carimbar `alteracao`.
 - Teste com rollback (usuario 302245 simulado): implantacao saiu com codusuariocriacao = codusuarioalteracao = 302245 e alteracao = criacao.
 - Correcao de producao (criterio #3): via tinker nao ha usuario logado, entao o titulo novo e o movimento dele devem receber o codusuariocriacao do proprio lote (tblbeerecarga.codusuariocriacao), para continuar mostrando quem fez a recarga.
+
+28/09/2026 - Criterio #3 conferido em PRODUCAO pelo Fabio: o levantamento (lotes ativos com titulo tipo 120) voltou vazio. Nenhum lote ficou com o titulo a debito; nada a corrigir.
 <!-- SECTION:NOTES:END -->
