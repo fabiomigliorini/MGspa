@@ -7,6 +7,7 @@ import { ref, computed } from 'vue'
 import { useCargaStore } from 'src/stores/carga'
 import { corTalhao } from 'src/utils/coresTalhao'
 import PlantioMapaDialog from 'components/PlantioMapaDialog.vue'
+import MgInput from '@components/MgInput.vue'
 
 defineOptions({ inheritAttrs: false })
 
@@ -31,7 +32,7 @@ function onSelect(p) {
 </script>
 
 <template>
-  <q-input
+  <MgInput
     :model-value="rotulo"
     :label="label"
     outlined
@@ -50,7 +51,7 @@ function onSelect(p) {
         <q-tooltip>Escolher no mapa</q-tooltip>
       </q-btn>
     </template>
-  </q-input>
+  </MgInput>
 
   <PlantioMapaDialog
     v-model="dialog"

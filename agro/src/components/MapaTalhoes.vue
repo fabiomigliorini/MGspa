@@ -6,6 +6,7 @@ import '@geoman-io/leaflet-geoman-free'
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css'
 import area from '@turf/area'
 import { corTalhao } from 'src/utils/coresTalhao'
+import MgInput from '@components/MgInput.vue'
 
 // Mapa de talhões sobre imagem de satélite (Esri World Imagery, grátis, sem
 // chave). Dois modos:
@@ -342,7 +343,7 @@ onBeforeUnmount(() => {
       class="absolute-top row justify-start items-start q-gutter-sm q-pa-sm"
       style="z-index: 1000; pointer-events: none; margin-top: 0px; margin-left: 0px"
     >
-      <q-input
+      <MgInput
         v-model="termoBusca"
         outlined
         bg-color="white"
@@ -364,7 +365,7 @@ onBeforeUnmount(() => {
             <q-tooltip>Minha localização</q-tooltip>
           </q-btn>
         </template>
-      </q-input>
+      </MgInput>
     </div>
 
     <q-banner

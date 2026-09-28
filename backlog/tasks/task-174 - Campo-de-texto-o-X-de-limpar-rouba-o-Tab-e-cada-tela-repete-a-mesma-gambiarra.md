@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-24 23:21'
+updated_date: '2026-09-28 22:06'
 labels:
   - components
 dependencies: []
@@ -34,7 +34,7 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 - [ ] #2 Nenhum <q-input> cru sobrou em pessoas/src
 - [ ] #3 Nenhum <q-input> cru sobrou em contas/src
 - [ ] #4 Nenhum <q-input> cru sobrou em estoque/src
-- [ ] #5 Nenhum <q-input> cru sobrou em agro/src
+- [x] #5 Nenhum <q-input> cru sobrou em agro/src
 - [ ] #6 Nenhum <q-input> cru sobrou em notas/src
 - [ ] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
 - [x] #8 Regra do MgInput escrita no CLAUDE.md (campo novo e form que receber manutencao usam MgInput)
@@ -44,4 +44,6 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 
 <!-- SECTION:NOTES:BEGIN -->
 24/09/2026: criado o @components/MgInput.vue e a regra no CLAUDE.md. ValeDialog (negocios) ja migrado — foi o que levantou o caso. O MgInputFormatado tambem passou a montar em cima do MgInput (era q-input cru), entao os 21 lugares que usam ele ja herdam o X fora do Tab. Falta a varredura dos q-input crus, app por app.
+
+28/09/2026: agro migrado — 31 q-input em 16 arquivos. 29 viraram MgInput (troca 1:1). Os 2 type=number viraram MgInputValor: Tara do caminhao (decimals 0, suffix kg) e N do romaneio no filtro de cargas (decimals 0, sem milhar, alinhado a esquerda). SelectTalhao tambem virou MgInput: o campo readonly sai do Tab e o foco cai direto no botao do mapa (Enter abre).
 <!-- SECTION:NOTES:END -->

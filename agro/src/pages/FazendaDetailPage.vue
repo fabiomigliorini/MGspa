@@ -11,6 +11,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import { PALETA_TALHAO, corTalhao } from 'src/utils/coresTalhao'
+import MgInput from '@components/MgInput.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -336,7 +337,7 @@ onMounted(() => {
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-12">
-                  <q-input
+                  <MgInput
                     v-model="formFazenda.fazenda"
                     label="Nome da fazenda"
                     outlined
@@ -394,7 +395,7 @@ onMounted(() => {
                     />
                   </div>
                   <div class="col-xs-8 col-sm-6">
-                    <q-input
+                    <MgInput
                       v-model="formTalhao.talhao"
                       label="Nome"
                       outlined

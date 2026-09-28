@@ -9,6 +9,7 @@ import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
+import MgInput from '@components/MgInput.vue'
 
 // Card "Plano de NF". Especialista na operação triangular: sequência de notas a
 // emitir por carga, cada uma podendo referenciar a chave de outra (refNFe).
@@ -178,7 +179,7 @@ function excluirNota(nt) {
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="formNota.observacaonf"
                   label="Observação da NF"
                   type="textarea"

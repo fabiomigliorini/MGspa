@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import { useCulturaStore } from 'src/stores/cultura'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInput from '@components/MgInput.vue'
 
 const route = useRoute()
 const codcultura = Number(route.params.codcultura)
@@ -120,7 +121,7 @@ onMounted(async () => {
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-12">
-                  <q-input
+                  <MgInput
                     v-model="formVariedade.variedade"
                     label="Variedade"
                     outlined

@@ -4,6 +4,8 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import MgSelectEstado from '@components/MgSelectEstado.vue'
 import MgSelectVeiculoTipo from '@components/MgSelectVeiculoTipo.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 // Cadastro rápido de caminhão no pátio — cria um tblveiculo com o mínimo que o
 // backend exige (apelido, tipo, proprietário, placa, UF). Online apenas; offline
@@ -76,7 +78,7 @@ async function salvar() {
         <q-card-section class="q-pt-md">
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <q-input
+              <MgInput
                 v-model="form.placa"
                 label="Placa"
                 outlined
@@ -97,7 +99,7 @@ async function salvar() {
               />
             </div>
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="form.veiculo"
                 label="Apelido"
                 outlined
@@ -127,16 +129,10 @@ async function salvar() {
               />
             </div>
             <div class="col-12 col-sm-6">
-              <q-input v-model="form.renavam" label="Renavam" outlined mask="###########" />
+              <MgInput v-model="form.renavam" label="Renavam" outlined mask="###########" />
             </div>
             <div class="col-12 col-sm-6">
-              <q-input
-                v-model.number="form.tara"
-                label="Tara (kg)"
-                outlined
-                type="number"
-                min="0"
-              />
+              <MgInputValor v-model="form.tara" :decimals="0" :min="0" suffix="kg" label="Tara" />
             </div>
           </div>
         </q-card-section>

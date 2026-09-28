@@ -5,6 +5,7 @@ import { storeToRefs } from 'pinia'
 import { useFazendaStore } from 'src/stores/fazenda'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInput from '@components/MgInput.vue'
 
 const router = useRouter()
 
@@ -98,7 +99,7 @@ onMounted(() => store.carregarFazendas())
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-12">
-                  <q-input
+                  <MgInput
                     v-model="formFazenda.fazenda"
                     label="Nome da fazenda"
                     outlined

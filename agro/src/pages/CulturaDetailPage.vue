@@ -9,6 +9,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import CulturaTributosCard from 'src/components/CulturaTributosCard.vue'
+import MgInput from '@components/MgInput.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -281,7 +282,7 @@ onMounted(() => store.carregarCultura(codcultura))
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-12 col-sm-8">
-                  <q-input
+                  <MgInput
                     v-model="formCultura.cultura"
                     label="Cultura"
                     outlined
@@ -291,7 +292,7 @@ onMounted(() => store.carregarCultura(codcultura))
                   />
                 </div>
                 <div class="col-12 col-sm-4">
-                  <q-input
+                  <MgInput
                     v-model="formCultura.icone"
                     label="Emoji"
                     outlined
@@ -301,7 +302,7 @@ onMounted(() => store.carregarCultura(codcultura))
                     <template #prepend>
                       <span style="font-size: 20px">{{ formCultura.icone || '🌱' }}</span>
                     </template>
-                  </q-input>
+                  </MgInput>
                 </div>
                 <div class="col-12">
                   <div class="row q-gutter-xs">

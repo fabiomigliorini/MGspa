@@ -13,6 +13,8 @@ import MgInputData from '@components/MgInputData.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import { useCargaListagemStore } from 'src/stores/cargaListagem'
 import { SENTIDOS, ETAPA_META } from 'src/utils/carga'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const store = useCargaListagemStore()
 const { filtros, safras, culturas, unidades, contratos, plantios, carregandoPlantios } =
@@ -226,13 +228,14 @@ onMounted(() => {
 
   <div class="q-pa-md q-gutter-y-md">
     <div class="text-caption text-grey-7">Caminhão</div>
-    <q-input v-model="filtros.placa" outlined clearable label="Placa" />
-    <q-input v-model="filtros.placacarreta" outlined clearable label="Carreta" />
-    <q-input v-model="filtros.motorista" outlined clearable label="Motorista" />
-    <q-input
-      v-model.number="filtros.codcarga"
-      type="number"
-      outlined
+    <MgInput v-model="filtros.placa" outlined clearable label="Placa" />
+    <MgInput v-model="filtros.placacarreta" outlined clearable label="Carreta" />
+    <MgInput v-model="filtros.motorista" outlined clearable label="Motorista" />
+    <MgInputValor
+      v-model="filtros.codcarga"
+      :decimals="0"
+      :grouping="false"
+      align="left"
       clearable
       label="Nº do romaneio"
     />
