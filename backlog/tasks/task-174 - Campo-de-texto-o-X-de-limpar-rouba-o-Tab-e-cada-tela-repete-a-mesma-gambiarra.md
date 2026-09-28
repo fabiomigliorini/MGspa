@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-28 22:06'
+updated_date: '2026-09-28 22:08'
 labels:
   - components
 dependencies: []
@@ -30,7 +30,7 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Nenhum <q-input> cru sobrou em negocios/src (trocado por MgInput)
+- [x] #1 Nenhum <q-input> cru sobrou em negocios/src (trocado por MgInput)
 - [ ] #2 Nenhum <q-input> cru sobrou em pessoas/src
 - [ ] #3 Nenhum <q-input> cru sobrou em contas/src
 - [ ] #4 Nenhum <q-input> cru sobrou em estoque/src
@@ -46,4 +46,6 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 24/09/2026: criado o @components/MgInput.vue e a regra no CLAUDE.md. ValeDialog (negocios) ja migrado — foi o que levantou o caso. O MgInputFormatado tambem passou a montar em cima do MgInput (era q-input cru), entao os 21 lugares que usam ele ja herdam o X fora do Tab. Falta a varredura dos q-input crus, app por app.
 
 28/09/2026: agro migrado — 31 q-input em 16 arquivos. 29 viraram MgInput (troca 1:1). Os 2 type=number viraram MgInputValor: Tara do caminhao (decimals 0, suffix kg) e N do romaneio no filtro de cargas (decimals 0, sem milhar, alinhado a esquerda). SelectTalhao tambem virou MgInput: o campo readonly sai do Tab e o foco cai direto no botao do mapa (Enter abre).
+
+28/09/2026: negocios migrado — 43 q-input em 19 arquivos. Numericos viraram MgInputValor: quantidade da devolucao (3 casas, teto = disponivel), codnegocio da confissao, copias da comanda e os filtros ID Woo, # Negocio, # Liquidacao e N do negocio dos vales emitidos (sem milhar). Removido um <q-input /> vazio perdido no dialogo de editar item (ListagemProdutos), que desenhava uma caixa sem funcao e parava no Tab.
 <!-- SECTION:NOTES:END -->

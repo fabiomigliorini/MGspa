@@ -6,6 +6,7 @@ import SelectFilial from 'src/components/selects/SelectFilial.vue'
 import moment from 'moment/min/moment-with-locales'
 import { api } from 'boot/axios'
 import qrcode from 'qrcode'
+import MgInput from '@components/MgInput.vue'
 moment.locale('pt-br')
 
 const sSinc = sincronizacaoStore()
@@ -301,7 +302,7 @@ onMounted(() => {
             />
 
             <!-- //input apelido -->
-            <q-input
+            <MgInput
               v-model="apelido"
               ref="inputApelido"
               outlined
@@ -365,7 +366,7 @@ onMounted(() => {
             />
 
             <!-- //input apelido -->
-            <q-input
+            <MgInput
               v-model="apelido"
               ref="inputApelido"
               outlined

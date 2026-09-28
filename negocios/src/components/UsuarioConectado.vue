@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useAuthStore } from 'stores/auth'
 import { useAuth } from 'src/composables/useAuth'
 import MgUserMenu from '@components/MgUserMenu.vue'
+import MgInput from '@components/MgInput.vue'
 
 const store = useAuthStore()
 const auth = useAuth()
@@ -36,7 +37,7 @@ onMounted(() => {
       <q-form @submit="login()">
         <q-card-section>
           <div class="q-gutter-md">
-            <q-input
+            <MgInput
               autofocus
               outlined
               v-model="usuario"
@@ -44,7 +45,7 @@ onMounted(() => {
               :rules="[(val) => (val && val.length > 0) || 'Obrigatório']"
             />
 
-            <q-input
+            <MgInput
               outlined
               ref="inputSenha"
               v-model="senha"
@@ -59,7 +60,7 @@ onMounted(() => {
                   @click="togglePassword()"
                 />
               </template>
-            </q-input>
+            </MgInput>
           </div>
         </q-card-section>
         <q-card-actions align="right">

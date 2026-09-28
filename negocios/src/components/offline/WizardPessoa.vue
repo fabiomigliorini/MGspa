@@ -22,6 +22,7 @@ import { negocioStore } from 'src/stores/negocio'
 import { api } from 'src/boot/axios'
 import axios from 'axios'
 import emitter from 'src/utils/emitter'
+import MgInput from '@components/MgInput.vue'
 
 const sSinc = sincronizacaoStore()
 const sNegocio = negocioStore()
@@ -630,7 +631,7 @@ watch(
         <q-card-section class="q-pa-none" :style="step != 1 ? 'margin-bottom: -48px' : ''">
           <q-stepper flat v-model="step" ref="stepper" color="primary" animated>
             <q-step :name="1" title="DOC" icon="settings" :done="step > 1">
-              <q-input
+              <MgInput
                 outlined
                 autofocus
                 label="Pesquisa"
@@ -662,7 +663,7 @@ watch(
                   />
                   <!-- <q-icon name="search" /> -->
                 </template>
-              </q-input>
+              </MgInput>
             </q-step>
             <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2" />
             <q-step :name="3" title="OK" icon="create_new_folder" :done="step > 2" />
@@ -795,7 +796,7 @@ watch(
             </template>
             <template v-else>
               <div class="row q-col-gutter-md q-mb-md">
-                <q-input
+                <MgInput
                   class="col-md-3 col-sm-6 col-xs-12"
                   outlined
                   v-model="pessoa.cnpj"
@@ -805,7 +806,7 @@ watch(
                   v-if="pessoa.fisica"
                   inputmode="numeric"
                 />
-                <q-input
+                <MgInput
                   class="col-md-3 col-sm-6 col-xs-12"
                   outlined
                   v-model="pessoa.cnpj"
@@ -818,7 +819,7 @@ watch(
                   v-else
                   inputmode="numeric"
                 />
-                <q-input
+                <MgInput
                   class="col-md-3 col-sm-6 col-xs-12"
                   outlined
                   v-model="pessoa.ie"
@@ -859,7 +860,7 @@ watch(
               </div>
               <div class="row q-col-gutter-md q-mb-md">
                 <template v-for="(e, i) in pessoa.emails" :key="i">
-                  <q-input
+                  <MgInput
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
                     v-model="pessoa.emails[i]"
@@ -886,12 +887,12 @@ watch(
                         tabindex="-1"
                       />
                     </template>
-                  </q-input>
+                  </MgInput>
                 </template>
               </div>
               <div class="row q-col-gutter-md q-mb-md">
                 <template v-for="(e, i) in pessoa.telefones" :key="i">
-                  <q-input
+                  <MgInput
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
                     v-model="pessoa.telefones[i].numero"
@@ -930,13 +931,13 @@ watch(
                         tabindex="-1"
                       />
                     </template>
-                  </q-input>
+                  </MgInput>
                 </template>
               </div>
 
               <template v-for="(e, i) in pessoa.enderecos" :key="i">
                 <div class="row q-col-gutter-md q-mb-md">
-                  <q-input
+                  <MgInput
                     class="col-md-3 col-sm-3 col-xs-12"
                     outlined
                     v-model="pessoa.enderecos[i].cep"
@@ -946,7 +947,7 @@ watch(
                     @update:model-value="consultarCep(i)"
                     inputmode="numeric"
                   >
-                  </q-input>
+                  </MgInput>
                   <MgInputFormatado
                     class="col-md-6 col-sm-6 col-xs-8"
                     outlined
@@ -972,7 +973,7 @@ watch(
                       />
                     </template>
                   </MgInputFormatado>
-                  <q-input
+                  <MgInput
                     class="col-md-3 col-sm-3 col-xs-4"
                     outlined
                     v-model="pessoa.enderecos[i].numero"
@@ -985,7 +986,7 @@ watch(
                     maxlength="10"
                     inputmode="tel"
                   >
-                  </q-input>
+                  </MgInput>
                   <MgInputFormatado
                     class="col-md-3 col-sm-3 col-xs-12"
                     outlined

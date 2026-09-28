@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import SelectFilial from 'components/selects/SelectFilial.vue'
 import SelectSetor from 'src/components/selects/SelectSetor.vue'
+import MgInput from '@components/MgInput.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -46,7 +47,7 @@ const salvar = () => {
           {{ titulo }}
         </q-card-section>
         <q-card-section class="q-gutter-md">
-          <q-input outlined v-model="model.apelido" autofocus label="Apelido" />
+          <MgInput outlined v-model="model.apelido" autofocus label="Apelido" />
           <select-filial
             outlined
             v-model="model.codfilial"
@@ -60,7 +61,7 @@ const salvar = () => {
             :rules="[(val) => !!val || 'Setor é obrigatório']"
             hide-bottom-space
           />
-          <q-input
+          <MgInput
             outlined
             autogrow
             v-model="model.observacoes"

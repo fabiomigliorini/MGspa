@@ -32,13 +32,11 @@ const confissaoRatio = ref('1:2')
               pasta="confissao"
               @upload="dialogConfissao = false"
             />
-            <q-input
-              type="number"
-              min="0"
+            <MgInputValor
               class="q-mt-md"
-              input-class="text-right"
-              step="1"
-              outlined
+              :decimals="0"
+              :min="0"
+              :grouping="false"
               v-model="sConfissao.codnegocio"
               :disable="sConfissao.encontrados == 1"
             />

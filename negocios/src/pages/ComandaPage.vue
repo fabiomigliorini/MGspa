@@ -5,6 +5,7 @@ import { api } from 'src/boot/axios'
 import { negocioStore } from 'stores/negocio'
 import SelectImpressora from 'components/selects/SelectImpressora.vue'
 import SelectPessoa from 'src/components/selects/SelectPessoa.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const sNegocio = negocioStore()
 
@@ -70,14 +71,11 @@ onMounted(() => {
                 somente-ativos
                 :rules="[(val) => !!val || 'Selecione um vendedor!']"
               />
-              <q-input
-                outlined
+              <MgInputValor
                 label="Cópias"
                 v-model="model.copias"
-                type="number"
-                step="1"
-                min="1"
-                input-class="text-right"
+                :decimals="0"
+                :min="1"
                 :rules="[(val) => val >= 1 || 'Informe a quantidade de cópias!']"
               />
             </div>

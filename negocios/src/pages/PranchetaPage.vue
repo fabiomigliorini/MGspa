@@ -6,6 +6,7 @@ import { uid, Dialog, Notify } from 'quasar'
 import { api } from 'src/boot/axios'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInput from '@components/MgInput.vue'
 
 const sProduto = produtoStore()
 const sSinc = sincronizacaoStore()
@@ -644,14 +645,14 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
                           map-options
                           @update:model-value="alterarCategoriaPai"
                         />
-                        <q-input
+                        <MgInput
                           v-model="categoria.categoria"
                           label="Categoria"
                           autofocus
                           outlined
                         />
-                        <q-input v-model="categoria.imagem" label="Imagem" outlined />
-                        <q-input
+                        <MgInput v-model="categoria.imagem" label="Imagem" outlined />
+                        <MgInput
                           v-model="categoria.observacoes"
                           label="Observações"
                           outlined
@@ -721,11 +722,11 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
                           map-options
                           @update:model-value="alterarCategoriaProduto"
                         />
-                        <q-input v-model="produto.barras" label="Barras" disable outlined />
-                        <q-input v-model="produto.produto" label="Produto" disable outlined />
+                        <MgInput v-model="produto.barras" label="Barras" disable outlined />
+                        <MgInput v-model="produto.produto" label="Produto" disable outlined />
                         <MgInputValor v-model="produto.preco" label="Preço" prefix="R$" readonly />
-                        <q-input v-model="produto.descricao" autofocus label="Descrição" outlined />
-                        <q-input
+                        <MgInput v-model="produto.descricao" autofocus label="Descrição" outlined />
+                        <MgInput
                           v-model="produto.observacoes"
                           label="Observações"
                           outlined

@@ -4,6 +4,7 @@ import { wooStore } from 'stores/woo'
 import { Notify } from 'quasar'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgInput from '@components/MgInput.vue'
 
 const sWoo = wooStore()
 
@@ -94,16 +95,13 @@ const buscarPorAlteracao = async () => {
     <!-- ID -->
     <q-item>
       <q-item-section>
-        <q-input
-          outlined
+        <MgInputValor
           v-model="sWoo.filtro.id"
-          input-class="text-right"
+          :decimals="0"
+          :min="1"
+          :grouping="false"
           label="ID Pedido Woo"
-          type="number"
-          step="1"
-          min="1"
-        >
-        </q-input>
+        />
       </q-item-section>
     </q-item>
 
@@ -136,14 +134,14 @@ const buscarPorAlteracao = async () => {
     <!-- NOME -->
     <q-item>
       <q-item-section>
-        <q-input
+        <MgInput
           outlined
           v-model="sWoo.filtro.nome"
           input-class="text-left"
           label="Cliente"
           type="text"
         >
-        </q-input>
+        </MgInput>
       </q-item-section>
     </q-item>
 

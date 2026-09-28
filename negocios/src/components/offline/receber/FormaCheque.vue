@@ -8,6 +8,7 @@ import { negocioStore } from 'stores/negocio'
 import { formataData } from '@components/formatters'
 import MgInputData from '@components/MgInputData.vue'
 import { parseCmc7 } from '../../../utils/cmc7.js'
+import MgInput from '@components/MgInput.vue'
 
 const emit = defineEmits(['concluido'])
 
@@ -135,7 +136,7 @@ defineExpose({ tecla })
     </q-banner>
 
     <template v-else-if="etapa === 'cmc7'">
-      <q-input
+      <MgInput
         v-model="cmc7Texto"
         label="CMC7 (passe o cheque no leitor)"
         outlined
@@ -164,8 +165,8 @@ defineExpose({ tecla })
       <div class="text-caption text-grey-7 q-mb-sm">
         Cheque nº {{ cmc7.numero }} · bom para {{ formataData(vencimento) }}
       </div>
-      <q-input v-model="cnpj" label="CPF/CNPJ do emitente" outlined autofocus class="q-mb-md" />
-      <q-input ref="nomeRef" v-model="emitente" label="Nome do emitente" outlined class="q-mb-sm" />
+      <MgInput v-model="cnpj" label="CPF/CNPJ do emitente" outlined autofocus class="q-mb-md" />
+      <MgInput ref="nomeRef" v-model="emitente" label="Nome do emitente" outlined class="q-mb-sm" />
       <div class="text-caption text-grey-7">Enter lança o cheque</div>
     </template>
   </div>
