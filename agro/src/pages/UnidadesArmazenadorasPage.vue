@@ -6,6 +6,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInput from '@components/MgInput.vue'
 
 // Tela do domínio unidade armazenadora — tudo vem da store. TIPOS/meta é
 // apresentação (ícone/cor) e fica na tela.
@@ -89,7 +90,7 @@ onMounted(store.carregar)
           <q-card-section class="q-pt-md">
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="form.unidadearmazenadora"
                   label="Nome"
                   outlined
@@ -125,7 +126,7 @@ onMounted(store.carregar)
                 <MgSelectPessoa v-model="form.codpessoa" label="Dono (armazém de terceiro)" clearable />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="form.observacao"
                   label="Observação"
                   type="textarea"

@@ -2096,7 +2096,11 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async Devolucao(arrDevolucao) {
-      const postDevolucao = await sSinc.negocioDevolucao(this.negocio.codnegocio, arrDevolucao)
+      const postDevolucao = await sSinc.negocioDevolucao(
+        this.negocio.codnegocio,
+        arrDevolucao,
+        this.padrao.impressora,
+      )
 
       return postDevolucao
     },

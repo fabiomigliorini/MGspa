@@ -899,11 +899,13 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
-    async negocioDevolucao(codnegocio, arrDevolucao) {
+    async negocioDevolucao(codnegocio, arrDevolucao, impressora) {
       try {
+        // com impressora, o backend imprime sozinho o vale de credito da devolucao
         const ret = await api.post('/v1/pdv/negocio/' + codnegocio + '/devolucao', {
           pdv: this.pdv.uuid,
           devolucao: arrDevolucao,
+          impressora,
         })
         return ret
       } catch (error) {

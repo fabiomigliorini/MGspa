@@ -5,6 +5,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectCor from '@components/MgSelectCor.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
+import MgInput from '@components/MgInput.vue'
 
 // Wizard de plantar talhão numa safra. Três passos:
 //  1) escolher a fazenda (grid de cards com mini-mapa dos talhões base)
@@ -294,7 +295,7 @@ const mapaKey = computed(() => form.value.codplantio || `base-${form.value.codta
                     />
                   </div>
                   <div class="col-xs-4 col-sm-3">
-                    <q-input
+                    <MgInput
                       v-model="form.talhao"
                       label="Talhão (nome / número)"
                       outlined

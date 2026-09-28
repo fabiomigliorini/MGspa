@@ -6,6 +6,7 @@ import { useClassificacaoStore } from 'src/stores/classificacao'
 import { useCulturaStore } from 'src/stores/cultura'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInput from '@components/MgInput.vue'
 
 // Parâmetros de classificação da CULTURA — cadastro único do desconto. Cada
 // parâmetro carrega a fórmula inteira; não há tabela intermediária. A `ordem`
@@ -190,7 +191,7 @@ onMounted(async () => {
             <q-card-section class="q-pt-md">
               <div class="row q-col-gutter-md">
                 <div class="col-8">
-                  <q-input
+                  <MgInput
                     v-model="formParametro.parametroclassificacao"
                     label="Parâmetro"
                     autofocus

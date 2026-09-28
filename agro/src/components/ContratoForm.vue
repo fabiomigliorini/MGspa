@@ -4,6 +4,7 @@ import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgInput from '@components/MgInput.vue'
 
 // Form único de novo/editar contrato (recebe :cad). Cultura e safra não
 // aparecem: o contrato vive dentro da safra, então o pai força esse vínculo
@@ -136,7 +137,7 @@ async function salvar() {
 
           <!-- NUMERO -->
           <div class="col-12 col-sm-3">
-            <q-input
+            <MgInput
               v-model="cad.form.contrato"
               label="Nº Nosso"
               outlined
@@ -182,7 +183,7 @@ async function salvar() {
 
           <!-- LOCAL -->
           <div class="col-12 col-sm-3">
-            <q-input v-model="cad.form.localentrega" label="Local / FOB-CIF" outlined />
+            <MgInput v-model="cad.form.localentrega" label="Local / FOB-CIF" outlined />
           </div>
 
           <!-- CONTRAPARTE -->
@@ -198,7 +199,7 @@ async function salvar() {
 
           <!-- NUMERO DA CONTRAPARTE -->
           <div class="col-12 col-sm-3">
-            <q-input v-model="cad.form.numerocontraparte" label="Nº Contraparte" outlined />
+            <MgInput v-model="cad.form.numerocontraparte" label="Nº Contraparte" outlined />
           </div>
 
           <!-- CORRETORA -->
@@ -208,7 +209,7 @@ async function salvar() {
 
           <!-- NUMERO DA CORRETORA -->
           <div class="col-12 col-sm-3">
-            <q-input v-model="cad.form.numerocorretora" label="Nº Corretora" outlined />
+            <MgInput v-model="cad.form.numerocorretora" label="Nº Corretora" outlined />
           </div>
 
           <template v-if="cad.form.codpessoacorretora">
@@ -257,7 +258,7 @@ async function salvar() {
 
           <!-- NUMERO DA COOPERATIVA -->
           <div class="col-12 col-sm-3">
-            <q-input v-model="cad.form.numerocooperativa" label="Nº Cooperativa" outlined />
+            <MgInput v-model="cad.form.numerocooperativa" label="Nº Cooperativa" outlined />
           </div>
 
           <!-- BARTER (settlement em insumos: troca por insumos) -->
@@ -271,7 +272,7 @@ async function salvar() {
 
           <!-- OBSERVACOES -->
           <div class="col-12">
-            <q-input
+            <MgInput
               v-model="cad.form.observacao"
               label="Observações"
               type="textarea"

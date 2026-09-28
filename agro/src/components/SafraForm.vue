@@ -2,6 +2,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import RadioCultura from 'components/RadioCultura.vue'
+import MgInput from '@components/MgInput.vue'
 
 // Formulário único de safra — serve tanto pra criar quanto pra editar. Recebe o
 // objeto reativo do form (da store do domínio) e a lista de safras já
@@ -138,7 +139,7 @@ onMounted(() => {
     </div>
 
     <div class="col-12">
-      <q-input
+      <MgInput
         :model-value="form.safra"
         label="Descrição"
         hint="Gerada automaticamente — pode ajustar"

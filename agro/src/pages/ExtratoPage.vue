@@ -3,6 +3,7 @@ import { onMounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useExtratoStore } from 'src/stores/extrato'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgInput from '@components/MgInput.vue'
 
 // Store da tela Estoque & Extrato: única fonte dos dados. A página só lê via
 // storeToRefs e chama as actions.
@@ -290,7 +291,7 @@ onMounted(async () => {
                 </q-banner>
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="form.observacao"
                   label="Observação"
                   type="textarea"

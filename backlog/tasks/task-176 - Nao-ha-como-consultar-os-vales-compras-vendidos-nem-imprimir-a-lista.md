@@ -1,11 +1,11 @@
 ---
 id: TASK-176
 title: Nao ha como consultar os vales compras vendidos nem imprimir a lista
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-25 16:28'
-updated_date: '2026-09-26 15:27'
+updated_date: '2026-09-28 21:59'
 labels:
   - negocios
   - api
@@ -34,7 +34,7 @@ Implementado endpoint paginado com filtros por vale/modelo, favorecido, situacao
 
 Fonte dos vales vendidos: somente `tblnegociovale`; `tblnegocio` e consultada para situacao/data, e `tblvalemodelo`/`tblpessoa` para descricao e favorecido. Sem leitura de tabela transacional legada. Os registros convertidos pelo milestone 9 aparecerao automaticamente.
 
-Pendente: validacao manual no navegador da listagem, filtros, atalhos, navegacao ao negocio e PDF.
+Validado pelo Fabio em 28/09/2026: listagem, filtros, atalhos, navegacao ao negocio e PDF. No ar desde o go-live de 26/09/2026.
 
 Ajuste solicitado: os filtros da página de emitidos ficam na drawer esquerda, no padrão da listagem de modelos de vale.
 
