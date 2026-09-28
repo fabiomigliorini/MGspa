@@ -157,6 +157,6 @@ A troca é 1:1: o `MgInput` repassa os atributos (`label`, `type`, `mask`, `maxl
 Cada tipo de campo tem o seu: valor/número é `MgInputValor`, data/timestamp é `MgInputData`,
 seleção é o `MgSelectXxx` do domínio. Componente do Quasar cru só quando nenhum deles cobre.
 
-**Campo novo nasce em `MgInput`.** E **todo formulário que receber manutenção troca os
-`q-input` que ainda estiverem nele**, mesmo os que não são o motivo da mexida — é assim que a
-varredura acaba. O que sobra está na **TASK-174**.
+**Campo novo nasce em `MgInput`.** A varredura terminou na **TASK-174** (28/09/2026): não sobrou
+`q-input` cru nos apps nem em `@components` — os únicos são os que servem de base ao próprio
+`MgInput`, `MgInputValor` e `MgInputData`. `<q-input>` que aparecer num diff é regressão.
