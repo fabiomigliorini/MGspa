@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -304,7 +305,7 @@ const postEmail = async (email, codpessoaemail, codverificacao) => {
         <q-separator inset />
 
         <q-card-section>
-          <q-input
+          <MgInput
             outlined
             v-model="modelEmail.email"
             autofocus

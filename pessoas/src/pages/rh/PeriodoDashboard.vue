@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
@@ -426,7 +427,7 @@ watch(tab, (novoTab) => {
               />
             </div>
             <div class="col-8">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelPeriodo.observacoes"
                 label="Observações"
@@ -631,10 +632,9 @@ watch(tab, (novoTab) => {
               <q-card-section v-else class="text-center q-py-sm">
                 <div class="text-caption text-grey q-mb-xs">Dias Úteis</div>
                 <div class="row items-center justify-center no-wrap q-gutter-xs">
-                  <q-input
-                    v-model.number="modelDiasUteis"
-                    type="number"
-                    outlined
+                  <MgInputValor
+                    v-model="modelDiasUteis"
+                    :decimals="0"
                     style="max-width: 70px"
                     input-class="text-center"
                     @keyup.enter="salvarDiasUteis()"

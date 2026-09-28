@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRouter } from 'vue-router'
@@ -161,7 +162,7 @@ onMounted(() => {
           </q-list>
         </q-card>
         <div class="q-pa-md q-gutter-md">
-          <q-input
+          <MgInput
             outlined
             v-model="sPessoa.filtroGrupoPesquisa.nome"
             label="Nome"

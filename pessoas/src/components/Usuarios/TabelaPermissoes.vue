@@ -25,7 +25,7 @@
           </q-td>
         </template>
         <template v-slot:top-right>
-          <q-input
+          <MgInput
             v-if="show_filter"
             filled
             borderless
@@ -37,7 +37,7 @@
             <template v-slot:append>
               <q-icon name="search" />
             </template>
-          </q-input>
+          </MgInput>
           <q-btn class="q-ml-sm" icon="filter_list" @click="show_filter = !show_filter" flat />
         </template>
 
@@ -53,6 +53,7 @@
 </template>
 
 <script>
+import MgInput from '@components/MgInput.vue'
 import { defineComponent, ref } from 'vue'
 
 const data = [
@@ -78,6 +79,9 @@ const model = ref([])
 
 export default defineComponent({
   name: 'TabelaPermissoes',
+  components: {
+    MgInput,
+  },
   setup() {
     return {
       data,

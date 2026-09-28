@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -166,7 +167,7 @@ const submit = () => {
               class="q-mb-md"
             />
 
-            <q-input
+            <MgInput
               outlined
               v-model="modelRegistroSpc.valor"
               label="Valor"
@@ -176,7 +177,7 @@ const submit = () => {
               ]"
             />
 
-            <q-input
+            <MgInput
               outlined
               v-model="modelRegistroSpc.observacoes"
               label="Observações"

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { defineAsyncComponent, ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { estadoCivilStore } from 'src/stores/estado-civil'
@@ -261,7 +262,7 @@ onMounted(() => {
           </q-card-section>
 
           <q-card-section class="q-pt-none">
-            <q-input
+            <MgInput
               outlined
               v-model="model.estadocivil"
               label="Descrição"
@@ -293,11 +294,11 @@ onMounted(() => {
           </q-list>
         </q-card>
         <div class="q-pa-md q-gutter-md">
-          <q-input outlined v-model="filtro.estadocivil" label="Buscar" @change="buscar" clearable>
+          <MgInput outlined v-model="filtro.estadocivil" label="Buscar" @change="buscar" clearable>
             <template v-slot:prepend>
               <q-icon name="search" />
             </template>
-          </q-input>
+          </MgInput>
 
           <q-select
             outlined

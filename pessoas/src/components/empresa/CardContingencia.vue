@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import MgInputData from '@components/MgInputData.vue'
@@ -181,7 +183,7 @@ const trocarModoEmissao = (valor) => {
       @update:model-value="salvarDataContingencia"
     />
 
-    <q-input
+    <MgInput
       outlined
       v-model="sEmpresa.item.contingenciajustificativa"
       label="Justificativa de Contingência"
@@ -203,10 +205,9 @@ const trocarModoEmissao = (valor) => {
       erro), e volta ao normal após 20 dentro dela.
     </div>
 
-    <q-input
-      v-model.number="sEmpresa.item.contingenciatolerancia"
-      outlined
-      type="number"
+    <MgInputValor
+      v-model="sEmpresa.item.contingenciatolerancia"
+      :decimals="0"
       label="Tolerância (segundos)"
       :disable="!podeContingencia"
       :loading="salvandoContingencia"

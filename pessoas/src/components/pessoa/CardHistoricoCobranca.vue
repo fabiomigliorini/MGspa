@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted, watch } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -169,7 +170,7 @@ watch(
         <q-separator inset />
 
         <q-card-section>
-          <q-input
+          <MgInput
             outlined
             v-model="modelCobrancaHistorico.historico"
             autofocus

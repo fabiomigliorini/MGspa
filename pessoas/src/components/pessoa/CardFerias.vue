@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { formataDataAbreviada, formataMesAno } from '@components/formatters'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
@@ -388,63 +390,55 @@ defineExpose({ nova })
           <div class="row q-col-gutter-md">
             <!-- DIAS -->
             <div class="col-3">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="model.dias"
+                :decimals="0"
+                :grouping="false"
                 label="Dias"
                 @change="calculaDiasGozo()"
                 autofocus
-                type="number"
-                step="1"
-                input-class="text-right"
                 inputmode="numeric"
-                min="1"
-                max="50"
+                :min="1"
+                :max="50"
                 :rules="[validaDias]"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="model.diasabono"
+                :decimals="0"
+                :grouping="false"
                 label="Abono"
                 @change="calculaDiasGozo()"
-                type="number"
-                step="1"
-                input-class="text-right"
                 inputmode="numeric"
-                min="0"
+                :min="0"
                 :max="model.dias - model.diasdescontados"
               />
             </div>
             <div class="col-3">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="model.diasdescontados"
+                :decimals="0"
+                :grouping="false"
                 label="Desconto"
                 @change="calculaDiasGozo()"
-                type="number"
-                step="1"
-                input-class="text-right"
                 inputmode="numeric"
-                min="0"
+                :min="0"
                 :max="model.dias - model.diasabono"
               />
             </div>
 
             <div class="col-3">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="model.diasgozo"
+                :decimals="0"
+                :grouping="false"
                 label="Dias Gozo"
                 :rules="[
                   (val) =>
                     (val !== null && val !== '' && val !== undefined) || 'Dias Gozo Obrigatório',
                 ]"
                 @change="calculaDiasGozo()"
-                type="number"
-                step="1"
-                input-class="text-right"
                 inputmode="numeric"
                 :min="model.dias - model.diasabono - model.diasdescontados"
                 :max="model.dias - model.diasabono - model.diasdescontados"
@@ -495,7 +489,7 @@ defineExpose({ nova })
             </div>
           </div>
 
-          <q-input
+          <MgInput
             outlined
             autogrow
             bordeless

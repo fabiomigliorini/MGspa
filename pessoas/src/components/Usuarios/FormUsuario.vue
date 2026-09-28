@@ -37,7 +37,7 @@
           </q-item-section>
           <q-item-section top>
             <q-item-label class="row">
-              <q-input
+              <MgInput
                 class="col-6 q-pr-md"
                 outlined
                 v-model="model.usuario"
@@ -131,6 +131,7 @@
 </template>
 
 <script>
+import MgInput from '@components/MgInput.vue'
 import { defineComponent, defineAsyncComponent } from 'vue'
 import { ref } from 'vue'
 import { usuarioStore } from 'stores/usuario'
@@ -144,6 +145,7 @@ export default defineComponent({
   name: 'FormUsuario',
 
   components: {
+    MgInput,
     SelectFilial: defineAsyncComponent(() => import('@components/MgSelectFilial.vue')),
     SelectPortador: defineAsyncComponent(() => import('@components/MgSelectPortador.vue')),
     SelectPessoaUsuario: defineAsyncComponent(

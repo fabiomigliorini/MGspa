@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -47,7 +48,7 @@ defineExpose({ abrirNovo, editar })
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="model.cargo"
                 label="Nome do Cargo"

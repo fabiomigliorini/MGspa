@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataCodigo, formataTimestamp } from '@components/formatters'
 import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
@@ -252,7 +253,7 @@ onMounted(() => {
                     </q-card-section>
 
                     <q-card-section class="q-pt-none">
-                      <q-input
+                      <MgInput
                         v-model="filtroFilial"
                         outlined
                         dense
@@ -264,7 +265,7 @@ onMounted(() => {
                         <template v-slot:prepend>
                           <q-icon name="search" />
                         </template>
-                      </q-input>
+                      </MgInput>
                     </q-card-section>
 
                     <q-inner-loading :showing="sEmpresa.loadingFiliais">

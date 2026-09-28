@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { metaStore } from 'src/stores/meta'
@@ -590,18 +591,15 @@ const removerFixo = (fixo) => {
               <MgInputValor v-model="modelFixo.valor" label="Valor" :min="0" />
             </div>
             <div class="col-6">
-              <q-input
-                outlined
-                v-model.number="modelFixo.quantidade"
+              <MgInputValor
+                v-model="modelFixo.quantidade"
+                :decimals="2"
                 label="Quantidade"
-                type="number"
-                step="1"
-                min="0"
-                input-class="text-right"
+                :min="0"
               />
             </div>
             <div class="col-12">
-              <q-input outlined v-model="modelFixo.descricao" label="Descricao" />
+              <MgInput outlined v-model="modelFixo.descricao" label="Descricao" />
             </div>
             <div class="col-6">
               <MgInputData v-model="modelFixo.datainicial" label="Data Inicial" type="date" />

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
@@ -297,14 +298,14 @@ watch(
             <q-separator inset />
 
             <q-card-section class="q-gutter-md">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelGrupoUsuario.grupousuario"
                 label="Grupo Usuário"
                 :rules="[(val) => (val && val.length > 0) || 'Campo obrigatório']"
               />
 
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelGrupoUsuario.observacoes"
                 label="Observações"

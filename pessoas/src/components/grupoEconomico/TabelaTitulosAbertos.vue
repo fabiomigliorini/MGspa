@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch, onMounted } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -158,7 +159,7 @@ onMounted(() => {
           label="Filtrar por pessoa"
           v-model="modelPessoas.codpessoa"
         />
-        <q-input
+        <MgInput
           v-if="showFilter"
           outlined
           dense
@@ -170,7 +171,7 @@ onMounted(() => {
           <template v-slot:append>
             <q-icon name="search" />
           </template>
-        </q-input>
+        </MgInput>
         <q-btn-group flat>
           <q-btn flat icon="filter_list" @click="showFilter = !showFilter" />
           <q-btn flat icon="list" @click="abrirTitulosContas">

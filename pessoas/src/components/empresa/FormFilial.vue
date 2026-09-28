@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -53,7 +55,7 @@ defineExpose({
 
 <template>
   <q-form ref="formRef" @submit.prevent="submit" class="q-gutter-sm">
-    <q-input
+    <MgInput
       outlined
       v-model="model.filial"
       label="Nome da Filial *"
@@ -61,7 +63,7 @@ defineExpose({
       lazy-rules
     />
 
-    <q-input outlined v-model.number="model.codpessoa" label="Código Pessoa" type="number" />
+    <MgInputValor v-model="model.codpessoa" :decimals="0" :grouping="false" label="Código Pessoa" />
 
     <q-select
       outlined
@@ -82,22 +84,27 @@ defineExpose({
       map-options
     />
 
-    <q-input outlined v-model.number="model.nfeserie" label="Série NFe" type="number" />
+    <MgInputValor v-model="model.nfeserie" :decimals="0" :grouping="false" label="Série NFe" />
 
     <div class="row q-gutter-sm">
       <q-toggle v-model="model.emitenfe" label="Emite NFe" />
       <q-toggle v-model="model.dfe" label="DF-e" />
     </div>
 
-    <q-input outlined v-model="model.tokennfce" label="Token NFCe" />
+    <MgInput outlined v-model="model.tokennfce" label="Token NFCe" />
 
-    <q-input outlined v-model="model.idtokennfce" label="ID Token NFCe" />
+    <MgInput outlined v-model="model.idtokennfce" label="ID Token NFCe" />
 
-    <q-input outlined v-model="model.tokenibpt" label="Token IBPT" />
+    <MgInput outlined v-model="model.tokenibpt" label="Token IBPT" />
 
-    <q-input outlined v-model.number="model.empresadominio" label="Empresa Domínio" type="number" />
+    <MgInputValor
+      v-model="model.empresadominio"
+      :decimals="0"
+      :grouping="false"
+      label="Empresa Domínio"
+    />
 
-    <q-input outlined v-model="model.senhacertificado" label="Senha Certificado" type="password" />
+    <MgInput outlined v-model="model.senhacertificado" label="Senha Certificado" type="password" />
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn color="primary" :loading="loading" icon="save" round class="q-pa-md" @click="submit" />

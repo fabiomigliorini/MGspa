@@ -46,14 +46,14 @@
               emit-value
               clearable
             />
-            <q-input
-              outlined
+            <MgInputValor
               v-model="sPessoa.filtroPesquisa.codpessoa"
+              :decimals="0"
+              :grouping="false"
               label="#"
               ref="codpessoa"
-              type="number"
             />
-            <q-input
+            <MgInput
               outlined
               v-model="sPessoa.filtroPesquisa.pessoa"
               ref="pessoa"
@@ -62,15 +62,15 @@
               autofocus
               unmasked-value
             />
-            <q-input
+            <MgInput
               outlined
               v-model="sPessoa.filtroPesquisa.cnpj"
               ref="cnpj"
               label="Cnpj/Cpf"
               unmasked-value
             />
-            <q-input outlined v-model="sPessoa.filtroPesquisa.email" ref="email" label="Email" />
-            <q-input
+            <MgInput outlined v-model="sPessoa.filtroPesquisa.email" ref="email" label="Email" />
+            <MgInput
               outlined
               v-model="sPessoa.filtroPesquisa.fone"
               ref="fone"
@@ -118,6 +118,8 @@
 </template>
 
 <script>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, onMounted, defineAsyncComponent, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
@@ -127,6 +129,8 @@ import { debounce } from 'quasar'
 
 export default {
   components: {
+    MgInput,
+    MgInputValor,
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
     SelectGrupoEconomico: defineAsyncComponent(
       () => import('@components/MgSelectGrupoEconomico.vue'),

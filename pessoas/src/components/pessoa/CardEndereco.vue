@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -328,7 +329,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-xs-12 col-sm-3">
-              <q-input
+              <MgInput
                 outlined
                 autofocus
                 v-model="modelEndereco.cep"
@@ -359,7 +360,7 @@ const baixo = async (codpessoa, codpessoaendereco) => {
               />
             </div>
             <div class="col-xs-3 col-sm-2">
-              <q-input
+              <MgInput
                 ref="numeroRef"
                 outlined
                 v-model="modelEndereco.numero"

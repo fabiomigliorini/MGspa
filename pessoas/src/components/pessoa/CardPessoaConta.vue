@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -295,7 +296,7 @@ const submit = () => {
 
             <div class="row">
               <div class="col-6 q-pr-md" v-if="modelContaBancaria.radio === 'bancaria'">
-                <q-input
+                <MgInput
                   outlined
                   v-model="modelContaBancaria.agencia"
                   label="Agência"
@@ -310,7 +311,7 @@ const submit = () => {
                 />
               </div>
               <div class="col-6" v-if="modelContaBancaria.radio === 'bancaria'">
-                <q-input
+                <MgInput
                   outlined
                   v-model="modelContaBancaria.conta"
                   label="Conta"
@@ -326,7 +327,7 @@ const submit = () => {
               </div>
 
               <div class="col-6 q-pr-md q-pt-md" v-if="modelContaBancaria.radio === 'pixcpf'">
-                <q-input
+                <MgInput
                   outlined
                   v-model="modelContaBancaria.pixcpf"
                   label="Pix CPF"
@@ -345,7 +346,7 @@ const submit = () => {
               </div>
 
               <div class="col-6 q-pt-md" v-if="modelContaBancaria.radio === 'pixcnpj'">
-                <q-input
+                <MgInput
                   outlined
                   v-model="modelContaBancaria.pixcnpj"
                   label="Pix cnpj"
@@ -362,7 +363,7 @@ const submit = () => {
                 />
               </div>
               <div class="col-6 q-pr-md q-pt-md" v-if="modelContaBancaria.radio === 'pixtelefone'">
-                <q-input
+                <MgInput
                   outlined
                   v-model="modelContaBancaria.pixtelefone"
                   label="Pix telefone"
@@ -379,7 +380,7 @@ const submit = () => {
                 />
               </div>
               <div class="col-6 q-pt-md" v-if="modelContaBancaria.radio === 'pixemail'">
-                <q-input
+                <MgInput
                   outlined
                   v-model="modelContaBancaria.pixemail"
                   label="Pix email"
@@ -394,7 +395,7 @@ const submit = () => {
                 />
               </div>
             </div>
-            <q-input
+            <MgInput
               v-if="modelContaBancaria.radio === 'pixaleatoria'"
               outlined
               v-model="modelContaBancaria.pixaleatoria"
@@ -409,7 +410,7 @@ const submit = () => {
               type="text"
             />
 
-            <q-input
+            <MgInput
               outlined
               v-model="modelContaBancaria.cnpj"
               v-if="modelContaBancaria.radio === 'bancaria'"
@@ -423,7 +424,7 @@ const submit = () => {
               step="any"
             />
 
-            <q-input
+            <MgInput
               outlined
               autogrow
               bordeless
@@ -526,7 +527,10 @@ const submit = () => {
           </q-item-section>
 
           <q-item-section side>
-            <q-item-label caption v-if="user.temAlgumaPermissao(['Financeiro', 'Recursos Humanos'])">
+            <q-item-label
+              caption
+              v-if="user.temAlgumaPermissao(['Financeiro', 'Recursos Humanos'])"
+            >
               <!-- EDITAR -->
               <q-btn
                 flat

@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { empresaStore } from 'src/stores/empresa'
 
 const sEmpresa = empresaStore()
@@ -18,8 +20,13 @@ const emit = defineEmits(['buscar'])
     </q-card>
     <q-form @change="emit('buscar')">
       <div class="q-pa-md q-gutter-md">
-        <q-input outlined v-model="sEmpresa.filtroPesquisa.codempresa" label="#" type="number" />
-        <q-input outlined v-model="sEmpresa.filtroPesquisa.empresa" label="Empresa" autofocus />
+        <MgInputValor
+          v-model="sEmpresa.filtroPesquisa.codempresa"
+          :decimals="0"
+          :grouping="false"
+          label="#"
+        />
+        <MgInput outlined v-model="sEmpresa.filtroPesquisa.empresa" label="Empresa" autofocus />
       </div>
     </q-form>
   </div>

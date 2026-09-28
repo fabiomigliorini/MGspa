@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 
 const props = defineProps({
@@ -42,7 +43,7 @@ defineExpose({
 
 <template>
   <q-form ref="formRef" @submit.prevent="submit" class="q-gutter-sm">
-    <q-input
+    <MgInput
       outlined
       v-model="model.empresa"
       label="Nome da Empresa *"

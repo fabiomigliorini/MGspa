@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-28 22:21'
+updated_date: '2026-09-28 22:25'
 labels:
   - components
 dependencies: []
@@ -31,7 +31,7 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Nenhum <q-input> cru sobrou em negocios/src (trocado por MgInput)
-- [ ] #2 Nenhum <q-input> cru sobrou em pessoas/src
+- [x] #2 Nenhum <q-input> cru sobrou em pessoas/src
 - [x] #3 Nenhum <q-input> cru sobrou em contas/src
 - [x] #4 Nenhum <q-input> cru sobrou em estoque/src
 - [x] #5 Nenhum <q-input> cru sobrou em agro/src
@@ -54,4 +54,6 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 28/09/2026: contas migrado — 82 q-input em 33 arquivos. Os 24 numericos (filtros de codigo, numero do banco, dados bancarios do portador, numero do motivo de devolucao, agencia do filtro de cheque, dias da parcela no agrupamento) viraram MgInputValor sem casas; so os Dias aceitam milhar/negativo. Nenhuma data crua no contas.
 
 28/09/2026: notas migrado — 115 q-input em 39 arquivos. Numericos viraram MgInputValor: quantidades e pesos com 3 casas (a quantidade do item tinha 4 na tela, o banco guarda 3), tara/capacidade/volumes sem casas, codigos/CST/CSOSN/NSU/numero/ordem sem casas nem milhar. O filtro de emissao das NF-e de terceiros (mascara DD/MM + q-date + conversao na mao) virou MgInputData, e sairam as funcoes convertToISODate/convertFromISODate. Varredura confirmou que nenhum campo migrado tinha conteudo no slot padrao (MgInput nao o repassa).
+
+28/09/2026: pessoas migrado — 133 q-input em 55 arquivos (5 em Options API: import + registro em components). Numericos viraram MgInputValor: quantidade da rubrica e do fixo da meta com 2 casas; dias de ferias/abono/desconto/gozo, dias de experiencia/renovacao, dias uteis, tolerancias, ano dos feriados, serie NF-e e codigos sem casas. Com isso os 6 apps estao sem q-input cru; falta o teste de Tab (#7).
 <!-- SECTION:NOTES:END -->

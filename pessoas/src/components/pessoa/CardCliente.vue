@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -111,15 +112,7 @@ const fecharRelatorio = () => {
         v-if="user.temPermissao('Financeiro')"
         @click="editarCliente()"
       />
-      <q-btn
-        flat
-        round
-        dense
-        icon="list"
-        size="sm"
-        color="grey-7"
-        @click="abrirTitulosContas"
-      >
+      <q-btn flat round dense icon="list" size="sm" color="grey-7" @click="abrirTitulosContas">
         <q-tooltip>Ver títulos em aberto!</q-tooltip>
       </q-btn>
       <q-btn flat round dense icon="print" size="sm" color="grey-7" @click="abrirRelatorio()">
@@ -256,7 +249,7 @@ const fecharRelatorio = () => {
         <q-separator inset />
 
         <q-card-section>
-          <q-input
+          <MgInput
             outlined
             autogrow
             v-model="modelEditar.mensagemvenda"
@@ -300,19 +293,16 @@ const fecharRelatorio = () => {
               />
             </div>
             <div :class="user.temPermissao('Financeiro') ? 'col-3' : 'col-9 q-pr-md'">
-              <q-input
-                outlined
+              <MgInputValor
                 v-model="modelEditar.toleranciaatraso"
+                :decimals="0"
                 label="Tolerância a Atraso"
-                type="number"
                 class="q-mb-md"
-                step="0"
-                input-class="text-right"
               >
                 <template v-slot:append>
                   <span class="text-caption">Dias</span>
                 </template>
-              </q-input>
+              </MgInputValor>
             </div>
           </div>
 

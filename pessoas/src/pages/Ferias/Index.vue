@@ -19,7 +19,7 @@
               {{ ano }}
               <q-btn flat color="primary" icon="chevron_right" @click="filtroAno(+1)" />
 
-              <q-input
+              <MgInput
                 v-if="show_filter"
                 outlined
                 dense
@@ -31,7 +31,7 @@
                 <template v-slot:append>
                   <q-icon name="search" />
                 </template>
-              </q-input>
+              </MgInput>
               <q-btn class="q-ml-sm" icon="filter_list" @click="show_filter = !show_filter" flat />
             </template>
 
@@ -105,6 +105,7 @@
 </template>
 
 <script>
+import MgInput from '@components/MgInput.vue'
 import { ref, defineAsyncComponent } from 'vue'
 import moment from 'moment'
 import { pessoaStore } from 'src/stores/pessoa'
@@ -115,6 +116,7 @@ import { formataDiaSemana, formataDataAbreviada } from '@components/formatters'
 
 export default {
   components: {
+    MgInput,
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
     NaoAutorizado: defineAsyncComponent(() => import('components/NaoAutorizado.vue')),
   },

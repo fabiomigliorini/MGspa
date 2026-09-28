@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
@@ -295,13 +296,13 @@ watch(
             <q-separator inset />
 
             <q-card-section>
-              <q-input
+              <MgInput
                 outlined
                 v-model="model.grupoeconomico"
                 label="Grupo Econômico"
                 class="q-mb-md"
               />
-              <q-input
+              <MgInput
                 outlined
                 v-model="model.observacoes"
                 label="Observações"

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
@@ -275,7 +276,7 @@ const salvarDetalhes = async () => {
         <q-separator inset />
 
         <q-card-section class="row q-col-gutter-md">
-          <q-input
+          <MgInput
             :class="
               modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
             "
@@ -286,7 +287,7 @@ const salvarDetalhes = async () => {
             unmasked-value
             disable
           />
-          <q-input
+          <MgInput
             class="col-md-3 col-sm-6 col-xs-12"
             outlined
             v-model="modelPessoa.rg"
@@ -355,7 +356,7 @@ const salvarDetalhes = async () => {
               label="Nome da Mãe"
             />
             <template v-if="sPessoa.item?.permissaoRH">
-              <q-input
+              <MgInput
                 class="col-md-4 col-sm-6 col-xs-12"
                 outlined
                 v-model="modelPessoa.tituloeleitor"
@@ -363,7 +364,7 @@ const salvarDetalhes = async () => {
                 label="Título de Eleitor"
                 unmasked-value
               />
-              <q-input
+              <MgInput
                 class="col-md-2 col-sm-3 col-xs-6"
                 outlined
                 v-model="modelPessoa.titulozona"
@@ -371,7 +372,7 @@ const salvarDetalhes = async () => {
                 mask="###"
                 unmasked-value
               />
-              <q-input
+              <MgInput
                 class="col-md-2 col-sm-3 col-xs-6"
                 outlined
                 v-model="modelPessoa.titulosecao"
@@ -379,7 +380,7 @@ const salvarDetalhes = async () => {
                 mask="####"
                 unmasked-value
               />
-              <q-input
+              <MgInput
                 class="col-md-4 col-sm-4 col-xs-12"
                 outlined
                 v-model="modelPessoa.pispasep"
@@ -387,7 +388,7 @@ const salvarDetalhes = async () => {
                 mask="###.#####.##-#"
                 unmasked-value
               />
-              <q-input
+              <MgInput
                 class="col-md-4 col-sm-3 col-xs-12"
                 outlined
                 v-model="modelPessoa.ctps"
@@ -396,7 +397,7 @@ const salvarDetalhes = async () => {
                 mask="#######"
                 unmasked-value
               />
-              <q-input
+              <MgInput
                 class="col-md-2 col-sm-2 col-xs-6"
                 outlined
                 v-model="modelPessoa.seriectps"
@@ -437,7 +438,7 @@ const salvarDetalhes = async () => {
             />
           </template>
 
-          <q-input
+          <MgInput
             v-if="sPessoa.item?.permissaoRH"
             class="col-md-4 col-sm-6 col-xs-12"
             outlined
@@ -461,7 +462,7 @@ const salvarDetalhes = async () => {
             emit-value
             clearable
           />
-          <q-input
+          <MgInput
             outlined
             borderless
             autogrow

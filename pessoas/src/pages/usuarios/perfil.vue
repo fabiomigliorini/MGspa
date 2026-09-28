@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataDataAbreviada } from '@components/formatters'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
@@ -173,7 +174,7 @@ onMounted(async () => {
             <q-separator inset />
 
             <q-card-section class="q-gutter-md">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelPerfilUsuario.senha_antiga"
                 label="Senha antiga"
@@ -190,9 +191,9 @@ onMounted(async () => {
                     @click="isPwd = !isPwd"
                   />
                 </template>
-              </q-input>
+              </MgInput>
 
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelPerfilUsuario.senha"
                 label="Nova Senha"
@@ -209,9 +210,9 @@ onMounted(async () => {
                     @click="isPwd = !isPwd"
                   />
                 </template>
-              </q-input>
+              </MgInput>
 
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelPerfilUsuario.senha_confirmacao"
                 label="Confirmar nova senha"
@@ -228,7 +229,7 @@ onMounted(async () => {
                     @click="isPwd = !isPwd"
                   />
                 </template>
-              </q-input>
+              </MgInput>
             </q-card-section>
 
             <q-card-actions align="right" class="text-primary">
