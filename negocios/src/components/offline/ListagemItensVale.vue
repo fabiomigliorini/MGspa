@@ -10,10 +10,17 @@
 // kit do modelo. Produto fora da lista o cliente leva como mercadoria, pela
 // bipagem normal.
 import { ref, computed } from 'vue'
-import { Dialog } from 'quasar'
+import { Dialog, Notify } from 'quasar'
+import { api } from 'boot/axios'
+import { abrirPdf } from '@components/abrirPdf'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
-import { formataData, formataNumero, formataNumeroInteligente } from '@components/formatters'
+import {
+  formataCodigo,
+  formataData,
+  formataNumero,
+  formataNumeroInteligente,
+} from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
@@ -24,9 +31,10 @@ const props = defineProps({
 const sProduto = produtoStore()
 const sNegocio = negocioStore()
 
-// A grade do vale nasce fechada: aberta, ela vira uma segunda parede de
-// cards igual a da mercadoria e some a fronteira entre as duas coisas. Quem
-// precisa dela e quem vai tirar item ou mexer na quantidade, e ai abre.
+// A grade do kit abre num dialog: no card do vale (do tamanho dos cards de
+// nota/titulo) ela nao cabe, e aberta na pagina viraria uma segunda parede
+// de cards igual a da mercadoria. Quem precisa dela e quem vai tirar item ou
+// mexer na quantidade, e ai abre.
 const mostrarItens = ref(false)
 
 const dialogItem = ref(false)
@@ -106,6 +114,48 @@ const excluirVale = () => {
   })
 }
 
+// Comprovante so' deste vale. O codigo de barras e' o do titulo, que so'
+// nasce no fechamento: antes disso nao ha o que imprimir.
+const podeImprimir = computed(
+  () => !!props.vale.codtitulo && sNegocio.negocio.codnegociostatus == 2,
+)
+
+const urlVale = () => '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
+
+const imprimirVale = async () => {
+  if (!sNegocio.padrao.impressora) {
+    Notify.create({
+      type: 'negative',
+      message: 'Nenhuma impressora térmica selecionada!',
+      timeout: 3000,
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return
+  }
+  await api.post(urlVale() + '/' + sNegocio.padrao.impressora, null, {
+    params: { uuid: props.vale.uuid },
+  })
+  Notify.create({
+    type: 'positive',
+    message: 'Impressão Solicitada!',
+    timeout: 1000,
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+}
+
+const abrirVale = () =>
+  abrirPdf(
+    api,
+    urlVale(),
+    { uuid: props.vale.uuid },
+    { title: 'Vale ' + props.letra, size: 'cupom', onImprimir: imprimirVale },
+  )
+
+// o titulo do vale so' nasce no fechamento: antes disso a linha nao e' link
+const urlTitulo = computed(() =>
+  props.vale.codtitulo ? process.env.CONTAS_URL + '/titulo/' + props.vale.codtitulo : undefined,
+)
+
 const linkProduto = (codproduto) => {
   return process.env.MGLARA_URL + 'produto/' + codproduto
 }
@@ -157,33 +207,116 @@ const linkProduto = (codproduto) => {
     </q-card>
   </q-dialog>
 
-  <!-- Cabeçalho do vale -->
-  <q-card flat bordered class="q-mb-md">
-    <q-card-section class="q-pb-sm">
-      <div class="row items-center">
-        <div class="col">
-          <div class="text-overline text-grey-7">Vale {{ letra }}</div>
-          <div class="text-subtitle1">
+  <!-- Card do vale: mesmo formato dos cards de nota/título -->
+  <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
+    <q-card flat bordered class="full-height column no-wrap">
+      <!-- cabecalho abre o titulo do vale no app de contas, como a nota abre o app de notas;
+           o titulo so' nasce no fechamento, antes disso nao e' link -->
+      <q-item :clickable="!!urlTitulo" v-ripple="!!urlTitulo" :href="urlTitulo" target="_blank">
+        <q-item-section avatar>
+          <q-avatar icon="card_giftcard" color="primary" text-color="white" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="ellipsis">Vale {{ letra }}</q-item-label>
+          <q-item-label caption class="ellipsis" v-if="vale.codtitulo">
+            {{ formataCodigo(vale.codtitulo) }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-separator inset />
+
+      <q-item>
+        <q-item-section>
+          <q-item-label class="ellipsis">
             {{ vale.codpessoafavorecido == 1 ? 'Ao portador' : (vale.favorecido ?? 'Ao portador') }}
-          </div>
-          <div class="text-caption text-grey-7">
-            <template v-if="vale.modelo">{{ vale.modelo }}<br /></template>
-            <template v-if="vale.aluno">{{ vale.aluno }} </template>
-            <template v-if="vale.turma">· {{ vale.turma }} </template>
-            <template v-if="vale.validade">· vale até {{ formataData(vale.validade) }}</template>
-          </div>
-        </div>
-        <div class="col-auto text-right">
-          <div class="text-caption text-grey-7">Valor do vale</div>
-          <div class="text-h5 text-primary">{{ formataNumero(vale.valorvale) }}</div>
-          <div class="text-caption text-grey-7" v-if="vale.valoravulso">
-            {{ formataNumero(vale.valorprodutos) }} em produtos +
-            {{ formataNumero(vale.valoravulso) }} avulso
-          </div>
-        </div>
-        <div class="col-auto q-ml-sm" v-if="sNegocio.podeEditar">
+          </q-item-label>
+          <q-item-label caption lines="1" class="ellipsis" v-if="vale.modelo">
+            {{ vale.modelo }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="vale.aluno || vale.turma">
+        <q-item-section>
+          <q-item-label class="ellipsis">{{ vale.aluno }}</q-item-label>
+          <q-item-label caption class="ellipsis" v-if="vale.turma">
+            Turma {{ vale.turma }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item>
+        <q-item-section>
+          <q-item-label>
+            R$
+            <span class="text-weight-bold">
+              {{ formataNumero(vale.valorvale) }}
+            </span>
+          </q-item-label>
+          <template v-if="vale.valorprodutos && vale.valoravulso">
+            <q-item-label caption lines="1">
+              {{ formataNumero(vale.valorprodutos) }} Em produtos
+            </q-item-label>
+            <q-item-label caption lines="1">
+              {{ formataNumero(vale.valoravulso) }} Avulso
+            </q-item-label>
+          </template>
+          <!-- <q-item-label caption lines="1">Valor do vale</q-item-label> -->
+          <template v-if="vale.valordesconto">
+            <q-item-label caption> {{ formataNumero(vale.valordesconto) }} Desconto </q-item-label>
+            <q-item-label caption> {{ formataNumero(vale.valortotal) }} Pagar </q-item-label>
+          </template>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="vale.validade">
+        <q-item-section>
+          <q-item-label class="ellipsis">{{ formataData(vale.validade) }}</q-item-label>
+          <q-item-label caption lines="1">Validade</q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <!-- Itens do kit: a grade abre num dialog, nao cabe no card -->
+      <q-item v-if="itens.length === 0">
+        <q-item-section>
+          <q-item-label>Sem produtos</q-item-label>
+          <q-item-label caption lines="1">Vale somente de valor</q-item-label>
+        </q-item-section>
+      </q-item>
+      <q-item v-else clickable v-ripple @click="mostrarItens = true">
+        <q-item-section>
+          <q-item-label>
+            {{ itens.length }} {{ itens.length == 1 ? 'item do kit' : 'itens do kit' }}
+          </q-item-label>
+          <q-item-label caption lines="1">
+            R$ {{ formataNumero(vale.valorprodutos) }} em produtos
+          </q-item-label>
+        </q-item-section>
+        <q-item-section side>
+          <q-icon name="chevron_right" color="grey-7" />
+        </q-item-section>
+      </q-item>
+
+      <q-space />
+      <template v-if="sNegocio.podeEditar || podeImprimir">
+        <q-separator inset />
+        <q-card-actions align="right">
           <q-btn
+            v-if="podeImprimir"
             flat
+            dense
+            round
+            size="sm"
+            color="primary"
+            icon="print"
+            @click="abrirVale()"
+          >
+            <q-tooltip>Imprimir Vale</q-tooltip>
+          </q-btn>
+          <q-btn
+            v-if="sNegocio.podeEditar"
+            flat
+            dense
             round
             size="sm"
             color="grey-7"
@@ -192,38 +325,37 @@ const linkProduto = (codproduto) => {
           >
             <q-tooltip>Editar Vale</q-tooltip>
           </q-btn>
-          <q-btn flat round size="sm" color="grey-7" icon="delete" @click="excluirVale()">
+          <q-btn
+            v-if="sNegocio.podeEditar"
+            flat
+            dense
+            round
+            size="sm"
+            color="negative"
+            icon="delete"
+            @click="excluirVale()"
+          >
             <q-tooltip>Excluir Vale</q-tooltip>
           </q-btn>
+        </q-card-actions>
+      </template>
+    </q-card>
+  </div>
+
+  <!-- Itens do kit -->
+  <q-dialog v-model="mostrarItens">
+    <q-card flat style="width: 1086px; max-width: 95vw">
+      <q-card-section class="row items-center no-wrap">
+        <div class="col">
+          <div class="text-h6 ellipsis">Vale {{ letra }} · {{ vale.modelo ?? 'Itens do kit' }}</div>
+          <div class="text-caption text-grey-7 ellipsis">
+            {{ vale.codpessoafavorecido == 1 ? 'Ao portador' : (vale.favorecido ?? 'Ao portador') }}
+          </div>
         </div>
-      </div>
-    </q-card-section>
+        <q-btn flat round icon="close" color="grey-7" v-close-popup />
+      </q-card-section>
 
-    <q-separator />
-
-    <!-- Itens do kit -->
-    <q-card-section v-if="itens.length === 0" class="text-grey-7">
-      Vale somente de valor, sem lista de produtos.
-    </q-card-section>
-
-    <template v-else>
-      <q-item clickable v-ripple @click="mostrarItens = !mostrarItens">
-        <q-item-section>
-          <q-item-label class="text-grey-8">
-            {{ itens.length }} {{ itens.length == 1 ? 'item do kit' : 'itens do kit' }}
-          </q-item-label>
-        </q-item-section>
-        <q-item-section side class="text-grey-7">
-          {{ formataNumero(vale.valorprodutos) }}
-        </q-item-section>
-        <q-item-section side>
-          <q-icon :name="mostrarItens ? 'expand_less' : 'expand_more'" color="grey-7" />
-        </q-item-section>
-      </q-item>
-    </template>
-
-    <q-slide-transition>
-      <q-card-section v-show="mostrarItens && itens.length > 0" class="q-pt-none">
+      <q-card-section class="q-pt-none">
         <div class="row q-col-gutter-md">
           <div
             class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
@@ -298,6 +430,6 @@ const linkProduto = (codproduto) => {
           </div>
         </div>
       </q-card-section>
-    </q-slide-transition>
-  </q-card>
+    </q-card>
+  </q-dialog>
 </template>

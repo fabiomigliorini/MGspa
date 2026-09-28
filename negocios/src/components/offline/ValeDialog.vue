@@ -16,7 +16,7 @@
 // é excluir o vale e lançar outro), então sobra o formulário de aluno,
 // turma e valor avulso.
 import { ref, computed } from 'vue'
-import { Notify } from 'quasar'
+import { Notify, useQuasar } from 'quasar'
 import { db } from 'boot/db'
 import { negocioStore } from 'stores/negocio'
 import { formataNumero } from '@components/formatters'
@@ -24,6 +24,7 @@ import MgInput from '@components/MgInput.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
+const $q = useQuasar()
 const sNegocio = negocioStore()
 
 const PASSO_FAVORECIDO = 1
@@ -32,9 +33,19 @@ const PASSO_ALUNO = 3
 const PASSO_VALOR = 4
 
 // Miolo do wizard com altura fixa: sem isso o dialog pula de tamanho a cada
-// passo (6 escolas, 10 kits, 2 campos). Os 108px descontam o header do stepper,
-// para o card fechar em ~70% da tela. O conteudo rola dentro.
-const ALTURA_PASSO = 'height: calc(70vh - 108px)'
+// passo (6 escolas, 10 kits, 2 campos). O conteudo rola dentro.
+// O header do stepper usa sempre alternative-labels (104px, rotulo embaixo
+// da bolinha: no dialog estreito os rotulos ao lado quebram linha). Ele ja'
+// tem 24px de respiro embaixo, e o passo mais 24px em cima: a margem
+// negativa come esse segundo respiro, que sobrava entre o header e a lista.
+// Desconto = 104 do header + 24 do padding de baixo do passo = 128px.
+// No celular o dialog abre em tela cheia e o miolo ocupa a altura toda.
+const mobile = computed(() => $q.screen.lt.sm)
+const ALTURA_PASSO = computed(
+  () =>
+    (mobile.value ? 'height: calc(100dvh - 128px)' : 'height: calc(70vh - 128px)') +
+    '; margin-top: -24px',
+)
 
 const passo = ref(PASSO_FAVORECIDO)
 const semModelo = ref(false)
@@ -56,6 +67,11 @@ const form = ref({
 })
 
 const isNovo = computed(() => !sNegocio.valeEditando)
+
+// 350px; so' o wizard vai em tela cheia no celular
+const estiloCard = computed(() =>
+  mobile.value && isNovo.value ? '' : 'width: 350px; max-width: 90vw',
+)
 // Consumidor (1) e o favorecido do vale ao portador, nao uma escola: nele
 // nao ha aluno nem turma para perguntar.
 const temFavorecido = computed(
@@ -245,10 +261,11 @@ const salvar = async () => {
 </script>
 
 <template>
-  <q-dialog v-model="sNegocio.dialog.vale" @before-show="preparar">
-    <q-card flat style="width: 600px; max-width: 90vw">
+  <!-- so' o wizard vai em tela cheia no celular; a edicao e' um form curto -->
+  <q-dialog v-model="sNegocio.dialog.vale" :maximized="mobile && isNovo" @before-show="preparar">
+    <q-card flat :style="estiloCard">
       <!-- NOVO: wizard -->
-      <q-stepper v-if="isNovo" v-model="passo" flat animated color="primary">
+      <q-stepper v-if="isNovo" v-model="passo" flat animated color="primary" alternative-labels>
         <!-- 1. FAVORECIDO -->
         <q-step :name="PASSO_FAVORECIDO" title="Favorecido" icon="school" :done="passo > 1">
           <div class="column" :style="ALTURA_PASSO">
@@ -303,6 +320,10 @@ const salvar = async () => {
                 </q-list>
               </div>
             </div>
+
+            <q-stepper-navigation>
+              <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+            </q-stepper-navigation>
           </div>
         </q-step>
 
@@ -340,6 +361,7 @@ const salvar = async () => {
             </div>
 
             <q-stepper-navigation>
+              <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
               <q-btn flat label="Voltar" color="grey-8" @click="voltar()" />
             </q-stepper-navigation>
           </div>
@@ -357,8 +379,8 @@ const salvar = async () => {
                   <div class="text-h5 text-primary">{{ formataNumero(valorVale) }}</div>
                 </div>
 
-                <div class="row q-col-gutter-md justify-center">
-                  <div class="col-12 col-sm-8">
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
                     <MgInputFormatado
                       outlined
                       autofocus
@@ -371,7 +393,7 @@ const salvar = async () => {
                       v-model="form.aluno"
                     />
                   </div>
-                  <div class="col-12 col-sm-8">
+                  <div class="col-12">
                     <MgInput clearable counter label="Turma" maxlength="40" v-model="form.turma" />
                   </div>
                 </div>
@@ -379,14 +401,9 @@ const salvar = async () => {
             </div>
 
             <q-stepper-navigation>
+              <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
               <q-btn flat label="Voltar" color="grey-8" tabindex="-1" @click="voltar()" />
-              <q-btn
-                type="submit"
-                flat
-                label="Adicionar Vale"
-                color="primary"
-                :loading="salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvando" />
             </q-stepper-navigation>
           </q-form>
         </q-step>
@@ -396,8 +413,8 @@ const salvar = async () => {
           <q-form class="column" :style="ALTURA_PASSO" @submit.prevent="salvar()">
             <div class="col scroll column">
               <div class="full-width" style="margin: auto 0">
-                <div class="row q-col-gutter-md justify-center">
-                  <div class="col-12 col-sm-8">
+                <div class="row q-col-gutter-md">
+                  <div class="col-12">
                     <MgInputValor
                       autofocus
                       lazy-rules
@@ -416,14 +433,9 @@ const salvar = async () => {
             </div>
 
             <q-stepper-navigation>
+              <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
               <q-btn flat label="Voltar" color="grey-8" tabindex="-1" @click="voltar()" />
-              <q-btn
-                type="submit"
-                flat
-                label="Adicionar Vale"
-                color="primary"
-                :loading="salvando"
-              />
+              <q-btn type="submit" flat label="Salvar" color="primary" :loading="salvando" />
             </q-stepper-navigation>
           </q-form>
         </q-step>
@@ -432,8 +444,6 @@ const salvar = async () => {
       <!-- EDIÇÃO: escola e kit já estão lançados -->
       <q-form v-else @submit.prevent="salvar()">
         <q-card-section>
-          <div class="text-h6 q-mb-md">EDITAR VALE COMPRAS</div>
-
           <!-- mesmo resumo do passo 3: escola, kit e valor, um por linha -->
           <div class="text-center q-mb-md">
             <div class="text-subtitle1">{{ form.favorecido ?? 'Ao portador' }}</div>
@@ -441,9 +451,9 @@ const salvar = async () => {
             <div class="text-h5 text-primary">{{ formataNumero(valorVale) }}</div>
           </div>
 
-          <div class="row q-col-gutter-md justify-center">
+          <div class="row q-col-gutter-md">
             <template v-if="temFavorecido">
-              <div class="col-12 col-sm-8">
+              <div class="col-12">
                 <MgInputFormatado
                   outlined
                   autofocus
@@ -456,12 +466,21 @@ const salvar = async () => {
                   v-model="form.aluno"
                 />
               </div>
-              <div class="col-12 col-sm-8">
+              <div class="col-12">
                 <MgInput clearable counter label="Turma" maxlength="40" v-model="form.turma" />
               </div>
             </template>
 
-            <div class="col-12 col-sm-8">
+            <div class="col-12">
+              <MgInputValor
+                readonly
+                :model-value="form.valorprodutos"
+                prefix="R$"
+                label="Valor produtos"
+              />
+            </div>
+
+            <div class="col-12">
               <MgInputValor
                 v-model="form.valoravulso"
                 prefix="R$"
@@ -475,37 +494,30 @@ const salvar = async () => {
                  andam juntos. A diferenca e que aqui ele NAO mexe na face:
                  a escola recebe o valor de face, o desconto sai do que o
                  cliente paga. -->
-            <div class="col-6 col-sm-4">
+            <div class="col-6">
               <MgInputValor
                 :decimals="1"
                 :min="0"
                 :max="99.9"
                 v-model="form.percentualdesconto"
-                label="% Desc"
+                label="% Desconto"
                 suffix="%"
                 @change="recalcularValorDesconto()"
               />
             </div>
-            <div class="col-6 col-sm-4">
+            <div class="col-6">
               <MgInputValor
                 :min="0"
                 :max="valorVale"
                 v-model="form.valordesconto"
                 prefix="R$"
-                label="Desconto"
+                label="Valor desconto"
                 @change="recalcularPercentualDesconto()"
               />
             </div>
 
-            <div class="col-12 col-sm-8" v-if="valorPago != valorVale">
-              <div class="row items-center">
-                <div class="col text-caption text-grey-7">Cliente paga</div>
-                <div class="col-auto text-subtitle1">{{ formataNumero(valorPago) }}</div>
-              </div>
-              <div class="text-caption text-grey-7">
-                O crédito emitido continua sendo a face:
-                {{ formataNumero(valorVale) }}
-              </div>
+            <div class="col-12">
+              <MgInputValor readonly :model-value="valorPago" prefix="R$" label="Valor final" />
             </div>
           </div>
         </q-card-section>

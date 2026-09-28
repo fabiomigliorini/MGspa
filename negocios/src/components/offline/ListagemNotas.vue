@@ -123,11 +123,11 @@ defineExpose({
 </script>
 <template>
   <div
-    class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3"
+    class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2"
     v-for="nota in sNegocio.negocio.notas"
     :key="nota.codnotafiscal"
   >
-    <q-card flat bordered>
+    <q-card flat bordered class="full-height column no-wrap">
       <q-item clickable v-ripple :href="urlNotaFiscal(nota.codnotafiscal)" target="_blank">
         <q-item-section avatar>
           <q-avatar
@@ -201,6 +201,7 @@ defineExpose({
           </q-item-label>
         </q-item-section>
       </q-item>
+      <q-space />
       <q-separator inset />
 
       <q-card-actions align="right" v-if="nota.emitida">

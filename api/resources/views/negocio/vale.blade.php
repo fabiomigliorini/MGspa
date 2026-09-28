@@ -96,7 +96,8 @@ use Illuminate\Support\Carbon;
 
 
     <h2>
-        Vale Compras
+        {{-- ja' usado em parte: o papel vale so' o que sobrou --}}
+        {{ round(abs($tit->saldo), 2) != round($tit->credito, 2) ? 'Contra Vale' : 'Vale Compras' }}
         {{$tit->numero}}
         <br>
         {{formataCodigo($tit->codtitulo)}}
@@ -134,6 +135,8 @@ use Illuminate\Support\Carbon;
         <tr>
             <td colspan="2" style="border-bottom: 0.9px solid black;"><b>Produtos</b></td>
             <td style="border-bottom: 0.9px solid black; text-align: right;"><b>Qtde</b></td>
+            <td style="border-bottom: 0.9px solid black; text-align: right;"><b>Preço</b></td>
+            <td style="border-bottom: 0.9px solid black; text-align: right;"><b>Total</b></td>
         </tr>
         @foreach($itens as $item)
         <tr>
@@ -147,14 +150,24 @@ use Illuminate\Support\Carbon;
                 <span style="font-size: 6pt;">{{ $item->ProdutoBarra->barras }}</span>
             </td>
             <td style="vertical-align: top; text-align: right;">{{ formataNumero($item->quantidade, 0) }}</td>
+            <td style="vertical-align: top; text-align: right; padding-left: 0.1cm;">{{ formataNumero($item->valorunitario) }}</td>
+            <td style="vertical-align: top; text-align: right; padding-left: 0.1cm;">{{ formataNumero($item->valorprodutos) }}</td>
         </tr>
         @endforeach
+        <tr>
+            <td colspan="4" style="border-top: 0.9px solid black; text-align: right;"><b>Total</b></td>
+            <td style="border-top: 0.9px solid black; text-align: right; padding-left: 0.1cm;"><b>{{ formataNumero($itens->sum('valorprodutos')) }}</b></td>
+        </tr>
     </table>
     @endif
 
     @if($vale->valoravulso > 0)
     <br>
     <div>Valor avulso: R$ {{ formataNumero($vale->valoravulso) }}</div>
+    @elseif($vale->valoravulso < 0)
+    {{-- vale do sistema antigo: o desconto da venda foi convertido em avulso negativo --}}
+    <br>
+    <div>Desconto: R$ {{ formataNumero(abs($vale->valoravulso)) }}</div>
     @endif
     @endif
 
@@ -204,12 +217,6 @@ use Illuminate\Support\Carbon;
 
         Sinop/MT, {{formataDataPorExtenso($tit->emissao)}}.
     </div>
-
-    <br><br><br><br><br><br>
-    <div style="margin-bottom: 0.2cm; border-bottom: 0.9px dashed black;">
-    </div>
-    <h3 style="text-align:center;">Migliorini & Migliorini Ltda</h3>
-
 
     <br><br>
     <div style="text-align:center;">

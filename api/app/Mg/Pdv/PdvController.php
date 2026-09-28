@@ -400,6 +400,10 @@ class PdvController
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($codnegocio);
         $negocio = PdvNegocioService::fechar($negocio, $pdv);
+        // vales e contra vales com saldo saem sozinhos na termica do caixa
+        if (!empty($request->impressora)) {
+            ImprimirValesNegocioJob::dispatch($negocio->codnegocio, $request->impressora)->onQueue('high');
+        }
         return new NegocioResource($negocio);
     }
 
@@ -421,15 +425,16 @@ class PdvController
         ]);
     }
 
-    public function imprimirVale($codnegocio, $impressora)
+    // ?uuid= imprime so' aquele vale do negocio; sem ele, todos
+    public function imprimirVale(Request $request, $codnegocio, $impressora)
     {
-        ValeService::imprimir($codnegocio, $impressora);
+        ValeService::imprimir($codnegocio, $impressora, $request->uuid, $request->codtitulo);
     }
 
-    public function vale($codnegocio)
+    public function vale(Request $request, $codnegocio)
     {
         $negocio = Negocio::findOrFail($codnegocio);
-        $pdf = ValeService::pdf($negocio);
+        $pdf = ValeService::pdf($negocio, $request->uuid, $request->codtitulo);
         return response()->make($pdf, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="ValeCompras' . $codnegocio . '.pdf"'

@@ -96,6 +96,11 @@ const routes = [
     children: [{ path: '', component: () => import('pages/ValeModeloPage.vue') }],
   },
   {
+    path: '/vale-modelo/emitidos',
+    component: () => import('layouts/ValeEmitidosLayout.vue'),
+    children: [{ path: '', component: () => import('pages/ValeEmitidosPage.vue') }],
+  },
+  {
     path: '/vale-modelo',
     component: () => import('layouts/ValeModeloFormLayout.vue'),
     children: [

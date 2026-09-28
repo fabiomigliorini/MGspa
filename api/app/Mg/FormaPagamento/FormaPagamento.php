@@ -9,7 +9,6 @@ namespace Mg\FormaPagamento;
 use Mg\MgModel;
 use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Pessoa\Pessoa;
-use Mg\ValeCompra\ValeCompraFormaPagamento;
 use Mg\Usuario\Usuario;
 
 class FormaPagamento extends MgModel
@@ -33,8 +32,7 @@ class FormaPagamento extends MgModel
         'parcelas',
         'pix',
         'safrapay',
-        'pagarme',
-        'valecompra'
+        'pagarme'
     ];
 
     protected $casts = [
@@ -55,8 +53,7 @@ class FormaPagamento extends MgModel
         'parcelas' => 'integer',
         'pix' => 'boolean',
         'safrapay' => 'boolean',
-        'pagarme' => 'boolean',
-        'valecompra' => 'boolean'
+        'pagarme' => 'boolean'
     ];
 
 
@@ -81,11 +78,6 @@ class FormaPagamento extends MgModel
     public function PessoaS()
     {
         return $this->hasMany(Pessoa::class, 'codformapagamento', 'codformapagamento');
-    }
-
-    public function ValeCompraFormaPagamentoS()
-    {
-        return $this->hasMany(ValeCompraFormaPagamento::class, 'codformapagamento', 'codformapagamento');
     }
 
 }

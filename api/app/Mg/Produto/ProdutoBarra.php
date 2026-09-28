@@ -13,7 +13,7 @@ use Mg\NfeTerceiro\NfeTerceiroItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\Produto\Prancheta;
 use Mg\Vale\ValeModeloProdutoBarra;
-use Mg\ValeCompra\ValeCompraProdutoBarra;
+use Mg\Negocio\NegocioValeProdutoBarra;
 use Mg\Woo\WooProduto;
 use Mg\Marca\Marca;
 use Mg\Produto\Produto;
@@ -113,9 +113,9 @@ class ProdutoBarra extends MgModel
         return $this->hasMany(ValeModeloProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
-    public function ValeCompraProdutoBarraS()
+    public function NegocioValeProdutoBarraS()
     {
-        return $this->hasMany(ValeCompraProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
+        return $this->hasMany(NegocioValeProdutoBarra::class, 'codprodutobarra', 'codprodutobarra');
     }
 
     public function WooProdutoUnidadeS()

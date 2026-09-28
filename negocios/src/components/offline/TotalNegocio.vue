@@ -196,6 +196,8 @@ onUnmounted(() => {
 // cobranças ainda não pagas (a paga já virou linha em negocio.pagamentos, com integracao)
 const corCobranca = (cancelada) => (cancelada ? 'grey' : 'warning')
 
+const CANCELADAS_PIX = ['EXPIRADO', 'REMOVIDA_PELO_USUARIO_RECEBEDOR']
+
 const resumoPedido = (ped) =>
   [
     ped.parcelas > 1 ? `${ped.parcelas}x ${formataNumero(ped.valorparcela)}` : null,
@@ -215,7 +217,8 @@ const cobrancas = computed(() => {
     .map((c) => ({
       chave: 'pix' + c.codpixcob,
       icone: 'pix',
-      cor: corCobranca(['EXPIRADO', 'REMOVIDA_PELO_USUARIO_RECEBEDOR'].includes(c.status)),
+      cancelada: CANCELADAS_PIX.includes(c.status),
+      cor: corCobranca(CANCELADAS_PIX.includes(c.status)),
       titulo: 'PIX',
       status: c.status,
       valor: c.valororiginal,
@@ -224,6 +227,7 @@ const cobrancas = computed(() => {
     }))
   const pedido = (ped, chave, abrir) => ({
     chave,
+    cancelada: ped.status == 3,
     icone: 'credit_card',
     cor: corCobranca(ped.status == 3),
     titulo: 'Cartão ' + (ped.tipodescricao ?? '').toLowerCase(),
@@ -240,6 +244,15 @@ const cobrancas = computed(() => {
     .map((p) => pedido(p, 'saurus' + p.codsauruspedido, dialogDetalhesSaurusPedido))
   return [...pix, ...pagarMe, ...saurus]
 })
+
+// na tela, cobrança não paga fica em bloco próprio, abaixo do saldo, para não
+// ser lida como pagamento já confirmado
+const gruposCobranca = computed(() =>
+  [
+    { titulo: 'Aguardando Pagamento', itens: cobrancas.value.filter((c) => !c.cancelada) },
+    { titulo: 'Canceladas', itens: cobrancas.value.filter((c) => c.cancelada) },
+  ].filter((g) => g.itens.length),
+)
 
 // Consumo de vários vales vira UMA linha na tela (decisão 6 do plano): no
 // FIFO por escola um pagamento de R$ 300 pode virar 5 vales, e 5 linhas
@@ -591,22 +604,6 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
         </q-item-section>
       </q-item>
 
-      <q-item v-for="cob in cobrancas" :key="cob.chave" clickable v-ripple @click="cob.abrir()">
-        <q-item-section avatar>
-          <q-avatar :color="cob.cor" text-color="white" :icon="cob.icone" />
-        </q-item-section>
-        <q-item-section>
-          <q-item-label class="ellipsis">
-            {{ cob.titulo }}
-            <q-badge :color="cob.cor" :label="cob.status" class="q-ml-xs text-lowercase" />
-          </q-item-label>
-          <q-item-label caption class="ellipsis">{{ cob.resumo }}</q-item-label>
-        </q-item-section>
-        <q-item-section side class="text-subtitle1 text-weight-bold text-grey-6">
-          {{ formataNumero(cob.valor) }}
-        </q-item-section>
-      </q-item>
-
       <!-- SALDO: faltando é a ação de receber (clique ou F8); troco só informa -->
       <div class="q-px-sm q-pt-sm" v-if="mostrarSaldo">
         <q-item
@@ -631,6 +628,26 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
           </q-item-section>
         </q-item>
       </div>
+
+      <!-- COBRANÇAS: abaixo do saldo, separadas do que já foi pago -->
+      <template v-for="grupo in gruposCobranca" :key="grupo.titulo">
+        <q-item-label header>{{ grupo.titulo }}</q-item-label>
+        <q-item v-for="cob in grupo.itens" :key="cob.chave" clickable v-ripple @click="cob.abrir()">
+          <q-item-section avatar>
+            <q-avatar :color="cob.cor" text-color="white" :icon="cob.icone" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label class="ellipsis">
+              {{ cob.titulo }}
+              <q-badge :color="cob.cor" :label="cob.status" class="q-ml-xs text-lowercase" />
+            </q-item-label>
+            <q-item-label caption class="ellipsis">{{ cob.resumo }}</q-item-label>
+          </q-item-section>
+          <q-item-section side class="text-subtitle1 text-weight-bold text-grey-6">
+            {{ formataNumero(cob.valor) }}
+          </q-item-section>
+        </q-item>
+      </template>
     </q-list>
   </template>
 </template>

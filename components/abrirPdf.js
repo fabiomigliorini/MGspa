@@ -1,15 +1,7 @@
 import { Dialog, Notify, Platform } from 'quasar'
 import MgRelatorioPdfDialog from './MgRelatorioPdfDialog.vue'
-
-export function extrairErro(error, fallback) {
-  const data = error?.response?.data
-  if (!data) return error?.message || fallback
-  if (data.errors) {
-    const primeiro = Object.values(data.errors).flat()[0]
-    if (primeiro) return primeiro
-  }
-  return data.message || data.mensagem || fallback
-}
+import { extrairErro } from './extrairErro'
+export { extrairErro } from './extrairErro'
 
 /**
  * Baixa um PDF protegido por Bearer e abre num modal (desktop) ou nova aba (mobile).
@@ -51,6 +43,14 @@ export async function abrirPdf(api, url, params = {}, options = {}) {
       URL.revokeObjectURL(blobUrl)
     })
   } catch (e) {
+    // Com responseType "blob", o Axios também entrega erros JSON como Blob.
+    if (e?.response?.data instanceof Blob) {
+      try {
+        e.response.data = JSON.parse(await e.response.data.text())
+      } catch {
+        // Mantém a mensagem de fallback se o corpo não for JSON.
+      }
+    }
     Notify.create({
       color: 'red-5',
       textColor: 'white',

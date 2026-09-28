@@ -1848,7 +1848,7 @@ export const negocioStore = defineStore('negocio', {
         return false
       }
       try {
-        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio)
+        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio, this.padrao.impressora)
         if (ret.codnegocio) {
           Notify.create({
             type: 'positive',

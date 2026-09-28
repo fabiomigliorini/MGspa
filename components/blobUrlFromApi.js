@@ -4,7 +4,8 @@
  *
  * @param {Object} api - instância axios autenticada do app
  * @param {string} url - rota relativa do arquivo
- * @param {string} mimeType - mime type do blob (ex: 'application/pdf', 'application/xml', 'image/*')
+ * @param {string|null} mimeType - mime type do blob (ex: 'application/pdf', 'application/xml');
+ *   null usa o Content-Type devolvido pela API (curinga tipo 'image/*' o navegador nao exibe, baixa)
  * @param {Object} [params] - query params
  * @returns {Promise<string>} blob URL — chamar URL.revokeObjectURL(...) quando não precisar mais
  */
@@ -14,5 +15,5 @@ export async function blobUrlFromApi(api, url, mimeType, params = {}) {
     responseType: 'blob',
     skipLoading: true,
   })
-  return URL.createObjectURL(new Blob([data], { type: mimeType }))
+  return URL.createObjectURL(new Blob([data], { type: mimeType ?? data.type }))
 }

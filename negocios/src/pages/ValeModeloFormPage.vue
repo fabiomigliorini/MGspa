@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { valeModeloStore } from 'stores/valeModelo'
 import { formataReal, formataNumero, formataNumeroInteligente } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInput from '@components/MgInput.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
@@ -123,9 +124,8 @@ onMounted(async () => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-md-6">
-                <q-input
+                <MgInput
                   v-model="form.modelo"
-                  outlined
                   label="Descrição"
                   maxlength="100"
                   autofocus
@@ -142,7 +142,7 @@ onMounted(async () => {
                 <div class="text-caption text-grey-7">Em branco = vale ao portador</div>
               </div>
               <div class="col-12">
-                <q-input v-model="form.observacoes" outlined label="Observações" maxlength="200" />
+                <MgInput v-model="form.observacoes" label="Observações" maxlength="200" />
               </div>
             </div>
           </q-card-section>
@@ -262,9 +262,26 @@ onMounted(async () => {
              pularia a validação. Cancelar não existe -- a seta do cabeçalho
              já volta para a listagem. -->
         <q-page-sticky position="bottom-right" :offset="[18, 18]">
-          <q-btn fab icon="save" color="primary" type="submit" :loading="salvando">
-            <q-tooltip anchor="center left" self="center right">Salvar</q-tooltip>
-          </q-btn>
+          <div class="row q-gutter-sm items-end">
+            <q-btn
+              v-if="!isNovo"
+              fab-mini
+              color="primary"
+              icon="receipt_long"
+              :to="{
+                path: '/vale-modelo/emitidos',
+                query: {
+                  codvalemodelo: form.codvalemodelo,
+                  codpessoafavorecido: form.codpessoafavorecido || undefined,
+                },
+              }"
+            >
+              <q-tooltip anchor="top middle" self="bottom middle">Vales emitidos</q-tooltip>
+            </q-btn>
+            <q-btn fab icon="save" color="primary" type="submit" :loading="salvando">
+              <q-tooltip anchor="top middle" self="bottom middle">Salvar</q-tooltip>
+            </q-btn>
+          </div>
         </q-page-sticky>
       </q-form>
     </div>

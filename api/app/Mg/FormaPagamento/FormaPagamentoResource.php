@@ -19,7 +19,6 @@ class FormaPagamentoResource extends Resource
             'fechamento' => (bool) $this->fechamento,
             'notafiscal' => (bool) $this->notafiscal,
             'entrega' => (bool) $this->entrega,
-            'valecompra' => (bool) $this->valecompra,
             'lio' => (bool) $this->lio,
             'pix' => (bool) $this->pix,
             'pagarme' => (bool) $this->pagarme,

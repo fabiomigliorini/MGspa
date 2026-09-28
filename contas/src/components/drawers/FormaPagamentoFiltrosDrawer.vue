@@ -4,6 +4,7 @@ import { useDebounceFn } from '@vueuse/core'
 import { useFormaPagamentoStore } from 'src/stores/formaPagamentoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import MgInput from '@components/MgInput.vue'
 
 const store = useFormaPagamentoStore()
 
@@ -33,7 +34,6 @@ const flags = [
   { key: 'fechamento', label: 'Fechamento' },
   { key: 'notafiscal', label: 'Nota Fiscal' },
   { key: 'entrega', label: 'Entrega' },
-  { key: 'valecompra', label: 'Vale Compra' },
   { key: 'pix', label: 'Pix' },
   { key: 'lio', label: 'Lio' },
   { key: 'pagarme', label: 'PagarMe' },
@@ -45,9 +45,8 @@ const flags = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
+      <MgInput
         v-model.number="store.filters.codformapagamento"
-        outlined
         clearable
         :bottom-slots="false"
         type="number"
@@ -55,17 +54,16 @@ const flags = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInput>
 
-      <q-input
+      <MgInput
         v-model="store.filters.formapagamento"
-        outlined
         clearable
         :bottom-slots="false"
         label="Descrição"
       >
         <template #prepend><q-icon name="description" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Status">

@@ -386,9 +386,7 @@ defineExpose({ tecla, acao })
     </template>
 
     <template v-else-if="etapa === 'parcelas'">
-      <div style="max-height: 40vh; overflow-y: auto">
-        <lista-opcoes ref="listaRef" :opcoes="planos" @escolher="escolherPlano" />
-      </div>
+      <lista-opcoes ref="listaRef" :opcoes="planos" @escolher="escolherPlano" />
     </template>
 
     <template v-else-if="etapa === 'modo'">
@@ -419,7 +417,7 @@ defineExpose({ tecla, acao })
     </template>
 
     <template v-else-if="etapa === 'autorizacao'">
-      <div class="text-right q-mb-md">
+      <div class="text-center q-mb-md">
         <div class="text-h2 text-weight-bold text-primary">
           R$ {{ formataNumero(valorMaquininha) }}
         </div>
@@ -429,8 +427,12 @@ defineExpose({ tecla, acao })
           <template v-if="plano?.valorjuros"> · com juros</template>
         </div>
       </div>
-      <MgInput v-model="autorizacao" label="Código de autorização" autofocus maxlength="20" />
-      <div class="text-caption text-grey-7 q-mt-sm">Enter lança o pagamento</div>
+      <div class="row justify-center">
+        <div class="col-12 col-sm-6">
+          <MgInput v-model="autorizacao" label="Código de autorização" autofocus maxlength="20" />
+          <div class="text-caption text-grey-7 text-center q-mt-sm">Enter lança o pagamento</div>
+        </div>
+      </div>
     </template>
 
     <q-inner-loading :showing="enviando" />

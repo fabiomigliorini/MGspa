@@ -22,7 +22,7 @@ onMounted(async () => {
     blobUrl.value = await blobUrlFromApi(
       api,
       `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/anexo/${props.pasta}/${props.anexo}`,
-      'image/*',
+      null,
     )
   } catch (e) {
     console.log(e)
@@ -39,8 +39,8 @@ const abrirNovaAba = () => {
 </script>
 
 <template>
-  <div class="col-xs-12 col-sm-6 col-md-6 col-lg-4 col-xl-3">
-    <q-card flat bordered>
+  <div class="col-xs-6 col-sm-4 col-md-4 col-lg-3 col-xl-2">
+    <q-card flat bordered class="full-height column no-wrap">
       <q-item clickable v-ripple @click="abrirNovaAba">
         <q-item-section avatar>
           <q-avatar :icon="icon" color="secondary" text-color="white" />
@@ -57,12 +57,11 @@ const abrirNovaAba = () => {
           <q-spinner color="primary" size="2em" />
         </div>
       </q-item>
-      <q-card-actions>
-        <q-btn-group flat>
-          <q-btn dense flat round icon="delete" color="negative" @click="emit('excluir')">
-            <q-tooltip class="bg-accent">Excluir</q-tooltip>
-          </q-btn>
-        </q-btn-group>
+      <q-space />
+      <q-card-actions align="right">
+        <q-btn flat dense round size="sm" icon="delete" color="negative" @click="emit('excluir')">
+          <q-tooltip class="bg-accent">Excluir</q-tooltip>
+        </q-btn>
       </q-card-actions>
     </q-card>
   </div>

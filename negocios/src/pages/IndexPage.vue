@@ -10,7 +10,7 @@ import { saurusStore } from 'stores/saurus'
 import { pixStore } from 'stores/pix'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
 import ListagemItensVale from 'components/offline/ListagemItensVale.vue'
-import ValeDialog from 'components/offline/ValeDialog.vue'
+import ListagemContraVale from 'components/offline/ListagemContraVale.vue'
 import InputBarras from 'components/offline/InputBarras.vue'
 import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
@@ -30,6 +30,7 @@ const sPagarMe = pagarMeStore()
 const sSaurus = saurusStore()
 const sPix = pixStore()
 const listagemNotasRef = ref(null)
+const listagemAnexosRef = ref(null)
 const dialogOrcamentoSelecionar = ref(false)
 const dialogOrcamento = ref(false)
 const iFrameOrcamentoRef = ref(null)
@@ -284,19 +285,6 @@ const imprimirRomaneio = async () => {
   })
 }
 
-const imprimirVale = async () => {
-  if (!checarImpressora()) return
-  await api.post(
-    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale/' + sNegocio.padrao.impressora,
-  )
-  Notify.create({
-    type: 'positive',
-    message: 'Impressão Solicitada!',
-    timeout: 1000,
-    actions: [{ icon: 'close', color: 'white' }],
-  })
-}
-
 const imprimirComanda = async () => {
   if (!checarImpressora()) return
   await api.post(
@@ -317,16 +305,6 @@ const romaneio = async () => {
     `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/romaneio`,
     {},
     { title: 'Romaneio', size: 'cupom', onImprimir: imprimirRomaneio },
-  )
-}
-
-const vale = async () => {
-  fecharDialogs()
-  await abrirPdf(
-    api,
-    `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/vale`,
-    {},
-    { title: 'Vale', size: 'cupom', onImprimir: imprimirVale },
   )
 }
 
@@ -517,55 +495,72 @@ onUnmounted(() => {
         >
           <q-tooltip class="bg-accent">Nova NFe (Nota Fiscal)</q-tooltip>
         </q-btn>
+        <q-btn flat color="primary" icon="mdi-paperclip" size="md" dense>
+          <q-tooltip class="bg-accent">Anexar</q-tooltip>
+          <q-menu auto-close>
+            <q-list>
+              <q-item clickable @click="listagemAnexosRef.anexar('confissao')">
+                <q-item-section avatar>
+                  <q-icon name="mdi-file-sign" color="primary" />
+                </q-item-section>
+                <q-item-section>Confissão</q-item-section>
+              </q-item>
+              <q-item clickable @click="listagemAnexosRef.anexar('pdf')">
+                <q-item-section avatar>
+                  <q-icon name="mdi-file-pdf-box" color="primary" />
+                </q-item-section>
+                <q-item-section>PDF</q-item-section>
+              </q-item>
+              <q-item clickable @click="listagemAnexosRef.anexar('imagem')">
+                <q-item-section avatar>
+                  <q-icon name="image" color="primary" />
+                </q-item-section>
+                <q-item-section>Imagem</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </q-item-label>
       <input-barras v-if="sNegocio.podeEditar" />
+      <!-- Notas, titulos, vales e anexos: todos no tamanho do card de produto.
+           Vale aparece tambem com o negocio aberto; o botao de adicionar fica
+           no input de barras (BotaoValeCompras). -->
       <div
         class="row q-col-gutter-md q-px-md"
-        v-if="sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3"
-      >
-        <listagem-notas ref="listagemNotasRef" />
-        <listagem-titulos />
-        <listagem-anexos v-if="sNegocio.negocio.anexos" />
-      </div>
-
-      <listagem-produtos />
-
-      <!-- VALE COMPRAS: um bloco por vale, abaixo da grade de mercadoria.
-           So aparece em natureza que gera financeiro: o vale vira titulo de
-           credito no fechamento, e onde nao ha financeiro ele nunca viraria
-           credito nenhum. Vale ja lancado continua visivel de qualquer jeito,
-           para nao sumir da tela se a natureza mudar. -->
-      <div
-        class="q-px-md"
         v-if="
-          sNegocio.valesAtivos.length > 0 || (sNegocio.podeEditar && sNegocio.negocio.financeiro)
+          sNegocio.negocio.codnegociostatus == 2 ||
+          sNegocio.negocio.codnegociostatus == 3 ||
+          sNegocio.valesAtivos.length > 0
         "
       >
-        <div class="row items-center q-mb-sm">
-          <div class="text-overline text-grey-7">Vale Compras</div>
-          <q-space />
-          <q-btn
-            v-if="sNegocio.podeEditar && sNegocio.negocio.financeiro"
-            flat
-            round
-            size="sm"
-            color="primary"
-            icon="add"
-            @click="sNegocio.abrirVale()"
-          >
-            <q-tooltip class="bg-accent">Adicionar Vale Compras</q-tooltip>
-          </q-btn>
-        </div>
+        <template
+          v-if="sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3"
+        >
+          <listagem-notas ref="listagemNotasRef" />
+          <listagem-titulos />
+        </template>
         <listagem-itens-vale
           v-for="(vale, indice) in sNegocio.valesAtivos"
           :key="vale.uuid"
           :vale="vale"
           :letra="letraVale(indice)"
         />
+        <template v-if="sNegocio.negocio.codnegociostatus == 2">
+          <listagem-contra-vale
+            v-for="pagamento in sNegocio.negocio.pagamentos.filter((p) => p.valenumero)"
+            :key="pagamento.uuid"
+            :pagamento="pagamento"
+          />
+        </template>
+        <listagem-anexos
+          ref="listagemAnexosRef"
+          v-if="sNegocio.negocio.codnegociostatus == 2 || sNegocio.negocio.codnegociostatus == 3"
+        />
       </div>
+
+      <listagem-produtos />
     </div>
 
-    <vale-dialog />
     <div style="padding-bottom: 75px"></div>
 
     <!-- ORCAMENTO SELECIONAR -->
@@ -731,18 +726,6 @@ onUnmounted(() => {
             color="accent"
             @click="dialogOrcamentoSelecionar = true"
             v-if="sNegocio.itensAtivos.length > 0 && sNegocio.negocio.codnegociostatus != 3"
-          />
-
-          <!-- VALE -->
-          <q-fab-action
-            external-label
-            label-class="bg-accent"
-            label="Vale Compras"
-            label-position="left"
-            icon="mdi-ticket"
-            color="accent"
-            @click="vale()"
-            v-if="sNegocio.negocio.codnegociostatus == 2"
           />
         </q-fab>
 

@@ -2,6 +2,7 @@
 // Lista com campo de filtro em cima: digita para filtrar, ↑/↓ navegam, Enter escolhe.
 // Se o texto digitado não bate com nenhum serial cadastrado, oferece "usar o digitado".
 import { ref, computed } from 'vue'
+import MgInput from '@components/MgInput.vue'
 import ListaOpcoes from './ListaOpcoes.vue'
 
 const props = defineProps({
@@ -65,14 +66,19 @@ defineExpose({ tecla })
 </script>
 <template>
   <div>
-    <q-input v-model="filtro" :label="label" outlined autofocus class="q-mb-sm">
+    <!-- a rolagem é do dialog: o filtro gruda no topo enquanto a lista rola -->
+    <MgInput
+      v-model="filtro"
+      :label="label"
+      autofocus
+      class="q-pb-sm bg-white"
+      style="position: sticky; top: 0; z-index: 1"
+    >
       <template #prepend>
         <q-icon name="search" />
       </template>
-    </q-input>
-    <div style="max-height: 40vh; overflow-y: auto">
-      <lista-opcoes ref="listaRef" :opcoes="filtradas" @escolher="escolher" />
-      <div v-if="!filtradas.length" class="text-grey-6 text-italic q-pa-sm">Nada encontrado</div>
-    </div>
+    </MgInput>
+    <lista-opcoes ref="listaRef" :opcoes="filtradas" @escolher="escolher" />
+    <div v-if="!filtradas.length" class="text-grey-6 text-italic q-pa-sm">Nada encontrado</div>
   </div>
 </template>

@@ -1,6 +1,6 @@
 import { Dialog, Notify } from 'quasar'
 import MgXmlDialog from './MgXmlDialog.vue'
-import { extrairErro } from './abrirPdf'
+import { extrairErro } from './extrairErro'
 
 // Com responseType blob o corpo de uma resposta de ERRO tambem vem como Blob, entao
 // error.response.data.message fica undefined. Desembrulha antes para nao perder a

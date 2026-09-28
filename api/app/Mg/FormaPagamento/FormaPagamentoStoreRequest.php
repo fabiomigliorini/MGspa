@@ -23,7 +23,6 @@ class FormaPagamentoStoreRequest extends FormRequest
             'fechamento' => 'boolean',
             'notafiscal' => 'boolean',
             'entrega' => 'boolean',
-            'valecompra' => 'boolean',
             'lio' => 'boolean',
             'pix' => 'boolean',
             'pagarme' => 'boolean',

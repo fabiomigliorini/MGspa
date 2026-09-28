@@ -56,7 +56,15 @@ const FORMAS = [
   { tecla: 3, valor: 'dinheiro', label: 'Dinheiro', ...VISUAL.dinheiro, troco: true },
   { tecla: 4, valor: 'entrega', label: 'Pagamento na Entrega', ...VISUAL.entrega },
   { tecla: 5, valor: 'prazo', label: 'Prazo', ...VISUAL.prazo, componente: FormaPrazo },
-  { tecla: 6, valor: 'vale', label: 'Vale Compras', ...VISUAL.vale, componente: FormaVale },
+  // vale pula o passo 2: o valor utilizado é decidido olhando o saldo do vale
+  {
+    tecla: 6,
+    valor: 'vale',
+    label: 'Vale Compras',
+    ...VISUAL.vale,
+    componente: FormaVale,
+    pulaValor: true,
+  },
   { tecla: 7, valor: 'cheque', label: 'Cheque', ...VISUAL.cheque, componente: FormaCheque },
 ]
 
@@ -92,10 +100,21 @@ const focar = () => {
 // entra no wizard com o que o store preparou (abrirReceber): forma preenchida = pula a escolha
 const entrar = () => {
   editando.value = false
-  passo.value = formaAtual.value ? 2 : 1
-  if (passo.value === 2) {
-    prepararValor()
+  if (!formaAtual.value) {
+    passo.value = 1
+    return
   }
+  irParaForma()
+}
+
+// forma escolhida: passo 2 (valor), ou direto às perguntas quando a forma decide o valor
+const irParaForma = () => {
+  if (formaAtual.value.pulaValor) {
+    passo.value = 3
+    return
+  }
+  passo.value = 2
+  prepararValor()
 }
 
 // dinheiro: o operador digita o que recebeu (campo focado, vazio); demais: saldo como texto
@@ -146,8 +165,7 @@ const cancelarEdicao = () => {
 // ---- navegação ----
 const escolherForma = (forma) => {
   sNegocio.receber.forma = forma.valor
-  passo.value = 2
-  prepararValor()
+  irParaForma()
 }
 
 // passo 2 → Dinheiro lança (após conferir recebido/troco); as outras seguem para as perguntas da forma
@@ -178,7 +196,7 @@ const voltar = () => {
     return
   }
   editando.value = false
-  passo.value -= 1
+  passo.value = passo.value === 3 && formaAtual.value?.pulaValor ? 1 : passo.value - 1
   if (passo.value === 2) {
     prepararValor()
   }
