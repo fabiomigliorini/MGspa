@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useCidadeStore } from '../../stores/cidadeStore'
 import { useDebounceFn } from '@vueuse/core'
@@ -102,20 +103,20 @@ onMounted(() => {
       <!-- Nome da Cidade -->
       <div class="text-caption text-grey-7 q-mb-md">Busque pela Cidade:</div>
       <div class="q-mb-md">
-        <q-input v-model="filters.cidade" label="Nome da Cidade" outlined clearable>
+        <MgInput v-model="filters.cidade" label="Nome da Cidade" outlined clearable>
           <template v-slot:prepend>
             <q-icon name="location_city" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <!-- Codigo Oficial -->
       <div class="q-mb-md">
-        <q-input v-model="filters.codigooficial" label="Codigo Oficial (IBGE)" outlined clearable>
+        <MgInput v-model="filters.codigooficial" label="Codigo Oficial (IBGE)" outlined clearable>
           <template v-slot:prepend>
             <q-icon name="tag" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
     </div>
   </div>

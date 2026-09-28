@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -262,11 +263,11 @@ onMounted(async () => {
 
               <!-- NCM -->
               <div class="col-12 col-sm-6">
-                <q-input v-model="form.ncm" outlined label="NCM" maxlength="10" :disable="loading">
+                <MgInput v-model="form.ncm" outlined label="NCM" maxlength="10" :disable="loading">
                   <template v-slot:prepend>
                     <q-icon name="tag" />
                   </template>
-                </q-input>
+                </MgInput>
               </div>
 
               <!-- BIT -->
@@ -286,17 +287,17 @@ onMounted(async () => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.csosn"
-                  outlined
+                <MgInputValor
+                  v-model="form.csosn"
+                  :decimals="0"
+                  :grouping="false"
                   label="CSOSN"
-                  type="number"
                   :disable="loading"
                 >
                   <template v-slot:prepend>
                     <q-icon name="tag" />
                   </template>
-                </q-input>
+                </MgInputValor>
               </div>
               <div class="col-12 col-sm-4">
                 <MgInputValor v-model="form.icmsbase" label="Base ICMS (%)" :readonly="loading" />
@@ -321,11 +322,11 @@ onMounted(async () => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.icmscst"
-                  outlined
+                <MgInputValor
+                  v-model="form.icmscst"
+                  :decimals="0"
+                  :grouping="false"
                   label="CST"
-                  type="number"
                   :disable="loading"
                 />
               </div>
@@ -359,11 +360,11 @@ onMounted(async () => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.piscst"
-                  outlined
+                <MgInputValor
+                  v-model="form.piscst"
+                  :decimals="0"
+                  :grouping="false"
                   label="PIS CST"
-                  type="number"
                   :disable="loading"
                 />
               </div>
@@ -371,11 +372,11 @@ onMounted(async () => {
                 <MgInputValor v-model="form.pispercentual" label="PIS (%)" :readonly="loading" />
               </div>
               <div class="col-12 col-sm-3">
-                <q-input
-                  v-model.number="form.cofinscst"
-                  outlined
+                <MgInputValor
+                  v-model="form.cofinscst"
+                  :decimals="0"
+                  :grouping="false"
                   label="COFINS CST"
-                  type="number"
                   :disable="loading"
                 />
               </div>
@@ -399,11 +400,11 @@ onMounted(async () => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.ipicst"
-                  outlined
+                <MgInputValor
+                  v-model="form.ipicst"
+                  :decimals="0"
+                  :grouping="false"
                   label="IPI CST"
-                  type="number"
                   :disable="loading"
                 />
               </div>
@@ -475,7 +476,7 @@ onMounted(async () => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-6">
-                <q-input
+                <MgInput
                   v-model="form.acumuladordominiovista"
                   outlined
                   label="Acumulador Domínio Vista"
@@ -483,7 +484,7 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 col-sm-6">
-                <q-input
+                <MgInput
                   v-model="form.acumuladordominioprazo"
                   outlined
                   label="Acumulador Domínio Prazo"
@@ -491,7 +492,7 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="form.historicodominio"
                   outlined
                   type="textarea"
@@ -525,7 +526,7 @@ onMounted(async () => {
             Observações
           </div>
           <q-card-section>
-            <q-input
+            <MgInput
               v-model="form.observacoesnf"
               outlined
               type="textarea"

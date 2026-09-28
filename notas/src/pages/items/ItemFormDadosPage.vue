@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -154,7 +155,7 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Código de Barras -->
               <div class="col-12">
-                <q-input
+                <MgInput
                   :model-value="item.produtoBarra?.codigobarra"
                   label="Código de Barras"
                   outlined
@@ -163,12 +164,12 @@ onMounted(() => {
                   <template v-slot:prepend>
                     <q-icon name="qr_code_scanner" />
                   </template>
-                </q-input>
+                </MgInput>
               </div>
 
               <!-- Descrição -->
               <div class="col-12">
-                <q-input
+                <MgInput
                   :model-value="item.produtoBarra?.descricao"
                   label="Descrição do Produto"
                   outlined
@@ -178,12 +179,12 @@ onMounted(() => {
 
               <!-- NCM -->
               <div class="col-12 col-sm-6">
-                <q-input :model-value="item.produtoBarra?.ncm" label="NCM" outlined readonly />
+                <MgInput :model-value="item.produtoBarra?.ncm" label="NCM" outlined readonly />
               </div>
 
               <!-- CEST -->
               <div class="col-12 col-sm-6">
-                <q-input :model-value="item.produtoBarra?.cest" label="CEST" outlined readonly />
+                <MgInput :model-value="item.produtoBarra?.cest" label="CEST" outlined readonly />
               </div>
             </div>
           </q-card-section>
@@ -197,13 +198,11 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Quantidade -->
               <div class="col-12 col-sm-6 col-md-4">
-                <q-input
-                  v-model.number="form.quantidade"
+                <MgInputValor
+                  v-model="form.quantidade"
+                  :decimals="3"
                   label="Quantidade *"
-                  outlined
-                  type="number"
-                  step="0.001"
-                  min="0.001"
+                  :min="0.001"
                   :rules="[
                     (val) => !!val || 'Campo obrigatório',
                     (val) => val > 0 || 'Quantidade deve ser maior que zero',
@@ -300,7 +299,7 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Informações Adicionais -->
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="form.informacoesadicionais"
                   label="Informações Adicionais do Item"
                   outlined

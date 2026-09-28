@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch } from 'vue'
 import dominioService from '../../services/dominioService'
 import { notificarSucesso, notificarErro } from '../../utils/notify'
@@ -62,7 +63,7 @@ const submit = async () => {
 
       <q-form @submit.prevent="submit">
         <q-card-section class="row q-col-gutter-md">
-          <q-input
+          <MgInput
             class="col-6"
             v-model="form.codcfop"
             label="CFOP *"
@@ -75,7 +76,7 @@ const submit = async () => {
               (v) => String(v).length === 4 || 'CFOP deve ter 4 dígitos',
             ]"
           />
-          <q-input
+          <MgInput
             class="col-6"
             v-model="form.icmscst"
             label="CST *"
@@ -84,7 +85,7 @@ const submit = async () => {
             :disable="isEdicao"
             :rules="[(v) => v >= 0 || 'Obrigatório']"
           />
-          <q-input
+          <MgInput
             class="col-6"
             v-model="form.acumuladoravista"
             label="Acumulador à Vista *"
@@ -92,7 +93,7 @@ const submit = async () => {
             mask="#######"
             :rules="[(v) => v > 0 || 'Obrigatório']"
           />
-          <q-input
+          <MgInput
             class="col-6"
             v-model="form.acumuladorprazo"
             label="Acumulador à Prazo *"
@@ -100,7 +101,7 @@ const submit = async () => {
             mask="#######"
             :rules="[(v) => v > 0 || 'Obrigatório']"
           />
-          <q-input
+          <MgInput
             class="col-12"
             v-model="form.historico"
             label="Histórico"

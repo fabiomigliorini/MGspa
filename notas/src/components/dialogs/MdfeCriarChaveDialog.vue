@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import mdfeService from '../../services/mdfeService'
@@ -62,7 +63,7 @@ const submit = async () => {
 
       <q-form @submit.prevent="submit">
         <q-card-section>
-          <q-input
+          <MgInput
             v-model="nfechave"
             label="Chave da NFe *"
             outlined

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
 import veiculoService from '../../services/veiculoService'
 import { notificarSucesso, notificarErro } from '../../utils/notify'
@@ -83,7 +84,7 @@ const submit = async () => {
 
       <q-form @submit.prevent="submit">
         <q-card-section class="q-gutter-md">
-          <q-input
+          <MgInput
             v-model="form.veiculoconjunto"
             label="Nome *"
             outlined

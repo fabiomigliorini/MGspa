@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-28 22:15'
+updated_date: '2026-09-28 22:21'
 labels:
   - components
 dependencies: []
@@ -35,7 +35,7 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 - [x] #3 Nenhum <q-input> cru sobrou em contas/src
 - [x] #4 Nenhum <q-input> cru sobrou em estoque/src
 - [x] #5 Nenhum <q-input> cru sobrou em agro/src
-- [ ] #6 Nenhum <q-input> cru sobrou em notas/src
+- [x] #6 Nenhum <q-input> cru sobrou em notas/src
 - [ ] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
 - [x] #8 Regra do MgInput escrita no CLAUDE.md (campo novo e form que receber manutencao usam MgInput)
 <!-- AC:END -->
@@ -52,4 +52,6 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 28/09/2026: estoque migrado — 64 q-input em 17 arquivos. Numeros viraram MgInputValor com as casas da coluna no banco (preco/dimensoes 2, peso 4, custo medio 6, quantidade conferida e embalagem 3, codigos e localizacao sem casas nem milhar, mes 1-12). Datas viraram MgInputData; a data/hora do ajuste da conferencia virou MgInputData timestamp e passou a abrir na hora local (antes vinha de toISOString, em UTC, 4h adiantada). MgInputValor e MgInputData ganharam o slot #prepend (repassado ao q-input), para os icones dos filtros de codigo e das datas continuarem aparecendo.
 
 28/09/2026: contas migrado — 82 q-input em 33 arquivos. Os 24 numericos (filtros de codigo, numero do banco, dados bancarios do portador, numero do motivo de devolucao, agencia do filtro de cheque, dias da parcela no agrupamento) viraram MgInputValor sem casas; so os Dias aceitam milhar/negativo. Nenhuma data crua no contas.
+
+28/09/2026: notas migrado — 115 q-input em 39 arquivos. Numericos viraram MgInputValor: quantidades e pesos com 3 casas (a quantidade do item tinha 4 na tela, o banco guarda 3), tara/capacidade/volumes sem casas, codigos/CST/CSOSN/NSU/numero/ordem sem casas nem milhar. O filtro de emissao das NF-e de terceiros (mascara DD/MM + q-date + conversao na mao) virou MgInputData, e sairam as funcoes convertToISODate/convertFromISODate. Varredura confirmou que nenhum campo migrado tinha conteudo no slot padrao (MgInput nao o repassa).
 <!-- SECTION:NOTES:END -->

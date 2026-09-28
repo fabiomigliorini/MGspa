@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch, computed } from 'vue'
 import {
   TIPO_PAGAMENTO_OPTIONS,
@@ -227,7 +228,7 @@ watch(
 
             <!-- Autorização (somente para cartões) -->
             <div v-if="requerAutorizacao" class="col-12 col-sm-6">
-              <q-input
+              <MgInput
                 v-model="form.autorizacao"
                 label="Código de Autorização"
                 outlined
@@ -250,7 +251,7 @@ watch(
 
             <!-- Descrição Adicional -->
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="form.descricao"
                 label="Descrição Adicional"
                 outlined

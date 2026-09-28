@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 import { validarChaveNFe } from 'src/utils/validators'
 
@@ -116,7 +117,7 @@ watch(
           <div class="row q-col-gutter-md">
             <!-- Chave de Acesso -->
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="form.nfechave"
                 label="Chave de Acesso da NFe *"
                 outlined

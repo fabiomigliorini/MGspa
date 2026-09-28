@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -134,7 +135,7 @@ onMounted(() => {
         <q-card v-if="!isEditMode" class="q-mb-md">
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">Código CFOP</div>
           <q-card-section>
-            <q-input
+            <MgInput
               v-model="form.codcfop"
               outlined
               autofocus
@@ -156,7 +157,7 @@ onMounted(() => {
         <q-card class="q-mb-md">
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">Descrição</div>
           <q-card-section>
-            <q-input
+            <MgInput
               v-model="form.cfop"
               type="textarea"
               rows="6"

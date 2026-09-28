@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { watch } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
@@ -140,7 +141,7 @@ const limparFiltros = async () => {
 
       <!-- 6. NCM -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="store.filters.ncm"
           label="6. NCM"
           outlined
@@ -176,7 +177,7 @@ const limparFiltros = async () => {
 
       <!-- CST -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="store.filters.cst"
           label="CST"
           outlined
@@ -188,7 +189,7 @@ const limparFiltros = async () => {
 
       <!-- Classificação Tributária -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="store.filters.cclasstrib"
           label="Classificação Tributária"
           outlined
@@ -216,7 +217,7 @@ const limparFiltros = async () => {
 
       <!-- Benefício -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="store.filters.beneficiocodigo"
           label="Código Benefício"
           outlined

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -964,7 +965,7 @@ watch(codnfeterceiroitem, () => carregarAnalise())
             </q-card-section>
 
             <q-card-section class="q-pt-md">
-              <q-input
+              <MgInput
                 v-model="formDetalhes.observacoes"
                 label="Observações"
                 outlined

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import {
@@ -70,8 +71,7 @@ const carregar = async () => {
 
 onMounted(carregar)
 
-const addVeiculo = () =>
-  form.value.MdfeVeiculoS.push({ codveiculo: null, codpessoacondutor: null })
+const addVeiculo = () => form.value.MdfeVeiculoS.push({ codveiculo: null, codpessoacondutor: null })
 const delVeiculo = (index) => form.value.MdfeVeiculoS.splice(index, 1)
 
 const submit = async () => {
@@ -201,7 +201,14 @@ const submit = async () => {
                 />
               </div>
               <div class="col-auto">
-                <q-btn flat round size="sm" color="grey-7" icon="delete" @click="delVeiculo(index)" />
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="delete"
+                  @click="delVeiculo(index)"
+                />
               </div>
             </div>
             <q-btn flat color="primary" icon="add" label="Adicionar Veículo" @click="addVeiculo" />
@@ -213,14 +220,14 @@ const submit = async () => {
             Informações
           </q-card-section>
           <q-card-section class="q-gutter-md">
-            <q-input
+            <MgInput
               v-model="form.informacoesadicionais"
               label="Informações Adicionais"
               type="textarea"
               outlined
               autogrow
             />
-            <q-input
+            <MgInput
               v-model="form.informacoescomplementares"
               label="Informações Complementares"
               type="textarea"

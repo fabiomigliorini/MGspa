@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -109,7 +110,7 @@ watch(
           <div class="row q-col-gutter-md">
             <!-- Fatura -->
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="form.fatura"
                 label="Número da Fatura *"
                 outlined

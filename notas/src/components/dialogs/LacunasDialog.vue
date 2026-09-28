@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useInutilizacaoStore } from '../../stores/inutilizacaoStore'
@@ -96,7 +97,7 @@ watch(model, (aberto) => {
       </q-card-section>
 
       <q-card-section class="q-pb-none q-mb-none">
-        <q-input
+        <MgInput
           v-model="justificativa"
           label="Justificativa"
           outlined

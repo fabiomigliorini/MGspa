@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
@@ -754,7 +755,7 @@ const confirmarExclusaoTributo = () => {
         </q-card-section>
 
         <q-card-section>
-          <q-input
+          <MgInput
             v-model="tributoForm.codigo"
             label="Sigla *"
             outlined
@@ -762,7 +763,7 @@ const confirmarExclusaoTributo = () => {
             counter
             :rules="[(val) => !!val || 'Campo obrigatório']"
           />
-          <q-input
+          <MgInput
             v-model="tributoForm.descricao"
             label="Descrição *"
             outlined
@@ -884,7 +885,7 @@ const confirmarExclusaoTributo = () => {
             />
 
             <!-- 6. NCM (menor prioridade, considera tamanho) -->
-            <q-input
+            <MgInput
               v-model="regraForm.ncm"
               label="6. NCM"
               outlined
@@ -908,7 +909,7 @@ const confirmarExclusaoTributo = () => {
           </div>
           <div class="row q-col-gutter-md q-mb-sm">
             <!-- CST -->
-            <q-input
+            <MgInput
               v-model="regraForm.cst"
               label="CST *"
               outlined
@@ -926,7 +927,7 @@ const confirmarExclusaoTributo = () => {
             />
 
             <!-- Classificação Tributária -->
-            <q-input
+            <MgInput
               v-model="regraForm.cclasstrib"
               label="Classificação Tributária *"
               outlined
@@ -967,7 +968,7 @@ const confirmarExclusaoTributo = () => {
             </div>
 
             <!-- Benefício -->
-            <q-input
+            <MgInput
               v-model="regraForm.beneficiocodigo"
               label="Benefício"
               outlined
@@ -998,7 +999,7 @@ const confirmarExclusaoTributo = () => {
             />
 
             <!-- Observações -->
-            <q-input
+            <MgInput
               v-model="regraForm.observacoes"
               label="Observações"
               outlined

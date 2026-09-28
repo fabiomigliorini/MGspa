@@ -1,4 +1,5 @@
 <script setup>
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -239,21 +240,18 @@ const submitDevolucao = async () => {
                 </q-item-section>
 
                 <q-item-section class="col-3">
-                  <q-input
-                    v-model.number="quantidades[item.codnotafiscalprodutobarra]"
-                    type="number"
+                  <MgInputValor
+                    v-model="quantidades[item.codnotafiscalprodutobarra]"
+                    :decimals="3"
                     label="Quantidade"
-                    outlined
                     dense
                     :min="0"
-                    step="0.001"
                     :max="parseFloat(item.quantidade)"
                     :rules="[
                       (val) => val >= 0 || 'Mínimo 0',
                       (val) => val <= parseFloat(item.quantidade) || `Máximo ${item.quantidade}`,
                     ]"
-                    input-class="text-right"
-                  ></q-input>
+                  ></MgInputValor>
                 </q-item-section>
               </q-item>
             </q-list>

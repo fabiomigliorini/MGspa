@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { computed, ref } from 'vue'
 import { useNotaFiscalStore } from 'src/stores/notaFiscalStore'
 import { getEnteIcon, getEnteColor } from 'src/composables/useTributoIcons'
@@ -268,7 +269,7 @@ const updatedValor = async (ti) => {
             </div>
 
             <div class="col-4">
-              <q-input
+              <MgInput
                 v-model="tributoItem.beneficiocodigo"
                 label="Benefício"
                 outlined
@@ -342,7 +343,7 @@ const updatedValor = async (ti) => {
 
             <!-- Benefício e Fundamento Legal -->
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="tributoItem.fundamentolegal"
                 label="Fundamento Legal"
                 outlined

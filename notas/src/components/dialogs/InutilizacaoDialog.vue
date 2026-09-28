@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -156,7 +157,7 @@ watch(model, (aberto) => {
 
             <div class="col-12">
               <!-- 15 caracteres e o minimo exigido pela SEFAZ -->
-              <q-input
+              <MgInput
                 v-model="cad.justificativa"
                 label="Justificativa"
                 outlined
