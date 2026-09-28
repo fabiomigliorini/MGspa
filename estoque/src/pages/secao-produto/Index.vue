@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInput from '@components/MgInput.vue'
 
 const $q = useQuasar()
 const treeRef = ref(null)
@@ -231,7 +232,7 @@ onMounted(carregarRaiz)
         <q-separator inset />
 
         <q-card-section>
-          <q-input
+          <MgInput
             v-model="filtro"
             outlined
             clearable
@@ -240,7 +241,7 @@ onMounted(carregarRaiz)
             class="q-mb-md"
           >
             <template #prepend><q-icon name="search" /></template>
-          </q-input>
+          </MgInput>
 
           <div v-if="loading" class="row justify-center q-my-lg">
             <q-spinner-dots color="primary" size="32px" />
@@ -345,7 +346,7 @@ onMounted(carregarRaiz)
             <div v-if="parentNode && isNovo" class="text-caption text-grey-6 q-mb-sm">
               Em: {{ parentNode.label }}
             </div>
-            <q-input
+            <MgInput
               v-model="nome"
               outlined
               :label="dialogCfg().label"

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-28 22:08'
+updated_date: '2026-09-28 22:11'
 labels:
   - components
 dependencies: []
@@ -33,7 +33,7 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 - [x] #1 Nenhum <q-input> cru sobrou em negocios/src (trocado por MgInput)
 - [ ] #2 Nenhum <q-input> cru sobrou em pessoas/src
 - [ ] #3 Nenhum <q-input> cru sobrou em contas/src
-- [ ] #4 Nenhum <q-input> cru sobrou em estoque/src
+- [x] #4 Nenhum <q-input> cru sobrou em estoque/src
 - [x] #5 Nenhum <q-input> cru sobrou em agro/src
 - [ ] #6 Nenhum <q-input> cru sobrou em notas/src
 - [ ] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
@@ -48,4 +48,6 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 28/09/2026: agro migrado — 31 q-input em 16 arquivos. 29 viraram MgInput (troca 1:1). Os 2 type=number viraram MgInputValor: Tara do caminhao (decimals 0, suffix kg) e N do romaneio no filtro de cargas (decimals 0, sem milhar, alinhado a esquerda). SelectTalhao tambem virou MgInput: o campo readonly sai do Tab e o foco cai direto no botao do mapa (Enter abre).
 
 28/09/2026: negocios migrado — 43 q-input em 19 arquivos. Numericos viraram MgInputValor: quantidade da devolucao (3 casas, teto = disponivel), codnegocio da confissao, copias da comanda e os filtros ID Woo, # Negocio, # Liquidacao e N do negocio dos vales emitidos (sem milhar). Removido um <q-input /> vazio perdido no dialogo de editar item (ListagemProdutos), que desenhava uma caixa sem funcao e parava no Tab.
+
+28/09/2026: estoque migrado — 64 q-input em 17 arquivos. Numeros viraram MgInputValor com as casas da coluna no banco (preco/dimensoes 2, peso 4, custo medio 6, quantidade conferida e embalagem 3, codigos e localizacao sem casas nem milhar, mes 1-12). Datas viraram MgInputData; a data/hora do ajuste da conferencia virou MgInputData timestamp e passou a abrir na hora local (antes vinha de toISOString, em UTC, 4h adiantada). MgInputValor e MgInputData ganharam o slot #prepend (repassado ao q-input), para os icones dos filtros de codigo e das datas continuarem aparecendo.
 <!-- SECTION:NOTES:END -->

@@ -4,14 +4,12 @@ import { useDebounceFn } from '@vueuse/core'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import MgInputData from '@components/MgInputData.vue'
 
 const store = useConferenciaStore()
 
 const debouncedFetch = useDebounceFn(() => store.fetchListagem(true), 800)
-watch(
-  () => [store.filters.inativo, store.filters.dataCorte],
-  debouncedFetch,
-)
+watch(() => [store.filters.inativo, store.filters.dataCorte], debouncedFetch)
 
 const clear = () => {
   store.clearFilters()
@@ -42,17 +40,15 @@ const statusOptions = [
     </FilterGroup>
 
     <FilterGroup title="Data de corte">
-      <q-input
+      <MgInputData
         v-model="store.filters.dataCorte"
-        outlined
-        type="date"
         stack-label
         :bottom-slots="false"
         label="Conferir desde"
         hint="Lista itens não conferidos desde esta data"
       >
         <template #prepend><q-icon name="event" /></template>
-      </q-input>
+      </MgInputData>
     </FilterGroup>
   </FilterDrawerShell>
 </template>

@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useUnidadeMedidaStore } from 'src/stores/unidadeMedidaStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInput from '@components/MgInput.vue'
 
 const $q = useQuasar()
 const store = useUnidadeMedidaStore()
@@ -213,7 +214,7 @@ onMounted(() => store.fetchItems(true))
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12 col-sm-8">
-                <q-input
+                <MgInput
                   v-model="model.unidademedida"
                   outlined
                   label="Descrição"
@@ -223,7 +224,7 @@ onMounted(() => store.fetchItems(true))
                 />
               </div>
               <div class="col-12 col-sm-4">
-                <q-input
+                <MgInput
                   v-model="model.sigla"
                   outlined
                   label="Sigla"

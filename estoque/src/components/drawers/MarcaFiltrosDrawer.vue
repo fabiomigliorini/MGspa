@@ -4,6 +4,8 @@ import { useDebounceFn } from '@vueuse/core'
 import { useMarcaStore } from 'src/stores/marcaStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const store = useMarcaStore()
 
@@ -30,27 +32,21 @@ const sortOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codmarca"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codmarca"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
-        v-model="store.filters.marca"
-        outlined
-        clearable
-        :bottom-slots="false"
-        label="Marca"
-      >
+      <MgInput v-model="store.filters.marca" outlined clearable :bottom-slots="false" label="Marca">
         <template #prepend><q-icon name="sell" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Ordenação e Status">

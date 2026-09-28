@@ -6,6 +6,9 @@ import { api } from 'src/services/api'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import { goBack } from 'src/utils/goBack'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInput from '@components/MgInput.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -307,7 +310,7 @@ onMounted(() => {
         >
         <q-separator inset />
         <q-card-section>
-          <q-input
+          <MgInput
             ref="barrasRef"
             v-model="barrasBusca"
             outlined
@@ -316,7 +319,7 @@ onMounted(() => {
             @keyup.enter="buscarPorBarras"
           >
             <template #prepend><q-icon name="qr_code_2" /></template>
-          </q-input>
+          </MgInput>
         </q-card-section>
         <q-separator inset />
         <q-card-actions align="right" class="text-primary">
@@ -453,48 +456,49 @@ onMounted(() => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-6">
-                <q-input
-                  v-model.number="conf.quantidade"
-                  outlined
-                  type="number"
-                  step="any"
+                <MgInputValor
+                  v-model="conf.quantidade"
+                  :decimals="3"
                   label="Quantidade conferida"
                   autofocus
                   :rules="[(v) => (v !== null && v !== '') || 'Obrigatório']"
                 />
               </div>
               <div class="col-6">
-                <q-input
-                  v-model.number="conf.custo"
-                  outlined
-                  type="number"
-                  step="any"
-                  label="Custo médio"
-                />
+                <MgInputValor v-model="conf.custo" :decimals="6" label="Custo médio" />
               </div>
               <div class="col-12">
-                <q-input
-                  v-model="conf.vencimento"
-                  outlined
-                  type="date"
-                  stack-label
-                  label="Vencimento (opcional)"
+                <MgInputData v-model="conf.vencimento" stack-label label="Vencimento (opcional)" />
+              </div>
+              <div class="col-3">
+                <MgInputValor
+                  v-model="conf.corredor"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Corredor"
                 />
               </div>
               <div class="col-3">
-                <q-input v-model.number="conf.corredor" outlined type="number" label="Corredor" />
+                <MgInputValor
+                  v-model="conf.prateleira"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Prat."
+                />
               </div>
               <div class="col-3">
-                <q-input v-model.number="conf.prateleira" outlined type="number" label="Prat." />
+                <MgInputValor
+                  v-model="conf.coluna"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Coluna"
+                />
               </div>
               <div class="col-3">
-                <q-input v-model.number="conf.coluna" outlined type="number" label="Coluna" />
-              </div>
-              <div class="col-3">
-                <q-input v-model.number="conf.bloco" outlined type="number" label="Bloco" />
+                <MgInputValor v-model="conf.bloco" :decimals="0" :grouping="false" label="Bloco" />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="conf.observacoes"
                   outlined
                   type="textarea"

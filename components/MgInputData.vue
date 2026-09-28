@@ -504,6 +504,7 @@ function onPaste(e) {
     @paste="onPaste"
     @update:model-value="onTyped"
   >
+    <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
     <q-popup-proxy
       ref="popupRef"
       :no-parent-event="true"
