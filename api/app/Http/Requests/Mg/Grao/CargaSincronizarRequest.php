@@ -46,6 +46,16 @@ class CargaSincronizarRequest extends FormRequest
             'codveiculo' => ['nullable', 'exists:tblveiculo,codveiculo'],
             'codpessoamotorista' => ['nullable', 'exists:tblpessoa,codpessoa'],
             'motorista' => ['nullable', 'string', 'max:60'],
+            // Motorista SEM cadastro (só dígitos em CPF/telefone/CEP). Nullable:
+            // carga antiga e offline chegam sem eles — quem exige é o modal do pátio.
+            'cpfmotorista' => ['nullable', 'digits:11', 'cpf_cnpj'],
+            'telefonemotorista' => ['nullable', 'digits_between:10,11'],
+            'cepmotorista' => ['nullable', 'digits:8'],
+            'enderecomotorista' => ['nullable', 'string', 'max:100'],
+            'numeromotorista' => ['nullable', 'string', 'max:10'],
+            'complementomotorista' => ['nullable', 'string', 'max:50'],
+            'bairromotorista' => ['nullable', 'string', 'max:50'],
+            'codcidademotorista' => ['nullable', 'exists:tblcidade,codcidade'],
             'observacao' => ['nullable', 'string'],
 
             // Pesos

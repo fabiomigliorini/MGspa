@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-17 14:51'
+updated_date: '2026-09-28 21:00'
 labels:
   - agro
 dependencies: []
@@ -34,3 +35,9 @@ Com o banco vazio, as migracoes do passo 2 nao fazem nada e o passo 3 semeia o p
 
 **Conferir depois:** se a PROD (e a base de onde o dev e restaurado) esta no mesmo estado.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+28/09/2026: o dev já está no esquema novo (tblparametroclassificacao com codcultura, 8 parâmetros da norma: Soja 5, Milho 3; tabelas do modelo de julho e colunas codtabelaclassificacao já removidas). Falta conferir a PROD com api/tests/agro/conferencia.sql antes de fechar.
+<!-- SECTION:NOTES:END -->

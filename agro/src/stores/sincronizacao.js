@@ -3,7 +3,11 @@ import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
 import { notifyError } from 'src/utils/notify'
-import { normalizarCargaDoServidor, ETAPAS_ABERTAS } from 'src/utils/carga'
+import {
+  normalizarCargaDoServidor,
+  ETAPAS_ABERTAS,
+  CAMPOS_MOTORISTA_SEM_CADASTRO,
+} from 'src/utils/carga'
 import { lerUltimaSincronizacao, gravarUltimaSincronizacao } from 'src/utils/cacheReferencias'
 
 // Store de sincronizacao offline-first (espelha o negocios):
@@ -130,6 +134,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
       patch.codcarga = norm.codcarga
       patch.placa = norm.placa
       patch.motorista = norm.motorista
+      for (const campo of CAMPOS_MOTORISTA_SEM_CADASTRO) patch[campo] = norm[campo]
       patch.codveiculo = norm.codveiculo
       patch.codpessoamotorista = norm.codpessoamotorista
       patch.classificacao = norm.classificacao
@@ -141,8 +146,8 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     return oficial
   }
 
-  // PULL de cargas (listagem multi-dispositivo): baixa as cargas da safra+dia e
-  // faz merge no Dexie. NÃO reusa puxarTabela porque, pra carga, `sincronizado` é
+  // PULL de cargas (listagem multi-dispositivo): baixa as cargas do dia e faz
+  // merge no Dexie. NÃO reusa puxarTabela porque, pra carga, `sincronizado` é
   // flag 0/1 (não timestamp) e um bulkPut cego sobrescreveria edições locais
   // pendentes. Regras do merge: nunca tocar em linha local `sincronizado === 0`;
   // as puxadas entram como `sincronizado: 1` (servidor é a autoridade). Casa pela
@@ -152,18 +157,23 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   // caminhão que chegou ontem em outro dispositivo e não finalizou tem que
   // aparecer hoje. O endpoint só filtra etapa por igualdade → uma chamada por
   // etapa aberta (poucas linhas cada).
-  async function puxarCargas(codsafra, dataIso) {
-    if (!codsafra) return
+  //
+  // O pátio é físico e mistura safras (milho e soja no mesmo dia), então nada
+  // aqui filtra por safra — exceto sem dia filtrado, quando "todos os romaneios"
+  // é a temporada inteira de cada safra ATIVA (`codsafras`), não o histórico.
+  async function puxarCargas(codsafras, dataIso) {
     const pendentes = new Set(
       (await db.carga.where('sincronizado').equals(0).toArray()).map((c) => c.uuid),
     )
-    if (!dataIso) {
-      await puxarPaginasCarga({ codsafra }, pendentes)
-      return
+    if (dataIso) {
+      await puxarPaginasCarga({ data: dataIso }, pendentes)
+    } else {
+      for (const codsafra of codsafras || []) {
+        await puxarPaginasCarga({ codsafra }, pendentes)
+      }
     }
-    await puxarPaginasCarga({ codsafra, data: dataIso }, pendentes)
     for (const etapa of ETAPAS_ABERTAS) {
-      await puxarPaginasCarga({ codsafra, etapa }, pendentes)
+      await puxarPaginasCarga({ etapa }, pendentes)
     }
   }
 

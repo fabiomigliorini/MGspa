@@ -1,28 +1,36 @@
 <script setup>
-// Tipo de romaneio (Recebimento / Expedição / Transferência) como toggle — o
-// operador decide na hora de digitar, não num filtro de tela.
+// Tipo de romaneio (Recebimento / Expedição / Transferência) — select do modal
+// de Operação. Ícone/cor vêm de SENTIDOS (utils/carga), o mesmo par do card.
+// Sem ícone no campo: num modal de 560px com 3 campos por linha ele cortaria
+// "Recebimento" com reticências.
 import { SENTIDOS } from 'src/utils/carga'
 
 defineProps({
   modelValue: { type: String, default: null },
-  disable: { type: Boolean, default: false },
+  label: { type: String, default: 'Operação' },
 })
 defineEmits(['update:modelValue'])
-
-const opcoes = SENTIDOS.map((s) => ({ label: s.label, value: s.value, icon: s.icon }))
 </script>
 
 <template>
-  <q-btn-toggle
+  <q-select
     :model-value="modelValue"
-    :options="opcoes"
-    :disable="disable"
-    spread
-    no-caps
-    unelevated
-    color="grey-3"
-    text-color="grey-9"
-    toggle-color="primary"
+    :options="SENTIDOS"
+    :label="label"
+    option-value="value"
+    option-label="label"
+    emit-value
+    map-options
+    outlined
     @update:model-value="$emit('update:modelValue', $event)"
-  />
+  >
+    <template #option="{ opt, itemProps }">
+      <q-item v-bind="itemProps">
+        <q-item-section avatar>
+          <q-icon :name="opt.icon" :color="opt.color" />
+        </q-item-section>
+        <q-item-section>{{ opt.label }}</q-item-section>
+      </q-item>
+    </template>
+  </q-select>
 </template>

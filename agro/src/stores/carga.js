@@ -13,6 +13,7 @@ import {
   pontoCompleto,
   ratearPontos,
   agoraLocal,
+  CAMPOS_MOTORISTA_SEM_CADASTRO,
 } from 'src/utils/carga'
 import { notifyError } from 'src/utils/notify'
 
@@ -75,10 +76,22 @@ export const useCargaStore = defineStore('carga', () => {
       .sort((a, b) => (Number(a.ordem) || 0) - (Number(b.ordem) || 0))
   }
 
+  // Safra/cultura/peso da saca de UMA carga. O pátio mistura safras (milho e
+  // soja no mesmo dia), então quem exibe a carga lê daqui, não da safra ativa.
+  function safraDaCarga(carga) {
+    return safras.value.find((x) => x.codsafra === carga?.codsafra) || null
+  }
+  function culturaDaCarga(carga) {
+    const codcultura = safraDaCarga(carga)?.codcultura
+    return culturas.value.find((c) => c.codcultura === codcultura) || null
+  }
+  function pesosacaDaCarga(carga) {
+    return culturaDaCarga(carga)?.pesosaca || 60
+  }
+
   // Parâmetros que valem para UMA carga — pela cultura da safra dela.
   function parametrosDaCarga(carga) {
-    const s = safras.value.find((x) => x.codsafra === carga?.codsafra)
-    return parametrosDaCultura(s?.codcultura)
+    return parametrosDaCultura(safraDaCarga(carga)?.codcultura)
   }
 
   function calcularLocal(carga) {
@@ -122,7 +135,7 @@ export const useCargaStore = defineStore('carga', () => {
     cargas.value.filter((c) => !c.inativo && c.etapa !== ETAPA_FINAL),
   )
 
-  // Finalizadas do dia filtrado; sem data, as últimas N da safra.
+  // Finalizadas do dia filtrado; sem data, as últimas N (de todas as safras).
   const cargasFinalizadas = computed(() => {
     const dia = dataFiltro.value
     const lista = cargas.value.filter(
@@ -131,23 +144,23 @@ export const useCargaStore = defineStore('carga', () => {
     return dia ? lista : lista.slice(0, LIMITE_FINALIZADAS_SEM_DATA)
   })
 
-  // Totais das finalizadas exibidas (as últimas N da lista ao lado).
+  // Totais das finalizadas exibidas (as últimas N da lista ao lado). Sacas carga
+  // a carga: milho e soja podem ter peso de saca diferente.
   const totaisFinalizadas = computed(() => {
     let bruto = 0
     let desconto = 0
     let liquido = 0
+    let sacas = 0
+    let descontoSacas = 0
     for (const c of cargasFinalizadas.value) {
+      const ps = pesosacaDaCarga(c)
       bruto += Number(c.bruto) || 0
       desconto += Number(c.desconto) || 0
       liquido += Number(c.liquido) || 0
+      sacas += (Number(c.liquido) || 0) / ps
+      descontoSacas += (Number(c.desconto) || 0) / ps
     }
-    return {
-      bruto,
-      desconto,
-      liquido,
-      sacas: liquido / pesosaca.value,
-      descontoSacas: desconto / pesosaca.value,
-    }
+    return { bruto, desconto, liquido, sacas, descontoSacas }
   })
 
   // Siglas dos parâmetros conhecidos (o catálogo não tem coluna de sigla); demais
@@ -330,12 +343,10 @@ export const useCargaStore = defineStore('carga', () => {
     }
   }
 
+  // Todas as safras: o pátio é físico e um caminhão de milho não pode sumir da
+  // lista porque a última carga lançada foi de soja (TASK-109).
   async function carregarCargas() {
-    if (!codsafraAtiva.value) {
-      cargas.value = []
-      return
-    }
-    const arr = await db.carga.where('codsafra').equals(codsafraAtiva.value).toArray()
+    const arr = await db.carga.toArray()
     // Auto-reparo: cargas cujo bruto/liquido foram zerados por uma resposta parcial
     // de sync (mas os pesos pbt/tara continuam lá) — recalcula localmente e regrava.
     // Roda 1x por carga afetada (depois liquido != null). Carga sem pesar tem
@@ -358,15 +369,15 @@ export const useCargaStore = defineStore('carga', () => {
     cargas.value = arr.sort((a, b) => (a.data < b.data ? 1 : -1))
   }
 
-  // Puxa as cargas da safra+dia do servidor (best-effort: offline segue com o
-  // Dexie local) e recarrega o board.
+  // Puxa as cargas do dia do servidor (best-effort: offline segue com o Dexie
+  // local) e recarrega o board.
   async function puxarCargasDoDia() {
-    if (codsafraAtiva.value) {
-      await sincronizacao.puxarCargas(codsafraAtiva.value, dataFiltro.value).catch(() => {})
-    }
+    const codsafras = safrasAtivas.value.map((s) => s.codsafra)
+    await sincronizacao.puxarCargas(codsafras, dataFiltro.value).catch(() => {})
     await carregarCargas()
   }
 
+  // `codsafraAtiva` não filtra mais o pátio: é só a safra da home/KPIs.
   async function definirSafra(codsafra) {
     codsafraAtiva.value = codsafra
     await puxarCargasDoDia()
@@ -392,17 +403,19 @@ export const useCargaStore = defineStore('carga', () => {
     saldosUnidades.value = sincronizacao.saldosUnidades
   }
 
-  // Nova carga (default Recebimento — o operador troca no formulário enquanto
-  // não pesou). Começa na 1ª etapa do sentido. A semeadura de origem/destino
-  // padrão é feita no CargaForm (camada de UI).
-  // Sem safra ativa retorna null — uma carga com codsafra:null seria órfã.
+  // Nova carga (default Recebimento — o operador troca no modal de Operação
+  // enquanto não pesou). Começa na 1ª etapa do sentido. A semeadura de
+  // origem/destino padrão é feita no CargaForm (camada de UI).
+  // Nasce SEM safra: o operador escolhe no modal (ou ela vem do talhão de
+  // origem), e o Registrar não passa sem ela. Sem nenhuma safra sincronizada
+  // retorna null — não haveria o que escolher.
   function nova(sentido = 'ENTRADA') {
-    if (!codsafraAtiva.value) return null
+    if (!safrasAtivas.value.length) return null
     const s = sentido
     return {
       uuid: uid(),
       codcarga: null,
-      codsafra: codsafraAtiva.value,
+      codsafra: null,
       sentido: s,
       etapa: ETAPAS_POR_SENTIDO[s][0],
       data: agoraLocal(),
@@ -411,6 +424,7 @@ export const useCargaStore = defineStore('carga', () => {
       placacarreta: null,
       codpessoamotorista: null,
       motorista: null,
+      ...Object.fromEntries(CAMPOS_MOTORISTA_SEM_CADASTRO.map((c) => [c, null])),
       pbt: null,
       tara: null,
       bruto: null,
@@ -513,6 +527,9 @@ export const useCargaStore = defineStore('carga', () => {
     parametrosDaSafra,
     parametrosDaCultura,
     parametrosDaCarga,
+    safraDaCarga,
+    culturaDaCarga,
+    pesosacaDaCarga,
     pesosaca,
     plantiosDaSafra,
     plantiosPorSafra,

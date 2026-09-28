@@ -15,7 +15,7 @@ const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const store = useCargaStore()
-const { cargaAtiva, codsafraAtiva } = storeToRefs(store)
+const { cargaAtiva, safrasAtivas } = storeToRefs(store)
 
 const formRef = ref(null)
 const cargaNova = ref(null)
@@ -34,7 +34,8 @@ async function selecionar(uuid) {
     return
   }
   if (uuid === 'nova') {
-    if (!codsafraAtiva.value) {
+    const nova = store.nova()
+    if (!nova) {
       $q.notify({
         type: 'warning',
         message: 'Sincronize ao menos uma safra antes de registrar cargas.',
@@ -43,16 +44,16 @@ async function selecionar(uuid) {
       return
     }
     store.abrir(null)
-    cargaNova.value = store.nova()
+    cargaNova.value = nova
     return
   }
   cargaNova.value = null
   store.abrir(uuid)
   if (cargaAtiva.value) return
-  // Não está na safra ativa: pode ser link de outra safra — troca a safra.
-  const c = await db.carga.get(uuid)
-  if (c && c.codsafra !== codsafraAtiva.value) {
-    await store.definirSafra(c.codsafra)
+  // A lista já tem todas as safras; se ainda não achou, pode ter chegado no
+  // Dexie depois da última leitura — relê antes de desistir.
+  if (await db.carga.get(uuid)) {
+    await store.carregarCargas()
     if (cargaAtiva.value) return
   }
   $q.notify({ type: 'warning', message: 'Carga não encontrada neste dispositivo.' })
@@ -60,8 +61,6 @@ async function selecionar(uuid) {
 }
 watch(() => route.params.uuid, selecionar)
 
-// Grava e, se o talhão escolhido no mapa levou a carga pra outra safra, troca
-// a safra ativa da listagem — senão a carga sumiria da lista após salvar.
 async function persistir(carga) {
   let salva
   try {
@@ -75,9 +74,6 @@ async function persistir(carga) {
       caption: String(e?.message || e),
     })
     throw e
-  }
-  if (salva.codsafra && salva.codsafra !== codsafraAtiva.value) {
-    await store.definirSafra(salva.codsafra)
   }
   return salva
 }
@@ -203,10 +199,10 @@ onUnmounted(() => {
         color="primary"
         icon="add"
         label="Nova carga (F2)"
-        :disable="!codsafraAtiva"
+        :disable="!safrasAtivas.length"
         @click="novaCarga"
       >
-        <q-tooltip v-if="!codsafraAtiva">Sincronize uma safra antes de registrar cargas</q-tooltip>
+        <q-tooltip v-if="!safrasAtivas.length">Sincronize uma safra antes de registrar cargas</q-tooltip>
       </q-btn>
     </div>
   </q-page>

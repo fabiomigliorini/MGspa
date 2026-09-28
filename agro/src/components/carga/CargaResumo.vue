@@ -11,7 +11,11 @@ import { sacas } from 'src/utils/desconto'
 import CargaEtapaProgresso from './CargaEtapaProgresso.vue'
 
 const store = useCargaStore()
-const { cargaAtiva: carga, safraAtiva, culturaAtiva, pesosaca } = storeToRefs(store)
+const { cargaAtiva: carga } = storeToRefs(store)
+// Da carga aberta, não da safra ativa: o pátio mistura milho e soja.
+const safra = computed(() => store.safraDaCarga(carga.value))
+const cultura = computed(() => store.culturaDaCarga(carga.value))
+const pesosaca = computed(() => store.pesosacaDaCarga(carga.value))
 
 const meta = computed(() => sentidoMeta(carga.value?.sentido))
 const etapa = computed(() => ETAPA_META[carga.value?.etapa] || {})
@@ -120,8 +124,8 @@ function kgPonto(p) {
           <q-avatar icon="eco" color="light-green-8" text-color="white" />
         </q-item-section>
         <q-item-section>
-          <q-item-label lines="1">{{ safraAtiva?.safra || '—' }}</q-item-label>
-          <q-item-label caption>{{ culturaAtiva?.cultura || 'Cultura' }}</q-item-label>
+          <q-item-label lines="1">{{ safra?.safra || '—' }}</q-item-label>
+          <q-item-label caption>{{ cultura?.cultura || 'Cultura' }}</q-item-label>
         </q-item-section>
       </q-item>
 

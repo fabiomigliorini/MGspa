@@ -122,7 +122,15 @@ async function salvar() {
         />
         <div class="text-subtitle2 text-grey-8">Classificação</div>
         <q-space />
-        <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="abrir" />
+        <q-btn
+          flat
+          round
+          dense
+          size="sm"
+          :icon="temLeitura ? 'edit' : 'add'"
+          :color="temLeitura ? 'grey-7' : 'primary'"
+          @click="abrir"
+        />
       </div>
       <q-banner v-if="avisoClassificacao" dense rounded class="bg-orange-1 text-orange-9 q-mb-sm">
         <template #avatar><q-icon name="warning" color="orange-8" /></template>
@@ -158,10 +166,10 @@ async function salvar() {
     </q-card-section>
   </q-card>
 
-  <q-dialog v-model="dialogAberto">
-    <q-card style="width: 700px; max-width: 90vw">
-      <q-form @submit="salvar">
-        <q-card-section>
+  <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
+    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
+      <q-form class="col column no-wrap" @submit="salvar">
+        <q-card-section class="col scroll">
           <div class="row items-center text-subtitle1 q-mb-md">
             <q-icon
               :name="ETAPA_META.CLASSIFICACAO.icon"
@@ -180,7 +188,7 @@ async function salvar() {
             <div
               v-for="(item, i) in itensCarga"
               :key="item.codparametroclassificacao"
-              class="col-6 col-sm-4 col-md-3"
+              class="col-6 col-sm-4"
             >
               <MgInputValor
                 v-model="linhaEdicao(item.codparametroclassificacao).leitura"
@@ -210,7 +218,7 @@ async function salvar() {
             </div>
           </div>
         </q-card-section>
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="col-auto">
           <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
             :label="rotuloConfirmar"

@@ -1,9 +1,11 @@
 ---
 id: TASK-109
 title: 'Patio: caminhao some da lista quando a safra selecionada e outra'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@fabio'
 created_date: '2026-09-17 19:06'
+updated_date: '2026-09-28 20:03'
 labels:
   - agro
 dependencies: []
@@ -23,3 +25,8 @@ Efeito medido em 17/09/2026: a carga 1 (Milho 2026, parada em CLASSIFICACAO desd
 
 **Decisao pendente:** confirmar com quem opera se o patio misturado e o comportamento desejado.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 No patio e Finalizadas listam cargas de todas as safras, com a safra escrita em cada item; o select de Safra sai do drawer
+<!-- AC:END -->

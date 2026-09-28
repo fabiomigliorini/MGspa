@@ -5,6 +5,7 @@ import { useCargaStore } from 'src/stores/carga'
 import {
   CONTATIPO_PADRAO,
   novoPonto,
+  pontoCompleto,
   pontosPorPapel,
   somaPercentual,
   somaPercBate,
@@ -46,6 +47,9 @@ const destinos = computed(() => pontosPorPapel(carga.value, 'DESTINO'))
 const somaPercOrigens = computed(() => somaPercentual(origens.value))
 const somaPercDestinos = computed(() => somaPercentual(destinos.value))
 
+// Linha semeada sem talhão/unidade/contrato escolhido não conta como informada.
+const temDados = computed(() => (carga.value.pontos || []).some(pontoCompleto))
+
 const temNf = computed(() => (carga.value.pontos || []).some((p) => !!p.numeronf || p.valornf != null))
 const idxEtapa = computed(() => indiceEtapa(carga.value))
 const ordem = computed(() => etapasDaCarga(carga.value))
@@ -86,6 +90,11 @@ function abrir({ etapa = null, rotulo = null } = {}) {
   edicao.value = {
     pontos: (carga.value.pontos || []).map((p) => ({ ...p })),
     codsafra: carga.value.codsafra,
+  }
+  // Origem e destino são obrigatórios: cada lado abre com ao menos uma linha
+  // (carga antiga pode ter chegado sem uma delas), e a última não sai.
+  for (const papel of ['ORIGEM', 'DESTINO']) {
+    if (!edicao.value.pontos.some((p) => p.papel === papel)) addPonto(papel)
   }
   etapaAtual.value = etapa
   rotuloConfirmar.value = rotulo || 'Salvar'
@@ -129,7 +138,7 @@ function setRotuloPonto(p) {
   else if (p.contatipo === 'CONTRATO') p.rotulo = store.rotuloContrato(p.codcontrato)
 }
 // Talhão escolhido pode ser de OUTRA safra (soja × milho): a carga segue a
-// safra do talhão. CargaPage.persistir já troca a safra ativa ao salvar.
+// safra do talhão — e a carga nova, que nasce sem safra, ganha a dela daqui.
 function onPlantioSelecionado(plantio) {
   if (plantio?.codsafra && plantio.codsafra !== edicao.value.codsafra) {
     edicao.value.codsafra = plantio.codsafra
@@ -154,7 +163,15 @@ async function salvar() {
       <div class="row items-center q-mb-sm">
         <div class="text-subtitle2 text-grey-8">Origem / Destino do grão</div>
         <q-space />
-        <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="abrir" />
+        <q-btn
+          flat
+          round
+          dense
+          size="sm"
+          :icon="temDados ? 'edit' : 'add'"
+          :color="temDados ? 'grey-7' : 'primary'"
+          @click="abrir"
+        />
       </div>
       <div class="row q-col-gutter-lg">
         <div class="col-12 col-md-6">
@@ -183,7 +200,7 @@ async function salvar() {
               </div>
             </div>
           </div>
-          <div v-if="origens.length" class="text-caption" :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'">
+          <div v-if="origens.length > 1" class="text-caption" :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'">
             Soma: {{ fmt(somaPercOrigens, 1) }}%
           </div>
         </div>
@@ -214,7 +231,7 @@ async function salvar() {
               </div>
             </div>
           </div>
-          <div v-if="destinos.length" class="text-caption" :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'">
+          <div v-if="destinos.length > 1" class="text-caption" :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'">
             Soma: {{ fmt(somaPercDestinos, 1) }}%
           </div>
         </div>
@@ -222,10 +239,10 @@ async function salvar() {
     </q-card-section>
   </q-card>
 
-  <q-dialog v-model="dialogAberto">
-    <q-card style="width: 900px; max-width: 95vw">
-      <q-form @submit="salvar">
-        <q-card-section>
+  <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
+    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
+      <q-form class="col column no-wrap" @submit="salvar">
+        <q-card-section class="col scroll">
           <div class="row items-center text-subtitle1 q-mb-md">
             <template v-if="etapaAtual">
               <q-icon
@@ -239,8 +256,14 @@ async function salvar() {
             <template v-else>Origem / Destino do grão</template>
           </div>
           <div class="row q-col-gutter-lg">
-            <div class="col-12 col-md-6">
-              <div class="text-subtitle2 text-grey-8 q-mb-xs">Origem do grão</div>
+            <div class="col-12">
+              <div class="row items-center q-mb-xs">
+                <div class="text-subtitle2 text-grey-8">Origem do grão</div>
+                <q-space />
+                <q-btn flat round dense size="sm" color="primary" icon="add" @click="addPonto('ORIGEM')">
+                  <q-tooltip>Adicionar origem</q-tooltip>
+                </q-btn>
+              </div>
               <div
                 v-for="(p, i) in origensEdicao"
                 :key="'o' + i"
@@ -298,29 +321,38 @@ async function salvar() {
                     () => !finalizando || somaPercBate(origensEdicao) || 'Soma dos % deve ser 100',
                   ]"
                 />
-                <!-- Sempre visível: uma linha semeada e impreenchível (ex.: safra sem
-                     talhão) travaria o registro sem saída. Remover é a válvula. -->
+                <!-- Só nas linhas a mais: origem e destino são obrigatórios, a última
+                     linha não sai. Linha que não dá pra preencher (ex.: safra sem
+                     talhão) troca de tipo no select ao lado. -->
                 <q-btn
+                  v-if="origensEdicao.length > 1"
                   flat
                   round
                   color="grey-7"
                   icon="close"
                   class="col-auto ponto-remover"
                   @click="removerPonto(p)"
-                />
+                >
+                  <q-tooltip>Remover origem</q-tooltip>
+                </q-btn>
               </div>
               <div
-                v-if="origensEdicao.length"
+                v-if="origensEdicao.length > 1"
                 class="text-caption q-mb-xs"
                 :class="somaPercBate(origensEdicao) ? 'text-grey-7' : 'text-orange-8'"
               >
                 Soma: {{ fmt(somaPercentual(origensEdicao), 1) }}%
               </div>
-              <q-btn flat dense color="primary" icon="add" label="Origem" @click="addPonto('ORIGEM')" />
             </div>
 
-            <div class="col-12 col-md-6">
-              <div class="text-subtitle2 text-grey-8 q-mb-xs">Destino do grão</div>
+            <div class="col-12">
+              <div class="row items-center q-mb-xs">
+                <div class="text-subtitle2 text-grey-8">Destino do grão</div>
+                <q-space />
+                <q-btn flat round dense size="sm" color="primary" icon="add" @click="addPonto('DESTINO')">
+                  <q-tooltip>Adicionar destino</q-tooltip>
+                </q-btn>
+              </div>
               <div v-for="(p, i) in destinosEdicao" :key="'d' + i" class="q-mb-xs">
                 <div class="row q-col-gutter-sm items-center">
                   <!-- `bottom-slots`: mesmo motivo da coluna de origem. -->
@@ -364,13 +396,16 @@ async function salvar() {
                     ]"
                   />
                   <q-btn
+                    v-if="destinosEdicao.length > 1"
                     flat
                     round
                     color="grey-7"
                     icon="close"
                     class="col-auto ponto-remover"
                     @click="removerPonto(p)"
-                  />
+                  >
+                    <q-tooltip>Remover destino</q-tooltip>
+                  </q-btn>
                 </div>
                 <div v-if="p.contatipo === 'CONTRATO' && p.codcontrato" class="text-caption">
                   <span v-if="saldoContrato(p.codcontrato) === Infinity" class="text-deep-purple-7">
@@ -413,17 +448,16 @@ async function salvar() {
                 </div>
               </div>
               <div
-                v-if="destinosEdicao.length"
+                v-if="destinosEdicao.length > 1"
                 class="text-caption q-mb-xs"
                 :class="somaPercBate(destinosEdicao) ? 'text-grey-7' : 'text-orange-8'"
               >
                 Soma: {{ fmt(somaPercentual(destinosEdicao), 1) }}%
               </div>
-              <q-btn flat dense color="primary" icon="add" label="Destino" @click="addPonto('DESTINO')" />
             </div>
           </div>
         </q-card-section>
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="col-auto">
           <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
             :label="rotuloConfirmar"
