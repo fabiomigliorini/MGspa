@@ -220,6 +220,9 @@ const moverSelecao = (delta) => {
   })
 }
 
+// Enter que comecou (keydown) no campo de pesquisa: so ele confirma no keyup
+const enterPesquisa = ref(false)
+
 // setas navegam na lista e Enter confirma, sem tirar o foco do campo de pesquisa
 const teclaPesquisa = (e) => {
   switch (e.key) {
@@ -234,17 +237,27 @@ const teclaPesquisa = (e) => {
     case 'Enter':
       // impede o submit do form (salvar() e do passo de cadastro)
       e.preventDefault()
-      if (consultando.value || (cnpj.value ?? '').trim() != textoPesquisado.value) {
-        return
-      }
-      if (opcoes.value.length) {
-        confirmar(opcoes.value[indice.value].codpessoa, null)
-      } else if (isCpfValido(cnpj.value)) {
-        confirmar(1, cnpj.value)
-      } else if (isCnpjValido(cnpj.value)) {
-        nova(false)
-      }
+      enterPesquisa.value = true
       break
+  }
+}
+
+// Enter confirma no keyup, como o q-btn: se fechasse no keydown, o foco volta pro
+// item "Consumidor" que abriu o dialog e o keyup clica nele, reabrindo o dialog
+const soltaTeclaPesquisa = (e) => {
+  if (e.key != 'Enter' || !enterPesquisa.value) {
+    return
+  }
+  enterPesquisa.value = false
+  if (consultando.value || (cnpj.value ?? '').trim() != textoPesquisado.value) {
+    return
+  }
+  if (opcoes.value.length) {
+    confirmar(opcoes.value[indice.value].codpessoa, null)
+  } else if (isCpfValido(cnpj.value)) {
+    confirmar(1, cnpj.value)
+  } else if (isCnpjValido(cnpj.value)) {
+    nova(false)
   }
 }
 
@@ -639,6 +652,7 @@ watch(
                 hide-bottom-space
                 @update:model-value="pesquisa()"
                 @keydown="teclaPesquisa"
+                @keyup="soltaTeclaPesquisa"
                 :rules="[(val) => (!!val && val.length > 3) || 'Digite pelo menos 3 letras']"
                 :inputmode="inputCnpjModeNumeric ? 'numeric' : 'search'"
                 ref="inputCnpj"
