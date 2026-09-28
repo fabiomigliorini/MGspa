@@ -686,6 +686,10 @@ class PdvController
         DB::beginTransaction();
         $negocioDev = PdvNegocioDevolucaoService::gerarDevolucao($pdv, $negocioOriginal, $request->devolucao);
         DB::commit();
+        // o vale de credito da devolucao sai sozinho na termica, como no fechar
+        if (!empty($request->impressora)) {
+            ImprimirValesNegocioJob::dispatch($negocioDev->codnegocio, $request->impressora)->onQueue('high');
+        }
         return new NegocioResource($negocioDev);
     }
 

@@ -79,11 +79,10 @@ class ValeService
         }
 
         // saldo de vale resgatado e credito de devolucao (caminho de sempre)
+        // $codtitulo filtra por titulo, e nao pelo pagamento: o credito da
+        // devolucao e' gerado pelo pagamento (TituloS), com nfp.codtitulo nulo
         foreach ($uuid ? [] : $negocio->NegocioFormaPagamentoS as $nfp) {
-            if ($codtitulo && $nfp->codtitulo != $codtitulo) {
-                continue;
-            }
-            if (!empty($nfp->codtitulo)) {
+            if (!empty($nfp->codtitulo) && (!$codtitulo || $nfp->codtitulo == $codtitulo)) {
                 if ($nfp->Titulo->codtipotitulo == TituloService::TIPO_VALE && $nfp->Titulo->saldo < 0) {
                     $comprovantes[$nfp->codtitulo] = $comprovantes[$nfp->codtitulo] ?? [
                         'titulo' => $nfp->Titulo,
@@ -93,6 +92,9 @@ class ValeService
                 }
             }
             foreach ($nfp->TituloS as $tit) {
+                if ($codtitulo && $tit->codtitulo != $codtitulo) {
+                    continue;
+                }
                 if ($tit->codtipotitulo == TituloService::TIPO_VALE && $tit->saldo < 0) {
                     $comprovantes[$tit->codtitulo] = $comprovantes[$tit->codtitulo] ?? [
                         'titulo' => $tit,

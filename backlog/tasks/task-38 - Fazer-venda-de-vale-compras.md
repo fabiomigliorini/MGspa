@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-26 20:10'
+updated_date: '2026-09-28 21:50'
 labels:
   - negocios
   - api
@@ -58,6 +58,7 @@ negocios. Entao 'uma passada de cartao' implica produtos e vale no MESMO negocio
 - [x] #8 Milestone 9: os 3.718 vales antigos convertidos para negocio+tblnegociovale, titulos repontados, tabelas tblvalecompra* dropadas, codigo do legado removido (o modulo do MGLara ja saiu; a aplicacao MGLara continua no ar) (feito em dev, aguardando validacao)
 - [ ] #9 Comissao de caixa nao conta o vale compras (so a mercadoria do negocio)
 - [x] #10 Ao fechar o negocio, vales vendidos e contra vales com saldo saem sozinhos na termica do caixa, num trabalho so (romaneio/nota seguem no front) (feito em dev, aguardando validacao na tela)
+- [x] #11 Devolucao de venda: o vale do cliente sai sozinho na termica e o card do titulo tem botao de imprimir
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -240,4 +241,6 @@ MILESTONE 9 (conversao do legado e limpeza) implementado em 26/09/2026, aguardan
 2026-09-26: card 'Contra Vale' no negocio fechado, um por vale usado como pagamento (saldo atual do titulo; esgotado fica so para consulta, sem imprimir); imprime so aquele vale (codtitulo no /vale). Cabecalho dos cards de vale abre o titulo no app contas; acoes no rodape; FAB 'Vale Compras' removido; cards de anexo no tamanho dos demais.
 
 Impressao automatica dos vales no fechamento: o front manda padrao.impressora no POST /fechar; PdvController::fecharNegocio despacha ImprimirValesNegocioJob (fila high) apos o commit do fechar; o job usa ValeService::comprovantes (extraido do pdf, mesmos filtros) e, havendo algo, ValeService::imprimir sem uuid/codtitulo = PDF unico com todos. Sem impressora no PDV nada e' disparado. Botoes dos cards seguem para reimpressao.
+
+2026-09-28: devolucao de venda ficou fora da impressao automatica e do botao. Causa: POST /devolucao (PdvNegocioDevolucaoService::gerarDevolucao) cria o negocio ja fechado e nunca passa pelo fecharNegocio que despacha o ImprimirValesNegocioJob; front nao mandava impressora. O credito N{cod}-DEV (tipo 3) aparece so no card generico de Titulo (ListagemTitulos), sem acao. E ValeService::comprovantes com ?codtitulo= pulava o pagamento inteiro quando nfp.codtitulo e' nulo (caso da devolucao) -- filtro passou para o nivel do titulo. Correcao: PdvController::devolucao despacha o job com a impressora; sincronizacao/negocio mandam padrao.impressora; ListagemTitulos ganha botao de imprimir para titulo tipo 3 com saldo. Teste: devolver item de venda fechada com impressora selecionada -> vale sai sozinho; card N...-DEV tem botao; contra vale segue imprimindo so ele.
 <!-- SECTION:NOTES:END -->
