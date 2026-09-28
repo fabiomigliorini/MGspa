@@ -1,17 +1,17 @@
 ---
 id: TASK-179
 title: 'Recarga Bee gera o titulo da Beevale a debito, e nao como conta a pagar'
-status: In Progress
+status: To Do
 assignee:
   - '@eduardo'
 created_date: '2026-09-26 14:11'
-updated_date: '2026-09-26 14:43'
+updated_date: '2026-09-28 21:52'
 labels:
   - pessoas
 dependencies: []
 priority: high
 type: bug
-ordinal: 190000
+ordinal: 197000
 ---
 
 ## Description
