@@ -1,4 +1,5 @@
 <script setup>
+import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useTituloAgrupamentoStore } from 'src/stores/tituloAgrupamentoStore'
@@ -39,15 +40,15 @@ const estornadoOptions = [
         label="Situação"
         class="q-mb-md"
       />
-      <q-input
-        v-model.number="store.filters.codtituloagrupamento"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codtituloagrupamento"
+        :decimals="0"
+        :grouping="false"
         :bottom-slots="false"
-        type="number"
         label="Código"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
     </FilterGroup>
 
     <FilterGroup title="Pessoa">

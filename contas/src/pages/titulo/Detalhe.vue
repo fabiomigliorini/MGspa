@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -898,7 +899,7 @@ watch(() => route.fullPath, carregar)
 
               <!-- NUMERO -->
               <div class="col-6 col-sm-4">
-                <q-input
+                <MgInput
                   v-model="model.numero"
                   outlined
                   label="Número"
@@ -911,7 +912,7 @@ watch(() => route.fullPath, carregar)
 
               <!-- FATURA -->
               <div class="col-6 col-sm-5">
-                <q-input v-model="model.fatura" outlined label="Fatura" maxlength="50" />
+                <MgInput v-model="model.fatura" outlined label="Fatura" maxlength="50" />
               </div>
 
               <!-- VALOR -->
@@ -1004,7 +1005,7 @@ watch(() => route.fullPath, carregar)
 
               <!-- OBSERVACOES -->
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.observacao"
                   outlined
                   type="textarea"

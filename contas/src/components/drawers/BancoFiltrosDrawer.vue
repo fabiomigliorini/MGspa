@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useBancoStore } from 'src/stores/bancoStore'
@@ -25,19 +27,19 @@ const statusOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codbanco"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codbanco"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.banco"
         outlined
         clearable
@@ -46,9 +48,9 @@ const statusOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="tag" /></template>
-      </q-input>
+      </MgInput>
 
-      <q-input
+      <MgInput
         v-model="store.filters.sigla"
         outlined
         clearable
@@ -57,18 +59,18 @@ const statusOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="vpn_key" /></template>
-      </q-input>
+      </MgInput>
 
-      <q-input
-        v-model.number="store.filters.numerobanco"
-        outlined
+      <MgInputValor
+        v-model="store.filters.numerobanco"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Número Banco"
       >
         <template #prepend><q-icon name="pin" /></template>
-      </q-input>
+      </MgInputValor>
     </FilterGroup>
 
     <FilterGroup title="Status">

@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useChequeMotivoDevolucaoStore } from 'src/stores/chequeMotivoDevolucaoStore'
@@ -19,31 +21,31 @@ const clear = () => {
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codchequemotivodevolucao"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codchequemotivodevolucao"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
-        v-model.number="store.filters.numero"
-        outlined
+      <MgInputValor
+        v-model="store.filters.numero"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Número"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="pin" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.chequemotivodevolucao"
         outlined
         clearable
@@ -51,7 +53,7 @@ const clear = () => {
         label="Descrição"
       >
         <template #prepend><q-icon name="description" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
   </FilterDrawerShell>
 </template>

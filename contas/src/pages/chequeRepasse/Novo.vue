@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from 'src/services/api'
@@ -117,7 +118,7 @@ async function salvar() {
               <MgInputData v-model="cabecalho.data" label="Data do Repasse" />
             </div>
             <div class="col-12 col-sm-5">
-              <q-input
+              <MgInput
                 v-model="cabecalho.observacoes"
                 outlined
                 label="Observações"

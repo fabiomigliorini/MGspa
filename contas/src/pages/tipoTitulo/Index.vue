@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
@@ -274,7 +275,7 @@ onMounted(() => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.tipotitulo"
                   outlined
                   label="Descrição"
@@ -307,7 +308,7 @@ onMounted(() => {
               </div>
 
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.observacoes"
                   outlined
                   label="Observações"

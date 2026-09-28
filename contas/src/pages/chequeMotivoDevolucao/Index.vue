@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
@@ -195,17 +197,17 @@ onMounted(() => store.fetchItems(true))
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-4">
-                <q-input
-                  v-model.number="model.numero"
-                  outlined
-                  type="number"
+                <MgInputValor
+                  v-model="model.numero"
+                  :decimals="0"
+                  :grouping="false"
                   label="Número"
                   autofocus
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.chequemotivodevolucao"
                   outlined
                   label="Descrição"

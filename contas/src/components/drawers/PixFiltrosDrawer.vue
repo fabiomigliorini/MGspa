@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { usePixStore } from 'src/stores/pixStore'
@@ -33,7 +34,7 @@ const sortOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Pessoa" first>
-      <q-input
+      <MgInput
         v-model="store.filters.nome"
         outlined
         clearable
@@ -42,9 +43,9 @@ const sortOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="search" /></template>
-      </q-input>
+      </MgInput>
 
-      <q-input
+      <MgInput
         v-model="store.filters.cpf"
         outlined
         clearable
@@ -52,7 +53,7 @@ const sortOptions = [
         label="CPF/CNPJ"
       >
         <template #prepend><q-icon name="badge" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Valor">

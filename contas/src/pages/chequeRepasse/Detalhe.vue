@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -331,7 +332,7 @@ onMounted(carregar)
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="devModel.observacoes"
                   outlined
                   type="textarea"

@@ -1,4 +1,5 @@
 <script setup>
+import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useFormaPagamentoStore } from 'src/stores/formaPagamentoStore'
@@ -45,16 +46,17 @@ const flags = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <MgInput
-        v-model.number="store.filters.codformapagamento"
+      <MgInputValor
+        v-model="store.filters.codformapagamento"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </MgInput>
+      </MgInputValor>
 
       <MgInput
         v-model="store.filters.formapagamento"

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -193,7 +194,7 @@ async function salvar() {
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="finalizar.observacao"
                   outlined
                   type="textarea"

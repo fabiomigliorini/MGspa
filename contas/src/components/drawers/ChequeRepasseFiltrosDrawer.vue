@@ -1,4 +1,5 @@
 <script setup>
+import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useChequeRepasseStore } from 'src/stores/chequeRepasseStore'
@@ -27,17 +28,17 @@ const statusOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codchequerepasse"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codchequerepasse"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
       <MgSelectPortador
         v-model="store.filters.codportador"

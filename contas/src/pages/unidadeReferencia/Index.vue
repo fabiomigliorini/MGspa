@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted } from 'vue'
 import { api } from 'src/services/api'
 import { useUnidadeReferenciaStore } from 'src/stores/unidadeReferenciaStore'
@@ -122,7 +123,7 @@ onMounted(() => store.fetchItems(true))
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-5">
-                <q-input
+                <MgInput
                   v-model="model.codigo"
                   outlined
                   label="Código"
@@ -144,7 +145,7 @@ onMounted(() => store.fetchItems(true))
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.descricao"
                   outlined
                   label="Descrição"
