@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-23 21:04'
-updated_date: '2026-09-23 21:04'
+updated_date: '2026-09-28 21:00'
 labels:
   - agro
 dependencies: []
@@ -34,6 +34,14 @@ Consolida as antigas TASK-126, TASK-127 e TASK-128 (arquivadas).
 - [ ] #1 Cards 'A colher' e 'Disponível p/ negociar' do extrato mostram valor de verdade, não zero
 - [ ] #2 Ajuste manual lançado como ORIGEM baixa o saldo em vez de somar
 - [ ] #3 Trava de excesso do contrato não conta ajuste estornado nem ignora lançamento manual, e bate com o 'Saldo a entregar' que o operador vê na carga
+- [ ] #4 Dois caminhões fechando ao mesmo tempo no mesmo contrato não passam do contratado
+- [ ] #5 Reativar uma carga cancelada respeita o teto do contrato
+- [ ] #6 Cancelar uma carga nunca é barrado pela trava do contrato
+- [ ] #7 Entregue da safra separa venda de compra
+- [ ] #8 Contrato entregue a mais mostra o excesso em vez de zerar o saldo
+- [ ] #9 Estoque & Extrato mostra todos os lançamentos e todos os contratos, silos e talhões nos selects
+- [ ] #10 Colhido é o mesmo no Início, na Safra, na Fazenda e na Cultura
+- [ ] #11 Ajuste manual grava exatamente o que o operador informou
 <!-- AC:END -->
 
 ## Implementation Notes

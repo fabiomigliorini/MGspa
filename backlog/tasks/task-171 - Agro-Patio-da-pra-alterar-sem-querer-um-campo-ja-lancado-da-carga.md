@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-09-28 20:37'
+updated_date: '2026-09-28 21:08'
 labels:
   - agro
 dependencies: []
@@ -86,4 +86,23 @@ Com os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) salvando indi
 - Placa/carreta: formato ABC1234 ou ABC1D23 (PLACA_RE em utils/carga.js). Placa sem cadastro: 'Usar sem cadastro' ou 'Cadastrar' (CaminhaoDialog, só online).
 - Motorista: MgSelectPessoa ganhou slot no-option com { busca } (compatível com os outros apps). Sem cadastro: CPF + nome completo gravados em tblcarga (cpfmotorista/motorista). Cadastrar: passo 2 no mesmo card (CargaMotoristaCadastro), POST v1/carga/motorista -> PdvPessoaService::novaPessoa (pessoa + telefone + endereço numa transação). CPF já cadastrado seleciona a pessoa existente.
 - Os 4 modais usam a classe .carga-dialog (560px x 70vh, css/app.scss) e abrem maximized no celular; Origem/Destino empilha, Classificação em 3 colunas.
+
+## Rodada 2 do modal de Operação (28/09/2026)
+
+**DDL renomeado:** api/database/agro_carga_motorista_sem_cadastro.sql (era agro_carga_cpfmotorista.sql, nunca commitado). Agora cria cpfmotorista, telefonemotorista, cepmotorista, enderecomotorista, numeromotorista, complementomotorista, bairromotorista, codcidademotorista. Já aplicado no dev; rodar em prod antes de publicar.
+
+- Carga nova nasce sem safra (store.nova codsafra null); CargaForm.entradaValida barra o Registrar e abre o modal de Operação. Escolher talhão de origem também preenche a safra.
+- Placa: as ações 'usar sem cadastro'/'cadastrar' viraram opções do q-select (setas + Enter chegam nelas); escolher a placa leva o foco pra Carreta (@popup-hide). Testado em Chrome headless com o QSelect real.
+- MgSelectPessoa (compartilhado): prop acoesSemResultado + evento acao — as ações viram opções quando a busca não acha ninguém. O slot no-option da rodada anterior saiu.
+- Motorista sem cadastro e cadastrar usam os mesmos campos (CargaMotoristaCampos.vue): CPF, nome, telefone, CEP (viacep), endereço, número, complemento, bairro, cidade + toggle 'Cadastrar no sistema'. Sem cadastro grava tudo na carga; cadastrar faz POST v1/carga/motorista antes de salvar. CargaService zera os campos sem cadastro quando há codpessoamotorista.
+- Origem/Destino: cada lado abre com ao menos uma linha; X só nas linhas a mais; Soma só com mais de uma linha; + na linha do título com tooltip.
+- Modais: .carga-dialog com height 50vh (largura 560px).
+
+### Revisão independente da rodada 2 (4 revisores + verificação adversarial): 16 achados confirmados, corrigidos
+- Placa: sem clearable do Quasar (X próprio fora do Tab); foco pra Carreta só se o foco ainda estiver na placa (Tab não pula campo; Enter rápido < debounce funciona); blur usa o texto do campo, não o último termo filtrado (Esc e re-escolher a mesma placa não trocam mais a placa). Placa/carreta antigas normalizadas ao abrir.
+- Motorista offline: abre na busca (não obriga motorista), X de voltar também offline, nome do cadastrado aparece offline (cache semeado). Busca que falha por rede oferece 'sem cadastro' (MgSelectPessoa passa { erro }) e tira a exigência de cidade.
+- CPF: Salvar espera a checagem do CPF (blur + Salvar reaproveitam a consulta); CPF de pessoa inativa avisa e segue sem cadastro (o backend recusa cadastrar CPF repetido mesmo de inativo).
+- CEP: preenche só o que o viacep trouxe; sem rua, foco no Endereço.
+- Home (IndexPage): 'No pátio' e 'Recebidas' filtram pela safra do select da home (a store agora carrega todas).
+- F3 não chamava o onSubmit (submit() sem evento + @submit.prevent) — corrigido passando um Event; mensagem 'ou remova a linha' ajustada.
 <!-- SECTION:NOTES:END -->

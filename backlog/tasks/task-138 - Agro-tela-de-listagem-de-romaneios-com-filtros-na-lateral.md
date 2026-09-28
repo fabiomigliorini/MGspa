@@ -1,11 +1,11 @@
 ---
 id: TASK-138
 title: 'Agro: tela de listagem de romaneios com filtros na lateral'
-status: Done
+status: To Do
 assignee:
   - '@fabio'
 created_date: '2026-09-22 12:23'
-updated_date: '2026-09-22 13:54'
+updated_date: '2026-09-28 21:00'
 labels:
   - agro
 dependencies:
@@ -36,6 +36,12 @@ NAO reusar SelectUnidade/SelectContrato/SelectTalhao: leem useCargaStore(), popu
 
 Ajuste aditivo em CargaListItem.vue: prop sync (default true) com v-if no bloco cloud_done/cloud_off - dado do servidor nao tem sincronizado/syncerro e toda linha mostraria 'Pendente' falso.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Listagem no molde de Vales Emitidos: card com cabeçalho de colunas, filtros no padrão do Vale e botão Imprimir lista no topo
+- [ ] #2 Totais separados por recebido, expedido e transferido, sem as canceladas
+<!-- AC:END -->
 
 ## Implementation Notes
 

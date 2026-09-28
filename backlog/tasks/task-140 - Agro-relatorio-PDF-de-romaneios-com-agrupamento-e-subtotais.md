@@ -1,11 +1,11 @@
 ---
 id: TASK-140
 title: 'Agro: relatorio PDF de romaneios com agrupamento e subtotais'
-status: Done
+status: To Do
 assignee:
   - '@fabio'
 created_date: '2026-09-22 12:24'
-updated_date: '2026-09-22 12:41'
+updated_date: '2026-09-28 21:00'
 labels:
   - agro
 dependencies:
@@ -41,6 +41,12 @@ Escopo frontend:
 
 Criterio de aceite: o total geral do PDF bate com a barra de totais da tela.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Relatório com o visual do de Vales Emitidos, mantendo agrupamento e subtotais
+- [ ] #2 Total do PDF igual ao da tela, por tipo e sem canceladas
+<!-- AC:END -->
 
 ## Implementation Notes
 
