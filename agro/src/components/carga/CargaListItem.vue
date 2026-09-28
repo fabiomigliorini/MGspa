@@ -12,6 +12,8 @@ import CargaEtapaProgresso from './CargaEtapaProgresso.vue'
 const props = defineProps({
   carga: { type: Object, required: true },
   pesosaca: { type: Number, default: 60 },
+  // Nome da safra — o pátio mistura safras (milho e soja no mesmo dia).
+  safra: { type: String, default: null },
   to: { type: [String, Object], default: null },
   // aviso de classificação (cultura sem parâmetro) — quem tem a store passa.
   aviso: { type: String, default: null },
@@ -49,7 +51,8 @@ const metrica = computed(() => {
       </q-item-label>
       <q-item-label caption class="ellipsis">{{ pontosResumo(carga) }}</q-item-label>
       <q-item-label caption>
-        {{ formataHora(carga.data) }} · {{ tempoRelativo(carga.data) }}
+        <span v-if="safra">{{ safra }} · </span>{{ formataHora(carga.data) }} ·
+        {{ tempoRelativo(carga.data) }}
       </q-item-label>
       <CargaEtapaProgresso :carga="carga" class="q-mt-xs" />
     </q-item-section>

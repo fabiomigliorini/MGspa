@@ -21,9 +21,13 @@ const props = defineProps({
   clearable: { type: Boolean, default: false },
   // Quando setado (>= 11 dígitos), busca automática e abre o popup.
   searchCnpj: { type: String, default: null },
+  // Busca sem resultado: (busca) => [{ acao, label, icon?, color? }]. Viram
+  // OPÇÕES da lista (as setas e o Enter chegam nelas, o que um slot não
+  // permite); escolher uma emite `acao` (acao, busca) em vez de mudar o valor.
+  acoesSemResultado: { type: Function, default: null },
 })
 
-const emit = defineEmits(['update:modelValue', 'clear', 'select'])
+const emit = defineEmits(['update:modelValue', 'clear', 'select', 'acao'])
 
 const cache = useSelectCacheStore()
 const ENTITY = 'pessoa'
@@ -163,6 +167,16 @@ const onPopupHide = () => {
   }
 }
 
+// Prefixo do value das opções de ação — nunca colide com codpessoa (número).
+const PREFIXO_ACAO = '__acao:'
+function opcoesDeAcao(busca) {
+  return (props.acoesSemResultado?.(busca) || []).map((a) => ({
+    ...a,
+    value: PREFIXO_ACAO + a.acao,
+    busca,
+  }))
+}
+
 const filterPessoa = (val, update) => {
   if (optionsFromCnpj.value.length > 0 && (!val || val.trim().length < 2)) {
     update(() => {
@@ -185,7 +199,7 @@ const filterPessoa = (val, update) => {
     .then((rows) => {
       temMais = rows.length === PER_PAGE
       update(() => {
-        options.value = rows
+        options.value = rows.length ? rows : opcoesDeAcao(val.trim())
       })
     })
     .catch((error) => {
@@ -221,6 +235,11 @@ const onScroll = async ({ index }) => {
 }
 
 const handleUpdate = (value) => {
+  if (typeof value === 'string' && value.startsWith(PREFIXO_ACAO)) {
+    const opcao = options.value.find((o) => o.value === value)
+    if (opcao) emit('acao', opcao.acao, opcao.busca)
+    return
+  }
   emit('update:modelValue', value)
   if (value === null) {
     emit('clear')
@@ -263,7 +282,15 @@ const handleUpdate = (value) => {
     :loading="loading"
   >
     <template v-slot:option="scope">
-      <q-item v-bind="scope.itemProps">
+      <q-item v-if="scope.opt.acao" v-bind="scope.itemProps">
+        <q-item-section avatar>
+          <q-icon :name="scope.opt.icon || 'add'" :color="scope.opt.color || 'grey-7'" />
+        </q-item-section>
+        <q-item-section :class="scope.opt.color ? `text-${scope.opt.color}` : ''">
+          {{ scope.opt.label }}
+        </q-item-section>
+      </q-item>
+      <q-item v-else v-bind="scope.itemProps">
         <q-item-section avatar>
           <q-icon
             :name="scope.opt.fisica ? 'person' : 'business'"

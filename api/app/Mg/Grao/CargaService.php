@@ -231,12 +231,31 @@ class CargaService extends MgService
         });
     }
 
+    /** Dados do motorista SEM cadastro — com codpessoamotorista ficam NULL. */
+    const CAMPOS_MOTORISTA_SEM_CADASTRO = [
+        'cpfmotorista',
+        'telefonemotorista',
+        'cepmotorista',
+        'enderecomotorista',
+        'numeromotorista',
+        'complementomotorista',
+        'bairromotorista',
+        'codcidademotorista',
+    ];
+
     /**
      * Mantem o snapshot textual (placa/motorista) coerente com o cadastro
      * quando a carga vem com a FK mas sem o texto. Preserva o texto livre.
+     * Motorista cadastrado: os dados do "sem cadastro" nao valem mais (vivem
+     * em tblpessoa) — zera pra nao ficar CPF/endereco velho na carga.
      */
     protected static function snapshotCaminhaoMotorista(Carga $carga): void
     {
+        if (!empty($carga->codpessoamotorista)) {
+            foreach (static::CAMPOS_MOTORISTA_SEM_CADASTRO as $campo) {
+                $carga->$campo = null;
+            }
+        }
         if (!empty($carga->codveiculo) && empty($carga->placa)) {
             $carga->placa = optional(Veiculo::find($carga->codveiculo))->placa;
         }

@@ -140,6 +140,29 @@ export function corIconeCarga(carga) {
   return sentidoMeta(carga?.sentido).color
 }
 
+// Dados do motorista SEM cadastro gravados na própria carga (com
+// codpessoamotorista ficam null — vivem no cadastro da pessoa). Espelha
+// CargaService::CAMPOS_MOTORISTA_SEM_CADASTRO.
+export const CAMPOS_MOTORISTA_SEM_CADASTRO = [
+  'cpfmotorista',
+  'telefonemotorista',
+  'cepmotorista',
+  'enderecomotorista',
+  'numeromotorista',
+  'complementomotorista',
+  'bairromotorista',
+  'codcidademotorista',
+]
+
+// Placa brasileira: antiga (ABC1234) ou Mercosul (ABC1D23) — o mesmo formato
+// que a máscara `AAA#X##` do cadastro de caminhão aceita.
+export const PLACA_RE = /^[A-Z]{3}\d[A-Z\d]\d{2}$/
+
+// Maiúscula e sem hífen/espaço: "abc-1234" vira "ABC1234".
+export function normalizarPlaca(placa) {
+  return (placa || '').toUpperCase().replace(/[^A-Z0-9]/g, '') || null
+}
+
 // Ponto (origem/destino) novo. `percentual` (rateio da carga) é campo só-do-front:
 // o kg (`liquido`) é derivado do líquido calculado da carga na hora de salvar.
 export function novoPonto(papel, contatipo) {
@@ -364,6 +387,7 @@ export function normalizarCargaDoServidor(cs) {
     placacarreta: cs.placacarreta ?? null,
     codpessoamotorista: cs.codpessoamotorista ?? null,
     motorista: cs.motorista ?? null,
+    ...Object.fromEntries(CAMPOS_MOTORISTA_SEM_CADASTRO.map((c) => [c, cs[c] ?? null])),
     pbt: cs.pbt ?? null,
     tara: cs.tara ?? null,
     bruto: cs.bruto ?? null,

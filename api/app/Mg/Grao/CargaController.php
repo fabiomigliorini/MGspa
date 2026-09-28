@@ -2,9 +2,12 @@
 
 namespace Mg\Grao;
 
+use App\Http\Requests\Mg\Grao\CargaMotoristaRequest;
 use App\Http\Requests\Mg\Grao\CargaSincronizarRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Mg\MgController;
+use Mg\Pdv\PdvPessoaService;
 
 class CargaController extends MgController
 {
@@ -69,6 +72,46 @@ class CargaController extends MgController
     {
         $carga = CargaService::sincronizar($request->validated());
         return new CargaResource($carga->load(CargaService::WITH));
+    }
+
+    /**
+     * Cadastra o motorista (pessoa fisica com telefone e endereco) de dentro do
+     * modal de Operacao do patio. Reaproveita o cadastro rapido do PDV, que ja
+     * grava pessoa + telefone + endereco de uma vez.
+     */
+    public function cadastrarMotorista(CargaMotoristaRequest $request)
+    {
+        $d = $request->validated();
+        // O novaPessoa espera o telefone como "(DD) numero" (separa pelo ')').
+        $tel = $d['telefone'];
+        $telefone = [
+            'tipo' => strlen($tel) === 11 ? 2 : 1,
+            'numero' => '(' . substr($tel, 0, 2) . ')' . substr($tel, 2),
+        ];
+        $pessoa = DB::transaction(fn () => PdvPessoaService::novaPessoa((object) [
+            'fisica' => true,
+            'cnpj' => $d['cpf'],
+            'pessoa' => $d['nome'],
+            'fantasia' => mb_substr($d['nome'], 0, 50),
+            'emails' => [],
+            'telefones' => [$telefone],
+            'enderecos' => [[
+                'cep' => $d['cep'],
+                'endereco' => $d['endereco'],
+                'numero' => $d['numero'],
+                'complemento' => $d['complemento'] ?? null,
+                'bairro' => $d['bairro'],
+                'codcidade' => $d['codcidade'],
+            ]],
+        ]));
+
+        return [
+            'codpessoa' => $pessoa->codpessoa,
+            'fantasia' => $pessoa->fantasia,
+            'pessoa' => $pessoa->pessoa,
+            'cnpj' => $pessoa->cnpj,
+            'fisica' => true,
+        ];
     }
 
     public function inativar(Request $request, $id)

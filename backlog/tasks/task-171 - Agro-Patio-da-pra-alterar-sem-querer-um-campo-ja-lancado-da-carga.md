@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-09-25 14:31'
+updated_date: '2026-09-28 20:37'
 labels:
   - agro
 dependencies: []
@@ -33,6 +33,15 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [ ] #7 Blocos em leitura com icone e hierarquia: rotulo em legenda, valor em destaque, icone por tipo de ponto (talhao/armazem/contrato)
 - [ ] #8 Chip colorido de etapa sai da area das abas; a etapa segue visivel na barra de progresso do drawer direito
 - [ ] #9 Botão da etapa (Pesar bruto, Classificar, Pesar tara, Notas fiscais) abre o dialog da etapa pedindo o valor; sem valor não avança
+- [ ] #10 Bloco sem nada informado mostra um + azul no lugar do lapis; com dado informado, segue o lapis de editar
+- [ ] #11 Safra e tipo de operacao saem do drawer e do card e viram selects no modal de Operacao (6 campos em 2 linhas de 3); o card so exibe
+- [ ] #12 Placa e carreta aceitam so formato brasileiro (ABC1234 ou ABC1D23); placa sem cadastro pode ser usada assim mesmo ou cadastrada
+- [ ] #13 Motorista pode ser cadastrado de dentro do modal com CPF, nome, telefone e endereco
+- [ ] #14 Motorista sem cadastro exige CPF, nome completo, telefone e endereco, gravados so na carga; CPF ja cadastrado seleciona a pessoa existente
+- [ ] #15 Os 4 modais da carga com metade da altura da tela (tela cheia no celular)
+- [ ] #16 Carga nova nasce com Recebimento e a chegada preenchidos, mas sem safra; registrar sem safra nao deixa
+- [ ] #17 No modal de Operacao as setas percorrem as opcoes de placa e motorista (inclusive usar sem cadastro e cadastrar), e escolher a placa leva o foco pra carreta
+- [ ] #18 Origem/Destino: a unica linha de origem ou destino nao tem X; a soma so aparece com mais de uma linha; o + fica na linha do titulo com tooltip
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -66,4 +75,15 @@ Com os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) salvando indi
 ## Estado da implementacao (era o Final Summary, de quando a task estava Done)
 
 4 blocos implementados (criterios #1 a #4): CargaForm.vue reescrito para renderizar CargaBlocoCaminhao/Pontos/Pesagem/Classificacao no lugar dos campos inline, com provide('persistirBloco', ...) + provide de calc/itensCarga/sacasLiquido/avisoClassificacao/finalizando para os blocos injetarem. CargaPage.vue passa :persistir='persistir' pro CargaForm. FAB cinza 'salvar sem avancar' e observacao ainda NAO tocados (fica pro criterio #5, que so deve rodar apos uso real validado). Lint limpo em todos os arquivos tocados. Verificacao visual em navegador bloqueada nesta sessao por problema de infra nos dev servers (TASK-172, criada durante este trabalho) — trabalho pronto na arvore, sem commit, aguardando validacao do usuario na tela real.
+
+## Modal de Operação: safra, operação, placa e motorista (28/09/2026)
+
+**DDL obrigatório antes de publicar:** api/database/agro_carga_cpfmotorista.sql (tblcarga.cpfmotorista varchar(11)). Já aplicado no dev. Sem ele o sync da carga dá 500.
+
+- Safra saiu do drawer (CargaLeftDrawer) e o toggle de operação saiu do card: os dois são select no modal de Operação (CargaBlocoOperacao), 6 campos em 2x3. O card só exibe.
+- Pátio lista todas as safras (TASK-109): stores/carga.js carregarCargas sem filtro; codsafraAtiva virou a safra padrão da próxima carga nova (a última salva). Tela/ticket/totais leem safra/cultura/pesosaca da carga (safraDaCarga, culturaDaCarga, pesosacaDaCarga).
+- trocarOperacao (CargaForm) devolve Promise<boolean> e não persiste mais; o Salvar do modal grava tudo numa vez.
+- Placa/carreta: formato ABC1234 ou ABC1D23 (PLACA_RE em utils/carga.js). Placa sem cadastro: 'Usar sem cadastro' ou 'Cadastrar' (CaminhaoDialog, só online).
+- Motorista: MgSelectPessoa ganhou slot no-option com { busca } (compatível com os outros apps). Sem cadastro: CPF + nome completo gravados em tblcarga (cpfmotorista/motorista). Cadastrar: passo 2 no mesmo card (CargaMotoristaCadastro), POST v1/carga/motorista -> PdvPessoaService::novaPessoa (pessoa + telefone + endereço numa transação). CPF já cadastrado seleciona a pessoa existente.
+- Os 4 modais usam a classe .carga-dialog (560px x 70vh, css/app.scss) e abrem maximized no celular; Origem/Destino empilha, Classificação em 3 colunas.
 <!-- SECTION:NOTES:END -->

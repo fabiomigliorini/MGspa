@@ -32,6 +32,7 @@ const mostrarPbt = computed(
 const mostrarTara = computed(
   () => idxEtapa.value >= ordem.value.indexOf('TARA') || carga.value.tara != null,
 )
+const temDados = computed(() => carga.value.pbt != null || carga.value.tara != null)
 const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.bruto !== undefined)
 
 const dialogAberto = ref(false)
@@ -88,7 +89,15 @@ async function salvar() {
         />
         <div class="text-subtitle2 text-grey-8">Pesagem</div>
         <q-space />
-        <q-btn flat round dense icon="edit" size="sm" color="grey-7" @click="abrir" />
+        <q-btn
+          flat
+          round
+          dense
+          size="sm"
+          :icon="temDados ? 'edit' : 'add'"
+          :color="temDados ? 'grey-7' : 'primary'"
+          @click="abrir"
+        />
       </div>
 
       <div v-if="mostrarResultado" class="row text-center bg-grey-1 rounded-borders q-pa-sm">
@@ -142,10 +151,10 @@ async function salvar() {
     </q-card-section>
   </q-card>
 
-  <q-dialog v-model="dialogAberto">
-    <q-card style="width: 500px; max-width: 90vw">
-      <q-form @submit="salvar">
-        <q-card-section>
+  <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
+    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
+      <q-form class="col column no-wrap" @submit="salvar">
+        <q-card-section class="col scroll">
           <div class="row items-center text-subtitle1 q-mb-md">
             <template v-if="etapaAtual">
               <q-icon
@@ -215,7 +224,7 @@ async function salvar() {
             </div>
           </div>
         </q-card-section>
-        <q-card-actions align="right">
+        <q-card-actions align="right" class="col-auto">
           <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
             :label="rotuloConfirmar"

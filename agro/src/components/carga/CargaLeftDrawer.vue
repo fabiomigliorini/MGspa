@@ -1,7 +1,8 @@
 <script setup>
 // Drawer esquerdo do pátio (espelha OfflineLeftDrawerTabNegocios do PDV):
-// filtro de safra, "No pátio" (qualquer sentido, qualquer dia) e "Finalizadas"
-// (as últimas). A seleção é pela rota carga/:uuid.
+// "No pátio" (qualquer sentido, qualquer dia, qualquer safra) e "Finalizadas"
+// (as últimas). A seleção é pela rota carga/:uuid. Sem filtro de safra: o pátio
+// é físico — a safra de cada carga aparece no item e se escolhe no modal dela.
 //
 // Sem botão de sincronizar aqui: o gatilho é único e vive fora do drawer. Este
 // componente não fala com a store de sincronização.
@@ -16,17 +17,16 @@ const router = useRouter()
 const $q = useQuasar()
 const store = useCargaStore()
 
-const { safras, codsafraAtiva, cargasNoPatio, cargasFinalizadas, totaisFinalizadas, pesosaca } =
-  storeToRefs(store)
+const { safrasAtivas, cargasNoPatio, cargasFinalizadas, totaisFinalizadas } = storeToRefs(store)
 
 function rota(carga) {
   return { name: 'carga', params: { uuid: carga.uuid } }
 }
 
 function novaCarga() {
-  // Sem safra ativa (ex.: cold start offline sem cache) a carga nasceria com
-  // codsafra:null — invisível na lista e rejeitada pra sempre no sync. Barra antes.
-  if (!codsafraAtiva.value) {
+  // Sem safra no cache (ex.: cold start offline) não há safra pra escolher no
+  // modal de Operação — a carga não teria como ser registrada. Barra antes.
+  if (!safrasAtivas.value.length) {
     $q.notify({
       type: 'warning',
       message: 'Sincronize ao menos uma safra antes de registrar cargas.',
@@ -38,22 +38,6 @@ function novaCarga() {
 </script>
 
 <template>
-  <div class="q-pa-sm">
-    <q-select
-      :model-value="codsafraAtiva"
-      :options="safras"
-      option-value="codsafra"
-      option-label="safra"
-      emit-value
-      map-options
-      outlined
-      label="Safra"
-      @update:model-value="store.definirSafra"
-    />
-  </div>
-
-  <q-separator />
-
   <q-item-label header class="row items-center">
     No pátio
     <q-badge color="orange-7" class="q-ml-sm" :label="cargasNoPatio.length" />
@@ -65,7 +49,8 @@ function novaCarga() {
   <template v-for="c in cargasNoPatio" :key="c.uuid">
     <CargaListItem
       :carga="c"
-      :pesosaca="pesosaca"
+      :pesosaca="store.pesosacaDaCarga(c)"
+      :safra="store.safraDaCarga(c)?.safra"
       :to="rota(c)"
       :aviso="store.avisoClassificacao(c)"
     />
@@ -94,7 +79,12 @@ function novaCarga() {
     </div>
   </q-banner>
   <template v-for="c in cargasFinalizadas" :key="c.uuid">
-    <CargaListItem :carga="c" :pesosaca="pesosaca" :to="rota(c)" />
+    <CargaListItem
+      :carga="c"
+      :pesosaca="store.pesosacaDaCarga(c)"
+      :safra="store.safraDaCarga(c)?.safra"
+      :to="rota(c)"
+    />
     <q-separator />
   </template>
   <div v-if="!cargasFinalizadas.length" class="text-grey-5 text-center q-pa-md">

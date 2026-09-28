@@ -11,7 +11,6 @@
 // (CargaPage.persistir: troca de safra + erro tratado), sem duplicar nada.
 import { ref, computed, watch, provide, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
-import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
 import { calcularCarga, sacas } from 'src/utils/desconto'
 import {
@@ -47,10 +46,11 @@ const emit = defineEmits(['salvar', 'avancar', 'cancelar'])
 
 const $q = useQuasar()
 const store = useCargaStore()
-const { culturaAtiva, safraAtiva } = storeToRefs(store)
 
 const formRef = ref(null)
 // Blocos que o botão da etapa abre (cada um expõe `abrir({ etapa, rotulo })`).
+// O de Operação abre quando falta a safra no Registrar.
+const blocoOperacao = ref(null)
 const blocoPontos = ref(null)
 const blocoPesagem = ref(null)
 const blocoClassificacao = ref(null)
@@ -87,6 +87,10 @@ watch(
   },
 )
 
+// Safra/cultura da CARGA (não a ativa): o pátio mistura milho e soja.
+const safraCarga = computed(() => store.safraDaCarga(local.value))
+const culturaCarga = computed(() => store.culturaDaCarga(local.value))
+
 // Compat: cargas antigas gravaram kg por ponto e não têm `percentual`. Reconstrói
 // o % a partir do kg (proporção sobre o líquido) ou divide igualmente. Linha
 // única → 100%. Cargas novas já vêm com percentual (não mexe).
@@ -119,44 +123,45 @@ function normalizarPontos(carga) {
 // vista (a carga sai do lugar no fluxo). Antes disso não há o que perder, então
 // aplica direto — a TASK-141 abriu essa edição de propósito e isto NÃO a fecha
 // de novo. A guarda mora aqui, no dono de `local`, pra não depender de quem
-// chama (o bloco de Operação só renderiza o toggle).
+// chama (o modal de Operação só pede a troca).
 const finalizada = computed(() => cargaFinalizada(local.value))
 
-async function aplicarTroca(sentido) {
+function aplicarTroca(sentido) {
   aplicarSentido(local.value, sentido)
   // A revisão era do fluxo antigo: sem zerar, o FAB seguiria verde escrito
   // "Salvar" enquanto o clique só avançaria uma etapa do fluxo novo.
   revisando.value = false
-  // Persiste na hora, como os demais blocos: sem isso o drawer da direita (que
-  // lê da store) seguiria mostrando a operação antiga. Se a troca deixou ponto
-  // incompleto, o aviso do `entradaValida` é a informação certa na hora certa —
-  // re-escolher origem/destino costuma ser mesmo necessário depois de trocar.
-  try {
-    await persistirBloco()
-  } catch {
-    // erro já notificado por quem persiste (CargaPage); a troca segue em `local`
-  }
 }
 
+// Aplica a troca em `local` e devolve se aplicou. NÃO persiste: quem chama é o
+// Salvar do modal de Operação, que grava a troca junto com os outros campos
+// numa gravação só. `false` = o operador desistiu na confirmação.
 function trocarOperacao(sentido) {
-  if (!sentido || !local.value || sentido === local.value.sentido) return
-  if (finalizada.value) return
+  if (!sentido || !local.value || sentido === local.value.sentido) return Promise.resolve(true)
+  if (finalizada.value) return Promise.resolve(false)
   if (!cargaPesada(local.value)) {
     aplicarTroca(sentido)
-    return
+    return Promise.resolve(true)
   }
   const meta = sentidoMeta(sentido)
-  $q.dialog({
-    title: 'Trocar a operação',
-    message:
-      `Esta carga já foi pesada. Ao trocar para <b>${meta.label}</b>, ` +
-      `a carga volta para a 1ª etapa do fluxo de ${meta.label} e a origem/destino ` +
-      'ainda não preenchida é redefinida. Os pesos já lidos ficam.',
-    html: true,
-    cancel: { label: 'Voltar', flat: true, color: 'grey-8' },
-    ok: { label: 'Trocar', flat: true, color: 'primary' },
-    persistent: true,
-  }).onOk(() => aplicarTroca(sentido))
+  return new Promise((resolve) => {
+    $q.dialog({
+      title: 'Trocar a operação',
+      message:
+        `Esta carga já foi pesada. Ao trocar para <b>${meta.label}</b>, ` +
+        `a carga volta para a 1ª etapa do fluxo de ${meta.label} e a origem/destino ` +
+        'ainda não preenchida é redefinida. Os pesos já lidos ficam.',
+      html: true,
+      cancel: { label: 'Voltar', flat: true, color: 'grey-8' },
+      ok: { label: 'Trocar', flat: true, color: 'primary' },
+      persistent: true,
+    })
+      .onOk(() => {
+        aplicarTroca(sentido)
+        resolve(true)
+      })
+      .onCancel(() => resolve(false))
+  })
 }
 
 // Sem o chip do topo, isto alimenta só o rótulo/ícone do FAB principal e a
@@ -179,7 +184,7 @@ const itensCarga = computed(() => store.parametrosDaCarga(local.value || {}))
 const avisoClassificacao = computed(() => {
   if (!local.value || itensCarga.value.length) return null
   return {
-    titulo: `Nenhum parâmetro de classificação ativo para ${culturaAtiva.value?.cultura || 'a cultura desta safra'}.`,
+    titulo: `Nenhum parâmetro de classificação ativo para ${culturaCarga.value?.cultura || 'a cultura desta safra'}.`,
     dica: 'Cadastre em Culturas › Classificação (umidade, impureza, avariados) — sem parâmetro não há desconto e o líquido sairia igual ao bruto.',
   }
 })
@@ -226,7 +231,7 @@ function descontoParam(codparam) {
   )
 }
 
-const pesosaca = computed(() => culturaAtiva.value?.pesosaca || 60)
+const pesosaca = computed(() => culturaCarga.value?.pesosaca || 60)
 const sacasLiquido = computed(() => sacas(calc.value.liquido, pesosaca.value))
 
 // kg estimado de um ponto — só depois de pesar (líquido da carga × %). Usado
@@ -240,6 +245,13 @@ function kgDoPonto(p) {
 
 // ---- Validações de coleção (sem campo pra destacar) ----
 function entradaValida() {
+  // Carga nova nasce sem safra (o operador escolhe); sem ela não há cultura,
+  // parâmetro de classificação nem como o servidor aceitar a carga.
+  if (!local.value?.codsafra) {
+    $q.notify({ type: 'warning', message: 'Informe a safra da carga.' })
+    blocoOperacao.value?.abrir()
+    return false
+  }
   if (!origens.value.length && !destinos.value.length) {
     $q.notify({ type: 'warning', message: 'Informe ao menos uma origem ou destino.' })
     return false
@@ -460,8 +472,8 @@ function imprimir() {
     numero: local.value.codcarga,
     data: local.value.data,
     fazenda: fazendaNome(),
-    cultura: culturaAtiva.value?.cultura,
-    safra: safraAtiva.value?.safra,
+    cultura: culturaCarga.value?.cultura,
+    safra: safraCarga.value?.safra,
     placa: local.value.placa,
     placacarreta: local.value.placacarreta,
     veiculo: veic?.veiculo || null,
@@ -517,7 +529,7 @@ defineExpose({
 <template>
   <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit" @validation-error="onErroValidacao">
     <div class="q-pa-md q-gutter-y-md carga-form">
-      <CargaBlocoOperacao :carga="local" :novo="novo" />
+      <CargaBlocoOperacao ref="blocoOperacao" :carga="local" :novo="novo" />
       <CargaBlocoPontos ref="blocoPontos" :carga="local" :novo="novo" />
       <CargaBlocoPesagem ref="blocoPesagem" :carga="local" :novo="novo" />
       <CargaBlocoClassificacao ref="blocoClassificacao" :carga="local" :novo="novo" />
