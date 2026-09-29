@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, inject } from 'vue'
-import { calcularCarga } from 'src/utils/desconto'
+import { calcularCarga, sacas } from 'src/utils/desconto'
+import { useCargaStore } from 'src/stores/carga'
 import { ETAPA_META, etapasDaCarga, indiceEtapa, fmtNumero as fmt } from 'src/utils/carga'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -11,8 +12,10 @@ const props = defineProps({
 
 // Providos pelo CargaForm.vue — mesmos computeds que o form usa pra validar/
 // imprimir, reaproveitados aqui em vez de recalculados do zero.
+const store = useCargaStore()
 const persistirBloco = inject('persistirBloco')
 const concluirEtapa = inject('concluirEtapa')
+const proximoPasso = inject('proximoPasso')
 const calc = inject('calc')
 const itensCarga = inject('itensCarga')
 const sacasLiquido = inject('sacasLiquido')
@@ -36,6 +39,7 @@ const temDados = computed(() => carga.value.pbt != null || carga.value.tara != n
 const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.bruto !== undefined)
 
 const dialogAberto = ref(false)
+const formRef = ref(null)
 const edicao = ref({})
 // Aberto pelo botão da etapa (PBT/TARA) em vez do lápis: o peso da etapa é
 // obrigatório e confirmar AVANÇA a carga (concluirEtapa), não só grava.
@@ -65,12 +69,20 @@ const calcPreview = computed(() =>
 const mostrarPreview = computed(
   () => calcPreview.value.bruto !== null && calcPreview.value.bruto !== undefined,
 )
+// Só leitura da cultura da carga (peso da saca) — nada é gravado pela store aqui.
+const sacasPreview = computed(() =>
+  sacas(calcPreview.value.liquido, store.pesosacaDaCarga(carga.value)),
+)
+const liquidoInvalido = computed(() => !(Number(calcPreview.value.liquido) > 0))
 
 async function salvar() {
   Object.assign(carga.value, { pbt: edicao.value.pbt, tara: edicao.value.tara })
   try {
     const ok = etapaAtual.value ? await concluirEtapa() : await persistirBloco()
-    if (ok) dialogAberto.value = false
+    if (ok) {
+      dialogAberto.value = false
+      proximoPasso('pesagem')
+    }
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
   }
@@ -152,10 +164,17 @@ async function salvar() {
   </q-card>
 
   <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
-    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
-      <q-form class="col column no-wrap" @submit="salvar">
-        <q-card-section class="col scroll">
-          <div class="row items-center text-subtitle1 q-mb-md">
+    <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página, que
+         dispararia o Registrar/avançar por baixo com o peso ainda não aplicado. -->
+    <q-card
+      flat
+      class="column no-wrap"
+      :class="{ 'carga-dialog': !$q.screen.lt.sm }"
+      @keydown.f3.prevent.stop="formRef.submit($event)"
+    >
+      <q-form ref="formRef" class="col column no-wrap" @submit="salvar">
+        <q-card-section class="col-auto q-pb-none">
+          <div class="row items-center text-subtitle1">
             <template v-if="etapaAtual">
               <q-icon
                 :name="ETAPA_META[etapaAtual].icon"
@@ -167,14 +186,21 @@ async function salvar() {
             </template>
             <template v-else>Pesagem</template>
           </div>
-          <div class="row q-col-gutter-md">
+        </q-card-section>
+        <!-- Mesmo desenho do "Receber" do /negocios (ReceberDialog, passo 2):
+             número grande no campo, resultado grande embaixo, à direita,
+             centralizado na vertical. -->
+        <q-card-section class="col scroll column no-wrap">
+          <div class="q-my-auto">
             <MgInputValor
               v-if="mostrarPbt"
               v-model="edicao.pbt"
               :decimals="0"
               suffix="kg"
-              label="Peso bruto total (caminhão + carga)"
-              class="col-12"
+              label="Peso bruto (PBT)"
+              hint="Caminhão + carga"
+              class="q-mb-md q-field--auto-height"
+              input-class="text-h2 text-weight-bold text-primary"
               :autofocus="!focoTara"
               lazy-rules
               :rules="[
@@ -186,8 +212,10 @@ async function salvar() {
               v-model="edicao.tara"
               :decimals="0"
               suffix="kg"
-              label="Tara (caminhão vazio)"
-              class="col-12"
+              label="Tara"
+              hint="Caminhão vazio"
+              class="q-mb-md q-field--auto-height"
+              input-class="text-h2 text-weight-bold text-primary"
               :autofocus="focoTara"
               lazy-rules
               :rules="[
@@ -204,30 +232,33 @@ async function salvar() {
                   'Líquido (PBT − tara − desconto) deve ser maior que zero.',
               ]"
             />
-          </div>
-          <div v-if="mostrarPreview" class="row text-center bg-grey-1 rounded-borders q-pa-sm q-mt-sm">
-            <div class="col">
-              <div class="text-caption text-grey-6">Bruto</div>
-              <div class="text-h6">{{ fmt(calcPreview.bruto) }} <small>kg</small></div>
-            </div>
-            <div class="col">
-              <div class="text-caption text-grey-6">Desconto</div>
-              <div class="text-h6 text-orange-9">
-                {{ fmt(calcPreview.desconto) }} <small>kg</small>
+            <div v-if="mostrarPreview" class="text-right">
+              <div class="text-h6 text-grey-8">
+                Bruto {{ fmt(calcPreview.bruto) }} kg ·
+                <span class="text-orange-9">Desconto {{ fmt(calcPreview.desconto) }} kg</span>
               </div>
-            </div>
-            <div class="col">
-              <div class="text-caption text-grey-6">Líquido</div>
-              <div class="text-h6 text-green-9">
-                {{ fmt(calcPreview.liquido) }} <small>kg</small>
+              <div
+                class="text-h2 text-weight-bold"
+                :class="liquidoInvalido ? 'text-orange-10' : 'text-green-9'"
+              >
+                {{ fmt(calcPreview.liquido) }} kg
+              </div>
+              <div
+                class="text-subtitle1"
+                :class="liquidoInvalido ? 'text-orange-10' : 'text-green-9'"
+              >
+                Líquido
+                <template v-if="!liquidoInvalido && sacasPreview != null">
+                  · {{ fmt(sacasPreview, 1) }} sacas
+                </template>
               </div>
             </div>
           </div>
         </q-card-section>
         <q-card-actions align="right" class="col-auto">
-          <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn label="Cancelar (Esc)" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
-            :label="rotuloConfirmar"
+            :label="`${rotuloConfirmar} (Enter)`"
             type="submit"
             :flat="!etapaAtual"
             :unelevated="!!etapaAtual"

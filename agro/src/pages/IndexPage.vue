@@ -96,7 +96,7 @@ const atalhos = [
 onMounted(async () => {
   await store.carregarReferencias()
   await store.carregarCargas()
-  store.sincronizar().catch(() => {})
+  store.sincronizar()
 })
 </script>
 
