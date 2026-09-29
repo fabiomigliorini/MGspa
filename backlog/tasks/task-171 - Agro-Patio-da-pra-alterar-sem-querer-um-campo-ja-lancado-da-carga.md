@@ -1,11 +1,11 @@
 ---
 id: TASK-171
 title: 'Agro/Patio: da pra alterar sem querer um campo ja lancado da carga'
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-09-29 17:54'
+updated_date: '2026-09-29 21:34'
 labels:
   - agro
 dependencies: []
@@ -28,24 +28,27 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [x] #2 Bloco Pesagem (PBT/Tara com preview ao vivo) so edita por dialog
 - [x] #3 Bloco Classificacao (leituras dos parametros da cultura) so edita por dialog
 - [x] #4 Bloco Origem/Destino do grao: um dialog so, duas colunas lado a lado
-- [ ] #5 FAB cinza 'salvar sem avancar' removido e a Observacao com lugar pra ser salva
-- [ ] #6 Trocar o tipo de romaneio com peso ja lancado pede confirmacao nomeando a consequencia; sem peso troca direto; finalizada segue bloqueada
-- [ ] #7 Blocos em leitura com icone e hierarquia: rotulo em legenda, valor em destaque, icone por tipo de ponto (talhao/armazem/contrato)
-- [ ] #8 Chip colorido de etapa sai da area das abas; a etapa segue visivel na barra de progresso do drawer direito
-- [ ] #9 Botão da etapa (Pesar bruto, Classificar, Pesar tara, Notas fiscais) abre o dialog da etapa pedindo o valor; sem valor não avança
-- [ ] #10 Bloco sem nada informado mostra um + azul no lugar do lapis; com dado informado, segue o lapis de editar
-- [ ] #11 Safra e tipo de operacao saem do drawer e do card e viram selects no modal de Operacao (6 campos em 2 linhas de 3); o card so exibe
-- [ ] #12 Placa e carreta aceitam so formato brasileiro (ABC1234 ou ABC1D23); placa sem cadastro pode ser usada assim mesmo ou cadastrada
-- [ ] #13 Motorista pode ser cadastrado de dentro do modal com CPF, nome, telefone e endereco
-- [ ] #14 Motorista sem cadastro exige CPF, nome completo, telefone e endereco, gravados so na carga; CPF ja cadastrado seleciona a pessoa existente
-- [ ] #15 Carga nova nasce com Recebimento e a chegada preenchidos, mas sem safra; registrar sem safra nao deixa
-- [ ] #16 No modal de Operacao as setas percorrem as opcoes de placa e motorista (inclusive usar sem cadastro e cadastrar), e escolher a placa leva o foco pra carreta
-- [ ] #17 Origem/Destino: a unica linha de origem ou destino nao tem X; a soma so aparece com mais de uma linha; o + fica na linha do titulo com tooltip
-- [ ] #18 Os 4 modais da carga com 60% da altura da tela (tela cheia no celular); o modal de Operação cabe sem rolar, com o 'cadastrar no sistema' no rodapé à esquerda
-- [ ] #19 Pesos (PBT/Tara) e leituras da classificacao em campos numericos grandes; na pesagem o Liquido em destaque
-- [ ] #20 Carga nova abre direto no modal de Operacao com o cursor na Safra; setas para cima/baixo percorrem as safras
-- [ ] #21 F3 e Enter confirmam o modal aberto e ja abrem o proximo que falta (Operacao > Origem/Destino > etapa da balanca); Esc interrompe
-- [ ] #22 Registrar com o peso ja digitado nao pede o peso de novo: a carga ja nasce na etapa seguinte
+- [x] #5 FAB cinza 'salvar sem avancar' removido e a Observacao com lugar pra ser salva
+- [x] #6 Trocar o tipo de romaneio com peso ja lancado pede confirmacao nomeando a consequencia; sem peso troca direto; finalizada segue bloqueada
+- [x] #7 Blocos em leitura com icone e hierarquia: rotulo em legenda, valor em destaque, icone por tipo de ponto (talhao/armazem/contrato)
+- [x] #8 Chip colorido de etapa sai da area das abas; a etapa segue visivel na barra de progresso do drawer direito
+- [x] #9 Botão da etapa (Pesar bruto, Classificar, Pesar tara, Notas fiscais) abre o dialog da etapa pedindo o valor; sem valor não avança
+- [x] #10 Bloco sem nada informado mostra um + azul no lugar do lapis; com dado informado, segue o lapis de editar
+- [x] #11 Safra e tipo de operacao saem do drawer e do card e viram selects no modal de Operacao (6 campos em 2 linhas de 3); o card so exibe
+- [x] #12 Placa e carreta aceitam so formato brasileiro (ABC1234 ou ABC1D23); placa sem cadastro pode ser usada assim mesmo ou cadastrada
+- [x] #13 Motorista pode ser cadastrado de dentro do modal com CPF, nome, telefone e endereco
+- [x] #14 Motorista sem cadastro exige CPF, nome completo, telefone e endereco, gravados so na carga; CPF ja cadastrado seleciona a pessoa existente
+- [x] #15 Carga nova nasce com Recebimento e a chegada preenchidos, mas sem safra; registrar sem safra nao deixa
+- [x] #16 No modal de Operacao as setas percorrem as opcoes de placa e motorista (inclusive usar sem cadastro e cadastrar), e escolher a placa leva o foco pra carreta
+- [x] #17 Origem/Destino: a unica linha de origem ou destino nao tem X; a soma so aparece com mais de uma linha; o + fica na linha do titulo com tooltip
+- [x] #18 Os 4 modais da carga com 60% da altura da tela (tela cheia no celular); o modal de Operação cabe sem rolar, com o 'cadastrar no sistema' no rodapé à esquerda
+- [x] #19 Pesos (PBT/Tara) e leituras da classificacao em campos numericos grandes; na pesagem o Liquido em destaque
+- [x] #20 Carga nova abre direto no modal de Operacao com o cursor na Safra; setas para cima/baixo percorrem as safras
+- [x] #21 F3 e Enter confirmam o modal aberto e ja abrem o proximo que falta (Operacao > Origem/Destino > etapa da balanca); Esc interrompe
+- [x] #22 Registrar com o peso ja digitado nao pede o peso de novo: a carga ja nasce na etapa seguinte
+- [x] #23 Enter funciona em Placa/Motorista tambem (nao so Safra/Operacao) quando a lista esta fechada
+- [x] #24 Modal de Operacao: 2 campos de Reboque (nao obrigatorios, formato de placa) lado a lado; Motorista numa linha propria col-6
+- [x] #25 FAB 'salvar sem avancar' removido; FAB principal (Registrar/etapa/Salvar) some quando a carga ja esta finalizada
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -109,4 +112,6 @@ Com os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) salvando indi
 - CEP: preenche só o que o viacep trouxe; sem rua, foco no Endereço.
 - Home (IndexPage): 'No pátio' e 'Recebidas' filtram pela safra do select da home (a store agora carrega todas).
 - F3 não chamava o onSubmit (submit() sem evento + @submit.prevent) — corrigido passando um Event; mensagem 'ou remova a linha' ajustada.
+
+29/09/2026: fechada a pedido do usuario (validacoes feitas em outra conversa). Pontos levantados na conferencia, para registro: layout do modal de Operacao segue o #24 (reboques so na Expedicao) e nao o '2 linhas de 3' do #11; backend aceita motorista sem cadastro sem CPF/endereco (so o front exige); mensagens de erro dos campos do motorista removidas; Observacao de carga finalizada so salva junto com algum bloco; script 30-agro_carga_reboque2.sql ainda fora do 00-diagnostico e do README.
 <!-- SECTION:NOTES:END -->

@@ -43,7 +43,7 @@ const props = defineProps({
   // através dela (via persistirBloco), nunca chamando a store diretamente.
   persistir: { type: Function, default: null },
 })
-const emit = defineEmits(['salvar', 'registrada', 'avancar', 'cancelar'])
+const emit = defineEmits(['registrada', 'avancar', 'cancelar'])
 
 const $q = useQuasar()
 const store = useCargaStore()
@@ -314,11 +314,6 @@ function onErroValidacao(comp) {
   })
 }
 
-// Carga finalizada: grava a correção (só ela passa por aqui agora).
-function salvar() {
-  if (!validarFinalizacao()) return
-  emit('salvar', local.value)
-}
 // Registrar da carga nova: grava pela 1ª vez, já na etapa seguinte à que o dado
 // preenchido cobre — sem isso o FAB virava "Pesar bruto" com o peso já digitado
 // e o dialog pedia o mesmo número de novo. Aguarda a gravação (props.persistir)
@@ -331,11 +326,6 @@ async function registrar() {
   registrada.value = true
   emit('registrada', salva)
   return true
-}
-// Salva na etapa ATUAL, sem avançar — pra corrigir um dado sem empurrar a carga.
-function salvarSemAvancar() {
-  if (!entradaValida()) return
-  emit('salvar', local.value)
 }
 function cancelarCarga() {
   const sincronizada = !!local.value.codcarga || !!local.value.sincronizado
@@ -516,19 +506,20 @@ async function concluirEtapa() {
   return true
 }
 
-// Botão principal (FAB): registrar (nova), salvar (finalizada) ou avançar etapa.
+// Botão principal (FAB): registrar (nova) ou avançar etapa. Carga finalizada
+// não tem mais o que salvar por aqui — cada bloco já persiste a própria
+// correção pelo lápis (persistirBloco); o botão nem aparece (ver template).
 function onSubmit() {
-  if (finalizada.value) salvar()
-  else avancar()
+  if (!finalizada.value) avancar()
 }
 const rotuloPrincipal = computed(() => {
   if (ehNova.value) return 'Registrar'
-  if (finalizada.value || revisando.value) return 'Salvar'
+  if (revisando.value) return 'Salvar'
   return etapaMeta.value.acao
 })
 const iconePrincipal = computed(() => {
   if (ehNova.value) return 'add'
-  if (finalizada.value || revisando.value) return 'save'
+  if (revisando.value) return 'save'
   return etapaMeta.value.icon
 })
 // Verde no clique que fecha o romaneio — é o único que não tem volta.
@@ -667,10 +658,10 @@ defineExpose({
         <q-btn v-if="finalizada" fab icon="print" color="accent" @click="imprimir">
           <q-tooltip>Imprimir romaneio (F4)</q-tooltip>
         </q-btn>
-        <q-btn v-if="!ehNova && !finalizada" fab icon="save" color="grey-7" @click="salvarSemAvancar">
-          <q-tooltip>Salvar sem avançar</q-tooltip>
-        </q-btn>
+        <!-- Carga finalizada: nada a salvar por aqui (cada bloco corrige e
+             persiste sozinho pelo lápis) — o FAB principal não existe. -->
         <q-btn
+          v-if="!finalizada"
           type="submit"
           fab
           :icon="iconePrincipal"

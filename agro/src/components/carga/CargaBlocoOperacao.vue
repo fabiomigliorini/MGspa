@@ -1,8 +1,20 @@
 <script setup>
 // Bloco "Operação": o que a carga É (tipo de romaneio + safra) e a ficha do
-// caminhão. O card só exibe; tudo se edita no modal do `+`/lápis — 6 campos em
-// 2 linhas de 3. Trocar a operação depois da 1ª pesagem pede confirmação, e
-// quem decide isso é o CargaForm (`trocarOperacao`), não este bloco.
+// caminhão. O card só exibe; tudo se edita no modal do `+`/lápis, numa ÚNICA
+// grade (`row`) que sempre fecha as linhas em 12 — nunca sobra nem falta
+// coluna, então nada empurra, nem espreme, nem deixa vazio:
+//   Operação(4) Safra(4) Chegada(4)                          = 12
+//   SAIDA:     Placa(4) Reboque1(4) Reboque2(4)               = 12
+//              Motorista(12, sozinho — o que vem depois (CPF…) começa do zero)
+//   demais:    Placa(6) Motorista(6)                          = 12
+//   sempre:    CPF(4) Nome(8) | Telefone(4) Endereço(8) | Bairro(4) CEP(4) Cidade(4)
+// (as larguras do CargaMotoristaCampos já fecham 12 sozinhas — só dependem de
+// começar do zero, o que as contas acima garantem). Largura de Placa/Motorista
+// muda com `mostrarReboque`: dá pra trocar a Operação no próprio modal e a
+// grade realinha sozinha. Reboque é coisa de caminhão saindo (bitrem/rodotrem)
+// — some do formulário e é zerado ao salvar quando a operação não é SAIDA.
+// Trocar a operação depois da 1ª pesagem pede confirmação, e quem decide isso
+// é o CargaForm (`trocarOperacao`), não este bloco.
 //
 // Placa e motorista podem estar cadastrados ou não (como o CPF na nota do
 // /negocios): placa sem cadastro fica só em texto; motorista sem cadastro
@@ -67,8 +79,20 @@ const finalizada = computed(() => cargaFinalizada(carga.value))
 // Nada do caminhão informado: o botão do bloco é o + de "informar", não o lápis.
 // Operação e chegada não contam — nascem preenchidas com a carga.
 const temDados = computed(
-  () => !!(carga.value.placa || carga.value.placacarreta || carga.value.motorista),
+  () =>
+    !!(
+      carga.value.placa ||
+      carga.value.placacarreta ||
+      carga.value.placacarreta2 ||
+      carga.value.motorista
+    ),
 )
+// "REB1234 / REB5678" — só o(s) que existir(em); "—" se nenhum.
+const reboques = computed(() =>
+  [carga.value.placacarreta, carga.value.placacarreta2].filter(Boolean).join(' / '),
+)
+// Reboque só existe na Expedição (bitrem/rodotrem saindo da fazenda).
+const ehExpedicao = computed(() => carga.value.sentido === 'SAIDA')
 
 const sentido = computed(() => sentidoMeta(carga.value.sentido))
 const nomeSafra = (codsafra) => safras.value.find((s) => s.codsafra === codsafra)?.safra || null
@@ -97,13 +121,17 @@ const formRef = ref(null)
 const safraRef = ref(null)
 const camposMotoristaRef = ref(null)
 const placaRef = ref(null)
-const carretaRef = ref(null)
+const reboque1Ref = ref(null)
 
-// Safra/Operação (selects sem digitação), com a lista FECHADA: ↑ abre a lista
-// como o ↓ do Quasar já faz, e Enter salva o modal (o Quasar reabriria a
-// lista). `qKeyEvent` faz o Quasar pular o tratamento dele — o emit do keydown
-// vem antes; mesmo truque do MgInputData. Placa e motorista ficam de fora: lá
-// o Enter com a lista fechada é a busca/"usar sem cadastro" do próprio select.
+// Qualquer q-select deste modal (Operação, Safra, Placa, Motorista), com a
+// lista FECHADA: Enter salva o modal em vez do padrão do Quasar (reabrir a
+// lista ou reprocessar o texto digitado como "novo valor" — o Quasar SEMPRE
+// intercepta e para a propagação do Enter, então um listener lá fora do campo
+// nunca pegaria essa tecla; tem que ser aqui, no próprio select). `qKeyEvent`
+// faz o Quasar pular o tratamento dele — o emit do keydown vem antes; mesmo
+// truque do MgInputData. Com a lista ABERTA, sai sem mexer: Enter continua
+// escolhendo a opção destacada (busca da Placa, "usar sem cadastro" etc.).
+// `sel` (só Safra) também abre a lista no ↑, como o ↓ do Quasar já faz.
 function tecladoSelect(e, sel) {
   if (e.target?.getAttribute('aria-expanded') === 'true') return
   if (e.key === 'ArrowUp' && sel) {
@@ -137,6 +165,7 @@ function abrir() {
     placa: normalizarPlaca(carga.value.placa),
     codveiculo: carga.value.codveiculo,
     placacarreta: normalizarPlaca(carga.value.placacarreta),
+    placacarreta2: normalizarPlaca(carga.value.placacarreta2),
     codpessoamotorista: carga.value.codpessoamotorista,
     motorista: carga.value.motorista,
     ...Object.fromEntries(CAMPOS_MOTORISTA_SEM_CADASTRO.map((c) => [c, carga.value[c] ?? null])),
@@ -166,6 +195,9 @@ function abrir() {
   placaBusca.value = edicao.value.placa || ''
   dialogAberto.value = true
 }
+// Reativo ao sentido EM EDIÇÃO (não ao já salvo): trocar pra Expedição no
+// próprio modal já revela os campos, sem precisar salvar e reabrir.
+const mostrarReboque = computed(() => edicao.value.sentido === 'SAIDA')
 // O CargaForm abre este modal quando o Registrar esbarra na safra em branco.
 defineExpose({ abrir })
 
@@ -262,7 +294,7 @@ function onPlacaEscolhida(val) {
   resolverPlaca(val === ACAO_PLACA.semcadastro ? placaBusca.value : val)
   if (!edicao.value.placa) return
   setTimeout(() => {
-    if (placaRef.value?.$el?.contains(document.activeElement)) carretaRef.value?.focus()
+    if (placaRef.value?.$el?.contains(document.activeElement)) reboque1Ref.value?.focus()
   })
 }
 // Saiu do campo sem escolher na lista: vale o que está ESCRITO nele (não o
@@ -403,7 +435,11 @@ async function salvar() {
       data: edicao.value.data,
       placa: edicao.value.placa,
       codveiculo: edicao.value.codveiculo,
-      placacarreta: edicao.value.placacarreta,
+      // Reboque só é coisa de Expedição — some do formulário e não grava se a
+      // operação salva não for SAIDA (mesmo que o campo tenha ficado com texto
+      // de antes de trocar o tipo de romaneio no próprio modal).
+      placacarreta: mostrarReboque.value ? edicao.value.placacarreta : null,
+      placacarreta2: mostrarReboque.value ? edicao.value.placacarreta2 : null,
       codpessoamotorista: semCadastro ? null : edicao.value.codpessoamotorista,
       motorista: edicao.value.motorista,
       ...Object.fromEntries(
@@ -475,11 +511,11 @@ async function salvar() {
             <span class="text-body1 text-weight-medium">{{ carga.placa || '—' }}</span>
           </div>
         </div>
-        <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Carreta</div>
+        <div v-if="ehExpedicao" class="col-6 col-sm-4">
+          <div class="text-caption text-grey-6">Reboque</div>
           <div class="row items-center no-wrap">
             <q-icon name="link" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">{{ carga.placacarreta || '—' }}</span>
+            <span class="text-body1 text-weight-medium">{{ reboques || '—' }}</span>
           </div>
         </div>
         <div class="col-12 col-sm-4">
@@ -562,12 +598,14 @@ async function salvar() {
               option-value="value"
               emit-value
               map-options
-              class="col-12 col-sm-4"
+              class="col-12"
+              :class="mostrarReboque ? 'col-sm-4' : 'col-sm-6'"
               lazy-rules
               :rules="[() => !!edicao.placa || 'Informe a placa.', () => regraPlaca(edicao.placa)]"
               @filter="filtrarPlaca"
               @update:model-value="onPlacaEscolhida"
               @blur="onPlacaBlur"
+              @keydown="tecladoSelect($event, null)"
             >
               <template v-if="edicao.placa" #append>
                 <q-icon
@@ -599,16 +637,35 @@ async function salvar() {
               </template>
             </q-select>
 
-            <MgInput
-              ref="carretaRef"
-              v-model="edicao.placacarreta"
-              label="Carreta"
-              mask="AAA#X##"
-              class="col-12 col-sm-4"
-              lazy-rules
-              :rules="[regraPlaca]"
-            />
+            <!-- Reboque: só na Expedição (bitrem/rodotrem saindo da fazenda) —
+                 Recebimento e Transferência não mostram. Quando aparece, são 2
+                 (nenhum obrigatório — regraPlaca aceita vazio), sempre lado a
+                 lado, mesmo no celular: placa cabe fácil em meia largura. -->
+            <template v-if="mostrarReboque">
+              <MgInput
+                ref="reboque1Ref"
+                v-model="edicao.placacarreta"
+                label="Reboque 1"
+                mask="AAA#X##"
+                class="col-6 col-sm-4"
+                lazy-rules
+                :rules="[regraPlaca]"
+              />
+              <MgInput
+                v-model="edicao.placacarreta2"
+                label="Reboque 2"
+                mask="AAA#X##"
+                class="col-6 col-sm-4"
+                lazy-rules
+                :rules="[regraPlaca]"
+              />
+            </template>
 
+            <!-- Motorista: na Expedição a linha da Placa já fechou os 12
+                 sozinha (Placa+Reboque1+Reboque2), então o Motorista ocupa a
+                 SUA linha inteira (12) — garante que o que vem depois (CPF…)
+                 também comece do zero, sem sobra pra disputar. Nos outros
+                 tipos, Placa é col-6 e o Motorista fecha o par (6+6=12). -->
             <MgSelectPessoa
               v-if="modoMotorista === 'pesquisa'"
               v-model="edicao.codpessoamotorista"
@@ -616,10 +673,12 @@ async function salvar() {
               placeholder="Nome ou CPF"
               clearable
               :acoes-sem-resultado="acoesMotorista"
-              class="col-12 col-sm-4"
+              class="col-12"
+              :class="mostrarReboque ? '' : 'col-sm-6'"
               @select="onMotoristaSelect"
               @clear="onMotoristaClear"
               @acao="onAcaoMotorista"
+              @keydown="tecladoSelect($event, null)"
             />
             <MgInput
               v-else
@@ -627,7 +686,8 @@ async function salvar() {
               label="Motorista"
               readonly
               bottom-slots
-              class="col-12 col-sm-4"
+              class="col-12"
+              :class="mostrarReboque ? '' : 'col-sm-6'"
             >
               <template #append>
                 <q-icon name="close" class="cursor-pointer" tabindex="-1" @click="voltarPesquisa">

@@ -121,7 +121,7 @@ class CargaService extends MgService
         if (!empty($filter['codpessoamotorista'])) {
             $qry->where('codpessoamotorista', $filter['codpessoamotorista']);
         }
-        foreach (['placa', 'placacarreta', 'motorista'] as $col) {
+        foreach (['placa', 'placacarreta', 'placacarreta2', 'motorista'] as $col) {
             if (!empty($filter[$col])) {
                 $qry->where($col, 'ilike', '%' . $filter[$col] . '%');
             }

@@ -112,12 +112,6 @@ function limparParaProxima() {
   router.replace({ name: 'carga', params: { uuid: 'nova' } })
 }
 
-// Correção numa carga finalizada (a nova passa por `onRegistrada`).
-async function onSalvar(carga) {
-  const salva = await persistir(carga)
-  avisarGravado(salva)
-  if (cargaFinalizada(salva)) limparParaProxima()
-}
 // Carga nova gravada pela 1ª vez (o form já persistiu — ele precisa esperar a
 // gravação pra seguir a cadeia de modais): sai de 'nova' pro uuid dela.
 function onRegistrada(salva) {
@@ -190,7 +184,6 @@ onUnmounted(() => {
       :carga="cargaSel"
       :novo="novo"
       :persistir="persistir"
-      @salvar="onSalvar"
       @registrada="onRegistrada"
       @avancar="onAvancar"
       @cancelar="onCancelar"

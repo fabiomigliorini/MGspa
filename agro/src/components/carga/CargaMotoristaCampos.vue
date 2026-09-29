@@ -96,7 +96,7 @@ async function onCep(cep) {
     inputmode="numeric"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => !!v || 'Informe o CPF.', (v) => isCpfValido(v) || 'CPF inválido.']"
+    :rules="[(v) => !!v, isCpfValido]"
     @blur="onCpfBlur"
   />
   <MgInput
@@ -106,7 +106,7 @@ async function onCep(cep) {
     maxlength="60"
     class="col-12 col-sm-8"
     lazy-rules
-    :rules="[(v) => nomeCompleto(v) || 'Informe nome e sobrenome.']"
+    :rules="[nomeCompleto]"
   />
 
   <!-- Sempre celular: o pátio liga/manda mensagem pro motorista na estrada. -->
@@ -119,7 +119,7 @@ async function onCep(cep) {
     inputmode="tel"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => isTelefoneValido(v, 2) || 'Informe o celular com DDD.']"
+    :rules="[(v) => isTelefoneValido(v, 2)]"
   />
   <MgInput
     v-model="d.enderecomotorista"
@@ -128,7 +128,7 @@ async function onCep(cep) {
     maxlength="100"
     class="col-12 col-sm-8"
     lazy-rules
-    :rules="[(v) => !!v || 'Informe o endereço.']"
+    :rules="[(v) => !!v]"
   />
 
   <MgInput
@@ -137,7 +137,7 @@ async function onCep(cep) {
     maxlength="50"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => !!v || 'Informe o bairro.']"
+    :rules="[(v) => !!v]"
   />
   <MgInput
     v-model="d.cepmotorista"
@@ -148,7 +148,7 @@ async function onCep(cep) {
     :loading="buscandoCep"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => (v || '').length === 8 || 'Informe o CEP.']"
+    :rules="[(v) => (v || '').length === 8]"
     @update:model-value="onCep"
   />
   <!-- Offline não há como buscar cidade: aí ela fica pra depois, pra não
@@ -157,6 +157,6 @@ async function onCep(cep) {
     v-model="d.codcidademotorista"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => !online || !!v || 'Informe a cidade.']"
+    :rules="[(v) => !online || !!v]"
   />
 </template>

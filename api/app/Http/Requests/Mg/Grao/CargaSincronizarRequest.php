@@ -43,6 +43,7 @@ class CargaSincronizarRequest extends FormRequest
             // Identificacao (snapshot textual + FKs)
             'placa' => ['nullable', 'string', 'max:10'],
             'placacarreta' => ['nullable', 'string', 'max:10'],
+            'placacarreta2' => ['nullable', 'string', 'max:10'],
             'codveiculo' => ['nullable', 'exists:tblveiculo,codveiculo'],
             'codpessoamotorista' => ['nullable', 'exists:tblpessoa,codpessoa'],
             'motorista' => ['nullable', 'string', 'max:60'],
