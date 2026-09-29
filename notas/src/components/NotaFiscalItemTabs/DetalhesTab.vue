@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { computed } from 'vue'
 import { useNotaFiscalStore } from 'src/stores/notaFiscalStore'
 import { storeToRefs } from 'pinia'
@@ -21,21 +23,20 @@ const { editingItem } = storeToRefs(notaFiscalStore)
   <div class="row q-col-gutter-md">
     <!-- Ordem -->
     <div class="col-12 col-sm-2">
-      <q-input
-        v-model.number="editingItem.ordem"
+      <MgInputValor
+        v-model="editingItem.ordem"
+        :decimals="0"
+        :grouping="false"
         label="Ordem"
-        outlined
-        type="number"
-        min="0"
+        :min="0"
         hint="Ordem de exibição"
         :disable="notaBloqueada"
-        input-class="text-right"
       />
     </div>
 
     <!-- Descrição Alternativa -->
     <div class="col-12 col-sm-10">
-      <q-input
+      <MgInput
         v-model="editingItem.descricaoalternativa"
         label="Descrição Alternativa"
         outlined
@@ -47,7 +48,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
     <!-- Pedido -->
     <div class="col-12 col-sm-6">
-      <q-input
+      <MgInput
         v-model="editingItem.pedido"
         label="Número do Pedido"
         outlined
@@ -59,7 +60,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
     <!-- Item do Pedido -->
     <div class="col-12 col-sm-6">
-      <q-input
+      <MgInput
         v-model="editingItem.pedidoitem"
         label="Item do Pedido"
         outlined
@@ -71,7 +72,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
     <!-- Observações -->
     <div class="col-12">
-      <q-input
+      <MgInput
         v-model="editingItem.observacoes"
         label="Observações"
         outlined

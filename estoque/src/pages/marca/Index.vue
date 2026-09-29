@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useMarcaStore } from 'src/stores/marcaStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInput from '@components/MgInput.vue'
 
 const $q = useQuasar()
 const store = useMarcaStore()
@@ -264,7 +265,7 @@ onMounted(() => store.fetchItems(true))
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.marca"
                   outlined
                   label="Marca"
@@ -274,7 +275,7 @@ onMounted(() => store.fetchItems(true))
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.descricaosite"
                   outlined
                   type="textarea"

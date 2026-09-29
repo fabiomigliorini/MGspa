@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import {
   useNaturezaOperacaoStore,
@@ -108,7 +109,7 @@ onMounted(() => {
       <!-- Nome da Natureza de Operação -->
       <div class="text-caption text-grey-7 q-mb-md">Busque pela Natureza:</div>
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="filters.naturezaoperacao"
           label="Natureza de Operação"
           outlined
@@ -118,7 +119,7 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="swap_horiz" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <!-- Filtro por Operação -->

@@ -7,6 +7,7 @@ import { produtoStore } from 'src/stores/produto'
 import { Dialog } from 'quasar'
 import { useRouter } from 'vue-router'
 import moment from 'moment/min/moment-with-locales'
+import MgInputValor from '@components/MgInputValor.vue'
 moment.locale('pt-br')
 
 const route = useRoute()
@@ -172,17 +173,14 @@ const salvarDevolucao = async () => {
                   </q-item-label>
                 </q-item-section>
                 <q-item-section style="max-width: 160px">
-                  <q-input
+                  <MgInputValor
                     v-model="item.quantidadeDevolucao"
-                    type="number"
-                    min="1"
-                    step="0.001"
+                    :decimals="3"
+                    :min="0"
                     :max="item.disponivelDevolucao"
-                    outlined
                     :disable="item.disponivelDevolucao == 0"
                     item-aligned
                     label="Quantidade"
-                    input-class="text-right"
                     @change="calcularValorDevolucao(item)"
                     :rules="[(val) => val <= item.disponivelDevolucao]"
                   />

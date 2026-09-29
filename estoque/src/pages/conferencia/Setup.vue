@@ -5,6 +5,8 @@ import { api } from 'src/services/api'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import { notifyError } from 'src/utils/notify'
 import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
+import MgInputData from '@components/MgInputData.vue'
+import { formataTimestampIso } from '@components/formatters'
 
 const router = useRouter()
 const store = useConferenciaStore()
@@ -13,7 +15,7 @@ const codestoquelocal = ref(null)
 const estoquelocalLabel = ref(null)
 const fiscal = ref(false)
 const conferenciaperiodica = ref(false)
-const data = ref(new Date().toISOString().slice(0, 16)) // yyyy-mm-ddThh:mm
+const data = ref(formataTimestampIso(new Date()))
 
 // Marca (autocomplete opcional)
 const marcaOptions = ref([])
@@ -138,16 +140,15 @@ const iniciar = () => {
               </div>
 
               <div class="col-12">
-                <q-input
+                <MgInputData
                   v-model="data"
-                  outlined
-                  type="datetime-local"
+                  type="timestamp"
                   stack-label
                   label="Data/hora do ajuste"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 >
                   <template #prepend><q-icon name="event" /></template>
-                </q-input>
+                </MgInputData>
               </div>
             </div>
           </q-card-section>

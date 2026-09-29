@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { formataDataIso, formataDataAbreviada } from '@components/formatters'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
@@ -737,11 +739,11 @@ watch(
 
             <!-- DIAS DE EXPERIENCIA -->
             <div class="col-2">
-              <q-input
-                outlined
-                v-model.number="modelColaborador.diasExperiencia"
-                min="0"
-                type="number"
+              <MgInputValor
+                v-model="modelColaborador.diasExperiencia"
+                :decimals="0"
+                :grouping="false"
+                :min="0"
                 label="Dias Exp."
                 input-class="text-center"
                 :disable="!isClt"
@@ -763,11 +765,11 @@ watch(
 
             <!-- DIAS DA RENOVACAO -->
             <div class="col-2">
-              <q-input
-                outlined
-                v-model.number="modelColaborador.diasRenovacao"
-                min="0"
-                type="number"
+              <MgInputValor
+                v-model="modelColaborador.diasRenovacao"
+                :decimals="0"
+                :grouping="false"
+                :min="0"
                 label="Dias Ren."
                 input-class="text-center"
                 :disable="!isClt"
@@ -788,10 +790,10 @@ watch(
             </div>
 
             <div class="col-6">
-              <q-input outlined v-model="modelColaborador.numeroponto" label="Número Ponto" />
+              <MgInput outlined v-model="modelColaborador.numeroponto" label="Número Ponto" />
             </div>
             <div class="col-6">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelColaborador.numerocontabilidade"
                 label="Número Contabilidade"
@@ -799,7 +801,7 @@ watch(
             </div>
 
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 autogrow
                 bordeless

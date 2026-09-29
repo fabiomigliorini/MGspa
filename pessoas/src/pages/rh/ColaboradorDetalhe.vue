@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -699,7 +700,7 @@ watch(
 
             <!-- DESCRIÇÃO (só avulsa) -->
             <div class="col-12" v-if="!modelRubrica.codrubrica">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelRubrica.descricao"
                 label="Descrição"
@@ -829,20 +830,19 @@ watch(
                 />
               </div>
               <div class="col-4">
-                <q-input
-                  outlined
-                  v-model.number="modelRubrica.quantidade"
+                <MgInputValor
+                  v-model="modelRubrica.quantidade"
+                  :decimals="2"
                   label="Quantidade"
-                  type="number"
                   :rules="[(val) => val > 0 || 'Obrigatório']"
                 />
               </div>
               <div class="col-4">
-                <q-input outlined :model-value="formataNumero(totalQ)" label="Total" readonly>
+                <MgInput outlined :model-value="formataNumero(totalQ)" label="Total" readonly>
                   <template #prepend>
                     <q-icon name="functions" />
                   </template>
-                </q-input>
+                </MgInput>
               </div>
             </template>
 
@@ -908,7 +908,7 @@ watch(
 
             <!-- OBSERVAÇÃO -->
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelRubrica.observacao"
                 label="Observação"

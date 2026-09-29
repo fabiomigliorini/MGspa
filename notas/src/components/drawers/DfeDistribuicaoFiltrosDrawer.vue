@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useDfeDistribuicaoStore } from '../../stores/dfeDistribuicaoStore'
 import { useDebounceFn } from '@vueuse/core'
@@ -117,11 +119,11 @@ onMounted(() => {
 
       <!-- Chave NFe -->
       <div class="q-mb-md">
-        <q-input v-model="filters.nfechave" label="Chave" outlined clearable :bottom-slots="false">
+        <MgInput v-model="filters.nfechave" label="Chave" outlined clearable :bottom-slots="false">
           <template v-slot:prepend>
             <q-icon name="vpn_key" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <!-- Filial -->
@@ -176,34 +178,34 @@ onMounted(() => {
 
       <!-- NSU De -->
       <div class="q-mb-md">
-        <q-input
-          v-model.number="filters.nsude"
+        <MgInputValor
+          v-model="filters.nsude"
+          :decimals="0"
+          :grouping="false"
           label="De"
-          outlined
           clearable
-          type="number"
           :bottom-slots="false"
         >
           <template v-slot:prepend>
             <q-icon name="dialpad" />
           </template>
-        </q-input>
+        </MgInputValor>
       </div>
 
       <!-- NSU Até -->
       <div class="q-mb-md">
-        <q-input
-          v-model.number="filters.nsuate"
+        <MgInputValor
+          v-model="filters.nsuate"
+          :decimals="0"
+          :grouping="false"
           label="Até"
-          outlined
           clearable
-          type="number"
           :bottom-slots="false"
         >
           <template v-slot:prepend>
             <q-icon name="dialpad" />
           </template>
-        </q-input>
+        </MgInputValor>
       </div>
     </div>
   </div>

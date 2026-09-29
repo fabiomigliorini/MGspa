@@ -204,7 +204,6 @@ const linkProduto = (codproduto) => {
             <q-card-section>
               <div class="row justify-end q-col-gutter-md">
                 <div class="col-6">
-                  <q-input />
                   <MgInputValor
                     autofocus
                     lazy-rules

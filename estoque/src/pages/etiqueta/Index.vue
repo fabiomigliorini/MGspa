@@ -3,6 +3,9 @@ import { ref, computed, nextTick, onMounted } from 'vue'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgSelectImpressora from '@components/MgSelectImpressora.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const etiquetas = ref([])
 
@@ -168,17 +171,16 @@ onMounted(focarBarras)
             <q-separator inset />
             <q-card-section>
               <q-form @submit.prevent="adicionarBarras">
-                <q-input
-                  v-model.number="quantidade"
-                  outlined
-                  type="number"
-                  min="1"
+                <MgInputValor
+                  v-model="quantidade"
+                  :decimals="0"
+                  :min="1"
                   label="Quantidade"
                   class="q-mb-sm"
                 >
                   <template #prepend><q-icon name="tag" /></template>
-                </q-input>
-                <q-input
+                </MgInputValor>
+                <MgInput
                   ref="barrasRef"
                   v-model="barras"
                   outlined
@@ -198,7 +200,7 @@ onMounted(focarBarras)
                       @click="adicionarBarras"
                     />
                   </template>
-                </q-input>
+                </MgInput>
               </q-form>
             </q-card-section>
           </q-card>
@@ -212,10 +214,10 @@ onMounted(focarBarras)
             <q-separator inset />
             <q-card-section>
               <q-form @submit.prevent="adicionarNegocio">
-                <q-input
-                  v-model.number="codnegocio"
-                  outlined
-                  type="number"
+                <MgInputValor
+                  v-model="codnegocio"
+                  :decimals="0"
+                  :grouping="false"
                   label="Número do negócio"
                   @keyup.enter="adicionarNegocio"
                 >
@@ -231,7 +233,7 @@ onMounted(focarBarras)
                       @click="adicionarNegocio"
                     />
                   </template>
-                </q-input>
+                </MgInputValor>
               </q-form>
             </q-card-section>
           </q-card>
@@ -244,22 +246,8 @@ onMounted(focarBarras)
             </q-card-section>
             <q-separator inset />
             <q-card-section>
-              <q-input
-                v-model="dataInicial"
-                outlined
-                type="date"
-                label="Data inicial"
-                stack-label
-                class="q-mb-sm"
-              />
-              <q-input
-                v-model="dataFinal"
-                outlined
-                type="date"
-                label="Data final"
-                stack-label
-                class="q-mb-sm"
-              />
+              <MgInputData v-model="dataInicial" label="Data inicial" stack-label class="q-mb-sm" />
+              <MgInputData v-model="dataFinal" label="Data final" stack-label class="q-mb-sm" />
               <q-btn
                 unelevated
                 color="primary"
@@ -326,15 +314,16 @@ onMounted(focarBarras)
                 <div class="text-weight-medium">{{ formataMoeda(item.preco) }}</div>
                 <div class="text-caption text-grey-6">
                   {{ item.unidademedidasigla }}
-                  <span v-if="item.quantidadeembalagem > 1">· C/{{ item.quantidadeembalagem }}</span>
+                  <span v-if="item.quantidadeembalagem > 1"
+                    >· C/{{ item.quantidadeembalagem }}</span
+                  >
                 </div>
               </div>
               <q-space />
-              <q-input
-                v-model.number="item.quantidadeetiqueta"
-                outlined
-                type="number"
-                min="1"
+              <MgInputValor
+                v-model="item.quantidadeetiqueta"
+                :decimals="0"
+                :min="1"
                 label="Qtd"
                 style="width: 90px"
                 :bottom-slots="false"

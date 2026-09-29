@@ -7,6 +7,8 @@ import MgAutocomplete from 'src/components/MgAutocomplete.vue'
 import MgSelectTipoProduto from '@components/MgSelectTipoProduto.vue'
 import MgSelectTributacao from '@components/MgSelectTributacao.vue'
 import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -171,7 +173,7 @@ onMounted(async () => {
         <q-form @submit.prevent="submit" v-show="!loading">
           <q-card-section class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="model.produto"
                 outlined
                 label="Descrição"
@@ -183,11 +185,9 @@ onMounted(async () => {
             </div>
 
             <div class="col-12 col-sm-4">
-              <q-input
-                v-model.number="model.preco"
-                outlined
-                type="number"
-                step="0.01"
+              <MgInputValor
+                v-model="model.preco"
+                :decimals="2"
                 label="Preço"
                 prefix="R$"
                 :rules="[(v) => v > 0 || 'Maior que zero']"
@@ -204,7 +204,7 @@ onMounted(async () => {
               />
             </div>
             <div class="col-12 col-sm-4">
-              <q-input v-model="model.referencia" outlined label="Referência" maxlength="50" />
+              <MgInput v-model="model.referencia" outlined label="Referência" maxlength="50" />
             </div>
 
             <div class="col-12 col-sm-4">
@@ -296,21 +296,16 @@ onMounted(async () => {
           <q-card-section class="text-grey-9 text-overline">DIMENSÕES E PESO</q-card-section>
           <q-card-section class="row q-col-gutter-md">
             <div class="col-6 col-sm-3">
-              <q-input v-model.number="model.altura" outlined type="number" label="Altura (cm)" />
+              <MgInputValor v-model="model.altura" :decimals="2" label="Altura (cm)" />
             </div>
             <div class="col-6 col-sm-3">
-              <q-input v-model.number="model.largura" outlined type="number" label="Largura (cm)" />
+              <MgInputValor v-model="model.largura" :decimals="2" label="Largura (cm)" />
             </div>
             <div class="col-6 col-sm-3">
-              <q-input
-                v-model.number="model.profundidade"
-                outlined
-                type="number"
-                label="Profund. (cm)"
-              />
+              <MgInputValor v-model="model.profundidade" :decimals="2" label="Profund. (cm)" />
             </div>
             <div class="col-6 col-sm-3">
-              <q-input v-model.number="model.peso" outlined type="number" label="Peso (kg)" />
+              <MgInputValor v-model="model.peso" :decimals="4" label="Peso (kg)" />
             </div>
           </q-card-section>
 
@@ -318,10 +313,10 @@ onMounted(async () => {
           <q-card-section class="text-grey-9 text-overline">SITE / OBSERVAÇÕES</q-card-section>
           <q-card-section class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input v-model="model.titulosite" outlined label="Título no site" />
+              <MgInput v-model="model.titulosite" outlined label="Título no site" />
             </div>
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="model.descricaosite"
                 outlined
                 type="textarea"
@@ -330,7 +325,7 @@ onMounted(async () => {
               />
             </div>
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="model.observacoes"
                 outlined
                 type="textarea"

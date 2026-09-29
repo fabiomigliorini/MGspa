@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch } from 'vue'
 import veiculoService from '../../services/veiculoService'
 import { TIPO_RODADO_OPTIONS, TIPO_CARROCERIA_OPTIONS } from '../../stores/veiculoStore'
@@ -74,7 +75,7 @@ const submit = async () => {
 
       <q-form @submit.prevent="submit">
         <q-card-section class="q-gutter-md">
-          <q-input
+          <MgInput
             v-model="form.veiculotipo"
             label="Nome *"
             outlined

@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import {
   useTributacaoNaturezaOperacaoStore,
@@ -117,18 +119,18 @@ onMounted(async () => {
       <!-- Código -->
       <div class="text-grey-7 text-body2">Código:</div>
       <div class="q-mb-md">
-        <q-input
+        <MgInputValor
           v-model="filters.codtributacaonaturezaoperacao"
+          :decimals="0"
+          :grouping="false"
           label="Código"
-          outlined
           clearable
           placeholder="Ex: 123"
-          type="number"
         >
           <template v-slot:prepend>
             <q-icon name="tag" />
           </template>
-        </q-input>
+        </MgInputValor>
       </div>
 
       <!-- Tributação -->
@@ -180,11 +182,11 @@ onMounted(async () => {
       <!-- NCM -->
       <div class="text-grey-7 text-body2">NCM:</div>
       <div class="q-mb-md">
-        <q-input v-model="filters.ncm" label="NCM" outlined clearable placeholder="Ex: 4901">
+        <MgInput v-model="filters.ncm" label="NCM" outlined clearable placeholder="Ex: 4901">
           <template v-slot:prepend>
             <q-icon name="tag" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <!-- CFOP -->

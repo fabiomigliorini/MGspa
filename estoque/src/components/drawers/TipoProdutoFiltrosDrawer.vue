@@ -4,6 +4,8 @@ import { useDebounceFn } from '@vueuse/core'
 import { useTipoProdutoStore } from 'src/stores/tipoProdutoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const store = useTipoProdutoStore()
 
@@ -19,19 +21,19 @@ const clear = () => {
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codtipoproduto"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codtipoproduto"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.tipoproduto"
         outlined
         clearable
@@ -39,7 +41,7 @@ const clear = () => {
         label="Tipo de Produto"
       >
         <template #prepend><q-icon name="category" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
   </FilterDrawerShell>
 </template>

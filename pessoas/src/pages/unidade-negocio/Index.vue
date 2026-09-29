@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { unidadeNegocioStore } from 'src/stores/unidadenegocio'
@@ -443,7 +444,7 @@ onMounted(async () => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelUnidade.descricao"
                 label="Descrição"
@@ -481,7 +482,7 @@ onMounted(async () => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelSetor.setor"
                 label="Nome do Setor"
@@ -535,7 +536,7 @@ onMounted(async () => {
         <q-separator inset />
 
         <q-card-section>
-          <q-input
+          <MgInput
             outlined
             v-model="modelTipoSetor.tiposetor"
             label="Tipo de Setor"

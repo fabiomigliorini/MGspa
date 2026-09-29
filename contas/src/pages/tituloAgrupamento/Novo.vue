@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -415,13 +416,12 @@ async function salvar() {
                   />
                 </q-item-section>
                 <q-item-section style="flex: 0 0 90px">
-                  <q-input
-                    type="number"
-                    outlined
+                  <MgInputValor
                     label="Dias"
                     stack-label
                     :bottom-slots="false"
                     :model-value="getDias(i)"
+                    :decimals="0"
                     @update:model-value="(v) => setDias(i, v)"
                     autofocus
                   />
@@ -480,7 +480,7 @@ async function salvar() {
 
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="finalizar.observacao"
                   outlined
                   type="textarea"

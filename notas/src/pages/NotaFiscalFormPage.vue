@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -437,7 +438,7 @@ onMounted(() => {
 
               <!-- Série -->
               <div class="col-12 col-sm-2">
-                <q-input
+                <MgInput
                   v-model="form.serie"
                   label="Série *"
                   outlined
@@ -448,20 +449,19 @@ onMounted(() => {
 
               <!-- Número -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.numero"
+                <MgInputValor
+                  v-model="form.numero"
+                  :decimals="0"
+                  :grouping="false"
                   label="Número"
-                  outlined
-                  type="number"
                   hint="Deixe em branco para gerar automaticamente"
                   :disable="notaBloqueada || form.emitida"
-                  input-class="text-right"
                 />
               </div>
 
               <!-- CHAVE -->
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="form.nfechave"
                   label="Chave de Acesso da NFe *"
                   outlined
@@ -530,7 +530,7 @@ onMounted(() => {
 
               <!-- CPF na Nota (opcional) - Apenas para Consumidor -->
               <div v-if="form.codpessoa === 1" class="col-12 col-sm-6">
-                <q-input
+                <MgInput
                   v-model="form.cpf"
                   label="CPF na Nota (Consumidor)"
                   outlined
@@ -578,7 +578,7 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Valor Produtos (somente leitura) -->
               <div class="col-12 col-sm-4" v-if="isEditMode">
-                <q-input
+                <MgInput
                   :model-value="nota?.valorprodutos?.toFixed(2)"
                   label="Produtos"
                   outlined
@@ -634,7 +634,7 @@ onMounted(() => {
 
               <!-- Valor Total (calculado) -->
               <div class="col-12 col-sm-4" v-if="isEditMode">
-                <q-input
+                <MgInput
                   :model-value="notaValorTotal.toFixed(2)"
                   label="Valor Total"
                   outlined
@@ -685,7 +685,7 @@ onMounted(() => {
 
               <!-- Placa -->
               <div class="col-12 col-sm-8">
-                <q-input
+                <MgInput
                   v-model="form.placa"
                   label="Placa do Veículo"
                   outlined
@@ -706,20 +706,18 @@ onMounted(() => {
 
               <!-- Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.volumes"
+                <MgInputValor
+                  v-model="form.volumes"
+                  :decimals="0"
                   label="Volumes"
-                  outlined
-                  type="number"
-                  min="0"
+                  :min="0"
                   :disable="notaBloqueada"
-                  input-class="text-right"
                 />
               </div>
 
               <!-- Espécie dos Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
+                <MgInput
                   v-model="form.volumesespecie"
                   label="Espécie"
                   outlined
@@ -731,7 +729,7 @@ onMounted(() => {
 
               <!-- Marca dos Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
+                <MgInput
                   v-model="form.volumesmarca"
                   label="Marca"
                   outlined
@@ -742,7 +740,7 @@ onMounted(() => {
 
               <!-- Numeração dos Volumes -->
               <div class="col-12 col-sm-4">
-                <q-input
+                <MgInput
                   v-model="form.volumesnumero"
                   label="Numeração"
                   outlined
@@ -753,29 +751,23 @@ onMounted(() => {
 
               <!-- Peso Bruto -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.pesobruto"
+                <MgInputValor
+                  v-model="form.pesobruto"
+                  :decimals="3"
                   label="Peso Bruto (Kg)"
-                  outlined
-                  type="number"
-                  step="0.001"
-                  min="0"
+                  :min="0"
                   :disable="notaBloqueada"
-                  input-class="text-right"
                 />
               </div>
 
               <!-- Peso Líquido -->
               <div class="col-12 col-sm-4">
-                <q-input
-                  v-model.number="form.pesoliquido"
+                <MgInputValor
+                  v-model="form.pesoliquido"
+                  :decimals="3"
                   label="Peso Líquido (Kg)"
-                  outlined
-                  type="number"
-                  step="0.001"
-                  min="0"
+                  :min="0"
                   :disable="notaBloqueada"
-                  input-class="text-right"
                 />
               </div>
             </div>
@@ -793,7 +785,7 @@ onMounted(() => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="form.observacoes"
                   label="Observações / Informações Complementares"
                   outlined

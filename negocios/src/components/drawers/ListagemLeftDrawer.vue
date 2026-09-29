@@ -86,12 +86,10 @@ onMounted(() => {
     <!-- CODNEGOCIO -->
     <q-item>
       <q-item-section>
-        <q-input
-          outlined
-          type="number"
-          step="1"
-          min="0"
-          input-class="text-right"
+        <MgInputValor
+          :decimals="0"
+          :min="0"
+          :grouping="false"
           v-model="sListagem.filtro.codnegocio"
           label="# Negócio"
         />

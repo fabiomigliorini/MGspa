@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useContaContabilStore } from 'src/stores/contaContabilStore'
@@ -25,19 +27,19 @@ const statusOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codcontacontabil"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codcontacontabil"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.contacontabil"
         outlined
         clearable
@@ -46,9 +48,9 @@ const statusOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="description" /></template>
-      </q-input>
+      </MgInput>
 
-      <q-input
+      <MgInput
         v-model="store.filters.numero"
         outlined
         clearable
@@ -56,7 +58,7 @@ const statusOptions = [
         label="Número"
       >
         <template #prepend><q-icon name="pin" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Status">

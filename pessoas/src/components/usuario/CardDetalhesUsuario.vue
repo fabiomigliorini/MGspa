@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataTimestamp, formataDataAbreviada } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { ref } from 'vue'
@@ -272,7 +273,7 @@ const ativar = async (codusuario) => {
         <q-separator inset />
 
         <q-card-section class="q-gutter-md">
-          <q-input
+          <MgInput
             outlined
             autofocus
             v-model="modelSenha.senha"
@@ -290,9 +291,9 @@ const ativar = async (codusuario) => {
                 @click="isPwd = !isPwd"
               />
             </template>
-          </q-input>
+          </MgInput>
 
-          <q-input
+          <MgInput
             outlined
             v-model="modelSenha.senha_confirmacao"
             label="Confirmar nova senha"
@@ -309,7 +310,7 @@ const ativar = async (codusuario) => {
                 @click="isPwd = !isPwd"
               />
             </template>
-          </q-input>
+          </MgInput>
         </q-card-section>
 
         <q-card-actions align="right">

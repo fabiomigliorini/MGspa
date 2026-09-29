@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { watch, ref, computed } from 'vue'
 import { useNotaFiscalStore } from '../../stores/notaFiscalStore'
 import { useDebounceFn } from '@vueuse/core'
@@ -160,23 +161,23 @@ watch(
 
       <!-- Número -->
       <div class="q-mb-md">
-        <q-input
+        <MgInputValor
           v-model="notaFiscalStore.filters.numero"
+          :decimals="0"
+          :grouping="false"
           label="Número"
-          outlined
           clearable
-          type="number"
           :bottom-slots="false"
         >
           <template v-slot:prepend>
             <q-icon name="tag" />
           </template>
-        </q-input>
+        </MgInputValor>
       </div>
 
       <!-- Série -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="notaFiscalStore.filters.serie"
           label="Série"
           outlined
@@ -186,12 +187,12 @@ watch(
           <template v-slot:prepend>
             <q-icon name="numbers" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <!-- Chave NFe -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="notaFiscalStore.filters.nfechave"
           label="Chave NFe"
           outlined
@@ -201,7 +202,7 @@ watch(
           <template v-slot:prepend>
             <q-icon name="vpn_key" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <q-separator class="q-my-md" />

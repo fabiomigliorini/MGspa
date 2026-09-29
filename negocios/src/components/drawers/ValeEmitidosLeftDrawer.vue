@@ -70,9 +70,11 @@ const saldoOptions = [
           <MgInputValor v-model="sVales.filtros.valorate" label="Até" prefix="R$" clearable />
         </div>
         <div class="col-12">
-          <MgInput
-            v-model.number="sVales.filtros.codnegocio"
-            type="number"
+          <MgInputValor
+            v-model="sVales.filtros.codnegocio"
+            :decimals="0"
+            :grouping="false"
+            align="left"
             label="Nº do negócio"
             clearable
             :bottom-slots="false"

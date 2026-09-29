@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -187,7 +188,7 @@ const ativar = async (cod) => {
 
             <!-- Número só no cadastro: é imutável, não se edita nunca. -->
             <div class="col-12" v-if="isNovo">
-              <q-input
+              <MgInput
                 outlined
                 autofocus
                 v-model="modelCartao.numero"
@@ -199,7 +200,7 @@ const ativar = async (cod) => {
             </div>
 
             <div class="col-4">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelCartao.validade"
                 label="Validade"
@@ -218,7 +219,7 @@ const ativar = async (cod) => {
             </div>
 
             <div class="col-8">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelCartao.email"
                 label="E-mail"
@@ -228,7 +229,7 @@ const ativar = async (cod) => {
             </div>
 
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelCartao.observacao"
                 label="Observação"

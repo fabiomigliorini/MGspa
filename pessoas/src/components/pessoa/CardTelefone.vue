@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -341,7 +342,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
 
             <!-- PAIS -->
             <div class="col-3">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelTel.pais"
                 mask="(+##)"
@@ -355,7 +356,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
 
             <!-- DDD -->
             <div class="col-3">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelTel.ddd"
                 mask="(##)"
@@ -370,7 +371,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
 
             <!-- TELEFONE -->
             <div class="col-6">
-              <q-input
+              <MgInput
                 v-if="modelTel.tipo == '2'"
                 outlined
                 v-model="modelTel.telefone"
@@ -382,7 +383,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 input-class="text-center"
               />
 
-              <q-input
+              <MgInput
                 v-if="modelTel.tipo == '1'"
                 outlined
                 v-model="modelTel.telefone"
@@ -398,7 +399,7 @@ const baixo = async (codpessoa, codpessoatelefone) => {
                 input-class="text-center"
               />
 
-              <q-input
+              <MgInput
                 v-if="modelTel.tipo == '9'"
                 outlined
                 v-model="modelTel.telefone"

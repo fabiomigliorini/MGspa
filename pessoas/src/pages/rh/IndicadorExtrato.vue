@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
@@ -431,7 +432,7 @@ onMounted(() => {
               autofocus
               :rules="[(val) => (val != null && val !== '') || 'Obrigatório']"
             />
-            <q-input
+            <MgInput
               outlined
               v-model="modelLancamento.descricao"
               label="Descrição"

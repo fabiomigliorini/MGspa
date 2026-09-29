@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 
 const props = defineProps({
@@ -69,7 +70,7 @@ defineExpose({
           <div class="row q-col-gutter-md">
             <!-- Texto da Correção -->
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="form.texto"
                 label="Texto da Correção *"
                 outlined

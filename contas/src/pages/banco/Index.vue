@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
@@ -222,7 +224,7 @@ onMounted(() => store.fetchItems(true))
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.banco"
                   outlined
                   label="Banco"
@@ -232,13 +234,13 @@ onMounted(() => store.fetchItems(true))
                 />
               </div>
               <div class="col-4">
-                <q-input v-model="model.sigla" outlined label="Sigla" maxlength="3" />
+                <MgInput v-model="model.sigla" outlined label="Sigla" maxlength="3" />
               </div>
               <div class="col-8">
-                <q-input
-                  v-model.number="model.numerobanco"
-                  outlined
-                  type="number"
+                <MgInputValor
+                  v-model="model.numerobanco"
+                  :decimals="0"
+                  :grouping="false"
                   label="Nº Banco"
                 />
               </div>

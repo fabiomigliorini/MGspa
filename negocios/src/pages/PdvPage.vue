@@ -7,6 +7,7 @@ import SelectFilial from 'components/selects/SelectFilial.vue'
 import SelectSetor from 'components/selects/SelectSetor.vue'
 import DialogEditarPdv from 'components/pdv/DialogEditarPdv.vue'
 import { Notify } from 'quasar'
+import MgInput from '@components/MgInput.vue'
 
 moment.locale('pt-br')
 
@@ -105,7 +106,7 @@ onMounted(() => {
       <div class="text-caption text-grey-7 q-mb-sm">Filtre seu dispositivo:</div>
       <div class="row q-col-gutter-md">
         <div class="col-xs-12 col-sm-4">
-          <q-input outlined v-model="filtro.apelido" label="Apelido" clearable />
+          <MgInput outlined v-model="filtro.apelido" label="Apelido" clearable />
         </div>
         <div class="col-xs-12 col-sm-4">
           <select-filial v-model="filtro.codfilial" clearable />
@@ -126,10 +127,10 @@ onMounted(() => {
           />
         </div>
         <div class="col-xs-12 col-sm-4">
-          <q-input outlined v-model="filtro.ip" label="IP" clearable />
+          <MgInput outlined v-model="filtro.ip" label="IP" clearable />
         </div>
         <div class="col-xs-12 col-sm-4">
-          <q-input outlined v-model="filtro.uuid" label="UUID" clearable />
+          <MgInput outlined v-model="filtro.uuid" label="UUID" clearable />
         </div>
         <div class="col-xs-12 col-sm-4">
           <select-setor v-model="filtro.codsetor" outlined label="Setor" clearable />

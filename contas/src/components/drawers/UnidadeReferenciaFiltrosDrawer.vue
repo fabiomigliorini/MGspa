@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useUnidadeReferenciaStore } from 'src/stores/unidadeReferenciaStore'
@@ -32,7 +33,7 @@ const statusOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
+      <MgInput
         v-model="store.filters.codigo"
         outlined
         clearable
@@ -41,7 +42,7 @@ const statusOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="tag" /></template>
-      </q-input>
+      </MgInput>
 
       <q-select
         v-model="store.filters.ente"

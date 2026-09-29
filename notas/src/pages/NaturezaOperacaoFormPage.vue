@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -324,7 +325,7 @@ onMounted(() => {
           </div>
           <q-card-section>
             <!-- Natureza de Operação -->
-            <q-input
+            <MgInput
               v-model="form.naturezaoperacao"
               outlined
               autofocus
@@ -342,7 +343,7 @@ onMounted(() => {
               <template v-slot:prepend>
                 <q-icon name="swap_horiz" />
               </template>
-            </q-input>
+            </MgInput>
 
             <div class="row q-col-gutter-md">
               <!-- Operação -->
@@ -576,7 +577,7 @@ onMounted(() => {
           </div>
           <q-card-section>
             <!-- Observações NF -->
-            <q-input
+            <MgInput
               v-model="form.observacoesnf"
               outlined
               type="textarea"
@@ -588,10 +589,10 @@ onMounted(() => {
               <template v-slot:prepend>
                 <q-icon name="note" />
               </template>
-            </q-input>
+            </MgInput>
 
             <!-- Mensagem PROCOM -->
-            <q-input
+            <MgInput
               v-model="form.mensagemprocom"
               outlined
               type="textarea"
@@ -602,7 +603,7 @@ onMounted(() => {
               <template v-slot:prepend>
                 <q-icon name="message" />
               </template>
-            </q-input>
+            </MgInput>
           </q-card-section>
         </q-card>
 

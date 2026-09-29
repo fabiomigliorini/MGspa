@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { rhStore } from 'src/stores/rh'
@@ -340,7 +341,7 @@ const confirmar = async () => {
 
         <!-- OBSERVAÇÃO -->
         <q-card-section class="q-pt-sm">
-          <q-input
+          <MgInput
             v-model="observacao"
             type="textarea"
             label="Observação (opcional)"

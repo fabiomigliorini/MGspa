@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
@@ -179,7 +180,7 @@ onMounted(async () => {
       <q-card-section class="q-pt-sm">
         <div class="row q-col-gutter-md">
           <div class="col-md-6 col-12">
-            <q-input
+            <MgInput
               outlined
               v-model="model.usuario"
               maxlength="20"
@@ -189,7 +190,7 @@ onMounted(async () => {
               <template #prepend>
                 <q-icon name="person" />
               </template>
-            </q-input>
+            </MgInput>
           </div>
 
           <div class="col-md-6 col-12">
@@ -224,7 +225,7 @@ onMounted(async () => {
         <div class="text-overline text-grey-9 q-mb-md">SENHA</div>
         <div class="row q-col-gutter-md">
           <div class="col-md-6 col-12">
-            <q-input
+            <MgInput
               outlined
               v-model="model.senha"
               label="Senha"
@@ -241,10 +242,10 @@ onMounted(async () => {
                   @click="isPwd = !isPwd"
                 />
               </template>
-            </q-input>
+            </MgInput>
           </div>
           <div class="col-md-6 col-12">
-            <q-input
+            <MgInput
               outlined
               v-model="model.senha_confirmacao"
               label="Confirmar senha"
@@ -254,7 +255,7 @@ onMounted(async () => {
               <template #prepend>
                 <q-icon name="lock_open" />
               </template>
-            </q-input>
+            </MgInput>
           </div>
         </div>
       </q-card-section>

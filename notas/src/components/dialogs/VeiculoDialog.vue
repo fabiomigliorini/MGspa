@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, computed, watch } from 'vue'
 import veiculoService from '../../services/veiculoService'
 import { useVeiculoStore, TIPO_PROPRIETARIO_OPTIONS } from '../../stores/veiculoStore'
@@ -91,7 +93,7 @@ const submit = async () => {
 
       <q-form @submit.prevent="submit">
         <q-card-section class="q-gutter-md">
-          <q-input
+          <MgInput
             v-model="form.veiculo"
             label="Apelido *"
             outlined
@@ -131,7 +133,7 @@ const submit = async () => {
 
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <q-input
+              <MgInput
                 v-model="form.placa"
                 label="Placa *"
                 outlined
@@ -154,34 +156,26 @@ const submit = async () => {
             </div>
           </div>
 
-          <q-input v-model="form.renavam" label="Renavam" outlined mask="###########" />
+          <MgInput v-model="form.renavam" label="Renavam" outlined mask="###########" />
 
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-4">
-              <q-input
-                v-model.number="form.tara"
-                label="Tara (KG)"
-                outlined
-                type="number"
-                min="0"
-              />
+              <MgInputValor v-model="form.tara" :decimals="0" label="Tara (KG)" :min="0" />
             </div>
             <div class="col-12 col-sm-4">
-              <q-input
-                v-model.number="form.capacidade"
+              <MgInputValor
+                v-model="form.capacidade"
+                :decimals="0"
                 label="Capacidade (KG)"
-                outlined
-                type="number"
-                min="0"
+                :min="0"
               />
             </div>
             <div class="col-12 col-sm-4">
-              <q-input
-                v-model.number="form.capacidadem3"
+              <MgInputValor
+                v-model="form.capacidadem3"
+                :decimals="0"
                 label="Capacidade (M³)"
-                outlined
-                type="number"
-                min="0"
+                :min="0"
               />
             </div>
           </div>

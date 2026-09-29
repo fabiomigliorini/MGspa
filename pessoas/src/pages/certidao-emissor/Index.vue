@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { defineAsyncComponent, ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { certidaoEmissorStore } from 'src/stores/certidao-emissor'
@@ -262,7 +263,7 @@ onMounted(() => {
           </q-card-section>
 
           <q-card-section class="q-pt-none">
-            <q-input
+            <MgInput
               outlined
               v-model="model.certidaoemissor"
               label="Certidão Emissor"
@@ -295,7 +296,7 @@ onMounted(() => {
           </q-list>
         </q-card>
         <div class="q-pa-md q-gutter-md">
-          <q-input
+          <MgInput
             outlined
             v-model="filtro.certidaoemissor"
             label="Buscar"
@@ -305,7 +306,7 @@ onMounted(() => {
             <template v-slot:prepend>
               <q-icon name="search" />
             </template>
-          </q-input>
+          </MgInput>
 
           <q-select
             outlined

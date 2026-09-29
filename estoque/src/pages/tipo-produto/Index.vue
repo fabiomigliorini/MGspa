@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useTipoProdutoStore } from 'src/stores/tipoProdutoStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInput from '@components/MgInput.vue'
 
 const $q = useQuasar()
 const store = useTipoProdutoStore()
@@ -198,7 +199,7 @@ onMounted(() => store.fetchItems(true))
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.tipoproduto"
                   outlined
                   label="Tipo de Produto"

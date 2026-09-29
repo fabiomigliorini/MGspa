@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useCfopStore } from '../../stores/cfopStore'
 import { useDebounceFn } from '@vueuse/core'
@@ -102,7 +103,7 @@ onMounted(() => {
       <!-- Codigo CFOP -->
       <div class="text-caption text-grey-7 q-mb-md">Busque pelo CFOP:</div>
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="filters.cfop"
           label="Código CFOP"
           outlined
@@ -112,12 +113,12 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="tag" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <!-- Descricao -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="filters.descricao"
           label="Descrição"
           outlined
@@ -127,7 +128,7 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="description" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
     </div>
   </div>

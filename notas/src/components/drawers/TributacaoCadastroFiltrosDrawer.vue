@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useTributacaoCadastroStore } from '../../stores/tributacaoCadastroStore'
 import { useDebounceFn } from '@vueuse/core'
@@ -101,7 +102,7 @@ onMounted(() => {
       <!-- Nome da Tributacao -->
       <div class="text-caption text-grey-7 q-mb-md">Busque pela Tributacao:</div>
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="filters.tributacao"
           label="Tributacao"
           outlined
@@ -111,7 +112,7 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="receipt_long" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
     </div>
   </div>

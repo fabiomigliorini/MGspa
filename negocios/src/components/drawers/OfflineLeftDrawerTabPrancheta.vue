@@ -5,6 +5,7 @@ import { debounce } from 'quasar'
 import { db } from 'src/boot/db'
 import { produtoStore } from 'src/stores/produto'
 import emitter from 'src/utils/emitter'
+import MgInput from '@components/MgInput.vue'
 
 const sProduto = produtoStore()
 const prancheta = ref({})
@@ -127,12 +128,12 @@ const pesquisar = debounce(async () => {
         class="cursor-pointer"
       />
     </q-breadcrumbs>
-    <q-input outlined v-model="texto" label="Pesquisa" autofocus v-else>
+    <MgInput outlined v-model="texto" label="Pesquisa" autofocus v-else>
       <template v-slot:append>
         <q-icon v-if="texto !== ''" name="close" @click="texto = ''" class="cursor-pointer" />
         <q-icon name="search" />
       </template>
-    </q-input>
+    </MgInput>
   </div>
   <q-list>
     <template v-for="cat in categorias" :key="cat.codpranchetacategoria">

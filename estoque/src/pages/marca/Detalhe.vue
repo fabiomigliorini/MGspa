@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { goBack } from 'src/utils/goBack'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import MgInput from '@components/MgInput.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -197,7 +198,9 @@ onMounted(carregar)
               <div class="col-6 col-sm-3">
                 <div class="text-caption text-grey-6">% do total/ano</div>
                 <div class="text-subtitle1">
-                  {{ marca.vendaanopercentual ? Number(marca.vendaanopercentual).toFixed(2) : '0' }}%
+                  {{
+                    marca.vendaanopercentual ? Number(marca.vendaanopercentual).toFixed(2) : '0'
+                  }}%
                 </div>
               </div>
             </div>
@@ -271,7 +274,7 @@ onMounted(carregar)
           <q-card-section v-if="model">
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.marca"
                   outlined
                   label="Marca"
@@ -281,7 +284,7 @@ onMounted(carregar)
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.descricaosite"
                   outlined
                   type="textarea"

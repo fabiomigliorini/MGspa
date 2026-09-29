@@ -1,11 +1,11 @@
 ---
 id: TASK-174
 title: 'Campo de texto: o X de limpar rouba o Tab e cada tela repete a mesma gambiarra'
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-28 22:06'
+updated_date: '2026-09-28 22:27'
 labels:
   - components
 dependencies: []
@@ -30,14 +30,15 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Nenhum <q-input> cru sobrou em negocios/src (trocado por MgInput)
-- [ ] #2 Nenhum <q-input> cru sobrou em pessoas/src
-- [ ] #3 Nenhum <q-input> cru sobrou em contas/src
-- [ ] #4 Nenhum <q-input> cru sobrou em estoque/src
+- [x] #1 Nenhum <q-input> cru sobrou em negocios/src (trocado por MgInput)
+- [x] #2 Nenhum <q-input> cru sobrou em pessoas/src
+- [x] #3 Nenhum <q-input> cru sobrou em contas/src
+- [x] #4 Nenhum <q-input> cru sobrou em estoque/src
 - [x] #5 Nenhum <q-input> cru sobrou em agro/src
-- [ ] #6 Nenhum <q-input> cru sobrou em notas/src
-- [ ] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
+- [x] #6 Nenhum <q-input> cru sobrou em notas/src
+- [x] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
 - [x] #8 Regra do MgInput escrita no CLAUDE.md (campo novo e form que receber manutencao usam MgInput)
+- [x] #9 Componentes compartilhados (@components) sem q-input cru fora dos proprios MgInput/MgInputValor/MgInputData
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -46,4 +47,16 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 24/09/2026: criado o @components/MgInput.vue e a regra no CLAUDE.md. ValeDialog (negocios) ja migrado — foi o que levantou o caso. O MgInputFormatado tambem passou a montar em cima do MgInput (era q-input cru), entao os 21 lugares que usam ele ja herdam o X fora do Tab. Falta a varredura dos q-input crus, app por app.
 
 28/09/2026: agro migrado — 31 q-input em 16 arquivos. 29 viraram MgInput (troca 1:1). Os 2 type=number viraram MgInputValor: Tara do caminhao (decimals 0, suffix kg) e N do romaneio no filtro de cargas (decimals 0, sem milhar, alinhado a esquerda). SelectTalhao tambem virou MgInput: o campo readonly sai do Tab e o foco cai direto no botao do mapa (Enter abre).
+
+28/09/2026: negocios migrado — 43 q-input em 19 arquivos. Numericos viraram MgInputValor: quantidade da devolucao (3 casas, teto = disponivel), codnegocio da confissao, copias da comanda e os filtros ID Woo, # Negocio, # Liquidacao e N do negocio dos vales emitidos (sem milhar). Removido um <q-input /> vazio perdido no dialogo de editar item (ListagemProdutos), que desenhava uma caixa sem funcao e parava no Tab.
+
+28/09/2026: estoque migrado — 64 q-input em 17 arquivos. Numeros viraram MgInputValor com as casas da coluna no banco (preco/dimensoes 2, peso 4, custo medio 6, quantidade conferida e embalagem 3, codigos e localizacao sem casas nem milhar, mes 1-12). Datas viraram MgInputData; a data/hora do ajuste da conferencia virou MgInputData timestamp e passou a abrir na hora local (antes vinha de toISOString, em UTC, 4h adiantada). MgInputValor e MgInputData ganharam o slot #prepend (repassado ao q-input), para os icones dos filtros de codigo e das datas continuarem aparecendo.
+
+28/09/2026: contas migrado — 82 q-input em 33 arquivos. Os 24 numericos (filtros de codigo, numero do banco, dados bancarios do portador, numero do motivo de devolucao, agencia do filtro de cheque, dias da parcela no agrupamento) viraram MgInputValor sem casas; so os Dias aceitam milhar/negativo. Nenhuma data crua no contas.
+
+28/09/2026: notas migrado — 115 q-input em 39 arquivos. Numericos viraram MgInputValor: quantidades e pesos com 3 casas (a quantidade do item tinha 4 na tela, o banco guarda 3), tara/capacidade/volumes sem casas, codigos/CST/CSOSN/NSU/numero/ordem sem casas nem milhar. O filtro de emissao das NF-e de terceiros (mascara DD/MM + q-date + conversao na mao) virou MgInputData, e sairam as funcoes convertToISODate/convertFromISODate. Varredura confirmou que nenhum campo migrado tinha conteudo no slot padrao (MgInput nao o repassa).
+
+28/09/2026: pessoas migrado — 133 q-input em 55 arquivos (5 em Options API: import + registro em components). Numericos viraram MgInputValor: quantidade da rubrica e do fixo da meta com 2 casas; dias de ferias/abono/desconto/gozo, dias de experiencia/renovacao, dias uteis, tolerancias, ano dos feriados, serie NF-e e codigos sem casas. Com isso os 6 apps estao sem q-input cru; falta o teste de Tab (#7).
+
+28/09/2026: MgAppsMenu (busca), MgDialogPesquisaProduto (pesquisa) e MgInputProdutoBarras (barras) trocados por MgInput. Em @components so restam os q-input que sao a base do MgInput, MgInputValor e MgInputData. App quasar/ (v1) abandonado, fora.
 <!-- SECTION:NOTES:END -->

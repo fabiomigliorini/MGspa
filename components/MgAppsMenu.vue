@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
@@ -255,7 +256,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleShortcut))
     >
       <q-card-section class="q-pa-md">
         <div class="row no-wrap items-center q-gutter-sm">
-          <q-input
+          <MgInput
             v-model="search"
             :autofocus="!isMobile"
             outlined
@@ -268,7 +269,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', handleShortcut))
             <template #prepend>
               <q-icon name="search" />
             </template>
-          </q-input>
+          </MgInput>
           <q-btn flat round icon="close" aria-label="Fechar" v-close-popup />
         </div>
       </q-card-section>

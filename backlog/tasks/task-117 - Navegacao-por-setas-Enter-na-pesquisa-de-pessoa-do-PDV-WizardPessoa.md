@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-18 18:51'
-updated_date: '2026-09-18 19:49'
+updated_date: '2026-09-28 23:14'
 labels:
   - negocios
 dependencies: []
@@ -24,6 +24,11 @@ Investigacao (2026-09-18): negocios/src/components/offline/WizardPessoa.vue nao 
 Impacto: toda venda com cliente identificado obriga o caixa a tirar a mao do teclado pro mouse.
 <!-- SECTION:DESCRIPTION:END -->
 
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Enter com CPF nao cadastrado (ou pessoa selecionada) fecha o dialog e ele nao reabre sozinho: confirmava no keydown, o foco voltava pro item Consumidor (DetalheNegocio) e o keyup do Enter clicava nele. Agora confirma no keyup.
+<!-- AC:END -->
+
 ## Implementation Plan
 
 <!-- SECTION:PLAN:BEGIN -->
@@ -37,3 +42,9 @@ Impacto: toda venda com cliente identificado obriga o caixa a tirar a mao do tec
 6. Mouse continua funcionando igual (@click no item).
 7. Validar: eslint/prettier no arquivo; testar no PDV dev - F10, digitar 'migliorini', aguardar, setas descem/sobem com scroll, Enter confirma a pessoa; Enter com CPF digitado; dialog 'Alterar Pessoa' (confirmar ja existente) abre com Enter e aceita OK por teclado.
 <!-- SECTION:PLAN:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+2026-09-28: regressao relatada - dialog aberto pelo clique em Consumidor reabria apos Enter. QItem clickable dispara click no keyup Enter (QItem.js onKeyup); QDialog devolve o foco ao item no hide. Fix: WizardPessoa confirma no keyup (keydown so previne o submit e marca enterPesquisa).
+<!-- SECTION:NOTES:END -->

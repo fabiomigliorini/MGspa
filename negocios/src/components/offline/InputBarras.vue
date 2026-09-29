@@ -13,6 +13,7 @@ import { Notify, Dialog, debounce } from 'quasar'
 import { falar } from '../../utils/falar.js'
 import emitter from '../../utils/emitter.js'
 import moment from 'moment/min/moment-with-locales'
+import MgInput from '@components/MgInput.vue'
 moment.locale('pt-br')
 
 const router = useRouter()
@@ -404,7 +405,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <q-input
+  <MgInput
     type="text"
     outlined
     ref="refBarras"
@@ -470,7 +471,7 @@ onUnmounted(() => {
         />
       </q-fab>
     </template>
-  </q-input>
+  </MgInput>
 
   <!-- Leitor de Codigo de Barras -->
   <div v-if="leitorLigado">
@@ -494,7 +495,7 @@ onUnmounted(() => {
   <q-dialog v-model="dialogOrcamento">
     <q-card style="width: 360px">
       <q-card-section>
-        <q-input
+        <MgInput
           type="text"
           mask="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
           outlined
@@ -569,7 +570,7 @@ onUnmounted(() => {
     <q-card>
       <q-card-section class="bg-primary text-white">
         <div class="row q-col-gutter-sm">
-          <q-input
+          <MgInput
             outlined
             autofocus
             v-model="sProduto.textoPesquisa"
@@ -590,7 +591,7 @@ onUnmounted(() => {
                 <q-tooltip class="bg-accent">Fechar</q-tooltip>
               </q-btn>
             </template>
-          </q-input>
+          </MgInput>
           <q-select
             outlined
             borderless

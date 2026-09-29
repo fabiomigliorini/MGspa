@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
 import { date, Notify } from 'quasar'
 import { formataMesAno } from '@components/formatters'
@@ -132,7 +133,7 @@ const excluirAcumulador = (ac) => {
       <div class="row items-center q-mb-md q-gutter-md">
         <div class="text-h5">Exportação Domínio</div>
         <q-space />
-        <q-input
+        <MgInput
           outlined
           readonly
           :model-value="mesLabel"
@@ -153,7 +154,7 @@ const excluirAcumulador = (ac) => {
               </q-popup-proxy>
             </q-icon>
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <q-tabs

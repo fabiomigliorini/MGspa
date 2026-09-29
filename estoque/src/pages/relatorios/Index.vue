@@ -4,6 +4,8 @@ import { abrirPdf } from 'src/utils/abrirPdf'
 import { notifyError } from 'src/utils/notify'
 import MgAutocomplete from 'src/components/MgAutocomplete.vue'
 import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 // Comparativo de vendas
 const cmp = ref({
@@ -98,35 +100,76 @@ const gerarTransferencias = () => {
 
       <!-- Comparativo de Vendas -->
       <q-card bordered flat class="q-mb-md">
-        <q-expansion-item icon="compare_arrows" label="Comparativo de Vendas (Depósito × Filial)" default-opened>
+        <q-expansion-item
+          icon="compare_arrows"
+          label="Comparativo de Vendas (Depósito × Filial)"
+          default-opened
+        >
           <q-card-section class="row q-col-gutter-md">
             <div class="col-12 col-sm-6">
-              <MgSelectEstoqueLocal v-model="cmp.codestoquelocaldeposito" label="Depósito" clearable />
+              <MgSelectEstoqueLocal
+                v-model="cmp.codestoquelocaldeposito"
+                label="Depósito"
+                clearable
+              />
             </div>
             <div class="col-12 col-sm-6">
               <MgSelectEstoqueLocal v-model="cmp.codestoquelocalfilial" label="Filial" />
             </div>
             <div class="col-6 col-sm-4">
-              <q-input v-model="cmp.datainicial" outlined type="date" label="Data inicial" stack-label />
+              <MgInputData v-model="cmp.datainicial" label="Data inicial" stack-label />
             </div>
             <div class="col-6 col-sm-4">
-              <q-input v-model="cmp.datafinal" outlined type="date" label="Data final" stack-label />
+              <MgInputData v-model="cmp.datafinal" label="Data final" stack-label />
             </div>
             <div class="col-6 col-sm-4">
-              <q-input v-model.number="cmp.dias_previsao" outlined type="number" label="Dias previsão" />
+              <MgInputValor v-model="cmp.dias_previsao" :decimals="0" label="Dias previsão" />
             </div>
             <div class="col-12 col-sm-4">
-              <q-select v-model="cmp.saldo_deposito" :options="[{label:'Com saldo no depósito',value:1},{label:'Sem saldo no depósito',value:-1},{label:'Indiferente',value:null}]" emit-value map-options outlined label="Saldo depósito" />
+              <q-select
+                v-model="cmp.saldo_deposito"
+                :options="[
+                  { label: 'Com saldo no depósito', value: 1 },
+                  { label: 'Sem saldo no depósito', value: -1 },
+                  { label: 'Indiferente', value: null },
+                ]"
+                emit-value
+                map-options
+                outlined
+                label="Saldo depósito"
+              />
             </div>
             <div class="col-12 col-sm-4">
-              <q-select v-model="cmp.saldo_filial" :options="[{label:'Acima da previsão',value:1},{label:'Abaixo da previsão',value:-1},{label:'Indiferente',value:null}]" emit-value map-options outlined label="Saldo filial" />
+              <q-select
+                v-model="cmp.saldo_filial"
+                :options="[
+                  { label: 'Acima da previsão', value: 1 },
+                  { label: 'Abaixo da previsão', value: -1 },
+                  { label: 'Indiferente', value: null },
+                ]"
+                emit-value
+                map-options
+                outlined
+                label="Saldo filial"
+              />
             </div>
             <div class="col-12 col-sm-4">
-              <MgAutocomplete v-model="cmp.codmarca" endpoint="v1/marca/autocompletar" search-param="marca" label="Marca (opcional)" />
+              <MgAutocomplete
+                v-model="cmp.codmarca"
+                endpoint="v1/marca/autocompletar"
+                search-param="marca"
+                label="Marca (opcional)"
+              />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn unelevated color="primary" icon="print" label="Gerar PDF" @click="gerarComparativo" />
+            <q-btn
+              unelevated
+              color="primary"
+              icon="print"
+              label="Gerar PDF"
+              @click="gerarComparativo"
+            />
           </q-card-actions>
         </q-expansion-item>
       </q-card>
@@ -136,32 +179,76 @@ const gerarTransferencias = () => {
         <q-expansion-item icon="balance" label="Físico × Fiscal">
           <q-card-section class="row q-col-gutter-md">
             <div class="col-6 col-sm-3">
-              <q-input v-model.number="ff.codempresa" outlined type="number" label="Empresa" />
+              <MgInputValor
+                v-model="ff.codempresa"
+                :decimals="0"
+                :grouping="false"
+                label="Empresa"
+              />
             </div>
             <div class="col-6 col-sm-3">
-              <q-input v-model.number="ff.mes" outlined type="number" label="Mês" />
+              <MgInputValor
+                v-model="ff.mes"
+                :decimals="0"
+                :min="1"
+                :max="12"
+                :grouping="false"
+                label="Mês"
+              />
             </div>
             <div class="col-6 col-sm-3">
-              <q-input v-model.number="ff.ano" outlined type="number" label="Ano" />
+              <MgInputValor v-model="ff.ano" :decimals="0" :grouping="false" label="Ano" />
             </div>
             <div class="col-6 col-sm-3">
               <MgSelectEstoqueLocal v-model="ff.codestoquelocal" label="Depósito" clearable />
             </div>
             <div class="col-12 col-sm-4">
-              <MgAutocomplete v-model="ff.codmarca" endpoint="v1/marca/autocompletar" search-param="marca" label="Marca (opcional)" />
+              <MgAutocomplete
+                v-model="ff.codmarca"
+                endpoint="v1/marca/autocompletar"
+                search-param="marca"
+                label="Marca (opcional)"
+              />
             </div>
             <div class="col-12 col-sm-4">
-              <q-select v-model="ff.saldo_fisico" :options="fiscalOptions" emit-value map-options outlined label="Saldo físico" />
+              <q-select
+                v-model="ff.saldo_fisico"
+                :options="fiscalOptions"
+                emit-value
+                map-options
+                outlined
+                label="Saldo físico"
+              />
             </div>
             <div class="col-12 col-sm-4">
-              <q-select v-model="ff.saldo_fiscal" :options="fiscalOptions" emit-value map-options outlined label="Saldo fiscal" />
+              <q-select
+                v-model="ff.saldo_fiscal"
+                :options="fiscalOptions"
+                emit-value
+                map-options
+                outlined
+                label="Saldo fiscal"
+              />
             </div>
             <div class="col-12 col-sm-6">
-              <q-select v-model="ff.saldo_fisico_fiscal" :options="comparaOptions" emit-value map-options outlined label="Comparação físico × fiscal" />
+              <q-select
+                v-model="ff.saldo_fisico_fiscal"
+                :options="comparaOptions"
+                emit-value
+                map-options
+                outlined
+                label="Comparação físico × fiscal"
+              />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn unelevated color="primary" icon="print" label="Gerar PDF" @click="gerarFisicoFiscal" />
+            <q-btn
+              unelevated
+              color="primary"
+              icon="print"
+              label="Gerar PDF"
+              @click="gerarFisicoFiscal"
+            />
           </q-card-actions>
         </q-expansion-item>
       </q-card>
@@ -177,14 +264,32 @@ const gerarTransferencias = () => {
               <MgSelectEstoqueLocal v-model="tr.codestoquelocaldestino" label="Local de destino" />
             </div>
             <div class="col-12 col-sm-6">
-              <MgAutocomplete v-model="tr.codmarca" endpoint="v1/marca/autocompletar" search-param="marca" label="Marca (opcional)" />
+              <MgAutocomplete
+                v-model="tr.codmarca"
+                endpoint="v1/marca/autocompletar"
+                search-param="marca"
+                label="Marca (opcional)"
+              />
             </div>
             <div class="col-12 col-sm-6">
-              <q-select v-model="tr.abc" :options="abcOptions" emit-value map-options outlined label="Curva ABC" />
+              <q-select
+                v-model="tr.abc"
+                :options="abcOptions"
+                emit-value
+                map-options
+                outlined
+                label="Curva ABC"
+              />
             </div>
           </q-card-section>
           <q-card-actions align="right">
-            <q-btn unelevated color="primary" icon="print" label="Gerar PDF" @click="gerarTransferencias" />
+            <q-btn
+              unelevated
+              color="primary"
+              icon="print"
+              label="Gerar PDF"
+              @click="gerarTransferencias"
+            />
           </q-card-actions>
         </q-expansion-item>
       </q-card>

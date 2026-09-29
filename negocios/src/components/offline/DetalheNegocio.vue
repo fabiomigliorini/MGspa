@@ -17,6 +17,7 @@ import { LoadingBar } from 'quasar'
 import { iconeNegocio, corIconeNegocio } from 'src/utils/iconeNegocio.js'
 import emitter from 'src/utils/emitter'
 import moment from 'moment/min/moment-with-locales'
+import MgInput from '@components/MgInput.vue'
 moment.locale('pt-br')
 
 const sNegocio = negocioStore()
@@ -207,7 +208,7 @@ const apropriar = () => {
               />
             </div>
             <div class="col-12">
-              <q-input
+              <MgInput
                 autofocus
                 outlined
                 autogrow
@@ -230,7 +231,7 @@ const apropriar = () => {
     <q-card style="width: 500px">
       <q-form ref="formItem">
         <q-card-section>
-          <q-input
+          <MgInput
             outlined
             autofocus
             label="Vendedor"

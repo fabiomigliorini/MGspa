@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -321,7 +322,7 @@ onMounted(carregar)
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-5">
-                <q-input
+                <MgInput
                   v-model="modelUnidade.codigo"
                   outlined
                   label="Código"
@@ -343,7 +344,7 @@ onMounted(carregar)
                 />
               </div>
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="modelUnidade.descricao"
                   outlined
                   label="Descrição"

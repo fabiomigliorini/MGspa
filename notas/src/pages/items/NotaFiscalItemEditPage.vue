@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -165,20 +166,17 @@ onBeforeUnmount(() => {
                 <div class="row q-col-gutter-md">
                   <!-- Quantidade -->
                   <div class="col-6 col-sm-3">
-                    <q-input
-                      v-model.number="editingItem.quantidade"
+                    <MgInputValor
+                      v-model="editingItem.quantidade"
+                      :decimals="3"
                       label="Quantidade *"
-                      outlined
-                      type="number"
-                      step="0.0001"
-                      min="0.0001"
+                      :min="0.0001"
                       :rules="[
                         (val) => (val !== null && val !== undefined) || 'Campo obrigatório',
                         (val) => val > 0 || 'Deve ser maior que zero',
                       ]"
                       lazy-rules
                       :disable="notaBloqueada"
-                      input-class="text-right"
                       autofocus
                       hint=""
                     />
@@ -203,7 +201,7 @@ onBeforeUnmount(() => {
 
                   <!-- Valor Total (calculado) -->
                   <div class="col-6 col-sm-3">
-                    <q-input
+                    <MgInput
                       :model-value="valorTotal.toFixed(2)"
                       label="Total Produto"
                       outlined
@@ -260,7 +258,7 @@ onBeforeUnmount(() => {
 
                   <!-- Valor Total Final (calculado) -->
                   <div class="col-6 col-sm-3">
-                    <q-input
+                    <MgInput
                       :model-value="valorTotalFinal.toFixed(2)"
                       label="Valor Total Final"
                       outlined

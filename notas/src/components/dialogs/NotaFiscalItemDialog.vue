@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { Notify } from 'quasar'
@@ -130,7 +131,7 @@ const handleKeyNavigation = (event) => {
         <q-card-section class="q-pt-md q-pb-md">
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="store.busca"
                 label="busca produto"
                 outlined

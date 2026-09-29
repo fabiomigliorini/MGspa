@@ -4,6 +4,8 @@ import { useDebounceFn } from '@vueuse/core'
 import { useUnidadeMedidaStore } from 'src/stores/unidadeMedidaStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const store = useUnidadeMedidaStore()
 
@@ -25,19 +27,19 @@ const statusOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codunidademedida"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codunidademedida"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.unidademedida"
         outlined
         clearable
@@ -46,17 +48,11 @@ const statusOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="straighten" /></template>
-      </q-input>
+      </MgInput>
 
-      <q-input
-        v-model="store.filters.sigla"
-        outlined
-        clearable
-        :bottom-slots="false"
-        label="Sigla"
-      >
+      <MgInput v-model="store.filters.sigla" outlined clearable :bottom-slots="false" label="Sigla">
         <template #prepend><q-icon name="tag" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Status">

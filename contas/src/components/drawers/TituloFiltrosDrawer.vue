@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useTituloStore } from 'src/stores/tituloStore'
@@ -81,18 +82,18 @@ const pagarReceberOptions = [
         label="Situação"
         class="q-mb-md"
       />
-      <q-input
-        v-model.number="store.filters.codtitulo"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codtitulo"
+        :decimals="0"
+        :grouping="false"
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-md"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.numero"
         outlined
         :bottom-slots="false"
@@ -100,7 +101,7 @@ const pagarReceberOptions = [
         class="q-mb-md"
       />
 
-      <q-input
+      <MgInput
         v-model="store.filters.nossonumero"
         outlined
         :bottom-slots="false"

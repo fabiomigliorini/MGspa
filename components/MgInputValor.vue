@@ -267,6 +267,7 @@ function onKeydown(e) {
     @keydown="onKeydown"
     @update:model-value="onTyped"
   >
+    <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
     <template v-if="clearable && lastValid !== null && !readonly" #append>
       <q-icon
         name="cancel"

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useMoedaStore } from 'src/stores/moedaStore'
@@ -25,7 +26,7 @@ const statusOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
+      <MgInput
         v-model="store.filters.moeda"
         outlined
         clearable
@@ -34,17 +35,11 @@ const statusOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="tag" /></template>
-      </q-input>
+      </MgInput>
 
-      <q-input
-        v-model="store.filters.iso"
-        outlined
-        clearable
-        :bottom-slots="false"
-        label="ISO"
-      >
+      <MgInput v-model="store.filters.iso" outlined clearable :bottom-slots="false" label="ISO">
         <template #prepend><q-icon name="vpn_key" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Status">

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -813,7 +814,7 @@ onMounted(async () => {
             <!-- Toolbar: Busca + Marcar tipo -->
             <div class="row q-gutter-sm q-mb-md items-center justify-end">
               <form @submit.prevent="handleBuscarItem">
-                <q-input
+                <MgInput
                   v-model="barrasInput"
                   label="Barras / Referencia"
                   outlined
@@ -823,7 +824,7 @@ onMounted(async () => {
                   <template v-slot:prepend>
                     <q-icon name="qr_code_scanner" />
                   </template>
-                </q-input>
+                </MgInput>
               </form>
               <q-select
                 v-model="tipoProdutoSelecionado"

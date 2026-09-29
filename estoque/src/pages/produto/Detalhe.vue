@@ -5,6 +5,8 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgAutocomplete from 'src/components/MgAutocomplete.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const route = useRoute()
 const $q = useQuasar()
@@ -1164,7 +1166,7 @@ onMounted(async () => {
         <q-form @submit.prevent="salvarVar">
           <q-separator inset />
           <q-card-section class="q-gutter-md">
-            <q-input
+            <MgInput
               v-model="varModel.variacao"
               outlined
               label="Variação (vazio = sem variação)"
@@ -1177,7 +1179,7 @@ onMounted(async () => {
               label="Marca específica (opcional)"
               :initial-option="varModel.optMarca"
             />
-            <q-input v-model="varModel.referencia" outlined label="Referência" maxlength="50" />
+            <MgInput v-model="varModel.referencia" outlined label="Referência" maxlength="50" />
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
@@ -1197,7 +1199,7 @@ onMounted(async () => {
         <q-form @submit.prevent="salvarBarra">
           <q-separator inset />
           <q-card-section class="q-gutter-md">
-            <q-input
+            <MgInput
               v-model="barraModel.barras"
               outlined
               label="Código de barras (vazio = gera interno)"
@@ -1212,7 +1214,7 @@ onMounted(async () => {
               clearable
               label="Embalagem (opcional)"
             />
-            <q-input v-model="barraModel.referencia" outlined label="Referência" maxlength="50" />
+            <MgInput v-model="barraModel.referencia" outlined label="Referência" maxlength="50" />
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
@@ -1232,10 +1234,9 @@ onMounted(async () => {
         <q-form @submit.prevent="salvarEmb">
           <q-separator inset />
           <q-card-section class="q-gutter-md">
-            <q-input
-              v-model.number="embModel.quantidade"
-              outlined
-              type="number"
+            <MgInputValor
+              v-model="embModel.quantidade"
+              :decimals="3"
               label="Quantidade"
               :rules="[(v) => v > 0 || 'Maior que zero']"
             />
@@ -1248,11 +1249,9 @@ onMounted(async () => {
               label="Unidade"
               :rules="[(v) => !!v || 'Obrigatório']"
             />
-            <q-input
-              v-model.number="embModel.preco"
-              outlined
-              type="number"
-              step="0.01"
+            <MgInputValor
+              v-model="embModel.preco"
+              :decimals="2"
               prefix="R$"
               label="Preço (vazio = calculado)"
             />

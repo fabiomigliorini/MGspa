@@ -5,6 +5,7 @@ import FilterDrawerShell from 'components/FilterDrawerShell.vue'
 import FilterGroup from 'components/FilterGroup.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
+import MgInput from '@components/MgInput.vue'
 
 const sVale = valeModeloStore()
 
@@ -43,7 +44,7 @@ const situacaoOptions = [
     </FilterGroup>
 
     <FilterGroup title="Descrição">
-      <q-input
+      <MgInput
         v-model="sVale.filtros.modelo"
         outlined
         clearable
@@ -51,7 +52,7 @@ const situacaoOptions = [
         label="Descrição"
       >
         <template #prepend><q-icon name="search" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Valor">

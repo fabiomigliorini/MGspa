@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useChequeStore } from 'src/stores/chequeStore'
@@ -24,17 +25,17 @@ const clear = () => {
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codcheque"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codcheque"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
       <MgSelectBanco
         v-model="store.filters.codbanco"
@@ -45,19 +46,19 @@ const clear = () => {
         class="q-mb-sm"
       />
 
-      <q-input
-        v-model.number="store.filters.agencia"
-        outlined
+      <MgInputValor
+        v-model="store.filters.agencia"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Agência"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="account_balance" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.numero"
         outlined
         clearable
@@ -65,7 +66,7 @@ const clear = () => {
         label="Número"
       >
         <template #prepend><q-icon name="pin" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Cliente / Emitente">
@@ -78,7 +79,7 @@ const clear = () => {
         class="q-mb-sm"
       />
 
-      <q-input
+      <MgInput
         v-model="store.filters.emitente"
         outlined
         clearable
@@ -86,7 +87,7 @@ const clear = () => {
         label="Emitente"
       >
         <template #prepend><q-icon name="person" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Valor">

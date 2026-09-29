@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -425,7 +426,7 @@ watch(() => route.fullPath, carregar)
                 />
               </div>
             </div>
-            <q-input
+            <MgInput
               v-model="editar.observacao"
               outlined
               type="textarea"

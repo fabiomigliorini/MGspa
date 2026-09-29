@@ -5,6 +5,7 @@ import { formataNumero, formataCodigo } from '@components/formatters'
 import { quiosqueStore } from 'stores/quiosque'
 import { produtoStore } from 'stores/produto'
 import { sincronizacaoStore } from 'stores/sincronizacao'
+import MgInput from '@components/MgInput.vue'
 
 const $q = useQuasar()
 const sQuiosque = quiosqueStore()
@@ -532,7 +533,7 @@ onUnmounted(() => {
         <q-card>
           <q-card-section class="bg-primary text-white">
             <div class="row q-col-gutter-sm">
-              <q-input
+              <MgInput
                 outlined
                 autofocus
                 v-model="sProduto.textoPesquisa"
@@ -552,7 +553,7 @@ onUnmounted(() => {
                     <q-tooltip class="bg-accent">Fechar</q-tooltip>
                   </q-btn>
                 </template>
-              </q-input>
+              </MgInput>
               <q-select
                 outlined
                 borderless

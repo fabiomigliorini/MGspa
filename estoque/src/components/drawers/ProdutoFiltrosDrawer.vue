@@ -5,6 +5,8 @@ import { useProdutoStore } from 'src/stores/produtoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import MgAutocomplete from 'src/components/MgAutocomplete.vue'
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const store = useProdutoStore()
 const f = store.filters
@@ -55,18 +57,18 @@ const siteOptions = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="f.codproduto"
-        outlined
+      <MgInputValor
+        v-model="f.codproduto"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
-      <q-input
+      </MgInputValor>
+      <MgInput
         v-model="f.produto"
         outlined
         clearable
@@ -75,8 +77,8 @@ const siteOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="search" /></template>
-      </q-input>
-      <q-input
+      </MgInput>
+      <MgInput
         v-model="f.barras"
         outlined
         clearable
@@ -85,37 +87,29 @@ const siteOptions = [
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="qr_code_2" /></template>
-      </q-input>
-      <q-input
-        v-model="f.referencia"
-        outlined
-        clearable
-        :bottom-slots="false"
-        label="Referência"
-      >
+      </MgInput>
+      <MgInput v-model="f.referencia" outlined clearable :bottom-slots="false" label="Referência">
         <template #prepend><q-icon name="tag" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Preço">
       <div class="row q-col-gutter-sm">
         <div class="col-6">
-          <q-input
-            v-model.number="f.preco_de"
-            outlined
+          <MgInputValor
+            v-model="f.preco_de"
+            :decimals="2"
             clearable
             :bottom-slots="false"
-            type="number"
             label="De"
           />
         </div>
         <div class="col-6">
-          <q-input
-            v-model.number="f.preco_ate"
-            outlined
+          <MgInputValor
+            v-model="f.preco_ate"
+            :decimals="2"
             clearable
             :bottom-slots="false"
-            type="number"
             label="Até"
           />
         </div>

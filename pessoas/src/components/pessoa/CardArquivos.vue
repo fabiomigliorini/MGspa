@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { onBeforeUnmount, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { ref } from 'vue'
@@ -366,14 +367,14 @@ const buscarListagem = async () => {
         <q-separator inset />
 
         <q-card-section>
-          <q-input
+          <MgInput
             outlined
             v-model="model.label"
             autofocus
             label="Nome"
             :rules="[(val) => (val && val.length > 0) || 'Obrigatório']"
           />
-          <q-input outlined v-model="model.observacoes" label="Observações" type="textarea" />
+          <MgInput outlined v-model="model.observacoes" label="Observações" type="textarea" />
         </q-card-section>
 
         <q-separator inset />

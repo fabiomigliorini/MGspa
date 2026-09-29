@@ -1,5 +1,5 @@
 <template>
-  <q-input
+  <MgInput
     outlined
     v-model="model"
     label="Inscrição Estadual"
@@ -10,6 +10,7 @@
 </template>
 
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { pessoaStore } from 'src/stores/pessoa'
 import { mascaraIe } from '@components/formatters'

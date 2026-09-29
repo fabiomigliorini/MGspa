@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch, computed } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -127,20 +128,19 @@ watch(
           <div class="row q-col-gutter-md">
             <!-- Tributo -->
             <div class="col-12">
-              <q-input
-                v-model.number="form.codtributo"
+              <MgInputValor
+                v-model="form.codtributo"
+                :decimals="0"
+                :grouping="false"
                 label="Código Tributo *"
-                outlined
-                type="number"
                 hint="Código do tributo (codtributo)"
                 :disable="notaBloqueada"
-                input-class="text-right"
               />
             </div>
 
             <!-- CST e Classificação -->
             <div class="col-12 col-sm-6">
-              <q-input
+              <MgInput
                 v-model="form.cst"
                 label="CST"
                 outlined
@@ -151,7 +151,7 @@ watch(
             </div>
 
             <div class="col-12 col-sm-6">
-              <q-input
+              <MgInput
                 v-model="form.cclasstrib"
                 label="Classificação Tributária"
                 outlined
@@ -266,7 +266,7 @@ watch(
             </div>
 
             <div class="col-12 col-sm-6">
-              <q-input
+              <MgInput
                 v-model="form.beneficiocodigo"
                 label="Código do Benefício"
                 outlined
@@ -277,7 +277,7 @@ watch(
             </div>
 
             <div class="col-12">
-              <q-input
+              <MgInput
                 v-model="form.fundamentolegal"
                 label="Fundamento Legal"
                 outlined

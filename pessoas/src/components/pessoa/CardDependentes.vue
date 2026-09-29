@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -339,7 +340,7 @@ const ativar = async (coddependente) => {
             </div>
           </div>
 
-          <q-input
+          <MgInput
             v-if="model.datafim"
             v-model="model.motivofim"
             outlined
@@ -390,7 +391,7 @@ const ativar = async (coddependente) => {
                 />
               </div>
               <div class="col-6">
-                <q-input
+                <MgInput
                   v-model="model.pensaobeneficiario"
                   outlined
                   label="Nome do Beneficiário"
@@ -398,7 +399,7 @@ const ativar = async (coddependente) => {
                 />
               </div>
               <div class="col-6">
-                <q-input
+                <MgInput
                   v-model="model.pensaocpfbeneficiario"
                   outlined
                   label="CPF do Beneficiário"
@@ -408,20 +409,20 @@ const ativar = async (coddependente) => {
               </div>
 
               <div class="col-4">
-                <q-input v-model="model.pensaobanco" outlined label="Banco" maxlength="3" />
+                <MgInput v-model="model.pensaobanco" outlined label="Banco" maxlength="3" />
               </div>
               <div class="col-4">
-                <q-input v-model="model.pensaoagencia" outlined label="Agência" maxlength="10" />
+                <MgInput v-model="model.pensaoagencia" outlined label="Agência" maxlength="10" />
               </div>
               <div class="col-4">
-                <q-input v-model="model.pensaoconta" outlined label="Conta" maxlength="20" />
+                <MgInput v-model="model.pensaoconta" outlined label="Conta" maxlength="20" />
               </div>
             </div>
           </q-slide-transition>
 
           <!-- Seção: Observações -->
           <div class="text-subtitle2 q-mb-sm">Observações</div>
-          <q-input v-model="model.observacao" outlined type="textarea" rows="2" maxlength="500" />
+          <MgInput v-model="model.observacao" outlined type="textarea" rows="2" maxlength="500" />
         </q-card-section>
 
         <q-separator inset />

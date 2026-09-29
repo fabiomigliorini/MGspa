@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
@@ -160,7 +161,7 @@ onMounted(() => {
               />
             </div>
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelNovoPeriodo.observacoes"
                 label="Observações"

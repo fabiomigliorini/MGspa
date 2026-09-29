@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -205,7 +206,7 @@ const submit = () => {
               <select-certidao-tipo v-model="modelCertidao.codcertidaotipo" />
             </div>
             <div class="col-6">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelCertidao.numero"
                 mask="####################"
@@ -214,7 +215,7 @@ const submit = () => {
               />
             </div>
             <div class="col-6">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelCertidao.autenticacao"
                 class="q-mb-md"

@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputData from '@components/MgInputData.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useNfeTerceiroStore } from '../../stores/nfeTerceiroStore'
 import { useDebounceFn } from '@vueuse/core'
@@ -68,26 +70,8 @@ const filters = reactive({
   importacao: null,
 })
 
-const convertToISODate = (ddmmyyyy) => {
-  if (!ddmmyyyy || ddmmyyyy.length !== 10) return null
-  const [day, month, year] = ddmmyyyy.split('/')
-  return `${year}-${month}-${day}`
-}
-
-const convertFromISODate = (yyyymmdd) => {
-  if (!yyyymmdd) return null
-  const [year, month, day] = yyyymmdd.split('-')
-  return `${day}/${month}/${year}`
-}
-
 const handleFilter = () => {
-  const filtersToSend = {
-    ...filters,
-    emissao_inicio: convertToISODate(filters.emissao_inicio),
-    emissao_fim: convertToISODate(filters.emissao_fim),
-  }
-
-  nfeTerceiroStore.setFilters(filtersToSend)
+  nfeTerceiroStore.setFilters({ ...filters })
   nfeTerceiroStore.fetchItems(true)
 }
 
@@ -122,11 +106,7 @@ watch(
 
 onMounted(() => {
   Object.keys(filters).forEach((key) => {
-    if (key === 'emissao_inicio' || key === 'emissao_fim') {
-      filters[key] = convertFromISODate(nfeTerceiroStore.filters[key])
-    } else {
-      filters[key] = nfeTerceiroStore.filters[key] || null
-    }
+    filters[key] = nfeTerceiroStore.filters[key] || null
   })
 
   setTimeout(() => {
@@ -179,7 +159,7 @@ onMounted(() => {
 
       <!-- Chave NFe -->
       <div class="q-mb-md">
-        <q-input
+        <MgInput
           v-model="filters.nfechave"
           label="Chave NFe"
           outlined
@@ -189,7 +169,7 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="vpn_key" />
           </template>
-        </q-input>
+        </MgInput>
       </div>
 
       <!-- Importacao -->
@@ -342,52 +322,12 @@ onMounted(() => {
 
       <!-- Emissao De -->
       <div class="q-mb-md">
-        <q-input
-          v-model="filters.emissao_inicio"
-          label="Emissao - De"
-          outlined
-          clearable
-          mask="##/##/####"
-          placeholder="DD/MM/AAAA"
-          :bottom-slots="false"
-        >
-          <template v-slot:append>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="filters.emissao_inicio" mask="DD/MM/YYYY">
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup label="Fechar" color="primary" flat />
-                  </div>
-                </q-date>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+        <MgInputData v-model="filters.emissao_inicio" label="Emissao - De" :bottom-slots="false" />
       </div>
 
       <!-- Emissao Ate -->
       <div class="q-mb-md">
-        <q-input
-          v-model="filters.emissao_fim"
-          label="Emissao - Ate"
-          outlined
-          clearable
-          mask="##/##/####"
-          placeholder="DD/MM/AAAA"
-          :bottom-slots="false"
-        >
-          <template v-slot:append>
-            <q-icon name="event" class="cursor-pointer">
-              <q-popup-proxy cover transition-show="scale" transition-hide="scale">
-                <q-date v-model="filters.emissao_fim" mask="DD/MM/YYYY">
-                  <div class="row items-center justify-end">
-                    <q-btn v-close-popup label="Fechar" color="primary" flat />
-                  </div>
-                </q-date>
-              </q-popup-proxy>
-            </q-icon>
-          </template>
-        </q-input>
+        <MgInputData v-model="filters.emissao_fim" label="Emissao - Ate" :bottom-slots="false" />
       </div>
     </div>
   </div>

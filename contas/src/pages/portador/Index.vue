@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
@@ -296,7 +298,7 @@ onMounted(() => {
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.portador"
                   outlined
                   label="Portador"
@@ -315,26 +317,36 @@ onMounted(() => {
               </div>
 
               <div class="col-4">
-                <q-input v-model.number="model.agencia" outlined type="number" label="Agência" />
+                <MgInputValor
+                  v-model="model.agencia"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Agência"
+                />
               </div>
               <div class="col-2">
-                <q-input
-                  v-model.number="model.agenciadigito"
-                  outlined
-                  type="number"
+                <MgInputValor
+                  v-model="model.agenciadigito"
+                  :decimals="0"
+                  :grouping="false"
                   label="Dígito"
                 />
               </div>
 
               <div class="col-4">
-                <q-input v-model.number="model.conta" outlined type="number" label="Conta" />
+                <MgInputValor v-model="model.conta" :decimals="0" :grouping="false" label="Conta" />
               </div>
               <div class="col-2">
-                <q-input v-model.number="model.contadigito" outlined type="number" label="Dígito" />
+                <MgInputValor
+                  v-model="model.contadigito"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Dígito"
+                />
               </div>
 
               <div class="col-12">
-                <q-input v-model="model.pixdict" outlined label="Chave Pix" maxlength="77" />
+                <MgInput v-model="model.pixdict" outlined label="Chave Pix" maxlength="77" />
               </div>
 
               <div class="col-12">
@@ -343,26 +355,26 @@ onMounted(() => {
 
               <template v-if="model.emiteboleto">
                 <div class="col-6 col-sm-4">
-                  <q-input
-                    v-model.number="model.convenio"
-                    outlined
-                    type="number"
+                  <MgInputValor
+                    v-model="model.convenio"
+                    :decimals="0"
+                    :grouping="false"
                     label="Convênio"
                   />
                 </div>
                 <div class="col-6 col-sm-4">
-                  <q-input
-                    v-model.number="model.carteira"
-                    outlined
-                    type="number"
+                  <MgInputValor
+                    v-model="model.carteira"
+                    :decimals="0"
+                    :grouping="false"
                     label="Carteira"
                   />
                 </div>
                 <div class="col-6 col-sm-4">
-                  <q-input
-                    v-model.number="model.carteiravariacao"
-                    outlined
-                    type="number"
+                  <MgInputValor
+                    v-model="model.carteiravariacao"
+                    :decimals="0"
+                    :grouping="false"
                     label="Variação"
                   />
                 </div>

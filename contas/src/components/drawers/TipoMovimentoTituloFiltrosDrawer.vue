@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useTipoMovimentoTituloStore } from 'src/stores/tipoMovimentoTituloStore'
@@ -41,19 +43,19 @@ const flags = [
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
-      <q-input
-        v-model.number="store.filters.codtipomovimentotitulo"
-        outlined
+      <MgInputValor
+        v-model="store.filters.codtipomovimentotitulo"
+        :decimals="0"
+        :grouping="false"
         clearable
         :bottom-slots="false"
-        type="number"
         label="Código"
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="numbers" /></template>
-      </q-input>
+      </MgInputValor>
 
-      <q-input
+      <MgInput
         v-model="store.filters.tipomovimentotitulo"
         outlined
         clearable
@@ -61,7 +63,7 @@ const flags = [
         label="Descrição"
       >
         <template #prepend><q-icon name="description" /></template>
-      </q-input>
+      </MgInput>
     </FilterGroup>
 
     <FilterGroup title="Status">

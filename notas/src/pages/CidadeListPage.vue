@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { computed, onMounted, watch, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useCidadeStore } from '../stores/cidadeStore'
@@ -538,14 +539,14 @@ const handleSaveCidade = async () => {
         </q-card-section>
 
         <q-card-section>
-          <q-input
+          <MgInput
             v-model="estadoForm.estado"
             label="Nome do Estado"
             outlined
             autofocus
             class="q-mb-md"
           />
-          <q-input
+          <MgInput
             v-model="estadoForm.sigla"
             label="Sigla (ex: MT, SP, RJ)"
             outlined
@@ -577,7 +578,7 @@ const handleSaveCidade = async () => {
         </q-card-section>
 
         <q-card-section class="q-pt-none">
-          <q-input
+          <MgInput
             v-model="novoPais.pais"
             label="Nome do Pais"
             outlined
@@ -585,7 +586,7 @@ const handleSaveCidade = async () => {
             autofocus
             class="q-mb-md"
           />
-          <q-input
+          <MgInput
             v-model="novoPais.sigla"
             label="Sigla (ex: BR, AR, US)"
             outlined
@@ -618,14 +619,14 @@ const handleSaveCidade = async () => {
         </q-card-section>
 
         <q-card-section>
-          <q-input
+          <MgInput
             v-model="cidadeForm.cidade"
             label="Nome da Cidade"
             outlined
             autofocus
             class="q-mb-md"
           />
-          <q-input
+          <MgInput
             v-model="cidadeForm.codigooficial"
             label="Codigo IBGE"
             outlined

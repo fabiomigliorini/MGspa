@@ -40,7 +40,7 @@
         </q-card>
         <q-form @change="buscarUsuarios()">
           <div class="q-pa-md q-gutter-md">
-            <q-input outlined v-model="sUsuario.filtroUsuarioPesquisa.usuario" label="Usuário" />
+            <MgInput outlined v-model="sUsuario.filtroUsuarioPesquisa.usuario" label="Usuário" />
 
             <q-select
               outlined
@@ -62,6 +62,7 @@
 </template>
 
 <script setup>
+import MgInput from '@components/MgInput.vue'
 // 1. Imports do Vue
 import { ref, onMounted, watch } from 'vue'
 

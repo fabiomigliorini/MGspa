@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { colaboradorStore } from 'stores/colaborador'
@@ -346,7 +347,7 @@ defineExpose({ novoColaboradorCargo })
             </div>
 
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 autogrow
                 bordeless

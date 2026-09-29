@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -534,7 +535,7 @@ watch(() => route.fullPath, carregar)
                 />
               </div>
             </div>
-            <q-input
+            <MgInput
               v-model="editar.observacao"
               outlined
               type="textarea"
@@ -608,7 +609,7 @@ watch(() => route.fullPath, carregar)
                 <q-tooltip>Adicionar e-mail</q-tooltip>
               </q-btn>
             </div>
-            <q-input
+            <MgInput
               v-for="(_, i) in emailsExtras"
               :key="i"
               v-model="emailsExtras[i]"

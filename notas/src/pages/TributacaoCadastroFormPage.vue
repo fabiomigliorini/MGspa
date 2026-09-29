@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -137,7 +138,7 @@ onMounted(() => {
         <q-card class="q-mb-md">
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">Tributacao</div>
           <q-card-section>
-            <q-input
+            <MgInput
               v-model="form.tributacao"
               outlined
               autofocus
@@ -157,7 +158,7 @@ onMounted(() => {
         <q-card class="q-mb-md">
           <div class="text-subtitle1 text-white bg-primary q-pa-sm">Aliquota ICMS ECF (%)</div>
           <q-card-section>
-            <q-input
+            <MgInput
               v-model="form.aliquotaicmsecf"
               outlined
               mask="##.##"

@@ -33,7 +33,7 @@
               <q-step :name="1" title="CNPJ/CPF" :done="step > 1">
                 <p>Informe o número do documento.</p>
 
-                <q-input
+                <MgInput
                   autofocus
                   outlined
                   v-model="model.cnpj"
@@ -47,7 +47,7 @@
                   style="max-width: 200px"
                   inputmode="numeric"
                 />
-                <q-input
+                <MgInput
                   autofocus
                   outlined
                   v-model="model.cnpj"
@@ -140,7 +140,7 @@
                       <q-item-label>
                         <div class="row">
                           <div class="col-6">
-                            <q-input
+                            <MgInput
                               outlined
                               v-model="model.ieoutra"
                               label="Outra"
@@ -221,6 +221,7 @@
 </template>
 
 <script>
+import MgInput from '@components/MgInput.vue'
 import { ref, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from 'src/stores'
@@ -230,6 +231,7 @@ import { formataIe, primeiraLetraMaiuscula, removerAcentos } from '@components/f
 
 export default {
   components: {
+    MgInput,
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
     SelectEstado: defineAsyncComponent(() => import('@components/MgSelectEstado.vue')),
     MgInputFormatado: defineAsyncComponent(() => import('@components/MgInputFormatado.vue')),

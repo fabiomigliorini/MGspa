@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { computed } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -13,7 +14,7 @@ const cad = computed(() => props.cad)
   <div class="row q-col-gutter-md">
     <!-- DESCRIÇÃO -->
     <div class="col-12">
-      <q-input
+      <MgInput
         outlined
         v-model="cad.descricao"
         label="Descrição"

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import MgInputData from '@components/MgInputData.vue'
@@ -203,7 +204,7 @@ const limparResultados = () => {
         <!-- Código de Barras -->
         <div class="q-mb-md">
           <div class="text-subtitle2 q-mb-xs">Código de Barras *</div>
-          <q-input
+          <MgInput
             v-model="form.barras"
             outlined
             dense

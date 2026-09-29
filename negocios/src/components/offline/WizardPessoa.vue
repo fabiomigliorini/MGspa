@@ -22,6 +22,7 @@ import { negocioStore } from 'src/stores/negocio'
 import { api } from 'src/boot/axios'
 import axios from 'axios'
 import emitter from 'src/utils/emitter'
+import MgInput from '@components/MgInput.vue'
 
 const sSinc = sincronizacaoStore()
 const sNegocio = negocioStore()
@@ -219,6 +220,9 @@ const moverSelecao = (delta) => {
   })
 }
 
+// Enter que comecou (keydown) no campo de pesquisa: so ele confirma no keyup
+const enterPesquisa = ref(false)
+
 // setas navegam na lista e Enter confirma, sem tirar o foco do campo de pesquisa
 const teclaPesquisa = (e) => {
   switch (e.key) {
@@ -233,17 +237,27 @@ const teclaPesquisa = (e) => {
     case 'Enter':
       // impede o submit do form (salvar() e do passo de cadastro)
       e.preventDefault()
-      if (consultando.value || (cnpj.value ?? '').trim() != textoPesquisado.value) {
-        return
-      }
-      if (opcoes.value.length) {
-        confirmar(opcoes.value[indice.value].codpessoa, null)
-      } else if (isCpfValido(cnpj.value)) {
-        confirmar(1, cnpj.value)
-      } else if (isCnpjValido(cnpj.value)) {
-        nova(false)
-      }
+      enterPesquisa.value = true
       break
+  }
+}
+
+// Enter confirma no keyup, como o q-btn: se fechasse no keydown, o foco volta pro
+// item "Consumidor" que abriu o dialog e o keyup clica nele, reabrindo o dialog
+const soltaTeclaPesquisa = (e) => {
+  if (e.key != 'Enter' || !enterPesquisa.value) {
+    return
+  }
+  enterPesquisa.value = false
+  if (consultando.value || (cnpj.value ?? '').trim() != textoPesquisado.value) {
+    return
+  }
+  if (opcoes.value.length) {
+    confirmar(opcoes.value[indice.value].codpessoa, null)
+  } else if (isCpfValido(cnpj.value)) {
+    confirmar(1, cnpj.value)
+  } else if (isCnpjValido(cnpj.value)) {
+    nova(false)
   }
 }
 
@@ -630,7 +644,7 @@ watch(
         <q-card-section class="q-pa-none" :style="step != 1 ? 'margin-bottom: -48px' : ''">
           <q-stepper flat v-model="step" ref="stepper" color="primary" animated>
             <q-step :name="1" title="DOC" icon="settings" :done="step > 1">
-              <q-input
+              <MgInput
                 outlined
                 autofocus
                 label="Pesquisa"
@@ -638,6 +652,7 @@ watch(
                 hide-bottom-space
                 @update:model-value="pesquisa()"
                 @keydown="teclaPesquisa"
+                @keyup="soltaTeclaPesquisa"
                 :rules="[(val) => (!!val && val.length > 3) || 'Digite pelo menos 3 letras']"
                 :inputmode="inputCnpjModeNumeric ? 'numeric' : 'search'"
                 ref="inputCnpj"
@@ -662,7 +677,7 @@ watch(
                   />
                   <!-- <q-icon name="search" /> -->
                 </template>
-              </q-input>
+              </MgInput>
             </q-step>
             <q-step :name="2" title="IE" icon="create_new_folder" :done="step > 2" />
             <q-step :name="3" title="OK" icon="create_new_folder" :done="step > 2" />
@@ -795,7 +810,7 @@ watch(
             </template>
             <template v-else>
               <div class="row q-col-gutter-md q-mb-md">
-                <q-input
+                <MgInput
                   class="col-md-3 col-sm-6 col-xs-12"
                   outlined
                   v-model="pessoa.cnpj"
@@ -805,7 +820,7 @@ watch(
                   v-if="pessoa.fisica"
                   inputmode="numeric"
                 />
-                <q-input
+                <MgInput
                   class="col-md-3 col-sm-6 col-xs-12"
                   outlined
                   v-model="pessoa.cnpj"
@@ -818,7 +833,7 @@ watch(
                   v-else
                   inputmode="numeric"
                 />
-                <q-input
+                <MgInput
                   class="col-md-3 col-sm-6 col-xs-12"
                   outlined
                   v-model="pessoa.ie"
@@ -859,7 +874,7 @@ watch(
               </div>
               <div class="row q-col-gutter-md q-mb-md">
                 <template v-for="(e, i) in pessoa.emails" :key="i">
-                  <q-input
+                  <MgInput
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
                     v-model="pessoa.emails[i]"
@@ -886,12 +901,12 @@ watch(
                         tabindex="-1"
                       />
                     </template>
-                  </q-input>
+                  </MgInput>
                 </template>
               </div>
               <div class="row q-col-gutter-md q-mb-md">
                 <template v-for="(e, i) in pessoa.telefones" :key="i">
-                  <q-input
+                  <MgInput
                     class="col-md-6 col-sm-12 col-xs-12"
                     outlined
                     v-model="pessoa.telefones[i].numero"
@@ -930,13 +945,13 @@ watch(
                         tabindex="-1"
                       />
                     </template>
-                  </q-input>
+                  </MgInput>
                 </template>
               </div>
 
               <template v-for="(e, i) in pessoa.enderecos" :key="i">
                 <div class="row q-col-gutter-md q-mb-md">
-                  <q-input
+                  <MgInput
                     class="col-md-3 col-sm-3 col-xs-12"
                     outlined
                     v-model="pessoa.enderecos[i].cep"
@@ -946,7 +961,7 @@ watch(
                     @update:model-value="consultarCep(i)"
                     inputmode="numeric"
                   >
-                  </q-input>
+                  </MgInput>
                   <MgInputFormatado
                     class="col-md-6 col-sm-6 col-xs-8"
                     outlined
@@ -972,7 +987,7 @@ watch(
                       />
                     </template>
                   </MgInputFormatado>
-                  <q-input
+                  <MgInput
                     class="col-md-3 col-sm-3 col-xs-4"
                     outlined
                     v-model="pessoa.enderecos[i].numero"
@@ -985,7 +1000,7 @@ watch(
                     maxlength="10"
                     inputmode="tel"
                   >
-                  </q-input>
+                  </MgInput>
                   <MgInputFormatado
                     class="col-md-3 col-sm-3 col-xs-12"
                     outlined

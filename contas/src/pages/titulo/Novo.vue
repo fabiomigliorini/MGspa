@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { date } from 'quasar'
@@ -512,7 +513,7 @@ onMounted(async () => {
         <!-- Etapa 1: Filial -->
         <div v-else-if="step === STEP.FILIAL">
           <q-card-section class="q-pb-none">
-            <q-input
+            <MgInput
               v-model="buscaFilial"
               outlined
               label="Filtrar filial"
@@ -523,7 +524,7 @@ onMounted(async () => {
               <template #prepend>
                 <q-icon name="search" />
               </template>
-            </q-input>
+            </MgInput>
           </q-card-section>
           <q-list separator class="q-mt-sm">
             <q-item
@@ -604,7 +605,7 @@ onMounted(async () => {
         <!-- Etapa 3: Portador -->
         <div v-else-if="step === STEP.PORTADOR">
           <q-card-section class="q-pb-none">
-            <q-input
+            <MgInput
               v-model="buscaPortador"
               outlined
               label="Filtrar portador"
@@ -615,7 +616,7 @@ onMounted(async () => {
               <template #prepend>
                 <q-icon name="search" />
               </template>
-            </q-input>
+            </MgInput>
           </q-card-section>
           <q-list separator class="q-mt-sm">
             <q-item
@@ -666,7 +667,7 @@ onMounted(async () => {
         <!-- Etapa 3: Tipo de Título -->
         <div v-else-if="step === STEP.TIPO">
           <q-card-section class="q-pb-none">
-            <q-input
+            <MgInput
               v-model="buscaTipo"
               outlined
               label="Filtrar tipo de título"
@@ -677,7 +678,7 @@ onMounted(async () => {
               <template #prepend>
                 <q-icon name="search" />
               </template>
-            </q-input>
+            </MgInput>
           </q-card-section>
           <q-list separator class="q-mt-sm">
             <q-item
@@ -711,7 +712,7 @@ onMounted(async () => {
         <!-- Etapa 4: Conta Contábil -->
         <div v-else-if="step === STEP.CONTA">
           <q-card-section class="q-pb-none">
-            <q-input
+            <MgInput
               v-model="contaBusca"
               outlined
               label="Filtrar conta contábil"
@@ -722,7 +723,7 @@ onMounted(async () => {
               <template #prepend>
                 <q-icon name="search" />
               </template>
-            </q-input>
+            </MgInput>
           </q-card-section>
           <q-list separator class="q-mt-sm">
             <q-item v-if="contaLoading">
@@ -760,7 +761,7 @@ onMounted(async () => {
         <!-- Etapa 5: Pessoa -->
         <div v-else-if="step === STEP.PESSOA">
           <q-card-section class="q-pb-none">
-            <q-input
+            <MgInput
               v-model="buscaPessoa"
               outlined
               label="Filtrar pessoa"
@@ -774,7 +775,7 @@ onMounted(async () => {
               <template #append>
                 <q-spinner v-if="pessoaLoading" color="primary" size="20px" />
               </template>
-            </q-input>
+            </MgInput>
           </q-card-section>
           <q-list separator class="q-mt-sm">
             <q-item
@@ -850,7 +851,7 @@ onMounted(async () => {
 
         <!-- Etapa 8: Observação + Salvar -->
         <q-card-section v-else-if="step === STEP.OBSERVACAO">
-          <q-input
+          <MgInput
             v-model="model.observacao"
             outlined
             type="textarea"

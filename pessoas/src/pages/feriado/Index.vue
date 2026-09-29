@@ -1,4 +1,6 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { feriadoStore } from 'src/stores/feriado'
@@ -251,7 +253,7 @@ onMounted(async () => {
               />
             </div>
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="modelFeriado.feriado"
                 label="Descrição"
@@ -284,11 +286,11 @@ onMounted(async () => {
             Duplica os feriados do ano anterior e atualiza as datas dos feriados móveis via
             BrasilAPI.
           </div>
-          <q-input
-            outlined
-            v-model.number="anoGerar"
+          <MgInputValor
+            v-model="anoGerar"
+            :decimals="0"
+            :grouping="false"
             label="Ano"
-            type="number"
             :min="2015"
             autofocus
           />

@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from 'src/services/api'
@@ -196,7 +197,7 @@ onMounted(carregar)
             <div class="row q-col-gutter-md">
               <!-- CMC7 -->
               <div class="col-12">
-                <q-input
+                <MgInput
                   v-model="model.cmc7"
                   outlined
                   label="CMC7"
@@ -206,7 +207,7 @@ onMounted(carregar)
                   :rules="[(v) => !!v || 'Informe o CMC7']"
                 >
                   <template #prepend><q-icon name="qr_code" /></template>
-                </q-input>
+                </MgInput>
                 <div v-if="cmc7Info" class="q-mt-xs">
                   <q-chip
                     v-if="cmc7Info.valido"
@@ -225,16 +226,16 @@ onMounted(carregar)
 
               <!-- Dados derivados do CMC7 -->
               <div class="col-6 col-sm-3">
-                <q-input :model-value="derivado.banco" outlined readonly label="Banco" />
+                <MgInput :model-value="derivado.banco" outlined readonly label="Banco" />
               </div>
               <div class="col-6 col-sm-3">
-                <q-input :model-value="derivado.agencia" outlined readonly label="Agência" />
+                <MgInput :model-value="derivado.agencia" outlined readonly label="Agência" />
               </div>
               <div class="col-6 col-sm-3">
-                <q-input :model-value="derivado.contacorrente" outlined readonly label="Conta" />
+                <MgInput :model-value="derivado.contacorrente" outlined readonly label="Conta" />
               </div>
               <div class="col-6 col-sm-3">
-                <q-input :model-value="derivado.numero" outlined readonly label="Número" />
+                <MgInput :model-value="derivado.numero" outlined readonly label="Número" />
               </div>
 
               <!-- Valor / datas -->
@@ -287,7 +288,7 @@ onMounted(carregar)
               class="row q-col-gutter-sm items-start q-mb-xs"
             >
               <div class="col-12 col-sm-4">
-                <q-input
+                <MgInput
                   v-model="linha.cnpj"
                   outlined
                   label="CNPJ / CPF"
@@ -296,7 +297,7 @@ onMounted(carregar)
                   @blur="consultarEmitenteCnpj(linha)"
                 >
                   <template #prepend><q-icon name="badge" /></template>
-                </q-input>
+                </MgInput>
               </div>
               <div class="col-10 col-sm-7">
                 <MgInputFormatado v-model="linha.emitente" outlined label="Emitente" />
@@ -331,7 +332,7 @@ onMounted(carregar)
 
           <!-- Observação -->
           <q-card-section>
-            <q-input
+            <MgInput
               v-model="model.observacao"
               outlined
               type="textarea"

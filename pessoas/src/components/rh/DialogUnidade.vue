@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { rhStore } from 'src/stores/rh'
@@ -80,7 +81,7 @@ const submit = async () => {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-input
+              <MgInput
                 outlined
                 v-model="cad.descricao"
                 label="Descrição"

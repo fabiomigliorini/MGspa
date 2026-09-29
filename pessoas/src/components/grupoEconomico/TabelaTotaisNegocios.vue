@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { ref, watch, onMounted } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -157,7 +158,7 @@ onMounted(() => {
             dense
           />
         </div>
-        <q-input
+        <MgInput
           v-if="showFilter"
           outlined
           dense
@@ -169,7 +170,7 @@ onMounted(() => {
           <template v-slot:append>
             <q-icon name="search" />
           </template>
-        </q-input>
+        </MgInput>
         <q-btn class="q-ml-sm" icon="filter_list" @click="showFilter = !showFilter" flat />
       </template>
     </q-table>

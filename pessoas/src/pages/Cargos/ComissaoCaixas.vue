@@ -1,4 +1,5 @@
 <script setup>
+import MgInput from '@components/MgInput.vue'
 import { formataTimestampIso } from '@components/formatters'
 import { ref, onMounted, watch } from 'vue'
 import { debounce } from 'quasar'
@@ -139,11 +140,11 @@ const filter = ref('')
           :filter="filter"
         >
           <template v-slot:top-right>
-            <q-input outlined dense debounce="300" v-model="filter" placeholder="Search">
+            <MgInput outlined dense debounce="300" v-model="filter" placeholder="Search">
               <template v-slot:append>
                 <q-icon name="search" />
               </template>
-            </q-input>
+            </MgInput>
           </template>
         </q-table>
       </div>
