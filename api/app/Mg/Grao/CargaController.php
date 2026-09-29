@@ -82,12 +82,10 @@ class CargaController extends MgController
     public function cadastrarMotorista(CargaMotoristaRequest $request)
     {
         $d = $request->validated();
-        // O novaPessoa espera o telefone como "(DD) numero" (separa pelo ')').
+        // Sempre celular (tipo 2). O novaPessoa espera "(DD) numero" (separa
+        // pelo ')').
         $tel = $d['telefone'];
-        $telefone = [
-            'tipo' => strlen($tel) === 11 ? 2 : 1,
-            'numero' => '(' . substr($tel, 0, 2) . ')' . substr($tel, 2),
-        ];
+        $telefone = ['tipo' => 2, 'numero' => '(' . substr($tel, 0, 2) . ')' . substr($tel, 2)];
         $pessoa = DB::transaction(fn () => PdvPessoaService::novaPessoa((object) [
             'fisica' => true,
             'cnpj' => $d['cpf'],
@@ -98,8 +96,6 @@ class CargaController extends MgController
             'enderecos' => [[
                 'cep' => $d['cep'],
                 'endereco' => $d['endereco'],
-                'numero' => $d['numero'],
-                'complemento' => $d['complemento'] ?? null,
                 'bairro' => $d['bairro'],
                 'codcidade' => $d['codcidade'],
             ]],

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
 import { notifyError } from 'src/utils/notify'
+import { extrairErro } from 'src/utils/extrairErro'
 import {
   normalizarCargaDoServidor,
   ETAPAS_ABERTAS,
@@ -13,16 +14,32 @@ import { lerUltimaSincronizacao, gravarUltimaSincronizacao } from 'src/utils/cac
 // Store de sincronizacao offline-first (espelha o negocios):
 //  - PULL: baixa os cadastros de referencia + saldos pro Dexie (leitura offline)
 //  - PUSH: envia as cargas pendentes (sincronizado = 0) pro backend
-// Deteccao de offline e por erro (ERR_NETWORK), best-effort.
+// Deteccao de offline e por erro de rede (ehFalhaDeRede), best-effort.
 // O pull pesado (cadastros + plantios) so refaz quando o cache esta "velho"
 // (TTL); o snapshot de saldos e leve e roda sempre.
+// Roda sozinha: ao abrir as telas, a cada minuto e quando a rede volta
+// (composables/useSincronizacaoAutomatica, montado no MainLayout).
 const TTL_SINCRONIZACAO = 5 * 60 * 1000 // 5 min
+
+// Toda chamada do sync vai com skipNotify: quem avisa o operador e esta store
+// (uma vez, na transicao pra erro), nao o interceptor a cada requisicao — senao
+// o ciclo automatico offline dispara "Erro de conexao" todo minuto.
+const OPCOES = { skipLoading: true, skipNotify: true }
+
+// Sem resposta do servidor = rede (offline, socket morto, timeout de 15s do
+// api.js). Timeout NAO e rejeicao: a carga fica pendente e sobe no proximo ciclo;
+// antes ela ganhava `syncerro` e nunca mais era reenviada sozinha.
+export function ehFalhaDeRede(e) {
+  return !e?.response && ['ERR_NETWORK', 'ECONNABORTED', 'ETIMEDOUT'].includes(e?.code)
+}
 
 export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   const sincronizando = ref(false)
   const online = ref(true)
   // Persistido no localStorage p/ o TTL sobreviver a reload (F5).
   const ultimaSincronizacao = ref(lerUltimaSincronizacao())
+  const ultimoCiclo = ref(null) // fim do ultimo ciclo completo sem erro (tooltip do header)
+  const erro = ref(null) // mensagem da ultima falha que nao foi de rede; null = ok
   const saldosUnidades = ref([]) // snapshot do estoque por unidade armazenadora
 
   // Ultima pagina da resposta. O Laravel embrulha o Resource em `data` e joga a
@@ -45,7 +62,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     let page = 1
     let last = 1
     do {
-      const { data } = await api.get(endpoint, { params: { page }, skipLoading: true })
+      const { data } = await api.get(endpoint, { ...OPCOES, params: { page } })
       const itens = Array.isArray(data) ? data : (data.data ?? [])
       todos.push(...itens)
       last = ultimaPagina(data)
@@ -71,8 +88,8 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
       let last = 1
       do {
         const { data } = await api.get(`v1/safra/${s.codsafra}/plantio`, {
+          ...OPCOES,
           params: { page },
-          skipLoading: true,
         })
         const itens = Array.isArray(data) ? data : (data.data ?? [])
         await db.plantio.bulkPut(itens.map((i) => ({ ...i, sincronizado })))
@@ -104,7 +121,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   // Fica FORA do TTL: e 1 requisicao leve e o dado mais volatil (saldo de contrato
   // no CargaForm); nao e persistido no Dexie, entao rodamos sempre.
   async function puxarSaldos() {
-    const { data } = await api.get('v1/movimento-grao/saldos-unidades', { skipLoading: true })
+    const { data } = await api.get('v1/movimento-grao/saldos-unidades', OPCOES)
     saldosUnidades.value = Array.isArray(data) ? data : []
   }
 
@@ -120,7 +137,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
         return ponto
       }),
     }
-    const { data: resp } = await api.post('v1/carga/sincronizar', payload, { skipLoading: true })
+    const { data: resp } = await api.post('v1/carga/sincronizar', payload, OPCOES)
     // O Resource embrulha o registro em { data: {...} } (Laravel default).
     const oficial = resp?.data ?? resp ?? {}
     // Só sobrescreve o que o backend REALMENTE devolveu. Uma resposta parcial/vazia
@@ -159,35 +176,38 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
   // etapa aberta (poucas linhas cada).
   //
   // O pátio é físico e mistura safras (milho e soja no mesmo dia), então nada
-  // aqui filtra por safra — exceto sem dia filtrado, quando "todos os romaneios"
-  // é a temporada inteira de cada safra ATIVA (`codsafras`), não o histórico.
-  async function puxarCargas(codsafras, dataIso) {
+  // aqui filtra por safra.
+  //
+  // Sem dia filtrado, as finalizadas vêm só da PRIMEIRA página das mais recentes
+  // (50, `-data`): o pátio mostra as últimas 30 (LIMITE_FINALIZADAS_SEM_DATA) e o
+  // histórico completo é a tela de Romaneios, que consulta o servidor. Antes
+  // baixava a temporada inteira de cada safra ativa, página por página, a cada
+  // abertura (TASK-169).
+  async function puxarCargas(dataIso) {
     const pendentes = new Set(
       (await db.carga.where('sincronizado').equals(0).toArray()).map((c) => c.uuid),
     )
     if (dataIso) {
       await puxarPaginasCarga({ data: dataIso }, pendentes)
     } else {
-      for (const codsafra of codsafras || []) {
-        await puxarPaginasCarga({ codsafra }, pendentes)
-      }
+      await puxarPaginasCarga({ sort: '-data' }, pendentes, { soPrimeira: true })
     }
     for (const etapa of ETAPAS_ABERTAS) {
       await puxarPaginasCarga({ etapa }, pendentes)
     }
   }
 
-  async function puxarPaginasCarga(filtro, pendentes) {
+  async function puxarPaginasCarga(filtro, pendentes, { soPrimeira = false } = {}) {
     const params = { ...filtro, page: 1 }
     let last = 1
     do {
-      const { data } = await api.get('v1/carga', { params, skipLoading: true })
+      const { data } = await api.get('v1/carga', { ...OPCOES, params })
       const itens = Array.isArray(data) ? data : (data.data ?? [])
       const gravar = itens
         .filter((c) => c.uuid && !pendentes.has(c.uuid))
         .map((c) => ({ ...normalizarCargaDoServidor(c), sincronizado: 1 }))
       if (gravar.length) await db.carga.bulkPut(gravar)
-      last = ultimaPagina(data)
+      last = soPrimeira ? 1 : ultimaPagina(data)
       params.page++
     } while (params.page <= last)
   }
@@ -200,11 +220,11 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
       // pra sempre. Ela volta ao fluxo quando o operador editar (salvar limpa o erro).
       if (carga.syncerro) continue
       // 422 (excede contrato, rateio não fecha) / 500: marca e segue; o registro
-      // fica pendente até o operador ajustar. Só rede (ERR_NETWORK) interrompe o ciclo.
+      // fica pendente até o operador ajustar. Só falha de rede interrompe o ciclo.
       try {
         await enviarCarga(carga)
       } catch (e) {
-        if (e.code === 'ERR_NETWORK') throw e
+        if (ehFalhaDeRede(e)) throw e
         const msg = e?.response?.data?.message || 'Rejeitado pelo servidor'
         await db.carga.update(carga.uuid, { syncerro: msg })
         notifyError(e)
@@ -215,7 +235,14 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
 
   // Roda o ciclo: empurra pendencias (sempre), refaz o pull pesado so quando o
   // cache esta "velho" (> TTL) ou quando forcado, e atualiza os saldos sempre.
-  // `force` (botao "Sincronizar") ignora o TTL; onMounted chama sem force.
+  // `force` (botao "Sincronizar") ignora o TTL; o ciclo automatico chama sem force.
+  //
+  // Nunca relanca: quem chama segue recarregando do Dexie o que ja foi gravado.
+  // Falha de rede so marca offline (o ciclo automatico tenta de novo). Outra
+  // falha (500, 404, erro do Dexie) grava `erro` e avisa UMA vez — o ciclo roda
+  // todo minuto e um toast por minuto do mesmo erro nao ajuda ninguem. Antes a
+  // falha subia e as telas a engoliam com .catch(() => {}): cadastro velho sem
+  // aviso nenhum.
   async function sincronizar({ force = false } = {}) {
     if (sincronizando.value) return
     sincronizando.value = true
@@ -232,9 +259,17 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
       }
       await puxarSaldos()
       online.value = true
+      erro.value = null
+      ultimoCiclo.value = Date.now()
     } catch (e) {
-      if (e.code === 'ERR_NETWORK') online.value = false
-      else throw e
+      if (ehFalhaDeRede(e)) {
+        online.value = false
+      } else {
+        online.value = true
+        if (!erro.value) notifyError(e, 'Falha ao sincronizar')
+        erro.value = extrairErro(e, 'Falha ao sincronizar')
+        console.error('Falha na sincronizacao', e)
+      }
     } finally {
       sincronizando.value = false
     }
@@ -244,6 +279,8 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     sincronizando,
     online,
     ultimaSincronizacao,
+    ultimoCiclo,
+    erro,
     saldosUnidades,
     sincronizar,
     puxarReferencias,

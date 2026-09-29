@@ -237,8 +237,6 @@ class CargaService extends MgService
         'telefonemotorista',
         'cepmotorista',
         'enderecomotorista',
-        'numeromotorista',
-        'complementomotorista',
         'bairromotorista',
         'codcidademotorista',
     ];

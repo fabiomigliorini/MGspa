@@ -37,8 +37,6 @@ class Carga extends MgModel
         'telefonemotorista',
         'cepmotorista',
         'enderecomotorista',
-        'numeromotorista',
-        'complementomotorista',
         'bairromotorista',
         'codcidademotorista',
         'codveiculo',
@@ -48,14 +46,12 @@ class Carga extends MgModel
         'bruto',
         'desconto',
         'liquido',
-        'aprovado',
         'observacao',
         'inativo',
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'aprovado' => 'datetime',
         'bruto' => 'float',
         'codcarga' => 'integer',
         'codcidademotorista' => 'integer',
