@@ -70,11 +70,11 @@
 }
 
 // Modais da carga no pátio (Operação, Pesagem, Classificação, Origem/Destino):
-// largura do modal de pagamento do /negocios (ReceberDialog) e metade da altura
+// largura do modal de pagamento do /negocios (ReceberDialog) e 60% da altura
 // da tela — o que passar disso rola por dentro, com o rodapé fixo. No celular o
 // q-dialog abre `maximized` e a classe não entra.
 .carga-dialog {
   width: 560px;
   max-width: 95vw;
-  height: 50vh;
+  height: 60vh;
 }

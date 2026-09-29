@@ -1,21 +1,24 @@
 <script setup>
 // Dados do motorista NOVO no modal de Operação — o mesmo formulário serve pros
 // dois caminhos: "sem cadastro" (grava tudo só na carga) e "cadastrar" (cria a
-// pessoa com telefone e endereço). Transportar grão é mais sério que comprar na
-// loja: CPF, nome completo, telefone e endereço são obrigatórios nos dois.
+// pessoa com celular e endereço; a chave fica no rodapé do modal). Transportar
+// grão é mais sério que comprar na loja: CPF, nome completo, celular e endereço
+// são obrigatórios nos dois.
 //
 // Só campos, sem q-form: fica DENTRO do form do modal (o Salvar valida tudo
-// junto) e renderiza as colunas direto na grade do pai (fragmento), 3 por linha.
+// junto) e renderiza as colunas direto na grade do pai (fragmento), 3 por linha:
+// CPF | Nome — Telefone | Endereço — Bairro | CEP | Cidade. O endereço é um
+// campo só (rua, número e complemento), sem campos separados.
 import { ref, computed, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
-import { MASCARA_CPF, MASCARA_CEP, mascaraTelefone } from '@components/formatters'
+import { MASCARA_CPF, MASCARA_CEP, MASCARA_TELEFONE_CELULAR } from '@components/formatters'
 import { isCpfValido, isTelefoneValido } from '@components/validador'
 import MgInput from '@components/MgInput.vue'
 import MgSelectCidade from '@components/MgSelectCidade.vue'
 import { nomeCompleto, pessoaPorCpf, enderecoPeloCep } from 'src/utils/motorista'
 
 const props = defineProps({
-  // O `edicao` do modal (campos *motorista + `cadastrarMotorista`).
+  // O `edicao` do modal (campos *motorista).
   dados: { type: Object, required: true },
   online: { type: Boolean, default: true },
 })
@@ -27,17 +30,9 @@ const $q = useQuasar()
 // Indireção (padrão dos blocos): muta o objeto do pai sem vue/no-mutating-props.
 const d = computed(() => props.dados)
 
-const TIPOS_TELEFONE = [
-  { label: 'Celular', value: 2 },
-  { label: 'Fixo', value: 1 },
-]
-// O tipo só escolhe a máscara; o que se grava é DDD + número (10 fixo, 11 celular).
-const tipoTelefone = ref(String(props.dados.telefonemotorista || '').length === 10 ? 1 : 2)
-
 const cpfRef = ref(null)
 const nomeRef = ref(null)
 const telefoneRef = ref(null)
-const numeroRef = ref(null)
 const buscandoCep = ref(false)
 
 // Foco no primeiro campo ainda vazio (o CPF ou o nome podem vir da busca).
@@ -48,33 +43,41 @@ function focar() {
     else telefoneRef.value?.focus()
   })
 }
-defineExpose({ focar })
+
+// Pessoa do cadastro com o CPF digitado, ou null. Uma consulta por CPF: o blur
+// e o Salvar (que não espera o blur) reaproveitam a mesma promessa.
+let verificacao = { cpf: null, promessa: Promise.resolve(null) }
+function verificarCpf() {
+  const cpf = d.value.cpfmotorista
+  if (!props.online || !isCpfValido(cpf)) return Promise.resolve(null)
+  if (verificacao.cpf !== cpf) {
+    // sem conexão: segue como está (o backend barra CPF duplicado no cadastro)
+    verificacao = { cpf, promessa: pessoaPorCpf(cpf).catch(() => null) }
+  }
+  return verificacao.promessa
+}
+defineExpose({ focar, verificarCpf })
 
 async function onCpfBlur() {
-  if (!props.online || !isCpfValido(d.value.cpfmotorista)) return
-  try {
-    const p = await pessoaPorCpf(d.value.cpfmotorista)
-    if (p) emit('existente', p)
-  } catch {
-    // sem conexão: segue como está (o backend barra CPF duplicado no cadastro)
-  }
+  const p = await verificarCpf()
+  if (p) emit('existente', p)
 }
 
+// O CEP vem DEPOIS do endereço e do bairro: completa só o que ainda está em
+// branco (principalmente a cidade), nunca por cima do que já foi digitado —
+// "Rua X, 120" não pode virar "Rua X".
 async function onCep(cep) {
   if ((cep || '').length !== 8 || !props.online) return
   buscandoCep.value = true
   try {
     const end = await enderecoPeloCep(cep)
     if (!end) {
-      $q.notify({ type: 'warning', message: 'CEP não encontrado — preencha o endereço.' })
+      $q.notify({ type: 'warning', message: 'CEP não encontrado — confira a cidade.' })
       return
     }
-    Object.assign(d.value, {
-      enderecomotorista: end.endereco,
-      bairromotorista: end.bairro,
-      codcidademotorista: end.codcidade,
-    })
-    numeroRef.value?.focus()
+    if (!d.value.enderecomotorista && end.endereco) d.value.enderecomotorista = end.endereco
+    if (!d.value.bairromotorista && end.bairro) d.value.bairromotorista = end.bairro
+    if (!d.value.codcidademotorista && end.codcidade) d.value.codcidademotorista = end.codcidade
   } catch {
     // viacep fora do ar: segue o preenchimento manual
   } finally {
@@ -106,27 +109,35 @@ async function onCep(cep) {
     :rules="[(v) => nomeCompleto(v) || 'Informe nome e sobrenome.']"
   />
 
-  <q-select
-    v-model="tipoTelefone"
-    :options="TIPOS_TELEFONE"
-    label="Tipo"
-    emit-value
-    map-options
-    outlined
-    bottom-slots
-    class="col-12 col-sm-4"
-    @update:model-value="d.telefonemotorista = null"
-  />
+  <!-- Sempre celular: o pátio liga/manda mensagem pro motorista na estrada. -->
   <MgInput
     ref="telefoneRef"
     v-model="d.telefonemotorista"
     label="Telefone"
-    :mask="mascaraTelefone(tipoTelefone)"
+    :mask="MASCARA_TELEFONE_CELULAR"
     unmasked-value
     inputmode="tel"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => isTelefoneValido(v, tipoTelefone) || 'Informe o telefone com DDD.']"
+    :rules="[(v) => isTelefoneValido(v, 2) || 'Informe o celular com DDD.']"
+  />
+  <MgInput
+    v-model="d.enderecomotorista"
+    label="Endereço"
+    placeholder="Rua, número, complemento"
+    maxlength="100"
+    class="col-12 col-sm-8"
+    lazy-rules
+    :rules="[(v) => !!v || 'Informe o endereço.']"
+  />
+
+  <MgInput
+    v-model="d.bairromotorista"
+    label="Bairro"
+    maxlength="50"
+    class="col-12 col-sm-4"
+    lazy-rules
+    :rules="[(v) => !!v || 'Informe o bairro.']"
   />
   <MgInput
     v-model="d.cepmotorista"
@@ -140,40 +151,6 @@ async function onCep(cep) {
     :rules="[(v) => (v || '').length === 8 || 'Informe o CEP.']"
     @update:model-value="onCep"
   />
-
-  <MgInput
-    v-model="d.enderecomotorista"
-    label="Endereço"
-    maxlength="100"
-    class="col-12 col-sm-8"
-    lazy-rules
-    :rules="[(v) => !!v || 'Informe o endereço.']"
-  />
-  <MgInput
-    ref="numeroRef"
-    v-model="d.numeromotorista"
-    label="Número"
-    maxlength="10"
-    class="col-12 col-sm-4"
-    lazy-rules
-    :rules="[(v) => !!v || 'Informe o número (S/N se não houver).']"
-  />
-
-  <MgInput
-    v-model="d.complementomotorista"
-    label="Complemento"
-    maxlength="50"
-    bottom-slots
-    class="col-12 col-sm-4"
-  />
-  <MgInput
-    v-model="d.bairromotorista"
-    label="Bairro"
-    maxlength="50"
-    class="col-12 col-sm-4"
-    lazy-rules
-    :rules="[(v) => !!v || 'Informe o bairro.']"
-  />
   <!-- Offline não há como buscar cidade: aí ela fica pra depois, pra não
        travar o pátio sem internet. -->
   <MgSelectCidade
@@ -182,15 +159,4 @@ async function onCep(cep) {
     lazy-rules
     :rules="[(v) => !online || !!v || 'Informe a cidade.']"
   />
-
-  <div class="col-12">
-    <q-toggle
-      v-model="d.cadastrarMotorista"
-      :disable="!online"
-      label="Cadastrar este motorista no sistema (fica disponível nas próximas cargas)"
-    />
-    <div v-if="!online" class="text-caption text-grey-6 q-pl-sm">
-      Sem conexão: o motorista fica só nesta carga.
-    </div>
-  </div>
 </template>

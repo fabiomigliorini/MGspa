@@ -148,8 +148,6 @@ export const CAMPOS_MOTORISTA_SEM_CADASTRO = [
   'telefonemotorista',
   'cepmotorista',
   'enderecomotorista',
-  'numeromotorista',
-  'complementomotorista',
   'bairromotorista',
   'codcidademotorista',
 ]

@@ -261,7 +261,7 @@ function entradaValida() {
   if ((local.value?.pontos || []).some((p) => !pontoCompleto(p))) {
     $q.notify({
       type: 'negative',
-      message: 'Selecione o talhão/unidade/contrato de cada origem e destino, ou remova a linha.',
+      message: 'Selecione o talhão/unidade/contrato de cada origem e destino.',
     })
     return false
   }
@@ -521,7 +521,10 @@ provide('finalizando', finalizando)
 
 // Atalhos da página (F3 = principal com validação do q-form; F4 = imprimir).
 defineExpose({
-  submit: () => formRef.value?.submit(),
+  // Com evento: o `@submit.prevent` do q-form chama preventDefault() nele, e
+  // sem evento (submit() puro) o handler estourava antes do onSubmit — o F3
+  // não fazia nada.
+  submit: () => formRef.value?.submit(new Event('submit')),
   imprimir,
 })
 </script>

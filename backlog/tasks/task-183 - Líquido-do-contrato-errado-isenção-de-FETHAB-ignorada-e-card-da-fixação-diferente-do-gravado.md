@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 21:11'
+updated_date: '2026-09-28 21:52'
 labels:
   - agro
 dependencies: []
@@ -30,3 +31,9 @@ ContratoFixacaoService::recalcular nunca passa isentofethab, então contrato ise
 - [ ] #6 O preço médio é o mesmo no contrato, na safra e no detalhe
 - [ ] #7 A comissão é calculada pelo servidor
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Linha de base 28/09 (api/tests/agro, camada V): a isenção de FETHAB DECLARADA no modal (linha do grupo com alíquota zerada) já sai sem FETHAB (V2 OK, líquido R$ 59.880,00 em 500 sc a R$ 120). O buraco real é a fixação gravada SEM tributos (V2b): nada é guardado e o líquido segue a tabela ao vivo — daí o risco de cobrar FETHAB de quem é isento e de mudar fixação antiga quando a tabela muda. Confirmado também: V5 (edição abaixo do travado passa) e V7 (plano de NF dá 500, Undefined array key itens).
+<!-- SECTION:NOTES:END -->

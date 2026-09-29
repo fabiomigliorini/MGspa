@@ -21,9 +21,10 @@ const props = defineProps({
   clearable: { type: Boolean, default: false },
   // Quando setado (>= 11 dígitos), busca automática e abre o popup.
   searchCnpj: { type: String, default: null },
-  // Busca sem resultado: (busca) => [{ acao, label, icon?, color? }]. Viram
-  // OPÇÕES da lista (as setas e o Enter chegam nelas, o que um slot não
-  // permite); escolher uma emite `acao` (acao, busca) em vez de mudar o valor.
+  // Busca sem resultado: (busca, { erro }) => [{ acao, label, icon?, color? }].
+  // Viram OPÇÕES da lista (as setas e o Enter chegam nelas, o que um slot não
+  // permite); escolher uma emite `acao` (acao, busca, { erro }) em vez de mudar
+  // o valor. `erro` = a busca falhou (sem rede) em vez de voltar vazia.
   acoesSemResultado: { type: Function, default: null },
 })
 
@@ -169,11 +170,12 @@ const onPopupHide = () => {
 
 // Prefixo do value das opções de ação — nunca colide com codpessoa (número).
 const PREFIXO_ACAO = '__acao:'
-function opcoesDeAcao(busca) {
-  return (props.acoesSemResultado?.(busca) || []).map((a) => ({
+function opcoesDeAcao(busca, { erro = false } = {}) {
+  return (props.acoesSemResultado?.(busca, { erro }) || []).map((a) => ({
     ...a,
     value: PREFIXO_ACAO + a.acao,
     busca,
+    erro,
   }))
 }
 
@@ -205,7 +207,7 @@ const filterPessoa = (val, update) => {
     .catch((error) => {
       console.error('Erro ao buscar pessoa:', error)
       update(() => {
-        options.value = []
+        options.value = opcoesDeAcao(val.trim(), { erro: true })
       })
     })
     .finally(() => {
@@ -237,7 +239,7 @@ const onScroll = async ({ index }) => {
 const handleUpdate = (value) => {
   if (typeof value === 'string' && value.startsWith(PREFIXO_ACAO)) {
     const opcao = options.value.find((o) => o.value === value)
-    if (opcao) emit('acao', opcao.acao, opcao.busca)
+    if (opcao) emit('acao', opcao.acao, opcao.busca, { erro: opcao.erro })
     return
   }
   emit('update:modelValue', value)
