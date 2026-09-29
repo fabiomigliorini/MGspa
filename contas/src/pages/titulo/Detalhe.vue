@@ -14,6 +14,7 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { abrirPdf } from '@components/abrirPdf'
@@ -278,13 +279,31 @@ function parseDateLocal(s) {
 const movimentosOrdenados = computed(() => {
   const lista = titulo.value?.movimentos
   if (!lista) return []
-  return [...lista].sort((a, b) => {
-    const ta = a.transacao || ''
-    const tb = b.transacao || ''
-    if (ta !== tb) return ta < tb ? -1 : 1
-    return (a.codmovimentotitulo ?? 0) - (b.codmovimentotitulo ?? 0)
-  })
+  const porCodigo = new Map(lista.map((m) => [m.codmovimentotitulo, m]))
+  return [...lista]
+    .sort((a, b) => {
+      const ta = a.transacao || ''
+      const tb = b.transacao || ''
+      if (ta !== tb) return ta < tb ? -1 : 1
+      return (a.codmovimentotitulo ?? 0) - (b.codmovimentotitulo ?? 0)
+    })
+    .map((m) => ({
+      ...m,
+      // o estorno não guarda liquidação/agrupamento: a origem dele é a do movimento que ele desfez
+      origem: porCodigo.get(m.codmovimentotituloestorno) ?? m,
+      // anulado = faz parte de um par estorno/estornado, que some da lista
+      anulado: !!(m.codmovimentotituloestorno || m.codmovimentotituloestornadopor),
+    }))
 })
+
+// Estorno antigo não aponta para o movimento que desfez: sem saber o par, os dois ficam sempre à vista.
+const mostrarEstornos = ref(false)
+const qtdAnulados = computed(() => movimentosOrdenados.value.filter((m) => m.anulado).length)
+const movimentosVisiveis = computed(() =>
+  mostrarEstornos.value
+    ? movimentosOrdenados.value
+    : movimentosOrdenados.value.filter((m) => !m.anulado),
+)
 
 const classeVencimento = computed(() => {
   if (!titulo.value || Number(titulo.value.saldo) === 0) return 'text-grey-6'
@@ -605,28 +624,43 @@ watch(() => route.fullPath, carregar)
           <!-- Card Movimentos -->
           <div class="col-xs-12 col-sm-6">
             <q-card bordered flat class="q-mt-md">
-              <q-card-section class="text-grey-9 text-overline">
-                MOVIMENTOS ({{ titulo.movimentos.length }})
+              <q-card-section class="text-grey-9 text-overline row items-center">
+                MOVIMENTOS ({{ movimentosVisiveis.length }})
+                <q-space />
+                <q-toggle
+                  v-if="qtdAnulados"
+                  v-model="mostrarEstornos"
+                  size="sm"
+                  :label="`Mostrar estornos (${qtdAnulados})`"
+                />
               </q-card-section>
+
+              <MgEmptyState v-if="!movimentosVisiveis.length" plain icon="undo">
+                Todos os movimentos foram estornados.
+              </MgEmptyState>
 
               <q-list separator>
                 <q-item
-                  v-for="m in movimentosOrdenados"
+                  v-for="m in movimentosVisiveis"
                   :key="m.codmovimentotitulo"
-                  :href="urlMovimento(m)"
+                  :href="urlMovimento(m.origem)"
+                  :class="m.anulado ? 'bg-grey-2' : ''"
                 >
                   <!-- Transacao -->
                   <q-item-section>
-                    <q-item-label class="ellipsis text-primary text-weight-bold">
-                      <span v-if="m.codperiodocolaboradoracerto"> Acerto RH </span>
-                      <span v-else-if="m.codliquidacaotitulo">
-                        Liquidação {{ formataCodigo(m.codliquidacaotitulo) }}
+                    <q-item-label
+                      class="ellipsis text-weight-bold"
+                      :class="m.anulado ? 'text-grey-7' : 'text-primary'"
+                    >
+                      <span v-if="m.origem.codperiodocolaboradoracerto"> Acerto RH </span>
+                      <span v-else-if="m.origem.codliquidacaotitulo">
+                        Liquidação {{ formataCodigo(m.origem.codliquidacaotitulo) }}
                       </span>
-                      <span v-else-if="m.codtituloagrupamento">
-                        Agrupamento {{ formataCodigo(m.codtituloagrupamento) }}
+                      <span v-else-if="m.origem.codtituloagrupamento">
+                        Agrupamento {{ formataCodigo(m.origem.codtituloagrupamento) }}
                       </span>
-                      <span v-else-if="m.codboletoretorno">Retorno Boleto</span>
-                      <span v-else-if="m.codcobranca">Cobrança</span>
+                      <span v-else-if="m.origem.codboletoretorno">Retorno Boleto</span>
+                      <span v-else-if="m.origem.codcobranca">Cobrança</span>
                       <span v-else-if="titulo.codnegocio">
                         Negócio {{ formataCodigo(titulo.codnegocio) }}
                       </span>
@@ -636,13 +670,30 @@ watch(() => route.fullPath, carregar)
                       <MgInfoCriacao :registro="m" />
                     </q-item-label>
                     <q-item-label v-if="m.portador" caption>{{ m.portador }}</q-item-label>
+                    <q-item-label v-if="mostrarEstornos" caption>
+                      Movimento {{ formataCodigo(m.codmovimentotitulo) }}
+                    </q-item-label>
+                    <q-item-label v-if="m.codmovimentotituloestorno" caption>
+                      <q-badge color="grey-7" label="Estorno" />
+                      do movimento {{ formataCodigo(m.codmovimentotituloestorno) }}
+                    </q-item-label>
+                    <q-item-label v-else-if="m.codmovimentotituloestornadopor" caption>
+                      <q-badge color="grey-7" label="Estornado" />
+                      pelo movimento {{ formataCodigo(m.codmovimentotituloestornadopor) }}
+                    </q-item-label>
+                    <q-item-label v-else-if="m.estorno" caption>
+                      <q-badge color="grey-7" label="Estorno" />
+                    </q-item-label>
                   </q-item-section>
 
                   <!-- VALOR -->
                   <q-item-section side>
                     <q-item-label
                       class="text-weight-bold"
-                      :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
+                      :class="[
+                        m.operacao === 'CR' ? 'text-orange' : 'text-green',
+                        m.anulado ? 'text-strike' : '',
+                      ]"
                     >
                       {{ formataNumero(Math.abs(m.valor)) }} {{ m.operacao }}
                     </q-item-label>

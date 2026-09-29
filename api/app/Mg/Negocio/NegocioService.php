@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Exception;
 
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 use Mg\Portador\Portador;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pdv\PdvNegocioService;
@@ -166,17 +167,12 @@ class NegocioService
             $titulo->codfilial = $nfp->Negocio->codfilial;
             $titulo->codtipotitulo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
             $titulo->codcontacontabil = $nfp->Negocio->NaturezaOperacao->codcontacontabil;
-            if ($nfp->Negocio->NaturezaOperacao->codoperacao == Operacao::SAIDA) {
-                $titulo->debito = $valor;
-            } else {
-                $titulo->credito = $valor;
-            }
+            $titulo->valor = ($nfp->Negocio->NaturezaOperacao->codoperacao == Operacao::SAIDA) ? $valor : -$valor;
             $titulo->boleto = $nfp->FormaPagamento->boleto;
             $titulo->codpessoa = $nfp->Negocio->codpessoa;
             $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "-$i/{$parcelas}";
             $titulo->emissao = Carbon::now();
             $titulo->transacao = $titulo->emissao;
-            $titulo->sistema = $titulo->emissao;
             $titulo->vencimento = $titulo->emissao->addDays($i * $nfp->FormaPagamento->diasentreparcelas);
             $titulo->vencimentooriginal = $titulo->vencimento;
             $titulo->gerencial = true;
@@ -189,10 +185,7 @@ class NegocioService
                 }
             }
 
-            //se deu erro ao salvar titulo aborta
-            if (!$titulo->save()) {
-                return false;
-            }
+            TituloService::implantar($titulo);
         }
         return $total;
     }

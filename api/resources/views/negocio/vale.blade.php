@@ -97,7 +97,7 @@ use Illuminate\Support\Carbon;
 
     <h2>
         {{-- ja' usado em parte: o papel vale so' o que sobrou --}}
-        {{ round(abs($tit->saldo), 2) != round($tit->credito, 2) ? 'Contra Vale' : 'Vale Compras' }}
+        {{ round(abs($tit->saldo), 2) != round(abs($tit->valor), 2) ? 'Contra Vale' : 'Vale Compras' }}
         {{$tit->numero}}
         <br>
         {{formataCodigo($tit->codtitulo)}}

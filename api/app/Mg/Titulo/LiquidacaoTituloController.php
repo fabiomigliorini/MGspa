@@ -153,10 +153,10 @@ class LiquidacaoTituloController extends Controller
         }
 
         $html = '';
-        if ($liq->credito > 0) {
+        if (LiquidacaoTituloService::temRecebimento($liq)) {
             $html .= view('liquidacao-titulo.recibo-recebimento', compact('liq'))->render();
         }
-        if ($liq->debito > 0) {
+        if (LiquidacaoTituloService::temPagamento($liq)) {
             $html .= view('liquidacao-titulo.recibo-pagamento', compact('liq'))->render();
         }
 
@@ -175,8 +175,8 @@ class LiquidacaoTituloController extends Controller
             abort(403, 'Liquidação não pertence à sua filial.');
         }
 
-        if ($liq->credito <= 0) {
-            throw new \Exception('Liquidação sem créditos para recibo de recebimento.', 400);
+        if (!LiquidacaoTituloService::temRecebimento($liq)) {
+            throw new \Exception('Liquidação sem recebimentos para recibo de recebimento.', 400);
         }
 
         return static::pdfResponse(
@@ -193,8 +193,8 @@ class LiquidacaoTituloController extends Controller
             abort(403, 'Liquidação não pertence à sua filial.');
         }
 
-        if ($liq->debito <= 0) {
-            throw new \Exception('Liquidação sem débitos para recibo de pagamento.', 400);
+        if (!LiquidacaoTituloService::temPagamento($liq)) {
+            throw new \Exception('Liquidação sem pagamentos para recibo de pagamento.', 400);
         }
 
         return static::pdfResponse(

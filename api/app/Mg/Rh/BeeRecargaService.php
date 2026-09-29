@@ -38,7 +38,7 @@ class BeeRecargaService
     // Financeiro baixa pela Liquidação (TASK-176). Com o 120, a baixa virava
     // recebimento e a Beevale aparecia devendo o lote à empresa.
     const CODPESSOA_BEEVALE = 26169;   // Beevale Pagamentos E Beneficios Ltda
-    const CODTIPOTITULO_PAGAR = 927;   // Duplicata A Pagar (credito = t -> conta a pagar)
+    const CODTIPOTITULO_PAGAR = 927;   // Duplicata A Pagar (natureza P -> conta a pagar)
     const CODCONTACONTABIL = 312;      // Vale Alimentacao Colaboradores
 
     /**
@@ -280,19 +280,6 @@ class BeeRecargaService
             'observacao' => 'Recarga cartão Bee - período ' . $codperiodo
                 . ($observacao ? ' - ' . $observacao : ''),
         ]);
-
-        // O movimento de implantação é gravado pela trigger fntbltituloai, que
-        // não sabe quem está logado: sem isto ele aparece no app de contas com o
-        // "Criado por" em branco. Quem gerou a recarga é quem criou o título.
-        // DB::table, não o model: o Eloquent carimbaria `alteracao`, e ninguém
-        // alterou o movimento — só falta dizer quem o criou.
-        DB::table('tblmovimentotitulo')
-            ->where('codtitulo', $titulo->codtitulo)
-            ->whereNull('codusuariocriacao')
-            ->update([
-                'codusuariocriacao' => $titulo->codusuariocriacao,
-                'codusuarioalteracao' => $titulo->codusuariocriacao,
-            ]);
 
         $recarga = new BeeRecarga([
             'codperiodo' => $codperiodo,

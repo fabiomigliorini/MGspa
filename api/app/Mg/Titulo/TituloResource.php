@@ -14,10 +14,32 @@ class TituloResource extends Resource
      */
     public function toArray($request)
     {
-        $ret = parent::toArray($request);
-        $ret['fantasia'] = $this->Pessoa->fantasia;
-        $ret['tipotitulo'] = $this->TipoTitulo->tipotitulo;
-        $ret['portador'] = $this->Portador->portador??null;
-        return $ret;
+        return [
+            'codtitulo' => $this->codtitulo,
+            'codtipotitulo' => $this->codtipotitulo,
+            'tipotitulo' => $this->TipoTitulo->tipotitulo,
+            'codfilial' => $this->codfilial,
+            'codpessoa' => $this->codpessoa,
+            'fantasia' => $this->Pessoa->fantasia,
+            'codportador' => $this->codportador,
+            'portador' => $this->Portador->portador ?? null,
+            'codnegocioformapagamento' => $this->codnegocioformapagamento,
+            'codtituloagrupamento' => $this->codtituloagrupamento,
+            'numero' => $this->numero,
+            'fatura' => $this->fatura,
+            'emissao' => $this->emissao,
+            'transacao' => $this->transacao,
+            'vencimento' => $this->vencimento,
+            'vencimentooriginal' => $this->vencimentooriginal,
+            'transacaoliquidacao' => $this->transacaoliquidacao,
+            'estornado' => $this->estornado,
+            'boleto' => $this->boleto,
+            'nossonumero' => $this->nossonumero,
+            'gerencial' => $this->gerencial,
+            'observacao' => $this->observacao,
+            // com sinal: positivo a receber, negativo a pagar
+            'valor' => $this->valor,
+            'saldo' => $this->saldo,
+        ];
     }
 }

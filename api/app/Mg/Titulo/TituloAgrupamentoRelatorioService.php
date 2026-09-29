@@ -48,7 +48,7 @@ class TituloAgrupamentoRelatorioService
         $linhas = '';
         $total = 0.0;
         foreach ($regs as $r) {
-            $valor = (float)$r->debito - (float)$r->credito;
+            $valor = (float)$r->valor;
             $op = $valor < 0 ? 'CR' : 'DB';
             $cor = $op === 'CR' ? '#cc6600' : '#009900';
             $cod = '#' . str_pad((string)$r->codtituloagrupamento, 8, '0', STR_PAD_LEFT);
@@ -137,7 +137,7 @@ class TituloAgrupamentoRelatorioService
                 $q->orderBy('codmovimentotitulo')->with([
                     'Titulo',
                     'Titulo.Filial:codfilial,filial',
-                    'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo,estorno',
+                    'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo',
                 ]);
             },
         ])->findOrFail($id);

@@ -15,7 +15,7 @@ class TipoTituloService
 
     public static function listar(array $filtros)
     {
-        $q = TipoTitulo::with('TipoMovimentoTitulo');
+        $q = TipoTitulo::query();
 
         if (!empty($filtros['codtipotitulo'])) {
             $q->where('codtipotitulo', $filtros['codtipotitulo']);
@@ -23,11 +23,11 @@ class TipoTituloService
         if (!empty($filtros['tipotitulo'])) {
             $q->palavras('tipotitulo', $filtros['tipotitulo']);
         }
-        if (!empty($filtros['codtipomovimentotitulo'])) {
-            $q->where('codtipomovimentotitulo', $filtros['codtipomovimentotitulo']);
+        if (!empty($filtros['natureza'])) {
+            $q->where('natureza', $filtros['natureza']);
         }
 
-        foreach (['pagar', 'receber', 'debito', 'credito'] as $flag) {
+        foreach (['pagar', 'receber', 'movimentaportador'] as $flag) {
             if (array_key_exists($flag, $filtros) && $filtros[$flag] !== null && $filtros[$flag] !== '') {
                 $q->where($flag, filter_var($filtros[$flag], FILTER_VALIDATE_BOOLEAN));
             }
@@ -52,9 +52,7 @@ class TipoTituloService
 
     public static function criar(array $dados): TipoTitulo
     {
-        $tipo = TipoTitulo::create($dados);
-        $tipo->load('TipoMovimentoTitulo');
-        return $tipo;
+        return TipoTitulo::create($dados);
     }
 
     public static function atualizar(TipoTitulo $tipo, array $dados): TipoTitulo
@@ -62,7 +60,6 @@ class TipoTituloService
         $tipo->fill($dados);
         $tipo->save();
         $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
         return $tipo;
     }
 
@@ -71,7 +68,6 @@ class TipoTituloService
         $tipo->inativo = Carbon::now();
         $tipo->save();
         $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
         return $tipo;
     }
 
@@ -80,7 +76,6 @@ class TipoTituloService
         $tipo->inativo = null;
         $tipo->save();
         $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
         return $tipo;
     }
 

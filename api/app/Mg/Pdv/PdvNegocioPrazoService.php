@@ -10,8 +10,8 @@ use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
 use Mg\Titulo\Titulo;
 use Mg\Portador\Portador;
-use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
+use Mg\Titulo\TituloService;
 use Mg\Titulo\TipoTituloService;
 use Mg\Negocio\NegocioFormaPagamentoService;
 
@@ -58,7 +58,7 @@ class PdvNegocioPrazoService
             FROM tbltitulo
             WHERE codpessoa = :codpessoa
             AND saldo <> 0
-            AND debito > 0
+            AND valor > 0
         ';
         $tot = DB::select($sql, [
             'codpessoa' => $pessoa->codpessoa
@@ -145,26 +145,18 @@ class PdvNegocioPrazoService
                 $titulo->codfilial = $nfp->Negocio->codfilial;
                 $titulo->codtipotitulo = $tipo;
                 $titulo->codcontacontabil = $nfp->Negocio->NaturezaOperacao->codcontacontabil;
-                if ($nfp->Negocio->codoperacao == 2) {
-                    $titulo->debito = $valor;
-                } else {
-                    $titulo->credito = $valor;
-                }
+                $titulo->valor = ($nfp->Negocio->codoperacao == 2) ? $valor : -$valor;
                 $titulo->boleto = false;
                 $titulo->codpessoa = $nfp->Negocio->codpessoa;
                 $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "$sufixo-$i/{$parcelas}";
                 $titulo->emissao = Carbon::now();
                 $titulo->transacao = $titulo->emissao;
-                $titulo->sistema = $titulo->emissao;
                 $titulo->vencimento = $vencimento;
                 $titulo->vencimentooriginal = $titulo->vencimento;
                 $titulo->gerencial = true;
                 $titulo->codportador = Portador::CARTEIRA;
 
-                //se deu erro ao salvar titulo aborta
-                if (!$titulo->save()) {
-                    throw new Exception('Falha ao Gerar Títulos do Negócio!', 1);
-                }
+                TituloService::implantar($titulo);
             }
 
             // monta sufixo da proxima forma de pagamento
@@ -184,25 +176,18 @@ class PdvNegocioPrazoService
             ->where('codformapagamento', NegocioFormaPagamentoService::CODFORMAPAGAMENTO_VALE)
             ->get();
         foreach ($nfps as $nfp) {
-            $debito = null;
-            $credito = null;
-            if ($negocio->codoperacao == 2) {
-                $debito = $nfp->valorpagamento;
-            } else {
-                $credito = $nfp->valorpagamento;
-            }
-            MovimentoTitulo::updateOrCreate([
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_AMORTIZACAO,
-                'codtitulo' => $nfp->codtitulo,
-                'codnegocioformapagamento' => $nfp->codnegocioformapagamento
-
-            ], [
-                'codportador' => $nfp->Titulo->codportador,
-                'debito' => $debito,
-                'credito' => $credito,
-                'transacao' => $negocio->lancamento,
-                'sistema' => $negocio->lancamento,
-            ]);
+            MovimentoTituloService::lancar(
+                $nfp->Titulo,
+                MovimentoTituloService::TIPO_AMORTIZACAO,
+                ($negocio->codoperacao == 2) ? $nfp->valorpagamento : -$nfp->valorpagamento,
+                [
+                    'codtitulo' => $nfp->codtitulo,
+                    'codnegocioformapagamento' => $nfp->codnegocioformapagamento,
+                    'codportador' => $nfp->Titulo->codportador,
+                    'transacao' => $negocio->lancamento,
+                ],
+                ['codtitulo', 'codnegocioformapagamento']
+            );
         }
     }
 
@@ -214,18 +199,23 @@ class PdvNegocioPrazoService
             ->get();
         foreach ($nfps as $nfp) {
             foreach ($nfp->MovimentoTituloS as $movOriginal) {
-                MovimentoTitulo::updateOrCreate([
-                    'codtipomovimentotitulo' => MovimentoTituloService::TIPO_ESTORNO_AMORTIZACAO,
-                    'codtitulo' => $nfp->codtitulo,
-                    'codnegocioformapagamento' => $nfp->codnegocioformapagamento
-
-                ], [
-                    'codportador' => $movOriginal->codportador,
-                    'debito' => $movOriginal->credito,
-                    'credito' => $movOriginal->debito,
-                    'transacao' => $movOriginal->transacao,
-                    'sistema' => Carbon::now(),
-                ]);
+                // so a amortizacao e' estornada; o proprio estorno tambem esta' na lista
+                if ($movOriginal->codtipomovimentotitulo != MovimentoTituloService::TIPO_AMORTIZACAO) {
+                    continue;
+                }
+                MovimentoTituloService::lancar(
+                    $nfp->Titulo,
+                    MovimentoTituloService::TIPO_ESTORNO_AMORTIZACAO,
+                    -1 * (float) $movOriginal->valor,
+                    [
+                        'codtitulo' => $nfp->codtitulo,
+                        'codnegocioformapagamento' => $nfp->codnegocioformapagamento,
+                        'codmovimentotituloestorno' => $movOriginal->codmovimentotitulo,
+                        'codportador' => $movOriginal->codportador,
+                        'transacao' => $movOriginal->transacao,
+                    ],
+                    ['codtitulo', 'codnegocioformapagamento']
+                );
             }
         }
     }

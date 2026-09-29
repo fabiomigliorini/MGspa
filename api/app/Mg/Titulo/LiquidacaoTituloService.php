@@ -95,11 +95,11 @@ class LiquidacaoTituloService
             'MovimentoTituloS' => function ($q) {
                 $q->orderBy('codmovimentotitulo')
                   ->with([
-                      'Titulo:codtitulo,codpessoa,codfilial,numero,vencimento,fatura,nossonumero,boleto,gerencial,codportador',
+                      'Titulo:codtitulo,codpessoa,codfilial,numero,vencimento,fatura,nossonumero,boleto,gerencial,codportador,codtituloagrupamento,valor,saldo',
                       'Titulo.Pessoa:codpessoa,fantasia',
                       'Titulo.Filial:codfilial,filial',
                       'Titulo.Portador:codportador,portador',
-                      'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo,estorno',
+                      'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo',
                   ]);
             },
         ])->findOrFail($id);
@@ -115,8 +115,8 @@ class LiquidacaoTituloService
         $codportador = (int)$dados['codportador'];
         $transacao = Carbon::parse($dados['transacao'])->format('Y-m-d');
 
-        $debito = 0.0;
-        $credito = 0.0;
+        // total líquido, com o sinal do movimento: receber baixa com negativo
+        $valor = 0.0;
         foreach ($dados['titulos'] as $t) {
             $titulo = Titulo::findOrFail((int)$t['codtitulo']);
             self::validarLinha($titulo, $t);
@@ -124,11 +124,7 @@ class LiquidacaoTituloService
             if ($total <= 0) {
                 throw new \InvalidArgumentException("Total do título {$titulo->codtitulo} deve ser maior que zero!");
             }
-            if (MovimentoTituloHelper::operacao($titulo) === 'CR') {
-                $credito += $total;
-            } else {
-                $debito += $total;
-            }
+            $valor += $titulo->ehReceber() ? -$total : $total;
         }
 
         $liq = new LiquidacaoTitulo([
@@ -136,9 +132,7 @@ class LiquidacaoTituloService
             'codportador' => $codportador,
             'transacao'   => $transacao,
             'observacao'  => $dados['observacao'] ?? null,
-            'debito'      => $debito,
-            'credito'     => $credito,
-            'sistema'     => Carbon::now()->format('Y-m-d H:i:s'),
+            'valor'       => $valor,
         ]);
         $liq->save();
 
@@ -198,6 +192,10 @@ class LiquidacaoTituloService
                     $mov->transacao = $transacao;
                 }
                 $mov->save();
+                // a data de liquidação do título sai da transacao dos movimentos
+                if ($mudouTransacao) {
+                    MovimentoTituloService::recalcular($mov->Titulo);
+                }
             }
         }
 
@@ -214,7 +212,7 @@ class LiquidacaoTituloService
         }
 
         foreach ($liq->MovimentoTituloS as $mov) {
-            if (optional($mov->TipoMovimentoTitulo)->estorno) continue;
+            if ($mov->ehEstorno()) continue;
             MovimentoTituloService::estornar($mov);
         }
 
@@ -223,6 +221,31 @@ class LiquidacaoTituloService
         $liq->save();
 
         return self::carregar($liq->codliquidacaotitulo);
+    }
+
+    /**
+     * A liquidação baixou título a receber? O total é líquido, então quem
+     * diz é o movimento: baixa de título a receber tem valor negativo.
+     */
+    public static function temRecebimento(LiquidacaoTitulo $liq): bool
+    {
+        return static::baixas($liq)->contains(fn($m) => (float)$m->valor < 0);
+    }
+
+    /**
+     * A liquidação baixou título a pagar? Baixa de título a pagar tem valor
+     * positivo.
+     */
+    public static function temPagamento(LiquidacaoTitulo $liq): bool
+    {
+        return static::baixas($liq)->contains(fn($m) => (float)$m->valor > 0);
+    }
+
+    private static function baixas(LiquidacaoTitulo $liq)
+    {
+        $tipos = [MovimentoTituloService::TIPO_LIQUIDACAO, MovimentoTituloService::TIPO_RH];
+        return $liq->MovimentoTituloS
+            ->filter(fn($m) => in_array((int)$m->codtipomovimentotitulo, $tipos) && !$m->ehEstorno());
     }
 
     private static function validarLinha(Titulo $titulo, array $t): void

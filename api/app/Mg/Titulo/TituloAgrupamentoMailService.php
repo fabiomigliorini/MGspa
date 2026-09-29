@@ -142,7 +142,7 @@ class TituloAgrupamentoMailService
                     'numero' => $mov->Titulo->numero,
                     'emissao' => $mov->Titulo->emissao,
                     'vencimento' => $mov->Titulo->vencimentooriginal,
-                    'valor' => $mov->Titulo->debito - $mov->Titulo->credito,
+                    'valor' => $mov->Titulo->valor,
                     'principal' => null,
                     'desconto' => null,
                     'juros' => null,
@@ -153,19 +153,19 @@ class TituloAgrupamentoMailService
             }
             switch ($mov->codtipomovimentotitulo) {
                 case 400: // juros
-                    $baixas[$mov->codtitulo]->juros += $mov->debito - $mov->credito;
+                    $baixas[$mov->codtitulo]->juros += $mov->valor;
                     break;
                 case 401: // Multa
-                    $baixas[$mov->codtitulo]->multa += $mov->debito - $mov->credito;
+                    $baixas[$mov->codtitulo]->multa += $mov->valor;
                     break;
                 case 500: // Desconto
-                    $baixas[$mov->codtitulo]->desconto += $mov->debito - $mov->credito;
+                    $baixas[$mov->codtitulo]->desconto += $mov->valor;
                     break;
                 case 901: // total
-                    $baixas[$mov->codtitulo]->total += $mov->credito - $mov->debito;
+                    $baixas[$mov->codtitulo]->total -= $mov->valor;
                     break;
                 default: // outros
-                    $baixas[$mov->codtitulo]->outras += $mov->debito - $mov->credito;
+                    $baixas[$mov->codtitulo]->outras += $mov->valor;
                     break;
             }
             $baixas[$mov->codtitulo]->principal = $baixas[$mov->codtitulo]->total

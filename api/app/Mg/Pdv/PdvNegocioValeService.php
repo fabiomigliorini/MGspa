@@ -102,11 +102,10 @@ class PdvNegocioValeService
         // o credito e' da ESCOLA (ou do Consumidor, no vale ao portador),
         // nao de quem pagou
         $titulo->codpessoa = $vale->codpessoafavorecido;
-        $titulo->credito = $vale->valorvale;
+        $titulo->valor = -1 * $vale->valorvale;
         $titulo->numero = 'V' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT) . "-{$letra}";
         $titulo->emissao = $emissao;
         $titulo->transacao = $emissao;
-        $titulo->sistema = $emissao;
         // validade de 1 ano, informativa (decisao 8): sem job de expiracao,
         // o saldo continua resgatavel depois da data
         $titulo->vencimento = $vale->validade ?? (clone $emissao)->addYear();
@@ -116,7 +115,7 @@ class PdvNegocioValeService
         // sem portador, como o vale compras do MGLara sempre nasceu: o credito
         // nao esta em lugar nenhum ate ser resgatado
         $titulo->codportador = null;
-        $titulo->save();
+        TituloService::implantar($titulo);
 
         return $titulo;
     }
@@ -137,7 +136,7 @@ class PdvNegocioValeService
             }
             if (static::foiMovimentado($titulo)) {
                 $letra = static::letra($i);
-                $usado = formataNumero(abs((float) $titulo->credito) - abs((float) $titulo->saldo), 2);
+                $usado = formataNumero(abs((float) $titulo->valor) - abs((float) $titulo->saldo), 2);
                 throw new Exception("O Vale {$letra} (#{$titulo->codtitulo}) já foi usado em compras: R$ {$usado} do crédito já saiu. Impossível cancelar este negócio!", 1);
             }
         }
@@ -169,7 +168,7 @@ class PdvNegocioValeService
     // conta que o TituloService::estornar() faz antes de deixar estornar.
     public static function foiMovimentado(Titulo $titulo)
     {
-        return round((float) $titulo->debito - (float) $titulo->credito, 2) != round((float) $titulo->saldo, 2);
+        return round((float) $titulo->valor, 2) != round((float) $titulo->saldo, 2);
     }
 
     // "Vale A", "Vale B", ... e depois de Z cai no numero, que e' melhor do

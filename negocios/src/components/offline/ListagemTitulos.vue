@@ -88,11 +88,11 @@ const abrir = (codtitulo) =>
         <q-item-section>
           <q-item-label>
             R$
-            {{ formataNumero(titulo.debito + titulo.credito) }}
+            {{ formataNumero(Math.abs(titulo.valor)) }}
           </q-item-label>
           <q-item-label caption lines="1">
             <template v-if="Math.abs(titulo.saldo) > 0">
-              <template v-if="titulo.saldo != Math.abs(titulo.debito + titulo.credito)">
+              <template v-if="titulo.saldo != Math.abs(titulo.valor)">
                 R$
                 {{ formataNumero(titulo.saldo) }}
               </template>

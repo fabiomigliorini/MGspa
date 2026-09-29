@@ -13,7 +13,7 @@ class TituloListagemService
             'Pessoa:codpessoa,fantasia,pessoa,codgrupoeconomico,codgrupocliente',
             'Filial:codfilial,filial',
             'Portador:codportador,portador,codbanco,codfilial',
-            'TipoTitulo:codtipotitulo,tipotitulo,credito,debito,pagar,receber',
+            'TipoTitulo:codtipotitulo,tipotitulo,natureza,pagar,receber',
             'ContaContabil:codcontacontabil,contacontabil',
             'UsuarioCriacao:codusuario,usuario',
             'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
@@ -83,12 +83,12 @@ class TituloListagemService
             }
         }
 
-        // credito (1 = credito; 2 = debito)
-        if (!empty($filtros['credito'])) {
-            if ((int)$filtros['credito'] === 1) {
-                $q->where('tbltitulo.credito', '>', 0);
-            } elseif ((int)$filtros['credito'] === 2) {
-                $q->where('tbltitulo.debito', '>', 0);
+        // natureza (R = a receber; P = a pagar)
+        if (!empty($filtros['natureza'])) {
+            if ($filtros['natureza'] === 'R') {
+                $q->where('tbltitulo.valor', '>', 0);
+            } elseif ($filtros['natureza'] === 'P') {
+                $q->where('tbltitulo.valor', '<', 0);
             }
         }
     }
@@ -134,16 +134,11 @@ class TituloListagemService
 
     private static function aplicarFiltrosValor($q, array $filtros): void
     {
-        $map = [
-            'debito_de' => ['tbltitulo.debito', '>='],
-            'debito_ate' => ['tbltitulo.debito', '<='],
-            'credito_de' => ['tbltitulo.credito', '>='],
-            'credito_ate' => ['tbltitulo.credito', '<='],
-        ];
-        foreach ($map as $key => [$coluna, $op]) {
-            if (isset($filtros[$key]) && $filtros[$key] !== '' && $filtros[$key] !== null) {
-                $q->where($coluna, $op, (float)($filtros[$key]));
-            }
+        if (isset($filtros['valor_de']) && $filtros['valor_de'] !== '' && $filtros['valor_de'] !== null) {
+            $q->whereRaw('abs(tbltitulo.valor) >= ?', [(float)($filtros['valor_de'])]);
+        }
+        if (isset($filtros['valor_ate']) && $filtros['valor_ate'] !== '' && $filtros['valor_ate'] !== null) {
+            $q->whereRaw('abs(tbltitulo.valor) <= ?', [(float)($filtros['valor_ate'])]);
         }
         if (isset($filtros['saldo_de']) && $filtros['saldo_de'] !== '' && $filtros['saldo_de'] !== null) {
             $q->whereRaw('abs(tbltitulo.saldo) >= ?', [(float)($filtros['saldo_de'])]);

@@ -8,24 +8,20 @@ class LiquidacaoTituloDetalheResource extends Resource
 {
     public function toArray($request)
     {
-        $debito = (float)$this->debito;
-        $credito = (float)$this->credito;
-        $valor = $debito - $credito;
+        $valor = (float)$this->valor;
         $operacao = ($valor < 0) ? 'CR' : 'DB';
 
         $movimentos = collect($this->MovimentoTituloS ?? [])
-            ->filter(fn($m) => !optional($m->TipoMovimentoTitulo)->estorno)
+            ->filter(fn($m) => !$m->ehEstorno())
             ->values()
             ->map(function ($m) {
-                $valorMov = (float)$m->debito - (float)$m->credito;
+                $valorMov = (float)$m->valor;
                 return [
                     'codmovimentotitulo'     => (int)$m->codmovimentotitulo,
                     'codtitulo'              => (int)$m->codtitulo,
                     'codtipomovimentotitulo' => (int)$m->codtipomovimentotitulo,
                     'tipomovimentotitulo'    => optional($m->TipoMovimentoTitulo)->tipomovimentotitulo,
                     'transacao'              => $m->transacao,
-                    'debito'                 => (float)$m->debito,
-                    'credito'                => (float)$m->credito,
                     'valor'                  => abs($valorMov),
                     'operacao'               => $valorMov < 0 ? 'CR' : 'DB',
                     'titulo' => $m->Titulo ? [
@@ -61,10 +57,10 @@ class LiquidacaoTituloDetalheResource extends Resource
             'observacao'          => $this->observacao,
             'codusuariocriacao'   => $this->codusuariocriacao,
             'codusuarioalteracao' => $this->codusuarioalteracao,
-            'debito'              => $debito,
-            'credito'             => $credito,
             'valor'               => abs($valor),
             'operacao'            => $operacao,
+            'recebimento'         => LiquidacaoTituloService::temRecebimento($this->resource),
+            'pagamento'           => LiquidacaoTituloService::temPagamento($this->resource),
             'movimentos'          => $movimentos,
         ];
     }

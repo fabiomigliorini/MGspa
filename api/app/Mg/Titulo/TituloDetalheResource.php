@@ -13,6 +13,8 @@ class TituloDetalheResource extends Resource
             return [];
         }
 
+        $estornos = implode(', ', MovimentoTituloService::TIPOS_ESTORNO);
+
         $sql = "
             select distinct
                 nf.codnotafiscal,
@@ -40,12 +42,12 @@ class TituloDetalheResource extends Resource
                 select nfp.codnegocio
                 from tbltitulo tag
                 inner join tblmovimentotitulo mt on (mt.codtituloagrupamento = tag.codtituloagrupamento)
-                inner join tbltipomovimentotitulo tmt on (tmt.codtipomovimentotitulo = mt.codtipomovimentotitulo)
                 inner join tbltitulo t on (t.codtitulo = mt.codtitulo)
                 inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
                 where tag.codtitulo = :codtitulo2
                   and tag.codtituloagrupamento is not null
-                  and coalesce(tmt.estorno, false) = false
+                  and mt.codmovimentotituloestorno is null
+                  and mt.codtipomovimentotitulo not in ({$estornos})
             )
             order by nf.emissao desc, nf.codnotafiscal desc
         ";
@@ -70,14 +72,10 @@ class TituloDetalheResource extends Resource
 
     public function toArray($request)
     {
-        $debito = (float)$this->debito;
-        $credito = (float)$this->credito;
         $saldo = (float)$this->saldo;
-        $debitosaldo = (float)$this->debitosaldo;
-        $creditosaldo = (float)$this->creditosaldo;
-        $valor = $debito - $credito;
+        $valor = (float)$this->valor;
         $operacao = ($valor < 0) ? 'CR' : 'DB';
-        $operacaosaldo = ($saldo < 0 || $credito > $debito) ? 'CR' : 'DB';
+        $operacaosaldo = $this->ehReceber() ? 'DB' : 'CR';
 
         $atualizacao = TituloService::calcularAtualizacao($saldo, $this->vencimento);
 
@@ -109,10 +107,13 @@ class TituloDetalheResource extends Resource
             ];
         });
 
-        $movimentos = $this->MovimentoTituloS->map(function ($m) {
-            $debMov = (float)$m->debito;
-            $credMov = (float)$m->credito;
-            $valMov = $debMov - $credMov;
+        // quem desfez quem: codigo do movimento original => codigo do estorno dele
+        $estornadoPor = $this->MovimentoTituloS
+            ->whereNotNull('codmovimentotituloestorno')
+            ->pluck('codmovimentotitulo', 'codmovimentotituloestorno');
+
+        $movimentos = $this->MovimentoTituloS->map(function ($m) use ($estornadoPor) {
+            $valMov = (float)$m->valor;
             $opMov = ($valMov < 0) ? 'CR' : 'DB';
             return [
                 'codmovimentotitulo' => (int)$m->codmovimentotitulo,
@@ -129,11 +130,13 @@ class TituloDetalheResource extends Resource
                 'codtitulorelacionado' => $m->codtitulorelacionado ? (int)$m->codtitulorelacionado : null,
                 'historico' => $m->historico,
                 'transacao' => $m->transacao,
-                'sistema' => $m->sistema,
                 'criacao' => $m->criacao,
                 'codusuariocriacao' => $m->codusuariocriacao ? (int)$m->codusuariocriacao : null,
-                'debito' => $debMov,
-                'credito' => $credMov,
+                'codmovimentotituloestorno' => $m->codmovimentotituloestorno ? (int)$m->codmovimentotituloestorno : null,
+                'codmovimentotituloestornadopor' => isset($estornadoPor[$m->codmovimentotitulo])
+                    ? (int)$estornadoPor[$m->codmovimentotitulo]
+                    : null,
+                'estorno' => $m->ehEstorno(),
                 'valor' => $valMov,
                 'operacao' => $opMov,
             ];
@@ -150,8 +153,7 @@ class TituloDetalheResource extends Resource
             'filial'           => optional($this->Filial)->filial,
             'codtipotitulo'    => (int)$this->codtipotitulo,
             'tipotitulo'       => optional($this->TipoTitulo)->tipotitulo,
-            'tipotitulocredito' => (bool)optional($this->TipoTitulo)->credito,
-            'tipotitulodebito'  => (bool)optional($this->TipoTitulo)->debito,
+            'tipotitulonatureza' => optional($this->TipoTitulo)->natureza,
             'tipotitulopagar'   => (bool)optional($this->TipoTitulo)->pagar,
             'tipotituloreceber' => (bool)optional($this->TipoTitulo)->receber,
             'codcontacontabil' => $this->codcontacontabil ? (int)$this->codcontacontabil : null,
@@ -175,11 +177,7 @@ class TituloDetalheResource extends Resource
             'boleto'           => (bool)$this->boleto,
             'nossonumero'      => $this->nossonumero,
             'remessa'          => $this->remessa,
-            'debito'           => $debito,
-            'credito'          => $credito,
             'saldo'            => $saldo,
-            'debitosaldo'      => $debitosaldo,
-            'creditosaldo'     => $creditosaldo,
             'valor'            => $valor,
             'operacao'         => $operacao,
             'operacaosaldo'    => $operacaosaldo,
@@ -190,7 +188,6 @@ class TituloDetalheResource extends Resource
             'observacao'       => $this->observacao,
             'criacao'          => $this->criacao,
             'alteracao'        => $this->alteracao,
-            'sistema'          => $this->sistema,
             'movimentos'       => $movimentos,
             'boletos'          => $boletos,
             'notas'            => $this->notasVinculadas(),

@@ -8,13 +8,11 @@ class TituloAgrupamentoDetalheResource extends Resource
 {
     public function toArray($request)
     {
-        $debito = (float)$this->debito;
-        $credito = (float)$this->credito;
-        $valor = $debito - $credito;
+        $valor = (float)$this->valor;
         $operacao = ($valor < 0) ? 'CR' : 'DB';
 
         $titulosGerados = collect($this->TituloS ?? [])->map(function ($t) {
-            $valorT = (float)$t->debito - (float)$t->credito;
+            $valorT = (float)$t->valor;
             return [
                 'codtitulo'   => (int)$t->codtitulo,
                 'numero'      => $t->numero,
@@ -35,14 +33,14 @@ class TituloAgrupamentoDetalheResource extends Resource
 
         $titulosBaixados = collect($this->MovimentoTituloS ?? [])
             ->filter(function ($m) {
-                if (optional($m->TipoMovimentoTitulo)->estorno) return false;
+                if ($m->ehEstorno()) return false;
                 if (!$m->Titulo) return false;
                 // exclui os títulos gerados pelo próprio agrupamento
                 return $m->Titulo->codtituloagrupamento !== $this->codtituloagrupamento;
             })
             ->values()
             ->map(function ($m) {
-                $valorM = (float)$m->debito - (float)$m->credito;
+                $valorM = (float)$m->valor;
                 return [
                     'codmovimentotitulo'  => (int)$m->codmovimentotitulo,
                     'codtipomovimentotitulo' => (int)$m->codtipomovimentotitulo,
@@ -98,8 +96,6 @@ class TituloAgrupamentoDetalheResource extends Resource
             'observacao'           => $this->observacao,
             'codusuariocriacao'    => $this->codusuariocriacao,
             'codusuarioalteracao'  => $this->codusuarioalteracao,
-            'debito'               => $debito,
-            'credito'              => $credito,
             'valor'                => abs($valor),
             'operacao'             => $operacao,
             'notas_fiscais'        => $notas,

@@ -13,7 +13,7 @@
         $cidadeEstado = $filialP->Cidade->cidade . '/' . ($filialP->Cidade->Estado->sigla ?? '');
     }
 
-    // Um item por titulo, com o valor liquido baixado (credito - debito). Agrupar por
+    // Um item por titulo, com o valor liquido baixado (valor negativo baixa). Agrupar por
     // titulo neutraliza eventuais ajustes de toggle (movimentos 930) de acertos reativados.
     $resumo = [];
     foreach ($ev->MovimentoTituloS as $mov) {
@@ -21,7 +21,7 @@
         if (!isset($resumo[$ct])) {
             $resumo[$ct] = ['titulo' => $mov->Titulo, 'valor' => 0];
         }
-        $resumo[$ct]['valor'] += ($mov->credito ?? 0) - ($mov->debito ?? 0);
+        $resumo[$ct]['valor'] -= (float) $mov->valor;
     }
     $linhas = array_values(array_filter($resumo, fn($r) => round($r['valor'], 2) > 0));
     $qtdeLinhas = count($linhas);

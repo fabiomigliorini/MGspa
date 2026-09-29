@@ -21,45 +21,20 @@ class MovimentoTituloHelper
         ?int $codtituloagrupamento = null,
         ?int $codliquidacaotitulo = null
     ): void {
-        $operacao = self::operacao($titulo);
+        // juros e multa aumentam o título; desconto diminui
+        $sinal = $titulo->ehReceber() ? 1 : -1;
+        $vinculos = self::vinculos($transacao, $codportador, $codtituloagrupamento, $codliquidacaotitulo);
 
         if ($juros > 0) {
-            self::movimentar(
-                $titulo,
-                MovimentoTituloService::TIPO_JUROS,
-                $operacao === 'DB' ? $juros : 0,
-                $operacao === 'CR' ? $juros : 0,
-                $transacao,
-                $codportador,
-                $codtituloagrupamento,
-                $codliquidacaotitulo
-            );
+            MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_JUROS, $sinal * $juros, $vinculos);
         }
 
         if ($multa > 0) {
-            self::movimentar(
-                $titulo,
-                MovimentoTituloService::TIPO_MULTA,
-                $operacao === 'DB' ? $multa : 0,
-                $operacao === 'CR' ? $multa : 0,
-                $transacao,
-                $codportador,
-                $codtituloagrupamento,
-                $codliquidacaotitulo
-            );
+            MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_MULTA, $sinal * $multa, $vinculos);
         }
 
         if ($desconto > 0) {
-            self::movimentar(
-                $titulo,
-                MovimentoTituloService::TIPO_DESCONTO,
-                $operacao === 'CR' ? $desconto : 0,
-                $operacao === 'DB' ? $desconto : 0,
-                $transacao,
-                $codportador,
-                $codtituloagrupamento,
-                $codliquidacaotitulo
-            );
+            MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_DESCONTO, -1 * $sinal * $desconto, $vinculos);
         }
     }
 
@@ -73,48 +48,26 @@ class MovimentoTituloHelper
         int $tipo = MovimentoTituloService::TIPO_LIQUIDACAO
     ): void {
         if ($total <= 0) return;
-        $operacao = self::operacao($titulo);
-        self::movimentar(
+        $sinal = $titulo->ehReceber() ? 1 : -1;
+        MovimentoTituloService::lancar(
             $titulo,
             $tipo,
-            $operacao === 'CR' ? $total : 0,
-            $operacao === 'DB' ? $total : 0,
-            $transacao,
-            $codportador,
-            $codtituloagrupamento,
-            $codliquidacaotitulo
+            -1 * $sinal * $total,
+            self::vinculos($transacao, $codportador, $codtituloagrupamento, $codliquidacaotitulo)
         );
     }
 
-    public static function operacao(Titulo $titulo): string
-    {
-        $saldo = (float)$titulo->saldo;
-        $credito = (float)$titulo->credito;
-        $debito = (float)$titulo->debito;
-        return ($saldo < 0 || $credito > $debito) ? 'CR' : 'DB';
-    }
-
-    private static function movimentar(
-        Titulo $titulo,
-        int $tipo,
-        float $debito,
-        float $credito,
+    private static function vinculos(
         ?string $transacao,
         ?int $codportador,
         ?int $codtituloagrupamento,
         ?int $codliquidacaotitulo
-    ): void {
-        $mov = new MovimentoTitulo([
-            'codtitulo'              => $titulo->codtitulo,
-            'codtipomovimentotitulo' => $tipo,
-            'debito'                 => $debito,
-            'credito'                => $credito,
-            'transacao'              => $transacao ? Carbon::parse($transacao)->format('Y-m-d') : Carbon::today()->format('Y-m-d'),
-            'codtituloagrupamento'   => $codtituloagrupamento,
-            'codliquidacaotitulo'    => $codliquidacaotitulo,
-            'codportador'            => $codportador,
-            'sistema'                => Carbon::now()->format('Y-m-d H:i:s'),
-        ]);
-        $mov->save();
+    ): array {
+        return [
+            'transacao'            => $transacao ? Carbon::parse($transacao)->format('Y-m-d') : Carbon::today()->format('Y-m-d'),
+            'codtituloagrupamento' => $codtituloagrupamento,
+            'codliquidacaotitulo'  => $codliquidacaotitulo,
+            'codportador'          => $codportador,
+        ];
     }
 }
