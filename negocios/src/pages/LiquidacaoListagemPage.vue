@@ -44,18 +44,18 @@ const statusClass = (liq) => {
 }
 
 const iconeLiquidacao = (liq) => {
-  if (liq.debito > liq.credito) {
+  if (liq.valor > 0) {
     return 'mdi-checkbook-arrow-left'
-  } else if (liq.debito < liq.credito) {
+  } else if (liq.valor < 0) {
     return 'mdi-checkbook-arrow-right'
   }
   return 'mdi-checkbook'
 }
 
 const corIconeLiquidacao = (liq) => {
-  if (liq.debito > liq.credito) {
+  if (liq.valor > 0) {
     return 'secondary'
-  } else if (liq.debito < liq.credito) {
+  } else if (liq.valor < 0) {
     return 'negative'
   }
   return 'grey'
@@ -98,20 +98,14 @@ const corIconeLiquidacao = (liq) => {
               </q-item-label>
             </q-item-section>
 
-            <!-- CREDITO -->
-            <q-item-section class="col-xs-2 col-sm-1">
+            <!-- VALOR -->
+            <q-item-section class="col-xs-3 col-sm-2">
               <q-item-label class="text-right">
-                {{ formataNumero(item.credito) }}
+                {{ formataNumero(Math.abs(item.valor)) }}
               </q-item-label>
-              <q-item-label class="ellipsis text-right" caption> Recebido </q-item-label>
-            </q-item-section>
-
-            <!-- DEBITO -->
-            <q-item-section class="col-xs-2 col-sm-1">
-              <q-item-label class="text-right">
-                {{ formataNumero(item.debito) }}
+              <q-item-label class="ellipsis text-right" caption>
+                {{ item.valor > 0 ? 'Pago' : 'Recebido' }}
               </q-item-label>
-              <q-item-label class="ellipsis text-right" caption> Pago </q-item-label>
             </q-item-section>
 
             <!-- PESSOA/VENDEDOR/COD/NATUREZA -->

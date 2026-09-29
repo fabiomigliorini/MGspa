@@ -29,6 +29,7 @@ class MovimentoTitulo extends MgModel
         'codboletoretorno',
         'codcobranca',
         'codliquidacaotitulo',
+        'codmovimentotituloestorno',
         'codnegocioformapagamento',
         'codperiodocolaboradoracerto',
         'codportador',
@@ -37,11 +38,9 @@ class MovimentoTitulo extends MgModel
         'codtituloagrupamento',
         'codtituloboleto',
         'codtitulorelacionado',
-        'credito',
-        'debito',
         'historico',
-        'sistema',
-        'transacao'
+        'transacao',
+        'valor'
     ];
 
     protected $casts = [
@@ -50,6 +49,7 @@ class MovimentoTitulo extends MgModel
         'codcobranca' => 'integer',
         'codliquidacaotitulo' => 'integer',
         'codmovimentotitulo' => 'integer',
+        'codmovimentotituloestorno' => 'integer',
         'codnegocioformapagamento' => 'integer',
         'codperiodocolaboradoracerto' => 'integer',
         'codportador' => 'integer',
@@ -60,12 +60,21 @@ class MovimentoTitulo extends MgModel
         'codtitulorelacionado' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'credito' => 'float',
         'criacao' => 'datetime',
-        'debito' => 'float',
-        'sistema' => 'datetime',
-        'transacao' => 'date'
+        'transacao' => 'date',
+        'valor' => 'float'
     ];
+
+
+    /**
+     * Movimento que desfaz outro. O estorno novo aponta para o original
+     * (codmovimentotituloestorno); o antigo só tem o tipo para dizer.
+     */
+    public function ehEstorno(): bool
+    {
+        return !empty($this->codmovimentotituloestorno)
+            || in_array((int) $this->codtipomovimentotitulo, MovimentoTituloService::TIPOS_ESTORNO);
+    }
 
 
     // Chaves Estrangeiras
@@ -82,6 +91,11 @@ class MovimentoTitulo extends MgModel
     public function LiquidacaoTitulo()
     {
         return $this->belongsTo(LiquidacaoTitulo::class, 'codliquidacaotitulo', 'codliquidacaotitulo');
+    }
+
+    public function MovimentoTituloEstorno()
+    {
+        return $this->belongsTo(MovimentoTitulo::class, 'codmovimentotituloestorno', 'codmovimentotitulo');
     }
 
     public function NegocioFormaPagamento()
@@ -136,6 +150,11 @@ class MovimentoTitulo extends MgModel
 
 
     // Tabelas Filhas
+    public function MovimentoTituloEstornoS()
+    {
+        return $this->hasMany(MovimentoTitulo::class, 'codmovimentotituloestorno', 'codmovimentotitulo');
+    }
+
     public function PortadorMovimentoS()
     {
         return $this->hasMany(PortadorMovimento::class, 'codmovimentotitulo', 'codmovimentotitulo');

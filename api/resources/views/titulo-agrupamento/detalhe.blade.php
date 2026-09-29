@@ -6,7 +6,7 @@
     $filial = optional($titulos->first())->Filial;
     $filialPessoa = optional($filial)->Pessoa;
 
-    $valorTotal = (float)$ag->debito - (float)$ag->credito;
+    $valorTotal = (float)$ag->valor;
     $valorAbs = abs($valorTotal);
     $opTotal = $valorTotal < 0 ? 'CR' : 'DB';
 
@@ -120,7 +120,7 @@
     <tbody>
         @foreach ($titulos as $t)
             @php
-                $valorT = (float)$t->debito - (float)$t->credito;
+                $valorT = (float)$t->valor;
                 $opT = $valorT < 0 ? 'CR' : 'DB';
                 $boletoStr = $t->boleto
                     ? trim((optional($t->Portador)->portador ?? '') . ' ' . (!empty($t->nossonumero) ? '- ' . $t->nossonumero : ''))
@@ -153,10 +153,16 @@
     </thead>
     <tbody>
         @foreach ($ag->MovimentoTituloS as $m)
-            @if (optional($m->TipoMovimentoTitulo)->codtipomovimentotitulo != 901) @continue @endif
             @if (!$m->Titulo) @continue @endif
             @php
-                $valorM = (float)$m->debito - (float)$m->credito;
+                // entram as baixas por agrupamento (901) e a implantacao dos titulos que
+                // ele gerou, que ate' o M0.2 tambem era 901 e hoje e' 100
+                $gerado = $m->Titulo->codtituloagrupamento == $ag->codtituloagrupamento;
+                $entra = $m->codtipomovimentotitulo == 901 || ($gerado && $m->codtipomovimentotitulo == 100);
+            @endphp
+            @if (!$entra || $m->ehEstorno()) @continue @endif
+            @php
+                $valorM = (float)$m->valor;
                 // Inverte: na "em substituição" o título original (mov CR) aparece como DB
                 // e o título gerado (mov DB) aparece como CR para o cliente
                 $opM = $valorM < 0 ? 'DB' : 'CR';

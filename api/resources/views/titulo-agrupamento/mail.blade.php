@@ -71,7 +71,7 @@ $tits = collect($ta->TituloS->sortBy('vencimento')->sortBy('numero')->all());
 
                     </td>
                     <td>
-                        {{ formataNumero($tit->debito) }}
+                        {{ formataNumero($tit->valor) }}
                     </td>
                 </tr>
             @endforeach
@@ -83,7 +83,7 @@ $tits = collect($ta->TituloS->sortBy('vencimento')->sortBy('numero')->all());
                         Total
                     </th>
                     <th>
-                        {{ formataNumero($tits->sum('debito')) }}
+                        {{ formataNumero($tits->sum('valor')) }}
                     </th>
                 </tr>
             </tfoot>

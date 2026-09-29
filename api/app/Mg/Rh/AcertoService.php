@@ -6,8 +6,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Mg\Colaborador\ColaboradorCargo;
-use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
+use Mg\Titulo\Titulo;
 
 /**
  * Acerto (Encontro de Contas) — modelo de EVENTOS.
@@ -17,7 +17,7 @@ use Mg\Titulo\MovimentoTituloService;
  * PeriodoColaborador->valortotal e é entregue via eventos (Bee/dinheiro) — sem
  * movimento financeiro. Os vales/adiantamentos (títulos reais a débito) são
  * baixados por movimentos (tblmovimentotitulo tipo 601, sem liquidação,
- * amarrados ao evento). A trigger fntblmovimentotituloaiauad baixa o saldo.
+ * amarrados ao evento). O MovimentoTituloService::lancar baixa o saldo.
  *
  * Nada é excluído: um acerto errado é INATIVADO (estornando seus movimentos) e
  * um novo é criado. Vários eventos por colaborador (parcial: parte folha, parte
@@ -154,8 +154,6 @@ class AcertoService
                 t.numero,
                 t.vencimento,
                 t.saldo,
-                t.debitosaldo,
-                t.creditosaldo,
                 tt.tipotitulo,
                 t.codtipotitulo,
                 CASE
@@ -189,8 +187,6 @@ class AcertoService
                 'numero'               => 'Remuneração Variável',
                 'vencimento'           => null,
                 'saldo'                => -$beneficioRestante,
-                'debitosaldo'          => $beneficioRestante < 0 ? abs($beneficioRestante) : 0,
-                'creditosaldo'         => $beneficioRestante > 0 ? $beneficioRestante : 0,
                 'tipotitulo'           => 'Benefício',
                 'codtipotitulo'        => 0,
                 'sugestao_descontando' => $beneficioRestante < 0 ? abs($beneficioRestante) : 0,
@@ -236,7 +232,7 @@ class AcertoService
         $rubricas   = 0.0;
         $creditos   = 0.0;
         $debitos    = 0.0;
-        $movimentos = []; // [codtitulo, debito, credito]
+        $movimentos = []; // [codtitulo, valor]
 
         foreach ($titulos as $t) {
             $codtitulo   = $t['codtitulo'] ?? null;
@@ -250,14 +246,14 @@ class AcertoService
             }
 
             if ($pagando > 0) {
-                // Título a crédito sendo pago → débito baixa o crédito.
+                // Título a crédito sendo pago → valor positivo baixa o crédito.
                 $creditos    += $pagando;
-                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'debito' => $pagando, 'credito' => null];
+                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'valor' => $pagando];
             }
             if ($descontando > 0) {
-                // Título a débito (vale) sendo descontado → crédito baixa o débito.
+                // Título a débito (vale) sendo descontado → valor negativo baixa o débito.
                 $debitos     += $descontando;
-                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'debito' => null, 'credito' => $descontando];
+                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'valor' => -$descontando];
             }
         }
 
@@ -282,10 +278,8 @@ class AcertoService
             static::criarMovimento(
                 $acerto->codperiodocolaboradoracerto,
                 $m['codtitulo'],
-                $m['debito'],
-                $m['credito'],
-                $dataForm,
-                $agora
+                $m['valor'],
+                $dataForm
             );
         }
 
@@ -297,25 +291,15 @@ class AcertoService
     protected static function criarMovimento(
         int $codperiodocolaboradoracerto,
         int $codtitulo,
-        ?float $debito,
-        ?float $credito,
+        float $valor,
         string $data,
-        Carbon $agora,
         int $tipo = MovimentoTituloService::TIPO_RH
     ): void {
-        $mov = new MovimentoTitulo([
-            'codtipomovimentotitulo'      => $tipo,
-            'codtitulo'                   => $codtitulo,
+        MovimentoTituloService::lancar(Titulo::findOrFail($codtitulo), $tipo, $valor, [
             'codperiodocolaboradoracerto' => $codperiodocolaboradoracerto,
-            'codliquidacaotitulo'         => null,
-            'codportador'                 => null,
-            'debito'                      => $debito,
-            'credito'                     => $credito,
             'historico'                   => 'Acerto RH',
             'transacao'                   => $data,
-            'sistema'                     => $agora,
         ]);
-        $mov->save();
     }
 
     // -------------------------------------------------------------------------
@@ -388,9 +372,8 @@ class AcertoService
      */
     protected static function ajustarBaixas(PeriodoColaboradorAcerto $acerto, bool $ativar): int
     {
-        $agora = Carbon::now();
-        $hoje  = $agora->toDateString();
-        $qtd   = 0;
+        $hoje = Carbon::now()->toDateString();
+        $qtd  = 0;
 
         foreach ($acerto->MovimentoTituloS->groupBy('codtitulo') as $codtitulo => $movs) {
             if (!$codtitulo) {
@@ -399,7 +382,7 @@ class AcertoService
             $original = 0.0;
             $atual    = 0.0;
             foreach ($movs as $m) {
-                $net    = (float) ($m->debito ?? 0) - (float) ($m->credito ?? 0);
+                $net    = (float) $m->valor;
                 $atual += $net;
                 if ((int) $m->codtipomovimentotitulo === MovimentoTituloService::TIPO_RH) {
                     $original += $net;
@@ -415,10 +398,8 @@ class AcertoService
             static::criarMovimento(
                 $acerto->codperiodocolaboradoracerto,
                 (int) $codtitulo,
-                $delta > 0 ? $delta : null,
-                $delta < 0 ? -$delta : null,
+                $delta,
                 $hoje,
-                $agora,
                 MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO
             );
             $qtd++;

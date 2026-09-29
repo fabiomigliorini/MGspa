@@ -14,6 +14,7 @@ use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 
 class PdvNegocioDevolucaoService
 {
@@ -162,23 +163,18 @@ class PdvNegocioDevolucaoService
         $titulo->codfilial = $nfp->Negocio->codfilial;
         $titulo->codtipotitulo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
         $titulo->codcontacontabil = $nfp->Negocio->NaturezaOperacao->codcontacontabil;
-        if ($nfp->Negocio->codoperacao == 2) {
-            $titulo->debito = $negocio->valortotal;
-        } else {
-            $titulo->credito = $negocio->valortotal;
-        }
+        $titulo->valor = ($nfp->Negocio->codoperacao == 2) ? $negocio->valortotal : -$negocio->valortotal;
         $titulo->boleto = false;
         $titulo->codpessoa = $nfp->Negocio->codpessoa;
         $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "-DEV";
         $titulo->emissao = Carbon::now();
         $titulo->transacao = $titulo->emissao;
-        $titulo->sistema = $titulo->emissao;
         $vencimento = Carbon::now()->add('year', 1);
         $titulo->vencimento = $vencimento;
         $titulo->vencimentooriginal = $titulo->vencimento;
         $titulo->gerencial = true;
         $titulo->codportador = Portador::CARTEIRA;
-        $titulo->save();
+        TituloService::implantar($titulo);
 
         // Gera a nota fiscal
         if ($gerarNotaDevolucao) {

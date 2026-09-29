@@ -5,7 +5,6 @@
     $fmtData = fn($d) => $d ? Carbon::parse($d)->format('d/m/Y') : '';
     $fmtCod = fn($c) => '#' . str_pad((string) $c, 8, '0', STR_PAD_LEFT);
 
-    $totalLiq = $totalDB - $totalCR;
     $opTot = $totalLiq < 0 ? 'CR' : 'DB';
 @endphp
 <style>
@@ -203,12 +202,12 @@
             <tbody>
                 @foreach ($liqs as $l)
                     @php
-                        $valor = (float) $l->debito - (float) $l->credito;
+                        $valor = (float) $l->valor;
                         $op = $valor < 0 ? 'CR' : 'DB';
                         $opLow = strtolower($op);
                         $clsEst = $l->estornado ? ' estornada' : '';
                         $movs = collect($l->MovimentoTituloS)
-                            ->filter(fn($m) => !optional($m->TipoMovimentoTitulo)->estorno && $m->Titulo)
+                            ->filter(fn($m) => !$m->ehEstorno() && $m->Titulo)
                             ->values();
                     @endphp
 
@@ -239,7 +238,7 @@
                         @endphp
                         @foreach ($movs as $m)
                             @php
-                                $valM = (float) $m->debito - (float) $m->credito;
+                                $valM = (float) $m->valor;
                                 $opM = $valM < 0 ? 'CR' : 'DB';
                                 $opMLow = strtolower($opM);
                                 $sameTitulo = $m->codtitulo === $lastCodTitulo;

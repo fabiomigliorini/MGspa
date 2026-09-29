@@ -34,7 +34,7 @@
     }
 
     // Titulos a credito pagos neste acerto (movimentos de debito). Raro no RH; agrupar
-    // por titulo com o liquido debito - credito neutraliza ajustes de toggle (930).
+    // por titulo com o valor liquido neutraliza ajustes de toggle (930).
     if ((float) $ev->creditos > 0) {
         $resumoCred = [];
         foreach ($ev->MovimentoTituloS as $mov) {
@@ -42,7 +42,7 @@
             if (!isset($resumoCred[$ct])) {
                 $resumoCred[$ct] = ['titulo' => $mov->Titulo, 'valor' => 0];
             }
-            $resumoCred[$ct]['valor'] += ($mov->debito ?? 0) - ($mov->credito ?? 0);
+            $resumoCred[$ct]['valor'] += (float) $mov->valor;
         }
         foreach ($resumoCred as $r) {
             if (round($r['valor'], 2) > 0) {

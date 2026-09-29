@@ -42,7 +42,7 @@ class LiquidacaoTituloRelatorioService
                 'Pessoa:codpessoa,fantasia',
                 'Portador:codportador,portador',
                 'UsuarioCriacao:codusuario,usuario',
-                'MovimentoTituloS.TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo,estorno',
+                'MovimentoTituloS.TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo',
                 'MovimentoTituloS.Titulo:codtitulo,codpessoa,numero,vencimento',
                 'MovimentoTituloS.Titulo.Pessoa:codpessoa,fantasia',
             ])
@@ -101,13 +101,8 @@ class LiquidacaoTituloRelatorioService
 
         $liqs = $q->get();
 
-        $totalDB = 0.0;
-        $totalCR = 0.0;
-        foreach ($liqs as $l) {
-            $totalDB += (float)$l->debito;
-            $totalCR += (float)$l->credito;
-        }
+        $totalLiq = (float)$liqs->sum('valor');
 
-        return view('liquidacao-titulo.relatorio', compact('liqs', 'totalDB', 'totalCR'))->render();
+        return view('liquidacao-titulo.relatorio', compact('liqs', 'totalLiq'))->render();
     }
 }

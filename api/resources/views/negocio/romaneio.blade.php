@@ -247,11 +247,7 @@
                 @endif
                 <p style="font-size: larger; text-align:justify">
                     Pagarei em <b>{{ formataData($titulo->vencimento, 'd/m/Y') }}</b>
-                    @if (!empty($titulo->debito))
-                        R$ <b>{{ formataNumero($titulo->debito) }}</b>
-                    @else
-                        R$ <b>{{ formataNumero($titulo->credito) }}</b>
-                    @endif
+                    R$ <b>{{ formataNumero(abs($titulo->valor)) }}</b>
                     <br>
                 </p>
                 @if ($loop->last)

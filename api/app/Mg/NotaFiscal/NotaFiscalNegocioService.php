@@ -320,7 +320,7 @@ class NotaFiscalNegocioService
                     $duplicata = new NotaFiscalDuplicatas([
                         'codnotafiscal' => $nota->codnotafiscal,
                         'fatura' => $titulo->numero,
-                        'valor' => abs($titulo->credito + $titulo->debito),
+                        'valor' => abs($titulo->valor),
                         'vencimento' => $titulo->vencimento,
                     ]);
                     $duplicata->save();
@@ -482,9 +482,9 @@ class NotaFiscalNegocioService
             foreach ($forma->Titulos as $titulo) {
                 $duplicatas[] = [
                     'fatura' => $titulo->numero,
-                    'valor' => round(abs($titulo->credito + $titulo->debito) * $proporcao, 2),
+                    'valor' => round(abs($titulo->valor) * $proporcao, 2),
                     'vencimento' => $titulo->vencimento,
-                    'cheio' => abs($titulo->credito + $titulo->debito),
+                    'cheio' => abs($titulo->valor),
                 ];
             }
         }

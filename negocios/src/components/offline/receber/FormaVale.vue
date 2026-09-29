@@ -26,7 +26,10 @@ const codigoLido = !!sNegocio.receber.codtituloVale
 
 const valor = computed(() => sNegocio.receber.valor)
 
-const saldoVale = computed(() => (titulo.value ? parseFloat(titulo.value.creditosaldo) : null))
+// o vale é um título a pagar: o saldo vem negativo
+const saldoVale = computed(() =>
+  titulo.value ? Math.max(-1 * parseFloat(titulo.value.saldo), 0) : null,
+)
 
 // teto do utilizado: o que o vale tem e o que falta receber
 const maximo = computed(() => {

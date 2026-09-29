@@ -8,12 +8,10 @@ class TituloListaResource extends Resource
 {
     public function toArray($request)
     {
-        $debito = (float)$this->debito;
-        $credito = (float)$this->credito;
         $saldo = (float)$this->saldo;
-        $valor = $debito - $credito;
+        $valor = (float)$this->valor;
         $operacao = ($valor < 0) ? 'CR' : 'DB';
-        $operacaosaldo = ($saldo < 0 || $credito > $debito) ? 'CR' : 'DB';
+        $operacaosaldo = $this->ehReceber() ? 'DB' : 'CR';
 
         return [
             'codtitulo'        => (int)$this->codtitulo,
@@ -41,8 +39,6 @@ class TituloListaResource extends Resource
             'gerencial'        => (bool)$this->gerencial,
             'boleto'           => (bool)$this->boleto,
             'nossonumero'      => $this->nossonumero,
-            'debito'           => $debito,
-            'credito'          => $credito,
             'saldo'            => $saldo,
             'valor'            => $valor,
             'operacao'         => $operacao,

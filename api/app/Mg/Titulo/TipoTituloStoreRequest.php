@@ -16,11 +16,10 @@ class TipoTituloStoreRequest extends FormRequest
         return [
             'tipotitulo' => 'required|string|max:20',
             'observacoes' => 'nullable|string|max:255',
-            'codtipomovimentotitulo' => 'nullable|integer|exists:tbltipomovimentotitulo,codtipomovimentotitulo',
+            'natureza' => 'required|in:R,P',
+            'movimentaportador' => 'boolean',
             'pagar' => 'boolean',
             'receber' => 'boolean',
-            'debito' => 'boolean',
-            'credito' => 'boolean',
         ];
     }
 }

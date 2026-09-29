@@ -68,7 +68,7 @@ const filtros = ref({
   codpessoa: props.codpessoaInicial,
   vencimento_de: null,
   vencimento_ate: null,
-  credito: null,
+  natureza: null,
   codtipotitulo: null,
   codcontacontabil: null,
   codportador: null,
@@ -83,8 +83,8 @@ watch(
 
 const operacaoOptions = [
   { label: 'Todos', value: null },
-  { label: 'CR', value: 1 },
-  { label: 'DB', value: 2 },
+  { label: 'CR', value: 'P' },
+  { label: 'DB', value: 'R' },
 ]
 
 // === Estado da listagem ===
@@ -162,7 +162,7 @@ async function buscar() {
       codfilial: filtros.value.codfilial,
       vencimento_de: filtros.value.vencimento_de,
       vencimento_ate: filtros.value.vencimento_ate,
-      credito: filtros.value.credito,
+      natureza: filtros.value.natureza,
       codtipotitulo: filtros.value.codtipotitulo,
       codcontacontabil: filtros.value.codcontacontabil,
       codportador: filtros.value.codportador,
@@ -389,7 +389,7 @@ function classeVencimento(t) {
           <div class="col-xs-4 col-sm-2">
             <q-select
               class="text-caption"
-              v-model="filtros.credito"
+              v-model="filtros.natureza"
               :options="operacaoOptions"
               emit-value
               map-options

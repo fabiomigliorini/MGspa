@@ -9,7 +9,6 @@ namespace Mg\Titulo;
 use Mg\MgModel;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Titulo\Titulo;
-use Mg\Titulo\TipoMovimentoTitulo;
 use Mg\Usuario\Usuario;
 
 class TipoTitulo extends MgModel
@@ -18,11 +17,14 @@ class TipoTitulo extends MgModel
     protected $primaryKey = 'codtipotitulo';
 
 
+    // o sinal com que o título nasce: a receber é positivo, a pagar é negativo
+    const NATUREZA_RECEBER = 'R';
+    const NATUREZA_PAGAR = 'P';
+
     protected $fillable = [
-        'codtipomovimentotitulo',
-        'credito',
-        'debito',
         'inativo',
+        'movimentaportador',
+        'natureza',
         'observacoes',
         'pagar',
         'receber',
@@ -31,25 +33,24 @@ class TipoTitulo extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'codtipomovimentotitulo' => 'integer',
         'codtipotitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'credito' => 'boolean',
         'criacao' => 'datetime',
-        'debito' => 'boolean',
         'inativo' => 'datetime',
+        'movimentaportador' => 'boolean',
         'pagar' => 'boolean',
         'receber' => 'boolean'
     ];
 
 
-    // Chaves Estrangeiras
-    public function TipoMovimentoTitulo()
+    public function ehReceber(): bool
     {
-        return $this->belongsTo(TipoMovimentoTitulo::class, 'codtipomovimentotitulo', 'codtipomovimentotitulo');
+        return $this->natureza === self::NATUREZA_RECEBER;
     }
 
+
+    // Chaves Estrangeiras
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');

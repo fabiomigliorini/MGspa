@@ -40,12 +40,12 @@ class TituloAbertosFechamentoService
         if (!empty($filtros['vencimento_ate'])) {
             $q->where('tbltitulo.vencimento', '<=', Carbon::parse($filtros['vencimento_ate'])->format('Y-m-d'));
         }
-        if (!empty($filtros['credito'])) {
-            // 1 = crédito, 2 = débito (mesmo padrão do TituloListagemService)
-            if ((int)$filtros['credito'] === 1) {
-                $q->where('tbltitulo.credito', '>', 0);
-            } elseif ((int)$filtros['credito'] === 2) {
-                $q->where('tbltitulo.debito', '>', 0);
+        if (!empty($filtros['natureza'])) {
+            // R = a receber, P = a pagar (mesmo padrão do TituloListagemService)
+            if ($filtros['natureza'] === 'R') {
+                $q->where('tbltitulo.valor', '>', 0);
+            } elseif ($filtros['natureza'] === 'P') {
+                $q->where('tbltitulo.valor', '<', 0);
             }
         }
         if (!empty($filtros['codtipotitulo'])) {
@@ -63,10 +63,8 @@ class TituloAbertosFechamentoService
         $titulos = $q->limit(200)->get();
 
         return $titulos->map(function ($t) {
-            $debito = (float)$t->debito;
-            $credito = (float)$t->credito;
             $saldo = (float)$t->saldo;
-            $operacao = ($saldo < 0 || $credito > $debito) ? 'CR' : 'DB';
+            $operacao = $t->ehReceber() ? 'DB' : 'CR';
             return [
                 'codtitulo'   => (int)$t->codtitulo,
                 'numero'      => $t->numero,

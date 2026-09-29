@@ -94,11 +94,11 @@ class TituloAgrupamentoService
             },
             'MovimentoTituloS' => function ($q) {
                 $q->orderBy('codmovimentotitulo')->with([
-                    'Titulo:codtitulo,codpessoa,codfilial,numero,vencimento,fatura,nossonumero,boleto,gerencial,codtituloagrupamento,codportador',
+                    'Titulo:codtitulo,codpessoa,codfilial,numero,vencimento,fatura,nossonumero,boleto,gerencial,codtituloagrupamento,codportador,valor,saldo',
                     'Titulo.Pessoa:codpessoa,fantasia',
                     'Titulo.Filial:codfilial,filial',
                     'Titulo.Portador:codportador,portador',
-                    'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo,estorno',
+                    'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo',
                 ]);
             },
         ])->findOrFail($id);
@@ -133,10 +133,10 @@ class TituloAgrupamentoService
             if (!empty($titulo->fatura)) $faturas[] = $titulo->fatura;
 
             $total = (float)$t['total'];
-            if (MovimentoTituloHelper::operacao($titulo) === 'CR') {
-                $totalTitulos -= $total;
-            } else {
+            if ($titulo->ehReceber()) {
                 $totalTitulos += $total;
+            } else {
+                $totalTitulos -= $total;
             }
         }
 
@@ -151,15 +151,11 @@ class TituloAgrupamentoService
             );
         }
 
-        $debitoTotal = max($totalTitulos, 0);
-        $creditoTotal = max(-$totalTitulos, 0);
-
         $ag = new TituloAgrupamento([
             'codpessoa'  => $codpessoa,
             'emissao'    => $emissao,
             'observacao' => $dados['observacao'] ?? null,
-            'debito'     => $debitoTotal,
-            'credito'    => $creditoTotal,
+            'valor'      => $totalTitulos,
         ]);
         $ag->save();
 
@@ -219,15 +215,8 @@ class TituloAgrupamentoService
                 'boleto'               => $boleto,
             ]);
 
-            if ($codtipotitulo === self::TIPOTITULO_AGRUPAMENTO_CREDITO) {
-                $novo->credito = $valor;
-                $novo->debito  = 0;
-            } else {
-                $novo->credito = 0;
-                $novo->debito  = $valor;
-            }
-            $novo->sistema = Carbon::now()->format('Y-m-d H:i:s');
-            $novo->save();
+            $novo->valor = $codtipotitulo === self::TIPOTITULO_AGRUPAMENTO_CREDITO ? -$valor : $valor;
+            TituloService::implantar($novo);
         }
 
         return self::carregar($ag->codtituloagrupamento);
@@ -283,7 +272,7 @@ class TituloAgrupamentoService
 
         // estorna todos os movimentos vinculados
         foreach ($ag->MovimentoTituloS as $mov) {
-            if (optional($mov->TipoMovimentoTitulo)->estorno) continue;
+            if ($mov->ehEstorno()) continue;
             MovimentoTituloService::estornar($mov);
         }
 
@@ -355,7 +344,7 @@ class TituloAgrupamentoService
 
         // duplicatas a partir dos títulos gerados pelo agrupamento
         foreach ($ag->TituloS as $tit) {
-            $valor = abs((float)$tit->credito - (float)$tit->debito);
+            $valor = abs((float)$tit->valor);
             $dupl = new NotaFiscalDuplicatas([
                 'codnotafiscal' => $nota->codnotafiscal,
                 'fatura'        => $tit->numero,

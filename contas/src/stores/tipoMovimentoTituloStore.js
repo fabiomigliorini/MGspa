@@ -3,18 +3,9 @@ import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
-const FLAGS = ['implantacao', 'ajuste', 'armotizacao', 'juros', 'desconto', 'pagamento', 'estorno']
-
 const defaultFilters = () => ({
   codtipomovimentotitulo: null,
   tipomovimentotitulo: null,
-  implantacao: null,
-  ajuste: null,
-  armotizacao: null,
-  juros: null,
-  desconto: null,
-  pagamento: null,
-  estorno: null,
   inativo: false,
 })
 
@@ -33,7 +24,6 @@ export const useTipoMovimentoTituloStore = defineStore(
       let count = 0
       if (f.codtipomovimentotitulo) count++
       if (f.tipomovimentotitulo) count++
-      for (const flag of FLAGS) if (f[flag] !== null) count++
       if (f.inativo !== false) count++
       return count
     })

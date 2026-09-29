@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 use Mg\Titulo\TituloNfeTerceiro;
 
 class NfeTerceiroIcmsStService
@@ -91,7 +92,7 @@ class NfeTerceiroIcmsStService
         }
 
         $guias = DB::select('
-            select t.codtitulo, t.numero, t.emissao, t.vencimento, t.credito, t.creditosaldo,
+            select t.codtitulo, t.numero, t.emissao, t.vencimento, t.valor, t.saldo,
                    tnft.codtitulonfeterceiro
             from tbltitulonfeterceiro tnft
             inner join tbltitulo t on (t.codtitulo = tnft.codtitulo)
@@ -276,15 +277,14 @@ class NfeTerceiroIcmsStService
         $titulo->codtipotitulo = 928; // Boleto a Pagar
         $titulo->codpessoa = 3899; // SEFAZ
         $titulo->codcontacontabil = 147; // ICMS ST
-        $titulo->credito = $valor;
+        $titulo->valor = -1 * $valor;
         $titulo->numero = "ICMS ST {$codtitulo}";
         $titulo->emissao = Carbon::now();
         $titulo->transacao = $titulo->emissao;
-        $titulo->sistema = $titulo->emissao; // NOT NULL no schema; legado preenche via beforeSave (sistema = criacao)
         $titulo->vencimento = $vencimentoCarbon;
         $titulo->vencimentooriginal = $vencimentoCarbon;
         $titulo->observacao = "ICMS ST NFe {$nft->numero} - {$nft->Pessoa->fantasia}\n{$nft->nfechave}";
-        $titulo->save();
+        TituloService::implantar($titulo);
 
         // Salva PDF
         $arquivo = "{$path}/{$nft->nfechave}-{$codtitulo}.pdf";

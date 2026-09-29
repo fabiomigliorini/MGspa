@@ -13,7 +13,7 @@ class SelectTipoTituloController extends Controller
         $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
 
         $sql = '
-            select codtipotitulo, tipotitulo, inativo, codtipotitulo as value, tipotitulo as label
+            select codtipotitulo, tipotitulo, natureza, inativo, codtipotitulo as value, tipotitulo as label
             from tbltipotitulo
             where (tipotitulo ilike :busca)
         ';
@@ -28,7 +28,7 @@ class SelectTipoTituloController extends Controller
     public static function show($id)
     {
         $sql = '
-            select codtipotitulo, tipotitulo, inativo, codtipotitulo as value, tipotitulo as label
+            select codtipotitulo, tipotitulo, natureza, inativo, codtipotitulo as value, tipotitulo as label
             from tbltipotitulo
             where codtipotitulo = :id
             limit 1

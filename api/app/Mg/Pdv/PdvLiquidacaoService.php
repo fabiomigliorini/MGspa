@@ -56,19 +56,14 @@ class PdvLiquidacaoService
 
         $filtros['tipo'] = $filtros['tipo'] ?? '';
 
-        if ($filtros['tipo'] == 'CR') {
+        // CR = recebeu (valor negativo); DB = pagou (valor positivo)
+        if (in_array($filtros['tipo'], ['CR', 'DB'])) {
+            $qry->where('valor', ($filtros['tipo'] == 'CR') ? '<' : '>', 0);
             if ($filtros['valor_de'] > 0) {
-                $qry->where('credito', '>=', $filtros['valor_de']);
+                $qry->whereRaw('abs(valor) >= ?', [$filtros['valor_de']]);
             }
             if ($filtros['valor_ate'] > 0) {
-                $qry->where('credito', '<=', $filtros['valor_ate']);
-            }
-        } elseif ($filtros['tipo'] == 'DB') {
-            if ($filtros['valor_de'] > 0) {
-                $qry->where('debito', '>=', $filtros['valor_de']);
-            }
-            if ($filtros['valor_ate'] > 0) {
-                $qry->where('debito', '<=', $filtros['valor_ate']);
+                $qry->whereRaw('abs(valor) <= ?', [$filtros['valor_ate']]);
             }
         }
         $qry->orderBy('transacao', 'desc')->orderBy('criacao', 'desc')->orderBy('codliquidacaotitulo', 'desc');

@@ -243,7 +243,7 @@ watch(() => route.fullPath, carregar)
                   <q-tooltip>Recibo</q-tooltip>
                 </q-btn>
                 <q-btn
-                  v-if="!estornado && liq.credito > 0"
+                  v-if="!estornado && liq.recebimento"
                   flat
                   round
                   dense
@@ -255,7 +255,7 @@ watch(() => route.fullPath, carregar)
                   <q-tooltip>Recibo Recebimento</q-tooltip>
                 </q-btn>
                 <q-btn
-                  v-if="!estornado && liq.debito > 0"
+                  v-if="!estornado && liq.pagamento"
                   flat
                   round
                   dense

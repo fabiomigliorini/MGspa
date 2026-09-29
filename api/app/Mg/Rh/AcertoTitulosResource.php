@@ -16,8 +16,6 @@ class AcertoTitulosResource extends JsonResource
                 'numero'               => $t->numero,
                 'vencimento'           => $t->vencimento,
                 'saldo'                => (float) $t->saldo,
-                'debitosaldo'          => (float) $t->debitosaldo,
-                'creditosaldo'         => (float) $t->creditosaldo,
                 'tipotitulo'           => $t->tipotitulo,
                 'codtipotitulo'        => (int) $t->codtipotitulo,
                 'sugestao_descontando' => (float) $t->sugestao_descontando,

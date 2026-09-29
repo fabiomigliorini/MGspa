@@ -17,6 +17,8 @@ class LiquidacaoTituloResource extends Resource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
+        // o total é um só, com sinal: valor
+        unset($ret['debito'], $ret['credito']);
         $ret['portador'] = $this->Portador->portador??null;
         $ret['fantasia'] = $this->Pessoa->fantasia;
         $ret['usuario'] = $this->usuariocriacao;

@@ -47,23 +47,37 @@ class TituloService
             self::aplicarSufixoNumero($titulo);
         }
 
-        // débito/crédito conforme tipotitulo
-        if ($tipoTitulo->credito) {
-            $titulo->credito = $valor;
-            $titulo->debito = 0;
-        } else {
-            $titulo->credito = 0;
-            $titulo->debito = $valor;
-        }
-
-        $titulo->sistema = Carbon::now();
+        // sinal conforme a natureza do tipo: a pagar é negativo
+        $titulo->valor = $tipoTitulo->ehReceber() ? $valor : -$valor;
 
         // valida unicidade do numero por pessoa
         self::validarNumeroUnico($titulo);
 
-        $titulo->save();
+        self::implantar($titulo);
 
         return self::carregar($titulo->codtitulo);
+    }
+
+    /**
+     * Grava um título novo e lança a implantação dele. Todo título nasce por
+     * aqui: quem monta o Titulo na mão chama isto no lugar do save().
+     */
+    public static function implantar(Titulo $titulo): Titulo
+    {
+        $titulo->save();
+
+        MovimentoTituloService::lancar(
+            $titulo,
+            MovimentoTituloService::TIPO_IMPLANTACAO,
+            (float) $titulo->valor,
+            [
+                'codportador'          => $titulo->codportador,
+                'codtituloagrupamento' => $titulo->codtituloagrupamento,
+                'transacao'            => $titulo->transacao,
+            ]
+        );
+
+        return $titulo;
     }
 
     public static function atualizar(Titulo $titulo, array $dados): Titulo
@@ -74,21 +88,19 @@ class TituloService
         $zerado = (float)$titulo->saldo == 0 && !empty($titulo->codtitulo);
 
         // valor: bloqueado se gerado auto ou já zerado
-        $valorNovo = (float)($dados['valor'] ?? abs((float)$titulo->debito - (float)$titulo->credito));
+        $valorAntigo = (float)$titulo->valor;
+        $valorNovo = (float)($dados['valor'] ?? abs($valorAntigo));
         if (!$geradoAuto && !$zerado) {
             if ($valorNovo <= 0) {
                 throw new \InvalidArgumentException('Valor deve ser maior que zero!');
             }
         }
 
-        // não pode trocar tipo entre crédito e débito
+        // não pode trocar o tipo por um de outra natureza: viraria o sinal do título
         if ((int)$dados['codtipotitulo'] !== (int)$titulo->codtipotitulo) {
             $antigo = TipoTitulo::find($titulo->codtipotitulo);
-            if ($antigo && (
-                (bool)$antigo->credito !== (bool)$tipoTitulo->credito ||
-                (bool)$antigo->debito !== (bool)$tipoTitulo->debito
-            )) {
-                throw new \InvalidArgumentException('Impossível alterar o tipo de título entre Débito e Crédito!');
+            if ($antigo && $antigo->natureza !== $tipoTitulo->natureza) {
+                throw new \InvalidArgumentException('Impossível alterar o tipo de título entre A Receber e A Pagar!');
             }
         }
 
@@ -119,13 +131,7 @@ class TituloService
 
         // valor: travado se gerado automaticamente ou já zerado
         if (!$geradoAuto && !$zerado) {
-            if ($tipoTitulo->credito) {
-                $titulo->credito = $valorNovo;
-                $titulo->debito = 0;
-            } else {
-                $titulo->credito = 0;
-                $titulo->debito = $valorNovo;
-            }
+            $titulo->valor = $tipoTitulo->ehReceber() ? $valorNovo : -$valorNovo;
         }
 
         // portador: sempre aceita o que vem do request.
@@ -138,6 +144,17 @@ class TituloService
 
         $titulo->save();
 
+        // mudou o valor: a diferença entra como ajuste
+        $diferenca = round((float)$titulo->valor - $valorAntigo, 2);
+        if ($diferenca != 0) {
+            MovimentoTituloService::lancar(
+                $titulo,
+                MovimentoTituloService::TIPO_AJUSTE,
+                $diferenca,
+                ['codportador' => $titulo->codportador]
+            );
+        }
+
         return self::carregar($titulo->codtitulo);
     }
 
@@ -147,14 +164,14 @@ class TituloService
             'Pessoa:codpessoa,fantasia,pessoa,cnpj,fisica',
             'Filial:codfilial,filial',
             'Portador:codportador,portador,codbanco,codfilial',
-            'TipoTitulo:codtipotitulo,tipotitulo,credito,debito,pagar,receber',
+            'TipoTitulo:codtipotitulo,tipotitulo,natureza,pagar,receber',
             'ContaContabil:codcontacontabil,contacontabil',
             'UsuarioCriacao:codusuario,usuario',
             'UsuarioAlteracao:codusuario,usuario',
             'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
             'TituloAgrupamento:codtituloagrupamento,emissao',
             'MovimentoTituloS' => function ($q) {
-                $q->orderBy('criacao')->orderBy('sistema')->orderBy('codmovimentotitulo')
+                $q->orderBy('criacao')->orderBy('codmovimentotitulo')
                     ->with([
                         'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo',
                         'Portador:codportador,portador',
@@ -177,21 +194,22 @@ class TituloService
         }
 
         // só pode estornar título não movimentado
-        if (round((float)$titulo->debito - (float)$titulo->credito, 2) != round((float)$titulo->saldo, 2)) {
+        if (round((float)$titulo->valor, 2) != round((float)$titulo->saldo, 2)) {
             throw new \Exception("Impossível estornar um título movimentado!", 1);
         }
 
-        $mov = new MovimentoTitulo([
-            'codtitulo' => $titulo->codtitulo,
-            'codtipomovimentotitulo' => MovimentoTituloService::TIPO_ESTORNO_IMPLANTACAO,
-            'debito' => $titulo->creditosaldo,
-            'credito' => $titulo->debitosaldo,
-            'transacao' => date('Y-m-d'),
-            'codtituloagrupamento' => $titulo->codtituloagrupamento,
-            'codportador' => $titulo->codportador,
-            'sistema' => date('Y-m-d H:i:s'),
-        ]);
-        $mov->save();
+        $implantacao = $titulo->MovimentoTituloS()->orderBy('codmovimentotitulo')->first();
+
+        MovimentoTituloService::lancar(
+            $titulo,
+            MovimentoTituloService::TIPO_ESTORNO_IMPLANTACAO,
+            -1 * (float)$titulo->saldo,
+            [
+                'codmovimentotituloestorno' => optional($implantacao)->codmovimentotitulo,
+                'codtituloagrupamento'      => $titulo->codtituloagrupamento,
+                'codportador'               => $titulo->codportador,
+            ]
+        );
         return self::carregar($titulo->codtitulo);
     }
 

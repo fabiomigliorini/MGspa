@@ -22,6 +22,7 @@ use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 use Mg\Titulo\TituloNfeTerceiro;
 
 class NfeTerceiroImportarService
@@ -196,21 +197,16 @@ class NfeTerceiroImportarService
                     $titulo->codpessoa = $nft->codpessoa;
                     $titulo->codportador = Portador::CARTEIRA;
 
-                    if ($natOp->codoperacao == Operacao::SAIDA) {
-                        $titulo->debito = $valor;
-                    } else {
-                        $titulo->credito = $valor;
-                    }
+                    $titulo->valor = ($natOp->codoperacao == Operacao::SAIDA) ? $valor : -$valor;
 
                     $titulo->numero = 'T' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT) . "-{$i}/{$parcelas}";
                     $titulo->fatura = str_pad($nft->numero, 8, '0', STR_PAD_LEFT) . "-{$i}/{$parcelas}";
                     $titulo->emissao = Carbon::now();
                     $titulo->transacao = $titulo->emissao;
-                    $titulo->sistema = $titulo->emissao;
                     $titulo->vencimento = $dup->dvenc;
                     $titulo->vencimentooriginal = $dup->dvenc;
                     $titulo->gerencial = true;
-                    $titulo->save();
+                    TituloService::implantar($titulo);
 
                     // Vincula título à duplicata da NFe Terceiro
                     $dup->codtitulo = $titulo->codtitulo;
@@ -238,20 +234,15 @@ class NfeTerceiroImportarService
                     $tituloSld->codpessoa = $nft->codpessoa;
                     $tituloSld->codportador = Portador::CARTEIRA;
 
-                    if ($natOp->codoperacao == Operacao::SAIDA) {
-                        $tituloSld->debito = $diferenca;
-                    } else {
-                        $tituloSld->credito = $diferenca;
-                    }
+                    $tituloSld->valor = ($natOp->codoperacao == Operacao::SAIDA) ? $diferenca : -$diferenca;
 
                     $tituloSld->numero = 'T' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT) . "-SLD";
                     $tituloSld->emissao = Carbon::now();
                     $tituloSld->transacao = $tituloSld->emissao;
-                    $tituloSld->sistema = $tituloSld->emissao;
                     $tituloSld->vencimento = $nft->entrada;
                     $tituloSld->vencimentooriginal = $nft->entrada;
                     $tituloSld->gerencial = true;
-                    $tituloSld->save();
+                    TituloService::implantar($tituloSld);
                 }
             }
 

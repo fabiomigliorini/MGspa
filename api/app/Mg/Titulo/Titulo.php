@@ -40,12 +40,6 @@ class Titulo extends MgModel
         'codportador',
         'codtipotitulo',
         'codtituloagrupamento',
-        'credito',
-        'creditosaldo',
-        'creditototal',
-        'debito',
-        'debitosaldo',
-        'debitototal',
         'emissao',
         'estornado',
         'fatura',
@@ -55,9 +49,9 @@ class Titulo extends MgModel
         'observacao',
         'remessa',
         'saldo',
-        'sistema',
         'transacao',
         'transacaoliquidacao',
+        'valor',
         'vencimento',
         'vencimentooriginal'
     ];
@@ -75,24 +69,29 @@ class Titulo extends MgModel
         'codtituloagrupamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'credito' => 'float',
-        'creditosaldo' => 'float',
-        'creditototal' => 'float',
         'criacao' => 'datetime',
-        'debito' => 'float',
-        'debitosaldo' => 'float',
-        'debitototal' => 'float',
         'emissao' => 'date',
         'estornado' => 'datetime',
         'gerencial' => 'boolean',
         'remessa' => 'integer',
         'saldo' => 'float',
-        'sistema' => 'datetime',
         'transacao' => 'date',
         'transacaoliquidacao' => 'date',
+        'valor' => 'float',
         'vencimento' => 'date',
         'vencimentooriginal' => 'date'
     ];
+
+
+    /**
+     * Título a receber? Valor e saldo têm sinal: positivo é a receber,
+     * negativo é a pagar. Basta um dos dois negativo para ser a pagar — um
+     * a receber pago a maior vira crédito do cliente.
+     */
+    public function ehReceber(): bool
+    {
+        return !((float) $this->saldo < 0 || (float) $this->valor < 0);
+    }
 
 
     // Chaves Estrangeiras

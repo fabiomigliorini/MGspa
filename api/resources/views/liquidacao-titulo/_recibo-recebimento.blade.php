@@ -22,16 +22,16 @@
         }
         switch ((int) $mov->codtipomovimentotitulo) {
             case MovimentoTituloService::TIPO_JUROS:
-                $resumo[$mov->codtitulo]['juros'] += $mov->debito - $mov->credito;
+                $resumo[$mov->codtitulo]['juros'] += $mov->valor;
                 break;
             case MovimentoTituloService::TIPO_MULTA:
-                $resumo[$mov->codtitulo]['multa'] += $mov->debito - $mov->credito;
+                $resumo[$mov->codtitulo]['multa'] += $mov->valor;
                 break;
             case MovimentoTituloService::TIPO_DESCONTO:
-                $resumo[$mov->codtitulo]['desconto'] += $mov->credito - $mov->debito;
+                $resumo[$mov->codtitulo]['desconto'] -= $mov->valor;
                 break;
             default:
-                $resumo[$mov->codtitulo]['total'] += $mov->credito - $mov->debito;
+                $resumo[$mov->codtitulo]['total'] -= $mov->valor;
                 break;
         }
     }
@@ -42,13 +42,13 @@
 
     $dt = $liq->transacao ?? now();
     $dataExtenso = $cidadeEstado . ', ' . formataDataPorExtenso($dt) . '.';
-    $valorExtenso = formataValorPorExtenso((float) $liq->credito, true);
 
     // Paginacao feita aqui, e nao pelo Dompdf: ele nao quebra tabela aninhada dentro
     // de celula de tabela e descarta as linhas que sobram (FrameDecorator/Page.php:464).
     $linhas = array_values(array_filter($resumo, fn($r) => $r['total'] > 0));
     $qtdeLinhas = count($linhas);
     $totalGeral = array_sum(array_column($linhas, 'total'));
+    $valorExtenso = formataValorPorExtenso((float) $totalGeral, true);
     $linhas[] = ['totalizador' => true];
     // A faixa "RECIBO / Valor / Recebemos de..." so sai na primeira pagina,
     // entao a partir da segunda cabem mais linhas na caixa de 108mm.
@@ -105,7 +105,7 @@
             @if ($numPagina == 1)
                 <div class="recibo-faixa">
                     <div class="titulo-recibo">R E C I B O</div>
-                    <div class="titulo-valor">Valor R$ {{ formataNumero($liq->credito) }}</div>
+                    <div class="titulo-valor">Valor R$ {{ formataNumero($totalGeral) }}</div>
                 </div>
             @endif
 
@@ -149,7 +149,7 @@
                                     <td>{{ $r['titulo']->emissao?->format('d/m/Y') }}</td>
                                     <td>{{ $r['titulo']->vencimento?->format('d/m/Y') }}</td>
                                     <td class="r">
-                                        {{ formataNumero(abs($r['titulo']->debito - $r['titulo']->credito)) }}</td>
+                                        {{ formataNumero(abs($r['titulo']->valor)) }}</td>
                                     <td class="r">{{ formataNumero($r['principal']) }}</td>
                                     <td class="r">{{ formataNumero($r['juros'] + $r['multa']) }}</td>
                                     <td class="r">{{ formataNumero($r['desconto']) }}</td>

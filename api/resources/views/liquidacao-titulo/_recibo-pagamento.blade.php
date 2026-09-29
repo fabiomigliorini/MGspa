@@ -7,12 +7,11 @@
         $cidadeEstado = $filialPessoa->Cidade->cidade . '/' . ($filialPessoa->Cidade->Estado->sigla ?? '');
     }
 
-    // Resumo por título (lado débito — empresa pagando)
+    // Resumo por título. No título a pagar o sinal é o contrário do a receber:
+    // a baixa e o desconto são positivos, juros e multa são negativos. Título a
+    // receber da mesma liquidação fica com total negativo e sai pelo filtro abaixo.
     $resumo = [];
     foreach ($liq->MovimentoTituloS as $mov) {
-        if ($mov->debito <= 0) {
-            continue;
-        }
         if (!isset($resumo[$mov->codtitulo])) {
             $resumo[$mov->codtitulo] = [
                 'titulo' => $mov->Titulo,
@@ -25,16 +24,16 @@
         }
         switch ((int) $mov->codtipomovimentotitulo) {
             case MovimentoTituloService::TIPO_JUROS:
-                $resumo[$mov->codtitulo]['juros'] += $mov->debito;
+                $resumo[$mov->codtitulo]['juros'] -= $mov->valor;
                 break;
             case MovimentoTituloService::TIPO_MULTA:
-                $resumo[$mov->codtitulo]['multa'] += $mov->debito;
+                $resumo[$mov->codtitulo]['multa'] -= $mov->valor;
                 break;
             case MovimentoTituloService::TIPO_DESCONTO:
-                $resumo[$mov->codtitulo]['desconto'] += $mov->credito;
+                $resumo[$mov->codtitulo]['desconto'] += $mov->valor;
                 break;
             default:
-                $resumo[$mov->codtitulo]['total'] += $mov->debito;
+                $resumo[$mov->codtitulo]['total'] += $mov->valor;
                 break;
         }
     }
@@ -43,6 +42,7 @@
     }
     unset($d);
 
+    $resumo = array_filter($resumo, fn($r) => $r['total'] > 0);
     $totalPago = collect($resumo)->sum('total');
 
     $dt = $liq->transacao ?? now();
@@ -193,7 +193,7 @@
                                     <td>{{ $r['titulo']->emissao?->format('d/m/Y') }}</td>
                                     <td>{{ $r['titulo']->vencimento?->format('d/m/Y') }}</td>
                                     <td class="r">
-                                        {{ formataNumero(abs($r['titulo']->debito - $r['titulo']->credito)) }}</td>
+                                        {{ formataNumero(abs($r['titulo']->valor)) }}</td>
                                     <td class="r">{{ formataNumero($r['principal']) }}</td>
                                     <td class="r">{{ formataNumero($r['juros'] + $r['multa']) }}</td>
                                     <td class="r">{{ formataNumero($r['desconto']) }}</td>

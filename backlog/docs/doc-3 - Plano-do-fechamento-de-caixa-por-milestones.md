@@ -182,7 +182,9 @@ filtros `debito_de/credito_de/saldo_de/credito=1|2` são contrato com o contas. 
 ### M0.1 — `valor`/`saldo` com sinal, sem triggers
 - **DDL `api/database/titulo_valor.sql`**: `tbltitulo.valor` e `tblmovimentotitulo.valor`
   numeric(14,2) com backfill `debito − credito`; `tblmovimentotitulo.codmovimentotituloestorno`
-  (auto-FK). Colunas antigas ficam nesta fase.
+  (auto-FK); `tbltituloagrupamento.valor` e `tblliquidacaotitulo.valor` (total do agrupamento e
+  total líquido da liquidação, mesmo backfill; a liquidação não guarda recebido e pago separados —
+  qual recibo oferecer sai dos movimentos). Colunas antigas ficam nesta fase.
 - **Backend**: um escritor só, `MovimentoTituloService::lancar(Titulo, int $tipo, float $valor,
   array $vinculos)` — grava `valor` **e** debito/credito (dual-write), recalcula `saldo`, `estornado`,
   `transacaoliquidacao` do título e o total da liquidação/agrupamento; `estornar()` grava o mesmo
@@ -194,7 +196,13 @@ filtros `debito_de/credito_de/saldo_de/credito=1|2` são contrato com o contas. 
   dual-write. Conferência: `sum(valor) = sum(debito − credito)` por título, pessoa e portador.
 - **Leitores**: ~41 PHP, 15 blades, 18 Vue migram para `valor`/`saldo`/`ehReceber`; filtros da API
   `valor_de`/`natureza`; `TituloResource` deixa de despejar colunas cruas; `FormaVale.vue` lê `saldo`.
-- **Limpeza**: derrubar colunas antigas e views (após confirmar que nada vivo lê).
+- **Limpeza**: derrubar colunas antigas e views (após confirmar que nada vivo lê). Feita em
+  título, movimento e agrupamento. **Ficam `debito`/`credito` da liquidação**: o "Totais de Caixa"
+  do MGLara soma as duas colunas; saem quando essa tela sair (M2). No MGsis só a NFe de Terceiros
+  está viva: os models `Titulo` e `MovimentoTitulo` de lá foram ajustados e sobem junto.
+- **Coluna `sistema`**: sai de título, movimento e liquidação (era a data de gravação do sistema
+  antigo; `criacao`/`alteracao` já guardam isso). `criacao` em branco recebe o valor de `sistema`
+  antes de a coluna cair.
 - **Valida**: contas → Títulos (novo/editar/estornar, filtros), Liquidações (nova/estornar/recibos),
   Agrupamentos, Boletos (retorno BB e Bradesco), Cheques; pessoas → RH acerto; negocios → venda a
   prazo, PIX a receber, entrega, vale (emitir e usar), devolução, cancelamento; PDFs.
@@ -206,6 +214,11 @@ filtros `debito_de/credito_de/saldo_de/credito=1|2` são contrato com o contas. 
   false`, para o M6), `inativo` nos 24 tipos sem uso; tipos de movimento 610/910/920/992/993
   inativados e os 7 flags removidos; `codtipomovimentotitulo` do tipo de título deixa de existir
   (implantação é sempre 100).
+- **Como ficou**: `natureza` é o sinal (o que os flags `debito`/`credito` diziam, que saíram);
+  `pagar`/`receber` ficam, porque são a carteira (cliente/fornecedor) e alimentam o filtro
+  "Pagar / Receber". Inativados 23 tipos, não 24: o 946 Remessa Armazenagem fica ativo porque a
+  natureza 72 aponta para ele com financeiro ligado. Os 364 movimentos sem tipo (Rubrica RH) não
+  foram alterados.
 - **Backend/front**: `TituloService::criar` usa `natureza` para o sinal; CRUDs `contas/pages/
   tipoTitulo`, `tipoMovimentoTitulo`, `MgSelectTipoTitulo/TipoMovimentoTitulo`, requests e resources
   refletem as colunas novas; corrigir os bugs de passagem.

@@ -69,7 +69,7 @@ class BoletoBbService
     {
         // Boleto só faz sentido para título a receber com saldo positivo.
         // Sem isso o BB rejeita com mensagem confusa de "desconto + abatimento >= valor".
-        if ($titulo->debitosaldo <= 0) {
+        if ($titulo->saldo <= 0) {
             throw new \Exception('Boleto só pode ser emitido para título a receber com saldo positivo!');
         }
 
@@ -342,93 +342,40 @@ class BoletoBbService
         if ($tituloBoleto->valoroutro > 0) { }
         */
 
+        $titulo = Titulo::findOrFail($tituloBoleto->codtitulo);
+        $vinculos = [
+            'codtituloboleto' => $tituloBoleto->codtituloboleto,
+            'codportador' => $tituloBoleto->codportador,
+            'transacao' => $tituloBoleto->datarecebimento,
+        ];
+
+        // valor de cada movimento, com sinal: ajuste, juros e multa aumentam
+        // o titulo; desconto e pagamento diminuem
+        $lancamentos = [
+            MovimentoTituloService::TIPO_AJUSTE => (float) $tituloBoleto->valoroutro,
+            MovimentoTituloService::TIPO_JUROS => (float) $tituloBoleto->valorjuromora,
+            MovimentoTituloService::TIPO_MULTA => (float) $tituloBoleto->valormulta,
+            MovimentoTituloService::TIPO_DESCONTO => -1 * (float) $tituloBoleto->valordesconto,
+            MovimentoTituloService::TIPO_LIQUIDACAO => -1 * (float) $tituloBoleto->valorpago,
+        ];
+
         // acumula cod dos movimentos gerados
         $codmovimentotitulos = [];
-
-        // lanca outros como ajuste
-        if ($tituloBoleto->valoroutro > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_AJUSTE,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->debito = $tituloBoleto->valoroutro;
-            if (!$mov->save()) {
-                return false;
+        foreach ($lancamentos as $tipo => $valor) {
+            if ($valor == 0) {
+                continue;
             }
-            $codmovimentotitulos[] = $mov->codmovimentotitulo;
-        }
-
-        // lanca juros
-        if ($tituloBoleto->valorjuromora > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_JUROS,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->debito = $tituloBoleto->valorjuromora;
-            if (!$mov->save()) {
-                return false;
-            }
-            $codmovimentotitulos[] = $mov->codmovimentotitulo;
-        }
-
-        // lanca Multa
-        if ($tituloBoleto->valormulta > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_MULTA,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->debito = $tituloBoleto->valormulta;
-            if (!$mov->save()) {
-                return false;
-            }
-            $codmovimentotitulos[] = $mov->codmovimentotitulo;
-        }
-
-        // lanca desconto
-        if ($tituloBoleto->valordesconto > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_DESCONTO,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->credito = $tituloBoleto->valordesconto;
-            if (!$mov->save()) {
-                return false;
-            }
-            $codmovimentotitulos[] = $mov->codmovimentotitulo;
-        }
-
-        // lanca valor do pagamento
-        if ($tituloBoleto->valorpago > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_LIQUIDACAO,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->credito = $tituloBoleto->valorpago;
-            if (!$mov->save()) {
-                return false;
-            }
+            $mov = MovimentoTituloService::lancar($titulo, $tipo, $valor, $vinculos, ['codtituloboleto']);
             $codmovimentotitulos[] = $mov->codmovimentotitulo;
         }
 
         // apaga movimentos que sobraram
-        MovimentoTitulo::where('codtituloboleto', $tituloBoleto->codtituloboleto)
+        $sobraram = MovimentoTitulo::where('codtituloboleto', $tituloBoleto->codtituloboleto)
             ->whereNotIn('codmovimentotitulo', $codmovimentotitulos)
             ->delete();
+        if ($sobraram > 0) {
+            MovimentoTituloService::recalcular($titulo);
+        }
 
         // retorna o mesmo objeto que recebeu
         return $tituloBoleto;

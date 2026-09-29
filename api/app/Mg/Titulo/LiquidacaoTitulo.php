@@ -42,9 +42,9 @@ class LiquidacaoTitulo extends MgModel
         'integracao',
         'observacao',
         'parcelas',
-        'sistema',
         'tipo',
         'transacao',
+        'valor',
         'valortotal'
     ];
 
@@ -70,9 +70,9 @@ class LiquidacaoTitulo extends MgModel
         'estornado' => 'datetime',
         'integracao' => 'boolean',
         'parcelas' => 'integer',
-        'sistema' => 'datetime',
         'tipo' => 'integer',
         'transacao' => 'date',
+        'valor' => 'float',
         'valortotal' => 'float'
     ];
 

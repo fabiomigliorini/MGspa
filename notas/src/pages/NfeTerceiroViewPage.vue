@@ -1047,7 +1047,7 @@ onMounted(async () => {
                     </q-item-section>
                     <q-item-section side>
                       <q-item-label class="text-weight-bold">
-                        R$ {{ formataNumero(guia.credito) }}
+                        R$ {{ formataNumero(Math.abs(guia.valor)) }}
                       </q-item-label>
                     </q-item-section>
                     <q-item-section side>
