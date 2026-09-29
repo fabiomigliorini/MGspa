@@ -44,6 +44,10 @@ As decisões novas são estas:
 | D9 | Retirada manual de silo sem desconto: líquido = −quantidade (coerente com D6). Substitui a regra do 3.4 abaixo | Fase 3 |
 | D10 | Acesso ao agro: **Administrador e Gerente**, como o Vale | TASK-129 |
 | D11 | Pico real do pátio: até 3 aparelhos simultâneos (o estresse realista usa 3) | TASK-184 |
+| D12 | **(29/09) O contrato pode ser carregado além do saldo.** O caminhão completa a carga para aproveitar o frete, e o comprador aceita. O servidor **não bloqueia**; o pátio avisa quanto passa e a tela mostra "Entregue a mais". Substitui a trava do 3.2 | Fase 3 |
+
+O que a bateria validou, o que é regra aceita e o que é defeito, confirmado em 29/09/2026:
+`backlog/docs/doc-3`.
 
 ---
 
@@ -113,7 +117,7 @@ cada fase é **esses cenários passarem e nenhum outro piorar**. Os `[INFO]` nã
 | 1 | TASK-180 | R1 (S3), R2, R3 (S4a), E4 (S4b), R4 (S7), A8 (S15, S16), R6, R7 |
 | 2 | TASK-180 | (front; roteiro manual) |
 | — | TASK-182 | A1, A4, A7, D*, R8, I4, I10 + paridade F1–F4 do `desconto-front.mjs` |
-| 3 | TASK-170 | R5 e E3 (S2), C2 (S8c), C4 (S8), C5 (S8d), C6, C8, C9, A6 (S14), I7, I9 (C3 = S8b continua OK) |
+| 3 | TASK-170 | C1 e E3 (aceitar e avisar, D12), C5 (S8d), C8, C9, A6 (S14), I9. C2, C3, C4 e R5 já passam com a regra aceita; I7 virou INFO |
 | 4 | TASK-181 | T3, I5, I6, I14 (S9, S10, S13, S13b) |
 | 5 | TASK-130 | T2, T5, T7 (S12), I1, I3, I8 (T4/I11 = S5/S6 continuam `[INFO]`, D1 = avisar) |
 
@@ -326,6 +330,16 @@ public static function entregueKg(int $codcontrato, ?int $excetoCodcarga = null)
   lugares que um depende do outro.
 
 ### 3.2 `validarOverloadContrato`
+
+> **Superado em 29/09/2026 (D12):** o contrato pode passar do saldo.
+> - O `validarOverloadContrato` **deixa de bloquear** e vira aviso: o pátio mostra quanto
+>   passa do contratado, usando o mesmo `saldokg` da tela (fonte única do 3.1).
+> - Sem bloqueio não há corrida a proteger. A trava de contrato abaixo **não entra**, e a
+>   ordem das travas fica: carga (consultiva) → silos, se um dia D1 mudar.
+> - "Cancelar nunca é barrado" (C5) continua valendo e, sem o bloqueio, vale por construção.
+>
+> O texto original fica abaixo como histórico.
+
 - **Pular quando `$carga->inativo !== null`.** Cancelar nunca pode ser barrado (S8d; hoje só
   passa porque o ajuste manual não é contado).
 - Considerar os pontos de **qualquer papel** ligados a contrato com teto; a mensagem não muda.
@@ -346,6 +360,8 @@ public static function entregueKg(int $codcontrato, ?int $excetoCodcarga = null)
 ### 3.3 `CargaService::ativar`
 Dentro da transação da Fase 1.4: `parent::ativar`, depois `$carga->load('CargaPontoS')`,
 `static::validar($carga)` (422 desfaz a reativação) e por fim `gerarMovimento`.
+Com a D12, o excesso de contrato **não** recusa mais a reativação (C4); as regras de domínio
+da Fase 4 continuam valendo.
 
 ### 3.4 Ajuste manual com sinal (critério #2)
 - `MovimentoGraoService::lancarManual`: depois de arredondar, se

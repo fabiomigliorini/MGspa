@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-23 21:04'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-09-29 13:38'
 labels:
   - agro
 dependencies: []
@@ -33,15 +33,13 @@ Consolida as antigas TASK-126, TASK-127 e TASK-128 (arquivadas).
 <!-- AC:BEGIN -->
 - [ ] #1 Cards 'A colher' e 'Disponível p/ negociar' do extrato mostram valor de verdade, não zero
 - [ ] #2 Ajuste manual lançado como ORIGEM baixa o saldo em vez de somar
-- [ ] #3 Trava de excesso do contrato não conta ajuste estornado nem ignora lançamento manual, e bate com o 'Saldo a entregar' que o operador vê na carga
-- [ ] #4 Dois caminhões fechando ao mesmo tempo no mesmo contrato não passam do contratado
-- [ ] #5 Reativar uma carga cancelada respeita o teto do contrato
-- [ ] #6 Cancelar uma carga nunca é barrado pela trava do contrato
-- [ ] #7 Entregue da safra separa venda de compra
-- [ ] #8 Contrato entregue a mais mostra o excesso em vez de zerar o saldo
-- [ ] #9 Estoque & Extrato mostra todos os lançamentos e todos os contratos, silos e talhões nos selects
-- [ ] #10 Colhido é o mesmo no Início, na Safra, na Fazenda e na Cultura
-- [ ] #11 Ajuste manual grava exatamente o que o operador informou
+- [ ] #3 Cancelar uma carga nunca é barrado pela trava do contrato
+- [ ] #4 Entregue da safra separa venda de compra
+- [ ] #5 Contrato entregue a mais mostra o excesso em vez de zerar o saldo
+- [ ] #6 Estoque & Extrato mostra todos os lançamentos e todos os contratos, silos e talhões nos selects
+- [ ] #7 Colhido é o mesmo no Início, na Safra, na Fazenda e na Cultura
+- [ ] #8 Ajuste manual grava exatamente o que o operador informou
+- [ ] #9 Carga que passa do saldo do contrato é aceita (o caminhão completa a carga); o pátio avisa quanto passa, com o mesmo 'Saldo a entregar' da tela (ajuste manual conta, estornado não)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -60,4 +58,6 @@ CargaService::validarOverloadContrato soma o ja entregue assim: MovimentoGrao::w
 ### TASK-128 — ajuste manual ignora o papel e sempre SOMA
 
 No extrato automatico o sinal vem do par papel+contatipo (CargaService::sinal: UNIDADE +destino/-origem; PLANTIO e CONTRATO sempre +). No ajuste MANUAL nao: MovimentoGraoService::lancarManual grava liquido = bruto - desconto e nunca olha o papel. A tela (ExtratoPage) pede papel ORIGEM/DESTINO e mostra 'Liquido = bruto - desconto', entao um ajuste lancado como ORIGEM/UNIDADE de 1.000 kg (retirada de silo) ACRESCENTA 1.000 kg ao saldo em vez de baixar. Para subtrair o operador precisa adivinhar que tem de digitar bruto negativo. Decidir: aplicar o mesmo sinal do automatico no lancarManual (e migrar os lancamentos ja gravados), ou remover o campo papel do form e deixar explicito 'entrada/saida'.
+
+29/09/2026 — regra aceita pelo negócio (doc-3): o contrato PODE ser carregado além do saldo; o caminhão completa a carga para aproveitar o frete e o comprador aceita. O servidor deixa de bloquear (hoje validarOverloadContrato recusa com 422, cenários C1 e E3 da bateria) e o pátio passa a AVISAR quanto passa do contratado. Saíram os critérios 'dois caminhões juntos não passam do contratado' e 'reativar respeita o teto'; a trava com lock de contrato do plano (Fase 4) deixa de ser necessária. Continuam: cancelar nunca é barrado (C5) e a tela mostrar o excesso (C8).
 <!-- SECTION:NOTES:END -->
