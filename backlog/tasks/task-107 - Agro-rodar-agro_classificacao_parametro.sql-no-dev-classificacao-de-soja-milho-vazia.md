@@ -3,10 +3,11 @@ id: TASK-107
 title: >-
   Agro: rodar agro_classificacao_parametro.sql no dev (classificacao de
   soja/milho vazia)
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@fabio'
 created_date: '2026-09-17 14:51'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-09-29 14:26'
 labels:
   - agro
 dependencies: []
@@ -40,4 +41,6 @@ Com o banco vazio, as migracoes do passo 2 nao fazem nada e o passo 3 semeia o p
 
 <!-- SECTION:NOTES:BEGIN -->
 28/09/2026: o dev já está no esquema novo (tblparametroclassificacao com codcultura, 8 parâmetros da norma: Soja 5, Milho 3; tabelas do modelo de julho e colunas codtabelaclassificacao já removidas). Falta conferir a PROD com api/tests/agro/conferencia.sql antes de fechar.
+
+29/09/2026: kit da PROD pronto em api/database/agro/ — README.md com o roteiro, 00-diagnostico.sql (so leitura: FEITO/PENDENTE por passo + contagem do que cada pendente mexe) e os passos 01-29 com guarda. Dev 100%: 01-29 aplicados, backups _bkp dropados, massa ZZTESTE apagada; conferencia I12/I12b vazia. Falta: usuario rodar o 00 na PROD, mandar o resultado, rodar 01-29 e a conferencia.
 <!-- SECTION:NOTES:END -->

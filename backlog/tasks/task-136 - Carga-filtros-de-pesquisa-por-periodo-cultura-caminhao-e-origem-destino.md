@@ -26,7 +26,7 @@ Escopo:
 - Origem/destino vivem em tblcargaponto (N:N). Usar whereHas (EXISTS), NUNCA join: join duplica a linha da carga e quebra meta.total e a paginacao.
 - Um whereHas POR filtro, nunca um so: contatipo e excludente (sincronizarPontos grava so uma das tres FKs), entao unidade+talhao num whereHas unico daria sempre zero.
 - Papel casa em qualquer lado por padrao (o silo e DESTINO no recebimento e ORIGEM na expedicao).
-- Indices novos em api/database/agro_carga_listagem.sql (idempotente, sem migrations): ix_carga_data, ix_carga_safra_data e tres parciais em tblcargaponto (unidade/plantio/contrato).
+- Indices novos em api/database/agro/26-agro_carga_listagem.sql (idempotente, sem migrations): ix_carga_data, ix_carga_safra_data e tres parciais em tblcargaponto (unidade/plantio/contrato).
 
 Origem: pedido do Fabio (21/09/2026) de uma tela de listagem de todas as cargas com filtros e relatorio PDF.
 <!-- SECTION:DESCRIPTION:END -->
@@ -44,7 +44,7 @@ Arquivos:
   - const WITH ganhou comentario CONTRATO DO SYNC OFFLINE + a relacao CargaPontoS.Plantio.Fazenda (o romaneio da TASK-139 precisa do nome da fazenda; aditivo, +1 query).
   - const WITH_LISTAGEM nova (enxuta, sem classificacao/Talhao/Veiculo/PessoaMotorista).
   - Comentario no filtro inativo avisando que a AUSENCIA da chave traz canceladas.
-- api/database/agro_carga_listagem.sql (novo): ix_carga_data, ix_carga_safra_data + 3 indices PARCIAIS em tblcargaponto.
+- api/database/agro/26-agro_carga_listagem.sql (novo): ix_carga_data, ix_carga_safra_data + 3 indices PARCIAIS em tblcargaponto.
 
 Verificado no dev (8 cargas):
 - baseline 8 | data=2026-09-18 (dia unico, contrato do sync) 1 | periodo 16..18 5 | sentido=ENTRADA 5 | etapa=FINALIZADO 2
@@ -55,5 +55,5 @@ Verificado no dev (8 cargas):
 - Regressao do sync: CargaResource ainda traz classificacao (4 leituras), CargaPontoS (2 pontos), Safra.Cultura e Plantio.Talhao. Plantio.Fazenda nova resolve 'Renascer'.
 - SQL rodado 2x no dev: idempotente (NOTICE ... skipping).
 
-PENDENTE EM PROD: rodar api/database/agro_carga_listagem.sql na producao (sem migrations, nada registra o aplicado).
+PENDENTE EM PROD: rodar api/database/agro/26-agro_carga_listagem.sql na producao (sem migrations, nada registra o aplicado).
 <!-- SECTION:NOTES:END -->

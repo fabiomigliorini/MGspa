@@ -3,9 +3,9 @@ id: TASK-171
 title: 'Agro/Patio: da pra alterar sem querer um campo ja lancado da carga'
 status: In Progress
 assignee:
-  - '@fabio'
+  - '@eduardo'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-09-29 13:14'
+updated_date: '2026-09-29 17:54'
 labels:
   - agro
 dependencies: []
@@ -42,6 +42,10 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [ ] #16 No modal de Operacao as setas percorrem as opcoes de placa e motorista (inclusive usar sem cadastro e cadastrar), e escolher a placa leva o foco pra carreta
 - [ ] #17 Origem/Destino: a unica linha de origem ou destino nao tem X; a soma so aparece com mais de uma linha; o + fica na linha do titulo com tooltip
 - [ ] #18 Os 4 modais da carga com 60% da altura da tela (tela cheia no celular); o modal de Operação cabe sem rolar, com o 'cadastrar no sistema' no rodapé à esquerda
+- [ ] #19 Pesos (PBT/Tara) e leituras da classificacao em campos numericos grandes; na pesagem o Liquido em destaque
+- [ ] #20 Carga nova abre direto no modal de Operacao com o cursor na Safra; setas para cima/baixo percorrem as safras
+- [ ] #21 F3 e Enter confirmam o modal aberto e ja abrem o proximo que falta (Operacao > Origem/Destino > etapa da balanca); Esc interrompe
+- [ ] #22 Registrar com o peso ja digitado nao pede o peso de novo: a carga ja nasce na etapa seguinte
 <!-- AC:END -->
 
 ## Implementation Notes

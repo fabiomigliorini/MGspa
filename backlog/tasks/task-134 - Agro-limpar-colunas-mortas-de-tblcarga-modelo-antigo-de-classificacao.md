@@ -1,10 +1,11 @@
 ---
 id: TASK-134
 title: 'Agro: limpar colunas mortas de tblcarga (modelo antigo de classificacao)'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@fabio'
 created_date: '2026-09-21 21:34'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-09-29 14:26'
 labels:
   - agro
 dependencies: []
@@ -21,5 +22,13 @@ tblcarga (agro_grao.sql) ainda tem as colunas do modelo antigo de 3 parametros f
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Rodar de novo os scripts antigos do agro não recria colunas nem derruba tabelas
+- [x] #1 Rodar de novo os scripts antigos do agro não recria colunas nem derruba tabelas
+- [x] #2 Coluna aprovado removida do banco e do código
+- [x] #3 Data de embarque antiga (dataembarque) preservada em embarqueinicio/embarquefim e a coluna removida
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+29/09/2026: scripts do agro movidos para api/database/agro/ (01-29, ordem de replay) e reescritos com guarda — cada um e um bloco DO atomico que pula o que ja foi feito; agro_grao.sql (13) nao dropa mais tblcarga/ponto/movimento/silo. Testado em 4 bases: instalacao do zero, base de junho com contratos, base de julho com classificacao e dev; todas terminam no mesmo esquema e a 2a rodada sai toda 'pulado'. Novos: 28 (dataembarque vira embarqueinicio/fim e sai) e 29 (drop aprovado). Codigo: aprovado saiu de Carga.php; dataembarque de Contrato.php e ContratoStoreRequest. Dev aplicado.
+<!-- SECTION:NOTES:END -->
