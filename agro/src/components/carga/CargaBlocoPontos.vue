@@ -34,6 +34,7 @@ const { unidadesAtivas } = storeToRefs(store)
 // Providos pelo CargaForm.vue.
 const persistirBloco = inject('persistirBloco')
 const concluirEtapa = inject('concluirEtapa')
+const proximoPasso = inject('proximoPasso')
 const calc = inject('calc')
 const finalizando = inject('finalizando')
 
@@ -77,6 +78,7 @@ function rotuloUnidade(cod) {
 // ---- Edição (cópia local — clone do array de pontos + codsafra, que pode
 // mudar junto se o talhão escolhido pertencer a outra safra) ----
 const dialogAberto = ref(false)
+const formRef = ref(null)
 const edicao = ref({ pontos: [], codsafra: null })
 // Aberto pelo botão "Notas fiscais" (etapa FISCAL da expedição): número e valor
 // da NF de cada contrato de destino são obrigatórios e confirmar AVANÇA a carga
@@ -150,7 +152,10 @@ async function salvar() {
   carga.value.codsafra = edicao.value.codsafra
   try {
     const ok = etapaAtual.value ? await concluirEtapa() : await persistirBloco()
-    if (ok) dialogAberto.value = false
+    if (ok) {
+      dialogAberto.value = false
+      proximoPasso('pontos')
+    }
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
   }
@@ -240,8 +245,14 @@ async function salvar() {
   </q-card>
 
   <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
-    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
-      <q-form class="col column no-wrap" @submit="salvar">
+    <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página. -->
+    <q-card
+      flat
+      class="column no-wrap"
+      :class="{ 'carga-dialog': !$q.screen.lt.sm }"
+      @keydown.f3.prevent.stop="formRef.submit($event)"
+    >
+      <q-form ref="formRef" class="col column no-wrap" @submit="salvar">
         <q-card-section class="col scroll">
           <div class="row items-center text-subtitle1 q-mb-md">
             <template v-if="etapaAtual">
@@ -458,9 +469,9 @@ async function salvar() {
           </div>
         </q-card-section>
         <q-card-actions align="right" class="col-auto">
-          <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn label="Cancelar (Esc)" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
-            :label="rotuloConfirmar"
+            :label="`${rotuloConfirmar} (Enter)`"
             type="submit"
             :flat="!etapaAtual"
             :unelevated="!!etapaAtual"

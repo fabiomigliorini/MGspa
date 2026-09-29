@@ -2,7 +2,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { uid } from 'quasar'
 import { db } from 'boot/db'
-import { useSincronizacaoStore } from 'src/stores/sincronizacao'
+import { useSincronizacaoStore, ehFalhaDeRede } from 'src/stores/sincronizacao'
 import { calcularCarga } from 'src/utils/desconto'
 import {
   SENTIDOS,
@@ -369,11 +369,10 @@ export const useCargaStore = defineStore('carga', () => {
     cargas.value = arr.sort((a, b) => (a.data < b.data ? 1 : -1))
   }
 
-  // Puxa as cargas do dia do servidor (best-effort: offline segue com o Dexie
-  // local) e recarrega o board.
+  // Puxa as cargas do servidor (best-effort: offline segue com o Dexie local) e
+  // recarrega o board.
   async function puxarCargasDoDia() {
-    const codsafras = safrasAtivas.value.map((s) => s.codsafra)
-    await sincronizacao.puxarCargas(codsafras, dataFiltro.value).catch(() => {})
+    await sincronizacao.puxarCargas(dataFiltro.value).catch(() => {})
     await carregarCargas()
   }
 
@@ -387,20 +386,17 @@ export const useCargaStore = defineStore('carga', () => {
     uuidAtivo.value = uuid || null
   }
 
-  // Troca o dia filtrado no board e puxa as cargas (multi-dispositivo). Vazio =
-  // todos os romaneios (puxa a safra inteira, sem filtro de data).
-  async function definirData(iso) {
-    dataFiltro.value = iso || null
-    await puxarCargasDoDia()
-  }
-
   // `opts` (ex.: { force: true } vindo do botao "Sincronizar") repassa pro throttle
-  // da store de sincronizacao. As re-leituras do Dexie sao baratas.
+  // da store de sincronizacao. As re-leituras do Dexie sao baratas e rodam mesmo
+  // se o ciclo falhar no meio: o que ja chegou no Dexie aparece na tela.
   async function sincronizar(opts) {
-    await sincronizacao.sincronizar(opts)
-    await carregarReferencias()
-    await puxarCargasDoDia()
-    saldosUnidades.value = sincronizacao.saldosUnidades
+    try {
+      await sincronizacao.sincronizar(opts)
+    } finally {
+      await carregarReferencias()
+      await puxarCargasDoDia()
+      saldosUnidades.value = sincronizacao.saldosUnidades
+    }
   }
 
   // Nova carga (default Recebimento — o operador troca no modal de Operação
@@ -461,10 +457,13 @@ export const useCargaStore = defineStore('carga', () => {
       .enviarCarga(JSON.parse(JSON.stringify(limpa)))
       .then(() => carregarCargas())
       .catch(async (e) => {
-        // Offline (ERR_NETWORK): fica pendente e sincroniza depois, em silêncio.
+        // Rede (offline, timeout): fica pendente e o ciclo automático envia quando
+        // a rede voltar, em silêncio.
         // Rejeição do servidor (422/500): marca `syncerro` p/ não re-tentar em loop,
         // reflete no board e avisa uma vez.
-        if (e?.code !== 'ERR_NETWORK') {
+        if (ehFalhaDeRede(e)) {
+          sincronizacao.online = false
+        } else {
           const msg = e?.response?.data?.message || 'Rejeitado pelo servidor'
           await db.carga.update(limpa.uuid, { syncerro: msg })
           await carregarCargas()
@@ -549,7 +548,6 @@ export const useCargaStore = defineStore('carga', () => {
     carregarCargas,
     definirSafra,
     abrir,
-    definirData,
     sincronizar,
     nova,
     salvar,

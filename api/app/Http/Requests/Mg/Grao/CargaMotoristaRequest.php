@@ -42,12 +42,11 @@ class CargaMotoristaRequest extends FormRequest
                 },
             ],
             'nome' => ['required', 'string', 'min:5', 'max:100'],
-            // DDD + número, só dígitos: 10 = fixo, 11 = celular.
-            'telefone' => ['required', 'digits_between:10,11'],
+            // Celular: DDD + número, 11 dígitos.
+            'telefone' => ['required', 'digits:11'],
             'cep' => ['required', 'digits:8'],
+            // Rua, número e complemento num campo só (como o pátio pede).
             'endereco' => ['required', 'string', 'max:100'],
-            'numero' => ['required', 'string', 'max:10'],
-            'complemento' => ['nullable', 'string', 'max:50'],
             'bairro' => ['required', 'string', 'max:50'],
             'codcidade' => ['required', 'exists:tblcidade,codcidade'],
         ];

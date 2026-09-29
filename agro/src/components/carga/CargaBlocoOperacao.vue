@@ -49,6 +49,8 @@ const persistirBloco = inject('persistirBloco')
 // Troca do tipo de romaneio — a confirmação mora LÁ (CargaForm), não aqui: a
 // guarda não pode depender de quem chama. Devolve se aplicou.
 const trocarOperacao = inject('trocarOperacao')
+// Salvou: o CargaForm abre o próximo modal que falta (Origem/Destino, balança).
+const proximoPasso = inject('proximoPasso')
 
 // Indireção (padrão ContratoForm/SafraForm): muta o objeto reativo compartilhado
 // sem disparar vue/no-mutating-props — `carga` é a MESMA referência que o
@@ -91,9 +93,28 @@ const edicao = ref({})
 // 'pesquisa' = select de pessoa; 'novo' = motorista sem cadastro ou a cadastrar
 // (CPF, nome, telefone, endereço — CargaMotoristaCampos).
 const modoMotorista = ref('pesquisa')
+const formRef = ref(null)
+const safraRef = ref(null)
 const camposMotoristaRef = ref(null)
 const placaRef = ref(null)
 const carretaRef = ref(null)
+
+// Safra/Operação (selects sem digitação), com a lista FECHADA: ↑ abre a lista
+// como o ↓ do Quasar já faz, e Enter salva o modal (o Quasar reabriria a
+// lista). `qKeyEvent` faz o Quasar pular o tratamento dele — o emit do keydown
+// vem antes; mesmo truque do MgInputData. Placa e motorista ficam de fora: lá
+// o Enter com a lista fechada é a busca/"usar sem cadastro" do próprio select.
+function tecladoSelect(e, sel) {
+  if (e.target?.getAttribute('aria-expanded') === 'true') return
+  if (e.key === 'ArrowUp' && sel) {
+    e.qKeyEvent = true
+    e.preventDefault()
+    sel.showPopup()
+  } else if (e.key === 'Enter') {
+    e.qKeyEvent = true
+    formRef.value?.submit(e)
+  }
+}
 // A busca de pessoa falhou por rede mesmo com `online` ainda true (o flag só
 // muda no ciclo de sync): trata como offline dali em diante neste modal.
 const semConexao = ref(false)
@@ -394,6 +415,7 @@ async function salvar() {
     // no bloco de Origem/Destino, não aqui; a gravação vem junto com ela.
     await persistirBloco()
     dialogAberto.value = false
+    proximoPasso('operacao')
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
   } finally {
@@ -475,8 +497,14 @@ async function salvar() {
   </q-card>
 
   <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
-    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
-      <q-form class="col column no-wrap" @submit="salvar">
+    <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página. -->
+    <q-card
+      flat
+      class="column no-wrap"
+      :class="{ 'carga-dialog': !$q.screen.lt.sm }"
+      @keydown.f3.prevent.stop="formRef.submit($event)"
+    >
+      <q-form ref="formRef" class="col column no-wrap" @submit="salvar">
         <q-card-section class="col scroll">
           <div class="text-subtitle1 q-mb-md">Operação</div>
           <div class="row q-col-gutter-x-md">
@@ -487,8 +515,12 @@ async function salvar() {
               :disable="finalizada"
               bottom-slots
               class="col-12 col-sm-4"
+              @keydown="tecladoSelect($event, null)"
             />
+            <!-- Cursor nasce aqui: a safra é o 1º dado da carga nova. Desabilitado
+                 (finalizada) o select não tem alvo de foco. -->
             <q-select
+              ref="safraRef"
               v-model="edicao.codsafra"
               :options="opcoesSafra"
               option-value="codsafra"
@@ -498,9 +530,11 @@ async function salvar() {
               outlined
               label="Safra"
               :disable="finalizada"
+              :autofocus="!finalizada"
               class="col-12 col-sm-4"
               lazy-rules
               :rules="[regraSafra]"
+              @keydown="tecladoSelect($event, safraRef)"
             />
             <MgInputData
               v-model="edicao.data"
@@ -529,7 +563,6 @@ async function salvar() {
               emit-value
               map-options
               class="col-12 col-sm-4"
-              autofocus
               lazy-rules
               :rules="[() => !!edicao.placa || 'Informe a placa.', () => regraPlaca(edicao.placa)]"
               @filter="filtrarPlaca"
@@ -628,8 +661,8 @@ async function salvar() {
             <q-tooltip v-if="offline">Sem conexão: o motorista fica só nesta carga.</q-tooltip>
           </span>
           <q-space />
-          <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn label="Salvar" type="submit" flat color="primary" :loading="salvando" />
+          <q-btn label="Cancelar (Esc)" flat color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn label="Salvar (Enter)" type="submit" flat color="primary" :loading="salvando" />
         </q-card-actions>
       </q-form>
     </q-card>

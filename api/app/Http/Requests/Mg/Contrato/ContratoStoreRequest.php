@@ -42,7 +42,6 @@ class ContratoStoreRequest extends FormRequest
             // "em aberto"). Precificação (preço/moeda/isenção) vive na fixação;
             // NF (natureza/pessoa/observação) no plano de notas (tblcontratonota).
             'quantidade' => ['nullable', 'numeric', 'gt:0'],
-            'dataembarque' => ['nullable', 'date'],
             'localentrega' => ['nullable', 'string'],
             'observacao' => ['nullable', 'string'],
             'codfilial' => ['nullable', 'exists:tblfilial,codfilial'],

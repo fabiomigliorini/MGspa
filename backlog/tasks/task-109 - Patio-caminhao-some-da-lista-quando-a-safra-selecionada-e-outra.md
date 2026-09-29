@@ -3,9 +3,9 @@ id: TASK-109
 title: 'Patio: caminhao some da lista quando a safra selecionada e outra'
 status: In Progress
 assignee:
-  - '@fabio'
+  - '@eduardo'
 created_date: '2026-09-17 19:06'
-updated_date: '2026-09-28 20:03'
+updated_date: '2026-09-29 14:01'
 labels:
   - agro
 dependencies: []

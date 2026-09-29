@@ -3,10 +3,11 @@ id: TASK-169
 title: >-
   Pátio não atualiza sozinho: fica com dado velho, não sobe carga pendente e
   está lento
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@fabio'
 created_date: '2026-09-23 21:03'
-updated_date: '2026-09-23 21:04'
+updated_date: '2026-09-29 14:30'
 labels:
   - agro
 dependencies: []
@@ -51,4 +52,9 @@ A sincronizacao so roda em dois momentos: onMounted da CargaPage e o botao Sincr
 ### TASK-132 — sem dia filtrado o pull baixa a safra inteira, página por página
 
 dataFiltro nasce null (o filtro de dia do CargaLeftDrawer comeca vazio) e puxarCargasDoDia chama puxarCargas(codsafra, null), que cai em puxarPaginasCarga({codsafra}) - varrendo TODAS as paginas de TODAS as cargas da safra a cada ciclo de sync (50 por pagina, MgModel::$perPage). Numa safra com 3.000 romaneios sao 60 requisicoes por sync, e a lista de finalizadas exibida e cortada em 30 (LIMITE_FINALIZADAS_SEM_DATA) - ou seja, quase tudo que foi baixado nem aparece. Opcoes: default do filtro = hoje; ou pull sem data limitado as ultimas N (sort -data e parar na primeira pagina); ou usar as ETAPAS_ABERTAS tambem no caso sem data.
+
+29/09/2026 — implementado (aguardando teste na balanca):
+AC1: sincronizacao.sincronizar() nao relanca mais; falha que nao e de rede grava 'erro' e avisa UMA vez (toast so na transicao ok->erro); carga.sincronizar() recarrega referencias/cargas do Dexie num finally. Telas nao engolem mais com .catch(() => {}). Estado sempre visivel num icone no header (MainLayout): cloud_done / cloud_off / sync_problem com tooltip e hora do ultimo ciclo; clique = sincronizar forcado.
+AC2: composables/useSincronizacaoAutomatica.js montado no MainLayout: evento online -> sincroniza na hora; a cada 60 s; ao voltar a aba visivel. Timeout (ECONNABORTED) agora conta como rede (ehFalhaDeRede) e a carga fica pendente em vez de ganhar syncerro. Chamadas do sync com skipNotify (boot/axios.js honra) para o ciclo offline nao disparar 'Erro de conexao' todo minuto.
+AC3: sem dia, puxarCargas baixa so a 1a pagina de v1/carga?sort=-data (50) + as etapas abertas; removidos definirData (sem chamadores desde a TASK-136) e o parametro codsafras.
 <!-- SECTION:NOTES:END -->
