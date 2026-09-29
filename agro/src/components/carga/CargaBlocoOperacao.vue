@@ -23,6 +23,7 @@ import {
   CAMPOS_MOTORISTA_SEM_CADASTRO,
 } from 'src/utils/carga'
 import { cadastrarMotorista } from 'src/utils/motorista'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { formataTimestamp, formataCpf, formataTelefone } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -91,7 +92,12 @@ const edicao = ref({})
 // (CPF, nome, telefone, endereço — CargaMotoristaCampos).
 const modoMotorista = ref('pesquisa')
 const camposMotoristaRef = ref(null)
+const placaRef = ref(null)
 const carretaRef = ref(null)
+// A busca de pessoa falhou por rede mesmo com `online` ainda true (o flag só
+// muda no ciclo de sync): trata como offline dali em diante neste modal.
+const semConexao = ref(false)
+const offline = computed(() => !online.value || semConexao.value)
 
 const placaOptions = ref([])
 const placaBusca = ref('')
@@ -105,21 +111,37 @@ function abrir() {
     sentido: carga.value.sentido,
     codsafra: carga.value.codsafra,
     data: carga.value.data,
-    placa: carga.value.placa,
+    // Placa antiga pode ter sido gravada com hífen ("ABC-1234"): a máscara
+    // mostraria limpa e a regra reprovaria um valor que parece certo.
+    placa: normalizarPlaca(carga.value.placa),
     codveiculo: carga.value.codveiculo,
-    placacarreta: carga.value.placacarreta,
+    placacarreta: normalizarPlaca(carga.value.placacarreta),
     codpessoamotorista: carga.value.codpessoamotorista,
     motorista: carga.value.motorista,
     ...Object.fromEntries(CAMPOS_MOTORISTA_SEM_CADASTRO.map((c) => [c, carga.value[c] ?? null])),
     cadastrarMotorista: false,
   }
-  // Nome digitado sem cadastro (ou offline, sem busca de pessoa) abre direto
-  // nos campos do motorista novo; carga antiga sem CPF/telefone/endereço passa
-  // a pedir o que falta aqui.
+  // Motorista já gravado sem cadastro abre direto nos campos dele (carga antiga
+  // sem CPF/telefone/endereço passa a pedir o que falta). Sem motorista, abre
+  // na busca — mesmo offline: motorista não é obrigatório, e a busca que falha
+  // oferece "usar sem cadastro".
   modoMotorista.value =
-    !edicao.value.codpessoamotorista && (edicao.value.motorista || !online.value)
-      ? 'novo'
-      : 'pesquisa'
+    !edicao.value.codpessoamotorista && edicao.value.motorista ? 'novo' : 'pesquisa'
+  // Offline o select não consegue buscar o nome do motorista cadastrado pelo
+  // id — sem isto o campo abriria vazio. Semeia o cache com o nome da carga.
+  const cache = useSelectCacheStore()
+  if (
+    !online.value &&
+    edicao.value.codpessoamotorista &&
+    edicao.value.motorista &&
+    !cache.getById('pessoa', edicao.value.codpessoamotorista)
+  ) {
+    cache.mergeById('pessoa', [
+      { value: edicao.value.codpessoamotorista, label: edicao.value.motorista },
+    ])
+  }
+  semConexao.value = false
+  inativoAvisado = null
   placaBusca.value = edicao.value.placa || ''
   dialogAberto.value = true
 }
@@ -207,24 +229,30 @@ function resolverPlaca(placa) {
   // por cima da placa escolhida na lista ("QCJ8I48").
   placaBusca.value = p || ''
 }
-// Placa escolhida (clique ou Enter): o foco segue pra Carreta quando o menu
-// fecha — o operador já decidiu, não precisa de outro clique.
-let focarCarreta = false
+// Placa escolhida (clique ou Enter): o foco segue pra Carreta — o operador já
+// decidiu, não precisa de outro clique. Só se o foco ainda estiver na placa:
+// com Tab o navegador já leva pra Carreta sozinho, e focar de novo aqui faria o
+// Tab pular um campo.
 function onPlacaEscolhida(val) {
   if (val === ACAO_PLACA.cadastrar) {
     cadastroCaminhao.value = true
     return
   }
   resolverPlaca(val === ACAO_PLACA.semcadastro ? placaBusca.value : val)
-  focarCarreta = !!edicao.value.placa
+  if (!edicao.value.placa) return
+  setTimeout(() => {
+    if (placaRef.value?.$el?.contains(document.activeElement)) carretaRef.value?.focus()
+  })
 }
-function onPlacaPopupHide() {
-  if (!focarCarreta) return
-  focarCarreta = false
-  nextTick(() => carretaRef.value?.focus())
-}
+// Saiu do campo sem escolher na lista: vale o que está ESCRITO nele (não o
+// último termo filtrado — depois de um Esc o Quasar volta o texto pra placa
+// atual, e o termo cancelado não pode trocar a placa).
 function onPlacaBlur() {
-  if (placaBusca.value && placaBusca.value !== edicao.value.placa) resolverPlaca(placaBusca.value)
+  const texto = normalizarPlaca(placaRef.value?.$el?.querySelector('input')?.value)
+  if (texto && texto !== edicao.value.placa) resolverPlaca(texto)
+}
+function limparPlaca() {
+  resolverPlaca(null)
 }
 async function onCaminhaoCriado(veiculo) {
   await store.adicionarVeiculo(veiculo)
@@ -242,12 +270,13 @@ function onMotoristaClear() {
   edicao.value.motorista = null
 }
 // Busca sem resultado: as duas saídas viram opções do select (setas + Enter).
-function acoesMotorista(busca) {
+// Busca que FALHOU (sem rede) só oferece o "sem cadastro".
+function acoesMotorista(busca, { erro = false } = {}) {
   if ((busca || '').length < 2) return []
   const acoes = [
     { acao: 'semcadastro', label: `Usar “${busca}” sem cadastro, só nesta carga`, icon: 'edit_note' },
   ]
-  if (online.value) {
+  if (!offline.value && !erro) {
     acoes.push({
       acao: 'cadastrar',
       label: `Cadastrar “${busca}” como motorista`,
@@ -264,7 +293,8 @@ function separarBusca(busca) {
     ? { cpfmotorista: b.replace(/\D/g, ''), motorista: null }
     : { cpfmotorista: null, motorista: b || null }
 }
-async function onAcaoMotorista(acao, busca) {
+async function onAcaoMotorista(acao, busca, { erro = false } = {}) {
+  if (erro) semConexao.value = true
   Object.assign(edicao.value, {
     codpessoamotorista: null,
     ...semCadastroVazio(),
@@ -295,9 +325,26 @@ function selecionarPessoa(p) {
   })
   modoMotorista.value = 'pesquisa'
 }
+// CPF de quem já está no cadastro. Ativo: usa a pessoa. Inativo: não dá pra
+// escolher no select nem cadastrar de novo — segue sem cadastro, avisando.
+// A verificação pode chegar duas vezes (blur + Salvar): avisa uma só.
+let inativoAvisado = null
 function onMotoristaExistente(p) {
+  const nome = p.fantasia || p.pessoa
+  if (p.inativo) {
+    edicao.value.cadastrarMotorista = false
+    if (inativoAvisado === p.codpessoa) return
+    inativoAvisado = p.codpessoa
+    $q.notify({
+      type: 'warning',
+      message: `CPF de ${nome}, que está INATIVO no cadastro.`,
+      caption: 'O motorista fica sem cadastro nesta carga. Para usar o cadastro, reative no app Pessoas.',
+    })
+    return
+  }
+  if (modoMotorista.value === 'pesquisa' && edicao.value.codpessoamotorista === p.codpessoa) return
   selecionarPessoa(p)
-  $q.notify({ type: 'info', message: `CPF já cadastrado: ${p.fantasia || p.pessoa} — selecionado.` })
+  $q.notify({ type: 'info', message: `CPF já cadastrado: ${nome} — selecionado.` })
 }
 async function cadastrarNoServidor() {
   try {
@@ -315,6 +362,13 @@ async function cadastrarNoServidor() {
 async function salvar() {
   salvando.value = true
   try {
+    // CPF digitado por último: a checagem do blur pode não ter voltado (ou nem
+    // ter rodado, com Enter). Confere aqui antes de gravar "sem cadastro" ou
+    // tentar cadastrar alguém que já existe.
+    if (modoMotorista.value === 'novo') {
+      const existente = await camposMotoristaRef.value?.verificarCpf()
+      if (existente) onMotoristaExistente(existente)
+    }
     // Cadastro do motorista antes de tudo: se o servidor recusar (CPF já
     // cadastrado, sem conexão), nada da carga foi mexido e o modal fica aberto.
     if (modoMotorista.value === 'novo' && edicao.value.cadastrarMotorista) {
@@ -456,7 +510,11 @@ async function salvar() {
               class="col-12 col-sm-4"
             />
 
+            <!-- Sem `clearable`: o X do Quasar entra na ordem do Tab (tabindex 0 fixo)
+                 e o Tab pararia nele em vez de ir pra Carreta — X próprio no #append,
+                 como o MgInput faz. -->
             <q-select
+              ref="placaRef"
               :model-value="edicao.placa"
               :options="placaOptions"
               label="Placa"
@@ -464,7 +522,6 @@ async function salvar() {
               use-input
               fill-input
               hide-selected
-              clearable
               input-debounce="200"
               new-value-mode="add-unique"
               option-label="label"
@@ -477,9 +534,16 @@ async function salvar() {
               :rules="[() => !!edicao.placa || 'Informe a placa.', () => regraPlaca(edicao.placa)]"
               @filter="filtrarPlaca"
               @update:model-value="onPlacaEscolhida"
-              @popup-hide="onPlacaPopupHide"
               @blur="onPlacaBlur"
             >
+              <template v-if="edicao.placa" #append>
+                <q-icon
+                  name="cancel"
+                  class="cursor-pointer"
+                  tabindex="-1"
+                  @click.stop="limparPlaca"
+                />
+              </template>
               <template #option="{ opt, itemProps }">
                 <q-item v-bind="itemProps">
                   <q-item-section avatar>
@@ -532,7 +596,7 @@ async function salvar() {
               bottom-slots
               class="col-12 col-sm-4"
             >
-              <template v-if="online" #append>
+              <template #append>
                 <q-icon name="close" class="cursor-pointer" tabindex="-1" @click="voltarPesquisa">
                   <q-tooltip>Pesquisar no cadastro</q-tooltip>
                 </q-icon>
@@ -543,7 +607,7 @@ async function salvar() {
               v-if="modoMotorista === 'novo'"
               ref="camposMotoristaRef"
               :dados="edicao"
-              :online="online"
+              :online="!offline"
               @existente="onMotoristaExistente"
             />
           </div>
@@ -551,7 +615,19 @@ async function salvar() {
             Romaneio finalizado — a operação e a safra não mudam mais.
           </div>
         </q-card-section>
-        <q-card-actions align="right" class="col-auto">
+        <q-card-actions class="col-auto">
+          <!-- Cadastrar ou não é decisão de quem salva: fica no rodapé, junto do
+               Salvar. Offline não há como cadastrar — o motorista fica só nesta
+               carga (o tooltip vai num span: botão desabilitado não recebe hover). -->
+          <span v-if="modoMotorista === 'novo'">
+            <q-toggle
+              v-model="edicao.cadastrarMotorista"
+              :disable="offline"
+              label="Cadastrar motorista no sistema"
+            />
+            <q-tooltip v-if="offline">Sem conexão: o motorista fica só nesta carga.</q-tooltip>
+          </span>
+          <q-space />
           <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn label="Salvar" type="submit" flat color="primary" :loading="salvando" />
         </q-card-actions>

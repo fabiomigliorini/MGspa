@@ -12,12 +12,14 @@ const { safras, codsafraAtiva, cargas, produtividade, safraAtiva } = storeToRefs
 const { online } = storeToRefs(sinc)
 
 // Independente do sentido/agrupamento e dos nomes de etapa: tudo que não está
-// finalizado está "no pátio".
-const noPatio = computed(
-  () => cargas.value.filter((c) => !c.inativo && c.etapa !== 'FINALIZADO').length,
+// finalizado está "no pátio". A store carrega TODAS as safras (o pátio é
+// físico); aqui os números seguem o select de safra da home, como o colhido.
+const cargasDaSafra = computed(() =>
+  cargas.value.filter((c) => !c.inativo && c.codsafra === codsafraAtiva.value),
 )
+const noPatio = computed(() => cargasDaSafra.value.filter((c) => c.etapa !== 'FINALIZADO').length)
 const finalizados = computed(
-  () => cargas.value.filter((c) => !c.inativo && c.etapa === 'FINALIZADO').length,
+  () => cargasDaSafra.value.filter((c) => c.etapa === 'FINALIZADO').length,
 )
 const pendentes = computed(() => cargas.value.filter((c) => !c.sincronizado && !c.inativo).length)
 

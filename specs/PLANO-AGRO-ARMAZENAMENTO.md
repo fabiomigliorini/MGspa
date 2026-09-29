@@ -1,8 +1,15 @@
 # Plano de ação — armazenamento de grãos do /agro
 
 Origem: auditoria de 2026-09-25 (lógica do /agro, com foco em entradas e saídas simultâneas).
-Bateria de testes que reproduz cada defeito: `api/tests/agro-armazenamento/` (linha de base
-em 2026-09-25: **20 cenários, 17 falhas**).
+
+**Atualizado em 28/09/2026:**
+- A bateria da auditoria (`api/tests/agro-armazenamento/`, 20 cenários) se perdeu antes do
+  commit. Foi refeita e ampliada em **`api/tests/agro/`** (TASK-184; ver o `README.md` de lá):
+  - cenários, corrida, descontos, valores, listagem, permissões e estresse;
+  - `conferencia.sql`, só leitura, para rodar na PROD.
+- Os cenários S2–S17 citados abaixo viraram os ids da bateria nova. A tabela "Como a bateria
+  vai evoluindo" traz a correspondência.
+- As tasks da Fase 0.2 foram criadas: TASK-SYNC = **TASK-180**, TASK-DOM = **TASK-181**.
 
 Este arquivo é para ser **executado de cima para baixo**. Cada fase termina num ponto de
 parada: trabalho na árvore, **sem `git add` e sem commit**, com o roteiro de teste. Só se passa
@@ -22,6 +29,25 @@ resposta for outra, ajuste a fase indicada.
 | D3 | Carga FINALIZADA pode ter o peso alterado depois? | **Pode** (corrigir romaneio é rotina). A versão da Fase 1 já impede que dois aparelhos se atropelem. Auditoria de quem mudou o quê fica fora deste plano. | nenhuma |
 | D4 | Ajustes manuais de **retirada** de silo já gravados em PROD somaram ao saldo. Inverter o sinal deles? | **Sim**, com o script da Fase 3 rodado depois de conferir a lista com quem lançou. No dev não há nenhum ajuste manual. | Fase 3 |
 | D5 | Os problemas de sincronização entre aparelhos viram task nova ou entram na TASK-169 ("Pátio não atualiza sozinho")? | **Task nova.** A TASK-169 trata de mostrar dado velho; aqui é dado velho **gravando por cima** do novo, com outro teste e outro risco. | Fase 0 |
+
+**Decididas em 28/09/2026** (conversa com quem prioriza):
+- **D1** está confirmado: avisar e pedir confirmação, sem bloquear no servidor.
+- **D2 a D5** seguem como recomendado acima.
+
+As decisões novas são estas:
+
+| # | Decisão | Afeta |
+|---|---|---|
+| D6 | Expedição ou transferência com desconto: o **silo de origem baixa o BRUTO** (o que saiu fisicamente); o destino recebe o líquido; a diferença é quebra | Fase 5 |
+| D7 | **Kg inteiro em tudo**: descontos, líquido, rateio, extrato e ticket | TASK-182 |
+| D8 | Tabela de classificação **congelada no romaneio no 1º FINALIZADO** (`tblcarga.parametrosclassificacao`) | TASK-182 |
+| D9 | Retirada manual de silo sem desconto: líquido = −quantidade (coerente com D6). Substitui a regra do 3.4 abaixo | Fase 3 |
+| D10 | Acesso ao agro: **Administrador e Gerente**, como o Vale | TASK-129 |
+| D11 | Pico real do pátio: até 3 aparelhos simultâneos (o estresse realista usa 3) | TASK-184 |
+| D12 | **(29/09) O contrato pode ser carregado além do saldo.** O caminhão completa a carga para aproveitar o frete, e o comprador aceita. O servidor **não bloqueia**; o pátio avisa quanto passa e a tela mostra "Entregue a mais". Substitui a trava do 3.2 | Fase 3 |
+
+O que a bateria validou, o que é regra aceita e o que é defeito, confirmado em 29/09/2026:
+`backlog/docs/doc-3`.
 
 ---
 
@@ -75,24 +101,25 @@ Anote os ids gerados. Neste documento eles aparecem como **TASK-SYNC** (a primei
 ### 0.3 Linha de base
 
 ```bash
-docker cp api/tests/agro-armazenamento mgspa-api:/tmp/agrotest
-docker exec -u www-data mgspa-api php /tmp/agrotest/run.php
-docker exec mgspa-api rm -rf /tmp/agrotest
+docker exec -u www-data -w /opt/www/MGspa/api mgspa-api php tests/agro/run.php todos --relatorio
+node api/tests/agro/desconto-front.mjs
 ```
 
-Esperado hoje: **17 falhas**. A bateria cria e apaga os próprios registros (`ZZTESTE`) e
-termina com `limpeza: registros ZZTESTE restantes = 0`.
+A bateria cria os próprios registros (`ZZTESTE`). As camadas funcionais apagam o que
+criaram; o estresse mantém a massa para conferir na tela até `run.php limpar`. A linha de
+base de 28/09 está no `api/tests/agro/README.md`.
 
 Como a bateria vai evoluindo: cada fase fecha um grupo de cenários. O critério de pronto de
 cada fase é **esses cenários passarem e nenhum outro piorar**. Os `[INFO]` não reprovam.
 
-| Fase | Task | Cenários que passam a `[OK]` |
+| Fase | Task | Cenários que passam a `[OK]` (bateria nova; S* = ids da auditoria) |
 |---|---|---|
-| 1 | TASK-SYNC | S3, S4a, S4b, S7, S15 |
-| 2 | TASK-SYNC | (front; roteiro manual) |
-| 3 | TASK-170 | S2.1–S2.3, S8, S8c, S14 (S8b e S8d continuam OK) |
-| 4 | TASK-DOM | S9, S10, S13, S13b, S16 |
-| 5 | TASK-130 | S12 (S5/S6 continuam `[INFO]` se D1 = avisar) |
+| 1 | TASK-180 | R1 (S3), R2, R3 (S4a), E4 (S4b), R4 (S7), A8 (S15, S16), R6, R7 |
+| 2 | TASK-180 | (front; roteiro manual) |
+| — | TASK-182 | A1, A4, A7, D*, R8, I4, I10 + paridade F1–F4 do `desconto-front.mjs` |
+| 3 | TASK-170 | C1 e E3 (aceitar e avisar, D12), C5 (S8d), C8, C9, A6 (S14), I9. C2, C3, C4 e R5 já passam com a regra aceita; I7 virou INFO |
+| 4 | TASK-181 | T3, I5, I6, I14 (S9, S10, S13, S13b) |
+| 5 | TASK-130 | T2, T5, T7 (S12), I1, I3, I8 (T4/I11 = S5/S6 continuam `[INFO]`, D1 = avisar) |
 
 ---
 
@@ -303,6 +330,16 @@ public static function entregueKg(int $codcontrato, ?int $excetoCodcarga = null)
   lugares que um depende do outro.
 
 ### 3.2 `validarOverloadContrato`
+
+> **Superado em 29/09/2026 (D12):** o contrato pode passar do saldo.
+> - O `validarOverloadContrato` **deixa de bloquear** e vira aviso: o pátio mostra quanto
+>   passa do contratado, usando o mesmo `saldokg` da tela (fonte única do 3.1).
+> - Sem bloqueio não há corrida a proteger. A trava de contrato abaixo **não entra**, e a
+>   ordem das travas fica: carga (consultiva) → silos, se um dia D1 mudar.
+> - "Cancelar nunca é barrado" (C5) continua valendo e, sem o bloqueio, vale por construção.
+>
+> O texto original fica abaixo como histórico.
+
 - **Pular quando `$carga->inativo !== null`.** Cancelar nunca pode ser barrado (S8d; hoje só
   passa porque o ajuste manual não é contado).
 - Considerar os pontos de **qualquer papel** ligados a contrato com teto; a mensagem não muda.
@@ -323,6 +360,8 @@ public static function entregueKg(int $codcontrato, ?int $excetoCodcarga = null)
 ### 3.3 `CargaService::ativar`
 Dentro da transação da Fase 1.4: `parent::ativar`, depois `$carga->load('CargaPontoS')`,
 `static::validar($carga)` (422 desfaz a reativação) e por fim `gerarMovimento`.
+Com a D12, o excesso de contrato **não** recusa mais a reativação (C4); as regras de domínio
+da Fase 4 continuam valendo.
 
 ### 3.4 Ajuste manual com sinal (critério #2)
 - `MovimentoGraoService::lancarManual`: depois de arredondar, se

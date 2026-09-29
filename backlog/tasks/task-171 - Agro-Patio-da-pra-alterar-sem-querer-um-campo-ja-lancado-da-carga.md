@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-09-28 21:08'
+updated_date: '2026-09-29 13:14'
 labels:
   - agro
 dependencies: []
@@ -38,10 +38,10 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [ ] #12 Placa e carreta aceitam so formato brasileiro (ABC1234 ou ABC1D23); placa sem cadastro pode ser usada assim mesmo ou cadastrada
 - [ ] #13 Motorista pode ser cadastrado de dentro do modal com CPF, nome, telefone e endereco
 - [ ] #14 Motorista sem cadastro exige CPF, nome completo, telefone e endereco, gravados so na carga; CPF ja cadastrado seleciona a pessoa existente
-- [ ] #15 Os 4 modais da carga com metade da altura da tela (tela cheia no celular)
-- [ ] #16 Carga nova nasce com Recebimento e a chegada preenchidos, mas sem safra; registrar sem safra nao deixa
-- [ ] #17 No modal de Operacao as setas percorrem as opcoes de placa e motorista (inclusive usar sem cadastro e cadastrar), e escolher a placa leva o foco pra carreta
-- [ ] #18 Origem/Destino: a unica linha de origem ou destino nao tem X; a soma so aparece com mais de uma linha; o + fica na linha do titulo com tooltip
+- [ ] #15 Carga nova nasce com Recebimento e a chegada preenchidos, mas sem safra; registrar sem safra nao deixa
+- [ ] #16 No modal de Operacao as setas percorrem as opcoes de placa e motorista (inclusive usar sem cadastro e cadastrar), e escolher a placa leva o foco pra carreta
+- [ ] #17 Origem/Destino: a unica linha de origem ou destino nao tem X; a soma so aparece com mais de uma linha; o + fica na linha do titulo com tooltip
+- [ ] #18 Os 4 modais da carga com 60% da altura da tela (tela cheia no celular); o modal de Operação cabe sem rolar, com o 'cadastrar no sistema' no rodapé à esquerda
 <!-- AC:END -->
 
 ## Implementation Notes
