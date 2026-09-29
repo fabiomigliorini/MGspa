@@ -63,8 +63,8 @@ não toca portador; `tblliquidacaotitulo` tem `codpdv/codpix/codpagarmepedido/ti
 em 100% das linhas. O modelo de títulos carrega colunas duplicadas, 4 triggers e catálogos com tipos
 sem uso desde 2016–2024.
 
-**Executar agora: M0** (M0.1, validar, depois M0.2). Os demais milestones esperam a validação do
-anterior.
+**Andamento**: M0.1 e M0.2 **concluídos e validados em 29/09/2026** (TASK-186, commits `7c6551a33`
+e `0991fc2b3`). **Próximo: M1.1.** Os demais milestones esperam a validação do anterior.
 
 **Formato do trabalho**: milestones. Cada um termina numa tela que o Fábio abre, testa e valida; só
 então começa o próximo. Tudo que o milestone precisa (DDL, backend, frontend) entra nele; o que não é
@@ -72,8 +72,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 
 | Milestone | Task | Tela que valida |
 |---|---|---|
-| M0.1 Títulos: `valor`/`saldo` com sinal, sem triggers | task prévia (nova) | contas → Títulos/Liquidações/Agrupamentos/Boletos; RH acerto; PDV prazo/vale/devolução |
-| M0.2 Títulos: catálogos enxutos, "Vale Colaborador", "Repasse Parceiro" | task prévia | contas → Cadastros → Tipos de Título / Tipos de Movimento; Novo título |
+| M0.1 Títulos: `valor`/`saldo` com sinal, sem triggers — **feito** | TASK-186 | contas → Títulos/Liquidações/Agrupamentos/Boletos; RH acerto; PDV prazo/vale/devolução |
+| M0.2 Títulos: catálogos enxutos, "Vale Colaborador", "Repasse Parceiro" — **feito** | TASK-186 | contas → Cadastros → Tipos de Título / Tipos de Movimento; Novo título |
 | M1.1 Receber título no PDV: dinheiro, PIX, cheque (+ portador em espécie e PDV → portador) | "Receber título no balcão" (nova) | negocios → Receber título; contas → Portadores; Config → PDV |
 | M1.2 Receber título no PDV: cartão pela maquineta | idem | negocios → Receber título com PagarMe/Saurus |
 | M2 Abrir/fechar caixa e venda em dinheiro (períodos + razão) | TASK-39 | negocios → Caixa; Receber → Dinheiro |
@@ -144,9 +144,20 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 
 ## Convenções confirmadas no código
 
-- Modelo atual de sinal: título a receber é `DB`, liquida com `credito = total`; após M0.1 vira
-  `−valor` do movimento. Razão: uma linha por movimento de liquidação (600), por estorno dela, e por
-  implantação (100)/estorno (900) de tipo com `movimentaportador`.
+- **Modelo de títulos depois do M0 (é o que vale)**: `tbltitulo`, `tblmovimentotitulo`,
+  `tbltituloagrupamento` e `tblliquidacaotitulo` têm um `valor` só, com sinal (positivo = a receber,
+  negativo = a pagar); `tbltitulo.saldo` na mesma convenção. Não existem mais `debito`/`credito`
+  (exceto em `tblliquidacaotitulo`, mantidos só para o "Totais de Caixa" do MGLara até o M2), nem
+  `debitosaldo/creditosaldo/debitototal/creditototal`, nem a coluna `sistema`, nem as 4 triggers e
+  as 4 views. Todo movimento nasce por `MovimentoTituloService::lancar`, que recalcula título,
+  liquidação e agrupamento; implantação é sempre tipo 100 (`TituloService::implantar`); estorno
+  guarda o tipo do original e aponta para ele (`codmovimentotituloestorno`); natureza do título por
+  `Titulo::ehReceber()`. `tbltipotitulo` tem `natureza` (R/P) e `movimentaportador` (true em 2 Vale
+  Colaborador, 120 Adto Fornecedor, 220 Adto Cliente, 230 Crédito Cliente); tipo 953 = Repasse
+  Parceiro.
+- Dinheiro no portador = `−valor` do movimento de liquidação (título a receber liquida com movimento
+  negativo → entrou dinheiro). Razão: uma linha por movimento de liquidação (600), por estorno dela,
+  e por implantação (100)/estorno de tipo com `movimentaportador`.
 - `Autorizador::pode([...], $codfilial)` sempre inclui Administrador, mas com filial exige linha do
   Admin naquela filial → "Admin ou X da filial" = `pode([]) || pode(['X'], $codfilial)`.
 - `tblportadormovimento.observacoes varchar(300)` = histórico; não criar coluna.
@@ -164,7 +175,9 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 
 ---
 
-## M0 — Títulos simplificados (task prévia)
+## M0 — Títulos simplificados (TASK-186) — CONCLUÍDO em 29/09/2026
+
+Mantido como registro. Os detalhes do que foi entregue e os achados estão nas notas da TASK-186.
 
 **Levantamento (feito):** `tbltitulo` tem `debito/credito`, `debitototal/creditototal` (ninguém lê),
 `debitosaldo/creditosaldo` (6 PHP + `negocios/.../FormaVale.vue`) e `saldo` (já é `debito − credito`).
