@@ -107,7 +107,12 @@ class TituloDetalheResource extends Resource
             ];
         });
 
-        $movimentos = $this->MovimentoTituloS->map(function ($m) {
+        // quem desfez quem: codigo do movimento original => codigo do estorno dele
+        $estornadoPor = $this->MovimentoTituloS
+            ->whereNotNull('codmovimentotituloestorno')
+            ->pluck('codmovimentotitulo', 'codmovimentotituloestorno');
+
+        $movimentos = $this->MovimentoTituloS->map(function ($m) use ($estornadoPor) {
             $valMov = (float)$m->valor;
             $opMov = ($valMov < 0) ? 'CR' : 'DB';
             return [
@@ -128,6 +133,9 @@ class TituloDetalheResource extends Resource
                 'criacao' => $m->criacao,
                 'codusuariocriacao' => $m->codusuariocriacao ? (int)$m->codusuariocriacao : null,
                 'codmovimentotituloestorno' => $m->codmovimentotituloestorno ? (int)$m->codmovimentotituloestorno : null,
+                'codmovimentotituloestornadopor' => isset($estornadoPor[$m->codmovimentotitulo])
+                    ? (int)$estornadoPor[$m->codmovimentotitulo]
+                    : null,
                 'estorno' => $m->ehEstorno(),
                 'valor' => $valMov,
                 'operacao' => $opMov,

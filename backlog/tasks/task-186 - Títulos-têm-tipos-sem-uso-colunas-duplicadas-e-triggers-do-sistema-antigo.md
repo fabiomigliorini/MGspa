@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-29 00:59'
-updated_date: '2026-09-29 14:42'
+updated_date: '2026-09-29 14:51'
 labels:
   - contas
   - api
@@ -49,6 +49,7 @@ Script DDL: api/database/titulo_valor.sql (idempotente; dev agora, produção no
 - [x] #14 M0.1.8 Agrupamento guarda o total num valor só, com sinal, igual a débito − crédito
 - [x] #15 M0.1.9 Liquidação guarda só o total líquido, com sinal; o recibo de recebimento e o de pagamento continuam saindo, decididos pelos movimentos
 - [x] #16 M0.1.10 Coluna sistema sai de título, movimento e liquidação; a data de gravação fica só em criação e alteração
+- [x] #17 M0.1.11 No detalhe do título, o movimento estornado e o estorno dele ficam escondidos; a opção Mostrar estornos exibe os dois identificados e dizendo qual se refere a qual
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -85,6 +86,8 @@ Tipos inativados com título em aberto: 8 Remessa Conserto (2), 932 Permuta (1),
 MGsis: Titulo.php passou a ler natureza do tipo. Importação real da NFe de terceiro testada em dev com rollback depois da limpeza e do M0.2.
 
 Coluna sistema (29/09/2026): derrubada de tbltitulo, tblmovimentotitulo e tblliquidacaotitulo. Antes, criacao em branco recebeu o valor de sistema (121.099 títulos e 342.178 movimentos; liquidação não tinha nenhum). alteracao em branco não foi preenchida. No código, a ordem dos movimentos e a data de estorno do título passaram a usar criacao. MGsis: Titulo.php e MovimentoTitulo.php deixaram de gravar sistema.
+
+Estornos no detalhe do título (29/09/2026, aguardando validação): a API devolve em cada movimento quem ele estorna e por quem foi estornado; a tela esconde o par e oferece Mostrar estornos. Estorno antigo (tipos 9xx, sem ponteiro para o original) continua sempre à vista, só com a etiqueta Estorno, porque não dá para saber qual movimento ele desfez.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary
