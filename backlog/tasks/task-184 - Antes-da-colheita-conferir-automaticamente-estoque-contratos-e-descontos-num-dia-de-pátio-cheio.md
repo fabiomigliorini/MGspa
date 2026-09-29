@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@eduardo'
 created_date: '2026-09-28 21:11'
-updated_date: '2026-09-28 21:52'
+updated_date: '2026-09-29 13:41'
 labels:
   - agro
 dependencies: []
@@ -42,4 +42,6 @@ Linha de base, run.php todos: OK 38, FALHA 59, INFO 12, ERRO 0, em 161 s. Parida
 Destaques: E4 = com dois aparelhos gravando o mesmo caminhão, 7 a 12 de 20 cargas ficam FINALIZADAS sem extrato; R5/E3 = o contrato passa do teto (75 t e 100 t em 60 t); R6 = extrato duplicado em 5-6 de 10; D = a fórmula é a da norma em 10.000/10.000 vetores (gramas), mas 9.706 saem fora do kg inteiro (até 2 kg); P1 = 91 de 91 rotas abertas para usuário só de Caixa; E1 = 3 aparelhos e 150 caminhões com p95 de ~100 ms e zero erro.
 
 Pendente: E2 (rampa até 24 aparelhos) pede horário combinado, porque deixa a API dev lenta para todos. A massa do estresse ficou no dev (safras ZZTESTE ... 2099) para conferir na tela; run.php limpar apaga.
+
+29/09/2026 — classificação confirmada com quem prioriza (registro: backlog/docs/doc-3). Aceito: contrato carregado além do saldo (D12: o caminhão completa a carga; o servidor aceita, o pátio avisa, a tela mostra o excesso) e silo negativo (D1). Confirmados como defeito: transferência para o mesmo silo, tabela nova recalculando romaneio fechado, silo inativo recebendo carga, entregue somando compra; cargas 1, 4, 6 e 8 do dev são teste. Bateria ajustada à D12: C1 e E3 exigem que a carga que passa do saldo seja ACEITA (hoje o servidor barra com 422, falha da TASK-170); C2/C3 conferem o saldo a entregar da tela; C4 e R5 aceitam o excesso; C6 virou roteiro de tela; I7 virou INFO.
 <!-- SECTION:NOTES:END -->

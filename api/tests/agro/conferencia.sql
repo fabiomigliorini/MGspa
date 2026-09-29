@@ -127,8 +127,8 @@ join tblcontrato k on k.codcontrato = p.codcontrato
 where p.contatipo = 'CONTRATO' and k.codcultura <> s.codcultura and c.inativo is null /*ESCOPO:c.codsafra*/
 order by 1;
 
--- @I7 FALHA Contrato com teto não fica entregue a mais (1 kg de folga)
-\echo '== I7 [FALHA] Contrato com teto não fica entregue a mais (1 kg de folga)'
+-- @I7 INFO Contrato entregue acima do contratado (aceito desde 29/09: o caminhão completa a carga e o pátio avisa)
+\echo '== I7 [INFO] Contrato entregue acima do contratado (aceito desde 29/09: o caminhão completa a carga e o pátio avisa)'
 select k.codcontrato, k.contrato, k.quantidade as sacas, k.quantidade * cu.pesosaca as contratadokg,
        coalesce(sum(m.liquido), 0) as entreguekg
 from tblcontrato k
