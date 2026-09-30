@@ -1,6 +1,5 @@
 <script setup>
 // Lista com campo de filtro em cima: digita para filtrar, ↑/↓ navegam, Enter escolhe.
-// Se o texto digitado não bate com nenhum serial cadastrado, oferece "usar o digitado".
 import { ref, computed } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import ListaOpcoes from './ListaOpcoes.vue'
@@ -14,10 +13,6 @@ const props = defineProps({
     type: String,
     default: 'Filtrar',
   },
-  permitirDigitado: {
-    type: Boolean,
-    default: false,
-  },
 })
 
 const emit = defineEmits(['escolher'])
@@ -27,27 +22,12 @@ const filtro = ref('')
 
 const filtradas = computed(() => {
   const texto = filtro.value.trim().toLowerCase()
-  let lista = props.opcoes
-  if (texto) {
-    lista = props.opcoes.filter((o) =>
-      [o.label, o.caption, o.serial].some((c) => c && String(c).toLowerCase().includes(texto)),
-    )
+  if (!texto) {
+    return props.opcoes
   }
-  const batePorSerial = lista.some((o) => o.serial && o.serial.toLowerCase() === texto)
-  if (props.permitirDigitado && texto && !batePorSerial) {
-    lista = [
-      ...lista,
-      {
-        valor: '__digitado__',
-        label: `Usar serial digitado: ${filtro.value.trim()}`,
-        serial: filtro.value.trim(),
-        icone: 'keyboard',
-        cor: 'indigo-6',
-        digitado: true,
-      },
-    ]
-  }
-  return lista
+  return props.opcoes.filter((o) =>
+    [o.label, o.caption, o.serial].some((c) => c && String(c).toLowerCase().includes(texto)),
+  )
 })
 
 const escolher = (opcao) => {

@@ -26,7 +26,11 @@ referenciando este arquivo e o milestone pelo nome (ex.: "executa o M1 do plano 
 **Andamento:** M0.1 e M0.2 (títulos com `valor`/`saldo`, catálogos enxutos) **concluídos e validados
 em 29/09/2026** (TASK-186, commits `7c6551a33` e `0991fc2b3`). **M1 (movimento de título numa
 linha) concluído e validado em 30/09/2026** (TASK-188). **M2 (tipo de portador e PDV →
-portador) concluído e validado em 30/09/2026** (TASK-188). **Próximo: M3.**
+portador) concluído e validado em 30/09/2026** (TASK-188). **M3 (cadastro único de maquinetas)
+validado em 30/09/2026** (TASK-188): decisões da conferência na seção do M3, que cresceu (tela
+Saurus/S2Pay do negocios e cadastro do POS PagarMe passam para contas → Maquinetas). Pendente do
+M3: o parceiro do cartão manual passar a vir das maquinetas (adquirente nova, como Cielo, não
+aparece no PDV) e o pareamento SafraPay por QR, que confere no go-live. **Próximo: M4.**
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -36,8 +40,11 @@ produção fica como está.
 **Pendências do Fábio no go-live** (não são gaps do plano): quais dos dois portadores em espécie da
 filial 101 (100 Caixa Financeiro, 101001 Caixa Atacado) são cofre; pessoa e conta contábil de cada
 item do caixa; cadastrar as gavetas (portador em espécie) e vinculá-las em cada PDV de caixa (M2);
-rodar os scripts DDL em produção, na ordem dos milestones (`movimento_titulo_colunas.sql`,
-`portador_tipo.sql`, …), com o MGsis e o MG Lara olhando as views temporárias.
+conferir a filial dos acessos de site de Brasil Card, Le Card e MultVale (nascem na 101) e as
+maquinetas manuais criadas pelos seriais digitados, e validar o pareamento SafraPay por QR com um
+pinpad reserva (M3); rodar os scripts DDL em produção, na ordem
+dos milestones (`movimento_titulo_colunas.sql`, `portador_tipo.sql`, `maquineta.sql`, …), com o
+MGsis e o MG Lara olhando as views temporárias.
 
 ## Glossário
 
@@ -65,7 +72,9 @@ rodar os scripts DDL em produção, na ordem dos milestones (`movimento_titulo_c
 - **Envelope**: o que sobra na gaveta ao fechar = `saldofinal` da sessão = `saldoinicial` da próxima.
 - **Item do caixa**: mercadoria de parceiro fora do fiscal (chips, ingressos, maquinetas de
   terceiros) que passa pela gaveta e vira título "Repasse Parceiro" no fechamento.
-- **Maquineta** (`tblmaquineta`): cadastro único dos terminais de cartão, integrados ou não.
+- **Maquineta** (`tblmaquineta`): cadastro único dos terminais de cartão, integrados ou não (um por
+  POS PagarMe, um por pinpad Saurus, manuais e acessos de site). A adquirente é dado dela.
+  **Compartilhada** = aparece no PDV de todas as filiais (acesso de site feito numa filial só).
 - **Baixa de título**: o nome novo para o que era "liquidação". A palavra liquidação só aparece
   neste doc para a tabela antiga (`tblliquidacaotitulo`) e as telas que existem até o M6.
 
@@ -301,9 +310,11 @@ dinheiro que andou, ou o que foi levado ao agrupamento —, sinal do principal).
 
 ### `tblmaquineta` (M3)
 
-`codmaquineta PK, apelido, serial, codfilial, codpessoa (adquirente), integracao char(1) (nulo manual |
-P PagarMe | S Saurus), codpagarmepos, codsauruspinpad, inativo, audit`. Seed das operadoras e dos
-seriais em uso. `tblmaquinetaconferencia` (M9): `codmaquineta, dia, credito, debito, observacoes,
+`codmaquineta PK, apelido varchar(50) NN, serial, codfilial NN, compartilhada bool NN default false,
+codpessoa NN (adquirente), integracao char(1) (nulo manual | P PagarMe | S Saurus), codpagarmepos
+(único), codsauruspinpad (único), inativo, audit`. CHECK: manual sem POS/pinpad; P só com POS; S só
+com pinpad. `tblnegocioformapagamento.codmaquineta` (FK, nulo só no histórico sem parceiro). Carga
+e regras no M3. `tblmaquinetaconferencia` (M9): `codmaquineta, dia, credito, debito, observacoes,
 codusuario, audit`, única por maquineta e dia.
 
 ### `tblportadorperiodo` (M10)
@@ -478,6 +489,63 @@ para leitura de histórico não convertido.
   `FormaCartao` lista as maquinetas da filial (recentes primeiro) em vez de digitar serial.
 - **Valida**: cadastro com as das duas operadoras e as manuais; venda em cartão manual e integrado
   escolhendo da lista; pagamento gravado com a maquineta certa.
+- **O que mudou em relação ao plano** (conferência de 30/09/2026 no banco e no código, decidido
+  item a item com o Fábio):
+  - **Serial digitado** (`serialmaquineta`, nasceu na TASK-100): casa com a maquineta pelo **serial +
+    filial do negócio** (ativa primeiro); se não achar, vira **maquineta manual daquela filial**
+    (apelido = serial, adquirente = parceiro do pagamento). Mesma regra na carga e no PDV antigo que
+    ainda manda serial. O mesmo aparelho usado em duas lojas vira duas maquinetas.
+  - **Carga com todos os aparelhos**, não só os ativos: 89 POS PagarMe (85 inativos) e 31 pinpads,
+    senão ~560 mil pagamentos PagarMe do histórico ficariam sem maquineta.
+  - **Saurus: maquineta = pinpad** (como no plano). Cada re-pareamento cria um pinpad novo no mesmo
+    PDV Saurus (7 PDVs têm 2 ou 3, de fev–mar/2025): o substituído entra **inativo**; parear de novo
+    cria a maquineta nova e inativa a anterior do mesmo PDV Saurus. Apelido vem do PDV Saurus. A
+    cobrança continua indo ao PDV Saurus (maquineta → pinpad → PDV Saurus).
+  - **Cartão manual no PDV continua perguntando o parceiro**; depois lista as maquinetas daquele
+    parceiro na filial (recentes primeiro, sem digitar) e **pula a etapa quando só há uma**.
+    Maquineta **obrigatória em todo cartão manual** (422 no `fechar`).
+  - **Brasil Card, Le Card e MultVale** são vendidos pelo site do parceiro, com um acesso só (cobram
+    por usuário) feito numa filial e usado por todas: uma **maquineta de site por parceiro**, filial
+    101, com a coluna nova **`compartilhada`** (aparece no PDV de todas as filiais). MultVale física,
+    onde houver, é cadastrada como manual na filial dela.
+  - **PDV antigo** (ainda sem a lista): serial → maquineta pela regra acima; sem serial (parceiros
+    de site), usa a maquineta do parceiro se for a única.
+  - **Histórico sem aparelho**: "Histórico Stone", "Histórico SafraPay" e "Histórico Cielo Lio"
+    **inativas, por filial** (PagarMe 2021–2022 sem pedido, manuais Stone/Safra sem serial, Cielo
+    Lio); o manual antigo de Brasil Card/Le Card/MultVale aponta para a maquineta do site. A pessoa
+    **Cielo S.A.** (CNPJ 01.027.058/0001-91) é criada pelo script. Ficam sem maquineta só os cartões
+    manuais antigos sem parceiro (478 mil), por isso a coluna aceita nulo.
+  - **Permissão** do cadastro: Admin e Financeiro em todas as filiais; **Gerente só na própria**.
+  - **Juntar maquinetas** entra no M3: a manual criada por serial errado é juntada na certa (mesma
+    adquirente); os pagamentos passam para a certa e a errada é excluída.
+  - **Tela Saurus/S2Pay sai do negocios** e vai para contas → Maquinetas: nova maquineta SafraPay
+    (filial + apelido → QR → pinpad lê → confere), parear de novo, editar e inativar (replicando no
+    PDV Saurus/pinpad). **POS PagarMe cadastrado dentro da maquineta** (serial + filial + apelido;
+    editar e inativar replicam no POS); o webhook continua criando sozinho o POS de serial
+    desconhecido, já com maquineta. A tela PagarMe do negocios (pedidos pendentes) fica onde está.
+  - Resultado da carga em dev (`api/database/maquineta.sql`): maquinetas PagarMe 4 ativas + 85
+    inativas, Saurus 21 + 10, site 3, manuais 3, histórico 14 inativas; pagamentos com maquineta:
+    PagarMe 566.261, Saurus 201.336, histórico 288.186, site 835, manuais 7; sem maquineta 478.509.
+    Conferência dentro do script (aborta se sobrar cartão com pedido, serial ou parceiro sem
+    maquineta). Em dev os seriais digitados são de teste (`123123123`, `asdasdasd`).
+  - Como ficou no código: domínio `Mg/Maquineta` (`MaquinetaService`: CRUD, inativar/ativar
+    replicando no POS/pinpad/PDV Saurus, `juntar`, `daPagarMePos`, `daSaurusPinPad`,
+    `parearSaurusPinPad`, `resolverSerial`, `unicaDoParceiro`, `paraPdv`); rotas `v1/maquineta`
+    (+ `adquirente`, `saurus/qrcode` com QR em SVG gerado na API, `saurus/confirmar`, `{id}/inativo`,
+    `{id}/juntar`) e `v1/select/maquineta`. Registro e leitura do PDV Saurus saíram do
+    `PdvController` para `SaurusService::{registrarPdv, verificarLeitura}`; as 6 rotas
+    `v1/pdv/saurus/{registrar-pos, verificar-leitura, pdvs, pdv/…}` foram removidas. PagarMe e
+    Saurus gravam `codmaquineta` no `vincularNegocioFormaPagamento`; `PdvNegocioService`
+    resolve o serial do PDV antigo no sync e recusa (422) cartão manual sem maquineta no
+    `fechar`. O estoque local do PDV traz `MaquinetaS` (ativas da filial + compartilhadas); o
+    `FormaCartao` sincroniza sozinho se ainda não tiver a lista. O serial físico da SafraPay fica
+    só na maquineta (`tblsauruspinpad.serial` vai como `IdPinPad` na cobrança e continua nulo).
+  - O cartão manual continua gravando `serialmaquineta` só no PDV antigo; o novo manda
+    `codmaquineta`. A coluna some com a tabela no M4.
+  - **Pareamento SafraPay por QR só é validado no go-live**, em produção, com um pinpad reserva:
+    o `api/.env` do dev não tem as credenciais da Saurus (`SAURUS_S2PAY_*`) e os PDVs Saurus do
+    banco de dev têm os mesmos ids dos de produção na conta Saurus (parear no dev re-parearia o
+    terminal real da loja). No dev a falha da API volta como 502 com mensagem.
 
 ## M4 — Pagamento e parcelas no lugar da forma de pagamento da venda (Fundação; PDV não muda)
 

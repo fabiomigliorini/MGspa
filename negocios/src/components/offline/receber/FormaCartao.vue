@@ -1,10 +1,12 @@
 <script setup>
 // Passo do wizard: cartão. Etapas: tipo → parcelas (crédito) → modo (maquininha ou manual)
-// → [maquininha do manual] → [bandeira] → [autorização].
+// → parceiro → [maquineta do parceiro, pulada se única] → [bandeira] → [autorização].
 // Enviar para a maquininha cria o pedido e emite 'cobranca'; manual lança direto.
+// As maquinetas vêm do cadastro único (contas → Maquinetas) pelo estoque local.
 import { ref, computed, onMounted } from 'vue'
 import { Notify } from 'quasar'
 import { negocioStore } from 'stores/negocio'
+import { sincronizacaoStore } from 'stores/sincronizacao'
 import { db } from 'boot/db'
 import MgInput from '@components/MgInput.vue'
 import { formataNumero } from '@components/formatters'
@@ -17,9 +19,7 @@ import ListaFiltravel from './ListaFiltravel.vue'
 const emit = defineEmits(['concluido', 'cobranca'])
 
 const sNegocio = negocioStore()
-
-const CODPESSOA_SAFRA = 20119
-const CODPESSOA_STONE = 9993
+const sSinc = sincronizacaoStore()
 const TIPOS = [
   { tecla: 1, valor: 1, label: 'Débito', ...VISUAL.debito },
   { tecla: 2, valor: 2, label: 'Crédito', ...VISUAL.credito },
@@ -34,42 +34,48 @@ const enviando = ref(false)
 const tipo = ref(null)
 const plano = ref(null)
 const parceiro = ref(null) // codpessoa do parceiro (manual) ou null (enviar p/ maquininha)
-const maquineta = ref(null) // { serial, apelido }
+const maquineta = ref(null) // maquineta do cartão manual (MaquinetaS do estoque local)
 const bandeira = ref(null)
 const autorizacao = ref(null)
 
-const posSaurus = ref([])
-const posPagarMe = ref([])
+// maquinetas ativas da filial + compartilhadas
+const maquinetas = ref([])
 
 const valor = computed(() => sNegocio.receber.valor)
 
 onMounted(async () => {
-  const loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
-  posSaurus.value = loc?.SaurusPosS ?? []
-  posPagarMe.value = loc?.PagarMePosS ?? []
+  let loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
+  // PDV atualizado que ainda não sincronizou o estoque local depois do cadastro de maquinetas
+  if (loc && !loc.MaquinetaS) {
+    await sSinc.silentSincronizarEstoqueLocal()
+    loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
+  }
+  maquinetas.value = loc?.MaquinetaS ?? []
 })
 
-// ---- maquininhas da filial; a padrão do PDV só vem pré-selecionada (pode estar com defeito) ----
-// SaurusPosS traz uma linha POR PINPAD, então um PDV com 2 ou 3 aparelhos repetia na lista
-// (mesmo apelido, mesmo `valor`, teclas diferentes — e key duplicada no v-for do ListaOpcoes).
-// Quem recebe a cobrança é o PDV (codsauruspdv), logo os pinpads dele são uma opção só.
+// ---- maquininhas integradas da filial; a padrão do PDV só vem pré-selecionada (pode estar
+// com defeito). Quem recebe a cobrança Saurus é o PDV Saurus (codsauruspdv), então dois pinpads
+// ativos no mesmo PDV Saurus são uma opção só.
 const maquinetasEnvio = computed(() => {
-  const todas = [
-    ...posSaurus.value.map((p) => ({
-      valor: `saurus-${p.codsauruspdv}`,
-      tipoMaquineta: 'saurus',
-      nome: 'SafraPay',
-      logo: '/logo-cartoes/Safra.jpg',
-      pos: p,
-    })),
-    ...posPagarMe.value.map((p) => ({
-      valor: `pagarme-${p.codpagarmepos}`,
-      tipoMaquineta: 'pagarme',
-      nome: 'Stone',
-      logo: '/logo-cartoes/Stone.jpg',
-      pos: p,
-    })),
-  ]
+  const todas = maquinetas.value
+    .filter((m) => m.integracao === 'P' || m.integracao === 'S')
+    .map((m) =>
+      m.integracao === 'S'
+        ? {
+            valor: `saurus-${m.codsauruspdv}`,
+            tipoMaquineta: 'saurus',
+            nome: 'SafraPay',
+            logo: '/logo-cartoes/Safra.jpg',
+            pos: m,
+          }
+        : {
+            valor: `pagarme-${m.codpagarmepos}`,
+            tipoMaquineta: 'pagarme',
+            nome: 'Stone',
+            logo: '/logo-cartoes/Stone.jpg',
+            pos: m,
+          },
+    )
   return todas.filter((m, i) => todas.findIndex((o) => o.valor === m.valor) === i)
 })
 
@@ -175,32 +181,41 @@ const opcoesParceiro = computed(() =>
 
 const parceiroAtual = computed(() => cartoesManuais.find((p) => p.codpessoa === parceiro.value))
 
+// maquinetas do parceiro escolhido, as usadas recentemente neste PDV primeiro
+const maquinetasParceiro = computed(() => {
+  const lista = maquinetas.value.filter((m) => m.codpessoa === parceiro.value)
+  const ordem = (m) => {
+    const i = sNegocio.maquinetasRecentes.indexOf(m.codmaquineta)
+    return i === -1 ? Infinity : i
+  }
+  return [...lista].sort((a, b) => ordem(a) - ordem(b))
+})
+
 const opcoesMaquineta = computed(() => {
-  const lista = parceiro.value === CODPESSOA_SAFRA ? posSaurus.value : posPagarMe.value
-  const recentes = sNegocio.maquinetasRecentes.filter((m) => m.codpessoa === parceiro.value)
-  const cadastradas = lista
-    .filter((p) => !recentes.some((r) => r.serial === p.serial))
-    .map((p) => ({
-      valor: p.serial ?? `sem-serial-${p.codsauruspdv ?? p.codpagarmepos}`,
-      label: p.apelido,
-      caption: p.serial ?? 'sem serial cadastrado',
-      serial: p.serial,
-      icone: 'point_of_sale',
+  if (!maquinetasParceiro.value.length) {
+    return [
+      {
+        valor: 'sem-maquineta',
+        label: `Nenhuma maquineta ${parceiroAtual.value?.apelido ?? ''} nesta filial`,
+        icone: 'point_of_sale',
+        cor: VISUAL.cartao.cor,
+        desabilitado: true,
+        motivo: 'Cadastre em Contas → Maquinetas',
+      },
+    ]
+  }
+  return maquinetasParceiro.value.map((m) => {
+    const recente = sNegocio.maquinetasRecentes.includes(m.codmaquineta)
+    const detalhe = m.serial ?? (m.compartilhada ? 'todas as filiais' : null)
+    return {
+      valor: m.codmaquineta,
+      label: m.apelido,
+      caption: [detalhe, recente ? 'usada recentemente' : null].filter(Boolean).join(' · '),
+      serial: m.serial,
+      icone: recente ? 'history' : 'point_of_sale',
       cor: VISUAL.cartao.cor,
-      desabilitado: !p.serial,
-      motivo: 'Sem serial cadastrado — digite o serial acima',
-    }))
-  return [
-    ...recentes.map((r) => ({
-      valor: r.serial,
-      label: r.apelido ?? r.serial,
-      caption: `${r.serial} · usada recentemente`,
-      serial: r.serial,
-      icone: 'history',
-      cor: VISUAL.cartao.cor,
-    })),
-    ...cadastradas,
-  ]
+    }
+  })
 })
 
 const opcoesBandeira = computed(() =>
@@ -257,18 +272,20 @@ const escolherModo = (opcao) => {
   irPara('parceiro')
 }
 
+// maquineta obrigatória; com uma só (ex.: acesso de site) ela vem sozinha
 const escolherParceiro = (opcao) => {
   parceiro.value = opcao.valor
-  if (parceiro.value === CODPESSOA_SAFRA || parceiro.value === CODPESSOA_STONE) {
-    irPara('maquineta')
+  maquineta.value = null
+  if (maquinetasParceiro.value.length === 1) {
+    maquineta.value = maquinetasParceiro.value[0]
+    depoisDaMaquineta()
     return
   }
-  maquineta.value = null
-  depoisDaMaquineta()
+  irPara('maquineta')
 }
 
 const escolherMaquineta = (opcao) => {
-  maquineta.value = { serial: opcao.serial, apelido: opcao.digitado ? null : opcao.label }
+  maquineta.value = maquinetasParceiro.value.find((m) => m.codmaquineta === opcao.valor) ?? null
   depoisDaMaquineta()
 }
 
@@ -336,6 +353,15 @@ const salvarManual = async () => {
     })
     return
   }
+  if (!maquineta.value) {
+    Notify.create({
+      type: 'negative',
+      message: 'Escolha a maquineta!',
+      timeout: 3000, // 3 segundos
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return
+  }
   const tipoManual = parceiroAtual.value.tipos.find((t) => t.tipo === tipo.value)
   await sNegocio.adicionarPagamento({
     codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_CARTAOMANUAL),
@@ -347,11 +373,10 @@ const salvarManual = async () => {
     autorizacao: aut,
     parcelas: plano.value.parcelas,
     valorparcela: plano.value.valorparcela,
-    serialmaquineta: maquineta.value?.serial ?? null,
+    codmaquineta: maquineta.value.codmaquineta,
+    maquineta: maquineta.value.apelido,
   })
-  if (maquineta.value?.serial) {
-    sNegocio.registrarMaquinetaRecente({ ...maquineta.value, codpessoa: parceiro.value })
-  }
+  sNegocio.registrarMaquinetaRecente(maquineta.value.codmaquineta)
   emit('concluido')
 }
 
@@ -407,7 +432,6 @@ defineExpose({ tecla, acao })
         ref="listaRef"
         :opcoes="opcoesMaquineta"
         label="Maquininha (apelido ou serial)"
-        permitir-digitado
         @escolher="escolherMaquineta"
       />
     </template>

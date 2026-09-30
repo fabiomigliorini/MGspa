@@ -125,6 +125,19 @@ const routes = [
         },
       },
       {
+        path: 'maquineta',
+        name: 'maquineta',
+        component: () => import('pages/maquineta/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Maquinetas',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/MaquinetaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'forma-pagamento',
         name: 'forma-pagamento',
         component: () => import('pages/formaPagamento/Index.vue'),

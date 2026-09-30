@@ -23,7 +23,7 @@ const campos = computed(() => {
     { label: 'Parceiro', valor: p.parceiro },
     { label: 'Bandeira', valor: p.nomebandeira },
     { label: 'Autorização', valor: p.autorizacao },
-    { label: 'Maquininha', valor: p.serialmaquineta },
+    { label: 'Maquininha', valor: p.maquineta ?? p.serialmaquineta },
     { label: 'Parcelas', valor: parcelado },
     { label: 'Prazo', valor: p.dias ? `${p.dias} dias` : null },
     { label: 'Emitente', valor: p.chequeemitente },

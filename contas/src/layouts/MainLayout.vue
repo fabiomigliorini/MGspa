@@ -81,6 +81,12 @@ const menuGroups = [
       },
       { label: 'Portadores', icon: 'credit_card', color: 'cyan-8', to: { name: 'portador' } },
       {
+        label: 'Maquinetas',
+        icon: 'point_of_sale',
+        color: 'deep-orange-8',
+        to: { name: 'maquineta' },
+      },
+      {
         label: 'Formas de Pagamento',
         icon: 'payments',
         color: 'green-8',

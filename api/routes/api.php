@@ -186,6 +186,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/tributacao', [\Mg\Select\SelectTributacaoController::class, 'index']);
     Route::get('select/moeda', [\Mg\Select\SelectMoedaController::class, 'index']);
     Route::get('select/vale-modelo', [\Mg\Select\SelectValeModeloController::class, 'index']);
+    Route::get('select/maquineta', [\Mg\Select\SelectMaquinetaController::class, 'index']);
 
     // Selects: resolução por id (objeto único ou 404) — padrão GET select/{ent}/{id}
     Route::get('select/pessoa/{id}', [\Mg\Select\SelectPessoaController::class, 'show'])->whereNumber('id');
@@ -211,6 +212,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estoque-movimento-tipo/{id}', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'show'])->whereNumber('id');
     Route::get('select/tributacao/{id}', [\Mg\Select\SelectTributacaoController::class, 'show'])->whereNumber('id');
     Route::get('select/moeda/{id}', [\Mg\Select\SelectMoedaController::class, 'show']);
+    Route::get('select/maquineta/{id}', [\Mg\Select\SelectMaquinetaController::class, 'show'])->whereNumber('id');
 
     // Selects novos (entidades LOCAL pequenas, padrão index + show)
     Route::get('select/forma-pagamento', [\Mg\Select\SelectFormaPagamentoController::class, 'index']);
@@ -911,15 +913,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('vale-escopo/selecionar', '\Mg\Pdv\PdvController@valeEscopoSelecionar');
         Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');
         // Saurus
-        Route::post('saurus/registrar-pos', '\Mg\Pdv\PdvController@registrarPosSaurus');
-        Route::post('saurus/verificar-leitura', '\Mg\Pdv\PdvController@verificarLeituraSaurus');
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
         Route::delete('saurus/pedido/{codsauruspedido}', '\Mg\Pdv\PdvController@cancelarSaurusPedido');
-        Route::get('saurus/pdvs', '\Mg\Pdv\PdvController@listaPdvsSaurus');
-        Route::post('saurus/pdv/{codsauruspdv}', '\Mg\Pdv\PdvController@editarPdvSaurus');
-        Route::get('saurus/pdv/{codsauruspdv}/inativar', '\Mg\Pdv\PdvController@inativarPdvSaurus');
-        Route::get('saurus/pdv/{codsauruspdv}/ativar', '\Mg\Pdv\PdvController@ativarPdvSaurus');
         Route::get('saurus/pedido/{codsauruspedido}/reenviar', '\Mg\Pdv\PdvController@reenviarSaurusPedido');
     });
 
@@ -1277,6 +1273,19 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('portador/{codportador}/saldos-portador', '\Mg\Portador\PortadorController@listaSaldosPortador');
     Route::get('portador/{codportador}/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
+
+    // Maquineta (M3 doc-3: cadastro unico de terminais de cartao)
+    Route::get('maquineta', '\Mg\Maquineta\MaquinetaController@index');
+    Route::get('maquineta/adquirente', '\Mg\Maquineta\MaquinetaController@adquirentes');
+    Route::post('maquineta', '\Mg\Maquineta\MaquinetaController@store');
+    Route::post('maquineta/saurus/qrcode', '\Mg\Maquineta\MaquinetaController@saurusQrCode');
+    Route::post('maquineta/saurus/confirmar', '\Mg\Maquineta\MaquinetaController@saurusConfirmar');
+    Route::get('maquineta/{codmaquineta}', '\Mg\Maquineta\MaquinetaController@show')->whereNumber('codmaquineta');
+    Route::put('maquineta/{codmaquineta}', '\Mg\Maquineta\MaquinetaController@update')->whereNumber('codmaquineta');
+    Route::delete('maquineta/{codmaquineta}', '\Mg\Maquineta\MaquinetaController@destroy')->whereNumber('codmaquineta');
+    Route::post('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@inativar')->whereNumber('codmaquineta');
+    Route::delete('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@ativar')->whereNumber('codmaquineta');
+    Route::post('maquineta/{codmaquineta}/juntar', '\Mg\Maquineta\MaquinetaController@juntar')->whereNumber('codmaquineta');
 
     // Mercos
     Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');

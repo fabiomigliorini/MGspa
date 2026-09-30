@@ -19,6 +19,7 @@ class NegocioFormaPagamentoResource extends Resource
         $ret = parent::toArray($request);
         $ret['formapagamento'] = $this->FormaPagamento->formapagamento;
         $ret['parceiro'] = $this->Pessoa->fantasia??null;
+        $ret['maquineta'] = $this->Maquineta->apelido ?? null;
         // logo do banco na listagem do PDV (public/bancos/{codbanco}.svg)
         $ret['codbanco'] = $this->PixCob->Portador->codbanco ?? null;
         $ret['nomebandeira'] = NegocioFormaPagamentoService::BANDEIRAS[$ret['bandeira']]?? null;

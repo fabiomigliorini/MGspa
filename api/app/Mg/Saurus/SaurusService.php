@@ -10,6 +10,8 @@ use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Negocio\NegocioService;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\S2Pay\ApiService;
+use Mg\Maquineta\MaquinetaService;
+use Ramsey\Uuid\Uuid;
 
 class SaurusService
 {
@@ -35,6 +37,75 @@ class SaurusService
         98 => 'bank_slip',
         99 => 'others',
     ];
+
+    // Registra (ou renova) o PDV Saurus na API: devolve o PDV com a chavepublica que vira o QR
+    // lido pelo pinpad. Sem uuid, cria um PDV novo com o próximo número da filial.
+    public static function registrarPdv(string $apelido, int $codfilial, ?string $pdv_uuid = null): SaurusPdv
+    {
+        $pdv_uuid = $pdv_uuid ?? (string) Uuid::uuid4();
+
+        $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
+        if ($pdvSaurus && $pdvSaurus->vencimento > now()) {
+            return $pdvSaurus;
+        }
+
+        $pessoa = Filial::findOrFail($codfilial)->Pessoa;
+
+        if ($pdvSaurus) {
+            $numero = $pdvSaurus->numero;
+        } else {
+            $ultimo = SaurusPdv::where('codfilial', $codfilial)->orderBy('numero', 'desc')->first();
+            $numero = $ultimo ? $ultimo->numero + 1 : 1;
+        }
+
+        $response = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $numero);
+
+        return SaurusPdv::updateOrCreate(
+            [
+                'id' => $pdv_uuid,
+            ],
+            [
+                'apelido' => $apelido,
+                'autorizacao' => $response->autorizacao->response->chavePublica,
+                'vencimento' => Carbon::parse($response->autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
+                'chavepublica' => $response->pdv->response->chavePublica,
+                'contratoid' => $response->pdv->response->contratoId,
+                'codfilial' => $codfilial,
+                'numero' => $numero,
+            ]
+        );
+    }
+
+    // Depois que o pinpad leu o QR: busca na API o pinpad pareado ao PDV Saurus e grava.
+    // Null enquanto o pinpad não leu.
+    public static function verificarLeitura(SaurusPdv $pdvSaurus): ?SaurusPinPad
+    {
+        $response = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
+
+        if (str_contains($response->retTexto, 'Chave de Autorização está Inválida')) {
+            $pessoa = Filial::findOrFail($pdvSaurus->codfilial)->Pessoa;
+            $autorizacao = ApiService::functionAutorizacao($pdvSaurus->id, $pessoa->cnpj);
+            $pdvSaurus->autorizacao = $autorizacao->response->chavePublica;
+            $pdvSaurus->vencimento = Carbon::parse($autorizacao->response->vencimento)->subHour(1)->subMinutes(10);
+            $pdvSaurus->save();
+            $response = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
+        }
+
+        if (empty($response->response->pinPads)) {
+            return null;
+        }
+
+        return SaurusPinPad::updateOrCreate(
+            [
+                'id' => $response->response->pinPads[0],
+            ],
+            [
+                'apelido' => mb_substr($pdvSaurus->apelido, 0, 20),
+                'codfilial' => $pdvSaurus->codfilial,
+                'codsauruspdv' => $pdvSaurus->codsauruspdv,
+            ]
+        );
+    }
 
     public static function cancelarPedidosAbertosPdv($codsauruspdv)
     {
@@ -258,7 +329,8 @@ class SaurusService
         $tipo = 99; //Outros
         $autorizacao = null;
         $bandeira = null;
-        $serialmaquineta = $ped->SaurusPdv->SaurusPinPadS->first()->serial ?? null;
+        // pinpad que cobrou; sem ele, o mais novo do PDV Saurus
+        $pinpad = $ped->SaurusPdv->SaurusPinPadS()->orderBy('codsauruspinpad', 'desc')->first();
         foreach ($ped->SaurusPagamentoS as $pag) {
             $tipo = $pag->modpagamento;
 
@@ -266,8 +338,9 @@ class SaurusService
             $bandeira = static::buscaOuCriaBandeira(
                 $pag->SaurusBandeira->bandeira
             );
-            $serialmaquineta = $pag->SaurusPinPad->serial ?? $serialmaquineta;
+            $pinpad = $pag->SaurusPinPad ?? $pinpad;
         }
+        $maquineta = $pinpad ? MaquinetaService::daSaurusPinPad($pinpad) : null;
 
         NegocioFormaPagamento::updateOrCreate(
             [
@@ -286,7 +359,8 @@ class SaurusService
                 'tipo' => $tipo,
                 'bandeira' => $bandeira->tband,
                 'integracao' => true,
-                'serialmaquineta' => $serialmaquineta,
+                'serialmaquineta' => $maquineta->serial ?? null,
+                'codmaquineta' => $maquineta->codmaquineta ?? null,
             ]
         );
 

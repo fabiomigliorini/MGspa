@@ -112,7 +112,7 @@ export const negocioStore = defineStore('negocio', {
       forma: null,
       codtituloVale: null,
     },
-    // maquininhas usadas em cartão manual neste PDV, mais recente primeiro
+    // codmaquineta das usadas em cartão manual neste PDV, mais recente primeiro
     maquinetasRecentes: [],
     padrao: {
       codestoquelocal: 101001, //Deposito
@@ -1725,11 +1725,12 @@ export const negocioStore = defineStore('negocio', {
       this.dialog.receber = true
     },
 
-    registrarMaquinetaRecente({ serial, apelido, codpessoa }) {
-      this.maquinetasRecentes = [
-        { serial, apelido, codpessoa },
-        ...this.maquinetasRecentes.filter((m) => m.serial !== serial),
-      ].slice(0, 5)
+    registrarMaquinetaRecente(codmaquineta) {
+      // antes do cadastro de maquinetas guardava { serial, apelido }: descarta
+      const anteriores = this.maquinetasRecentes.filter(
+        (m) => Number.isInteger(m) && m !== codmaquineta,
+      )
+      this.maquinetasRecentes = [codmaquineta, ...anteriores].slice(0, 10)
     },
 
     async adicionarPagamento({
@@ -1745,7 +1746,8 @@ export const negocioStore = defineStore('negocio', {
       parcelas = null,
       valorparcela = null,
       dias = null,
-      serialmaquineta = null,
+      codmaquineta = null,
+      maquineta = null,
       cmc7 = null,
       chequevencimento = null,
       chequecnpj = null,
@@ -1797,7 +1799,8 @@ export const negocioStore = defineStore('negocio', {
           parcelas,
           valorparcela,
           dias,
-          serialmaquineta,
+          codmaquineta,
+          maquineta,
           cmc7,
           chequevencimento,
           chequecnpj,

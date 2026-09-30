@@ -18,6 +18,7 @@ use Mg\Pix\PixCob;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\SaurusPedido;
+use Mg\Maquineta\Maquineta;
 
 class NegocioFormaPagamento extends MgModel
 {
@@ -35,6 +36,7 @@ class NegocioFormaPagamento extends MgModel
         'cmc7',
         'codformapagamento',
         'codliopedido',
+        'codmaquineta',
         'codnegocio',
         'codpagarmepedido',
         'codpessoa',
@@ -62,6 +64,7 @@ class NegocioFormaPagamento extends MgModel
         'chequevencimento' => 'date',
         'codformapagamento' => 'integer',
         'codliopedido' => 'integer',
+        'codmaquineta' => 'integer',
         'codnegocio' => 'integer',
         'codnegocioformapagamento' => 'integer',
         'codpagarmepedido' => 'integer',
@@ -93,6 +96,11 @@ class NegocioFormaPagamento extends MgModel
     public function LioPedido()
     {
         return $this->belongsTo(LioPedido::class, 'codliopedido', 'codliopedido');
+    }
+
+    public function Maquineta()
+    {
+        return $this->belongsTo(Maquineta::class, 'codmaquineta', 'codmaquineta');
     }
 
     public function Negocio()

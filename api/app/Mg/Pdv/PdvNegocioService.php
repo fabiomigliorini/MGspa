@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Maquineta\MaquinetaService;
+use Mg\Negocio\NegocioFormaPagamentoService;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
 use Mg\Negocio\NegocioVale;
@@ -241,6 +243,7 @@ class PdvNegocioService
             // vincula pagamento
             $nfp->fill($pagto);
             $nfp->codnegocio = $negocio->codnegocio;
+            static::maquinetaDoCartaoManual($nfp, $negocio);
             $nfp->save();
         }
 
@@ -249,6 +252,23 @@ class PdvNegocioService
         NegocioFormaPagamento::where('codnegocio', $negocio->codnegocio)->where('integracao', false)->whereNotIn('uuid', $uuids)->delete();
 
         return $negocio;
+    }
+
+    // PDV antigo manda o serial digitado e não o codmaquineta: serial + filial vira maquineta
+    // (cria a manual se não achar); sem serial, a do parceiro se for a única (acesso de site).
+    public static function maquinetaDoCartaoManual(NegocioFormaPagamento $nfp, Negocio $negocio)
+    {
+        if ($nfp->codformapagamento != NegocioFormaPagamentoService::CODFORMAPAGAMENTO_CARTAO_MANUAL) {
+            return;
+        }
+        if (!empty($nfp->codmaquineta) || empty($nfp->codpessoa)) {
+            return;
+        }
+        if (!empty(trim($nfp->serialmaquineta ?? ''))) {
+            $nfp->codmaquineta = MaquinetaService::resolverSerial($nfp->serialmaquineta, $negocio->codfilial, $nfp->codpessoa)->codmaquineta;
+            return;
+        }
+        $nfp->codmaquineta = MaquinetaService::unicaDoParceiro($nfp->codpessoa, $negocio->codfilial)->codmaquineta ?? null;
     }
 
     public static function negocioFechado(Negocio $negocio, $data, Pdv $pdv)
@@ -369,6 +389,11 @@ class PdvNegocioService
 
             // 2. Itera sobre os pagamentos para validações e cálculo dos totais
             foreach ($negocio->NegocioFormaPagamentos as $nfp) {
+                // cartão manual sempre com a maquineta (M3 doc-3)
+                if ($nfp->codformapagamento == NegocioFormaPagamentoService::CODFORMAPAGAMENTO_CARTAO_MANUAL && empty($nfp->codmaquineta)) {
+                    abort(422, 'Cartão manual sem maquineta! Exclua o pagamento e lance de novo escolhendo a maquininha.');
+                }
+
                 // Validações de regra de negócio
                 if ($negocio->codpessoa == 1) { // Consumidor final
                     if (!$nfp->FormaPagamento->avista && $nfp->parcelas > 1) {

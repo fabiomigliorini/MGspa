@@ -8,6 +8,7 @@ use Mg\Filial\Filial;
 use Mg\Negocio\Negocio;
 use Mg\Pessoa\Pessoa;
 use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Maquineta\MaquinetaService;
 use Mg\Negocio\NegocioService;
 use Mg\FormaPagamento\FormaPagamento;
 
@@ -61,6 +62,7 @@ class PagarMeService
             $reg->apelido = $serial;
             $reg->codfilial = $codfilial;
             $reg->save();
+            MaquinetaService::daPagarMePos($reg);
         }
         return $reg;
     }
@@ -370,10 +372,13 @@ class PagarMeService
         $tipo = 99; //Outros
         $autorizacao = null;
         $bandeira = null;
+        // POS que cobrou; sem ele, o do pedido
+        $pos = $ped->PagarMePos;
         foreach ($ped->PagarMePagamentoS as $pag) {
             if ($pag->valorcancelamento) {
                 continue;
             }
+            $pos = $pag->PagarMePos ?? $pos;
             switch ($pag->tipo) {
                 case 1: //debit
                     $tipo = 4; //Cartão de Débito
@@ -411,7 +416,8 @@ class PagarMeService
                 'tipo' => $tipo,
                 'bandeira' => $bandeira,
                 'integracao' => true,
-                'serialmaquineta' => $ped->PagarMePos->serial ?? null,
+                'serialmaquineta' => $pos->serial ?? null,
+                'codmaquineta' => $pos ? MaquinetaService::daPagarMePos($pos)->codmaquineta : null,
             ]
         );
 

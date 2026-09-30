@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-09-30 14:45'
+updated_date: '2026-09-30 21:56'
 labels:
   - contas
   - negocios
@@ -56,7 +56,7 @@ Milestones:
 - [x] #6 M2.1 Cada portador tem um tipo (espécie, banco, adquirente, cartão da empresa, outros) e a lista de portadores filtra por ele
 - [x] #7 M2.2 Existem Stone, SafraPay e o troco de cada loja; a gaveta de cada PDV de caixa é cadastrada no contas como portador em espécie
 - [x] #8 M2.3 Cada PDV de caixa aponta para a sua gaveta, e só aceita portador em espécie da mesma filial
-- [ ] #9 M3.1 As maquinetas das duas operadoras e as manuais ficam num cadastro só no contas
+- [x] #9 M3.1 As maquinetas das duas operadoras e as manuais ficam num cadastro só no contas
 - [ ] #10 M3.2 No PDV o cartão manual escolhe a maquineta da lista da filial em vez de digitar o serial, e o pagamento fica gravado com ela
 - [ ] #11 M4.1 A venda grava pagamentos e parcelas no formato novo, com o histórico copiado e os mesmos totais por negócio
 - [ ] #12 M4.2 Cada parcela a prazo vira título ao fechar a venda
@@ -69,6 +69,8 @@ Milestones:
 - [ ] #19 M6.2 Encontro de contas sem dinheiro continua possível e estornar desfaz o pagamento inteiro
 - [ ] #20 M6.3 Acerto de RH e baixa de boleto BB geram pagamento
 - [ ] #21 M6.4 Histórico das liquidações copiado, com totais por portador e mês iguais, e o Totais de Caixa do MG Lara funcionando
+- [x] #22 M3.3 Cadastrar, parear de novo, editar e inativar maquineta SafraPay e Stone integrada é feito no contas, e a tela Saurus/S2Pay sai do negocios
+- [x] #23 M3.4 Maquineta criada por serial digitado errado pode ser juntada na certa, levando os pagamentos
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -95,4 +97,14 @@ M2 implementado em dev em 29/09/2026, aguardando validação (ACs M2.x desmarcad
 M1 validado pelo Fábio em 30/09/2026 (contas, negocios, pessoas, MGsis). Boleto Bradesco fora da validação: abandonado, boleto só pela API do BB.
 
 M2 validado pelo Fábio em 30/09/2026 (contas → Portadores; negocios → Config → PDV). Critério M2.2 ajustado à decisão da conferência: a gaveta de cada PDV de caixa é cadastrada no contas, não criada pelo script.
+
+M3 em andamento (30/09/2026): cadastro único de maquinetas.
+
+M3 decidido item a item em 30/09/2026 (detalhe no doc-3, seção M3 'O que mudou'): serial casa por serial+filial senão vira manual; carga com todos os POS/pinpads (inativos inativos); Saurus = pinpad, substituído inativo; manual continua pedindo parceiro e pula maquineta se única, obrigatória; maquineta de site compartilhada (coluna nova) para Brasil Card/Le Card/MultVale na 101; Gerente só na própria filial; PDV antigo resolve serial ou cria manual; histórico sem aparelho em 'Histórico Stone/SafraPay/Cielo Lio' inativas por filial (pessoa Cielo criada); juntar maquinetas; S2Pay e POS PagarMe passam para contas → Maquinetas. DDL api/database/maquineta.sql rodado em dev.
+
+M3 implementado em dev em 30/09/2026, aguardando validação (ACs M3.x desmarcados até o OK). DDL api/database/maquineta.sql rodado 2x em dev (idempotente). Backend Mg/Maquineta + select; contas → Cadastros → Maquinetas (filtros, cadastro manual/Stone integrada/SafraPay por QR, parear de novo, juntar, inativar); @components/MgSelectMaquineta; negocios FormaCartao pela lista (recentes primeiro, pula se única), tela Saurus/S2Pay removida. Testado com rollback: service, endpoints pelo kernel HTTP (inclusive Gerente de outra filial = 403), vincular PagarMe/Saurus, serial do PDV antigo. Não testado: QR/pareamento Saurus (chama a API real, precisa de pinpad).
+
+Pareamento SafraPay por QR fica para validar no go-live (decisão do Fábio, 30/09/2026): dev sem SAURUS_S2PAY_* no api/.env e PDVs Saurus do dev compartilham ids com produção. Falha da API Saurus agora volta 502 com mensagem; dialog de parear não trava mais no carregando.
+
+M3 validado pelo Fábio em 30/09/2026 (contas → Maquinetas, negocios Receber → Cartão). Pareamento SafraPay por QR confere no go-live. M3.2 fica aberto: o parceiro do cartão manual ainda vem da lista fixa (cartoes-manuais.json) e uma maquineta de adquirente nova (ex.: Cielo) não aparece no PDV — ajuste em seguida, fora do commit do M3.
 <!-- SECTION:NOTES:END -->
