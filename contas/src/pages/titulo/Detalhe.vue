@@ -695,8 +695,23 @@ watch(() => route.fullPath, carregar)
                         m.anulado ? 'text-strike' : '',
                       ]"
                     >
-                      {{ formataNumero(Math.abs(m.valor)) }} {{ m.operacao }}
+                      {{ formataNumero(Math.abs(m.principal)) }} {{ m.operacao }}
                     </q-item-label>
+                    <!-- juros, multa e desconto vêm na mesma linha da baixa -->
+                    <template v-if="m.juros || m.multa || m.desconto">
+                      <q-item-label caption v-if="m.juros" class="text-orange">
+                        Juros {{ formataNumero(m.juros) }}
+                      </q-item-label>
+                      <q-item-label caption v-if="m.multa" class="text-orange">
+                        Multa {{ formataNumero(m.multa) }}
+                      </q-item-label>
+                      <q-item-label caption v-if="m.desconto" class="text-blue">
+                        Desconto {{ formataNumero(m.desconto) }}
+                      </q-item-label>
+                      <q-item-label caption class="text-weight-bold">
+                        Total {{ formataNumero(Math.abs(m.total)) }}
+                      </q-item-label>
+                    </template>
                     <q-item-label caption>
                       {{ m.tipomovimentotitulo }}
                     </q-item-label>

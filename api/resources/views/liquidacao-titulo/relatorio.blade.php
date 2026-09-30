@@ -129,7 +129,8 @@
         color: #c10015;
     }
 
-    span.rh {
+    span.rh,
+    span.acrescimos {
         color: #888;
     }
 
@@ -238,8 +239,14 @@
                         @endphp
                         @foreach ($movs as $m)
                             @php
-                                $valM = (float) $m->valor;
+                                // o que foi pago; juros, multa e desconto vêm na mesma linha
+                                $valM = (float) $m->total;
                                 $opM = $valM < 0 ? 'CR' : 'DB';
+                                $acrescimos = collect([
+                                    'J' => (float) $m->juros,
+                                    'M' => (float) $m->multa,
+                                    'D' => (float) $m->desconto,
+                                ])->filter(fn($v) => $v > 0);
                                 $opMLow = strtolower($opM);
                                 $sameTitulo = $m->codtitulo === $lastCodTitulo;
                             @endphp
@@ -270,7 +277,15 @@
                                 <td class="mov-pess">{{ $sameTitulo ? '' : optional($m->Titulo->Pessoa)->fantasia }}
                                 </td>
                                 <td class="mov-valor {{ $opMLow }}">
-                                    {{ $fmtVal($valM) }}&nbsp;{{ $opM }}</td>
+                                    {{ $fmtVal($valM) }}&nbsp;{{ $opM }}
+                                    @if ($acrescimos->isNotEmpty())
+                                        <br><span class="acrescimos">Principal {{ $fmtVal($m->principal) }}
+                                            @foreach ($acrescimos as $sigla => $v)
+                                                {{ $sigla }}&nbsp;{{ $fmtVal($v) }}
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                </td>
                                 <td class="tipo">{{ optional($m->TipoMovimentoTitulo)->tipomovimentotitulo }}</td>
                             </tr>
                             @php

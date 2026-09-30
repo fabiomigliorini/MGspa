@@ -15,15 +15,19 @@ class LiquidacaoTituloDetalheResource extends Resource
             ->filter(fn($m) => !$m->ehEstorno())
             ->values()
             ->map(function ($m) {
-                $valorMov = (float)$m->valor;
+                $principal = (float)$m->principal;
                 return [
                     'codmovimentotitulo'     => (int)$m->codmovimentotitulo,
                     'codtitulo'              => (int)$m->codtitulo,
                     'codtipomovimentotitulo' => (int)$m->codtipomovimentotitulo,
                     'tipomovimentotitulo'    => optional($m->TipoMovimentoTitulo)->tipomovimentotitulo,
                     'transacao'              => $m->transacao,
-                    'valor'                  => abs($valorMov),
-                    'operacao'               => $valorMov < 0 ? 'CR' : 'DB',
+                    'principal'              => abs($principal),
+                    'juros'                  => (float)$m->juros,
+                    'multa'                  => (float)$m->multa,
+                    'desconto'               => (float)$m->desconto,
+                    'total'                  => abs((float)$m->total),
+                    'operacao'               => $principal < 0 ? 'CR' : 'DB',
                     'titulo' => $m->Titulo ? [
                         'codtitulo'   => (int)$m->Titulo->codtitulo,
                         'numero'      => $m->Titulo->numero,

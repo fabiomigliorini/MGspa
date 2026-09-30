@@ -21,7 +21,7 @@
         if (!isset($resumo[$ct])) {
             $resumo[$ct] = ['titulo' => $mov->Titulo, 'valor' => 0];
         }
-        $resumo[$ct]['valor'] -= (float) $mov->valor;
+        $resumo[$ct]['valor'] -= (float) $mov->total;
     }
     $linhas = array_values(array_filter($resumo, fn($r) => round($r['valor'], 2) > 0));
     $qtdeLinhas = count($linhas);

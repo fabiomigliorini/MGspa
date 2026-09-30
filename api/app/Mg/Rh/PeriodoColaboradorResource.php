@@ -48,7 +48,7 @@ class PeriodoColaboradorResource extends JsonResource
                     ->map(fn ($m) => [
                         'codtitulo' => (int) $m->codtitulo,
                         'numero'    => optional($m->Titulo)->numero,
-                        'valor'     => abs((float) $m->valor),
+                        'valor'     => abs((float) $m->principal),
                     ])->values(),
             ];
         })->values();

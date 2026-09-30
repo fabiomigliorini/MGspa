@@ -167,33 +167,36 @@ class BoletoRetornoService
                     'transacao' => $br->dataretorno,
                 ];
 
-                // Lanca Juros
-                $juros = $br->jurosatraso + $br->jurosmora;
-                if ($juros > 0) {
-                    MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_JUROS, $juros, $vinculos, ['codboletoretorno']);
-                }
-
-                // Lanca Desconto
-                $desconto = $br->abatimento + $br->desconto;
-                if ($desconto > 0) {
-                    MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_DESCONTO, -$desconto, $vinculos, ['codboletoretorno']);
-                }
-
-                // Lanca Liquidacao
-                if ($br->pagamento > 0) {
-                    MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_LIQUIDACAO, -$br->pagamento, $vinculos, ['codboletoretorno']);
+                // Uma linha: juros e desconto junto com o pago. O que sai do
+                // saldo e' o pago sem os juros e com o desconto.
+                $juros = (float) $br->jurosatraso + (float) $br->jurosmora;
+                $desconto = (float) $br->abatimento + (float) $br->desconto;
+                $pagamento = (float) $br->pagamento;
+                $principal = $pagamento - $juros + $desconto;
+                if ($pagamento > 0 || $principal != 0) {
+                    MovimentoTituloService::lancar(
+                        $titulo,
+                        MovimentoTituloService::TIPO_LIQUIDACAO,
+                        -$principal,
+                        ['juros' => $juros, 'desconto' => $desconto, 'total' => -$pagamento],
+                        $vinculos,
+                        ['codboletoretorno']
+                    );
                 }
                 break;
 
             // Estorno de Pagamento (ocorrência 40)
             case '140':
-                $juros = $br->jurosatraso + $br->jurosmora;
-                $baixa = $br->abatimento + $br->desconto + $br->pagamento;
-                if ($juros > 0 || $baixa > 0) {
+                $juros = (float) $br->jurosatraso + (float) $br->jurosmora;
+                $desconto = (float) $br->abatimento + (float) $br->desconto;
+                $pagamento = (float) $br->pagamento;
+                $principal = $pagamento - $juros + $desconto;
+                if ($pagamento > 0 || $principal != 0) {
                     MovimentoTituloService::lancar(
                         $titulo,
                         MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO,
-                        $baixa - $juros,
+                        $principal,
+                        ['juros' => $juros, 'desconto' => $desconto, 'total' => $pagamento],
                         [
                             'codboletoretorno' => $br->codboletoretorno,
                             'codportador' => $br->codportador,

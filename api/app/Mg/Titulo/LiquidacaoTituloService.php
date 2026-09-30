@@ -138,19 +138,12 @@ class LiquidacaoTituloService
 
         foreach ($dados['titulos'] as $t) {
             $titulo = Titulo::findOrFail((int)$t['codtitulo']);
-            MovimentoTituloHelper::adicionarMultaJurosDesconto(
-                $titulo,
-                (float)($t['multa'] ?? 0),
-                (float)($t['juros'] ?? 0),
-                (float)($t['desconto'] ?? 0),
-                $transacao,
-                $codportador,
-                null,
-                $liq->codliquidacaotitulo
-            );
             MovimentoTituloHelper::liquidar(
                 $titulo,
                 (float)$t['total'],
+                (float)($t['juros'] ?? 0),
+                (float)($t['multa'] ?? 0),
+                (float)($t['desconto'] ?? 0),
                 $transacao,
                 $codportador,
                 null,
@@ -225,11 +218,11 @@ class LiquidacaoTituloService
 
     /**
      * A liquidação baixou título a receber? O total é líquido, então quem
-     * diz é o movimento: baixa de título a receber tem valor negativo.
+     * diz é o movimento: baixa de título a receber tem principal negativo.
      */
     public static function temRecebimento(LiquidacaoTitulo $liq): bool
     {
-        return static::baixas($liq)->contains(fn($m) => (float)$m->valor < 0);
+        return static::baixas($liq)->contains(fn($m) => (float)$m->principal < 0);
     }
 
     /**
@@ -238,7 +231,7 @@ class LiquidacaoTituloService
      */
     public static function temPagamento(LiquidacaoTitulo $liq): bool
     {
-        return static::baixas($liq)->contains(fn($m) => (float)$m->valor > 0);
+        return static::baixas($liq)->contains(fn($m) => (float)$m->principal > 0);
     }
 
     private static function baixas(LiquidacaoTitulo $liq)

@@ -43,12 +43,32 @@ class MovimentoTituloService
         self::TIPO_ESTORNO_AGRUPAMENTO,
     ];
 
+    // Tipos que baixam o título (ou desfazem uma baixa): o valor efetivo da
+    // baixa vai em total. Nos demais (implantação, ajuste...) total é 0.
+    const TIPOS_BAIXA = [
+        self::TIPO_AMORTIZACAO,
+        self::TIPO_LIQUIDACAO,
+        self::TIPO_RH,
+        self::TIPO_LIQUIDACAO_COBRANCA,
+        self::TIPO_AGRUPAMENTO,
+        self::TIPO_ESTORNO_LIQUIDACAO_COBRANCA,
+        self::TIPO_ESTORNO_LIQUIDACAO,
+        self::TIPO_ESTORNO_AMORTIZACAO,
+        self::TIPO_ESTORNO_AGRUPAMENTO,
+    ];
+
     /**
-     * Único ponto que grava movimento de título.
+     * Único ponto que grava movimento de título. Uma linha por título em
+     * cada baixa, com juros, multa e desconto nela.
      *
-     * $valor tem sinal: positivo aumenta o que o título tem a receber,
-     * negativo diminui (ou aumenta o que tem a pagar). Liquidar um título a
-     * receber é lançar o valor negativo.
+     * $principal tem sinal: é o efeito no saldo. Positivo aumenta o que o
+     * título tem a receber, negativo diminui (ou aumenta o que tem a pagar).
+     * Liquidar um título a receber é lançar o principal negativo.
+     *
+     * $valores: juros, multa e desconto (positivos) e total (o valor
+     * efetivo da baixa, mesmo sinal do principal). Sem total, a baixa
+     * calcula |total| = |principal| + juros + multa - desconto; os demais
+     * tipos gravam 0.
      *
      * $vinculos são as demais colunas do movimento (portador, liquidação,
      * agrupamento, boleto, acerto, histórico, transacao...).
@@ -63,10 +83,27 @@ class MovimentoTituloService
     public static function lancar(
         Titulo $titulo,
         int $tipo,
-        float $valor,
+        float $principal,
+        array $valores = [],
         array $vinculos = [],
         array $unicoPor = []
     ): MovimentoTitulo {
+        $juros = round((float) ($valores['juros'] ?? 0), 2);
+        $multa = round((float) ($valores['multa'] ?? 0), 2);
+        $desconto = round((float) ($valores['desconto'] ?? 0), 2);
+        if ($juros < 0 || $multa < 0 || $desconto < 0) {
+            abort(422, 'Juros, multa e desconto não podem ser negativos!');
+        }
+        $principal = round($principal, 2);
+        if (array_key_exists('total', $valores)) {
+            $total = round((float) $valores['total'], 2);
+        } elseif (in_array($tipo, static::TIPOS_BAIXA)) {
+            $sinal = $principal < 0 ? -1 : 1;
+            $total = round($sinal * (abs($principal) + $juros + $multa - $desconto), 2);
+        } else {
+            $total = 0;
+        }
+
         $mov = null;
         if (!empty($unicoPor)) {
             $mov = MovimentoTitulo::where('codtipomovimentotitulo', $tipo)
@@ -79,7 +116,11 @@ class MovimentoTituloService
         $mov->fill($vinculos);
         $mov->codtitulo = $titulo->codtitulo;
         $mov->codtipomovimentotitulo = $tipo;
-        $mov->valor = round($valor, 2);
+        $mov->principal = $principal;
+        $mov->juros = $juros;
+        $mov->multa = $multa;
+        $mov->desconto = $desconto;
+        $mov->total = $total;
         $mov->transacao = $mov->transacao ?? Carbon::today();
         $mov->save();
 
@@ -95,8 +136,9 @@ class MovimentoTituloService
     }
 
     /**
-     * Desfaz um movimento: lança o valor contrário, com o mesmo tipo do
-     * original e apontando para ele.
+     * Desfaz um movimento inteiro numa linha: principal e total contrários,
+     * os mesmos juros, multa e desconto, com o mesmo tipo do original e
+     * apontando para ele.
      */
     public static function estornar(MovimentoTitulo $movimento): MovimentoTitulo
     {
@@ -105,7 +147,13 @@ class MovimentoTituloService
         return static::lancar(
             Titulo::findOrFail($movimento->codtitulo),
             static::tipoEstorno($movimento),
-            -1 * (float) $movimento->valor,
+            -1 * (float) $movimento->principal,
+            [
+                'juros'    => (float) $movimento->juros,
+                'multa'    => (float) $movimento->multa,
+                'desconto' => (float) $movimento->desconto,
+                'total'    => -1 * (float) $movimento->total,
+            ],
             [
                 'codmovimentotituloestorno'   => $movimento->codmovimentotitulo,
                 'codportador'                 => $movimento->codportador,
@@ -143,7 +191,7 @@ class MovimentoTituloService
                    transacaoliquidacao = case when m.saldo = 0 then m.transacao end,
                    estornado           = case when m.saldo = 0 then m.estornado end
               from (
-                    select coalesce(sum(valor), 0) as saldo,
+                    select coalesce(sum(principal), 0) as saldo,
                            max(transacao) as transacao,
                            max(criacao)
                                filter (where codtipomovimentotitulo = :estorno) as estornado
@@ -171,9 +219,10 @@ class MovimentoTituloService
     }
 
     /**
-     * Total da liquidação = soma líquida das liquidações (600) dela, com o
-     * sinal do movimento: negativo quando recebeu mais do que pagou. Estorno
-     * não entra: a liquidação estornada guarda o total que teve.
+     * Total da liquidação = soma líquida do total das liquidações (600)
+     * dela, o dinheiro que andou, com o sinal do movimento: negativo quando
+     * recebeu mais do que pagou. Estorno não entra: a liquidação estornada
+     * guarda o total que teve.
      *
      * debito/credito da liquidação ainda são gravados junto: o "Totais de
      * Caixa" do MGLara soma as duas colunas. Saem quando essa tela sair.
@@ -187,9 +236,9 @@ class MovimentoTituloService
                    credito = q.credito
               from (
                     select codliquidacaotitulo,
-                           sum(valor) as valor,
-                           sum(greatest(valor, 0)) as debito,
-                           sum(greatest(-valor, 0)) as credito
+                           sum(total) as valor,
+                           sum(greatest(total, 0)) as debito,
+                           sum(greatest(-total, 0)) as credito
                       from tblmovimentotitulo
                      where codliquidacaotitulo = :codmov
                        and codtipomovimentotitulo = :tipo

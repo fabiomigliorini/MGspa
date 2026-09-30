@@ -7,9 +7,9 @@
         $cidadeEstado = $filialPessoa->Cidade->cidade . '/' . ($filialPessoa->Cidade->Estado->sigla ?? '');
     }
 
-    // Resumo por título. No título a pagar o sinal é o contrário do a receber:
-    // a baixa e o desconto são positivos, juros e multa são negativos. Título a
-    // receber da mesma liquidação fica com total negativo e sai pelo filtro abaixo.
+    // Resumo por título. No título a pagar a baixa tem principal e total
+    // positivos. Título a receber da mesma liquidação fica com total negativo
+    // e sai pelo filtro abaixo.
     $resumo = [];
     foreach ($liq->MovimentoTituloS as $mov) {
         if (!isset($resumo[$mov->codtitulo])) {
@@ -22,18 +22,28 @@
                 'total' => 0,
             ];
         }
+        // juros, multa e desconto vêm na linha da baixa (positivos; no
+        // estorno, descontam). Os tipos 400/401/500 e seus estornos só
+        // aparecem em histórico que não foi convertido.
+        $sinal = $mov->ehEstorno() ? -1 : 1;
         switch ((int) $mov->codtipomovimentotitulo) {
             case MovimentoTituloService::TIPO_JUROS:
-                $resumo[$mov->codtitulo]['juros'] -= $mov->valor;
+            case MovimentoTituloService::TIPO_ESTORNO_JUROS:
+                $resumo[$mov->codtitulo]['juros'] -= $mov->principal;
                 break;
             case MovimentoTituloService::TIPO_MULTA:
-                $resumo[$mov->codtitulo]['multa'] -= $mov->valor;
+            case MovimentoTituloService::TIPO_ESTORNO_MULTA:
+                $resumo[$mov->codtitulo]['multa'] -= $mov->principal;
                 break;
             case MovimentoTituloService::TIPO_DESCONTO:
-                $resumo[$mov->codtitulo]['desconto'] += $mov->valor;
+            case MovimentoTituloService::TIPO_ESTORNO_DESCONTO:
+                $resumo[$mov->codtitulo]['desconto'] += $mov->principal;
                 break;
             default:
-                $resumo[$mov->codtitulo]['total'] += $mov->valor;
+                $resumo[$mov->codtitulo]['total'] += $mov->total;
+                $resumo[$mov->codtitulo]['juros'] += $sinal * $mov->juros;
+                $resumo[$mov->codtitulo]['multa'] += $sinal * $mov->multa;
+                $resumo[$mov->codtitulo]['desconto'] += $sinal * $mov->desconto;
                 break;
         }
     }

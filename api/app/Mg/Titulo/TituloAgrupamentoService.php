@@ -162,19 +162,12 @@ class TituloAgrupamentoService
         // baixa títulos selecionados
         foreach ($dados['titulos'] as $t) {
             $titulo = Titulo::findOrFail((int)$t['codtitulo']);
-            MovimentoTituloHelper::adicionarMultaJurosDesconto(
-                $titulo,
-                (float)($t['multa'] ?? 0),
-                (float)($t['juros'] ?? 0),
-                (float)($t['desconto'] ?? 0),
-                $emissao,
-                $codportador,
-                $ag->codtituloagrupamento,
-                null
-            );
             MovimentoTituloHelper::liquidar(
                 $titulo,
                 (float)$t['total'],
+                (float)($t['juros'] ?? 0),
+                (float)($t['multa'] ?? 0),
+                (float)($t['desconto'] ?? 0),
                 $emissao,
                 $codportador,
                 $ag->codtituloagrupamento,

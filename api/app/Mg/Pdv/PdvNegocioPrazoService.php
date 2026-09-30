@@ -180,6 +180,7 @@ class PdvNegocioPrazoService
                 $nfp->Titulo,
                 MovimentoTituloService::TIPO_AMORTIZACAO,
                 ($negocio->codoperacao == 2) ? $nfp->valorpagamento : -$nfp->valorpagamento,
+                [],
                 [
                     'codtitulo' => $nfp->codtitulo,
                     'codnegocioformapagamento' => $nfp->codnegocioformapagamento,
@@ -206,7 +207,8 @@ class PdvNegocioPrazoService
                 MovimentoTituloService::lancar(
                     $nfp->Titulo,
                     MovimentoTituloService::TIPO_ESTORNO_AMORTIZACAO,
-                    -1 * (float) $movOriginal->valor,
+                    -1 * (float) $movOriginal->principal,
+                    ['total' => -1 * (float) $movOriginal->total],
                     [
                         'codtitulo' => $nfp->codtitulo,
                         'codnegocioformapagamento' => $nfp->codnegocioformapagamento,

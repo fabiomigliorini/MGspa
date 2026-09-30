@@ -349,23 +349,31 @@ class BoletoBbService
             'transacao' => $tituloBoleto->datarecebimento,
         ];
 
-        // valor de cada movimento, com sinal: ajuste, juros e multa aumentam
-        // o titulo; desconto e pagamento diminuem
-        $lancamentos = [
-            MovimentoTituloService::TIPO_AJUSTE => (float) $tituloBoleto->valoroutro,
-            MovimentoTituloService::TIPO_JUROS => (float) $tituloBoleto->valorjuromora,
-            MovimentoTituloService::TIPO_MULTA => (float) $tituloBoleto->valormulta,
-            MovimentoTituloService::TIPO_DESCONTO => -1 * (float) $tituloBoleto->valordesconto,
-            MovimentoTituloService::TIPO_LIQUIDACAO => -1 * (float) $tituloBoleto->valorpago,
-        ];
+        // "outro" aumenta o titulo e fica num ajuste proprio; juros, multa
+        // e desconto vao na linha da liquidacao, que tira do saldo o pago
+        // sem os juros e a multa e com o desconto
+        $outro = (float) $tituloBoleto->valoroutro;
+        $juros = (float) $tituloBoleto->valorjuromora;
+        $multa = (float) $tituloBoleto->valormulta;
+        $desconto = (float) $tituloBoleto->valordesconto;
+        $pago = (float) $tituloBoleto->valorpago;
+        $principal = $pago - $juros - $multa + $desconto;
 
         // acumula cod dos movimentos gerados
         $codmovimentotitulos = [];
-        foreach ($lancamentos as $tipo => $valor) {
-            if ($valor == 0) {
-                continue;
-            }
-            $mov = MovimentoTituloService::lancar($titulo, $tipo, $valor, $vinculos, ['codtituloboleto']);
+        if ($outro != 0) {
+            $mov = MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_AJUSTE, $outro, [], $vinculos, ['codtituloboleto']);
+            $codmovimentotitulos[] = $mov->codmovimentotitulo;
+        }
+        if ($pago != 0 || $principal != 0) {
+            $mov = MovimentoTituloService::lancar(
+                $titulo,
+                MovimentoTituloService::TIPO_LIQUIDACAO,
+                -$principal,
+                ['juros' => $juros, 'multa' => $multa, 'desconto' => $desconto, 'total' => -$pago],
+                $vinculos,
+                ['codtituloboleto']
+            );
             $codmovimentotitulos[] = $mov->codmovimentotitulo;
         }
 

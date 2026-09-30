@@ -40,14 +40,18 @@ class TituloAgrupamentoDetalheResource extends Resource
             })
             ->values()
             ->map(function ($m) {
-                $valorM = (float)$m->valor;
+                $principal = (float)$m->principal;
                 return [
                     'codmovimentotitulo'  => (int)$m->codmovimentotitulo,
                     'codtipomovimentotitulo' => (int)$m->codtipomovimentotitulo,
                     'tipomovimentotitulo' => optional($m->TipoMovimentoTitulo)->tipomovimentotitulo,
                     'transacao'           => $m->transacao,
-                    'valor'               => abs($valorM),
-                    'operacao'            => $valorM < 0 ? 'CR' : 'DB',
+                    'principal'              => abs($principal),
+                    'juros'                  => (float)$m->juros,
+                    'multa'                  => (float)$m->multa,
+                    'desconto'               => (float)$m->desconto,
+                    'total'                  => abs((float)$m->total),
+                    'operacao'               => $principal < 0 ? 'CR' : 'DB',
                     'titulo' => $m->Titulo ? [
                         'codtitulo'   => (int)$m->Titulo->codtitulo,
                         'numero'      => $m->Titulo->numero,

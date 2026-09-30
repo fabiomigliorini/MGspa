@@ -162,7 +162,9 @@
             @endphp
             @if (!$entra || $m->ehEstorno()) @continue @endif
             @php
-                $valorM = (float)$m->valor;
+                // o título baixado leva ao agrupamento o total (com juros,
+                // multa e desconto); o gerado nasce com o principal
+                $valorM = (float)($m->codtipomovimentotitulo == 901 ? $m->total : $m->principal);
                 // Inverte: na "em substituição" o título original (mov CR) aparece como DB
                 // e o título gerado (mov DB) aparece como CR para o cliente
                 $opM = $valorM < 0 ? 'DB' : 'CR';
