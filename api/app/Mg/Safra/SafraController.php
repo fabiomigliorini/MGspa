@@ -7,11 +7,16 @@ use App\Http\Requests\Mg\Safra\SafraUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 class SafraController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     public function index(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = SafraService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
         return SafraResource::collection($res);
@@ -19,6 +24,8 @@ class SafraController extends MgController
 
     public function store(SafraStoreRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = new Safra();
         $model->fill($request->validated());
         $model->save();
@@ -28,6 +35,8 @@ class SafraController extends MgController
 
     public function show(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return new SafraResource(Safra::with('Cultura')->findOrFail($id));
     }
 
@@ -37,11 +46,15 @@ class SafraController extends MgController
      */
     public function comercial(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return response()->json(SafraService::resumoComercial((int) $id), 200);
     }
 
     public function update(SafraUpdateRequest $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = Safra::findOrFail($id);
         $model->fill($request->validated());
         $model->update();
@@ -51,6 +64,8 @@ class SafraController extends MgController
 
     public function destroy($id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $safra = Safra::findOrFail($id);
         try {
             $safra->delete();
@@ -72,12 +87,16 @@ class SafraController extends MgController
 
     public function inativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         SafraService::inativar(Safra::findOrFail($id));
         return new SafraResource(Safra::with('Cultura')->findOrFail($id));
     }
 
     public function ativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         SafraService::ativar(Safra::findOrFail($id));
         return new SafraResource(Safra::with('Cultura')->findOrFail($id));
     }

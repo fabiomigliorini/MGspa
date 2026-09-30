@@ -403,6 +403,7 @@ export function normalizarCargaDoServidor(cs) {
   return {
     uuid: cs.uuid,
     codcarga: cs.codcarga ?? null,
+    versao: cs.versao ?? null,
     codsafra: cs.codsafra,
     sentido: cs.sentido,
     etapa: cs.etapa,

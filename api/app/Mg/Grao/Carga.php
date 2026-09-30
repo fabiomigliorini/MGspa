@@ -49,6 +49,8 @@ class Carga extends MgModel
         'liquido',
         'observacao',
         'inativo',
+        // 'versao' fica fora de proposito: quem incrementa e o servidor
+        // (CargaService::sincronizar), nunca o payload do aparelho.
     ];
 
     protected $casts = [
@@ -68,6 +70,7 @@ class Carga extends MgModel
         'liquido' => 'float',
         'pbt' => 'float',
         'tara' => 'float',
+        'versao' => 'integer',
     ];
 
     // Chaves Estrangeiras

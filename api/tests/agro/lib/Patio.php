@@ -121,9 +121,22 @@ final class Patio
         return $c;
     }
 
-    public function enviar(array $c, ?array $parametros = null, string $rotulo = 'POST v1/carga/sincronizar'): Resposta
+    /**
+     * `&$c` (TASK-180): a resposta traz a `versao` que o servidor gravou, e o
+     * aparelho de verdade guarda ela pra mandar no proximo envio — sem isso um
+     * `$velha = $c` tirado depois desta chamada nunca carregaria uma versao
+     * realmente velha, e R3/R4 nunca exercitariam o 409 de verdade.
+     */
+    public function enviar(array &$c, ?array $parametros = null, string $rotulo = 'POST v1/carga/sincronizar'): Resposta
     {
-        return $this->api->post('v1/carga/sincronizar', $this->payload($c, $parametros), $rotulo);
+        $resp = $this->api->post('v1/carga/sincronizar', $this->payload($c, $parametros), $rotulo);
+        if ($resp->ok()) {
+            $dado = $resp->dado();
+            if (is_array($dado) && array_key_exists('versao', $dado)) {
+                $c['versao'] = $dado['versao'];
+            }
+        }
+        return $resp;
     }
 
     /**
@@ -189,8 +202,10 @@ final class Patio
     {
         $resp = null;
         foreach (static::passos($c, $pbt, $tara, $opc) as $estado) {
+            // Envia $c (nao $estado): so assim o `versao` que enviar() atualiza
+            // por referencia continua acompanhando o aparelho entre os passos.
             $c = $estado;
-            $resp = $this->enviar($estado, $parametros);
+            $resp = $this->enviar($c, $parametros);
             if (!$resp->ok()) {
                 return $resp;
             }
@@ -205,12 +220,12 @@ final class Patio
         $final = array_pop($estados);
         foreach ($estados as $estado) {
             $c = $estado;
-            $resp = $this->enviar($estado, $parametros);
+            $resp = $this->enviar($c, $parametros);
             if (!$resp->ok()) {
                 return $resp;
             }
         }
-        $c = $final;
+        $c = array_replace($final, ['versao' => $c['versao'] ?? null]);
         return null;
     }
 

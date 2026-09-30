@@ -3,16 +3,16 @@ id: TASK-183
 title: >-
   Líquido do contrato errado: isenção de FETHAB ignorada e card da fixação
   diferente do gravado
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-28 21:11'
-updated_date: '2026-09-28 21:52'
+updated_date: '2026-09-30 15:07'
 labels:
   - agro
 dependencies: []
 priority: high
 type: bug
-ordinal: 196000
+ordinal: 1000
 ---
 
 ## Description

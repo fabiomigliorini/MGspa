@@ -7,6 +7,7 @@ use App\Http\Requests\Mg\Fazenda\PlantioUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 /**
  * Plantio e aninhado na safra: safra/{codsafra}/plantio/{codplantio}.
@@ -14,10 +15,14 @@ use Mg\MgController;
  */
 class PlantioController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     const WITH = ['Safra.Cultura', 'Fazenda', 'Variedade'];
 
     public function index(Request $request, $codsafra)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $filter['codsafra'] = $codsafra;
         $res = PlantioService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
@@ -26,6 +31,8 @@ class PlantioController extends MgController
 
     public function store(PlantioStoreRequest $request, $codsafra)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = new Plantio();
         $model->fill($request->validated());
         $model->codsafra = $codsafra;
@@ -36,11 +43,15 @@ class PlantioController extends MgController
 
     public function show(Request $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return new PlantioResource($this->buscar($codsafra, $codplantio, static::WITH));
     }
 
     public function update(PlantioUpdateRequest $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = $this->buscar($codsafra, $codplantio);
 
         $model->fill($request->validated());
@@ -56,6 +67,8 @@ class PlantioController extends MgController
      */
     public function hacolhido(Request $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $request->validate(['hacolhido' => ['nullable', 'numeric', 'gte:0']]);
         $model = $this->buscar($codsafra, $codplantio);
         $model->hacolhido = $request->input('hacolhido');
@@ -65,6 +78,8 @@ class PlantioController extends MgController
 
     public function destroy($codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $plantio = $this->buscar($codsafra, $codplantio);
         try {
             $plantio->delete();
@@ -84,6 +99,8 @@ class PlantioController extends MgController
 
     public function inativar(Request $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = $this->buscar($codsafra, $codplantio);
         PlantioService::inativar($model);
         return new PlantioResource($model->fresh(static::WITH));
@@ -91,6 +108,8 @@ class PlantioController extends MgController
 
     public function ativar(Request $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = $this->buscar($codsafra, $codplantio);
         PlantioService::ativar($model);
         return new PlantioResource($model->fresh(static::WITH));

@@ -6,6 +6,7 @@ use App\Http\Requests\Mg\Contrato\ContratoFixacaoCambioRequest;
 use Illuminate\Http\Request;
 use Mg\MgController;
 use Mg\MgService;
+use Mg\Usuario\Autorizador;
 
 /**
  * Travas de câmbio aninhadas na fixação:
@@ -14,8 +15,12 @@ use Mg\MgService;
  */
 class ContratoFixacaoCambioController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     public function index(Request $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $res = ContratoFixacaoCambio::where('codcontratofixacao', $codfixacao)
             ->orderBy('data')
             ->get();
@@ -24,6 +29,8 @@ class ContratoFixacaoCambioController extends MgController
 
     public function store(ContratoFixacaoCambioRequest $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $fixacao = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
 
         $model = new ContratoFixacaoCambio();
@@ -38,6 +45,8 @@ class ContratoFixacaoCambioController extends MgController
 
     public function update(ContratoFixacaoCambioRequest $request, $codcontrato, $codfixacao, $codcambio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $fixacao = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         $model = ContratoFixacaoCambio::where('codcontratofixacao', $codfixacao)->findOrFail($codcambio);
 
@@ -51,6 +60,8 @@ class ContratoFixacaoCambioController extends MgController
 
     public function destroy($codcontrato, $codfixacao, $codcambio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $fixacao = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         ContratoFixacaoCambio::where('codcontratofixacao', $codfixacao)->findOrFail($codcambio)->delete();
 
@@ -61,6 +72,8 @@ class ContratoFixacaoCambioController extends MgController
 
     public function inativar(Request $request, $codcontrato, $codfixacao, $codcambio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $fixacao = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         $m = ContratoFixacaoCambio::where('codcontratofixacao', $codfixacao)->findOrFail($codcambio);
         MgService::inativar($m);
@@ -72,6 +85,8 @@ class ContratoFixacaoCambioController extends MgController
 
     public function ativar(Request $request, $codcontrato, $codfixacao, $codcambio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $fixacao = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         $m = ContratoFixacaoCambio::where('codcontratofixacao', $codfixacao)->findOrFail($codcambio);
         MgService::ativar($m);

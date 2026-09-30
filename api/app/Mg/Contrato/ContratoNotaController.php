@@ -6,6 +6,7 @@ use App\Http\Requests\Mg\Contrato\ContratoNotaRequest;
 use Illuminate\Http\Request;
 use Mg\MgController;
 use Mg\MgService;
+use Mg\Usuario\Autorizador;
 
 /**
  * Plano de emissao de NF aninhado no contrato: contrato/{codcontrato}/nota.
@@ -14,10 +15,14 @@ use Mg\MgService;
  */
 class ContratoNotaController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     const WITH = ['NaturezaOperacao', 'PessoaNf'];
 
     public function index(Request $request, $codcontrato)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $res = ContratoNota::with(static::WITH)
             ->where('codcontrato', $codcontrato)
             ->orderBy('ordem')
@@ -28,6 +33,8 @@ class ContratoNotaController extends MgController
 
     public function store(ContratoNotaRequest $request, $codcontrato)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         Contrato::findOrFail($codcontrato);
 
         $model = new ContratoNota();
@@ -41,6 +48,8 @@ class ContratoNotaController extends MgController
 
     public function update(ContratoNotaRequest $request, $codcontrato, $codnota)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ContratoNota::where('codcontrato', $codcontrato)->findOrFail($codnota);
         $model->fill($request->validated());
         $model->codcontrato = $codcontrato;
@@ -52,12 +61,16 @@ class ContratoNotaController extends MgController
 
     public function destroy($codcontrato, $codnota)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         ContratoNota::where('codcontrato', $codcontrato)->findOrFail($codnota)->delete();
         return response()->noContent();
     }
 
     public function inativar(Request $request, $codcontrato, $codnota)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoNota::where('codcontrato', $codcontrato)->findOrFail($codnota);
         MgService::inativar($m);
         return new ContratoNotaResource($m->fresh(static::WITH));
@@ -65,6 +78,8 @@ class ContratoNotaController extends MgController
 
     public function ativar(Request $request, $codcontrato, $codnota)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoNota::where('codcontrato', $codcontrato)->findOrFail($codnota);
         MgService::ativar($m);
         return new ContratoNotaResource($m->fresh(static::WITH));

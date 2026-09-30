@@ -216,8 +216,24 @@ class CargaService extends MgService
     public static function sincronizar(array $data): Carga
     {
         return DB::transaction(function () use ($data) {
+            // Trava consultiva pelo uuid: serializa ate dois envios da MESMA carga
+            // chegando ao mesmo tempo (libera sozinha no commit/rollback). So depois
+            // dela e seguro ler o estado — antes, os dois liam a linha antiga e cada
+            // um gravava so os campos "sujos" dele (TASK-180).
+            DB::select('select pg_advisory_xact_lock(hashtext(?))', ['carga:' . $data['uuid']]);
+
             $carga = Carga::firstOrNew(['uuid' => $data['uuid']]);
+
+            // Concorrencia otimista. `versao` ausente/null = aparelho que nunca
+            // recebeu resposta desta carga (criacao reenviada) ou app antigo:
+            // aplica, como sempre foi.
+            $versaoCliente = $data['versao'] ?? null;
+            if ($carga->exists && $versaoCliente !== null && (int) $versaoCliente !== (int) $carga->versao) {
+                throw new CargaConflitoException($carga->fresh(static::WITH));
+            }
+
             $carga->fill($data);
+            $carga->versao = $carga->exists ? ((int) $carga->versao + 1) : 1;
             static::snapshotCaminhaoMotorista($carga);
             $carga->save();
             static::sincronizarPontos($carga, $data['pontos'] ?? []);
@@ -228,7 +244,7 @@ class CargaService extends MgService
             static::validar($carga);
             static::gerarMovimento($carga);
             return $carga->fresh(static::WITH);
-        });
+        }, 3); // retentativa em deadlock/serialization failure do Postgres
     }
 
     /** Dados do motorista SEM cadastro — com codpessoamotorista ficam NULL. */
@@ -596,18 +612,34 @@ class CargaService extends MgService
         return $res;
     }
 
+    /**
+     * Cancelar/reativar, com a mesma trava e versao do sincronizar (TASK-180):
+     * hoje o MgService::ativar/inativar nem estava em transacao, e se o
+     * gerarMovimento falhasse no meio a carga ficava cancelada/reativada com o
+     * extrato velho.
+     */
     public static function inativar($model, $date = null)
     {
-        $model = parent::inativar($model, $date);
-        // Carga inativada some do extrato (estorno) — mantem os saldos coerentes.
-        static::gerarMovimento($model->fresh('CargaPontoS'));
-        return $model;
+        return DB::transaction(function () use ($model, $date) {
+            DB::select('select pg_advisory_xact_lock(hashtext(?))', ['carga:' . $model->uuid]);
+            $model = Carga::where('codcarga', $model->codcarga)->lockForUpdate()->firstOrFail();
+            $model->versao++;
+            $model = parent::inativar($model, $date);
+            // Carga inativada some do extrato (estorno) — mantem os saldos coerentes.
+            static::gerarMovimento($model->fresh('CargaPontoS'));
+            return $model;
+        }, 3);
     }
 
     public static function ativar($model)
     {
-        $model = parent::ativar($model);
-        static::gerarMovimento($model->fresh('CargaPontoS'));
-        return $model;
+        return DB::transaction(function () use ($model) {
+            DB::select('select pg_advisory_xact_lock(hashtext(?))', ['carga:' . $model->uuid]);
+            $model = Carga::where('codcarga', $model->codcarga)->lockForUpdate()->firstOrFail();
+            $model->versao++;
+            $model = parent::ativar($model);
+            static::gerarMovimento($model->fresh('CargaPontoS'));
+            return $model;
+        }, 3);
     }
 }

@@ -33,7 +33,10 @@ class CargaSincronizarRequest extends FormRequest
     public function rules()
     {
         return [
-            'uuid' => ['required', 'string'],
+            'uuid' => ['required', 'uuid'],
+            // Ausente/null = aparelho antigo (sem controle de versao) ou criacao
+            // reenviada: CargaService::sincronizar aplica direto, como hoje.
+            'versao' => ['nullable', 'integer', 'min:1'],
             'codsafra' => ['required', 'exists:tblsafra,codsafra'],
             'sentido' => ['required', Rule::in(CargaService::SENTIDOS)],
             'etapa' => ['required', Rule::in(CargaService::ETAPAS)],
@@ -57,14 +60,21 @@ class CargaSincronizarRequest extends FormRequest
             'codcidademotorista' => ['nullable', 'exists:tblcidade,codcidade'],
             'observacao' => ['nullable', 'string'],
 
-            // Pesos
-            'pbt' => ['nullable', 'numeric', 'gte:0'],
-            'tara' => ['nullable', 'numeric', 'gte:0'],
+            // Pesos: inteiros em kg, ate 150.000 (maior PBT real fica bem abaixo
+            // disso). tara > pbt so e recusada quando os dois vierem juntos.
+            'pbt' => ['nullable', 'integer', 'between:0,150000'],
+            'tara' => ['nullable', 'integer', 'between:0,150000', function ($attribute, $value, $fail) {
+                if ($value !== null && $this->pbt !== null && $value > $this->pbt) {
+                    $fail('A tara (' . $value . ' kg) e maior que o PBT (' . $this->pbt . ' kg). Confira as pesagens.');
+                }
+            }],
 
-            // Tabela resolvida + leituras da classificacao (o modelo por formula)
+            // Tabela resolvida + leituras da classificacao (o modelo por formula).
+            // `distinct` no parametro: o mesmo parametro nao pode ter duas leituras
+            // na mesma carga.
             'classificacao' => ['array'],
-            'classificacao.*.codparametroclassificacao' => ['required', 'exists:tblparametroclassificacao,codparametroclassificacao'],
-            'classificacao.*.leitura' => ['nullable', 'numeric'],
+            'classificacao.*.codparametroclassificacao' => ['required', 'distinct', 'exists:tblparametroclassificacao,codparametroclassificacao'],
+            'classificacao.*.leitura' => ['nullable', 'numeric', 'between:0,100'],
 
             // Pontos (origem/destino)
             'pontos' => ['array'],

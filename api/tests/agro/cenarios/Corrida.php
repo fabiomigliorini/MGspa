@@ -175,7 +175,11 @@ final class Corrida extends Cenario
         $payload = $this->p->payload($c);
         $resps = $this->api()->lote(array_fill(0, 3, ['POST', 'v1/carga/sincronizar', $payload]));
         $b = Patio::banco($c['uuid']);
-        $ok = Patio::contarCargas($c['uuid']) === 1 && count($b->movimentos) === 2 && !array_filter($resps, fn ($r) => !$r->ok());
+        // As 3 cópias carregam a MESMA versão (foram congeladas antes do envio, como
+        // um reenvio de verdade depois de um timeout): a 1ª aplica e avança a versão,
+        // as outras 2 batem 409 (a própria — não é erro, é o mesmo request perdendo a
+        // corrida contra si mesmo). O que não pode é 5xx nem duplicar o extrato.
+        $ok = Patio::contarCargas($c['uuid']) === 1 && count($b->movimentos) === 2 && !array_filter($resps, fn ($r) => $r->erroServidor());
         $this->r->checar('R7', 'Reenvio da mesma carga finalizada (timeout)', $ok,
             count($b->movimentos) . ' linhas no extrato (eram 2); respostas: ' . $this->codigos($resps));
     }

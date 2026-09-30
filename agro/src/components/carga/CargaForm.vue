@@ -87,10 +87,12 @@ watch(
   { immediate: true },
 )
 watch(
-  () => [props.carga?.codcarga, props.carga?.sincronizado, props.carga?.syncerro],
-  ([codcarga, sincronizado, syncerro]) => {
+  () => [props.carga?.codcarga, props.carga?.sincronizado, props.carga?.syncerro, props.carga?.versao],
+  ([codcarga, sincronizado, syncerro, versao]) => {
     if (!local.value || !props.carga || props.carga.uuid !== local.value.uuid) return
-    Object.assign(local.value, { codcarga, sincronizado, syncerro })
+    // `versao` entra aqui pelo mesmo motivo: sem isso, salvar de novo com o form
+    // aberto mandaria uma versão velha e bateria 409 na própria mão (TASK-180).
+    Object.assign(local.value, { codcarga, sincronizado, syncerro, versao })
   },
 )
 

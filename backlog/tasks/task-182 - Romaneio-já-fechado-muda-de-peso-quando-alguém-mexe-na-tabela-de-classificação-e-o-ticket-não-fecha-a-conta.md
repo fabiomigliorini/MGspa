@@ -3,15 +3,16 @@ id: TASK-182
 title: >-
   Romaneio já fechado muda de peso quando alguém mexe na tabela de
   classificação, e o ticket não fecha a conta
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-28 21:11'
+updated_date: '2026-09-30 14:30'
 labels:
   - agro
 dependencies: []
 priority: high
 type: bug
-ordinal: 195000
+ordinal: 2000
 ---
 
 ## Description
@@ -31,3 +32,12 @@ Toda regravação da carga (inclusive cancelar pelo pátio) recalcula o desconto
 - [ ] #7 Trocar o talhão para outra cultura depois de classificar avisa em vez de zerar o desconto
 - [ ] #8 A carga não fica presa em erro depois que a tabela muda
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-09-30 14:30
+---
+Revisada em conjunto com a TASK-129 em 30/09/2026, a pedido do responsavel, que considerou o cenario do titulo (alguem editar a tabela de classificacao manualmente) raro na pratica -- ajustes hoje sao feitos por query SQL direta, nao pela tela. Fechada sem implementacao. Registro pra nao perder o levantamento: (1) a tela agro/ParametroClassificacaoPage.vue existe e permite editar tolerancia/fator pela UI, mas o mecanismo real independe disso -- CargaService::sincronizar() sempre busca a tabela vigente e recalcula em QUALQUER regravacao de carga ja finalizada (cancelar pelo patio, reabrir pra corrigir campo, retry apos falha de rede, trocar talhao), inclusive a propria query manual de ajuste tem esse efeito colateral na proxima regravacao de carga antiga da mesma cultura. (2) Os criterios #2 a #8 sao bugs independentes, com causa propria no codigo, sem depender do #1: arredondamento em grama vs ticket em kg inteiro (CargaService::calcular vs utils/ticket.js), dois algoritmos de rateio diferentes pra ponto (CargaPonto.liquido) vs extrato (CargaService::gerarMovimento/ratear), calculo duplicado cliente/servidor (utils/desconto.js replica CargaService, sem garantia de convergencia), falta de validacao de ordem unica/tolerancia<100/leitura 0-100 em ParametroClassificacaoStoreRequest e CargaSincronizarRequest, e troca silenciosa de cultura ao trocar talhao em CargaBlocoPontos.vue::onPlantioSelecionado sem aviso. Se o assunto voltar (reclamacao de romaneio fechado que nao bate, ticket que nao fecha conta), comecar por esses pontos.
+---
+<!-- COMMENTS:END -->

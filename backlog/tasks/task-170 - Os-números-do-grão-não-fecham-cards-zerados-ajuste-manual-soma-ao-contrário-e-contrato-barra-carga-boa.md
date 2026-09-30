@@ -3,16 +3,16 @@ id: TASK-170
 title: >-
   Os números do grão não fecham: cards zerados, ajuste manual soma ao contrário
   e contrato barra carga boa
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-23 21:04'
-updated_date: '2026-09-29 13:38'
+updated_date: '2026-09-30 15:07'
 labels:
   - agro
 dependencies: []
 priority: high
 type: bug
-ordinal: 179000
+ordinal: 3000
 ---
 
 ## Description
