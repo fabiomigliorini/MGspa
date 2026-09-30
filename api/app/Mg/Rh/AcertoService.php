@@ -295,7 +295,7 @@ class AcertoService
         string $data,
         int $tipo = MovimentoTituloService::TIPO_RH
     ): void {
-        MovimentoTituloService::lancar(Titulo::findOrFail($codtitulo), $tipo, $valor, [
+        MovimentoTituloService::lancar(Titulo::findOrFail($codtitulo), $tipo, $valor, [], [
             'codperiodocolaboradoracerto' => $codperiodocolaboradoracerto,
             'historico'                   => 'Acerto RH',
             'transacao'                   => $data,
@@ -382,7 +382,7 @@ class AcertoService
             $original = 0.0;
             $atual    = 0.0;
             foreach ($movs as $m) {
-                $net    = (float) $m->valor;
+                $net    = (float) $m->principal;
                 $atual += $net;
                 if ((int) $m->codtipomovimentotitulo === MovimentoTituloService::TIPO_RH) {
                     $original += $net;

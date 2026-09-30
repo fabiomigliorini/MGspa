@@ -5,6 +5,7 @@ namespace Mg\Pdv;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Mg\Filial\Setor;
+use Mg\Portador\Portador;
 use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPinPad;
@@ -500,6 +501,15 @@ class PdvService
     {
 
         $pdv->fill($data);
+        if (!empty($pdv->codportador)) {
+            $portador = Portador::findOrFail($pdv->codportador);
+            if ($portador->tipo !== Portador::TIPO_ESPECIE) {
+                abort(422, "O portador {$portador->portador} não é em espécie!");
+            }
+            if ($portador->codfilial != $pdv->codfilial) {
+                abort(422, "O portador {$portador->portador} não é da filial do PDV!");
+            }
+        }
         $pdv->save();
         return $pdv;
     }

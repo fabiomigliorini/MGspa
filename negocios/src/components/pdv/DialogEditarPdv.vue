@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import SelectFilial from 'components/selects/SelectFilial.vue'
 import SelectSetor from 'src/components/selects/SelectSetor.vue'
 import MgInput from '@components/MgInput.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -60,6 +61,13 @@ const salvar = () => {
             label="Setor"
             :rules="[(val) => !!val || 'Setor é obrigatório']"
             hide-bottom-space
+          />
+          <MgSelectPortador
+            v-model="model.codportador"
+            label="Portador (gaveta)"
+            :tipos="['E']"
+            :filiais="[model.codfilial]"
+            clearable
           />
           <MgInput
             outlined

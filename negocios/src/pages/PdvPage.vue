@@ -159,6 +159,10 @@ onMounted(() => {
             <q-item-label caption class="ellipsis">
               {{ formataCodigo(pdv.codpdv) }} | {{ pdv.filial }}
             </q-item-label>
+            <q-item-label caption class="ellipsis">
+              <q-icon name="point_of_sale" />
+              {{ pdv.portador || 'Sem portador' }}
+            </q-item-label>
             <q-item-label caption class="ellipsis" v-if="pdv.observacoes">
               IP: {{ pdv.ip }}
             </q-item-label>

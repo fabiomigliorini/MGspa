@@ -113,8 +113,10 @@ class TituloDetalheResource extends Resource
             ->pluck('codmovimentotitulo', 'codmovimentotituloestorno');
 
         $movimentos = $this->MovimentoTituloS->map(function ($m) use ($estornadoPor) {
-            $valMov = (float)$m->valor;
-            $opMov = ($valMov < 0) ? 'CR' : 'DB';
+            // principal é o efeito no saldo; na baixa, juros, multa e
+            // desconto vêm na mesma linha e total é o que foi pago
+            $principal = (float)$m->principal;
+            $opMov = ($principal < 0) ? 'CR' : 'DB';
             return [
                 'codmovimentotitulo' => (int)$m->codmovimentotitulo,
                 'codtipomovimentotitulo' => (int)$m->codtipomovimentotitulo,
@@ -137,7 +139,11 @@ class TituloDetalheResource extends Resource
                     ? (int)$estornadoPor[$m->codmovimentotitulo]
                     : null,
                 'estorno' => $m->ehEstorno(),
-                'valor' => $valMov,
+                'principal' => $principal,
+                'juros' => (float)$m->juros,
+                'multa' => (float)$m->multa,
+                'desconto' => (float)$m->desconto,
+                'total' => (float)$m->total,
                 'operacao' => $opMov,
             ];
         });

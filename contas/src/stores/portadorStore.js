@@ -6,6 +6,7 @@ import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 const defaultFilters = () => ({
   codportador: null,
   portador: null,
+  tipo: null,
   codbanco: null,
   codfilial: null,
   emiteboleto: null,
@@ -27,6 +28,7 @@ export const usePortadorStore = defineStore(
       let count = 0
       if (f.codportador) count++
       if (f.portador) count++
+      if (f.tipo) count++
       if (f.codbanco) count++
       if (f.codfilial) count++
       if (f.emiteboleto !== null) count++

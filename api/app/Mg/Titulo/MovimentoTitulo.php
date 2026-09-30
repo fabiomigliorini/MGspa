@@ -38,9 +38,13 @@ class MovimentoTitulo extends MgModel
         'codtituloagrupamento',
         'codtituloboleto',
         'codtitulorelacionado',
+        'desconto',
         'historico',
-        'transacao',
-        'valor'
+        'juros',
+        'multa',
+        'principal',
+        'total',
+        'transacao'
     ];
 
     protected $casts = [
@@ -61,8 +65,12 @@ class MovimentoTitulo extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
-        'transacao' => 'date',
-        'valor' => 'float'
+        'desconto' => 'float',
+        'juros' => 'float',
+        'multa' => 'float',
+        'principal' => 'float',
+        'total' => 'float',
+        'transacao' => 'date'
     ];
 
 

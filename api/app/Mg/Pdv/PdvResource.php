@@ -20,6 +20,7 @@ class PdvResource extends JsonResource
         // Chave Extrangeira
         $ret['filial'] = @$this->Filial->filial;
         $ret['setor'] = $this->Setor?->setor ?? null;
+        $ret['portador'] = $this->Portador?->portador ?? null;
 
         return $ret;
     }

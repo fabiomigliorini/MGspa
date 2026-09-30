@@ -325,7 +325,7 @@ watch(() => route.fullPath, carregar)
                   class="text-weight-bold text-right"
                   :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
                 >
-                  {{ formataNumero(m.valor) }} {{ m.operacao }}
+                  {{ formataNumero(m.total) }} {{ m.operacao }}
                 </q-item-label>
                 <q-item-label class="text-right" caption>{{ m.tipomovimentotitulo }}</q-item-label>
               </q-item-section>
@@ -372,8 +372,23 @@ watch(() => route.fullPath, carregar)
                       class="text-weight-bold text-right"
                       :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
                     >
-                      {{ formataNumero(m.valor) }} {{ m.operacao }}
+                      {{ formataNumero(m.total) }} {{ m.operacao }}
                     </q-item-label>
+                    <!-- juros, multa e desconto vêm na mesma linha da baixa -->
+                    <template v-if="m.juros || m.multa || m.desconto">
+                      <q-item-label caption>
+                        Principal {{ formataNumero(m.principal) }}
+                      </q-item-label>
+                      <q-item-label caption v-if="m.juros" class="text-orange">
+                        Juros {{ formataNumero(m.juros) }}
+                      </q-item-label>
+                      <q-item-label caption v-if="m.multa" class="text-orange">
+                        Multa {{ formataNumero(m.multa) }}
+                      </q-item-label>
+                      <q-item-label caption v-if="m.desconto" class="text-blue">
+                        Desconto {{ formataNumero(m.desconto) }}
+                      </q-item-label>
+                    </template>
                     <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                     <q-item-label caption>
                       {{ formataData(m.titulo?.vencimento) }}

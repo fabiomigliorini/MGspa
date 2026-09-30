@@ -42,7 +42,7 @@
             if (!isset($resumoCred[$ct])) {
                 $resumoCred[$ct] = ['titulo' => $mov->Titulo, 'valor' => 0];
             }
-            $resumoCred[$ct]['valor'] += (float) $mov->valor;
+            $resumoCred[$ct]['valor'] += (float) $mov->total;
         }
         foreach ($resumoCred as $r) {
             if (round($r['valor'], 2) > 0) {

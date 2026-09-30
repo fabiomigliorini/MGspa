@@ -128,7 +128,7 @@ class TituloAgrupamentoMailService
     {
         $baixas = [];
         foreach ($ta->MovimentoTituloS as $mov) {
-            if ($mov->codtipomovimentotitulo == 100) {
+            if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO || $mov->ehEstorno()) {
                 continue;
             }
             // Pula as parcelas novas geradas pelo próprio agrupamento
@@ -151,28 +151,19 @@ class TituloAgrupamentoMailService
                     'total' => null,
                 ];
             }
-            switch ($mov->codtipomovimentotitulo) {
-                case 400: // juros
-                    $baixas[$mov->codtitulo]->juros += $mov->valor;
-                    break;
-                case 401: // Multa
-                    $baixas[$mov->codtitulo]->multa += $mov->valor;
-                    break;
-                case 500: // Desconto
-                    $baixas[$mov->codtitulo]->desconto += $mov->valor;
-                    break;
-                case 901: // total
-                    $baixas[$mov->codtitulo]->total -= $mov->valor;
-                    break;
-                default: // outros
-                    $baixas[$mov->codtitulo]->outras += $mov->valor;
-                    break;
+            $b = $baixas[$mov->codtitulo];
+            if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_AGRUPAMENTO) {
+                // a baixa: juros, multa e desconto estao na mesma linha
+                $b->principal += abs($mov->principal);
+                $b->juros += $mov->juros;
+                $b->multa += $mov->multa;
+                $b->desconto += $mov->desconto;
+                $b->total += abs($mov->total);
+            } else {
+                // outros movimentos no agrupamento (juros/multa/desconto de
+                // historico nao convertido, ajuste...)
+                $b->outras += $mov->principal;
             }
-            $baixas[$mov->codtitulo]->principal = $baixas[$mov->codtitulo]->total
-                + $baixas[$mov->codtitulo]->desconto
-                - $baixas[$mov->codtitulo]->juros
-                - $baixas[$mov->codtitulo]->multa
-                - $baixas[$mov->codtitulo]->outras;
         }
         return collect($baixas)->sortBy('vencimento');
     }

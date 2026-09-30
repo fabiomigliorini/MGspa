@@ -70,6 +70,7 @@ class TituloService
             $titulo,
             MovimentoTituloService::TIPO_IMPLANTACAO,
             (float) $titulo->valor,
+            [],
             [
                 'codportador'          => $titulo->codportador,
                 'codtituloagrupamento' => $titulo->codtituloagrupamento,
@@ -151,6 +152,7 @@ class TituloService
                 $titulo,
                 MovimentoTituloService::TIPO_AJUSTE,
                 $diferenca,
+                [],
                 ['codportador' => $titulo->codportador]
             );
         }
@@ -204,6 +206,7 @@ class TituloService
             $titulo,
             MovimentoTituloService::TIPO_ESTORNO_IMPLANTACAO,
             -1 * (float)$titulo->saldo,
+            [],
             [
                 'codmovimentotituloestorno' => optional($implantacao)->codmovimentotitulo,
                 'codtituloagrupamento'      => $titulo->codtituloagrupamento,

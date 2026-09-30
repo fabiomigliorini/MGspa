@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-29 00:59'
+updated_date: '2026-09-30 02:21'
 labels:
   - negocios
   - contas
@@ -33,15 +33,15 @@ Consolida: TASK-33 (codportador na manutenção de PDV), TASK-34 (não movimenta
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 M2 - Caixa abre e fecha no PDV com contagem de moedas e cedulas, mostra a diferenca e gera o PDF Movimento do Caixa
-- [ ] #2 M2 - Venda em dinheiro entra no caixa do PDV; sem caixa aberto ou PDV sem portador o Dinheiro fica bloqueado com o motivo
-- [ ] #3 M2 - So Caixa da filial, Gerente ou Administrador recebe em dinheiro
-- [ ] #4 M2 - Cancelar venda em dinheiro tira do caixa; com o caixa daquele dia fechado, so reabrindo
-- [ ] #5 M2 - Lancamento avulso de entrada e saida no caixa aberto
-- [ ] #6 M3 - Titulo recebido ou pago em dinheiro aparece no caixa (liquidacao do contas, recebimento no PDV, vale colaborador, adiantamento)
-- [ ] #7 M4 - Sangria e suprimento entre caixas, cofre, troco, financeiro e banco, com confirmacao de quem recebe e cancelamento com justificativa
-- [ ] #8 M4 - Nao transfere de ou para caixa fechado; caixa nao fecha com transferencia chegando pendente
-- [ ] #9 M4 - Tela Caixas no contas com saldos dos portadores em especie e transferencias
-- [ ] #10 M5 - Financeiro fecha periodo de cofre e banco pela data de corte; fechado e imutavel; reabre e fecha em ordem
-- [ ] #11 M6 - Chips, ingressos e maquinetas de parceiros contados no caixa e virando titulo Repasse Parceiro no fechamento
+- [ ] #1 M10 - Caixa abre e fecha no PDV com contagem de moedas e cedulas, mostra a diferenca e gera o PDF Movimento do Caixa
+- [ ] #2 M10 - Venda em dinheiro entra no caixa do PDV; sem caixa aberto ou PDV sem portador o Dinheiro fica bloqueado com o motivo
+- [ ] #3 M10 - So Caixa da filial, Gerente ou Administrador recebe em dinheiro
+- [ ] #4 M10 - Cancelar venda em dinheiro tira do caixa; com o caixa daquele dia fechado, so reabrindo
+- [ ] #5 M10 - Lancamento avulso de entrada e saida no caixa aberto
+- [ ] #6 M10 - Notinha recebida, vale de cliente pago, vale de colaborador e adiantamento em dinheiro aparecem no caixa
+- [ ] #7 M11 - Sangria e suprimento entre caixas, cofre, troco, financeiro e banco, com confirmacao de quem recebe e cancelamento com justificativa
+- [ ] #8 M11 - Nao transfere de ou para caixa fechado; caixa nao fecha com transferencia chegando pendente
+- [ ] #9 M11 - Tela Caixas no contas com saldos dos portadores em especie e transferencias
+- [ ] #10 M12 - Financeiro fecha periodo de cofre e banco pela data de corte; fechado e imutavel; reabre e fecha em ordem (em cadeia)
+- [ ] #11 M13 - Chips, ingressos e maquinetas de parceiros contados no caixa e virando titulo Repasse Parceiro no fechamento
 <!-- AC:END -->
