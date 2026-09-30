@@ -145,11 +145,16 @@ final class Fluxo extends Cenario
         $dif = [];
 
         $r1 = $this->api()->post("v1/carga/{$antes->codcarga}/inativo");
+        // O botão também grava versão nova (TASK-180); sem repassar pro $c, o envio
+        // "pelo pátio" logo abaixo chegaria com versão velha e bateria 409 à toa —
+        // aqui o pátio de verdade teria aprendido a versão pelo GET/pull.
+        $c['versao'] = $r1->dado()['versao'] ?? ($c['versao'] ?? null);
         $cancelada = Patio::banco($c['uuid']);
         if (!$r1->ok() || count($cancelada->movimentos) !== 0 || abs(Patio::saldo('UNIDADE', $silo)) > 0.0005) {
             $dif[] = 'cancelar pelo botão: ' . $r1->status . ', ' . count($cancelada->movimentos) . ' linhas no extrato';
         }
         $r2 = $this->api()->delete("v1/carga/{$antes->codcarga}/inativo");
+        $c['versao'] = $r2->dado()['versao'] ?? ($c['versao'] ?? null);
         $reativada = Patio::banco($c['uuid']);
         if (!$r2->ok() || $foto($reativada) != $foto($antes)) {
             $dif[] = 'reativar: ' . $r2->status . ', extrato diferente do original';

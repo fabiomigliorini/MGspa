@@ -10,6 +10,15 @@ export function notifySuccess(message) {
   })
 }
 
+export function notifyWarning(message) {
+  Notify.create({
+    color: 'orange-5',
+    textColor: 'white',
+    icon: 'warning',
+    message,
+  })
+}
+
 export function notifyError(error, fallback = 'Ocorreu um erro') {
   const message = typeof error === 'string' ? error : extrairErro(error, fallback)
   Notify.create({

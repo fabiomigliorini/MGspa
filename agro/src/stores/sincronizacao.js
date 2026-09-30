@@ -2,7 +2,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref } from 'vue'
 import { api } from 'src/services/api'
 import { db } from 'boot/db'
-import { notifyError } from 'src/utils/notify'
+import { notifyError, notifyWarning } from 'src/utils/notify'
 import { extrairErro } from 'src/utils/extrairErro'
 import {
   normalizarCargaDoServidor,
@@ -125,9 +125,31 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     saldosUnidades.value = Array.isArray(data) ? data : []
   }
 
-  // Envia uma carga pro backend; o servidor recalcula pesos/descontos e GERA o
-  // extrato (autoridade), devolvendo o codcarga + valores oficiais.
-  async function enviarCarga(carga) {
+  // Fila por uuid (TASK-180): encadeia na promessa em voo daquela carga, se
+  // houver, e só então dispara — nunca dois POSTs da MESMA carga no ar ao
+  // mesmo tempo (o board pode chamar salvar() a cada bloco e o ciclo
+  // automático pode cair por cima). `.catch(() => {})` no elo anterior é só
+  // pra sequenciar: uma falha não pode emperrar as próximas tentativas.
+  const envioEmVoo = new Map()
+
+  function enviarCargaPorUuid(uuid) {
+    const anterior = (envioEmVoo.get(uuid) || Promise.resolve()).catch(() => {})
+    const atual = anterior.then(() => enviarCargaUma(uuid))
+    envioEmVoo.set(uuid, atual)
+    atual.catch(() => {}).finally(() => {
+      if (envioEmVoo.get(uuid) === atual) envioEmVoo.delete(uuid)
+    })
+    return atual
+  }
+
+  // Envia UMA carga pro backend; o servidor recalcula pesos/descontos e GERA o
+  // extrato (autoridade), devolvendo o codcarga + valores oficiais + a versão
+  // gravada. Lê o Dexie na hora de enviar (não recebe o objeto capturado) pra
+  // sempre mandar o que há de mais atual, mesmo depois de esperar na fila.
+  async function enviarCargaUma(uuid) {
+    const carga = await db.carga.get(uuid)
+    if (!carga || carga.sincronizado === 1) return undefined
+    const revisaoEnviada = carga.revisao
     // `percentual` é rateio só-do-front; o backend usa o `liquido` (kg) já rateado.
     const payload = {
       ...carga,
@@ -137,29 +159,58 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
         return ponto
       }),
     }
-    const { data: resp } = await api.post('v1/carga/sincronizar', payload, OPCOES)
+    let resp
+    try {
+      ;({ data: resp } = await api.post('v1/carga/sincronizar', payload, OPCOES))
+    } catch (e) {
+      // Conflito de versão (TASK-180): outro aparelho sincronizou esta carga
+      // antes de nós — raro. Não é rejeição — o servidor já manda a versão
+      // atual no corpo; adotamos ela e só avisamos, sem guardar o que foi
+      // digitado (NÃO marca syncerro, senão o ciclo automático para de tentar).
+      if (e?.response?.status === 409) {
+        const oficial = e.response.data?.carga ?? {}
+        const norm = normalizarCargaDoServidor(oficial)
+        await db.carga.update(uuid, { ...norm, sincronizado: 1, syncerro: null })
+        notifyWarning(`Carga ${norm.placa || ''} alterada em outro aparelho; a versão daqui foi atualizada.`)
+        return oficial
+      }
+      throw e
+    }
     // O Resource embrulha o registro em { data: {...} } (Laravel default).
     const oficial = resp?.data ?? resp ?? {}
-    // Só sobrescreve o que o backend REALMENTE devolveu. Uma resposta parcial/vazia
-    // (ex.: dedup de POSTs concorrentes no api.js) NÃO pode zerar o liquido/codcarga
-    // já calculados localmente — senão a carga finalizada fica "— kg / 0 sc".
-    // Com codcarga presente (resposta real), o servidor é a autoridade: regrava o
-    // snapshot placa/motorista e o desconto por parâmetro.
-    const patch = { sincronizado: 1, syncerro: null }
-    if (oficial.codcarga != null) {
-      const norm = normalizarCargaDoServidor(oficial)
-      patch.codcarga = norm.codcarga
-      patch.placa = norm.placa
-      patch.motorista = norm.motorista
-      for (const campo of CAMPOS_MOTORISTA_SEM_CADASTRO) patch[campo] = norm[campo]
-      patch.codveiculo = norm.codveiculo
-      patch.codpessoamotorista = norm.codpessoamotorista
-      patch.classificacao = norm.classificacao
-      for (const campo of ['bruto', 'desconto', 'liquido']) {
-        if (oficial[campo] != null) patch[campo] = oficial[campo]
+    await db.transaction('rw', db.carga, async () => {
+      const atual = await db.carga.get(uuid)
+      if (!atual) return
+      // Reeditou enquanto o envio estava no ar (revisão mudou): só aprende
+      // codcarga/versão, mantém pendente — a edição nova sai na PRÓXIMA
+      // chamada da fila, já com a versão certa (critério #4 da TASK-180).
+      if (atual.revisao !== revisaoEnviada) {
+        await db.carga.update(uuid, {
+          codcarga: oficial.codcarga ?? atual.codcarga,
+          versao: oficial.versao ?? atual.versao,
+        })
+        return
       }
-    }
-    await db.carga.update(carga.uuid, patch)
+      // Só sobrescreve o que o backend REALMENTE devolveu. Uma resposta parcial/vazia
+      // (ex.: dedup de POSTs concorrentes no api.js) NÃO pode zerar o liquido/codcarga
+      // já calculados localmente — senão a carga finalizada fica "— kg / 0 sc".
+      const patch = { sincronizado: 1, syncerro: null }
+      if (oficial.codcarga != null) {
+        const norm = normalizarCargaDoServidor(oficial)
+        patch.codcarga = norm.codcarga
+        patch.versao = norm.versao
+        patch.placa = norm.placa
+        patch.motorista = norm.motorista
+        for (const campo of CAMPOS_MOTORISTA_SEM_CADASTRO) patch[campo] = norm[campo]
+        patch.codveiculo = norm.codveiculo
+        patch.codpessoamotorista = norm.codpessoamotorista
+        patch.classificacao = norm.classificacao
+        for (const campo of ['bruto', 'desconto', 'liquido']) {
+          if (oficial[campo] != null) patch[campo] = oficial[campo]
+        }
+      }
+      await db.carga.update(uuid, patch)
+    })
     return oficial
   }
 
@@ -222,7 +273,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
       // 422 (excede contrato, rateio não fecha) / 500: marca e segue; o registro
       // fica pendente até o operador ajustar. Só falha de rede interrompe o ciclo.
       try {
-        await enviarCarga(carga)
+        await enviarCargaPorUuid(carga.uuid)
       } catch (e) {
         if (ehFalhaDeRede(e)) throw e
         const msg = e?.response?.data?.message || 'Rejeitado pelo servidor'
@@ -285,7 +336,7 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
     sincronizar,
     puxarReferencias,
     puxarCargas,
-    enviarCarga,
+    enviarCargaPorUuid,
     enviarCargasPendentes,
   }
 })

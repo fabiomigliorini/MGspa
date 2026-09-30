@@ -445,6 +445,14 @@ export const useCargaStore = defineStore('carga', () => {
       pontos: (carga.pontos || []).filter(pontoCompleto).map((p) => ({ ...p })),
       classificacao: (carga.classificacao || []).map((c) => ({ ...c })),
     }
+    // TASK-180: `atual` (Dexie) é a última palavra do que já foi confirmado com o
+    // servidor — mais segura que o `carga` recebido (cópia do formulário, que só é
+    // atualizada por watcher separado). `revisao` marca esta gravação local pra
+    // enviarCargaUma saber, na volta do POST, se o operador editou de novo enquanto
+    // o envio estava no ar; `versao` é controle do servidor — o form nunca mexe.
+    const atual = await db.carga.get(limpa.uuid)
+    limpa.revisao = (atual?.revisao ?? 0) + 1
+    limpa.versao = atual?.versao ?? limpa.versao ?? null
     // syncerro: null — reeditar/salvar limpa uma rejeição anterior e rearma o envio.
     Object.assign(limpa, calcularCarga(limpa, parametrosDaCarga(limpa)), {
       sincronizado: 0,
@@ -455,7 +463,7 @@ export const useCargaStore = defineStore('carga', () => {
     await db.carga.put(plain)
     await carregarCargas()
     sincronizacao
-      .enviarCarga(JSON.parse(JSON.stringify(limpa)))
+      .enviarCargaPorUuid(limpa.uuid)
       .then(() => carregarCargas())
       .catch(async (e) => {
         // Rede (offline, timeout): fica pendente e o ciclo automático envia quando

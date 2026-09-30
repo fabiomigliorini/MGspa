@@ -90,4 +90,15 @@ return Application::configure(basePath: dirname(__DIR__))
                 409
             );
         });
+
+        // Conflito de sync do patio (versao otimista) — TASK-180. Nao e bug: outro
+        // aparelho gravou esta carga primeiro. So o patio consome este endpoint,
+        // sempre via XHR/fetch, entao a resposta e sempre JSON.
+        $exceptions->dontReport(\Mg\Grao\CargaConflitoException::class);
+        $exceptions->render(function (\Mg\Grao\CargaConflitoException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'carga' => new \Mg\Grao\CargaResource($e->carga),
+            ], 409);
+        });
     })->create();
