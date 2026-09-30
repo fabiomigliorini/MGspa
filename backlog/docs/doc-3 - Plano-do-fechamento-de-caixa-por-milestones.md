@@ -28,10 +28,16 @@ em 29/09/2026** (TASK-186, commits `7c6551a33` e `0991fc2b3`). **M1 (movimento d
 linha) concluído e validado em 30/09/2026** (TASK-188). **M2 (tipo de portador e PDV →
 portador) concluído e validado em 30/09/2026** (TASK-188). **Próximo: M3.**
 
+**Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
+validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
+milestones sobem de uma vez, numa única janela com a API parada, quando o plano terminar. Até lá
+produção fica como está.
+
 **Pendências do Fábio no go-live** (não são gaps do plano): quais dos dois portadores em espécie da
 filial 101 (100 Caixa Financeiro, 101001 Caixa Atacado) são cofre; pessoa e conta contábil de cada
-item do caixa; conferir os nomes das gavetas geradas dos PDVs; rodar os scripts DDL em produção na
-janela combinada (API parada), com o MGsis e o MG Lara olhando as views temporárias.
+item do caixa; cadastrar as gavetas (portador em espécie) e vinculá-las em cada PDV de caixa (M2);
+rodar os scripts DDL em produção, na ordem dos milestones (`movimento_titulo_colunas.sql`,
+`portador_tipo.sql`, …), com o MGsis e o MG Lara olhando as views temporárias.
 
 ## Glossário
 
@@ -691,8 +697,8 @@ TED, PIX), Sicredi sem API pública de pagamento. Conferir campos e estados ao i
 ## Riscos e bordas
 
 - M4, M5 e M6 mexem no caminho crítico do PDV e do financeiro: um de cada vez, com o roteiro de
-  validação completo, e conferência de totais do histórico antes e depois. Deploy de cada um na
-  janela com a API parada, script + código juntos.
+  validação completo em dev, e conferência de totais do histórico antes e depois. O deploy é um só,
+  no go-live final (ver topo), com todos os scripts e o código juntos e a API parada.
 - PDVs com versão antiga durante o M5: o sync aceita os dois formatos até todos atualizarem.
 - PDV offline: abrir/fechar caixa, receber título e fechar negócio são online; estado velho no
   Receber → 422 claro no `fechar`.
