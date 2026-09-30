@@ -8,11 +8,16 @@ use App\Http\Requests\Mg\Contrato\ContratoUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 class ContratoController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     public function index(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = ContratoService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
         return ContratoResource::collection($res);
@@ -20,6 +25,8 @@ class ContratoController extends MgController
 
     public function show(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return new ContratoResource(ContratoService::detalhe((int) $id));
     }
 
@@ -29,6 +36,8 @@ class ContratoController extends MgController
      */
     public function calculo(ContratoCalculoRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return response()->json(ContratoCalculoService::calcular([
             'codcultura' => (int) $request->codcultura,
             'bruto' => (float) $request->bruto,
@@ -45,6 +54,8 @@ class ContratoController extends MgController
      */
     public function emissao(Request $request, $codcontrato, $codcarga)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return response()->json(
             \Mg\NotaFiscal\NotaFiscalContratoService::planoEmissao((int) $codcontrato, (int) $codcarga),
             200,
@@ -57,23 +68,31 @@ class ContratoController extends MgController
      */
     public function proximoNumero($codsafra)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return response()->json(['numero' => ContratoService::proximoNumero((int) $codsafra)]);
     }
 
     public function store(ContratoStoreRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ContratoService::salvar($request->validated());
         return new ContratoResource(ContratoService::detalhe((int) $model->codcontrato));
     }
 
     public function update(ContratoUpdateRequest $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ContratoService::salvar($request->validated(), Contrato::findOrFail($id));
         return new ContratoResource(ContratoService::detalhe((int) $model->codcontrato));
     }
 
     public function destroy($id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $contrato = Contrato::findOrFail($id);
         try {
             $contrato->delete();
@@ -93,12 +112,16 @@ class ContratoController extends MgController
 
     public function inativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         ContratoService::inativar(Contrato::findOrFail($id));
         return new ContratoResource(ContratoService::detalhe((int) $id));
     }
 
     public function ativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         ContratoService::ativar(Contrato::findOrFail($id));
         return new ContratoResource(ContratoService::detalhe((int) $id));
     }
@@ -109,12 +132,16 @@ class ContratoController extends MgController
      */
     public function marcarBarter(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         ContratoService::barter(Contrato::findOrFail($id), true);
         return new ContratoResource(ContratoService::detalhe((int) $id));
     }
 
     public function desmarcarBarter(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         ContratoService::barter(Contrato::findOrFail($id), false);
         return new ContratoResource(ContratoService::detalhe((int) $id));
     }

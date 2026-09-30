@@ -7,13 +7,18 @@ use App\Http\Requests\Mg\Fazenda\TalhaoUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 class TalhaoController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     const WITH = ['Fazenda'];
 
     public function index(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = TalhaoService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
         return TalhaoResource::collection($res);
@@ -23,6 +28,8 @@ class TalhaoController extends MgController
     // excluir a fazenda atual e receber só "as outras".
     public function mapa(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $qry = Talhao::query()
             ->with('Fazenda:codfazenda,fazenda')
             ->whereNotNull('geometria')
@@ -48,6 +55,8 @@ class TalhaoController extends MgController
 
     public function store(TalhaoStoreRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = new Talhao();
         $model->fill($request->validated());
         $model->save();
@@ -57,11 +66,15 @@ class TalhaoController extends MgController
 
     public function show(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return new TalhaoResource(Talhao::with(static::WITH)->findOrFail($id));
     }
 
     public function update(TalhaoUpdateRequest $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = Talhao::findOrFail($id);
         $model->fill($request->validated());
         $model->update();
@@ -71,6 +84,8 @@ class TalhaoController extends MgController
 
     public function destroy($id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $talhao = Talhao::findOrFail($id);
         try {
             $talhao->delete();
@@ -85,6 +100,8 @@ class TalhaoController extends MgController
 
     public function inativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = Talhao::findOrFail($id);
         TalhaoService::inativar($model);
         return new TalhaoResource($model->fresh(static::WITH));
@@ -92,6 +109,8 @@ class TalhaoController extends MgController
 
     public function ativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = Talhao::findOrFail($id);
         TalhaoService::ativar($model);
         return new TalhaoResource($model->fresh(static::WITH));

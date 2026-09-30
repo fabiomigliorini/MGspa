@@ -14,7 +14,3 @@ export const PERMISSOES = Object.freeze({
   CONTADOR: 'Contador',
   RH: 'Recursos Humanos',
 })
-
-// Esqueleto: o app Agro ainda não restringe acesso por grupo — qualquer
-// usuário autenticado entra (rotas sem `meta.permissions`). Quando houver
-// um grupo dedicado (ex: 'Agro'), adicione aqui e gate as rotas.

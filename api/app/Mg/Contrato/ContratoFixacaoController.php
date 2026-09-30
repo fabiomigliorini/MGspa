@@ -6,6 +6,7 @@ use App\Http\Requests\Mg\Contrato\ContratoFixacaoRequest;
 use Illuminate\Http\Request;
 use Mg\MgController;
 use Mg\MgService;
+use Mg\Usuario\Autorizador;
 
 /**
  * Fixacoes de preco aninhadas no contrato: contrato/{codcontrato}/fixacao.
@@ -17,8 +18,12 @@ use Mg\MgService;
  */
 class ContratoFixacaoController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     public function index(Request $request, $codcontrato)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $res = ContratoFixacao::with('Moeda', 'ContratoFixacaoCambioS')
             ->where('codcontrato', $codcontrato)
             ->orderBy('data')
@@ -28,6 +33,8 @@ class ContratoFixacaoController extends MgController
 
     public function store(ContratoFixacaoRequest $request, $codcontrato)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         // Precificacao vive na fixacao: um contrato "FIXO" e so um que recebe a
         // fixacao cheia na assinatura. Qualquer contrato pode receber fixacoes.
         Contrato::findOrFail($codcontrato);
@@ -44,6 +51,8 @@ class ContratoFixacaoController extends MgController
 
     public function update(ContratoFixacaoRequest $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
 
         $model->fill($request->validated());
@@ -57,12 +66,16 @@ class ContratoFixacaoController extends MgController
 
     public function destroy($codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao)->delete();
         return response()->noContent();
     }
 
     public function inativar(Request $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         MgService::inativar($m);
         return new ContratoFixacaoResource($m->fresh('Moeda', 'ContratoFixacaoCambioS'));
@@ -70,6 +83,8 @@ class ContratoFixacaoController extends MgController
 
     public function ativar(Request $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         MgService::ativar($m);
         return new ContratoFixacaoResource($m->fresh('Moeda', 'ContratoFixacaoCambioS'));
@@ -81,6 +96,8 @@ class ContratoFixacaoController extends MgController
      */
     public function quitar(Request $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         $m->quitado = now();
         $m->save();
@@ -91,6 +108,8 @@ class ContratoFixacaoController extends MgController
 
     public function reabrir(Request $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         $m->quitado = null;
         $m->save();

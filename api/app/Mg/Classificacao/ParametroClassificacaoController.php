@@ -7,11 +7,16 @@ use App\Http\Requests\Mg\Classificacao\ParametroClassificacaoUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 class ParametroClassificacaoController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     public function index(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = ParametroClassificacaoService::pesquisar($filter, $sort, $fields)
             ->paginate()->appends($request->all());
@@ -20,6 +25,8 @@ class ParametroClassificacaoController extends MgController
 
     public function store(ParametroClassificacaoStoreRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = new ParametroClassificacao();
         $model->fill($request->validated());
         $model->save();
@@ -29,6 +36,8 @@ class ParametroClassificacaoController extends MgController
 
     public function show(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return new ParametroClassificacaoResource(
             ParametroClassificacao::with(ParametroClassificacaoService::WITH)->findOrFail($id)
         );
@@ -36,6 +45,8 @@ class ParametroClassificacaoController extends MgController
 
     public function update(ParametroClassificacaoUpdateRequest $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ParametroClassificacao::findOrFail($id);
         $model->fill($request->validated());
         $model->update();
@@ -45,6 +56,8 @@ class ParametroClassificacaoController extends MgController
 
     public function destroy($id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ParametroClassificacao::findOrFail($id);
         try {
             $model->delete();
@@ -59,6 +72,8 @@ class ParametroClassificacaoController extends MgController
 
     public function inativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ParametroClassificacao::findOrFail($id);
         ParametroClassificacaoService::inativar($model);
         return new ParametroClassificacaoResource($model->fresh(ParametroClassificacaoService::WITH));
@@ -66,6 +81,8 @@ class ParametroClassificacaoController extends MgController
 
     public function ativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ParametroClassificacao::findOrFail($id);
         ParametroClassificacaoService::ativar($model);
         return new ParametroClassificacaoResource($model->fresh(ParametroClassificacaoService::WITH));

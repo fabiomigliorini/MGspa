@@ -145,7 +145,6 @@ export const useAuthStore = defineStore('auth', () => {
       usuario.value = null
       expiresAt.value = null
       localStorage.removeItem('access_token')
-      localStorage.removeItem('usuario')
       window.location.href = '/'
     }
   }
@@ -166,6 +165,13 @@ export const useAuthStore = defineStore('auth', () => {
     filiaisDoGrupo,
     filiaisRestritas,
   }
+},
+{
+  // O pátio é offline-first: um F5 sem internet não pode perder `usuario`,
+  // senão a checagem de `meta.permissions` do guard vê `null` e bloqueia
+  // quem já estava autorizado (validarToken() fica otimista só pro token,
+  // não repopula usuario sem resposta do servidor).
+  persist: { pick: ['usuario', 'expiresAt'] },
 })
 
 if (import.meta.hot) {
