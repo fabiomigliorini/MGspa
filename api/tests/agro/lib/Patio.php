@@ -43,6 +43,7 @@ final class Patio
             'inativo' => null,
             'placa' => static::placa(),
             'placacarreta' => null,
+            'placacarreta2' => null,
             'motorista' => Massa::PREFIXO . ' MOTORISTA',
             'codveiculo' => null,
             'codpessoamotorista' => null,

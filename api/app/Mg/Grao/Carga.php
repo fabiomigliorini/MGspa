@@ -32,6 +32,7 @@ class Carga extends MgModel
         'data',
         'placa',
         'placacarreta',
+        'placacarreta2',
         'motorista',
         'cpfmotorista',
         'telefonemotorista',

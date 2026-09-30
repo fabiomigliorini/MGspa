@@ -1,11 +1,11 @@
 ---
 id: TASK-109
 title: 'Patio: caminhao some da lista quando a safra selecionada e outra'
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-17 19:06'
-updated_date: '2026-09-29 14:01'
+updated_date: '2026-09-29 21:07'
 labels:
   - agro
 dependencies: []
@@ -30,3 +30,9 @@ Efeito medido em 17/09/2026: a carga 1 (Milho 2026, parada em CLASSIFICACAO desd
 <!-- AC:BEGIN -->
 - [ ] #1 No patio e Finalizadas listam cargas de todas as safras, com a safra escrita em cada item; o select de Safra sai do drawer
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+29/09/2026: validado. Titulo da lista trocado para 'Cargas finalizadas', sem contagem.
+<!-- SECTION:NOTES:END -->

@@ -236,6 +236,16 @@ const onScroll = async ({ index }) => {
   }
 }
 
+// Rótulo usado pelo Quasar pra ecoar a opção destacada DENTRO do campo (seta
+// com `fill-input`). Nas ações ("Usar sem cadastro"/"Cadastrar") isso faria a
+// frase inteira substituir o texto digitado enquanto o operador só está
+// navegando — aqui devolve o texto ORIGINAL da busca, então passar por cima
+// da ação não muda visualmente o campo. O rótulo bonito (ícone + frase) segue
+// só no slot #option, que não usa isto.
+function optionLabelFn(opt) {
+  return opt?.acao ? opt.busca : opt?.label
+}
+
 const handleUpdate = (value) => {
   if (typeof value === 'string' && value.startsWith(PREFIXO_ACAO)) {
     const opcao = options.value.find((o) => o.value === value)
@@ -263,7 +273,7 @@ const handleUpdate = (value) => {
     :clearable="clearable"
     :options="options"
     option-value="value"
-    option-label="label"
+    :option-label="optionLabelFn"
     emit-value
     map-options
     use-input

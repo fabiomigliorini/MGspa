@@ -3,17 +3,17 @@ id: TASK-107
 title: >-
   Agro: rodar agro_classificacao_parametro.sql no dev (classificacao de
   soja/milho vazia)
-status: In Progress
+status: To Do
 assignee:
   - '@fabio'
 created_date: '2026-09-17 14:51'
-updated_date: '2026-09-29 14:26'
+updated_date: '2026-09-29 19:17'
 labels:
   - agro
 dependencies: []
 priority: medium
 type: bug
-ordinal: 106000
+ordinal: 197000
 ---
 
 ## Description

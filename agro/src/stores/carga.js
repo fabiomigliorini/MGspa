@@ -418,6 +418,7 @@ export const useCargaStore = defineStore('carga', () => {
       codveiculo: null,
       placa: null,
       placacarreta: null,
+      placacarreta2: null,
       codpessoamotorista: null,
       motorista: null,
       ...Object.fromEntries(CAMPOS_MOTORISTA_SEM_CADASTRO.map((c) => [c, null])),
