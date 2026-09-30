@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-09-30 21:56'
+updated_date: '2026-09-30 22:01'
 labels:
   - contas
   - negocios
@@ -57,7 +57,7 @@ Milestones:
 - [x] #7 M2.2 Existem Stone, SafraPay e o troco de cada loja; a gaveta de cada PDV de caixa é cadastrada no contas como portador em espécie
 - [x] #8 M2.3 Cada PDV de caixa aponta para a sua gaveta, e só aceita portador em espécie da mesma filial
 - [x] #9 M3.1 As maquinetas das duas operadoras e as manuais ficam num cadastro só no contas
-- [ ] #10 M3.2 No PDV o cartão manual escolhe a maquineta da lista da filial em vez de digitar o serial, e o pagamento fica gravado com ela
+- [x] #10 M3.2 No PDV o cartão manual escolhe a maquineta da lista da filial em vez de digitar o serial, e o pagamento fica gravado com ela
 - [ ] #11 M4.1 A venda grava pagamentos e parcelas no formato novo, com o histórico copiado e os mesmos totais por negócio
 - [ ] #12 M4.2 Cada parcela a prazo vira título ao fechar a venda
 - [ ] #13 M4.3 NF-e e NFC-e, DIMP, romaneio e conferência do PDV saem iguais em todas as formas de pagamento
@@ -107,4 +107,8 @@ M3 implementado em dev em 30/09/2026, aguardando validação (ACs M3.x desmarcad
 Pareamento SafraPay por QR fica para validar no go-live (decisão do Fábio, 30/09/2026): dev sem SAURUS_S2PAY_* no api/.env e PDVs Saurus do dev compartilham ids com produção. Falha da API Saurus agora volta 502 com mensagem; dialog de parear não trava mais no carregando.
 
 M3 validado pelo Fábio em 30/09/2026 (contas → Maquinetas, negocios Receber → Cartão). Pareamento SafraPay por QR confere no go-live. M3.2 fica aberto: o parceiro do cartão manual ainda vem da lista fixa (cartoes-manuais.json) e uma maquineta de adquirente nova (ex.: Cielo) não aparece no PDV — ajuste em seguida, fora do commit do M3.
+
+M3.2, ajuste em dev (30/09/2026, fora do commit 78cd48526, aguardando validação): parceiros do cartão manual = fixos + toda adquirente com maquineta ativa na filial (Cielo etc., padrão da Stone, sem logo); fixo sem maquineta na filial fica desabilitado; Receber → Cartão sincroniza o estoque local a cada abertura (online). MaquinetaService::paraPdv devolve o nome da adquirente.
+
+M3.2 validado pelo Fábio em 30/09/2026 (Cielo no passo parceiro).
 <!-- SECTION:NOTES:END -->

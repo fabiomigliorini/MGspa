@@ -350,8 +350,10 @@ class MaquinetaService
         return DB::select('
             select
                 m.codmaquineta, m.apelido, m.serial, m.codfilial, m.compartilhada,
-                m.codpessoa, m.integracao, m.codpagarmepos, pin.codsauruspdv
+                m.codpessoa, trim(p.fantasia) as adquirente, m.integracao, m.codpagarmepos,
+                pin.codsauruspdv
             from tblmaquineta m
+            inner join tblpessoa p on (p.codpessoa = m.codpessoa)
             left join tblsauruspinpad pin on (pin.codsauruspinpad = m.codsauruspinpad)
             where m.inativo is null
               and (m.codfilial = :codfilial or m.compartilhada)

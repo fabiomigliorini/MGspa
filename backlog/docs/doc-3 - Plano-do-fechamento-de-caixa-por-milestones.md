@@ -29,8 +29,7 @@ linha) concluído e validado em 30/09/2026** (TASK-188). **M2 (tipo de portador 
 portador) concluído e validado em 30/09/2026** (TASK-188). **M3 (cadastro único de maquinetas)
 validado em 30/09/2026** (TASK-188): decisões da conferência na seção do M3, que cresceu (tela
 Saurus/S2Pay do negocios e cadastro do POS PagarMe passam para contas → Maquinetas). Pendente do
-M3: o parceiro do cartão manual passar a vir das maquinetas (adquirente nova, como Cielo, não
-aparece no PDV) e o pareamento SafraPay por QR, que confere no go-live. **Próximo: M4.**
+M3 só o pareamento SafraPay por QR, que confere no go-live. **Próximo: M4.**
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -542,6 +541,13 @@ para leitura de histórico não convertido.
     só na maquineta (`tblsauruspinpad.serial` vai como `IdPinPad` na cobrança e continua nulo).
   - O cartão manual continua gravando `serialmaquineta` só no PDV antigo; o novo manda
     `codmaquineta`. A coluna some com a tabela no M4.
+  - **Parceiros do cartão manual** (ajuste depois da validação): além dos fixos de
+    `cartoes-manuais.json` (logo, tipos, bandeiras), aparece toda adquirente com maquineta ativa na
+    filial (ex.: Cielo), sem logo e aceitando o mesmo que a Stone (débito, crédito, voucher e as
+    bandeiras dela). Parceiro fixo sem maquineta na filial aparece desabilitado ("Nenhuma maquineta
+    nesta filial"), para as teclas não mudarem de loja para loja. O Receber → Cartão busca a lista
+    de maquinetas de novo a cada abertura (online): maquineta cadastrada no contas aparece sem
+    sincronizar à mão.
   - **Pareamento SafraPay por QR só é validado no go-live**, em produção, com um pinpad reserva:
     o `api/.env` do dev não tem as credenciais da Saurus (`SAURUS_S2PAY_*`) e os PDVs Saurus do
     banco de dev têm os mesmos ids dos de produção na conta Saurus (parear no dev re-parearia o

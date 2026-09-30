@@ -43,14 +43,18 @@ const maquinetas = ref([])
 
 const valor = computed(() => sNegocio.receber.valor)
 
-onMounted(async () => {
-  let loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
-  // PDV atualizado que ainda não sincronizou o estoque local depois do cadastro de maquinetas
-  if (loc && !loc.MaquinetaS) {
-    await sSinc.silentSincronizarEstoqueLocal()
-    loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
-  }
+const carregarMaquinetas = async () => {
+  const loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
   maquinetas.value = loc?.MaquinetaS ?? []
+}
+
+// mostra o que está no PDV e, online, busca de novo: maquineta cadastrada agora no contas já
+// aparece sem sincronizar à mão
+onMounted(async () => {
+  await carregarMaquinetas()
+  if (await sSinc.silentSincronizarEstoqueLocal()) {
+    await carregarMaquinetas()
+  }
 })
 
 // ---- maquininhas integradas da filial; a padrão do PDV só vem pré-selecionada (pode estar
@@ -167,19 +171,41 @@ const opcoesModo = computed(() => {
   return opcoes.map((o, i) => ({ ...o, tecla: i < 10 ? i : null }))
 })
 
-// parceiro do cartão manual (Stone, SafraPay, Brasil Card…); só os que aceitam o tipo escolhido
+// parceiros do cartão manual: os fixos (logo, tipos e bandeiras em cartoes-manuais.json) e
+// toda adquirente com maquineta na filial (ex.: Cielo), que aceita o mesmo que a Stone
+const ADQUIRENTE_PADRAO = cartoesManuais.find((p) => p.apelido === 'Stone')
+const parceiros = computed(() => {
+  const novos = maquinetas.value
+    .filter((m) => !cartoesManuais.some((p) => p.codpessoa === m.codpessoa))
+    .filter((m, i, lista) => lista.findIndex((o) => o.codpessoa === m.codpessoa) === i)
+    .map((m) => ({
+      ...ADQUIRENTE_PADRAO,
+      codpessoa: m.codpessoa,
+      apelido: m.adquirente,
+      logo: null,
+    }))
+  return [...cartoesManuais, ...novos]
+})
+
+// só os que aceitam o tipo escolhido e têm maquineta nesta filial
 const opcoesParceiro = computed(() =>
-  cartoesManuais.map((pes, i) => ({
-    tecla: i < 9 ? i + 1 : null,
-    valor: pes.codpessoa,
-    label: pes.apelido,
-    logo: pes.logo,
-    desabilitado: !pes.tipos.some((t) => t.tipo === tipo.value),
-    motivo: `Não aceita ${nomeTipo.value}`,
-  })),
+  parceiros.value.map((pes, i) => {
+    const aceita = pes.tipos.some((t) => t.tipo === tipo.value)
+    const temMaquineta = maquinetas.value.some((m) => m.codpessoa === pes.codpessoa)
+    return {
+      tecla: i < 9 ? i + 1 : null,
+      valor: pes.codpessoa,
+      label: pes.apelido,
+      logo: pes.logo,
+      icone: pes.logo ? null : 'credit_card',
+      cor: VISUAL.cartao.cor,
+      desabilitado: !aceita || !temMaquineta,
+      motivo: !aceita ? `Não aceita ${nomeTipo.value}` : 'Nenhuma maquineta nesta filial',
+    }
+  }),
 )
 
-const parceiroAtual = computed(() => cartoesManuais.find((p) => p.codpessoa === parceiro.value))
+const parceiroAtual = computed(() => parceiros.value.find((p) => p.codpessoa === parceiro.value))
 
 // maquinetas do parceiro escolhido, as usadas recentemente neste PDV primeiro
 const maquinetasParceiro = computed(() => {
