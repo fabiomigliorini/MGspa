@@ -3,16 +3,16 @@ id: TASK-129
 title: >-
   Agro: nenhum endpoint do agro verifica grupo de usuario (contratos e precos
   abertos a qualquer login)
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-09-21 21:33'
-updated_date: '2026-09-30 14:39'
+updated_date: '2026-09-30 15:07'
 labels:
   - agro
 dependencies: []
 priority: high
 type: bug
-ordinal: 1000
+ordinal: 199000
 ---
 
 ## Description

@@ -1,15 +1,16 @@
 ---
 id: TASK-180
 title: Carga finalizada ou cancelada volta atrás quando outro aparelho sincroniza
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-28 21:11'
+updated_date: '2026-09-30 15:07'
 labels:
   - agro
 dependencies: []
 priority: high
 type: bug
-ordinal: 193000
+ordinal: 2000
 ---
 
 ## Description

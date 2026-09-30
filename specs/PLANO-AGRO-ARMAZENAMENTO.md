@@ -140,7 +140,10 @@ cada fase é **esses cenários passarem e nenhum outro piorar**. Os `[INFO]` nã
   (S4b: 2 em 10 rodadas).
 - uuid fora do formato chega no Postgres (`uuid` é tipo `uuid`) e vira 500 (S15).
 
-### 1.1 DDL — `api/database/agro_carga_versao.sql` (arquivo novo)
+### 1.1 DDL — `api/database/agro/30-agro_carga_versao.sql` (arquivo novo)
+
+No formato da pasta (bloco `DO` com guarda, sem `BEGIN`/`COMMIT` — ver
+`api/database/agro/README.md`) e com linha nova no `00-diagnostico.sql`.
 
 ```sql
 -- Versao otimista da carga: incrementada a cada gravacao no servidor. O aparelho
@@ -150,7 +153,7 @@ COMMENT ON COLUMN tblcarga.versao IS
   'Versao otimista (sync offline do patio). Ver CargaService::sincronizar.';
 ```
 
-Rodar no dev: `docker exec -i mgdb-mgdb-1 psql -U mgsis -d mgsis < api/database/agro_carga_versao.sql`.
+Rodar no dev: `docker exec -i mgdb-mgdb-1 psql -U mgsis -d mgsis < api/database/agro/30-agro_carga_versao.sql`.
 **Em PROD o DDL vai antes do deploy do backend** (memória `ddl_scripts_manuais_sem_tracking`:
 nada registra o que já foi aplicado, então anote no PR).
 
@@ -372,7 +375,8 @@ da Fase 4 continuam valendo.
   "Líquido = bruto − desconto" por "Entrada no silo" / "Retirada do silo" conforme o papel.
   No `MovimentoGraoManualRequest`, `bruto`/`desconto` passam a `gte:0`. Para PLANTIO e
   CONTRATO, correção para baixo = estornar o lançamento errado e lançar o certo.
-- **Migração (D4)** — `api/database/agro_movimento_manual_sinal.sql`:
+- **Migração (D4)** — `api/database/agro/31-agro_movimento_manual_sinal.sql` (mesmo formato; o
+  `WHERE liquido > 0` é o que impede uma 2ª rodada de desinverter):
   ```sql
   -- 1) conferir antes (levar a lista pra quem lancou):
   SELECT codmovimentograo, data, codunidadearmazenadora, liquido, observacao, codusuariocriacao
@@ -551,7 +555,7 @@ Commit: `[FIX] TASK-130 Patio mostra saldo e espaco do silo e pede confirmacao a
 
 1. Bateria completa: **0 falhas**, só `[INFO]` em S5, S6 e S17.
 2. PROD, na ordem:
-   `agro_carga_versao.sql` → deploy do api → conferir e rodar `agro_movimento_manual_sinal.sql`
+   `agro/30-agro_carga_versao.sql` → deploy do api → conferir e rodar `agro/31-agro_movimento_manual_sinal.sql`
    (D4) → deploy do agro.
    O backend novo aceita o app antigo (sem `versao` = comportamento de hoje), então a janela
    entre os deploys é segura. O app antigo só é protegido depois que o PWA atualizar.
