@@ -40,7 +40,7 @@ class PdvController
     public function getDispositivo(Request $request)
     {
         Autorizador::autoriza(['Administrador']);
-        $query = Pdv::orderBy('criacao', 'desc');
+        $query = Pdv::with(['Filial', 'Setor', 'Portador'])->orderBy('criacao', 'desc');
         if ($request->apelido) {
             $query->where('apelido', 'ilike', "%{$request->apelido}%");
         }

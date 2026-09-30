@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-09-30 14:44'
+updated_date: '2026-09-30 14:45'
 labels:
   - contas
   - negocios
@@ -53,9 +53,9 @@ Milestones:
 - [x] #3 M1.3 O histórico antigo aparece convertido, com o saldo de cada título e os totais de juros, multa e desconto por mês iguais aos de antes
 - [x] #4 M1.4 Baixa de boleto BB, acerto de RH, agrupamento e venda a prazo e vale no PDV gravam o movimento no formato novo
 - [x] #5 M1.5 Títulos, Liquidações, Agrupamentos, recibos e relatórios mostram principal, juros, multa, desconto e total
-- [ ] #6 M2.1 Cada portador tem um tipo (espécie, banco, adquirente, cartão da empresa, outros) e a lista de portadores filtra por ele
-- [ ] #7 M2.2 Existem Stone, SafraPay, o troco de cada loja e uma gaveta para cada PDV de caixa
-- [ ] #8 M2.3 Cada PDV de caixa aponta para a sua gaveta, e só aceita portador em espécie da mesma filial
+- [x] #6 M2.1 Cada portador tem um tipo (espécie, banco, adquirente, cartão da empresa, outros) e a lista de portadores filtra por ele
+- [x] #7 M2.2 Existem Stone, SafraPay e o troco de cada loja; a gaveta de cada PDV de caixa é cadastrada no contas como portador em espécie
+- [x] #8 M2.3 Cada PDV de caixa aponta para a sua gaveta, e só aceita portador em espécie da mesma filial
 - [ ] #9 M3.1 As maquinetas das duas operadoras e as manuais ficam num cadastro só no contas
 - [ ] #10 M3.2 No PDV o cartão manual escolhe a maquineta da lista da filial em vez de digitar o serial, e o pagamento fica gravado com ela
 - [ ] #11 M4.1 A venda grava pagamentos e parcelas no formato novo, com o histórico copiado e os mesmos totais por negócio
@@ -88,5 +88,11 @@ Testado em dev com rollback (tinker): liquidação receber+pagar com juros/multa
 
 Deploy: script + código do MGspa + MGsis na mesma janela, API parada.
 
+M2 em andamento (29/09/2026). Decisões na conferência: gavetas NÃO são criadas pelo script (alocacao='C' dá 120 PDVs ativos, não 17) — o portador espécie de cada caixa é criado no contas e vinculado em negocios → Config → PDV; cartões de débito da empresa (202021, 202022, 202040, 202041, 202043, 202045) = B; 202028 e 202031 (sem codbanco) = C; Troco de 101 a 105.
+
+M2 implementado em dev em 29/09/2026, aguardando validação (ACs M2.x desmarcados até o OK). DDL api/database/portador_tipo.sql (idempotente, rodado 2x em dev): tblportador.tipo + CHECK + índice; seed A 6, B 39, C 10, E 12, O 9; Caixa Arquitetura → filial 501; Stone (202055) e SafraPay (202056) tipo A; Troco Deposito/Botanico/Centro/Imperial/Andre Maggi. Backend: Portador::TIPO_*, ehGaveta(); tipo nos requests, filtro, select e resource (+ gaveta); PdvService::update recusa (422) portador que não é espécie ou é de outra filial; PdvResource com portador. Frontend: contas Portadores (tipo no form, filtro, badge tipo/Gaveta); negocios Config → PDV (portador espécie da filial no editar, listagem mostra o portador); MgSelectPortador com tipos e agrupar/codfilial.
+
 M1 validado pelo Fábio em 30/09/2026 (contas, negocios, pessoas, MGsis). Boleto Bradesco fora da validação: abandonado, boleto só pela API do BB.
+
+M2 validado pelo Fábio em 30/09/2026 (contas → Portadores; negocios → Config → PDV). Critério M2.2 ajustado à decisão da conferência: a gaveta de cada PDV de caixa é cadastrada no contas, não criada pelo script.
 <!-- SECTION:NOTES:END -->

@@ -8,6 +8,7 @@ import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import MgSelectBanco from '@components/MgSelectBanco.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
+import { PORTADOR_TIPO_OPTIONS } from 'src/constants/portadorTipo'
 
 const store = usePortadorStore()
 
@@ -59,6 +60,18 @@ const statusOptions = [
     </FilterGroup>
 
     <FilterGroup title="Vínculos">
+      <q-select
+        v-model="store.filters.tipo"
+        :options="PORTADOR_TIPO_OPTIONS"
+        emit-value
+        map-options
+        outlined
+        clearable
+        :bottom-slots="false"
+        label="Tipo"
+        class="q-mb-sm"
+      />
+
       <MgSelectBanco
         v-model="store.filters.codbanco"
         outlined

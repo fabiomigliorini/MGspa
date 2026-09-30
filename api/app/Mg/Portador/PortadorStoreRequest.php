@@ -15,6 +15,7 @@ class PortadorStoreRequest extends FormRequest
     {
         return [
             'portador' => 'required|string|max:50',
+            'tipo' => 'required|in:E,B,A,C,O',
             'codbanco' => 'nullable|integer|exists:tblbanco,codbanco',
             'codfilial' => 'nullable|integer|exists:tblfilial,codfilial',
             'agencia' => 'nullable|integer',

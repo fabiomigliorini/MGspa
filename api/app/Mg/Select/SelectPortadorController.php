@@ -12,7 +12,7 @@ class SelectPortadorController extends Controller
     {
         $sql = '
             select
-                p.codportador, p.portador, p.codfilial,
+                p.codportador, p.portador, p.tipo, p.codfilial,
                 f.filial, f.codempresa,
                 p.codbanco, b.banco,
                 p.agencia, p.agenciadigito,
@@ -55,7 +55,7 @@ class SelectPortadorController extends Controller
     {
         $sql = '
             select
-                p.codportador, p.portador, p.codfilial,
+                p.codportador, p.portador, p.tipo, p.codfilial,
                 f.filial, f.codempresa,
                 p.codbanco, b.banco,
                 p.agencia, p.agenciadigito,

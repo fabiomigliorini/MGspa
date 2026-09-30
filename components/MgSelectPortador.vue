@@ -10,6 +10,11 @@ const props = defineProps({
   label: { type: String, default: 'Portador' },
   // Se array de codfilial, restringe aos portadores dessas filiais.
   filiais: { type: Array, default: null },
+  // Se array de tipos (E, B, A, C, O), restringe a esses tipos.
+  tipos: { type: Array, default: null },
+  // Agrupa em "Desta filial" (portadores de codfilial) e "Mais opções" (o resto).
+  agrupar: { type: Boolean, default: false },
+  codfilial: { type: [Number, String], default: null },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
   // Modo multiplo: v-model e Array, onde [] = sem filtro (todos). Espelha o backend,
@@ -26,17 +31,31 @@ const opcoes = ref([])
 const carregando = ref(false)
 
 const permitidos = computed(() => {
-  const todos = cache.entities[ENTITY]?.items || []
+  let todos = cache.entities[ENTITY]?.items || []
+  if (props.tipos) {
+    todos = todos.filter((v) => props.tipos.includes(v.tipo))
+  }
   if (!props.filiais) return todos
   const set = new Set(props.filiais.map((f) => Number(f)))
   return todos.filter((v) => set.has(Number(v.codfilial)))
 })
 
+// Com agrupar, intercala cabecalhos (opcoes desabilitadas) entre os grupos.
+function agrupados(lista) {
+  if (!props.agrupar) return lista
+  const desta = lista.filter((v) => Number(v.codfilial) === Number(props.codfilial))
+  const mais = lista.filter((v) => Number(v.codfilial) !== Number(props.codfilial))
+  const ret = []
+  if (desta.length) ret.push({ header: true, label: 'Desta filial', disable: true }, ...desta)
+  if (mais.length) ret.push({ header: true, label: 'Mais opções', disable: true }, ...mais)
+  return ret
+}
+
 async function carregar() {
   carregando.value = true
   try {
     await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
-    opcoes.value = permitidos.value
+    opcoes.value = agrupados(permitidos.value)
   } catch {
     opcoes.value = []
   } finally {
@@ -47,9 +66,11 @@ async function carregar() {
 function filtrar(val, update) {
   update(() => {
     const needle = (val || '').toLowerCase()
-    opcoes.value = needle
-      ? permitidos.value.filter((v) => (v.label || '').toLowerCase().includes(needle))
-      : permitidos.value
+    opcoes.value = agrupados(
+      needle
+        ? permitidos.value.filter((v) => (v.label || '').toLowerCase().includes(needle))
+        : permitidos.value,
+    )
   })
 }
 
@@ -88,7 +109,12 @@ onMounted(() => carregar())
       <q-item><q-item-section class="text-grey-6">Nenhum portador</q-item-section></q-item>
     </template>
     <template #option="scope">
-      <q-item v-bind="scope.itemProps" :class="multiple && scope.selected ? 'bg-blue-1' : ''">
+      <q-item-label v-if="scope.opt.header" header>{{ scope.opt.label }}</q-item-label>
+      <q-item
+        v-else
+        v-bind="scope.itemProps"
+        :class="multiple && scope.selected ? 'bg-blue-1' : ''"
+      >
         <q-item-section>
           <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
             {{ scope.opt.label }}

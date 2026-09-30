@@ -26,6 +26,10 @@ class PortadorService
             $q->palavras('portador', $filtros['portador']);
         }
 
+        if (!empty($filtros['tipo'])) {
+            $q->where('tipo', $filtros['tipo']);
+        }
+
         if (!empty($filtros['codbanco'])) {
             $q->where('codbanco', $filtros['codbanco']);
         }

@@ -30,6 +30,20 @@ class Portador extends MgModel
 {
     const CARTEIRA = 999;
 
+    const TIPO_ESPECIE = 'E';
+    const TIPO_BANCO = 'B';
+    const TIPO_ADQUIRENTE = 'A';
+    const TIPO_CARTAO = 'C';
+    const TIPO_OUTROS = 'O';
+
+    const TIPOS = [
+        self::TIPO_ESPECIE,
+        self::TIPO_BANCO,
+        self::TIPO_ADQUIRENTE,
+        self::TIPO_CARTAO,
+        self::TIPO_OUTROS,
+    ];
+
     protected $table = 'tblportador';
     protected $primaryKey = 'codportador';
 
@@ -51,7 +65,8 @@ class Portador extends MgModel
         'emiteboleto',
         'inativo',
         'pixdict',
-        'portador'
+        'portador',
+        'tipo'
     ];
 
     protected $casts = [
@@ -74,6 +89,12 @@ class Portador extends MgModel
         'inativo' => 'datetime'
     ];
 
+
+    // Gaveta = portador em especie com PDV apontando
+    public function ehGaveta(): bool
+    {
+        return $this->tipo === self::TIPO_ESPECIE && $this->PdvS()->exists();
+    }
 
     // Chaves Estrangeiras
     public function Banco()

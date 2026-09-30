@@ -8,6 +8,11 @@ import { usePortadorStore } from 'src/stores/portadorStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgSelectBanco from '@components/MgSelectBanco.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
+import {
+  PORTADOR_TIPO_OPTIONS,
+  portadorTipoLabel,
+  portadorTipoColor,
+} from 'src/constants/portadorTipo'
 
 const $q = useQuasar()
 const store = usePortadorStore()
@@ -19,6 +24,7 @@ const saving = ref(false)
 const emptyModel = () => ({
   codportador: null,
   portador: '',
+  tipo: null,
   codbanco: null,
   codfilial: null,
   agencia: null,
@@ -43,6 +49,7 @@ const columns = [
     format: (v) => '#' + String(v).padStart(8, '0'),
   },
   { name: 'portador', label: 'Portador', field: 'portador', align: 'left' },
+  { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'left' },
   { name: 'banco', label: 'Banco', field: 'banco', align: 'left' },
   { name: 'filial', label: 'Filial', field: 'filial', align: 'left' },
   { name: 'conta', label: 'Conta', field: 'conta', align: 'left' },
@@ -69,6 +76,7 @@ const abrirEditar = (row) => {
   model.value = {
     codportador: row.codportador,
     portador: row.portador,
+    tipo: row.tipo,
     codbanco: row.codbanco,
     codfilial: row.codfilial,
     agencia: row.agencia,
@@ -86,6 +94,7 @@ const abrirEditar = (row) => {
 
 const payload = () => ({
   portador: model.value.portador,
+  tipo: model.value.tipo,
   codbanco: model.value.codbanco,
   codfilial: model.value.codfilial,
   agencia: model.value.agencia,
@@ -199,6 +208,15 @@ onMounted(() => {
             </q-td>
           </template>
 
+          <template #body-cell-tipo="props">
+            <q-td :props="props">
+              <q-badge :color="portadorTipoColor(props.row.tipo)">
+                {{ portadorTipoLabel(props.row.tipo) }}
+              </q-badge>
+              <q-badge v-if="props.row.gaveta" color="teal-7" class="q-ml-xs">Gaveta</q-badge>
+            </q-td>
+          </template>
+
           <template #body-cell-banco="props">
             <q-td :props="props" class="text-grey-8">
               {{ props.row.banco || '—' }}
@@ -297,7 +315,7 @@ onMounted(() => {
           <q-separator inset />
           <q-card-section>
             <div class="row q-col-gutter-md">
-              <div class="col-12">
+              <div class="col-12 col-sm-8">
                 <MgInput
                   v-model="model.portador"
                   outlined
@@ -305,6 +323,19 @@ onMounted(() => {
                   maxlength="50"
                   autofocus
                   :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+
+              <div class="col-12 col-sm-4">
+                <q-select
+                  v-model="model.tipo"
+                  :options="PORTADOR_TIPO_OPTIONS"
+                  emit-value
+                  map-options
+                  outlined
+                  label="Tipo"
+                  lazy-rules
+                  :rules="[(v) => !!v]"
                 />
               </div>
 

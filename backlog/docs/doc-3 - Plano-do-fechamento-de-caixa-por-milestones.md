@@ -25,7 +25,8 @@ referenciando este arquivo e o milestone pelo nome (ex.: "executa o M1 do plano 
 
 **Andamento:** M0.1 e M0.2 (títulos com `valor`/`saldo`, catálogos enxutos) **concluídos e validados
 em 29/09/2026** (TASK-186, commits `7c6551a33` e `0991fc2b3`). **M1 (movimento de título numa
-linha) concluído e validado em 30/09/2026** (TASK-188). **Próximo: M2.**
+linha) concluído e validado em 30/09/2026** (TASK-188). **M2 (tipo de portador e PDV →
+portador) concluído e validado em 30/09/2026** (TASK-188). **Próximo: M3.**
 
 **Pendências do Fábio no go-live** (não são gaps do plano): quais dos dois portadores em espécie da
 filial 101 (100 Caixa Financeiro, 101001 Caixa Atacado) são cofre; pessoa e conta contábil de cada
@@ -441,6 +442,23 @@ para leitura de histórico não convertido.
   ("desta filial / mais opções", usado nos milestones seguintes).
 - **Valida**: tipos certos nos 69 portadores; Stone/SafraPay/trocos/17 gavetas criados; Config →
   PDV mostra e troca o portador; portador de outra filial ou que não é espécie → recusa.
+- **O que mudou em relação ao plano** (conferência de 29/09/2026 no banco):
+  - **Gavetas não são criadas pelo script.** `alocacao = 'C'` não identifica PDV de caixa: são 275
+    PDVs com `C`, 120 ativos e autorizados (celulares, escritório, depósito…); os 17 do plano só
+    aparecem filtrando também o apelido com "Caixa". Decisão do Fábio: cada gaveta é cadastrada no
+    contas → Portadores (tipo Espécie, filial da loja) e vinculada ao PDV em negocios → Config → PDV.
+  - **Cartões de débito da empresa são `B`** (202021, 202022, 202040, 202041, 202043, 202045: o
+    débito sai direto da conta, não tem fatura). `C` ficou só para os de crédito, incluindo 202028
+    "Cartao 4439" e 202031 "Cartao 4956", que não têm `codbanco`.
+  - O seed do tipo só roda quando a coluna nasce; depois quem manda é a tela (rodar o script de novo
+    não desfaz o que foi mudado no cadastro). Resultado em dev: A 6, B 39, C 10, E 12, O 9.
+  - Trocos criados como "Troco " + nome da filial: Troco Deposito, Botanico, Centro, Imperial,
+    Andre Maggi. Stone e SafraPay sem filial, com `codpessoa` 9993 e 20119.
+  - `MgSelectPortador`: `tipos` (array) filtra no front (a lista já vem inteira do
+    `v1/select/portador`, que agora devolve `tipo`); `agrupar` usa a prop nova `codfilial` como
+    referência de "Desta filial" e põe o resto em "Mais opções".
+  - O formulário de portador do contas já não tinha `q-input` cru; nada a trocar.
+  - Recurso do portador devolve `gaveta` (espécie com PDV apontando), mostrado como badge na lista.
 
 ## M3 — Cadastro único de maquinetas (Fundação)
 

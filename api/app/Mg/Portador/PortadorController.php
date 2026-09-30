@@ -17,7 +17,7 @@ class PortadorController extends MgController
     {
         if ($request->boolean('paginar')) {
             $paginator = PortadorService::listar($request->only([
-                'codportador', 'portador', 'codbanco', 'codfilial', 'emiteboleto', 'inativo',
+                'codportador', 'portador', 'tipo', 'codbanco', 'codfilial', 'emiteboleto', 'inativo',
             ]));
             return PortadorResource::collection($paginator);
         }
