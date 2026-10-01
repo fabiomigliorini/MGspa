@@ -432,6 +432,9 @@ async function salvar() {
                   >
                     Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
                     <span v-if="kgDoPonto(p)"> · esta carga ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                    <span v-if="(kgDoPonto(p) || 0) > saldoContrato(p.codcontrato) + 1">
+                      · passa {{ fmt(kgDoPonto(p) - saldoContrato(p.codcontrato)) }} kg do contratado
+                    </span>
                   </span>
                 </div>
                 <div

@@ -6,9 +6,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Ajuste MANUAL (comercial) no extrato. Os tres campos (bruto/desconto/liquido)
- * devem fechar a invariante liquido = bruto - desconto (tambem garantida no
- * service e por CHECK no banco).
+ * Ajuste MANUAL (comercial) no extrato. Quantidades POSITIVAS: o sinal vem do
+ * papel (MovimentoGraoService::lancarManual). Basta bruto ou liquido.
  */
 class MovimentoGraoManualRequest extends FormRequest
 {
@@ -31,9 +30,9 @@ class MovimentoGraoManualRequest extends FormRequest
                 'exists:tblunidadearmazenadora,codunidadearmazenadora',
             ],
             'codcontrato' => ['nullable', 'required_if:contatipo,CONTRATO', 'exists:tblcontrato,codcontrato'],
-            'bruto' => ['nullable', 'numeric'],
-            'desconto' => ['nullable', 'numeric'],
-            'liquido' => ['required', 'numeric'],
+            'bruto' => ['nullable', 'required_without:liquido', 'numeric', 'gte:0'],
+            'desconto' => ['nullable', 'numeric', 'gte:0', 'lte:bruto'],
+            'liquido' => ['nullable', 'numeric', 'gte:0'],
             'observacao' => ['nullable', 'string', 'max:255'],
         ];
     }

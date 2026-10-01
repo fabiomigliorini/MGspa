@@ -1,6 +1,7 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { api } from 'src/services/api'
 import { useAuth } from 'src/composables/useAuth'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
@@ -21,6 +22,31 @@ const noPatio = computed(() => cargasDaSafra.value.filter((c) => c.etapa !== 'FI
 const finalizados = computed(
   () => cargasDaSafra.value.filter((c) => c.etapa === 'FINALIZADO').length,
 )
+// Colhido: online vale o do servidor (mesma conta da Safra, da Fazenda e da
+// Cultura — inclui ajuste manual); offline, o cálculo local das cargas do Dexie.
+const resumoServidor = ref(null)
+watch(
+  [codsafraAtiva, online],
+  async ([cod, on]) => {
+    resumoServidor.value = null
+    if (!cod || !on) return
+    try {
+      const { data } = await api.get(`v1/safra/${cod}/comercial`, {
+        skipLoading: true,
+        skipNotify: true,
+      })
+      if (cod === codsafraAtiva.value) resumoServidor.value = data
+    } catch {
+      // sem servidor fica o cálculo local
+    }
+  },
+  { immediate: true },
+)
+const colhidoSacas = computed(() => resumoServidor.value?.colhido ?? produtividade.value.sacas)
+const produtividadeMedia = computed(
+  () => resumoServidor.value?.produtividadecolhido ?? produtividade.value.produtividadeMedia,
+)
+
 const pendentes = computed(() => cargas.value.filter((c) => !c.sincronizado && !c.inativo).length)
 
 function fmt(v, dec = 0) {
@@ -36,13 +62,13 @@ const kpis = computed(() => [
   { label: 'Recebidas', valor: fmt(finalizados.value), icon: 'task_alt', cor: 'green' },
   {
     label: 'Colhido (sacas)',
-    valor: fmt(produtividade.value.sacas),
+    valor: fmt(colhidoSacas.value),
     icon: 'grain',
     cor: 'amber',
   },
   {
     label: 'Produtividade (sc/ha)',
-    valor: fmt(produtividade.value.produtividadeMedia, 1),
+    valor: fmt(produtividadeMedia.value, 1),
     icon: 'trending_up',
     cor: 'teal',
   },

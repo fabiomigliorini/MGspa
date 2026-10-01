@@ -34,8 +34,9 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
   const carregadokg = computed(() => n(contrato.value?.carregadokg))
   const carregadosc = computed(() => n(contrato.value?.carregadosc))
   // saldo em kg; null/sem teto quando volumeemaberto (leva o saldo do silo).
+  // Negativo = entregue a mais (aceito desde 29/09; a tela mostra o excesso).
   const saldokg = computed(() =>
-    volumeemaberto.value ? null : Math.max(0, contratadokg.value - carregadokg.value),
+    volumeemaberto.value ? null : contratadokg.value - carregadokg.value,
   )
   const valornf = computed(() => n(contrato.value?.valornf))
 

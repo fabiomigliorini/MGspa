@@ -28,12 +28,15 @@ class CulturaService extends MgService
             ->whereNull('tblsafra.inativo')
             ->sum('tblplantio.areaplantada');
 
-        // Colhido = SUM(liquido) das contas PLANTIO no extrato (so cargas
-        // finalizadas/ativas geram movimento), das safras desta cultura.
-        $colhidokg = (float) MovimentoGrao::join('tblsafra', 'tblsafra.codsafra', '=', 'tblmovimentograo.codsafra')
+        // Colhido = SUM(liquido) das contas PLANTIO no extrato. Mesma regra da
+        // Safra e da Fazenda: safra do movimento, plantio e safra ativos.
+        $colhidokg = (float) MovimentoGrao::join('tblplantio as p', 'p.codplantio', '=', 'tblmovimentograo.codplantio')
+            ->join('tblsafra as s', 's.codsafra', '=', 'tblmovimentograo.codsafra')
             ->where('tblmovimentograo.contatipo', 'PLANTIO')
-            ->where('tblsafra.codcultura', $codcultura)
+            ->where('s.codcultura', $codcultura)
             ->whereNull('tblmovimentograo.inativo')
+            ->whereNull('p.inativo')
+            ->whereNull('s.inativo')
             ->sum('tblmovimentograo.liquido');
 
         $sacas = $pesosaca > 0 ? $colhidokg / $pesosaca : 0;
@@ -62,7 +65,7 @@ class CulturaService extends MgService
             ->pluck('area', 'codvariedade');
 
         $colhidoPorVar = MovimentoGrao::join('tblplantio as p', 'p.codplantio', '=', 'tblmovimentograo.codplantio')
-            ->join('tblsafra as s', 's.codsafra', '=', 'p.codsafra')
+            ->join('tblsafra as s', 's.codsafra', '=', 'tblmovimentograo.codsafra')
             ->where('tblmovimentograo.contatipo', 'PLANTIO')
             ->where('s.codcultura', $codcultura)
             ->whereNull('tblmovimentograo.inativo')

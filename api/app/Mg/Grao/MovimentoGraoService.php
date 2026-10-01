@@ -95,7 +95,9 @@ class MovimentoGraoService extends MgService
 
     /**
      * Lanca um ajuste MANUAL (comercial) direto no extrato. Nunca tocado pelo
-     * recalc. Invariante liquido = bruto - desconto (validada no request + CHECK).
+     * recalc. O operador informa quantidade POSITIVA; o sinal vem do papel, pela
+     * mesma regra do automatico (CargaService::sinal): retirada de silo baixa.
+     * Retirada de silo nao tem desconto (D9): liquido = -quantidade.
      */
     public static function lancarManual(array $data): MovimentoGrao
     {
@@ -106,11 +108,19 @@ class MovimentoGraoService extends MgService
         if (empty($mov->data)) {
             $mov->data = now();
         }
-        // Garante a invariante mesmo se o cliente mandar so parte dos campos.
-        // Arredonda bruto/desconto antes p/ o liquido fechar com o CHECK do banco.
-        $mov->bruto = round((float) ($data['bruto'] ?? 0), 3);
-        $mov->desconto = round((float) ($data['desconto'] ?? 0), 3);
-        $mov->liquido = round($mov->bruto - $mov->desconto, 3);
+        // So a FK do tipo de conta escolhido vale.
+        foreach (['PLANTIO' => 'codplantio', 'UNIDADE' => 'codunidadearmazenadora', 'CONTRATO' => 'codcontrato'] as $tipo => $fk) {
+            if ($mov->contatipo !== $tipo) {
+                $mov->$fk = null;
+            }
+        }
+        $retirada = $mov->contatipo === 'UNIDADE' && $mov->papel === 'ORIGEM';
+        $bruto = round((float) ($data['bruto'] ?? $data['liquido'] ?? 0), 3);
+        $desconto = $retirada ? 0.0 : round((float) ($data['desconto'] ?? 0), 3);
+        $sinal = CargaService::sinal($mov->contatipo, $mov->papel);
+        $mov->bruto = $bruto * $sinal;
+        $mov->desconto = $desconto * $sinal;
+        $mov->liquido = round(($bruto - $desconto) * $sinal, 3);
         // codsafra ausente: infere do contrato/plantio p/ o ajuste aparecer nos
         // KPIs por safra (estoque/entregue). UNIDADE sem safra fica global.
         if (empty($mov->codsafra)) {

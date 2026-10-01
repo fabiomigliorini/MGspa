@@ -48,7 +48,8 @@ class ContratoResource extends Resource
         $ret['contratadokg'] = $contratadokg;
         $ret['carregadosc'] = $pesosaca > 0 ? round($carregadokg / $pesosaca, 2) : 0.0;
         // saldo so faz sentido em contrato com teto; volume em aberto -> null.
-        $ret['saldokg'] = $emaberto ? null : max(0, $contratadokg - $carregadokg);
+        // Sem piso: negativo = entregue a mais (D12, aceito e mostrado).
+        $ret['saldokg'] = $emaberto ? null : $contratadokg - $carregadokg;
 
         // relações em PascalCase (whenLoaded — chaves ausentes somem do JSON)
         $ret['Pessoa'] = $this->whenLoaded('Pessoa');

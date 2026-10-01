@@ -145,12 +145,18 @@ class SafraService extends MgService
             ->whereNull('inativo')
             ->sum('liquido');
 
-        // Entregue = Σ liquido dos movimentos CONTRATO (contador +, sempre positivo),
-        // igual ao carregadokg por contrato. codsafra sempre presente nos autos.
-        $entreguekg = (float) MovimentoGrao::where('contatipo', 'CONTRATO')
-            ->where('codsafra', $codsafra)
-            ->whereNull('inativo')
-            ->sum('liquido');
+        // Σ liquido dos movimentos CONTRATO, igual ao carregadokg por contrato,
+        // separado por operacao: entregue = VENDA, recebido = COMPRA.
+        $porOperacao = MovimentoGrao::query()
+            ->join('tblcontrato', 'tblcontrato.codcontrato', '=', 'tblmovimentograo.codcontrato')
+            ->where('tblmovimentograo.contatipo', 'CONTRATO')
+            ->where('tblmovimentograo.codsafra', $codsafra)
+            ->whereNull('tblmovimentograo.inativo')
+            ->groupBy('tblcontrato.operacao')
+            ->selectRaw('tblcontrato.operacao, SUM(tblmovimentograo.liquido) as kg')
+            ->pluck('kg', 'operacao');
+        $entreguekg = (float) ($porOperacao['VENDA'] ?? 0);
+        $recebidokg = (float) ($porOperacao['COMPRA'] ?? 0);
 
         // Fecha os agregados: Σ → médias/arredondamento. Grupos ficam chaveados
         // (codvariedade / talhão) p/ o front casar cada linha com seu total.
@@ -173,6 +179,11 @@ class SafraService extends MgService
             'estoquesc' => round($estoquekg / $pesosaca, 0),
             'entreguekg' => round($entreguekg, 0),
             'entreguesc' => round($entreguekg / $pesosaca, 0),
+            'recebidokg' => round($recebidokg, 0),
+            'recebidosc' => round($recebidokg / $pesosaca, 0),
+            // Cards do Estoque & Extrato. disponivelkg sem piso: a tela pinta o negativo.
+            'acolherkg' => round(max(0, $producaoTotal - $colhidoTotal) * $pesosaca, 0),
+            'disponivelkg' => round(($producaoTotal - $contratado) * $pesosaca, 0),
             'precomediobrl' => $firmeSacas > 0 ? round($firmeLiq / $firmeSacas, 2) : null, // R$ líquido/sc
             'precomediousd' => ($usd && $usd['sacas'] > 0) ? round($usd['saldo'] / $usd['sacas'], 2) : null,
             // agronômico

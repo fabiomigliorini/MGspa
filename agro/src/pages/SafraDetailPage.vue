@@ -78,9 +78,11 @@ const plantioCad = reactive({
 // como legenda (grão é físico, kg importa).
 const estoque = computed(() => Number(comercial.value?.estoquesc) || 0)
 const estoquekg = computed(() => Number(comercial.value?.estoquekg) || 0)
-// Entregue = grão já entregue aos contratos (saldo CONTRATO da safra), pronto do backend.
+// Entregue = grão já entregue aos contratos de VENDA; recebido = de COMPRA.
 const entregue = computed(() => Number(comercial.value?.entreguesc) || 0)
 const entreguekg = computed(() => Number(comercial.value?.entreguekg) || 0)
+const recebidokg = computed(() => Number(comercial.value?.recebidokg) || 0)
+const recebido = computed(() => Number(comercial.value?.recebidosc) || 0)
 const contratado = computed(() => Number(comercial.value?.contratado) || 0)
 const fixado = computed(() => Number(comercial.value?.fixado) || 0)
 const afixar = computed(() => Number(comercial.value?.afixar) || 0)
@@ -320,6 +322,9 @@ onMounted(async () => {
               <div class="text-caption text-grey-7">Entregue</div>
               <div class="text-h6">{{ fmt(entregue) }} sc</div>
               <div class="text-caption text-grey-6">{{ fmt(entreguekg) }} kg</div>
+              <div v-if="recebidokg" class="text-caption text-grey-7">
+                Recebido de compra: {{ fmt(recebido) }} sc · {{ fmt(recebidokg) }} kg
+              </div>
             </q-card-section>
           </q-card>
         </div>

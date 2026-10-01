@@ -30,9 +30,28 @@ export const useExtratoStore = defineStore('extrato', () => {
   // ---- Getters derivados ----
   const safraSel = computed(() => safras.value.find((s) => s.codsafra === codsafra.value) || null)
   const pesosaca = computed(() => safraSel.value?.Cultura?.pesosaca || 60)
-  const liquidoForm = computed(
-    () => Number(form.value.bruto || 0) - Number(form.value.desconto || 0),
+  // Retirada de silo não tem desconto (o servidor grava −quantidade).
+  const retirada = computed(
+    () => form.value.contatipo === 'UNIDADE' && form.value.papel === 'ORIGEM',
   )
+  const liquidoForm = computed(
+    () => Number(form.value.bruto || 0) - (retirada.value ? 0 : Number(form.value.desconto || 0)),
+  )
+
+  // Todas as páginas (o Laravel pagina em 50): senão o extrato e os selects
+  // paravam no 50º registro.
+  async function todasPaginas(url, params = {}) {
+    const todos = []
+    let page = 1
+    let last = 1
+    do {
+      const { data } = await api.get(url, { params: { ...params, page } })
+      todos.push(...(data.data ?? data))
+      last = data?.meta?.last_page ?? data?.last_page ?? 1
+      page++
+    } while (page <= last)
+    return todos
+  }
 
   // ---- GET ----
   async function carregarSafras() {
@@ -50,13 +69,14 @@ export const useExtratoStore = defineStore('extrato', () => {
       const [k, s, e] = await Promise.all([
         api.get(`v1/safra/${codsafra.value}/comercial`),
         api.get('v1/movimento-grao/saldos-unidades', { params: { codsafra: codsafra.value } }),
-        api.get('v1/movimento-grao', {
-          params: { codsafra: codsafra.value, sort: '-data,-codmovimentograo' },
+        todasPaginas('v1/movimento-grao', {
+          codsafra: codsafra.value,
+          sort: '-data,-codmovimentograo',
         }),
       ])
       kpis.value = k.data
       saldos.value = s.data
-      extrato.value = e.data.data ?? e.data
+      extrato.value = e
     } catch (err) {
       notifyError(err)
     } finally {
@@ -65,17 +85,17 @@ export const useExtratoStore = defineStore('extrato', () => {
   }
 
   async function carregarCadastros() {
-    const [u, c] = await Promise.all([api.get('v1/unidade-armazenadora'), api.get('v1/contrato')])
-    unidades.value = u.data.data ?? u.data
-    contratos.value = c.data.data ?? c.data
+    ;[unidades.value, contratos.value] = await Promise.all([
+      todasPaginas('v1/unidade-armazenadora'),
+      todasPaginas('v1/contrato'),
+    ])
   }
 
   // Recarrega os plantios da safra selecionada (selects do ajuste) e os dados do
   // dashboard. Chamado pela página no watch de codsafra.
   async function selecionarSafra(cod) {
     if (!cod) return
-    const { data } = await api.get(`v1/safra/${cod}/plantio`)
-    plantios.value = data.data ?? data
+    plantios.value = await todasPaginas(`v1/safra/${cod}/plantio`)
     await carregarDados()
   }
 
@@ -99,7 +119,8 @@ export const useExtratoStore = defineStore('extrato', () => {
     if (salvando.value) return
     salvando.value = true
     try {
-      await api.post('v1/movimento-grao', { ...form.value, liquido: liquidoForm.value })
+      const desconto = retirada.value ? 0 : form.value.desconto
+      await api.post('v1/movimento-grao', { ...form.value, desconto, liquido: liquidoForm.value })
       notifySuccess('Ajuste lançado')
       dialog.value = false
       await carregarDados()
@@ -137,6 +158,7 @@ export const useExtratoStore = defineStore('extrato', () => {
     // getters
     safraSel,
     pesosaca,
+    retirada,
     liquidoForm,
     // actions
     carregarSafras,
