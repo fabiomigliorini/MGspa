@@ -29,8 +29,9 @@ linha) concluído e validado em 30/09/2026** (TASK-188). **M2 (tipo de portador 
 portador) concluído e validado em 30/09/2026** (TASK-188). **M3 (cadastro único de maquinetas)
 validado em 30/09/2026** (TASK-188): decisões da conferência na seção do M3, que cresceu (tela
 Saurus/S2Pay do negocios e cadastro do POS PagarMe passam para contas → Maquinetas). Pendente do
-M3 só o pareamento SafraPay por QR, que confere no go-live. **M4 implementado em dev em 30/09/2026,
-aguardando validação** (TASK-188).
+M3 só o pareamento SafraPay por QR, que confere no go-live. **M4 (pagamento e parcelas da venda)
+commitado em 30/09/2026 sem validação** (TASK-188, `ed90fe2e8` + MGsis `b914186`): o Fábio valida M4 e
+M5 juntos. **Próximo: M5.**
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -45,7 +46,9 @@ maquinetas manuais criadas pelos seriais digitados, e validar o pareamento Safra
 pinpad reserva (M3); rodar os scripts DDL em produção, na ordem
 dos milestones (`movimento_titulo_colunas.sql`, `portador_tipo.sql`, `maquineta.sql`,
 `pagamento.sql`, …), com o MGsis (NFe de Terceiros grava parcela desde o M4) e o MG Lara olhando
-as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de formas).
+as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de formas). Cada script roda
+uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
+`pagamento.sql` (a tabela já virou view).
 
 ## Glossário
 
@@ -58,10 +61,11 @@ as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de forma
   venda, título, vale, adiantamento, sangria, depósito, repasse de adquirente, fatura de cartão,
   taxa, ajuste de caixa e, no futuro, ordem ao banco.
 - **Meio**: como o dinheiro andou (dinheiro, cheque, crédito, débito, PIX, boleto, transferência,
-  vale, compensação, folha, permuta, perda). Lista fixa no código, com os códigos da NF-e.
+  vale, outros, compensação, folha, permuta, perda). Lista fixa no código, com os códigos da NF-e.
 - **Estado do pagamento**: pendente (amarelo), efetivado (verde), cancelado (vermelho).
 - **Parcela do negócio** (`tblnegocioparcela`): o que a venda deixou para depois. Vira título ao
-  fechar. Condições: fechamento, parcelado, boleto, entrega, PIX/depósito a receber.
+  fechar. Condições: fechamento, parcelado, boleto, entrega, PIX/depósito a receber, vale da
+  devolução.
 - **Movimento de título** (`tblmovimentotitulo`): o que mudou no título. Uma linha por título em cada
   pagamento, com principal, juros, multa, desconto e total — as mesmas colunas de valor do pagamento.
 - **Razão** (`tblportadormovimento`): o que cai em cada portador e quando. Toda linha nasce de um
@@ -183,7 +187,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
     troco). Na venda: juros do parcelamento (12x no cartão) e desconto por pagar à vista (PIX,
     dinheiro) ficam no pagamento e são rateados nos itens como hoje se faz com o juros
     (`valorjuros` do item → vOutro; `valordesconto` do item → vDesc); conferência: Σ principal dos
-    pagamentos = Σ itens; Σ total − troco = total da venda. Na baixa de título: o pagamento
+    pagamentos = Σ itens; Σ total dos pagamentos + Σ parcelas = total da venda (o troco fica fora do
+    `total`; a NF-e manda vPag = total + troco). Na baixa de título: o pagamento
     consolida as linhas de movimento (Σ de cada coluna dos movimentos = a coluna do pagamento). Juros
     de **título** (notinha atrasada) nasce no movimento; juros de **venda** nasce no pagamento.
 
@@ -254,12 +259,13 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | uuid | uuid | sync offline do PDV |
 | codportadororigem | bigint FK | nulo = veio de fora |
 | codportadordestino | bigint FK | nulo = foi para fora |
-| meio | smallint NN | código NF-e: 1 dinheiro, 2 cheque, 3 crédito, 4 débito, 12 vale, 15 boleto, 16 depósito, 17 PIX, 18 transferência; internos: 91 compensação, 92 folha, 93 permuta, 94 perda |
+| meio | smallint NN | código NF-e: 1 dinheiro, 2 cheque, 3 crédito, 4 débito, 12 vale, 15 boleto, 16 depósito, 17 PIX, 18 transferência, 99 outros (Mercos Pay, cartão do histórico sem débito/crédito); internos: 91 compensação, 92 folha, 93 permuta, 94 perda |
 | estado | char(1) NN | P pendente, E efetivado, C cancelado |
 | principal | numeric(14,2) NN | > 0; o que foi quitado (itens da venda, saldo de títulos) |
 | juros, multa, desconto | numeric(14,2) NN default 0 | positivos; venda: juros do parcelamento e desconto por meio; título: consolidação dos movimentos |
 | total | numeric(14,2) NN | o que andou de dinheiro por este meio = principal + juros + multa − desconto |
-| valortroco | numeric(14,2) | dinheiro |
+| valortroco | numeric(14,2) | dinheiro; fora do `total` |
+| codtitulo | bigint FK | vale consumido como pagamento (meio 12), antes de virar movimento (M4) |
 | parcelas | smallint | cartão de crédito |
 | lancamento | timestamp NN | data do ato |
 | efetivacao, codusuarioefetivacao | timestamp, bigint | quando/quem confirmou |
@@ -287,9 +293,11 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | Coluna | Observação |
 |---|---|
 | codnegocioparcela PK, uuid, codnegocio NN | |
-| condicao char(1) NN | F fechamento (último dia útil do mês seguinte), P parcelado (30/60/90), B boleto, E entrega, X PIX/depósito a receber |
+| condicao char(1) NN | F fechamento (último dia útil do mês seguinte, seg a sáb sem feriado), P parcelado (30/60/90), B boleto, E entrega, X PIX/depósito a receber, V vale da devolução (+1 ano) |
 | numero smallint, vencimento date NN, valor numeric NN | |
 | codtitulo bigint FK | preenchido ao fechar |
+| juros numeric NN default 0 | parte de juros do valor (crediário) |
+| uuidforma uuid | forma do PDV antigo que gerou as parcelas; some no M5 |
 | audit | |
 
 Histórico: uma parcela por título que apontava para forma de pagamento a prazo (vencimento e valor
@@ -302,7 +310,8 @@ do título; condição pela forma antiga: 3010/3020/5601 → F, 5100 → P, 4100
 (numeric NN default 0, CHECK ≥ 0) e `total` (numeric NN default 0, valor efetivo da baixa —
 dinheiro que andou, ou o que foi levado ao agrupamento —, sinal do principal). Na baixa: |total| =
 |principal| + juros + multa − desconto. Implantação e ajuste: total 0. Script
-`api/database/movimento_titulo_colunas.sql` (M1). Em M6 ganha `codpagamento` (FK) e perde
+`api/database/movimento_titulo_colunas.sql` (M1). `codpagamento` (FK) já existe desde o M4 (vale
+usado no PDV); em M6 é preenchido pela liquidação e perde
 `codliquidacaotitulo`.
 
 ### `tblportador` (M2)
@@ -314,7 +323,8 @@ dinheiro que andou, ou o que foi levado ao agrupamento —, sinal do principal).
 `codmaquineta PK, apelido varchar(50) NN, serial, codfilial NN, compartilhada bool NN default false,
 codpessoa NN (adquirente), integracao char(1) (nulo manual | P PagarMe | S Saurus), codpagarmepos
 (único), codsauruspinpad (único), inativo, audit`. CHECK: manual sem POS/pinpad; P só com POS; S só
-com pinpad. `tblnegocioformapagamento.codmaquineta` (FK, nulo só no histórico sem parceiro). Carga
+com pinpad. `tblpagamento.codmaquineta` (era `tblnegocioformapagamento.codmaquineta` no M3; FK, nulo só no
+histórico sem parceiro). Carga
 e regras no M3. `tblmaquinetaconferencia` (M9): `codmaquineta, dia, credito, debito, observacoes,
 codusuario, audit`, única por maquineta e dia.
 
@@ -341,8 +351,10 @@ valorvendido, valorentrada, valorsaida, observacoes, codpagamento, codtitulo`, �
 ### O que some
 
 `tblnegocioformapagamento` (vira view temporária), `tblliquidacaotitulo` (idem), `tblportadortransferencia`,
-`vwnegocioformapagamento`, `vwnegocioformapagamentototais`. `tblformapagamento` fica congelada, sem
-tela, só para a view; cai com ela. Tipos de movimento 400, 401, 500 e os estornos deles ficam só
+`vwnegocioformapagamento` (`vwnegocioformapagamentototais` ficou no M4, redefinida sobre pagamento
+e parcela, porque `vwnegocio`/`vwnegocio_listagem` dependem dela). `tblformapagamento` fica
+congelada, só para a view e a forma padrão do cliente (`tblpessoa.codformapagamento`); a tela sai
+quando ninguém mais usar. Tipos de movimento 400, 401, 500 e os estornos deles ficam só
 para leitura de histórico não convertido.
 
 ---
@@ -654,7 +666,13 @@ para leitura de histórico não convertido.
 - **Backend**: `tblsauruspedido.codnegocio` nullable; `PixService`, `PagarMeService`, `SaurusService`
   criam e consultam cobrança/pedido para um documento que pode não ser negócio; sync aceita o formato
   novo (e o antigo até todos os PDVs atualizarem); `NegocioResource` deixa de devolver o formato antigo
-  quando não houver mais cliente antigo.
+  quando não houver mais cliente antigo. Herança do M4: o tradutor do formato antigo é
+  `NegocioFormaPagamentoService` (`importar`, `formaAntiga`, `filtroForma`/`filtroIntegracao` da
+  listagem, códigos deduzidos de meio/condição); `tblnegocioparcela.uuidforma` agrupa as parcelas da
+  forma antiga e o sync as recalcula a cada envio (vencimento a partir do dia do sync) — no formato
+  novo as parcelas vêm do PDV por `uuid`, com vencimento e valor editados, e o sync não recalcula.
+  Filtro da listagem do PDV passa a meio/condição; `PdvNegocioService::fechar` já confere Σ total +
+  Σ parcelas = total e Σ juros = `valorjuros`.
 - **Valida**: venda exatamente como antes em todas as formas, F6 a F9, pagamento dividido, cancelar
   cobrança, fechamento automático; prazo com vencimentos editados virando títulos com as datas
   certas; fechamento mensal caindo no último dia útil do mês seguinte.
@@ -664,8 +682,8 @@ para leitura de histórico não convertido.
 - **DDL** (seção 2 de `pagamento.sql`): copia `tblliquidacaotitulo` para `tblpagamento` (código
   novo, `codliquidacaotituloantigo`, `meio` derivado do portador antigo: espécie → dinheiro; banco →
   transferência; pseudoportadores → compensação/folha/permuta/perda; estado E ou C se estornada;
-  origem/destino pelo sentido); `tblmovimentotitulo.codpagamento` (backfill pelo antigo
-  `codliquidacaotitulo`), derruba `codliquidacaotitulo`; derruba a tabela e cria a **view
+  origem/destino pelo sentido); `tblmovimentotitulo.codpagamento` (já existe desde o M4, com os vales
+  usados no PDV; backfill pelo antigo `codliquidacaotitulo`), derruba `codliquidacaotitulo`; derruba a tabela e cria a **view
   `tblliquidacaotitulo`** (pagamentos que movimentam título, com `debito`/`credito` calculados) para o
   Totais de Caixa; pseudoportadores inativados.
 - **Backend**: `LiquidacaoTituloService` → `PagamentoTituloService::{receber, pagar, estornar}`:
