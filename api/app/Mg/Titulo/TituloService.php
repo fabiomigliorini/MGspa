@@ -3,6 +3,8 @@
 namespace Mg\Titulo;
 
 use Carbon\Carbon;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Portador\Portador;
 
 class TituloService
@@ -15,7 +17,9 @@ class TituloService
     const PERCENTUAL_JUROS_MES = 4.0;
     const PERCENTUAL_MULTA = 2.0;
 
-    public static function criar(array $dados): Titulo
+    // $pagamento: titulo que movimenta portador (vale colaborador,
+    // adiantamento) nasce com o dinheiro que andou (M8 doc-3)
+    public static function criar(array $dados, ?Pagamento $pagamento = null): Titulo
     {
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo']);
 
@@ -53,7 +57,7 @@ class TituloService
         // valida unicidade do numero por pessoa
         self::validarNumeroUnico($titulo);
 
-        self::implantar($titulo);
+        self::implantar($titulo, $pagamento);
 
         return self::carregar($titulo->codtitulo);
     }
@@ -61,8 +65,12 @@ class TituloService
     /**
      * Grava um título novo e lança a implantação dele. Todo título nasce por
      * aqui: quem monta o Titulo na mão chama isto no lugar do save().
+     *
+     * Com $pagamento (título que movimenta portador: vale colaborador,
+     * adiantamento), a implantação é o dinheiro que andou: total = valor,
+     * ligada ao pagamento e no portador dele.
      */
-    public static function implantar(Titulo $titulo): Titulo
+    public static function implantar(Titulo $titulo, ?Pagamento $pagamento = null): Titulo
     {
         $titulo->save();
 
@@ -70,11 +78,14 @@ class TituloService
             $titulo,
             MovimentoTituloService::TIPO_IMPLANTACAO,
             (float) $titulo->valor,
-            [],
+            $pagamento ? ['total' => (float) $titulo->valor] : [],
             [
-                'codportador'          => $titulo->codportador,
+                'codportador'          => $pagamento
+                    ? ($pagamento->codportadordestino ?? $pagamento->codportadororigem)
+                    : $titulo->codportador,
                 'codtituloagrupamento' => $titulo->codtituloagrupamento,
                 'transacao'            => $titulo->transacao,
+                'codpagamento'         => $pagamento->codpagamento ?? null,
             ]
         );
 
@@ -189,30 +200,37 @@ class TituloService
         ])->findOrFail($codtitulo);
     }
 
-    public static function estornar(Titulo $titulo)
+    // Título que nasceu com dinheiro (vale colaborador, adiantamento): o
+    // estorno devolve o total ao portador e cancela o pagamento
+    public static function estornar(Titulo $titulo, ?string $justificativa = null)
     {
         if (!empty($titulo->estornado)) {
-            throw new \Exception("Titulo já está estornado!", 1);
+            abort(422, 'Titulo já está estornado!');
         }
 
         // só pode estornar título não movimentado
         if (round((float)$titulo->valor, 2) != round((float)$titulo->saldo, 2)) {
-            throw new \Exception("Impossível estornar um título movimentado!", 1);
+            abort(422, 'Impossível estornar um título movimentado!');
         }
 
         $implantacao = $titulo->MovimentoTituloS()->orderBy('codmovimentotitulo')->first();
+        $pagamento = optional($implantacao)->Pagamento;
 
         MovimentoTituloService::lancar(
             $titulo,
             MovimentoTituloService::TIPO_ESTORNO_IMPLANTACAO,
             -1 * (float)$titulo->saldo,
-            [],
+            $pagamento ? ['total' => -1 * (float) $implantacao->total] : [],
             [
                 'codmovimentotituloestorno' => optional($implantacao)->codmovimentotitulo,
                 'codtituloagrupamento'      => $titulo->codtituloagrupamento,
-                'codportador'               => $titulo->codportador,
+                'codportador'               => $pagamento ? $implantacao->codportador : $titulo->codportador,
+                'codpagamento'              => $pagamento->codpagamento ?? null,
             ]
         );
+        if ($pagamento) {
+            PagamentoService::cancelar($pagamento, $justificativa ?: "Estorno do título {$titulo->numero}");
+        }
         return self::carregar($titulo->codtitulo);
     }
 

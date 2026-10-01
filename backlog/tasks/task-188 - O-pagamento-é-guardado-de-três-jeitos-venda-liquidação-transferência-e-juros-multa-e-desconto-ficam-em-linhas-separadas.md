@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-01 18:41'
+updated_date: '2026-10-01 19:19'
 labels:
   - contas
   - negocios
@@ -188,4 +188,12 @@ Não testado: PIX QR e cartão integrado de ponta a ponta (banco/maquineta reais
 Achado (não corrigido, fora do escopo): cheque com nome do emitente e sem CPF/CNPJ grava emitente com CNPJ vazio e o banco recusa — deve afetar o fechamento da venda em cheque sem CPF/CNPJ (PdvNegocioChequeService::gerar → ChequeService::sincronizarEmitentes). No recebimento de título só mando o emitente com CPF/CNPJ.
 
 M6.1 commitado sem validação a pedido do Fábio (01/10/2026): ele valida depois. ACs M6.1.x seguem desmarcados até a validação.
+
+M8 em andamento (01/10/2026): vale colaborador e adiantamentos no PDV. Conferência do código do M6.1 antes de codar.
+
+M8 decidido com o Fábio (01/10/2026), depois do levantamento: (1) conta contábil com padrão por tipo, editável no dialog (2 → 42 Despesa Colaboradores, 120 → 1 Compra Mercadoria, 220 → 2 Venda Mercadoria); (2) vencimento em campo, padrão +30 dias; (3) estorno pela listagem de pagamentos: TituloService::estornar leva total/codpagamento ao estorno e cancela o pagamento (vale também para o contas), e o estorno de pagamento cuja linha é a implantação chama ele — sem rota nova; (4) sem atalho de teclado, só botão no PDV.
+
+M8 implementado em dev em 01/10/2026, na árvore, sem commit (detalhe no doc-3, seção M8 'O que mudou'). Backend: TituloService::criar/implantar com pagamento (implantação com total = valor e codpagamento), TituloService::estornar leva total/codpagamento ao estorno e cancela o pagamento (abort 422 no lugar das exceções), PagamentoTituloService::estornar desfaz o título quando a linha é a implantação; Mg/Pdv/PdvTituloService::lancar + PdvTituloController + PdvTituloStoreRequest (POST v1/pdv/titulo; um título por forma; vale e adto fornecedor só dinheiro da gaveta; adto cliente pelas formas do Receber título; Admin ou Caixa/Gerente da filial); recibo térmico com o tipo, observação e assinatura. negocios: LancarTituloDialog + store pagamento.js (reusa baixaTitulosStore e MgCobrancaDialog sem mudar @components), botão Vale / Adiantamento no PDV. Conferido: php -l, eslint/prettier; serviço com rollback (vale, adto fornecedor, adto cliente dinheiro com troco + cartão manual, PIX integrado amarrado, recusas: vale em cartão, tipo 230, vencido, PIX reusado, PDV sem gaveta; estorno pela listagem, repetido, estorno do título no contas cancelando o pagamento, título movimentado = 422; recibos PDF); navegador (Chrome headless, PDV 508 com gaveta temporária): vale R$ 50 e adto cliente R$ 100 com troco 20 pelo wizard, estornados pela rota da listagem do PDV, gaveta do PDV 508 restaurada. Não testado: PIX QR e cartão integrado de ponta a ponta (banco/maquineta reais), impressão na térmica (dev sem impressora). ACs do M8 não lançados: a task 'Receber no balcão' (dona dos ACs M8/M9 pelo doc-3) não existe.
+
+M8 commitado sem validação a pedido do Fábio (01/10/2026): ele valida depois.
 <!-- SECTION:NOTES:END -->

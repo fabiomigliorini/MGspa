@@ -36,7 +36,9 @@ M5 juntos. **M5 (wizard desacoplado, prazo ajustável) commitado em 30/09/2026 s
 30/09/2026, na árvore, sem commit**: o Fábio valida M4, M5 e M6 juntos. **M6 validado em 01/10/2026** (`bc911e922`), com uma correção de rumo registrada como
 **M6.1**: o wizard foi desacoplado mas não compartilhado, e o contas ganhou um dialog próprio sem
 cartão e uma listagem parcial. **M6.1 commitado em 01/10/2026 sem validação**, a pedido do Fábio
-(TASK-188): ele valida depois. **Próximo: M8** (depois da validação do M6.1).
+(TASK-188): ele valida depois. **M8 (vale colaborador e adiantamentos no PDV) commitado em
+01/10/2026 sem validação**, a pedido do Fábio (TASK-188): ele valida depois. **Próximo:
+M9.**
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -988,6 +990,40 @@ stores nem do wizard fora de `@components`.
   `pagamento/recibo-termica`).
 - **Valida**: vale em dinheiro; adiantamento de cliente em dinheiro, PIX QR e cartão; adiantamento a
   fornecedor; títulos no contas com portador certo; estorno.
+- **O que mudou em relação ao plano** (conferência de 01/10/2026 no código, decidido com o Fábio):
+  - **Conta contábil** (obrigatória no título): padrão por tipo, editável no dialog — 2 Vale
+    Colaborador → 42 Despesa Colaboradores; 120 Adto Fornecedor → 1 Compra Mercadoria; 220 Adto
+    Cliente → 2 Venda Mercadoria. **Vencimento** em campo, padrão hoje + 30 dias (não antes de
+    hoje). Número do título pela regra do `TituloService` (data + sufixo por pessoa).
+  - **Sem atalho de teclado**: só o botão "Vale / Adiantamento" ao lado do Receber título (F1–F11
+    ocupadas; F12 é o DevTools).
+  - **Estorno pela listagem de Pagamentos**, sem rota nova: `PagamentoTituloService::estornar`,
+    quando a linha do pagamento é a implantação, chama `TituloService::estornar`, que só desfaz
+    título não movimentado (422) e agora leva `total` e `codpagamento` ao estorno (900) e cancela o
+    pagamento com a justificativa. Vale também para o estorno do título no contas (o pagamento é
+    cancelado com "Estorno do título …"). Regra de quem estorna no PDV é a do M6.1 (Caixa os
+    próprios em 2 h; Gerente a filial). As duas exceções genéricas do `TituloService::estornar`
+    viraram `abort(422)`.
+  - **Como ficou no código**: `TituloService::criar(dados, ?Pagamento)` e `implantar(titulo,
+    ?Pagamento)` (implantação com `total` = valor, `codpagamento` e o portador do pagamento);
+    `Mg/Pdv/PdvTituloService::lancar` + `PdvTituloController` + `PdvTituloStoreRequest`, rota
+    `POST v1/pdv/titulo`; reusa `PagamentoTituloService::pagamentoDaForma` (portador pela regra da
+    baixa, cobrança integrada amarrada pelo `codpagamento`) e `gerarCheque` (cheque recebido no
+    adiantamento de cliente vai para o controle de cheques), que ficaram públicos. Vale e
+    adiantamento a fornecedor: só dinheiro (422 em outra forma). Permissão: Admin, ou Caixa/Gerente
+    da filial do PDV.
+  - **Comprovante**: o mesmo `pagamento/recibo-termica` (um recibo para as formas do lançamento):
+    cabeçalho com o tipo ("VALE COLABORADOR"), "referente a Vale Colaborador" + observação e a
+    linha de assinatura (da pessoa na saída; da empresa na entrada). Impresso na impressora do PDV
+    pela rota do M6.1.
+  - **negocios**: `components/offline/LancarTituloDialog.vue` (tipo, pessoa, valor, vencimento,
+    conta, observação → `MgCobrancaDialog`); estado e ações no store do domínio
+    `stores/pagamento.js` (`abrirLancamento`, `cobrarLancamento`, `finalizarLancamento`). O wizard e
+    as cobranças integradas usam o `baixaTitulosStore` de `@components` sem mudança: o título que
+    ainda não existe entra como uma linha só, no sentido do tipo; a finalização manda as formas
+    para `v1/pdv/titulo`. "Lançar o que foi pago" grava só as formas já lançadas (cobrança
+    integrada de parte do valor). Nada mudou em `@components`. Os pagamentos aparecem na listagem
+    travada no PDV como origem "Títulos".
 
 ## M9 — Conferência de maquinetas (Receber no balcão)
 

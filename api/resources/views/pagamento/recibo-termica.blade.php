@@ -9,10 +9,15 @@
     $entrada = PagamentoListaService::operacao($primeiro) != 'DB';
     $total = $pags->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->sum('total');
     $titulos = [];
+    // vale colaborador / adiantamento lancado no PDV (M8): o pagamento nasceu com o titulo
+    $lancados = [];
     foreach ($pags as $pag) {
         foreach ($pag->MovimentoTituloS as $mov) {
             if ($mov->ehEstorno() || !$mov->Titulo) {
                 continue;
+            }
+            if ($mov->codtipomovimentotitulo == \Mg\Titulo\MovimentoTituloService::TIPO_IMPLANTACAO) {
+                $lancados[$mov->Titulo->TipoTitulo->tipotitulo ?? ''] = $mov->Titulo->observacao;
             }
             $cod = $mov->codtitulo;
             $titulos[$cod] = $titulos[$cod] ?? ['titulo' => $mov->Titulo, 'total' => 0, 'juros' => 0, 'desconto' => 0];
@@ -80,7 +85,7 @@
     <div class="cabecalho">
         <b style="font-size: 12pt">{{ $filial->filial ?? '' }}</b><br>
         {{ $filial->Pessoa->telefone1 ?? '' }}<br>
-        <b>{{ $entrada ? 'RECIBO DE RECEBIMENTO' : 'RECIBO DE PAGAMENTO' }}</b><br>
+        <b>{{ $lancados ? mb_strtoupper(implode(' / ', array_keys($lancados))) : ($entrada ? 'RECIBO DE RECEBIMENTO' : 'RECIBO DE PAGAMENTO') }}</b><br>
         {{ $primeiro->lancamento->format('d/m/Y H:i:s') }}
     </div>
 
@@ -88,7 +93,14 @@
         {{ $entrada ? 'Recebemos de' : 'Pagamos a' }}
         <b>{{ $pessoa->pessoa ?? '' }}</b> ({{ formataCodigo($pessoa->codpessoa ?? 0) }})
         a importância de <b>{{ formataValorPorExtenso((float) $total, true) }}</b>
-        referente aos títulos abaixo.
+        @if ($lancados)
+            referente a {{ implode(' / ', array_keys($lancados)) }}.
+            @foreach (array_filter($lancados) as $obs)
+                <br>{{ $obs }}
+            @endforeach
+        @else
+            referente aos títulos abaixo.
+        @endif
     </p>
 
     <div class="linha"></div>

@@ -11,6 +11,7 @@ import { pixStore } from '@components/stores/pixStore'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import { pagamentoStore } from 'stores/pagamento'
 import ReceberTituloDialog from 'components/offline/ReceberTituloDialog.vue'
+import LancarTituloDialog from 'components/offline/LancarTituloDialog.vue'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
 import ListagemItensVale from 'components/offline/ListagemItensVale.vue'
 import ListagemContraVale from 'components/offline/ListagemContraVale.vue'
@@ -116,11 +117,20 @@ const hotkeys = (event) => {
 
 // notinha, entrega paga na volta, vale do cliente: abre com a pessoa da venda
 const receberTitulo = async () => {
-  if (sCobranca.dialog || sPagamento.dialog) {
+  if (sCobranca.dialog || sPagamento.dialog || sPagamento.dialogLancamento) {
     return
   }
   await fecharDialogs()
   sPagamento.abrir(sNegocio.negocio?.codpessoa)
+}
+
+// vale colaborador, adiantamento a fornecedor e de cliente (M8)
+const lancarTitulo = async () => {
+  if (sCobranca.dialog || sPagamento.dialog || sPagamento.dialogLancamento) {
+    return
+  }
+  await fecharDialogs()
+  sPagamento.abrirLancamento()
 }
 
 const vazioOuCriar = async () => {
@@ -179,6 +189,7 @@ const carregareOuCriarNegocio = async () => {
 const fecharDialogs = async () => {
   sCobranca.fechar()
   sPagamento.dialog = false
+  sPagamento.dialogLancamento = false
   sNegocio.dialog.valores = false
   sNegocio.dialog.vale = false
   sAuth.dialog.login = false
@@ -702,12 +713,18 @@ onUnmounted(() => {
     </q-page-scroller>
 
     <receber-titulo-dialog />
+    <lancar-titulo-dialog />
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]" v-if="sNegocio.negocio">
       <div class="q-gutter-sm">
         <!-- RECEBER TÍTULO / PAGAR VALE -->
         <q-btn fab icon="request_quote" color="deep-purple" @click="receberTitulo()">
           <q-tooltip class="bg-accent">Receber Título / Pagar Vale (F11)</q-tooltip>
+        </q-btn>
+
+        <!-- VALE / ADIANTAMENTO -->
+        <q-btn fab icon="payments" color="deep-purple-4" @click="lancarTitulo()">
+          <q-tooltip class="bg-accent">Vale / Adiantamento</q-tooltip>
         </q-btn>
 
         <!-- DUPLICAR -->

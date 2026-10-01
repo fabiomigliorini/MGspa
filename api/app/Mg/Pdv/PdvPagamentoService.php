@@ -137,7 +137,8 @@ class PdvPagamentoService
             'PortadorOrigem:codportador,portador',
             'Maquineta:codmaquineta,apelido',
             'UsuarioCriacao:codusuario,usuario',
-            'MovimentoTituloS.Titulo:codtitulo,numero,vencimento',
+            'MovimentoTituloS.Titulo:codtitulo,numero,vencimento,codtipotitulo,observacao',
+            'MovimentoTituloS.Titulo.TipoTitulo:codtipotitulo,tipotitulo',
         ])->whereIn('codpagamento', $codpagamentos)->orderBy('codpagamento')->get();
         if ($pags->isEmpty()) {
             abort(404, 'Pagamento não encontrado!');

@@ -13,6 +13,7 @@ use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloHelper;
 use Mg\Titulo\MovimentoTituloService;
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 
 /**
  * Recebimento e pagamento de titulos (M6 do plano doc-3, com varias formas
@@ -271,8 +272,9 @@ class PagamentoTituloService
     }
 
     // Cria o pagamento de uma forma (ou amarra a cobranca integrada ja'
-    // confirmada), com origem e destino pelo meio e por onde aconteceu
-    protected static function pagamentoDaForma(
+    // confirmada), com origem e destino pelo meio e por onde aconteceu. Usado
+    // tambem pelo lancamento de vale/adiantamento no PDV (PdvTituloService).
+    public static function pagamentoDaForma(
         array $forma,
         bool $entrada,
         bool $compensacao,
@@ -454,7 +456,7 @@ class PagamentoTituloService
     }
 
     // Cheque recebido vai para o controle de cheques (idempotente)
-    protected static function gerarCheque(Pagamento $pag): void
+    public static function gerarCheque(Pagamento $pag): void
     {
         if (Cheque::where('codpagamento', $pag->codpagamento)->exists()) {
             return;
@@ -620,8 +622,15 @@ class PagamentoTituloService
             if ($mov->ehEstorno() || $mov->MovimentoTituloEstornoS()->exists()) {
                 continue;
             }
+            // vale colaborador / adiantamento: o pagamento nasceu com o
+            // titulo, estornar e' desfazer o titulo (so' se nao movimentado)
+            if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
+                TituloService::estornar($mov->Titulo, $justificativa);
+                continue;
+            }
             MovimentoTituloService::estornar($mov);
         }
+        $pag->refresh();
         PagamentoService::cancelar($pag, $justificativa);
         return PagamentoListaService::carregar($pag->codpagamento);
     }

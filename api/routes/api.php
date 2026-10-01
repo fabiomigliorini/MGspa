@@ -924,6 +924,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
         Route::post('pagamento/{id}/estornar', '\Mg\Pdv\PdvPagamentoController@estornar')->whereNumber('id');
         Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
+        // vale colaborador e adiantamentos (M8 doc-3)
+        Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
         // Saurus
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
