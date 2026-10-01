@@ -344,20 +344,23 @@ class MaquinetaService
         return $lista->count() === 1 ? $lista->first() : null;
     }
 
-    // Ativas que aparecem no PDV da filial (dela + compartilhadas), para o estoque-local
+    // Ativas que o cartão do wizard oferece (estoque local do PDV e contas): todas, de todas as
+    // filiais — o entregador sai com a maquineta de outra loja e o registro tem que bater com a
+    // realidade. As da filial (e compartilhadas) primeiro; as outras com `outrafilial`.
     public static function paraPdv(int $codfilial): array
     {
         return DB::select('
             select
-                m.codmaquineta, m.apelido, m.serial, m.codfilial, m.compartilhada,
+                m.codmaquineta, m.apelido, m.serial, m.codfilial, f.filial, m.compartilhada,
+                (m.codfilial <> :codfilial and not m.compartilhada) as outrafilial,
                 m.codpessoa, trim(p.fantasia) as adquirente, m.integracao, m.codpagarmepos,
                 pin.codsauruspdv
             from tblmaquineta m
             inner join tblpessoa p on (p.codpessoa = m.codpessoa)
+            inner join tblfilial f on (f.codfilial = m.codfilial)
             left join tblsauruspinpad pin on (pin.codsauruspinpad = m.codsauruspinpad)
             where m.inativo is null
-              and (m.codfilial = :codfilial or m.compartilhada)
-            order by m.apelido, m.codmaquineta
-        ', ['codfilial' => $codfilial]);
+            order by (m.codfilial <> :codfilial2 and not m.compartilhada), m.apelido, m.codmaquineta
+        ', ['codfilial' => $codfilial, 'codfilial2' => $codfilial]);
     }
 }

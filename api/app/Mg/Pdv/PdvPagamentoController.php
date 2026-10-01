@@ -7,6 +7,7 @@ use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaResource;
 use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoTituloStoreRequest;
+use Mg\Titulo\TituloAbertosFechamentoService;
 
 /**
  * Pagamentos vistos e feitos no PDV (M6.1 doc-3): a listagem unica travada
@@ -30,10 +31,19 @@ class PdvPagamentoController
         return new PagamentoDetalheResource(PdvPagamentoService::carregar($pdv, $id));
     }
 
+    // títulos abertos para o seletor (os mesmos filtros e formato do contas); no PDV só com
+    // pessoa ou grupo econômico
     public function titulos(PdvRequest $request)
     {
         PdvService::autoriza($request->pdv);
-        return ['data' => PdvPagamentoService::titulosAbertos($request->codpessoa, $request->numero)];
+        if (empty($request->codpessoa) && empty($request->codgrupoeconomico)) {
+            abort(422, 'Informe a pessoa ou o grupo econômico!');
+        }
+        return ['data' => TituloAbertosFechamentoService::listar($request->only([
+            'codpessoa', 'codgrupoeconomico', 'codfilial',
+            'vencimento_de', 'vencimento_ate', 'natureza',
+            'codtipotitulo', 'codcontacontabil', 'codportador',
+        ]))];
     }
 
     public function originais(PdvRequest $request)

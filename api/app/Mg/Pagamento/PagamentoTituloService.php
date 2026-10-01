@@ -461,9 +461,8 @@ class PagamentoTituloService
         if (Cheque::where('codpagamento', $pag->codpagamento)->exists()) {
             return;
         }
-        // o nome vai no cheque; a lista de emitentes so' com CPF/CNPJ
         $emitentes = [];
-        if (!empty($pag->chequecnpj)) {
+        if (!empty($pag->chequecnpj) || !empty($pag->chequeemitente)) {
             $emitentes[] = ['cnpj' => $pag->chequecnpj, 'emitente' => $pag->chequeemitente];
         }
         ChequeService::criar([

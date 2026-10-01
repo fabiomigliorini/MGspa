@@ -129,7 +129,10 @@ class ChequeService extends MgService
     {
         $mantidos = [];
         foreach ($emitentes as $dados) {
-            if (empty($dados['cnpj']) && empty($dados['emitente'])) {
+            // a lista de emitentes é por CPF/CNPJ (coluna obrigatória); só o nome fica no
+            // próprio cheque (tblcheque.emitente)
+            $cnpj = preg_replace('/[^0-9]/', '', (string) ($dados['cnpj'] ?? ''));
+            if ($cnpj === '') {
                 continue;
             }
             if (!empty($dados['codchequeemitente'])) {
@@ -138,7 +141,7 @@ class ChequeService extends MgService
                 $emit = new ChequeEmitente();
             }
             $emit->codcheque = $cheque->codcheque;
-            $emit->cnpj = preg_replace('/[^0-9]/', '', $dados['cnpj'] ?? '');
+            $emit->cnpj = $cnpj;
             $emit->emitente = $dados['emitente'] ?? null;
             $emit->save();
             $mantidos[] = $emit->codchequeemitente;

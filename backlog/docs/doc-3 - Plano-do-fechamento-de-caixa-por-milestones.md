@@ -415,10 +415,13 @@ para leitura de histórico não convertido.
   - Quem abre o wizard informa `documento` (o que se paga: `tipo` 'negocio' ou 'titulos', com os
     tratadores `aoPagamento`/`aoParcelas`/`aoCobranca` ou, sem eles, os eventos do dialog),
     `contexto` (onde: `pdv` uuid ou nulo no contas, `codfilial`, `carregarMaquinetas`,
-    `portadores`, `buscarVale`) e `formasPermitidas`. Um `MgCobrancaDialog` por app (no PDV fica no
-    `TotalNegocio`; no contas, na página que usa).
-  - Baixa de títulos (PDV e contas) = `@components/stores/baixaTitulosStore.js` (títulos → formas
-    lançadas → finalizar) + `Mg/Pagamento/PagamentoTituloService::baixar(dados, ?Pdv)`: um
+    `portadores`, `buscarVale`) e `formasPermitidas`. Um `MgCobrancaDialog` por tela (venda: no
+    `TotalNegocio`; Pagamentos do PDV: na página, para o Vale / Adiantamento; Receber Título e
+    contas: dentro da `MgBaixaTitulos`).
+  - Baixa de títulos (PDV e contas) = a mesma tela, `@components/MgBaixaTitulos.vue` (seletor
+    `MgSeletorTitulosAbertos` + pessoa/observação + formas lançadas + wizard; cada app passa onde
+    busca, as formas, o contexto e para onde manda) sobre `@components/stores/baixaTitulosStore.js`
+    (títulos → formas lançadas → finalizar) + `Mg/Pagamento/PagamentoTituloService::baixar(dados, ?Pdv)`: um
     pagamento por forma, linhas distribuídas por vencimento, portador resolvido pelo meio
     (dinheiro na gaveta do PDV; no contas, cofre/troco/Caixa Financeiro; cheque recebido na
     Carteira; cartão na adquirente da maquineta). Rotas: contas `POST v1/pagamento`; PDV
@@ -909,8 +912,9 @@ estava errado: duplicou código e escondeu dado conforme a tela. Decidido com o 
   registro de devolução de PIX (origem = banco, aponta para o PIX original); `estornar` (Caixa:
   próprios, 120 min; Gerente: filial); recibo térmico. Rotas `v1/pdv/pagamento/*`. PIX chave,
   transferência e depósito não aparecem no PDV.
-- **Frontend negocios**: `ReceberTituloDialog.vue` (teclado): pessoa ou número → títulos abertos e
-  créditos com seleção e total → `MgCobrancaDialog` de `@components` (sentido conforme o líquido); atalho F11; para
+- **Frontend negocios** (como ficou, ver "O que mudou"): página `/pagamento/receber` aberta pelo FAB
+  da tela Pagamentos, com a mesma `MgBaixaTitulos` do contas → `MgCobrancaDialog` de `@components`
+  (sentido conforme o líquido); para
   pagar crédito, escolha do meio (dinheiro / cancelamento no cartão escolhendo o pagamento original /
   devolução de PIX); store `pagamento.js`; listagem de pagamentos do PDV mostra meio, maquineta e PDV.
 - **Valida**: notinha em dinheiro (troco), PIX QR, cheque, cartão nas duas operadoras, cartão manual;
@@ -955,7 +959,7 @@ stores nem do wizard fora de `@components`.
 - **Vários pagamentos para os mesmos títulos**: `PagamentoTituloService::baixar(dados, ?pdv)`
   distribui as linhas por vencimento; título que cai entre duas formas é dividido com juros,
   multa e desconto proporcionais; títulos do sentido contrário entram no 1º pagamento.
-  "Finalizar parcial" no PDV baixa só o que foi pago, por vencimento. Fora da venda o cartão não
+  Pagamento parcial = editar o capital do título no seletor (como no contas). Fora da venda o cartão não
   tem juros de parcelamento nem a forma dinheiro tem desconto (título não tem onde guardar).
 - Juros e multa do título em atraso: regra única em `@components/cobranca/juros.js` (contas e
   PDV); a seleção de títulos do contas continua com os parâmetros editáveis.
@@ -966,13 +970,27 @@ stores nem do wizard fora de `@components`.
   `MgSelectPdv` para o filtro de PDV. O relatório PDF usa os mesmos filtros (limite de 5.000
   pagamentos). No contas o detalhe é a página de sempre (edição e recibos PDF no slot); no PDV é
   um dialog (estorno e recibo térmico).
-- **PDV**: `ReceberTituloDialog` (F11 e botão), store `negocios/src/stores/pagamento.js`; rotas
+- **PDV**: tela `/pagamento/receber` (layout próprio, volta para Pagamentos) = `MgBaixaTitulos`
+  com `MgSeletorTitulosAbertos` (era o `SeletorTitulosAbertos` do contas, foi para
+  `@components`), sem atalho de teclado e sem lista própria (decisão do Fábio, 01/10/2026: a tela
+  do PDV fica só com a venda; Receber Título e Vale / Adiantamento entram pelos FABs da tela
+  Pagamentos). Busca só com pessoa ou grupo econômico (422 sem eles), filial do PDV como padrão;
+  multa, juros e desconto editáveis por qualquer um, como no contas. `stores/pagamento.js`
+  guarda as formas (`FORMAS_RECEBER`), o M8 e o recibo; rotas
   `v1/pdv/pagamento` (index, `{id}`, `titulos`, `originais`, store, `{id}/estornar`,
   `recibo/{impressora}`) e o PDF assinado `pdv/pagamento/recibo/{codpagamentos}` (um recibo
   para os pagamentos do mesmo recebimento, blade `pagamento/recibo-termica`). Pagar vale: só
   Gerente da filial ou Administrador (403); devolução no cartão/PIX escolhe o pagamento original
   dos últimos 12 meses e não passa do que resta dele; cartão sem portador de adquirente (Brasil
   Card, Le Card, Cielo) fica sem origem/destino.
+- **Maquineta de qualquer filial** (decisão do Fábio, 01/10/2026: o sistema não bloqueia o
+  registro da realidade — o entregador sai com a maquineta de outra loja): o cartão do wizard,
+  manual e integrado, no PDV e no contas, lista as maquinetas ativas de todas as filiais
+  (`MaquinetaService::paraPdv` com `filial` e `outrafilial`); as de outra filial vêm por último,
+  no grupo "Outras filiais", com a filial na legenda e cor de aviso. Nada bloqueia.
+- **Cheque só com o nome do emitente** (sem CPF/CNPJ): `ChequeService::sincronizarEmitentes` não
+  cria linha de emitente sem CPF/CNPJ (a coluna é obrigatória; o nome fica no cheque). Quebrava o
+  fechamento da venda em cheque sem CPF/CNPJ.
 - Cheque recebido em título vai para o controle de cheques (como na venda); estornar cancela o
   cheque ainda a repassar. Troco do dinheiro gravado no pagamento.
 
@@ -995,8 +1013,8 @@ stores nem do wizard fora de `@components`.
     Colaborador → 42 Despesa Colaboradores; 120 Adto Fornecedor → 1 Compra Mercadoria; 220 Adto
     Cliente → 2 Venda Mercadoria. **Vencimento** em campo, padrão hoje + 30 dias (não antes de
     hoje). Número do título pela regra do `TituloService` (data + sufixo por pessoa).
-  - **Sem atalho de teclado**: só o botão "Vale / Adiantamento" ao lado do Receber título (F1–F11
-    ocupadas; F12 é o DevTools).
+  - **Sem atalho de teclado**: o botão "Vale / Adiantamento" fica na tela **Pagamentos** (fab-mini ao
+    lado do FAB do Receber Título), não na do PDV (ajuste do M6.1, 01/10/2026).
   - **Estorno pela listagem de Pagamentos**, sem rota nova: `PagamentoTituloService::estornar`,
     quando a linha do pagamento é a implantação, chama `TituloService::estornar`, que só desfaz
     título não movimentado (422) e agora leva `total` e `codpagamento` ao estorno (900) e cancela o

@@ -51,6 +51,7 @@ watch(
             </div>
             <div class="col-12">
               <select-pessoa
+                outlined
                 v-model="sPagamento.lancamento.codpessoa"
                 label="Pessoa"
                 autofocus

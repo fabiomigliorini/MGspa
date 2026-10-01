@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-01 19:19'
+updated_date: '2026-10-01 20:18'
 labels:
   - contas
   - negocios
@@ -77,6 +77,7 @@ Milestones:
 - [ ] #27 M6.1.4 O dialog e a listagem parciais do contas e a listagem de liquidacoes do negocios sao apagados
 - [ ] #28 M6.1.5 No PDV o caixa recebe notinha e entrega paga na volta em dinheiro, PIX QR, cheque e cartao, sem trocar de app
 - [ ] #29 M6.1.6 No PDV o Gerente paga vale/credito do cliente em dinheiro ou registrando cancelamento no cartao ou devolucao de PIX, apontando para o pagamento original
+- [ ] #30 M6.1.7 Cheque com só o nome do emitente, sem CPF/CNPJ, é aceito na venda e no recebimento de título
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -196,4 +197,13 @@ M8 decidido com o Fábio (01/10/2026), depois do levantamento: (1) conta contáb
 M8 implementado em dev em 01/10/2026, na árvore, sem commit (detalhe no doc-3, seção M8 'O que mudou'). Backend: TituloService::criar/implantar com pagamento (implantação com total = valor e codpagamento), TituloService::estornar leva total/codpagamento ao estorno e cancela o pagamento (abort 422 no lugar das exceções), PagamentoTituloService::estornar desfaz o título quando a linha é a implantação; Mg/Pdv/PdvTituloService::lancar + PdvTituloController + PdvTituloStoreRequest (POST v1/pdv/titulo; um título por forma; vale e adto fornecedor só dinheiro da gaveta; adto cliente pelas formas do Receber título; Admin ou Caixa/Gerente da filial); recibo térmico com o tipo, observação e assinatura. negocios: LancarTituloDialog + store pagamento.js (reusa baixaTitulosStore e MgCobrancaDialog sem mudar @components), botão Vale / Adiantamento no PDV. Conferido: php -l, eslint/prettier; serviço com rollback (vale, adto fornecedor, adto cliente dinheiro com troco + cartão manual, PIX integrado amarrado, recusas: vale em cartão, tipo 230, vencido, PIX reusado, PDV sem gaveta; estorno pela listagem, repetido, estorno do título no contas cancelando o pagamento, título movimentado = 422; recibos PDF); navegador (Chrome headless, PDV 508 com gaveta temporária): vale R$ 50 e adto cliente R$ 100 com troco 20 pelo wizard, estornados pela rota da listagem do PDV, gaveta do PDV 508 restaurada. Não testado: PIX QR e cartão integrado de ponta a ponta (banco/maquineta reais), impressão na térmica (dev sem impressora). ACs do M8 não lançados: a task 'Receber no balcão' (dona dos ACs M8/M9 pelo doc-3) não existe.
 
 M8 commitado sem validação a pedido do Fábio (01/10/2026): ele valida depois.
+
+Ajustes do M6.1 pedidos pelo Fábio (01/10/2026), na árvore, sem commit:
+- Receber Título / Pagar Vale no PDV usa a mesma tela do contas: @components/MgBaixaTitulos.vue (seletor + pessoa/observação + formas lançadas + wizard) e @components/MgSeletorTitulosAbertos.vue (era contas/src/components/SeletorTitulosAbertos.vue; o contas e o Agrupamento usam o mesmo). Saíram o ReceberTituloDialog, a busca por número, o 'Finalizar parcial' (parcial = editar o capital) e o baixaTitulosStore.ajustarAoPago.
+- Sem F11. A tela do PDV fica só com a venda: Receber Título (FAB principal → /pagamento/receber) e Vale / Adiantamento (fab-mini, dialog do M8) entram pela tela Pagamentos.
+- PDV: busca de títulos só com pessoa ou grupo econômico (v1/pdv/pagamento/titulos com os filtros do seletor, 422 sem eles), filial do PDV como padrão; multa/juros/desconto editáveis por qualquer um, como no contas.
+- Maquineta de qualquer filial no cartão (manual e integrado, PDV e contas), com aviso 'outra filial' e sem bloquear (MaquinetaService::paraPdv com filial/outrafilial). Princípio: o sistema não bloqueia o registro da realidade.
+- Cheque só com o nome do emitente: ChequeService::sincronizarEmitentes não cria emitente sem CPF/CNPJ (quebrava a venda); saiu o contorno do recebimento de título.
+- Campos outlined: o SelectPessoa do Vale / Adiantamento ganhou outlined; os demais do M6.1 já eram.
+- Dev: portador em espécie 'Gaveta Dev Fabio' (202062, filial 101) vinculado ao PDV 508 'Dev Fabio'.
 <!-- SECTION:NOTES:END -->

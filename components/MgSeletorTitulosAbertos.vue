@@ -1,4 +1,7 @@
 <script setup>
+// Seleção de títulos abertos para baixar (capital, multa, juros, desconto e total por título),
+// a mesma no contas (Receber ou Pagar Títulos, Agrupamentos) e no PDV (Receber Título / Pagar
+// Vale, M6.1 do plano doc-3). Cada app diz onde busca (`endpoint`, `params`).
 import { ref, computed, watch } from 'vue'
 import { api } from 'src/services/api'
 import { formataNumero, formataData } from '@components/formatters'
@@ -20,6 +23,13 @@ import {
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   codpessoaInicial: { type: Number, default: null },
+  // onde busca (o PDV usa a rota dele, autorizada pelo dispositivo) e parâmetros extras
+  endpoint: { type: String, default: 'v1/titulo/abertos-para-fechamento' },
+  params: { type: Object, default: () => ({}) },
+  // só busca com pessoa ou grupo econômico informado (PDV)
+  exigePessoa: { type: Boolean, default: false },
+  // filial que já vem no filtro (trocável)
+  filialPadrao: { type: Number, default: null },
 })
 
 const emit = defineEmits([
@@ -39,13 +49,16 @@ function maxTotal(t) {
   return (Number(t.saldo) || 0) + juros + multa
 }
 
+// título no contas (abre em outra aba, de qualquer app)
+const urlTitulo = (codtitulo) => `${process.env.CONTAS_URL}/titulo/${codtitulo}`
+
 function round2(n) {
   return Math.round(Number(n) * 100) / 100
 }
 
 // === Filtros ===
 const filtros = ref({
-  codfilial: null,
+  codfilial: props.filialPadrao,
   codgrupoeconomico: null,
   codpessoa: props.codpessoaInicial,
   vencimento_de: null,
@@ -136,9 +149,14 @@ function emitModel() {
 
 // === Buscar títulos ===
 async function buscar() {
+  if (props.exigePessoa && !filtros.value.codpessoa && !filtros.value.codgrupoeconomico) {
+    titulos.value = titulos.value.filter((r) => r.selecionado)
+    return
+  }
   loading.value = true
   try {
     const params = {
+      ...props.params,
       codpessoa: filtros.value.codpessoa,
       codgrupoeconomico: filtros.value.codgrupoeconomico,
       codfilial: filtros.value.codfilial,
@@ -149,7 +167,7 @@ async function buscar() {
       codcontacontabil: filtros.value.codcontacontabil,
       codportador: filtros.value.codportador,
     }
-    const { data } = await api.get('v1/titulo/abertos-para-fechamento', { params })
+    const { data } = await api.get(props.endpoint, { params })
     const novosTitulos = data.data || []
     // merge: mantém selecionados que sumiram no resultado novo + atualiza dados imutáveis dos que voltaram
     const novosCodigos = new Set(novosTitulos.map((t) => t.codtitulo))
@@ -393,7 +411,7 @@ function classeVencimento(t) {
           <div class="col-xs-6 col-sm-3">
             <div class="row q-col-gutter-md">
               <div class="col-6">
-                <mgInputData
+                <MgInputData
                   input-class="text-caption"
                   v-model="filtros.vencimento_de"
                   type="date"
@@ -452,7 +470,10 @@ function classeVencimento(t) {
     <q-inner-loading :showing="loading" color="primary" />
 
     <div v-if="!titulos.length" class="text-center text-grey q-ma-xl">
-      Nenhum título encontrado para esses filtros.
+      <template v-if="exigePessoa && !filtros.codpessoa && !filtros.codgrupoeconomico">
+        Informe a pessoa ou o grupo econômico.
+      </template>
+      <template v-else>Nenhum título encontrado para esses filtros.</template>
     </div>
     <q-card v-else flat bordered class="text-caption">
       <!-- TOTAIS -->
@@ -534,8 +555,8 @@ function classeVencimento(t) {
             <!-- NUMERO -->
             <div class="col-xs-12 col-sm-3 ellipsis">
               <div class="row">
-                <router-link
-                  :to="'/titulo/' + titulo.codtitulo"
+                <a
+                  :href="urlTitulo(titulo.codtitulo)"
                   class="text-primary"
                   style="text-decoration: none"
                   @click.stop
@@ -544,7 +565,7 @@ function classeVencimento(t) {
                 >
                   {{ titulo.numero }}
                   <q-icon name="launch" />
-                </router-link>
+                </a>
                 <q-space />
                 <span :class="classeOperacao(titulo.operacao)" class="text-body2 text-weight-bold">
                   {{ formataNumero(titulo.saldo) }} {{ titulo.operacao }}
