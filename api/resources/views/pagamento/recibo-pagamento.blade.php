@@ -145,13 +145,13 @@
             font-size: 6pt;
             text-align: center;
         }
-        .assin-cnpj {
+        .assin-doc {
             font-size: 5.5pt;
             color: #333;
         }
     </style>
 </head>
 <body>
-    @include('liquidacao-titulo._recibo-recebimento', ['liq' => $liq])
+    @include('pagamento._recibo-pagamento', ['pag' => $pag])
 </body>
 </html>

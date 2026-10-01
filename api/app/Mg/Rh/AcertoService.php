@@ -6,6 +6,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Mg\Colaborador\ColaboradorCargo;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Titulo\MovimentoTituloService;
 use Mg\Titulo\Titulo;
 
@@ -22,6 +24,12 @@ use Mg\Titulo\Titulo;
  * Nada é excluído: um acerto errado é INATIVADO (estornando seus movimentos) e
  * um novo é criado. Vários eventos por colaborador (parcial: parte folha, parte
  * dinheiro, resto Bee).
+ *
+ * Cada evento tem o seu pagamento (M6 do plano doc-3): o saldo do evento, meio
+ * pela forma (B Recarga Bee = compensação, porque o dinheiro anda depois no
+ * título da recarga; D dinheiro, com o portador em espécie de onde saiu ou
+ * para onde entrou; F folha; saldo zero = compensação), e os movimentos
+ * apontam para ele. Inativar cancela o pagamento; reativar cria outro.
  */
 class AcertoService
 {
@@ -215,7 +223,7 @@ class AcertoService
     // Efetivação (cria UM evento por confirmação; suporta parcial/múltiplo)
     // -------------------------------------------------------------------------
 
-    public static function efetivar(int $codperiodocolaborador, array $titulos, string $forma, ?string $observacao, ?string $data): array
+    public static function efetivar(int $codperiodocolaborador, array $titulos, string $forma, ?string $observacao, ?string $data, ?int $codportador = null): array
     {
         $pc = PeriodoColaborador::with(['Colaborador', 'Periodo'])
             ->findOrFail($codperiodocolaborador);
@@ -274,12 +282,17 @@ class AcertoService
         ]);
         $acerto->save();
 
+        $pag = static::criarPagamento($acerto, $pc->Colaborador->codpessoa ?? null, $codportador);
+
         foreach ($movimentos as $m) {
             static::criarMovimento(
                 $acerto->codperiodocolaboradoracerto,
                 $m['codtitulo'],
                 $m['valor'],
-                $dataForm
+                $dataForm,
+                MovimentoTituloService::TIPO_RH,
+                $pag->codpagamento,
+                $pag->portadorDoPagamento()->codportador ?? null
             );
         }
 
@@ -293,13 +306,62 @@ class AcertoService
         int $codtitulo,
         float $valor,
         string $data,
-        int $tipo = MovimentoTituloService::TIPO_RH
+        int $tipo = MovimentoTituloService::TIPO_RH,
+        ?int $codpagamento = null,
+        ?int $codportador = null
     ): void {
         MovimentoTituloService::lancar(Titulo::findOrFail($codtitulo), $tipo, $valor, [], [
             'codperiodocolaboradoracerto' => $codperiodocolaboradoracerto,
+            'codpagamento'                => $codpagamento,
+            'codportador'                 => $codportador,
             'historico'                   => 'Acerto RH',
             'transacao'                   => $data,
         ]);
+    }
+
+    // meio do pagamento pela forma do evento
+    const MEIO_DA_FORMA = [
+        'B' => PagamentoService::MEIO_COMPENSACAO,
+        'D' => PagamentoService::MEIO_DINHEIRO,
+        'F' => PagamentoService::MEIO_FOLHA,
+    ];
+
+    // Pagamento do evento: o saldo (rubricas + créditos - débitos) que andou
+    // pela forma. Dinheiro pede o portador em espécie: saldo positivo saiu
+    // dele (a empresa pagou o colaborador), negativo entrou.
+    protected static function criarPagamento(PeriodoColaboradorAcerto $acerto, ?int $codpessoa, ?int $codportador = null): Pagamento
+    {
+        $total = round(abs((float) $acerto->saldo), 2);
+        $pc = $acerto->PeriodoColaborador;
+        $portador = null;
+        if ($acerto->forma == 'D' && $total > 0) {
+            $portador = $codportador ? \Mg\Portador\Portador::find($codportador) : null;
+            if (!$portador || $portador->tipo != \Mg\Portador\Portador::TIPO_ESPECIE || !empty($portador->inativo)) {
+                abort(422, 'Acerto em dinheiro: informe o caixa ou cofre (portador em espécie, ativo).');
+            }
+        }
+        return PagamentoService::criar([
+            'codportadororigem' => ($portador && $acerto->saldo > 0) ? $portador->codportador : null,
+            'codportadordestino' => ($portador && $acerto->saldo < 0) ? $portador->codportador : null,
+            'meio' => ($total > 0) ? static::MEIO_DA_FORMA[$acerto->forma] : PagamentoService::MEIO_COMPENSACAO,
+            'estado' => PagamentoService::ESTADO_EFETIVADO,
+            'principal' => $total,
+            'lancamento' => Carbon::parse($acerto->data),
+            'efetivacao' => Carbon::now(),
+            'codusuarioefetivacao' => auth()->user()->codusuario ?? null,
+            'codpessoa' => $codpessoa ?? $pc->Colaborador->codpessoa ?? null,
+            'codfilial' => $pc->Colaborador->codfilial ?? null,
+            'codperiodocolaboradoracerto' => $acerto->codperiodocolaboradoracerto,
+            'observacoes' => $acerto->observacao ? mb_substr($acerto->observacao, 0, 300) : null,
+        ]);
+    }
+
+    protected static function pagamentoAtivo(PeriodoColaboradorAcerto $acerto): ?Pagamento
+    {
+        return Pagamento::where('codperiodocolaboradoracerto', $acerto->codperiodocolaboradoracerto)
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+            ->orderBy('codpagamento', 'desc')
+            ->first();
     }
 
     // -------------------------------------------------------------------------
@@ -312,7 +374,11 @@ class AcertoService
         if ($acerto->inativo) {
             throw new \Exception('Este acerto já está inativo.');
         }
-        $qtd = static::ajustarBaixas($acerto, false); // desfaz as baixas
+        $pag = static::pagamentoAtivo($acerto);
+        $qtd = static::ajustarBaixas($acerto, false, $pag->codpagamento ?? null); // desfaz as baixas
+        if ($pag) {
+            PagamentoService::cancelar($pag, 'Acerto de RH inativado');
+        }
         $acerto->inativo = Carbon::now();
         $acerto->save();
         return $qtd;
@@ -346,7 +412,13 @@ class AcertoService
         if (!$acerto->inativo) {
             throw new \Exception('Este acerto já está ativo.');
         }
-        $qtd = static::ajustarBaixas($acerto, true); // reaplica as baixas
+        // o mesmo portador do pagamento que foi cancelado
+        $anterior = Pagamento::where('codperiodocolaboradoracerto', $acerto->codperiodocolaboradoracerto)
+            ->orderBy('codpagamento', 'desc')
+            ->first();
+        $codportador = $anterior ? ($anterior->codportadororigem ?? $anterior->codportadordestino) : null;
+        $pag = static::criarPagamento($acerto, null, $codportador);
+        $qtd = static::ajustarBaixas($acerto, true, $pag->codpagamento); // reaplica as baixas
         $acerto->inativo = null;
         $acerto->save();
         return $qtd;
@@ -370,7 +442,7 @@ class AcertoService
      * A diferença (alvo − atual) vira um movimento de ajuste (tipo 930). Como o
      * "original" é sempre derivado só dos 601, o toggle é estável a N idas e voltas.
      */
-    protected static function ajustarBaixas(PeriodoColaboradorAcerto $acerto, bool $ativar): int
+    protected static function ajustarBaixas(PeriodoColaboradorAcerto $acerto, bool $ativar, ?int $codpagamento = null): int
     {
         $hoje = Carbon::now()->toDateString();
         $qtd  = 0;
@@ -400,7 +472,8 @@ class AcertoService
                 (int) $codtitulo,
                 $delta,
                 $hoje,
-                MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO
+                MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO,
+                $codpagamento
             );
             $qtd++;
         }

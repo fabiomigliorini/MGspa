@@ -16,6 +16,8 @@ class EfetivarAcertoRequest extends FormRequest
     {
         return [
             'forma'                 => 'required|in:B,D,F',
+            // dinheiro: de qual caixa/cofre (portador em espécie) saiu ou entrou
+            'codportador'           => 'required_if:forma,D|nullable|integer|exists:tblportador,codportador',
             'data'                  => 'nullable|date',
             'observacao'            => 'nullable|string|max:200',
             'titulos'               => 'required|array|min:1',

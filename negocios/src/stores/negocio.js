@@ -458,6 +458,9 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async recalcularValorTotal() {
+      // desconto dado na forma de pagamento entra no desconto dos itens e vales
+      this.ratearDescontoPagamento()
+
       let valorprodutos = 0
       let valordesconto = 0
       let valorfrete = 0
@@ -507,13 +510,6 @@ export const negocioStore = defineStore('negocio', {
         (this.negocio.pagamentos ?? []).reduce((soma, pag) => soma + (pag.juros || 0), 0) +
         (this.negocio.parcelas ?? []).reduce((soma, np) => soma + (parseFloat(np.juros) || 0), 0)
 
-      // desconto por forma (dinheiro): fica no pagamento, fora do desconto dos itens; a nota
-      // fiscal rateia nos itens (M5 doc-3)
-      const descontoPagamentos = (this.negocio.pagamentos ?? []).reduce(
-        (soma, pag) => soma + (pag.desconto || 0),
-        0,
-      )
-
       let valortotal =
         valorprodutos +
         valorvales -
@@ -521,8 +517,7 @@ export const negocioStore = defineStore('negocio', {
         valorfrete +
         valorseguro +
         valoroutras +
-        valorjuros -
-        descontoPagamentos
+        valorjuros
 
       this.negocio.valorprodutos = Math.round(valorprodutos * 100) / 100
       this.negocio.valorvales = Math.round(valorvales * 100) / 100
@@ -580,6 +575,55 @@ export const negocioStore = defineStore('negocio', {
 
     // O dinheiro entregue (total + troco) não muda; o troco é redistribuído entre os pagamentos
     // em dinheiro (o maior primeiro) quando o saldo muda, e o principal acompanha
+    // Rateia o desconto dado no pagamento (dinheiro, M5 doc-3) no valordesconto dos itens e
+    // vales, pelos mesmos pesos do juros. Cada um guarda a fatia em valordescontopagamento
+    // (o servidor devolve a mesma conta, por uuid) para refazer o rateio sem perder o
+    // desconto digitado. Ordem por uuid, sobra no último: igual ao
+    // PdvNegocioPagamentoService::ratearDesconto.
+    ratearDescontoPagamento() {
+      const r2 = (num) => Math.round((parseFloat(num) || 0) * 100) / 100
+      const porUuid = (a, b) => (a.uuid < b.uuid ? -1 : a.uuid > b.uuid ? 1 : 0)
+      const total = r2(
+        (this.negocio.pagamentos ?? []).reduce((soma, pag) => soma + (pag.desconto || 0), 0),
+      )
+      const itens = this.negocio.itens.filter((i) => i.inativo == null).sort(porUuid)
+      const vales = (this.negocio.vales ?? []).filter((v) => v.inativo == null).sort(porUuid)
+      const alvos = [...itens, ...vales]
+      const pesos = [...itens.map((i) => r2(i.valorprodutos)), ...vales.map((v) => r2(v.valorvale))]
+      const base = r2(pesos.reduce((soma, peso) => soma + peso, 0))
+      const fatias = new Map()
+      if (total > 0 && base > 0) {
+        let soma = 0
+        alvos.forEach((alvo, i) => {
+          const fatia = i == alvos.length - 1 ? r2(total - soma) : r2((total * pesos[i]) / base)
+          soma = r2(soma + fatia)
+          fatias.set(alvo.uuid, fatia)
+        })
+      }
+      // inativos também: devolvem a fatia que tinham
+      const todos = [...this.negocio.itens, ...(this.negocio.vales ?? [])]
+      todos.forEach((alvo) => {
+        const anterior = r2(alvo.valordescontopagamento)
+        const fatia = fatias.get(alvo.uuid) ?? 0
+        if (anterior == fatia) {
+          return
+        }
+        alvo.valordesconto = r2(r2(alvo.valordesconto) - anterior + fatia) || null
+        alvo.valordescontopagamento = fatia || null
+        if (alvo.valorvale !== undefined) {
+          alvo.valortotal = r2(r2(alvo.valorvale) - r2(alvo.valordesconto))
+        } else {
+          alvo.valortotal = r2(
+            r2(alvo.valorprodutos) -
+              r2(alvo.valordesconto) +
+              r2(alvo.valorfrete) +
+              r2(alvo.valorseguro) +
+              r2(alvo.valoroutras),
+          )
+        }
+      })
+    },
+
     async recalcularTroco() {
       const pagar = this.valorapagar
       let troco = pagar < 0 ? Math.abs(pagar) : 0
@@ -1068,7 +1112,9 @@ export const negocioStore = defineStore('negocio', {
         item.valorunitario = valorunitario
         item.valorprodutos = valorprodutos
         item.percentualdesconto = percentualdesconto
+        // o dialog edita só o desconto digitado; a fatia do pagamento volta no rateio
         item.valordesconto = valordesconto
+        item.valordescontopagamento = null
         item.valorfrete = valorfrete
         item.valorseguro = valorseguro
         item.valoroutras = valoroutras
@@ -1105,6 +1151,8 @@ export const negocioStore = defineStore('negocio', {
       } else {
         item.valordesconto = Math.round(item.valorprodutos * item.percentualdesconto) / 100
       }
+      // desconto refeito do zero: a fatia do pagamento volta no rateio
+      item.valordescontopagamento = null
       this.itemRecalcularValorTotal(item)
     },
 
@@ -1312,6 +1360,7 @@ export const negocioStore = defineStore('negocio', {
         // undefined = quem chamou nem mexeu no campo; deixa como esta.
         if (valordesconto !== undefined) {
           vale.valordesconto = parseFloat(valordesconto) || null
+          vale.valordescontopagamento = null
         }
         vale.alteracao = formataTimestampIso(new Date())
         this.valeRecalcularValores(vale)
@@ -1460,6 +1509,7 @@ export const negocioStore = defineStore('negocio', {
           continue
         }
         vale.valordesconto = fatia.valordesconto
+        vale.valordescontopagamento = null
         vale.alteracao = formataTimestampIso(new Date())
         this.valeRecalcularValores(vale)
       }
@@ -1545,6 +1595,8 @@ export const negocioStore = defineStore('negocio', {
       for (let index = 0; index <= ultimoIndex; index++) {
         const item = itensOrdenados[index] // Usa o item ORDENADO
 
+        // o desconto digitado substitui o do item; a fatia do pagamento volta no rateio
+        item.valordescontopagamento = null
         aplicarRateio(
           item,
           index,

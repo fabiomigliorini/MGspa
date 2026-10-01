@@ -6,7 +6,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Mg\Filial\Filial;
 use Mg\Pessoa\PessoaCartao;
-use Mg\Portador\Portador;
 use Mg\Titulo\TituloService;
 
 /**
@@ -220,8 +219,7 @@ class BeeRecargaService
         int $codempresa,
         ?array $itens = null,
         ?string $dia = null,
-        ?string $observacao = null,
-        ?int $codportador = null
+        ?string $observacao = null
     ): BeeRecarga {
         // Serializa gerações concorrentes do mesmo período (double-submit, duas
         // abas). Sem isto, duas transações leriam a mesma prévia e criariam dois
@@ -253,24 +251,17 @@ class BeeRecargaService
         $valor = array_sum(array_column($linhas, 'valor'));
         $hoje = Carbon::today();
 
-        // O portador escolhido manda na filial do título quando ele tem uma:
-        // dizer "sai da conta do Depósito" e lançar o título no Botânico seria
-        // incoerente, e o TituloService::atualizar recusaria qualquer edição
-        // depois. Portador sem filial (Carteira, Programação Pagamentos) cai na
-        // heurística do maior valor.
-        $portador = static::portadorValidado($codportador, $codempresa);
-        $codfilial = $portador && $portador->codfilial
-            ? (int) $portador->codfilial
-            : static::codfilialDoTitulo($linhas);
+        $codfilial = static::codfilialDoTitulo($linhas);
 
         // `dia` é quando o saldo tem que estar no cartão; as datas do título
         // continuam sendo hoje, porque a conta a pagar à Beevale nasce agora.
-        // O título nasce EM ABERTO: o portador diz de onde o dinheiro vai sair,
-        // e a baixa continua sendo do Financeiro, pela tela de Liquidação.
+        // O título nasce EM ABERTO e sem portador: quem diz de onde o dinheiro
+        // saiu é o pagamento, quando o Financeiro paga (contas → Recebimentos
+        // e Pagamentos, M6 doc-3).
         $titulo = TituloService::criar([
             'codtipotitulo' => static::CODTIPOTITULO_PAGAR,
             'codfilial' => $codfilial,
-            'codportador' => $portador ? $portador->codportador : null,
+            'codportador' => null,
             'codpessoa' => static::CODPESSOA_BEEVALE,
             'codcontacontabil' => static::CODCONTACONTABIL,
             'valor' => $valor,
@@ -320,43 +311,6 @@ class BeeRecargaService
      * também a Fazenda, cuja operação está em Renascer (402) e não na filial
      * homônima 401 — uma heurística de "menor código" erraria esse caso.
      */
-    /**
-     * Portador do título, quando o RH escolheu um.
-     *
-     * O TituloService só valida filial x portador no atualizar(), não no criar()
-     * — então a validação tem que vir daqui, senão o lote nasce num estado que a
-     * tela de títulos se recusa a salvar depois.
-     *
-     * A trava que importa é a EMPRESA: o lote é de um CNPJ só, e um portador da
-     * filial errada jogaria o título a pagar na empresa errada. Portador sem
-     * filial (Carteira, Programação Pagamentos) serve a qualquer uma.
-     */
-    protected static function portadorValidado(?int $codportador, int $codempresa): ?Portador
-    {
-        if (empty($codportador)) {
-            return null;
-        }
-
-        $portador = Portador::find($codportador);
-        if (!$portador) {
-            throw new \Exception('Portador não encontrado.');
-        }
-        if ($portador->inativo) {
-            throw new \Exception("Portador {$portador->portador} está inativo.");
-        }
-
-        if ($portador->codfilial) {
-            $filial = Filial::find($portador->codfilial);
-            if (!$filial || (int) $filial->codempresa !== $codempresa) {
-                throw new \Exception(
-                    "Portador {$portador->portador} é de outra empresa — o lote é de um CNPJ só."
-                );
-            }
-        }
-
-        return $portador;
-    }
-
     protected static function codfilialDoTitulo(array $linhas): int
     {
         $porFilial = [];

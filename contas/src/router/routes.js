@@ -262,12 +262,12 @@ const routes = [
         },
       },
       {
-        path: 'liquidacao-titulo',
-        name: 'liquidacao-titulo',
-        component: () => import('pages/liquidacaoTitulo/Index.vue'),
+        path: 'pagamento',
+        name: 'pagamento',
+        component: () => import('pages/pagamento/Index.vue'),
         meta: {
           auth: true,
-          title: 'Liquidações de Títulos',
+          title: 'Recebimentos e Pagamentos',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,
@@ -276,17 +276,17 @@ const routes = [
             PERMISSOES.CAIXA,
           ],
           leftDrawer: defineAsyncComponent(
-            () => import('components/drawers/LiquidacaoTituloFiltrosDrawer.vue'),
+            () => import('components/drawers/PagamentoFiltrosDrawer.vue'),
           ),
         },
       },
       {
-        path: 'liquidacao-titulo/nova',
-        name: 'liquidacao-titulo-nova',
-        component: () => import('pages/liquidacaoTitulo/Nova.vue'),
+        path: 'pagamento/novo',
+        name: 'pagamento-novo',
+        component: () => import('pages/pagamento/Nova.vue'),
         meta: {
           auth: true,
-          title: 'Nova Liquidação',
+          title: 'Novo Recebimento ou Pagamento',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,
@@ -297,12 +297,12 @@ const routes = [
         },
       },
       {
-        path: 'liquidacao-titulo/:id(\\d+)',
-        name: 'liquidacao-titulo-detalhe',
-        component: () => import('pages/liquidacaoTitulo/Detalhe.vue'),
+        path: 'pagamento/:id(\\d+)',
+        name: 'pagamento-detalhe',
+        component: () => import('pages/pagamento/Detalhe.vue'),
         meta: {
           auth: true,
-          title: 'Liquidação',
+          title: 'Recebimento ou Pagamento',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,

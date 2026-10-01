@@ -7,7 +7,6 @@
 namespace Mg\Pix;
 
 use Mg\MgModel;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Pix\PixDevolucao;
 use Mg\Portador\PortadorMovimento;
 use Mg\Pix\PixCob;
@@ -79,10 +78,6 @@ class Pix extends MgModel
 
 
     // Tabelas Filhas
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpix', 'codpix');
-    }
 
     public function PixDevolucaoS()
     {

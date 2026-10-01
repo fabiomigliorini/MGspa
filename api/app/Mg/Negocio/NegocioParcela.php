@@ -9,7 +9,6 @@ use Mg\Usuario\Usuario;
 /**
  * O que a venda deixou para depois (M4 do plano doc-3). Vira titulo ao
  * fechar (tbltitulo.codnegocioparcela). Condicoes em NegocioParcelaService.
- * uuidforma = forma do PDV antigo que gerou a parcela (some no M5).
  */
 class NegocioParcela extends MgModel
 {
@@ -25,7 +24,6 @@ class NegocioParcela extends MgModel
         'valor',
         'juros',
         'codtitulo',
-        'uuidforma',
     ];
 
     protected $casts = [

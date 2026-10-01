@@ -911,7 +911,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('vale-escopo/favorecido', '\Mg\Pdv\PdvController@valeEscopoFavorecidos');
         Route::get('vale-escopo/favorecido/{codpessoafavorecido}/turma', '\Mg\Pdv\PdvController@valeEscopoTurmas');
         Route::get('vale-escopo/selecionar', '\Mg\Pdv\PdvController@valeEscopoSelecionar');
-        Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');
+        // recebimentos e pagamentos de titulos (M6 doc-3; era liquidacao)
+        Route::get('pagamento', '\Mg\Pdv\PdvPagamentoController@index');
         // Saurus
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
@@ -1218,7 +1219,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('pix/', '\Mg\Pix\PixController@index');
     Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
 
-    // TituloBoleto + Titulo CRUD + Liquidacao + Agrupamento
+    // TituloBoleto + Titulo CRUD + Pagamento + Agrupamento
     Route::get('titulo/boleto/abertos/resumo', '\Mg\Titulo\TituloBoletoController@abertosResumo');
     Route::get('titulo/boleto/abertos', '\Mg\Titulo\TituloBoletoController@abertosLista');
     Route::get('titulo/boleto/liquidados/navegacao', '\Mg\Titulo\TituloBoletoController@liquidadosNavegacao');
@@ -1231,15 +1232,16 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
     Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
 
-    Route::get('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@index');
-    Route::get('liquidacao-titulo/relatorio', '\Mg\Titulo\LiquidacaoTituloController@relatorio');
-    Route::get('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@show')->where('id', '[0-9]+');
-    Route::post('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@store');
-    Route::put('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@update')->where('id', '[0-9]+');
-    Route::post('liquidacao-titulo/{id}/estornar', '\Mg\Titulo\LiquidacaoTituloController@estornar')->where('id', '[0-9]+');
-    Route::get('liquidacao-titulo/{id}/recibo', '\Mg\Titulo\LiquidacaoTituloController@recibo');
-    Route::get('liquidacao-titulo/{id}/recibo-recebimento', '\Mg\Titulo\LiquidacaoTituloController@reciboRecebimento');
-    Route::get('liquidacao-titulo/{id}/recibo-pagamento', '\Mg\Titulo\LiquidacaoTituloController@reciboPagamento');
+    // Recebimentos e pagamentos de titulos (M6 doc-3; era liquidacao-titulo)
+    Route::get('pagamento', '\Mg\Pagamento\PagamentoTituloController@index');
+    Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoTituloController@relatorio');
+    Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoTituloController@show')->where('id', '[0-9]+');
+    Route::post('pagamento', '\Mg\Pagamento\PagamentoTituloController@store');
+    Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoTituloController@update')->where('id', '[0-9]+');
+    Route::post('pagamento/{id}/estornar', '\Mg\Pagamento\PagamentoTituloController@estornar')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo', '\Mg\Pagamento\PagamentoTituloController@recibo')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo-recebimento', '\Mg\Pagamento\PagamentoTituloController@reciboRecebimento')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo-pagamento', '\Mg\Pagamento\PagamentoTituloController@reciboPagamento')->where('id', '[0-9]+');
 
     Route::get('titulo-agrupamento', '\Mg\Titulo\TituloAgrupamentoController@index');
     Route::get('titulo-agrupamento/pendentes', '\Mg\Titulo\TituloAgrupamentoController@pendentes');

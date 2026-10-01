@@ -1,18 +1,21 @@
 <script setup>
 import { onMounted } from 'vue'
 import { formataNumero, formataData, formataCodigo } from '@components/formatters'
-import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
+import { usePagamentoStore } from 'src/stores/pagamentoStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
-const store = useLiquidacaoTituloStore()
+const store = usePagamentoStore()
 
 function abrirRelatorio() {
   const params = {}
   for (const [k, v] of Object.entries(store.filters)) {
     if (v !== null && v !== undefined && v !== '') params[k] = v
   }
-  abrirPdf('v1/liquidacao-titulo/relatorio', params, { title: 'Liquidações' })
+  abrirPdf('v1/pagamento/relatorio', params, { title: 'Recebimentos e Pagamentos' })
 }
+
+// CR recebeu, DB pagou, CP encontro de contas sem dinheiro
+const icone = (l) => ({ CR: 'south_west', DB: 'north_east' })[l.operacao] ?? 'sync_alt'
 
 async function carregarMais(index, done) {
   await store.fetchItems(false)
@@ -31,15 +34,15 @@ onMounted(() => {
         <q-list v-if="store.items.length > 0" bordered separator class="bg-white rounded-borders">
           <q-item
             v-for="l in store.items"
-            :key="l.codliquidacaotitulo"
+            :key="l.codpagamento"
             clickable
-            :to="{ name: 'liquidacao-titulo-detalhe', params: { id: l.codliquidacaotitulo } }"
-            :class="{ 'bg-red-1': !!l.estornado }"
+            :to="{ name: 'pagamento-detalhe', params: { id: l.codpagamento } }"
+            :class="{ 'bg-red-1': l.estado === 'C' }"
           >
             <q-item-section avatar class="gt-xs">
               <q-avatar
-                :icon="l.estornado ? 'undo' : 'paid'"
-                :color="l.estornado ? 'grey' : 'primary'"
+                :icon="l.estado === 'C' ? 'undo' : icone(l)"
+                :color="l.estado === 'C' ? 'grey' : 'primary'"
                 text-color="white"
                 size="40px"
               />
@@ -50,7 +53,10 @@ onMounted(() => {
                 {{ l.fantasia }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
-                {{ formataCodigo(l.codliquidacaotitulo) }}
+                {{ formataCodigo(l.codpagamento) }}
+                <template v-if="l.codliquidacaotituloantigo">
+                  (liquidação {{ formataCodigo(l.codliquidacaotituloantigo) }})
+                </template>
                 · {{ l.usuariocriacao || '' }}
               </q-item-label>
               <q-item-label caption class="ellipsis">
@@ -60,10 +66,10 @@ onMounted(() => {
 
             <q-item-section class="gt-xs" style="flex: 0 0 130px; min-width: 0">
               <q-item-label class="ellipsis">
-                {{ l.portador }}
+                {{ l.portador || l.meiodescricao }}
               </q-item-label>
               <q-item-label caption>
-                {{ formataData(l.transacao) }}
+                {{ l.portador ? l.meiodescricao + ' · ' : '' }}{{ formataData(l.lancamento) }}
               </q-item-label>
             </q-item-section>
 
@@ -72,24 +78,28 @@ onMounted(() => {
                 class="text-weight-bold text-right"
                 :class="l.operacao === 'CR' ? 'text-orange' : 'text-green'"
               >
-                {{ formataNumero(l.valor) }} {{ l.operacao }}
+                {{ formataNumero(l.total) }} {{ l.operacao }}
               </q-item-label>
-              <q-item-label v-if="l.estornado" caption class="text-right text-negative">
+              <q-item-label v-if="l.estado === 'C'" caption class="text-right text-negative">
                 Estornado
               </q-item-label>
-              <q-item-label v-if="l.codperiodo" caption class="text-right text-grey-7">
-                RH #{{ l.codperiodo }}
+              <q-item-label
+                v-if="l.codperiodocolaboradoracerto"
+                caption
+                class="text-right text-grey-7"
+              >
+                Acerto RH
               </q-item-label>
             </q-item-section>
           </q-item>
         </q-list>
 
         <div v-else-if="!store.loading" class="text-center text-grey q-pa-xl">
-          Nenhuma liquidação encontrada
+          Nenhum recebimento ou pagamento encontrado
         </div>
 
         <div v-if="store.items.length" class="text-caption text-grey q-mt-md text-center">
-          {{ store.items.length }} de {{ store.total }} liquidação(ões)
+          {{ store.items.length }} de {{ store.total }}
         </div>
       </div>
 
@@ -105,8 +115,8 @@ onMounted(() => {
         <q-btn fab-mini color="grey-8" icon="print" @click="abrirRelatorio">
           <q-tooltip anchor="top middle" self="bottom middle">Relatório</q-tooltip>
         </q-btn>
-        <q-btn fab icon="add" color="primary" :to="{ name: 'liquidacao-titulo-nova' }">
-          <q-tooltip anchor="top middle" self="bottom middle">Nova Liquidação</q-tooltip>
+        <q-btn fab icon="add" color="primary" :to="{ name: 'pagamento-novo' }">
+          <q-tooltip anchor="top middle" self="bottom middle">Receber ou Pagar Títulos</q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>

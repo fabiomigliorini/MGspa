@@ -50,57 +50,39 @@ onMounted(() => {
       </q-item-section>
     </q-item>
 
-    <!-- CODLIQUIDACAO -->
+    <!-- CODPAGAMENTO -->
     <q-item>
       <q-item-section>
         <MgInputValor
           :decimals="0"
           :min="1"
           :grouping="false"
-          v-model="sLiquidacao.filtro.codliquidacao"
-          label="# Liquidação"
+          v-model="sLiquidacao.filtro.codpagamento"
+          label="# Pagamento (ou liquidação antiga)"
         />
       </q-item-section>
     </q-item>
 
-    <!-- LANCAMENTO_DE -->
+    <!-- DATA_DE -->
     <q-item>
       <q-item-section>
         <MgInputData
           type="timestamp"
           :seconds="false"
-          v-model="sLiquidacao.filtro.transacao_de"
+          v-model="sLiquidacao.filtro.lancamento_de"
           label="De"
         />
       </q-item-section>
     </q-item>
 
-    <!-- LANCAMENTO_ATE -->
+    <!-- DATA_ATE -->
     <q-item>
       <q-item-section>
         <MgInputData
           type="timestamp"
           :seconds="false"
-          v-model="sLiquidacao.filtro.transacao_ate"
+          v-model="sLiquidacao.filtro.lancamento_ate"
           label="Até"
-        />
-      </q-item-section>
-    </q-item>
-
-    <!-- PESQUISAR EM -->
-    <q-item>
-      <q-item-section>
-        <q-select
-          outlined
-          v-model="sLiquidacao.filtro.pesquisar"
-          label="Pesquisar por"
-          clearable
-          :options="[
-            { value: 'LIQ', label: 'Total Liquidação' },
-            { value: 'MOV', label: 'Títulos' },
-          ]"
-          map-options
-          emit-value
         />
       </q-item-section>
     </q-item>
@@ -112,19 +94,33 @@ onMounted(() => {
       </q-item-section>
     </q-item>
 
-    <!-- TIPO -->
+    <!-- SENTIDO -->
     <q-item>
       <q-item-section>
         <q-select
           outlined
-          v-model="sLiquidacao.filtro.tipo"
-          label="Tipo"
+          v-model="sLiquidacao.filtro.sentido"
+          label="Sentido"
           clearable
-          :options="[
-            { value: 'DB', label: 'Débito' },
-            { value: 'CR', label: 'Crédito' },
-          ]"
+          :options="sLiquidacao.opcoes.sentido"
           map-options
+          emit-value
+        />
+      </q-item-section>
+    </q-item>
+
+    <!-- MEIO -->
+    <q-item>
+      <q-item-section>
+        <q-select
+          outlined
+          v-model="sLiquidacao.filtro.meio"
+          multiple
+          label="Meio"
+          clearable
+          :options="sLiquidacao.opcoes.meio"
+          map-options
+          emit-value
         />
       </q-item-section>
     </q-item>
@@ -149,20 +145,6 @@ onMounted(() => {
             prefix="R$"
           />
         </div>
-      </q-item-section>
-    </q-item>
-
-    <!-- INTEGRACAO -->
-    <q-item>
-      <q-item-section>
-        <q-select
-          outlined
-          v-model="sLiquidacao.filtro.integracao"
-          multiple
-          :options="sLiquidacao.opcoes.integracao"
-          label="Integração Pagamento"
-          clearable
-        />
       </q-item-section>
     </q-item>
 

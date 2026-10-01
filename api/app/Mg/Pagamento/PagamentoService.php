@@ -47,6 +47,56 @@ class PagamentoService
 
     const MEIOS_CARTAO = [self::MEIO_CREDITO, self::MEIO_DEBITO];
 
+    // bandeira do cartao (codigo da NF-e)
+    const BANDEIRAS = [
+        1 => 'Visa',
+        2 => 'Mastercard',
+        3 => 'American Express',
+        4 => 'Sorocred',
+        5 => 'Diners Club',
+        6 => 'Elo',
+        7 => 'Hipercard',
+        8 => 'Aura',
+        9 => 'Cabal',
+        99 => 'Outros'
+    ];
+
+    // tPag da NF-e (grupo pag da nota)
+    const TPAG = [
+        01 => 'Dinheiro',
+        02 => 'Cheque',
+        03 => 'Cartão de Crédito',
+        04 => 'Cartão de Débito',
+        05 => 'Crédito Loja',
+        10 => 'Vale Alimentação',
+        11 => 'Vale Refeição',
+        12 => 'Vale Presente',
+        13 => 'Vale Combustível',
+        15 => 'Boleto Bancário',
+        16 => 'Depósito Bancário',
+        17 => 'Pagamento Instantâneo (PIX)',
+        18 => 'Transferência bancária, Carteira Digital',
+        19 => 'Programa de fidelidade, Cashback, Crédito Virtual',
+        90 => 'Sem pagamento',
+        99 => 'Outros'
+    ];
+
+    // portador (adquirente) do Mercos Pay: o pagamento dele e' meio 99 com
+    // destino aqui
+    const CODPORTADOR_MERCOSPAY = 202046;
+
+    // Descricao do pagamento na nota e nas telas: o meio, ou a integracao
+    public static function descricao(Pagamento $pag): string
+    {
+        if (!empty($pag->codpixcob)) {
+            return 'PIX QR Code';
+        }
+        if ($pag->meio == static::MEIO_OUTROS && $pag->codportadordestino == static::CODPORTADOR_MERCOSPAY) {
+            return 'Mercos Pay';
+        }
+        return static::MEIOS[$pag->meio] ?? 'Outros';
+    }
+
     const ESTADO_PENDENTE = 'P';
     const ESTADO_EFETIVADO = 'E';
     const ESTADO_CANCELADO = 'C';

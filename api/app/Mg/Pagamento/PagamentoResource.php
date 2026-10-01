@@ -3,7 +3,6 @@
 namespace Mg\Pagamento;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Mg\Negocio\NegocioFormaPagamentoService;
 
 class PagamentoResource extends JsonResource
 {
@@ -12,7 +11,7 @@ class PagamentoResource extends JsonResource
         $ret = parent::toArray($request);
         $ret['meiodescricao'] = PagamentoService::MEIOS[$this->meio] ?? null;
         $ret['estadodescricao'] = PagamentoService::ESTADOS[$this->estado] ?? null;
-        $ret['nomebandeira'] = NegocioFormaPagamentoService::BANDEIRAS[$this->bandeira] ?? null;
+        $ret['nomebandeira'] = PagamentoService::BANDEIRAS[$this->bandeira] ?? null;
         $ret['integrado'] = $this->ehIntegrado();
         $ret['saida'] = $this->ehSaida();
         $ret['parceiro'] = $this->Pessoa->fantasia ?? null;

@@ -17,10 +17,10 @@ const menuGroups = [
     items: [
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
-        label: 'Liquidações',
+        label: 'Recebimentos e Pagamentos',
         icon: 'paid',
         color: 'indigo-7',
-        to: { name: 'liquidacao-titulo' },
+        to: { name: 'pagamento' },
       },
       {
         label: 'Agrupamentos',

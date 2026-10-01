@@ -3,7 +3,6 @@ import MgInput from '@components/MgInput.vue'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
-import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
@@ -11,13 +10,13 @@ import MgInputData from '@components/MgInputData.vue'
 import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
 import { formataNumero, formataDataIso } from '@components/formatters'
 import { useAuthStore } from 'src/stores/auth'
-import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
+import { usePagamentoStore, MEIOS, meioDoTipo } from 'src/stores/pagamentoStore'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 const router = useRouter()
 const $q = useQuasar()
 const auth = useAuthStore()
-const store = useLiquidacaoTituloStore()
+const store = usePagamentoStore()
 const selectCache = useSelectCacheStore()
 
 const filiaisPortador = computed(() => auth.filiaisRestritas())
@@ -34,32 +33,50 @@ const finalizar = ref({
   transacao: formataDataIso(new Date()),
   codpessoa: null,
   codportador: null,
+  meio: null,
   observacao: '',
 })
 
 const podeAvancar = computed(() => titulos.value.length > 0)
 
+// títulos que se anulam: encontro de contas sem dinheiro, sem portador nem meio
+const compensacao = computed(() => Math.abs(totalLiquido.value) < 0.005)
+
+const descricaoOperacao = computed(() => {
+  if (compensacao.value) return 'Encontro de contas'
+  return operacao.value === 'CR' ? 'Recebimento' : 'Pagamento'
+})
+
+// meio sugerido pelo tipo do portador escolhido (editável)
+const portadorEscolhido = (p) => {
+  finalizar.value.meio = p ? meioDoTipo(p.tipo) : null
+}
+
 const portadorCacheKey = () =>
-  auth.usuario?.codusuario ? `liquidacao-titulo:ultimoPortador:${auth.usuario.codusuario}` : null
+  auth.usuario?.codusuario ? `pagamento:ultimoPortador:${auth.usuario.codusuario}` : null
 
 async function abrirFinalizar() {
   // Sugere pessoa quando todos os títulos têm a mesma
   const codpessoas = new Set(titulos.value.map((l) => l.codpessoa).filter((v) => v != null))
   finalizar.value.codpessoa = codpessoas.size === 1 ? [...codpessoas][0] : null
 
-  // Sugere último portador do usuário (se disponível na sua filial)
+  // Sugere último portador do usuário (se disponível na sua filial e não for gaveta)
   finalizar.value.codportador = null
+  finalizar.value.meio = null
   const key = portadorCacheKey()
   const cod = key ? Number(localStorage.getItem(key)) : null
-  if (cod) {
+  if (cod && !compensacao.value) {
     await selectCache.loadList('portador', 'v1/select/portador')
     const filiais = filiaisPortador.value
-    const disponivel = (selectCache.entities.portador?.items || []).some((p) => {
-      if (Number(p.codportador) !== cod) return false
+    const portador = (selectCache.entities.portador?.items || []).find((p) => {
+      if (Number(p.codportador) !== cod || p.gaveta) return false
       if (filiais == null) return true
       return filiais.map(Number).includes(Number(p.codfilial))
     })
-    if (disponivel) finalizar.value.codportador = cod
+    if (portador) {
+      finalizar.value.codportador = cod
+      portadorEscolhido(portador)
+    }
   }
 
   dialogFinalizar.value = true
@@ -70,13 +87,13 @@ async function salvar() {
     notifyError({ message: 'Selecione a pessoa!' }, 'Selecione a pessoa')
     return
   }
-  if (!finalizar.value.codportador) {
+  if (!compensacao.value && !finalizar.value.codportador) {
     notifyError({ message: 'Selecione um portador!' }, 'Selecione um portador')
     return
   }
   $q.dialog({
     title: 'Confirmar',
-    message: 'Tem certeza que deseja salvar a liquidação?',
+    message: `Confirma o ${descricaoOperacao.value.toLowerCase()}?`,
     ok: { label: 'Confirmar', color: 'primary', flat: true },
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
   }).onOk(async () => {
@@ -84,7 +101,8 @@ async function salvar() {
     try {
       const payload = {
         codpessoa: finalizar.value.codpessoa,
-        codportador: finalizar.value.codportador,
+        codportador: compensacao.value ? null : finalizar.value.codportador,
+        meio: compensacao.value ? null : finalizar.value.meio,
         transacao: finalizar.value.transacao,
         observacao: finalizar.value.observacao || null,
         titulos: titulos.value.map((l) => ({
@@ -96,17 +114,13 @@ async function salvar() {
           total: l.total,
         })),
       }
-      const { data } = await api.post('v1/liquidacao-titulo', payload)
-      store.upsertLocal(data.data)
+      const pag = await store.criar(payload)
       const key = portadorCacheKey()
-      if (key) localStorage.setItem(key, String(payload.codportador))
-      notifySuccess('Liquidação criada')
-      router.replace({
-        name: 'liquidacao-titulo-detalhe',
-        params: { id: data.data.codliquidacaotitulo },
-      })
+      if (key && payload.codportador) localStorage.setItem(key, String(payload.codportador))
+      notifySuccess(descricaoOperacao.value + ' registrado')
+      router.replace({ name: 'pagamento-detalhe', params: { id: pag.codpagamento } })
     } catch (e) {
-      notifyError(e, 'Erro ao salvar liquidação')
+      notifyError(e, 'Erro ao salvar')
     } finally {
       saving.value = false
     }
@@ -124,12 +138,12 @@ async function salvar() {
             dense
             round
             icon="arrow_back"
-            :to="{ name: 'liquidacao-titulo' }"
+            :to="{ name: 'pagamento' }"
             aria-label="Voltar"
           />
         </q-item-section>
         <q-item-section>
-          <div class="text-h5 text-grey-9">Nova Liquidação</div>
+          <div class="text-h5 text-grey-9">Receber ou Pagar Títulos</div>
         </q-item-section>
       </q-item>
 
@@ -147,7 +161,7 @@ async function salvar() {
     <!-- FAB Salvar -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn fab icon="save" color="primary" :disable="!podeAvancar" @click="abrirFinalizar">
-        <q-tooltip>Finalizar Liquidação</q-tooltip>
+        <q-tooltip>Finalizar</q-tooltip>
       </q-btn>
     </q-page-sticky>
 
@@ -156,7 +170,7 @@ async function salvar() {
       <q-card bordered flat style="width: 500px; max-width: 90vw">
         <q-form @submit.prevent="salvar">
           <q-card-section class="items-center q-pb-none">
-            <div class="text-grey-9 text-overline">FINALIZAR</div>
+            <div class="text-grey-9 text-overline">{{ descricaoOperacao }}</div>
             <div class="text-grey-7 q-mb-md text-caption">
               {{ titulos.length }} títulos selecionados — R$ {{ formataNumero(totalLiquido) }}
               {{ operacao }}
@@ -174,14 +188,32 @@ async function salvar() {
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
-              <div class="col-xs-12 col-sm-8">
+              <div class="col-xs-12 col-sm-8" v-if="!compensacao">
                 <MgSelectPortador
                   v-model="finalizar.codportador"
                   outlined
                   label="Portador"
                   :rules="[(v) => !!v || 'Obrigatório']"
                   :filiais="filiaisPortador"
+                  sem-gaveta
                   autofocus
+                  @select="portadorEscolhido"
+                />
+              </div>
+              <div class="col-xs-12 col-sm-8" v-else>
+                <div class="text-body2 text-grey-8 q-pt-sm">
+                  Os títulos se anulam: encontro de contas, sem dinheiro e sem portador.
+                </div>
+              </div>
+              <div class="col-xs-12 col-sm-6" v-if="!compensacao">
+                <q-select
+                  v-model="finalizar.meio"
+                  :options="MEIOS"
+                  emit-value
+                  map-options
+                  outlined
+                  label="Meio"
+                  :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
               <div class="col-xs-12">
@@ -199,7 +231,7 @@ async function salvar() {
                   outlined
                   type="textarea"
                   label="Observação"
-                  maxlength="200"
+                  maxlength="300"
                   autogrow
                 />
               </div>

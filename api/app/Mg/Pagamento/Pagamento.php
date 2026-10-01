@@ -14,6 +14,7 @@ use Mg\Pessoa\Pessoa;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
+use Mg\Rh\PeriodoColaboradorAcerto;
 use Mg\Saurus\SaurusPedido;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\Titulo;
@@ -65,6 +66,8 @@ class Pagamento extends MgModel
         'codsauruspedido',
         'codliopedido',
         'codtitulo',
+        'codliquidacaotituloantigo',
+        'codperiodocolaboradoracerto',
         'cmc7',
         'chequevencimento',
         'chequecnpj',
@@ -93,6 +96,8 @@ class Pagamento extends MgModel
         'codportadororigem' => 'integer',
         'codsauruspedido' => 'integer',
         'codtitulo' => 'integer',
+        'codliquidacaotituloantigo' => 'integer',
+        'codperiodocolaboradoracerto' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocancelamento' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -124,6 +129,12 @@ class Pagamento extends MgModel
     public function ehSaida(): bool
     {
         return !empty($this->codportadororigem) && empty($this->codportadordestino);
+    }
+
+    // Portador do pagamento: o destino (recebimento) ou a origem (pagamento)
+    public function portadorDoPagamento(): ?Portador
+    {
+        return $this->PortadorDestino ?? $this->PortadorOrigem;
     }
 
     // Chaves Estrangeiras
@@ -190,6 +201,11 @@ class Pagamento extends MgModel
     public function PortadorOrigem()
     {
         return $this->belongsTo(Portador::class, 'codportadororigem', 'codportador');
+    }
+
+    public function PeriodoColaboradorAcerto()
+    {
+        return $this->belongsTo(PeriodoColaboradorAcerto::class, 'codperiodocolaboradoracerto', 'codperiodocolaboradoracerto');
     }
 
     public function SaurusPedido()

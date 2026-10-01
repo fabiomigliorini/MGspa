@@ -103,7 +103,9 @@ const editar = async (uuid) => {
   edicao.value.valorunitario = item.valorunitario
   edicao.value.valorprodutos = item.valorprodutos
   edicao.value.percentualdesconto = item.percentualdesconto
-  edicao.value.valordesconto = item.valordesconto
+  // só o desconto digitado (a parte do pagamento é rateada sozinha)
+  edicao.value.valordesconto =
+    Math.round(((item.valordesconto || 0) - (item.valordescontopagamento || 0)) * 100) / 100 || null
   edicao.value.valorfrete = item.valorfrete
   edicao.value.valorseguro = item.valorseguro
   edicao.value.valoroutras = item.valoroutras

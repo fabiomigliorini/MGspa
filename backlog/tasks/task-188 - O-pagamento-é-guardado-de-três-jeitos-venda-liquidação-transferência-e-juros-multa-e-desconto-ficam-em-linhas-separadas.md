@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-01 02:24'
+updated_date: '2026-10-01 14:53'
 labels:
   - contas
   - negocios
@@ -58,10 +58,10 @@ Milestones:
 - [x] #8 M2.3 Cada PDV de caixa aponta para a sua gaveta, e só aceita portador em espécie da mesma filial
 - [x] #9 M3.1 As maquinetas das duas operadoras e as manuais ficam num cadastro só no contas
 - [x] #10 M3.2 No PDV o cartão manual escolhe a maquineta da lista da filial em vez de digitar o serial, e o pagamento fica gravado com ela
-- [ ] #11 M4.1 A venda grava pagamentos e parcelas no formato novo, com o histórico copiado e os mesmos totais por negócio
-- [ ] #12 M4.2 Cada parcela a prazo vira título ao fechar a venda
-- [ ] #13 M4.3 NF-e e NFC-e, DIMP, romaneio e conferência do PDV saem iguais em todas as formas de pagamento
-- [ ] #14 M4.4 Totais de Caixa do MG Lara e NFe de Terceiros do MGsis continuam funcionando
+- [x] #11 M4.1 A venda grava pagamentos e parcelas no formato novo, com o histórico copiado e os mesmos totais por negócio
+- [x] #12 M4.2 Cada parcela a prazo vira título ao fechar a venda
+- [x] #13 M4.3 NF-e e NFC-e, DIMP, romaneio e conferência do PDV saem iguais em todas as formas de pagamento
+- [x] #14 M4.4 Totais de Caixa do MG Lara e NFe de Terceiros do MGsis continuam funcionando
 - [ ] #15 M5.1 Receber no PDV (F6 a F9) funciona como antes em todas as formas, com o wizard separado da venda
 - [ ] #16 M5.2 Na venda a prazo dá para ajustar vencimento e valor de cada parcela antes de fechar
 - [ ] #17 M5.3 A venda para o fechamento mensal vence no último dia útil do mês seguinte
@@ -128,4 +128,38 @@ Dúvidas para o Fábio (M5):
 1. Desconto por forma: qual percentual sugerir no dinheiro (hoje 0%, o operador digita com a tecla −)? E no PIX: o QR não tem onde guardar o desconto (tblpixcob) e PIX por chave é parcela — quer desconto no PIX? Precisa de coluna nova no tblpixcob.
 2. O desconto do pagamento é rateado nos itens só na nota fiscal (o item não separa desconto digitado de desconto do pagamento sem coluna nova). Está bom assim ou prefere uma coluna valordescontopagamento no item, como o valorjuros?
 3. Quando tirar o formato antigo (tradutor NegocioFormaPagamentoService, uuidforma, cabeçalho)? Proposta: algumas semanas depois do go-live, numa limpeza própria.
+
+M6 em andamento (30/09/2026): pagamento no lugar da liquidação. Conferência do banco e do código antes de codar.
+
+M6 implementado em dev em 30/09/2026, na árvore, sem commit (ACs M6.x desmarcados até a validação de M4+M5+M6). DDL api/database/pagamento_liquidacao.sql (script próprio, depois do pagamento.sql), rodado 2x em dev: 175.766 liquidações → pagamentos (código novo, codliquidacaotituloantigo), 436.875 movimentos reapontados, dinheiro por portador e mês igual (conferência dentro do script); view tblliquidacaotitulo conferida contra o dump (debito/credito iguais, menos 8 liquidações antigas com débito negativo); 229 encontros mistos com juros/multa/desconto zerados no pagamento; pseudoportadores inativados. Backend: Mg/Pagamento/PagamentoTituloService::{receber, pagar, estornar, daBaixa}, autorizador, controller (rotas v1/pagamento), resources, relatório e recibos; movimento perdeu codliquidacaotitulo; boleto BB e retorno Bradesco criam pagamento por baixa; acerto de RH cria pagamento por evento (inativar cancela, reativar cria outro); v1/pdv/pagamento no lugar de v1/pdv/liquidacao. contas: Recebimentos e Pagamentos (lista, detalhe, receber/pagar sem gaveta, estorno com justificativa, recibos, relatório). negocios: listagem de pagamentos com título (filtros corrigidos). pessoas: link do pagamento no evento do acerto. MGsis: MovimentoTitulo.php declara codliquidacaotitulo como propriedade (sobe junto). Conferido: php -l, lint contas/negocios/pessoas, simulação por API com rollback (receber em banco com juros/multa/desconto, recibo PDF, estorno e estorno repetido, pagar fornecedor com PIX, encontro de contas e estorno, sem portador 422, gaveta 422, cofre em dinheiro, listagem/filtros/código antigo/detalhe histórico, relatório HTML e PDF, listagem do PDV, acerto B/D/F + inativar/reativar, boleto BB reprocessado), M5 refeito depois do M6 sem regressão, e as telas do contas abertas no navegador sem erro. Não testado: tela do MGsis (console sem conexão), Totais de Caixa do MG Lara na tela (só a consulta dele contra a view).
+
+Dúvidas para o Fábio (M6):
+1. Acerto de RH sem portador: o evento não diz de qual conta saiu (B) nem de qual caixa (D). Fica sem origem até o M10/M11, ou o acerto passa a pedir o portador?
+2. Forma F do acerto: usei o meio folha (92); o doc diz 'F folha = compensação'. Folha ou compensação (91)?
+3. Meio do histórico para portador adquirente (Asaas, Mercos Pay, Cielo, Mercado Pago) = transferência e cartão da empresa = crédito; 'outros' (Carteira, Cobrador Externo, Brad Expresso, Pagfacil) = outros; Programação Pagamentos = compensação. Confere?
+4. Programação Pagamentos (202016) foi inativado com os pseudoportadores, mas o RH (recarga Bee) cita ele como portador de título a pagar. Reativo?
+5. Baixas antigas de boleto BB pela API (5,6 mil, sem liquidação) e eventos de acerto que existirem em produção no go-live ficaram sem pagamento. Cria no script?
+6. A liquidação podia ser editada (pessoa, portador, data); o pagamento não. Tudo bem só estornar e lançar de novo?
+
+M4 validado pelo Fábio em 01/10/2026.
+
+Respostas do Fábio às dúvidas de M5/M6 (01/10/2026):
+1. Desconto por forma: fica o do dinheiro (tecla −); a regra completa (forma de pagamento + categoria de cliente) vai para a TASK-190 (criada a pedido, High).
+2. Desconto do pagamento rateado pelo PDV na coluna valordesconto que já existe nos itens/vales (sai o rateio feito na NF-e).
+3. Formato antigo do PDV (tradutor, uuidforma, cabeçalho) sai junto no go-live.
+4. Acerto de RH passa a pedir o portador (B banco, D caixa/cofre), gravado como origem do pagamento.
+5. Forma F do acerto = meio folha (92).
+6. Meio do histórico das liquidações confere.
+7. Recarga Bee não usa Programação Pagamentos: o título nasce sem portador; quem diz o portador é o pagamento, quando o financeiro paga.
+8. pagamento_liquidacao.sql cria também os pagamentos das baixas antigas de boleto BB e dos eventos de acerto existentes.
+9. Pagamento de título volta a ser editável como a liquidação (pessoa, portador, data).
+
+Respostas aplicadas em dev em 01/10/2026 (vão no commit do M6, junto com a correção do M5):
+- Desconto do pagamento rateado pelo PDV no valordesconto dos itens/vales (fatia em valordescontopagamento, devolvida pelo NegocioResource com a mesma conta); saiu o rateio da NF-e e o ajuste de total no servidor.
+- Formato antigo do PDV removido: NegocioFormaPagamentoService apagado, cabeçalho X-Pagamento-Formato fora, uuidforma derrubada no cobranca_documento.sql (view tblnegocioformapagamento agrupa por condição). Achado e corrigido: o romaneio ainda lia o formato antigo (500 no romaneio).
+- Acerto de RH: B é Recarga Bee (não banco) → compensação sem portador (resposta do Fábio); D pede caixa/cofre (espécie), origem/destino pelo sinal do saldo; F folha. Reativar usa o mesmo portador.
+- Recarga Bee sem portador: título nasce sem portador.
+- pagamento_liquidacao.sql seção 5: 70.600 baixas de boleto (BB + Bradesco) e 16 eventos de acerto ganharam pagamento em dev; a view do MG Lara não mostra boleto nem acerto.
+- Edição do pagamento de título (PUT v1/pagamento/{id}: pessoa, portador, meio, data, observação), exceção à regra de imutabilidade.
+Conferido: php -l, lint negocios/contas/pessoas, simulação M5 (todas as formas, fatia do desconto devolvida) e M6 (inclui edição, edição para gaveta = 422, acerto D sem portador = 422, B/D/F), romaneio renderizado, smoke no navegador (desconto rateado no item: desconto 5, fatia 5, total 295; crediário 2x fechando).
 <!-- SECTION:NOTES:END -->

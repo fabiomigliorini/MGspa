@@ -10,7 +10,6 @@ use Mg\MgModel;
 use Mg\Portador\PortadorMovimento;
 use Mg\Boleto\BoletoRetorno;
 use Mg\Cobranca\Cobranca;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Portador\Portador;
 use Mg\Titulo\TipoMovimentoTitulo;
 use Mg\Titulo\Titulo;
@@ -28,7 +27,6 @@ class MovimentoTitulo extends MgModel
     protected $fillable = [
         'codboletoretorno',
         'codcobranca',
-        'codliquidacaotitulo',
         'codmovimentotituloestorno',
         'codpagamento',
         'codperiodocolaboradoracerto',
@@ -51,7 +49,6 @@ class MovimentoTitulo extends MgModel
         'alteracao' => 'datetime',
         'codboletoretorno' => 'integer',
         'codcobranca' => 'integer',
-        'codliquidacaotitulo' => 'integer',
         'codmovimentotitulo' => 'integer',
         'codmovimentotituloestorno' => 'integer',
         'codpagamento' => 'integer',
@@ -94,11 +91,6 @@ class MovimentoTitulo extends MgModel
     public function Cobranca()
     {
         return $this->belongsTo(Cobranca::class, 'codcobranca', 'codcobranca');
-    }
-
-    public function LiquidacaoTitulo()
-    {
-        return $this->belongsTo(LiquidacaoTitulo::class, 'codliquidacaotitulo', 'codliquidacaotitulo');
     }
 
     public function MovimentoTituloEstorno()

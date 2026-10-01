@@ -4,7 +4,7 @@ namespace Mg\NotaFiscal\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 
-use Mg\Negocio\NegocioFormaPagamentoService;
+use Mg\Pagamento\PagamentoService;
 use Mg\NotaFiscal\NotaFiscalPagamento;
 
 class NotaFiscalPagamentoResource extends JsonResource
@@ -19,7 +19,7 @@ class NotaFiscalPagamentoResource extends JsonResource
 
             // Dados do Pagamento
             'tipo' => $this->tipo,
-            'tipodescricao' => NegocioFormaPagamentoService::TIPOS[$this->tipo] ?? null,
+            'tipodescricao' => PagamentoService::TPAG[$this->tipo] ?? null,
             'descricao' => $this->descricao,
             'valorpagamento' => $this->valorpagamento,
             'avista' => $this->avista,
@@ -27,7 +27,7 @@ class NotaFiscalPagamentoResource extends JsonResource
 
             // Cartão
             'bandeira' => $this->bandeira,
-            'bandeiradescricao' => NegocioFormaPagamentoService::BANDEIRAS[$this->bandeira] ?? null,
+            'bandeiradescricao' => PagamentoService::BANDEIRAS[$this->bandeira] ?? null,
             'autorizacao' => $this->autorizacao,
             'integracao' => $this->integracao,
 

@@ -15,7 +15,23 @@ export const liquidacaoStore = defineStore('liquidacao', {
   },
   state: () => ({
     opcoes: {
-      integracao: ['Manual', 'Integrado'],
+      sentido: [
+        { value: 'R', label: 'Recebimentos' },
+        { value: 'P', label: 'Pagamentos' },
+        { value: 'C', label: 'Encontro de contas' },
+      ],
+      meio: [
+        { value: 1, label: 'Dinheiro' },
+        { value: 2, label: 'Cheque' },
+        { value: 3, label: 'Cartão Crédito' },
+        { value: 4, label: 'Cartão Débito' },
+        { value: 15, label: 'Boleto' },
+        { value: 17, label: 'PIX' },
+        { value: 18, label: 'Transferência' },
+        { value: 91, label: 'Compensação' },
+        { value: 92, label: 'Folha' },
+        { value: 99, label: 'Outros' },
+      ],
     },
     counter: 0,
     listagem: [],
@@ -39,22 +55,25 @@ export const liquidacaoStore = defineStore('liquidacao', {
 
   actions: {
     async inicializaFiltro() {
+      // filtro guardado ainda da liquidação (antes do M6): recomeça
+      if (Object.keys(this.filtro).length > 0 && !('lancamento_de' in this.filtro)) {
+        this.filtro = {}
+      }
       if (Object.keys(this.filtro).length > 0) {
         return
       }
       const filtro = {
         codpdv: null,
-        codusuariocriacao: 1,
+        codusuariocriacao: null,
         codportador: null,
-        codliquidacao: null,
-        transacao_de: moment().subtract(7, 'd').startOf('day').format('YYYY-MM-DD HH:mm'),
-        transacao_ate: formataTimestampIso(moment().endOf('day').toDate()),
-        pesquisar: 'LIQ',
+        codpagamento: null,
+        lancamento_de: moment().subtract(7, 'd').startOf('day').format('YYYY-MM-DD HH:mm'),
+        lancamento_ate: formataTimestampIso(moment().endOf('day').toDate()),
         codpessoa: null,
-        tipo: null,
+        sentido: null,
+        meio: [],
         valor_de: null,
         valor_ate: null,
-        integracao: [],
       }
       const pdv = await sPdv.findByUuid(sSinc.pdv.uuid)
       if (pdv) {
@@ -79,7 +98,7 @@ export const liquidacaoStore = defineStore('liquidacao', {
         const filtro = { ...this.filtro }
         filtro.pdv = sSinc.pdv.uuid
         filtro.page = this.paginacao.current_page + 1
-        const { data } = await api.get('/v1/pdv/liquidacao', {
+        const { data } = await api.get('/v1/pdv/pagamento', {
           params: filtro,
         })
         if (filtro.page == 1) {

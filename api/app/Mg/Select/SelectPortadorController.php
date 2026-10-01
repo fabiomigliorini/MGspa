@@ -18,6 +18,7 @@ class SelectPortadorController extends Controller
                 p.agencia, p.agenciadigito,
                 p.conta, p.contadigito,
                 p.pixdict, p.inativo,
+                exists (select 1 from tblpdv d where d.codportador = p.codportador) as gaveta,
                 p.codportador as value, p.portador as label
             from tblportador p
             left join tblfilial f on (f.codfilial = p.codfilial)
@@ -61,6 +62,7 @@ class SelectPortadorController extends Controller
                 p.agencia, p.agenciadigito,
                 p.conta, p.contadigito,
                 p.pixdict, p.inativo,
+                exists (select 1 from tblpdv d where d.codportador = p.codportador) as gaveta,
                 p.codportador as value, p.portador as label
             from tblportador p
             left join tblfilial f on (f.codfilial = p.codfilial)

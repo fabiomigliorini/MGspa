@@ -49,22 +49,28 @@ class NegocioResource extends Resource
         $ret['estoquelocal'] = $this->EstoqueLocal->estoquelocal;
         $ret['fantasia'] = $this->Pessoa->fantasia;
         $ret['fantasiavendedor'] = $this->PessoaVendedor->fantasia ?? null;
-        $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS()->orderBy('alteracao', 'desc')->get());
-        // PDV novo (M5 doc-3) le' pagamentos e parcelas no formato novo; o
-        // antigo, a forma de pagamento, ate todos os PDVs atualizarem
-        if (PdvNegocioPagamentoService::formatoNovo()) {
-            $ret['pagamentos'] = PdvNegocioPagamentoService::pagamentos($this->resource);
-            $ret['parcelas'] = PdvNegocioPagamentoService::parcelas($this->resource);
-        } else {
-            $ret['pagamentos'] = NegocioFormaPagamentoService::formaAntiga($this->resource);
+        // fatia de cada item/vale no desconto do pagamento (o PDV refaz o
+        // rateio com ela, M5 doc-3)
+        $fatias = PdvNegocioPagamentoService::ratearDesconto($this->resource);
+        $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS()->orderBy('alteracao', 'desc')->get())->resolve();
+        foreach ($ret['itens'] as &$item) {
+            $item['valordescontopagamento'] = $fatias[$item['uuid']] ?? null;
         }
+        unset($item);
+        // pagamentos e parcelas como o PDV le' (M5 doc-3)
+        $ret['pagamentos'] = PdvNegocioPagamentoService::pagamentos($this->resource);
+        $ret['parcelas'] = PdvNegocioPagamentoService::parcelas($this->resource);
         // formato novo (M4 doc-3)
         $ret['PagamentoS'] = PagamentoResource::collection($this->PagamentoS()->orderBy('codpagamento')->get());
         $ret['NegocioParcelaS'] = NegocioParcelaResource::collection($this->NegocioParcelaS()->orderBy('codnegocioparcela')->get());
         // Vale compras: bloco proprio do negocio, com os itens dentro de cada vale.
         // Vale inativo (excluido no PDV) viaja junto, como o item de mercadoria, para
         // o offline saber que a linha existe e nao tentar criar outra pelo mesmo uuid.
-        $ret['vales'] = NegocioValeResource::collection($this->NegocioValeS);
+        $ret['vales'] = NegocioValeResource::collection($this->NegocioValeS)->resolve();
+        foreach ($ret['vales'] as &$vale) {
+            $vale['valordescontopagamento'] = $fatias[$vale['uuid']] ?? null;
+        }
+        unset($vale);
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());
         $ret['PagarMePedidoS'] = PagarMePedidoResource::collection($this->PagarMePedidoS()->orderBy('criacao', 'desc')->get());
         $ret['SaurusPedidoS'] = SaurusPedidoResource::collection($this->SaurusPedidoS()->orderBy('criacao', 'desc')->get());

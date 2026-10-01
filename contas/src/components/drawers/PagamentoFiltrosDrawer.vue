@@ -2,7 +2,7 @@
 import MgInputValor from '@components/MgInputValor.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
-import { useLiquidacaoTituloStore } from 'src/stores/liquidacaoTituloStore'
+import { usePagamentoStore, MEIOS_FILTRO } from 'src/stores/pagamentoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
@@ -12,7 +12,7 @@ import MgSelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
 import MgSelectUsuario from '@components/MgSelectUsuario.vue'
 import MgInputData from '@components/MgInputData.vue'
 
-const store = useLiquidacaoTituloStore()
+const store = usePagamentoStore()
 
 const debouncedFetch = useDebounceFn(() => store.fetchItems(true), 800)
 watch(() => store.filters, debouncedFetch, { deep: true })
@@ -22,10 +22,16 @@ function clear() {
   store.fetchItems(true)
 }
 
-const estornadoOptions = [
+const canceladoOptions = [
   { label: 'Não Estornados', value: '0' },
   { label: 'Estornados', value: '1' },
   { label: 'Todos', value: '9' },
+]
+
+const sentidoOptions = [
+  { label: 'Recebimentos', value: 'R' },
+  { label: 'Pagamentos', value: 'P' },
+  { label: 'Encontro de contas', value: 'C' },
 ]
 </script>
 
@@ -33,8 +39,8 @@ const estornadoOptions = [
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
     <FilterGroup title="Identificação" first>
       <q-select
-        v-model="store.filters.estornado"
-        :options="estornadoOptions"
+        v-model="store.filters.cancelado"
+        :options="canceladoOptions"
         emit-value
         map-options
         outlined
@@ -42,12 +48,23 @@ const estornadoOptions = [
         label="Situação"
         class="q-mb-md"
       />
+      <q-select
+        v-model="store.filters.sentido"
+        :options="sentidoOptions"
+        emit-value
+        map-options
+        outlined
+        clearable
+        :bottom-slots="false"
+        label="Sentido"
+        class="q-mb-md"
+      />
       <MgInputValor
-        v-model="store.filters.codliquidacaotitulo"
+        v-model="store.filters.codpagamento"
         :decimals="0"
         :grouping="false"
         :bottom-slots="false"
-        label="Código"
+        label="Código (ou da liquidação antiga)"
       >
         <template #prepend><q-icon name="numbers" /></template>
       </MgInputValor>
@@ -79,13 +96,26 @@ const estornadoOptions = [
       />
     </FilterGroup>
 
-    <FilterGroup title="Portador">
+    <FilterGroup title="Portador e meio">
       <MgSelectPortador
         v-model="store.filters.codportador"
         outlined
         clearable
+        inativos
         :bottom-slots="false"
         label="Portador"
+        class="q-mb-md"
+      />
+      <q-select
+        v-model="store.filters.meio"
+        :options="MEIOS_FILTRO"
+        multiple
+        emit-value
+        map-options
+        outlined
+        clearable
+        :bottom-slots="false"
+        label="Meio"
       />
     </FilterGroup>
 
@@ -103,16 +133,16 @@ const estornadoOptions = [
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
           <MgInputData
-            v-model="store.filters.transacao_de"
+            v-model="store.filters.lancamento_de"
             :bottom-slots="false"
             type="date"
-            label="Transação"
+            label="Data"
             stack-label
           />
         </div>
         <div class="col-6">
           <MgInputData
-            v-model="store.filters.transacao_ate"
+            v-model="store.filters.lancamento_ate"
             :bottom-slots="false"
             type="date"
             label="Até"

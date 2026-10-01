@@ -32,7 +32,9 @@ Saurus/S2Pay do negocios e cadastro do POS PagarMe passam para contas → Maquin
 M3 só o pareamento SafraPay por QR, que confere no go-live. **M4 (pagamento e parcelas da venda)
 commitado em 30/09/2026 sem validação** (TASK-188, `ed90fe2e8` + MGsis `b914186`): o Fábio valida M4 e
 M5 juntos. **M5 (wizard desacoplado, prazo ajustável) commitado em 30/09/2026 sem validação**
-(TASK-188): valida junto com M4 e M6. **Próximo: M6.**
+(TASK-188): valida junto com M4 e M6. **M6 (pagamento no lugar da liquidação) implementado em dev em
+30/09/2026, na árvore, sem commit**: o Fábio valida M4, M5 e M6 juntos. **Próximo: M7** (depois da
+validação).
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -46,10 +48,12 @@ conferir a filial dos acessos de site de Brasil Card, Le Card e MultVale (nascem
 maquinetas manuais criadas pelos seriais digitados, e validar o pareamento SafraPay por QR com um
 pinpad reserva (M3); rodar os scripts DDL em produção, na ordem
 dos milestones (`movimento_titulo_colunas.sql`, `portador_tipo.sql`, `maquineta.sql`,
-`pagamento.sql`, `cobranca_documento.sql`, …), com o MGsis (NFe de Terceiros grava parcela desde o M4) e o MG Lara olhando
+`pagamento.sql`, `cobranca_documento.sql`, `pagamento_liquidacao.sql`, …), com o MGsis (NFe de Terceiros grava parcela desde o M4) e o MG Lara olhando
 as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de formas). Cada script roda
 uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
-`pagamento.sql` (a tabela já virou view).
+`pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
+liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
+pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais).
 
 ## Glossário
 
@@ -678,13 +682,15 @@ para leitura de histórico não convertido.
   cobrança, fechamento automático; prazo com vencimentos editados virando títulos com as datas
   certas; fechamento mensal caindo no último dia útil do mês seguinte.
 - **O que mudou em relação ao plano** (conferência de 30/09/2026 no banco e no código):
-  - **Como o PDV novo se identifica**: cabeçalho `X-Pagamento-Formato: 2` em toda requisição do
-    negocios (`boot/axios.js`; o CORS da API já aceita qualquer cabeçalho). Com ele o sync lê e o
-    `NegocioResource` devolve `pagamentos` e `parcelas` no formato novo
+  - **O formato antigo sai já, no go-live** (decisão do Fábio, 01/10/2026): o sync lê e o
+    `NegocioResource` devolve só `pagamentos` e `parcelas` no formato novo
     (`Mg/Pdv/PdvNegocioPagamentoService`), e os endpoints de cobrança devolvem a cobrança criada
-    (PixCob/pedido) em vez do negócio. Sem ele, tudo como no M4 (`NegocioFormaPagamentoService`).
-    O tradutor e `tblnegocioparcela.uuidforma` **ficam** até o go-live (PDV com aba aberta na
-    versão antiga); saem depois, numa limpeza própria.
+    (PixCob/pedido). `NegocioFormaPagamentoService` foi apagado (bandeiras, tPag e o portador do
+    Mercos Pay foram para `PagamentoService`; tPag da condição para `NegocioParcelaService`);
+    `tblnegocioparcela.uuidforma` cai no `cobranca_documento.sql` (só servia à cópia do histórico,
+    e a view `tblnegocioformapagamento` do `pagamento.sql` passou a agrupar parcelas por
+    condição). PDV com aba aberta na versão antiga precisa recarregar a página depois do deploy.
+    O romaneio, a DIMP e o grupo `pag` da nota leem pagamento e parcela direto.
   - **Formato novo no PDV** (Dexie v8): pagamento = `meio`, `principal`, `juros`, `desconto`,
     `total`, `valortroco`, maquineta, cheque, vale (`codtitulo`); parcela = `condicao`, `numero`,
     `vencimento`, `valor`, `juros`. No PDV o dinheiro entregue fica como `total + valortroco` e o
@@ -700,13 +706,15 @@ para leitura de histórico não convertido.
     recalcula; o `fechar` recusa (422) parcela vencida antes de hoje. Títulos numerados por
     condição (`N…-1/2`), em ordem de vencimento.
   - **Juros editável** no cartão de crédito: plano com juros abre uma etapa com o juros sugerido.
-  - **Desconto por forma só no dinheiro** (tecla − no passo do valor; sugestão 0% até o Fábio
-    definir). Ele fica no pagamento e **sai do total do negócio, não do desconto dos itens**: o
-    item não tem coluna para separar o desconto do pagamento do desconto digitado, então o rateio
-    nos itens acontece na nota fiscal (`NotaFiscalNegocioService::ratearDescontoPagamento`, mesmos
-    pesos do rateio do juros, vira vDesc do item). `confereTotais` e `NegocioService::recalcularTotal`
-    descontam Σ desconto dos pagamentos. PIX ficou sem desconto: o QR não tem onde guardar o desconto
-    (`tblpixcob`) e PIX por chave é parcela (ver Dúvidas na TASK-188).
+  - **Desconto por forma só no dinheiro** (tecla − no passo do valor, sugestão 0%); a regra
+    completa (forma de pagamento + categoria de cliente) é a TASK-190. O desconto fica no pagamento
+    e o PDV o **rateia no `valordesconto` dos itens e vales** (decisão do Fábio, 01/10/2026),
+    pelos pesos do juros, ordem por uuid e sobra no último. Cada item/vale guarda a sua fatia em
+    `valordescontopagamento` (só no PDV; o `NegocioResource` devolve a mesma conta,
+    `PdvNegocioPagamentoService::ratearDesconto`), para refazer o rateio sem perder o desconto
+    digitado; os dialogs de item, vale e cabeçalho editam só o digitado. Assim a conferência e a
+    nota continuam as de sempre (desconto do item → vDesc). PIX ficou sem desconto: o QR não tem
+    onde guardar o desconto (`tblpixcob`) e PIX por chave é parcela.
   - **Cobrança por documento**: `cobranca.js` cria PIX QR/PagarMe/Saurus para o documento (hoje o
     negócio; `codnegocio` opcional, com `codpessoa`), `tblsauruspedido.codnegocio` aceita nulo
     (`api/database/cobranca_documento.sql`), e as stores `pix`/`pagar-me`/`saurus` só avisam
@@ -715,7 +723,8 @@ para leitura de histórico não convertido.
   - Filtro de forma da listagem do PDV: `forma[]` com `m<meio>` e `c<condição>`; o
     `codformapagamento` continua para o PDV antigo.
   - Saiu do `.env` do negocios todo `CODFORMAPAGAMENTO_*` (dev). A tabela `formaPagamento` do Dexie
-    fica: mostra a forma padrão do cliente.
+    fica: mostra a forma padrão do cliente. O romaneio passou a listar pagamentos (com desconto e
+    troco) e parcelas por condição.
   - Conferência em dev: 20 cenários por serviço com rollback (dinheiro com troco e com desconto, PIX
     QR com e sem negócio, PIX chave, PagarMe 12x com juros, Saurus com e sem negócio, cartão manual,
     cheque, vale + dinheiro, fechamento com vencimento editado, crediário, boleto sem registrar no
@@ -749,6 +758,68 @@ para leitura de histórico não convertido.
 - **Valida**: receber em banco no contas (uma forma); pagar fornecedor; encontro de contas; estornar;
   acerto de RH (B/D/F); baixa de boleto BB pela API; recibos e relatório; Totais de Caixa do MG
   Lara na view; histórico: Σ por portador e mês antes = depois.
+- **O que mudou em relação ao plano** (conferência de 30/09/2026 no banco e no código):
+  - **Script próprio** `api/database/pagamento_liquidacao.sql` (não a seção 2 do `pagamento.sql`):
+    roda sozinho, depois do `pagamento.sql`, e a cópia só acontece enquanto `tblliquidacaotitulo`
+    for tabela (rodar de novo não faz nada). Cópia de antes em dev:
+    `mgdb-mgdb-1:/tmp/m6_antes_liquidacaotitulo.dump` e `/tmp/m6_antes_movimento_liquidacao.csv`.
+  - **Valores do pagamento** = soma das linhas de baixa (sem os estornos): total = |Σ total|,
+    juros/multa/desconto = Σ das colunas, principal = total − juros − multa + desconto. Encontro de
+    contas misto que daria principal negativo (229 no histórico) fica com principal = total e
+    juros/multa/desconto zerados **no pagamento** (as linhas do movimento continuam com eles).
+  - **Meio pelo portador antigo**: espécie → dinheiro; banco **e adquirente** → transferência;
+    **cartão da empresa → crédito**; Acerto Folha → folha; Barter → permuta; Perda por Prazo →
+    perda; Programação Pagamentos e Cred Pis/Cofins → compensação; demais "outros" (Carteira,
+    Cobrador Externo, Brad Expresso, Pagfacil) → outros. Total zero (9.259 encontros de contas) →
+    compensação sem portador. Os pseudoportadores ficam como origem/destino no histórico (para a
+    conferência por portador fechar) e foram inativados.
+  - Resultado em dev: 175.766 liquidações copiadas (5.343 estornadas → C), 436.875 movimentos
+    reapontados, dinheiro por portador e mês igual (conferência dentro do script). Conferido fora
+    dele contra o dump: `debito`/`credito` da view iguais aos da tabela antiga em todas, menos 8
+    liquidações de 2015–2016 com débito negativo gravado (a view calcula certo). Os códigos antigos
+    vão até 80.000.003 e os pagamentos novos começam em 80.000.196 (a sequência do M4): a view
+    usa `coalesce(codliquidacaotituloantigo, codpagamento)` sem colisão.
+  - **View `tblliquidacaotitulo`**: pagamentos com movimento de título e sem negócio (fora o vale
+    usado na venda), com `debito`/`credito` das linhas de baixa (qualquer tipo < 900, não só 600) e
+    as colunas que o Totais de Caixa lê.
+  - **Edição como na liquidação** (decisão do Fábio, 01/10/2026, exceção à regra de o pagamento
+    não mudar): pessoa, portador, meio, data e observação, levando portador e data às linhas do
+    movimento (`PUT v1/pagamento/{id}`). Valores e títulos não mudam (estorna e lança de novo);
+    venda, acerto e baixa de boleto pelo banco não se editam no contas. **Estorno pede
+    justificativa** (vai para o cancelamento).
+  - **Quem estorna o quê**: acerto de RH só pelo acerto (inativar); baixa de boleto pelo banco não
+    se estorna no contas; venda, pelo negócio.
+  - **Gaveta recusada no contas**: 422 no backend e o select de portador do "Receber ou Pagar"
+    esconde gaveta (`v1/select/portador` devolve `gaveta`; `MgSelectPortador` ganhou `sem-gaveta`).
+    Meio sugerido pelo tipo do portador e editável (dinheiro, cheque, crédito, débito, boleto,
+    depósito, PIX, transferência, outros). Títulos que se anulam viram encontro de contas, sem
+    portador (só Admin/Financeiro/Cobrança, porque a filial vem do portador).
+  - **Boleto BB e retorno Bradesco** criam um pagamento por linha de baixa (meio boleto, destino o
+    portador do boleto; ocorrência 40 do Bradesco = sentido contrário), regravado no
+    reprocessamento (`PagamentoTituloService::daBaixa`). O histórico também (seção 5 do script):
+    em dev 70.600 baixas (30,6 mil BB + 40 mil Bradesco) e 16 eventos de acerto ganharam
+    pagamento. A view do MG Lara **não** mostra boleto nem acerto (nunca foram liquidação).
+  - **Acerto de RH**: um pagamento por evento, valor = |saldo do evento| (rubricas + créditos −
+    débitos), meio pela forma. **B é Recarga Bee, não banco** (o doc estava errado): compensação,
+    sem portador, porque o dinheiro anda depois, no título da recarga. **D dinheiro pede o caixa ou
+    cofre** (portador em espécie; saldo positivo sai dele, negativo entra). **F folha** (meio 92).
+    Saldo zero = compensação. `codperiodocolaboradoracerto` no pagamento e os movimentos apontando
+    para ele. Inativar cancela; reativar cria outro com o mesmo portador. Em pessoas o evento
+    mostra o link do pagamento e o modal pede o portador no dinheiro.
+  - **Recarga Bee sem portador** (decisão do Fábio, 01/10/2026): o título a pagar da Beevale nasce
+    sem portador; quem diz de onde saiu é o pagamento, quando o financeiro paga. Saiu a escolha de
+    portador da recarga.
+  - Rotas `v1/pagamento` (index, relatorio, show, store, `{id}/estornar`, recibos) e
+    `v1/pdv/pagamento` (listagem do negocios, que corrigiu os filtros: usuário, código e valor não
+    filtravam). Domínio em `Mg/Pagamento` (`PagamentoTituloService`, `PagamentoTituloAutorizador`,
+    controller, request, resources, `PagamentoRelatorioService`), blades em `views/pagamento`.
+  - contas: menu "Recebimentos e Pagamentos", `pages/pagamento` (lista com filtros de sentido,
+    portador, meio, pessoa e datas; detalhe com principal/juros/multa/desconto/total e os títulos;
+    "Receber ou Pagar Títulos"), `pagamentoStore` com o CRUD; o detalhe do título liga o movimento
+    ao pagamento.
+  - **MGsis**: `MovimentoTitulo.php` declara `codliquidacaotitulo` como propriedade (a NFe de
+    Terceiros grava movimento passando por `Titulo::adicionaMovimento`, que atribui a coluna que
+    saiu). **Sobe junto.**
 
 ## M7 — Receber notinha e pagar vale do cliente no PDV (Receber no balcão)
 

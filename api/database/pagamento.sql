@@ -23,8 +23,8 @@
 --     fechar (tbltitulo.codnegocioparcela).
 --       condicao  F fechamento, P parcelado, B boleto, E entrega,
 --                 X PIX/deposito a receber, V vale da devolucao
---       uuidforma  forma do PDV antigo que gerou a parcela (some no M5,
---                  junto com o formato antigo do sync)
+--       uuidforma  forma antiga que gerou a parcela: so' para a copia do
+--                  historico; o cobranca_documento.sql (M5) derruba a coluna
 --
 -- Historico (mantendo os codigos: pagamento 123 = antiga forma 123):
 --   - forma com titulo, ou a prazo, ou vale da devolucao -> uma parcela por
@@ -209,7 +209,13 @@ CREATE INDEX IF NOT EXISTS idx_tblpagamento_codliopedido ON tblpagamento (codlio
 CREATE UNIQUE INDEX IF NOT EXISTS uk_tblnegocioparcela_uuid ON tblnegocioparcela (uuid);
 CREATE INDEX IF NOT EXISTS idx_tblnegocioparcela_codnegocio ON tblnegocioparcela (codnegocio);
 CREATE INDEX IF NOT EXISTS idx_tblnegocioparcela_codtitulo ON tblnegocioparcela (codtitulo);
-CREATE INDEX IF NOT EXISTS idx_tblnegocioparcela_uuidforma ON tblnegocioparcela (uuidforma);
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns
+               WHERE table_name = 'tblnegocioparcela' AND column_name = 'uuidforma') THEN
+        CREATE INDEX IF NOT EXISTS idx_tblnegocioparcela_uuidforma ON tblnegocioparcela (uuidforma);
+    END IF;
+END $$;
 
 ALTER TABLE tbltitulo ADD COLUMN IF NOT EXISTS codnegocioparcela bigint;
 ALTER TABLE tblmovimentotitulo ADD COLUMN IF NOT EXISTS codpagamento bigint;
@@ -625,8 +631,8 @@ END $$;
 
 -- ---------------------------------------------------------------------
 -- 3. View com o nome antigo (Totais de Caixa do MG Lara), ate sair.
---    Pagamento: codigo = codpagamento. Parcelas: uma linha por forma do
---    PDV (uuidforma), codigo negativo (nunca colide com pagamento).
+--    Pagamento: codigo = codpagamento. Parcelas: uma linha por condicao,
+--    codigo negativo (nunca colide com pagamento).
 --    Forma deduzida de meio/condicao/integracao (Fechamento sai 3020;
 --    Stone historico sem pedido sai 2010).
 -- ---------------------------------------------------------------------
@@ -706,7 +712,7 @@ SELECT
     NULL::smallint AS bandeira,
     false AS integracao,
     NULL::bigint AS codpessoa,
-    COALESCE(np.uuidforma, np.uuid) AS uuid,
+    min(np.uuid::text)::uuid AS uuid,
     sum(np.valor)::numeric(14,2) AS valortotal,
     count(*)::smallint AS parcelas,
     min(np.valor)::numeric(14,2) AS valorparcela,
@@ -720,6 +726,6 @@ SELECT
     NULL::varchar(100) AS chequeemitente,
     NULL::bigint AS codmaquineta
 FROM tblnegocioparcela np
-GROUP BY np.codnegocio, np.condicao, COALESCE(np.uuidforma, np.uuid);
+GROUP BY np.codnegocio, np.condicao;
 
 COMMIT;

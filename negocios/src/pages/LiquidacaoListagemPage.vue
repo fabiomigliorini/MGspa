@@ -36,30 +36,25 @@ watch(
   { deep: true },
 )
 
-const statusClass = (liq) => {
-  if (liq.estornado) {
+// recebimentos e pagamentos de títulos (M6 doc-3; era a liquidação)
+const statusClass = (pag) => {
+  if (pag.estado == 'C') {
     return 'bg-deep-orange-1 text-deep-orange-10'
   }
   return ''
 }
 
-const iconeLiquidacao = (liq) => {
-  if (liq.valor > 0) {
-    return 'mdi-checkbook-arrow-left'
-  } else if (liq.valor < 0) {
-    return 'mdi-checkbook-arrow-right'
-  }
-  return 'mdi-checkbook'
-}
+// CR recebeu, DB pagou, CP encontro de contas sem dinheiro
+const iconeLiquidacao = (pag) =>
+  ({ DB: 'mdi-checkbook-arrow-left', CR: 'mdi-checkbook-arrow-right' })[pag.operacao] ??
+  'mdi-checkbook'
 
-const corIconeLiquidacao = (liq) => {
-  if (liq.valor > 0) {
-    return 'secondary'
-  } else if (liq.valor < 0) {
-    return 'negative'
-  }
-  return 'grey'
-}
+const corIconeLiquidacao = (pag) => ({ DB: 'secondary', CR: 'negative' })[pag.operacao] ?? 'grey'
+
+const descricaoOperacao = (pag) =>
+  ({ DB: 'Pago', CR: 'Recebido' })[pag.operacao] ?? 'Encontro de contas'
+
+const urlPagamento = (pag) => `${process.env.CONTAS_URL}/pagamento/${pag.codpagamento}`
 </script>
 <template>
   <q-page class="bg-grey-2">
@@ -73,12 +68,7 @@ const corIconeLiquidacao = (liq) => {
     <q-list v-else>
       <q-infinite-scroll @load="onLoad" ref="scrollRef">
         <template :key="index" v-for="(item, index) in sLiquidacao.listagem">
-          <!-- <q-item
-            :to="'/liquidacao/' + item.codliquidacaotitulo"
-            :class="statusClass(item)"
-            class="row"
-          > -->
-          <q-item :class="statusClass(item)" class="row">
+          <q-item :href="urlPagamento(item)" target="_blank" :class="statusClass(item)" class="row">
             <!-- ICONE -->
             <q-item-section avatar>
               <q-avatar
@@ -91,20 +81,20 @@ const corIconeLiquidacao = (liq) => {
             <!-- PORTADOR -->
             <q-item-section class="col-2">
               <q-item-label lines="1">
-                {{ item.portador }}
+                {{ item.portador || item.meiodescricao }}
               </q-item-label>
               <q-item-label class="ellipsis" caption>
-                {{ formataCodigo(item.codliquidacaotitulo) }}
+                {{ formataCodigo(item.codpagamento) }}
               </q-item-label>
             </q-item-section>
 
             <!-- VALOR -->
             <q-item-section class="col-xs-3 col-sm-2">
               <q-item-label class="text-right">
-                {{ formataNumero(Math.abs(item.valor)) }}
+                {{ formataNumero(item.total) }}
               </q-item-label>
               <q-item-label class="ellipsis text-right" caption>
-                {{ item.valor > 0 ? 'Pago' : 'Recebido' }}
+                {{ descricaoOperacao(item) }}
               </q-item-label>
             </q-item-section>
 
@@ -114,32 +104,26 @@ const corIconeLiquidacao = (liq) => {
                 {{ item.fantasia }}
               </q-item-label>
               <q-item-label caption>
-                <span v-if="item.codpix"> PIX </span>
-                <span v-if="item.codpagarmepedido"> PagarMe </span>
-                <span v-if="item.codcheque"> Cheque </span>
-                <span v-if="item.tipo"> {{ item.nometipo }} </span>
-                <span v-if="item.parcelas > 1"> {{ item.parcelas }} Parcelas </span>
-                <span v-if="item.autorizacao"> {{ item.autorizacao }} </span>
-                <span v-if="item.bandeira"> {{ item.nomebandeira }} </span>
-                <span v-if="item.integracao"> Pagamento Integrado </span>
-                <span v-if="item.codpessoacartao"> {{ item.parceiro }} </span>
+                {{ item.meiodescricao }}
+                <span v-if="item.estado == 'C'"> · Estornado </span>
+                <span v-if="item.codperiodocolaboradoracerto"> · Acerto RH </span>
               </q-item-label>
             </q-item-section>
 
             <!-- OBSERVACAO -->
             <q-item-section class="gt-sm col-sm-3 col-md-2 col-lg-1">
               <q-item-label caption lines="3" style="white-space: pre-line">
-                {{ item.observacao }}
+                {{ item.observacoes }}
               </q-item-label>
             </q-item-section>
 
             <!-- DATA/STATUS -->
             <q-item-section class="col-xs-4 col-sm-3 col-md-2 col-lg-1 ellipsis" side>
               <q-item-label caption>
-                {{ formataData(item.transacao) }}
+                {{ formataData(item.lancamento) }}
               </q-item-label>
               <q-item-label caption>
-                {{ item.usuario }}
+                {{ item.usuariocriacao }}
               </q-item-label>
               <q-item-label caption v-if="item.codpdv">
                 {{ item.pdv }}

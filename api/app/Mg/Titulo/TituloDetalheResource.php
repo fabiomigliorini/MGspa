@@ -123,7 +123,7 @@ class TituloDetalheResource extends Resource
                 'tipomovimentotitulo' => optional($m->TipoMovimentoTitulo)->tipomovimentotitulo,
                 'codportador' => $m->codportador ? (int)$m->codportador : null,
                 'portador' => optional($m->Portador)->portador,
-                'codliquidacaotitulo' => $m->codliquidacaotitulo ? (int)$m->codliquidacaotitulo : null,
+                'codpagamento' => $m->codpagamento ? (int)$m->codpagamento : null,
                 'codperiodocolaboradoracerto' => $m->codperiodocolaboradoracerto ? (int)$m->codperiodocolaboradoracerto : null,
                 'codtituloagrupamento' => $m->codtituloagrupamento ? (int)$m->codtituloagrupamento : null,
                 'codnegocio' => optional($m->Pagamento)->codnegocio,

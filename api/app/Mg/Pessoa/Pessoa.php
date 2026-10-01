@@ -16,7 +16,6 @@ use Mg\Colaborador\Colaborador;
 use Mg\CupomFiscal\CupomFiscal;
 use Mg\Pessoa\Dependente;
 use Mg\Filial\Filial;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Mdfe\MdfeVeiculo;
 use Mg\Mercos\MercosCliente;
 use Mg\Meta\MetaFilialPessoa;
@@ -282,15 +281,7 @@ class Pessoa extends MgModel
         return $this->hasMany(Filial::class, 'codpessoa', 'codpessoa');
     }
 
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpessoa', 'codpessoa');
-    }
 
-    public function LiquidacaoTituloCartaoS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpessoacartao', 'codpessoa');
-    }
 
     public function MdfeVeiculoCondutorS()
     {

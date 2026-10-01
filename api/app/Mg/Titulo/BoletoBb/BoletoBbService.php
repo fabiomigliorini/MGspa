@@ -2,6 +2,9 @@
 
 namespace Mg\Titulo\BoletoBb;
 
+use Mg\Pagamento\PagamentoService;
+use Mg\Pagamento\PagamentoTituloService;
+
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Support\Facades\DB;
@@ -375,6 +378,8 @@ class BoletoBbService
                 ['codtituloboleto']
             );
             $codmovimentotitulos[] = $mov->codmovimentotitulo;
+            // o dinheiro entrou no banco do boleto: pagamento da baixa (M6 doc-3)
+            PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $tituloBoleto->codportador, $tituloBoleto->datarecebimento);
         }
 
         // apaga movimentos que sobraram

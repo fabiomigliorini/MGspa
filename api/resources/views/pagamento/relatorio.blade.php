@@ -5,7 +5,10 @@
     $fmtData = fn($d) => $d ? Carbon::parse($d)->format('d/m/Y') : '';
     $fmtCod = fn($c) => '#' . str_pad((string) $c, 8, '0', STR_PAD_LEFT);
 
-    $opTot = $totalLiq < 0 ? 'CR' : 'DB';
+    use Mg\Pagamento\PagamentoService;
+    use Mg\Pagamento\PagamentoTituloService;
+
+    $opTot = $totalPag < 0 ? 'CR' : 'DB';
 @endphp
 <style>
     body {
@@ -165,7 +168,7 @@
 </style>
 
 <htmlpageheader name="page-header">
-    <div class="report-title">Relatório de Liquidações de Títulos</div>
+    <div class="report-title">Relatório de Recebimentos e Pagamentos de Títulos</div>
 </htmlpageheader>
 
 <htmlpagefooter name="page-footer">
@@ -201,12 +204,14 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($liqs as $l)
+                @foreach ($pags as $l)
                     @php
-                        $valor = (float) $l->valor;
+                        $valor = PagamentoTituloService::valor($l);
+                        $cancelado = $l->estado == PagamentoService::ESTADO_CANCELADO;
+                        $portador = optional($l->portadorDoPagamento())->portador ?? PagamentoService::MEIOS[$l->meio] ?? '';
                         $op = $valor < 0 ? 'CR' : 'DB';
                         $opLow = strtolower($op);
-                        $clsEst = $l->estornado ? ' estornada' : '';
+                        $clsEst = $cancelado ? ' estornada' : '';
                         $movs = collect($l->MovimentoTituloS)
                             ->filter(fn($m) => !$m->ehEstorno() && $m->Titulo)
                             ->values();
@@ -214,19 +219,19 @@
 
                     @if ($movs->isEmpty())
                         <tr class="liq-row{{ $clsEst }}">
-                            <td class="cod">{{ $fmtCod($l->codliquidacaotitulo) }}</td>
+                            <td class="cod">{{ $fmtCod($l->codpagamento) }}</td>
                             <td class="pess">{{ mb_substr(optional($l->Pessoa)->fantasia ?? '', 0, 40) }}</td>
                             <td class="valor {{ $opLow }}">
                                 {{ $fmtVal($valor) }}&nbsp;{{ $op }}
-                                @if ($l->estornado)
+                                @if ($cancelado)
                                     <br><span class="estorno">Estornado</span>
                                 @endif
-                                @if ($l->codperiodo)
-                                    <br><span class="rh">RH #{{ $l->codperiodo }}</span>
+                                @if ($l->codperiodocolaboradoracerto)
+                                    <br><span class="rh">Acerto RH #{{ $l->codperiodocolaboradoracerto }}</span>
                                 @endif
                             </td>
-                            <td class="tran">{{ $fmtData($l->transacao) }}</td>
-                            <td class="port">{{ optional($l->Portador)->portador }}</td>
+                            <td class="tran">{{ $fmtData($l->lancamento) }}</td>
+                            <td class="port">{{ $portador }}</td>
                             <td class="num"></td>
                             <td class="mov-pess"></td>
                             <td class="mov-valor"></td>
@@ -252,20 +257,20 @@
                             @endphp
                             <tr class="{{ $primeira ? 'liq-row' : 'liq-cont' }}{{ $clsEst }}">
                                 @if ($primeira)
-                                    <td class="cod">{{ $fmtCod($l->codliquidacaotitulo) }}</td>
+                                    <td class="cod">{{ $fmtCod($l->codpagamento) }}</td>
                                     <td class="pess">{{ mb_substr(optional($l->Pessoa)->fantasia ?? '', 0, 40) }}
                                     </td>
                                     <td class="valor {{ $opLow }}">
                                         {{ $fmtVal($valor) }}&nbsp;{{ $op }}
-                                        @if ($l->estornado)
+                                        @if ($cancelado)
                                             <br><span class="estorno">Estornado</span>
                                         @endif
-                                        @if ($l->codperiodo)
-                                            <br><span class="rh">RH #{{ $l->codperiodo }}</span>
+                                        @if ($l->codperiodocolaboradoracerto)
+                                            <br><span class="rh">Acerto RH #{{ $l->codperiodocolaboradoracerto }}</span>
                                         @endif
                                     </td>
-                                    <td class="tran">{{ $fmtData($l->transacao) }}</td>
-                                    <td class="port">{{ optional($l->Portador)->portador }}</td>
+                                    <td class="tran">{{ $fmtData($l->lancamento) }}</td>
+                                    <td class="port">{{ $portador }}</td>
                                 @else
                                     <td></td>
                                     <td></td>
@@ -301,6 +306,6 @@
         <table class="total">
             <tr>
                 <td class="label">Total</td>
-                <td class="tot-valor {{ strtolower($opTot) }}">{{ $fmtVal($totalLiq) }}&nbsp;{{ $opTot }}</td>
+                <td class="tot-valor {{ strtolower($opTot) }}">{{ $fmtVal($totalPag) }}&nbsp;{{ $opTot }}</td>
             </tr>
         </table>

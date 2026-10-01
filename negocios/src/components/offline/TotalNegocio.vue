@@ -58,13 +58,14 @@ const baseRateio = computed(
 const editarValores = () => {
   edicao.value.valorprodutos = sNegocio.negocio.valorprodutos
   edicao.value.valorvales = sNegocio.negocio.valorvales
-  if (sNegocio.negocio.valordesconto > 0 && baseRateio.value) {
-    edicao.value.percentualdesconto =
-      Math.round((sNegocio.negocio.valordesconto / baseRateio.value) * 1000) / 10
+  // só o desconto digitado: o do pagamento é rateado sozinho
+  const descontoDigitado = descontoItens.value
+  if (descontoDigitado > 0 && baseRateio.value) {
+    edicao.value.percentualdesconto = Math.round((descontoDigitado / baseRateio.value) * 1000) / 10
   } else {
     edicao.value.percentualdesconto = null
   }
-  edicao.value.valordesconto = sNegocio.negocio.valordesconto
+  edicao.value.valordesconto = descontoDigitado || null
   edicao.value.valorfrete = sNegocio.negocio.valorfrete
   edicao.value.valorseguro = sNegocio.negocio.valorseguro
   edicao.value.valoroutras = sNegocio.negocio.valoroutras
@@ -346,12 +347,17 @@ const pagamentosVisiveis = computed(() => {
 
 const grupos = computed(() => gruposParcelas(sNegocio.negocio?.parcelas))
 
-// desconto dado na forma de pagamento (dinheiro), à parte do desconto dos itens
+// desconto dado na forma de pagamento (dinheiro): está rateado no desconto dos itens, mas
+// aparece à parte do desconto digitado
 const descontoPagamentos = computed(
   () =>
     Math.round(
       (sNegocio.negocio?.pagamentos ?? []).reduce((soma, p) => soma + (p.desconto || 0), 0) * 100,
     ) / 100,
+)
+
+const descontoItens = computed(
+  () => Math.round(((sNegocio.negocio?.valordesconto || 0) - descontoPagamentos.value) * 100) / 100,
 )
 
 const temLancamento = computed(
@@ -538,13 +544,13 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
         </q-item-section>
       </q-item>
 
-      <q-item v-if="sNegocio.negocio.valordesconto">
+      <q-item v-if="descontoItens">
         <q-item-section>
           <q-item-label caption>Desconto</q-item-label>
         </q-item-section>
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-weight-bolder text-green-8">
-            {{ formataNumero(sNegocio.negocio.valordesconto) }}
+            {{ formataNumero(descontoItens) }}
           </q-item-label>
         </q-item-section>
       </q-item>

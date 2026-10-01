@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamentoService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Negocio\NegocioProdutoBarra;
@@ -173,7 +172,7 @@ class MercosPedidoService
                 // Mercos Pay: meio outros (tPag 99), destino = portador Mercos
                 // Pay; fica pendente ate' o negocio fechar
                 $pag = Pagamento::where('codnegocio', $n->codnegocio)
-                    ->where('codportadordestino', NegocioFormaPagamentoService::CODPORTADOR_MERCOSPAY)
+                    ->where('codportadordestino', PagamentoService::CODPORTADOR_MERCOSPAY)
                     ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
                     ->first() ?? new Pagamento();
                 PagamentoService::preencher($pag, [
@@ -181,7 +180,7 @@ class MercosPedidoService
                     'codfilial' => $n->codfilial,
                     'meio' => PagamentoService::MEIO_OUTROS,
                     'principal' => $n->valortotal,
-                    'codportadordestino' => NegocioFormaPagamentoService::CODPORTADOR_MERCOSPAY,
+                    'codportadordestino' => PagamentoService::CODPORTADOR_MERCOSPAY,
                 ]);
                 $pag->save();
                 break;

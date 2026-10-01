@@ -58,8 +58,7 @@ class NegocioService
             + $negocio->valorfrete
             + $negocio->valorseguro
             + $negocio->valoroutras
-            + $negocio->valorjuros
-            - \Mg\Pdv\PdvNegocioService::descontoPagamentos($negocio);
+            + $negocio->valorjuros;
         $negocio->save();
     }
 

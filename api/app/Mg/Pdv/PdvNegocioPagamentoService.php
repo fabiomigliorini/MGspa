@@ -4,7 +4,6 @@ namespace Mg\Pdv;
 
 use Carbon\Carbon;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamentoService;
 use Mg\Negocio\NegocioParcela;
 use Mg\Negocio\NegocioParcelaService;
 use Mg\Negocio\NegocioService;
@@ -13,14 +12,10 @@ use Mg\Pagamento\PagamentoService;
 use Mg\Titulo\TituloService;
 
 /**
- * Pagamentos e parcelas do negocio no formato novo do PDV (M5 do plano
+ * Pagamentos e parcelas do negocio como o PDV manda e le' (M5 do plano
  * doc-3): o wizard de cobranca manda pagamentos (meio, principal, juros,
  * desconto, troco) e parcelas (condicao, vencimento e valor editados) por
  * uuid, e le' o mesmo formato de volta.
- *
- * O PDV novo se identifica pelo cabecalho X-Pagamento-Formato: 2. Sem ele
- * vale o formato antigo (NegocioFormaPagamentoService) ate todos os PDVs
- * atualizarem.
  */
 class PdvNegocioPagamentoService
 {
@@ -42,11 +37,6 @@ class PdvNegocioPagamentoService
         NegocioParcelaService::CONDICAO_ENTREGA,
         NegocioParcelaService::CONDICAO_PIX,
     ];
-
-    public static function formatoNovo(): bool
-    {
-        return request()->header('X-Pagamento-Formato') == '2';
-    }
 
     // Upsert por uuid, apaga o que nao veio. Pagamento integrado ou que ja'
     // saiu de pendente e parcela que ja' virou titulo nao mudam.
@@ -153,7 +143,6 @@ class PdvNegocioPagamentoService
             'vencimento' => Carbon::parse($dados['vencimento'])->startOfDay(),
             'valor' => $valor,
             'juros' => $juros,
-            'uuidforma' => null,
         ]);
         $np->save();
         return $np;
@@ -164,7 +153,6 @@ class PdvNegocioPagamentoService
     {
         $vencida = $negocio->NegocioParcelaS()
             ->whereNull('codtitulo')
-            ->whereNull('uuidforma')
             ->where('vencimento', '<', Carbon::today())
             ->orderBy('vencimento')
             ->first();
@@ -172,6 +160,46 @@ class PdvNegocioPagamentoService
             $venc = $vencida->vencimento->format('d/m/Y');
             abort(422, "A parcela {$vencida->numero} vence em {$venc}, antes de hoje! Exclua o prazo e lance de novo.");
         }
+    }
+
+    // Fatia de cada item e vale (uuid => valor) no desconto dos pagamentos,
+    // que o PDV rateia no valordesconto (M5 doc-3). A mesma conta do
+    // negocioStore.ratearDescontoPagamento: ativos por uuid, itens e depois
+    // vales, pesos valorprodutos/valorvale, sobra no ultimo, arredondamento
+    // do Math.round do JS. Volta ao PDV para ele refazer o rateio sem perder
+    // o desconto digitado.
+    public static function ratearDesconto(Negocio $negocio): array
+    {
+        $r2 = fn($v) => floor((float) $v * 100 + 0.5) / 100;
+        $total = $r2($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->sum('desconto'));
+        if ($total <= 0) {
+            return [];
+        }
+        $porUuid = fn($a, $b) => strcmp($a->uuid, $b->uuid);
+        $itens = $negocio->NegocioProdutoBarraS()->whereNull('inativo')->get()->all();
+        usort($itens, $porUuid);
+        $vales = $negocio->NegocioValeS()->whereNull('inativo')->get()->all();
+        usort($vales, $porUuid);
+        $alvos = [];
+        foreach ($itens as $i) {
+            $alvos[] = [$i->uuid, $r2($i->valorprodutos)];
+        }
+        foreach ($vales as $v) {
+            $alvos[] = [$v->uuid, $r2($v->valorvale)];
+        }
+        $base = $r2(array_sum(array_column($alvos, 1)));
+        if ($base <= 0) {
+            return [];
+        }
+        $ret = [];
+        $soma = 0;
+        $ultimo = count($alvos) - 1;
+        foreach ($alvos as $n => [$uuid, $peso]) {
+            $fatia = ($n == $ultimo) ? $r2($total - $soma) : $r2($total * $peso / $base);
+            $soma = $r2($soma + $fatia);
+            $ret[$uuid] = $fatia;
+        }
+        return $ret;
     }
 
     // ---------------------------------------------------------------
@@ -212,7 +240,7 @@ class PdvNegocioPagamentoService
             'codpessoa' => $pag->codpessoa,
             'parceiro' => $pag->Pessoa->fantasia ?? null,
             'bandeira' => $pag->bandeira,
-            'nomebandeira' => NegocioFormaPagamentoService::BANDEIRAS[$pag->bandeira] ?? null,
+            'nomebandeira' => PagamentoService::BANDEIRAS[$pag->bandeira] ?? null,
             'autorizacao' => $pag->autorizacao,
             'parcelas' => $pag->parcelas,
             'codmaquineta' => $pag->codmaquineta,

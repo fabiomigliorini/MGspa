@@ -4,7 +4,7 @@ import LiquidacaoListagemLeftDrawer from 'components/drawers/LiquidacaoListagemL
 import UsuarioConectado from 'components/UsuarioConectado.vue'
 </script>
 <template>
-  <main-layout title="Listagem de Liquidações" left-drawer>
+  <main-layout title="Recebimentos e Pagamentos" left-drawer>
     <template #usuario>
       <!-- USUARIO  -->
       <usuario-conectado />

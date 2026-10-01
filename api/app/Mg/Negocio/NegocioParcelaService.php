@@ -32,6 +32,16 @@ class NegocioParcelaService
         self::CONDICAO_VALE => 'Vale da Devolução',
     ];
 
+    // tPag da NF-e de cada condicao
+    const TPAG_DA_CONDICAO = [
+        self::CONDICAO_FECHAMENTO => 5,
+        self::CONDICAO_PARCELADO => 5,
+        self::CONDICAO_BOLETO => 15,
+        self::CONDICAO_ENTREGA => 5,
+        self::CONDICAO_PIX => 16,
+        self::CONDICAO_VALE => 90,
+    ];
+
     // Ultimo dia util do mes (seg a sab, sem feriado), como o RH conta.
     public static function ultimoDiaUtil(Carbon $mes): Carbon
     {
@@ -76,7 +86,6 @@ class NegocioParcelaService
         ?int $parcelas = 1,
         ?float $valorparcela = null,
         ?int $dias = null,
-        ?string $uuidforma = null,
         ?Carbon $base = null
     ): array {
         if (!array_key_exists($condicao, static::CONDICOES)) {
@@ -111,7 +120,6 @@ class NegocioParcelaService
                 'vencimento' => static::vencimento($condicao, $i, $dias, $base),
                 'valor' => $v,
                 'juros' => max(0, min($j, $v)),
-                'uuidforma' => $uuidforma,
             ]);
             $np->save();
             $ret[] = $np;
@@ -133,11 +141,10 @@ class NegocioParcelaService
         return $np->Negocio->NaturezaOperacao->codtipotitulo;
     }
 
-    // Grupo das parcelas: a condicao (PDV novo, M5) ou a forma antiga que
-    // as gerou (uuidforma, PDV antigo)
+    // Grupo das parcelas: a condicao
     public static function grupo(NegocioParcela $np): string
     {
-        return $np->uuidforma ?? $np->condicao;
+        return $np->condicao;
     }
 
     // Gera o titulo de cada parcela ainda sem titulo. Numero N00000000-1/3,

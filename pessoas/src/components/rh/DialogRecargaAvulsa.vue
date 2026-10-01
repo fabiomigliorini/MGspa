@@ -52,7 +52,6 @@ const marcados = ref({})
 const valores = ref({})
 const dia = ref(null)
 const observacao = ref('')
-const codportador = ref(null)
 
 const hojeIso = () => {
   // Local, não toISOString(): à noite o UTC já virou o dia seguinte.
@@ -150,7 +149,6 @@ const preparar = () => {
   busca.value = ''
   dia.value = hojeIso()
   observacao.value = ''
-  codportador.value = null
   marcados.value = {}
   valores.value = {}
 
@@ -179,7 +177,6 @@ const submit = async () => {
   try {
     const ret = await sRh.gerarRecarga(props.codperiodo, {
       codempresa: props.empresa.codempresa,
-      codportador: codportador.value || null,
       dia: dia.value,
       observacao: observacao.value || null,
       itens: selecionadas.value.map((l) => ({

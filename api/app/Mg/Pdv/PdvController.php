@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Cidade\Cidade;
 use Mg\Negocio\NegocioResource;
-use Mg\Negocio\NegocioFormaPagamentoService;
 use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
@@ -358,27 +357,6 @@ class PdvController
                 case 'codusuario':
                     $qry->where('codusuario', $valor);
                     break;
-                case 'integracao':
-                    if (sizeof($valor) == 2) {
-                        // se todos nao precisa fazer nenhum filtro
-                        break;
-                    }
-                    $integracao = ($valor[0] != 'Manual');
-                    $qry->whereIn('codnegocio', function ($query) use ($integracao) {
-                        NegocioFormaPagamentoService::filtroIntegracao($query, $integracao);
-                    });
-                    break;
-                case 'forma':
-                    // m<meio> do pagamento ou c<condicao> da parcela (M5 doc-3)
-                    $qry->whereIn('codnegocio', function ($query) use ($valor) {
-                        PdvNegocioPagamentoService::filtroForma($query, (array) $valor);
-                    });
-                    break;
-                case 'codformapagamento':
-                    $qry->whereIn('codnegocio', function ($query) use ($valor) {
-                        NegocioFormaPagamentoService::filtroForma($query, (array) $valor);
-                    });
-                    break;
                 case 'pdv':
                     break;
                 default:
@@ -484,18 +462,15 @@ class PdvController
     }
 
     // Cobrancas integradas do wizard (M5 doc-3): para um documento, que pode
-    // nao ser negocio (codnegocio nulo, com a pessoa que paga). O PDV novo
-    // (X-Pagamento-Formato: 2) recebe a cobranca criada; o antigo, o negocio.
+    // nao ser negocio (codnegocio nulo, com a pessoa que paga). Devolve a
+    // cobranca criada.
     public function criarPixCob(PdvRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);
         $negocio = $request->codnegocio ? Negocio::findOrFail($request->codnegocio) : null;
         $pessoa = $request->codpessoa ? Pessoa::findOrFail($request->codpessoa) : null;
         $cob = PixService::criarPixCobPdv($request->valor, $pdv, $negocio, $request->codportador, $pessoa);
-        if (PdvNegocioPagamentoService::formatoNovo() || !$negocio) {
-            return new PixCobResource($cob->fresh());
-        }
-        return new NegocioResource($negocio);
+        return new PixCobResource($cob->fresh());
     }
 
     public function criarPagarMePedido(PdvRequest $request)
@@ -520,10 +495,7 @@ class PdvController
             $pdv->codpdv,
             $data->codpessoa ?? null
         );
-        if (PdvNegocioPagamentoService::formatoNovo() || !$negocio) {
-            return new PagarMePedidoResource($ped->fresh());
-        }
-        return new NegocioResource($negocio);
+        return new PagarMePedidoResource($ped->fresh());
     }
 
     public function criarSaurusPedido(PdvRequest $request)
@@ -568,10 +540,7 @@ class PdvController
             $pos
         );
 
-        if (PdvNegocioPagamentoService::formatoNovo() || !$negocio) {
-            return new SaurusPedidoResource($ped->fresh());
-        }
-        return new NegocioResource($negocio);
+        return new SaurusPedidoResource($ped->fresh());
     }
 
     public function reenviarSaurusPedido($codsauruspedido)
@@ -603,12 +572,7 @@ class PdvController
 
         $pedidoResponse = ApiService::functionPedidoCriar($pedido, $pdv, $pos);
 
-        if (PdvNegocioPagamentoService::formatoNovo() || empty($pedido->codnegocio)) {
-            return new SaurusPedidoResource($pedido->fresh());
-        }
-        $negocio = Negocio::findOrFail($pedido->codnegocio);
-
-        return new NegocioResource($negocio);
+        return new SaurusPedidoResource($pedido->fresh());
     }
 
     public function consultarPagarMePedido($codpagarmepedido)

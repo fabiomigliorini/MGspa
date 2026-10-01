@@ -1,12 +1,15 @@
 <?php
 
-namespace Mg\Titulo;
+namespace Mg\Pagamento;
 
 use Carbon\Carbon;
 use Mg\Portador\Portador;
 use Mg\Usuario\UsuarioService;
 
-class LiquidacaoTituloAutorizador
+// Quem ve, cria e estorna recebimento/pagamento de titulo no contas
+// (M6 doc-3, as regras da antiga liquidacao): Admin/Financeiro/Cobranca em
+// tudo; Gerente e Caixa pela filial do pagamento (a do portador).
+class PagamentoTituloAutorizador
 {
     private const GRUPOS_IRRESTRITOS = ['Administrador', 'Financeiro', 'Cobranca'];
     private const JANELA_CAIXA_MIN = 120;
@@ -31,24 +34,30 @@ class LiquidacaoTituloAutorizador
         return array_values(array_unique(array_merge($caixa, $gerente)));
     }
 
-    public static function podeVer(LiquidacaoTitulo $liq, int $codusuario): bool
+    public static function filial(Pagamento $pag): ?int
     {
-        if (self::temAcessoIrrestrito($codusuario)) {
-            return true;
-        }
-        $codfilialPortador = optional($liq->Portador)->codfilial;
-        if (!$codfilialPortador) {
-            return false;
-        }
-        return in_array((int)$codfilialPortador, self::filiaisRestritas($codusuario), true);
+        return $pag->portadorDoPagamento()->codfilial ?? $pag->codfilial;
     }
 
-    public static function podeCriar(int $codusuario, int $codportador): bool
+    public static function podeVer(Pagamento $pag, int $codusuario): bool
     {
         if (self::temAcessoIrrestrito($codusuario)) {
             return true;
         }
-        $portador = Portador::find($codportador);
+        $codfilial = self::filial($pag);
+        if (!$codfilial) {
+            return false;
+        }
+        return in_array((int)$codfilial, self::filiaisRestritas($codusuario), true);
+    }
+
+    // encontro de contas sem dinheiro (sem portador) so' para irrestritos
+    public static function podeCriar(int $codusuario, ?int $codportador): bool
+    {
+        if (self::temAcessoIrrestrito($codusuario)) {
+            return true;
+        }
+        $portador = $codportador ? Portador::find($codportador) : null;
         if (!$portador || !$portador->codfilial) {
             return false;
         }
@@ -59,12 +68,12 @@ class LiquidacaoTituloAutorizador
      * Retorna null se autorizado, ou string com mensagem de erro.
      * $acao usado apenas para compor as mensagens (ex: 'estornar', 'editar').
      */
-    public static function motivoBloqueioMutacao(LiquidacaoTitulo $liq, int $codusuario, string $acao = 'alterar'): ?string
+    public static function motivoBloqueioMutacao(Pagamento $pag, int $codusuario, string $acao = 'alterar'): ?string
     {
         if (self::temAcessoIrrestrito($codusuario)) {
             return null;
         }
-        $codfilialPortador = (int)optional($liq->Portador)->codfilial;
+        $codfilialPortador = (int)self::filial($pag);
 
         if (UsuarioService::temGrupo($codusuario, 'Gerente')) {
             $filiaisGerente = UsuarioService::filiaisDoUsuarioNoGrupo($codusuario, 'Gerente');
@@ -74,26 +83,26 @@ class LiquidacaoTituloAutorizador
         }
 
         if (UsuarioService::temGrupo($codusuario, 'Caixa')) {
-            if ((int)$liq->codusuariocriacao !== $codusuario) {
-                return "Caixa só pode {$acao} suas próprias liquidações.";
+            if ((int)$pag->codusuariocriacao !== $codusuario) {
+                return "Caixa só pode {$acao} seus próprios recebimentos e pagamentos.";
             }
-            $minutos = Carbon::parse($liq->criacao)->diffInMinutes(Carbon::now());
+            $minutos = Carbon::parse($pag->criacao)->diffInMinutes(Carbon::now());
             if ($minutos > self::JANELA_CAIXA_MIN) {
-                return "Caixa só pode {$acao} suas próprias liquidações nas primeiras 2 horas.";
+                return "Caixa só pode {$acao} seus próprios recebimentos e pagamentos nas primeiras 2 horas.";
             }
             return null;
         }
 
-        return 'Liquidação não pertence à sua filial.';
+        return 'Pagamento não pertence à sua filial.';
     }
 
-    public static function motivoBloqueioEstorno(LiquidacaoTitulo $liq, int $codusuario): ?string
+    public static function motivoBloqueioEstorno(Pagamento $pag, int $codusuario): ?string
     {
-        return self::motivoBloqueioMutacao($liq, $codusuario, 'estornar');
+        return self::motivoBloqueioMutacao($pag, $codusuario, 'estornar');
     }
 
-    public static function motivoBloqueioEdicao(LiquidacaoTitulo $liq, int $codusuario): ?string
+    public static function motivoBloqueioEdicao(Pagamento $pag, int $codusuario): ?string
     {
-        return self::motivoBloqueioMutacao($liq, $codusuario, 'editar');
+        return self::motivoBloqueioMutacao($pag, $codusuario, 'editar');
     }
 }

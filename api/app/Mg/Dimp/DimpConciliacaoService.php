@@ -210,7 +210,7 @@ class DimpConciliacaoService
                    sum(np.valor) as valortotal,
                    null as valortroco
             from tblnegocioparcela np
-            group by np.codnegocio, np.condicao, coalesce(np.uuidforma, np.uuid)
+            group by np.codnegocio, np.condicao
         )";
     }
 
