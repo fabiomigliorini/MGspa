@@ -12,6 +12,8 @@ const props = defineProps({
   filiais: { type: Array, default: null },
   // Se array de tipos (E, B, A, C, O), restringe a esses tipos.
   tipos: { type: Array, default: null },
+  // Esconde as gavetas (espécie com PDV apontando): no contas não se baixa título em gaveta.
+  semGaveta: { type: Boolean, default: false },
   // Agrupa em "Desta filial" (portadores de codfilial) e "Mais opções" (o resto).
   agrupar: { type: Boolean, default: false },
   codfilial: { type: [Number, String], default: null },
@@ -34,6 +36,9 @@ const permitidos = computed(() => {
   let todos = cache.entities[ENTITY]?.items || []
   if (props.tipos) {
     todos = todos.filter((v) => props.tipos.includes(v.tipo))
+  }
+  if (props.semGaveta) {
+    todos = todos.filter((v) => !v.gaveta)
   }
   if (!props.filiais) return todos
   const set = new Set(props.filiais.map((f) => Number(f)))

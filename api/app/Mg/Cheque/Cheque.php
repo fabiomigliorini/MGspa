@@ -10,7 +10,6 @@ use Mg\MgModel;
 use Mg\Cheque\ChequeEmitente;
 use Mg\Cheque\ChequeRepasseCheque;
 use Mg\Cobranca\Cobranca;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Banco\Banco;
 use Mg\Pessoa\Pessoa;
 use Mg\Titulo\Titulo;
@@ -27,7 +26,7 @@ class Cheque extends MgModel
         'cancelamento',
         'cmc7',
         'codbanco',
-        'codnegocioformapagamento',
+        'codpagamento',
         'codpessoa',
         'codtitulo',
         'contacorrente',
@@ -50,7 +49,7 @@ class Cheque extends MgModel
         'cancelamento' => 'datetime',
         'codbanco' => 'integer',
         'codcheque' => 'integer',
-        'codnegocioformapagamento' => 'integer',
+        'codpagamento' => 'integer',
         'codpessoa' => 'integer',
         'codtitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -109,9 +108,5 @@ class Cheque extends MgModel
         return $this->hasMany(Cobranca::class, 'codcheque', 'codcheque');
     }
 
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codcheque', 'codcheque');
-    }
 
 }

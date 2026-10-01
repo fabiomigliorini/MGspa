@@ -66,4 +66,10 @@ class PeriodoColaboradorAcerto extends MgModel
     {
         return $this->hasMany(MovimentoTitulo::class, 'codperiodocolaboradoracerto', 'codperiodocolaboradoracerto');
     }
+
+    // pagamento do evento (M6 doc-3); reativar cria outro
+    public function PagamentoS()
+    {
+        return $this->hasMany(\Mg\Pagamento\Pagamento::class, 'codperiodocolaboradoracerto', 'codperiodocolaboradoracerto');
+    }
 }

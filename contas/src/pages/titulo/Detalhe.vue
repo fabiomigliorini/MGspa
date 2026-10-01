@@ -57,8 +57,7 @@ const model = ref({})
 // não herda codnegocio/codtituloagrupamento e nasce com saldo positivo.
 const geradoAuto = computed(
   () =>
-    !duplicando.value &&
-    !!(titulo.value?.codnegocioformapagamento || titulo.value?.codtituloagrupamento),
+    !duplicando.value && !!(titulo.value?.codnegocioparcela || titulo.value?.codtituloagrupamento),
 )
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).
@@ -322,8 +321,8 @@ const urlMovimento = (m) => {
     // Baixa por Acerto RH (app pessoas) — sem link direto daqui.
     return null
   }
-  if (m.codliquidacaotitulo) {
-    return `/liquidacao-titulo/${m.codliquidacaotitulo}`
+  if (m.codpagamento && !m.codnegocio) {
+    return `/pagamento/${m.codpagamento}`
   }
   if (m.codtituloagrupamento) {
     return `/agrupamento/${m.codtituloagrupamento}`
@@ -653,8 +652,8 @@ watch(() => route.fullPath, carregar)
                       :class="m.anulado ? 'text-grey-7' : 'text-primary'"
                     >
                       <span v-if="m.origem.codperiodocolaboradoracerto"> Acerto RH </span>
-                      <span v-else-if="m.origem.codliquidacaotitulo">
-                        Liquidação {{ formataCodigo(m.origem.codliquidacaotitulo) }}
+                      <span v-else-if="m.origem.codpagamento && !m.origem.codnegocio">
+                        Pagamento {{ formataCodigo(m.origem.codpagamento) }}
                       </span>
                       <span v-else-if="m.origem.codtituloagrupamento">
                         Agrupamento {{ formataCodigo(m.origem.codtituloagrupamento) }}

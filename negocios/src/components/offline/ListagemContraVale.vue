@@ -81,7 +81,7 @@ const abrir = () =>
         <q-item-section>
           <q-item-label>
             R$
-            <span class="text-weight-bold">{{ formataNumero(pagamento.valorpagamento) }}</span>
+            <span class="text-weight-bold">{{ formataNumero(pagamento.total) }}</span>
           </q-item-label>
           <q-item-label caption lines="1">Usado neste negócio</q-item-label>
         </q-item-section>

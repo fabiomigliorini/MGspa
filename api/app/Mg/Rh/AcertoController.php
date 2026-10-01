@@ -42,7 +42,8 @@ class AcertoController extends Controller
                 $request->input('titulos', []),
                 $request->input('forma'),
                 $request->input('observacao'),
-                $request->input('data')
+                $request->input('data'),
+                $request->input('codportador')
             );
             DB::commit();
             return new PeriodoColaboradorAcertoResource($resultado['acerto']);

@@ -2,21 +2,35 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Dialog } from 'quasar'
 import { negocioStore } from 'stores/negocio'
-import { pixStore } from 'stores/pix'
-import { pagarMeStore } from 'stores/pagar-me'
-import { saurusStore } from 'stores/saurus'
-import ReceberDialog from 'components/offline/ReceberDialog.vue'
-import PixCobDialog from 'components/offline/PixCobDialog.vue'
-import PagarMePedidoDialog from 'components/offline/PagarMePedidoDialog.vue'
-import SaurusPedidoDialog from 'components/offline/SaurusPedidoDialog.vue'
+import { cobrancaStore } from '@components/stores/cobrancaStore'
+import { pixStore } from '@components/stores/pixStore'
+import { pagarMeStore } from '@components/stores/pagarMeStore'
+import { saurusStore } from '@components/stores/saurusStore'
+import MgCobrancaDialog from '@components/MgCobrancaDialog.vue'
+import PixCobDialog from '@components/cobranca/PixCobDialog.vue'
+import PagarMePedidoDialog from '@components/cobranca/PagarMePedidoDialog.vue'
+import SaurusPedidoDialog from '@components/cobranca/SaurusPedidoDialog.vue'
+import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
+import { ouvir } from '@components/cobranca/eventos.js'
+import { abrirCobrancaIntegrada } from '@components/cobranca/integrada.js'
 import PagamentoDialog from 'components/offline/PagamentoDialog.vue'
-import LogoPagamento from 'components/offline/LogoPagamento.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { formataFromNow, formataNumero } from '@components/formatters'
 import emitter from '../../utils/emitter.js'
-import { resumoPagamento, tituloPagamento, visualPagamento } from '../../utils/pagamento.js'
+import {
+  CONDICOES,
+  MEIO,
+  gruposParcelas,
+  resumoPagamento,
+  resumoParcelas,
+  tituloPagamento,
+  valorExibido,
+  visualCondicao,
+  visualPagamento,
+} from '@components/cobranca/pagamento.js'
 
 const sNegocio = negocioStore()
+const sCobranca = cobrancaStore()
 const sPix = pixStore()
 const sPagarMe = pagarMeStore()
 const sSaurus = saurusStore()
@@ -46,13 +60,14 @@ const baseRateio = computed(
 const editarValores = () => {
   edicao.value.valorprodutos = sNegocio.negocio.valorprodutos
   edicao.value.valorvales = sNegocio.negocio.valorvales
-  if (sNegocio.negocio.valordesconto > 0 && baseRateio.value) {
-    edicao.value.percentualdesconto =
-      Math.round((sNegocio.negocio.valordesconto / baseRateio.value) * 1000) / 10
+  // só o desconto digitado: o do pagamento é rateado sozinho
+  const descontoDigitado = descontoItens.value
+  if (descontoDigitado > 0 && baseRateio.value) {
+    edicao.value.percentualdesconto = Math.round((descontoDigitado / baseRateio.value) * 1000) / 10
   } else {
     edicao.value.percentualdesconto = null
   }
-  edicao.value.valordesconto = sNegocio.negocio.valordesconto
+  edicao.value.valordesconto = descontoDigitado || null
   edicao.value.valorfrete = sNegocio.negocio.valorfrete
   edicao.value.valorseguro = sNegocio.negocio.valorseguro
   edicao.value.valoroutras = sNegocio.negocio.valoroutras
@@ -147,6 +162,50 @@ const dialogDetalhesSaurusPedido = (ped) => {
   sSaurus.dialog.detalhesPedido = true
 }
 
+// ---- wizard de cobrança: o negócio consome o que ele emite ----
+const receberDialogRef = ref(null)
+
+const pagamentoRecebido = async (pag) => {
+  await sNegocio.adicionarPagamento(pag)
+  emitter.emit('pagamentoAdicionado')
+}
+
+const parcelasRecebidas = async (parcelas) => {
+  await sNegocio.adicionarParcelas(parcelas)
+  emitter.emit('pagamentoAdicionado')
+}
+
+// cobrança integrada criada: abre o dialog especialista dela
+const cobrancaCriada = (cobranca) => abrirCobrancaIntegrada(cobranca)
+
+// bipagem VAL… abre direto na forma vale
+const valeLido = async (codigo) => {
+  if (!sNegocio.podeEditar || !sNegocio.negocio?.financeiro) {
+    return
+  }
+  const aberto = sCobranca.dialog
+  await sNegocio.abrirReceber({ forma: 'vale', codtituloVale: codigo })
+  if (aberto) {
+    receberDialogRef.value?.entrar()
+  }
+}
+
+const cobrancaAtualizada = (dados) => sNegocio.cobrancaAtualizada(dados)
+// banco/maquineta confirmou a cobrança deste negócio: o painel pisca o que falta (ou o troco);
+// a do Receber título não é da venda
+const cobrancaConcluida = ({ dados }) => {
+  if (dados?.codnegocio && dados.codnegocio == sNegocio.negocio?.codnegocio) {
+    emitter.emit('pagamentoAdicionado')
+  }
+}
+let deixarDeOuvir = []
+
+// grupo de parcelas abre o detalhe com as datas (e Excluir)
+const abrirParcelas = (grupo) => {
+  sNegocio.pagamentoDetalhe = grupo
+  sNegocio.dialog.pagamento = true
+}
+
 // pagamento de integração abre o dialog da cobrança (tem o pagador, NSU etc); o resto, o detalhe
 const abrirPagamento = (pag) => {
   const n = sNegocio.negocio
@@ -186,10 +245,17 @@ const piscarSaldo = () => {
 
 onMounted(() => {
   emitter.on('pagamentoAdicionado', piscarSaldo)
+  emitter.on('valeComprasLido', valeLido)
+  deixarDeOuvir = [
+    ouvir('cobrancaAtualizada', cobrancaAtualizada),
+    ouvir('cobrancaConcluida', cobrancaConcluida),
+  ]
 })
 
 onUnmounted(() => {
   emitter.off('pagamentoAdicionado', piscarSaldo)
+  emitter.off('valeComprasLido', valeLido)
+  deixarDeOuvir.forEach((parar) => parar())
   clearTimeout(timerPiscar)
 })
 
@@ -258,20 +324,16 @@ const gruposCobranca = computed(() =>
 // FIFO por escola um pagamento de R$ 300 pode virar 5 vales, e 5 linhas
 // iguais escondem o resto do pagamento. No banco continuam N, e o grupo
 // abre em um toque para o operador poder tirar um do lote.
-const CODFORMAPAGAMENTO_VALE = parseInt(process.env.CODFORMAPAGAMENTO_VALE)
+const ehValeUsado = (p) => p.meio == MEIO.VALE && p.codtitulo
 
-const valesLancados = computed(() =>
-  (sNegocio.negocio?.pagamentos ?? []).filter(
-    (p) => p.codformapagamento == CODFORMAPAGAMENTO_VALE && p.codtitulo,
-  ),
-)
+const valesLancados = computed(() => (sNegocio.negocio?.pagamentos ?? []).filter(ehValeUsado))
 
 const agruparVales = computed(() => valesLancados.value.length > 1)
 
 const valesExpandidos = ref(false)
 
 const valesTotal = computed(() =>
-  valesLancados.value.reduce((soma, p) => soma + parseFloat(p.valortotal), 0),
+  valesLancados.value.reduce((soma, p) => soma + parseFloat(p.total), 0),
 )
 
 // a lista da tela: sem agrupamento é a de sempre, com agrupamento os vales
@@ -281,11 +343,29 @@ const pagamentosVisiveis = computed(() => {
   if (!agruparVales.value) {
     return pagamentos
   }
-  return pagamentos.filter((p) => !(p.codformapagamento == CODFORMAPAGAMENTO_VALE && p.codtitulo))
+  return pagamentos.filter((p) => !ehValeUsado(p))
 })
 
+const grupos = computed(() => gruposParcelas(sNegocio.negocio?.parcelas))
+
+// desconto dado na forma de pagamento (dinheiro): está rateado no desconto dos itens, mas
+// aparece à parte do desconto digitado
+const descontoPagamentos = computed(
+  () =>
+    Math.round(
+      (sNegocio.negocio?.pagamentos ?? []).reduce((soma, p) => soma + (p.desconto || 0), 0) * 100,
+    ) / 100,
+)
+
+const descontoItens = computed(
+  () => Math.round(((sNegocio.negocio?.valordesconto || 0) - descontoPagamentos.value) * 100) / 100,
+)
+
 const temLancamento = computed(
-  () => sNegocio.negocio.pagamentos.length > 0 || cobrancas.value.length > 0,
+  () =>
+    sNegocio.negocio.pagamentos.length > 0 ||
+    (sNegocio.negocio.parcelas ?? []).length > 0 ||
+    cobrancas.value.length > 0,
 )
 
 // só aparece quando há o que receber (venda vazia não mostra o botão)
@@ -427,8 +507,13 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
   </q-dialog>
 
   <!-- DIALOGS DE PAGAMENTOS -->
-  <receber-dialog />
-  <pix-cob-dialog />
+  <mg-cobranca-dialog
+    ref="receberDialogRef"
+    @pagamento="pagamentoRecebido"
+    @parcelas="parcelasRecebidas"
+    @cobranca="cobrancaCriada"
+  />
+  <pix-cob-dialog :impressora="sNegocio.padrao.impressora" />
   <pagar-me-pedido-dialog />
   <saurus-pedido-dialog />
   <pagamento-dialog />
@@ -460,13 +545,24 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
         </q-item-section>
       </q-item>
 
-      <q-item v-if="sNegocio.negocio.valordesconto">
+      <q-item v-if="descontoItens">
         <q-item-section>
           <q-item-label caption>Desconto</q-item-label>
         </q-item-section>
         <q-item-section class="text-right">
           <q-item-label class="text-h5 text-weight-bolder text-green-8">
-            {{ formataNumero(sNegocio.negocio.valordesconto) }}
+            {{ formataNumero(descontoItens) }}
+          </q-item-label>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="descontoPagamentos">
+        <q-item-section>
+          <q-item-label caption>Desconto no pagamento</q-item-label>
+        </q-item-section>
+        <q-item-section class="text-right">
+          <q-item-label class="text-h5 text-weight-bolder text-green-8">
+            {{ formataNumero(descontoPagamentos) }}
           </q-item-label>
         </q-item-section>
       </q-item>
@@ -578,7 +674,7 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
             <q-item-label class="ellipsis">Vale #{{ pag.codtitulo }}</q-item-label>
           </q-item-section>
           <q-item-section side class="text-subtitle1 text-grey-8">
-            {{ formataNumero(pag.valortotal) }}
+            {{ formataNumero(pag.total) }}
           </q-item-section>
         </q-item>
       </template>
@@ -600,7 +696,27 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
           </q-item-label>
         </q-item-section>
         <q-item-section side class="text-subtitle1 text-weight-bold text-grey-9">
-          {{ formataNumero(pag.valortotal) }}
+          {{ formataNumero(valorExibido(pag)) }}
+        </q-item-section>
+      </q-item>
+
+      <!-- PRAZO: uma linha por condição, com as datas -->
+      <q-item
+        v-for="grupo in grupos"
+        :key="'parcelas' + grupo.condicao"
+        clickable
+        v-ripple
+        @click="abrirParcelas(grupo)"
+      >
+        <q-item-section avatar>
+          <logo-pagamento v-bind="visualCondicao(grupo.condicao)" size="40px" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label class="ellipsis">{{ CONDICOES[grupo.condicao] }}</q-item-label>
+          <q-item-label caption class="ellipsis">{{ resumoParcelas(grupo) }}</q-item-label>
+        </q-item-section>
+        <q-item-section side class="text-subtitle1 text-weight-bold text-grey-9">
+          {{ formataNumero(grupo.valor) }}
         </q-item-section>
       </q-item>
 

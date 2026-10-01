@@ -9,6 +9,7 @@ use Mg\Portador\Portador;
 use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPinPad;
+use Mg\Maquineta\MaquinetaService;
 
 class PdvService
 {
@@ -324,6 +325,8 @@ class PdvService
             'sincronizado' => $sincronizado
         ]);
         foreach ($regs as $reg) {
+            // maquinetas ativas da filial + compartilhadas (cartão integrado e manual no Receber)
+            $reg->MaquinetaS = MaquinetaService::paraPdv($reg->codfilial);
             $reg->PagarMePosS = PagarMePos::select(['codpagarmepos', 'serial', 'apelido'])->where('codfilial', $reg->codfilial)->whereNull('inativo')->get();
             // um registro por pinpad; serial é o número de série físico (null até o 1º uso no PDV)
             $reg->SaurusPosS = SaurusPinPad::select(['tblsauruspinpad.codsauruspinpad', 'tblsauruspinpad.serial', 'tblsauruspdv.codsauruspdv', 'tblsauruspdv.apelido'])
@@ -457,10 +460,10 @@ class PdvService
             group by ped.codnegocio
         ),
         tit as (
-            select nfp.codnegocio, sum(t.valor) filter (where t.valor > 0) as valortitulo
-            from tblnegocioformapagamento nfp 
-            inner join tbltitulo t on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
-            group by nfp.codnegocio
+            select np.codnegocio, sum(t.valor) filter (where t.valor > 0) as valortitulo
+            from tblnegocioparcela np
+            inner join tbltitulo t on (np.codnegocioparcela = t.codnegocioparcela)
+            group by np.codnegocio
         )
         select 
             n.codnegocio, 

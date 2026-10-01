@@ -9,7 +9,6 @@ namespace Mg\Portador;
 use Mg\MgModel;
 use Mg\Portador\ExtratoBancarioPortadorMovimento;
 use Mg\Titulo\MovimentoTitulo;
-use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Pix\Pix;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorTransferencia;
@@ -22,7 +21,6 @@ class PortadorMovimento extends MgModel
 
     protected $fillable = [
         'codmovimentotitulo',
-        'codnegocioformapagamento',
         'codpix',
         'codportador',
         'codportadortransferencia',
@@ -37,7 +35,6 @@ class PortadorMovimento extends MgModel
     protected $casts = [
         'alteracao' => 'datetime',
         'codmovimentotitulo' => 'integer',
-        'codnegocioformapagamento' => 'integer',
         'codpix' => 'integer',
         'codportador' => 'integer',
         'codportadormovimento' => 'integer',
@@ -59,10 +56,6 @@ class PortadorMovimento extends MgModel
         return $this->belongsTo(MovimentoTitulo::class, 'codmovimentotitulo', 'codmovimentotitulo');
     }
 
-    public function NegocioFormaPagamento()
-    {
-        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
-    }
 
     public function Pix()
     {

@@ -32,6 +32,7 @@ const menuGroups = [
       { label: 'Confissão de Dívida', icon: 'photo_camera', color: 'negative', to: '/confissao' },
       { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
       { label: 'Conferência', icon: 'check', color: 'orange', to: '/conferencia' },
+      { label: 'Pagamentos', icon: 'payments', color: 'indigo', to: '/pagamento' },
       { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
     ],
   },

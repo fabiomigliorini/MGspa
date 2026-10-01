@@ -10,6 +10,12 @@ import MgSelectContaContabil from '@components/MgSelectContaContabil.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+// juros e multa: a mesma regra do Receber título do PDV (legado MGsis/MGJuros.php)
+import {
+  calcularJurosMulta as jurosMulta,
+  diasAtraso,
+  PARAMETROS_JUROS,
+} from '@components/cobranca/juros.js'
 
 const props = defineProps({
   modelValue: { type: Array, default: () => [] },
@@ -23,34 +29,10 @@ const emit = defineEmits([
   'update:operacao',
 ])
 
-// Cálculo de juros conforme legado MGsis/MGJuros.php
-const parametros = ref({
-  juros: 4, // % ao mês
-  multa: 2, // %
-  diasTolerancia: 3,
-})
+// parâmetros editáveis na tela (recalcular)
+const parametros = ref({ ...PARAMETROS_JUROS })
 
-function diasAtraso(vencimento) {
-  if (!vencimento) return 0
-  const venc = new Date(String(vencimento).slice(0, 10) + 'T00:00:00')
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-  return Math.floor((hoje.getTime() - venc.getTime()) / 86400000)
-}
-
-function calcularJurosMulta(t) {
-  const dias = diasAtraso(t.vencimento)
-  const valor = Number(t.saldo) || 0
-  // Juros e multa apenas para títulos a receber (DB)
-  if (t.operacao === 'DB' && dias > parametros.value.diasTolerancia && valor > 0) {
-    return {
-      juros: round2(valor * (parametros.value.juros / 30 / 100) * dias),
-      multa: round2(valor * (parametros.value.multa / 100)),
-      dias,
-    }
-  }
-  return { juros: 0, multa: 0, dias }
-}
+const calcularJurosMulta = (t) => jurosMulta(t, parametros.value)
 
 function maxTotal(t) {
   const { juros, multa } = calcularJurosMulta(t)

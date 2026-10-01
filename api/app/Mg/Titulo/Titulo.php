@@ -12,7 +12,8 @@ use Mg\Cheque\Cheque;
 use Mg\Cobranca\Cobranca;
 use Mg\Cobranca\CobrancaHistoricoTitulo;
 use Mg\Titulo\MovimentoTitulo;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Negocio\NegocioParcela;
+use Mg\Pagamento\Pagamento;
 use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\Rh\PeriodoColaborador;
 use Mg\Titulo\TituloBoleto;
@@ -35,7 +36,7 @@ class Titulo extends MgModel
         'boleto',
         'codcontacontabil',
         'codfilial',
-        'codnegocioformapagamento',
+        'codnegocioparcela',
         'codpessoa',
         'codportador',
         'codtipotitulo',
@@ -61,7 +62,7 @@ class Titulo extends MgModel
         'boleto' => 'boolean',
         'codcontacontabil' => 'integer',
         'codfilial' => 'integer',
-        'codnegocioformapagamento' => 'integer',
+        'codnegocioparcela' => 'integer',
         'codpessoa' => 'integer',
         'codportador' => 'integer',
         'codtipotitulo' => 'integer',
@@ -105,9 +106,9 @@ class Titulo extends MgModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
-    public function NegocioFormaPagamento()
+    public function NegocioParcela()
     {
-        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+        return $this->belongsTo(NegocioParcela::class, 'codnegocioparcela', 'codnegocioparcela');
     }
 
     public function Pessoa()
@@ -172,9 +173,10 @@ class Titulo extends MgModel
         return $this->hasMany(MovimentoTitulo::class, 'codtitulorelacionado', 'codtitulo');
     }
 
-    public function NegocioFormaPagamentoS()
+    // vale consumido como pagamento
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codtitulo', 'codtitulo');
+        return $this->hasMany(Pagamento::class, 'codtitulo', 'codtitulo');
     }
 
     public function NfeTerceiroDuplicataS()

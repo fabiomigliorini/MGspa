@@ -16,7 +16,7 @@ class TituloListagemService
             'TipoTitulo:codtipotitulo,tipotitulo,natureza,pagar,receber',
             'ContaContabil:codcontacontabil,contacontabil',
             'UsuarioCriacao:codusuario,usuario',
-            'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
+            'NegocioParcela:codnegocioparcela,codnegocio',
         ])->paginate(50);
     }
 

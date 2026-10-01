@@ -72,10 +72,6 @@ const routes = [
       { path: 'pdv/', component: () => import('pages/PdvPage.vue') },
       { path: 'pagar-me/', component: () => import('pages/PagarMePage.vue') },
       {
-        path: 'saurus-s2-pay/',
-        component: () => import('pages/SaurusS2PayPage.vue'),
-      },
-      {
         path: 'prancheta/',
         component: () => import('pages/PranchetaPage.vue'),
       },
@@ -138,9 +134,9 @@ const routes = [
   },
 
   {
-    path: '/liquidacao',
-    component: () => import('layouts/LiquidacaoListagemLayout.vue'),
-    children: [{ path: '', component: () => import('pages/LiquidacaoListagemPage.vue') }],
+    path: '/pagamento',
+    component: () => import('layouts/PagamentoLayout.vue'),
+    children: [{ path: '', component: () => import('pages/PagamentoPage.vue') }],
   },
 
   // Always leave this as last one,

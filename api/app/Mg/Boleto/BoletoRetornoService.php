@@ -2,6 +2,9 @@
 
 namespace Mg\Boleto;
 
+use Mg\Pagamento\PagamentoService;
+use Mg\Pagamento\PagamentoTituloService;
+
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -174,7 +177,7 @@ class BoletoRetornoService
                 $pagamento = (float) $br->pagamento;
                 $principal = $pagamento - $juros + $desconto;
                 if ($pagamento > 0 || $principal != 0) {
-                    MovimentoTituloService::lancar(
+                    $mov = MovimentoTituloService::lancar(
                         $titulo,
                         MovimentoTituloService::TIPO_LIQUIDACAO,
                         -$principal,
@@ -182,6 +185,7 @@ class BoletoRetornoService
                         $vinculos,
                         ['codboletoretorno']
                     );
+                    PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $br->codportador, $br->dataretorno);
                 }
                 break;
 
@@ -192,7 +196,7 @@ class BoletoRetornoService
                 $pagamento = (float) $br->pagamento;
                 $principal = $pagamento - $juros + $desconto;
                 if ($pagamento > 0 || $principal != 0) {
-                    MovimentoTituloService::lancar(
+                    $mov = MovimentoTituloService::lancar(
                         $titulo,
                         MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO,
                         $principal,
@@ -204,6 +208,8 @@ class BoletoRetornoService
                         ],
                         ['codboletoretorno']
                     );
+                    // saiu do banco: pagamento no sentido contrario
+                    PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $br->codportador, $br->dataretorno);
                 }
                 break;
 

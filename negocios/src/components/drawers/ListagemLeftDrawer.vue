@@ -168,9 +168,9 @@ onMounted(() => {
       <q-item-section>
         <q-select
           outlined
-          v-model="sListagem.filtro.codformapagamento"
+          v-model="sListagem.filtro.forma"
           multiple
-          :options="sListagem.opcoes.codformapagamento"
+          :options="sListagem.opcoes.forma"
           label="Forma de Pagamento"
           clearable
           map-options

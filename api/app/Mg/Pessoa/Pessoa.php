@@ -16,7 +16,6 @@ use Mg\Colaborador\Colaborador;
 use Mg\CupomFiscal\CupomFiscal;
 use Mg\Pessoa\Dependente;
 use Mg\Filial\Filial;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Mdfe\MdfeVeiculo;
 use Mg\Mercos\MercosCliente;
 use Mg\Meta\MetaFilialPessoa;
@@ -24,7 +23,7 @@ use Mg\Meta\MetaUnidadeNegocioPessoa;
 use Mg\Meta\MetaUnidadeNegocioPessoaFixo\MetaUnidadeNegocioPessoaFixo;
 use Mg\Meta\MetaVendedor;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalPagamento;
@@ -282,15 +281,7 @@ class Pessoa extends MgModel
         return $this->hasMany(Filial::class, 'codpessoa', 'codpessoa');
     }
 
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpessoa', 'codpessoa');
-    }
 
-    public function LiquidacaoTituloCartaoS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpessoacartao', 'codpessoa');
-    }
 
     public function MdfeVeiculoCondutorS()
     {
@@ -337,9 +328,9 @@ class Pessoa extends MgModel
         return $this->hasMany(Negocio::class, 'codpessoavendedor', 'codpessoa');
     }
 
-    public function NegocioFormaPagamentoS()
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codpessoa', 'codpessoa');
+        return $this->hasMany(Pagamento::class, 'codpessoa', 'codpessoa');
     }
 
     public function NfeTerceiroS()

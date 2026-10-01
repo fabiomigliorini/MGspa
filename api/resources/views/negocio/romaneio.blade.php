@@ -186,18 +186,30 @@
             <b>Total R$ {{ formataNumero($negocio->valortotal, 2) }}</b>
         </div>
 
-        <!-- PAGAMENTOS -->
-        @foreach ($negocio->NegocioFormaPagamentoS as $pag)
+        <!-- PAGAMENTOS (M5 doc-3: pagamentos e parcelas do negocio) -->
+        @php
+            $cancelado = $negocio->codnegociostatus == \Mg\Negocio\NegocioService::STATUS_CANCELADO;
+            $pagamentos = $negocio->PagamentoS()->orderBy('codpagamento')->get()
+                ->filter(fn($p) => $cancelado || $p->estado != \Mg\Pagamento\PagamentoService::ESTADO_CANCELADO);
+        @endphp
+        @foreach ($pagamentos as $pag)
             <!-- JUROS -->
-            @if (!empty($pag->valorjuros))
+            @if ($pag->juros > 0)
                 Juros
-                R$ {{ formataNumero($pag->valorjuros, 2) }}
+                R$ {{ formataNumero($pag->juros, 2) }}
                 <br>
             @endif
 
-            <!-- FORMA PAGAMENTO -->
-            {{ $pag->FormaPagamento->formapagamento }}
-            R$ {{ formataNumero($pag->valorpagamento, 2) }}
+            <!-- DESCONTO -->
+            @if ($pag->desconto > 0)
+                Desconto
+                R$ {{ formataNumero($pag->desconto, 2) }}
+                <br>
+            @endif
+
+            <!-- FORMA PAGAMENTO: o entregue (com o troco) -->
+            {{ \Mg\Pagamento\PagamentoService::descricao($pag) }}
+            R$ {{ formataNumero($pag->total + ($pag->valortroco ?? 0), 2) }}
 
             <!-- TROCO -->
             @if (!empty($pag->valortroco))
@@ -206,6 +218,14 @@
                 R$ {{ formataNumero($pag->valortroco, 2) }}
             @endif
 
+            <br>
+        @endforeach
+        @foreach ($negocio->NegocioParcelaS()->orderBy('vencimento')->get()->groupBy('condicao') as $condicao => $parcelas)
+            {{ \Mg\Negocio\NegocioParcelaService::CONDICOES[$condicao] ?? $condicao }}
+            @if ($parcelas->count() > 1)
+                {{ $parcelas->count() }}x
+            @endif
+            R$ {{ formataNumero($parcelas->sum('valor'), 2) }}
             <br>
         @endforeach
 
@@ -228,8 +248,13 @@
 
     <!-- TITULOS -->
     @if ($confissao)
-        @foreach ($negocio->NegocioFormaPagamentos as $nfp)
-            @foreach ($nfp->Titulos()->orderBy('vencimento')->get() as $titulo)
+        {{-- uma confissao por condicao a prazo --}}
+        @foreach ($negocio->NegocioParcelaS()->orderBy('codnegocioparcela')->get()->groupBy('condicao') as $parcelas)
+            @php
+                $titulos = $parcelas->map(fn($np) => $np->Titulo)->filter()->sortBy('vencimento')->values();
+                $totalTitulos = $titulos->sum(fn($t) => abs($t->valor));
+            @endphp
+            @foreach ($titulos as $titulo)
                 <!-- CABECALHO VENCIMENTOS -->
                 @if ($loop->first)
                     <h1 style="page-break-before: always;">Confissão de Dívida</h1>
@@ -253,8 +278,8 @@
                 @if ($loop->last)
                     <p style="font-size: larger; text-align:justify">
                         Totalizando
-                        R$ <b>{{ formataNumero($nfp->valorpagamento) }}</b>
-                        ({{ formataValorPorExtenso($nfp->valorpagamento) }})
+                        R$ <b>{{ formataNumero($totalTitulos) }}</b>
+                        ({{ formataValorPorExtenso($totalTitulos) }})
                         .
                     </p>
                     <p style="font-size: larger; text-align:justify">

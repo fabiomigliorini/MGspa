@@ -6,7 +6,7 @@ import { useRoute } from 'vue-router'
 import { api } from 'src/boot/axios'
 import { rhStore } from 'src/stores/rh'
 import { useAuthStore } from 'src/stores'
-import { formataData, formataFromNow, formataNumero } from '@components/formatters'
+import { formataCodigo, formataData, formataFromNow, formataNumero } from '@components/formatters'
 import { abrirPdf } from '@components/abrirPdf'
 import { tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
 import DialogEditarMeta from 'src/components/rh/DialogEditarMeta.vue'
@@ -601,6 +601,8 @@ const formaColor = (f) => FORMA_COLOR[f] || 'grey-7'
 const urlTitulo = (codtitulo) =>
   codtitulo ? `${process.env.CONTAS_URL}/titulo/${codtitulo}` : null
 
+const urlPagamento = (codpagamento) => `${process.env.CONTAS_URL}/pagamento/${codpagamento}`
+
 const toggleInativoAcerto = async (ac) => {
   try {
     if (ac.inativo) {
@@ -1148,6 +1150,12 @@ watch(
                   </div>
                   <div v-if="ac.usuariocriacao" class="text-caption text-grey-5">
                     {{ ac.usuariocriacao }} · {{ formataData(ac.criacao) }}
+                    <template v-if="ac.codpagamento">
+                      ·
+                      <a :href="urlPagamento(ac.codpagamento)" target="_blank" class="text-primary">
+                        Pagamento {{ formataCodigo(ac.codpagamento) }}
+                      </a>
+                    </template>
                   </div>
                 </div>
               </div>

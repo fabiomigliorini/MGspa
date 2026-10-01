@@ -16,35 +16,19 @@ export const listagemStore = defineStore('listagem', {
 
   state: () => ({
     opcoes: {
-      codformapagamento: [
-        {
-          label: 'Dinheiro',
-          value: process.env.CODFORMAPAGAMENTO_DINHEIRO,
-        },
-        {
-          label: 'PIX Chave',
-          value: process.env.CODFORMAPAGAMENTO_PIXCHAVE,
-        },
-        {
-          label: 'Cartão Manual',
-          value: process.env.CODFORMAPAGAMENTO_CARTAOMANUAL,
-        },
-        {
-          label: 'Entrega',
-          value: process.env.CODFORMAPAGAMENTO_ENTREGA,
-        },
-        {
-          label: 'Fechamento',
-          value: process.env.CODFORMAPAGAMENTO_FECHAMENTO,
-        },
-        {
-          label: 'Carteira',
-          value: process.env.CODFORMAPAGAMENTO_CARTEIRA,
-        },
-        {
-          label: 'Boleto',
-          value: process.env.CODFORMAPAGAMENTO_BOLETO,
-        },
+      // m<meio> do pagamento, c<condição> da parcela
+      forma: [
+        { label: 'Dinheiro', value: 'm1' },
+        { label: 'Cartão Crédito', value: 'm3' },
+        { label: 'Cartão Débito', value: 'm4' },
+        { label: 'PIX QR Code', value: 'm17' },
+        { label: 'Cheque', value: 'm2' },
+        { label: 'Vale Compras', value: 'm12' },
+        { label: 'PIX Chave', value: 'cX' },
+        { label: 'Entrega', value: 'cE' },
+        { label: 'Fechamento', value: 'cF' },
+        { label: 'Crediário', value: 'cP' },
+        { label: 'Boleto', value: 'cB' },
       ],
       integracao: ['Manual', 'Integrado'],
       codnegociostatus: [
@@ -95,7 +79,7 @@ export const listagemStore = defineStore('listagem', {
         codpessoatransportador: null,
         codpdv: null,
         integracao: [],
-        codformapagamento: [],
+        forma: [],
         valor_de: null,
         valor_ate: null,
       }

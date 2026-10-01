@@ -7,8 +7,7 @@
 namespace Mg\PagarMe;
 
 use Mg\MgModel;
-use Mg\Titulo\LiquidacaoTitulo;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\Filial\Filial;
 use Mg\Negocio\Negocio;
@@ -109,14 +108,10 @@ class PagarMePedido extends MgModel
 
 
     // Tabelas Filhas
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpagarmepedido', 'codpagarmepedido');
-    }
 
-    public function NegocioFormaPagamentoS()
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codpagarmepedido', 'codpagarmepedido');
+        return $this->hasMany(Pagamento::class, 'codpagarmepedido', 'codpagarmepedido');
     }
 
     public function PagarMePagamentoS()

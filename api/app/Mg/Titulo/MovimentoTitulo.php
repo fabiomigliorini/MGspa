@@ -10,14 +10,13 @@ use Mg\MgModel;
 use Mg\Portador\PortadorMovimento;
 use Mg\Boleto\BoletoRetorno;
 use Mg\Cobranca\Cobranca;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Portador\Portador;
 use Mg\Titulo\TipoMovimentoTitulo;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloAgrupamento;
 use Mg\Usuario\Usuario;
 use Mg\Titulo\TituloBoleto;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 
 class MovimentoTitulo extends MgModel
 {
@@ -28,9 +27,8 @@ class MovimentoTitulo extends MgModel
     protected $fillable = [
         'codboletoretorno',
         'codcobranca',
-        'codliquidacaotitulo',
         'codmovimentotituloestorno',
-        'codnegocioformapagamento',
+        'codpagamento',
         'codperiodocolaboradoracerto',
         'codportador',
         'codtipomovimentotitulo',
@@ -51,10 +49,9 @@ class MovimentoTitulo extends MgModel
         'alteracao' => 'datetime',
         'codboletoretorno' => 'integer',
         'codcobranca' => 'integer',
-        'codliquidacaotitulo' => 'integer',
         'codmovimentotitulo' => 'integer',
         'codmovimentotituloestorno' => 'integer',
-        'codnegocioformapagamento' => 'integer',
+        'codpagamento' => 'integer',
         'codperiodocolaboradoracerto' => 'integer',
         'codportador' => 'integer',
         'codtipomovimentotitulo' => 'integer',
@@ -96,19 +93,14 @@ class MovimentoTitulo extends MgModel
         return $this->belongsTo(Cobranca::class, 'codcobranca', 'codcobranca');
     }
 
-    public function LiquidacaoTitulo()
-    {
-        return $this->belongsTo(LiquidacaoTitulo::class, 'codliquidacaotitulo', 'codliquidacaotitulo');
-    }
-
     public function MovimentoTituloEstorno()
     {
         return $this->belongsTo(MovimentoTitulo::class, 'codmovimentotituloestorno', 'codmovimentotitulo');
     }
 
-    public function NegocioFormaPagamento()
+    public function Pagamento()
     {
-        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+        return $this->belongsTo(Pagamento::class, 'codpagamento', 'codpagamento');
     }
 
     public function PeriodoColaboradorAcerto()

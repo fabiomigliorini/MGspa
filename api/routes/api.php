@@ -186,6 +186,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/tributacao', [\Mg\Select\SelectTributacaoController::class, 'index']);
     Route::get('select/moeda', [\Mg\Select\SelectMoedaController::class, 'index']);
     Route::get('select/vale-modelo', [\Mg\Select\SelectValeModeloController::class, 'index']);
+    Route::get('select/maquineta', [\Mg\Select\SelectMaquinetaController::class, 'index']);
+    Route::get('select/pdv', [\Mg\Select\SelectPdvController::class, 'index']);
 
     // Selects: resolução por id (objeto único ou 404) — padrão GET select/{ent}/{id}
     Route::get('select/pessoa/{id}', [\Mg\Select\SelectPessoaController::class, 'show'])->whereNumber('id');
@@ -211,6 +213,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estoque-movimento-tipo/{id}', [\Mg\Select\SelectEstoqueMovimentoTipoController::class, 'show'])->whereNumber('id');
     Route::get('select/tributacao/{id}', [\Mg\Select\SelectTributacaoController::class, 'show'])->whereNumber('id');
     Route::get('select/moeda/{id}', [\Mg\Select\SelectMoedaController::class, 'show']);
+    Route::get('select/maquineta/{id}', [\Mg\Select\SelectMaquinetaController::class, 'show'])->whereNumber('id');
+    Route::get('select/pdv/{id}', [\Mg\Select\SelectPdvController::class, 'show'])->whereNumber('id');
 
     // Selects novos (entidades LOCAL pequenas, padrão index + show)
     Route::get('select/forma-pagamento', [\Mg\Select\SelectFormaPagamentoController::class, 'index']);
@@ -674,6 +678,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
         Route::get('negocio/{codnegocio}/comanda', '\Mg\Pdv\PdvController@comanda');
         Route::get('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@show');
+        Route::get('pagamento/recibo/{codpagamentos}', '\Mg\Pdv\PdvPagamentoController@recibo')
+            ->name('pdv.pagamento.recibo')
+            ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     });
 
     // Produto
@@ -909,17 +916,20 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('vale-escopo/favorecido', '\Mg\Pdv\PdvController@valeEscopoFavorecidos');
         Route::get('vale-escopo/favorecido/{codpessoafavorecido}/turma', '\Mg\Pdv\PdvController@valeEscopoTurmas');
         Route::get('vale-escopo/selecionar', '\Mg\Pdv\PdvController@valeEscopoSelecionar');
-        Route::get('liquidacao', '\Mg\Pdv\PdvLiquidacaoController@getLiquidacoes');
+        // pagamentos do PDV, receber titulo e pagar vale (M6.1 doc-3)
+        Route::get('pagamento', '\Mg\Pdv\PdvPagamentoController@index');
+        Route::get('pagamento/titulos', '\Mg\Pdv\PdvPagamentoController@titulos');
+        Route::get('pagamento/originais', '\Mg\Pdv\PdvPagamentoController@originais');
+        Route::get('pagamento/{id}', '\Mg\Pdv\PdvPagamentoController@show')->whereNumber('id');
+        Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
+        Route::post('pagamento/{id}/estornar', '\Mg\Pdv\PdvPagamentoController@estornar')->whereNumber('id');
+        Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
+        // vale colaborador e adiantamentos (M8 doc-3)
+        Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
         // Saurus
-        Route::post('saurus/registrar-pos', '\Mg\Pdv\PdvController@registrarPosSaurus');
-        Route::post('saurus/verificar-leitura', '\Mg\Pdv\PdvController@verificarLeituraSaurus');
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
         Route::delete('saurus/pedido/{codsauruspedido}', '\Mg\Pdv\PdvController@cancelarSaurusPedido');
-        Route::get('saurus/pdvs', '\Mg\Pdv\PdvController@listaPdvsSaurus');
-        Route::post('saurus/pdv/{codsauruspdv}', '\Mg\Pdv\PdvController@editarPdvSaurus');
-        Route::get('saurus/pdv/{codsauruspdv}/inativar', '\Mg\Pdv\PdvController@inativarPdvSaurus');
-        Route::get('saurus/pdv/{codsauruspdv}/ativar', '\Mg\Pdv\PdvController@ativarPdvSaurus');
         Route::get('saurus/pedido/{codsauruspedido}/reenviar', '\Mg\Pdv\PdvController@reenviarSaurusPedido');
     });
 
@@ -1222,7 +1232,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('pix/', '\Mg\Pix\PixController@index');
     Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
 
-    // TituloBoleto + Titulo CRUD + Liquidacao + Agrupamento
+    // TituloBoleto + Titulo CRUD + Pagamento + Agrupamento
     Route::get('titulo/boleto/abertos/resumo', '\Mg\Titulo\TituloBoletoController@abertosResumo');
     Route::get('titulo/boleto/abertos', '\Mg\Titulo\TituloBoletoController@abertosLista');
     Route::get('titulo/boleto/liquidados/navegacao', '\Mg\Titulo\TituloBoletoController@liquidadosNavegacao');
@@ -1235,15 +1245,21 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
     Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
 
-    Route::get('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@index');
-    Route::get('liquidacao-titulo/relatorio', '\Mg\Titulo\LiquidacaoTituloController@relatorio');
-    Route::get('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@show')->where('id', '[0-9]+');
-    Route::post('liquidacao-titulo', '\Mg\Titulo\LiquidacaoTituloController@store');
-    Route::put('liquidacao-titulo/{id}', '\Mg\Titulo\LiquidacaoTituloController@update')->where('id', '[0-9]+');
-    Route::post('liquidacao-titulo/{id}/estornar', '\Mg\Titulo\LiquidacaoTituloController@estornar')->where('id', '[0-9]+');
-    Route::get('liquidacao-titulo/{id}/recibo', '\Mg\Titulo\LiquidacaoTituloController@recibo');
-    Route::get('liquidacao-titulo/{id}/recibo-recebimento', '\Mg\Titulo\LiquidacaoTituloController@reciboRecebimento');
-    Route::get('liquidacao-titulo/{id}/recibo-pagamento', '\Mg\Titulo\LiquidacaoTituloController@reciboPagamento');
+    // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
+    Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
+    Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
+    Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
+    Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');
+    Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoController@update')->where('id', '[0-9]+');
+    Route::post('pagamento/{id}/estornar', '\Mg\Pagamento\PagamentoController@estornar')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo', '\Mg\Pagamento\PagamentoController@recibo')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo-recebimento', '\Mg\Pagamento\PagamentoController@reciboRecebimento')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo-pagamento', '\Mg\Pagamento\PagamentoController@reciboPagamento')->where('id', '[0-9]+');
+    // cobranca integrada sem PDV (contas, M6.1 doc-3)
+    Route::post('cobranca/pix', '\Mg\Pagamento\CobrancaController@pix');
+    Route::post('cobranca/pagar-me', '\Mg\Pagamento\CobrancaController@pagarMe');
+    Route::post('cobranca/saurus', '\Mg\Pagamento\CobrancaController@saurus');
+    Route::get('cobranca/maquineta/{codfilial}', '\Mg\Pagamento\CobrancaController@maquinetas')->whereNumber('codfilial');
 
     Route::get('titulo-agrupamento', '\Mg\Titulo\TituloAgrupamentoController@index');
     Route::get('titulo-agrupamento/pendentes', '\Mg\Titulo\TituloAgrupamentoController@pendentes');
@@ -1277,6 +1293,19 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('portador/{codportador}/saldos-portador', '\Mg\Portador\PortadorController@listaSaldosPortador');
     Route::get('portador/{codportador}/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
+
+    // Maquineta (M3 doc-3: cadastro unico de terminais de cartao)
+    Route::get('maquineta', '\Mg\Maquineta\MaquinetaController@index');
+    Route::get('maquineta/adquirente', '\Mg\Maquineta\MaquinetaController@adquirentes');
+    Route::post('maquineta', '\Mg\Maquineta\MaquinetaController@store');
+    Route::post('maquineta/saurus/qrcode', '\Mg\Maquineta\MaquinetaController@saurusQrCode');
+    Route::post('maquineta/saurus/confirmar', '\Mg\Maquineta\MaquinetaController@saurusConfirmar');
+    Route::get('maquineta/{codmaquineta}', '\Mg\Maquineta\MaquinetaController@show')->whereNumber('codmaquineta');
+    Route::put('maquineta/{codmaquineta}', '\Mg\Maquineta\MaquinetaController@update')->whereNumber('codmaquineta');
+    Route::delete('maquineta/{codmaquineta}', '\Mg\Maquineta\MaquinetaController@destroy')->whereNumber('codmaquineta');
+    Route::post('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@inativar')->whereNumber('codmaquineta');
+    Route::delete('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@ativar')->whereNumber('codmaquineta');
+    Route::post('maquineta/{codmaquineta}/juntar', '\Mg\Maquineta\MaquinetaController@juntar')->whereNumber('codmaquineta');
 
     // Mercos
     Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');

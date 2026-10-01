@@ -11,7 +11,6 @@ use Mg\Boleto\BoletoRetorno;
 use Mg\Cheque\ChequeRepasse;
 use Mg\Cobranca\Cobranca;
 use Mg\Portador\ExtratoBancario;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Pdv\Pdv;
 use Mg\Pix\Pix;
@@ -144,10 +143,6 @@ class Portador extends MgModel
         return $this->hasMany(ExtratoBancario::class, 'codportador', 'codportador');
     }
 
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codportador', 'codportador');
-    }
 
     public function MovimentoTituloS()
     {

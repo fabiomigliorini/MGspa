@@ -7,9 +7,10 @@ use Illuminate\Support\Facades\Storage;
 use Mg\Filial\Filial;
 use Mg\Negocio\Negocio;
 use Mg\Pessoa\Pessoa;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
+use Mg\Maquineta\MaquinetaService;
 use Mg\Negocio\NegocioService;
-use Mg\FormaPagamento\FormaPagamento;
 
 use Carbon\Carbon;
 
@@ -61,6 +62,7 @@ class PagarMeService
             $reg->apelido = $serial;
             $reg->codfilial = $codfilial;
             $reg->save();
+            MaquinetaService::daPagarMePos($reg);
         }
         return $reg;
     }
@@ -342,38 +344,28 @@ class PagarMeService
     }
 
 
-    public static function vincularNegocioFormaPagamento(PagarMePedido $ped)
+    // Pedido pago vira pagamento efetivado (M4 doc-3). Sem negocio
+    // (recebimento de titulo, M6.1) nasce sem documento: a tela que criou a
+    // cobranca o amarra aos titulos ao finalizar.
+    public static function vincularPagamento(PagarMePedido $ped)
     {
-        if (empty($ped->codnegocio)) {
-            return false;
-        }
-
         if ($ped->valorpagoliquido <= 0) {
-            NegocioFormaPagamento::where([
-                'codpagarmepedido' => $ped->codpagarmepedido,
-            ])->delete();
+            foreach (Pagamento::where('codpagarmepedido', $ped->codpagarmepedido)->get() as $pag) {
+                PagamentoService::cancelar($pag, 'Pedido PagarMe cancelado ou sem pagamento');
+            }
             return true;
-        }
-
-        $fp = FormaPagamento::firstOrNew([
-            'pagarme' => true,
-            'integracao' => true
-        ]);
-
-        if (!$fp->exists) {
-            $fp->formapagamento = 'Stone PagarMe';
-            $fp->avista = true;
-            $fp->integracao = true;
-            $fp->save();
         }
 
         $tipo = 99; //Outros
         $autorizacao = null;
         $bandeira = null;
+        // POS que cobrou; sem ele, o do pedido
+        $pos = $ped->PagarMePos;
         foreach ($ped->PagarMePagamentoS as $pag) {
             if ($pag->valorcancelamento) {
                 continue;
             }
+            $pos = $pag->PagarMePos ?? $pos;
             switch ($pag->tipo) {
                 case 1: //debit
                     $tipo = 4; //Cartão de Débito
@@ -394,28 +386,38 @@ class PagarMeService
             );
         }
 
-        NegocioFormaPagamento::updateOrCreate(
-            [
-                'codnegocio' => $ped->codnegocio,
-                'autorizacao' => $autorizacao,
-                'codpessoa' => config('services.pagarme.codpessoa')
-            ],
-            [
-                'codpagarmepedido' => $ped->codpagarmepedido,
-                'codformapagamento' => $fp->codformapagamento,
-                'avista' => true,
-                'valorpagamento' => $ped->valor,
-                'valorjuros' => $ped->valorjuros,
-                'valortotal' => $ped->valorpagoliquido,
-                'valortroco' => null,
-                'tipo' => $tipo,
-                'bandeira' => $bandeira,
-                'integracao' => true,
-                'serialmaquineta' => $ped->PagarMePos->serial ?? null,
-            ]
-        );
+        // pagamento efetivado: a maquineta ja' confirmou (M4 doc-3). O que
+        // andou e' o pago liquido (menos cancelamento); o juros e' do
+        // parcelamento, o resto e' principal.
+        $juros = min(floatval($ped->valorjuros), floatval($ped->valorpagoliquido));
+        $pag = Pagamento::firstOrNew(['codpagarmepedido' => $ped->codpagarmepedido]);
+        // sem negocio, depois de amarrado aos titulos os valores sao deles
+        if (empty($ped->codnegocio) && $pag->exists && $pag->estado != PagamentoService::ESTADO_CANCELADO) {
+            return true;
+        }
+        PagamentoService::preencher($pag, [
+            'codnegocio' => $ped->codnegocio,
+            'codfilial' => $ped->Negocio->codfilial ?? $ped->codfilial,
+            'codpdv' => $ped->Negocio->codpdv ?? $ped->codpdv,
+            'meio' => $tipo,
+            'estado' => ($pag->estado == PagamentoService::ESTADO_CANCELADO) ? PagamentoService::ESTADO_PENDENTE : $pag->estado,
+            'cancelamento' => null,
+            'codusuariocancelamento' => null,
+            'justificativa' => null,
+            'principal' => round($ped->valorpagoliquido - $juros, 2),
+            'juros' => $juros,
+            'valortroco' => null,
+            'autorizacao' => $autorizacao,
+            'bandeira' => $bandeira,
+            'codpessoa' => empty($ped->codnegocio) ? $pag->codpessoa : config('services.pagarme.codpessoa'),
+            'codmaquineta' => $pos ? MaquinetaService::daPagarMePos($pos)->codmaquineta : null,
+        ]);
+        $pag->save();
+        PagamentoService::efetivar($pag);
 
-        NegocioService::fecharSePago($ped->Negocio);
+        if (!empty($ped->codnegocio)) {
+            NegocioService::fecharSePago($ped->Negocio);
+        }
 
         return true;
     }
@@ -582,7 +584,7 @@ class PagarMeService
         static::fecharPedidoSePago($ped);
 
         // cria forma de pagamento e atrela ao negocio
-        static::vincularNegocioFormaPagamento($ped);
+        static::vincularPagamento($ped);
 
         return $ped->fresh();
     }

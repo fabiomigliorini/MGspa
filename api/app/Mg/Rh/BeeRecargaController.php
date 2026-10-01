@@ -69,8 +69,7 @@ class BeeRecargaController extends Controller
                 (int) $request->input('codempresa'),
                 $request->input('itens'),
                 $request->input('dia'),
-                $request->input('observacao'),
-                $request->input('codportador')
+                $request->input('observacao')
             );
             DB::commit();
             $recarga->load(['Filial.Empresa', 'Titulo.Portador']);

@@ -28,10 +28,10 @@ class LioController extends MgController
                     p.fantasia,
                     n.valortotal,
                     (
-                        select sum(nfp.valorpagamento)
-                        from tblnegocioformapagamento nfp
-                        where nfp.codnegocio = n.codnegocio
-                        group by nfp.codnegocio
+                        select sum(pag.total)
+                        from tblpagamento pag
+                        where pag.codnegocio = n.codnegocio
+                        and pag.estado != \'C\'
                     ) as valorpago,
                     case when n.codusuario = u.codusuario then true else false end as usuario,
                     case when n.codfilial = u.codfilial then true else false end as filial,

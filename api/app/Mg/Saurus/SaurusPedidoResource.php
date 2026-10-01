@@ -19,6 +19,10 @@ class SaurusPedidoResource extends Resource
         $ret['apelido'] = $this->SaurusPdv->apelido??null;
         $ret['statusdescricao'] = SaurusService::STATUS_DESCRIPTION[$this->status]??null;
         $ret['tipodescricao'] = SaurusService::TYPE_DESCRIPTION[$this->modpagamento]??null;
+        // pagamento que a confirmacao criou (o recebimento de titulo o amarra)
+        $ret['codpagamento'] = \Mg\Pagamento\Pagamento::where('codsauruspedido', $this->codsauruspedido)
+            ->where('estado', '!=', \Mg\Pagamento\PagamentoService::ESTADO_CANCELADO)
+            ->value('codpagamento');
         $ret['SaurusPagamentoS'] = SaurusPagamentoResource::collection(
             $this->SaurusPagamentoS()->orderBy('criacao', 'desc')->get()
         );

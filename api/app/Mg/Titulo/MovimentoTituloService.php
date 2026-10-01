@@ -128,9 +128,6 @@ class MovimentoTituloService
         if (!empty($codtituloAnterior) && $codtituloAnterior != $titulo->codtitulo) {
             static::recalcular(Titulo::findOrFail($codtituloAnterior));
         }
-        if (!empty($mov->codliquidacaotitulo)) {
-            static::recalcularLiquidacao($mov->codliquidacaotitulo);
-        }
 
         return $mov;
     }
@@ -157,7 +154,7 @@ class MovimentoTituloService
             [
                 'codmovimentotituloestorno'   => $movimento->codmovimentotitulo,
                 'codportador'                 => $movimento->codportador,
-                'codliquidacaotitulo'         => $movimento->codliquidacaotitulo,
+                'codpagamento'                => $movimento->codpagamento,
                 'codperiodocolaboradoracerto' => $movimento->codperiodocolaboradoracerto,
             ]
         );
@@ -216,42 +213,6 @@ class MovimentoTituloService
         if (!empty($titulo->codtituloagrupamento)) {
             static::recalcularAgrupamento($titulo->codtituloagrupamento);
         }
-    }
-
-    /**
-     * Total da liquidação = soma líquida do total das liquidações (600)
-     * dela, o dinheiro que andou, com o sinal do movimento: negativo quando
-     * recebeu mais do que pagou. Estorno não entra: a liquidação estornada
-     * guarda o total que teve.
-     *
-     * debito/credito da liquidação ainda são gravados junto: o "Totais de
-     * Caixa" do MGLara soma as duas colunas. Saem quando essa tela sair.
-     */
-    public static function recalcularLiquidacao(int $codliquidacaotitulo): void
-    {
-        $sql = '
-            update tblliquidacaotitulo l
-               set valor   = q.valor,
-                   debito  = q.debito,
-                   credito = q.credito
-              from (
-                    select codliquidacaotitulo,
-                           sum(total) as valor,
-                           sum(greatest(total, 0)) as debito,
-                           sum(greatest(-total, 0)) as credito
-                      from tblmovimentotitulo
-                     where codliquidacaotitulo = :codmov
-                       and codtipomovimentotitulo = :tipo
-                       and codmovimentotituloestorno is null
-                     group by codliquidacaotitulo
-                   ) q
-             where l.codliquidacaotitulo = :cod
-        ';
-        DB::update($sql, [
-            'codmov' => $codliquidacaotitulo,
-            'tipo'   => static::TIPO_LIQUIDACAO,
-            'cod'    => $codliquidacaotitulo,
-        ]);
     }
 
     /**

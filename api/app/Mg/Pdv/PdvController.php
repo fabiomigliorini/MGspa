@@ -12,8 +12,9 @@ use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
+use Mg\Pagamento\CobrancaService;
 use Mg\PagarMe\PagarMePedidoResource;
-use Mg\Pix\PixService;
+use Mg\Pix\PixCobResource;
 use Mg\PagarMe\PagarMeService;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Titulo\Titulo;
@@ -32,7 +33,6 @@ use Mg\Saurus\SaurusPinPad;
 use Mg\Saurus\SaurusService;
 use Mg\Rh\ProcessarVendaJob;
 use Mg\Usuario\Autorizador;
-use Ramsey\Uuid\Uuid;
 
 class PdvController
 {
@@ -356,27 +356,6 @@ class PdvController
                 case 'codusuario':
                     $qry->where('codusuario', $valor);
                     break;
-                case 'integracao':
-                    if (sizeof($valor) == 2) {
-                        // se todos nao precisa fazer nenhum filtro
-                        break;
-                    }
-                    $integracao = ($valor[0] != 'Manual');
-                    $qry->whereIn('codnegocio', function ($query) use ($integracao) {
-                        $query->select('codnegocio')
-                            ->from('tblnegocioformapagamento')
-                            ->whereRaw('tblnegocioformapagamento.codnegocio = tblnegocio.codnegocio')
-                            ->where('integracao', $integracao);
-                    });
-                    break;
-                case 'codformapagamento':
-                    $qry->whereIn('codnegocio', function ($query) use ($valor) {
-                        $query->select('codnegocio')
-                            ->from('tblnegocioformapagamento')
-                            ->whereRaw('tblnegocioformapagamento.codnegocio = tblnegocio.codnegocio')
-                            ->whereIn('codformapagamento', $valor);
-                    });
-                    break;
                 case 'pdv':
                     break;
                 default:
@@ -481,82 +460,29 @@ class PdvController
         ];
     }
 
+    // Cobrancas integradas do wizard (M5 doc-3): para um documento, que pode
+    // nao ser negocio (codnegocio nulo, com a pessoa que paga). Devolve a
+    // cobranca criada.
+    // cobranca integrada do wizard (M5/M6.1 doc-3): o negocio ou nenhum
     public function criarPixCob(PdvRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);
-        $negocio = Negocio::findOrFail($request->codnegocio);
-        PixService::criarPixCobPdv($request->valor, $pdv, $negocio, $request->codportador);
-        return new NegocioResource($negocio);
+        $cob = CobrancaService::pix($request->all(), $pdv);
+        return new PixCobResource($cob->fresh());
     }
 
     public function criarPagarMePedido(PdvRequest $request)
     {
-        $data = (object) $request->all();
         $pdv = PdvService::autoriza($request->pdv);
-        $negocio = Negocio::findOrFail($request->codnegocio);
-        PagarMeService::consultarPedidosAbertosPos($data->codpagarmepos);
-        PagarMeService::cancelarPedidosAbertosPos($data->codpagarmepos);
-        PagarMeService::criarPedido(
-            null,
-            $data->codpagarmepos,
-            $data->tipo,
-            $data->valor,
-            $data->valorjuros ?? 0,
-            ($data->valorjuros ?? 0) + ($data->valor ?? 0),
-            $data->valorparcela ?? 0,
-            $data->parcelas,
-            $data->jurosloja,
-            $data->descricao,
-            $data->codnegocio,
-            $pdv->codpdv,
-            $data->codpessoa
-        );
-        return new NegocioResource($negocio);
+        $ped = CobrancaService::pagarMe($request->all(), $pdv);
+        return new PagarMePedidoResource($ped->fresh());
     }
 
     public function criarSaurusPedido(PdvRequest $request)
     {
-        $data = (object) $request->all();
-        $pdv = PdvService::autoriza($request->pdv);
-        $pdvSaurus = SaurusPdv::findOrFail($data->codsauruspos);
-        $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
-        $negocio = Negocio::findOrFail($request->codnegocio);
-        SaurusService::cancelarPedidosAbertosPdv($pdvSaurus->codsauruspdv);
-
-        $idpedido = Uuid::uuid4();
-        $idfaturapag = Uuid::uuid4();
-
-        switch ($data->tipo) {
-            case 1:
-                $modpagamento = 4;
-                break;
-            case 2:
-                $modpagamento = 3;
-                break;
-            default:
-                $modpagamento = 3;
-        }
-
-
-        SaurusService::criarPedido(
-            $idpedido,
-            $pdvSaurus->codsauruspdv,
-            $data->codnegocio,
-            $data->valor,
-            $data->valorjuros ?? 0,
-            ($data->valorjuros ?? 0) + ($data->valor ?? 0),
-            $data->valorparcela ?? 0,
-            $idfaturapag,
-            $modpagamento,
-            $data->parcelas,
-            0,
-            auth()->user()->codusuario,
-            now(),
-            $pdvSaurus,
-            $pos
-        );
-
-        return new NegocioResource($negocio);
+        PdvService::autoriza($request->pdv);
+        $ped = CobrancaService::saurus($request->all());
+        return new SaurusPedidoResource($ped->fresh());
     }
 
     public function reenviarSaurusPedido($codsauruspedido)
@@ -588,9 +514,7 @@ class PdvController
 
         $pedidoResponse = ApiService::functionPedidoCriar($pedido, $pdv, $pos);
 
-        $negocio = Negocio::findOrFail($pedido->codnegocio);
-
-        return new NegocioResource($negocio);
+        return new SaurusPedidoResource($pedido->fresh());
     }
 
     public function consultarPagarMePedido($codpagarmepedido)
@@ -750,163 +674,5 @@ class PdvController
             throw new Exception("Este não é um Vale Compras!");
         }
         return new TituloResource($titulo);
-    }
-
-    public function registrarPosSaurus(Request $request)
-    {
-
-        // valida campos requeridos
-        $request->validate([
-            'pdv_uuid' => 'nullable|string',
-            'apelido' => 'required|string',
-            'codfilial' => 'required|exists:tblfilial,codfilial',
-        ]);
-
-        // se nao veio uuid, gera um
-        $pdv_uuid = $request->pdv_uuid ?? Uuid::uuid4();
-
-        // verifica se já existe um pdv com esse uuid cadastrado
-        $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
-        if ($pdvSaurus && $pdvSaurus->vencimento > now()) {
-            return response()->json([
-                'success' => true,
-                'pdvsaurus' => $pdvSaurus
-            ], 200);
-        }
-
-        // busca a pessoa
-        $pessoa = Filial::findOrFail($request->codfilial)->pessoa; //Pessoa::findOrFail(->codpessoa);
-
-        // se nao tem numero, busca o proximo na filial
-        if ($pdvSaurus) {
-            $numero = $pdvSaurus->numero;
-        } else {
-            $numero = SaurusPdv::select('numero')->where('codfilial', $request->codfilial)->orderBy('numero', 'desc')->first();
-            if ($numero) {
-                $numero = $numero->numero + 1;
-            } else {
-                $numero = 1;
-            }
-        }
-
-        // faz a chamada na api da saurus criando o pdv 
-        $responsePdvSaurus = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $numero);
-
-        // salva retorno na tabela
-        $pdvSaurus = SaurusPdv::updateOrCreate(
-            [
-                'id' => $pdv_uuid,
-            ],
-            [
-                'apelido' => $request->apelido,
-                'autorizacao' => $responsePdvSaurus->autorizacao->response->chavePublica,
-                'vencimento' => Carbon::parse($responsePdvSaurus->autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
-                'chavepublica' => $responsePdvSaurus->pdv->response->chavePublica,
-                'contratoid' => $responsePdvSaurus->pdv->response->contratoId,
-                'codfilial' => $request->codfilial,
-                'numero' => $numero,
-            ]
-        );
-
-        // retorna o pdv criado
-        return response()->json([
-            'success' => true,
-            'pdvsaurus' => $pdvSaurus
-        ], 200);
-    }
-
-    public function verificarLeituraSaurus(Request $request)
-    {
-        $request->validate([
-            'pdv_uuid' => 'required|string',
-        ]);
-
-        $pdv_uuid = $request->pdv_uuid;
-
-        $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
-
-        $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdvSaurus->codfilial)->codpessoa);
-
-        $responsePdvSaurus = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
-
-        if (str_contains($responsePdvSaurus->retTexto, 'Chave de Autorização está Inválida')) {
-
-            $autorizacao = ApiService::functionAutorizacao($pdvSaurus->id, $pessoa->cnpj);
-
-            SaurusPdv::updateOrCreate(
-                [
-                    'id' => $pdv_uuid,
-                ],
-                [
-
-                    'autorizacao' => $autorizacao->response->chavePublica,
-                    'vencimento' => Carbon::parse($autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
-                ]
-            );
-
-            $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
-
-            $responsePdvSaurus = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
-        }
-
-        if (count($responsePdvSaurus->response->pinPads) > 0) {
-
-
-            SaurusPinPad::updateOrCreate(
-                [
-                    'id' => $responsePdvSaurus->response->pinPads[0],
-                ],
-                [
-                    'apelido' => $pdvSaurus->apelido,
-                    'codfilial' => $pdvSaurus->codfilial,
-                    'codsauruspdv' => $pdvSaurus->codsauruspdv,
-                ]
-            );
-
-
-            return response()->json([
-                'success' => true,
-            ], 200);
-        } else {
-            return response()->json([
-                'success' => false,
-            ], 200);
-        }
-    }
-
-    public function listaPdvsSaurus(Request $request)
-    {
-        $pdvs = SaurusPdv::orderBy('criacao', 'desc')->with('SaurusPinPadS')->get();
-        return $pdvs;
-    }
-
-    public function editarPdvSaurus(Request $request, $codsauruspdv)
-    {
-        $request->validate([
-            'apelido' => 'required|string',
-            'codfilial' => 'required|exists:tblfilial,codfilial',
-        ]);
-
-        $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
-        $pdvSaurus->apelido = $request->apelido;
-        $pdvSaurus->codfilial = $request->codfilial;
-        $pdvSaurus->save();
-        return $pdvSaurus;
-    }
-
-    public function inativarPdvSaurus(Request $request, $codsauruspdv)
-    {
-        $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
-        $pdvSaurus->inativo = now();
-        $pdvSaurus->save();
-        return $pdvSaurus;
-    }
-
-    public function ativarPdvSaurus(Request $request, $codsauruspdv)
-    {
-        $pdvSaurus = SaurusPdv::findOrFail($codsauruspdv);
-        $pdvSaurus->inativo = null;
-        $pdvSaurus->save();
-        return $pdvSaurus;
     }
 }

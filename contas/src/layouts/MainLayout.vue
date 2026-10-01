@@ -17,10 +17,10 @@ const menuGroups = [
     items: [
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
-        label: 'Liquidações',
+        label: 'Pagamentos',
         icon: 'paid',
         color: 'indigo-7',
-        to: { name: 'liquidacao-titulo' },
+        to: { name: 'pagamento' },
       },
       {
         label: 'Agrupamentos',
@@ -80,6 +80,12 @@ const menuGroups = [
         to: { name: 'tipo-movimento-titulo' },
       },
       { label: 'Portadores', icon: 'credit_card', color: 'cyan-8', to: { name: 'portador' } },
+      {
+        label: 'Maquinetas',
+        icon: 'point_of_sale',
+        color: 'deep-orange-8',
+        to: { name: 'maquineta' },
+      },
       {
         label: 'Formas de Pagamento',
         icon: 'payments',

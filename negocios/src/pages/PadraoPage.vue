@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { negocioStore } from 'stores/negocio'
-import { pixStore } from 'stores/pix'
+import { pixStore } from '@components/stores/pixStore'
+import { logo } from '@components/cobranca/logos.js'
 import { Dialog, Notify } from 'quasar'
 import { db } from 'src/boot/db'
 import SelectNaturezaOperacao from 'components/selects/SelectNaturezaOperacao.vue'
@@ -153,8 +154,9 @@ const salvar = async () => {
                     <q-item-section avatar>
                       <q-avatar>
                         <q-img
-                          :src="'/bancos/' + port.codbanco + '.svg'"
-                          @error="(evt) => (evt.target.src = '/bancos/pix.svg')"
+                          :src="
+                            logo('/bancos/' + port.codbanco + '.svg') ?? logo('/bancos/pix.svg')
+                          "
                         />
                       </q-avatar>
                     </q-item-section>

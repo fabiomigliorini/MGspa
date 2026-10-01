@@ -7,7 +7,6 @@
 namespace Mg\Pdv;
 
 use Mg\MgModel;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Negocio\Negocio;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
@@ -90,10 +89,6 @@ class Pdv extends MgModel
 
 
     // Tabelas Filhas
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpdv', 'codpdv');
-    }
 
     public function NegocioS()
     {

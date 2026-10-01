@@ -5,7 +5,7 @@ namespace Mg\Titulo;
 use Carbon\Carbon;
 
 /**
- * Baixa de título pela liquidação e pelo agrupamento, sem transação interna
+ * Baixa de título pelo pagamento e pelo agrupamento, sem transação interna
  * (transação fica a cargo do Service/Controller chamador).
  */
 class MovimentoTituloHelper
@@ -25,7 +25,7 @@ class MovimentoTituloHelper
         ?string $transacao = null,
         ?int $codportador = null,
         ?int $codtituloagrupamento = null,
-        ?int $codliquidacaotitulo = null,
+        ?int $codpagamento = null,
         int $tipo = MovimentoTituloService::TIPO_LIQUIDACAO
     ): void {
         $principal = round($total - $juros - $multa + $desconto, 2);
@@ -46,7 +46,7 @@ class MovimentoTituloHelper
             [
                 'transacao'            => $transacao ? Carbon::parse($transacao)->format('Y-m-d') : Carbon::today()->format('Y-m-d'),
                 'codtituloagrupamento' => $codtituloagrupamento,
-                'codliquidacaotitulo'  => $codliquidacaotitulo,
+                'codpagamento'         => $codpagamento,
                 'codportador'          => $codportador,
             ]
         );

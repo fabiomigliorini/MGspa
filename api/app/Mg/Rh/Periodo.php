@@ -8,7 +8,6 @@ namespace Mg\Rh;
 
 use Mg\MgModel;
 use Mg\Rh\Indicador;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Rh\PeriodoColaborador;
 
 class Periodo extends MgModel
@@ -45,10 +44,6 @@ class Periodo extends MgModel
         return $this->hasMany(Indicador::class, 'codperiodo', 'codperiodo');
     }
 
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codperiodo', 'codperiodo');
-    }
 
     public function PeriodoColaboradorS()
     {

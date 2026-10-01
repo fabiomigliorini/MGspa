@@ -12,7 +12,8 @@ use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Negocio\NegocioParcela;
+use Mg\Negocio\NegocioParcelaService;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
 use Mg\Negocio\NegocioStatus;
@@ -127,7 +128,7 @@ class NfeTerceiroImportarService
             $nf->save();
 
             // ==================== NEGOCIO (condicional) ====================
-            $negocioFormaPagamento = null;
+            $prazoNegocio = false;
 
             if ($geraNegocio) {
                 $negocio = new Negocio();
@@ -147,14 +148,9 @@ class NfeTerceiroImportarService
                 $negocio->valoroutras = $nft->valoroutras;
                 $negocio->save();
 
-                // Forma de pagamento (Boleto = 3010) se financeiro
-                if ($natOp->financeiro) {
-                    $negocioFormaPagamento = new NegocioFormaPagamento();
-                    $negocioFormaPagamento->codnegocio = $negocio->codnegocio;
-                    $negocioFormaPagamento->codformapagamento = 3010;
-                    $negocioFormaPagamento->valorpagamento = $nft->valortotal;
-                    $negocioFormaPagamento->save();
-                }
+                // Prazo (fechamento) se financeiro: uma parcela por titulo,
+                // com o vencimento da duplicata (M4 doc-3)
+                $prazoNegocio = (bool) $natOp->financeiro;
             }
 
             // ==================== DUPLICATAS + TÍTULOS ====================
@@ -181,7 +177,7 @@ class NfeTerceiroImportarService
                 $nfd->save();
 
                 // Títulos (se gera negócio e é financeiro)
-                if ($geraNegocio && $natOp->financeiro && $negocioFormaPagamento) {
+                if ($geraNegocio && $natOp->financeiro && $prazoNegocio) {
                     $valor = $nfd->valor;
 
                     // Última parcela: pega diferença para evitar centavos perdidos
@@ -190,7 +186,7 @@ class NfeTerceiroImportarService
                     }
 
                     $titulo = new Titulo();
-                    $titulo->codnegocioformapagamento = $negocioFormaPagamento->codnegocioformapagamento;
+                    $titulo->codnegocioparcela = static::parcela($negocio, $i, $dup->dvenc, $valor)->codnegocioparcela;
                     $titulo->codfilial = $nft->codfilial;
                     $titulo->codtipotitulo = $natOp->codtipotitulo;
                     $titulo->codcontacontabil = $natOp->codcontacontabil;
@@ -207,6 +203,7 @@ class NfeTerceiroImportarService
                     $titulo->vencimentooriginal = $dup->dvenc;
                     $titulo->gerencial = true;
                     TituloService::implantar($titulo);
+                    NegocioParcela::where('codnegocioparcela', $titulo->codnegocioparcela)->update(['codtitulo' => $titulo->codtitulo]);
 
                     // Vincula título à duplicata da NFe Terceiro
                     $dup->codtitulo = $titulo->codtitulo;
@@ -223,11 +220,17 @@ class NfeTerceiroImportarService
             }
 
             // Título SLD se diferença > 0.05
-            if ($geraNegocio && $natOp->financeiro && $negocioFormaPagamento && $parcelas > 0) {
+            // sem duplicata: o prazo fica numa parcela so', sem titulo (como a
+            // forma de pagamento antiga ficava)
+            if ($geraNegocio && $natOp->financeiro && $prazoNegocio && $parcelas == 0 && $nft->valortotal > 0) {
+                static::parcela($negocio, 1, $nft->entrada, $nft->valortotal);
+            }
+
+            if ($geraNegocio && $natOp->financeiro && $prazoNegocio && $parcelas > 0) {
                 $diferenca = $nft->valortotal - $totalTitulos;
                 if (abs($diferenca) > 0.05) {
                     $tituloSld = new Titulo();
-                    $tituloSld->codnegocioformapagamento = $negocioFormaPagamento->codnegocioformapagamento;
+                    $tituloSld->codnegocioparcela = static::parcela($negocio, $parcelas + 1, $nft->entrada, $diferenca)->codnegocioparcela;
                     $tituloSld->codfilial = $nft->codfilial;
                     $tituloSld->codtipotitulo = $natOp->codtipotitulo;
                     $tituloSld->codcontacontabil = $natOp->codcontacontabil;
@@ -243,6 +246,7 @@ class NfeTerceiroImportarService
                     $tituloSld->vencimentooriginal = $nft->entrada;
                     $tituloSld->gerencial = true;
                     TituloService::implantar($tituloSld);
+                    NegocioParcela::where('codnegocioparcela', $tituloSld->codnegocioparcela)->update(['codtitulo' => $tituloSld->codtitulo]);
                 }
             }
 
@@ -354,5 +358,19 @@ class NfeTerceiroImportarService
         }
 
         return $nft->fresh();
+    }
+
+    // parcela do negocio que vira o titulo da duplicata (fechamento)
+    private static function parcela($negocio, int $numero, $vencimento, $valor): NegocioParcela
+    {
+        $np = new NegocioParcela([
+            'codnegocio' => $negocio->codnegocio,
+            'condicao' => NegocioParcelaService::CONDICAO_FECHAMENTO,
+            'numero' => $numero,
+            'vencimento' => $vencimento,
+            'valor' => round(abs($valor), 2),
+        ]);
+        $np->save();
+        return $np;
     }
 }

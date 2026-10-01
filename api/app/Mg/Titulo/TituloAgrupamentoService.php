@@ -282,7 +282,7 @@ class TituloAgrupamentoService
             from tbltituloagrupamento ta
             inner join tblmovimentotitulo mt on (mt.codtituloagrupamento = ta.codtituloagrupamento)
             inner join tbltitulo t on (t.codtitulo = mt.codtitulo)
-            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
             inner join tblnegocioprodutobarra npb on (npb.codnegocio = nfp.codnegocio)
             inner join tblnotafiscalprodutobarra nfpb on (nfpb.codnegocioprodutobarra = npb.codnegocioprodutobarra)
             where ta.codtituloagrupamento = :codtituloagrupamento
@@ -317,7 +317,7 @@ class TituloAgrupamentoService
             from tbltituloagrupamento ta
             inner join tblmovimentotitulo mt on (mt.codtituloagrupamento = ta.codtituloagrupamento)
             inner join tbltitulo t on (t.codtitulo = mt.codtitulo)
-            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
             where ta.codtituloagrupamento = :codtituloagrupamento
         ', ['codtituloagrupamento' => $ag->codtituloagrupamento]);
 
@@ -365,7 +365,7 @@ class TituloAgrupamentoService
                 sum(t.saldo) as saldo,
                 min(t.vencimento) as vencimento
             from tbltitulo t
-            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
             inner join tblnegocio n on (n.codnegocio = nfp.codnegocio)
             inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
             inner join tblpessoa p on (p.codpessoa = t.codpessoa)

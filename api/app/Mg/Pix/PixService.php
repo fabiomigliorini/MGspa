@@ -8,12 +8,13 @@ use Dompdf\Dompdf;
 
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Portador\Portador;
 use Mg\Pix\Sicredi\PixSicrediService;
-use Mg\FormaPagamento\FormaPagamento;
 use Illuminate\Support\Facades\DB;
 use Mg\Pdv\Pdv;
+use Mg\Pessoa\Pessoa;
 
 class PixService
 {
@@ -25,7 +26,7 @@ class PixService
         }
 
         // calcula saldo a pagar do negocio
-        $pago = $negocio->NegocioFormaPagamentoS()->sum('valorpagamento');
+        $pago = \Mg\Negocio\NegocioService::valorPago($negocio);
         $saldo = $negocio->valortotal - $pago;
         if ($saldo <= 0) {
             throw new \Exception("Não existe saldo à pagar para gerar o PIX!", 1);
@@ -94,12 +95,18 @@ class PixService
         return $cob;
     }
 
-    public static function criarPixCobPdv(Float $valor, Pdv $pdv, Negocio $negocio, int $codportador = null)
+    // Cobranca PIX do wizard do PDV para um documento (M5 doc-3): o negocio,
+    // ou nenhum (recebimento no balcao, M7), com a pessoa que paga
+    // PDV nulo: cobranca feita pelo contas (recebimento de titulo, M6.1)
+    public static function criarPixCobPdv(Float $valor, ?Pdv $pdv, ?Negocio $negocio, int $codportador = null, ?Pessoa $pessoa = null)
     {
+        $pessoa = $negocio->Pessoa ?? $pessoa;
+        $codfilial = $negocio->codfilial ?? $pdv->codfilial ?? null;
+
         // procura ou cria registro
         $cob = new PixCob([
-            'codnegocio' => $negocio->codnegocio,
-            'codpdv' => $pdv->codpdv,
+            'codnegocio' => $negocio->codnegocio ?? null,
+            'codpdv' => $pdv->codpdv ?? null,
             'valororiginal' => $valor
         ]);
 
@@ -113,18 +120,24 @@ class PixService
         $cob->codpixcobstatus = $status->codpixcobstatus;
 
         // CNPJ ou CPF
-        if (!empty($negocio->Pessoa->cnpj)) {
-            $cob->nome = $negocio->Pessoa->pessoa;
-            if ($negocio->Pessoa->fisica) {
-                $cob->cpf = $negocio->Pessoa->cnpj;
+        if (!empty($pessoa->cnpj)) {
+            $cob->nome = $pessoa->pessoa;
+            if ($pessoa->fisica) {
+                $cob->cpf = $pessoa->cnpj;
             } else {
-                $cob->cnpj = $negocio->Pessoa->cnpj;
+                $cob->cnpj = $pessoa->cnpj;
             }
         }
 
         // Texto para ser apresentado pro cliente
-        $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
-        $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
+        if ($negocio && $pdv) {
+            $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
+        } elseif ($pdv) {
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento PDV #{$pdv->uuid}!";
+        } else {
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento de títulos!";
+        }
 
         // Se codportador informado, busca direto
         if ($codportador) {
@@ -134,7 +147,7 @@ class PixService
                 ->first();
         } else {
             // Fallback: procura portador do BB pra filial com convenio
-            $portador = Portador::where('codfilial', $negocio->codfilial)
+            $portador = Portador::where('codfilial', $codfilial)
                 ->whereNull('inativo')
                 ->where('codbanco', 1)
                 ->whereNotNull('pixdict')
@@ -265,37 +278,40 @@ class PixService
         return $pix;
     }
 
+    // PIX confirmado vira pagamento efetivado (o banco ja' confirmou, M4
+    // doc-3). Sem negocio (recebimento de titulo, M6.1) nasce sem documento:
+    // a tela que criou a cobranca o amarra aos titulos ao finalizar.
     public static function processarPixCobNegocio(PixCob $cob)
     {
-        if (empty($cob->codnegocio)) {
-            return;
-        }
         $valorpagamento = $cob->PixS()->sum('valor');
         if ($valorpagamento <= 0) {
             return;
         }
-        $nfp = NegocioFormaPagamento::firstOrNew([
+        $pag = Pagamento::firstOrNew([
             'codpixcob' => $cob->codpixcob
         ]);
-        $nfp->codnegocio = $cob->codnegocio;
-        $nfp->valorpagamento = $valorpagamento;
-        $nfp->valortotal = $valorpagamento;
-        $fp = FormaPagamento::firstOrNew(['pix' => true, 'integracao' => true]);
-        if (!$fp->exists) {
-            $fp->formapagamento = 'PIX';
-            $fp->avista = true;
-            $fp->integracao = true;
-            $fp->save();
+        // sem negocio, depois de amarrado aos titulos os valores sao deles
+        if (empty($cob->codnegocio) && $pag->exists) {
+            return;
         }
-        $nfp->tipo = 17;
-        $nfp->integracao = true;
-        $nfp->avista = true;
-        $nfp->codformapagamento = $fp->codformapagamento;
-        // $nfp->codportador = $cob->codportador;
-        $nfp->codpessoa = $cob->Portador->codpessoa;
-        $nfp->autorizacao = $cob->PixS[0]->e2eid;
-        $nfp->save();
-        $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
+        PagamentoService::preencher($pag, [
+            'codnegocio' => $cob->codnegocio,
+            'codfilial' => $cob->Negocio->codfilial ?? $cob->Pdv->codfilial ?? $cob->Portador->codfilial,
+            'codpdv' => $cob->codpdv ?? $cob->Negocio->codpdv ?? null,
+            'meio' => PagamentoService::MEIO_PIX,
+            'principal' => $valorpagamento,
+            'codportadordestino' => $cob->codportador,
+            'codpessoa' => empty($cob->codnegocio) ? $pag->codpessoa : $cob->Portador->codpessoa,
+            'codpix' => $cob->PixS[0]->codpix,
+            'autorizacao' => $cob->PixS[0]->e2eid,
+        ]);
+        $pag->save();
+        if ($pag->estado != PagamentoService::ESTADO_CANCELADO) {
+            PagamentoService::efetivar($pag);
+        }
+        if (!empty($cob->codnegocio)) {
+            \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
+        }
     }
 
     public static function consultarPix(

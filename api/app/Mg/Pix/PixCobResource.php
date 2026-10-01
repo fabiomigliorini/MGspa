@@ -24,6 +24,10 @@ class PixCobResource extends Resource
         }
         unset($ret['Portador']);
         $ret['portador'] = $this->Portador->portador;
+        // pagamento que a confirmacao criou (o recebimento de titulo o amarra)
+        $ret['codpagamento'] = \Mg\Pagamento\Pagamento::where('codpixcob', $this->codpixcob)
+            ->where('estado', '!=', \Mg\Pagamento\PagamentoService::ESTADO_CANCELADO)
+            ->value('codpagamento');
         $ret['PixS'] = [];
         foreach ($this->PixS as $pix) {
             $retPix = $pix->toArray();
