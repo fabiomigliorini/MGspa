@@ -402,7 +402,33 @@ para leitura de histórico não convertido.
   173, `FormaVale` 197, `FormaPrazo` 152, stores `pix`/`pagar-me`/`saurus`). `tblsauruspedido.codnegocio`
   é NOT NULL; `tblpixcob.codnegocio` e `tblpagarmepedido.codnegocio` aceitam nulo. Maquinetas:
   `tblpagarmepos` (89, 4 ativas), `tblsauruspdv` (24) + `tblsauruspinpad` (31), serial digitado no
-  cartão manual. PDVs de caixa: 17 com `alocacao = 'C'`.
+  cartão manual. PDVs de caixa: 17 com `alocacao = 'C'`. (Os nomes de arquivo deste levantamento
+  são de antes do M6.1; onde as peças estão hoje, no item abaixo.)
+- **Pagamento e cobrança depois do M6.1** (vale para M8 em diante; detalhe na seção M6.1):
+  - Wizard, formas e integrações só em `@components`: `MgCobrancaDialog.vue`, `cobranca/`
+    (`Forma*.vue`, `ListaOpcoes`, `PixCobDialog`/`PagarMePedidoDialog`/`SaurusPedidoDialog`,
+    `pagamento.js` com MEIO/VISUAL/CONDICAO, `juros.js`, `eventos.js`, `integrada.js`) e
+    `stores/{cobrancaStore, pixStore (id pixCob), pagarMeStore, saurusStore}.js`. Nenhuma cópia em
+    app: forma nova entra em `@components` e na lista `FORMAS` do `MgCobrancaDialog`.
+  - Quem abre o wizard informa `documento` (o que se paga: `tipo` 'negocio' ou 'titulos', com os
+    tratadores `aoPagamento`/`aoParcelas`/`aoCobranca` ou, sem eles, os eventos do dialog),
+    `contexto` (onde: `pdv` uuid ou nulo no contas, `codfilial`, `carregarMaquinetas`,
+    `portadores`, `buscarVale`) e `formasPermitidas`. Um `MgCobrancaDialog` por app (no PDV fica no
+    `TotalNegocio`; no contas, na página que usa).
+  - Baixa de títulos (PDV e contas) = `@components/stores/baixaTitulosStore.js` (títulos → formas
+    lançadas → finalizar) + `Mg/Pagamento/PagamentoTituloService::baixar(dados, ?Pdv)`: um
+    pagamento por forma, linhas distribuídas por vencimento, portador resolvido pelo meio
+    (dinheiro na gaveta do PDV; no contas, cofre/troco/Caixa Financeiro; cheque recebido na
+    Carteira; cartão na adquirente da maquineta). Rotas: contas `POST v1/pagamento`; PDV
+    `POST v1/pdv/pagamento` (`PdvPagamentoService`, pagar vale só Gerente/Admin).
+  - Cobrança integrada sem negócio: o pagamento nasce efetivado e sem documento na confirmação
+    (`PixService::processarPixCobNegocio`, `PagarMeService`/`SaurusService::vincularPagamento`);
+    quem criou a cobrança o amarra mandando `codpagamento` na forma. Criar cobrança sem PDV:
+    `Mg/Pagamento/CobrancaService` + `v1/cobranca/{pix, pagar-me, saurus}`.
+  - Listagem única: `PagamentoListaService` (origem V venda / T títulos / X transferência / A
+    avulso, filtros), `PagamentoListaResource`/`PagamentoDetalheResource`, `PagamentoController`
+    (`v1/pagamento`, contas) e `PdvPagamentoController` (`v1/pdv/pagamento`, travada no PDV); no
+    front `MgPagamentoLista`/`MgPagamentoFiltros`/`MgPagamentoDetalhe` + `stores/pagamentoListaStore`.
 
 ---
 
@@ -952,10 +978,14 @@ stores nem do wizard fora de `@components`.
 
 - **Backend** `PdvTituloService::lancar(Pdv, dados)`: cria título com `movimentaportador` (2 Vale
   Colaborador e 120 Adto Fornecedor: saída em dinheiro, origem = gaveta; 220 Adto Cliente: entrada
-  pelas formas do M7), um título por forma, implantação com `total` e pagamento ligado; `estornar`
+  pelas formas do Receber título do M6.1), um título por forma, implantação com `total` e pagamento
+  ligado (portador pela mesma regra de `PagamentoTituloService`; cobrança integrada amarrada pelo
+  `codpagamento` que a confirmação criou); `estornar`
   via `TituloService::estornar` (cancela o pagamento). Permissão: Caixa da filial/Gerente/Admin.
-- **Frontend**: `LancarTituloDialog.vue` (tipo, pessoa, valor, observação → wizard no sentido certo);
-  comprovante térmico com assinatura.
+- **Frontend**: `LancarTituloDialog.vue` (tipo, pessoa, valor, observação → `MgCobrancaDialog` de
+  `@components` no sentido certo, com documento próprio e tratadores `aoPagamento`/`aoCobranca`,
+  como o `baixaTitulosStore`); comprovante térmico com assinatura (como o
+  `pagamento/recibo-termica`).
 - **Valida**: vale em dinheiro; adiantamento de cliente em dinheiro, PIX QR e cartão; adiantamento a
   fornecedor; títulos no contas com portador certo; estorno.
 
@@ -989,11 +1019,14 @@ stores nem do wizard fora de `@components`.
   avulso) + informativo por meio dos negócios dos PDVs da gaveta na janela.
 - **Frontend negocios**: `stores/caixa.js`; `/caixa` (`CaixaLayout`, `CaixaPage`: sem portador,
   fechado → abertura inline, aberto → cabeçalho, `CaixaResumo`, informativos, lançamentos, botões
-  Lançamento e Fechar com diferença ao vivo → PDF; última sessão com Reabrir); `ReceberDialog`
-  desabilita Dinheiro com motivo; menu "Caixa".
+  Lançamento e Fechar com diferença ao vivo → PDF; última sessão com Reabrir); o
+  `MgCobrancaDialog` desabilita Dinheiro com motivo (informado pelo `contexto` do PDV, na venda e
+  no Receber título); menu "Caixa". O dinheiro de título no PDV passa por
+  `PagamentoTituloService::baixar` (gaveta do PDV): o hook de caixa fechado vale ali também. O
+  `MgPagamentoDetalhe` ganha os lançamentos do razão.
 - **Valida**: abrir com 50 + 200 → ajuste +250; venda R$10 em dinheiro → +10 na sessão; fechar →
   Dinheiro desabilitado; cancelar venda com sessão aberta → estorno; com sessão fechada → 422;
-  notinha e vale do M7/M8 aparecendo; fechar com contagem → PDF; reabrir (Gerente); sessão de ontem
+  notinha e vale do M6.1/M8 aparecendo; fechar com contagem → PDF; reabrir (Gerente); sessão de ontem
   reaberta exige fechar antes de hoje.
 
 ## M11 — Transferências (TASK-39)
@@ -1008,6 +1041,8 @@ stores nem do wizard fora de `@components`.
   desabilitadas com motivo), lista com cores por estado, Confirmar/Cancelar; contas → página
   **Caixas** (`pages/caixa/Index.vue`, `caixaStore`, drawer filial/de/até): abas Portadores e
   Transferências (pendentes, histórico, FAB "Nova transferência" de → para). Menu Movimento → Caixas.
+  A transferência já aparece na listagem única (origem X, `PagamentoListaService`); Confirmar/
+  Cancelar entram no `MgPagamentoDetalhe`.
 - **Valida**: gaveta → cofre 200 pendente, gerente confirma; gerente registra "recebi 250" (nasce
   efetivada); cancelar com justificativa; gaveta → gaveta com destino fechado → 422; fechar gaveta
   com pendente chegando → 422; gaveta → Caixa Financeiro (Financeiro confirma no contas); cancelar
@@ -1085,6 +1120,8 @@ TED, PIX), Sicredi sem API pública de pagamento. Conferir campos e estados ao i
   `--dep TASK-186`; ACs `M1.x` a `M6.x` (um `--ac` por critério, na língua de quem usa).
 - **Receber no balcão** (nova, feature, labels `negocios,contas,api`, high):
   `task create "Notinha, vale e adiantamento não têm como ser recebidos ou pagos no PDV com a forma certa"` com ACs `M7.x` a `M9.x`; `--dep` na Fundação.
+  **Ainda não criada** (01/10/2026). O M7 foi absorvido pelo M6.1 e virou os ACs M6.1.5 e M6.1.6
+  da TASK-188; quando for criada, ela fica só com M8 e M9.
 - **TASK-39**: `--dep` na task de balcão; ACs M10 a M13 (já lançados; ajustar os que citam
   liquidação/transferência para pagamento).
 - **Futuras** (M14, M15): só anotadas aqui; nascem com OK explícito quando chegar a vez.
