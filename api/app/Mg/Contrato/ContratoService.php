@@ -136,8 +136,26 @@ class ContratoService extends MgService
         // quantidade NULL = volume em aberto (leva o saldo do silo; sem teto). A
         // coluna é nullable (agro_contrato_refatoracao.sql); não ancorar em 0,
         // senão deixa de ser "em aberto" e o tipo/saldo derivam errado.
+        static::aplicarComissao($contrato);
         $contrato->save();
         return $contrato;
+    }
+
+    /**
+     * Comissão total, sempre calculada aqui (o cliente não manda): TOTAL = o
+     * valor; SACA = valor × sacas contratadas; PERCENTUAL = % do fixado em R$.
+     */
+    public static function aplicarComissao(Contrato $contrato): void
+    {
+        $valor = (float) $contrato->comissaovalor;
+        $contrato->comissaototal = match ($contrato->comissaotipo) {
+            'TOTAL' => $valor,
+            'SACA' => round($valor * (float) $contrato->quantidade, 2),
+            'PERCENTUAL' => $contrato->exists
+                ? round($valor / 100 * static::valorFixadoBruto((int) $contrato->codcontrato), 2)
+                : 0.0,
+            default => null,
+        };
     }
 
     /**

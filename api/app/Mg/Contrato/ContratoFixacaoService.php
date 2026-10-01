@@ -52,6 +52,12 @@ class ContratoFixacaoService extends MgService
         $f->liquidobrl = static::liquido($f, $totalbrl, $sacastravadas);
         $f->save();
 
+        // A comissão percentual é sobre o fixado: acompanha cada mudança.
+        if ($f->Contrato) {
+            ContratoService::aplicarComissao($f->Contrato);
+            $f->Contrato->save();
+        }
+
         return $f;
     }
 
@@ -83,6 +89,20 @@ class ContratoFixacaoService extends MgService
             'funruralvenda' => $funruralvenda,
             'tributos' => $tributos, // override quando o operador declarou as linhas
         ]);
+
+        // Sem linhas declaradas, guarda as vigentes na fixação (tributos da época):
+        // dali em diante vale o override, e mexer na tabela não muda fixação antiga.
+        if ($tributos === null && !empty($calc['itens'])) {
+            $f->tributos = array_map(fn ($i) => [
+                'codtributo' => $i['codtributo'] ?? null,
+                'codigo' => $i['codigo'] ?? null,
+                'descricao' => $i['descricao'] ?? null,
+                'base' => $i['base'],
+                'percentual' => $i['percentual'],
+                'upf' => $i['upf'] ?? null,
+                'grupofethab' => (bool) ($i['grupofethab'] ?? false),
+            ], $calc['itens']);
+        }
 
         return round((float) $calc['liquido'] * $sacastravadas, 2);
     }

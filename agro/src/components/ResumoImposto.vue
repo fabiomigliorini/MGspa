@@ -12,6 +12,9 @@ const props = defineProps({
   sacas: { type: Number, default: 0 },
   tributos: { type: Array, default: () => [] },
   pesosaca: { type: Number, default: 60 },
+  // Líquido GRAVADO pelo servidor (card da fixação). Sem ele (prévia nos
+  // diálogos) vale a conta local, com o mesmo arredondamento do servidor.
+  liquido: { type: Number, default: null },
 })
 
 const rs = formataReal
@@ -21,23 +24,36 @@ function n(v) {
 function arred(v) {
   return Math.round(n(v) * 100) / 100
 }
+function arred4(v) {
+  return Math.round(n(v) * 10000) / 10000
+}
+
+// Como o servidor (ContratoCalculoService): cada tributo por SACA em 4 casas,
+// líquido por saca em 4 casas, × sacas, 2 casas.
+const brutoSc = computed(() => (n(props.sacas) > 0 ? n(props.bruto) / n(props.sacas) : 0))
 
 const linhas = computed(() =>
   (props.tributos || []).map((t) => {
     const unidade = t.base === 'UNIDADE'
-    const valor = unidade
-      ? (n(t.percentual) / 100) * n(t.upf) * (n(props.pesosaca) / 1000) * n(props.sacas)
-      : (n(t.percentual) / 100) * n(props.bruto)
+    const porSc = arred4(
+      unidade
+        ? (n(t.percentual) / 100) * n(t.upf) * (n(props.pesosaca) / 1000)
+        : (n(t.percentual) / 100) * brutoSc.value,
+    )
     const detalhe = unidade
       ? `${formataNumero(props.sacas, 0)} sc`
       : `${formataNumero(t.percentual, 2)}%`
-    return { codigo: t.codigo, detalhe, valor: arred(valor) }
+    return { codigo: t.codigo, detalhe, porSc, valor: arred(porSc * n(props.sacas)) }
   }),
 )
-const totalDeducao = computed(() => arred(linhas.value.reduce((s, l) => s + l.valor, 0)))
-const liquido = computed(() => arred(n(props.bruto) - totalDeducao.value))
+const liquidoLocal = computed(() =>
+  arred(arred4(brutoSc.value - linhas.value.reduce((s, l) => s + l.porSc, 0)) * n(props.sacas)),
+)
+const liquidoFinal = computed(() => props.liquido ?? liquidoLocal.value)
 // Líquido por saca (o que sobra por sc, R$) — leitura direta pro produtor.
-const liquidoPorSc = computed(() => (n(props.sacas) > 0 ? liquido.value / n(props.sacas) : 0))
+const liquidoPorSc = computed(() =>
+  n(props.sacas) > 0 ? liquidoFinal.value / n(props.sacas) : 0,
+)
 </script>
 
 <template>
@@ -66,7 +82,7 @@ const liquidoPorSc = computed(() => (n(props.sacas) > 0 ? liquido.value / n(prop
         Líquido
         <span class="text-caption text-grey-5">{{ rs(liquidoPorSc) }}/sc</span>
       </span>
-      <span class="text-subtitle1 text-weight-bold text-green-8">{{ rs(liquido) }}</span>
+      <span class="text-subtitle1 text-weight-bold text-green-8">{{ rs(liquidoFinal) }}</span>
     </div>
   </div>
 </template>
