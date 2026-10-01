@@ -3,13 +3,16 @@
 // Passo 1: forma por número. Passo 2: valor deste pagamento (texto; Insert edita).
 // Passo 3: perguntas da forma escolhida (componente em receber/Forma*.vue).
 // O foco fica no card; nunca no campo de valor, para as setas não alterarem nada sem querer.
-import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
+//
+// Desacoplado da venda (M5 do plano doc-3): lê o que o documento informou no store cobranca
+// ({ valor, total, saldo, sentido, pessoa, formasPermitidas, documento }) e emite `pagamento`
+// (formato novo: meio, principal, juros, desconto, troco…), `parcelas` (condição, vencimento,
+// valor) ou `cobranca` (integrada criada: o pai abre o dialog dela).
+import { ref, computed, nextTick } from 'vue'
 import { Notify, useQuasar } from 'quasar'
-import { negocioStore } from 'stores/negocio'
-import { pixStore } from 'stores/pix'
-import { pagarMeStore } from 'stores/pagar-me'
-import { saurusStore } from 'stores/saurus'
+import { cobrancaStore } from 'stores/cobranca'
 import { formataNumero } from '@components/formatters'
+import moment from 'moment'
 import MgInputValor from '@components/MgInputValor.vue'
 import ListaOpcoes from './receber/ListaOpcoes.vue'
 import FormaCartao from './receber/FormaCartao.vue'
@@ -17,14 +20,12 @@ import FormaPrazo from './receber/FormaPrazo.vue'
 import FormaVale from './receber/FormaVale.vue'
 import FormaPix from './receber/FormaPix.vue'
 import FormaCheque from './receber/FormaCheque.vue'
-import emitter from '../../utils/emitter.js'
-import { VISUAL } from '../../utils/pagamento.js'
+import { CONDICAO, MEIO, VISUAL } from '../../utils/pagamento.js'
+
+const emit = defineEmits(['pagamento', 'parcelas', 'cobranca'])
 
 const $q = useQuasar()
-const sNegocio = negocioStore()
-const sPix = pixStore()
-const sPagarMe = pagarMeStore()
-const sSaurus = saurusStore()
+const sCobranca = cobrancaStore()
 
 const cardRef = ref(null)
 const listaFormasRef = ref(null)
@@ -32,12 +33,20 @@ const formaRef = ref(null)
 const passo = ref(1)
 const editando = ref(false)
 const valorEdicao = ref(null)
+// desconto por forma (só dinheiro): sugerido pelo percentual da forma, editável (tecla −)
+const desconto = ref(0)
+const editandoDesconto = ref(false)
+const descontoEdicao = ref(null)
 
-const saldo = computed(() => sNegocio.valorapagar)
-const valor = computed(() => sNegocio.receber.valor)
-const total = computed(() => sNegocio.negocio?.valortotal ?? 0)
+const arredonda = (v) => Math.round((parseFloat(v) || 0) * 100) / 100
+
+const saldo = computed(() => sCobranca.saldo)
+const valor = computed(() => sCobranca.valor)
+const total = computed(() => sCobranca.total ?? 0)
 // já lançado em outros pagamentos (pagamento dividido)
-const recebido = computed(() => Math.round((total.value - saldo.value) * 100) / 100)
+const recebido = computed(() => arredonda(total.value - saldo.value))
+// o que falta pagar depois do desconto desta forma
+const aPagar = computed(() => arredonda(saldo.value - desconto.value))
 
 // valor considerado: durante a edição acompanha o que está sendo digitado
 const valorAtual = computed(() =>
@@ -45,15 +54,23 @@ const valorAtual = computed(() =>
 )
 
 // positivo = troco, negativo = ainda falta
-const diferenca = computed(() => Math.round((valorAtual.value - saldo.value) * 100) / 100)
+const diferenca = computed(() => arredonda(valorAtual.value - aPagar.value))
 const temTroco = computed(() => diferenca.value > 0)
 const temFalta = computed(() => diferenca.value < 0)
 
 // ordem pela frequência de uso no caixa: cartão, PIX, dinheiro, depois o resto
+// desconto: percentual sugerido pela forma (0 = sem sugestão; o operador ainda pode dar com −)
 const FORMAS = [
   { tecla: 1, valor: 'cartao', label: 'Cartão', ...VISUAL.cartao, componente: FormaCartao },
   { tecla: 2, valor: 'pix', label: 'PIX', ...VISUAL.pix, componente: FormaPix },
-  { tecla: 3, valor: 'dinheiro', label: 'Dinheiro', ...VISUAL.dinheiro, troco: true },
+  {
+    tecla: 3,
+    valor: 'dinheiro',
+    label: 'Dinheiro',
+    ...VISUAL.dinheiro,
+    troco: true,
+    desconto: 0,
+  },
   { tecla: 4, valor: 'entrega', label: 'Pagamento na Entrega', ...VISUAL.entrega },
   { tecla: 5, valor: 'prazo', label: 'Prazo', ...VISUAL.prazo, componente: FormaPrazo },
   // vale pula o passo 2: o valor utilizado é decidido olhando o saldo do vale
@@ -68,13 +85,13 @@ const FORMAS = [
   { tecla: 7, valor: 'cheque', label: 'Cheque', ...VISUAL.cheque, componente: FormaCheque },
 ]
 
-const formaAtual = computed(() => FORMAS.find((f) => f.valor === sNegocio.receber.forma))
+const formaAtual = computed(() => FORMAS.find((f) => f.valor === sCobranca.forma))
 
 // prazo e cheque exigem cliente identificado
 const PRECISA_CLIENTE = ['prazo', 'cheque']
 const opcoesFormas = computed(() =>
-  FORMAS.map((f) =>
-    PRECISA_CLIENTE.includes(f.valor) && sNegocio.negocio?.codpessoa == 1
+  FORMAS.filter((f) => sCobranca.permitida(f.valor)).map((f) =>
+    PRECISA_CLIENTE.includes(f.valor) && sCobranca.consumidor
       ? { ...f, desabilitado: true, motivo: 'Informe o cliente (F10)' }
       : f,
   ),
@@ -97,9 +114,11 @@ const focar = () => {
   nextTick(() => cardRef.value?.$el?.focus())
 }
 
-// entra no wizard com o que o store preparou (abrirReceber): forma preenchida = pula a escolha
+// entra no wizard com o que o documento preparou: forma preenchida = pula a escolha
 const entrar = () => {
   editando.value = false
+  editandoDesconto.value = false
+  desconto.value = 0
   if (!formaAtual.value) {
     passo.value = 1
     return
@@ -119,6 +138,10 @@ const irParaForma = () => {
 
 // dinheiro: o operador digita o que recebeu (campo focado, vazio); demais: saldo como texto
 const prepararValor = () => {
+  editandoDesconto.value = false
+  desconto.value = formaAtual.value?.desconto
+    ? arredonda((saldo.value * formaAtual.value.desconto) / 100)
+    : 0
   if (formaAtual.value?.troco) {
     valorEdicao.value = null
     editando.value = true
@@ -128,7 +151,7 @@ const prepararValor = () => {
 }
 
 const fechar = () => {
-  sNegocio.dialog.receber = false
+  sCobranca.fechar()
 }
 
 const avisar = (message) => {
@@ -152,7 +175,7 @@ const aplicarEdicao = () => {
     avisar('Informe o valor!')
     return
   }
-  sNegocio.receber.valor = Math.round(v * 100) / 100
+  sCobranca.valor = arredonda(v)
   editando.value = false
   focar()
 }
@@ -162,9 +185,44 @@ const cancelarEdicao = () => {
   focar()
 }
 
+// ---- edição do desconto (tecla −), só na forma que aceita desconto ----
+const editarDesconto = () => {
+  if (formaAtual.value?.desconto === undefined) {
+    return
+  }
+  editando.value = false
+  descontoEdicao.value = desconto.value || null
+  editandoDesconto.value = true
+}
+
+const aplicarDesconto = () => {
+  const d = arredonda(descontoEdicao.value)
+  if (d < 0 || d >= saldo.value) {
+    avisar('Desconto precisa ser menor que o saldo!')
+    return
+  }
+  desconto.value = d
+  editandoDesconto.value = false
+  // dinheiro volta a pedir o recebido, agora com o desconto
+  prepararValorDinheiro()
+}
+
+const cancelarDesconto = () => {
+  editandoDesconto.value = false
+  prepararValorDinheiro()
+}
+
+const prepararValorDinheiro = () => {
+  if (formaAtual.value?.troco) {
+    valorEdicao.value = null
+    editando.value = true
+  }
+  focar()
+}
+
 // ---- navegação ----
 const escolherForma = (forma) => {
-  sNegocio.receber.forma = forma.valor
+  sCobranca.forma = forma.valor
   irParaForma()
 }
 
@@ -201,75 +259,55 @@ const voltar = () => {
     prepararValor()
   }
   if (passo.value === 1) {
-    sNegocio.receber.forma = null
+    sCobranca.forma = null
   }
   focar()
 }
 
-const dinheiro = async () => {
-  await sNegocio.adicionarPagamento({
-    codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_DINHEIRO),
-    tipo: 1, // Dinheiro
-    valorpagamento: valor.value,
+// dinheiro: o que ficou (total) é o recebido até o que falta; o resto é troco.
+// principal = total + desconto (o desconto quita a parte dele do saldo)
+const dinheiro = () => {
+  const totalPago = Math.min(valor.value, aPagar.value)
+  pagamento({
+    meio: MEIO.DINHEIRO,
+    principal: arredonda(totalPago + desconto.value),
+    desconto: desconto.value,
     valortroco: temTroco.value ? diferenca.value : null,
   })
-  depoisDeAdicionar()
 }
 
 // cliente paga ao receber ou retirar o produto: título único, vence no dia
-const entrega = async () => {
-  await sNegocio.adicionarPagamento({
-    codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_ENTREGA),
-    tipo: 5, // Crédito Loja
-    valorpagamento: valor.value,
-    parcelas: 1,
-    valorparcela: valor.value,
-    dias: 0,
-  })
-  depoisDeAdicionar()
+const entrega = () => {
+  parcelas([
+    {
+      condicao: CONDICAO.ENTREGA,
+      numero: 1,
+      vencimento: moment().format('YYYY-MM-DD'),
+      valor: valor.value,
+      juros: 0,
+    },
+  ])
 }
 
-// fecha sempre; se ainda falta, o painel de totais pisca o "Faltando"/"Troco"
-const depoisDeAdicionar = () => {
+// fecha sempre; quem abriu decide o resto (painel de totais pisca o "Faltando"/"Troco")
+const pagamento = (pag) => {
   fechar()
-  emitter.emit('pagamentoAdicionado')
+  emit('pagamento', pag)
 }
 
-// cobrança integrada criada: fecha o wizard e abre o dialog especialista
-const abrirCobranca = ({ tipo, dados }) => {
+const parcelas = (lista) => {
   fechar()
-  switch (tipo) {
-    case 'pix':
-      sPix.pixCob = dados
-      sPix.dialog.detalhesPixCob = true
-      break
-    case 'pagarme':
-      sPagarMe.pedido = dados
-      sPagarMe.dialog.detalhesPedido = true
-      break
-    case 'saurus':
-      sSaurus.pedido = dados
-      sSaurus.dialog.detalhesPedido = true
-      break
-  }
+  emit('parcelas', lista)
 }
 
-// bipagem VAL… abre direto na forma vale
-const valeLido = (codigo) => {
-  if (!sNegocio.podeEditar || !sNegocio.negocio?.financeiro) {
-    return
-  }
-  sNegocio.abrirReceber({ forma: 'vale', codtituloVale: codigo })
-  entrar()
+// cobrança integrada criada: fecha o wizard e o pai abre o dialog especialista
+const abrirCobranca = (cobranca) => {
+  fechar()
+  emit('cobranca', cobranca)
 }
 
-onMounted(() => {
-  emitter.on('valeComprasLido', valeLido)
-})
-
-onUnmounted(() => {
-  emitter.off('valeComprasLido', valeLido)
-})
+// o documento abriu de novo com a forma escolhida (bipagem VAL… com o dialog aberto)
+defineExpose({ entrar })
 
 // ---- teclado ----
 const tecla = (e) => {
@@ -280,7 +318,18 @@ const tecla = (e) => {
 
   let tratada = true
 
-  if (editando.value) {
+  if (editandoDesconto.value) {
+    switch (e.key) {
+      case 'Enter':
+        aplicarDesconto()
+        break
+      case 'Escape':
+        cancelarDesconto()
+        break
+      default:
+        tratada = false
+    }
+  } else if (editando.value) {
     // no modo edição as demais teclas são do MgInputValor (inclusive as setas)
     switch (e.key) {
       case 'Enter':
@@ -288,6 +337,10 @@ const tecla = (e) => {
         break
       case 'Escape':
         cancelarEdicao()
+        break
+      case '-':
+      case 'Subtract':
+        editarDesconto()
         break
       case 'F6':
       case 'F7':
@@ -317,6 +370,12 @@ const tecla = (e) => {
           editar()
         }
         break
+      case '-':
+      case 'Subtract':
+        if (passo.value === 2) {
+          editarDesconto()
+        }
+        break
       case 'Enter':
         if (passo.value === 2) {
           continuar()
@@ -342,7 +401,7 @@ const tecla = (e) => {
 </script>
 <template>
   <q-dialog
-    v-model="sNegocio.dialog.receber"
+    v-model="sCobranca.dialog"
     no-esc-dismiss
     :maximized="mobile"
     @before-show="entrar"
@@ -418,6 +477,30 @@ const tecla = (e) => {
             />
           </div>
 
+          <!-- desconto da forma (dinheiro): tecla − edita -->
+          <div class="q-mb-md text-right" v-if="formaAtual.desconto !== undefined">
+            <MgInputValor
+              v-if="editandoDesconto"
+              v-model="descontoEdicao"
+              label="Desconto"
+              prefix="R$"
+              :min="0"
+              autofocus
+              hint="Enter aplica · Esc desfaz"
+              class="q-field--auto-height"
+              input-class="text-right text-h4 text-weight-bold text-green-8"
+            />
+            <template v-else-if="desconto > 0">
+              <div class="text-h4 text-weight-bold text-green-8">
+                − R$ {{ formataNumero(desconto) }}
+              </div>
+              <div class="text-subtitle1 text-grey-7">
+                Desconto · a pagar R$ {{ formataNumero(aPagar) }}
+              </div>
+            </template>
+            <div v-else class="text-subtitle1 text-grey-5">Tecla − dá desconto</div>
+          </div>
+
           <div class="text-right" v-if="temFalta">
             <div class="text-h2 text-weight-bold text-orange-10">
               R$ {{ formataNumero(Math.abs(diferenca)) }}
@@ -439,7 +522,8 @@ const tecla = (e) => {
           <component
             :is="formaAtual.componente"
             ref="formaRef"
-            @concluido="depoisDeAdicionar"
+            @pagamento="pagamento"
+            @parcelas="parcelas"
             @cobranca="abrirCobranca"
           />
         </div>
@@ -459,14 +543,14 @@ const tecla = (e) => {
           flat
           color="primary"
           :label="
-            editando
+            editando || editandoDesconto
               ? 'Aplicar (Enter)'
               : formaAtual.troco || formaAtual.valor === 'entrega'
                 ? 'Lançar (Enter)'
                 : 'Continuar (Enter)'
           "
           tabindex="-1"
-          @click="editando ? aplicarEdicao() : continuar()"
+          @click="editandoDesconto ? aplicarDesconto() : editando ? aplicarEdicao() : continuar()"
         />
         <q-btn
           v-if="passo === 3 && formaRef?.acao"

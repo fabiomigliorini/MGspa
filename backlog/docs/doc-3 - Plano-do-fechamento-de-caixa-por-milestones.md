@@ -31,7 +31,8 @@ validado em 30/09/2026** (TASK-188): decisões da conferência na seção do M3,
 Saurus/S2Pay do negocios e cadastro do POS PagarMe passam para contas → Maquinetas). Pendente do
 M3 só o pareamento SafraPay por QR, que confere no go-live. **M4 (pagamento e parcelas da venda)
 commitado em 30/09/2026 sem validação** (TASK-188, `ed90fe2e8` + MGsis `b914186`): o Fábio valida M4 e
-M5 juntos. **Próximo: M5.**
+M5 juntos. **M5 (wizard desacoplado, prazo ajustável) commitado em 30/09/2026 sem validação**
+(TASK-188): valida junto com M4 e M6. **Próximo: M6.**
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -45,7 +46,7 @@ conferir a filial dos acessos de site de Brasil Card, Le Card e MultVale (nascem
 maquinetas manuais criadas pelos seriais digitados, e validar o pareamento SafraPay por QR com um
 pinpad reserva (M3); rodar os scripts DDL em produção, na ordem
 dos milestones (`movimento_titulo_colunas.sql`, `portador_tipo.sql`, `maquineta.sql`,
-`pagamento.sql`, …), com o MGsis (NFe de Terceiros grava parcela desde o M4) e o MG Lara olhando
+`pagamento.sql`, `cobranca_documento.sql`, …), com o MGsis (NFe de Terceiros grava parcela desde o M4) e o MG Lara olhando
 as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de formas). Cada script roda
 uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
 `pagamento.sql` (a tabela já virou view).
@@ -676,6 +677,51 @@ para leitura de histórico não convertido.
 - **Valida**: venda exatamente como antes em todas as formas, F6 a F9, pagamento dividido, cancelar
   cobrança, fechamento automático; prazo com vencimentos editados virando títulos com as datas
   certas; fechamento mensal caindo no último dia útil do mês seguinte.
+- **O que mudou em relação ao plano** (conferência de 30/09/2026 no banco e no código):
+  - **Como o PDV novo se identifica**: cabeçalho `X-Pagamento-Formato: 2` em toda requisição do
+    negocios (`boot/axios.js`; o CORS da API já aceita qualquer cabeçalho). Com ele o sync lê e o
+    `NegocioResource` devolve `pagamentos` e `parcelas` no formato novo
+    (`Mg/Pdv/PdvNegocioPagamentoService`), e os endpoints de cobrança devolvem a cobrança criada
+    (PixCob/pedido) em vez do negócio. Sem ele, tudo como no M4 (`NegocioFormaPagamentoService`).
+    O tradutor e `tblnegocioparcela.uuidforma` **ficam** até o go-live (PDV com aba aberta na
+    versão antiga); saem depois, numa limpeza própria.
+  - **Formato novo no PDV** (Dexie v8): pagamento = `meio`, `principal`, `juros`, `desconto`,
+    `total`, `valortroco`, maquineta, cheque, vale (`codtitulo`); parcela = `condicao`, `numero`,
+    `vencimento`, `valor`, `juros`. No PDV o dinheiro entregue fica como `total + valortroco` e o
+    troco continua redistribuído entre os pagamentos em dinheiro quando o saldo muda. A migração v8
+    converte os negócios do aparelho (prazo antigo vira parcelas com o vencimento sugerido) e marca
+    os abertos para sincronizar de novo.
+  - **PIX por chave e entrega são parcela** (X e E, vencendo no dia), como o M4 já gravava.
+  - **Prazo**: condição → plano (como antes) → editor com vencimento e valor de cada parcela; a
+    última absorve a diferença ao mexer no valor de outra; foco inicial no valor da 1ª (Enter
+    lança com as datas sugeridas; Shift+Tab chega ao vencimento). Vencimento sugerido pela regra do
+    servidor (fechamento = último dia útil, seg a sáb, sem feriado; feriados baixados de
+    `v1/feriado` uma vez por dia, offline usa o último que baixou). O sync grava por `uuid` e não
+    recalcula; o `fechar` recusa (422) parcela vencida antes de hoje. Títulos numerados por
+    condição (`N…-1/2`), em ordem de vencimento.
+  - **Juros editável** no cartão de crédito: plano com juros abre uma etapa com o juros sugerido.
+  - **Desconto por forma só no dinheiro** (tecla − no passo do valor; sugestão 0% até o Fábio
+    definir). Ele fica no pagamento e **sai do total do negócio, não do desconto dos itens**: o
+    item não tem coluna para separar o desconto do pagamento do desconto digitado, então o rateio
+    nos itens acontece na nota fiscal (`NotaFiscalNegocioService::ratearDescontoPagamento`, mesmos
+    pesos do rateio do juros, vira vDesc do item). `confereTotais` e `NegocioService::recalcularTotal`
+    descontam Σ desconto dos pagamentos. PIX ficou sem desconto: o QR não tem onde guardar o desconto
+    (`tblpixcob`) e PIX por chave é parcela (ver Dúvidas na TASK-188).
+  - **Cobrança por documento**: `cobranca.js` cria PIX QR/PagarMe/Saurus para o documento (hoje o
+    negócio; `codnegocio` opcional, com `codpessoa`), `tblsauruspedido.codnegocio` aceita nulo
+    (`api/database/cobranca_documento.sql`), e as stores `pix`/`pagar-me`/`saurus` só avisam
+    (`cobrancaAtualizada` com o `codnegocio`); quem estiver com o negócio aberto recarrega. O
+    pagamento de cobrança sem negócio ainda não nasce (fica para o M7, que tem o título).
+  - Filtro de forma da listagem do PDV: `forma[]` com `m<meio>` e `c<condição>`; o
+    `codformapagamento` continua para o PDV antigo.
+  - Saiu do `.env` do negocios todo `CODFORMAPAGAMENTO_*` (dev). A tabela `formaPagamento` do Dexie
+    fica: mostra a forma padrão do cliente.
+  - Conferência em dev: 20 cenários por serviço com rollback (dinheiro com troco e com desconto, PIX
+    QR com e sem negócio, PIX chave, PagarMe 12x com juros, Saurus com e sem negócio, cartão manual,
+    cheque, vale + dinheiro, fechamento com vencimento editado, crediário, boleto sem registrar no
+    BB, entrega, dividido em 3, vencimento passado, sync repetido, formato antigo, cancelar), todos
+    com Σ total + Σ parcelas = total; NFC-e da venda com desconto (vDesc rateado, vPag 100 com troco
+    5); e no navegador, dinheiro com desconto + crediário 2x editado fechando sozinho.
 
 ## M6 — Pagamento no lugar da liquidação (Fundação)
 

@@ -6,6 +6,10 @@ const sAuth = useAuthStore()
 // timeout: sem ele, um socket HTTP/2 morto reaproveitado pendura a request por minutos.
 const api = axios.create({ baseURL: process.env.API_URL, timeout: 15000 })
 
+// PDV com o wizard de cobrança desacoplado (M5 do plano doc-3): manda e lê pagamentos e
+// parcelas no formato novo; sem o cabeçalho a API responde no formato antigo
+api.defaults.headers.common['X-Pagamento-Formato'] = '2'
+
 // Dedup global de requisicoes mutantes identicas em voo: protege contra
 // double-submit (clicar varias vezes em Salvar antes da resposta voltar).
 // O 2o POST/PUT/PATCH/DELETE identico reusa a promessa do 1o, entao apenas

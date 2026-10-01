@@ -14,6 +14,7 @@ use Mg\Portador\Portador;
 use Mg\Pix\Sicredi\PixSicrediService;
 use Illuminate\Support\Facades\DB;
 use Mg\Pdv\Pdv;
+use Mg\Pessoa\Pessoa;
 
 class PixService
 {
@@ -94,11 +95,16 @@ class PixService
         return $cob;
     }
 
-    public static function criarPixCobPdv(Float $valor, Pdv $pdv, Negocio $negocio, int $codportador = null)
+    // Cobranca PIX do wizard do PDV para um documento (M5 doc-3): o negocio,
+    // ou nenhum (recebimento no balcao, M7), com a pessoa que paga
+    public static function criarPixCobPdv(Float $valor, Pdv $pdv, ?Negocio $negocio, int $codportador = null, ?Pessoa $pessoa = null)
     {
+        $pessoa = $negocio->Pessoa ?? $pessoa;
+        $codfilial = $negocio->codfilial ?? $pdv->codfilial;
+
         // procura ou cria registro
         $cob = new PixCob([
-            'codnegocio' => $negocio->codnegocio,
+            'codnegocio' => $negocio->codnegocio ?? null,
             'codpdv' => $pdv->codpdv,
             'valororiginal' => $valor
         ]);
@@ -113,18 +119,22 @@ class PixService
         $cob->codpixcobstatus = $status->codpixcobstatus;
 
         // CNPJ ou CPF
-        if (!empty($negocio->Pessoa->cnpj)) {
-            $cob->nome = $negocio->Pessoa->pessoa;
-            if ($negocio->Pessoa->fisica) {
-                $cob->cpf = $negocio->Pessoa->cnpj;
+        if (!empty($pessoa->cnpj)) {
+            $cob->nome = $pessoa->pessoa;
+            if ($pessoa->fisica) {
+                $cob->cpf = $pessoa->cnpj;
             } else {
-                $cob->cnpj = $negocio->Pessoa->cnpj;
+                $cob->cnpj = $pessoa->cnpj;
             }
         }
 
         // Texto para ser apresentado pro cliente
-        $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
-        $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
+        if ($negocio) {
+            $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
+        } else {
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento PDV #{$pdv->uuid}!";
+        }
 
         // Se codportador informado, busca direto
         if ($codportador) {
@@ -134,7 +144,7 @@ class PixService
                 ->first();
         } else {
             // Fallback: procura portador do BB pra filial com convenio
-            $portador = Portador::where('codfilial', $negocio->codfilial)
+            $portador = Portador::where('codfilial', $codfilial)
                 ->whereNull('inativo')
                 ->where('codbanco', 1)
                 ->whereNotNull('pixdict')

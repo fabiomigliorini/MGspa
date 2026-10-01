@@ -9,6 +9,7 @@ import {
   formataCodigo,
 } from '@components/formatters'
 import BarCode from 'components/BarCode.vue'
+import { formasOrcamento } from 'src/utils/pagamento.js'
 
 const route = useRoute()
 const sNegocio = negocioStore()
@@ -151,18 +152,12 @@ onMounted(() => {
             <td class="text-right">Total R$ {{ formataNumero(sNegocio.negocio.valortotal) }}</td>
           </tr>
         </tbody>
-        <tbody v-if="sNegocio.negocio.pagamentos.length > 0" class="pagamentos">
+        <tbody v-if="formasOrcamento(sNegocio.negocio).length > 0" class="pagamentos">
           <tr>
             <td><b>Forma de Pagamento:</b></td>
           </tr>
-          <tr
-            v-for="formapagamento in sNegocio.negocio.pagamentos"
-            v-bind:key="formapagamento.uuid"
-          >
-            <td>
-              R$ {{ formataNumero(formapagamento.valorpagamento) }} -
-              {{ formapagamento.formapagamento }}
-            </td>
+          <tr v-for="pag in formasOrcamento(sNegocio.negocio)" v-bind:key="pag.chave">
+            <td>R$ {{ formataNumero(pag.valor) }} - {{ pag.descricao }}</td>
           </tr>
         </tbody>
         <tbody v-if="sNegocio.negocio.observacoes" class="observacoes">

@@ -1,9 +1,7 @@
 import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
-import { negocioStore } from './negocio'
 import { Notify } from 'quasar'
-
-const sNegocio = negocioStore()
+import emitter from '../utils/emitter.js'
 
 export const saurusStore = defineStore('saurus', {
   state: () => ({
@@ -101,29 +99,9 @@ export const saurusStore = defineStore('saurus', {
       }
     },
 
+    // o pedido é de um documento (hoje o negócio): quem estiver com ele aberto recarrega
     async atualizarSaurusPedido() {
-      // se nao estiver vinculado com negocio desiste
-      if (!this.pedido.codnegocio) {
-        return
-      }
-
-      // se nao estiver com negocio aberto desiste
-      if (!sNegocio.negocio) {
-        return
-      }
-
-      // se nao estiver com o mesmo negocio desiste
-      if (this.pedido.codnegocio != sNegocio.negocio.codnegocio) {
-        return
-      }
-
-      // se o negocio nao estiver sincronizado desiste
-      if (!sNegocio.negocio.sincronizado) {
-        return
-      }
-
-      // recarrega negocio da api
-      await sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio)
+      emitter.emit('cobrancaAtualizada', { codnegocio: this.pedido.codnegocio })
     },
   },
 })

@@ -18,7 +18,9 @@ use Mg\Titulo\TituloService;
  * continua mandando e lendo o formato de hoje ate o M5: aqui ficam as duas
  * traducoes (forma antiga -> pagamento/parcelas no sync; pagamento/parcelas
  * -> forma antiga no NegocioResource). O codigo da forma antiga e' deduzido
- * de meio/condicao/integracao. Sai no M5.
+ * de meio/condicao/integracao. Desde o M5 o PDV novo usa o formato novo
+ * (PdvNegocioPagamentoService); isto fica so' para o PDV que ainda nao
+ * atualizou e sai depois do go-live.
  */
 class NegocioFormaPagamentoService
 {
@@ -417,7 +419,7 @@ class NegocioFormaPagamentoService
         $grupos = $negocio->NegocioParcelaS()
             ->orderBy('codnegocioparcela')
             ->get()
-            ->groupBy(fn($np) => $np->uuidforma ?? $np->uuid);
+            ->groupBy(fn($np) => NegocioParcelaService::grupo($np));
         foreach ($grupos as $uuid => $parcelas) {
             $ret[] = static::formaAntigaDasParcelas($uuid, $parcelas);
         }

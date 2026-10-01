@@ -8,6 +8,7 @@ import { useAuthStore } from 'stores/auth'
 import { pagarMeStore } from 'stores/pagar-me'
 import { saurusStore } from 'stores/saurus'
 import { pixStore } from 'stores/pix'
+import { cobrancaStore } from 'stores/cobranca'
 import ListagemProdutos from 'components/offline/ListagemProdutos.vue'
 import ListagemItensVale from 'components/offline/ListagemItensVale.vue'
 import ListagemContraVale from 'components/offline/ListagemContraVale.vue'
@@ -29,6 +30,7 @@ const sAuth = useAuthStore()
 const sPagarMe = pagarMeStore()
 const sSaurus = saurusStore()
 const sPix = pixStore()
+const sCobranca = cobrancaStore()
 const listagemNotasRef = ref(null)
 const listagemAnexosRef = ref(null)
 const dialogOrcamentoSelecionar = ref(false)
@@ -158,7 +160,7 @@ const carregareOuCriarNegocio = async () => {
 }
 
 const fecharDialogs = async () => {
-  sNegocio.dialog.receber = false
+  sCobranca.fechar()
   sNegocio.dialog.valores = false
   sNegocio.dialog.vale = false
   sAuth.dialog.login = false
@@ -387,9 +389,11 @@ const romaneioOuNotaVendaPadrao = async (modelo) => {
     //90= Sem pagamento
     //99=Outros
   ]
-  const emitir = sNegocio.negocio.pagamentos.filter((p) => tiposEmitir.includes(p.tipo)).length
+  const emitir = sNegocio.negocio.pagamentos.filter((p) => tiposEmitir.includes(p.meio)).length
+  // boleto a prazo também emite
+  const boleto = (sNegocio.negocio.parcelas ?? []).filter((np) => np.condicao == 'B').length
   // se foi pago por integracao ou por
-  if (integracao > 0 || emitir > 0) {
+  if (integracao > 0 || emitir > 0 || boleto > 0) {
     novaNota(modelo)
     return
   }

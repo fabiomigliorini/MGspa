@@ -4,15 +4,16 @@
 import { ref, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'
-import { negocioStore } from 'stores/negocio'
+import { cobrancaStore } from 'stores/cobranca'
 import { formataData } from '@components/formatters'
 import MgInputData from '@components/MgInputData.vue'
 import { parseCmc7 } from '../../../utils/cmc7.js'
 import MgInput from '@components/MgInput.vue'
+import { MEIO } from '../../../utils/pagamento.js'
 
-const emit = defineEmits(['concluido'])
+const emit = defineEmits(['pagamento'])
 
-const sNegocio = negocioStore()
+const sCobranca = cobrancaStore()
 
 const etapa = ref('cmc7')
 const cmc7Texto = ref('')
@@ -21,8 +22,8 @@ const cnpj = ref('')
 const emitente = ref('')
 const nomeRef = ref(null)
 
-const valor = computed(() => sNegocio.receber.valor)
-const consumidor = computed(() => sNegocio.negocio.codpessoa == 1)
+const valor = computed(() => sCobranca.valor)
+const consumidor = computed(() => sCobranca.consumidor)
 const cmc7 = computed(() => parseCmc7(cmc7Texto.value))
 const hoje = new Date().toISOString().substr(0, 10)
 
@@ -71,7 +72,7 @@ const confirmarVencimento = () => {
   etapa.value = 'emitente'
 }
 
-const salvar = async () => {
+const salvar = () => {
   const cnpjDigitos = String(cnpj.value ?? '').replace(/\D/g, '')
   const nome = (emitente.value ?? '').trim()
   if (!nome) {
@@ -82,16 +83,14 @@ const salvar = async () => {
     avisar('CPF/CNPJ do emitente inválido!')
     return
   }
-  await sNegocio.adicionarPagamento({
-    codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_CHEQUE ?? 1020),
-    tipo: 2, // tPag Cheque
-    valorpagamento: valor.value,
+  emit('pagamento', {
+    meio: MEIO.CHEQUE,
+    principal: valor.value,
     cmc7: cmc7.value.cmc7,
     chequevencimento: vencimento.value,
     chequecnpj: cnpjDigitos ? parseInt(cnpjDigitos) : null,
     chequeemitente: nome,
   })
-  emit('concluido')
 }
 
 // devolve true quando consumiu a tecla; o resto é digitação nos campos

@@ -1,9 +1,7 @@
 import { defineStore } from 'pinia'
 import { api } from 'src/boot/axios'
-import { negocioStore } from './negocio'
 import { Notify } from 'quasar'
-
-const sNegocio = negocioStore()
+import emitter from '../utils/emitter.js'
 
 export const pixStore = defineStore('pix', {
   state: () => ({
@@ -95,8 +93,8 @@ export const pixStore = defineStore('pix', {
       }
     },
 
-    async imprimirPixCob() {
-      if (!sNegocio.padrao.impressora) {
+    async imprimirPixCob(impressora) {
+      if (!impressora) {
         Notify.create({
           type: 'negative',
           message: 'Nenhuma impressora térmica selecionada!',
@@ -107,7 +105,7 @@ export const pixStore = defineStore('pix', {
       }
       try {
         await api.post('/v1/pix/cob/' + this.pixCob.codpixcob + '/imprimir-qr-code', {
-          impressora: sNegocio.padrao.impressora,
+          impressora,
         })
         Notify.create({
           type: 'positive',
@@ -131,37 +129,12 @@ export const pixStore = defineStore('pix', {
       }
     },
 
+    // a cobrança é de um documento (hoje o negócio): quem estiver com ele aberto recarrega
     async atualizarPixCobNegocio() {
-      // se nao estiver com o mesmo negocio desiste
-      if (this.pixCob.codnegocio != sNegocio.negocio.codnegocio) {
-        return
-      }
-
-      // se o negocio nao estiver sincronizado desiste
-      if (!sNegocio.negocio.sincronizado) {
-        return
-      }
-
-      // procura pix cob no negcoio
-      const index = sNegocio.negocio.pixCob.findIndex(
-        (pixCob) => pixCob.codpixcob === this.pixCob.codpixcob,
-      )
-
-      // se nao existir recarrega da api
-      if (index == -1) {
-        sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio)
-        return
-      }
-
-      // se for o mesmo  status só substitui, nem recarrega
-      if (sNegocio.negocio.pixCob[index].codpixcobstatus == this.pixCob.codpixcobstatus) {
-        sNegocio.negocio.pixCob[index] = this.pixCob
-        sNegocio.salvar(false)
-        return
-      }
-
-      // recarrega negocio da api
-      await sNegocio.recarregarDaApi(sNegocio.negocio.codnegocio)
+      emitter.emit('cobrancaAtualizada', {
+        codnegocio: this.pixCob.codnegocio,
+        pixCob: this.pixCob,
+      })
     },
   },
 })

@@ -15,6 +15,7 @@ use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixService;
+use Mg\Pix\PixCobResource;
 use Mg\PagarMe\PagarMeService;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Titulo\Titulo;
@@ -367,6 +368,12 @@ class PdvController
                         NegocioFormaPagamentoService::filtroIntegracao($query, $integracao);
                     });
                     break;
+                case 'forma':
+                    // m<meio> do pagamento ou c<condicao> da parcela (M5 doc-3)
+                    $qry->whereIn('codnegocio', function ($query) use ($valor) {
+                        PdvNegocioPagamentoService::filtroForma($query, (array) $valor);
+                    });
+                    break;
                 case 'codformapagamento':
                     $qry->whereIn('codnegocio', function ($query) use ($valor) {
                         NegocioFormaPagamentoService::filtroForma($query, (array) $valor);
@@ -476,11 +483,18 @@ class PdvController
         ];
     }
 
+    // Cobrancas integradas do wizard (M5 doc-3): para um documento, que pode
+    // nao ser negocio (codnegocio nulo, com a pessoa que paga). O PDV novo
+    // (X-Pagamento-Formato: 2) recebe a cobranca criada; o antigo, o negocio.
     public function criarPixCob(PdvRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);
-        $negocio = Negocio::findOrFail($request->codnegocio);
-        PixService::criarPixCobPdv($request->valor, $pdv, $negocio, $request->codportador);
+        $negocio = $request->codnegocio ? Negocio::findOrFail($request->codnegocio) : null;
+        $pessoa = $request->codpessoa ? Pessoa::findOrFail($request->codpessoa) : null;
+        $cob = PixService::criarPixCobPdv($request->valor, $pdv, $negocio, $request->codportador, $pessoa);
+        if (PdvNegocioPagamentoService::formatoNovo() || !$negocio) {
+            return new PixCobResource($cob->fresh());
+        }
         return new NegocioResource($negocio);
     }
 
@@ -488,11 +502,11 @@ class PdvController
     {
         $data = (object) $request->all();
         $pdv = PdvService::autoriza($request->pdv);
-        $negocio = Negocio::findOrFail($request->codnegocio);
+        $negocio = !empty($data->codnegocio) ? Negocio::findOrFail($data->codnegocio) : null;
         PagarMeService::consultarPedidosAbertosPos($data->codpagarmepos);
         PagarMeService::cancelarPedidosAbertosPos($data->codpagarmepos);
-        PagarMeService::criarPedido(
-            null,
+        $ped = PagarMeService::criarPedido(
+            $pdv->codfilial,
             $data->codpagarmepos,
             $data->tipo,
             $data->valor,
@@ -501,11 +515,14 @@ class PdvController
             $data->valorparcela ?? 0,
             $data->parcelas,
             $data->jurosloja,
-            $data->descricao,
-            $data->codnegocio,
+            $data->descricao ?? null,
+            $data->codnegocio ?? null,
             $pdv->codpdv,
-            $data->codpessoa
+            $data->codpessoa ?? null
         );
+        if (PdvNegocioPagamentoService::formatoNovo() || !$negocio) {
+            return new PagarMePedidoResource($ped->fresh());
+        }
         return new NegocioResource($negocio);
     }
 
@@ -515,7 +532,7 @@ class PdvController
         $pdv = PdvService::autoriza($request->pdv);
         $pdvSaurus = SaurusPdv::findOrFail($data->codsauruspos);
         $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
-        $negocio = Negocio::findOrFail($request->codnegocio);
+        $negocio = !empty($data->codnegocio) ? Negocio::findOrFail($data->codnegocio) : null;
         SaurusService::cancelarPedidosAbertosPdv($pdvSaurus->codsauruspdv);
 
         $idpedido = Uuid::uuid4();
@@ -533,10 +550,10 @@ class PdvController
         }
 
 
-        SaurusService::criarPedido(
+        $ped = SaurusService::criarPedido(
             $idpedido,
             $pdvSaurus->codsauruspdv,
-            $data->codnegocio,
+            $data->codnegocio ?? null,
             $data->valor,
             $data->valorjuros ?? 0,
             ($data->valorjuros ?? 0) + ($data->valor ?? 0),
@@ -551,6 +568,9 @@ class PdvController
             $pos
         );
 
+        if (PdvNegocioPagamentoService::formatoNovo() || !$negocio) {
+            return new SaurusPedidoResource($ped->fresh());
+        }
         return new NegocioResource($negocio);
     }
 
@@ -583,6 +603,9 @@ class PdvController
 
         $pedidoResponse = ApiService::functionPedidoCriar($pedido, $pdv, $pos);
 
+        if (PdvNegocioPagamentoService::formatoNovo() || empty($pedido->codnegocio)) {
+            return new SaurusPedidoResource($pedido->fresh());
+        }
         $negocio = Negocio::findOrFail($pedido->codnegocio);
 
         return new NegocioResource($negocio);

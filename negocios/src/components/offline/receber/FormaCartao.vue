@@ -1,14 +1,16 @@
 <script setup>
-// Passo do wizard: cartão. Etapas: tipo → parcelas (crédito) → modo (maquininha ou manual)
+// Passo do wizard: cartão. Etapas: tipo → parcelas (crédito) → [juros, se o plano tem] → modo
+// (maquininha ou manual)
 // → parceiro → [maquineta do parceiro, pulada se única] → [bandeira] → [autorização].
 // Enviar para a maquininha cria o pedido e emite 'cobranca'; manual lança direto.
 // As maquinetas vêm do cadastro único (contas → Maquinetas) pelo estoque local.
 import { ref, computed, onMounted } from 'vue'
 import { Notify } from 'quasar'
-import { negocioStore } from 'stores/negocio'
+import { cobrancaStore } from 'stores/cobranca'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { db } from 'boot/db'
 import MgInput from '@components/MgInput.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import { formataNumero } from '@components/formatters'
 import { calcularParcelas } from '../../../utils/parcelamento.js'
 import { VISUAL } from '../../../utils/pagamento.js'
@@ -16,9 +18,9 @@ import cartoesManuais from '../../../data/cartoes-manuais.json'
 import ListaOpcoes from './ListaOpcoes.vue'
 import ListaFiltravel from './ListaFiltravel.vue'
 
-const emit = defineEmits(['concluido', 'cobranca'])
+const emit = defineEmits(['pagamento', 'cobranca'])
 
-const sNegocio = negocioStore()
+const sCobranca = cobrancaStore()
 const sSinc = sincronizacaoStore()
 const TIPOS = [
   { tecla: 1, valor: 1, label: 'Débito', ...VISUAL.debito },
@@ -37,14 +39,15 @@ const parceiro = ref(null) // codpessoa do parceiro (manual) ou null (enviar p/ 
 const maquineta = ref(null) // maquineta do cartão manual (MaquinetaS do estoque local)
 const bandeira = ref(null)
 const autorizacao = ref(null)
+const jurosEdicao = ref(null)
 
 // maquinetas ativas da filial + compartilhadas
 const maquinetas = ref([])
 
-const valor = computed(() => sNegocio.receber.valor)
+const valor = computed(() => sCobranca.valor)
 
 const carregarMaquinetas = async () => {
-  const loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
+  const loc = await db.estoqueLocal.get(sCobranca.documento?.codestoquelocal)
   maquinetas.value = loc?.MaquinetaS ?? []
 }
 
@@ -84,14 +87,15 @@ const maquinetasEnvio = computed(() => {
 })
 
 const valorPadrao = computed(() => {
-  if (sNegocio.negocio.codestoquelocal != sNegocio.padrao.codestoquelocal) {
+  const padrao = sCobranca.padrao
+  if (sCobranca.documento?.codestoquelocal != padrao.codestoquelocal) {
     return null
   }
-  if (sNegocio.padrao.maquineta === 'saurus') {
-    return `saurus-${sNegocio.padrao.codsauruspos}`
+  if (padrao.maquineta === 'saurus') {
+    return `saurus-${padrao.codsauruspos}`
   }
-  if (sNegocio.padrao.maquineta === 'pagarme') {
-    return `pagarme-${sNegocio.padrao.codpagarmepos}`
+  if (padrao.maquineta === 'pagarme') {
+    return `pagarme-${padrao.codpagarmepos}`
   }
   return null
 })
@@ -128,7 +132,7 @@ const valorMaquininha = computed(
 // Sem padrão configurado (ou negócio de outro estoque local) não há o que destacar: Manual
 // volta ao 0 e as maquininhas contam de 1, sob o cabeçalho "Maquinetas".
 const opcoesModo = computed(() => {
-  const sincronizado = sNegocio.negocio.sincronizado
+  const sincronizado = sCobranca.sincronizado
   const padrao = maquinetasEnvio.value.find((m) => m.valor === valorPadrao.value) ?? null
   const outras = maquinetasEnvio.value.filter((m) => m !== padrao)
 
@@ -211,7 +215,7 @@ const parceiroAtual = computed(() => parceiros.value.find((p) => p.codpessoa ===
 const maquinetasParceiro = computed(() => {
   const lista = maquinetas.value.filter((m) => m.codpessoa === parceiro.value)
   const ordem = (m) => {
-    const i = sNegocio.maquinetasRecentes.indexOf(m.codmaquineta)
+    const i = sCobranca.maquinetasRecentes.indexOf(m.codmaquineta)
     return i === -1 ? Infinity : i
   }
   return [...lista].sort((a, b) => ordem(a) - ordem(b))
@@ -231,7 +235,7 @@ const opcoesMaquineta = computed(() => {
     ]
   }
   return maquinetasParceiro.value.map((m) => {
-    const recente = sNegocio.maquinetasRecentes.includes(m.codmaquineta)
+    const recente = sCobranca.maquinetasRecentes.includes(m.codmaquineta)
     const detalhe = m.serial ?? (m.compartilhada ? 'todas as filiais' : null)
     return {
       valor: m.codmaquineta,
@@ -283,8 +287,24 @@ const escolherTipo = (opcao) => {
   irPara('modo')
 }
 
+// plano com juros: o juros sugerido pode ser ajustado antes de seguir
 const escolherPlano = (opcao) => {
-  plano.value = opcao
+  plano.value = { ...opcao }
+  if (opcao.valorjuros > 0) {
+    jurosEdicao.value = opcao.valorjuros
+    irPara('juros')
+    return
+  }
+  irPara('modo')
+}
+
+const confirmarJuros = () => {
+  const j = Math.round((parseFloat(jurosEdicao.value) || 0) * 100) / 100
+  if (j < 0) {
+    return
+  }
+  plano.value.valorjuros = j
+  plano.value.valorparcela = Math.round(((valor.value + j) / plano.value.parcelas) * 100) / 100
   irPara('modo')
 }
 
@@ -338,28 +358,25 @@ const enviar = async () => {
   enviando.value = true
   let pedido
   let tipoCobranca
+  const dados = {
+    valor: valor.value,
+    valorparcela: plano.value.valorparcela,
+    valorjuros: plano.value.valorjuros,
+    tipo: tipo.value,
+    parcelas: plano.value.parcelas,
+  }
   if (posEscolhida.value.tipoMaquineta === 'saurus') {
     tipoCobranca = 'saurus'
-    pedido = await sNegocio.criarSaurusPedido(
-      posEscolhida.value.pos.codsauruspdv,
-      valor.value,
-      plano.value.valorparcela,
-      plano.value.valorjuros,
-      tipo.value,
-      plano.value.parcelas,
-      true,
-    )
+    pedido = await sCobranca.criarSaurusPedido({
+      ...dados,
+      codsauruspos: posEscolhida.value.pos.codsauruspdv,
+    })
   } else {
     tipoCobranca = 'pagarme'
-    pedido = await sNegocio.criarPagarMePedido(
-      posEscolhida.value.pos.codpagarmepos,
-      valor.value,
-      plano.value.valorparcela,
-      plano.value.valorjuros,
-      tipo.value,
-      plano.value.parcelas,
-      true,
-    )
+    pedido = await sCobranca.criarPagarMePedido({
+      ...dados,
+      codpagarmepos: posEscolhida.value.pos.codpagarmepos,
+    })
   }
   enviando.value = false
   if (!pedido) {
@@ -389,27 +406,30 @@ const salvarManual = async () => {
     return
   }
   const tipoManual = parceiroAtual.value.tipos.find((t) => t.tipo === tipo.value)
-  await sNegocio.adicionarPagamento({
-    codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_CARTAOMANUAL),
-    tipo: tipoManual.tpag,
-    valorpagamento: valor.value,
-    valorjuros: plano.value.valorjuros || null,
+  sCobranca.registrarMaquinetaRecente(maquineta.value.codmaquineta)
+  emit('pagamento', {
+    meio: tipoManual.tpag,
+    principal: valor.value,
+    juros: plano.value.valorjuros || 0,
     codpessoa: parceiro.value,
     bandeira: bandeira.value,
     autorizacao: aut,
     parcelas: plano.value.parcelas,
-    valorparcela: plano.value.valorparcela,
     codmaquineta: maquineta.value.codmaquineta,
     maquineta: maquineta.value.apelido,
   })
-  sNegocio.registrarMaquinetaRecente(maquineta.value.codmaquineta)
-  emit('concluido')
 }
 
 // botão do rodapé do wizard: só as etapas que terminam em lançamento têm ação
-const acao = computed(() =>
-  etapa.value === 'autorizacao' ? { label: 'Lançar (Enter)', executar: salvarManual } : null,
-)
+const acao = computed(() => {
+  if (etapa.value === 'autorizacao') {
+    return { label: 'Lançar (Enter)', executar: salvarManual }
+  }
+  if (etapa.value === 'juros') {
+    return { label: 'Continuar (Enter)', executar: confirmarJuros }
+  }
+  return null
+})
 
 // devolve true quando consumiu a tecla
 const tecla = (e) => {
@@ -417,6 +437,12 @@ const tecla = (e) => {
     return voltarEtapa()
   }
   switch (etapa.value) {
+    case 'juros':
+      if (e.key === 'Enter') {
+        confirmarJuros()
+        return true
+      }
+      return false
     case 'autorizacao':
       if (e.key === 'Enter') {
         salvarManual()
@@ -438,6 +464,29 @@ defineExpose({ tecla, acao })
 
     <template v-else-if="etapa === 'parcelas'">
       <lista-opcoes ref="listaRef" :opcoes="planos" @escolher="escolherPlano" />
+    </template>
+
+    <template v-else-if="etapa === 'juros'">
+      <div class="text-center q-mb-md">
+        <div class="text-subtitle1 text-grey-7">
+          {{ plano.parcelas }}x · R$ {{ formataNumero(valor) }} + juros
+        </div>
+      </div>
+      <div class="row justify-center">
+        <div class="col-12 col-sm-6">
+          <MgInputValor
+            v-model="jurosEdicao"
+            label="Juros do parcelamento"
+            prefix="R$"
+            :min="0"
+            autofocus
+            input-class="text-h5 text-weight-bold text-primary"
+          />
+          <div class="text-caption text-grey-7 text-center q-mt-sm">
+            Total R$ {{ formataNumero(valor + (parseFloat(jurosEdicao) || 0)) }} · Enter continua
+          </div>
+        </div>
+      </div>
     </template>
 
     <template v-else-if="etapa === 'modo'">

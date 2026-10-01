@@ -9,6 +9,7 @@ use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
 use Mg\Pagamento\PagamentoResource;
 use Mg\Pdv\PdvAnexoService;
+use Mg\Pdv\PdvNegocioPagamentoService;
 use Mg\Saurus\SaurusPedidoResource;
 use Mg\Woo\WooPedidoResource;
 use Mg\NotaFiscal\NotaFiscal;
@@ -49,8 +50,14 @@ class NegocioResource extends Resource
         $ret['fantasia'] = $this->Pessoa->fantasia;
         $ret['fantasiavendedor'] = $this->PessoaVendedor->fantasia ?? null;
         $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS()->orderBy('alteracao', 'desc')->get());
-        // formato antigo (forma de pagamento), que o PDV le' ate o M5
-        $ret['pagamentos'] = NegocioFormaPagamentoService::formaAntiga($this->resource);
+        // PDV novo (M5 doc-3) le' pagamentos e parcelas no formato novo; o
+        // antigo, a forma de pagamento, ate todos os PDVs atualizarem
+        if (PdvNegocioPagamentoService::formatoNovo()) {
+            $ret['pagamentos'] = PdvNegocioPagamentoService::pagamentos($this->resource);
+            $ret['parcelas'] = PdvNegocioPagamentoService::parcelas($this->resource);
+        } else {
+            $ret['pagamentos'] = NegocioFormaPagamentoService::formaAntiga($this->resource);
+        }
         // formato novo (M4 doc-3)
         $ret['PagamentoS'] = PagamentoResource::collection($this->PagamentoS()->orderBy('codpagamento')->get());
         $ret['NegocioParcelaS'] = NegocioParcelaResource::collection($this->NegocioParcelaS()->orderBy('codnegocioparcela')->get());

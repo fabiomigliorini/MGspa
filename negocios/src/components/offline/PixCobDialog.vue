@@ -5,6 +5,7 @@ import { ref, watch } from 'vue'
 import { Notify, debounce } from 'quasar'
 import QRCode from 'qrcode'
 import { pixStore } from 'stores/pix'
+import { negocioStore } from 'stores/negocio'
 import {
   formataCpf,
   formataCnpj,
@@ -15,6 +16,8 @@ import { useConsultaAutomatica } from '../../composables/useConsultaAutomatica.j
 import emitter from '../../utils/emitter.js'
 
 const sPix = pixStore()
+// só a impressora térmica padrão do PDV
+const sNegocio = negocioStore()
 
 const btnConsultarRef = ref(null)
 const qrDataUrl = ref(null)
@@ -70,7 +73,7 @@ const transmitir = () => {
 }
 
 const imprimir = () => {
-  sPix.imprimirPixCob()
+  sPix.imprimirPixCob(sNegocio.padrao.impressora)
 }
 
 const textoMensagem = () => {

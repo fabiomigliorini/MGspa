@@ -8,13 +8,14 @@
 //   Vale      − utilizado = Contra Vale
 import { ref, computed, watch, onMounted } from 'vue'
 import { Notify, debounce } from 'quasar'
-import { negocioStore } from 'stores/negocio'
+import { cobrancaStore } from 'stores/cobranca'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import { MEIO } from '../../../utils/pagamento.js'
 
-const emit = defineEmits(['concluido'])
+const emit = defineEmits(['pagamento'])
 
-const sNegocio = negocioStore()
+const sCobranca = cobrancaStore()
 
 const codigo = ref(null)
 const titulo = ref(null)
@@ -22,9 +23,9 @@ const buscando = ref(false)
 const utilizado = ref(null)
 
 // veio da bipagem VAL… no input de barras: o código não se edita
-const codigoLido = !!sNegocio.receber.codtituloVale
+const codigoLido = !!sCobranca.codtituloVale
 
-const valor = computed(() => sNegocio.receber.valor)
+const valor = computed(() => sCobranca.valor)
 
 // o vale é um título a pagar: o saldo vem negativo
 const saldoVale = computed(() =>
@@ -63,13 +64,13 @@ const buscar = debounce(async () => {
   if (!cod) {
     return
   }
-  const jaUsado = (sNegocio.negocio.pagamentos ?? []).some((p) => p.codtitulo == cod)
+  const jaUsado = (sCobranca.documento?.valesUsados ?? []).some((c) => c == cod)
   if (jaUsado) {
     avisar('Este vale já foi usado neste negócio!')
     return
   }
   buscando.value = true
-  const ret = await sNegocio.buscarVale(cod)
+  const ret = await sCobranca.buscarVale(cod)
   buscando.value = false
   if (!ret) {
     return
@@ -82,7 +83,7 @@ watch(codigo, () => buscar())
 
 onMounted(() => {
   if (codigoLido) {
-    codigo.value = String(sNegocio.receber.codtituloVale)
+    codigo.value = String(sCobranca.codtituloVale)
   }
 })
 
@@ -99,17 +100,13 @@ const salvar = async () => {
     return false
   }
 
-  // vale identifica o cliente quando a venda está no consumidor final
-  if (sNegocio.negocio.codpessoa == 1) {
-    await sNegocio.informarPessoa(titulo.value.codpessoa, null)
-  }
-  await sNegocio.adicionarPagamento({
-    codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_VALE),
-    tipo: 12, // tPag Vale Presente
+  // codpessoavale: o vale identifica o cliente quando a venda está no consumidor final
+  emit('pagamento', {
+    meio: MEIO.VALE,
     codtitulo: titulo.value.codtitulo,
-    valorpagamento: utilizado.value,
+    principal: utilizado.value,
+    codpessoavale: titulo.value.codpessoa,
   })
-  emit('concluido')
   return true
 }
 

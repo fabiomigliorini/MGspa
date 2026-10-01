@@ -133,15 +133,23 @@ class NegocioParcelaService
         return $np->Negocio->NaturezaOperacao->codtipotitulo;
     }
 
+    // Grupo das parcelas: a condicao (PDV novo, M5) ou a forma antiga que
+    // as gerou (uuidforma, PDV antigo)
+    public static function grupo(NegocioParcela $np): string
+    {
+        return $np->uuidforma ?? $np->condicao;
+    }
+
     // Gera o titulo de cada parcela ainda sem titulo. Numero N00000000-1/3,
-    // com sufixo -A, -B... quando o negocio tem mais de uma forma a prazo
-    // (uuidforma), -DEV no vale da devolucao. Devolve a soma das parcelas.
+    // com sufixo -A, -B... quando o negocio tem mais de um grupo a prazo,
+    // -DEV no vale da devolucao. Devolve a soma das parcelas.
     public static function gerarTitulos(Negocio $negocio, ?string $numeroFixo = null): float
     {
         $parcelas = $negocio->NegocioParcelaS()
+            ->orderBy('vencimento')
             ->orderBy('codnegocioparcela')
             ->get();
-        $grupos = $parcelas->groupBy(fn($np) => $np->uuidforma ?? $np->uuid);
+        $grupos = $parcelas->groupBy(fn($np) => static::grupo($np));
         $sufixo = ($grupos->count() > 1) ? 'A' : null;
         $total = 0;
         foreach ($grupos as $grupo) {

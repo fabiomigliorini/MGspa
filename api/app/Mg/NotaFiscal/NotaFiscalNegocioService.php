@@ -2,6 +2,8 @@
 
 namespace Mg\NotaFiscal;
 
+use Mg\Pdv\PdvNegocioService;
+
 use Exception;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -148,6 +150,11 @@ class NotaFiscalNegocioService
         // esta' em tblnegociovale.valorjuros, e o loop abaixo so' percorre
         // itens de mercadoria.
 
+        // O desconto por forma de pagamento (dinheiro, M5 doc-3) fica no
+        // pagamento, fora do total dos itens: e' rateado aqui, pelos mesmos
+        // pesos do juros, e vira vDesc do item. A fatia do vale fica fora.
+        $descontosPagamento = static::ratearDescontoPagamento($negocio);
+
         // variaveis de controle do loop
         $primeiro = true;
         $chavesReferenciadas = [];
@@ -253,6 +260,15 @@ class NotaFiscalNegocioService
                 // juros do parcelamento: ja' rateado no negocio, vira
                 // "outras" no item da nota
                 $notaItem->valoroutras += $item->valorjuros ?? 0;
+
+                // desconto do pagamento: vDesc do item
+                $desconto = $descontosPagamento[$item->codnegocioprodutobarra] ?? 0;
+                if ($desconto > 0) {
+                    if ($item->quantidade != $quantidade) {
+                        $desconto = round($desconto * $quantidade / $item->quantidade, 2);
+                    }
+                    $notaItem->valordesconto = round(($notaItem->valordesconto ?? 0) + $desconto, 2);
+                }
             }
 
             // calcula tributacao
@@ -357,6 +373,39 @@ class NotaFiscalNegocioService
     // Pagamentos e parcelas do negocio no formato que a nota usa (um por
     // pagamento, um por forma a prazo). vPag = total + troco; CNPJ do
     // credenciador pela adquirente da maquineta (M4 doc-3).
+    // Fatia de cada item no desconto dos pagamentos (codnegocioprodutobarra
+    // => valor). Pesos = valorprodutos dos itens e face dos vales, como o
+    // rateio do juros no PDV; a sobra do arredondamento fica no ultimo.
+    public static function ratearDescontoPagamento(Negocio $negocio): array
+    {
+        $total = PdvNegocioService::descontoPagamentos($negocio);
+        if ($total <= 0) {
+            return [];
+        }
+        $alvos = [];
+        foreach ($negocio->NegocioProdutoBarraS()->whereNull('inativo')->orderBy('codnegocioprodutobarra')->get() as $item) {
+            $alvos[] = [$item->codnegocioprodutobarra, round($item->valorprodutos, 2)];
+        }
+        foreach ($negocio->NegocioValeS()->whereNull('inativo')->orderBy('codnegociovale')->get() as $vale) {
+            $alvos[] = [null, round($vale->valorvale, 2)];
+        }
+        $base = array_sum(array_column($alvos, 1));
+        if ($base <= 0) {
+            return [];
+        }
+        $ret = [];
+        $soma = 0;
+        $ultimo = count($alvos) - 1;
+        foreach ($alvos as $i => [$cod, $peso]) {
+            $fatia = ($i == $ultimo) ? round($total - $soma, 2) : round($total * $peso / $base, 2);
+            $soma += $fatia;
+            if ($cod) {
+                $ret[$cod] = $fatia;
+            }
+        }
+        return $ret;
+    }
+
     public static function formasDoNegocio(Negocio $negocio)
     {
         $formas = collect();

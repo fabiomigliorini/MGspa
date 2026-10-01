@@ -1,16 +1,19 @@
 <script setup>
 // Passo do wizard: PIX. Etapa 1 = QR Code (cobrança no banco) ou chave manual;
 // etapa 2 (só QR) = conta que recebe. QR emite 'cobranca' para o wizard abrir o dialog do PixCob.
+// Pela chave o cliente já transferiu: vira parcela PIX/depósito a receber, que o financeiro baixa
+// quando o dinheiro aparece no extrato.
 import { ref, computed, onMounted } from 'vue'
-import { negocioStore } from 'stores/negocio'
+import { cobrancaStore } from 'stores/cobranca'
 import { pixStore } from 'stores/pix'
 import { db } from 'boot/db'
+import moment from 'moment'
 import ListaOpcoes from './ListaOpcoes.vue'
-import { VISUAL } from '../../../utils/pagamento.js'
+import { CONDICAO, VISUAL } from '../../../utils/pagamento.js'
 
-const emit = defineEmits(['concluido', 'cobranca'])
+const emit = defineEmits(['parcelas', 'cobranca'])
 
-const sNegocio = negocioStore()
+const sCobranca = cobrancaStore()
 const sPix = pixStore()
 
 const listaRef = ref(null)
@@ -19,10 +22,10 @@ const portadores = ref([])
 const codfilial = ref(null)
 const criando = ref(false)
 
-const valor = computed(() => sNegocio.receber.valor)
+const valor = computed(() => sCobranca.valor)
 
 onMounted(async () => {
-  const loc = await db.estoqueLocal.get(sNegocio.negocio.codestoquelocal)
+  const loc = await db.estoqueLocal.get(sCobranca.documento?.codestoquelocal)
   if (loc?.codfilial) {
     codfilial.value = loc.codfilial
     portadores.value = await sPix.carregarPortadores(loc.codfilial)
@@ -31,7 +34,7 @@ onMounted(async () => {
 
 const opcoesModo = computed(() => {
   let motivoQr = null
-  if (!sNegocio.negocio.sincronizado) {
+  if (!sCobranca.sincronizado) {
     motivoQr = 'Negócio ainda não sincronizado com o servidor'
   } else if (!portadores.value.length) {
     motivoQr = 'Nenhuma conta PIX disponível (sem conexão?)'
@@ -59,7 +62,7 @@ const opcoesModo = computed(() => {
 })
 
 const opcoesConta = computed(() => {
-  const padraoCod = sNegocio.padrao?.codportador
+  const padraoCod = sCobranca.padrao?.codportador
   const localCodfilial = codfilial.value
 
   // separa por filial
@@ -153,15 +156,16 @@ const escolherModo = (opcao) => {
   etapa.value = 'conta'
 }
 
-const chave = async () => {
-  await sNegocio.adicionarPagamento({
-    codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_PIXCHAVE),
-    tipo: 16, // Depósito Bancário
-    valorpagamento: valor.value,
-    parcelas: 1,
-    valorparcela: valor.value,
-  })
-  emit('concluido')
+const chave = () => {
+  emit('parcelas', [
+    {
+      condicao: CONDICAO.PIX,
+      numero: 1,
+      vencimento: moment().format('YYYY-MM-DD'),
+      valor: valor.value,
+      juros: 0,
+    },
+  ])
 }
 
 const qr = async (codportador) => {
@@ -169,7 +173,7 @@ const qr = async (codportador) => {
     return
   }
   criando.value = true
-  const cob = await sNegocio.criarPixCob(valor.value, codportador)
+  const cob = await sCobranca.criarPixCob(valor.value, codportador)
   criando.value = false
   if (!cob) {
     return
@@ -200,7 +204,7 @@ defineExpose({ tecla })
       <lista-opcoes
         ref="listaRef"
         :opcoes="opcoesConta"
-        :inicial="sNegocio.padrao.codportador"
+        :inicial="sCobranca.padrao.codportador"
         @escolher="(o) => qr(o.valor)"
       />
     </template>

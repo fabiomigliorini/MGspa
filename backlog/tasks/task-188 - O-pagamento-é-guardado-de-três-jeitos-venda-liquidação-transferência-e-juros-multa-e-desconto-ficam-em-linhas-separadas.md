@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-01 01:46'
+updated_date: '2026-10-01 02:24'
 labels:
   - contas
   - negocios
@@ -119,4 +119,13 @@ M4 decidido item a item com o Fábio (30/09/2026): (1) NFe de Terceiros do MGsis
 M4 implementado em dev em 30/09/2026, aguardando validação (ACs M4.x desmarcados até o OK). DDL api/database/pagamento.sql (seção 1) rodado em dev e de novo sem efeito (idempotente): 4.732.518 pagamentos, 620.204 parcelas, 270 formas de valor zero não copiadas, 4 contrários; reapontados 611.378 títulos, 3.174 movimentos, 0 cheques. Conferência fora do script contra a cópia de antes (banco m4antes no container): 298 negócios com total diferente, todos explicados (174 parcela = título alterado, 117 troco em dobro, 7 forma incoerente); 67 negócios só com forma zero. DIMP de jul/2026 igual por tPag (dinheiro −3 formas de troco total, líquido igual). vwnegocioformapagamentototais redefinida (vwnegocio/vwnegocio_listagem dependem). Backend: Mg/Pagamento (model, service, resource), NegocioParcela + service + resource, NegocioFormaPagamentoService = tradutor do formato antigo (sai no M5); sync, fechar, cancelar, NF-e, DIMP, romaneio, vale, cheque, conferência, listagem, títulos, PIX/PagarMe/Saurus/Lio/Mercos, NFe de terceiros, devolução. contas: Detalhe do título. MGsis: NfeTerceiro.php, Titulo.php, _grid_titulos.php, NegocioParcela.php (sobem junto). Testado com rollback (tinker): todas as formas, dividido, negativo, sync repetido/troca de forma, cancelar, NF-e/NFC-e, integrações. Não testado: fechar boleto (registra no BB), importação de NFe de Terceiros (consulta a SEFAZ; uma tentativa em dev esbarrou em '656 Consumo Indevido', limite de consultas/hora) e a tela do MGsis.
 
 M4 commitado sem validação a pedido do Fábio (30/09/2026): valida junto com o M5. ACs M4.x seguem desmarcados até a validação.
+
+M5 em andamento (30/09/2026): wizard de cobrança desacoplado e prazo com vencimento ajustável. Conferência do banco e do código antes de codar.
+
+M5 implementado em dev em 30/09/2026 (ACs M5.x desmarcados até a validação, junto com M4 e M6). DDL api/database/cobranca_documento.sql (tblsauruspedido.codnegocio nulo), rodado 2x em dev. PDV novo se identifica com o cabeçalho X-Pagamento-Formato: 2 (sync e NegocioResource no formato novo via Mg/Pdv/PdvNegocioPagamentoService; cobranças devolvem a cobrança). negocios: store cobranca.js, ReceberDialog e Forma*.vue sem negocioStore (emitem pagamento/parcelas/cobranca), FormaPrazo com editor de vencimento e valor, juros editável no crédito, desconto (tecla −) só no dinheiro, Dexie v8 migrando os negócios do aparelho, stores pix/pagar-me/saurus avisam por cobrancaAtualizada, filtro da listagem por meio/condição, CODFORMAPAGAMENTO_* fora do .env de dev. Backend: desconto do pagamento sai do total do negócio (confereTotais, recalcularTotal) e é rateado nos itens na NF-e; fechar recusa parcela vencida; títulos numerados por condição. Conferido: lint, php -l, 20 cenários por serviço com rollback (todas as formas, Σ total + Σ parcelas = total), NFC-e com desconto, e no navegador dinheiro com desconto + crediário 2x editado fechando sozinho (negócios de teste cancelados). Não testado: PIX QR e cartão integrado de ponta a ponta com banco/maquineta reais (simulados no serviço); migração Dexie com negócio antigo de verdade no aparelho.
+
+Dúvidas para o Fábio (M5):
+1. Desconto por forma: qual percentual sugerir no dinheiro (hoje 0%, o operador digita com a tecla −)? E no PIX: o QR não tem onde guardar o desconto (tblpixcob) e PIX por chave é parcela — quer desconto no PIX? Precisa de coluna nova no tblpixcob.
+2. O desconto do pagamento é rateado nos itens só na nota fiscal (o item não separa desconto digitado de desconto do pagamento sem coluna nova). Está bom assim ou prefere uma coluna valordescontopagamento no item, como o valorjuros?
+3. Quando tirar o formato antigo (tradutor NegocioFormaPagamentoService, uuidforma, cabeçalho)? Proposta: algumas semanas depois do go-live, numa limpeza própria.
 <!-- SECTION:NOTES:END -->

@@ -113,7 +113,10 @@ class PdvNegocioService
         $confere('valorfrete', $negocio->valorfrete, $tot->valorfrete);
         $confere('valoroutras', $negocio->valoroutras, $tot->valoroutras);
         $confere('valorseguro', $negocio->valorseguro, $tot->valorseguro);
-        $confere('valortotal', $negocio->valortotal - $negocio->valorjuros, floatval($tot->valortotal) + floatval($totVale->valortotal));
+        // juros e desconto do pagamento ficam no cabecalho, fora do total
+        // dos itens (o desconto e' rateado nos itens so' na nota fiscal)
+        $descontoPagamentos = static::descontoPagamentos($negocio);
+        $confere('valortotal', $negocio->valortotal - $negocio->valorjuros + $descontoPagamentos, floatval($tot->valortotal) + floatval($totVale->valortotal));
 
         // O juros do parcelamento nasce no pagamento, no cabecalho, e e'
         // rateado entre os itens e os vales -- e' o item que a nota fiscal
@@ -134,6 +137,15 @@ class PdvNegocioService
         }
 
         return true;
+    }
+
+    // Desconto por forma de pagamento (dinheiro, M5 doc-3): sai do total do
+    // negocio mas nao do total dos itens, como o juros entra
+    public static function descontoPagamentos(Negocio $negocio): float
+    {
+        return round(floatval($negocio->PagamentoS()
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+            ->sum('desconto')), 2);
     }
 
     // Dois valores de dinheiro conferem?
@@ -225,13 +237,18 @@ class PdvNegocioService
         // a partir do que esta' gravado aqui.
         static::importarVales($negocio, $data['vales'] ?? []);
 
+        // importa os pagamentos e parcelas antes da conferencia: o desconto
+        // do pagamento sai do total do negocio (M5 doc-3). PDV novo manda o
+        // formato novo; o antigo manda a forma de pagamento (M4 traduz).
+        if (PdvNegocioPagamentoService::formatoNovo()) {
+            PdvNegocioPagamentoService::importar($negocio, $data['pagamentos'] ?? [], $data['parcelas'] ?? []);
+        } else {
+            NegocioFormaPagamentoService::importar($negocio, $data['pagamentos'] ?? []);
+        }
+
         if (!static::confereTotais($negocio)) {
             throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
         }
-
-        // importa os pagamentos: o PDV ainda manda o formato antigo (forma
-        // de pagamento); vira pagamentos e parcelas (M4 doc-3)
-        NegocioFormaPagamentoService::importar($negocio, $data['pagamentos'] ?? []);
 
         return $negocio;
     }
@@ -372,7 +389,9 @@ class PdvNegocioService
                 $valorJuros += $sinal * $pag->juros;
             }
 
-            // 3. Validações das parcelas (prazo)
+            // 3. Validações das parcelas (prazo); vencimento editado no PDV
+            //    não pode ter ficado para trás
+            PdvNegocioPagamentoService::validarVencimentos($negocio);
             $valorPagamentosPrazo = 0;
             foreach ($parcelas as $np) {
                 if ($negocio->codpessoa == 1) { // Consumidor final
