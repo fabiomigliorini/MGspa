@@ -57,8 +57,8 @@ class FazendaService extends MgService
             ->where('p.codfazenda', $codfazenda)
             ->whereNull('tblmovimentograo.inativo')
             ->whereNull('p.inativo')
-            ->groupBy('p.codsafra')
-            ->selectRaw('p.codsafra, SUM(tblmovimentograo.liquido) as colhido')
+            ->groupBy('tblmovimentograo.codsafra')
+            ->selectRaw('tblmovimentograo.codsafra, SUM(tblmovimentograo.liquido) as colhido')
             ->pluck('colhido', 'codsafra');
 
         $codsafras = $areaPorSafra->keys()->merge($colhidoPorSafra->keys())->unique();

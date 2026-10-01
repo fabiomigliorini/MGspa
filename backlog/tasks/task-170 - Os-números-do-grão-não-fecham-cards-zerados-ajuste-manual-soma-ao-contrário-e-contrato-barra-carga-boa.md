@@ -4,9 +4,10 @@ title: >-
   Os números do grão não fecham: cards zerados, ajuste manual soma ao contrário
   e contrato barra carga boa
 status: In Progress
-assignee: []
+assignee:
+  - '@eduardo'
 created_date: '2026-09-23 21:04'
-updated_date: '2026-09-30 15:07'
+updated_date: '2026-09-30 21:46'
 labels:
   - agro
 dependencies: []
@@ -60,4 +61,6 @@ CargaService::validarOverloadContrato soma o ja entregue assim: MovimentoGrao::w
 No extrato automatico o sinal vem do par papel+contatipo (CargaService::sinal: UNIDADE +destino/-origem; PLANTIO e CONTRATO sempre +). No ajuste MANUAL nao: MovimentoGraoService::lancarManual grava liquido = bruto - desconto e nunca olha o papel. A tela (ExtratoPage) pede papel ORIGEM/DESTINO e mostra 'Liquido = bruto - desconto', entao um ajuste lancado como ORIGEM/UNIDADE de 1.000 kg (retirada de silo) ACRESCENTA 1.000 kg ao saldo em vez de baixar. Para subtrair o operador precisa adivinhar que tem de digitar bruto negativo. Decidir: aplicar o mesmo sinal do automatico no lancarManual (e migrar os lancamentos ja gravados), ou remover o campo papel do form e deixar explicito 'entrada/saida'.
 
 29/09/2026 — regra aceita pelo negócio (doc-3): o contrato PODE ser carregado além do saldo; o caminhão completa a carga para aproveitar o frete e o comprador aceita. O servidor deixa de bloquear (hoje validarOverloadContrato recusa com 422, cenários C1 e E3 da bateria) e o pátio passa a AVISAR quanto passa do contratado. Saíram os critérios 'dois caminhões juntos não passam do contratado' e 'reativar respeita o teto'; a trava com lock de contrato do plano (Fase 4) deixa de ser necessária. Continuam: cancelar nunca é barrado (C5) e a tela mostrar o excesso (C8).
+
+30/09/2026 — implementado, aguardando validação. Backend: validarOverloadContrato removido (D12: aceita e avisa; cancelar nunca barra); lancarManual com sinal por papel (CargaService::sinal público), retirada de silo sem desconto, só líquido vira bruto, FKs de outro tipo zeradas; ContratoResource.saldokg sem piso; resumoComercial com entregue só VENDA, recebidokg (COMPRA), acolherkg e disponivelkg; colhido de Cultura/Fazenda na mesma regra da Safra (safra do movimento, plantio/safra ativos). Front: extrato e selects buscam todas as páginas; form de ajuste com Entrada/Retirada do silo; contrato mostra 'Entregue a mais'; pátio mostra 'passa X kg do contratado'; safra mostra recebido de compra; Início usa o colhido do servidor quando online. PROD: api/database/agro_movimento_manual_sinal.sql (D4, conferir a lista antes do UPDATE). Bateria todos: OK 62 · FALHA 32 (era 57/38), nenhuma FALHA nova; A6, C1–C9 OK.
 <!-- SECTION:NOTES:END -->

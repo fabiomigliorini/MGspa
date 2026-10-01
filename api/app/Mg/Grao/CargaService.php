@@ -4,7 +4,6 @@ namespace Mg\Grao;
 
 use Mg\MgService;
 use Mg\Safra\Safra;
-use Mg\Contrato\Contrato;
 use Mg\Classificacao\ParametroClassificacao;
 use Mg\Classificacao\ParametroClassificacaoService;
 use Mg\Veiculo\Veiculo;
@@ -443,14 +442,12 @@ class CargaService extends MgService
     }
 
     /**
-     * Validacoes (autoridade do servidor): fechamento do rateio nas etapas
-     * finais + over-load de contrato de venda. So cobra fechamento no FINALIZADO
-     * (antes disso o kanban aceita parcial).
+     * Validacoes (autoridade do servidor): fechamento do rateio no FINALIZADO
+     * (antes disso o kanban aceita parcial). Contrato alem do saldo NAO bloqueia
+     * (D12, 29/09): o caminhao completa a carga e o patio so avisa.
      */
     protected static function validar(Carga $carga): void
     {
-        static::validarOverloadContrato($carga);
-
         if ($carga->etapa !== static::ETAPA_FINAL) {
             return;
         }
@@ -473,50 +470,6 @@ class CargaService extends MgService
                 throw ValidationException::withMessages([
                     'pontos' => "A soma das " . ($papel === 'ORIGEM' ? 'origens' : 'destinos')
                         . " (" . round($soma) . " kg) deve fechar com o liquido (" . round($liq) . " kg).",
-                ]);
-            }
-        }
-    }
-
-    /**
-     * Bloqueio de over-load: destino CONTRATO (venda) nao pode levar o total
-     * entregue acima do contratado. Contrato em volume aberto (quantidade NULL,
-     * rapa-silo) pula.
-     */
-    protected static function validarOverloadContrato(Carga $carga): void
-    {
-        $kgPorContrato = [];
-        foreach ($carga->CargaPontoS as $p) {
-            if ($p->contatipo === 'CONTRATO' && $p->papel === 'DESTINO' && $p->codcontrato) {
-                $kgPorContrato[$p->codcontrato] = ($kgPorContrato[$p->codcontrato] ?? 0) + (float) $p->liquido;
-            }
-        }
-        if (!$kgPorContrato) {
-            return;
-        }
-        $contratos = Contrato::with('Cultura')
-            ->whereIn('codcontrato', array_keys($kgPorContrato))
-            ->get()
-            ->keyBy('codcontrato');
-
-        foreach ($kgPorContrato as $cod => $estaCargaKg) {
-            $contrato = $contratos->get($cod);
-            if (!$contrato || $contrato->quantidade === null) {
-                continue;
-            }
-            $pesosaca = (float) ($contrato->Cultura->pesosaca ?? 60) ?: 60;
-            $contratadokg = (float) $contrato->quantidade * $pesosaca;
-            // entregue por OUTRAS cargas (extrato; exclui a propria).
-            $jaOutros = (float) MovimentoGrao::where('contatipo', 'CONTRATO')
-                ->where('codcontrato', $cod)
-                ->where('papel', 'DESTINO')
-                ->when($carga->codcarga, fn ($q) => $q->where('codcarga', '!=', $carga->codcarga))
-                ->sum('liquido');
-            if ($jaOutros + $estaCargaKg > $contratadokg + 1) {
-                $saldo = max(0, $contratadokg - $jaOutros);
-                throw ValidationException::withMessages([
-                    'pontos' => "Contrato {$contrato->contrato}: carregamento excede o contratado ("
-                        . round($contratadokg) . " kg). Saldo disponivel: " . round($saldo) . " kg.",
                 ]);
             }
         }
@@ -582,7 +535,7 @@ class CargaService extends MgService
      * Sinal do saldo: UNIDADE e a unica conta-saldo (+entrada/-saida); PLANTIO
      * (producao) e CONTRATO (entregue/recebido) sao contadores (sempre +).
      */
-    protected static function sinal(string $contatipo, string $papel): int
+    public static function sinal(string $contatipo, string $papel): int
     {
         if ($contatipo === 'UNIDADE') {
             return $papel === 'DESTINO' ? 1 : -1;
