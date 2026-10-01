@@ -14,7 +14,7 @@ import {
 } from '@components/formatters'
 import { produtoStore } from 'src/stores/produto'
 import BarCode from 'components/BarCode.vue'
-import { formasOrcamento } from 'src/utils/pagamento.js'
+import { formasOrcamento } from '@components/cobranca/pagamento.js'
 
 const route = useRoute()
 const sNegocio = negocioStore()

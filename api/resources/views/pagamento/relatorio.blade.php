@@ -6,7 +6,7 @@
     $fmtCod = fn($c) => '#' . str_pad((string) $c, 8, '0', STR_PAD_LEFT);
 
     use Mg\Pagamento\PagamentoService;
-    use Mg\Pagamento\PagamentoTituloService;
+    use Mg\Pagamento\PagamentoListaService;
 
     $opTot = $totalPag < 0 ? 'CR' : 'DB';
 @endphp
@@ -206,7 +206,7 @@
             <tbody>
                 @foreach ($pags as $l)
                     @php
-                        $valor = PagamentoTituloService::valor($l);
+                        $valor = PagamentoListaService::valorComSinal($l);
                         $cancelado = $l->estado == PagamentoService::ESTADO_CANCELADO;
                         $portador = optional($l->portadorDoPagamento())->portador ?? PagamentoService::MEIOS[$l->meio] ?? '';
                         $op = $valor < 0 ? 'CR' : 'DB';
@@ -220,7 +220,7 @@
                     @if ($movs->isEmpty())
                         <tr class="liq-row{{ $clsEst }}">
                             <td class="cod">{{ $fmtCod($l->codpagamento) }}</td>
-                            <td class="pess">{{ mb_substr(optional($l->Pessoa)->fantasia ?? '', 0, 40) }}</td>
+                            <td class="pess">{{ mb_substr(optional(PagamentoListaService::pessoa($l))->fantasia ?? '', 0, 40) }}</td>
                             <td class="valor {{ $opLow }}">
                                 {{ $fmtVal($valor) }}&nbsp;{{ $op }}
                                 @if ($cancelado)
@@ -258,7 +258,7 @@
                             <tr class="{{ $primeira ? 'liq-row' : 'liq-cont' }}{{ $clsEst }}">
                                 @if ($primeira)
                                     <td class="cod">{{ $fmtCod($l->codpagamento) }}</td>
-                                    <td class="pess">{{ mb_substr(optional($l->Pessoa)->fantasia ?? '', 0, 40) }}
+                                    <td class="pess">{{ mb_substr(optional(PagamentoListaService::pessoa($l))->fantasia ?? '', 0, 40) }}
                                     </td>
                                     <td class="valor {{ $opLow }}">
                                         {{ $fmtVal($valor) }}&nbsp;{{ $op }}

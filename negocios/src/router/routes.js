@@ -134,9 +134,9 @@ const routes = [
   },
 
   {
-    path: '/liquidacao',
-    component: () => import('layouts/LiquidacaoListagemLayout.vue'),
-    children: [{ path: '', component: () => import('pages/LiquidacaoListagemPage.vue') }],
+    path: '/pagamento',
+    component: () => import('layouts/PagamentoLayout.vue'),
+    children: [{ path: '', component: () => import('pages/PagamentoPage.vue') }],
   },
 
   // Always leave this as last one,

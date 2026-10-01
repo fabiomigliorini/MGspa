@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-01 14:53'
+updated_date: '2026-10-01 18:41'
 labels:
   - contas
   - negocios
@@ -71,6 +71,12 @@ Milestones:
 - [ ] #21 M6.4 Histórico das liquidações copiado, com totais por portador e mês iguais, e o Totais de Caixa do MG Lara funcionando
 - [x] #22 M3.3 Cadastrar, parear de novo, editar e inativar maquineta SafraPay e Stone integrada é feito no contas, e a tela Saurus/S2Pay sai do negocios
 - [x] #23 M3.4 Maquineta criada por serial digitado errado pode ser juntada na certa, levando os pagamentos
+- [ ] #24 M6.1.1 O wizard de cobranca, as formas e as integracoes (PIX, PagarMe, Saurus) existem numa copia so, em @components, usados por negocios e contas
+- [ ] #25 M6.1.2 No contas, Receber ou Pagar Titulos abre o mesmo wizard do PDV: cartao com bandeira, autorizacao, parcelas e maquineta; transferencia, dinheiro do cofre, cheque, compensacao; gaveta nunca
+- [ ] #26 M6.1.3 Uma listagem de pagamentos so, com todos os pagamentos (venda, titulo, transferencia, avulso) e filtros; no negocios travada no PDV atual
+- [ ] #27 M6.1.4 O dialog e a listagem parciais do contas e a listagem de liquidacoes do negocios sao apagados
+- [ ] #28 M6.1.5 No PDV o caixa recebe notinha e entrega paga na volta em dinheiro, PIX QR, cheque e cartao, sem trocar de app
+- [ ] #29 M6.1.6 No PDV o Gerente paga vale/credito do cliente em dinheiro ou registrando cancelamento no cartao ou devolucao de PIX, apontando para o pagamento original
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -162,4 +168,24 @@ Respostas aplicadas em dev em 01/10/2026 (vão no commit do M6, junto com a corr
 - pagamento_liquidacao.sql seção 5: 70.600 baixas de boleto (BB + Bradesco) e 16 eventos de acerto ganharam pagamento em dev; a view do MG Lara não mostra boleto nem acerto.
 - Edição do pagamento de título (PUT v1/pagamento/{id}: pessoa, portador, meio, data, observação), exceção à regra de imutabilidade.
 Conferido: php -l, lint negocios/contas/pessoas, simulação M5 (todas as formas, fatia do desconto devolvida) e M6 (inclui edição, edição para gaveta = 422, acerto D sem portador = 422, B/D/F), romaneio renderizado, smoke no navegador (desconto rateado no item: desconto 5, fatia 5, total 295; crediário 2x fechando).
+
+M6.1 em andamento (01/10/2026): wizard, formas e integrações em @components; contas usa o wizard; listagem única de pagamentos; receber notinha e pagar vale do cliente no PDV (absorve o M7). Levantamento antes de codar.
+
+M6.1 decidido com o Fábio (01/10/2026), depois do levantamento:
+1. PIX QR e cartão integrado em recebimento de título: na confirmação o servidor cria o pagamento efetivado sem título; a tela manda o codpagamento ao finalizar (finaliza sozinha quando zera o saldo). Tela fechada no meio = pagamento avulso sem título na listagem. Sem DDL.
+2. Contas, saída: banco, dinheiro de cofre/troco/Caixa Financeiro, cartão da empresa, compensação e cheque (emitido pela empresa).
+3. Listagem do negocios por v1/pdv/pagamento (autorizada pelo dispositivo, PDV forçado no servidor).
+4. Rotas de criar cobrança integrada com PDV opcional, para o contas ter PIX QR e cartão integrado.
+Divergências do plano relatadas e mantidas: dialogs PIX/PagarMe/Saurus, useConsultaAutomatica, LogoPagamento, utils de pagamento e logos também vão para @components; @components sem moment/mitt (qrcode com alias no contas e no negocios); store compartilhado de PIX com id pixCob (o contas já tem 'pix'); filtros e estado da listagem também em @components; vários pagamentos para os mesmos títulos distribuídos por vencimento no backend.
+
+M6.1 implementado em dev em 01/10/2026, na árvore, sem commit (ACs M6.1.x desmarcados até a validação). Detalhe no doc-3, seção M6.1 'O que mudou'.
+@components: MgCobrancaDialog + cobranca/ (Forma* incl. FormaPortador e FormaEstorno novos, ListaOpcoes, ListaFiltravel, LogoPagamento, dialogs PIX/PagarMe/Saurus, pagamento.js, juros.js, eventos.js, logos), stores cobrancaStore/pixStore (id pixCob)/pagarMeStore/saurusStore/baixaTitulosStore/pagamentoListaStore, MgPagamentoLista/Filtros/Detalhe, MgSelectPdv.
+negocios: venda pelo wizard de @components; Receber Título / Pagar Vale (F11, stores/pagamento.js); menu Pagamentos (/pagamento, travada no PDV); apagados ReceberDialog, receber/*, stores cobranca/pix/pagar-me/saurus/liquidacao, LiquidacaoListagem (page/layout/drawer).
+contas: Receber ou Pagar Títulos = seleção de títulos + wizard (sem gaveta); menu Pagamentos com a listagem única; detalhe com edição e recibos; pagamentoStore apagado; qrcode no package.json; ícones MDI.
+Backend: PagamentoTituloService::baixar (várias formas, distribuição por vencimento), PagamentoListaService + resources (listagem única), PagamentoController (era PagamentoTituloController), CobrancaService/CobrancaController (cobrança sem PDV), PdvPagamentoService/Controller, PIX/PagarMe/Saurus criam pagamento sem negócio na confirmação, codpagamento nos resources das cobranças, v1/select/pdv, recibo térmico.
+Conferido: php -l, eslint negocios/contas e da cópia de @components (só o MgSelectCargo, que já falhava), prettier, quasar build dos dois apps; serviço com rollback (contas banco/dinheiro/cartão manual dividido, compensação, cheque recebido e emitido, cartão da empresa, PDV dinheiro, vale em dinheiro, devolução parcial no cartão acima do original = 422, cobrança integrada amarrada, estorno com cheque, listagem/filtros/documento); navegador (Chrome headless): contas listagem, detalhe, baixa em Banco e dividida cartão manual 2x + dinheiro do cofre; PDV listagem travada, F11 com notinhas, dinheiro parcial + Finalizar parcial (distribuiu por vencimento) e vale pago em dinheiro da gaveta. Dados de teste estornados/cancelados e gaveta do PDV 508 restaurada.
+Não testado: PIX QR e cartão integrado de ponta a ponta (banco/maquineta reais); recibo na térmica (dev sem impressora); cheque no navegador.
+Achado (não corrigido, fora do escopo): cheque com nome do emitente e sem CPF/CNPJ grava emitente com CNPJ vazio e o banco recusa — deve afetar o fechamento da venda em cheque sem CPF/CNPJ (PdvNegocioChequeService::gerar → ChequeService::sincronizarEmitentes). No recebimento de título só mando o emitente com CPF/CNPJ.
+
+M6.1 commitado sem validação a pedido do Fábio (01/10/2026): ele valida depois. ACs M6.1.x seguem desmarcados até a validação.
 <!-- SECTION:NOTES:END -->

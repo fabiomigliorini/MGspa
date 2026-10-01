@@ -97,15 +97,16 @@ class PixService
 
     // Cobranca PIX do wizard do PDV para um documento (M5 doc-3): o negocio,
     // ou nenhum (recebimento no balcao, M7), com a pessoa que paga
-    public static function criarPixCobPdv(Float $valor, Pdv $pdv, ?Negocio $negocio, int $codportador = null, ?Pessoa $pessoa = null)
+    // PDV nulo: cobranca feita pelo contas (recebimento de titulo, M6.1)
+    public static function criarPixCobPdv(Float $valor, ?Pdv $pdv, ?Negocio $negocio, int $codportador = null, ?Pessoa $pessoa = null)
     {
         $pessoa = $negocio->Pessoa ?? $pessoa;
-        $codfilial = $negocio->codfilial ?? $pdv->codfilial;
+        $codfilial = $negocio->codfilial ?? $pdv->codfilial ?? null;
 
         // procura ou cria registro
         $cob = new PixCob([
             'codnegocio' => $negocio->codnegocio ?? null,
-            'codpdv' => $pdv->codpdv,
+            'codpdv' => $pdv->codpdv ?? null,
             'valororiginal' => $valor
         ]);
 
@@ -129,11 +130,13 @@ class PixService
         }
 
         // Texto para ser apresentado pro cliente
-        if ($negocio) {
+        if ($negocio && $pdv) {
             $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
             $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
-        } else {
+        } elseif ($pdv) {
             $cob->solicitacaopagador = "MG Papelaria! Pagamento PDV #{$pdv->uuid}!";
+        } else {
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento de títulos!";
         }
 
         // Se codportador informado, busca direto
@@ -275,27 +278,30 @@ class PixService
         return $pix;
     }
 
+    // PIX confirmado vira pagamento efetivado (o banco ja' confirmou, M4
+    // doc-3). Sem negocio (recebimento de titulo, M6.1) nasce sem documento:
+    // a tela que criou a cobranca o amarra aos titulos ao finalizar.
     public static function processarPixCobNegocio(PixCob $cob)
     {
-        if (empty($cob->codnegocio)) {
-            return;
-        }
         $valorpagamento = $cob->PixS()->sum('valor');
         if ($valorpagamento <= 0) {
             return;
         }
-        // pagamento efetivado: o banco ja' confirmou (M4 doc-3)
         $pag = Pagamento::firstOrNew([
             'codpixcob' => $cob->codpixcob
         ]);
+        // sem negocio, depois de amarrado aos titulos os valores sao deles
+        if (empty($cob->codnegocio) && $pag->exists) {
+            return;
+        }
         PagamentoService::preencher($pag, [
             'codnegocio' => $cob->codnegocio,
-            'codfilial' => $cob->Negocio->codfilial,
-            'codpdv' => $cob->codpdv ?? $cob->Negocio->codpdv,
+            'codfilial' => $cob->Negocio->codfilial ?? $cob->Pdv->codfilial ?? $cob->Portador->codfilial,
+            'codpdv' => $cob->codpdv ?? $cob->Negocio->codpdv ?? null,
             'meio' => PagamentoService::MEIO_PIX,
             'principal' => $valorpagamento,
             'codportadordestino' => $cob->codportador,
-            'codpessoa' => $cob->Portador->codpessoa,
+            'codpessoa' => empty($cob->codnegocio) ? $pag->codpessoa : $cob->Portador->codpessoa,
             'codpix' => $cob->PixS[0]->codpix,
             'autorizacao' => $cob->PixS[0]->e2eid,
         ]);
@@ -303,7 +309,9 @@ class PixService
         if ($pag->estado != PagamentoService::ESTADO_CANCELADO) {
             PagamentoService::efetivar($pag);
         }
-        $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
+        if (!empty($cob->codnegocio)) {
+            \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
+        }
     }
 
     public static function consultarPix(

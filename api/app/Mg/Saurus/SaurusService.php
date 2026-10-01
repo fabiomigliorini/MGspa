@@ -307,11 +307,11 @@ class SaurusService
         return $reg;
     }
 
+    // Pedido pago vira pagamento efetivado (M4 doc-3). Sem negocio
+    // (recebimento de titulo, M6.1) nasce sem documento: a tela que criou a
+    // cobranca o amarra aos titulos ao finalizar.
     public static function vincularPagamento(SaurusPedido $ped)
     {
-        if (empty($ped->codnegocio)) {
-            return false;
-        }
 
         $tipo = 99; //Outros
         $autorizacao = null;
@@ -332,7 +332,11 @@ class SaurusService
         // pagamento efetivado: a maquineta ja' confirmou (M4 doc-3). Um por
         // pedido; mesma autorizacao no negocio e' o mesmo pagamento.
         $pag = Pagamento::where('codsauruspedido', $ped->codsauruspedido)->first();
-        if (!$pag && !empty($autorizacao)) {
+        // sem negocio, depois de amarrado aos titulos os valores sao deles
+        if (empty($ped->codnegocio) && $pag) {
+            return true;
+        }
+        if (!$pag && !empty($autorizacao) && !empty($ped->codnegocio)) {
             $pag = Pagamento::where('codnegocio', $ped->codnegocio)
                 ->where('autorizacao', $autorizacao)
                 ->where('codpessoa', config('mg.codpessoa_safra'))
@@ -341,8 +345,8 @@ class SaurusService
         $pag = $pag ?? new Pagamento();
         PagamentoService::preencher($pag, [
             'codnegocio' => $ped->codnegocio,
-            'codfilial' => $ped->Negocio->codfilial,
-            'codpdv' => $ped->Negocio->codpdv,
+            'codfilial' => $ped->Negocio->codfilial ?? $ped->SaurusPdv->codfilial,
+            'codpdv' => $ped->Negocio->codpdv ?? null,
             'codsauruspedido' => $ped->codsauruspedido,
             'meio' => array_key_exists((int) $tipo, PagamentoService::MEIOS) ? (int) $tipo : PagamentoService::MEIO_OUTROS,
             'principal' => $ped->valor,
@@ -350,7 +354,7 @@ class SaurusService
             'valortroco' => null,
             'autorizacao' => $autorizacao,
             'bandeira' => $bandeira->tband ?? null,
-            'codpessoa' => config('mg.codpessoa_safra'),
+            'codpessoa' => empty($ped->codnegocio) ? null : config('mg.codpessoa_safra'),
             'codmaquineta' => $maquineta->codmaquineta ?? null,
         ]);
         $pag->save();
@@ -358,7 +362,9 @@ class SaurusService
             PagamentoService::efetivar($pag);
         }
 
-        NegocioService::fecharSePago($ped->Negocio);
+        if (!empty($ped->codnegocio)) {
+            NegocioService::fecharSePago($ped->Negocio);
+        }
 
         return true;
     }

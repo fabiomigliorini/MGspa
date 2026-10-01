@@ -9,7 +9,7 @@ import {
   formataCodigo,
 } from '@components/formatters'
 import BarCode from 'components/BarCode.vue'
-import { formasOrcamento } from 'src/utils/pagamento.js'
+import { formasOrcamento } from '@components/cobranca/pagamento.js'
 
 const route = useRoute()
 const sNegocio = negocioStore()

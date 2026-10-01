@@ -4,10 +4,13 @@ namespace Mg\Pagamento;
 
 use Mpdf\Mpdf;
 
-// Relatorio de Recebimentos e Pagamentos de titulos (M6 doc-3; era o de
-// Liquidacoes), mesmos filtros da listagem
+// Relatorio de pagamentos (M6 doc-3; era o de Liquidacoes): os mesmos
+// filtros da listagem unica (M6.1), com os titulos de cada pagamento
 class PagamentoRelatorioService
 {
+    // o PDF nao aguenta o mes inteiro de vendas de todas as filiais
+    const LIMITE = 5000;
+
     public static function pdf(array $filtros): string
     {
         $html = self::html($filtros);
@@ -38,10 +41,12 @@ class PagamentoRelatorioService
         ini_set('memory_limit', '512M');
         set_time_limit(120);
 
-        $q = PagamentoTituloService::query()
+        $q = Pagamento::query()
             ->select('tblpagamento.*')
             ->with([
                 'Pessoa:codpessoa,fantasia',
+                'Negocio:codnegocio,codpessoa',
+                'Negocio.Pessoa:codpessoa,fantasia',
                 'PortadorDestino:codportador,portador',
                 'PortadorOrigem:codportador,portador',
                 'UsuarioCriacao:codusuario,usuario',
@@ -49,7 +54,10 @@ class PagamentoRelatorioService
                 'MovimentoTituloS.Titulo:codtitulo,codpessoa,numero,vencimento',
                 'MovimentoTituloS.Titulo.Pessoa:codpessoa,fantasia',
             ]);
-        PagamentoTituloService::filtrar($q, $filtros);
+        PagamentoListaService::filtrar($q, $filtros);
+        if ((clone $q)->count() > static::LIMITE) {
+            abort(422, 'Mais de ' . static::LIMITE . ' pagamentos: refine os filtros do relatório.');
+        }
         $q->orderBy('tblpagamento.lancamento', 'desc')
             ->orderBy('tblpagamento.codpagamento', 'desc');
 
@@ -58,7 +66,7 @@ class PagamentoRelatorioService
         $totalPag = 0.0;
         foreach ($pags as $pag) {
             if ($pag->estado != PagamentoService::ESTADO_CANCELADO) {
-                $totalPag += PagamentoTituloService::valor($pag);
+                $totalPag += PagamentoListaService::valorComSinal($pag);
             }
         }
 

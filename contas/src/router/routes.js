@@ -267,7 +267,7 @@ const routes = [
         component: () => import('pages/pagamento/Index.vue'),
         meta: {
           auth: true,
-          title: 'Recebimentos e Pagamentos',
+          title: 'Pagamentos',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,
@@ -286,7 +286,7 @@ const routes = [
         component: () => import('pages/pagamento/Nova.vue'),
         meta: {
           auth: true,
-          title: 'Novo Recebimento ou Pagamento',
+          title: 'Receber ou Pagar Títulos',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,
@@ -302,7 +302,7 @@ const routes = [
         component: () => import('pages/pagamento/Detalhe.vue'),
         meta: {
           auth: true,
-          title: 'Recebimento ou Pagamento',
+          title: 'Pagamento',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,

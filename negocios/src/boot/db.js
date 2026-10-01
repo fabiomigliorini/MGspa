@@ -1,7 +1,7 @@
 // db.js
 import Dexie from 'dexie'
 import { uid } from 'quasar'
-import { MEIOS, vencimentoSugerido } from '../utils/pagamento.js'
+import { MEIOS, vencimentoSugerido } from '@components/cobranca/pagamento.js'
 
 export const db = new Dexie('negocios')
 db.version(6).stores({

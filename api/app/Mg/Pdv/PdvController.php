@@ -12,8 +12,8 @@ use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
+use Mg\Pagamento\CobrancaService;
 use Mg\PagarMe\PagarMePedidoResource;
-use Mg\Pix\PixService;
 use Mg\Pix\PixCobResource;
 use Mg\PagarMe\PagarMeService;
 use Mg\PagarMe\PagarMePedido;
@@ -33,7 +33,6 @@ use Mg\Saurus\SaurusPinPad;
 use Mg\Saurus\SaurusService;
 use Mg\Rh\ProcessarVendaJob;
 use Mg\Usuario\Autorizador;
-use Ramsey\Uuid\Uuid;
 
 class PdvController
 {
@@ -464,82 +463,25 @@ class PdvController
     // Cobrancas integradas do wizard (M5 doc-3): para um documento, que pode
     // nao ser negocio (codnegocio nulo, com a pessoa que paga). Devolve a
     // cobranca criada.
+    // cobranca integrada do wizard (M5/M6.1 doc-3): o negocio ou nenhum
     public function criarPixCob(PdvRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);
-        $negocio = $request->codnegocio ? Negocio::findOrFail($request->codnegocio) : null;
-        $pessoa = $request->codpessoa ? Pessoa::findOrFail($request->codpessoa) : null;
-        $cob = PixService::criarPixCobPdv($request->valor, $pdv, $negocio, $request->codportador, $pessoa);
+        $cob = CobrancaService::pix($request->all(), $pdv);
         return new PixCobResource($cob->fresh());
     }
 
     public function criarPagarMePedido(PdvRequest $request)
     {
-        $data = (object) $request->all();
         $pdv = PdvService::autoriza($request->pdv);
-        $negocio = !empty($data->codnegocio) ? Negocio::findOrFail($data->codnegocio) : null;
-        PagarMeService::consultarPedidosAbertosPos($data->codpagarmepos);
-        PagarMeService::cancelarPedidosAbertosPos($data->codpagarmepos);
-        $ped = PagarMeService::criarPedido(
-            $pdv->codfilial,
-            $data->codpagarmepos,
-            $data->tipo,
-            $data->valor,
-            $data->valorjuros ?? 0,
-            ($data->valorjuros ?? 0) + ($data->valor ?? 0),
-            $data->valorparcela ?? 0,
-            $data->parcelas,
-            $data->jurosloja,
-            $data->descricao ?? null,
-            $data->codnegocio ?? null,
-            $pdv->codpdv,
-            $data->codpessoa ?? null
-        );
+        $ped = CobrancaService::pagarMe($request->all(), $pdv);
         return new PagarMePedidoResource($ped->fresh());
     }
 
     public function criarSaurusPedido(PdvRequest $request)
     {
-        $data = (object) $request->all();
-        $pdv = PdvService::autoriza($request->pdv);
-        $pdvSaurus = SaurusPdv::findOrFail($data->codsauruspos);
-        $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
-        $negocio = !empty($data->codnegocio) ? Negocio::findOrFail($data->codnegocio) : null;
-        SaurusService::cancelarPedidosAbertosPdv($pdvSaurus->codsauruspdv);
-
-        $idpedido = Uuid::uuid4();
-        $idfaturapag = Uuid::uuid4();
-
-        switch ($data->tipo) {
-            case 1:
-                $modpagamento = 4;
-                break;
-            case 2:
-                $modpagamento = 3;
-                break;
-            default:
-                $modpagamento = 3;
-        }
-
-
-        $ped = SaurusService::criarPedido(
-            $idpedido,
-            $pdvSaurus->codsauruspdv,
-            $data->codnegocio ?? null,
-            $data->valor,
-            $data->valorjuros ?? 0,
-            ($data->valorjuros ?? 0) + ($data->valor ?? 0),
-            $data->valorparcela ?? 0,
-            $idfaturapag,
-            $modpagamento,
-            $data->parcelas,
-            0,
-            auth()->user()->codusuario,
-            now(),
-            $pdvSaurus,
-            $pos
-        );
-
+        PdvService::autoriza($request->pdv);
+        $ped = CobrancaService::saurus($request->all());
         return new SaurusPedidoResource($ped->fresh());
     }
 

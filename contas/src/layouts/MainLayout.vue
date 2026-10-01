@@ -17,7 +17,7 @@ const menuGroups = [
     items: [
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
-        label: 'Recebimentos e Pagamentos',
+        label: 'Pagamentos',
         icon: 'paid',
         color: 'indigo-7',
         to: { name: 'pagamento' },

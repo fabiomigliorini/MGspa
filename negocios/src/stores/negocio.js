@@ -4,10 +4,10 @@ import { toRaw } from 'vue'
 import { db } from 'boot/db'
 import { Notify, uid } from 'quasar'
 import { sincronizacaoStore } from 'stores/sincronizacao'
-import { cobrancaStore } from 'stores/cobranca'
+import { cobrancaStore } from '@components/stores/cobrancaStore'
 import bandeirasCartao from '../data/bandeiras-cartao.json'
 import { falar } from '../utils/falar.js'
-import { CONDICOES, MEIO, MEIOS, totalPagamento } from '../utils/pagamento.js'
+import { CONDICOES, MEIO, MEIOS, totalPagamento } from '@components/cobranca/pagamento.js'
 
 const sSinc = sincronizacaoStore()
 const sCobranca = cobrancaStore()
@@ -1767,7 +1767,7 @@ export const negocioStore = defineStore('negocio', {
 
     // abre o wizard de cobrança para o negócio; forma/codtituloVale pulam direto para o passo
     // da forma (bipagem VAL…)
-    abrirReceber({ forma = null, codtituloVale = null } = {}) {
+    async abrirReceber({ forma = null, codtituloVale = null } = {}) {
       if (this.valorapagar <= 0) {
         Notify.create({
           type: 'negative',
@@ -1795,10 +1795,31 @@ export const negocioStore = defineStore('negocio', {
         sentido: this.negocio.codoperacao == 1 ? 'saida' : 'entrada',
         pessoa: { codpessoa: this.negocio.codpessoa, fantasia: this.negocio.Pessoa?.fantasia },
         documento: this.documentoCobranca(),
+        contexto: await this.contextoCobranca(this.negocio.codestoquelocal),
         padrao: this.padrao,
         forma,
         codtituloVale,
       })
+    },
+
+    // o PDV como contexto do wizard de cobrança (também no Receber título): a filial e as
+    // maquinetas vêm do estoque local; online, as maquinetas são buscadas de novo
+    async contextoCobranca(codestoquelocal) {
+      const local = async () => (await db.estoqueLocal.get(codestoquelocal)) ?? {}
+      return {
+        pdv: sSinc.pdv.uuid,
+        codfilial: (await local()).codfilial ?? null,
+        carregarMaquinetas: async (aoAtualizar) => {
+          const antes = (await local()).MaquinetaS ?? []
+          sSinc.silentSincronizarEstoqueLocal().then(async (ok) => {
+            if (ok && aoAtualizar) {
+              aoAtualizar((await local()).MaquinetaS ?? [])
+            }
+          })
+          return antes
+        },
+        buscarVale: (codtitulo) => sSinc.buscarVale(codtitulo),
+      }
     },
 
     // o negócio como documento do wizard de cobrança

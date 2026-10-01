@@ -33,8 +33,10 @@ M3 só o pareamento SafraPay por QR, que confere no go-live. **M4 (pagamento e p
 commitado em 30/09/2026 sem validação** (TASK-188, `ed90fe2e8` + MGsis `b914186`): o Fábio valida M4 e
 M5 juntos. **M5 (wizard desacoplado, prazo ajustável) commitado em 30/09/2026 sem validação**
 (TASK-188): valida junto com M4 e M6. **M6 (pagamento no lugar da liquidação) implementado em dev em
-30/09/2026, na árvore, sem commit**: o Fábio valida M4, M5 e M6 juntos. **Próximo: M7** (depois da
-validação).
+30/09/2026, na árvore, sem commit**: o Fábio valida M4, M5 e M6 juntos. **M6 validado em 01/10/2026** (`bc911e922`), com uma correção de rumo registrada como
+**M6.1**: o wizard foi desacoplado mas não compartilhado, e o contas ganhou um dialog próprio sem
+cartão e uma listagem parcial. **M6.1 commitado em 01/10/2026 sem validação**, a pedido do Fábio
+(TASK-188): ele valida depois. **Próximo: M8** (depois da validação do M6.1).
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -115,7 +117,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | M4 | Pagamento e parcelas no lugar da forma de pagamento da venda; histórico copiado; view do legado (PDV não muda) | Fundação | venda em todas as formas, NF-e, DIMP, romaneio | **Alto** |
 | M5 | Wizard de cobrança desacoplado; prazo com vencimento ajustável | Fundação | PDV → Receber (F6–F9), Prazo | **Alto** |
 | M6 | Pagamento no lugar da liquidação; telas de recebimentos e pagamentos | Fundação | contas → Recebimentos e Pagamentos; RH acerto; retorno de boleto | **Alto** |
-| M7 | Receber notinha e pagar vale/crédito do cliente no PDV | Receber no balcão (nova) | PDV → Receber título / Pagar vale | Médio |
+| M6.1 | Wizard, formas e integrações em `@components`; contas usa o wizard; listagem única de pagamentos; receber notinha e pagar vale do cliente no PDV (absorve o M7) | Fundação | contas → Receber ou Pagar Títulos (cartão com bandeira/autorização/parcelas/maquineta), Pagamentos; negocios → Receber título / Pagar vale, Pagamentos | **Alto** |
+| M7 | (absorvido pelo M6.1) | — | — | — |
 | M8 | Vale colaborador e adiantamentos no PDV | Receber no balcão | PDV → Vale / Adiantamento | Baixo |
 | M9 | Conferência de maquinetas | Receber no balcão | contas → Maquinetas → Conferência | Baixo |
 | M10 | Caixa: períodos, razão, abrir/fechar, dinheiro | TASK-39 | negocios → Caixa | Médio |
@@ -821,7 +824,52 @@ para leitura de histórico não convertido.
     Terceiros grava movimento passando por `Titulo::adicionaMovimento`, que atribui a coluna que
     saiu). **Sobe junto.**
 
-## M7 — Receber notinha e pagar vale do cliente no PDV (Receber no balcão)
+## M6.1 — Um wizard, uma listagem, nos dois apps (Fundação; absorve o M7)
+
+**Por quê** (01/10/2026): o M5 desacoplou o wizard do negócio mas o deixou em `negocios/src`, e o M6
+seguiu o plano à risca criando no contas um dialog próprio ("portador + meio") sem bandeira,
+autorização, parcelas nem maquineta, e uma listagem só de pagamentos com título. Era o plano que
+estava errado: duplicou código e escondeu dado conforme a tela. Decidido com o Fábio:
+
+- O caixa não alterna de app: receber notinha e pagar vale do cliente é no **negocios**.
+- O financeiro paga e recebe no **contas**, com **o mesmo wizard**.
+- **Tudo em `@components`**, inclusive as integrações: `MgCobrancaDialog` (era `ReceberDialog`),
+  `Forma*`, `ListaOpcoes`, `ListaFiltravel` e os stores `cobranca`, `pix`, `pagarMe`, `saurus`.
+  O app injeta só o que é dele: instância da `api`, identificação do PDV (negocios) ou nenhuma
+  (contas), formas permitidas e portadores de dinheiro disponíveis. Nenhuma cópia local.
+- **Formas no contas**: todas as do wizard, menos gaveta — transferência/TED/depósito/PIX chave e
+  boleto (banco), dinheiro (cofre, troco, Caixa Financeiro), cartão manual e integrado (maquineta
+  da filial), PIX QR, cheque, compensação, cartão de crédito da empresa (portador C).
+- **Listagem única** `MgPagamentoLista` em `@components`: todos os pagamentos (venda, título,
+  transferência, avulso, pendentes e cancelados, cor por estado); colunas data, origem (venda nº com
+  link / títulos / de → para / avulso com motivo), pessoa, meio, maquineta, portador, total, estado,
+  PDV, usuário; filtros período, filial, PDV, portador, meio, estado, origem, pessoa, maquineta,
+  número do documento; detalhe com documento, títulos movimentados (principal/juros/multa/
+  desconto/total) e, do M10 em diante, lançamentos; ações estornar/cancelar e recibo. No
+  **negocios a listagem fica travada no PDV atual** (sem filtro de filial/PDV); no contas, tudo, com
+  padrão filial do usuário e mês.
+- **Apagar**: o dialog de pagamento do contas (`pages/pagamento/Nova.vue`, a parte portador + meio),
+  a listagem parcial do contas (`pages/pagamento/Index.vue`), a `LiquidacaoListagemPage` do
+  negocios e as cópias dos stores em `negocios/src/stores`. **Fica** a seleção de títulos do contas
+  (capital, multa, juros, desconto por título), que passa a abrir o wizard.
+- **TASK-191** (unificar PagarMe/Saurus/Lio no backend) fica fora: os stores mudam de pasta como
+  estão.
+
+**Entrega**
+
+- `@components`: `MgCobrancaDialog.vue` + `cobranca/Forma*.vue`, `stores/cobrancaStore.js`,
+  `stores/pixStore.js`, `stores/pagarMeStore.js`, `stores/saurusStore.js` (injeção: `api`, `pdv`
+  opcional, `formasPermitidas`, `portadoresDinheiro`, `maquinetas`); `MgPagamentoLista.vue` +
+  `MgPagamentoDetalhe.vue` (endpoint `GET v1/pagamento` com todos os filtros; `v1/pagamento/{id}`).
+- **negocios**: `IndexPage`/`negocioStore` consomem o wizard de `@components`; tela **Receber
+  título / Pagar vale** (o M7, abaixo); menu "Pagamentos" com `MgPagamentoLista` travada no PDV.
+- **contas**: Receber ou Pagar Títulos = seleção de títulos → `MgCobrancaDialog` (sentido pelo
+  líquido, formas da lista acima, um pagamento por forma); menu Movimento → Pagamentos com
+  `MgPagamentoLista`.
+- **Backend**: `GET v1/pagamento` passa a listar todos os pagamentos com os filtros; o que o M7
+  previa (`PdvPagamentoService`), abaixo.
+
+### Tela do PDV (o que era o M7)
 
 - **Backend** `Mg/Pdv/PdvPagamentoService`: `titulosAbertos(codpessoa | numero)` (a receber e créditos
   do cliente); `receber(Pdv, dados)`: pagamentos de entrada (dinheiro → destino = gaveta do PDV ou 422
@@ -834,12 +882,71 @@ para leitura de histórico não convertido.
   próprios, 120 min; Gerente: filial); recibo térmico. Rotas `v1/pdv/pagamento/*`. PIX chave,
   transferência e depósito não aparecem no PDV.
 - **Frontend negocios**: `ReceberTituloDialog.vue` (teclado): pessoa ou número → títulos abertos e
-  créditos com seleção e total → wizard de cobrança (sentido conforme o líquido); atalho F11; para
+  créditos com seleção e total → `MgCobrancaDialog` de `@components` (sentido conforme o líquido); atalho F11; para
   pagar crédito, escolha do meio (dinheiro / cancelamento no cartão escolhendo o pagamento original /
   devolução de PIX); store `pagamento.js`; listagem de pagamentos do PDV mostra meio, maquineta e PDV.
 - **Valida**: notinha em dinheiro (troco), PIX QR, cheque, cartão nas duas operadoras, cartão manual;
   entrega paga na volta; dividido (dois pagamentos, um recibo); crédito de devolução pago em dinheiro
   (só Gerente), cancelamento parcial no cartão registrado; estorno; contas mostra tudo.
+
+**Valida (tudo junto)**: no contas, pagar título em cartão com bandeira, autorização, parcelas e
+maquineta, e em transferência, dinheiro do cofre, cheque e compensação; gaveta não aparece; a
+venda de agora há pouco aparece na listagem do contas e na do negocios (travada no PDV); no PDV,
+notinha em dinheiro (troco), PIX QR, cheque, cartão nas duas operadoras e manual, entrega paga na
+volta, dividido (dois pagamentos, um recibo), vale de devolução pago em dinheiro (só Gerente) e
+cancelamento parcial no cartão registrado; estorno; `grep` confirma que não sobrou cópia dos
+stores nem do wizard fora de `@components`.
+
+**O que mudou em relação ao plano** (levantamento de 01/10/2026, decidido com o Fábio):
+
+- **Cobrança integrada em título** (PIX QR, Stone, SafraPay): na confirmação o servidor cria o
+  pagamento efetivado **sem título** (PIX, PagarMe e Saurus deixaram de exigir negócio); a tela
+  manda o `codpagamento` junto ao finalizar, e finaliza sozinha quando as formas fecham o
+  líquido. Tela fechada no meio = pagamento avulso sem título na listagem. Sem DDL.
+- **Saída no contas** (pagar fornecedor, pagar vale): banco, dinheiro de cofre/troco/Caixa
+  Financeiro, cartão da empresa, compensação **e cheque emitido pela empresa** (CMC7 + bom para
+  + conta; não entra no controle de cheques recebidos).
+- **Listagem do negocios** por `v1/pdv/pagamento` (o dispositivo autoriza e o servidor força o
+  PDV), não por `v1/pagamento?codpdv=`. Mesmo serviço e filtros (`PagamentoListaService`).
+- **Criar cobrança sem PDV**: rotas `v1/cobranca/{pix, pagar-me, saurus}` e
+  `v1/cobranca/maquineta/{codfilial}` para o contas; a criação saiu do `PdvController` para
+  `Mg/Pagamento/CobrancaService` (o PDV chama o mesmo).
+- **Também foram para `@components`**: os dialogs das integradas (`cobranca/PixCobDialog`,
+  `PagarMePedidoDialog`, `SaurusPedidoDialog`), `useConsultaAutomatica`, `LogoPagamento`,
+  `pagamento.js`, `parcelamento.js`, `cmc7.js`, `cartoes-manuais.json` e os logos
+  (`assets/pagamento`, servidos pelo bundle de cada app). O `@components` não tem `node_modules`:
+  o wizard deixou de usar `moment` e `mitt` (avisos por `cobranca/eventos.js`); o `qrcode` tem
+  alias nos dois `quasar.config` (como o `pinia`) e entrou no `package.json` do contas, que
+  também passou a carregar os ícones MDI.
+- Nomes: o store de PIX tem id **`pixCob`** (o contas já tem um `pix`, de Pix Recebidos); arquivos
+  `components/stores/{cobrancaStore, pixStore, pagarMeStore, saurusStore}.js`.
+- **Um fluxo de baixa só**: `components/stores/baixaTitulosStore.js` (títulos escolhidos →
+  formas lançadas → finalizar) serve o Receber título do PDV e o Receber ou Pagar Títulos do
+  contas. O wizard devolve o resultado pelos tratadores do documento (`aoPagamento`,
+  `aoCobranca`) ou, sem eles, pelos eventos — um wizard por app.
+- **Vários pagamentos para os mesmos títulos**: `PagamentoTituloService::baixar(dados, ?pdv)`
+  distribui as linhas por vencimento; título que cai entre duas formas é dividido com juros,
+  multa e desconto proporcionais; títulos do sentido contrário entram no 1º pagamento.
+  "Finalizar parcial" no PDV baixa só o que foi pago, por vencimento. Fora da venda o cartão não
+  tem juros de parcelamento nem a forma dinheiro tem desconto (título não tem onde guardar).
+- Juros e multa do título em atraso: regra única em `@components/cobranca/juros.js` (contas e
+  PDV); a seleção de títulos do contas continua com os parâmetros editáveis.
+- **Listagem**: `MgPagamentoLista` + `MgPagamentoFiltros` + `MgPagamentoDetalhe` + store
+  `pagamentoLista` em `@components`; filtros período, origem (venda/títulos/transferência/
+  avulso), estado, documento (venda ou título), pessoa, filial, PDV, meio, portador, maquineta,
+  usuário e código. Saíram grupo econômico, grupo de cliente e sentido. Novo `v1/select/pdv` +
+  `MgSelectPdv` para o filtro de PDV. O relatório PDF usa os mesmos filtros (limite de 5.000
+  pagamentos). No contas o detalhe é a página de sempre (edição e recibos PDF no slot); no PDV é
+  um dialog (estorno e recibo térmico).
+- **PDV**: `ReceberTituloDialog` (F11 e botão), store `negocios/src/stores/pagamento.js`; rotas
+  `v1/pdv/pagamento` (index, `{id}`, `titulos`, `originais`, store, `{id}/estornar`,
+  `recibo/{impressora}`) e o PDF assinado `pdv/pagamento/recibo/{codpagamentos}` (um recibo
+  para os pagamentos do mesmo recebimento, blade `pagamento/recibo-termica`). Pagar vale: só
+  Gerente da filial ou Administrador (403); devolução no cartão/PIX escolhe o pagamento original
+  dos últimos 12 meses e não passa do que resta dele; cartão sem portador de adquirente (Brasil
+  Card, Le Card, Cielo) fica sem origem/destino.
+- Cheque recebido em título vai para o controle de cheques (como na venda); estornar cancela o
+  cheque ainda a repassar. Troco do dinheiro gravado no pagamento.
 
 ## M8 — Vale colaborador e adiantamentos no PDV (Receber no balcão)
 

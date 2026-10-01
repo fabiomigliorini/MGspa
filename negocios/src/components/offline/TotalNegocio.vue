@@ -2,16 +2,18 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Dialog } from 'quasar'
 import { negocioStore } from 'stores/negocio'
-import { cobrancaStore } from 'stores/cobranca'
-import { pixStore } from 'stores/pix'
-import { pagarMeStore } from 'stores/pagar-me'
-import { saurusStore } from 'stores/saurus'
-import ReceberDialog from 'components/offline/ReceberDialog.vue'
-import PixCobDialog from 'components/offline/PixCobDialog.vue'
-import PagarMePedidoDialog from 'components/offline/PagarMePedidoDialog.vue'
-import SaurusPedidoDialog from 'components/offline/SaurusPedidoDialog.vue'
+import { cobrancaStore } from '@components/stores/cobrancaStore'
+import { pixStore } from '@components/stores/pixStore'
+import { pagarMeStore } from '@components/stores/pagarMeStore'
+import { saurusStore } from '@components/stores/saurusStore'
+import MgCobrancaDialog from '@components/MgCobrancaDialog.vue'
+import PixCobDialog from '@components/cobranca/PixCobDialog.vue'
+import PagarMePedidoDialog from '@components/cobranca/PagarMePedidoDialog.vue'
+import SaurusPedidoDialog from '@components/cobranca/SaurusPedidoDialog.vue'
+import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
+import { ouvir } from '@components/cobranca/eventos.js'
+import { abrirCobrancaIntegrada } from '@components/cobranca/integrada.js'
 import PagamentoDialog from 'components/offline/PagamentoDialog.vue'
-import LogoPagamento from 'components/offline/LogoPagamento.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { formataFromNow, formataNumero } from '@components/formatters'
 import emitter from '../../utils/emitter.js'
@@ -25,7 +27,7 @@ import {
   valorExibido,
   visualCondicao,
   visualPagamento,
-} from '../../utils/pagamento.js'
+} from '@components/cobranca/pagamento.js'
 
 const sNegocio = negocioStore()
 const sCobranca = cobrancaStore()
@@ -174,33 +176,29 @@ const parcelasRecebidas = async (parcelas) => {
 }
 
 // cobrança integrada criada: abre o dialog especialista dela
-const cobrancaCriada = ({ tipo, dados }) => {
-  switch (tipo) {
-    case 'pix':
-      dialogDetalhesPixCob(dados)
-      break
-    case 'pagarme':
-      dialogDetalhesPagarMePedido(dados)
-      break
-    case 'saurus':
-      dialogDetalhesSaurusPedido(dados)
-      break
-  }
-}
+const cobrancaCriada = (cobranca) => abrirCobrancaIntegrada(cobranca)
 
 // bipagem VAL… abre direto na forma vale
-const valeLido = (codigo) => {
+const valeLido = async (codigo) => {
   if (!sNegocio.podeEditar || !sNegocio.negocio?.financeiro) {
     return
   }
   const aberto = sCobranca.dialog
-  sNegocio.abrirReceber({ forma: 'vale', codtituloVale: codigo })
+  await sNegocio.abrirReceber({ forma: 'vale', codtituloVale: codigo })
   if (aberto) {
     receberDialogRef.value?.entrar()
   }
 }
 
 const cobrancaAtualizada = (dados) => sNegocio.cobrancaAtualizada(dados)
+// banco/maquineta confirmou a cobrança deste negócio: o painel pisca o que falta (ou o troco);
+// a do Receber título não é da venda
+const cobrancaConcluida = ({ dados }) => {
+  if (dados?.codnegocio && dados.codnegocio == sNegocio.negocio?.codnegocio) {
+    emitter.emit('pagamentoAdicionado')
+  }
+}
+let deixarDeOuvir = []
 
 // grupo de parcelas abre o detalhe com as datas (e Excluir)
 const abrirParcelas = (grupo) => {
@@ -248,13 +246,16 @@ const piscarSaldo = () => {
 onMounted(() => {
   emitter.on('pagamentoAdicionado', piscarSaldo)
   emitter.on('valeComprasLido', valeLido)
-  emitter.on('cobrancaAtualizada', cobrancaAtualizada)
+  deixarDeOuvir = [
+    ouvir('cobrancaAtualizada', cobrancaAtualizada),
+    ouvir('cobrancaConcluida', cobrancaConcluida),
+  ]
 })
 
 onUnmounted(() => {
   emitter.off('pagamentoAdicionado', piscarSaldo)
   emitter.off('valeComprasLido', valeLido)
-  emitter.off('cobrancaAtualizada', cobrancaAtualizada)
+  deixarDeOuvir.forEach((parar) => parar())
   clearTimeout(timerPiscar)
 })
 
@@ -506,13 +507,13 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
   </q-dialog>
 
   <!-- DIALOGS DE PAGAMENTOS -->
-  <receber-dialog
+  <mg-cobranca-dialog
     ref="receberDialogRef"
     @pagamento="pagamentoRecebido"
     @parcelas="parcelasRecebidas"
     @cobranca="cobrancaCriada"
   />
-  <pix-cob-dialog />
+  <pix-cob-dialog :impressora="sNegocio.padrao.impressora" />
   <pagar-me-pedido-dialog />
   <saurus-pedido-dialog />
   <pagamento-dialog />

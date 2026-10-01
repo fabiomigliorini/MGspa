@@ -11,8 +11,8 @@ import {
   valorExibido,
   visualCondicao,
   visualPagamento,
-} from '../../utils/pagamento.js'
-import LogoPagamento from './LogoPagamento.vue'
+} from '@components/cobranca/pagamento.js'
+import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
 
 const sNegocio = negocioStore()
 

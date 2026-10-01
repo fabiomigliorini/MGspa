@@ -187,6 +187,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/moeda', [\Mg\Select\SelectMoedaController::class, 'index']);
     Route::get('select/vale-modelo', [\Mg\Select\SelectValeModeloController::class, 'index']);
     Route::get('select/maquineta', [\Mg\Select\SelectMaquinetaController::class, 'index']);
+    Route::get('select/pdv', [\Mg\Select\SelectPdvController::class, 'index']);
 
     // Selects: resolução por id (objeto único ou 404) — padrão GET select/{ent}/{id}
     Route::get('select/pessoa/{id}', [\Mg\Select\SelectPessoaController::class, 'show'])->whereNumber('id');
@@ -213,6 +214,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/tributacao/{id}', [\Mg\Select\SelectTributacaoController::class, 'show'])->whereNumber('id');
     Route::get('select/moeda/{id}', [\Mg\Select\SelectMoedaController::class, 'show']);
     Route::get('select/maquineta/{id}', [\Mg\Select\SelectMaquinetaController::class, 'show'])->whereNumber('id');
+    Route::get('select/pdv/{id}', [\Mg\Select\SelectPdvController::class, 'show'])->whereNumber('id');
 
     // Selects novos (entidades LOCAL pequenas, padrão index + show)
     Route::get('select/forma-pagamento', [\Mg\Select\SelectFormaPagamentoController::class, 'index']);
@@ -676,6 +678,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
         Route::get('negocio/{codnegocio}/comanda', '\Mg\Pdv\PdvController@comanda');
         Route::get('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@show');
+        Route::get('pagamento/recibo/{codpagamentos}', '\Mg\Pdv\PdvPagamentoController@recibo')
+            ->name('pdv.pagamento.recibo')
+            ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     });
 
     // Produto
@@ -911,8 +916,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('vale-escopo/favorecido', '\Mg\Pdv\PdvController@valeEscopoFavorecidos');
         Route::get('vale-escopo/favorecido/{codpessoafavorecido}/turma', '\Mg\Pdv\PdvController@valeEscopoTurmas');
         Route::get('vale-escopo/selecionar', '\Mg\Pdv\PdvController@valeEscopoSelecionar');
-        // recebimentos e pagamentos de titulos (M6 doc-3; era liquidacao)
+        // pagamentos do PDV, receber titulo e pagar vale (M6.1 doc-3)
         Route::get('pagamento', '\Mg\Pdv\PdvPagamentoController@index');
+        Route::get('pagamento/titulos', '\Mg\Pdv\PdvPagamentoController@titulos');
+        Route::get('pagamento/originais', '\Mg\Pdv\PdvPagamentoController@originais');
+        Route::get('pagamento/{id}', '\Mg\Pdv\PdvPagamentoController@show')->whereNumber('id');
+        Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
+        Route::post('pagamento/{id}/estornar', '\Mg\Pdv\PdvPagamentoController@estornar')->whereNumber('id');
+        Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
         // Saurus
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
@@ -1232,16 +1243,21 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
     Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
 
-    // Recebimentos e pagamentos de titulos (M6 doc-3; era liquidacao-titulo)
-    Route::get('pagamento', '\Mg\Pagamento\PagamentoTituloController@index');
-    Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoTituloController@relatorio');
-    Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoTituloController@show')->where('id', '[0-9]+');
-    Route::post('pagamento', '\Mg\Pagamento\PagamentoTituloController@store');
-    Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoTituloController@update')->where('id', '[0-9]+');
-    Route::post('pagamento/{id}/estornar', '\Mg\Pagamento\PagamentoTituloController@estornar')->where('id', '[0-9]+');
-    Route::get('pagamento/{id}/recibo', '\Mg\Pagamento\PagamentoTituloController@recibo')->where('id', '[0-9]+');
-    Route::get('pagamento/{id}/recibo-recebimento', '\Mg\Pagamento\PagamentoTituloController@reciboRecebimento')->where('id', '[0-9]+');
-    Route::get('pagamento/{id}/recibo-pagamento', '\Mg\Pagamento\PagamentoTituloController@reciboPagamento')->where('id', '[0-9]+');
+    // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
+    Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
+    Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
+    Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
+    Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');
+    Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoController@update')->where('id', '[0-9]+');
+    Route::post('pagamento/{id}/estornar', '\Mg\Pagamento\PagamentoController@estornar')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo', '\Mg\Pagamento\PagamentoController@recibo')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo-recebimento', '\Mg\Pagamento\PagamentoController@reciboRecebimento')->where('id', '[0-9]+');
+    Route::get('pagamento/{id}/recibo-pagamento', '\Mg\Pagamento\PagamentoController@reciboPagamento')->where('id', '[0-9]+');
+    // cobranca integrada sem PDV (contas, M6.1 doc-3)
+    Route::post('cobranca/pix', '\Mg\Pagamento\CobrancaController@pix');
+    Route::post('cobranca/pagar-me', '\Mg\Pagamento\CobrancaController@pagarMe');
+    Route::post('cobranca/saurus', '\Mg\Pagamento\CobrancaController@saurus');
+    Route::get('cobranca/maquineta/{codfilial}', '\Mg\Pagamento\CobrancaController@maquinetas')->whereNumber('codfilial');
 
     Route::get('titulo-agrupamento', '\Mg\Titulo\TituloAgrupamentoController@index');
     Route::get('titulo-agrupamento/pendentes', '\Mg\Titulo\TituloAgrupamentoController@pendentes');

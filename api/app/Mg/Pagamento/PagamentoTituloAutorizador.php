@@ -64,6 +64,34 @@ class PagamentoTituloAutorizador
         return in_array((int)$portador->codfilial, self::filiaisRestritas($codusuario), true);
     }
 
+    // Baixa pelo wizard do contas: cada forma com portador precisa ser da
+    // filial do usuario (sem portador, a filial e' a do titulo); encontro de
+    // contas e compensacao so' para irrestritos
+    public static function motivoBloqueioBaixa(int $codusuario, array $dados): ?string
+    {
+        if (self::temAcessoIrrestrito($codusuario)) {
+            return null;
+        }
+        $filiais = self::filiaisRestritas($codusuario);
+        $codtitulo = $dados['titulos'][0]['codtitulo'] ?? null;
+        $codfilialTitulo = $codtitulo ? \Mg\Titulo\Titulo::find($codtitulo)->codfilial ?? null : null;
+        $formas = $dados['pagamentos'] ?? [];
+        if (empty($formas)) {
+            return 'Encontro de contas só pelo Financeiro.';
+        }
+        foreach ($formas as $f) {
+            if ((int) ($f['meio'] ?? 0) == PagamentoService::MEIO_COMPENSACAO) {
+                return 'Compensação só pelo Financeiro.';
+            }
+            $portador = !empty($f['codportador']) ? Portador::find($f['codportador']) : null;
+            $codfilial = $portador->codfilial ?? $codfilialTitulo;
+            if (!$codfilial || !in_array((int) $codfilial, $filiais, true)) {
+                return 'Portador não pertence à sua filial.';
+            }
+        }
+        return null;
+    }
+
     /**
      * Retorna null se autorizado, ou string com mensagem de erro.
      * $acao usado apenas para compor as mensagens (ex: 'estornar', 'editar').

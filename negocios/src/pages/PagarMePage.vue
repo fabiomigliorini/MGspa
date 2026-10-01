@@ -2,7 +2,7 @@
 import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { onMounted, ref } from 'vue'
 import { Notify } from 'quasar'
-import { pagarMeStore } from 'src/stores/pagar-me'
+import { pagarMeStore } from '@components/stores/pagarMeStore'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
 

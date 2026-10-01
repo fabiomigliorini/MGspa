@@ -344,12 +344,11 @@ class PagarMeService
     }
 
 
+    // Pedido pago vira pagamento efetivado (M4 doc-3). Sem negocio
+    // (recebimento de titulo, M6.1) nasce sem documento: a tela que criou a
+    // cobranca o amarra aos titulos ao finalizar.
     public static function vincularPagamento(PagarMePedido $ped)
     {
-        if (empty($ped->codnegocio)) {
-            return false;
-        }
-
         if ($ped->valorpagoliquido <= 0) {
             foreach (Pagamento::where('codpagarmepedido', $ped->codpagarmepedido)->get() as $pag) {
                 PagamentoService::cancelar($pag, 'Pedido PagarMe cancelado ou sem pagamento');
@@ -392,10 +391,14 @@ class PagarMeService
         // parcelamento, o resto e' principal.
         $juros = min(floatval($ped->valorjuros), floatval($ped->valorpagoliquido));
         $pag = Pagamento::firstOrNew(['codpagarmepedido' => $ped->codpagarmepedido]);
+        // sem negocio, depois de amarrado aos titulos os valores sao deles
+        if (empty($ped->codnegocio) && $pag->exists && $pag->estado != PagamentoService::ESTADO_CANCELADO) {
+            return true;
+        }
         PagamentoService::preencher($pag, [
             'codnegocio' => $ped->codnegocio,
-            'codfilial' => $ped->Negocio->codfilial,
-            'codpdv' => $ped->Negocio->codpdv,
+            'codfilial' => $ped->Negocio->codfilial ?? $ped->codfilial,
+            'codpdv' => $ped->Negocio->codpdv ?? $ped->codpdv,
             'meio' => $tipo,
             'estado' => ($pag->estado == PagamentoService::ESTADO_CANCELADO) ? PagamentoService::ESTADO_PENDENTE : $pag->estado,
             'cancelamento' => null,
@@ -406,13 +409,15 @@ class PagarMeService
             'valortroco' => null,
             'autorizacao' => $autorizacao,
             'bandeira' => $bandeira,
-            'codpessoa' => config('services.pagarme.codpessoa'),
+            'codpessoa' => empty($ped->codnegocio) ? $pag->codpessoa : config('services.pagarme.codpessoa'),
             'codmaquineta' => $pos ? MaquinetaService::daPagarMePos($pos)->codmaquineta : null,
         ]);
         $pag->save();
         PagamentoService::efetivar($pag);
 
-        NegocioService::fecharSePago($ped->Negocio);
+        if (!empty($ped->codnegocio)) {
+            NegocioService::fecharSePago($ped->Negocio);
+        }
 
         return true;
     }
