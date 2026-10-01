@@ -4,7 +4,7 @@ namespace Mg\Maquineta;
 
 use Mg\MgModel;
 use Mg\Filial\Filial;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\PagarMe\PagarMePos;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\SaurusPinPad;
@@ -86,8 +86,8 @@ class Maquineta extends MgModel
     }
 
     // Tabelas Filhas
-    public function NegocioFormaPagamentoS()
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codmaquineta', 'codmaquineta');
+        return $this->hasMany(Pagamento::class, 'codmaquineta', 'codmaquineta');
     }
 }

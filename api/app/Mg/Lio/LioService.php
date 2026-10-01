@@ -8,8 +8,8 @@ use Carbon\Carbon;
 
 use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
-use Mg\FormaPagamento\FormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 
 class LioService
 {
@@ -118,20 +118,20 @@ class LioService
         if (!empty($order->number)) {
             $n = Negocio::where(['codnegocio' => $order->number])->first();
             if ($n) {
-                $nfp = NegocioFormaPagamento::firstOrNew([
+                // Cielo Lio (abandonada em 2021): pagamento efetivado, meio
+                // outros (o pedido nao traz debito/credito)
+                $pag = Pagamento::firstOrNew([
                     'codliopedido' => $pedido->codliopedido
                 ]);
-                $nfp->codnegocio = $order->number;
-                $nfp->valorpagamento = $pedido->valorpago;
-                $fp = FormaPagamento::firstOrNew(['lio' => true, 'integracao' => true]);
-                if (!$fp->exists) {
-                    $fp->formapagamento = 'Cielo Lio';
-                    $fp->avista = true;
-                    $fp->integracao = true;
-                    $fp->save();
-                }
-                $nfp->codformapagamento = $fp->codformapagamento;
-                $nfp->save();
+                PagamentoService::preencher($pag, [
+                    'codnegocio' => $n->codnegocio,
+                    'codfilial' => $n->codfilial,
+                    'codpdv' => $n->codpdv,
+                    'meio' => PagamentoService::MEIO_OUTROS,
+                    'principal' => $pedido->valorpago,
+                ]);
+                $pag->save();
+                PagamentoService::efetivar($pag);
                 $fechado = \Mg\Negocio\NegocioService::fecharSePago($n);
             }
         }

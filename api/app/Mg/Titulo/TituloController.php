@@ -126,7 +126,7 @@ class TituloController extends MgController
         // título gerado automaticamente (negócio/agrupamento) só pode ser estornado
         // pela origem que o criou.
         $titulo = Titulo::findOrFail($codtitulo);
-        if (!empty($titulo->codnegocioformapagamento) || !empty($titulo->codtituloagrupamento)) {
+        if (!empty($titulo->codnegocioparcela) || !empty($titulo->codtituloagrupamento)) {
             throw new \Exception("Título gerado automaticamente não pode ser estornado individualmente!", 1);
         }
 

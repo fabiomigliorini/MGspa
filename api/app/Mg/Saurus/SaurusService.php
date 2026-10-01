@@ -5,8 +5,8 @@ namespace Mg\Saurus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Mg\Filial\Filial;
-use Mg\FormaPagamento\FormaPagamento;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Negocio\NegocioService;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\S2Pay\ApiService;
@@ -248,7 +248,7 @@ class SaurusService
         $ped->fresh();
 
         if($ped->status == 2) {
-            self::vincularNegocioFormaPagamento($ped);
+            self::vincularPagamento($ped);
         }
 
         return $ped;
@@ -307,23 +307,10 @@ class SaurusService
         return $reg;
     }
 
-    public static function vincularNegocioFormaPagamento(SaurusPedido $ped)
+    public static function vincularPagamento(SaurusPedido $ped)
     {
         if (empty($ped->codnegocio)) {
             return false;
-        }
-
-        $fp = FormaPagamento::firstOrNew([
-            'safrapay' => true,
-            'integracao' => true
-        ]);
-
-        if (!$fp->exists) {
-            $fp->formapagamento = 'Saurus S2Pay';
-            $fp->avista = true;
-            $fp->integracao = true;
-            $fp->safrapay = true;
-            $fp->save();
         }
 
         $tipo = 99; //Outros
@@ -342,27 +329,34 @@ class SaurusService
         }
         $maquineta = $pinpad ? MaquinetaService::daSaurusPinPad($pinpad) : null;
 
-        NegocioFormaPagamento::updateOrCreate(
-            [
-                'codnegocio' => $ped->codnegocio,
-                'autorizacao' => $autorizacao,
-                'codpessoa' => config('mg.codpessoa_safra')
-            ],
-            [
-                'codsauruspedido' => $ped->codsauruspedido,
-                'codformapagamento' => $fp->codformapagamento,
-                'avista' => true,
-                'valorpagamento' => $ped->valor,
-                'valorjuros' => $ped->valorjuros,
-                'valortotal' => $ped->valor + $ped->valorjuros,
-                'valortroco' => null,
-                'tipo' => $tipo,
-                'bandeira' => $bandeira->tband,
-                'integracao' => true,
-                'serialmaquineta' => $maquineta->serial ?? null,
-                'codmaquineta' => $maquineta->codmaquineta ?? null,
-            ]
-        );
+        // pagamento efetivado: a maquineta ja' confirmou (M4 doc-3). Um por
+        // pedido; mesma autorizacao no negocio e' o mesmo pagamento.
+        $pag = Pagamento::where('codsauruspedido', $ped->codsauruspedido)->first();
+        if (!$pag && !empty($autorizacao)) {
+            $pag = Pagamento::where('codnegocio', $ped->codnegocio)
+                ->where('autorizacao', $autorizacao)
+                ->where('codpessoa', config('mg.codpessoa_safra'))
+                ->first();
+        }
+        $pag = $pag ?? new Pagamento();
+        PagamentoService::preencher($pag, [
+            'codnegocio' => $ped->codnegocio,
+            'codfilial' => $ped->Negocio->codfilial,
+            'codpdv' => $ped->Negocio->codpdv,
+            'codsauruspedido' => $ped->codsauruspedido,
+            'meio' => array_key_exists((int) $tipo, PagamentoService::MEIOS) ? (int) $tipo : PagamentoService::MEIO_OUTROS,
+            'principal' => $ped->valor,
+            'juros' => $ped->valorjuros ?? 0,
+            'valortroco' => null,
+            'autorizacao' => $autorizacao,
+            'bandeira' => $bandeira->tband ?? null,
+            'codpessoa' => config('mg.codpessoa_safra'),
+            'codmaquineta' => $maquineta->codmaquineta ?? null,
+        ]);
+        $pag->save();
+        if ($pag->estado != PagamentoService::ESTADO_CANCELADO) {
+            PagamentoService::efetivar($pag);
+        }
 
         NegocioService::fecharSePago($ped->Negocio);
 

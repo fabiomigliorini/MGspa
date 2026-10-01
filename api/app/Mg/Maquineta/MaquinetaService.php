@@ -5,7 +5,7 @@ namespace Mg\Maquineta;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPinPad;
@@ -237,7 +237,7 @@ class MaquinetaService
             abort(422, 'Só dá para juntar maquinetas da mesma adquirente.');
         }
 
-        NegocioFormaPagamento::where('codmaquineta', $errada->codmaquineta)
+        Pagamento::where('codmaquineta', $errada->codmaquineta)
             ->update(['codmaquineta' => $certa->codmaquineta]);
         $errada->delete();
 

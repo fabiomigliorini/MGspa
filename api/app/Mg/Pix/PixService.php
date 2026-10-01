@@ -8,10 +8,10 @@ use Dompdf\Dompdf;
 
 use Mg\NaturezaOperacao\Operacao;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Portador\Portador;
 use Mg\Pix\Sicredi\PixSicrediService;
-use Mg\FormaPagamento\FormaPagamento;
 use Illuminate\Support\Facades\DB;
 use Mg\Pdv\Pdv;
 
@@ -25,7 +25,7 @@ class PixService
         }
 
         // calcula saldo a pagar do negocio
-        $pago = $negocio->NegocioFormaPagamentoS()->sum('valorpagamento');
+        $pago = \Mg\Negocio\NegocioService::valorPago($negocio);
         $saldo = $negocio->valortotal - $pago;
         if ($saldo <= 0) {
             throw new \Exception("Não existe saldo à pagar para gerar o PIX!", 1);
@@ -274,27 +274,25 @@ class PixService
         if ($valorpagamento <= 0) {
             return;
         }
-        $nfp = NegocioFormaPagamento::firstOrNew([
+        // pagamento efetivado: o banco ja' confirmou (M4 doc-3)
+        $pag = Pagamento::firstOrNew([
             'codpixcob' => $cob->codpixcob
         ]);
-        $nfp->codnegocio = $cob->codnegocio;
-        $nfp->valorpagamento = $valorpagamento;
-        $nfp->valortotal = $valorpagamento;
-        $fp = FormaPagamento::firstOrNew(['pix' => true, 'integracao' => true]);
-        if (!$fp->exists) {
-            $fp->formapagamento = 'PIX';
-            $fp->avista = true;
-            $fp->integracao = true;
-            $fp->save();
+        PagamentoService::preencher($pag, [
+            'codnegocio' => $cob->codnegocio,
+            'codfilial' => $cob->Negocio->codfilial,
+            'codpdv' => $cob->codpdv ?? $cob->Negocio->codpdv,
+            'meio' => PagamentoService::MEIO_PIX,
+            'principal' => $valorpagamento,
+            'codportadordestino' => $cob->codportador,
+            'codpessoa' => $cob->Portador->codpessoa,
+            'codpix' => $cob->PixS[0]->codpix,
+            'autorizacao' => $cob->PixS[0]->e2eid,
+        ]);
+        $pag->save();
+        if ($pag->estado != PagamentoService::ESTADO_CANCELADO) {
+            PagamentoService::efetivar($pag);
         }
-        $nfp->tipo = 17;
-        $nfp->integracao = true;
-        $nfp->avista = true;
-        $nfp->codformapagamento = $fp->codformapagamento;
-        // $nfp->codportador = $cob->codportador;
-        $nfp->codpessoa = $cob->Portador->codpessoa;
-        $nfp->autorizacao = $cob->PixS[0]->e2eid;
-        $nfp->save();
         $fechado = \Mg\Negocio\NegocioService::fecharSePago($cob->Negocio);
     }
 

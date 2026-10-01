@@ -23,6 +23,7 @@ use Mg\Titulo\MovimentoTituloService;
 use Mg\Portador\Portador;
 use Mg\Portador\Bb\AuthService;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioParcelaService;
 
 class BoletoBbService
 {
@@ -191,11 +192,12 @@ class BoletoBbService
     public static function registrarPeloNegocio(Negocio $negocio)
     {
         $tituloBoletos = collect();
-        foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
-            if (!$nfp->FormaPagamento->boleto) {
-                continue;
-            }
-            foreach ($nfp->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
+        $parcelas = $negocio->NegocioParcelaS()
+            ->where('condicao', NegocioParcelaService::CONDICAO_BOLETO)
+            ->orderBy('codnegocioparcela')
+            ->get();
+        foreach ($parcelas as $np) {
+            foreach ($np->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
                 $tituloBoletos[] = static::registrar($titulo);
             }
         }
@@ -303,11 +305,9 @@ class BoletoBbService
     public static function pdfPeloNegocio(Negocio $negocio)
     {
         $data = [];
-        foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
-            foreach ($nfp->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
-                foreach ($titulo->TituloBoletoS()->whereNull('inativo')->orderBy('codtituloboleto')->get() as $tituloBoleto) {
-                    $data[] = new BoletoBbPdf($tituloBoleto);
-                }
+        foreach (NegocioParcelaService::titulos($negocio)->where('saldo', '>', 0) as $titulo) {
+            foreach ($titulo->TituloBoletoS()->whereNull('inativo')->orderBy('codtituloboleto')->get() as $tituloBoleto) {
+                $data[] = new BoletoBbPdf($tituloBoleto);
             }
         }
         if (count($data) == 0) {

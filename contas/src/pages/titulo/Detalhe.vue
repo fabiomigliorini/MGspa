@@ -57,8 +57,7 @@ const model = ref({})
 // não herda codnegocio/codtituloagrupamento e nasce com saldo positivo.
 const geradoAuto = computed(
   () =>
-    !duplicando.value &&
-    !!(titulo.value?.codnegocioformapagamento || titulo.value?.codtituloagrupamento),
+    !duplicando.value && !!(titulo.value?.codnegocioparcela || titulo.value?.codtituloagrupamento),
 )
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).

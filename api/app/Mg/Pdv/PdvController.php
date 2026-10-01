@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Cidade\Cidade;
 use Mg\Negocio\NegocioResource;
+use Mg\Negocio\NegocioFormaPagamentoService;
 use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
@@ -363,18 +364,12 @@ class PdvController
                     }
                     $integracao = ($valor[0] != 'Manual');
                     $qry->whereIn('codnegocio', function ($query) use ($integracao) {
-                        $query->select('codnegocio')
-                            ->from('tblnegocioformapagamento')
-                            ->whereRaw('tblnegocioformapagamento.codnegocio = tblnegocio.codnegocio')
-                            ->where('integracao', $integracao);
+                        NegocioFormaPagamentoService::filtroIntegracao($query, $integracao);
                     });
                     break;
                 case 'codformapagamento':
                     $qry->whereIn('codnegocio', function ($query) use ($valor) {
-                        $query->select('codnegocio')
-                            ->from('tblnegocioformapagamento')
-                            ->whereRaw('tblnegocioformapagamento.codnegocio = tblnegocio.codnegocio')
-                            ->whereIn('codformapagamento', $valor);
+                        NegocioFormaPagamentoService::filtroForma($query, (array) $valor);
                     });
                     break;
                 case 'pdv':

@@ -85,7 +85,7 @@ class TituloService
     {
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo'] ?? $titulo->codtipotitulo);
 
-        $geradoAuto = !empty($titulo->codnegocioformapagamento) || !empty($titulo->codtituloagrupamento);
+        $geradoAuto = !empty($titulo->codnegocioparcela) || !empty($titulo->codtituloagrupamento);
         $zerado = (float)$titulo->saldo == 0 && !empty($titulo->codtitulo);
 
         // valor: bloqueado se gerado auto ou já zerado
@@ -170,14 +170,14 @@ class TituloService
             'ContaContabil:codcontacontabil,contacontabil',
             'UsuarioCriacao:codusuario,usuario',
             'UsuarioAlteracao:codusuario,usuario',
-            'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
+            'NegocioParcela:codnegocioparcela,codnegocio',
             'TituloAgrupamento:codtituloagrupamento,emissao',
             'MovimentoTituloS' => function ($q) {
                 $q->orderBy('criacao')->orderBy('codmovimentotitulo')
                     ->with([
                         'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo',
                         'Portador:codportador,portador',
-                        'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
+                        'Pagamento:codpagamento,codnegocio',
                         'UsuarioCriacao:codusuario,usuario',
                     ]);
             },

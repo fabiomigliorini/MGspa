@@ -29,7 +29,8 @@ linha) concluído e validado em 30/09/2026** (TASK-188). **M2 (tipo de portador 
 portador) concluído e validado em 30/09/2026** (TASK-188). **M3 (cadastro único de maquinetas)
 validado em 30/09/2026** (TASK-188): decisões da conferência na seção do M3, que cresceu (tela
 Saurus/S2Pay do negocios e cadastro do POS PagarMe passam para contas → Maquinetas). Pendente do
-M3 só o pareamento SafraPay por QR, que confere no go-live. **Próximo: M4.**
+M3 só o pareamento SafraPay por QR, que confere no go-live. **M4 implementado em dev em 30/09/2026,
+aguardando validação** (TASK-188).
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -42,8 +43,9 @@ item do caixa; cadastrar as gavetas (portador em espécie) e vinculá-las em cad
 conferir a filial dos acessos de site de Brasil Card, Le Card e MultVale (nascem na 101) e as
 maquinetas manuais criadas pelos seriais digitados, e validar o pareamento SafraPay por QR com um
 pinpad reserva (M3); rodar os scripts DDL em produção, na ordem
-dos milestones (`movimento_titulo_colunas.sql`, `portador_tipo.sql`, `maquineta.sql`, …), com o
-MGsis e o MG Lara olhando as views temporárias.
+dos milestones (`movimento_titulo_colunas.sql`, `portador_tipo.sql`, `maquineta.sql`,
+`pagamento.sql`, …), com o MGsis (NFe de Terceiros grava parcela desde o M4) e o MG Lara olhando
+as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de formas).
 
 ## Glossário
 
@@ -583,6 +585,57 @@ para leitura de histórico não convertido.
   cancelamento; NF-e/NFC-e emitida com o grupo de pagamento certo; DIMP do mês; romaneio; Totais de
   Caixa do MG Lara e NFe de Terceiros do MGsis funcionando na view; conferência de totais do
   histórico (Σ total por negócio antes = depois).
+- **O que mudou em relação ao plano** (conferência de 30/09/2026 no banco e no código, decidido
+  item a item com o Fábio):
+  - **Levantamento**: 68 PHP + 2 blades (não 52), além de `NegocioService::gerarTitulos` (segundo
+    gerador de títulos, fluxo sem PDV), `LioService`, `MercosPedidoService`,
+    `PdvNegocioDevolucaoService`, `PdvAnexoService`, `ControleController`, `PdvValeEscopoService`,
+    `ValeService`, `TituloAgrupamento*`, `BoletoBbService` e os filtros da listagem do PDV. O grupo
+    `pag` da NF-e sai de `tblnotafiscalpagamento`, copiada do negócio ao gerar a nota: só a cópia
+    (`NotaFiscalNegocioService::formasDoNegocio`) mudou. `tblportadormovimento` (vazia) só perdeu a
+    coluna; `tblcheque` apontando para forma: 0 em dev. `tblpessoa.codformapagamento` (forma padrão
+    do cliente) continua apontando para a `tblformapagamento` congelada.
+  - **MGsis grava**, não só lê: a NFe de Terceiros fazia `INSERT` da forma 3010 e gravava
+    `tbltitulo.codnegocioformapagamento`. `NfeTerceiro.php` passa a gravar uma parcela (F) por
+    título e `Titulo.php`/`_grid_titulos.php` passam a `codnegocioparcela`; model novo
+    `NegocioParcela.php`. **Sobem junto.** A view atende só o Totais de Caixa do MG Lara.
+  - **Vale gerado na devolução** (forma 1030, tipo 90, título Vale Compras a pagar) = parcela com a
+    **condição nova V**, título pelo tipo da natureza, como numa compra (vence em 1 ano, `N…-DEV`).
+  - **`tblpagamento.codtitulo`** (coluna nova) = vale consumido como pagamento (meio 12): o vale é
+    escolhido com a venda aberta e só vira movimento no fechar.
+  - **Troco**: na tabela antiga `valorpagamento` era o entregue (troco dentro). No pagamento,
+    `principal` = entregue − troco, `total` = principal + juros + multa − desconto (o que ficou),
+    `valortroco` à parte; conferência Σ total dos pagamentos + Σ parcelas = total da venda (não
+    "Σ total − troco"); NF-e manda vPag = total + troco.
+  - **Sem coluna da forma antiga**: o código (`codformapagamento`) é deduzido de meio, condição e
+    integração (`NegocioFormaPagamentoService`, que vira só o tradutor do formato antigo e sai no
+    M5). Perde-se no histórico a diferença entre Fechamento B/C/D (volta 3020) e o PagarMe sem
+    pedido de 2021–2022 (volta 2010). Mercos Pay = meio 99 com destino no portador Mercos Pay
+    (202046).
+  - **Parcela do histórico = título** (valor e vencimento do título); forma a prazo sem título
+    (negócio cancelado ou aberto) = uma parcela com o valor da forma. `tblnegocioparcela` ganhou
+    `juros` (o juros do crediário, para Σ juros = `valorjuros` do negócio) e `uuidforma` (a forma do
+    PDV antigo que gerou as parcelas; o sync recalcula as parcelas em aberto por ela; sai no M5).
+    Vencimento no sync: a partir do dia do sync (o fechamento calculava do dia de fechar).
+  - **Cartão sem débito/crédito no histórico** (Cartao manual 2011–2024, Cielo Lio, PagarMe sem
+    pedido) = **meio 99 outros**; PagarMe com pedido usa o tipo do pedido. O meio 99 entra na lista.
+  - **Último dia útil** = segunda a sábado, sem feriado (`tblferiado`), como o RH.
+  - **Histórico corrigido**: formas de valor zero não são copiadas; os 4 cartões negativos
+    (estorno lançado na própria venda, 2025–2026) viram **pagamento contrário** (origem = portador
+    da adquirente, `codpagamentoorigem` = cartão da mesma autorização quando existe); troco lançado
+    em dobro (138 formas de 2024–2025 com troco maior que o pago) é redistribuído no negócio como o
+    PDV faz hoje (maior pagamento primeiro); CHECK `principal > 0` (zero só na compensação, M6). O
+    PDV antigo que ainda manda cartão negativo gera o mesmo pagamento contrário.
+  - Forma antiga **incoerente** (`valortotal` ≠ `valorpagamento` + juros, 7 negócios em dev): o
+    pagamento sai do `valorpagamento`; a conferência lista esses negócios em vez de abortar.
+  - **Integrações** (PIX QR, PagarMe, Saurus, Lio) criam o pagamento já **efetivado**; pedido
+    PagarMe zerado **cancela** o pagamento (antes apagava a forma). O sync do PDV não grava nem
+    apaga pagamento integrado nem pagamento que já saiu de pendente.
+  - **`vwnegocioformapagamentototais` não cai**: `vwnegocio` e `vwnegocio_listagem` (sem uso no
+    código; só SQLs avulsos de `MGdb/SQLs`, como o fechamento de comissões) dependem dela. Ela foi
+    redefinida sobre pagamentos e parcelas, com as mesmas colunas. `vwnegocioformapagamento` cai.
+  - O cadastro Formas de Pagamento do contas **continua com tela** neste milestone (fora do
+    escopo pedido); a tabela fica congelada para a view e para a forma padrão do cliente.
 
 ## M5 — Wizard de cobrança desacoplado e prazo com vencimento ajustável (Fundação)
 

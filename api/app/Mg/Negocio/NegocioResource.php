@@ -7,6 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
+use Mg\Pagamento\PagamentoResource;
 use Mg\Pdv\PdvAnexoService;
 use Mg\Saurus\SaurusPedidoResource;
 use Mg\Woo\WooPedidoResource;
@@ -48,7 +49,11 @@ class NegocioResource extends Resource
         $ret['fantasia'] = $this->Pessoa->fantasia;
         $ret['fantasiavendedor'] = $this->PessoaVendedor->fantasia ?? null;
         $ret['itens'] = NegocioProdutoBarraResource::collection($this->NegocioProdutoBarraS()->orderBy('alteracao', 'desc')->get());
-        $ret['pagamentos'] = NegocioFormaPagamentoResource::collection($this->NegocioFormaPagamentoS);
+        // formato antigo (forma de pagamento), que o PDV le' ate o M5
+        $ret['pagamentos'] = NegocioFormaPagamentoService::formaAntiga($this->resource);
+        // formato novo (M4 doc-3)
+        $ret['PagamentoS'] = PagamentoResource::collection($this->PagamentoS()->orderBy('codpagamento')->get());
+        $ret['NegocioParcelaS'] = NegocioParcelaResource::collection($this->NegocioParcelaS()->orderBy('codnegocioparcela')->get());
         // Vale compras: bloco proprio do negocio, com os itens dentro de cada vale.
         // Vale inativo (excluido no PDV) viaja junto, como o item de mercadoria, para
         // o offline saber que a linha existe e nao tentar criar outra pelo mesmo uuid.
@@ -56,10 +61,7 @@ class NegocioResource extends Resource
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());
         $ret['PagarMePedidoS'] = PagarMePedidoResource::collection($this->PagarMePedidoS()->orderBy('criacao', 'desc')->get());
         $ret['SaurusPedidoS'] = SaurusPedidoResource::collection($this->SaurusPedidoS()->orderBy('criacao', 'desc')->get());
-        $ret['titulos'] = collect([]);
-        foreach ($this->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
-            $ret['titulos'] = $ret['titulos']->concat(TituloResource::collection($nfp->TituloS()->orderBy('vencimento')->get()));
-        }
+        $ret['titulos'] = TituloResource::collection(NegocioParcelaService::titulos($this->resource));
         $ret['notas'] = NotaFiscalResource::collection(
             NotaFiscal::with(['Filial', 'Pessoa.Cidade.Estado', 'NaturezaOperacao', 'Operacao'])
                 ->whereIn('codnotafiscal', function ($query) {

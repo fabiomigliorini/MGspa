@@ -20,7 +20,7 @@ use Mg\Titulo\TituloService;
  * valendo.
  *
  * O titulo fica SOLTO -- so' referenciado por tblnegociovale.codtitulo,
- * nunca pendurado em tblnegocioformapagamento. O motivo e' concreto:
+ * nunca pendurado numa parcela do negocio. O motivo e' concreto:
  * PdvNegocioService::negocioFechado() reescreve codpessoa, codtipotitulo e
  * codcontacontabil de TODO titulo pendurado num pagamento, a cada PUT de
  * negocio fechado. Um simples "trocar o cliente do negocio" transformaria o

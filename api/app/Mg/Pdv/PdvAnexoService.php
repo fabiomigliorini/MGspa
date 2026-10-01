@@ -362,9 +362,10 @@ class PdvAnexoService
         // busca todos negocios a prazo com saldo em aberto
         $sql = "
             with s as (
-                select t.codnegocioformapagamento, abs(sum(t.saldo)) as valorsaldo
+                select np.codnegocio, abs(sum(t.saldo)) as valorsaldo
                 from tbltitulo t
-                group by t.codnegocioformapagamento
+                inner join tblnegocioparcela np on (np.codnegocioparcela = t.codnegocioparcela)
+                group by np.codnegocio
             )
             select distinct
                 n.codfilial,
@@ -381,12 +382,10 @@ class PdvAnexoService
                 n.valortotal,
                 s.valorsaldo
             from tblnegocio n
-            inner join tblnegocioformapagamento nfp on (nfp.codnegocio = n.codnegocio)
-            inner join tblformapagamento fp on (fp.codformapagamento = nfp.codformapagamento)
             inner join tblfilial f on (f.codfilial = n.codfilial)
             inner join tblpessoa pe on (pe.codpessoa = n.codpessoa)
             inner join tblusuario u on (u.codusuario = n.codusuario)
-            inner join s on (s.codnegocioformapagamento = nfp.codnegocioformapagamento)
+            inner join s on (s.codnegocio = n.codnegocio)
             inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
             left join tblpdv p on (p.codpdv = n.codpdv)
             where n.codnegociostatus = 2

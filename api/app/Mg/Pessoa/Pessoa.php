@@ -24,7 +24,7 @@ use Mg\Meta\MetaUnidadeNegocioPessoa;
 use Mg\Meta\MetaUnidadeNegocioPessoaFixo\MetaUnidadeNegocioPessoaFixo;
 use Mg\Meta\MetaVendedor;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\NotaFiscal\NotaFiscalPagamento;
@@ -337,9 +337,9 @@ class Pessoa extends MgModel
         return $this->hasMany(Negocio::class, 'codpessoavendedor', 'codpessoa');
     }
 
-    public function NegocioFormaPagamentoS()
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codpessoa', 'codpessoa');
+        return $this->hasMany(Pagamento::class, 'codpessoa', 'codpessoa');
     }
 
     public function NfeTerceiroS()

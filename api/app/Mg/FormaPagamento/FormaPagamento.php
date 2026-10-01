@@ -7,7 +7,6 @@
 namespace Mg\FormaPagamento;
 
 use Mg\MgModel;
-use Mg\Negocio\NegocioFormaPagamento;
 use Mg\Pessoa\Pessoa;
 use Mg\Usuario\Usuario;
 
@@ -70,10 +69,6 @@ class FormaPagamento extends MgModel
 
 
     // Tabelas Filhas
-    public function NegocioFormaPagamentoS()
-    {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codformapagamento', 'codformapagamento');
-    }
 
     public function PessoaS()
     {

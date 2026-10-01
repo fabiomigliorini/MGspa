@@ -187,6 +187,33 @@ class DimpConciliacaoService
         return (array) DB::select($sql, $bind)[0];
     }
 
+    /**
+     * Formas de pagamento dos negocios (M4 doc-3): um por pagamento nao
+     * cancelado e um por forma a prazo (parcelas agrupadas), no formato
+     * antigo: tipo = tPag, valortotal = o que o cliente entregou (com o
+     * troco), valortroco a parte.
+     */
+    private static function formasSql()
+    {
+        return "(
+            select p.codnegocio,
+                   p.meio as tipo,
+                   (case when p.codportadororigem is not null and p.codportadordestino is null then -1 else 1 end)
+                       * (p.total + coalesce(p.valortroco, 0)) as valortotal,
+                   p.valortroco
+            from tblpagamento p
+            where p.codnegocio is not null
+              and p.estado <> 'C'
+            union all
+            select np.codnegocio,
+                   case np.condicao when 'B' then 15 when 'X' then 16 when 'V' then 90 else 5 end as tipo,
+                   sum(np.valor) as valortotal,
+                   null as valortroco
+            from tblnegocioparcela np
+            group by np.codnegocio, np.condicao, coalesce(np.uuidforma, np.uuid)
+        )";
+    }
+
     /** Como o cliente pagou os negócios do mês, por tPag. */
     private static function pagamentosDoMes(array $bind)
     {
@@ -197,7 +224,7 @@ class DimpConciliacaoService
                 coalesce(sum(nfp.valortotal), 0) as bruto,
                 coalesce(sum(nfp.valortroco), 0) as troco,
                 coalesce(sum(nfp.valortotal - coalesce(nfp.valortroco, 0)), 0) as liquido
-            from tblnegocioformapagamento nfp
+            from ' . static::formasSql() . ' nfp
             inner join tblnegocio n on (n.codnegocio = nfp.codnegocio)
             where n.codnegociostatus = 2
               and n.codoperacao = 2
@@ -258,7 +285,7 @@ class DimpConciliacaoService
                 select
                     nfp.codnegocio,
                     sum(nfp.valortotal - coalesce(nfp.valortroco, 0)) as liquido
-                from tblnegocioformapagamento nfp
+                from ' . static::formasSql() . ' nfp
                 where nfp.codnegocio in (select codnegocio from vale)
                   and nfp.tipo in (' . implode(',', static::TPAG_ELETRONICOS) . ')
                 group by nfp.codnegocio
@@ -396,7 +423,7 @@ class DimpConciliacaoService
             with pag as (
                 select nfp.codnegocio,
                        sum(nfp.valortotal - coalesce(nfp.valortroco, 0)) as liquido
-                from tblnegocioformapagamento nfp
+                from ' . static::formasSql() . ' nfp
                 group by nfp.codnegocio
             )
             select count(*) as quantidade,

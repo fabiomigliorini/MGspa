@@ -9,7 +9,7 @@ class TituloDetalheResource extends Resource
 {
     private function notasVinculadas(): array
     {
-        if (empty($this->codnegocioformapagamento) && empty($this->codtituloagrupamento)) {
+        if (empty($this->codnegocioparcela) && empty($this->codtituloagrupamento)) {
             return [];
         }
 
@@ -36,14 +36,14 @@ class TituloDetalheResource extends Resource
             where npb.codnegocio in (
                 select nfp.codnegocio
                 from tbltitulo t
-                inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+                inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
                 where t.codtitulo = :codtitulo1
                 union
                 select nfp.codnegocio
                 from tbltitulo tag
                 inner join tblmovimentotitulo mt on (mt.codtituloagrupamento = tag.codtituloagrupamento)
                 inner join tbltitulo t on (t.codtitulo = mt.codtitulo)
-                inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+                inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
                 where tag.codtitulo = :codtitulo2
                   and tag.codtituloagrupamento is not null
                   and mt.codmovimentotituloestorno is null
@@ -126,7 +126,7 @@ class TituloDetalheResource extends Resource
                 'codliquidacaotitulo' => $m->codliquidacaotitulo ? (int)$m->codliquidacaotitulo : null,
                 'codperiodocolaboradoracerto' => $m->codperiodocolaboradoracerto ? (int)$m->codperiodocolaboradoracerto : null,
                 'codtituloagrupamento' => $m->codtituloagrupamento ? (int)$m->codtituloagrupamento : null,
-                'codnegocio' => optional($m->NegocioFormaPagamento)->codnegocio,
+                'codnegocio' => optional($m->Pagamento)->codnegocio,
                 'codboletoretorno' => $m->codboletoretorno ? (int)$m->codboletoretorno : null,
                 'codcobranca' => $m->codcobranca ? (int)$m->codcobranca : null,
                 'codtitulorelacionado' => $m->codtitulorelacionado ? (int)$m->codtitulorelacionado : null,
@@ -168,8 +168,8 @@ class TituloDetalheResource extends Resource
             'portador'         => optional($this->Portador)->portador,
             'portadorcodbanco' => optional($this->Portador)->codbanco ? (int)$this->Portador->codbanco : null,
             'portadorcodfilial' => optional($this->Portador)->codfilial ? (int)$this->Portador->codfilial : null,
-            'codnegocioformapagamento' => $this->codnegocioformapagamento ? (int)$this->codnegocioformapagamento : null,
-            'codnegocio'       => optional($this->NegocioFormaPagamento)->codnegocio,
+            'codnegocioparcela' => $this->codnegocioparcela ? (int)$this->codnegocioparcela : null,
+            'codnegocio'       => optional($this->NegocioParcela)->codnegocio,
             'codtituloagrupamento' => $this->codtituloagrupamento ? (int)$this->codtituloagrupamento : null,
             'codusuariocriacao' => $this->codusuariocriacao ? (int)$this->codusuariocriacao : null,
             'codusuarioalteracao' => $this->codusuarioalteracao ? (int)$this->codusuarioalteracao : null,
@@ -197,7 +197,7 @@ class TituloDetalheResource extends Resource
             'movimentos'       => $movimentos,
             'boletos'          => $boletos,
             'notas'            => $this->notasVinculadas(),
-            'gerado_automaticamente' => (!empty($this->codnegocioformapagamento) || !empty($this->codtituloagrupamento)),
+            'gerado_automaticamente' => (!empty($this->codnegocioparcela) || !empty($this->codtituloagrupamento)),
         ];
     }
 }

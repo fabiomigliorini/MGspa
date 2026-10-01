@@ -7,6 +7,9 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioFormaPagamentoService;
+use Mg\Negocio\NegocioParcelaService;
+use Mg\Pagamento\PagamentoService;
 use Mg\Pessoa\PessoaService;
 use Mg\Negocio\NegocioProdutoBarraService;
 use Mg\Filial\Filial;
@@ -288,15 +291,15 @@ class NotaFiscalNegocioService
         // Consumo de vale: N pagamentos no banco viram UM detPag tPag 12 na
         // nota (decisão 6 do plano). Só entra quando existe mais de um --
         // com zero ou um vale consumido, nada muda.
-        $valesConsumidos = $negocio->NegocioFormaPagamentoS()
+        $formasNegocio = static::formasDoNegocio($negocio);
+        $valesConsumidos = $formasNegocio
             ->where('tipo', static::TPAG_VALE_PRESENTE)
-            ->orderBy('codnegocioformapagamento')
-            ->get();
+            ->values();
         $agruparVale = $valesConsumidos->count() > 1;
 
         // adiciona as duplicatas
         if (!$temVale) {
-            foreach ($negocio->NegocioFormaPagamentos as $forma) {
+            foreach ($formasNegocio as $forma) {
                 // os tPag 12 saem juntos, numa linha só, depois do laço
                 if ($agruparVale && $forma->tipo == static::TPAG_VALE_PRESENTE) {
                     continue;
@@ -313,10 +316,10 @@ class NotaFiscalNegocioService
                     'autorizacao' => $forma->autorizacao,
                 ]);
                 if ($pag->tipo == 99) {
-                    $pag->descricao = $forma->FormaPagamento->formapagamento;
+                    $pag->descricao = $forma->descricao;
                 }
                 $pag->save();
-                foreach ($forma->Titulos as $titulo) {
+                foreach ($forma->titulos as $titulo) {
                     $duplicata = new NotaFiscalDuplicatas([
                         'codnotafiscal' => $nota->codnotafiscal,
                         'fatura' => $titulo->numero,
@@ -351,6 +354,57 @@ class NotaFiscalNegocioService
      * pagou R$ X em vale presente": a SEFAZ não tem onde guardar qual vale
      * foi, e N linhas iguais só poluem o cupom.
      */
+    // Pagamentos e parcelas do negocio no formato que a nota usa (um por
+    // pagamento, um por forma a prazo). vPag = total + troco; CNPJ do
+    // credenciador pela adquirente da maquineta (M4 doc-3).
+    public static function formasDoNegocio(Negocio $negocio)
+    {
+        $formas = collect();
+        $pags = $negocio->PagamentoS()
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+            ->orderBy('codpagamento')
+            ->get();
+        foreach ($pags as $pag) {
+            $sinal = $pag->ehSaida() ? -1 : 1;
+            $formas->push((object) [
+                'ordem' => $pag->codpagamento,
+                'avista' => true,
+                'tipo' => $pag->meio,
+                'valortotal' => round($sinal * ($pag->total + ($pag->valortroco ?? 0)), 2),
+                'valortroco' => $pag->valortroco,
+                'integracao' => $pag->ehIntegrado(),
+                'codpessoa' => $pag->Maquineta->codpessoa ?? $pag->codpessoa,
+                'bandeira' => $pag->bandeira,
+                'autorizacao' => $pag->autorizacao,
+                'descricao' => NegocioFormaPagamentoService::nomeFormaPagamento(
+                    NegocioFormaPagamentoService::codFormaPagamento($pag)
+                ),
+                'titulos' => collect(),
+            ]);
+        }
+        $grupos = $negocio->NegocioParcelaS()
+            ->orderBy('codnegocioparcela')
+            ->get()
+            ->groupBy(fn($np) => $np->uuidforma ?? $np->uuid);
+        foreach ($grupos as $parcelas) {
+            $condicao = $parcelas->first()->condicao;
+            $formas->push((object) [
+                'ordem' => PHP_INT_MAX - 1000000 + $parcelas->first()->codnegocioparcela,
+                'avista' => false,
+                'tipo' => NegocioFormaPagamentoService::TIPO_DA_CONDICAO[$condicao],
+                'valortotal' => round($parcelas->sum('valor'), 2),
+                'valortroco' => null,
+                'integracao' => false,
+                'codpessoa' => null,
+                'bandeira' => null,
+                'autorizacao' => null,
+                'descricao' => NegocioParcelaService::CONDICOES[$condicao],
+                'titulos' => $parcelas->map(fn($np) => $np->Titulo)->filter()->sortBy('vencimento')->values(),
+            ]);
+        }
+        return $formas;
+    }
+
     public static function detPagValeAgrupado(NotaFiscal $nota, $valor, $avista = true)
     {
         $pag = new NotaFiscalPagamento([
@@ -398,10 +452,9 @@ class NotaFiscalNegocioService
 
         // dinheiro (01) -> PIX (17) -> o resto, e dentro de cada grupo na
         // ordem de lancamento, para o resultado nao depender do Postgres
-        $formas = $negocio->NegocioFormaPagamentoS()
-            ->orderByRaw('case tipo when 1 then 1 when 17 then 2 else 3 end')
-            ->orderBy('codnegocioformapagamento')
-            ->get();
+        $formas = static::formasDoNegocio($negocio)
+            ->sortBy(fn($f) => [$f->tipo == 1 ? 1 : ($f->tipo == 17 ? 2 : 3), $f->ordem])
+            ->values();
 
         $pagamentos = [];
         $valeAgrupado = null;
@@ -438,7 +491,7 @@ class NotaFiscalNegocioService
                 'autorizacao' => $forma->autorizacao,
             ]);
             if ($pag->tipo == 99) {
-                $pag->descricao = $forma->FormaPagamento->formapagamento;
+                $pag->descricao = $forma->descricao;
             }
             $pag->save();
             $pagamentos[] = $pag;
@@ -479,7 +532,7 @@ class NotaFiscalNegocioService
         $proporcao = $negocio->valortotal > 0 ? ($nota->valortotal / $negocio->valortotal) : 0;
         $duplicatas = [];
         foreach ($formas as $forma) {
-            foreach ($forma->Titulos as $titulo) {
+            foreach ($forma->titulos as $titulo) {
                 $duplicatas[] = [
                     'fatura' => $titulo->numero,
                     'valor' => round(abs($titulo->valor) * $proporcao, 2),

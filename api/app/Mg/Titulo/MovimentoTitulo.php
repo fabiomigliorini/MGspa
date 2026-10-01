@@ -17,7 +17,7 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloAgrupamento;
 use Mg\Usuario\Usuario;
 use Mg\Titulo\TituloBoleto;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 
 class MovimentoTitulo extends MgModel
 {
@@ -30,7 +30,7 @@ class MovimentoTitulo extends MgModel
         'codcobranca',
         'codliquidacaotitulo',
         'codmovimentotituloestorno',
-        'codnegocioformapagamento',
+        'codpagamento',
         'codperiodocolaboradoracerto',
         'codportador',
         'codtipomovimentotitulo',
@@ -54,7 +54,7 @@ class MovimentoTitulo extends MgModel
         'codliquidacaotitulo' => 'integer',
         'codmovimentotitulo' => 'integer',
         'codmovimentotituloestorno' => 'integer',
-        'codnegocioformapagamento' => 'integer',
+        'codpagamento' => 'integer',
         'codperiodocolaboradoracerto' => 'integer',
         'codportador' => 'integer',
         'codtipomovimentotitulo' => 'integer',
@@ -106,9 +106,9 @@ class MovimentoTitulo extends MgModel
         return $this->belongsTo(MovimentoTitulo::class, 'codmovimentotituloestorno', 'codmovimentotitulo');
     }
 
-    public function NegocioFormaPagamento()
+    public function Pagamento()
     {
-        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+        return $this->belongsTo(Pagamento::class, 'codpagamento', 'codpagamento');
     }
 
     public function PeriodoColaboradorAcerto()

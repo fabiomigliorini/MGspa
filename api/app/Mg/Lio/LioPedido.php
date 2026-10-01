@@ -8,7 +8,7 @@ namespace Mg\Lio;
 
 use Mg\MgModel;
 use Mg\Lio\LioPedidoPagamento;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\Lio\LioPedidoStatus;
 use Mg\Usuario\Usuario;
 
@@ -63,9 +63,9 @@ class LioPedido extends MgModel
         return $this->hasMany(LioPedidoPagamento::class, 'codliopedido', 'codliopedido');
     }
 
-    public function NegocioFormaPagamentoS()
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codliopedido', 'codliopedido');
+        return $this->hasMany(Pagamento::class, 'codliopedido', 'codliopedido');
     }
 
 }

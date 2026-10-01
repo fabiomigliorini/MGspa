@@ -41,7 +41,7 @@ class TituloRelatorioService
             $regs = DB::select('
                 select distinct n.*
                 from tbltitulo t
-                inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+                inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
                 inner join tblnegocio n on (n.codnegocio = nfp.codnegocio)
                 where t.codpessoa = :codpessoa
                 and t.saldo !=0
@@ -71,7 +71,7 @@ class TituloRelatorioService
                 from tbltitulo t
                 where t.codpessoa = :codpessoa
                 and t.saldo != 0
-                and t.codnegocioformapagamento is null
+                and t.codnegocioparcela is null
                 and t.codtituloagrupamento is null
                 order by t.vencimento  
             ',[

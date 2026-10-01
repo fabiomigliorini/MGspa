@@ -68,7 +68,7 @@ class TituloAgrupamentoMailService
             select distinct nf.* 
             from tblmovimentotitulo mov 
             inner join tbltitulo t on (t.codtitulo = mov.codtitulo)
-            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
             inner join tblnegocioprodutobarra npb on (npb.codnegocio = nfp.codnegocio)
             inner join tblnotafiscalprodutobarra nfpb on (nfpb.codnegocioprodutobarra = npb.codnegocioprodutobarra)
             inner join tblnotafiscal nf on (nf.codnotafiscal = nfpb.codnotafiscal)
@@ -92,7 +92,7 @@ class TituloAgrupamentoMailService
             select distinct neg.* 
             from tblmovimentotitulo mov 
             inner join tbltitulo t on (t.codtitulo = mov.codtitulo)
-            inner join tblnegocioformapagamento nfp on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
+            inner join tblnegocioparcela nfp on (nfp.codnegocioparcela = t.codnegocioparcela)
             inner join tblnegocio neg on (neg.codnegocio = nfp.codnegocio)
             where mov.codtituloagrupamento = :codtituloagrupamento
             and neg.codnegociostatus = 2 

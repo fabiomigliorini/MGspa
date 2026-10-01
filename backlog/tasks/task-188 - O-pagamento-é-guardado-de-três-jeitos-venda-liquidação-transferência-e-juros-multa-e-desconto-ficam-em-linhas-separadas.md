@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-09-30 22:01'
+updated_date: '2026-10-01 01:46'
 labels:
   - contas
   - negocios
@@ -111,4 +111,12 @@ M3 validado pelo Fábio em 30/09/2026 (contas → Maquinetas, negocios Receber �
 M3.2, ajuste em dev (30/09/2026, fora do commit 78cd48526, aguardando validação): parceiros do cartão manual = fixos + toda adquirente com maquineta ativa na filial (Cielo etc., padrão da Stone, sem logo); fixo sem maquineta na filial fica desabilitado; Receber → Cartão sincroniza o estoque local a cada abertura (online). MaquinetaService::paraPdv devolve o nome da adquirente.
 
 M3.2 validado pelo Fábio em 30/09/2026 (Cielo no passo parceiro).
+
+M4 em andamento (30/09/2026): pagamento e parcelas no lugar da forma de pagamento da venda. Levantamento antes de codar.
+
+M4 decidido item a item com o Fábio (30/09/2026): (1) NFe de Terceiros do MGsis grava parcela/codnegocioparcela — NfeTerceiro.php e Titulo.php do MGsis ajustados, sobem junto; (2) vale gerado na devolução = parcela condição nova V (título pelo tipo da natureza, como compra); (3) tblpagamento.codtitulo = vale consumido; (4) total = o que ficou (principal+juros+multa−desconto), troco à parte, Σ total = total da venda, NF-e vPag = total+troco; (5) sem coluna de forma antiga: codformapagamento deduzido de meio/condição/integração (view e formato antigo); (6) parcela do histórico = título (valor e vencimento), sem título = uma parcela com o valor da forma; (7) cartão do histórico sem tipo = meio 99 outros; (8) último dia útil = seg a sáb sem feriado (tblferiado); (9) histórico corrigido: formas de valor zero não são copiadas, os 4 cartões negativos viram pagamento contrário (origem = portador da adquirente, codpagamentoorigem = cartão de mesma autorização), CHECK principal > 0.
+
+M4 implementado em dev em 30/09/2026, aguardando validação (ACs M4.x desmarcados até o OK). DDL api/database/pagamento.sql (seção 1) rodado em dev e de novo sem efeito (idempotente): 4.732.518 pagamentos, 620.204 parcelas, 270 formas de valor zero não copiadas, 4 contrários; reapontados 611.378 títulos, 3.174 movimentos, 0 cheques. Conferência fora do script contra a cópia de antes (banco m4antes no container): 298 negócios com total diferente, todos explicados (174 parcela = título alterado, 117 troco em dobro, 7 forma incoerente); 67 negócios só com forma zero. DIMP de jul/2026 igual por tPag (dinheiro −3 formas de troco total, líquido igual). vwnegocioformapagamentototais redefinida (vwnegocio/vwnegocio_listagem dependem). Backend: Mg/Pagamento (model, service, resource), NegocioParcela + service + resource, NegocioFormaPagamentoService = tradutor do formato antigo (sai no M5); sync, fechar, cancelar, NF-e, DIMP, romaneio, vale, cheque, conferência, listagem, títulos, PIX/PagarMe/Saurus/Lio/Mercos, NFe de terceiros, devolução. contas: Detalhe do título. MGsis: NfeTerceiro.php, Titulo.php, _grid_titulos.php, NegocioParcela.php (sobem junto). Testado com rollback (tinker): todas as formas, dividido, negativo, sync repetido/troca de forma, cancelar, NF-e/NFC-e, integrações. Não testado: fechar boleto (registra no BB), importação de NFe de Terceiros (consulta a SEFAZ; uma tentativa em dev esbarrou em '656 Consumo Indevido', limite de consultas/hora) e a tela do MGsis.
+
+M4 commitado sem validação a pedido do Fábio (30/09/2026): valida junto com o M5. ACs M4.x seguem desmarcados até a validação.
 <!-- SECTION:NOTES:END -->

@@ -23,7 +23,7 @@ class TituloResource extends Resource
             'fantasia' => $this->Pessoa->fantasia,
             'codportador' => $this->codportador,
             'portador' => $this->Portador->portador ?? null,
-            'codnegocioformapagamento' => $this->codnegocioformapagamento,
+            'codnegocioparcela' => $this->codnegocioparcela,
             'codtituloagrupamento' => $this->codtituloagrupamento,
             'numero' => $this->numero,
             'fatura' => $this->fatura,

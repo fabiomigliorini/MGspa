@@ -28,7 +28,7 @@ class TituloListaResource extends Resource
             'codportador'      => $this->codportador ? (int)$this->codportador : null,
             'portador'         => optional($this->Portador)->portador,
             'codusuariocriacao' => $this->codusuariocriacao ? (int)$this->codusuariocriacao : null,
-            'codnegocio'       => optional($this->NegocioFormaPagamento)->codnegocio,
+            'codnegocio'       => optional($this->NegocioParcela)->codnegocio,
             'codtituloagrupamento' => $this->codtituloagrupamento ? (int)$this->codtituloagrupamento : null,
             'emissao'          => $this->emissao,
             'vencimento'       => $this->vencimento,

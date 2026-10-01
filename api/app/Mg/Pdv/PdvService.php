@@ -460,10 +460,10 @@ class PdvService
             group by ped.codnegocio
         ),
         tit as (
-            select nfp.codnegocio, sum(t.valor) filter (where t.valor > 0) as valortitulo
-            from tblnegocioformapagamento nfp 
-            inner join tbltitulo t on (nfp.codnegocioformapagamento = t.codnegocioformapagamento)
-            group by nfp.codnegocio
+            select np.codnegocio, sum(t.valor) filter (where t.valor > 0) as valortitulo
+            from tblnegocioparcela np
+            inner join tbltitulo t on (np.codnegocioparcela = t.codnegocioparcela)
+            group by np.codnegocio
         )
         select 
             n.codnegocio, 

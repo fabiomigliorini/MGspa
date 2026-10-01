@@ -187,23 +187,23 @@
         </div>
 
         <!-- PAGAMENTOS -->
-        @foreach ($negocio->NegocioFormaPagamentoS as $pag)
+        @foreach (\Mg\Negocio\NegocioFormaPagamentoService::formaAntiga($negocio) as $pag)
             <!-- JUROS -->
-            @if (!empty($pag->valorjuros))
+            @if (!empty($pag['valorjuros']))
                 Juros
-                R$ {{ formataNumero($pag->valorjuros, 2) }}
+                R$ {{ formataNumero($pag['valorjuros'], 2) }}
                 <br>
             @endif
 
             <!-- FORMA PAGAMENTO -->
-            {{ $pag->FormaPagamento->formapagamento }}
-            R$ {{ formataNumero($pag->valorpagamento, 2) }}
+            {{ $pag['formapagamento'] }}
+            R$ {{ formataNumero($pag['valorpagamento'], 2) }}
 
             <!-- TROCO -->
-            @if (!empty($pag->valortroco))
+            @if (!empty($pag['valortroco']))
                 <br>
                 Troco
-                R$ {{ formataNumero($pag->valortroco, 2) }}
+                R$ {{ formataNumero($pag['valortroco'], 2) }}
             @endif
 
             <br>
@@ -228,8 +228,13 @@
 
     <!-- TITULOS -->
     @if ($confissao)
-        @foreach ($negocio->NegocioFormaPagamentos as $nfp)
-            @foreach ($nfp->Titulos()->orderBy('vencimento')->get() as $titulo)
+        {{-- uma confissao por forma a prazo (parcelas agrupadas pela forma do PDV) --}}
+        @foreach ($negocio->NegocioParcelaS()->orderBy('codnegocioparcela')->get()->groupBy(fn($np) => $np->uuidforma ?? $np->uuid) as $parcelas)
+            @php
+                $titulos = $parcelas->map(fn($np) => $np->Titulo)->filter()->sortBy('vencimento')->values();
+                $totalTitulos = $titulos->sum(fn($t) => abs($t->valor));
+            @endphp
+            @foreach ($titulos as $titulo)
                 <!-- CABECALHO VENCIMENTOS -->
                 @if ($loop->first)
                     <h1 style="page-break-before: always;">Confissão de Dívida</h1>
@@ -253,8 +258,8 @@
                 @if ($loop->last)
                     <p style="font-size: larger; text-align:justify">
                         Totalizando
-                        R$ <b>{{ formataNumero($nfp->valorpagamento) }}</b>
-                        ({{ formataValorPorExtenso($nfp->valorpagamento) }})
+                        R$ <b>{{ formataNumero($totalTitulos) }}</b>
+                        ({{ formataValorPorExtenso($totalTitulos) }})
                         .
                     </p>
                     <p style="font-size: larger; text-align:justify">
