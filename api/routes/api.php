@@ -1241,6 +1241,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('titulo/listagem/relatorio', '\Mg\Titulo\TituloController@relatorioListagem');
     Route::get('titulo', '\Mg\Titulo\TituloController@index');
     Route::post('titulo', '\Mg\Titulo\TituloController@store');
+    // vale colaborador e adiantamentos (M8 doc-3; o PDV usa v1/pdv/titulo)
+    Route::post('titulo/adiantamento', '\Mg\Titulo\TituloAdiantamentoController@store');
     Route::get('titulo/{codtitulo}', '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
     Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
     Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');

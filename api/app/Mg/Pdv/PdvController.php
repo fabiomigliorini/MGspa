@@ -19,7 +19,6 @@ use Mg\PagarMe\PagarMeService;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloResource;
-use Mg\Titulo\TituloService;
 use App\Rules\InscricaoEstadual;
 use Carbon\Carbon;
 use Mg\Filial\Filial;
@@ -670,8 +669,10 @@ class PdvController
         if (!$titulo) {
             throw new Exception("Nenhum título localizado com este código!");
         }
-        if ($titulo->codtipotitulo != TituloService::TIPO_VALE) {
-            throw new Exception("Este não é um Vale Compras!");
+        // todo titulo com saldo de credito paga compra no PDV (vale compras,
+        // credito e adiantamento do cliente, duplicata a pagar...)
+        if ((float) $titulo->saldo >= 0) {
+            throw new Exception("Este título não tem saldo de crédito!");
         }
         return new TituloResource($titulo);
     }

@@ -13,9 +13,9 @@ use Mg\Titulo\BoletoBb\BoletoBbService;
 
 class TituloAgrupamentoService
 {
-    // copiados do MGsis legado
-    const TIPOTITULO_AGRUPAMENTO_CREDITO = 911;
-    const TIPOTITULO_AGRUPAMENTO_DEBITO  = 921;
+    // o titulo do agrupamento e' uma duplicata comum (sem tipo proprio desde
+    // o M8.1 do doc-3): quem diz que veio de agrupamento e' o
+    // codtituloagrupamento, o numero A... e a conta contabil
     const CONTACONTABIL_AGRUPAMENTO      = 7;
 
     public static function listar(array $filtros)
@@ -178,8 +178,8 @@ class TituloAgrupamentoService
 
         // gera novos títulos (parcelas)
         $codtipotitulo = $totalTitulos < 0
-            ? self::TIPOTITULO_AGRUPAMENTO_CREDITO
-            : self::TIPOTITULO_AGRUPAMENTO_DEBITO;
+            ? TituloService::TIPO_DUPLICATA_PAGAR
+            : TituloService::TIPO_DUPLICATA_RECEBER;
 
         $totalParcelas = count($dados['vencimentos']);
         $faturaStr = substr(implode(', ', $faturas), 0, 50);
@@ -208,7 +208,7 @@ class TituloAgrupamentoService
                 'boleto'               => $boleto,
             ]);
 
-            $novo->valor = $codtipotitulo === self::TIPOTITULO_AGRUPAMENTO_CREDITO ? -$valor : $valor;
+            $novo->valor = $codtipotitulo === TituloService::TIPO_DUPLICATA_PAGAR ? -$valor : $valor;
             TituloService::implantar($novo);
         }
 

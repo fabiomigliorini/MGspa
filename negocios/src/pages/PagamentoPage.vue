@@ -3,10 +3,9 @@
 // próprios nas primeiras 2 horas; Gerente: a filial) e recibo na térmica. Daqui saem os
 // pagamentos avulsos do caixa: Receber Título / Pagar Vale (página própria) e Vale / Adiantamento
 // (M8, dialog). A tela do PDV fica só com a venda.
-import { watch } from 'vue'
 import { Notify } from 'quasar'
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
-import { pagamentoStore } from 'stores/pagamento'
+import { pagamentoStore, FORMAS_ADIANTAMENTO } from 'stores/pagamento'
 import { negocioStore } from 'stores/negocio'
 import MgPagamentoLista from '@components/MgPagamentoLista.vue'
 import MgPagamentoDetalhe from '@components/MgPagamentoDetalhe.vue'
@@ -14,11 +13,13 @@ import MgCobrancaDialog from '@components/MgCobrancaDialog.vue'
 import PixCobDialog from '@components/cobranca/PixCobDialog.vue'
 import PagarMePedidoDialog from '@components/cobranca/PagarMePedidoDialog.vue'
 import SaurusPedidoDialog from '@components/cobranca/SaurusPedidoDialog.vue'
-import LancarTituloDialog from 'components/offline/LancarTituloDialog.vue'
+import MgAdiantamentoDialog from '@components/MgAdiantamentoDialog.vue'
+import { sincronizacaoStore } from 'stores/sincronizacao'
 
 const store = pagamentoListaStore()
 const sPagamento = pagamentoStore()
 const sNegocio = negocioStore()
+const pdv = sincronizacaoStore().pdv.uuid
 
 const abrir = async (l) => {
   try {
@@ -33,13 +34,14 @@ const abrir = async (l) => {
   }
 }
 
-// lançou vale/adiantamento: a listagem mostra o pagamento novo
-watch(
-  () => sPagamento.dialogLancamento,
-  (aberto) => {
-    if (!aberto) store.buscar(true)
-  },
-)
+// filial e maquinetas do estoque local configurado no PDV (a filial do lançamento é a do PDV)
+const contexto = () => sNegocio.contextoCobranca(sNegocio.padrao.codestoquelocal)
+
+// lançou vale/adiantamento: recibo na térmica e a listagem mostra o pagamento novo
+const adiantamentoLancado = async (pags) => {
+  await sPagamento.imprimirRecibo(pags.map((p) => p.codpagamento))
+  store.buscar(true)
+}
 
 const recibo = async (pag) => {
   await sPagamento.imprimirRecibo([pag.codpagamento])
@@ -60,7 +62,12 @@ const recibo = async (pag) => {
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <div class="row q-gutter-sm items-end">
-        <q-btn fab-mini color="deep-purple-4" icon="payments" @click="sPagamento.abrirLancamento()">
+        <q-btn
+          fab-mini
+          color="deep-purple-4"
+          icon="payments"
+          @click="sPagamento.dialogAdiantamento = true"
+        >
           <q-tooltip anchor="top middle" self="bottom middle">Vale / Adiantamento</q-tooltip>
         </q-btn>
         <q-btn fab icon="add" color="primary" to="/pagamento/receber">
@@ -71,7 +78,14 @@ const recibo = async (pag) => {
       </div>
     </q-page-sticky>
 
-    <LancarTituloDialog />
+    <MgAdiantamentoDialog
+      v-model="sPagamento.dialogAdiantamento"
+      :formas="FORMAS_ADIANTAMENTO"
+      :contexto="contexto"
+      :finalizar="{ url: 'v1/pdv/titulo', extras: { pdv } }"
+      :padrao="sNegocio.padrao"
+      @finalizado="adiantamentoLancado"
+    />
     <MgCobrancaDialog />
     <PixCobDialog :impressora="sNegocio.padrao.impressora" />
     <PagarMePedidoDialog />

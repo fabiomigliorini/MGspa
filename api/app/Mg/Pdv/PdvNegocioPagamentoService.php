@@ -9,7 +9,6 @@ use Mg\Negocio\NegocioParcelaService;
 use Mg\Negocio\NegocioService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
-use Mg\Titulo\TituloService;
 
 /**
  * Pagamentos e parcelas do negocio como o PDV manda e le' (M5 do plano
@@ -262,8 +261,8 @@ class PdvNegocioPagamentoService
             'alteracao' => $pag->alteracao,
             'codusuarioalteracao' => $pag->codusuarioalteracao,
         ];
-        // vale compras usado no pagamento: card do Contra Vale (saldo atual do titulo)
-        if (!empty($pag->codtitulo) && $pag->Titulo->codtipotitulo == TituloService::TIPO_VALE) {
+        // titulo de credito usado no pagamento (vale): card do Contra Vale (saldo atual do titulo)
+        if (!empty($pag->codtitulo)) {
             $ret['valenumero'] = $pag->Titulo->numero;
             $ret['valefavorecido'] = $pag->Titulo->Pessoa->fantasia;
             $ret['valesaldo'] = round(-$pag->Titulo->saldo, 2);

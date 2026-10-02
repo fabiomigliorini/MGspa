@@ -9,8 +9,18 @@ use Mg\Portador\Portador;
 
 class TituloService
 {
-    const TIPO_VALE = 3;
-    const TIPO_RH = 952;
+    // codigos dos tipos de titulo (renumerados no M8.1 do doc-3: 1xx a
+    // receber, 2xx a pagar; ver api/database/tipo_titulo_limpeza.sql)
+    const TIPO_DUPLICATA_RECEBER = 100;
+    const TIPO_DUPLICATA_PAGAR = 200;
+    const TIPO_VALE = 210;
+    const TIPO_CREDITO_CLIENTE = 212;
+    const TIPO_RH = 220;
+
+    // credito que a propria venda gera e sai como vale impresso (vale compras
+    // e credito da devolucao). Para PAGAR no PDV vale qualquer titulo com
+    // saldo de credito.
+    const TIPOS_VALE_PDV = [self::TIPO_VALE, self::TIPO_CREDITO_CLIENTE];
 
     // Regras de atualização de título em atraso (porta de MGJuros)
     const DIAS_TOLERANCIA_ATRASO = 3;

@@ -10,6 +10,7 @@ use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Titulo\MovimentoTituloService;
 use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 
 /**
  * Acerto (Encontro de Contas) — modelo de EVENTOS.
@@ -155,7 +156,7 @@ class AcertoService
         $beneficioRestante = round(((float) $pc->valortotal) - static::beneficioJaEntregue($acertos), 2);
 
         // Vales/adiantamentos reais (débitos/créditos com saldo != 0).
-        // Exclui o título RH (952) legado — o benefício agora é sintético.
+        // Exclui o título RH (Rubrica RH) legado — o benefício agora é sintético.
         $titulosReais = DB::select("
             SELECT
                 t.codtitulo,
@@ -178,9 +179,10 @@ class AcertoService
             JOIN tbltipotitulo tt ON tt.codtipotitulo = t.codtipotitulo
             WHERE t.codpessoa = :codpessoa
               AND t.saldo != 0
-              AND t.codtipotitulo <> 952
+              AND t.codtipotitulo <> :tiporh
             ORDER BY t.vencimento, t.saldo, t.codtitulo
         ", [
+            'tiporh'    => TituloService::TIPO_RH,
             'codpessoa' => $colaborador->codpessoa,
             'dias'      => $dias,
             'dias2'     => $dias,

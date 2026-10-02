@@ -4,43 +4,10 @@
 // maquineta; banco; dinheiro do cofre; cheque; cartão da empresa; compensação). Gaveta de PDV não
 // aparece. Maquinetas de todas as filiais (o financeiro conserta lançamento de qualquer loja).
 import { useRouter } from 'vue-router'
-import { api } from 'src/services/api'
-import { useAuthStore } from 'src/stores/auth'
-import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import MgBaixaTitulos from '@components/MgBaixaTitulos.vue'
-
-// o financeiro não usa gaveta (o PDV recebe na dele)
-const FORMAS = {
-  entrada: ['cartao', 'pix', 'dinheiro', 'cheque', 'banco', 'compensacao'],
-  saida: ['banco', 'dinheiro', 'cartaoEmpresa', 'cheque', 'compensacao'],
-}
+import { contextoCobranca, FORMAS_TITULOS } from 'src/utils/cobranca'
 
 const router = useRouter()
-const auth = useAuthStore()
-const selectCache = useSelectCacheStore()
-
-// portadores que o usuário pode usar (filiais dele), menos gaveta
-const portadores = async () => {
-  const todos = await selectCache.loadList('portador', 'v1/select/portador')
-  const filiais = auth.filiaisRestritas()
-  return todos.filter(
-    (p) => !p.gaveta && (filiais == null || filiais.map(Number).includes(Number(p.codfilial))),
-  )
-}
-
-const contexto = async (codfilialTitulos) => {
-  const codfilial = codfilialTitulos ?? auth.usuario?.codfilial ?? null
-  return {
-    pdv: null,
-    codfilial,
-    portadores: await portadores(),
-    // todas as ativas; as de outra filial vêm marcadas
-    carregarMaquinetas: async () => {
-      const { data } = await api.get(`v1/cobranca/maquineta/${codfilial}`)
-      return data.data
-    },
-  }
-}
 
 const finalizado = (pags) =>
   router.replace({ name: 'pagamento-detalhe', params: { id: pags[0].codpagamento } })
@@ -59,8 +26,8 @@ const finalizado = (pags) =>
       </q-item>
 
       <MgBaixaTitulos
-        :formas="FORMAS"
-        :contexto="contexto"
+        :formas="FORMAS_TITULOS"
+        :contexto="contextoCobranca"
         :finalizar="{ url: 'v1/pagamento', extras: {} }"
         com-data
         @finalizado="finalizado"

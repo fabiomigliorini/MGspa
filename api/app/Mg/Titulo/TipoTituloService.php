@@ -8,10 +8,10 @@ use RuntimeException;
 
 class TipoTituloService
 {
-    const TIPO_PIX_RECEBER = 201;
-    const TIPO_PIX_PAGAR = 930;
-    const TIPO_ENTREGA_RECEBER = 310;
-    const TIPO_ENTREGA_PAGAR = 320;
+    const TIPO_PIX_RECEBER = 101;
+    const TIPO_PIX_PAGAR = 201;
+    const TIPO_ENTREGA_RECEBER = 102;
+    const TIPO_ENTREGA_PAGAR = 202;
 
     public static function listar(array $filtros)
     {

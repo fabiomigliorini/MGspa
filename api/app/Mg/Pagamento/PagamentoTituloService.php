@@ -273,7 +273,7 @@ class PagamentoTituloService
 
     // Cria o pagamento de uma forma (ou amarra a cobranca integrada ja'
     // confirmada), com origem e destino pelo meio e por onde aconteceu. Usado
-    // tambem pelo lancamento de vale/adiantamento no PDV (PdvTituloService).
+    // tambem pelo lancamento de vale/adiantamento (TituloAdiantamentoService).
     public static function pagamentoDaForma(
         array $forma,
         bool $entrada,
