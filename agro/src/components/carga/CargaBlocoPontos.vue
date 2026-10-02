@@ -139,10 +139,10 @@ function setRotuloPonto(p) {
   else if (p.contatipo === 'UNIDADE') p.rotulo = rotuloUnidade(p.codunidadearmazenadora)
   else if (p.contatipo === 'CONTRATO') p.rotulo = store.rotuloContrato(p.codcontrato)
 }
-// Talhão escolhido pode ser de OUTRA safra (soja × milho): a carga segue a
-// safra do talhão — e a carga nova, que nasce sem safra, ganha a dela daqui.
+// Carga que ainda não tem safra ganha a do talhão escolhido. Safra já definida
+// em Operação nunca é sobrescrita daqui (o mapa só mostra talhões dela).
 function onPlantioSelecionado(plantio) {
-  if (plantio?.codsafra && plantio.codsafra !== edicao.value.codsafra) {
+  if (plantio?.codsafra && !edicao.value.codsafra) {
     edicao.value.codsafra = plantio.codsafra
   }
 }

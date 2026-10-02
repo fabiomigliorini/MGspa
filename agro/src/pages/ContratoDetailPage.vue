@@ -36,6 +36,7 @@ const {
   valornf,
   valorCarregado,
   fixadoResumo,
+  precoMedioLiquido,
   afixar,
   bate,
 } = storeToRefs(store)
@@ -202,6 +203,9 @@ onMounted(() => store.carregar(cod))
                     </div>
                     <div class="text-caption text-grey-6">
                       {{ fmt(b.sacas) }} sc · {{ simbolo(b.iso) }} {{ fmt(b.precomedio, 2) }}/sc
+                    </div>
+                    <div v-if="b.firme && precoMedioLiquido" class="text-caption text-grey-7">
+                      Preço médio líquido: R$ {{ fmt(precoMedioLiquido, 2) }}/sc
                     </div>
                   </div>
                 </template>

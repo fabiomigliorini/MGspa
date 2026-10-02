@@ -64,13 +64,11 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
 
   const fixado = computed(() => n(contrato.value?.fixado))
   const afixar = computed(() => contratado.value - fixado.value)
-  // Preço médio R$/saca FIRME (só o câmbio travado; US$ flutuante entra como 0).
-  const precoMedio = computed(() => {
-    const q = fixacoes.value.reduce((s, f) => s + n(f.quantidade), 0)
-    const v = fixacoes.value.reduce((s, f) => s + n(f.totalbrl), 0)
-    return q > 0 ? v / q : 0
-  })
-  // precoMedio é R$/saca; o carregado físico está em sacas derivadas.
+  // Preço médio R$/saca, PRONTO do servidor (ContratoCalculoService::calcularDoContrato):
+  // R$ ÷ sacas firmes em R$. Bruto confere com a NF; líquido, com o recebido.
+  const precoMedio = computed(() => n(contrato.value?.calculo?.bruto))
+  const precoMedioLiquido = computed(() => n(contrato.value?.calculo?.liquido))
+  // O carregado físico está em sacas derivadas.
   const valorCarregado = computed(() => carregadosc.value * precoMedio.value)
   // Total recebido no contrato = Σ recebido de cada fixação (ledger do backend).
   const pago = computed(() => fixacoes.value.reduce((s, f) => s + n(f.recebido), 0))
@@ -97,9 +95,10 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     return !!f && (f.estrangeira ?? (f.moeda || 'BRL') !== 'BRL')
   }
 
-  // "Bate?" — valor carregado x NFs x pago (tolerância de centavos)
+  // "Bate?" — NF (bruta) x carregado bruto, e recebido (líquido) x carregado
+  // LÍQUIDO: o que entra no caixa já vem sem os tributos (tolerância de R$ 1).
   const difNf = computed(() => valornf.value - valorCarregado.value)
-  const difPago = computed(() => pago.value - valornf.value)
+  const difPago = computed(() => pago.value - carregadosc.value * precoMedioLiquido.value)
   const bate = computed(
     () => Math.abs(difNf.value) < 1 && Math.abs(difPago.value) < 1 && valornf.value > 0,
   )
@@ -264,6 +263,7 @@ export const useContratoDetalheStore = defineStore('contratoDetalhe', () => {
     fixado,
     afixar,
     precoMedio,
+    precoMedioLiquido,
     valorCarregado,
     pago,
     valorFixadoBruto,

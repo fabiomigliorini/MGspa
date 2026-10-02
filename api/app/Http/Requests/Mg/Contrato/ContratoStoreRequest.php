@@ -56,7 +56,6 @@ class ContratoStoreRequest extends FormRequest
             // Comissão só faz sentido com corretora: tipo/valor exigidos quando há corretora.
             'comissaotipo' => ['nullable', 'required_with:codpessoacorretora', Rule::in(['PERCENTUAL', 'SACA', 'TOTAL'])],
             'comissaovalor' => ['nullable', 'required_with:codpessoacorretora', 'numeric', 'gte:0'],
-            'comissaototal' => ['nullable', 'numeric', 'gte:0'],
             'codpessoacooperativa' => ['nullable', 'exists:tblpessoa,codpessoa'],
             'numerocontraparte' => ['nullable', 'max:30'],
             'numerocorretora' => ['nullable', 'max:30'],

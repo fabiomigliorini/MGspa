@@ -32,9 +32,9 @@ const comissaoTipos = [
   { label: 'R$ total', value: 'TOTAL' },
 ]
 
-// Comissão total resolvida do tipo (R$/sc, R$ total) — info gerencial. O tipo %
-// depende do preço, que agora vive na fixação; nesse caso fica a cargo do
-// preenchimento manual (sem preço único no contrato).
+// Prévia da comissão total. Quem calcula e grava é o servidor
+// (ContratoService::aplicarComissao); o tipo % depende das fixações, então aqui
+// só mostra o último valor gravado.
 const comissaoTotal = computed(() => {
   const v = Number(cad.value.form.comissaovalor) || 0
   const q = Number(cad.value.form.quantidade) || 0
@@ -86,7 +86,6 @@ const embarqueInvertido = computed(() => {
 async function salvar() {
   const saved = await props.cad.salvar((f) => ({
     ...f,
-    comissaototal: comissaoTotal.value,
     ...(props.fixar || {}),
   }))
   // saved (com codcontrato) sobe pro pai — na criação, ele navega pra tela do contrato.
