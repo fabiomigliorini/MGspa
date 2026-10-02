@@ -37,7 +37,7 @@ class BeeRecargaService
     // Financeiro baixa pela Liquidação (TASK-176). Com o 120, a baixa virava
     // recebimento e a Beevale aparecia devendo o lote à empresa.
     const CODPESSOA_BEEVALE = 26169;   // Beevale Pagamentos E Beneficios Ltda
-    const CODTIPOTITULO_PAGAR = 927;   // Duplicata A Pagar (natureza P -> conta a pagar)
+    const CODTIPOTITULO_PAGAR = TituloService::TIPO_DUPLICATA_PAGAR;
     const CODCONTACONTABIL = 312;      // Vale Alimentacao Colaboradores
 
     /**

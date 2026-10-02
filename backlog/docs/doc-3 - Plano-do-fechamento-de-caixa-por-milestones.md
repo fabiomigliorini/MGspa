@@ -37,8 +37,16 @@ M5 juntos. **M5 (wizard desacoplado, prazo ajustável) commitado em 30/09/2026 s
 **M6.1**: o wizard foi desacoplado mas não compartilhado, e o contas ganhou um dialog próprio sem
 cartão e uma listagem parcial. **M6.1 commitado em 01/10/2026 sem validação**, a pedido do Fábio
 (TASK-188): ele valida depois. **M8 (vale colaborador e adiantamentos no PDV) commitado em
-01/10/2026 sem validação**, a pedido do Fábio (TASK-188): ele valida depois. **Próximo:
-M9.**
+01/10/2026 sem validação**, a pedido do Fábio (TASK-188): ele valida depois. **M8.1** (mesmo
+dia, na árvore, sem commit): o dialog do M8 virou peça única em `@components`, usada também pelo
+contas (o financeiro lança vale e adiantamento por depósito, transferência, cofre, cartão da
+empresa). No M8.1 entram também a **limpeza dos tipos de título** (02/10/2026, executada em dev:
+14 tipos ativos renumerados, 1xx a receber e 2xx a pagar, mais 5 inativos de histórico; os outros
+38 apagados) e o **PDV pagando com qualquer título de crédito**; detalhe na seção M8. **M8.1
+commitado em 02/10/2026 sem validação, a pedido do Fábio** (MGspa + `../MGsis` + `../MGdb`): ele
+valida depois.
+**Próximo: M9, em paralelo** (outra conversa) — ver "Coordenação com o M8.1" na seção M9.
+TASK-193 (nova, High): tipo de título só obrigatório quando a natureza gera financeiro.
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -57,7 +65,9 @@ as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de forma
 uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
-pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais).
+pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). **`tipo_titulo_limpeza.sql` é o último
+script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
+`NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
 
 ## Glossário
 
@@ -85,7 +95,8 @@ pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais).
   período de cartão da empresa, com vencimento.
 - **Envelope**: o que sobra na gaveta ao fechar = `saldofinal` da sessão = `saldoinicial` da próxima.
 - **Item do caixa**: mercadoria de parceiro fora do fiscal (chips, ingressos, maquinetas de
-  terceiros) que passa pela gaveta e vira título "Repasse Parceiro" no fechamento.
+  terceiros) que passa pela gaveta e vira título de repasse ao parceiro (Duplicata a Pagar, 200)
+  no fechamento.
 - **Maquineta** (`tblmaquineta`): cadastro único dos terminais de cartão, integrados ou não (um por
   POS PagarMe, um por pinpad Saurus, manuais e acessos de site). A adquirente é dado dela.
   **Compartilhada** = aparece no PDV de todas as filiais (acesso de site feito numa filial só).
@@ -121,7 +132,7 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | M6 | Pagamento no lugar da liquidação; telas de recebimentos e pagamentos | Fundação | contas → Recebimentos e Pagamentos; RH acerto; retorno de boleto | **Alto** |
 | M6.1 | Wizard, formas e integrações em `@components`; contas usa o wizard; listagem única de pagamentos; receber notinha e pagar vale do cliente no PDV (absorve o M7) | Fundação | contas → Receber ou Pagar Títulos (cartão com bandeira/autorização/parcelas/maquineta), Pagamentos; negocios → Receber título / Pagar vale, Pagamentos | **Alto** |
 | M7 | (absorvido pelo M6.1) | — | — | — |
-| M8 | Vale colaborador e adiantamentos no PDV | Receber no balcão | PDV → Vale / Adiantamento | Baixo |
+| M8 | Vale colaborador e adiantamentos, no PDV e no contas | Receber no balcão | negocios e contas → Pagamentos → Vale / Adiantamento | Baixo |
 | M9 | Conferência de maquinetas | Receber no balcão | contas → Maquinetas → Conferência | Baixo |
 | M10 | Caixa: períodos, razão, abrir/fechar, dinheiro | TASK-39 | negocios → Caixa | Médio |
 | M11 | Transferências (sangria, suprimento, depósito, envio ao financeiro) | TASK-39 | negocios → Caixa; contas → Caixas | Médio |
@@ -237,8 +248,9 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 24. **A loja só baixa o que se confirma na hora**: dinheiro, PIX QR (o banco confirma pela API),
     cheque, cartão integrado e cartão manual (o comprovante da maquineta é a prova). PIX por chave,
     transferência e depósito são do financeiro, no contas. **No contas não se baixa título em gaveta.**
-25. **Devolução sempre gera o vale** (título de crédito do cliente), como hoje. Devolver dinheiro é
-    **pagar esse vale**: em dinheiro (gaveta), registrando o cancelamento no cartão (origem =
+25. **Devolução sempre gera o crédito do cliente** (título **Crédito Cliente, 212**; até a limpeza
+    dos tipos do M8.1 era Vale Compras), usado no PDV como vale. Devolver dinheiro é
+    **pagar esse crédito**: em dinheiro (gaveta), registrando o cancelamento no cartão (origem =
     adquirente, aponta para o pagamento original), registrando a devolução de PIX (origem = banco,
     aponta para o PIX original), ou por PIX/transferência comum pelo financeiro. Cancelamento e
     devolução são **só registrados** nesta fase; executar pela integração fica no M15.
@@ -247,7 +259,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
     gaveta cuida só de dinheiro e itens; cartão e PIX aparecem nele como informação.
 27. **Itens do caixa** (fora do fiscal): modo contagem (chips, ingressos impressos) e modo maquineta/
     terceiro (Bilhete Agora, BlackTicket, Redeflex, Bradesco Expresso). Cada item tem parceiro e
-    conta contábil; no fechamento da sessão o líquido vira título "Repasse Parceiro" (tipo 953),
+    conta contábil; no fechamento da sessão o líquido vira título de repasse (Duplicata a Pagar, 200,
+    com pessoa e conta do item; sem tipo próprio desde a limpeza dos tipos do M8.1),
     número `AAAA-MM-DD-P{id do período}`, um por sessão por item; o financeiro agrupa e paga. Reabrir
     sessão estorna esses títulos (422 se já movimentados).
 28. **Vale colaborador / adiantamento**: título com `movimentaportador` cuja implantação já vem com o
@@ -376,8 +389,9 @@ para leitura de histórico não convertido.
   multa, desconto, total], vinculos, unicoPor)`, sem total a baixa calcula), estorno com o tipo do
   original + `codmovimentotituloestorno`; implantação sempre
   100 (`TituloService::implantar`); escritor único `MovimentoTituloService::lancar`; `Titulo::ehReceber()`;
-  `tbltipotitulo.natureza` (R/P) e `movimentaportador` (2 Vale Colaborador, 120, 220, 230); tipo 953
-  Repasse Parceiro. `debito`/`credito` de `tblliquidacaotitulo` ainda existem só para o Totais de
+  `tbltipotitulo.natureza` (R/P) e `movimentaportador` (120 Vale Colaborador, 121 Adiantamento
+  Fornecedor, 211 Adiantamento Cliente — códigos novos da limpeza do M8.1; antes 2, 120, 220, 230).
+  `debito`/`credito` de `tblliquidacaotitulo` ainda existem só para o Totais de
   Caixa do MG Lara (somem com a view do M6).
 - Dinheiro no portador = `−total` do movimento de título ligado ao pagamento (título a receber baixa
   com total negativo → entrou dinheiro).
@@ -406,6 +420,15 @@ para leitura de histórico não convertido.
   `tblpagarmepos` (89, 4 ativas), `tblsauruspdv` (24) + `tblsauruspinpad` (31), serial digitado no
   cartão manual. PDVs de caixa: 17 com `alocacao = 'C'`. (Os nomes de arquivo deste levantamento
   são de antes do M6.1; onde as peças estão hoje, no item abaixo.)
+- **Tipos de título depois do M8.1** (`api/database/tipo_titulo_limpeza.sql`; detalhe na seção
+  M8): ativos 100 Duplicata a Receber, 101 PIX/Depósito Receber, 102 Entrega Receber, 111 Cheque
+  Devolvido, 120 Vale Colaborador, 121 Adiantamento Fornecedor, 122 Débito Fornecedor, 200
+  Duplicata a Pagar, 201 PIX/Depósito Pagar, 202 Entrega Pagar, 210 Vale Compras, 211
+  Adiantamento Cliente, 212 Crédito Cliente (devolução), 220 Rubrica RH; inativos de histórico 130,
+  131, 132, 133, 230. Código usa constantes (`TituloService::TIPO_DUPLICATA_RECEBER/PAGAR`,
+  `TIPO_VALE`, `TIPO_CREDITO_CLIENTE`, `TIPO_RH`; `TipoTituloService::TIPO_PIX_*`/`TIPO_ENTREGA_*`),
+  nunca número solto. `movimentaportador` = 120, 121, 211. Agrupamento gera 100/200 (sem tipo
+  próprio). No PDV, **qualquer título com saldo de crédito paga compra** (meio vale, tPag 12).
 - **Pagamento e cobrança depois do M6.1** (vale para M8 em diante; detalhe na seção M6.1):
   - Wizard, formas e integrações só em `@components`: `MgCobrancaDialog.vue`, `cobranca/`
     (`Forma*.vue`, `ListaOpcoes`, `PixCobDialog`/`PagarMePedidoDialog`/`SaurusPedidoDialog`,
@@ -415,10 +438,13 @@ para leitura de histórico não convertido.
   - Quem abre o wizard informa `documento` (o que se paga: `tipo` 'negocio' ou 'titulos', com os
     tratadores `aoPagamento`/`aoParcelas`/`aoCobranca` ou, sem eles, os eventos do dialog),
     `contexto` (onde: `pdv` uuid ou nulo no contas, `codfilial`, `carregarMaquinetas`,
-    `portadores`, `buscarVale`) e `formasPermitidas`. Um `MgCobrancaDialog` por app (no PDV fica no
-    `TotalNegocio`; no contas, na página que usa).
-  - Baixa de títulos (PDV e contas) = `@components/stores/baixaTitulosStore.js` (títulos → formas
-    lançadas → finalizar) + `Mg/Pagamento/PagamentoTituloService::baixar(dados, ?Pdv)`: um
+    `portadores`, `buscarVale`) e `formasPermitidas`. Um `MgCobrancaDialog` por tela (venda: no
+    `TotalNegocio`; Pagamentos do PDV: na página, para o Vale / Adiantamento; Receber Título e
+    contas: dentro da `MgBaixaTitulos`).
+  - Baixa de títulos (PDV e contas) = a mesma tela, `@components/MgBaixaTitulos.vue` (seletor
+    `MgSeletorTitulosAbertos` + pessoa/observação + formas lançadas + wizard; cada app passa onde
+    busca, as formas, o contexto e para onde manda) sobre `@components/stores/baixaTitulosStore.js`
+    (títulos → formas lançadas → finalizar) + `Mg/Pagamento/PagamentoTituloService::baixar(dados, ?Pdv)`: um
     pagamento por forma, linhas distribuídas por vencimento, portador resolvido pelo meio
     (dinheiro na gaveta do PDV; no contas, cofre/troco/Caixa Financeiro; cheque recebido na
     Carteira; cartão na adquirente da maquineta). Rotas: contas `POST v1/pagamento`; PDV
@@ -431,6 +457,13 @@ para leitura de histórico não convertido.
     avulso, filtros), `PagamentoListaResource`/`PagamentoDetalheResource`, `PagamentoController`
     (`v1/pagamento`, contas) e `PdvPagamentoController` (`v1/pdv/pagamento`, travada no PDV); no
     front `MgPagamentoLista`/`MgPagamentoFiltros`/`MgPagamentoDetalhe` + `stores/pagamentoListaStore`.
+  - Vale colaborador e adiantamentos (M8.1): `@components/MgAdiantamentoDialog.vue` +
+    `Mg/Titulo/TituloAdiantamentoService::lancar(dados, ?Pdv)`; rotas `POST v1/pdv/titulo` e `POST
+    v1/titulo/adiantamento`; botão na tela Pagamentos dos dois apps. Contexto do wizard no contas em
+    `contas/src/utils/cobranca.js` (`contextoCobranca`, `FORMAS_TITULOS`, `FORMAS_ADIANTAMENTO`).
+    Wizard com uma forma só permitida entra direto nela.
+  - Maquinetas no cartão (ajuste do M6.1): lista as de todas as filiais, as de outra filial num
+    grupo próprio (`MaquinetaService::paraPdv` devolve `outrafilial`), sem bloquear.
 
 ---
 
@@ -909,8 +942,9 @@ estava errado: duplicou código e escondeu dado conforme a tela. Decidido com o 
   registro de devolução de PIX (origem = banco, aponta para o PIX original); `estornar` (Caixa:
   próprios, 120 min; Gerente: filial); recibo térmico. Rotas `v1/pdv/pagamento/*`. PIX chave,
   transferência e depósito não aparecem no PDV.
-- **Frontend negocios**: `ReceberTituloDialog.vue` (teclado): pessoa ou número → títulos abertos e
-  créditos com seleção e total → `MgCobrancaDialog` de `@components` (sentido conforme o líquido); atalho F11; para
+- **Frontend negocios** (como ficou, ver "O que mudou"): página `/pagamento/receber` aberta pelo FAB
+  da tela Pagamentos, com a mesma `MgBaixaTitulos` do contas → `MgCobrancaDialog` de `@components`
+  (sentido conforme o líquido); para
   pagar crédito, escolha do meio (dinheiro / cancelamento no cartão escolhendo o pagamento original /
   devolução de PIX); store `pagamento.js`; listagem de pagamentos do PDV mostra meio, maquineta e PDV.
 - **Valida**: notinha em dinheiro (troco), PIX QR, cheque, cartão nas duas operadoras, cartão manual;
@@ -955,7 +989,7 @@ stores nem do wizard fora de `@components`.
 - **Vários pagamentos para os mesmos títulos**: `PagamentoTituloService::baixar(dados, ?pdv)`
   distribui as linhas por vencimento; título que cai entre duas formas é dividido com juros,
   multa e desconto proporcionais; títulos do sentido contrário entram no 1º pagamento.
-  "Finalizar parcial" no PDV baixa só o que foi pago, por vencimento. Fora da venda o cartão não
+  Pagamento parcial = editar o capital do título no seletor (como no contas). Fora da venda o cartão não
   tem juros de parcelamento nem a forma dinheiro tem desconto (título não tem onde guardar).
 - Juros e multa do título em atraso: regra única em `@components/cobranca/juros.js` (contas e
   PDV); a seleção de títulos do contas continua com os parâmetros editáveis.
@@ -966,17 +1000,31 @@ stores nem do wizard fora de `@components`.
   `MgSelectPdv` para o filtro de PDV. O relatório PDF usa os mesmos filtros (limite de 5.000
   pagamentos). No contas o detalhe é a página de sempre (edição e recibos PDF no slot); no PDV é
   um dialog (estorno e recibo térmico).
-- **PDV**: `ReceberTituloDialog` (F11 e botão), store `negocios/src/stores/pagamento.js`; rotas
+- **PDV**: tela `/pagamento/receber` (layout próprio, volta para Pagamentos) = `MgBaixaTitulos`
+  com `MgSeletorTitulosAbertos` (era o `SeletorTitulosAbertos` do contas, foi para
+  `@components`), sem atalho de teclado e sem lista própria (decisão do Fábio, 01/10/2026: a tela
+  do PDV fica só com a venda; Receber Título e Vale / Adiantamento entram pelos FABs da tela
+  Pagamentos). Busca só com pessoa ou grupo econômico (422 sem eles), filial do PDV como padrão;
+  multa, juros e desconto editáveis por qualquer um, como no contas. `stores/pagamento.js`
+  guarda as formas (`FORMAS_RECEBER`, `FORMAS_ADIANTAMENTO`), o dialog do M8 e o recibo; rotas
   `v1/pdv/pagamento` (index, `{id}`, `titulos`, `originais`, store, `{id}/estornar`,
   `recibo/{impressora}`) e o PDF assinado `pdv/pagamento/recibo/{codpagamentos}` (um recibo
   para os pagamentos do mesmo recebimento, blade `pagamento/recibo-termica`). Pagar vale: só
   Gerente da filial ou Administrador (403); devolução no cartão/PIX escolhe o pagamento original
   dos últimos 12 meses e não passa do que resta dele; cartão sem portador de adquirente (Brasil
   Card, Le Card, Cielo) fica sem origem/destino.
+- **Maquineta de qualquer filial** (decisão do Fábio, 01/10/2026: o sistema não bloqueia o
+  registro da realidade — o entregador sai com a maquineta de outra loja): o cartão do wizard,
+  manual e integrado, no PDV e no contas, lista as maquinetas ativas de todas as filiais
+  (`MaquinetaService::paraPdv` com `filial` e `outrafilial`); as de outra filial vêm por último,
+  no grupo "Outras filiais", com a filial na legenda e cor de aviso. Nada bloqueia.
+- **Cheque só com o nome do emitente** (sem CPF/CNPJ): `ChequeService::sincronizarEmitentes` não
+  cria linha de emitente sem CPF/CNPJ (a coluna é obrigatória; o nome fica no cheque). Quebrava o
+  fechamento da venda em cheque sem CPF/CNPJ.
 - Cheque recebido em título vai para o controle de cheques (como na venda); estornar cancela o
   cheque ainda a repassar. Troco do dinheiro gravado no pagamento.
 
-## M8 — Vale colaborador e adiantamentos no PDV (Receber no balcão)
+## M8 — Vale colaborador e adiantamentos, no PDV e no contas (Receber no balcão)
 
 - **Backend** `PdvTituloService::lancar(Pdv, dados)`: cria título com `movimentaportador` (2 Vale
   Colaborador e 120 Adto Fornecedor: saída em dinheiro, origem = gaveta; 220 Adto Cliente: entrada
@@ -993,10 +1041,10 @@ stores nem do wizard fora de `@components`.
 - **O que mudou em relação ao plano** (conferência de 01/10/2026 no código, decidido com o Fábio):
   - **Conta contábil** (obrigatória no título): padrão por tipo, editável no dialog — 2 Vale
     Colaborador → 42 Despesa Colaboradores; 120 Adto Fornecedor → 1 Compra Mercadoria; 220 Adto
-    Cliente → 2 Venda Mercadoria. **Vencimento** em campo, padrão hoje + 30 dias (não antes de
+    Cliente e 230 Crédito Cliente → 2 Venda Mercadoria. **Vencimento** em campo, padrão hoje + 30 dias (não antes de
     hoje). Número do título pela regra do `TituloService` (data + sufixo por pessoa).
-  - **Sem atalho de teclado**: só o botão "Vale / Adiantamento" ao lado do Receber título (F1–F11
-    ocupadas; F12 é o DevTools).
+  - **Sem atalho de teclado**: o botão "Vale / Adiantamento" fica na tela **Pagamentos** (fab-mini ao
+    lado do FAB do Receber Título), não na do PDV (ajuste do M6.1, 01/10/2026).
   - **Estorno pela listagem de Pagamentos**, sem rota nova: `PagamentoTituloService::estornar`,
     quando a linha do pagamento é a implantação, chama `TituloService::estornar`, que só desfaz
     título não movimentado (422) e agora leva `total` e `codpagamento` ao estorno (900) e cancela o
@@ -1004,26 +1052,151 @@ stores nem do wizard fora de `@components`.
     cancelado com "Estorno do título …"). Regra de quem estorna no PDV é a do M6.1 (Caixa os
     próprios em 2 h; Gerente a filial). As duas exceções genéricas do `TituloService::estornar`
     viraram `abort(422)`.
-  - **Como ficou no código**: `TituloService::criar(dados, ?Pagamento)` e `implantar(titulo,
-    ?Pagamento)` (implantação com `total` = valor, `codpagamento` e o portador do pagamento);
-    `Mg/Pdv/PdvTituloService::lancar` + `PdvTituloController` + `PdvTituloStoreRequest`, rota
-    `POST v1/pdv/titulo`; reusa `PagamentoTituloService::pagamentoDaForma` (portador pela regra da
-    baixa, cobrança integrada amarrada pelo `codpagamento`) e `gerarCheque` (cheque recebido no
-    adiantamento de cliente vai para o controle de cheques), que ficaram públicos. Vale e
-    adiantamento a fornecedor: só dinheiro (422 em outra forma). Permissão: Admin, ou Caixa/Gerente
-    da filial do PDV.
+  - **Como ficou no código** (M8.1, 01/10/2026: o dialog era local do negocios e só servia ao PDV;
+    "ao invés de uma tela genérica, reutilizável, ficou capada" — Fábio). Uma peça só, nos dois apps,
+    como o `MgBaixaTitulos`:
+    - Backend: `TituloService::criar(dados, ?Pagamento)` e `implantar(titulo, ?Pagamento)`
+      (implantação com `total` = valor, `codpagamento` e o portador do pagamento);
+      `Mg/Titulo/TituloAdiantamentoService::lancar(dados, ?Pdv)` + `TituloAdiantamentoStoreRequest`.
+      Rotas `POST v1/pdv/titulo` (`PdvTituloController`, o dispositivo autoriza) e `POST
+      v1/titulo/adiantamento` (`TituloAdiantamentoController`; quem baixa título no contas:
+      Admin/Financeiro/Cobrança em tudo, Gerente/Caixa na filial deles,
+      `PagamentoTituloAutorizador::motivoBloqueioAdiantamento`). Reusa
+      `PagamentoTituloService::pagamentoDaForma` (portador pela regra da baixa: no PDV dinheiro na
+      gaveta; no contas banco, cofre/troco/Caixa Financeiro, cartão da empresa, cheque emitido;
+      cartão na adquirente; cobrança integrada amarrada pelo `codpagamento`) e `gerarCheque`, que
+      ficaram públicos. Compensação e devolução recusadas (o título nasce com dinheiro).
+    - **Tipos**: os ativos com `movimentaportador`, do cadastro (`v1/select/tipo-titulo`
+      devolve a flag); saídas primeiro, Vale Colaborador como padrão. Depois da limpeza dos tipos
+      (abaixo) são só **120 Vale Colaborador, 121 Adiantamento Fornecedor e 211 Adiantamento
+      Cliente**: o Crédito Cliente (crédito de devolução) perde a flag.
+    - **PDV**: data = agora, filial do PDV, Admin ou Caixa/Gerente da filial; saída só em dinheiro
+      da gaveta (decisão 24). **Contas**: data e filial escolhidas no dialog (padrão hoje e a
+      filial do usuário); vencimento não antes da data.
+    - Frontend: `@components/MgAdiantamentoDialog.vue` (tipo, data e filial no contas, pessoa,
+      valor, vencimento, conta, observação → wizard no sentido do tipo; formas lançadas e "Lançar
+      o que foi pago"; o título que ainda não existe entra no `baixaTitulosStore` como uma linha
+      só). Cada app informa formas, contexto e para onde manda; o wizard e os dialogs
+      PIX/Stone/SafraPay ficam na página. negocios: fab-mini em Pagamentos (`PagamentoPage`,
+      `FORMAS_ADIANTAMENTO`, recibo na térmica e listagem recarregada); contas: fab-mini em
+      Pagamentos (`pages/pagamento/Index.vue`, formas do financeiro sem compensação; abre o
+      detalhe do pagamento). O contexto do wizard no contas saiu do `Nova.vue` para
+      `contas/src/utils/cobranca.js` (`contextoCobranca`, `FORMAS_TITULOS`,
+      `FORMAS_ADIANTAMENTO`). Apagados `LancarTituloDialog.vue` e o estado do M8 em
+      `negocios/src/stores/pagamento.js`.
+    - **Wizard com uma forma só** (`cobrancaStore.abrir`): vai direto a ela, sem lista de uma
+      opção, e "Voltar" fecha (vale do PDV: direto no dinheiro).
   - **Comprovante**: o mesmo `pagamento/recibo-termica` (um recibo para as formas do lançamento):
     cabeçalho com o tipo ("VALE COLABORADOR"), "referente a Vale Colaborador" + observação e a
     linha de assinatura (da pessoa na saída; da empresa na entrada). Impresso na impressora do PDV
-    pela rota do M6.1.
-  - **negocios**: `components/offline/LancarTituloDialog.vue` (tipo, pessoa, valor, vencimento,
-    conta, observação → `MgCobrancaDialog`); estado e ações no store do domínio
-    `stores/pagamento.js` (`abrirLancamento`, `cobrarLancamento`, `finalizarLancamento`). O wizard e
-    as cobranças integradas usam o `baixaTitulosStore` de `@components` sem mudança: o título que
-    ainda não existe entra como uma linha só, no sentido do tipo; a finalização manda as formas
-    para `v1/pdv/titulo`. "Lançar o que foi pago" grava só as formas já lançadas (cobrança
-    integrada de parte do valor). Nada mudou em `@components`. Os pagamentos aparecem na listagem
-    travada no PDV como origem "Títulos".
+    pela rota do M6.1. No contas, o detalhe do pagamento tem os recibos de sempre.
+  - Os pagamentos aparecem na listagem única como origem "Títulos".
+- **Valida (M8.1)**: no PDV (Pagamentos → Vale / Adiantamento) vale em dinheiro (wizard direto no
+  dinheiro) e adiantamento de cliente em dinheiro, PIX QR e cartão; no contas (Pagamentos → Vale /
+  Adiantamento) vale por transferência, adiantamento a fornecedor no cartão da empresa,
+  adiantamento de cliente por depósito e dinheiro do cofre, data de ontem; gaveta não aparece no
+  contas; estorno pelas duas listagens.
+
+### Limpeza dos tipos de título (M8.1, decidida e executada em dev em 02/10/2026)
+
+**Por quê**: o dialog Vale / Adiantamento mostrou "Adto Cliente" e "Crédito Cliente" lado a lado,
+e o cadastro tinha 26 tipos ativos: tipos que só diferem pela forma de pagar (boleto, débito
+automático, CTRC), sem uso, que o agrupamento usava sem precisar, e um Vale Compras que misturava
+vale comprado com crédito de devolução. Segunda passada depois da TASK-186 (que inativou 26 em
+28/09). Decidido item a item com o Fábio:
+
+- **Ficam 14 tipos, renumerados com 3 dígitos: 1xx a receber, 2xx a pagar.** As FKs de
+  `tbltitulo` e `tblnaturezaoperacao` para `tbltipotitulo` já são `ON UPDATE CASCADE`.
+- **Cheque Devolvido fica** (cheque de cliente que deu calote).
+- **PIX/Depósito e Entrega** (a receber e a pagar) **ficam**: a venda escolhe o tipo pela
+  condição da parcela.
+- **Vale Compras, Adiantamento Cliente e Crédito Cliente ficam separados**: vale compras = vale
+  comprado (ou dado de brinde); adiantamento = o cliente deixou dinheiro; crédito = devolução. Hoje
+  a devolução gerava Vale Compras: os 19.041 de devolução (conta "Devolução de Vendas") passam
+  para Crédito Cliente, as naturezas de devolução de venda passam a gerar Crédito Cliente e o PDV
+  aceita Crédito Cliente como vale (o vale por escola/turma continua só Vale Compras).
+  Adiantamento Cliente (e qualquer título com saldo de crédito) paga compra no PDV: ver abaixo.
+- **Somem**: Agrupamento Débito/Crédito (o título do agrupamento já se identifica pelo
+  `codtituloagrupamento`, pelo número `A…` e pela conta 7; até 2022 o agrupamento gerava tipos
+  comuns), Débito Cliente (é Duplicata a Receber, só muda a conta contábil), os de forma de pagar
+  (Boleto, CTRC, Programação, Débito Automático), Compra, Compra/Venda Imóvel, Entrada
+  Bonificação, Outras Saídas, Remessa Armazenagem e Repasse Parceiro (sem uso; o M13 usa Duplicata
+  a Pagar). Naturezas de operação que apontavam para eles → 100 (saída) / 200 (entrada).
+
+| Novo | Antigo | Tipo | Nat. | Movimenta portador |
+|---|---|---|---|---|
+| 100 | 200 (+921, 240, 950, 945, 946) | Duplicata a Receber | R | não |
+| 101 | 201 | PIX/Depósito Receber | R | não |
+| 102 | 310 | Entrega Receber | R | não |
+| 111 | 1 | Cheque Devolvido | R | não |
+| 120 | 2 | Vale Colaborador | R | sim |
+| 121 | 120 | Adiantamento Fornecedor (era Adto Fornecedor) | R | sim |
+| 122 | 4 (+140) | Débito Fornecedor (era Devolução de Compra) | R | não |
+| 200 | 927 (+911, 928, 937, 931, 100, 935, 951, 7, 953) | Duplicata a Pagar | P | não |
+| 201 | 930 | PIX/Depósito Pagar | P | não |
+| 202 | 320 | Entrega Pagar | P | não |
+| 210 | 3 (sem os de devolução) | Vale Compras | P | não |
+| 211 | 220 | Adiantamento Cliente (era Adto Cliente) | P | sim |
+| 212 | 230 (+ Vale Compras de devolução) | Crédito Cliente | P | não |
+| 220 | 952 | Rubrica RH | P | não |
+
+Mais os 5 inativos de histórico da parte 2 (130, 131, 132, 133, 230), abaixo.
+
+- **Como**: `api/database/tipo_titulo_limpeza.sql` (idempotente; conferência de saldo de cada
+  título antes e depois; transfere, apaga os 15 tipos que somem, renomeia, desliga a flag do
+  Crédito Cliente e renumera em duas passadas, porque códigos novos e antigos se cruzam). Último
+  script do go-live. Código: constantes de `TituloService` (vale 210, RH 220, crédito cliente
+  212), `TipoTituloService` (PIX/entrega), `TituloAgrupamentoService` (gera 100/200 pelo sinal),
+  `BeeRecargaService`, `AcertoService`, `NfeTerceiroIcmsStService` e o PDV aceitando 210 e 212
+  como vale; MGsis `NfeTerceiroController.php` (928 → 200) sobe junto. `titulo_valor.sql` deixa de
+  criar o 953.
+- **Resultado em dev** (1 min 41 s; rodar de novo só confere): 96.462 títulos transferidos, 13
+  naturezas reapontadas, 19.041 Vale Compras de devolução → Crédito Cliente, 2 naturezas de
+  devolução de venda → Crédito Cliente, 15 tipos apagados; saldo e valor de cada título iguais
+  (conferência dentro do script). Títulos por tipo: 100 527.000, 101 6.061, 102 4.293, 111 145,
+  120 7.261, 121 5.026, 122 1.321, 200 111.602, 201 408, 202 21, 210 4.162, 211 145, 212 19.585,
+  220 364. O nome do tipo passou de 20 para 50 caracteres ("Adiantamento Fornecedor" não cabia).
+  O 946 Remessa Armazenagem estava cadastrado como "a pagar" com flag de receber; sem título, foi
+  para 100 com as suas três naturezas (todas de saída). Cópia de antes em dev:
+  `mgdb-mgdb-1:/tmp/tl_antes_{tipotitulo.dump, titulo_tipo.csv, natureza_tipo.csv}`.
+- **Parte 2 — os 23 inativos da TASK-186** (decididos um a um com o Fábio, 02/10/2026: "nada
+  inativo com lixo"). Os títulos vão para um tipo ativo e o tipo é apagado; alguns ganham o nome
+  antigo na frente da observação (`PROVISAO`, `CONSIGNACAO`, `DEVOLUCAO CONSIGNACAO`, `RETORNO
+  CONSERTO`, `REMESSA CONSERTO`, `GARANTIA`, `OUTRAS ENTRADAS`, `CREDITO FORNECEDOR`,
+  `EMPRESTIMO`, `COMODATO`, `DESCONTO CONVENIO`, `ALUGUEL` + quebra de linha) e as trocas ganham
+  o portador da troca:
+
+  | Antigo | Vai para | Títulos | Observação / portador |
+  |---|---|---|---|
+  | 936 Provisão a Pagar | 200 | 230 (30 em aberto) | `PROVISAO` |
+  | 933 Pacote Soja, 934 Pacote Milho, 942 Pacote Milheto, 944 Troca Prod. Agrícola | 200 | 168, 70, 7, 84 | portador **Barter** (202007, reativado) |
+  | 932 Permuta | 200 | 110 | portador **Permuta** (novo, tipo Outros, ativo) |
+  | 929 DDA a Pagar | 200 | 50 | — |
+  | 943 Entrada Consignação | 200 | 39 | `CONSIGNACAO` |
+  | 941 Retorno Conserto | 200 | 8 | `RETORNO CONSERTO` |
+  | 5 Outras Entradas (8 naturezas) | 200 | 7 | `OUTRAS ENTRADAS` |
+  | 130 Crédito Fornecedor | 200 | 7 | `CREDITO FORNECEDOR` |
+  | 949 Empréstimo Recebido | 200 | 7 | `EMPRESTIMO` |
+  | 6 Entrada de Comodato | 200 | 1 | `COMODATO` |
+  | 947 Devolução Consignação | 122 | 10 | `DEVOLUCAO CONSIGNACAO` |
+  | 8 Remessa Conserto | 122 | 31 (2 em aberto) | `REMESSA CONSERTO` |
+  | 948 Garantia | 122 | 17 | `GARANTIA` |
+  | 940 Desconto Convênio | 100 | 16 | `DESCONTO CONVENIO` |
+  | 939 Contrato Aluguel Rec | 100 | 13 | `ALUGUEL` |
+
+  **Ficam inativos, só de histórico** (notas que nunca deviam ter gerado título), renumerados:
+  **130 Transferência Saída** (era 922, 72.916), **131 Uso e Consumo** (926, 12.819), **132
+  Perda** (925, 2.651), **133 Doação, Brinde** (924, 992) e **230 Transferência Entrada** (923,
+  21). As naturezas desses continuam apontando para eles até a **TASK-193** (criada a pedido do
+  Fábio, High): tipo de título só obrigatório quando a natureza gera financeiro.
+  Em dev: 875 títulos e 19 naturezas, 8 s; cópia de antes em `mgdb-mgdb-1:/tmp/tl2_antes_*`.
+- **PDV paga com qualquer título de crédito** (decisão do Fábio, 02/10/2026): "todo título com
+  saldo de crédito pode ser usado como pagamento numa compra no PDV" — vale compras, crédito e
+  adiantamento do cliente, duplicata a pagar (fornecedor que também é cliente)... `buscarVale`
+  aceita qualquer título com saldo negativo; a NF-e sai com tPag 12 (Vale Presente) para todos. O
+  vale impresso pela própria venda continua só para Vale Compras e Crédito Cliente.
+- SQLs avulsos do `MGdb/SQLs` com códigos antigos atualizados para os novos (5 arquivos; repositório
+  MGdb, na árvore).
 
 ## M9 — Conferência de maquinetas (Receber no balcão)
 
@@ -1033,6 +1206,21 @@ stores nem do wizard fora de `@components`.
   → Conferência (filial e dia; sistema × informado × diferença, crédito e débito; detalhe; PDF).
 - **Valida**: dia com vendas e recebimentos em três maquinetas; relatório digitado; diferença zero e
   provocada.
+- **Base para o M9** (conferido em 02/10/2026): `tblmaquineta` (M3, domínio `Mg/Maquineta`, tela
+  contas → Maquinetas com permissão Admin/Financeiro em todas e Gerente na própria filial);
+  `tblpagamento.codmaquineta` em todo cartão (venda, baixa de título, vale/adiantamento, cobrança
+  integrada), `meio` 3 crédito / 4 débito, `estado` E efetivado, `codnegocio` (venda) ou movimento
+  de título (`PagamentoListaService::origem`); cancelamento parcial no cartão = pagamento contrário
+  (`codpagamentoorigem`, origem = adquirente). Listagem única (`MgPagamentoLista`) já filtra por
+  maquineta.
+- **Coordenação com o M8.1** (commitado em 02/10/2026; o que segue vale se ele voltar a mexer
+  antes do commit do M9): o M8.1 mexe em `api/routes/api.php`,
+  `backlog/docs/doc-3…md`, `backlog/tasks/task-188…md`, `components/MgCobrancaDialog.vue`,
+  `components/stores/cobrancaStore.js`, `contas/src/pages/pagamento/*`, `negocios/src/pages/
+  PagamentoPage.vue`, `negocios/src/stores/pagamento.js` e no banco de dev (tipos de título
+  renumerados). Se o M9 tocar nesses arquivos antes do commit do M8.1, commitar só os próprios
+  trechos (`git add -p`) para um commit não levar o trabalho do outro; no doc-3 e na TASK-188,
+  escrever só na seção/notas do M9.
 
 ## M10 — Caixa: períodos, razão, abrir/fechar, dinheiro (TASK-39)
 
@@ -1104,14 +1292,14 @@ stores nem do wizard fora de `@components`.
   cria os lançamentos dos itens ativos (C com `valorabertura`) e soma no contado;
   `salvarItemLancamento` (pagamento `entrada − saida`, destino/origem = gaveta, doc = item); `fechar`
   pede `valorfechamento` dos C, soma no contado e, por item com líquido ≠ 0 (C: `abertura + entrada −
-  saida − fechamento`; M: `entrada − saida`), cria título "Repasse Parceiro" (pessoa e conta do item,
+  saida − fechamento`; M: `entrada − saida`), cria título de repasse, Duplicata a Pagar 200 (pessoa e conta do item,
   filial da gaveta, número `AAAA-MM-DD-P{id}` + sufixo, vencimento = corte) e grava `codtitulo`;
   `reabrir` estorna (422 se movimentados); `GET v1/caixa/item-lancamento` para o acerto.
 - **Frontend**: contas → Cadastros → Itens do Caixa; negocios → Caixa: contagem por item C na
   abertura/fechamento, `CaixaItens.vue` na sessão aberta, PDF completo; contas → Caixas → aba Itens.
 - **Valida**: abrir com chips 100; vender 1 chip (nada lança); bloco de ingressos entrada 500;
   Bilhete Agora vendido 120 / entrada 120 → +120; fechar contando chips 85 e ingressos 380 → títulos
-  Repasse Parceiro de 15, 120 e 120 em contas a pagar; agrupar e pagar; reabrir com título já
+  de repasse (Duplicata a Pagar) de 15, 120 e 120 em contas a pagar; agrupar e pagar; reabrir com título já
   agrupado → 422.
 
 ## M14 — Cartões no razão e conciliação (futura; a definir quando chegar)

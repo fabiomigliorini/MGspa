@@ -26,7 +26,9 @@ const filtradas = computed(() => {
     return props.opcoes
   }
   return props.opcoes.filter((o) =>
-    [o.label, o.caption, o.serial].some((c) => c && String(c).toLowerCase().includes(texto)),
+    [o.label, o.caption, o.serial, o.filial].some(
+      (c) => c && String(c).toLowerCase().includes(texto),
+    ),
   )
 })
 

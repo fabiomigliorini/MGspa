@@ -92,6 +92,26 @@ class PagamentoTituloAutorizador
         return null;
     }
 
+    // vale/adiantamento no contas: Gerente e Caixa so' na filial deles, com
+    // portador dela
+    public static function motivoBloqueioAdiantamento(int $codusuario, array $dados): ?string
+    {
+        if (self::temAcessoIrrestrito($codusuario)) {
+            return null;
+        }
+        $filiais = self::filiaisRestritas($codusuario);
+        if (!in_array((int) ($dados['codfilial'] ?? 0), $filiais, true)) {
+            return 'Filial não pertence a você.';
+        }
+        foreach ($dados['pagamentos'] ?? [] as $f) {
+            $portador = !empty($f['codportador']) ? Portador::find($f['codportador']) : null;
+            if ($portador && $portador->codfilial && !in_array((int) $portador->codfilial, $filiais, true)) {
+                return 'Portador não pertence à sua filial.';
+            }
+        }
+        return null;
+    }
+
     /**
      * Retorna null se autorizado, ou string com mensagem de erro.
      * $acao usado apenas para compor as mensagens (ex: 'estornar', 'editar').

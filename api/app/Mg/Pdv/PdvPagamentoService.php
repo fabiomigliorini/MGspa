@@ -8,47 +8,15 @@ use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloAutorizador;
 use Mg\Pagamento\PagamentoTituloService;
-use Mg\Pessoa\Pessoa;
-use Mg\Titulo\Titulo;
-use Mg\Titulo\TituloAbertosFechamentoService;
 use Mg\Usuario\Autorizador;
 
 /**
  * Receber titulo e pagar vale/credito do cliente no PDV (M7 do plano doc-3,
- * absorvido pelo M6.1): titulos abertos da pessoa, baixa pelo wizard de
- * cobranca (o mesmo servico do contas, com o dinheiro na gaveta do PDV),
- * estorno e recibo termico.
+ * absorvido pelo M6.1): baixa pelo wizard de cobranca (o mesmo servico do
+ * contas, com o dinheiro na gaveta do PDV), estorno e recibo termico.
  */
 class PdvPagamentoService
 {
-    // Titulos abertos (a receber e creditos) da pessoa, achada pelo codigo
-    // ou pelo numero de um titulo dela
-    public static function titulosAbertos(?int $codpessoa, ?string $numero): array
-    {
-        if (empty($codpessoa) && !empty($numero)) {
-            $titulo = Titulo::where('numero', 'ilike', trim($numero) . '%')
-                ->where('saldo', '<>', 0)
-                ->orderBy('vencimento')
-                ->first();
-            if (!$titulo) {
-                abort(404, "Nenhum título aberto com o número {$numero}!");
-            }
-            $codpessoa = $titulo->codpessoa;
-        }
-        if (empty($codpessoa)) {
-            abort(422, 'Informe o cliente ou o número do título!');
-        }
-        $pessoa = Pessoa::findOrFail($codpessoa);
-        return [
-            'pessoa' => [
-                'codpessoa' => (int) $pessoa->codpessoa,
-                'fantasia' => $pessoa->fantasia,
-                'pessoa' => $pessoa->pessoa,
-            ],
-            'titulos' => TituloAbertosFechamentoService::listar(['codpessoa' => $codpessoa]),
-        ];
-    }
-
     // Cartao e PIX que a pessoa pagou (na venda ou em titulo), com o que
     // ainda da' para devolver: para registrar o cancelamento no cartao ou a
     // devolucao de PIX ao pagar o vale

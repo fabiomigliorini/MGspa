@@ -274,7 +274,7 @@ class NfeTerceiroIcmsStService
         $titulo = new Titulo();
         $titulo->codtitulo = $codtitulo;
         $titulo->codfilial = $nft->codfilial;
-        $titulo->codtipotitulo = 928; // Boleto a Pagar
+        $titulo->codtipotitulo = TituloService::TIPO_DUPLICATA_PAGAR;
         $titulo->codpessoa = 3899; // SEFAZ
         $titulo->codcontacontabil = 147; // ICMS ST
         $titulo->valor = -1 * $valor;

@@ -165,42 +165,6 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
       })
     },
 
-    // pagou menos que o líquido: os títulos a receber ficam com o que foi pago, por vencimento
-    // (juros e multa proporcionais); o resto continua aberto
-    ajustarAoPago() {
-      if (!this.entrada || this.saldo <= 0) {
-        return
-      }
-      let resta =
-        this.pago + this.titulos.filter((t) => t.operacao === 'CR').reduce((s, t) => s + t.total, 0)
-      const receber = this.titulos
-        .filter((t) => t.operacao === 'DB')
-        .sort((a, b) => String(a.vencimento).localeCompare(String(b.vencimento)))
-      const ficam = []
-      for (const t of receber) {
-        if (resta <= 0.005) break
-        if (t.total <= resta + 0.005) {
-          ficam.push(t)
-          resta = arredonda(resta - t.total)
-          continue
-        }
-        const fator = resta / t.total
-        const juros = arredonda(t.juros * fator)
-        const multa = arredonda(t.multa * fator)
-        const desconto = arredonda(t.desconto * fator)
-        ficam.push({
-          ...t,
-          juros,
-          multa,
-          desconto,
-          total: resta,
-          saldo: arredonda(resta - juros - multa + desconto),
-        })
-        resta = 0
-      }
-      this.titulos = [...this.titulos.filter((t) => t.operacao === 'CR'), ...ficam]
-    },
-
     // manda títulos e formas; devolve os pagamentos criados
     async finalizar(url, extras = {}) {
       if (this.finalizando) {

@@ -273,7 +273,7 @@ class PagamentoTituloService
 
     // Cria o pagamento de uma forma (ou amarra a cobranca integrada ja'
     // confirmada), com origem e destino pelo meio e por onde aconteceu. Usado
-    // tambem pelo lancamento de vale/adiantamento no PDV (PdvTituloService).
+    // tambem pelo lancamento de vale/adiantamento (TituloAdiantamentoService).
     public static function pagamentoDaForma(
         array $forma,
         bool $entrada,
@@ -461,9 +461,8 @@ class PagamentoTituloService
         if (Cheque::where('codpagamento', $pag->codpagamento)->exists()) {
             return;
         }
-        // o nome vai no cheque; a lista de emitentes so' com CPF/CNPJ
         $emitentes = [];
-        if (!empty($pag->chequecnpj)) {
+        if (!empty($pag->chequecnpj) || !empty($pag->chequeemitente)) {
             $emitentes[] = ['cnpj' => $pag->chequecnpj, 'emitente' => $pag->chequeemitente];
         }
         ChequeService::criar([

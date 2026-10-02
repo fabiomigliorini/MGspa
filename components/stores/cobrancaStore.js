@@ -107,7 +107,8 @@ export const cobrancaStore = defineStore('cobranca', {
       this.documento = documento
       this.contexto = contexto
       this.padrao = { ...padrao }
-      this.forma = forma
+      // uma forma só permitida: vai direto a ela, sem lista de uma opção
+      this.forma = forma ?? (formasPermitidas?.length === 1 ? formasPermitidas[0] : null)
       this.codtituloVale = codtituloVale
       this.dialog = true
     },

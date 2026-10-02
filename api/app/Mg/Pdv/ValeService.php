@@ -84,7 +84,7 @@ class ValeService
         // devolucao e' o titulo da parcela (condicao V)
         foreach ($uuid ? [] : $negocio->PagamentoS as $nfp) {
             if (!empty($nfp->codtitulo) && (!$codtitulo || $nfp->codtitulo == $codtitulo)) {
-                if ($nfp->Titulo->codtipotitulo == TituloService::TIPO_VALE && $nfp->Titulo->saldo < 0) {
+                if ($nfp->Titulo->saldo < 0) {
                     $comprovantes[$nfp->codtitulo] = $comprovantes[$nfp->codtitulo] ?? [
                         'titulo' => $nfp->Titulo,
                         'vale' => null,
@@ -97,7 +97,7 @@ class ValeService
             if ($codtitulo && $tit->codtitulo != $codtitulo) {
                 continue;
             }
-            if ($tit->codtipotitulo == TituloService::TIPO_VALE && $tit->saldo < 0) {
+            if (in_array((int) $tit->codtipotitulo, TituloService::TIPOS_VALE_PDV) && $tit->saldo < 0) {
                 $comprovantes[$tit->codtitulo] = $comprovantes[$tit->codtitulo] ?? [
                     'titulo' => $tit,
                     'vale' => null,

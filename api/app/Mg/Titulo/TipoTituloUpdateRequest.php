@@ -14,7 +14,7 @@ class TipoTituloUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipotitulo' => 'required|string|max:20',
+            'tipotitulo' => 'required|string|max:50',
             'observacoes' => 'nullable|string|max:255',
             'natureza' => 'required|in:R,P',
             'movimentaportador' => 'boolean',

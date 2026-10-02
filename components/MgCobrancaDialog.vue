@@ -289,6 +289,11 @@ const voltar = () => {
   }
   editando.value = false
   passo.value = passo.value === 3 && formaAtual.value?.pulaValor ? 1 : passo.value - 1
+  // uma forma só: não há lista para voltar
+  if (passo.value === 1 && sCobranca.formasPermitidas?.length === 1) {
+    fechar()
+    return
+  }
   if (passo.value === 2) {
     prepararValor()
   }

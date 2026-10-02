@@ -296,13 +296,8 @@ UPDATE tbltipotitulo
    SET tipotitulo = 'Vale Colaborador'
  WHERE codtipotitulo = 2 AND tipotitulo = 'Vale Funcionario';
 
--- Repasse Parceiro: o que o caixa recebeu de item de parceiro (chips,
--- ingressos, maquinetas de terceiros) e tem que repassar. A pagar, carteira
--- de fornecedores, sem mexer no portador.
-INSERT INTO tbltipotitulo (codtipotitulo, tipotitulo, natureza, pagar, receber, movimentaportador)
-SELECT 953, 'Repasse Parceiro', 'P', true, false, false
- WHERE NOT EXISTS (SELECT 1 FROM tbltipotitulo
-                    WHERE codtipotitulo = 953 OR tipotitulo = 'Repasse Parceiro');
+-- (Repasse Parceiro, 953, saiu na limpeza dos tipos do M8.1: o repasse do
+-- M13 e' uma Duplicata a Pagar.)
 
 SELECT setval('tbltipotitulo_codtipotitulo_seq', (SELECT max(codtipotitulo) FROM tbltipotitulo));
 

@@ -40,7 +40,7 @@ const bandeira = ref(null)
 const autorizacao = ref(null)
 const jurosEdicao = ref(null)
 
-// maquinetas ativas da filial + compartilhadas
+// maquinetas ativas de todas as filiais (as de outra filial vêm com `outrafilial`)
 const maquinetas = ref([])
 
 const valor = computed(() => sCobranca.valor)
@@ -51,8 +51,14 @@ onMounted(async () => {
   maquinetas.value = await sCobranca.carregarMaquinetas((lista) => (maquinetas.value = lista))
 })
 
-// ---- maquininhas integradas da filial; a padrão do PDV só vem pré-selecionada (pode estar
-// com defeito). Quem recebe a cobrança Saurus é o PDV Saurus (codsauruspdv), então dois pinpads
+// maquineta de outra filial: aparece e pode ser usada (o entregador sai com a de outra loja),
+// só com o aviso na tela
+const COR_OUTRA_FILIAL = 'orange-8'
+const outraFilial = (m) => !!m.outrafilial
+const avisoFilial = (m) => (outraFilial(m) ? `${m.filial} · outra filial` : null)
+
+// ---- maquininhas integradas (todas as filiais, as desta primeiro); a padrão do PDV só vem
+// pré-selecionada (pode estar com defeito). Quem recebe a cobrança Saurus é o PDV Saurus (codsauruspdv), então dois pinpads
 // ativos no mesmo PDV Saurus são uma opção só.
 const maquinetasEnvio = computed(() => {
   const todas = maquinetas.value
@@ -120,7 +126,8 @@ const valorMaquininha = computed(
 )
 
 // Ordem da etapa: 0 = maquininha padrão do PDV (já pré-selecionada), 1 = Manual e, embaixo
-// do cabeçalho "Outras Maquinetas", as demais da filial em 2, 3, 4…
+// do cabeçalho "Outras Maquinetas", as demais da filial em 2, 3, 4… e, por último, sob "Outras
+// filiais", as de outra loja (com aviso, sem bloquear).
 // Sem padrão configurado (ou negócio de outro estoque local) não há o que destacar: Manual
 // volta ao 0 e as maquininhas contam de 1, sob o cabeçalho "Maquinetas".
 const opcoesModo = computed(() => {
@@ -132,10 +139,11 @@ const opcoesModo = computed(() => {
   const maquininha = (m, grupo = null) => ({
     ...m,
     label: `${m.pos.apelido} · ${m.nome}`,
-    caption: m === padrao ? 'Maquineta Padrão do PDV' : 'Enviar para a maquineta',
+    caption:
+      avisoFilial(m.pos) ?? (m === padrao ? 'Maquineta Padrão do PDV' : 'Enviar para a maquineta'),
     icone: 'point_of_sale',
-    cor: VISUAL.cartao.cor,
-    grupo,
+    cor: outraFilial(m.pos) ? COR_OUTRA_FILIAL : VISUAL.cartao.cor,
+    grupo: outraFilial(m.pos) ? 'Outras filiais' : grupo,
     desabilitado: !sincronizado,
     motivo: 'Negócio ainda não sincronizado com o servidor',
   })
@@ -159,7 +167,7 @@ const opcoesModo = computed(() => {
       icone: 'point_of_sale',
       cor: VISUAL.cartao.cor,
       desabilitado: true,
-      motivo: 'Nenhuma maquininha cadastrada nesta filial',
+      motivo: 'Nenhuma maquininha integrada cadastrada',
     })
   }
 
@@ -168,7 +176,7 @@ const opcoesModo = computed(() => {
 })
 
 // parceiros do cartão manual: os fixos (logo, tipos e bandeiras em cartoes-manuais.json) e
-// toda adquirente com maquineta na filial (ex.: Cielo), que aceita o mesmo que a Stone
+// toda adquirente com maquineta ativa (ex.: Cielo), que aceita o mesmo que a Stone
 const ADQUIRENTE_PADRAO = cartoesManuais.find((p) => p.apelido === 'Stone')
 const parceiros = computed(() => {
   const novos = maquinetas.value
@@ -183,7 +191,7 @@ const parceiros = computed(() => {
   return [...cartoesManuais, ...novos]
 })
 
-// só os que aceitam o tipo escolhido e têm maquineta nesta filial
+// só os que aceitam o tipo escolhido e têm maquineta ativa (de qualquer filial)
 const opcoesParceiro = computed(() =>
   parceiros.value.map((pes, i) => {
     const aceita = pes.tipos.some((t) => t.tipo === tipo.value)
@@ -196,21 +204,24 @@ const opcoesParceiro = computed(() =>
       icone: pes.logo ? null : 'credit_card',
       cor: VISUAL.cartao.cor,
       desabilitado: !aceita || !temMaquineta,
-      motivo: !aceita ? `Não aceita ${nomeTipo.value}` : 'Nenhuma maquineta nesta filial',
+      motivo: !aceita ? `Não aceita ${nomeTipo.value}` : 'Nenhuma maquineta cadastrada',
     }
   }),
 )
 
 const parceiroAtual = computed(() => parceiros.value.find((p) => p.codpessoa === parceiro.value))
 
-// maquinetas do parceiro escolhido, as usadas recentemente neste PDV primeiro
+// maquinetas do parceiro escolhido: as desta filial primeiro, e em cada grupo as usadas
+// recentemente neste aparelho
 const maquinetasParceiro = computed(() => {
   const lista = maquinetas.value.filter((m) => m.codpessoa === parceiro.value)
   const ordem = (m) => {
     const i = sCobranca.maquinetasRecentes.indexOf(m.codmaquineta)
     return i === -1 ? Infinity : i
   }
-  return [...lista].sort((a, b) => ordem(a) - ordem(b))
+  return [...lista].sort(
+    (a, b) => Number(outraFilial(a)) - Number(outraFilial(b)) || ordem(a) - ordem(b),
+  )
 })
 
 const opcoesMaquineta = computed(() => {
@@ -218,7 +229,7 @@ const opcoesMaquineta = computed(() => {
     return [
       {
         valor: 'sem-maquineta',
-        label: `Nenhuma maquineta ${parceiroAtual.value?.apelido ?? ''} nesta filial`,
+        label: `Nenhuma maquineta ${parceiroAtual.value?.apelido ?? ''} cadastrada`,
         icone: 'point_of_sale',
         cor: VISUAL.cartao.cor,
         desabilitado: true,
@@ -226,16 +237,21 @@ const opcoesMaquineta = computed(() => {
       },
     ]
   }
+  const misturado = maquinetasParceiro.value.some(outraFilial)
   return maquinetasParceiro.value.map((m) => {
     const recente = sCobranca.maquinetasRecentes.includes(m.codmaquineta)
     const detalhe = m.serial ?? (m.compartilhada ? 'todas as filiais' : null)
     return {
       valor: m.codmaquineta,
       label: m.apelido,
-      caption: [detalhe, recente ? 'usada recentemente' : null].filter(Boolean).join(' · '),
+      caption: [avisoFilial(m), detalhe, recente ? 'usada recentemente' : null]
+        .filter(Boolean)
+        .join(' · '),
       serial: m.serial,
+      filial: m.filial,
       icone: recente ? 'history' : 'point_of_sale',
-      cor: VISUAL.cartao.cor,
+      cor: outraFilial(m) ? COR_OUTRA_FILIAL : VISUAL.cartao.cor,
+      grupo: misturado ? (outraFilial(m) ? 'Outras filiais' : 'Desta filial') : null,
     }
   })
 })
