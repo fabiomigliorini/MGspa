@@ -38,6 +38,15 @@ return [
     | Chaves de linhas do banco que a regra de negócio referencia direto.
     */
     'codcidade_sinop' => env('CODCIDADE_SINOP'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Conferências do caixa (M9 doc-3)
+    |--------------------------------------------------------------------------
+    | Dia do go-live: pagamentos e vendas de antes não entram em lote de
+    | maquineta, sessão de gaveta nem viram pendência.
+    */
+    'conferencia_inicio' => env('CONFERENCIA_INICIO', '2026-10-02'),
     'codpessoa_safra' => env('SAFRA_CODPESSOA'),
     'codnaturezaoperacao_transferencia_saida' => env('CODNATUREZAOPERACAO_TRANSFERENCIA_SAIDA'),
 

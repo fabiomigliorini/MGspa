@@ -856,7 +856,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async uploadAnexo(codnegocio, pasta, ratio, anexoBase64) {
       try {
-        const ret = await api.post('/v1/pdv/negocio/' + codnegocio + '/anexo', {
+        const ret = await api.post('/v1/negocio/' + codnegocio + '/anexo', {
           pdv: this.pdv.uuid,
           pasta: pasta,
           ratio: ratio,
@@ -882,7 +882,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async deleteAnexo(codnegocio, pasta, anexo) {
       try {
         const { data } = await api.delete(
-          '/v1/pdv/negocio/' + codnegocio + '/anexo/' + pasta + '/' + anexo,
+          '/v1/negocio/' + codnegocio + '/anexo/' + pasta + '/' + anexo,
           {
             params: {
               pdv: this.pdv.uuid,

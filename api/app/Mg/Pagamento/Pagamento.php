@@ -6,7 +6,9 @@ use Mg\MgModel;
 use Mg\Cheque\Cheque;
 use Mg\Filial\Filial;
 use Mg\Lio\LioPedido;
+use Mg\Conferencia\ConferenciaService;
 use Mg\Maquineta\Maquineta;
+use Mg\Maquineta\MaquinetaLote;
 use Mg\Negocio\Negocio;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pdv\Pdv;
@@ -14,6 +16,7 @@ use Mg\Pessoa\Pessoa;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorPeriodo;
 use Mg\Rh\PeriodoColaboradorAcerto;
 use Mg\Saurus\SaurusPedido;
 use Mg\Titulo\MovimentoTitulo;
@@ -73,6 +76,12 @@ class Pagamento extends MgModel
         'chequecnpj',
         'chequeemitente',
         'observacoes',
+        'codmaquinetalote',
+        'codmaquinetalotecancelamento',
+        'indevido',
+        'codportadorperiodo',
+        'conferencia',
+        'codusuarioconferencia',
     ];
 
     protected $casts = [
@@ -84,6 +93,12 @@ class Pagamento extends MgModel
         'codfilial' => 'integer',
         'codliopedido' => 'integer',
         'codmaquineta' => 'integer',
+        'codmaquinetalote' => 'integer',
+        'codmaquinetalotecancelamento' => 'integer',
+        'codportadorperiodo' => 'integer',
+        'codusuarioconferencia' => 'integer',
+        'conferencia' => 'datetime',
+        'indevido' => 'boolean',
         'codnegocio' => 'integer',
         'codpagamento' => 'integer',
         'codpagamentoorigem' => 'integer',
@@ -114,6 +129,19 @@ class Pagamento extends MgModel
         'total' => 'float',
         'valortroco' => 'float',
     ];
+
+    // Cartao no lote da maquineta e dinheiro na sessao da gaveta (M9 doc-3):
+    // todo pagamento gravado passa pela conferencia, venha de onde vier.
+    // creating/updating, nao saving: o saving do MgModel devolve true e
+    // interrompe os outros ouvintes.
+    protected static function booted()
+    {
+        $vincular = function (Pagamento $pag) {
+            ConferenciaService::vincular($pag);
+        };
+        static::creating($vincular);
+        static::updating($vincular);
+    }
 
     // Veio de uma integracao (PIX QR, PagarMe, Saurus, Lio): o PDV nao
     // grava nem apaga pelo sync.
@@ -156,6 +184,16 @@ class Pagamento extends MgModel
     public function Maquineta()
     {
         return $this->belongsTo(Maquineta::class, 'codmaquineta', 'codmaquineta');
+    }
+
+    public function MaquinetaLote()
+    {
+        return $this->belongsTo(MaquinetaLote::class, 'codmaquinetalote', 'codmaquinetalote');
+    }
+
+    public function MaquinetaLoteCancelamento()
+    {
+        return $this->belongsTo(MaquinetaLote::class, 'codmaquinetalotecancelamento', 'codmaquinetalote');
     }
 
     public function Negocio()
@@ -203,6 +241,11 @@ class Pagamento extends MgModel
         return $this->belongsTo(Portador::class, 'codportadororigem', 'codportador');
     }
 
+    public function PortadorPeriodo()
+    {
+        return $this->belongsTo(PortadorPeriodo::class, 'codportadorperiodo', 'codportadorperiodo');
+    }
+
     public function PeriodoColaboradorAcerto()
     {
         return $this->belongsTo(PeriodoColaboradorAcerto::class, 'codperiodocolaboradoracerto', 'codperiodocolaboradoracerto');
@@ -228,6 +271,11 @@ class Pagamento extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocancelamento', 'codusuario');
     }
 
+    public function UsuarioConferencia()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
+    }
+
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
@@ -247,5 +295,10 @@ class Pagamento extends MgModel
     public function PagamentoContrarioS()
     {
         return $this->hasMany(Pagamento::class, 'codpagamentoorigem', 'codpagamento');
+    }
+
+    public function PagamentoCorrecaoS()
+    {
+        return $this->hasMany(PagamentoCorrecao::class, 'codpagamento', 'codpagamento');
     }
 }

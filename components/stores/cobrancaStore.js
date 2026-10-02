@@ -17,7 +17,8 @@
 //     carregarMaquinetas: async (aoAtualizar) => maquinetas da filial (cadastro único, formato
 //       paraPdv); aoAtualizar(lista) quando uma lista mais nova chega depois,
 //     portadores: portadores que o contas pode usar (dinheiro, banco, cartão da empresa),
-//     buscarVale: async (codtitulo) => vale (só no negócio) }
+//     buscarVale: async (codtitulo) => vale (só no negócio),
+//     bloqueioDinheiro: motivo de o Dinheiro estar bloqueado (PDV sem gaveta, caixa fechado) }
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'

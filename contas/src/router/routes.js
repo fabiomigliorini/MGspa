@@ -138,6 +138,56 @@ const routes = [
         },
       },
       {
+        path: 'maquineta/:id(\\d+)/lotes',
+        name: 'maquineta-lotes',
+        component: () => import('pages/maquineta/Lotes.vue'),
+        meta: {
+          auth: true,
+          title: 'Lotes da Maquineta',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        path: 'fechamento',
+        name: 'fechamento',
+        component: () => import('pages/fechamento/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Fechamentos',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        path: 'fechamento/lote/:id(\\d+)',
+        name: 'fechamento-lote',
+        component: () => import('pages/fechamento/Lote.vue'),
+        meta: {
+          auth: true,
+          title: 'Lote da Maquineta',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        path: 'fechamento/sessao/:id(\\d+)',
+        name: 'fechamento-sessao',
+        component: () => import('pages/fechamento/Sessao.vue'),
+        meta: {
+          auth: true,
+          title: 'Caixa',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        path: 'fechamento/venda/:id(\\d+)',
+        name: 'fechamento-venda',
+        component: () => import('pages/fechamento/Venda.vue'),
+        meta: {
+          auth: true,
+          title: 'Venda com Diferença',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
         path: 'forma-pagamento',
         name: 'forma-pagamento',
         component: () => import('pages/formaPagamento/Index.vue'),

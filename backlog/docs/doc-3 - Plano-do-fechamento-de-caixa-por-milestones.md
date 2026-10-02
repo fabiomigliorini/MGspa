@@ -45,7 +45,10 @@ empresa). No M8.1 entram também a **limpeza dos tipos de título** (02/10/2026,
 38 apagados) e o **PDV pagando com qualquer título de crédito**; detalhe na seção M8. **M8.1
 commitado em 02/10/2026 sem validação, a pedido do Fábio** (MGspa + `../MGsis` + `../MGdb`): ele
 valida depois.
-**Próximo: M9, em paralelo** (outra conversa) — ver "Coordenação com o M8.1" na seção M9.
+**M8.1 commitado em 02/10/2026** (`43a95c90e`). **M9 em andamento (02/10/2026), redesenhado**:
+conferências independentes de tudo que o caixa movimenta, fechadas pelo gerente no contas, com
+correção dos lançamentos; absorve a gaveta do M10 (ver seção M9). **M10 (só o razão) em
+paralelo**, outra conversa — ver "Coordenação M9 × M10" na seção M10.
 TASK-193 (nova, High): tipo de título só obrigatório quando a natureza gera financeiro.
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
@@ -65,7 +68,8 @@ as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de forma
 uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
-pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). **`tipo_titulo_limpeza.sql` é o último
+pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) roda antes do
+`tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
 
@@ -100,6 +104,11 @@ script** (renumera os tipos de título; os anteriores usam os códigos antigos),
 - **Maquineta** (`tblmaquineta`): cadastro único dos terminais de cartão, integrados ou não (um por
   POS PagarMe, um por pinpad Saurus, manuais e acessos de site). A adquirente é dado dela.
   **Compartilhada** = aparece no PDV de todas as filiais (acesso de site feito numa filial só).
+- **Lote** (`tblmaquinetalote`, M9): o borderô da maquineta. Sempre um aberto por maquineta; o
+  cartão cai nele; o gerente fecha digitando crédito e débito do borderô, com a foto.
+- **Conferência** (M9): o "conferi" do gerente sobre o que o caixa movimentou — sessão da gaveta,
+  lote, cheque, vale recebido, duplicata (confissão), venda desbalanceada. **Pendência** = conferência
+  ainda não confirmada; a tela Fechamentos do contas lista as da filial.
 - **Baixa de título**: o nome novo para o que era "liquidação". A palavra liquidação só aparece
   neste doc para a tabela antiga (`tblliquidacaotitulo`) e as telas que existem até o M6.
 
@@ -133,8 +142,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | M6.1 | Wizard, formas e integrações em `@components`; contas usa o wizard; listagem única de pagamentos; receber notinha e pagar vale do cliente no PDV (absorve o M7) | Fundação | contas → Receber ou Pagar Títulos (cartão com bandeira/autorização/parcelas/maquineta), Pagamentos; negocios → Receber título / Pagar vale, Pagamentos | **Alto** |
 | M7 | (absorvido pelo M6.1) | — | — | — |
 | M8 | Vale colaborador e adiantamentos, no PDV e no contas | Receber no balcão | negocios e contas → Pagamentos → Vale / Adiantamento | Baixo |
-| M9 | Conferência de maquinetas | Receber no balcão | contas → Maquinetas → Conferência | Baixo |
-| M10 | Caixa: períodos, razão, abrir/fechar, dinheiro | TASK-39 | negocios → Caixa | Médio |
+| M9 | Conferências e fechamento do caixa: sessão da gaveta, lote da maquineta, documentos, correção de lançamentos, vendas desbalanceadas (redesenhado em 02/10/2026) | Receber no balcão | negocios → Caixa; contas → Fechamentos, Maquinetas → lotes | **Alto** |
+| M10 | Razão do dinheiro (`tblportadormovimento`) e saldo do portador; a sessão da gaveta foi para o M9 | TASK-39 | contas → detalhe do pagamento (lançamentos do razão) | Médio |
 | M11 | Transferências (sangria, suprimento, depósito, envio ao financeiro) | TASK-39 | negocios → Caixa; contas → Caixas | Médio |
 | M12 | Períodos no contas (financeiro fecha o mês) | TASK-39 | contas → Caixas → Períodos | Baixo |
 | M13 | Itens do caixa e repasse ao parceiro | TASK-39 | negocios → Caixa; contas a pagar | Médio |
@@ -254,9 +263,10 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
     adquirente, aponta para o pagamento original), registrando a devolução de PIX (origem = banco,
     aponta para o PIX original), ou por PIX/transferência comum pelo financeiro. Cancelamento e
     devolução são **só registrados** nesta fase; executar pela integração fica no M15.
-26. **Duas conferências de cartão, separadas do caixa**: do dia (gerente: sistema × relatório da
-    maquineta, M9) e do repasse (financeiro: adquirente × banco, taxa e prazo, M14). O fechamento da
-    gaveta cuida só de dinheiro e itens; cartão e PIX aparecem nele como informação.
+26. **Duas conferências de cartão, separadas do caixa**: do lote (gerente: lançado × borderô da
+    maquineta, M9 — era "do dia", mudou no redesenho do M9 em 02/10/2026) e do repasse (financeiro:
+    adquirente × banco, taxa e prazo, M14). O fechamento da gaveta cuida só de dinheiro e itens;
+    cartão e PIX aparecem nele como informação.
 27. **Itens do caixa** (fora do fiscal): modo contagem (chips, ingressos impressos) e modo maquineta/
     terceiro (Bilhete Agora, BlackTicket, Redeflex, Bradesco Expresso). Cada item tem parceiro e
     conta contábil; no fechamento da sessão o líquido vira título de repasse (Duplicata a Pagar, 200,
@@ -351,7 +361,7 @@ histórico sem parceiro). Carga
 e regras no M3. `tblmaquinetaconferencia` (M9): `codmaquineta, dia, credito, debito, observacoes,
 codusuario, audit`, única por maquineta e dia.
 
-### `tblportadorperiodo` (M10)
+### `tblportadorperiodo` (criada no M9, `conferencia.sql`; colunas de conferência na seção M9)
 
 `codportadorperiodo PK, codportador NN, inicio NN, fim (nulo = corrente), fechamento (nulo = aberto),
 codusuarioabertura, codusuariofechamento, saldoinicial NN default 0, saldofinal, vencimento (fatura,
@@ -1198,14 +1208,178 @@ Mais os 5 inativos de histórico da parte 2 (130, 131, 132, 133, 230), abaixo.
 - SQLs avulsos do `MGdb/SQLs` com códigos antigos atualizados para os novos (5 arquivos; repositório
   MGdb, na árvore).
 
-## M9 — Conferência de maquinetas (Receber no balcão)
+## M9 — Conferências e fechamento do caixa (Receber no balcão; absorve a gaveta do M10)
 
-- **DDL**: `tblmaquinetaconferencia`. **Backend** `MaquinetaConferenciaService`: total do sistema por
-  maquineta e dia (pagamentos efetivados com meio crédito/débito, por documento), lançamentos do dia,
-  gravar o informado, diferença; Gerente da filial/Financeiro/Admin. **Frontend contas**: Maquinetas
-  → Conferência (filial e dia; sistema × informado × diferença, crédito e débito; detalhe; PDF).
-- **Valida**: dia com vendas e recebimentos em três maquinetas; relatório digitado; diferença zero e
-  provocada.
+**Por quê** (redesenho com o Fábio, 02/10/2026): o M9 era uma tela de conferência de maquineta por
+dia. Discutindo a dinâmica, ficou claro que o fechamento é em dois tempos e que o gerente precisa
+**consertar** o que a loja fez errado, não só comparar números. Levantamento em dev (2025–26): 33
+pedidos SafraPay com o pagamento gravado duas vezes (mesmo pedido, mesma autorização); 333 de 568
+mil vendas fechadas com Σ pagamentos + parcelas ≠ total (207 a mais, R$ 8,5 mil, quase todas com
+cartão; 84 a menos, R$ 500); 1.137 de 2.830 devoluções eram de venda em cartão e só 1 tem o
+cancelamento do cartão registrado. Na mesma conversa a parte de gaveta do M10 entrou aqui ("tudo
+no M9").
+
+**Decisões (M9.x, não reabrir)**
+
+1. **Toda movimentação nasce "a conferir" e pertence a uma conferência independente**: dinheiro →
+   **sessão da gaveta**; cartão → **lote da maquineta**; cheque recebido e vale recebido → o
+   próprio pagamento, item a item; duplicata a prazo → a venda, **escaneando a confissão**
+   (`tblnegocio.confissao`, que já existe); PIX manual/depósito (parcela X) → financeiro, baixando
+   o título contra o banco; PIX QR e boleto nascem conferidos (o banco confirmou). Cada conferência
+   fecha sozinha, no seu tempo: a duplicata pode estar com o entregador, a maquineta pode estar com
+   outro caixa.
+2. **Caixa abre e fecha o dinheiro no PDV** (contagem de moedas e cédulas; fechar imprime o
+   **borderô do caixa**) e sobe ao escritório com tudo. Sem sessão aberta o Dinheiro fica bloqueado
+   no PDV (TASK-39 AC #2). Cartão, PIX, cheque, vale e prazo aparecem no borderô do caixa só como
+   informação.
+3. **O gerente confere tudo no contas, pensado para o celular**: tela **Fechamentos** = lista das
+   conferências pendentes da filial; ele escolhe uma, **digita às cegas** (só depois vê sistema e
+   diferença) e confirma. O financeiro vê a mesma tela (todas as filiais, as fechadas também) e
+   cuida do PIX manual. Permissão: Gerente da filial, Financeiro, Admin
+   (`MaquinetaService::podeGerenciar`).
+4. **Lote da maquineta = o borderô da maquineta.** Cada maquineta tem sempre um lote aberto;
+   pagamento em cartão com maquineta cai nele ao ser gravado. Fica no lote tudo que entrou até o
+   gerente fechar ("tudo até fechar": venda feita depois de emitido o borderô ele **move** para o
+   lote seguinte). Fechar pede crédito e débito do borderô e a **foto do borderô**. Maquineta usada
+   por mais de um caixa fecha uma vez só, quando o último vier. Cancelamento de verdade (venda
+   cancelada, pagamento contrário) cai no lote aberto **no momento do cancelamento** — como no
+   extrato da maquineta. Lote usado por mais de um caixa mostra o subtotal de cada PDV.
+5. **Correção dos lançamentos pelo gerente** (Gerente da filial, Financeiro, Admin), inclusive
+   cartão integrado — a API às vezes erra o valor ou duplica —, com **justificativa obrigatória e o
+   dado anterior guardado** (`tblpagamentocorrecao`): corrigir dados (meio crédito/débito, maquineta,
+   bandeira, autorização, parcelas), mover de lote, corrigir valor (inclusive dinheiro: o caixa
+   descobre pelas câmeras que cobrou errado ou caiu num golpe), **excluir registro indevido**
+   (cancela e tira do lote: não é cancelamento na maquineta) e incluir o que faltou (wizard). Total
+   da venda, itens, estoque e nota **não mudam** (NFC-e autorizada não se corrige).
+6. **Venda desbalanceada vira pendência** da filial (Σ pagamentos efetivados + Σ parcelas + Σ
+   acertos ≠ total). O destino da diferença é decidido depois, pelo gerente ou pelo financeiro, e
+   gravado como **acerto da venda** (`tblnegocioacerto`): **a menos** → perdoar, vale do colaborador
+   (título 120 a receber do colaborador) ou duplicata do cliente (100); **a mais** → perdoar ou
+   crédito do cliente (212, usável no PDV como vale; o financeiro pode devolver por PIX baixando
+   contra o banco).
+7. **Devolução de venda paga no cartão**: a devolução continua gerando o crédito do cliente (212); o
+   gerente registra o cancelamento do cartão **pelo lote** (pagamento contrário apontando o
+   original, origem = adquirente, mesma maquineta) e o crédito é baixado por esse pagamento.
+8. **Conferência confirmada só muda reabrindo** — qualquer correção dentro dela. Reabrir: quem
+   confere; fica a trilha (quem/quando).
+9. **Histórico fora**: as conferências começam no go-live (`CONFERENCIA_INICIO` no `.env` da API).
+   Pagamento e venda anteriores não entram em lote nem viram pendência.
+10. **Anexos do negócio numa rota só, fora do prefixo `pdv`** (`v1/negocio/...`; com `pdv` autoriza
+    pelo dispositivo, sem ele pelo usuário), serviço movido para `Mg/Negocio`, sem duplicar rota nem
+    código; Slim e leitor de confissão em `@components`, usados pelo negocios e pelo contas.
+11. A decisão 26 muda: o cartão do dia é conferido **por lote**, no fechamento, pelo gerente; o
+    repasse adquirente × banco continua no M14 (o lote é o gancho: "caiu no banco" vira coluna dele).
+
+**Modelo de dados** (`api/database/conferencia.sql`)
+
+- `tblmaquinetalote`: `codmaquinetalote PK, codmaquineta NN, abertura NN, fechamento (nulo =
+  aberto), creditoinformado, debitoinformado, creditosistema, debitosistema (gravados ao fechar),
+  observacoes, codusuariofechamento, audit`; único aberto por maquineta. Foto do borderô no disco
+  de anexos (`maquineta-lote/{cod}/`).
+- `tblpagamento`: `codmaquinetalote` (cartão), `codmaquinetalotecancelamento` (lote aberto quando o
+  cancelamento aconteceu), `indevido bool NN default false` (registro indevido: cancelado e fora de
+  lote), `codportadorperiodo` (sessão da gaveta do dinheiro), `conferencia`/`codusuarioconferencia`
+  (cheque e vale recebido, item a item).
+- `tblpagamentocorrecao`: `codpagamentocorrecao PK, codpagamento NN, antes jsonb, depois jsonb,
+  justificativa NN, audit` (uma linha por correção).
+- `tblnegocioacerto`: `codnegocioacerto PK, codnegocio NN, valor (com sinal: positivo = faltou
+  pagar), destino char(1) P perdão / C colaborador / D duplicata do cliente / R crédito do cliente,
+  codpessoa, codtitulo, justificativa, inativo, audit`.
+- `tblportadorperiodo` (do modelo do M10) + `conferencia`, `codusuarioconferencia`,
+  `valorconferido` (contado pelo gerente, às cegas). Sessão de gaveta: abre e fecha pelo caixa
+  com contagem (`moedas*`, `cedulas*`); `saldofinal` = contado pelo caixa.
+- O razão (`tblportadormovimento`) **fica no M10**: a sessão soma o dinheiro pelos pagamentos com
+  `codportadorperiodo` (o pagamento de dinheiro só toca um portador). Transferências (M11) e
+  períodos de banco/cofre (M12) trazem o razão completo.
+
+**Pontos decididos sem o Fábio, a validar** (02/10/2026, ele almoçando: "trabalha sozinho")
+
+- Perdão não gera título nem pagamento: fica só o acerto (quem, quando, justificativa).
+- Crédito do cliente na diferença a mais = 212 Crédito Cliente (não 211 Adiantamento).
+- Cheque e vale recebido: conferência marcada no pagamento.
+- Itens do caixa (chips, ingressos) continuam no M13.
+- Entrada do Caixa no negocios: a definir com o `MainLayout.vue` (estava alterado na árvore por
+  outra conversa em 02/10).
+- O protótipo `negocios /conferencia` (`ConferenciaPage`, `PdvService::conferencia`) sai quando a
+  tela Fechamentos cobrir.
+
+**Em paralelo com o M10** (02/10/2026): a divisão de escopo e de arquivos está no topo da seção
+M10 ("Coordenação M9 × M10").
+
+**Como ficou no código** (02/10/2026, na árvore, sem commit):
+
+- **DDL** `api/database/conferencia.sql` (rodado 2x em dev). O lote "corrente" é o mais novo da
+  maquineta, se aberto: reabrir um lote antigo deixa dois abertos e o antigo só recebe lançamento
+  movido (por isso o índice de aberto não é único).
+- **Vínculo automático**: `Pagamento::booted` (`creating`/`updating` — o `saving` do `MgModel`
+  devolve `true` e corta os outros ouvintes) chama `Mg/Conferencia/ConferenciaService::vincular`:
+  cartão com maquineta → lote corrente (`MaquinetaLoteService::vincular`; trocar a maquineta leva ao
+  lote dela; cancelamento cai no lote corrente do momento; registro indevido e pendente cancelado
+  sem efetivação ficam fora); dinheiro com portador de gaveta → sessão aberta
+  (`CaixaService::vincular`; sem sessão = 422 "Caixa … fechado"; cancelar dinheiro de sessão que o
+  caixa já fechou = 422 "reabra"). Vale para venda, baixa de título, vale/adiantamento e qualquer
+  outro caminho que grave pagamento.
+- **Venda**: `PdvNegocioService::fechar` manda o dinheiro para a gaveta do PDV
+  (`CaixaService::gavetaAberta`: PDV sem gaveta ou caixa fechado = 422). O wizard desabilita o
+  Dinheiro com o motivo (`contexto.bloqueioDinheiro`, consultado em `v1/pdv/caixa` ao abrir o
+  wizard; offline não bloqueia e o servidor recusa no fechar).
+- **Backend** `Mg/Conferencia`: `ConferenciaService::pendencias` (sessões, lotes com movimento —
+  os da filial e os compartilhados —, cheque e vale recebidos no PDV, venda a prazo F/P/B sem
+  confissão, vendas desbalanceadas, PIX/depósito a receber só para o financeiro; sem valores do
+  sistema), `PagamentoCorrecaoService` (`corrigir`: meio entre dinheiro/crédito/débito, valor,
+  maquineta, lote, bandeira, autorização, parcelas; `indevido`; `incluir`; valor e meio só em
+  pagamento sem título; dinheiro vai para a sessão do momento do pagamento, se não conferida),
+  `VendaConferenciaService` (diferença = total − Σ pagamentos efetivados com sinal − Σ parcelas −
+  Σ acertos; acerto P/C/D/R com título 120/100/212 pelo `TituloService::criar`, conta 42 ou 2,
+  vencimento +30 dias ou +1 ano no crédito; desfazer estorna o título), `ConferenciaAutorizador`
+  (Financeiro/Admin em tudo, Gerente na filial; o `MaquinetaService::podeGerenciar` passou a usar),
+  resources (`ConferenciaPagamentoResource` estende o da listagem única), `ConferenciaController`
+  (`v1/conferencia`, `v1/maquineta/{id}/lote`). `Mg/Caixa`: `CaixaService` (abrir, fechar,
+  conferir, desconferir, reabrir — só a última sessão —, dinheiro, informativo), `CaixaController`
+  (`v1/pdv/caixa`: status, abrir, fechar, borderô na impressora; PDF assinado
+  `v1/pdv/caixa/{id}/bordero`), `CaixaBorderoService` + `views/caixa/bordero-termica` (bobina
+  80 mm). `Mg/Maquineta/MaquinetaLoteService` (corrente, sistema por PDV, fechar às cegas,
+  reabrir, foto do borderô no disco `negocio-anexo`, pasta `maquineta-lote/{cod}`).
+  `TituloService::TIPO_VALE_COLABORADOR` (120) novo.
+- **Borderô do caixa sem valores do sistema**: traz a contagem do caixa e só a **quantidade** de
+  cheques, vales, duplicatas e cartões por maquineta — senão o gerente veria o sistema antes de
+  digitar (as duas conferências são às cegas). Decidido sem o Fábio, a validar.
+- **Anexos** (decisão 10): `Mg/Pdv/PdvAnexo*` → `Mg/Negocio/NegocioAnexo{Service,Controller}`
+  (movidos; `jpeg()` extraído para servir também à foto do borderô); as 8 rotas saíram do grupo
+  `pdv` para `v1/negocio/...`. `@components`: `MgSlim.vue` (recorte genérico, emite a imagem),
+  `anexo/slim/` (só `slim.module.js` e `slim.min.css` vieram; o resto de
+  `negocios/src/utils/pqina` ficou, sem uso), `MgConfissaoScanner.vue`, `stores/confissaoStore.js`.
+  negocios: `ConfissaoPage` usa o scanner; `ListagemAnexos`, `MgAnexoImagem`,
+  `ConfissaoFaltandoPage`, `sincronizacao.js` nas rotas novas; `stores/confissao.js` e os dois
+  `MgSlim*` locais apagados.
+- **contas**: menu Movimento → **Fechamentos** (`pages/fechamento/Index.vue`: pendências por
+  grupo, filial no topo; cheque e vale com "conferido" na linha; duplicata abre o
+  `MgConfissaoScanner`; PIX abre o título), `Lote.vue` (crédito e débito do borderô às cegas,
+  foto, lançamentos escondidos até digitar, corrigir/indevido, reabrir, borderô × sistema e por
+  caixa depois de conferido), `Sessao.vue` (dinheiro contado às cegas; depois sistema × caixa ×
+  gerente; reabrir conferência ou caixa), `Venda.vue` (pagamentos, parcelas, acertos, incluir
+  pagamento, destino da diferença); Maquinetas ganhou o botão **Lotes** (`maquineta/:id/lotes`).
+  Store `stores/conferenciaStore.js`; componentes `components/conferencia/{ListaLancamentos,
+  CorrecaoPagamentoDialog}`. `@components/cobranca/pagamento.js` exporta `BANDEIRAS`.
+- **negocios**: `/caixa` (`CaixaLayout`, `CaixaPage`, `stores/caixa.js`): abrir com contagem,
+  fechar com contagem (imprime o borderô na impressora do PDV), reimprimir/ver o último borderô;
+  item "Caixa" no menu (`MainLayout.vue`, que estava alterado na árvore por outra mão em 02/10).
+- **Atenção no go-live**: com o M9, **PDV sem gaveta não recebe dinheiro** (em dev só o PDV 508
+  tem gaveta). Cadastrar as gavetas e vincular os PDVs de caixa (já era pendência do M2) é
+  pré-requisito; `CONFERENCIA_INICIO` no `.env` da API = dia do go-live.
+
+**Valida (M9)**: (1) negocios → Caixa no PDV 508: abrir com 50 + 200; venda em dinheiro; venda no
+cartão manual em três maquinetas (uma delas também usada por outro PDV), uma lançada na maquineta
+errada; cancelamento parcial no cartão (pagar vale → devolução no cartão) e uma venda cancelada;
+cheque, vale e venda a prazo; fechar o caixa contando → borderô. (2) Wizard com o caixa fechado:
+Dinheiro desabilitado com o motivo. (3) contas → Fechamentos (no celular): caixa, lotes, cheque,
+vale, duplicata e PIX listados; conferir o caixa às cegas (diferença zero e provocada); lote:
+digitar o borderô às cegas, foto, diferença zero; no lote da maquineta errada, corrigir a
+maquineta (diferença provocada some), mover uma venda para o lote seguinte, registro indevido de
+um cartão duplicado → venda com diferença → acertar (vale do colaborador) e desfazer; reabrir lote
+e sessão. (4) Duplicata: escanear a confissão pelo contas. (5) Maquinetas → Lotes. (6) PDV →
+Confissão de Dívida e anexos da venda continuam funcionando (rotas novas).
+
 - **Base para o M9** (conferido em 02/10/2026): `tblmaquineta` (M3, domínio `Mg/Maquineta`, tela
   contas → Maquinetas com permissão Admin/Financeiro em todas e Gerente na própria filial);
   `tblpagamento.codmaquineta` em todo cartão (venda, baixa de título, vale/adiantamento, cobrança
@@ -1222,7 +1396,50 @@ Mais os 5 inativos de histórico da parte 2 (130, 131, 132, 133, 230), abaixo.
   trechos (`git add -p`) para um commit não levar o trabalho do outro; no doc-3 e na TASK-188,
   escrever só na seção/notas do M9.
 
-## M10 — Caixa: períodos, razão, abrir/fechar, dinheiro (TASK-39)
+## M10 — Razão do dinheiro (TASK-39; o resto da gaveta foi para o M9)
+
+> **Redesenho de 02/10/2026 — leia antes de executar.** O M9 ficou com a **sessão da gaveta**
+> inteira: `tblportadorperiodo` (criada no `api/database/conferencia.sql` do M9), abrir e fechar
+> com contagem no PDV, Dinheiro bloqueado sem sessão aberta, borderô do caixa, conferência e
+> reabertura pelo gerente no contas, e o vínculo do dinheiro com a sessão
+> (`tblpagamento.codportadorperiodo`, preenchido por `Mg/Conferencia/ConferenciaService::vincular`
+> no `saving` do `Pagamento`). **O M10 é o M9 rodando em paralelo (02/10/2026, o M9 ainda sem
+> commit): ver "Coordenação M9 × M10" abaixo.**
+>
+> **Escopo do M10 agora**:
+> - DDL `api/database/razao.sql` (não `caixa.sql`): recria `tblportadormovimento` (modelo acima,
+>   com `codportadorperiodo` apontando para a `tblportadorperiodo` do M9). **Não** cria
+>   `tblportadorperiodo` nem `tblpagamento.codportadorperiodo` (já existem no dev pelo M9).
+> - `Mg/Portador/PortadorMovimentoService::lancar(Pagamento)` (dinheiro, PIX, depósito,
+>   transferência: uma linha por lado com portador, data = hoje; cartão só no M14; outros nada) e
+>   `inativar`; chamado de `PagamentoService::efetivar`/`cancelar` (ou de um `saved` próprio do
+>   `Pagamento`) — **não** dentro do `ConferenciaService::vincular` do M9. Na gaveta, a linha usa
+>   o `codportadorperiodo` que o pagamento já tem.
+> - Períodos dos portadores que não são gaveta (cofre, banco, adquirente): o corrente nasce sozinho
+>   no primeiro lançamento (decisão 18); fechar com corte e reabrir em cadeia ficam no M12.
+> - Saldo do portador pela decisão 19 (`PortadorPeriodoService::saldo`), sem tela própria (o M11
+>   e o M12 usam).
+> - `MgPagamentoDetalhe` ganha os lançamentos do razão.
+> - **Fora do M10** (estão no M9): `CaixaService`/`CaixaController` (`v1/pdv/caixa`), tela
+>   `negocios /caixa`, borderô do caixa, bloqueio do Dinheiro no `MgCobrancaDialog`, o dinheiro da
+>   venda indo para a gaveta no `PdvNegocioService::fechar`, a conferência da sessão.
+> - Lançamento avulso e ajuste de caixa (motivo A) no PDV: ficam para depois do M9 commitado
+>   (precisam da tela do caixa do M9).
+>
+> **Coordenação M9 × M10** (os dois na mesma árvore, sem commit): cada um commita só os próprios
+> arquivos (`git add -p` onde dividirem). Arquivos do M9 — o M10 **não edita**: `api/database/
+> conferencia.sql`, `api/app/Mg/Conferencia/*`, `api/app/Mg/Caixa/*`, `api/app/Mg/Maquineta/*`,
+> `api/app/Mg/Portador/PortadorPeriodo.php`, `api/app/Mg/Pagamento/{Pagamento,PagamentoCorrecao,
+> PagamentoListaService}.php`, `api/app/Mg/Negocio/{NegocioAnexoService,NegocioAnexoController,
+> NegocioAcerto,Negocio}.php`, `api/app/Mg/Pdv/{PdvNegocioService,RomaneioService}.php`,
+> `api/config/mg.php`, `components/{MgSlim,MgConfissaoScanner,MgCobrancaDialog}.vue`,
+> `components/stores/{confissaoStore,cobrancaStore}.js`, `components/anexo/`, `contas/src/` (telas
+> Fechamentos e Maquinetas), `negocios/src/` (Caixa, Confissão, anexos). Compartilhados com regra:
+> `api/routes/api.php` (cada um no seu bloco), `Portador.php` (relações novas no fim), doc-3 (cada
+> um na sua seção) e TASK-188/TASK-39 (cada um nas suas notas). Se o M10 precisar mudar algo de um
+> arquivo do M9, relata ao Fábio em vez de editar.
+>
+> O texto abaixo é o plano original do M10, mantido para referência (a parte de sessão está no M9).
 
 - **DDL `api/database/caixa.sql`** (seção 1): `tblportadorperiodo`; recria `tblportadormovimento`;
   `tblpagamento.codportadorperiodo`.

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 use Mg\NFePHP\NFePHPService;
 use Mg\NFePHP\NFePHPPathService;
-use Mg\Pdv\PdvAnexoService;
+use Mg\Negocio\NegocioAnexoService;
 use Mg\Pdv\RomaneioService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Dompdf\Dompdf;
@@ -88,8 +88,8 @@ class TituloAgrupamentoMail extends Mailable
             $this->attachData($pdf, "Negocio{$neg->codnegocio}.pdf", [
                 'mime' => 'application/pdf',
             ]);
-            $listagem = PdvAnexoService::listagem($neg->codnegocio);
-            $dir = PdvAnexoService::diretorio($neg->codnegocio);
+            $listagem = NegocioAnexoService::listagem($neg->codnegocio);
+            $dir = NegocioAnexoService::diretorio($neg->codnegocio);
             $iAnexo = 1;
             foreach ($listagem as $pasta => $anexos) {
                 foreach ($anexos as $anexo) {

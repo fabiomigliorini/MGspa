@@ -677,9 +677,13 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             ->name('pdv.negocio.vale')
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
         Route::get('negocio/{codnegocio}/comanda', '\Mg\Pdv\PdvController@comanda');
-        Route::get('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@show');
         Route::get('pagamento/recibo/{codpagamentos}', '\Mg\Pdv\PdvPagamentoController@recibo')
             ->name('pdv.pagamento.recibo')
+            ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
+        // bordero do caixa (M9 doc-3)
+        Route::get('caixa/{id}/bordero', '\Mg\Caixa\CaixaController@bordero')
+            ->whereNumber('id')
+            ->name('pdv.caixa.bordero')
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     });
 
@@ -776,6 +780,15 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
     Route::post('negocio/{codnegocio}/boleto-bb/registrar', '\Mg\Negocio\NegocioController@BoletoBbRegistrar');
     Route::post('negocio/{codnegocio}/identificar-vendedor/{codpessoavendedor}', '\Mg\Negocio\NegocioController@identificarVendedor');
+    // anexos e confissao do negocio, PDV e contas (M9 doc-3): com `pdv` o dispositivo autoriza
+    Route::post('negocio/anexo/sugerir', '\Mg\Negocio\NegocioAnexoController@sugerir');
+    Route::post('negocio/anexo/procurar', '\Mg\Negocio\NegocioAnexoController@procurar');
+    Route::get('negocio/anexo/faltando/{ano}/{mes}', '\Mg\Negocio\NegocioAnexoController@faltando');
+    Route::get('negocio/{codnegocio}/anexo', '\Mg\Negocio\NegocioAnexoController@listagem')->whereNumber('codnegocio');
+    Route::post('negocio/{codnegocio}/anexo', '\Mg\Negocio\NegocioAnexoController@upload')->whereNumber('codnegocio');
+    Route::get('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Negocio\NegocioAnexoController@show')->whereNumber('codnegocio');
+    Route::delete('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Negocio\NegocioAnexoController@excluir')->whereNumber('codnegocio');
+    Route::post('negocio/{codnegocio}/ignorar-confissao', '\Mg\Negocio\NegocioAnexoController@ignorarConfissao')->whereNumber('codnegocio');
 
     // Boleto BB PDF aberto em iframe pelo MGsis — usa auth_or_cookie
     Route::get('titulo/{codtitulo}/boleto-bb/{codtituloboleto}/pdf', '\Mg\Titulo\BoletoBb\BoletoBbController@pdf')
@@ -889,13 +902,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');
         Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Pdv\PdvController@unificarComanda');
         Route::post('negocio/{codnegocio}/devolucao', '\Mg\Pdv\PdvController@devolucao');
-        Route::post('negocio/{codnegocio}/anexo', '\Mg\Pdv\PdvAnexoController@upload');
-        Route::get('negocio/{codnegocio}/anexo', '\Mg\Pdv\PdvAnexoController@listagem');
-        Route::delete('negocio/{codnegocio}/anexo/{pasta}/{anexo}', '\Mg\Pdv\PdvAnexoController@excluir');
-        Route::post('negocio/anexo/sugerir', '\Mg\Pdv\PdvAnexoController@sugerir');
-        Route::post('negocio/anexo/procurar', '\Mg\Pdv\PdvAnexoController@procurar');
-        Route::get('negocio/anexo/faltando/{ano}/{mes}', '\Mg\Pdv\PdvAnexoController@faltando');
-        Route::post('negocio/{codnegocio}/ignorar-confissao', '\Mg\Pdv\PdvAnexoController@ignorarConfissao');
         Route::get('orcamento', '\Mg\Pdv\PdvController@getOrcamentos');
         Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
         Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
@@ -926,6 +932,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
         // vale colaborador e adiantamentos (M8 doc-3)
         Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
+        // caixa: abrir e fechar o dinheiro da gaveta (M9 doc-3)
+        Route::get('caixa', '\Mg\Caixa\CaixaController@status');
+        Route::post('caixa/abrir', '\Mg\Caixa\CaixaController@abrir');
+        Route::post('caixa/fechar', '\Mg\Caixa\CaixaController@fechar');
+        Route::post('caixa/{id}/bordero/{impressora}', '\Mg\Caixa\CaixaController@imprimirBordero')->whereNumber('id');
         // Saurus
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
@@ -1308,6 +1319,26 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@inativar')->whereNumber('codmaquineta');
     Route::delete('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@ativar')->whereNumber('codmaquineta');
     Route::post('maquineta/{codmaquineta}/juntar', '\Mg\Maquineta\MaquinetaController@juntar')->whereNumber('codmaquineta');
+    Route::get('maquineta/{codmaquineta}/lote', '\Mg\Conferencia\ConferenciaController@lotes')->whereNumber('codmaquineta');
+
+    // Conferencias e fechamento do caixa (M9 doc-3): tela Fechamentos do contas
+    Route::get('conferencia', '\Mg\Conferencia\ConferenciaController@index');
+    Route::get('conferencia/lote/{id}', '\Mg\Conferencia\ConferenciaController@showLote')->whereNumber('id');
+    Route::post('conferencia/lote/{id}/fechar', '\Mg\Conferencia\ConferenciaController@fecharLote')->whereNumber('id');
+    Route::post('conferencia/lote/{id}/reabrir', '\Mg\Conferencia\ConferenciaController@reabrirLote')->whereNumber('id');
+    Route::post('conferencia/lote/{id}/foto', '\Mg\Conferencia\ConferenciaController@fotoLote')->whereNumber('id');
+    Route::get('conferencia/lote/{id}/foto/{arquivo}', '\Mg\Conferencia\ConferenciaController@mostrarFotoLote')->whereNumber('id');
+    Route::get('conferencia/sessao/{id}', '\Mg\Conferencia\ConferenciaController@showSessao')->whereNumber('id');
+    Route::post('conferencia/sessao/{id}/conferir', '\Mg\Conferencia\ConferenciaController@conferirSessao')->whereNumber('id');
+    Route::post('conferencia/sessao/{id}/reabrir', '\Mg\Conferencia\ConferenciaController@reabrirSessao')->whereNumber('id');
+    Route::get('conferencia/venda/{id}', '\Mg\Conferencia\ConferenciaController@showVenda')->whereNumber('id');
+    Route::post('conferencia/venda/{id}/acerto', '\Mg\Conferencia\ConferenciaController@acertarVenda')->whereNumber('id');
+    Route::post('conferencia/venda/{id}/pagamento', '\Mg\Conferencia\ConferenciaController@incluirPagamento')->whereNumber('id');
+    Route::delete('conferencia/acerto/{id}', '\Mg\Conferencia\ConferenciaController@desfazerAcerto')->whereNumber('id');
+    Route::post('conferencia/pagamento/{id}/correcao', '\Mg\Conferencia\ConferenciaController@corrigirPagamento')->whereNumber('id');
+    Route::post('conferencia/pagamento/{id}/indevido', '\Mg\Conferencia\ConferenciaController@indevido')->whereNumber('id');
+    Route::post('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@conferirPagamento')->whereNumber('id');
+    Route::delete('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@reabrirPagamento')->whereNumber('id');
 
     // Mercos
     Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');

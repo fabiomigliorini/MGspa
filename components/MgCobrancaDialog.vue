@@ -130,6 +130,10 @@ const opcoesFormas = computed(() =>
       if (PRECISA_CLIENTE.includes(f.valor) && sCobranca.consumidor) {
         return { ...opcao, desabilitado: true, motivo: 'Informe o cliente (F10)' }
       }
+      // PDV sem gaveta ou com o caixa fechado (M9 doc-3): o contexto diz o motivo
+      if (f.dinheiro && sCobranca.contexto?.bloqueioDinheiro) {
+        return { ...opcao, desabilitado: true, motivo: sCobranca.contexto.bloqueioDinheiro }
+      }
       return opcao
     },
   ),

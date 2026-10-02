@@ -28,6 +28,7 @@ const menuGroups = [
     label: 'Ponto de Venda',
     items: [
       { label: 'PDV', icon: 'point_of_sale', color: 'secondary', to: '/' },
+      { label: 'Caixa', icon: 'savings', color: 'green-8', to: '/caixa' },
       { label: 'Consulta de Preços', icon: 'price_check', color: 'teal', to: '/quiosque' },
       { label: 'Confissão de Dívida', icon: 'photo_camera', color: 'negative', to: '/confissao' },
       { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },

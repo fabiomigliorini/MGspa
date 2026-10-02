@@ -4,6 +4,7 @@ import { toRaw } from 'vue'
 import { db } from 'boot/db'
 import { Notify, uid } from 'quasar'
 import { sincronizacaoStore } from 'stores/sincronizacao'
+import { caixaStore } from 'stores/caixa'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import bandeirasCartao from '../data/bandeiras-cartao.json'
 import { falar } from '../utils/falar.js'
@@ -1819,6 +1820,8 @@ export const negocioStore = defineStore('negocio', {
           return antes
         },
         buscarVale: (codtitulo) => sSinc.buscarVale(codtitulo),
+        // PDV sem gaveta ou caixa fechado: Dinheiro bloqueado no wizard (M9 doc-3)
+        bloqueioDinheiro: await caixaStore().bloqueioDinheiro(),
       }
     },
 

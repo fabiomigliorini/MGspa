@@ -154,6 +154,11 @@ class Portador extends MgModel
         return $this->hasMany(Pdv::class, 'codportador', 'codportador');
     }
 
+    public function PortadorPeriodoS()
+    {
+        return $this->hasMany(PortadorPeriodo::class, 'codportador', 'codportador');
+    }
+
     public function PixS()
     {
         return $this->hasMany(Pix::class, 'codportador', 'codportador');
