@@ -250,19 +250,35 @@ agrupados por período.
 
 ### Transferência e permissão
 
-- Cada portador (qualquer tipo) tem uma **lista de usuários** (`tblportadorusuario`). Ela
-  **substitui** a regra por grupo e filial (`TransferenciaAutorizador`). Na virada, a lista nasce
-  preenchida pela regra de hoje.
-- Quem está na lista **vê e altera** o portador (lançar, confirmar transferência chegando, abrir,
-  fechar, reabrir, contagem, a própria lista). **Quem não está não vê** (painel e tela do
-  portador). Administrador vê e altera todos. O select de **destino** da transferência lista todos
-  os portadores (sangria para o cofre, envio ao Financeiro).
-- Transferência registrada por quem tem permissão no destino nasce **feita**; senão fica **a
-  confirmar** até alguém com permissão no destino confirmar. Ex.: caixa registra sangria → gerente
-  confirma; gerente faz sangria para o cofre dele → feita; gerente manda ao financeiro → financeiro
-  aprova.
-- Lista editada pelo ícone de cadeado ao lado do lápis do portador: dialog com os usuários, select
-  para adicionar, X para tirar. Edita quem está na lista ou é Administrador.
+- Cada portador (qualquer tipo) tem uma **lista de usuários com role** (`tblportadorusuario`:
+  portador, usuário, role). Ela **substitui** a regra por grupo e filial
+  (`TransferenciaAutorizador`, `ConferenciaAutorizador` no caixa). Administrador é gestor em todos.
+- Três roles:
+
+| | Depositante | Operador | Gestor |
+|---|---|---|---|
+| Ver o portador, o saldo e os movimentos | | ✓ | ✓ |
+| Aparecer como **destino** no select | ✓ | ✓ | ✓ |
+| Aparecer como **origem** no select | | ✓ | ✓ |
+| Lançar ajuste; abrir, contar e fechar período | | ✓ | ✓ |
+| Confirmar transferência que chegou | | | ✓ |
+| Reabrir, editar início/fim, dividir, unificar | | | ✓ |
+| Cuidar da lista de usuários do portador | | | ✓ |
+
+- **Depositante** só diz para onde a pessoa pode mandar dinheiro: não vê saldo nem movimento do
+  portador. Os selects de origem e destino mostram **só** os portadores em que o usuário tem role
+  (evita a sangria para o portador errado). Sem role nenhuma, o portador não aparece em lugar
+  nenhum (painel, tela, selects).
+- Transferência registrada por **gestor do destino** nasce **feita**; senão fica **a confirmar**
+  até um gestor do destino confirmar. Ex.: caixa (operador na gaveta, depositante no cofre) faz
+  sangria → gerente (gestor no cofre) confirma; gerente faz sangria para o cofre dele → feita;
+  gerente (depositante no Caixa Financeiro) manda ao financeiro → financeiro (gestor) aprova.
+- **Não fecha período com transferência a confirmar**, chegando ou saindo.
+- Lista editada pelo ícone de cadeado ao lado do lápis do portador: dialog com os usuários e a
+  role, select para adicionar, X para tirar. Edita o gestor do portador ou o Administrador.
+- Na virada, a lista nasce da regra de hoje: Gerente da filial = gestor na gaveta, cofre e troco;
+  Caixa da filial = operador na gaveta e depositante no cofre e troco; Financeiro = gestor no
+  Caixa Financeiro e nos bancos; Gerente = depositante no Caixa Financeiro.
 - **PDV não valida**: quem está naquela gaveta trabalha nela.
 
 ### Período (todo portador em espécie)
@@ -294,7 +310,7 @@ agrupados por período.
 **Banco**: fica o intervalo/fechamento de `tblportadorperiodo` e o DDL
 `portador_periodo_limpeza.sql` já rodado; `saldoinicial` muda de sentido (contagem final do
 anterior, só espécie); novos `tblportadorperiodo.diferenca`, `tblportador.tolerancia`,
-`tblportadorusuario`; `tblportadormovimento` ganha tipo, observação, estado, justificativa,
+`tblportadorusuario` (com role); `tblportadormovimento` ganha tipo, observação, estado, justificativa,
 confirmação/cancelamento e o par da transferência, e `codpagamento` fica opcional; saem o
 `motivo` A e a transferência de `tblpagamento`.
 
@@ -320,7 +336,8 @@ refatoração dele.
    movimento, `diferenca`, `tolerancia`; converter os ajustes `motivo` A e as transferências de
    `tblpagamento`. Valida: saldo de cada portador igual antes e depois.
 2. Movimento como registro principal: o razão aceita linha de pagamento ou de ajuste/transferência.
-3. Ajuste e transferência: lançar, confirmar, cancelar; permissão por portador e "a confirmar".
+3. Ajuste e transferência: lançar, confirmar, cancelar; roles do portador (depositante,
+   operador, gestor) e "a confirmar"; fechar recusa com transferência a confirmar.
 4. Período em espécie: abrir com contagem inicial, fechar com tolerância/pendente, reabrir,
    editar datas, `diferenca`.
 5. Limpar o pagamento: `motivo` A, transferência, `TransferenciaAutorizador`, origem X.
