@@ -69,11 +69,11 @@ class PortadorMovimentoService
     }
 
     // gaveta: a sessao que o M9 gravou no pagamento (ou a do momento);
-    // demais: o periodo corrente, que nasce sozinho
+    // demais: o periodo da data (decisao 18; o corrente nasce sozinho)
     private static function periodo(Pagamento $pag, Portador $portador, Carbon $transacao): PortadorPeriodo
     {
         if (!$portador->ehGaveta()) {
-            return PortadorPeriodoService::corrente($portador);
+            return PortadorPeriodoService::doMomento($portador, $transacao);
         }
         $sessao = null;
         if (!empty($pag->codportadorperiodo)) {

@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-03 00:47'
+updated_date: '2026-10-03 13:09'
 labels:
   - negocios
   - contas
@@ -57,4 +57,10 @@ M10 commitado sem validação a pedido do Fábio (02/10/2026): ele valida amanh�
 M11 em andamento (02/10/2026): transferências entre portadores (decisões 13, 22 e 23), executado na mesma conversa que o M12.
 
 M11 executado em dev (02/10/2026; sem DDL): PagamentoService::{transferir, confirmar, cancelarTransferencia, pendentes} com TransferenciaAutorizador (decisões 22 e 23), razão lançando a transferência a confirmar, sessão da gaveta pegando o lado gaveta e somando as transferências (documento X), fechar o caixa recusa com transferência chegando; rotas v1/pdv/caixa/transferencia, v1/pagamento/transferencia, v1/portador/caixas, v1/portador/{id}/saldo; negocios DialogTransferir + card na tela do Caixa; contas Movimento → Caixas (Portadores, Transferências); Confirmar/Cancelar no MgPagamentoDetalhe. Conferido no tinker com rollback (serviço e controllers). Detalhe e 'Dúvidas para o Fábio (M11)' no doc-3, seção M11. ACs M11 desmarcados até a validação.
+
+M12 em andamento (02/10/2026): períodos no contas (fechar com corte, reabrir em ordem, lançamento avulso), sem a sessão da gaveta (já é do M9).
+
+M12 executado em dev (02/10/2026, na árvore, sem commit; sem DDL; sessão da gaveta fora, é do M9): PortadorPeriodoService::{doMomento (o razão de não-gaveta cai no período da data), fechar com corte (o que fica depois vai para o corrente novo, saldos propagados), reabrir só o fechado mais novo, lancar avulso T/F/R/A — implantação = Ajuste na data do go-live}; PortadorPeriodoController v1/portador-periodo (Financeiro/Admin); contas Caixas → aba Períodos. Conferido no tinker com rollback (cofre com setembro/outubro, corte, 422s, reabrir e fechar na ordem, implantação no banco) e M11 de novo. Detalhe e 'Dúvidas para o Fábio (M12)' no doc-3, seção M12. ACs M10.x a M12 desmarcados até a validação.
+
+M12 commitado sem validação a pedido do Fábio (03/10/2026): ele valida M10, M11 e M12 juntos pelo roteiro único do doc-3 (seção M12, 'Valida M10 + M11 + M12'). ACs M10.x a M12 seguem desmarcados até a validação.
 <!-- SECTION:NOTES:END -->

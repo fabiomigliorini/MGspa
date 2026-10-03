@@ -51,7 +51,9 @@ contas, com correção dos lançamentos; absorveu a gaveta do M10 (ver seção M
 o campo `transacao`) commitado em 02/10/2026 sem validação, a pedido do Fábio** (TASK-39): ele
 valida depois, junto com M11 e M12; decisões e "Como ficou no código" na seção M10. **M11
 (transferências) commitado em 02/10/2026 sem validação**, na mesma conversa que o M12 (TASK-39):
-o Fábio valida M10, M11 e M12 juntos.
+o Fábio valida M10, M11 e M12 juntos. **M12 (períodos no contas) commitado em 03/10/2026 sem
+validação, a pedido do Fábio** (TASK-39): ele valida M10, M11 e M12 juntos pelo roteiro único
+(seção M12, "Valida M10 + M11 + M12"); detalhe na seção M12.
 TASK-193 (nova, High): tipo de título só obrigatório quando a natureza gera financeiro.
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
@@ -501,6 +503,14 @@ para leitura de histórico não convertido.
   - Períodos e saldo: `Mg/Portador/PortadorPeriodoService::{corrente, imutavel, descricao,
     saldo}`. Gaveta = sessão do M9 (`CaixaService`); os demais portadores ganham o corrente
     sozinhos. Imutável: gaveta conferida; demais, fechados.
+- **Transferências e períodos depois do M11/M12** (detalhe nas seções):
+  - Transferência = pagamento com os dois lados e sem venda (`PagamentoService::ehTransferencia`);
+    nasce no `PagamentoService::transferir`, confirma no `confirmar`, cancela no
+    `cancelarTransferencia`; donos de cada lado em `Pagamento/TransferenciaAutorizador`. O razão
+    lança a pendente ("a confirmar" = estado P do pagamento).
+  - Lançamento de não-gaveta cai no período **da data** (`PortadorPeriodoService::doMomento`), não
+    mais sempre no corrente; fechado = 422. Fechar/reabrir/avulso: `PortadorPeriodoService::{fechar,
+    reabrir, lancar}`, rotas `v1/portador-periodo`.
 
 ---
 
@@ -1687,6 +1697,85 @@ sem `lancamento` de pagamento, cheque, extrato e bonificação.
 - **Valida**: cofre com lançamentos em set e out → fechar com corte 30/09 → `saldofinal` sem outubro,
   corrente novo com outubro; lançar com data de setembro → 422; reabrir em cadeia e fechar na ordem;
   saldo de implantação de banco/cofre; fechar sessão de gaveta pelo contas.
+
+**Como ficou no código** (02/10/2026, executado em dev; commitado em 03/10 sem validação; sem
+DDL). Escopo ajustado pelo Fábio: a sessão da gaveta (fechar com contagem, conferir, reabrir) é do M9 e não
+entrou aqui (o "`CaixaController` lado contas" do plano original saiu).
+
+- **Backend** `PortadorPeriodoService`: `doMomento(portador, transacao)` (decisão 18: o período
+  cuja faixa contém a data; depois do último corte, o corrente) — o razão
+  (`PortadorMovimentoService::periodo`) passou a usar no lugar do `corrente`; `corrente` nasce
+  com o `saldofinal` do último fechado (era sempre 0); `movimento(periodo, ?ate)`; `fechar(periodo,
+  ?corte)`: só não-gaveta, do mais antigo para o mais novo (422), o corrente fecha em `fim` = fim
+  do dia do corte (corte entre o início e ontem, senão 422), `saldofinal` = inicial + linhas até
+  o fim, as linhas ativas depois do corte vão para o período seguinte (o corrente nasce se
+  preciso) e o `saldoinicial` do seguinte recebe o `saldofinal`; o reaberto fecha no mesmo `fim`;
+  `reabrir`: só o fechado mais novo do portador (422 "reabra antes o …"), limpa `fechamento` e
+  `saldofinal`; `lancar(portador, motivo, valor com sinal, ?transacao, obs)`: pagamento sem
+  documento (motivo T/F/R/A, efetivado, meio dinheiro na espécie e transferência nos demais), no
+  período da data — fechado = 422 pelo razão; antes do `CONFERENCIA_INICIO` = 422; gaveta = 422.
+- **Rotas** `v1/portador-periodo` (`PortadorPeriodoController`, Financeiro/Admin): index
+  (`codportador`, `codfilial`, `estado`, `transacao_de/ate` = períodos que encostam no intervalo,
+  `gaveta`), show (com os lançamentos), `{id}/fechar` (`corte`), `{id}/reabrir`, `lancamento`
+  (`codportador`, `motivo`, `valor` com sinal, `transacao`, `observacoes`).
+  `PortadorPeriodoResource`: saldos de sessão de gaveta só depois de conferida (às cegas).
+- **contas** → Caixas → aba **Períodos** (só Financeiro/Admin): portador, início, fim, estado
+  (corrente, reaberto, fechado; sessão do caixa), saldo inicial e final (aberto: "até agora");
+  Fechar com `MgInputData` de corte (padrão: último dia do mês anterior), Reabrir, detalhe com os
+  lançamentos (cada um abre o pagamento) e Lançamento avulso (FAB e no detalhe). Sessão de gaveta
+  fechada abre a tela Sessão do Fechamentos (M9). Os filtros da página (filial, de, até) valem
+  para os períodos.
+- **Conferido** (tinker com rollback, `CONFERENCIA_INICIO` simulado em 01/08 para ter dois meses;
+  cofre Caixa Botânico e banco Brad Botânico; usuário só Financeiro): implantação +1000 no
+  cofre sem período (corrente nasce sozinho); taxa em setembro, rendimento em 01/10, tarifa em
+  20/10; saldo 1020 (a tarifa a cair); corte hoje e corte antes do início = 422; corte 30/09 →
+  `saldofinal` 970, corrente novo de 01/10 com inicial 970 e outubro levado; avulso e
+  cancelamento em setembro fechado = 422; reabrir setembro com outubro fechado = 422; reabrir na
+  ordem, lançar em 20/09 cai em setembro reaberto; fechar outubro antes de setembro = 422; fechar
+  na ordem propagando os saldos (960, 1010); saldo pela decisão 19; implantação de 5000 no banco;
+  avulso e fechar em gaveta = 422; index, show e sessão sem saldos antes de conferida; Gerente =
+  403. As conferências do M11 rodadas de novo depois da mudança no razão. Lint e templates
+  compilados; não aberto no navegador.
+
+**Valida M10 + M11 + M12** (roteiro único, do mais arriscado para o menos; em dev só o PDV 508
+tem gaveta — para gaveta → gaveta, cadastrar outro portador Espécie da 101 e vincular a outro PDV):
+
+1. **Caixa do PDV** (negocios `/caixa`): abrir com 50 + 200; venda de R$ 10 e pagar vale em
+   dinheiro → card Razão com +10 na sessão; fechar e conferir às cegas no Fechamentos; o dinheiro
+   do sistema bate.
+2. **Transferências no PDV**: gaveta → Caixa Atacado 200 amarela (a confirmar); o caixa não
+   confirma, o gerente confirma; gerente registra gaveta → cofre 250 verde; cancelar com
+   justificativa → riscada e as duas linhas do razão riscadas; gaveta fechada desabilitada com
+   "Caixa fechado" (422 pela API); cofre → gaveta registrado no contas por quem não opera a gaveta
+   → fechar o caixa = 422; com pendente saindo o caixa fecha e cancelar depois = 422.
+3. **contas → Caixas**: Portadores (saldos dos cofres, gaveta "saldo após a conferência",
+   chegando/saindo), Transferências (a confirmar, histórico, FAB gaveta → Caixa Financeiro que o
+   Financeiro confirma), Confirmar/Cancelar no detalhe do pagamento.
+4. **Períodos** (Financeiro): Ajuste +1000 em 02/10 num cofre, taxa −30 em 03/10; corte padrão
+   30/09 = 422; corte 02/10 → final 1000 e corrente de 03/10 com a taxa; avulso em 02/10 = 422;
+   reabrir o antigo antes do novo = 422; reabrir e fechar na ordem; implantação num banco; sessão
+   de gaveta fechada abre o Fechamentos.
+5. **M10 restante**: receber título por transferência com data de ontem, editar portador/data,
+   estornar (antiga riscada, nova criada); filtro de período nas listagens, extrato BB, cheques,
+   bonificação.
+
+Saldos × razão: `select p.portador, pm.codportadorperiodo, sum(pm.valor) from tblportadormovimento
+pm join tblportador p using(codportador) where pm.inativo is null group by 1,2 order by 1,2` e
+`select * from tblportadorperiodo order by codportador, inicio`.
+
+**Dúvidas para o Fábio (M12)**, decididas assim até ele dizer:
+
+1. **Reabrir "em cadeia"** = um de cada vez, do mais novo para o mais antigo (o botão Reabrir de um
+   período antigo recusa enquanto houver um mais novo fechado). Não reabre os seguintes sozinho.
+2. **Saldo de implantação** = lançamento avulso de Ajuste na data do go-live (fica no razão e no
+   detalhe do período), não um `saldoinicial` editável.
+3. **Lançamento avulso por portador e data** (o período vem da data), e não pelo período: a
+   implantação precisa funcionar num portador que ainda não tem período.
+4. **Corte até ontem**; o corrente novo só nasce se houver lançamento depois do corte (senão no
+   próximo lançamento, com o saldo final do fechado).
+5. **Aba Períodos só para Financeiro/Admin** (o Gerente vê Portadores e Transferências).
+6. Lançamento avulso **na gaveta** (M9.5, TASK-188 #37) continua sem fazer: o M12 é só de
+   não-gaveta.
 
 ## M13 — Itens do caixa e repasse ao parceiro (TASK-39)
 

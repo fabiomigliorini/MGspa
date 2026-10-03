@@ -1310,6 +1310,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('portador/{codportador}', '\Mg\Portador\PortadorController@destroy');
     Route::post('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@inativar');
     Route::delete('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@ativar');
+    // periodos do portador (M12 doc-3): o financeiro fecha com corte e reabre
+    Route::get('portador-periodo', '\Mg\Portador\PortadorPeriodoController@index');
+    Route::get('portador-periodo/{id}', '\Mg\Portador\PortadorPeriodoController@show')->whereNumber('id');
+    Route::post('portador-periodo/{id}/fechar', '\Mg\Portador\PortadorPeriodoController@fechar')->whereNumber('id');
+    Route::post('portador-periodo/{id}/reabrir', '\Mg\Portador\PortadorPeriodoController@reabrir')->whereNumber('id');
+    Route::post('portador-periodo/lancamento', '\Mg\Portador\PortadorPeriodoController@lancamento');
     Route::get('portador/caixas', '\Mg\Caixa\CaixasController@caixas');
     Route::get('portador/{id}/saldo', '\Mg\Caixa\CaixasController@saldo')->whereNumber('id');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');

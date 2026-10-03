@@ -7,6 +7,8 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 // Domínio caixas (M11 doc-3): os portadores em espécie com saldo e sessão, e as transferências
 // entre portadores (registrar, confirmar, cancelar). Rotas v1/portador/caixas e
 // v1/pagamento/transferencia. Quem opera cada lado decide o servidor (decisão 23).
+// M12: os períodos dos portadores (fechar com corte, reabrir, lançamento avulso), rotas
+// v1/portador-periodo, Financeiro/Admin.
 
 const iso = (d) =>
   [
@@ -96,9 +98,13 @@ export const useCaixaStore = defineStore(
       }
     }
 
-    function atualizar() {
+    // os períodos só para o Financeiro/Admin (a página decide)
+    let comPeriodos = false
+    function atualizar(periodosTambem) {
+      if (typeof periodosTambem === 'boolean') comPeriodos = periodosTambem
       buscarCaixas()
       buscarTransferencias()
+      if (comPeriodos) buscarPeriodos()
     }
 
     async function transferir(dados) {
@@ -133,7 +139,85 @@ export const useCaixaStore = defineStore(
       if (ok) atualizar()
     }
 
+    // ---- períodos (M12) ----
+    const periodos = ref([])
+    const carregandoPeriodos = ref(false)
+    const periodo = ref(null)
+    const dialogPeriodo = ref(false)
+    const dialogLancamento = ref(false)
+
+    async function buscarPeriodos() {
+      carregandoPeriodos.value = true
+      try {
+        const { data } = await api.get('v1/portador-periodo', {
+          params: {
+            codfilial: filtros.value.codfilial || undefined,
+            transacao_de: filtros.value.transacao_de || undefined,
+            transacao_ate: filtros.value.transacao_ate || undefined,
+          },
+        })
+        periodos.value = data.data
+      } catch (e) {
+        notifyError(e, 'Erro ao buscar os períodos')
+      } finally {
+        carregandoPeriodos.value = false
+      }
+    }
+
+    async function abrirPeriodo(id) {
+      periodo.value = null
+      dialogPeriodo.value = true
+      try {
+        const { data } = await api.get(`v1/portador-periodo/${id}`)
+        periodo.value = data.data
+      } catch (e) {
+        notifyError(e, 'Erro ao carregar o período')
+      }
+    }
+
+    async function fecharPeriodo(id, corte) {
+      const ret = await executar(
+        () => api.post(`v1/portador-periodo/${id}/fechar`, { corte: corte || null }),
+        'Período fechado',
+      )
+      if (ret) {
+        if (periodo.value?.codportadorperiodo === id) periodo.value = ret.data.data
+        buscarPeriodos()
+      }
+      return !!ret
+    }
+
+    async function reabrirPeriodo(id) {
+      const ret = await executar(
+        () => api.post(`v1/portador-periodo/${id}/reabrir`),
+        'Período reaberto',
+      )
+      if (ret) {
+        if (periodo.value?.codportadorperiodo === id) periodo.value = ret.data.data
+        buscarPeriodos()
+      }
+    }
+
+    async function lancar(dados) {
+      const ret = await executar(
+        () => api.post('v1/portador-periodo/lancamento', dados),
+        'Lançamento registrado',
+      )
+      if (ret) buscarPeriodos()
+      return !!ret
+    }
+
     return {
+      periodos,
+      carregandoPeriodos,
+      periodo,
+      dialogPeriodo,
+      dialogLancamento,
+      buscarPeriodos,
+      abrirPeriodo,
+      fecharPeriodo,
+      reabrirPeriodo,
+      lancar,
       filtros,
       aba,
       salvando,
