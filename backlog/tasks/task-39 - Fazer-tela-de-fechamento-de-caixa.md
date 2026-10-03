@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-03 15:18'
+updated_date: '2026-10-03 15:24'
 labels:
   - negocios
   - contas
@@ -67,4 +67,6 @@ M12 commitado sem validação a pedido do Fábio (03/10/2026): ele valida M10, M
 M13 em andamento (03/10/2026): itens do caixa e repasse ao parceiro (decisões 21 e 27), mais a pendência da gaveta deixada pelo M10 — ajuste de caixa na abertura/fechamento da sessão e lançamento avulso no PDV (TASK-188 M9.5, #37).
 
 M13 executado em dev (03/10/2026, na árvore, sem commit). Redesenhado com o Fábio antes de codar: uma tela só do caixa (@components/MgCaixaSessao) no PDV e no contas, contagem por quantidade de cédula/moeda (jsonb), saldo inicial = envelope, um ajuste na abertura e um no fechamento (sempre o mesmo registro), fechar = conferência (a etapa às cegas do M9 saiu; o caixa ou o gerente fecha), sangria pela própria tela. DDL api/database/caixa_item.sql rodado 2x (tblcaixaitem com 6 seeds, tblcaixaitemlancamento, tblpagamento.codcaixaitemlancamento, tblportadorperiodo ajuste/contagem). Itens: pagamento entrada − saída na gaveta (mesmo registro), títulos de repasse no fechamento (200 a pagar, 100 se negativo; pessoa obriga conta), reabrir estorna (422 se agrupado). Avulso T/F/R/A na gaveta (exclui só quem lançou, caixa aberto) — cobre o M9.5 da TASK-188 (#37). Cadastros → Itens do Caixa e Caixas → aba Itens no contas; origem 'Item do caixa' na listagem. Conferido no tinker e pela camada HTTP com rollback; não aberto no navegador. Detalhe, roteiro 'Valida (M13)' e 'Dúvidas para o Fábio (M13)' no doc-3, seção M13. AC #5 desmarcado até a validação.
+
+M13 commitado sem validação a pedido do Fábio (03/10/2026, e8ab52048): ele valida pelo roteiro 'Valida (M13)' do doc-3. AC #5 (e o M9.5 da TASK-188) seguem desmarcados até a validação.
 <!-- SECTION:NOTES:END -->

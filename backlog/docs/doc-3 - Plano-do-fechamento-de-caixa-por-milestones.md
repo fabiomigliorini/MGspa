@@ -54,7 +54,8 @@ valida depois, junto com M11 e M12; decisões e "Como ficou no código" na seç�
 o Fábio valida M10, M11 e M12 juntos. **M12 (períodos no contas) commitado em 03/10/2026 sem
 validação, a pedido do Fábio** (TASK-39): ele valida M10, M11 e M12 juntos pelo roteiro único
 (seção M12, "Valida M10 + M11 + M12"); detalhe na seção M12. **M13 (itens do caixa, repasse,
-ajuste e avulso da gaveta) executado em dev em 03/10/2026, na árvore, sem commit** (TASK-39):
+ajuste e avulso da gaveta) commitado em 03/10/2026 sem validação, a pedido do Fábio** (TASK-39,
+`e8ab52048`):
 redesenhado com o Fábio em **uma tela só do caixa**, a mesma no PDV e no contas, com contagem por
 cédula e moeda; **fechar passou a ser a conferência** (a etapa às cegas do M9 saiu). Detalhe na
 seção M13.
@@ -1860,7 +1861,7 @@ nulas), `tblcaixaitemlancamento`, `tblpagamento.codcaixaitemlancamento`,
 `tblportadorperiodo.codpagamentoabertura/codpagamentofechamento/contagemabertura/contagemfechamento`
 e as FKs.
 
-**Como ficou no código** (03/10/2026, executado em dev, na árvore, sem commit):
+**Como ficou no código** (03/10/2026, executado em dev; commitado sem validação em `e8ab52048`):
 
 - **DDL** rodado 2x em dev (a segunda não faz nada). Uma consulta `count(*)` sobre a view
   `tblliquidacaotitulo` estava presa havia 16 h no psql de dev segurando lock de `tblpagamento`:
