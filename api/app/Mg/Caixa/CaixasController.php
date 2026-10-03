@@ -48,12 +48,15 @@ class CaixasController extends Controller
             'codportadordestino' => 'required|integer|exists:tblportador,codportador|different:codportadororigem',
             'valor' => 'required|numeric|min:0.01',
             'observacoes' => 'nullable|string|max:300',
+            'transacao' => 'nullable|date',
         ]);
         $pag = DB::transaction(fn () => PagamentoService::transferir(
             Portador::findOrFail($dados['codportadororigem']),
             Portador::findOrFail($dados['codportadordestino']),
             (float) $dados['valor'],
-            $dados['observacoes'] ?? null
+            $dados['observacoes'] ?? null,
+            null,
+            !empty($dados['transacao']) ? \Carbon\Carbon::parse($dados['transacao']) : null
         ));
         return $this->pagamento($pag);
     }

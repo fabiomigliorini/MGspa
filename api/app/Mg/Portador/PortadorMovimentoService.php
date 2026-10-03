@@ -68,11 +68,12 @@ class PortadorMovimentoService
         return $ret;
     }
 
-    // gaveta: a sessao que o M9 gravou no pagamento (ou a do momento);
-    // demais: o periodo da data (decisao 18; o corrente nasce sozinho)
+    // caixa (especie): a sessao que o M9 gravou no pagamento (ou a do
+    // momento); demais: o periodo da data (decisao 18; o corrente nasce
+    // sozinho)
     private static function periodo(Pagamento $pag, Portador $portador, Carbon $transacao): PortadorPeriodo
     {
-        if (!$portador->ehGaveta()) {
+        if (!$portador->ehCaixa()) {
             return PortadorPeriodoService::doMomento($portador, $transacao);
         }
         $sessao = null;
@@ -104,7 +105,7 @@ class PortadorMovimentoService
     {
         $periodo = PortadorPeriodo::findOrFail($codportadorperiodo);
         if (PortadorPeriodoService::imutavel($periodo)) {
-            $o = $periodo->Portador->ehGaveta() ? 'o caixa' : 'o período';
+            $o = $periodo->Portador->ehCaixa() ? 'o caixa' : 'o período';
             abort(422, "O razão de {$periodo->Portador->portador} ("
                 . PortadorPeriodoService::descricao($periodo)
                 . ") já foi fechado: reabra {$o} antes de mudar este pagamento.");

@@ -24,15 +24,16 @@ const ICONE = {
   O: 'wallet',
 }
 
-const aberta = (p) => p.ehGaveta && !!p.sessao?.aberta
+const aberta = (p) => p.ehCaixa && !!p.sessao?.aberta
 
 const situacao = (p) => {
-  if (!p.ehGaveta) return null
+  if (!p.ehCaixa) return null
   const s = p.sessao
-  if (!s) return 'Gaveta · caixa nunca aberto'
+  if (!s) return 'Caixa nunca aberto'
   return s.aberta
-    ? `Gaveta · desde ${formataTimestamp(s.inicio, 0)} por ${s.usuarioabertura}`
-    : `Gaveta · fechado em ${formataTimestamp(s.fim, 0)} por ${s.usuariofechamento}`
+    ? `Aberto desde ${formataTimestamp(s.inicio, 0)}` +
+        (s.usuarioabertura ? ` por ${s.usuarioabertura}` : '')
+    : `Fechado em ${formataTimestamp(s.fim, 0)} por ${s.usuariofechamento}`
 }
 
 onMounted(() => store.buscarPainel())

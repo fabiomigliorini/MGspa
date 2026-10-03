@@ -105,7 +105,7 @@ export const usePortadorStore = defineStore('portador', () => {
   function aplicar(p) {
     const sPeriodo = periodoStore()
     if (sPeriodo.portador?.codportador === p.codportador) {
-      sPeriodo.portador = { ...p, ehGaveta: p.gaveta }
+      sPeriodo.portador = { ...p, ehGaveta: p.gaveta, ehCaixa: p.caixa }
     }
   }
 

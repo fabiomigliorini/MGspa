@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-03 18:39'
+updated_date: '2026-10-03 21:51'
 labels:
   - negocios
   - contas
@@ -35,19 +35,25 @@ Consolida: TASK-33 (codportador na manutenção de PDV), TASK-34 (não movimenta
 <!-- AC:BEGIN -->
 - [ ] #1 M11 - Sangria e suprimento entre caixas, cofre, troco, financeiro e banco, com confirmacao de quem recebe e cancelamento com justificativa
 - [ ] #2 M11 - Nao transfere de ou para caixa fechado; caixa nao fecha com transferencia chegando pendente
-- [ ] #3 M11 - Tela Caixas no contas com saldos dos portadores em especie e transferencias
-- [ ] #4 M12 - Financeiro fecha periodo de cofre e banco pela data de corte; fechado e imutavel; reabre e fecha em ordem (em cadeia)
-- [ ] #5 M13 - Chips, ingressos e maquinetas de parceiros contados no caixa e virando titulo de repasse ao parceiro (Duplicata a Pagar) no fechamento
-- [ ] #6 M10.1 Dinheiro, PIX, deposito, transferencia e boleto feitos depois do go-live aparecem no razao da gaveta, cofre, banco ou conta onde cairam: entrada positiva, saida negativa, na data da transacao
-- [ ] #7 M10.2 Cancelar, estornar ou corrigir um pagamento (valor, portador, meio ou data, no contas ou na conferencia do gerente) acerta o razao junto; com o caixa daquele dinheiro ja conferido, so reabrindo
-- [ ] #8 M10.3 O detalhe do pagamento, no contas e no PDV, mostra os lancamentos do razao, com a sessao do caixa ou o periodo em que cairam, e os desfeitos riscados
-- [ ] #9 M10.4 O saldo de cada caixa, cofre e banco e o saldo inicial do periodo mais o que caiu ate hoje
-- [ ] #10 M10.5 Pagamento, cheque, extrato bancario e bonificacao guardam a data e hora em que o fato aconteceu, separada de quando foi digitado (o PIX de ontem lancado hoje fica com a data de ontem)
-- [ ] #11 R1 - Uma tela Portadores no contas mostra todos os portadores por filial, com o saldo da especie e a situacao de cada caixa, e substitui Saldos e Cadastros > Portadores (criar, editar, inativar e importar OFX nela)
-- [ ] #12 R2 - Ao abrir um portador, os periodos aparecem em abas Ano > Mes > Periodo, e o endereco da pagina leva direto ao periodo escolhido
-- [ ] #13 R3 - O periodo mostra saldo inicial, entradas e saidas por origem (vendas, titulos, transferencias, avulsos, itens) e saldo final, com a lista de lancamentos e o saldo corrente linha a linha
-- [ ] #14 R4 - Transferir, lancar avulso, item do caixa, abrir, fechar e reabrir o caixa ou o periodo feitos na propria tela do periodo, que se atualiza na hora
-- [ ] #15 R5 - Venda em dinheiro, sangria, confirmacao, cancelamento, recebimento no banco e fechamento com corte conferidos na tela do periodo (roteiro Valida do doc-4)
+- [ ] #3 M12 - Financeiro fecha periodo de cofre e banco pela data de corte; fechado e imutavel; reabre e fecha em ordem (em cadeia)
+- [ ] #4 M13 - Chips, ingressos e maquinetas de parceiros contados no caixa e virando titulo de repasse ao parceiro (Duplicata a Pagar) no fechamento
+- [ ] #5 M10.1 Dinheiro, PIX, deposito, transferencia e boleto feitos depois do go-live aparecem no razao da gaveta, cofre, banco ou conta onde cairam: entrada positiva, saida negativa, na data da transacao
+- [ ] #6 M10.2 Cancelar, estornar ou corrigir um pagamento (valor, portador, meio ou data, no contas ou na conferencia do gerente) acerta o razao junto; com o caixa daquele dinheiro ja conferido, so reabrindo
+- [ ] #7 M10.3 O detalhe do pagamento, no contas e no PDV, mostra os lancamentos do razao, com a sessao do caixa ou o periodo em que cairam, e os desfeitos riscados
+- [ ] #8 M10.4 O saldo de cada caixa, cofre e banco e o saldo inicial do periodo mais o que caiu ate hoje
+- [ ] #9 M10.5 Pagamento, cheque, extrato bancario e bonificacao guardam a data e hora em que o fato aconteceu, separada de quando foi digitado (o PIX de ontem lancado hoje fica com a data de ontem)
+- [ ] #10 R1 - Uma tela Portadores no contas mostra todos os portadores por filial, com o saldo da especie e a situacao de cada caixa, e substitui Saldos e Cadastros > Portadores (criar, editar, inativar e importar OFX nela)
+- [ ] #11 R2 - Ao abrir um portador, os periodos aparecem em abas Ano > Mes > Periodo, e o endereco da pagina leva direto ao periodo escolhido
+- [ ] #12 R3 - O periodo mostra saldo inicial, entradas e saidas por origem (vendas, titulos, transferencias, avulsos, itens) e saldo final, com a lista de lancamentos e o saldo corrente linha a linha
+- [ ] #13 R4 - Transferir, lancar avulso, item do caixa, abrir, fechar e reabrir o caixa ou o periodo feitos na propria tela do periodo, que se atualiza na hora
+- [ ] #14 R5 - Venda em dinheiro, sangria, confirmacao, cancelamento, recebimento no banco e fechamento com corte conferidos na tela do periodo (roteiro Valida do doc-4)
+- [ ] #15 R7.1 - Ajuste de caixa lançado só no portador, sem virar pagamento, com observação; cancela com justificativa e fica visível em Mostrar cancelados
+- [ ] #16 R7.2 - Sangria, reforço e depósito não viram pagamento: saem de um portador e entram no outro; ficam a confirmar quando quem registrou não tem permissão no destino
+- [ ] #17 R7.3 - Cada portador tem sua lista de usuários (cadeado ao lado do editar): só quem está nela vê e mexe no portador; Administrador vê todos; o PDV não valida
+- [ ] #18 R7.4 - O período em espécie começa com a contagem final do anterior; a contagem inicial só confere e mostra se não bater
+- [ ] #19 R7.5 - Fechar com diferença até a tolerância do portador (padrão R$ 2,00) fecha e registra a diferença; acima fica pendente até ser corrigido, sem travar o dia seguinte
+- [ ] #20 R7.6 - Reabrir deixa corrigir a contagem final, do período mais novo para o mais antigo
+- [ ] #21 R7.7 - Dividir um período numa data de corte e unificar dois períodos
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -78,4 +84,8 @@ M13 commitado sem validação a pedido do Fábio (03/10/2026, e8ab52048): ele va
 Refatoração portador e período (doc-4) executada em dev em 03/10/2026, na árvore, sem commit: DDL portador_saldo.sql (2x), saldo gravado no período e no portador (PortadorPeriodoService::recalcular via sincronizar), painel /portador e tela /portador/{cod}/{codperiodo} no contas, periodoStore em @components com os dialogs genéricos, rotas de movimento devolvendo os períodos afetados, v1/portador/caixas e /saldo removidos (tela Caixas quebra até o redesenho), cancelar avulso fora da gaveta, mensagem única 'Gaveta não aberta'. Decisões da execução e 'Como ficou' no doc-4. ACs R1–R5 desmarcados até a validação pelo roteiro Valida do doc-4.
 
 Ajustes de tela na mesma conversa (cabeçalho por tipo no painel, badge Aberto, primeiro período sem F5, avulso com data preenchida/radio/combo, lançamentos em q-timeline com link para o outro lado da transferência). Commitado em 03/10/2026 sem validação, a pedido do Fábio: ele valida pelo roteiro Valida do doc-4; ACs R1–R5 seguem desmarcados. Em aberto: Abrir caixa com contagem em cofre/troco/Caixa Financeiro (só implantação ou diário).
+
+R6 (03/10/2026, na árvore, sem commit; processo único do caixa): Portador::ehCaixa() = espécie (sessão: abre, só movimenta aberta, conta, fecha) e ehGaveta() = espécie com PDV só no que é do PDV (itens do caixa, grupo Caixa, baixa de título no contas, texto Sangria/Suprimento). CaixaService: abrir sem contagem obrigatória e sem ajuste; fechar exige a contagem do fechamento = saldo final (PortadorPeriodoService::exigirContagemBate, 422 dizendo o ajuste que falta); reabrir o fechado mais novo (a última volta a ficar aberta, anterior mantém o fim e só destrava correção; avulso nela cai no fim); permissão por portador (CaixaService::podeOperar(Portador)). Contagem: POST v1/portador-periodo/{id}/contagem (PortadorPeriodoService::contar, sessão não fechada, itens só na gaveta); resource 'contagem' {abertura, fechamento: contagem, contado, diferenca}. Cofre/troco/Financeiro deixam o fechar com corte e o avulso pelo período (M12 fica para banco, adquirente e cartão). Painel: situação e bloqueio 'Caixa não aberto' para toda espécie. Front contas: Abrir/Fechar/Reabrir caixa só confirmação; o único dialog é o da contagem, aberto pelo botão ao lado do saldo inicial e final no resumo; ContagemCaixa em duas colunas com hint do valor, totais e total geral. Tela do caixa do PDV (MgCaixaSessao, negocios /caixa e Fechamentos → sessão) NÃO adaptada, a pedido do Fábio (ele refatora o PDV depois). Conferido no tinker com rollback (cofre: fechar sem contagem/com diferença = 422, ajuste e fecha, transferência para fechado = 422, abrir, reabrir com outra aberta, refechar, saldo inicial seguinte recalculado; gaveta fechando e abrindo com contagem junto). Também na árvore: timeline dos lançamentos refeita e tela do período em duas colunas.
+
+Contagem (03/10/2026, na árvore): ContagemCaixa em duas colunas (cédulas | moedas), o valor de cada campo no hint, total por coluna, total dos itens e total geral; vale para o dialog do período e para a tela do caixa (MgCaixaSessao). totalContagem do caixaSessaoStore saiu (só o componente usava).
 <!-- SECTION:NOTES:END -->

@@ -90,7 +90,8 @@ class ConferenciaService
             left join tblfilial f on (f.codfilial = po.codfilial)
             left join tblusuario ua on (ua.codusuario = pp.codusuarioabertura)
             left join tblusuario uf on (uf.codusuario = pp.codusuariofechamento)
-            where pp.conferencia is null
+            where pp.fechamento is null
+            and exists (select 1 from tblpdv d where d.codportador = pp.codportador)
             {$where}
             order by pp.inicio
         ", $params) as $r) {

@@ -285,17 +285,7 @@ class PagamentoService
         return static::MEIO_TRANSFERENCIA;
     }
 
-    // gaveta de origem ou destino precisa de sessao aberta
-    private static function exigirGavetasAbertas(Portador ...$portadores): void
-    {
-        foreach ($portadores as $portador) {
-            if ($portador->ehGaveta()) {
-                CaixaService::exigirAberta($portador);
-            }
-        }
-    }
-
-    // cancelar transferencia: as sessoes de gaveta onde ela caiu precisam
+    // cancelar transferencia: as sessoes de caixa onde ela caiu precisam
     // estar abertas (os demais periodos o razao confere: fechado = 422)
     private static function exigirSessoesDoRazaoAbertas(Pagamento $pag): void
     {
@@ -305,7 +295,7 @@ class PagamentoService
             ->get();
         foreach ($linhas as $l) {
             $periodo = $l->PortadorPeriodo;
-            if ($periodo->Portador->ehGaveta() && !$periodo->aberto()) {
+            if ($periodo->Portador->ehCaixa() && !empty($periodo->fechamento)) {
                 abort(422, "O caixa {$periodo->Portador->portador} da sessão de {$periodo->inicio->format('d/m/Y H:i')} já foi fechado: o gerente precisa reabrir a sessão antes de cancelar a transferência.");
             }
         }
@@ -315,7 +305,9 @@ class PagamentoService
     // opera o destino (inclusive dono dos dois lados), senao pendente "a
     // confirmar" pelo dono do destino. Os dois lancamentos do razao nascem
     // ja' no registro.
-    public static function transferir(Portador $origem, Portador $destino, float $total, ?string $observacoes = null, ?int $codpdv = null): Pagamento
+    // A data (sem ela, agora) decide a sessao de cada lado que e' caixa
+    // (especie): a que contem a data, nao fechada
+    public static function transferir(Portador $origem, Portador $destino, float $total, ?string $observacoes = null, ?int $codpdv = null, ?Carbon $transacao = null): Pagamento
     {
         if ($origem->codportador == $destino->codportador) {
             abort(422, 'Origem e destino da transferência são o mesmo portador!');
@@ -329,9 +321,18 @@ class PagamentoService
         $cods = [$origem->codportador, $destino->codportador];
         sort($cods);
         Portador::whereIn('codportador', $cods)->orderBy('codportador')->lockForUpdate()->get();
-        static::exigirGavetasAbertas($origem, $destino);
         $efetivada = TransferenciaAutorizador::podeOperar($destino);
         $agora = Carbon::now();
+        $transacao = $transacao ?? $agora;
+        if ($transacao->gt($agora)) {
+            abort(422, 'A data não pode ser no futuro.');
+        }
+        // cada lado que e' caixa precisa de sessao nao fechada naquela data
+        foreach ([$origem, $destino] as $portador) {
+            if ($portador->ehCaixa()) {
+                CaixaService::sessaoDoMomento($portador, $transacao);
+            }
+        }
         return static::criar([
             'codportadororigem' => $origem->codportador,
             'codportadordestino' => $destino->codportador,
@@ -340,7 +341,7 @@ class PagamentoService
             'estado' => $efetivada ? static::ESTADO_EFETIVADO : static::ESTADO_PENDENTE,
             'efetivacao' => $efetivada ? $agora : null,
             'codusuarioefetivacao' => $efetivada ? (Auth::user()->codusuario ?? null) : null,
-            'transacao' => $agora,
+            'transacao' => $transacao,
             'codfilial' => $origem->codfilial ?? $destino->codfilial,
             'codpdv' => $codpdv,
             'observacoes' => empty(trim($observacoes ?? '')) ? null : mb_substr(trim($observacoes), 0, 300),

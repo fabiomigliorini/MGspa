@@ -16,7 +16,6 @@ import { formataNumero, formataData, formataTimestamp } from '@components/format
 import { periodoStore } from '@components/stores/periodoStore'
 import PortadorDialog from 'components/portador/PortadorDialog.vue'
 import PeriodoCabecalho from 'components/portador/PeriodoCabecalho.vue'
-import PeriodoResumo from 'components/portador/PeriodoResumo.vue'
 import PeriodoLancamentos from 'components/portador/PeriodoLancamentos.vue'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import { portadorTipoLabel, portadorTipoColor } from 'src/constants/portadorTipo'
@@ -69,14 +68,13 @@ const doMes = computed(() =>
 )
 
 const rotulo = (p) => {
-  if (portador.value?.ehGaveta) return formataTimestamp(p.inicio, 0)
+  if (portador.value?.ehCaixa) return formataTimestamp(p.inicio, 0)
   return formataData(p.inicio, 0) + (p.fim ? ` a ${formataData(p.fim, 0)}` : ' →')
 }
-const situacaoCurta = (p) =>
-  p.aberto ? (p.fim && !portador.value?.ehGaveta ? 'Reaberto' : 'Aberto') : 'fechado'
-// gaveta com a sessão aberta (badge no cabeçalho)
+const situacaoCurta = (p) => (p.aberto ? (p.fim ? 'Reaberto' : 'Aberto') : 'fechado')
+// caixa (espécie) com a sessão aberta (badge no cabeçalho)
 const caixaAberto = computed(
-  () => !!portador.value?.ehGaveta && periodos.value.some((p) => p.aberto),
+  () => !!portador.value?.ehCaixa && periodos.value.some((p) => p.aberto && !p.fim),
 )
 
 // ---- carregar: sem período na URL, o servidor manda o último (o watch abaixo leva a URL) ----
@@ -123,8 +121,8 @@ function excluir() {
   })
 }
 
-// ---- FAB: na gaveta só com o caixa aberto ----
-const podeMovimentar = computed(() => !portador.value?.ehGaveta || !!periodo.value?.aberto)
+// ---- FAB: no caixa (espécie) só na sessão não fechada ----
+const podeMovimentar = computed(() => !portador.value?.ehCaixa || !!periodo.value?.aberto)
 </script>
 
 <template>
@@ -260,13 +258,18 @@ const podeMovimentar = computed(() => !portador.value?.ehGaveta || !!periodo.val
           </template>
         </q-card>
 
-        <PeriodoCabecalho />
-        <PeriodoResumo />
-        <PeriodoLancamentos />
-
-        <MgEmptyState v-if="!periodos.length && !carregando" icon="receipt_long">
-          Nenhum movimento neste portador desde o go-live.
-        </MgEmptyState>
+        <!-- o período: cabeçalho e resumo à esquerda, lançamentos à direita -->
+        <div class="row q-col-gutter-md q-mb-md">
+          <div class="col-12 col-md-5">
+            <PeriodoCabecalho />
+          </div>
+          <div class="col-12 col-md-7">
+            <PeriodoLancamentos />
+            <MgEmptyState v-if="!periodos.length && !carregando" icon="receipt_long">
+              Nenhum movimento neste portador.
+            </MgEmptyState>
+          </div>
+        </div>
       </template>
     </div>
 
@@ -303,7 +306,9 @@ const podeMovimentar = computed(() => !portador.value?.ehGaveta || !!periodo.val
           icon="swap_horiz"
           @click="store.dialogTransferir = true"
         >
-          <q-tooltip anchor="top middle" self="bottom middle">Transferir</q-tooltip>
+          <q-tooltip anchor="top middle" self="bottom middle">
+            {{ portador.ehCaixa ? 'Reforço / Sangria' : 'Transferir' }}
+          </q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>

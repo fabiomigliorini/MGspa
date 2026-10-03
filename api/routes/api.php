@@ -1310,6 +1310,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('portador-periodo/{id}', '\Mg\Portador\PortadorPeriodoController@show')->whereNumber('id');
     Route::post('portador-periodo/{id}/fechar', '\Mg\Portador\PortadorPeriodoController@fechar')->whereNumber('id');
     Route::post('portador-periodo/{id}/reabrir', '\Mg\Portador\PortadorPeriodoController@reabrir')->whereNumber('id');
+    Route::post('portador-periodo/{id}/contagem', '\Mg\Portador\PortadorPeriodoController@contagem')->whereNumber('id');
     Route::post('portador-periodo/lancamento', '\Mg\Portador\PortadorPeriodoController@lancamento');
     Route::post('portador-periodo/lancamento/{codpagamento}/cancelar', '\Mg\Portador\PortadorPeriodoController@cancelarLancamento')->whereNumber('codpagamento');
     // tela do caixa, a mesma no PDV e no contas (M13 doc-3)
@@ -1317,6 +1318,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('caixa/gaveta/{codportador}/abrir', '\Mg\Caixa\CaixaController@abrir')->whereNumber('codportador');
     Route::get('caixa/sessao/{id}', '\Mg\Caixa\CaixaController@show')->whereNumber('id');
     Route::post('caixa/sessao/{id}/fechar', '\Mg\Caixa\CaixaController@fechar')->whereNumber('id');
+    Route::post('caixa/sessao/{id}/datas', '\Mg\Caixa\CaixaController@datas')->whereNumber('id');
     Route::post('caixa/sessao/{id}/reabrir', '\Mg\Caixa\CaixaController@reabrir')->whereNumber('id');
     Route::post('caixa/sessao/{id}/item/{codcaixaitem}', '\Mg\Caixa\CaixaController@salvarItem')->whereNumber(['id', 'codcaixaitem']);
     Route::post('caixa/sessao/{id}/avulso', '\Mg\Caixa\CaixaController@avulso')->whereNumber('id');

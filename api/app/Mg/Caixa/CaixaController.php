@@ -2,6 +2,7 @@
 
 namespace Mg\Caixa;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
@@ -41,7 +42,7 @@ class CaixaController extends Controller
     private function sessao(int $id): PortadorPeriodo
     {
         $sessao = PortadorPeriodo::with('Portador')->findOrFail($id);
-        CaixaService::autorizarOperar($sessao->Portador->codfilial);
+        CaixaService::autorizarOperar($sessao->Portador);
         return $sessao;
     }
 
@@ -60,7 +61,7 @@ class CaixaController extends Controller
             'contagem.*' => 'integer|min:0',
             'itens' => 'nullable|array',
             'itens.*' => 'numeric|min:0',
-            'observacoes' => 'nullable|string|max:250',
+            'observacoes' => 'nullable|string|max:500',
             'codpdv' => 'nullable|integer|exists:tblpdv,codpdv',
         ]);
     }
@@ -70,7 +71,7 @@ class CaixaController extends Controller
     public function gaveta(int $codportador)
     {
         $gaveta = Portador::findOrFail($codportador);
-        CaixaService::autorizarOperar($gaveta->codfilial);
+        CaixaService::autorizarOperar($gaveta);
         $aberta = CaixaService::sessaoAberta($codportador);
         $sessao = $aberta ?? CaixaService::ultimaSessao($codportador);
         return ['data' => [
@@ -82,22 +83,42 @@ class CaixaController extends Controller
             'aberta' => !empty($aberta),
             'sessao' => $sessao ? new SessaoResource($sessao) : null,
             'envelope' => CaixaService::envelope($codportador),
-            'itens' => CaixaItemResource::collection(CaixaItemService::ativosDaFilial($gaveta->codfilial)),
+            'itens' => $gaveta->ehGaveta() ? CaixaItemResource::collection(CaixaItemService::ativosDaFilial($gaveta->codfilial)) : [],
         ]];
     }
 
     public function abrir(Request $request, int $codportador)
     {
         $dados = $this->contagem($request);
+        $request->validate(['inicio' => 'nullable|date']);
         $gaveta = Portador::findOrFail($codportador);
+        // contagem so' quando vem (o PDV conta junto; o contas conta depois)
         $sessao = DB::transaction(fn () => CaixaService::abrir(
             $gaveta,
-            $dados['contagem'] ?? [],
+            $dados['contagem'] ?? null,
             $dados['itens'] ?? [],
             $dados['observacoes'] ?? null,
-            $dados['codpdv'] ?? null
+            $dados['codpdv'] ?? null,
+            $request->inicio ? Carbon::parse($request->inicio) : null
         ));
         return $this->resposta($sessao);
+    }
+
+    // corrige o inicio e o fim da sessao nao fechada
+    public function datas(Request $request, int $id)
+    {
+        $dados = $request->validate([
+            'inicio' => 'required|date',
+            'fim' => 'nullable|date',
+            'observacoes' => 'nullable|string|max:500',
+        ]);
+        $sessao = DB::transaction(fn () => CaixaService::editarDatas(
+            $this->sessao($id),
+            Carbon::parse($dados['inicio']),
+            !empty($dados['fim']) ? Carbon::parse($dados['fim']) : null,
+            $dados['observacoes'] ?? null
+        ));
+        return $this->resposta($sessao->fresh('Portador'));
     }
 
     public function show(int $id)
@@ -108,14 +129,15 @@ class CaixaController extends Controller
     public function fechar(Request $request, int $id)
     {
         $dados = $this->contagem($request);
-        $request->validate(['impressora' => 'nullable|string']);
+        $request->validate(['impressora' => 'nullable|string', 'fim' => 'nullable|date']);
         $sessao = $this->sessao($id);
         $sessao = DB::transaction(fn () => CaixaService::fechar(
             $sessao,
-            $dados['contagem'] ?? [],
+            $dados['contagem'] ?? null,
             $dados['itens'] ?? [],
             $dados['observacoes'] ?? null,
-            $dados['codpdv'] ?? null
+            $dados['codpdv'] ?? null,
+            $request->fim ? Carbon::parse($request->fim) : null
         ));
         if (!empty($request->impressora)) {
             CaixaBorderoService::imprimir($sessao, $request->impressora);
@@ -153,6 +175,7 @@ class CaixaController extends Controller
             'valor' => 'required|numeric|min:0.01',
             'observacoes' => 'required|string|min:3|max:300',
             'codpdv' => 'nullable|integer|exists:tblpdv,codpdv',
+            'transacao' => 'nullable|date',
         ]);
         $sessao = $this->sessao($id);
         DB::transaction(fn () => CaixaService::lancarAvulso(
@@ -161,7 +184,8 @@ class CaixaController extends Controller
             $dados['motivo'],
             (float) $dados['valor'],
             $dados['observacoes'],
-            $dados['codpdv'] ?? null
+            $dados['codpdv'] ?? null,
+            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null
         ));
         return $this->resposta($sessao->fresh('Portador'));
     }
@@ -169,7 +193,7 @@ class CaixaController extends Controller
     public function cancelarAvulso(int $codpagamento)
     {
         $pag = Pagamento::findOrFail($codpagamento);
-        $sessao = $this->sessao((int) $pag->codportadorperiodo);
+        $sessao = $this->sessao((int) optional(CaixaService::sessaoDoPagamento($pag))->codportadorperiodo);
         DB::transaction(fn () => CaixaService::cancelarAvulso($pag));
         return $this->resposta($sessao->fresh('Portador'));
     }

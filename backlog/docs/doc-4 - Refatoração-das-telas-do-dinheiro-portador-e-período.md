@@ -216,3 +216,115 @@ lançamento na lista com a origem certa, resumo por origem e saldo do período e
 10. URL: navegar pelas abas troca a URL; recarregar a página volta ao mesmo período; voltar do
     navegador funciona.
 11. Celular: painel e período usáveis no celular do gerente.
+
+## Redefinição do domínio do dinheiro (03/10/2026, com o Fábio, antes de codar)
+
+O modelo foi construído com definições erradas: ajuste e transferência viraram `tblpagamento`
+(igual a pagamento de verdade), ajuste/taxa/tarifa/rendimento misturados em "Avulsos e ajustes",
+ajuste automático inventado na abertura/fechamento. Estas definições **mandam** sobre o que vier
+antes neste doc e no doc-3 onde houver conflito (R3 origens, Valida 2/5/7, R6 da TASK-39).
+Escopo: **só o dinheiro em espécie**.
+
+### Movimento do portador
+
+`tblportadormovimento` é o **registro principal** do saldo. Cada linha tem **tipo**, valor com
+sinal, data e período; `codpagamento` só no tipo pagamento. A tela do portador lista os movimentos
+agrupados por período.
+
+| Tipo | O que é | Contraparte | Grava |
+|---|---|---|---|
+| **Pagamento** (venda em dinheiro, título, vale) | dinheiro entrou/saiu por causa de alguém | pessoa (negócio, título, acerto) | `tblpagamento`, que gera a linha (como hoje, `sincronizar`) |
+| **Ajuste** | aceitar uma diferença sem explicação | nenhuma | só a linha, com observação obrigatória |
+| **Transferência** (depósito, reforço, sangria) | saldo sai de um portador e vai para outro | o outro portador | duas linhas ligadas (−X origem, +X destino), sem `tblpagamento`; estado e justificativa **nas duas**, o backend mantém as duas iguais |
+
+- **Taxa, tarifa, rendimento**: fora do escopo. Ficam como estão (`tblpagamento.motivo` T/F/R),
+  mexendo só no necessário para o ajuste sair.
+- **Item do caixa** (chips, ingressos, recargas): controle à parte, será refatorado (cadastro
+  dinâmico de parceiros, controle por caixa com início e fim). Fora destas definições.
+- **Cancelar**: ajuste e transferência só se cancelam, com justificativa, e continuam visíveis em
+  "Mostrar cancelados". Período não fechado (nos dois lados, na transferência).
+- **Em qual período cai**: no contas, o período que está na tela, com a data dentro do início/fim
+  dele. PDV e outras telas: a data decide.
+- As linhas geradas pelo pagamento continuam usando `inativo` para a troca interna; o cancelamento
+  de ajuste/transferência é estado próprio, separado.
+
+### Transferência e permissão
+
+- Cada portador (qualquer tipo) tem uma **lista de usuários** (`tblportadorusuario`). Ela
+  **substitui** a regra por grupo e filial (`TransferenciaAutorizador`). Na virada, a lista nasce
+  preenchida pela regra de hoje.
+- Quem está na lista **vê e altera** o portador (lançar, confirmar transferência chegando, abrir,
+  fechar, reabrir, contagem, a própria lista). **Quem não está não vê** (painel e tela do
+  portador). Administrador vê e altera todos. O select de **destino** da transferência lista todos
+  os portadores (sangria para o cofre, envio ao Financeiro).
+- Transferência registrada por quem tem permissão no destino nasce **feita**; senão fica **a
+  confirmar** até alguém com permissão no destino confirmar. Ex.: caixa registra sangria → gerente
+  confirma; gerente faz sangria para o cofre dele → feita; gerente manda ao financeiro → financeiro
+  aprova.
+- Lista editada pelo ícone de cadeado ao lado do lápis do portador: dialog com os usuários, select
+  para adicionar, X para tirar. Edita quem está na lista ou é Administrador.
+- **PDV não valida**: quem está naquela gaveta trabalha nela.
+
+### Período (todo portador em espécie)
+
+- Todo portador em espécie (gaveta, cofre, troco, Caixa Financeiro) **abre e fecha**. "Sessão"
+  deixa de existir: é tudo **período**.
+- Estados: **aberto** (sem fim), **pendente** (com fim, sem fechamento), **fechado**.
+- `saldoinicial` = **contagem final do período anterior** (soma das cédulas e moedas), nunca
+  editado nem ajustado à mão. No primeiro período do portador, informado na abertura.
+- Saldo final = `saldoinicial` + movimentos.
+- **Contagem inicial**: quem abre conta para conferir; se não bater com o `saldoinicial`, o sistema
+  mostra — não ajusta nada.
+- **Contagem final** ao fechar. `diferenca` = contagem final − saldo final, gravada no período
+  (coluna para levantar os dias com diferença). Contagem = só cédulas e moedas.
+- **Tolerância** por portador (`tblportador.tolerancia`, padrão R$ 2,00, editável no form).
+  - Diferença dentro da tolerância: **fecha**, a diferença só fica registrada.
+  - Acima: fica **pendente** — com fim, para de receber movimento do dia a dia, o dia seguinte
+    abre normal. Só entra correção (vale ao colaborador quando falta, o movimento que faltou,
+    ajuste); fecha quando a diferença cair na tolerância. Sobra acima: achar o que aconteceu.
+- Corrigir um período pendente não mexe no seguinte (ele nasceu da contagem).
+- **Reabrir** deixa corrigir a contagem final (que é o `saldoinicial` do seguinte): reabre do mais
+  novo para o mais antigo.
+- **Editar início/fim**: não pode deixar movimento de fora.
+- **Dividir** (data de corte): sem contagem no corte; a segunda parte começa com o saldo final
+  calculado da primeira. **Unificar**: só se o período de cima não tiver diferença.
+
+### O que fica, muda e sai
+
+**Banco**: fica o intervalo/fechamento de `tblportadorperiodo` e o DDL
+`portador_periodo_limpeza.sql` já rodado; `saldoinicial` muda de sentido (contagem final do
+anterior, só espécie); novos `tblportadorperiodo.diferenca`, `tblportador.tolerancia`,
+`tblportadorusuario`; `tblportadormovimento` ganha tipo, observação, estado, justificativa,
+confirmação/cancelamento e o par da transferência, e `codpagamento` fica opcional; saem o
+`motivo` A e a transferência de `tblpagamento`.
+
+**Backend**: abrir/fechar/reabrir/editar datas saem do `CaixaService` para o
+`PortadorPeriodoService` (o `CaixaService` fica só com o PDV); fechar com tolerância e pendente;
+reabrir vira pendente e deixa corrigir a contagem; contado sem os itens; `recalcular` em espécie
+encadeia contagem final → inicial; saem `TransferenciaAutorizador`, a permissão do caixa por
+`ConferenciaAutorizador`, `PagamentoService::transferir/confirmar/cancelarTransferencia/pendentes`,
+`lancarAvulso/cancelarAvulso` do caixa, origem X; títulos de repasse dos itens ficam isolados na
+gaveta, sem evoluir.
+
+**Front (contas)**: ficam `Detalhe.vue` em duas colunas, a linha do tempo, o dialog de
+transferência e a contagem (sem itens); mudam cabeçalho (estados, fechar, reabrir, dividir,
+unificar, editar datas, cadeado de permissões), resumo (saldo inicial com a contagem inicial,
+pagamentos, transferências, ajustes, taxas/tarifas só no banco, saldo final, contagem final,
+diferença), avulso vira ajuste, painel filtrado pela lista; sai a página `/caixa` (Caixas do M11).
+Borderô com ajustes mínimos. PDV (`MgCaixaSessao`, negocios `/caixa`) fora: quebra até a
+refatoração dele.
+
+### Plano (do core para as beiradas; cada etapa validada antes da seguinte)
+
+1. DDL no dev + migração: `tblportadorusuario` (preenchida pela regra de hoje), colunas novas do
+   movimento, `diferenca`, `tolerancia`; converter os ajustes `motivo` A e as transferências de
+   `tblpagamento`. Valida: saldo de cada portador igual antes e depois.
+2. Movimento como registro principal: o razão aceita linha de pagamento ou de ajuste/transferência.
+3. Ajuste e transferência: lançar, confirmar, cancelar; permissão por portador e "a confirmar".
+4. Período em espécie: abrir com contagem inicial, fechar com tolerância/pendente, reabrir,
+   editar datas, `diferenca`.
+5. Limpar o pagamento: `motivo` A, transferência, `TransferenciaAutorizador`, origem X.
+6. API (rotas, controllers, resources).
+7. Telas do contas.
+8. Borderô.
+9. Dividir e unificar período (por último: é funcionalidade nova).

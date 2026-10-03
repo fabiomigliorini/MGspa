@@ -1,29 +1,41 @@
 <script setup>
 // Lançamento avulso (M13 doc-3; TASK-188 M9.5; genérico desde o doc-4): entrada ou saída sem
-// documento, com o motivo e o histórico. Na gaveta cai na sessão aberta (cancela só quem lançou,
-// com o caixa aberto); nos demais portadores, no período da data (M12: a implantação é um Ajuste
-// na data do go-live).
-import { ref, watch } from 'vue'
+// documento, com o motivo e o histórico. No caixa (espécie) cai na sessão da tela, com a data
+// dentro dela (do início ao fim; aberta, até agora) e cancela só quem lançou; nos demais
+// portadores, no período da data (M12).
+import { ref, computed, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
-import { formataTimestampIso } from '@components/formatters'
+import { formataTimestamp, formataTimestampIso } from '@components/formatters'
 import { periodoStore } from '@components/stores/periodoStore'
 import { MOTIVOS } from '@components/stores/caixaSessaoStore'
 
 const SENTIDOS = [
-  { label: 'Saída', value: 'S' },
   { label: 'Entrada', value: 'E' },
+  { label: 'Saída', value: 'S' },
 ]
 
 const store = periodoStore()
-// a data já vem com agora; na gaveta é sempre agora (a sessão aberta)
+// caixa: a data fica entre o início e o fim da sessão (aberta, agora)
+const sessao = computed(() => (store.portador?.ehCaixa ? store.periodo : null))
+const limite = () => (sessao.value?.fim ? new Date(sessao.value.fim) : new Date())
+// lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
+const naSessao = () => {
+  if (!sessao.value || !form.value.transacao) return true
+  const d = new Date(form.value.transacao)
+  return (
+    (d >= new Date(sessao.value.inicio) && d <= limite()) ||
+    `Fora da sessão (de ${formataTimestamp(sessao.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
+  )
+}
+// a data já vem com agora (na sessão reaberta, com o fim dela)
 const vazio = () => ({
-  sentido: 'S',
+  sentido: 'E',
   motivo: 'A',
   valor: null,
   observacoes: '',
-  transacao: formataTimestampIso(new Date()),
+  transacao: formataTimestampIso(sessao.value ? limite() : new Date()),
 })
 const form = ref(vazio())
 
@@ -46,7 +58,7 @@ async function salvar() {
 
 <template>
   <q-dialog v-model="store.dialogAvulso" @show="focarTipo">
-    <q-card flat style="width: 400px; max-width: 90vw">
+    <q-card flat style="width: 300px; max-width: 90vw">
       <q-form @submit.prevent="salvar">
         <q-card-section class="text-h6">Lançamento avulso</q-card-section>
         <q-card-section>
@@ -57,8 +69,7 @@ async function salvar() {
                 type="timestamp"
                 default-time="now"
                 label="Data"
-                :readonly="!!store.portador?.ehGaveta"
-                :rules="[(v) => !!v]"
+                :rules="[(v) => !!v, naSessao]"
               />
             </div>
             <div ref="refTipo" class="col-12">

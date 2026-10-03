@@ -4,6 +4,7 @@ namespace Mg\Caixa;
 
 use Illuminate\Support\Facades\URL;
 use Mg\Portador\PortadorPeriodo;
+use Mg\Portador\PortadorPeriodoResource;
 
 /**
  * Bordero do caixa (M9; completo desde o M13 doc-3): a contagem por cedula
@@ -17,7 +18,9 @@ class CaixaBorderoService
         $sessao->load(['Portador.Filial.Pessoa', 'UsuarioAbertura', 'UsuarioFechamento']);
         $painel = CaixaService::painel($sessao);
         $informativo = $painel['informativo'];
-        $html = view('caixa.bordero-termica', compact('sessao', 'painel', 'informativo'))->render();
+        // o resumo e a contagem como a tela do periodo mostra
+        $periodo = (new PortadorPeriodoResource($sessao))->comLancamentos()->resolve();
+        $html = view('caixa.bordero-termica', compact('sessao', 'painel', 'informativo', 'periodo'))->render();
         $dompdf = new \Dompdf\Dompdf();
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->setPaper([0.0, 0.0, 226.77, 841.89], 'portrait');

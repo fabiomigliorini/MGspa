@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Mg\Caixa\CaixaService;
 use Mg\Conferencia\ConferenciaService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
@@ -63,19 +64,19 @@ class PortadorPeriodoService
         return $periodo ?? static::corrente($portador);
     }
 
-    // o razao nao mexe mais no periodo: gaveta fechada (fechar grava a
-    // conferencia desde o M13); os demais depois de fechados (M12)
+    // o razao nao mexe mais no periodo fechado
     public static function imutavel(PortadorPeriodo $periodo): bool
     {
-        if (!empty($periodo->conferencia)) {
-            return true;
-        }
-        return !empty($periodo->fechamento) && !$periodo->Portador->ehGaveta();
+        return !empty($periodo->fechamento);
     }
+
+    // o estoque dos itens de contagem da gaveta fica no lancamento do item,
+    // na coluna da abertura ou do fechamento
+    private const COLUNA_ITEM = ['inicial' => 'valorabertura', 'final' => 'valorfechamento'];
 
     public static function descricao(PortadorPeriodo $periodo): string
     {
-        if ($periodo->Portador->ehGaveta()) {
+        if ($periodo->Portador->ehCaixa()) {
             return 'sessão de ' . $periodo->inicio->format('d/m/Y H:i');
         }
         return empty($periodo->fim)
@@ -83,12 +84,13 @@ class PortadorPeriodoService
             : 'período de ' . $periodo->inicio->format('d/m/Y') . ' a ' . $periodo->fim->format('d/m/Y');
     }
 
-    // ==== M12: o financeiro fecha e reabre (nao-gaveta) ====
+    // ==== M12: o financeiro fecha e reabre banco, adquirente e cartao ====
+    // (a especie e' caixa: abre, fecha e reabre pelo CaixaService)
 
-    private static function exigirNaoGaveta(PortadorPeriodo $periodo): void
+    private static function exigirNaoCaixa(PortadorPeriodo $periodo): void
     {
-        if ($periodo->Portador->ehGaveta()) {
-            abort(422, 'Sessão de caixa abre e fecha no PDV e se confere em Fechamentos.');
+        if ($periodo->Portador->ehCaixa()) {
+            abort(422, 'Portador em espécie é caixa: abre, conta e fecha pela sessão.');
         }
     }
 
@@ -174,7 +176,7 @@ class PortadorPeriodoService
     // (ja' tem fim) fecha no mesmo fim. Saldo final = inicial + linhas.
     public static function fechar(PortadorPeriodo $periodo, ?Carbon $corte): PortadorPeriodo
     {
-        static::exigirNaoGaveta($periodo);
+        static::exigirNaoCaixa($periodo);
         $portador = $periodo->Portador;
         Portador::where('codportador', $portador->codportador)->lockForUpdate()->first();
         $periodo->refresh();
@@ -227,11 +229,81 @@ class PortadorPeriodoService
         return $periodo;
     }
 
+    // contagem do caixa (especie) inicial ou final da sessao
+    // aberta: cedulas, moedas e, na gaveta, o estoque dos itens de contagem.
+    // So' registra (a tela mostra a diferenca para o saldo; o ajuste e'
+    // lancamento); sem contagem, limpa
+    public static function contar(PortadorPeriodo $periodo, string $momento, ?array $contagem, array $itens = []): PortadorPeriodo
+    {
+        $portador = $periodo->Portador;
+        if (!$portador->ehCaixa()) {
+            abort(422, 'Só portador em espécie tem contagem de dinheiro.');
+        }
+        if (!empty($periodo->fechamento)) {
+            abort(422, 'Caixa fechado: reabra para mudar a contagem.');
+        }
+        [$contagem] = CaixaService::contagem($contagem);
+        $vazia = empty($contagem) && empty(array_filter($itens, fn ($v) => (float) $v != 0));
+        $periodo->{"contagem{$momento}"} = $vazia ? null : $contagem;
+        $periodo->save();
+        $coluna = static::COLUNA_ITEM[$momento];
+        foreach (CaixaService::lancamentos($periodo) as $lanc) {
+            if (!$lanc->CaixaItem->ehContagem()) {
+                continue;
+            }
+            $valor = round((float) ($itens[$lanc->codcaixaitem] ?? 0), 2);
+            if ($valor < 0) {
+                abort(422, "Contagem de {$lanc->CaixaItem->item} não pode ser negativa.");
+            }
+            $lanc->$coluna = $vazia && $momento == 'final' ? null : $valor;
+            $lanc->save();
+        }
+        return $periodo;
+    }
+
+    // o dinheiro contado no momento (inicial ou final): cedulas,
+    // moedas e o estoque dos itens de contagem da gaveta; null sem contagem
+    public static function contado(PortadorPeriodo $periodo, string $momento): ?float
+    {
+        if ($periodo->{"contagem{$momento}"} === null) {
+            return null;
+        }
+        $coluna = static::COLUNA_ITEM[$momento];
+        $itens = CaixaService::lancamentos($periodo)
+            ->filter(fn ($l) => $l->CaixaItem->ehContagem())
+            ->sum(fn ($l) => (float) $l->$coluna);
+        return round(CaixaService::totalContagem($periodo->{"contagem{$momento}"}) + $itens, 2);
+    }
+
+    // fechar o caixa: a contagem do fechamento tem que bater com o saldo
+    // final (inicial + linhas ate' o fim); com saldo zero, sem contagem
+    // tambem fecha. Devolve o saldo
+    public static function exigirContagemBate(PortadorPeriodo $periodo, Carbon $fim): float
+    {
+        $saldo = round((float) $periodo->saldoinicial + static::movimento($periodo, $fim), 2);
+        $contado = static::contado($periodo, 'final');
+        $f = fn ($v) => 'R$ ' . number_format($v, 2, ',', '.');
+        if ($saldo < 0) {
+            abort(422, "Saldo final negativo ({$f($saldo)}): lance o ajuste antes de fechar o caixa.");
+        }
+        // caixa vazio: nada a contar
+        if ($contado === null && $saldo == 0) {
+            return $saldo;
+        }
+        if ($contado === null) {
+            abort(422, "Conte o dinheiro do fechamento antes de fechar o caixa (saldo final {$f($saldo)}).");
+        }
+        if ($contado != $saldo) {
+            abort(422, "A contagem do fechamento ({$f($contado)}) não bate com o saldo final ({$f($saldo)}): lance o ajuste da diferença ({$f($contado - $saldo)}) antes de fechar.");
+        }
+        return $saldo;
+    }
+
     // reabre do mais novo para o mais antigo: so' o fechado mais novo do
     // portador (os seguintes precisam estar abertos)
     public static function reabrir(PortadorPeriodo $periodo): PortadorPeriodo
     {
-        static::exigirNaoGaveta($periodo);
+        static::exigirNaoCaixa($periodo);
         Portador::where('codportador', $periodo->codportador)->lockForUpdate()->first();
         $periodo->refresh();
         if (empty($periodo->fechamento)) {
@@ -258,8 +330,8 @@ class PortadorPeriodoService
     // (fechado = 422; sem periodo ainda, nasce o corrente).
     public static function lancar(Portador $portador, string $motivo, float $valor, ?Carbon $transacao, ?string $observacoes): Pagamento
     {
-        if ($portador->ehGaveta()) {
-            abort(422, 'Lançamento avulso na gaveta é pelo caixa, não pelo período.');
+        if ($portador->ehCaixa()) {
+            abort(422, 'Lançamento avulso em espécie é pelo caixa, não pelo período.');
         }
         $valor = round($valor, 2);
         if ($valor == 0) {
@@ -300,8 +372,8 @@ class PortadorPeriodoService
         ) {
             abort(422, 'Só lançamento avulso (taxa, tarifa, rendimento, ajuste) se cancela por aqui.');
         }
-        if ($portador->ehGaveta()) {
-            abort(422, 'Lançamento avulso da gaveta se cancela pelo caixa.');
+        if ($portador->ehCaixa()) {
+            abort(422, 'Lançamento avulso em espécie se cancela pelo caixa.');
         }
         if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
             abort(422, 'Lançamento já cancelado.');

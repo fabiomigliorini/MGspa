@@ -92,8 +92,16 @@ class Portador extends MgModel
     ];
 
 
-    // Gaveta = portador em especie com PDV apontando (lembrado na instancia:
-    // as listas do periodo perguntam linha a linha)
+    // Caixa = portador em especie (gaveta, cofre, troco, Caixa Financeiro):
+    // trabalha em sessao, que abre, so' movimenta aberta, conta e fecha
+    public function ehCaixa(): bool
+    {
+        return $this->tipo === self::TIPO_ESPECIE;
+    }
+
+    // Gaveta = caixa com PDV apontando: o que e' so' do PDV (itens do caixa,
+    // o grupo Caixa operando). Lembrado na instancia: as listas do periodo
+    // perguntam linha a linha
     private ?bool $gaveta = null;
 
     public function ehGaveta(): bool

@@ -22,7 +22,7 @@ const erro = (error) => error?.response?.data?.message ?? error?.message ?? Stri
 
 export const periodoStore = defineStore('periodo', {
   state: () => ({
-    // { codportador, portador, codfilial, tipo, ehGaveta, saldo, ... }
+    // { codportador, portador, codfilial, tipo, ehCaixa (espécie), ehGaveta (com PDV), saldo, ... }
     portador: null,
     // o que o usuário pode fazer neste portador (cadastro, transferir, avulso, caixa...)
     pode: {},
@@ -54,7 +54,11 @@ export const periodoStore = defineStore('periodo', {
           `v1/portador/${codportador}/periodo` +
             (codportadorperiodo ? `/${codportadorperiodo}` : ''),
         )
-        this.portador = { ...data.data.portador, ehGaveta: data.data.portador.gaveta }
+        this.portador = {
+          ...data.data.portador,
+          ehGaveta: data.data.portador.gaveta,
+          ehCaixa: data.data.portador.caixa,
+        }
         this.pode = data.data.pode
         this.periodos = data.data.periodos
         this.periodo = data.data.periodo
@@ -69,7 +73,7 @@ export const periodoStore = defineStore('periodo', {
 
     // a tela do caixa (MgCaixaSessao) entrega a gaveta e a sessão para os dialogs
     usar(portador, periodo, aoMudar) {
-      this.portador = { ...portador, ehGaveta: true }
+      this.portador = { ...portador, ehGaveta: true, ehCaixa: true }
       this.periodo = periodo
       this.periodos = []
       this.aoMudar = aoMudar
@@ -120,7 +124,7 @@ export const periodoStore = defineStore('periodo', {
       }
     },
 
-    transferir({ sentido, codportador, valor, observacoes }) {
+    transferir({ sentido, codportador, valor, observacoes, transacao }) {
       const meu = this.portador.codportador
       return this.executar(
         () =>
@@ -129,6 +133,7 @@ export const periodoStore = defineStore('periodo', {
             codportadordestino: sentido === 'E' ? codportador : meu,
             valor,
             observacoes,
+            transacao: transacao || null,
           }),
         (pag) =>
           pag.estado === 'E'
@@ -151,10 +156,10 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    // ==== avulso: na gaveta pela sessão aberta; nos demais pelo período da data (M12) ====
+    // ==== avulso: no caixa (espécie) pela sessão; nos demais pelo período da data (M12) ====
 
     lancarAvulso({ sentido, motivo, valor, observacoes, transacao }) {
-      if (this.portador.ehGaveta) {
+      if (this.portador.ehCaixa) {
         return this.executar(
           () =>
             api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/avulso`, {
@@ -162,6 +167,7 @@ export const periodoStore = defineStore('periodo', {
               motivo,
               valor,
               observacoes,
+              transacao: transacao || null,
               codpdv: this.contexto.codpdv,
             }),
           'Lançamento registrado',
@@ -183,7 +189,7 @@ export const periodoStore = defineStore('periodo', {
     cancelarAvulso(codpagamento, justificativa) {
       return this.executar(
         () =>
-          this.portador.ehGaveta
+          this.portador.ehCaixa
             ? api.post(`v1/caixa/avulso/${codpagamento}/cancelar`)
             : api.post(`v1/portador-periodo/lancamento/${codpagamento}/cancelar`, {
                 justificativa,
@@ -192,7 +198,7 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    // ==== gaveta: itens do caixa, abrir, fechar e reabrir (M13) ====
+    // ==== caixa (espécie): abrir, fechar e reabrir; itens só na gaveta (M13) ====
 
     abrirItem(codcaixaitem = null) {
       this.item = codcaixaitem
@@ -246,6 +252,19 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
+    // corrige o início e o fim da sessão não fechada
+    editarDatas({ inicio, fim, observacoes }) {
+      return this.executar(
+        () =>
+          api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/datas`, {
+            inicio,
+            fim,
+            observacoes,
+          }),
+        'Salvo',
+      )
+    },
+
     reabrirCaixa() {
       return this.executar(
         () => api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/reabrir`),
@@ -271,6 +290,19 @@ export const periodoStore = defineStore('periodo', {
             corte: corte || null,
           }),
         'Período fechado',
+      )
+    },
+
+    // contagem do caixa na abertura ou no fechamento (só registra; a diferença aparece)
+    contar(momento, { contagem, itens }) {
+      return this.executar(
+        () =>
+          api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/contagem`, {
+            momento,
+            contagem,
+            itens,
+          }),
+        'Contagem salva',
       )
     },
 

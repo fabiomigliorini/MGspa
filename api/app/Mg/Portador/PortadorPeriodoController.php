@@ -95,17 +95,18 @@ class PortadorPeriodoController extends Controller
         if ($codportadorperiodo && !$periodo) {
             abort(404, 'Período não é deste portador.');
         }
-        $gaveta = $portador->ehGaveta();
+        $caixa = $portador->ehCaixa();
+        $operar = $caixa && CaixaService::podeOperar($portador);
         $financeiro = Autorizador::pode(['Financeiro']);
         return ['data' => [
             'portador' => new PortadorResource($portador),
             'pode' => [
                 'cadastro' => $financeiro,
                 'transferir' => TransferenciaAutorizador::podeOperar($portador),
-                'avulso' => $gaveta ? CaixaService::podeOperar($portador->codfilial) : $financeiro,
-                'caixa' => $gaveta && CaixaService::podeOperar($portador->codfilial),
-                'reabrirCaixa' => $gaveta && ConferenciaAutorizador::pode($portador->codfilial),
-                'periodo' => !$gaveta && $financeiro,
+                'avulso' => $caixa ? $operar : $financeiro,
+                'caixa' => $operar,
+                'reabrirCaixa' => $caixa && ConferenciaAutorizador::pode($portador->codfilial),
+                'periodo' => !$caixa && $financeiro,
             ],
             'periodos' => PortadorPeriodoResource::collection($periodos),
             'periodo' => $periodo ? (new PortadorPeriodoResource($periodo))->comLancamentos() : null,
@@ -130,6 +131,28 @@ class PortadorPeriodoController extends Controller
         $periodo = DB::transaction(fn () => PortadorPeriodoService::reabrir(PortadorPeriodo::findOrFail($id)));
         return (new PortadorPeriodoResource($periodo->fresh()))->comLancamentos()
             ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::desde($periodo))]);
+    }
+
+    // contagem do caixa (especie) inicial ou final da sessao
+    public function contagem(Request $request, int $id)
+    {
+        $dados = $request->validate([
+            'momento' => 'required|in:inicial,final',
+            'contagem' => 'nullable|array',
+            'contagem.*' => 'nullable|integer|min:0',
+            'itens' => 'nullable|array',
+            'itens.*' => 'nullable|numeric|min:0',
+        ]);
+        $periodo = PortadorPeriodo::with('Portador')->findOrFail($id);
+        CaixaService::autorizarOperar($periodo->Portador);
+        $periodo = DB::transaction(fn () => PortadorPeriodoService::contar(
+            $periodo,
+            $dados['momento'],
+            $dados['contagem'] ?? [],
+            $dados['itens'] ?? []
+        ));
+        return (new PortadorPeriodoResource($periodo->fresh()))->comLancamentos()
+            ->additional(['periodos' => PortadorPeriodoResource::lista(collect([$periodo]))]);
     }
 
     public function lancamento(Request $request)

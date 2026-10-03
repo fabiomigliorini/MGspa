@@ -3,9 +3,8 @@
     // moeda, itens do caixa, avulsos e ajustes. Cartoes so' em quantidade (o
     // gerente fecha o lote da maquineta pelo bordero dela).
     $filial = $sessao->Portador->Filial;
-    $contado = (float) $sessao->saldofinal;
-    $abertura = $sessao->contagemabertura ?? [];
-    $fechamento = $sessao->contagemfechamento ?? [];
+    $abertura = $sessao->contageminicial ?? [];
+    $fechamento = $sessao->contagemfinal ?? [];
     $denominacoes = array_merge(\Mg\Caixa\CaixaService::CEDULAS, \Mg\Caixa\CaixaService::MOEDAS);
     $itens = collect($painel['itens']);
     $estoqueAbertura = $itens->where('modo', 'C')->sum('valorabertura');
@@ -47,6 +46,23 @@
             text-align: right;
         }
 
+        .c {
+            text-align: center;
+        }
+
+        .contagem td {
+            font-size: 7pt;
+            padding: 1px 1px;
+        }
+
+        .contagem .lado {
+            padding-left: 8px;
+        }
+
+        .contagem .total td {
+            border-top: 1px solid #000;
+        }
+
         .linha {
             border-top: 1px dashed #000;
             margin: 4px 0;
@@ -75,79 +91,77 @@
     <table>
         <tr>
             <td>Abertura</td>
-            <td class="r">{{ $sessao->inicio->format('d/m/Y H:i') }}<br>{{ $sessao->UsuarioAbertura->usuario ?? '' }}</td>
+            <td class="r">{{ $sessao->UsuarioAbertura->usuario ?? '' }} {{ $sessao->inicio->format('d/m/Y H:i') }}</td>
         </tr>
         <tr>
             <td>Fechamento</td>
-            <td class="r">{{ $sessao->fim?->format('d/m/Y H:i') }}<br>{{ $sessao->UsuarioFechamento->usuario ?? '' }}</td>
+            <td class="r">{{ $sessao->UsuarioFechamento->usuario ?? '' }} {{ $sessao->fim?->format('d/m/Y H:i') }}</td>
         </tr>
     </table>
 
     <div class="linha"></div>
-    <b>CONTAGEM</b> <small>(quantidade)</small>
-    <table>
+    <b>CONTAGEM</b>
+    <table class="contagem">
         <tr>
-            <td></td>
-            <td class="r">Abertura</td>
-            <td class="r">Fechamento</td>
+            <td colspan="5" class="c"><b>ABERTURA</b></td>
+            <td colspan="5" class="c lado"><b>FECHAMENTO</b></td>
         </tr>
         @foreach ($denominacoes as $d)
             @if (!empty($abertura[$d]) || !empty($fechamento[$d]))
                 <tr>
-                    <td>{{ formataNumero((float) $d) }}</td>
-                    <td class="r">{{ $abertura[$d] ?? '' }}</td>
-                    <td class="r">{{ $fechamento[$d] ?? '' }}</td>
+                    @foreach ([$abertura, $fechamento] as $n => $cont)
+                        @if (!empty($cont[$d]))
+                            <td class="r {{ $n ? 'lado' : '' }}">{{ $cont[$d] }}</td>
+                            <td class="c">x</td>
+                            <td class="r">{{ formataNumero((float) $d) }}</td>
+                            <td class="c">=</td>
+                            <td class="r">{{ formataNumero($cont[$d] * (float) $d) }}</td>
+                        @else
+                            <td class="{{ $n ? 'lado' : '' }}"></td><td></td><td></td><td></td><td></td>
+                        @endif
+                    @endforeach
                 </tr>
             @endif
         @endforeach
-        <tr>
-            <td>Moedas</td>
-            <td class="r">{{ formataNumero($sessao->moedasabertura ?? 0) }}</td>
-            <td class="r">{{ formataNumero($sessao->moedasfechamento ?? 0) }}</td>
-        </tr>
-        <tr>
-            <td>Cédulas</td>
-            <td class="r">{{ formataNumero($sessao->cedulasabertura ?? 0) }}</td>
-            <td class="r">{{ formataNumero($sessao->cedulasfechamento ?? 0) }}</td>
-        </tr>
         @foreach ($itens->where('modo', 'C') as $i)
             <tr>
-                <td>{{ $i['item'] }}</td>
+                <td colspan="4">{{ $i['item'] }}</td>
                 <td class="r">{{ formataNumero($i['valorabertura'] ?? 0) }}</td>
+                <td colspan="4" class="lado">{{ $i['item'] }}</td>
                 <td class="r">{{ formataNumero($i['valorfechamento'] ?? 0) }}</td>
             </tr>
         @endforeach
-        <tr>
-            <td><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero(($sessao->moedasabertura ?? 0) + ($sessao->cedulasabertura ?? 0) + $estoqueAbertura) }}</b></td>
-            <td class="r grande">{{ formataNumero($contado) }}</td>
+        <tr class="total">
+            <td colspan="4"><b>Total</b></td>
+            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($abertura) + $estoqueAbertura) }}</b></td>
+            <td colspan="4" class="lado"><b>Total</b></td>
+            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($fechamento) + $estoqueFechamento) }}</b></td>
         </tr>
     </table>
 
     <div class="linha"></div>
-    <b>DINHEIRO</b>
+    <b>RESUMO</b>
     <table>
         <tr>
-            <td>Envelope anterior</td>
-            <td class="r">{{ formataNumero($sessao->saldoinicial ?? 0) }}</td>
+            <td></td>
+            <td class="r">Entradas</td>
+            <td class="r">Saídas</td>
         </tr>
-        @if ($painel['ajusteabertura'] != 0)
+        <tr>
+            <td>Saldo inicial</td>
+            <td class="r">{{ $periodo['saldoinicial'] >= 0 ? formataNumero($periodo['saldoinicial']) : '' }}</td>
+            <td class="r">{{ $periodo['saldoinicial'] < 0 ? formataNumero(-$periodo['saldoinicial']) : '' }}</td>
+        </tr>
+        @foreach ($periodo['resumo'] as $r)
             <tr>
-                <td>Ajuste na abertura</td>
-                <td class="r">{{ formataNumero($painel['ajusteabertura']) }}</td>
+                <td>{{ $r['descricao'] }} ({{ $r['quantidade'] }})</td>
+                <td class="r">{{ formataNumero($r['entrada']) }}</td>
+                <td class="r">{{ formataNumero($r['saida']) }}</td>
             </tr>
-        @endif
+        @endforeach
         <tr>
-            <td>Sistema</td>
-            <td class="r">{{ formataNumero($painel['dinheiro']['sistema'] - $painel['ajustefechamento']) }}</td>
-        </tr>
-        <tr>
-            <td>Contado</td>
-            <td class="r">{{ formataNumero($contado) }}</td>
-        </tr>
-        <tr>
-            <td><b>Ajuste no fechamento</b></td>
-            <td class="r"><b>{{ formataNumero($painel['ajustefechamento']) }}</b></td>
+            <td><b>Saldo final</b></td>
+            <td colspan="2" class="r grande">{{ formataNumero($periodo['saldofinal']) }}</td>
         </tr>
     </table>
 

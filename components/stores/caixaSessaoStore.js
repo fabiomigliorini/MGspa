@@ -40,11 +40,6 @@ export const DOCUMENTOS = {
   A: 'Avulsos',
 }
 
-export const totalContagem = (contagem) =>
-  Math.round(
-    [...CEDULAS, ...MOEDAS].reduce((s, v) => s + (Number(contagem?.[v]) || 0) * Number(v), 0) * 100,
-  ) / 100
-
 export const caixaSessaoStore = defineStore('caixaSessao', {
   state: () => ({
     // a gaveta (modo PDV) ou a da sessão aberta pelo contas

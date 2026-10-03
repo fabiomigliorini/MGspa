@@ -45,6 +45,7 @@ class PortadorPeriodoResource extends Resource
     public function toArray($request)
     {
         $gaveta = $this->Portador->ehGaveta();
+        $caixa = $this->Portador->ehCaixa();
         $ret = [
             'codportadorperiodo' => $this->codportadorperiodo,
             'codportador' => $this->codportador,
@@ -53,6 +54,7 @@ class PortadorPeriodoResource extends Resource
             'codfilial' => $this->Portador->codfilial,
             'filial' => optional($this->Portador->Filial)->filial,
             'ehGaveta' => $gaveta,
+            'ehCaixa' => $caixa,
             'descricao' => PortadorPeriodoService::descricao($this->resource),
             'inicio' => $this->inicio,
             'fim' => $this->fim,
@@ -61,7 +63,6 @@ class PortadorPeriodoResource extends Resource
             'fechamento' => $this->fechamento,
             'usuarioabertura' => optional($this->UsuarioAbertura)->usuario,
             'usuariofechamento' => optional($this->UsuarioFechamento)->usuario,
-            'conferencia' => $this->conferencia,
             'saldoinicial' => (float) $this->saldoinicial,
             'movimento' => round((float) $this->saldofinal - (float) $this->saldoinicial, 2),
             'saldofinal' => (float) $this->saldofinal,
@@ -76,26 +77,43 @@ class PortadorPeriodoResource extends Resource
         if (!$this->comLancamentos) {
             return $ret;
         }
-        $ret['lancamentos'] = $this->lancamentos($gaveta);
+        $ret['lancamentos'] = $this->lancamentos($caixa);
         $ret['resumo'] = $this->resumo($ret['lancamentos']);
+        if ($caixa) {
+            $ret['contagem'] = $this->contagem();
+        }
         if ($gaveta) {
-            $abertura = CaixaService::ajuste($this->codpagamentoabertura);
-            $fechamento = empty($this->fechamento) ? 0.0 : CaixaService::ajuste($this->codpagamentofechamento);
-            $ret['caixa'] = [
-                'ajusteabertura' => $abertura,
-                'contadoabertura' => round((float) $this->saldoinicial + $abertura, 2),
-                'ajustefechamento' => $fechamento,
-                'contadofechamento' => empty($this->fechamento) ? null : (float) $this->saldofinal,
-                'sistemafechamento' => empty($this->fechamento) ? null : round((float) $this->saldofinal - $fechamento, 2),
-            ];
             $ret['itens'] = CaixaService::itens($this->resource);
         }
         return $ret;
     }
 
+    // o dinheiro contado na abertura e no fechamento e a diferenca para o
+    // saldo inicial e final (so' aparece; o ajuste e' lancamento)
+    private function contagem(): array
+    {
+        $ret = [];
+        foreach (['inicial' => 'saldoinicial', 'final' => 'saldofinal'] as $momento => $saldo) {
+            $contado = PortadorPeriodoService::contado($this->resource, $momento);
+            $ret[$momento] = [
+                'contagem' => static::objeto($this->{"contagem{$momento}"}),
+                'contado' => $contado,
+                'diferenca' => $contado === null ? 0.0 : round($contado - (float) $this->$saldo, 2),
+            ];
+        }
+        return $ret;
+    }
+
+    // {cedula: quantidade} como objeto: o resource reindexa array de chave
+    // numerica ({"50": 1} viraria [1])
+    private static function objeto(?array $contagem): ?object
+    {
+        return $contagem === null ? null : (object) $contagem;
+    }
+
     // as linhas do razao do periodo como extrato: o fato, a origem em texto,
     // o meio, o valor e o saldo corrente (sem as inativas)
-    private function lancamentos(bool $gaveta): array
+    private function lancamentos(bool $caixa): array
     {
         $linhas = PortadorMovimento::where('codportadorperiodo', $this->codportadorperiodo)
             ->with(['Pagamento' => fn ($q) => $q->with(array_merge(PagamentoListaService::RELACOES, [
@@ -108,8 +126,7 @@ class PortadorPeriodoResource extends Resource
         $codusuario = Auth::user()->codusuario ?? null;
         $financeiro = Autorizador::pode(['Financeiro']);
         $mutavel = !PortadorPeriodoService::imutavel($this->resource);
-        $ajustes = array_filter([$this->codpagamentoabertura, $this->codpagamentofechamento]);
-        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $gaveta, $codusuario, $financeiro, $mutavel, $ajustes) {
+        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $caixa, $codusuario, $financeiro, $mutavel) {
             $pag = $l->Pagamento;
             $origem = PagamentoListaService::origem($pag);
             $ativa = empty($l->inativo);
@@ -120,8 +137,7 @@ class PortadorPeriodoResource extends Resource
             $avulso = $ativa
                 && $origem == PagamentoListaService::ORIGEM_AVULSO
                 && !empty($pag->motivo)
-                && $pag->estado != PagamentoService::ESTADO_CANCELADO
-                && !in_array($pag->codpagamento, $ajustes);
+                && $pag->estado != PagamentoService::ESTADO_CANCELADO;
             return [
                 'codportadormovimento' => $l->codportadormovimento,
                 'codpagamento' => $l->codpagamento,
@@ -140,9 +156,9 @@ class PortadorPeriodoResource extends Resource
                     : null,
                 'podeConfirmar' => $transferencia && TransferenciaAutorizador::podeConfirmar($pag),
                 'podeCancelar' => $transferencia && TransferenciaAutorizador::podeCancelar($pag),
-                // gaveta: so' quem lancou, com o caixa aberto; demais: Financeiro
-                'podeCancelarAvulso' => $avulso && $mutavel && ($gaveta
-                    ? $pag->codusuariocriacao == $codusuario && empty($this->fim)
+                // caixa: so' quem lancou, com o caixa nao fechado; demais: Financeiro
+                'podeCancelarAvulso' => $avulso && $mutavel && ($caixa
+                    ? $pag->codusuariocriacao == $codusuario
                     : $financeiro),
             ];
         })->all();

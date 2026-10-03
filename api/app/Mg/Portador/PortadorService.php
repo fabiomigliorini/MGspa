@@ -57,9 +57,9 @@ class PortadorService
     }
 
     // painel /portador (doc-4): os portadores por filial com o saldo gravado
-    // (so' da especie nesta fase, R3), a situacao da gaveta e as
-    // transferencias a confirmar. Gerente ve as filiais dele; Financeiro e
-    // Admin, todas (R15). `bloqueio`: a gaveta nao aceita transferencia agora
+    // (so' da especie nesta fase, R3), a situacao do caixa (toda especie) e
+    // as transferencias a confirmar. Gerente ve as filiais dele; Financeiro
+    // e Admin, todas (R15). `bloqueio`: o caixa nao aceita transferencia agora
     public static function painel(?int $codfilial, bool $inativos): array
     {
         $filiais = ConferenciaAutorizador::filiais();
@@ -73,7 +73,8 @@ class PortadorService
             ->get();
         $gavetas = DB::table('tblpdv')->whereNotNull('codportador')->distinct()->pluck('codportador')
             ->map(fn ($c) => (int) $c)->all();
-        $sessoes = PortadorPeriodo::whereIn('codportador', $gavetas)
+        $caixas = $portadores->filter(fn ($p) => $p->ehCaixa())->pluck('codportador')->all();
+        $sessoes = PortadorPeriodo::whereIn('codportador', $caixas ?: [0])
             ->whereRaw('codportadorperiodo in (
                 select distinct on (codportador) codportadorperiodo
                 from tblportadorperiodo
@@ -98,8 +99,8 @@ class PortadorService
             ];
         };
         return $portadores->map(function (Portador $p) use ($gavetas, $sessoes, $somar) {
-            $gaveta = $p->tipo == Portador::TIPO_ESPECIE && in_array($p->codportador, $gavetas);
-            $sessao = $gaveta ? $sessoes->get($p->codportador) : null;
+            $gaveta = $p->ehCaixa() && in_array($p->codportador, $gavetas);
+            $sessao = $p->ehCaixa() ? $sessoes->get($p->codportador) : null;
             return [
                 'codportador' => $p->codportador,
                 'portador' => $p->portador,
@@ -108,6 +109,7 @@ class PortadorService
                 'filial' => optional($p->Filial)->filial,
                 'inativo' => $p->inativo,
                 'ehGaveta' => $gaveta,
+                'ehCaixa' => $p->ehCaixa(),
                 'saldo' => $p->tipo == Portador::TIPO_ESPECIE ? (float) $p->saldo : null,
                 'sessao' => $sessao ? [
                     'codportadorperiodo' => $sessao->codportadorperiodo,
@@ -117,7 +119,7 @@ class PortadorService
                     'usuarioabertura' => optional($sessao->UsuarioAbertura)->usuario,
                     'usuariofechamento' => optional($sessao->UsuarioFechamento)->usuario,
                 ] : null,
-                'bloqueio' => $gaveta && !($sessao && $sessao->aberto()) ? 'Gaveta não aberta' : null,
+                'bloqueio' => $p->ehCaixa() && !($sessao && $sessao->aberto()) ? 'Caixa não aberto' : null,
                 'chegando' => $somar('codportadordestino', $p->codportador),
                 'saindo' => $somar('codportadororigem', $p->codportador),
             ];
